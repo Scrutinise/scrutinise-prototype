@@ -2,7 +2,40 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-24 01:31 UTC — ▼ **INGEST C3: THE PURGE IS PROVEN AND STILL UNRUN — AND THIS
+*Last updated: 2026-08-24 01:56 UTC — ▼ **SEARCH S13: THE MERGE IS ARITHMETIC, AND IT IS ALREADY
+SHOWING ALMOST EVERYTHING IT CAN.** `merged rank ≈ in-stream rank × streams routed` holds for **29
+of 34** keys found and merged — that relation IS the round-robin, so a top-20 window can show at most
+the first **floor(20/S)** of each stream. Of the 35 questions where retrieval found the answer, **16
+sit inside their own ceiling and 15 of those 16 are displayed.** ⚠⚠ **The brief's framing is refuted
+both ways:** the merge does not DISCARD (pure reordering, budget = total, drops nothing) and it makes
+almost no bad trades — "a low-value result displaced a high-value one" is **1 question, 10 slots,
+across all 65**, and that one is misattributed. **12 of 65 are recoverable by a merge change: 23% →
+a ceiling of 42%**; four of the seven unrecoverable **routed only ONE stream, where there is no merge
+at all.** ✅ No cross-stream raw-score comparison exists anywhere in the merge. **New baseline
+merged@20 15/65 (23%), in-stream@20 28/65 (43%) on `corpus_fts` v7308 — it SUPERSEDES NOTHING**
+(S10's are void, S12's was never taken). ⚠ Length is NOT the mechanism: the 773-vs-280-word headline
+is confounded by collection, every within-collection cell has n≤5, and **no normalisation change was
+made.** ⚠⚠ **V2-Q15's answer key is a 66-character dot-leader placeholder** — s.28 Local Government
+Act 1988 is stored as `28 . . . .`; found at in-stream rank 2 and correctly suppressed. We do not
+hold the text. ⚠⚠⚠ **THE PLATFORM WAS SHOWING 1.1% OF THE SPRING STATEMENT, FROM THE TOP.** Both legs
+returned `body.slice(0,300)`; the ANN had already chosen the matching chunk and `vectorSearchSections`
+**dropped `r.chunkId` on the line that built the hit**, so the service hydrated chunk 0. Keyed debates
+speeches run 920–5,714 words. ✅ Fixed with ONE selector shared by both legs (they cannot disagree),
+**no re-index needed — `corpus_vec` already carries `chunkId`**, $0. `check-passage` **15/15, all 5
+negative controls FIRED** — and it caught its own first version reporting `matched:true` on a passage
+centred on the word **"the"**. ⚠⚠ **THE S12 SNIPPET FIX IS COMMITTED, PUSHED AND STILL NOT DEPLOYED
+THREE DAYS ON** — the running `vector-serve` reproduces the pre-fix table exactly (limit=10 → **5 of
+10 empty**). A restart re-runs the existing artefact. ⚠ **§3's number is BEFORE-only: 54 of 81 (67%)
+contain a query term, mean coverage 25.2%** — the brief's "close to zero" is refuted, and **the metric
+had to be repaired first** (title+snippet together read 80% on the OLD build; the 80% was the title).
+❌ **§2's merge arm is built, `LEX_MERGE_COVERAGE` default OFF, and NOT MEASURED** — it refuses to run
+without §3's signal rather than reporting a null it did not measure. ❌ **§5 not run**, gated on the
+re-key validation and the redeploy. ⚠ Debates is **9 of 11 NOT-RETRIEVED** — retrieval, not merge.
+▶▶ **CHARLIE: (a) verdicts on the eleven rows in `docs/GOLD_V2_DEBATES_REKEY.md`; (b) five decisions
+in `docs/SEARCH_S13_REPORT.md` §6 — D-2 (rebuild both serve services) unblocks everything else.**
+The signal that proves D-2: `vector-search limit=10 tier=caselaw` returning **0** empty snippets
+where it returns exactly **5** today. Not an absence of errors. `docs/SEARCH_S13_REPORT.md`.**
+Earlier: 2026-08-24 01:31 UTC — ▼ **INGEST C3: THE PURGE IS PROVEN AND STILL UNRUN — AND THIS
 TIME IT IS A HARNESS BOUNDARY, NOT A CLEARED CONTEXT.** Claude Code's auto-mode classifier refuses
 production DELETE and DDL from a session whatever the brief authorises; `l2-purge.ts --execute` and
 `e1-drop-ftsvector.ts --execute` were both refused. Every manifest, guard, dry run and expected

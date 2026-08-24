@@ -132,6 +132,134 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## CENTRAL Stage 2d — the training exchange, bulk upload, and Teams becomes a tab; and STAGE 2c WAS NEVER BUILT (2026-08-24 02:07 UTC)
+
+Executes the "Central Stage 2d" brief (24 Aug 2026) in full. `tsc --noEmit` and `next build` clean;
+**`npm run check:central` 295/295 against the live app DB, up from 189**, self-cleaning. Design
+written up in `SCRUTINISE_CENTRAL_SPEC.md` §8, decision log §12.
+
+⚠⚠ **THE AUDIT'S FIRST FINDING IS THAT THE BRIEF'S OWN DEPENDENCY DOES NOT EXIST. STAGE 2c WAS
+NEVER BUILT.** There is no `prisma/central_stage2c.sql`, no Events model, no `TrainingSession`, and
+— the item the brief flags as the pilot launch blocker — **no `authorType` column anywhere in the
+database**. The brief asks whether 2c is done: it is not, and nothing shipped since 11 Aug has
+touched it. **27 Claude-written answers still render as members' work.** `TrainingSession` is
+therefore created by `central_stage2d.sql`, because "Log this session" is a 2d acceptance criterion
+and cannot exist without it; §8.5 records that a later 2c must ADD to that table rather than
+recreate it. The attribution item is untouched and is still the blocker — it was not in this brief's
+scope and has not been quietly absorbed into it.
+
+**Schema:** `prisma/central_stage2d.sql`, hand-written and applied to Neon, then read back column by
+column. Three tables (`TrainingListing`, `TrainingMatch`, `TrainingSession`), `User.phone`, one
+`PointsConfig` row, and the tag-promotion update. ⚠ **No partial or expression indexes this time** —
+Stage 1.2 and Stage 2 each left one invisible to `schema.prisma`; every uniqueness rule in 2d is a
+plain composite, so the schema tells the whole truth about it.
+
+**A. Navigation.** Tabs read **Questions · Training · Leaderboard · Teams**; the "Teams & branches"
+tree and the "Managing {node}" rail moved out of the page header into the Teams tab; the header is
+breadcrumb, name, role badge and points. Three knock-on decisions, taken rather than inherited:
+"Leave this Community" moved into Teams (it was in a header that is now four things); **a `?panel=`
+deep link now lands on Teams**, because `lib/community.ts` writes `?panel=requests` into every
+join-request notification and those links are already in people's inboxes — a tab move that ignored
+them would have broken every one silently; and a member who is in no branch at all now lands on
+Teams by default, because "Find your branch" moved into the tab with the tree and a prompt nobody is
+shown is not a prompt.
+
+**B. The chip row is contexts only.** Contexts pair one-to-one with the Out-in-the-world /
+Behind-the-scenes toggle directly above them, so a promoted-topic chip in the same row read as a
+third context while filtering on a different axis. Topics live in the "All topics" dropdown, where
+`promoted` now orders them (promoted first) so promotion still means something visible — the brief's
+recommended option, taken. Promoted: **Party conduct (11 questions), Media skills (6), Economy (3),
+Social issues (3), Law & rights (1)**; **Housing unpromoted at 0 questions**, having been promoted by
+the Stage 2b seed before anyone had written anything. Applied to **all four Community nodes**,
+because the tag set is seeded per node and a member standing at a branch reads that branch's tags —
+5 × 4 = the 20 rows the library update flagged.
+
+**C. Bulk upload.** Community admins only — manage rights over the **root**, not over the branch the
+uploader happens to be standing in. Two steps: parse and validate → a preview listing exactly what
+will be created with every failing row named and its reason spelled out → confirm → write.
+Confirming re-sends the file and the server re-parses it: a preview is a promise about a file, not a
+writable instruction. ⚠ **One deliberate departure from `scripts/import-central-seed.ts`**: the
+script aborts the whole file on an unknown context, and this fails that row and imports the rest —
+in a UI, naming the three bad rows beats refusing all two hundred. **An unknown context is still
+never guessed** (its side cannot be inferred from a question, and a guess would put it on the wrong
+side of the toggle forever); an unknown *topic* is created unpromoted, because a topic has no
+ambiguous side. Idempotent on exact question text and exact answer body, and on collisions **within
+one file** as well as against the database — a plan that only checked the database would have
+promised two creations and delivered one. Attribution is stated in a box **above** the file picker:
+every row imports as authored by the uploader, there is no author column, and there will not be one.
+
+⚠ **"The Notes column is never imported" was a check that could not fail, and the negative-control
+run is what found it.** It asserted against the *plan*, and the plan carries only `hasAnswer` — never
+the answer text — so a Notes-into-Answer leak would have passed it silently. Moved to the parsed
+rows, where it fails: with the leak planted it now reports the smuggled string in its own failure
+message. ⚠ **A second one, found the same way:** SheetJS reads almost anything as a one-cell CSV, so
+"it parsed" was not evidence the file was ours — a stray .txt produced an empty preview with no
+explanation. `parseUpload` now refuses a header row carrying none of the template's columns and
+quotes back what it did find, with a control asserting that a sheet of just Question and Context
+still reads.
+
+⚠ **The template is a stand-in.** The brief says to serve the .xlsx Charlie supplies; none had been
+supplied, so `scripts/make-question-template.ts` generates one with the brief's columns and worked
+examples on a second sheet (the importer reads sheet 1 only, so the examples cannot be uploaded by
+accident). Replacing it is dropping Charlie's file in at the same path — the importer keys off column
+*names*, not positions. `xlsx` (SheetJS 0.20.3, pure JS) moved devDependencies → dependencies,
+because a server route now imports it; no native module enters the serverless bundle.
+
+**D. The training exchange, and the one rule the whole thing turns on.**
+`lib/training.ts` `contactFor()` is **the only function in the codebase that reads a member's email
+or phone in order to show it to another member.** Four conditions, all required: the viewer is one of
+the two people; both sides have accepted; nobody has closed it; and **the *other* side ticked that
+channel**. It returns `null` — not an empty object — for everyone else, so a caller cannot render a
+truthy husk. The board query does not select an address at all, and the check asserts that as an
+absence in the shape as well as in the serialised JSON.
+
+**Two acceptance timestamps, not one.** `responderAcceptedAt` is stamped when the proposal is created
+(that *is* the responder's consent — they have just been shown what it shares) and `authorAcceptedAt`
+when the author accepts, so "both sides accepted" is a condition that can be read back from the row
+rather than inferred from a status string. Before either acceptance each person is shown a sentence
+saying exactly what of theirs goes, to whom, and what comes back — **computed server-side from the
+same ticks `contactFor` reads**, so the promise on the confirmation screen and the disclosure that
+follows cannot drift apart. **Closing is not a status**: a closed match must still record that it was
+accepted, so closure is its own columns, and the UI says in as many words that it cannot unsend what
+has already been seen.
+
+⚠ **Phone numbers are Charlie's call and were flagged, not taken.** `User.phone` is added as the
+brief instructs — optional, entered by the user in their own settings, read by nothing else — and
+ships with sharing ON per the brief's primary instruction. The email-only alternative the brief
+allows is one row: `UPDATE "PointsConfig" SET "numericValue" = 0 WHERE "key" =
+'TRAINING_PHONE_SHARING'`. **The switch is read at display time, not at consent time, so turning it
+off is retroactive** — a number stops being shown even on a match that already ticked it. Both states
+are asserted, so neither is the untested one. Ticking "share my phone" with no number on file is
+refused rather than silently ignored: a channel that cannot deliver is exactly the surprise the
+design exists to prevent.
+
+**Closing the loop: one action, both records.** "Log this session" writes the `TrainingSession` and
+raises **both** activity claims — trainer 40, trainee 20 — so the training history and the points
+come from the same event and cannot disagree about whether a session happened. ⚠ **Who taught comes
+from the listing, not from who pressed the button** — on an OFFER the author teaches, on a REQUEST
+the responder does; taking it from the presser would let either party award themselves the larger
+tariff, and the check proves it with a REQUEST where the roles reverse. `matchId` is UNIQUE, so a
+double press does not raise four claims. A same-day duplicate claim is **reused** rather than
+refused, and the reuse is recorded on the session — refusing would abort a legitimate second session
+and leave one participant claimed and the other not. Each claim is raised against a branch its
+claimant is actually in, not the branch the logger happens to be standing on.
+
+**Verified: `npm run check:central` — 295/295** against the live app DB (Neon), self-cleaning
+including the borrowed phone numbers and the config row, which are restored to whatever they were
+found as. **Every new guard was watched failing first**, in three planted-break runs, not reasoned
+about:
+- drop the "is the viewer one of the two people" test → **2 fail** (the admin and the uninvolved
+  member both start seeing the details);
+- ignore `closedAt` and ignore the other side's ticks → **5 fail** (including the phone-switch
+  assertion and both closure assertions);
+- import the Notes column and guess an unknown context → **9 fail**, and that run is what exposed the
+  plan-level Notes check as unfailable.
+
+**Not done, named:** the browser walk is Charlie's — no Clerk session exists from a CC session, and
+local Clerk is a dev instance. Not attempted, not inferred, not reported as passing.
+
+---
+
 ## INGEST C3 — THE PURGE IS PROVEN AND UNRUN, AND A QUOTED IDENTIFIER WOULD HAVE MADE IT REPORT SUCCESS (2026-08-24 01:31 UTC)
 
 **Read `docs/INGEST_C3_REPORT.md`. Run `docs/C3_EXECUTE.sh`.**
@@ -266,6 +394,89 @@ world surprised me.** Prediction 6 ("chunks + vec under 5 min", actual 7.4) rest
 probes that **used quoted identifiers and were measuring nothing** — a suspiciously good number
 taken as good news instead of as a question. Prediction 9 ("`ots-reports` 60–110 deleted", actual
 421) predicted the brief's framing instead of measuring the collection.
+
+## SEARCH S13 — THE MERGE IS ARITHMETIC, AND THE PLATFORM WAS SHOWING 1.1% OF A SPRING STATEMENT FROM THE TOP (2026-08-24 01:56 UTC)
+
+**Executes** `docs/BRIEF_SEARCH_S13.md`. Report: `docs/SEARCH_S13_REPORT.md`. Index of record:
+`corpus_fts` v7308 / 18,272,377 rows, stamped either side of every run and unchanged.
+Clock cross-checked against Google and Cloudflare `date` headers before stamping.
+
+**⚠ THE BRIEF'S EXECUTING DOCUMENT DOES NOT EXIST — THIRD SPRINT RUNNING.**
+`MECHANISM_AND_ARGUMENT_GRAPH_DESIGN.md` is not in the repository. Built from the brief's own
+§1–§6, which are self-contained.
+
+**§1 — THE AUDIT, RUN TWICE WITH IDENTICAL OUTPUT, n=65, whole population.**
+`merged rank ≈ in-stream rank × streams routed` holds for **29 of the 34** keys found and merged.
+That relation IS the round-robin, so the visible window is arithmetic: **with S streams routed a
+top-20 can show at most the first floor(20/S) of EACH stream.** Of the 35 questions where retrieval
+found the answer somewhere, **16 sit inside their own ceiling and 15 of those 16 are shown** — so
+the merge is already displaying almost everything it can. ⚠⚠ **The brief's framing is refuted in
+both directions:** the merge does not DISCARD (it is a pure reordering, budget = total) and it makes
+almost no bad trades — the "a low-value result displaced a high-value one" count is **1 question, 10
+slots, across all 65**, and even that one is misattributed. What it does is give every stream an
+equal share of a 20-wide window. **12 of 65 are recoverable by a merge change; 23% → a ceiling of
+42%.** ⚠ Four of the seven unrecoverable ones **routed only one stream, where there is no merge at
+all.** ✅ The brief's first question answered: **no cross-stream raw-score comparison exists** —
+`interleaveStreams` never touches `score`, and `sortByScore` throws on a mixed scorer.
+**Baseline: merged@20 15/65 (23%), in-stream@20 28/65 (43%). It supersedes NOTHING** — S10's figures
+are void and S12's was never taken. ⚠ **Length is NOT the mechanism**: the headline (discarded median
+773 words vs surviving 280) is confounded by collection and every within-collection cell has n≤5 —
+no normalisation change made, and the reason is stated.
+
+**⚠⚠ V2-Q15's ANSWER KEY POINTS AT A 66-CHARACTER DOT-LEADER PLACEHOLDER.** Section 28 of the Local
+Government Act 1988 is stored as `28 . . . .` (wordCount 33). Retrieval finds it at in-stream rank 2
+and the hollow-repeal filter correctly removes it. **We do not hold the text**, so the question can
+never score however good retrieval gets.
+
+**§2 — the merge arm is BUILT, flag-gated `LEX_MERGE_COVERAGE` default OFF, and DELIBERATELY NOT
+MEASURED.** Post-floor slots allocated by the fraction of the query's content terms present, floor
+preserved exactly (a stream reaching zero is the failure `interleave.ts` exists to prevent). ⚠ It
+**refuses to run and logs an error** when the services do not send `snippetMatched`, because scoring
+coverage over a head-of-document snippet would look exactly like a null result. No A/B is reported.
+
+**§3 — THE CHUNK IDENTITY WAS IN SCOPE ON THE LINE THAT DROPPED IT.** `vectorSearchSections`
+collapsed chunk hits to `{sectionId, corpus, tier, score}` with `r.chunkId` right there; the service
+then hydrated chunk **0**, sliced to 300 chars. The sparse leg did `body.slice(0,300)` outright.
+Measured on the validated debates set (bodies read from R2): keyed speeches run **920–5,714 words**,
+and the user saw **1.1%** of the 2025 Spring Statement and **0.9%** of Lord Gardiner's 1969 speech,
+from the top. ✅ **No re-index needed — `corpus_vec` already carries `chunkId`**; pure serving change,
+$0. One shared selector for both legs so they cannot disagree. **`check-passage` 15/15 with all 5
+negative controls FIRED** — and it caught its own module's first version reporting `matched: true`
+on a passage centred on the word **"the"**, which would have returned ~100% for a system that
+located nothing.
+
+**⚠⚠ AND THE S12 SNIPPET FIX IS COMMITTED, PUSHED AND NOT DEPLOYED, THREE DAYS ON.** Read off the
+running service: `limit=1 → 0/1 empty, limit=3 → 1/3, limit=10 → 5/10` — the pre-fix arithmetic
+exactly. Commit `bf8eeb1` 21 Aug 23:17; `vector-serve` booted 23 Aug 00:24 and still serves the old
+build. **A restart re-runs the existing artefact.**
+
+**§3's number, BEFORE arm only: 54 of 81 displayed results (67%) contain a content term from the
+query, mean coverage 25.2%.** ⚠ The brief's "close to zero by design" is **refuted**. ⚠⚠ **The metric
+had to be repaired first** — scoring title+snippet together returned **80% on the old build**, and
+the 80% was the TITLE (*"Prepayment Meters: Self-Disconnection"* matches a prepayment-meter query on
+its heading alone). It would have moved 80%→85% across a change that alters every snippet.
+
+**§4 — eleven debates questions re-keyed to verbatim paragraphs, with Charlie.**
+`docs/GOLD_V2_DEBATES_REKEY.md`. **Nothing scored.** ⚠⚠ **Twelve of the fourteen keyed speeches are
+stored as ONE paragraph** — the TheyWorkForYou and historic-Hansard compile paths flatten paragraph
+breaks, the NI (53) and Scottish (34) paths do not — so there is no paragraph index to key on and the
+key is a verbatim quotation, which is stricter. *(An ingest observation, reported not acted on.)*
+⚠ The Senedd coordination point resolves itself: **no key in the set is `senedd-cofnod`.**
+⚠⚠ **Reading the source corrected me on Q9**: the term ranking put both best windows on the
+*consequences* of forced prepayment meters and I had written the row up as an unanswerable question;
+the answer to *why* is 48% in — *"almost 500,000 court warrants … in the homes of customers in
+debt"*. **Term density and "answers the question" are different things**, which is the limit of the
+passage selector, stated.
+
+**§5 — NOT DONE, dependency named:** gated on Charlie's re-key validation AND a service redeploy.
+⚠ **Debates is 9 of 11 NOT-RETRIEVED** — the key never appears in the debates stream's list at any
+depth. That is retrieval, not merge and not display; the meaning-based-search decision stays deferred
+and now has evidence behind the deferral.
+
+**▶ CHARLIE: five numbered decisions in `docs/SEARCH_S13_REPORT.md` §6.** The one that unblocks
+everything is **D-2, rebuild both serve services** — the signal that proves it is
+`vector-search limit=10 tier=caselaw` returning **0** empty snippets where it returns exactly **5**
+today, plus `snippetMatched` on the wire with its controls still passing. Not an absence of errors.
 
 ## INGEST C3 — PREDICTIONS, LOGGED BEFORE ANY LANE RAN (2026-08-24 00:35 UTC)
 

@@ -245,6 +245,41 @@ search could not be completed, which is a different state from a completed searc
 
 ## 4. How to ask
 
+### ⚠⚠ WHAT `snippet` IS — THE PASSAGE THAT MATCHED, NOT THE HEAD OF THE DOCUMENT (added S13 §3)
+
+**Until 2026-08-24 `snippet` was `body.slice(0, 300)` on both retrieval legs**, whatever the query
+was. For a 26,259-character Spring Statement that is 1.1% of the document, from the top, containing
+no announcement; for a 31,657-character Lords speech on the death penalty it is 0.9%, and for a Lords
+speech the top is the opening courtesies. The dense index matches at CHUNK level — a ~3,200-character
+window — and `vector-core.ts` was discarding the winning `chunkId` on the line that built the hit,
+then hydrating chunk **0**.
+
+**`snippet` is now the passage carrying the query's own content terms.** One selector,
+`scripts/ingest/search/passage.ts`, is used by BOTH services — the dense leg applies it to the chunk
+the ANN actually matched, the sparse leg to the body — so the same document cannot read differently
+depending on which leg found it.
+
+Two fields carry its provenance, and **all three of their states are meaningful**:
+
+| `snippetMatched` | means |
+|---|---|
+| `true` | `snippet` is the passage containing the query's terms; `snippetLocation` says where in the document it sits ("about 62% of the way through") |
+| `false` | **no query term could be located** — `snippet` is the head of the document, as it always was. ⚠ NOT a claim that the document is irrelevant, and it must never be rendered as though it were the matched passage |
+| `undefined` | the retrieval service predates S13 §3 and does not report. ⚠ A THIRD state — never default it to `false` |
+
+⚠ **It is a coverage heuristic, not a relevance model.** Term density and "answers the question" are
+different things: on GOLD V2 Q9 the two densest windows of the keyed speech are about the
+*consequences* of forced prepayment meters and the paragraph answering *why* is elsewhere. The
+passage selector picks a far better passage than the head of the document; it does not pick the best
+one. A reranker remains the answer to that.
+
+⚠ **Kill-switch `SEARCH_PASSAGE_SNIPPET=false`**, one name shared by both services so they cannot be
+turned over separately, restoring `body.slice(0, 300)` exactly.
+
+⚠ **It is a SERVING change and needs a REBUILD, not a restart.** `tsx search/{fts,vector}-serve-run.ts
+redeploy`. The probe that is false on the old build: `vector-search` at `limit=10, tier=caselaw`
+returns `0` empty snippets where the pre-fix build returns exactly `5`.
+
 ### ⚠ WHO SAID IT — `attribution` (added S8 §2)
 
 Every `SearchResult` and every `EvidenceResult` now carries an optional
