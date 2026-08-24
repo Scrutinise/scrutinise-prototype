@@ -24,6 +24,22 @@ const CASES: Array<{ body: string; hollow: boolean; why: string }> = [
     why: '⚠ retained-eu:eudn/2007/643:annex-article-32' },
   { body: 'Article 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .', hollow: true,
     why: '⚠ retained-eu:eudn/2009/582:article-1' },
+  // ── C3 LANE B3: the third costume. A provision number with a MULTI-LETTER suffix.
+  //    Real bodies, read out of corpus_fts by b3-partial-census.ts on 24 Aug 2026, every one of
+  //    which the C2-era guard called live law because 'ZA'/'GC'/'FG' is a run of two letters.
+  { body: '12ZA . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .', hollow: true,
+    why: '⚠ primary-acts-pre-2000:ukpga/1970/9:section-12ZA' },
+  { body: '234ZA . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .', hollow: true,
+    why: '⚠ primary-acts-pre-2000:ukpga/1985/6:section-234ZA' },
+  { body: '502GC . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .', hollow: true,
+    why: '⚠ primary-acts-pre-2000:ukpga/1988/1:section-502GC' },
+  { body: '164FG . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .', hollow: true,
+    why: '⚠ primary-acts-pre-2000:ukpga/1992/12:section-164FG' },
+  // ── and the near-miss the fix must NOT break: one letter, then LIVE WORDS
+  { body: '5A . . . as amended . . .', hollow: false,
+    why: 'V36 dangerous near-miss — stripping 5A must still leave "as amended", which is live text' },
+  { body: '12A 1 The Secretary of State shall by order specify the relevant date.', hollow: false,
+    why: 'a suffixed provision that says something — the strip must not reach the words' },
 ]
 
 let pass = 0, fail = 0

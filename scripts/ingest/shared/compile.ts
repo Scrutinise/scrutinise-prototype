@@ -165,17 +165,72 @@ const HTML_ENTITIES: Record<string, string> = {
  * Treating a dot run as sufficient would mark live law hollow and drop it out of the
  * usable-text count. The whole body must still reduce to nothing; only the label is new.
  */
-/** One leading structural label, and only at the start — the publisher's own heading for
- *  the provision. Anything after it must still be dots and digits for the section to be
- *  saying nothing. */
+/**
+ * One leading structural reference, and only at the start — the publisher's own heading for the
+ * provision. Anything after it must still be dots and digits for the section to be saying nothing.
+ *
+ * ⚠⚠ C3 LANE B3 — THE SAME BUG IN A THIRD COSTUME, AND IT WAS THE PROVISION NUMBER ITSELF. V36
+ * caught the bare form (`31 . . . .`). C2 Lane 2 caught the labelled form (`Article 31 . . . .`).
+ * Neither catches a section number carrying a MULTI-LETTER SUFFIX, which is how inserted
+ * provisions are numbered:
+ *
+ *     12ZA  . . . .      234ZA  . . . .      502GC  . . . .      164FG  . . . .
+ *
+ * `ZA`, `GC` and `FG` are each a run of two letters, so the "no word of two or more letters" test
+ * reads them as words and the section as live law. ⚠ ONE letter was always fine — `12A . . . .`
+ * matched — so the defect only appears on the deeper insertions, which is why it survived two
+ * fixes. Found by reading the bodies the B3 partial census flagged: **4 of 60 sampled "partially
+ * repealed" sections were whole-body dot leaders**, ~6.7%.
+ *
+ * ⚠ THE ONE THING THIS MUST NOT DO is swallow live text. `5A . . . as amended . . .` is V36's own
+ * dangerous near-miss and must stay NOT-hollow: stripping `5A` leaves `as amended`, which still
+ * carries two-letter words. The strip is bounded to a single leading token of digits-then-letters,
+ * so it can never reach a word that starts with a letter.
+ */
 const PROVISION_LABEL = /^(?:article|regulation|section|paragraph|schedule|rule|part|chapter|annex|title)\b/i
+/** A provision number with its optional inserted-provision suffix: 12, 12A, 12ZA, 234ZA, 502GC. */
+const PROVISION_NUMBER = /^\s*\d+[A-Za-z]*\b/
 
 export function isRepealedPlaceholder(text: string): boolean {
   const t = text.trim()
   if (!t) return false                    // empty is a different state — not this one
   if (!/[.·…]/.test(t)) return false      // no dot leader at all
-  const body = t.replace(PROVISION_LABEL, '')
+  const body = t.replace(PROVISION_LABEL, '').replace(PROVISION_NUMBER, '')
   return !/[A-Za-z]{2}/.test(body)        // no word of two or more letters anywhere else
+}
+
+/**
+ * True when a section carries LIVE LAW WITH HOLES IN IT — a publisher dot leader marking removed
+ * subsections, alongside text that still says something. C3 Lane B3.
+ *
+ * ⚠ THIS IS THE OTHER HALF OF `isRepealedPlaceholder`, AND THE TWO MUST NEVER SHARE A RULE. That
+ * is not a style preference; it is the defect C2 Lane 2's own first detector shipped and its
+ * negative control caught. A whole-body dot leader says nothing and must never be returned as an
+ * answer. A partially repealed section is CURRENT LAW and must stay retrievable — suppressing it
+ * would drop live law out of the corpus. The only thing they have in common is the punctuation.
+ *
+ * ⚠ NOTHING IN THE DATABASE DISTINGUISHES THEM TODAY. `section_repeals` holds 249,256 rows and
+ * every single one carries `evidence = 'dot-leader-placeholder'`; there is no column for the
+ * partial case and no row for it. C2 Lane 2 surfaced "~35,895 partially-repealed sections" as an
+ * uncounted estimate — this predicate is what turns that into a measurement.
+ *
+ * ── THE DOT RUN IS A PUBLISHER LEADER, NOT AN ELLIPSIS ──────────────────────────────────────────
+ * legislation.gov.uk renders a removed provision as SPACE-SEPARATED periods — `. . . .` — which is
+ * why three-in-a-row with spaces is the signal and `...` is not. Requiring the spacing is what
+ * keeps ordinary prose out: an elision inside a quotation, `e.g.`, and a run-on numbered list are
+ * all common in this corpus and none of them produces `. . .`.
+ *
+ * ⚠ AND IT EXCLUDES THE WHOLE-BODY CASE BY CONSTRUCTION rather than by a separate call site, so
+ * the two populations cannot overlap however the callers are wired.
+ */
+const DOT_LEADER_RUN = /[.·](?:\s+[.·]){2,}/
+
+export function isPartiallyRepealed(text: string): boolean {
+  const t = text.trim()
+  if (!t) return false
+  if (!DOT_LEADER_RUN.test(t)) return false      // no publisher leader → not this
+  if (isRepealedPlaceholder(t)) return false     // says nothing at all → the OTHER population
+  return true                                    // a leader, and live words beside it
 }
 
 export function rawToText(input: string): string {
