@@ -68,6 +68,9 @@ interface Props {
   /** The uploader's own name, shown on the bulk-upload screen because every
    *  row imports as authored by them. */
   myName: string
+  /** Stage 2e — how many things on this node are waiting for a manager.
+   *  Zero for anyone who cannot act on them. */
+  pendingForManager: number
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -93,6 +96,7 @@ export default function CommunityDashboardClient({
   questionTags,
   initialQuestions,
   myName,
+  pendingForManager,
 }: Props) {
   const router = useRouter()
   const [inviteLink, setInviteLink] = useState<string | null>(null)
@@ -213,6 +217,15 @@ export default function CommunityDashboardClient({
             }`}
           >
             {t.label}
+            {/* Stage 2e — a badge on Teams, so something waiting on a manager is
+                visible from wherever they happen to be standing. It counts what
+                can actually be acted on: with pre-approval gone, that is join
+                requests plus anything the old model left pending. */}
+            {t.key === 'teams' && pendingForManager > 0 && (
+              <span className="tabular ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800">
+                {pendingForManager}
+              </span>
+            )}
           </Link>
         ))}
       </div>
@@ -289,7 +302,14 @@ export default function CommunityDashboardClient({
             </div>
             {canManage && (
               <div className="space-y-2.5">
-                <h2 className="text-sm font-semibold">Managing {community.name}</h2>
+                <h2 className="text-sm font-semibold">
+                  Managing {community.name}
+                  {pendingForManager > 0 && (
+                    <span className="tabular ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                      {pendingForManager} waiting
+                    </span>
+                  )}
+                </h2>
                 <RequestsPanel
                   communityId={community.id}
                   communityName={community.name}

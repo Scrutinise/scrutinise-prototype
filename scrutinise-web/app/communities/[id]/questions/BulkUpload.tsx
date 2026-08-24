@@ -114,7 +114,10 @@ export default function BulkUpload({
         still show your name against them.
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Stage 2e — the file picker is a real button. The browser default is a
+          grey “Choose File” that reads as disabled next to the primary actions
+          around it, so the input is hidden and the Button drives it. */}
+      <div>
         <input
           ref={fileRef}
           type="file"
@@ -125,11 +128,27 @@ export default function BulkUpload({
             setWritten(null)
             setError(null)
           }}
-          className="text-[13px]"
+          className="sr-only"
+          id="bulk-upload-file"
         />
-        <Button size="sm" disabled={!file || busy} onClick={() => send('preview')}>
-          {busy && !plan ? 'Checking…' : 'Check this file'}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={() => fileRef.current?.click()}>
+            Choose File
+          </Button>
+          <Button size="sm" variant="outline" disabled={!file || busy} onClick={() => send('preview')}>
+            {busy && !plan ? 'Checking…' : 'Check this file'}
+          </Button>
+        </div>
+        {file && (
+          <p className="mt-2 text-[12.5px]">
+            <span className="text-muted-foreground">File selected</span>
+            <br />
+            <span className="font-medium">{file.name}</span>
+            <span className="tabular ml-2 text-muted-foreground">
+              {(file.size / 1024).toFixed(0)} KB
+            </span>
+          </p>
+        )}
       </div>
 
       {error && <p className="text-[13px] text-red-600">{error}</p>}

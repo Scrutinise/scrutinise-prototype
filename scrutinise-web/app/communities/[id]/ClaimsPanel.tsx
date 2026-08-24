@@ -10,6 +10,8 @@ interface Claim {
   occurredAt: string
   evidenceUrl: string | null
   note: string | null
+  status: string
+  awarded: number
   user: { id: string; name: string | null; username: string }
 }
 
@@ -21,13 +23,18 @@ const LABELS: Record<string, string> = {
 }
 
 /**
- * Pending offline-activity claims on this node, beside the join requests.
- * Manage rights, and they cascade — an ancestor admin approves a branch's
- * claims without joining it.
+ * CENTRAL Stage 2e — activity awarded on this node, and the reverse control.
  *
- * Every decision, approve or decline, lands in the Community activity log,
- * which is visible to all members. That visibility is the anti-abuse mechanism
- * at this stage; nothing here is private.
+ * ⚠ THIS PANEL USED TO BE AN APPROVAL QUEUE AND IS NOT ONE ANY MORE. Charlie
+ * removed pre-approval on 24 Aug 2026: a claim pays the moment it is logged.
+ * A member who did the work and watched their score stay at zero read that as
+ * the feature being broken, not as a queue — which is exactly what happened in
+ * the pilot walk.
+ *
+ * What is left for a manager is to REVERSE an award that should not have been
+ * made, with a reason the claimant is told. Every award and every reversal is
+ * in the Community activity log, visible to all members: with no gate in front
+ * of the points, that visibility IS the anti-abuse mechanism.
  */
 export default function ClaimsPanel({
   communityId,
@@ -42,10 +49,12 @@ export default function ClaimsPanel({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
+  const [reversing, setReversing] = useState<string | null>(null)
+  const [reasons, setReasons] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(`/api/communities/${communityId}/claims`)
+    const res = await fetch(`/api/communities/${communityId}/claims?status=AWARDED`)
     if (res.ok) setClaims((await res.json()).claims)
     setLoading(false)
   }, [communityId])
@@ -54,14 +63,19 @@ export default function ClaimsPanel({
     load()
   }, [load])
 
-  async function decide(id: string, decision: 'APPROVED' | 'DECLINED', who: string) {
+  async function reverse(id: string, who: string) {
+    const reason = (reasons[id] ?? '').trim()
+    if (!reason) {
+      setError('Say why you are reversing this — the claimant is told the reason.')
+      return
+    }
     setBusyId(id)
     setError(null)
     try {
       const res = await fetch(`/api/communities/${communityId}/claims/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision }),
+        body: JSON.stringify({ reason }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -69,11 +83,8 @@ export default function ClaimsPanel({
         return
       }
       setClaims((prev) => prev.filter((c) => c.id !== id))
-      setDone(
-        decision === 'APPROVED'
-          ? `Approved — ${who} earned ${data.awarded} points. It is in the activity log.`
-          : `Declined — no points awarded, and it is in the activity log.`,
-      )
+      setReversing(null)
+      setDone(`Reversed — ${data.reversed} points taken back from ${who}. Both events stay in the activity log.`)
       router.refresh()
     } catch {
       setError('Network error — please try again.')
@@ -83,30 +94,37 @@ export default function ClaimsPanel({
   }
 
   return (
-    <details open={defaultOpen || claims.length > 0} className="central-card p-4">
+    <details open={defaultOpen} className="central-card p-4">
       <summary className="cursor-pointer text-sm font-medium">
-        Activity to approve
+        Activity awarded
         {claims.length > 0 && (
-          <span className="tabular ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+          <span className="tabular ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
             {claims.length}
           </span>
         )}
       </summary>
 
       <div className="mt-3 space-y-2">
+        <p className="text-xs text-muted-foreground pretty">
+          Activity pays as soon as it is logged — there is no approval step. If one of these should
+          not have been awarded, reverse it and say why.
+        </p>
         {error && <p className="text-xs text-red-600">{error}</p>}
         {done && <p className="text-xs text-muted-foreground">{done}</p>}
 
         {loading ? (
           <p className="text-xs text-muted-foreground">Loading…</p>
         ) : claims.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nothing waiting to be approved.</p>
+          <p className="text-xs text-muted-foreground">No activity logged on this node yet.</p>
         ) : (
           claims.map((c) => {
             const who = c.user.name ?? c.user.username
             return (
               <div key={c.id} className="central-inset p-2">
-                <p className="text-sm font-medium">{LABELS[c.activityType] ?? c.activityType}</p>
+                <p className="text-sm font-medium">
+                  {LABELS[c.activityType] ?? c.activityType}
+                  <span className="tabular ml-2 text-xs font-semibold central-teal-text">+{c.awarded}</span>
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {who} · {new Date(c.occurredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
@@ -121,14 +139,44 @@ export default function ClaimsPanel({
                     Evidence
                   </a>
                 )}
-                <div className="mt-2 flex gap-1.5">
-                  <Button size="sm" className="h-7 px-2 text-xs" disabled={busyId === c.id} onClick={() => decide(c.id, 'APPROVED', who)}>
-                    Approve
-                  </Button>
-                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={busyId === c.id} onClick={() => decide(c.id, 'DECLINED', who)}>
-                    Decline
-                  </Button>
-                </div>
+                {reversing === c.id ? (
+                  <div className="mt-2 space-y-1.5">
+                    <input
+                      value={reasons[c.id] ?? ''}
+                      onChange={(e) => setReasons((r) => ({ ...r, [c.id]: e.target.value }))}
+                      placeholder="Why is this being reversed? (required)"
+                      maxLength={1000}
+                      className="w-full rounded-lg border bg-background px-2 py-1 text-xs"
+                    />
+                    <div className="flex gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        disabled={busyId === c.id}
+                        onClick={() => reverse(c.id, who)}
+                      >
+                        {busyId === c.id ? 'Reversing…' : `Reverse ${c.awarded} points`}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setReversing(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setReversing(c.id); setError(null) }}
+                    className="mt-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  >
+                    Reverse this
+                  </button>
+                )}
               </div>
             )
           })

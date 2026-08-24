@@ -46,6 +46,8 @@ type MatchRow = {
   closedAt: string | null
   role: 'author' | 'responder'
   otherParty: { id: string; name: string | null; username: string }
+  listingProposalCount: number
+  authorMessage: string | null
   contact: { email: string | null; phone: string | null } | null
   sharingFromMe: { email: boolean; phone: boolean }
   sessionLogged: boolean
@@ -82,8 +84,13 @@ type Proposal = {
   createdAt: string
   responder: { id: string; name: string | null; username: string }
   willShare: { email: boolean; phone: boolean }
+  authorMessage: string | null
   closedAt: string | null
 }
+
+/** “See 1 proposal” / “See 3 proposals” — a bare count read as a label, not a
+ *  control, which is why nobody clicked it. */
+const seeProposals = (n: number) => `See ${n} proposal${n === 1 ? '' : 's'}`
 
 const who = (u: { name: string | null; username: string }) => u.name ?? u.username
 
@@ -241,7 +248,16 @@ export default function TrainingExchange({
           <h3 className="mb-2 text-sm font-semibold">Your matches</h3>
           <div className="flex flex-col gap-2.5">
             {data.matches.map((m) => (
-              <MatchCard key={m.id} communityId={communityId} match={m} onChanged={load} />
+              <MatchCard
+                key={m.id}
+                communityId={communityId}
+                match={m}
+                onChanged={load}
+                proposalsOpen={openListingId === m.listingId}
+                onToggleProposals={() =>
+                  setOpenListingId(openListingId === m.listingId ? null : m.listingId)
+                }
+              />
             ))}
           </div>
         </section>
@@ -263,9 +279,9 @@ export default function TrainingExchange({
                   <button
                     type="button"
                     onClick={() => setOpenListingId(openListingId === l.id ? null : l.id)}
-                    className="underline underline-offset-2 hover:text-foreground"
+                    className="font-medium text-primary underline underline-offset-2 hover:text-foreground"
                   >
-                    {l.proposalCount} {l.proposalCount === 1 ? 'proposal' : 'proposals'}
+                    {openListingId === l.id ? 'Hide proposals' : seeProposals(l.proposalCount)}
                   </button>
                   {l.status !== 'CLOSED' && (
                     <button
@@ -604,6 +620,8 @@ function ProposalList({
   const [previews, setPreviews] = useState<Record<string, SharePreview>>({})
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // One box per proposal, shared by Accept and Decline. Optional on both.
+  const [messages, setMessages] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/communities/${communityId}/training/${listingId}`)
@@ -630,7 +648,7 @@ function ProposalList({
     const res = await fetch(`/api/communities/${communityId}/training/matches/${matchId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action, message: messages[matchId]?.trim() || undefined }),
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
@@ -655,6 +673,9 @@ function ProposalList({
             {p.status === 'DECLINED' && <span className="ml-2 text-[12px] text-muted-foreground">Declined</span>}
           </p>
           {p.message && <p className="mt-1 text-[13px] text-[oklch(0.42_0.01_250)] pretty">{p.message}</p>}
+          {p.authorMessage && p.status !== 'PROPOSED' && (
+            <p className="mt-1 text-[12.5px] text-muted-foreground pretty">You said: {p.authorMessage}</p>
+          )}
           {p.status === 'PROPOSED' && (
             <>
               <p className="mb-1.5 mt-2 text-[12px] font-semibold">If you accept:</p>
@@ -663,6 +684,17 @@ function ProposalList({
               ) : (
                 <p className="text-[12px] text-muted-foreground">Checking…</p>
               )}
+              {/* Stage 2e — one optional line, on BOTH decisions. A decline with
+                  a reason is much better for a branch of a dozen people who see
+                  each other on Saturday than a silent refusal. */}
+              <textarea
+                value={messages[p.id] ?? ''}
+                onChange={(e) => setMessages((m) => ({ ...m, [p.id]: e.target.value }))}
+                placeholder={`A line to ${who(p.responder)} (optional) — sent either way`}
+                rows={2}
+                maxLength={1000}
+                className="mt-2 w-full rounded-lg border bg-background px-2.5 py-1.5 text-[13px]"
+              />
               <div className="mt-2 flex gap-2">
                 <Button size="sm" disabled={busyId === p.id} onClick={() => act(p.id, 'accept')}>
                   Accept
@@ -696,10 +728,14 @@ function MatchCard({
   communityId,
   match,
   onChanged,
+  proposalsOpen,
+  onToggleProposals,
 }: {
   communityId: string
   match: MatchRow
   onChanged: () => void
+  proposalsOpen: boolean
+  onToggleProposals: () => void
 }) {
   const [logging, setLogging] = useState(false)
   const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 10))
@@ -766,6 +802,31 @@ function MatchCard({
       <p className="mt-1.5 text-[12px] text-muted-foreground">
         You are sharing <strong>{channelList(match.sharingFromMe)}</strong> with {who(match.otherParty)}.
       </p>
+
+      {/* Stage 2e — the proposal link lives on BOTH panels. A “waiting on you”
+          chip with no control was a dead end: the only way to act on a proposal
+          was to find the same listing again under Your listings. */}
+      {match.role === 'author' && (
+        <button
+          type="button"
+          onClick={onToggleProposals}
+          className="mt-1 text-[12px] font-medium text-primary underline underline-offset-2 hover:text-foreground"
+        >
+          {proposalsOpen ? 'Hide proposals' : seeProposals(match.listingProposalCount)}
+        </button>
+      )}
+      {proposalsOpen && match.role === 'author' && (
+        <ProposalList communityId={communityId} listingId={match.listingId} onChanged={onChanged} />
+      )}
+
+      {match.authorMessage && (
+        <p className="mt-2 rounded-lg border border-border bg-muted/40 p-2 text-[12.5px] pretty">
+          <span className="text-muted-foreground">
+            {match.role === 'author' ? 'You said:' : `${who(match.otherParty)} said:`}
+          </span>{' '}
+          {match.authorMessage}
+        </p>
+      )}
 
       {live && match.contact && (
         <div className="mt-2 rounded-lg border border-[var(--central-teal-fill-strong)] bg-[var(--central-teal-fill)] p-3 text-[13px]">

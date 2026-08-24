@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import BulkUpload from './BulkUpload'
+import { AiLabel } from '@/components/central/AnswerByline'
 
 export interface QuestionRow {
   id: string
@@ -17,6 +18,8 @@ export interface QuestionRow {
   myVote: boolean
   branchName: string | null
   answerPreview: string | null
+  /** Stage 2e — whether the previewed answer was written by AI. */
+  answerPreviewIsAI: boolean
   hasSources: boolean
   hasLocalExample: boolean
 }
@@ -249,6 +252,7 @@ export default function QuestionLibrary({
           <button
             type="button"
             onClick={() => setContext('')}
+
             className={`central-chip border px-3 text-[13px] transition-colors ${
               context === ''
                 ? 'border-primary bg-primary font-semibold text-primary-foreground'
@@ -274,8 +278,14 @@ export default function QuestionLibrary({
         </div>
       </div>
 
+      {/* Stage 2e — the vote affordance. Charlie worked out that clicking again
+          removes the vote, but a hint costs nothing and the control is a bare
+          triangle and a number. */}
       <p className="mb-3 text-[13px] text-muted-foreground">
         <span className="tabular">{loading ? '…' : countLine}</span>
+        <span className="ml-2 text-[12px]">
+          ▲ You get one vote per question — click it again to take it back.
+        </span>
         {activeSearch && (
           <>
             {' '}for “{activeSearch}”{' '}
@@ -305,9 +315,14 @@ export default function QuestionLibrary({
                   {q.text}
                 </Link>
                 {q.answerPreview && (
-                  <p className="border-l-2 border-border pl-2.5 text-[13px] leading-[1.55] text-[oklch(0.42_0.01_250)] pretty">
-                    {q.answerPreview}
-                  </p>
+                  <div className="border-l-2 border-border pl-2.5">
+                    {/* The list is the one place most people ever look, so the
+                        label goes ABOVE the text, not after it. */}
+                    {q.answerPreviewIsAI && <AiLabel aiModel={null} className="mb-1" />}
+                    <p className="text-[13px] leading-[1.55] text-[oklch(0.42_0.01_250)] pretty">
+                      {q.answerPreview}
+                    </p>
+                  </div>
                 )}
                 <div className="flex flex-wrap items-center gap-2 text-[11px]">
                   {[...q.contextTags, ...q.topicTags].map((t) => (

@@ -8,6 +8,7 @@ import {
   canManageCommunity,
   getCommunityMembership,
   getCommunityTreeIds,
+  listJoinRequests,
 } from '@/lib/community'
 import { getUserPoints } from '@/lib/central-points'
 import { getTags, listQuestions } from '@/lib/question-library'
@@ -74,6 +75,15 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
     })
   ).map((m) => ({ id: m.community.id, name: m.community.name, role: m.role }))
 
+  // Stage 2e — what is actually waiting for a manager on this node. With
+  // pre-approval gone there is no claims queue, so this is join requests, plus
+  // any claim left PENDING by the old model. A count nobody can act on is worse
+  // than no count, so it is only computed for someone who can manage the node.
+  const pendingForManager = canManage
+    ? (await listJoinRequests(id, 'PENDING')).length +
+      (await prisma.activityClaim.count({ where: { communityId: id, status: 'PENDING' } }))
+    : 0
+
   // Questions is the default sub-tab — EXCEPT for a member of the Community who
   // is in no branch at all. Stage 2d moved “Find your branch” into the Teams tab,
   // and a prompt nobody is shown is not a prompt; so with no tab asked for, that
@@ -130,6 +140,7 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
         questionTags={questionTags}
         initialQuestions={initialQuestions}
         myName={user.name ?? user.username}
+        pendingForManager={pendingForManager}
       />
     </div>
   )

@@ -38,7 +38,12 @@ export async function GET(_req: Request, { params }: Params) {
   return NextResponse.json({ preview, contact })
 }
 
-const ActionSchema = z.object({ action: z.enum(['accept', 'decline', 'close']) })
+const ActionSchema = z.object({
+  action: z.enum(['accept', 'decline', 'close']),
+  /** Optional on both accept and decline. A decline with a line of explanation
+   *  is much better for a small community than a silent refusal. */
+  message: z.string().max(1000).optional(),
+})
 
 // POST /api/communities/[id]/training/matches/[matchId]
 export async function POST(req: Request, { params }: Params) {
@@ -61,9 +66,9 @@ export async function POST(req: Request, { params }: Params) {
   try {
     await requireTrainingAccess(user.id, id)
     if (parsed.data.action === 'accept') {
-      await acceptMatch(matchId, user.id)
+      await acceptMatch(matchId, user.id, parsed.data.message)
     } else if (parsed.data.action === 'decline') {
-      await declineMatch(matchId, user.id)
+      await declineMatch(matchId, user.id, parsed.data.message)
     } else {
       await closeMatch(matchId, user.id)
     }

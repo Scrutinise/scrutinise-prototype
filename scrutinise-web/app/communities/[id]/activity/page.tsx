@@ -14,11 +14,13 @@ export const metadata: Metadata = { title: 'Community activity log' }
 /**
  * The Community activity log.
  *
- * Every approved and declined activity claim across the whole tree, who claimed
+ * Every activity award and reversal across the whole tree, who claimed
  * it, who decided it and what it paid — visible to EVERY member of the
  * Community, not only to admins. That visibility is the anti-abuse mechanism at
- * this stage: approvals are witnessed rather than private, which is what makes
- * a tariff-paying approval safe to hand to branch admins.
+ * this stage. ⚠ STAGE 2e MADE IT LOAD-BEARING: with pre-approval removed there
+ * is no manager standing between a claim and the points, so the fact that every
+ * award is witnessed by the whole Community — and reversible with a stated
+ * reason — is the whole of the anti-abuse mechanism.
  */
 export default async function CommunityActivityPage({ params }: Props) {
   const { id } = await params
@@ -46,13 +48,13 @@ export default async function CommunityActivityPage({ params }: Props) {
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">Activity log</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Every offline activity approved or declined in {root.name}. Visible to every member — that is
+          Every offline activity awarded or reversed in {root.name}. Visible to every member — that is
           the point.
         </p>
 
         {entries.length === 0 ? (
           <div className="mt-8 rounded-lg border border-border p-8 text-center">
-            <p className="text-sm text-muted-foreground">Nothing has been decided yet.</p>
+            <p className="text-sm text-muted-foreground">No activity has been logged yet.</p>
           </div>
         ) : (
           <ul className="mt-6 space-y-2">
@@ -64,20 +66,36 @@ export default async function CommunityActivityPage({ params }: Props) {
                   </p>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      e.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-600'
+                      e.status === 'REVERSED'
+                        ? 'bg-red-100 text-red-700'
+                        : e.status === 'DECLINED'
+                          ? 'bg-zinc-100 text-zinc-600'
+                          : 'bg-emerald-100 text-emerald-800'
                     }`}
                   >
-                    {e.status === 'APPROVED' ? `+${e.pointsAwarded} points` : 'Declined — no points'}
+                    {e.status === 'REVERSED'
+                      ? `Reversed — ${e.pointsAwarded} points taken back`
+                      : e.status === 'DECLINED'
+                        ? 'Declined — no points'
+                        : `+${e.pointsAwarded} points`}
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   in {e.community.name} ·{' '}
                   {new Date(e.occurredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {' · decided by '}
-                  {e.decidedBy ? (e.decidedBy.name ?? e.decidedBy.username) : 'an admin'}
-                  {e.decidedAt &&
-                    ` on ${new Date(e.decidedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                  {e.status === 'REVERSED' && e.reversedBy
+                    ? ` · reversed by ${e.reversedBy.name ?? e.reversedBy.username}${
+                        e.reversedAt
+                          ? ` on ${new Date(e.reversedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                          : ''
+                      }`
+                    : e.decidedBy
+                      ? ` · decided by ${e.decidedBy.name ?? e.decidedBy.username}`
+                      : ' · awarded on logging'}
                 </p>
+                {e.reversalReason && (
+                  <p className="mt-1 text-xs text-red-700 pretty">Reason: {e.reversalReason}</p>
+                )}
                 {e.note && <p className="mt-1 text-xs italic text-muted-foreground">“{e.note}”</p>}
                 {e.evidenceUrl && (
                   <a

@@ -14,12 +14,13 @@ const ACTIVITIES = [
 ] as const
 
 /**
- * Log offline activity for approval. Self-claims only — the API takes the
+ * Log offline activity. Self-claims only — the API takes the
  * claimant from the session, never from this form.
  *
  * The point values shown are the current tariff's starter values, labelled as
- * indicative: the award is priced when a manager approves, so a retune between
- * logging and approval pays the new rate.
+ * ⚠ STAGE 2e: THERE IS NO APPROVAL STEP. Logging pays the tariff immediately
+ * and a manager may reverse it afterwards with a reason. The figure shown is
+ * therefore what will actually be paid, not an indication.
  */
 export default function LogActivity({ communityId, communityName }: { communityId: string; communityName: string }) {
   const router = useRouter()
@@ -68,13 +69,14 @@ export default function LogActivity({ communityId, communityName }: { communityI
     <div className="central-card p-4">
       <h3 className="text-sm font-medium">Log offline activity</h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Canvassing, events and training you did for {communityName}. An admin approves it, and every
-        decision appears in the activity log.
+        Canvassing, events and training you did for {communityName}. It pays straight away, and
+        every award appears in the activity log for the whole Community to see. An admin can reverse
+        one afterwards if it is wrong, with a reason.
       </p>
 
       {sent && !open && (
         <p className="mt-2 text-xs text-emerald-700">
-          Logged — it is waiting for an admin. You will hear back in your Feed.
+          Logged — the points are on your total now, and it is in the activity log.
         </p>
       )}
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
@@ -113,12 +115,12 @@ export default function LogActivity({ communityId, communityName }: { communityI
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Anything the approver should know (optional)"
+            placeholder="Anything worth recording alongside it (optional)"
             rows={2}
           />
           <div className="flex gap-2">
             <Button size="sm" type="submit" disabled={busy}>
-              {busy ? 'Sending…' : 'Send for approval'}
+              {busy ? 'Logging…' : 'Log it'}
             </Button>
             <Button size="sm" variant="ghost" type="button" onClick={() => setOpen(false)}>Cancel</Button>
           </div>
