@@ -23,11 +23,18 @@
  *      its own title and date, so no case name is lost.
  *   B. the three retired collections — 28,629 rows, R9 above.
  *
- * ⚠ NOT INCLUDED, DELIBERATELY. `lda-lordsdivisions` (2,089 rows, proved 99.9% duplicated
- *   against `lords-divisions-votes` by this sprint) and `lda-commonsdivisions` (5,553, proved
- *   duplicated by C1) are duplicates of a richer collection and are the obvious next candidates
- *   — but the brief does not authorise their deletion and a proof is not an instruction.
- *   They are reported, not removed.
+ *   C. the four additions Charlie approved on 23 August (C3 Lane A), which C2 deliberately left
+ *      out because "a proof is not an instruction" — the proofs now have an instruction:
+ *      `lda-commonsdivisions` (5,553, item-level duplicate proved by C1 A4, median 8 words against
+ *      1,972), `lda-lordsdivisions` (2,089, proved duplicate at 2,087 of 2,089 by C2 L2 item 8),
+ *      `written-answers` (143, truncated at the LDA API's 5,000-answer page cap while
+ *      `pwdata-wrans` holds 1,235,281 properly split), and `oecd` (505, which contains no OECD
+ *      material at all — 505 of 505 rows are gov.uk URLs).
+ *
+ * ⚠ NOT INCLUDED, DELIBERATELY. `ots-reports` is ~14% contaminated, not 100%: at least 69 of its
+ *   497 rows are news stories and speeches and the other ~428 are real OTS reports, correctly
+ *   published on gov.uk. A wholesale purge would destroy 428 genuine documents. It is handled by
+ *   `ots-filter.ts`, which classifies before it deletes.
  *
  * ════════════════════════════════════════════════════════════════════════════════════
  * SAFETY
@@ -85,7 +92,40 @@ const TARGETS = [
     corpus: 'written-statements',
     where: `corpus = 'written-statements'`,
     expect: 129,
-    why: 'retired target, rows never removed (R9)',
+    why: 'retired target, rows never removed (R9) — one section per MONTH, statements joined by ---',
+  },
+  // ── the four C3 Lane A additions, approved 23 Aug 2026 ────────────────────────────────────────
+  {
+    key: 'dup-lda-commonsdivisions',
+    corpus: 'lda-commonsdivisions',
+    where: `corpus = 'lda-commonsdivisions'`,
+    expect: 5553,
+    why: 'proved item-level duplicate of commons-divisions-votes (C1 A4); median 8 words against ' +
+         '1,972 in the collection that supersedes it — a division title, not a division',
+  },
+  {
+    key: 'dup-lda-lordsdivisions',
+    corpus: 'lda-lordsdivisions',
+    where: `corpus = 'lda-lordsdivisions'`,
+    expect: 2089,
+    why: 'proved duplicate at 2,087 of 2,089 against lords-divisions-votes (C2 Lane 2 item 8)',
+  },
+  {
+    key: 'truncated-written-answers',
+    corpus: 'written-answers',
+    where: `corpus = 'written-answers'`,
+    expect: 143,
+    why: 'truncated at the LDA API 5,000-answer page cap — each row is a page of answers, not an ' +
+         'answer; pwdata-wrans holds 1,235,281 of them properly split',
+  },
+  {
+    key: 'wrong-content-oecd',
+    corpus: 'oecd',
+    where: `corpus = 'oecd'`,
+    expect: 505,
+    why: 'contains no OECD material at all: 505 of 505 rows are gov.uk URLs — 52 news stories, 31 ' +
+         'speeches, one about the London 2012 Olympics — and it printed [100% complete] because ' +
+         'est_sections had been set equal to the compiled count',
   },
 ]
 

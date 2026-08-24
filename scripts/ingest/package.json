@@ -17,7 +17,10 @@
     "check:loop": "tsx v32-loop-test.ts",
     "check:acceptance": "tsx v32-acceptance-live.ts",
     "state:committees": "tsx v32-state-check.ts",
-    "backfill:committees": "bash v32-finish-backfill.sh"
+    "backfill:committees": "bash v32-finish-backfill.sh",
+    "check:dot-guard": "tsx c2/check-dot-guard.ts",
+    "check:partial-guard": "tsx c2/check-partial-guard.ts",
+    "check:b5-regnal": "tsx c2/check-b5-regnal.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
