@@ -2,7 +2,72 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-23 23:46 UTC — ▼ **BUILD FIXED AND PUSHED: production was failing for two
+*Last updated: 2026-08-24 01:31 UTC — ▼ **INGEST C3: THE PURGE IS PROVEN AND STILL UNRUN — AND THIS
+TIME IT IS A HARNESS BOUNDARY, NOT A CLEARED CONTEXT.** Claude Code's auto-mode classifier refuses
+production DELETE and DDL from a session whatever the brief authorises; `l2-purge.ts --execute` and
+`e1-drop-ftsvector.ts --execute` were both refused. Every manifest, guard, dry run and expected
+count is on disk. ▶▶ **CHARLIE: `bash docs/C3_EXECUTE.sh`** — eight steps, one confirmation each.
+$0.00 of the $150 ceiling; no embedding ran. ⚠⚠⚠ **THE FINDING THAT MATTERS MOST IS A SILENT NO-OP
+THAT NEARLY SHIPPED: LanceDB accepts a DOUBLE-QUOTED identifier, matches NOTHING, and raises
+NOTHING.** `id = 'x'` returns 1 and `"id" = 'x'` returns 0, measured on all three tables — so a
+`delete()` carrying the quoted form removes 0 rows, returns normally, and **the purge reports
+success with 168,569 rows still serving.** It is also ~70x FASTER because it prunes every fragment,
+which is what makes it look like an optimisation. What caught it was counting before deleting and
+printing the count; the script now refuses to run when a predicate matches zero. ✅ Lane A staged:
+**all eight collections match the brief exactly (168,569)**, and **layer three now exists** —
+`l2-purge.ts` used to end by printing *"NEXT (index layer, not done here)"*, the same defect one
+layer along. `verify-retired-gone.ts` **watched at 0/3 before anything was touched**, both sides of
+all three probes returning 10. ⚠⚠ **`ots-reports`: the brief's premise is INVERTED.** Not "~14%
+contaminated, ~428 genuine" — measured 497 of 497 through the gov.uk content API, **76 published by
+the OTS and 421 by somebody else (84.7% not-OTS)**. The cause is one seeder line: a free-text
+relevance search with no publisher filter over **347,938** results, of which we kept the first 500.
+Ten bodies read at random before any rule was written: **zero were OTS reports** — *Renew your
+driving licence*, *Apply online for a UK passport*, *Spain travel advice*. ⚠ `document_type` cannot
+make the cut (nine types carry both verdicts) and **the brief's own rule destroys 27 genuine OTS
+press releases while leaving 380 non-OTS rows serving**. NOT DELETED — decision D-1. ✅ **B2/B4: the
+exclusion is WIRED, not just the annotation** — 249,256 dot leaders have been labelled since Surface
+1 and returned anyway; the filter keys on the EVIDENCE not the state, so a repealed provision whose
+text we hold is still returned with its label. Check watched failing 8/2, passing 10/0. ✅⚠ **B3:
+32,040 partially repealed sections [CI 25,956-40,088], counted for the first time** —
+`section_repeals` had no row of that kind at all. ⚠⚠⚠ **And the dot-leader bug has now worn THREE
+costumes: this one was the provision number itself** (`12ZA . . . .`, `234ZA`, `502GC`) — one letter
+was always fine, which is why it survived two fixes. B2's 249,256 is a **floor**, ~1,487 short.
+✅⚠ **B5: titles 54.2% → 99.1%** and 1,575 citations repointed — ⚠⚠ the obvious fix would have
+resolved *Vagrancy Act 1824* and then **fetched zero rows**, because the title is on `ukpga/1824/83`
+(0 sections) and the text is on `ukpga/Geo4/5/83` (20). NOT DELIVERED: titles are baked in at index
+build, so step 8 must run. ⚠⚠ **B6: verified live and two-sided (0/20 through every stream scope,
+3-4/20 with the tier filter alone) — and its stated blocker is GONE**, because Gold v2 shipped 11
+debates questions on 22 Aug and `corpus-map.ts` still says there are none. ✅ **C2: only 10.5% of the
+503 ET orphans have a judgment** — 131 of the 179 without one are Scottish, 134 carry 6-digit case
+numbers, 105 are from 2006: a coverage boundary, not a fetch failure. ❌ **C3 gate 1 RED** — every
+parliament.uk host 403s with a Cloudflare challenge including the root. ✅ E3 · E4 was already done
+by GRAPH 3C · F4 generated. ❌ **NOT STARTED: B1 · C1 · C4 · Lane D entirely · E2 · F1-F3.**
+`docs/INGEST_C3_REPORT.md` · `docs/OPEN_ITEMS.md` · `docs/CORPUS_SCOPE.md`.**
+Earlier: 2026-08-24 01:12 UTC — ▼ **25-E's DELIVERY RECORD IS REDONE AND CHECK 4 NOW PASSES:
+25-E IS LIVE ON THE RUNNING SITE.** The boundary fix worked. `/ideas/build` now serves a bundle
+carrying **4 of 4 25-E markers** — *"Picking up where you left off"*, *"I couldn't put together what
+I understand you're trying to do just then"*, *"I couldn't check whether the build is ready to
+start"*, *"Let me try again"* — where ~1 hour after the 25-E push it carried **0 of 4**. ⚠ **The
+probe carries its controls, because "all markers absent" is also what a probe that cannot see the
+bundle returns**: all 3 pre-25-E strings from the same components (*"That's everything I need"*,
+*"Could not start a session"*, *"Nothing to add"*) are PRESENT, so the probe reads the right bundle;
+`x-vercel-cache: MISS`, `age: 0`. Bundle 16 chunks / **816,612 bytes against the stuck build's
+812,883** — it moved. **No redeploy was needed.** ✅ `verify:lex-25e` re-run against Neon: **19/19**,
+including the assertion that was false in production for eight sprints (after confirming,
+`canStart=true`, `blockedReason=null`). ⚠ **The route probe is still worthless and was not used** —
+Clerk 307s `/api/ideas/…/build`, `/elicitation` AND a deliberately non-existent control alike. That
+the build route is deployed is an INFERENCE, not a measurement: it was committed at `854303c`, long
+before the deployment the client bundle proves we are at. ✅ **The live DB says Charlie's run is set
+up**: idea `452c5ade` (cl@scrutinise.org) is **CONFIRMED, 2,934 chars of problem, 690 of own
+knowledge, a 750-char understanding paragraph, 0 builds** — and the page's OWN resume query, run
+verbatim against production for his user id, **returns that idea and not the blank 23 Aug shell**.
+So a bare visit to `https://www.scrutinise.org/ideas/build` should open on the build card with a
+working control (`?fresh=1` to start clean). ▶▶ **CHARLIE: THE ACCEPTANCE CRITERION IS UNCHANGED AND
+IT IS YOURS — complete the elicitation and START A BUILD. `IdeaBuild` still holds ZERO rows across
+the whole database; nobody ever has.** No Clerk session exists from here, so the click cannot be
+made from a CC session. Sections B–G of the walk remain untested because the build has still never
+run.**
+Earlier: 2026-08-23 23:46 UTC — ▼ **BUILD FIXED AND PUSHED: production was failing for two
 days on a PACKAGE BOUNDARY, not a missing dependency.** Vercel died on
 `../scripts/ingest/search/lance.ts: Cannot find module '@lancedb/lancedb'`. Chain found with
 `tsc --listFiles`, not guessed: `scrutinise-web/scripts/measure-s12-baseline.ts` →

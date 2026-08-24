@@ -1,0 +1,109 @@
+{
+  "generated": "2026-08-24T01:20:15.631Z",
+  "titledGids": 135531,
+  "regnalPairs": 14294,
+  "byCorpus": [
+    {
+      "corpus": "primary-acts-pre-2000",
+      "instruments": 3599,
+      "regnalIds": 1650,
+      "direct": 1949,
+      "viaAlt": 1650,
+      "unresolved": 0,
+      "beforePct": 54.15393164767991,
+      "afterPct": 100,
+      "sampleUnresolvedRegnal": [],
+      "sampleUnresolvedCalendar": []
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "instruments": 938,
+      "regnalIds": 0,
+      "direct": 925,
+      "viaAlt": 0,
+      "unresolved": 13,
+      "beforePct": 98.61407249466951,
+      "afterPct": 98.61407249466951,
+      "sampleUnresolvedRegnal": [],
+      "sampleUnresolvedCalendar": [
+        "ukpga/2026/15",
+        "ukpga/2026/16",
+        "ukpga/2026/17",
+        "ukpga/2026/18",
+        "ukpga/2026/19"
+      ]
+    },
+    {
+      "corpus": "si-pre-2010",
+      "instruments": 58309,
+      "regnalIds": 0,
+      "direct": 42525,
+      "viaAlt": 0,
+      "unresolved": 15784,
+      "beforePct": 72.93042240477456,
+      "afterPct": 72.93042240477456,
+      "sampleUnresolvedRegnal": [],
+      "sampleUnresolvedCalendar": [
+        "uksi/1948/1044",
+        "uksi/1948/1047",
+        "uksi/1948/1054",
+        "uksi/1948/1060",
+        "uksi/1948/1062"
+      ]
+    },
+    {
+      "corpus": "si-2010plus",
+      "instruments": 19878,
+      "regnalIds": 0,
+      "direct": 17417,
+      "viaAlt": 0,
+      "unresolved": 2461,
+      "beforePct": 87.61947882080692,
+      "afterPct": 87.61947882080692,
+      "sampleUnresolvedRegnal": [],
+      "sampleUnresolvedCalendar": [
+        "uksi/2010/1077",
+        "uksi/2010/1079",
+        "uksi/2010/1081",
+        "uksi/2010/1082",
+        "uksi/2010/1083"
+      ]
+    },
+    {
+      "corpus": "regional",
+      "instruments": 27083,
+      "regnalIds": 0,
+      "direct": 23775,
+      "viaAlt": 1,
+      "unresolved": 3307,
+      "beforePct": 87.7856958239486,
+      "afterPct": 87.78938817708526,
+      "sampleUnresolvedRegnal": [],
+      "sampleUnresolvedCalendar": [
+        "asc/2026/10",
+        "asc/2026/5",
+        "asc/2026/6",
+        "asc/2026/7",
+        "asc/2026/8"
+      ]
+    },
+    {
+      "corpus": "retained-eu",
+      "instruments": 41680,
+      "regnalIds": 0,
+      "direct": 39599,
+      "viaAlt": 0,
+      "unresolved": 2081,
+      "beforePct": 95.00719769673704,
+      "afterPct": 95.00719769673704,
+      "sampleUnresolvedRegnal": [],
+      "sampleUnresolvedCalendar": [
+        "eudn/1953/30",
+        "eudn/1953/31",
+        "eudn/1953/32",
+        "eudn/1953/4",
+        "eudn/1954/1"
+      ]
+    }
+  ]
+}

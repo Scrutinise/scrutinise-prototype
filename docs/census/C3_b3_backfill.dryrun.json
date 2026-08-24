@@ -1,0 +1,11 @@
+{
+  "generated": "2026-08-24T01:16:51.063Z",
+  "executed": false,
+  "totals": {
+    "read": 8000,
+    "partial": 1209,
+    "hollowNew": 26,
+    "missingFromIndex": 0,
+    "written": 0
+  }
+}
