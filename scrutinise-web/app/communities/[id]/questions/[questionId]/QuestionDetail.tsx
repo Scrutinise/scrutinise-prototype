@@ -6,9 +6,13 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { AnswerByline } from '@/components/central/AnswerByline'
 
 interface Answer {
   id: string
+  /** MEMBER | AI — Stage 2e. Rendered by AnswerByline on every surface. */
+  authorType: string
+  aiModel: string | null
   body: string
   sources: string[]
   localExample: string | null
@@ -384,9 +388,13 @@ export default function QuestionDetail({
                           {a.flag.level === 'DO_NOT_USE' ? 'Do not use' : 'Use with care'}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground">
-                        {a.branchName ? `${a.branchName} · ` : ''}{age(a.createdAt)}
-                      </span>
+                      {/* Stage 2e — WHO WROTE IT. This line used to be a branch
+                          name and an age with no author at all, which is how 27
+                          Claude-written answers came to look like members' work. */}
+                      <AnswerByline
+                        answer={a}
+                        suffix={`${a.branchName ? `${a.branchName} · ` : ''}${age(a.createdAt)}`}
+                      />
                     </div>
 
                     {a.flag && (

@@ -15,8 +15,12 @@ export interface PackEntryView {
     localExample: string | null
     flag: { level: string; reason: string } | null
     isFavourite: boolean
+    authorType: string
+    aiModel: string | null
   } | null
   favouriteAnswer: {
+    authorType: string
+    aiModel: string | null
     body: string
     sources: string[]
     localExample: string | null
@@ -37,6 +41,37 @@ const FORMATS: { key: Format; label: string; rationale: string }[] = [
 /** The line every output carries, without exception. */
 function Disclaimer({ text, className = '' }: { text: string; className?: string }) {
   return <p className={`text-[10px] text-muted-foreground ${className}`}>{text}</p>
+}
+
+/**
+ * CENTRAL Stage 2e — an AI-written answer says so, in the pack too.
+ *
+ * ⚠ THE PACK IS THE LAST PLACE THIS MAY SLIP. It is the artefact a member
+ * carries into a room and reads off, detached from the site and from any
+ * context that would explain where the words came from. Plain text on the
+ * printed sheet, because a coloured badge is the first thing a printer loses.
+ */
+function AiNote({
+  answer,
+  plain = false,
+}: {
+  answer: { authorType: string; aiModel: string | null } | null | undefined
+  plain?: boolean
+}) {
+  if (answer?.authorType !== 'AI') return null
+  const model = answer.aiModel ?? 'AI'
+  if (plain) {
+    return (
+      <p className="mt-1 text-[11px] font-medium text-[oklch(0.42_0.09_265)]">
+        Written by {model} — not a member’s answer.
+      </p>
+    )
+  }
+  return (
+    <p className="mt-1 inline-flex rounded-md border border-[oklch(0.86_0.03_265)] bg-[oklch(0.97_0.02_265)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.07em] text-[oklch(0.42_0.09_265)]">
+      Written by {model}
+    </p>
+  )
 }
 
 /** A USE_WITH_CARE flag stays packable, and its reason travels with it. */
@@ -118,6 +153,7 @@ export default function PackOutput({
                   Best answer
                 </p>
                 <p className="mt-1 text-sm leading-relaxed pretty">{current.answer.body}</p>
+                <AiNote answer={current.answer} />
                 <FlagNote flag={current.answer.flag} />
                 {withSources && current.answer.sources.length > 0 && (
                   <p className="tabular mt-2 text-[11px] text-muted-foreground">
@@ -175,6 +211,7 @@ export default function PackOutput({
               <p className="text-[19px] font-medium leading-[1.5] pretty">
                 {current.answer?.body ?? 'No answer yet.'}
               </p>
+              <AiNote answer={current.answer} />
               <FlagNote flag={current.answer?.flag ?? null} />
             </div>
             <div className="mt-4 flex items-center justify-between gap-2">
@@ -209,6 +246,7 @@ export default function PackOutput({
                   {e.text}
                 </p>
                 {e.answer && <p className="mt-1 text-xs leading-relaxed text-muted-foreground pretty">{e.answer.body}</p>}
+                <AiNote answer={e.answer} />
                 <FlagNote flag={e.answer?.flag ?? null} />
                 {e.favouriteAnswer && (
                   <p className="mt-1 text-xs text-primary pretty">★ Your favourite: {e.favouriteAnswer.body}</p>
@@ -257,6 +295,7 @@ export default function PackOutput({
                     ) : (
                       <p className="mt-1 text-sm italic text-muted-foreground">No answer yet.</p>
                     )}
+                    <AiNote answer={e.answer} plain />
                     <FlagNote flag={e.answer?.flag ?? null} />
                     {e.favouriteAnswer && (
                       <p className="mt-1 text-sm leading-[1.6] pretty">
