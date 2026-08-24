@@ -46,10 +46,13 @@ export {
   repealPromptNote,
   REPEAL_PROMPT_INSTRUCTION,
   REPEAL_UNAVAILABLE_INSTRUCTION,
+  HOLLOW_EVIDENCE,
+  PARTIAL_EVIDENCE,
+  isHollowRepeal,
 } from './repeal-wording'
 export type { RepealState, RepealStatus } from './repeal-wording'
 
-import { NO_RECORD, type RepealStatus } from './repeal-wording'
+import { NO_RECORD, PARTIAL_EVIDENCE, type RepealStatus } from './repeal-wording'
 
 /**
  * Look up repeal status for a batch of section ids.
@@ -76,7 +79,13 @@ export async function lookupRepeals(sectionIds: string[]): Promise<{ statuses: M
       WHERE r.section_id = ANY(${ids})`
     for (const row of rows) {
       out.set(row.section_id, {
-        state: row.repealed_by ? 'repealed-known' : 'repealed-unknown',
+        // ⚠ C3 LANE B3 — THE EVIDENCE DECIDES THE STATE, and `partial-dot-leader` must be checked
+        // FIRST. A partially repealed row carries live law and is NOT "repealed"; calling it
+        // repealed would tell a user that current law is dead, which is the mirror image of the
+        // defect Surface 1 exists to prevent. `repealed_by` is null on both kinds, so ordering
+        // these two tests the other way round silently collapses them.
+        state: row.evidence === PARTIAL_EVIDENCE ? 'partially-repealed'
+          : row.repealed_by ? 'repealed-known' : 'repealed-unknown',
         repealedBy: row.repealed_by,
         // `title` is a `corpus_acts` title, 57 of which carry a literal entity — and this one is
         // read out to the user as "repealed by X", so it is decoded. `repealed_by` is the GID and

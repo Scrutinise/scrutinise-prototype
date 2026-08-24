@@ -25,7 +25,7 @@ import { fuseWeightedRrf } from './fusion'
 // SURFACE 1: the gateway is 'the SINGLE point of contact with search', so it is where repeal
 // status is attached. Every consumer of a SearchResult then gets it without knowing it exists —
 // the briefing, the Deepening, the build passes, the panels — and no caller can forget.
-import { lookupRepeals, annotate } from './repeal-status'
+import { lookupRepeals, annotate, isHollowRepeal } from './repeal-status'
 // S9 §4 — the statistics catalogue. Values never enter this file; only descriptors.
 import { searchCatalogue, statsUseContext, type CatalogueSearchOutcome } from './stats-catalogue'
 
@@ -495,9 +495,39 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   // ⚠ ONE query per search, not one per result: twenty round trips inside a request that already
   // holds a retrieval call is a latency regression nobody would attribute to a label.
   const { statuses, ok: repealOk } = await lookupRepeals([...results, ...grouped].map((r) => r.id))
-  const annotatedResults = annotate(results, statuses, repealOk)
-  const annotatedGrouped = annotate(grouped, statuses, repealOk)
+  const rawAnnotatedResults = annotate(results, statuses, repealOk)
+  const rawAnnotatedGrouped = annotate(grouped, statuses, repealOk)
+
+  // ── C3 LANE B2/B4 — THE EXCLUSION, NOT JUST THE ANNOTATION ──────────────────────────────
+  //
+  // ⚠ ANNOTATION WITHOUT EXCLUSION IS THE SAME DEFECT AS RETIRING A TARGET WITHOUT DELETING THE
+  // ROWS, and this codebase has now shipped that shape twice. All 249,256 whole-body dot leaders
+  // have been labelled in every search result since Surface 1 — and still returned. A row whose
+  // entire text is `Article 31 . . . .` cannot answer anything: at best it displaces a result that
+  // could, and at worst Lex renders it as the provision the user asked about.
+  //
+  // ⚠ IT IS FILTERED HERE, AT THE GATEWAY, so every consumer gets the same list. Filtering in one
+  // caller is how the panel and the prompt come to disagree — the exact failure the annotation
+  // block above was written to avoid, one layer along.
+  //
+  // ⚠ THE RULE IS `isHollowRepeal`, KEYED ON THE EVIDENCE. A repealed provision whose text we hold
+  // is NOT suppressed: it is returned with its REPEALED label, which is what a user asking about
+  // repeal history needs. A PARTIALLY repealed provision is not suppressed either — it is live law.
+  //
+  // ⚠ AND IT IS COUNTED AND LOGGED, never silent. A retrieval path that quietly drops rows is
+  // indistinguishable from one that failed to find them.
+  const hollowResults = rawAnnotatedResults.filter((r) => isHollowRepeal(r.repeal))
+  const annotatedResults = rawAnnotatedResults.filter((r) => !isHollowRepeal(r.repeal))
+  const annotatedGrouped = rawAnnotatedGrouped.filter((r) => !isHollowRepeal(r.repeal))
+  if (hollowResults.length) {
+    console.log('[search-gateway] B2 suppressed whole-body dot leaders — rows whose entire text is a repeal placeholder', {
+      suppressed: hollowResults.length,
+      of: rawAnnotatedResults.length,
+      ids: hollowResults.slice(0, 5).map((r) => r.id),
+    })
+  }
   const repealedCount = annotatedResults.filter((r) => r.repeal && r.repeal.state !== 'no-record').length
+  const partialCount = annotatedResults.filter((r) => r.repeal?.state === 'partially-repealed').length
 
   // S11 §5.1 — the fan-out, stated. Derived from what actually happened rather than recomputed
   // from the scope table: `perStream` is present only on the routed path, and the tier-scoped and
@@ -511,7 +541,8 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
 
   console.log('[search-gateway] result', {
     intent: q.intent, results: results.length, failed, reason: failureReason ?? null,
-    repealed: repealedCount, repealLookup: repealOk ? 'ok' : 'FAILED',
+    repealed: repealedCount, partiallyRepealed: partialCount,
+    hollowSuppressed: hollowResults.length, repealLookup: repealOk ? 'ok' : 'FAILED',
     // ⚠ Logged as `asked → got` rather than as a bare count, because a bare count is what every
     // log line already had while the fan-out went unnoticed for six weeks (§5.1).
     limit: `asked ${requested.limit} → got ${requested.returned} across ${requested.streams} stream(s) (${requested.fanout}×)`,

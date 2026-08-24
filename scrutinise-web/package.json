@@ -19,6 +19,7 @@
     "check:lex-scope": "tsx scripts/check-lex-scope.ts",
     "measure:s5": "tsx --env-file=.env scripts/measure-s5-lex-scope.ts",
     "check:repeal-status": "tsx scripts/check-repeal-status.ts",
+    "check:repeal-exclusion": "tsx scripts/check-repeal-exclusion.ts",
     "verify:surface-1": "tsx --env-file=.env scripts/verify-surface-1-repeal.ts",
     "check:model-registry": "tsx scripts/check-model-registry.ts",
     "probe:models": "tsx --env-file=.env scripts/probe-model-access.ts",
@@ -133,6 +134,7 @@
     "react-markdown": "^10.1.0",
     "svix": "^1.89.0",
     "tailwind-merge": "^3.3.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -147,7 +149,6 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.67.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "typescript-eslint": "^8.67.0"
   }
 }
