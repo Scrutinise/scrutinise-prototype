@@ -1,0 +1,325 @@
+{
+  "S10-Q1": {
+    "debates": "House of Lords debate water sewage regulation failure",
+    "committees": "Lords committee report water quality regulation failing",
+    "guidance": "Ofwat Environment Agency regulatory failure water sewage"
+  },
+  "S10-Q2": {
+    "committees": "Post Office Horizon compensation scheme inquiry evidence"
+  },
+  "S10-Q3": {
+    "debates": "Grenfell Inquiry government response parliamentary statements questions",
+    "committees": "Housing Communities Local Government Committee Grenfell Inquiry"
+  },
+  "S10-Q4": {
+    "committees": "committee report evidence Universal Credit migration managed migration"
+  },
+  "S10-Q5": {
+    "debates": "leasehold reform parliamentary questions ministers statements",
+    "committees": "levelling up committee leasehold reform inquiry evidence"
+  },
+  "S10-Q6": {
+    "committees": "AI governance evidence submissions select committee report",
+    "guidance": "Law Commission AI governance regulatory principles report"
+  },
+  "S10-Q7": {
+    "committees": "net zero trade policy committee evidence inquiry"
+  },
+  "S10-Q8": {
+    "committees": "special educational needs committee evidence witnesses"
+  },
+  "S10-Q9": {
+    "committees": "committee evidence serious violence causes prevention inquiry"
+  },
+  "S10-Q10": {
+    "debates": "NHS waiting times planned operations parliamentary debates",
+    "committees": "Health Committee inquiry NHS waiting lists operations",
+    "guidance": "NHS England waiting times operational planning guidance"
+  },
+  "S10-Q12": {
+    "debates": "prorogation of Parliament Supreme Court judgment",
+    "committees": "prorogation of Parliament select committee evidence",
+    "caselaw": "R (Miller) v The Prime Minister prorogation"
+  },
+  "S10-Q13": {
+    "caselaw": "Supreme Court judgment gig economy worker employment status"
+  },
+  "S10-Q14": {
+    "legislation": "Mental Capacity Act 2005 deprivation of liberty safeguards",
+    "debates": "deprivation of liberty care settings human rights",
+    "committees": "Joint Committee Human Rights deprivation liberty safeguards inquiry",
+    "caselaw": "Supreme Court deprivation of liberty care settings judgment",
+    "guidance": "CQC deprivation of liberty safeguards guidance care"
+  },
+  "S10-Q15": {
+    "caselaw": "R (UNISON) v Lord Chancellor employment tribunal fees"
+  },
+  "S10-Q16": {
+    "caselaw": "duty to investigate deaths in custody court decision"
+  },
+  "S10-Q20": {
+    "caselaw": "[2003] EWCA Civ 1769 Court of Appeal judgment"
+  },
+  "S10-Q21": {
+    "legislation": "Money Laundering Regulations 2017 company formation agents",
+    "guidance": "HMRC anti-money laundering guidance company formation supervision"
+  },
+  "S10-Q22": {
+    "legislation": "Domestic Abuse Act 2021 charging standards prosecution",
+    "debates": "domestic abuse prosecution charging decisions CPS",
+    "committees": "Home Affairs Committee domestic abuse charging evidence",
+    "caselaw": "domestic abuse charging standards prosecution review",
+    "guidance": "CPS guidance domestic abuse charging decisions code"
+  },
+  "S10-Q23": {
+    "legislation": "perverting the course of justice false allegation",
+    "debates": "false rape allegations criminal justice system",
+    "committees": "Home Affairs Committee false allegations evidence",
+    "caselaw": "perverting course of justice false rape allegation",
+    "guidance": "CPS guidance false allegations perverting justice"
+  },
+  "S10-Q24": {
+    "legislation": "Police and Criminal Evidence Act 1984 stop search powers",
+    "debates": "police stop and search powers accountability",
+    "committees": "Home Affairs Committee stop and search scrutiny",
+    "caselaw": "stop and search legality human rights",
+    "guidance": "PACE Code A stop and search guidance"
+  },
+  "S10-Q25": {
+    "guidance": "CPS guidance abuse of process criminal proceedings"
+  },
+  "S10-Q26": {
+    "legislation": "Magistrates' Courts Act 1980 committal Crown Court procedure",
+    "debates": "magistrates' court Crown Court transfer process",
+    "committees": "criminal justice system committal Crown Court evidence",
+    "caselaw": "committal for trial Crown Court jurisdiction procedure",
+    "guidance": "CPS guidance magistrates' court Crown Court committal"
+  },
+  "S10-Q27": {
+    "caselaw": "Administrative Court judicial review appeal procedure"
+  },
+  "S10-Q28": {
+    "guidance": "HMRC staff guidance anti-money laundering compliance checks"
+  },
+  "S10-Q29": {
+    "legislation": "HMRC Commissioners for Revenue and Customs Act discretion",
+    "debates": "HMRC powers discretion taxpayer treatment debate",
+    "committees": "Treasury Committee HMRC discretion taxpayer charter inquiry",
+    "caselaw": "HMRC legitimate expectation judicial review discretion",
+    "guidance": "HMRC Statement of Practice extra-statutory concession guidance"
+  },
+  "S10-Q30": {
+    "legislation": "HMRC error official error concession taxpayer rights",
+    "debates": "HMRC wrong advice taxpayer compensation redress scheme",
+    "committees": "Treasury Committee HMRC taxpayer service errors complaints",
+    "caselaw": "HMRC legitimate expectation judicial review official error",
+    "guidance": "HMRC complaints process official error guidance manual"
+  },
+  "S10-Q31": {
+    "legislation": "Environmental Protection Act 1990 plastic straw ban",
+    "debates": "plastic straw ban impact assessment cost government",
+    "committees": "Environmental Audit Committee plastic waste inquiry evidence",
+    "guidance": "Defra guidance single-use plastics ban impact assessment"
+  },
+  "S10-Q32": {
+    "legislation": "Building Safety Act 2022 levy scheme regulations",
+    "debates": "building safety levy scheme impact assessment government",
+    "committees": "levy scheme building safety committee evidence inquiry",
+    "guidance": "building safety levy scheme government guidance predictions"
+  },
+  "S10-Q33": {
+    "debates": "residual waste reduction target predicted cost",
+    "committees": "waste reduction target cost inquiry evidence",
+    "guidance": "Defra residual waste reduction target impact assessment"
+  },
+  "S10-Q34": {
+    "debates": "Regulatory Policy Committee tobacco products fees regulations approval",
+    "committees": "Regulatory Policy Committee tobacco products fees scrutiny",
+    "guidance": "Regulatory Policy Committee impact assessment tobacco fees"
+  },
+  "S10-Q35": {
+    "debates": "tobacco fee changes business cost government statement",
+    "committees": "tobacco control inquiry business impact assessment evidence",
+    "guidance": "DHSC tobacco fees consultation impact assessment"
+  },
+  "S10-Q36": {
+    "legislation": "Environmental Permitting Regulations impact assessment changes",
+    "debates": "environmental permitting changes impact assessment debate",
+    "committees": "environmental permitting changes impact assessment inquiry",
+    "guidance": "Environment Agency environmental permitting impact assessment guidance"
+  },
+  "S10-Q37": {
+    "legislation": "UK GDPR adequacy regulations South Korea data transfer",
+    "debates": "data adequacy decision South Korea government expectations",
+    "committees": "DCMS Committee inquiry data adequacy South Korea",
+    "guidance": "ICO guidance international data transfers adequacy regulations"
+  },
+  "S10-Q38": {
+    "legislation": "Public Guardian fees statutory instrument justification",
+    "debates": "Public Guardian fees increase debate written question",
+    "committees": "Justice Committee Public Guardian fees evidence inquiry",
+    "guidance": "Office of Public Guardian fee increase consultation"
+  },
+  "S10-Q39": {
+    "debates": "Public Guardian fee setting government options consideration",
+    "committees": "Public Guardian fee review inquiry evidence",
+    "guidance": "Office of the Public Guardian fee consultation report"
+  },
+  "S10-Q41": {
+    "debates": "government consultation reducing sewage discharges water quality",
+    "committees": "environmental audit committee sewage discharge inquiry evidence",
+    "guidance": "Defra consultation storm overflows sewage discharge reduction"
+  },
+  "S10-Q42": {
+    "debates": "smoking age ban consultation parliamentary debate",
+    "committees": "Health Committee inquiry smoking age consultation evidence",
+    "guidance": "Department Health Social Care smoking age consultation"
+  },
+  "S10-Q43": {
+    "legislation": "Building Safety Act 2022 higher-risk buildings regulations",
+    "debates": "building safety bill government proposals Grenfell Tower",
+    "committees": "Housing Committee building safety inquiry evidence report",
+    "guidance": "HSE building safety regulator guidance golden thread"
+  },
+  "S10-Q44": {
+    "debates": "gambling sponsorship consultation government policy",
+    "committees": "gambling regulation inquiry evidence sponsorship consultation",
+    "guidance": "Gambling Commission consultation responses industry sponsorship"
+  },
+  "S10-Q45": {
+    "debates": "AI copyright intellectual property government policy questions",
+    "committees": "AI intellectual property select committee inquiry evidence",
+    "guidance": "Intellectual Property Office AI copyright guidance"
+  },
+  "S10-Q46": {
+    "legislation": "Leasehold Reform Act consultation commonhold enfranchisement",
+    "debates": "leasehold reform consultation government response parliamentary debate",
+    "committees": "Levelling Up Committee leasehold reform inquiry evidence",
+    "guidance": "Law Commission leasehold reform consultation paper report"
+  },
+  "S10-Q47": {
+    "debates": "storm overflows consultation water companies government policy",
+    "committees": "Environmental Audit Committee storm overflows inquiry evidence",
+    "guidance": "Environment Agency Ofwat storm overflows guidance consultation"
+  },
+  "S10-Q48": {
+    "debates": "net zero aviation government consultation strategy",
+    "committees": "Transport Committee net zero aviation inquiry evidence",
+    "guidance": "Department for Transport net zero aviation consultation response"
+  },
+  "S10-Q49": {
+    "legislation": "Building Regulations electrical safety consultation",
+    "debates": "electrical safety building regulations consultation",
+    "committees": "electrical safety building regulations inquiry evidence",
+    "guidance": "HSE electrical safety building regulations guidance consultation"
+  },
+  "V2-Q1": {
+    "debates": "MPs debate assisted dying terminally ill people"
+  },
+  "V2-Q2": {
+    "debates": "assisted dying bill House of Lords debate"
+  },
+  "V2-Q3": {
+    "debates": "Stormont ministers Renewable Heat Incentive scheme botched",
+    "committees": "Northern Ireland Assembly RHI inquiry report evidence"
+  },
+  "V2-Q4": {
+    "debates": "parliamentary debate two child benefit limit abolition",
+    "committees": "select committee evidence two child limit impact"
+  },
+  "V2-Q5": {
+    "debates": "House of Lords debate subpostmasters convictions overturning Post Office"
+  },
+  "V2-Q6": {
+    "debates": "parliament debate death penalty reintroduction capital punishment"
+  },
+  "V2-Q7": {
+    "debates": "House of Lords reform elected second chamber",
+    "committees": "Joint Committee House of Lords reform proposals",
+    "guidance": "Law Commission House of Lords reform options"
+  },
+  "V2-Q8": {
+    "debates": "gender recognition reform Scotland MSPs debate"
+  },
+  "V2-Q9": {
+    "legislation": "Smart Meters Act 2018 prepayment meter warrant installation",
+    "debates": "prepayment meters forced installation energy companies vulnerable customers",
+    "committees": "Business Committee energy prepayment meters inquiry evidence",
+    "guidance": "Ofgem prepayment meter installation rules guidance"
+  },
+  "V2-Q10": {
+    "debates": "Grenfell Tower Inquiry government response recommendations",
+    "committees": "Housing Communities Local Government Committee Grenfell inquiry recommendations",
+    "guidance": "Grenfell Tower Inquiry Phase 1 Phase 2 recommendations"
+  },
+  "V2-Q11": {
+    "debates": "Spring Statement Chancellor announcement budget fiscal policy"
+  },
+  "V2-Q12": {
+    "legislation": "Housing Act 1988 section 21 assured shorthold tenancy possession",
+    "debates": "no fault eviction section 21 abolition renters reform",
+    "committees": "select committee evidence private rented sector eviction",
+    "caselaw": "section 21 notice validity possession proceedings",
+    "guidance": "Ministry of Housing section 21 guidance tenants landlords"
+  },
+  "V2-Q13": {
+    "legislation": "Renters Reform Bill no-fault eviction section 21 abolition",
+    "debates": "no-fault eviction section 21 abolition renters reform bill",
+    "committees": "Levelling Up Committee renters reform bill pre-legislative scrutiny",
+    "guidance": "Ministry of Justice no-fault eviction section 21 guidance"
+  },
+  "V2-Q14": {
+    "legislation": "Equality Act 2010 reasonable adjustments disability discrimination",
+    "debates": "disability discrimination reasonable adjustments employer duties debate",
+    "committees": "Women and Equalities Committee disability employment inquiry evidence",
+    "caselaw": "reasonable adjustments disability discrimination employment tribunal claim",
+    "guidance": "Equality and Human Rights Commission reasonable adjustments guidance"
+  },
+  "V2-Q15": {
+    "legislation": "Local Government Act 1988 section 28 repeal",
+    "debates": "section 28 repeal homosexuality promotion schools",
+    "committees": "education committee evidence section 28 impact",
+    "caselaw": "judicial review section 28 local government powers",
+    "guidance": "Department for Education guidance relationships education LGBT"
+  },
+  "V2-Q16": {
+    "legislation": "Environmental Protection Act 1990 plastic straw ban regulations",
+    "debates": "plastic straw ban environmental impact government policy",
+    "committees": "Environmental Audit Committee plastic waste inquiry evidence",
+    "guidance": "Defra guidance single-use plastics ban regulations"
+  },
+  "V2-Q17": {
+    "legislation": "Alcohol etc. (Scotland) Act 2010 minimum pricing",
+    "debates": "Scotland minimum unit pricing alcohol debate",
+    "committees": "Scottish Parliament Health Committee alcohol minimum pricing",
+    "caselaw": "minimum unit pricing alcohol Scotland legal challenge",
+    "guidance": "Scottish Government minimum unit pricing alcohol guidance"
+  },
+  "V2-Q18": {
+    "legislation": "Landlord and Tenant Act 1985 fitness for human habitation",
+    "debates": "damp mould private rented sector housing conditions",
+    "committees": "Housing Committee inquiry private rented sector standards",
+    "caselaw": "landlord disrepair claim fitness for human habitation",
+    "guidance": "Housing Ombudsman damp mould landlord responsibilities guidance"
+  },
+  "V2-Q19": {
+    "legislation": "Health Act 2006 smoking ban enclosed public places",
+    "debates": "smoking ban pubs restaurants public health debate",
+    "committees": "Health Committee inquiry smoking public places legislation",
+    "caselaw": "smoking ban enforcement appeals public health regulations",
+    "guidance": "Department of Health smoking ban compliance guidance enforcement"
+  },
+  "V2-Q20": {
+    "legislation": "Online Safety Act 2023 child safety duties",
+    "debates": "online safety bill children social media protection",
+    "committees": "Online Safety Bill pre-legislative scrutiny children's online safety",
+    "guidance": "Ofcom Online Safety Act child protection guidance"
+  },
+  "V2-Q21": {
+    "legislation": "Data Protection Act 2018 subject access request",
+    "debates": "data protection personal information subject access request",
+    "committees": "ICO enforcement powers data protection subject access",
+    "caselaw": "subject access request personal data disclosure",
+    "guidance": "ICO guidance subject access requests personal data"
+  }
+}
