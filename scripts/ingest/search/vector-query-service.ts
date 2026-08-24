@@ -42,10 +42,24 @@ import { CHUNKS_TABLE, VEC_TABLE } from './vector-common'
 import { MAX_CHUNKS } from './chunk'
 import { embedQuery, vectorSearchSections, retrievalConfig } from './vector-core'
 import { QueryCache } from './query-cache'
+import { bestPassage, passageTerms, passageLocation, PASSAGE_CHARS } from './passage'
 
 /** Rows the snippet lookup may read per requested section. Taken from the chunker's own cap so the
  *  two cannot drift: if MAX_CHUNKS rises, the snippet budget rises with it. See `snippets()`. */
 const SNIPPET_ROWS_PER_SECTION = MAX_CHUNKS
+
+/**
+ * S13 §3 — SHOW THE PASSAGE THAT MATCHED, NOT THE HEAD OF THE DOCUMENT. ON by default.
+ *
+ * ⚠ THE KILL-SWITCH IS A SWITCH, NOT A DEFAULT. `SEARCH_PASSAGE_SNIPPET=false` restores exactly
+ * the old behaviour — first chunk, `.slice(0, 300)` — and is here because a serving change to
+ * text that reaches the answer model should be revertible without a rebuild. It ships ON because
+ * the behaviour it replaces is not defensible under measurement: for the validated debates set
+ * the keyed speeches run 920–5,714 words and the user was shown the first ~50, from the top.
+ * ⚠ It is read through an explicit `!== 'false'` rather than a truthiness test, so an unset
+ * variable and a misspelt one both mean ON — the state a reader would assume.
+ */
+const PASSAGE_SNIPPET = (process.env.SEARCH_PASSAGE_SNIPPET ?? 'true') !== 'false'
 
 const PORT = parseInt(process.env.VECTOR_PORT ?? '8081', 10)
 // Boot time, so a monitor can tell a restart from a quiet service: /stats counters are
@@ -59,7 +73,13 @@ const STARTED_AT = new Date().toISOString()
 // that B2 flags. Set VECTOR_CACHE_TTL_MS=0 to disable entirely.
 const CACHE_TTL_MS = parseInt(process.env.VECTOR_CACHE_TTL_MS ?? '300000', 10) // 5 min
 const CACHE_MAX = parseInt(process.env.VECTOR_CACHE_MAX ?? '500', 10)
-interface CachedHit { id: string; corpus: string; tier: string; score: number; snippet: string }
+// ⚠ S13 §3 — `snippetMatched` / `snippetLocation` / `chunkId` are cached WITH the hit. The cache
+// key already includes the query (QueryCache.key), and the passage is selected FROM the query, so
+// a cached entry carries a passage chosen for that same query and cannot be served for another.
+interface CachedHit {
+  id: string; corpus: string; tier: string; score: number; snippet: string
+  snippetMatched: boolean; snippetLocation: string | null; chunkId: string
+}
 const cache = new QueryCache<CachedHit[]>({ ttlMs: CACHE_TTL_MS, maxEntries: CACHE_MAX })
 
 // ── concurrency guard ────────────────────────────────────────────────────────
@@ -186,19 +206,66 @@ function send(res: http.ServerResponse, code: number, obj: unknown, headers: Rec
  * exonerated. **Bytes before hypotheses**, in both directions.
  *
  * The budget is now per section rather than shared, so no section can be crowded out by another.
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * S13 §3 — AND THE SNIPPET IS NOW THE CHUNK THAT MATCHED, NOT THE FIRST ONE.
+ *
+ * `if (!out.has(r.sectionId))` over chunks sorted by chunkId took chunk **0** of every section:
+ * the head of the document, whatever the query was. The ANN had already decided which chunk
+ * answered the query, and `vectorSearchSections` used to throw that decision away (see
+ * `VecSectionHit.chunkId`). It no longer does, so this takes the winning chunk's body and runs
+ * `bestPassage` over it to centre the ~600 characters shown on the query's own terms.
+ *
+ * ⚠ THE ROW BUDGET STAYS PER-SECTION even though only one chunk per section is now used. The
+ * `sectionId IN (…)` scan cannot cheaply be narrowed to specific chunkIds without an index on
+ * `chunkId`, and shrinking the budget to `sectionIds.length` would re-create the starvation this
+ * function was rewritten to remove the moment a section's winning chunk was not the first row
+ * returned. A budget that is larger than needed costs a scan; one that is too small loses text.
  */
-async function snippets(sectionIds: string[]): Promise<Map<string, string>> {
-  const out = new Map<string, string>()
-  if (!sectionIds.length) return out
+export interface SnippetOut { text: string; matched: boolean; location: string | null; chunkId: string }
+
+async function snippets(hits: Array<{ sectionId: string; chunkId: string }>, query: string): Promise<Map<string, SnippetOut>> {
+  const out = new Map<string, SnippetOut>()
+  if (!hits.length) return out
+  const sectionIds = hits.map((h) => h.sectionId)
+  const wantChunk = new Map(hits.map((h) => [h.sectionId, h.chunkId]))
   const inList = sectionIds.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')
   // MAX_CHUNKS (8) is the cap `chunk.ts` enforces, so this is the true worst case, not a guess.
   const rows = await chunksTbl.query().where(`sectionId IN (${inList})`).select(['sectionId', 'chunkId', 'body', 'sectionTitle']).limit(sectionIds.length * SNIPPET_ROWS_PER_SECTION).toArray() as any[]
   rows.sort((a, b) => (a.chunkId < b.chunkId ? -1 : 1))
-  for (const r of rows) if (!out.has(r.sectionId)) out.set(r.sectionId, (r.body ?? '').slice(0, 300))
+
+  const terms = passageTerms(query)
+  const byChunk = new Map<string, any>()
+  const firstChunk = new Map<string, any>()
+  for (const r of rows) {
+    byChunk.set(r.chunkId, r)
+    if (!firstChunk.has(r.sectionId)) firstChunk.set(r.sectionId, r)
+  }
+  let fellBackToFirst = 0
+  let unmatchedPassage = 0
+  for (const sid of sectionIds) {
+    const wanted = wantChunk.get(sid)!
+    // ⚠ A MISSING WINNING CHUNK FALLS BACK TO THE FIRST AND IS COUNTED. It should not happen —
+    // the chunkId came out of corpus_vec and corpus_chunks is its source — but a silent fallback
+    // here would look exactly like the defect this change removes, and would be invisible.
+    const row = byChunk.get(wanted) ?? firstChunk.get(sid)
+    if (!row) continue
+    if (!byChunk.has(wanted)) fellBackToFirst++
+    const body = (row.body ?? '') as string
+    if (!PASSAGE_SNIPPET) {
+      out.set(sid, { text: body.slice(0, 300), matched: false, location: null, chunkId: row.chunkId })
+      continue
+    }
+    const p = bestPassage(body, terms, PASSAGE_CHARS)
+    if (!p.matched) unmatchedPassage++
+    out.set(sid, { text: p.text, matched: p.matched, location: passageLocation(p, body.length), chunkId: row.chunkId })
+  }
   // A section that still got no row is a fault, not an empty document — say so rather than
   // returning a blank snippet that reads like "this document has no text".
   const missing = sectionIds.filter((s) => !out.has(s))
   if (missing.length) console.warn(`[vector-query] ${missing.length}/${sectionIds.length} sections got NO snippet row (budget ${sectionIds.length * SNIPPET_ROWS_PER_SECTION}) — e.g. ${missing.slice(0, 2).join(', ')}`)
+  if (fellBackToFirst) console.warn(`[vector-query] ${fellBackToFirst}/${sectionIds.length} winning chunkIds were absent from corpus_chunks — fell back to chunk 0`)
+  if (unmatchedPassage) console.log(`[vector-query] ${unmatchedPassage}/${sectionIds.length} passages located no query term — head of chunk returned, flagged matched:false`)
   return out
 }
 
@@ -263,8 +330,20 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
           if (!release) { shed = true; throw new Error(SHED) }
 
           const hits = await vectorSearchSections(vecTbl, qv, lim, tier, { corpora, excludeCorpora })
-          const snip = await snippets(hits.map((h) => h.sectionId))
-          return hits.map((h) => ({ id: h.sectionId, corpus: h.corpus, tier: h.tier, score: h.score, snippet: snip.get(h.sectionId) ?? '' }))
+          const snip = await snippets(hits.map((h) => ({ sectionId: h.sectionId, chunkId: h.chunkId })), query)
+          return hits.map((h) => {
+            const s = snip.get(h.sectionId)
+            return {
+              id: h.sectionId, corpus: h.corpus, tier: h.tier, score: h.score,
+              snippet: s?.text ?? '',
+              // S13 §3 — the provenance of the text above, on the wire. `snippetMatched: false`
+              // means "we could not locate a query term in it", which is a different statement
+              // from "here is the passage that matched" and must not read the same downstream.
+              snippetMatched: s?.matched ?? false,
+              snippetLocation: s?.location ?? null,
+              chunkId: s?.chunkId ?? h.chunkId,
+            }
+          })
         }
 
         let outcome: 'hit' | 'coalesced' | 'miss' = 'miss'

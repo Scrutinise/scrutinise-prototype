@@ -51,7 +51,28 @@ export async function embedQuery(text: string): Promise<number[]> {
   return values
 }
 
-export interface VecSectionHit { sectionId: string; corpus: string; tier: string; score: number }
+export interface VecSectionHit {
+  sectionId: string
+  corpus: string
+  tier: string
+  score: number
+  /**
+   * S13 §3 — THE CHUNK THAT ACTUALLY MATCHED, carried out instead of thrown away.
+   *
+   * ⚠ THIS FIELD IS THE WHOLE §3 AUDIT FINDING. The dense index matches at CHUNK level — a
+   * ~3,200-character window, roughly two or three paragraphs of speech — and the collapse below
+   * used to record only `sectionId`, `corpus`, `tier` and `score`. The winning `chunkId` was
+   * present on the row, in scope, on the line that built the hit, and dropped.
+   *
+   * `vector-query-service.ts::snippets` then hydrated a snippet by taking each section's FIRST
+   * chunk. So for a 5,714-word Lords speech the service found the passage that answered the
+   * question and displayed the opening courtesies. Nothing downstream could recover the matched
+   * passage, because by the time a result left this function the information no longer existed.
+   *
+   * Format is `${sectionId}#${k}` (content-addressed; see build-corpus-chunks.ts).
+   */
+  chunkId: string
+}
 
 /**
  * ANN over corpus_vec → best-similarity section ranking (chunks collapsed to sections).
@@ -87,12 +108,22 @@ export async function vectorSearchSections(
   if (scope?.excludeCorpora?.length) preds.push(`corpus NOT IN (${scope.excludeCorpora.map(sql).join(', ')})`)
   if (preds.length) q = q.where(preds.join(' AND '))
   const rows = await q.toArray() as any[]
-  // cosine distance → similarity; keep best per section
+  // cosine distance → similarity; keep best per section.
+  // ⚠ S13 §3 — `chunkId` travels with the winning chunk. The collapse is still to one hit per
+  // section (ranking semantics are unchanged and match the pilot), but WHICH chunk won is now
+  // recorded rather than discarded, because that is the passage the user should be shown.
   const best = new Map<string, VecSectionHit>()
   for (const r of rows) {
     const sim = 1 - (typeof r._distance === 'number' ? r._distance : 1)
     const cur = best.get(r.sectionId)
-    if (!cur || sim > cur.score) best.set(r.sectionId, { sectionId: r.sectionId, corpus: r.corpus, tier: r.tier, score: sim })
+    if (!cur || sim > cur.score) {
+      best.set(r.sectionId, {
+        sectionId: r.sectionId, corpus: r.corpus, tier: r.tier, score: sim,
+        // A row with no chunkId would be an index built before the field existed; falling back to
+        // chunk 0 reproduces exactly the old behaviour for it rather than dropping the hit.
+        chunkId: typeof r.chunkId === 'string' && r.chunkId ? r.chunkId : `${r.sectionId}#0`,
+      })
+    }
   }
   return [...best.values()].sort((a, b) => b.score - a.score).slice(0, limit)
 }

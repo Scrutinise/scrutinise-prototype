@@ -7,6 +7,7 @@
  */
 import { lancedb } from './lance'
 import { ActIndex, parseCitation, resolveCitation, idPatternsFor } from './citation-resolver'
+import { bestPassage, passageLocation, normaliseBody } from './passage'
 
 export const TITLE_BOOST = parseFloat(process.env.FTS_TITLE_BOOST ?? '2.5')
 export const OVERSCAN = parseInt(process.env.FTS_OVERSCAN ?? '5', 10)
@@ -82,20 +83,44 @@ export type Hit = {
   parentDocId: string | null; score: number; bodyScore: number; titleBoosted: boolean
   resolved: boolean
   body: string; snippet: string
+  /** S13 §3 — TRUE when `snippet` is the passage that contains the query's terms; FALSE when no
+   *  term could be located and `snippet` is the head of the document, as it always used to be.
+   *  The two must not read the same downstream (CLAUDE.md §18: a degradation announces itself). */
+  snippetMatched: boolean
+  /** Where in the document the passage sits, in words a user can read. Null for a fallback. */
+  snippetLocation: string | null
 }
 
 export function queryTerms(q: string): string[] {
   return q.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 3)
 }
 
-function toHit(r: any, score: number, bodyScore: number, titleBoosted: boolean, resolved: boolean): Hit {
+/**
+ * S13 §3 — ON by default; `SEARCH_PASSAGE_SNIPPET=false` restores `body.slice(0, 300)` exactly.
+ * ⚠ THE SAME VARIABLE NAME AND THE SAME DEFAULT AS `vector-query-service.ts`, deliberately: if
+ * one leg showed the matched passage and the other the head of the document, the SAME document
+ * would read differently depending on which leg found it. Two switches would make that state
+ * reachable by configuration; one name means both services are turned over together.
+ */
+const PASSAGE_SNIPPET = (process.env.SEARCH_PASSAGE_SNIPPET ?? 'true') !== 'false'
+
+function toHit(r: any, score: number, bodyScore: number, titleBoosted: boolean, resolved: boolean, terms: string[]): Hit {
   const body = (r.body ?? '') as string
+  // ⚠ THE SNIPPET USED TO BE `body.slice(0, 300)` AND THAT IS THE §3 DEFECT ON THE SPARSE SIDE.
+  // BM25 scores the WHOLE section, so a 5,714-word Lords speech could be the top hit for a term
+  // that appears once, 20,000 characters in — and the user was shown the first 300 characters,
+  // which for a Lords speech is the opening courtesies. The passage is chosen by the SAME module
+  // the dense service uses, so the two legs cannot disagree about what a document looks like.
+  const p = PASSAGE_SNIPPET ? bestPassage(body, terms) : null
   return {
     id: r.id, corpus: r.corpus, tier: r.tier, jurisdiction: r.jurisdiction,
     sectionTitle: (r.sectionTitle ?? null) as string | null,
     itemDate: r.itemDate ?? null, speaker: r.speaker ?? null, parentDocId: r.parentDocId ?? null,
     score, bodyScore, titleBoosted, resolved,
-    body, snippet: body.slice(0, 300).replace(/\s+/g, ' ').trim(),
+    body,
+    snippet: p ? p.text : body.slice(0, 300).replace(/\s+/g, ' ').trim(),
+    snippetMatched: p ? p.matched : false,
+    snippetLocation: p ? passageLocation(p, normaliseBody(body).length) : null,
   }
 }
 
@@ -118,7 +143,7 @@ async function resolveInjections(table: lancedb.Table, query: string, actIndex?:
     // out-of-scope injection does not merely appear, it appears FIRST.
     const where = scoped ? `id LIKE '${like}' AND ${scoped}` : `id LIKE '${like}'`
     const rows = (await table.query().where(where).limit(max).toArray()) as any[]
-    for (const row of rows) { if (!seen.has(row.id)) { seen.add(row.id); out.push(toHit(row, 0, 0, false, true)) } }
+    for (const row of rows) { if (!seen.has(row.id)) { seen.add(row.id); out.push(toHit(row, 0, 0, false, true, queryTerms(query))) } }
   }
   if (pats.exact) {
     // Exact ref given (e.g. "section 149"): inject ONLY that section and let BM25
@@ -157,7 +182,7 @@ export async function rankedSearch(
     const tierBoost = r.tier === 'legislation'
       ? (isCitation ? CITATION_TIER_BOOST : LEX_LEG_TIER_BOOST)
       : 1
-    return toHit(r, bodyScore * (titleBoosted ? TITLE_BOOST : 1) * tierBoost, bodyScore, titleBoosted, false)
+    return toHit(r, bodyScore * (titleBoosted ? TITLE_BOOST : 1) * tierBoost, bodyScore, titleBoosted, false, terms)
   })
   bm25.sort((a, b) => b.score - a.score)
 
