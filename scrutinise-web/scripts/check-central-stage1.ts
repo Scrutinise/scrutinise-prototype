@@ -50,7 +50,8 @@ import { POINTS_SCHEDULE } from '@/lib/points'
 import {
   applyBulletinMark,
   createActivityClaim,
-  decideActivityClaim,
+  reverseActivityClaim,
+  applyAnswerVote,
   getBranchLeaderboard,
   getCommunityActivityLog,
   getConfig,
@@ -820,38 +821,38 @@ async function partD() {
     )
     check('the same activity cannot be logged twice for the same day', dup !== null, dup ?? 'not refused')
 
-    const selfApprove = await refuses(() => decideActivityClaim(claim.id, author.id, 'APPROVED'), 403)
-    check('you cannot approve your own claim', selfApprove !== null, selfApprove ?? 'not refused')
+    // ⚠ STAGE 2e REWROTE THIS BLOCK. There is no approval step: the claim above
+    // already paid on creation. What a manager can still do is reverse it, and
+    // the reversal path is asserted end to end in part H.
 
-    // The approver is the ROOT owner, who is NOT a member of the branch — the
-    // admin cascade is what makes this legal.
-    check('the approving root OWNER is not a member of the branch',
+    // The reverser is the ROOT owner, who is NOT a member of the branch — the
+    // admin cascade is what makes that legal, and it still holds.
+    check('the reversing root OWNER is not a member of the branch',
       (await getCommunityMembership(owner.id, branch.id)) === null)
 
-    const pointsBefore = await getUserPoints(author.id, root.id)
     const canvassing = await resolveTariff('CLAIM_CANVASSING_SESSION')
-    const approved = await decideActivityClaim(claim.id, owner.id, 'APPROVED')
-    eq('an approved canvassing claim pays the tariff', approved.awarded, canvassing.points)
-    eq('…and it lands in the ledger', await getUserPoints(author.id, root.id), pointsBefore + canvassing.points)
+    eq('the canvassing claim paid its tariff the moment it was logged', claim.awarded, canvassing.points)
 
     const log = await getCommunityActivityLog(root.id)
     const logged = log.find((l) => l.id === claim.id)
-    check('the approval appears in the Community activity log', logged !== undefined)
+    check('the award appears in the Community activity log', logged !== undefined)
     eq('…showing what it paid', logged?.pointsAwarded, canvassing.points)
-    check('…and who decided it', logged?.decidedBy?.id === owner.id)
+    check('…and that nobody decided it, because nobody had to', logged?.decidedBy == null)
 
-    const declinedClaim = await createActivityClaim({
+    const reversedClaim = await createActivityClaim({
       userId: author.id,
       communityId: branch.id,
       activityType: 'RAN_EVENT',
       occurredAt: new Date(),
     })
-    claimIds.push(declinedClaim.id)
-    const afterApproval = await getUserPoints(author.id, root.id)
-    await decideActivityClaim(declinedClaim.id, owner.id, 'DECLINED')
-    eq('a declined claim awards nothing', await getUserPoints(author.id, root.id), afterApproval)
-    check('…but is still logged',
-      (await getCommunityActivityLog(root.id)).some((l) => l.id === declinedClaim.id && l.status === 'DECLINED'))
+    claimIds.push(reversedClaim.id)
+    const afterAward = await getUserPoints(author.id, root.id)
+    await reverseActivityClaim(reversedClaim.id, owner.id, 'zz reversed by the check')
+    eq('a reversed claim gives its points back',
+      await getUserPoints(author.id, root.id), afterAward - reversedClaim.awarded)
+    check('…and is still logged, with its reason',
+      (await getCommunityActivityLog(root.id)).some(
+        (l) => l.id === reversedClaim.id && l.status === 'REVERSED' && l.reversalReason === 'zz reversed by the check'))
 
     // ── admin cascade over a descendant board ───────────────────────────────
     check('an ancestor admin can READ a descendant board without joining it',
@@ -893,14 +894,15 @@ async function partD() {
       note: 'zz-check-referral',
     })
     claimIds.push(eventClaim.id)
-    // The RAN_EVENT logged earlier today was DECLINED, and the duplicate guard
-    // skips declined rows — so this second one existing IS the proof.
-    check('a declined activity can be logged again for the same day',
-      eventClaim.id !== declinedClaim.id && eventClaim.status === 'PENDING')
+    // The RAN_EVENT logged earlier today was REVERSED, and the duplicate guard
+    // skips reversed rows — so this second one existing IS the proof.
+    check('a reversed activity can be logged again for the same day',
+      eventClaim.id !== reversedClaim.id && eventClaim.status === 'AWARDED')
 
     const ranEvent = await resolveTariff('CLAIM_RAN_EVENT')
-    await decideActivityClaim(eventClaim.id, owner.id, 'APPROVED')
 
+    // 60 points, so every layer clears 1.0 on this single event and the whole
+    // bonus lands at once. The fractional case — where it does not — is part H.
     eq('layer 1 receives 10%',
       (await getUserPoints(middle.id, root.id)) - l1Before, Math.floor(ranEvent.points * 0.1))
     eq('layer 2 receives 5%',
@@ -1565,9 +1567,19 @@ async function partF() {
     )
     check('someone outside the match cannot log its session', outsiderLogs !== null, outsiderLogs ?? 'not refused')
 
-    // Now, not midday: on a run before noon a midday stamp is in the future and
-    // the future-session guard would refuse it.
+    // ⚠ FIVE DAYS AGO, NOT TODAY. The one-per-day guard is per calendar day and
+    // it looks at EVERY claim the user has, including real ones: the first run
+    // of this part reused Charlie's own live GAVE_TRAINING claim from 24 Aug,
+    // which sat in the root Community rather than this branch, and the session
+    // silently paid nothing. A date the fixtures own outright cannot collide.
     const occurredAt = new Date()
+    occurredAt.setDate(occurredAt.getDate() - 5)
+    occurredAt.setHours(12, 0, 0, 0)
+    // ⚠ Taken BEFORE the session is logged. Stage 2e pays on logging, so a
+    // reading taken afterwards would show a delta of zero and the check would
+    // pass while proving nothing.
+    const beforeAnn = await getUserPoints(ann.id, root.id)
+    const beforeBen = await getUserPoints(ben.id, root.id)
     const logged = await logSessionForMatch({
       matchId: match.id, userId: ben.id, occurredAt, branchCommunityId: branch.id,
     })
@@ -1580,19 +1592,24 @@ async function partF() {
     eq('…and the trainee is the responder', logged.trainee.userId, ben.id)
     eq('the trainer\'s claim is worth 40', logged.trainer.points, 40)
     eq('the trainee\'s claim is worth 20', logged.trainee.points, 20)
+    // The control for the assertions below: a REUSED claim pays nothing, so if a
+    // fixture ever collides with a real claim again this fails here rather than
+    // reporting a 0-point award as a pass.
+    eq('both claims are new, not reused from a real one',
+      [logged.trainer.reused, logged.trainee.reused], [false, false])
 
     const raised = await prisma.activityClaim.findMany({
       where: { id: { in: [logged.trainer.claimId, logged.trainee.claimId] } },
       select: { userId: true, activityType: true, status: true, communityId: true },
       orderBy: { activityType: 'asc' },
     })
-    eq('two claims exist, one each, both pending in the BRANCH the admin approves in',
+    eq('two claims exist, one each, both AWARDED in the BRANCH the manager oversees',
       raised.map((r) => [r.activityType, r.status, r.communityId === branch.id]),
-      [['COMPLETED_TRAINING', 'PENDING', true], ['GAVE_TRAINING', 'PENDING', true]])
+      [['COMPLETED_TRAINING', 'AWARDED', true], ['GAVE_TRAINING', 'AWARDED', true]])
 
-    const pending = await listActivityClaims(branch.id, 'PENDING')
-    check('both are visible to the branch admin\'s queue',
-      [logged.trainer.claimId, logged.trainee.claimId].every((id) => pending.some((c) => c.id === id)))
+    const awarded = await listActivityClaims(branch.id, 'AWARDED')
+    check('both are visible to the branch manager, who can reverse either',
+      [logged.trainer.claimId, logged.trainee.claimId].every((id) => awarded.some((c) => c.id === id)))
 
     const twice = await refuses(
       () => logSessionForMatch({ matchId: match.id, userId: ann.id, occurredAt, branchCommunityId: branch.id }),
@@ -1602,12 +1619,17 @@ async function partF() {
     eq('…and there is still exactly one session for the match',
       await prisma.trainingSession.count({ where: { matchId: match.id } }), 1)
 
-    const beforeAnn = await getUserPoints(ann.id, root.id)
-    const beforeBen = await getUserPoints(ben.id, root.id)
-    await decideActivityClaim(logged.trainer.claimId, admin.id, 'APPROVED')
-    await decideActivityClaim(logged.trainee.claimId, admin.id, 'APPROVED')
-    eq('approving the trainer\'s claim awards 40', (await getUserPoints(ann.id, root.id)) - beforeAnn, 40)
-    eq('approving the trainee\'s claim awards 20', (await getUserPoints(ben.id, root.id)) - beforeBen, 20)
+    // ⚠ STAGE 2e: NO APPROVAL STEP. The points landed when the session was
+    // logged, so this asserts they are ALREADY there — measured against the
+    // totals read before logSessionForMatch ran.
+    eq('logging the session awarded the trainer 40 on the spot',
+      (await getUserPoints(ann.id, root.id)) - beforeAnn, 40)
+    eq('…and the trainee 20', (await getUserPoints(ben.id, root.id)) - beforeBen, 20)
+    eq('…with one ledger row per claim and no second payment',
+      await prisma.pointsEvent.count({
+        where: { sourceType: 'ACTIVITY_CLAIM', sourceId: { in: [logged.trainer.claimId, logged.trainee.claimId] } },
+      }),
+      2)
 
     const completed = await listCompletedSessions(branch.id)
     check('the session appears in the branch\'s completed list',
@@ -1621,7 +1643,7 @@ async function partF() {
     })
     await acceptMatch(reqMatch.id, ben.id)
     const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setDate(yesterday.getDate() - 6)
     yesterday.setHours(12, 0, 0, 0)
     const reqLogged = await logSessionForMatch({
       matchId: reqMatch.id, userId: ben.id, occurredAt: yesterday, branchCommunityId: branch.id,
@@ -1742,8 +1764,20 @@ async function partG() {
     const templateParsed = parseUpload(readFileSync(templatePath))
     eq('…and its columns are the ones the importer reads',
       templateParsed.columns, [...TEMPLATE_COLUMNS])
-    eq('…and it ships empty, so downloading and uploading it writes nothing',
-      templateParsed.rows.length, 0)
+    // ⚠ The shipped workbook's FIRST sheet is "Read me first". Reading sheet one
+    // would parse the instructions as questions and report that the file has no
+    // Question column, so the parser looks for the sheet by NAME.
+    check('…read from the Questions sheet, not from sheet one',
+      templateParsed.columns[0] === 'Question', templateParsed.columns.join(' | '))
+    eq('…and every row it ships with is scaffolding: one guidance row, three examples',
+      templateParsed.rows.map((r) => r.scaffold),
+      ['guidance', 'example', 'example', 'example'])
+    const templatePlan = await planImport(root.id, readFileSync(templatePath))
+    eq('…so uploading it untouched creates nothing at all',
+      [templatePlan.counts.questionsToCreate, templatePlan.counts.answersToCreate, templatePlan.counts.errors],
+      [0, 0, 0])
+    eq('…and says why, rather than showing four silent skips',
+      templatePlan.rows.every((r) => r.action === 'skip' && Boolean(r.note)), true)
 
     // ── the happy path: three rows, three creations ─────────────────────────
     const good = sheet(rows)
@@ -1868,10 +1902,303 @@ async function partG() {
   }
 }
 
+async function partH() {
+  console.log('\nH. Stage 2e — AI attribution, votes that pay, award-then-reverse, referral accrual')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+  const questionIds: string[] = []
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 4,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 4) throw new Error('need at least four active users to run part H')
+  const [owner, writer, voter, inviter] = users
+
+  try {
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-h-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: owner.id, role: 'OWNER' },
+            { userId: writer.id, role: 'MEMBER' },
+            { userId: voter.id, role: 'MEMBER' },
+            { userId: inviter.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+    const branch = await prisma.community.create({
+      data: {
+        name: `zz-check-h-branch-${stamp}`,
+        parentCommunityId: root.id,
+        bulletinCategories: [],
+        members: {
+          create: [
+            { userId: writer.id, role: 'MEMBER' },
+            { userId: voter.id, role: 'MEMBER' },
+            { userId: inviter.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(branch.id)
+    await prisma.questionTag.createMany({
+      data: [{ communityId: root.id, kind: 'CONTEXT_EXTERNAL', label: 'Doorstep', promoted: true }],
+    })
+
+    const question = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: writer.id, branchId: branch.id,
+        text: `zz H question ${stamp}?`, scope: 'COMMUNITY', contextTags: ['Doorstep'],
+      },
+    })
+    questionIds.push(question.id)
+
+    const memberAnswer = await prisma.answer.create({
+      data: { questionId: question.id, authorId: writer.id, body: `zz member answer ${stamp}` },
+    })
+    const aiAnswer = await prisma.answer.create({
+      data: {
+        questionId: question.id, authorId: owner.id, body: `zz AI answer ${stamp}`,
+        authorType: 'AI', aiModel: 'Claude',
+      },
+    })
+
+    // ── item 0: an AI answer is labelled wherever it appears ────────────────
+    const ranked = await getRankedAnswers(question.id, voter.id)
+    eq('the ranked answers carry authorType on every row',
+      ranked.every((a) => typeof a.authorType === 'string'), true)
+    eq('the AI answer says which model wrote it',
+      ranked.find((a) => a.id === aiAnswer.id)?.aiModel, 'Claude')
+    eq('…and the member answer claims no model',
+      ranked.find((a) => a.id === memberAnswer.id)?.aiModel, null)
+
+    // The three surfaces, grepped rather than assumed — a fourth surface that
+    // forgets the label is what this is here to catch.
+    for (const [label, file] of [
+      ['the question detail', 'app/communities/[id]/questions/[questionId]/QuestionDetail.tsx'],
+      ['the library list', 'app/communities/[id]/questions/QuestionLibrary.tsx'],
+      ['the pack output', 'app/communities/[id]/packs/new/PackOutput.tsx'],
+    ] as const) {
+      const src = readFileSync(resolvePath(process.cwd(), file), 'utf8')
+      check(`${label} renders the AI label`,
+        /AiLabel|AnswerByline|AiNote/.test(src), file)
+    }
+    const packSrc = readFileSync(
+      resolvePath(process.cwd(), 'app/communities/[id]/packs/new/PackOutput.tsx'), 'utf8')
+    check('…and the printed sheet uses the plain-text form, which a printer cannot lose',
+      packSrc.includes('<AiNote answer={e.answer} plain />'))
+
+    // ── item 3: an answer vote moves the author's points ────────────────────
+    const before = await getUserPoints(writer.id, root.id)
+    const up = await applyAnswerVote(memberAnswer.id, voter.id, 'UP')
+    const afterUp = await getUserPoints(writer.id, root.id)
+    eq('an upvote on a member answer pays the mark tariff', afterUp - before, 4)
+    eq('…and the caller is told the new total', up.authorPoints, afterUp)
+    eq('…recorded against ANSWER_VOTE, so it is tellable apart from a bulletin mark',
+      (await prisma.pointsEvent.findFirst({
+        where: { sourceType: 'ANSWER_VOTE', sourceId: memberAnswer.id, type: 'MARK_RECEIVED' },
+        select: { tariffKey: true },
+      }))?.tariffKey,
+      'MARK_CONSTRUCTIVE')
+
+    // Switching direction reverses the old award and pays the new one.
+    await applyAnswerVote(memberAnswer.id, voter.id, 'DOWN')
+    eq('switching to a downvote moves the total by eight, not four',
+      (await getUserPoints(writer.id, root.id)) - before, -4)
+    await applyAnswerVote(memberAnswer.id, voter.id, 'DOWN')
+    eq('clearing the vote returns the author to where they started',
+      await getUserPoints(writer.id, root.id), before)
+    eq('…by appending, never by deleting: every event survives',
+      await prisma.pointsEvent.count({ where: { sourceType: 'ANSWER_VOTE', sourceId: memberAnswer.id } }),
+      4)
+
+    const ownVote = await refuses(() => applyAnswerVote(memberAnswer.id, writer.id, 'UP'), 403)
+    check('voting on your own answer is still refused', ownVote !== null, ownVote ?? 'not refused')
+
+    // ── item 0: an AI answer ranks but mints nothing ───────────────────────
+    const ownerBefore = await getUserPoints(owner.id, root.id)
+    const aiVote = await applyAnswerVote(aiAnswer.id, voter.id, 'UP')
+    eq('a vote on an AI answer still counts for RANKING', aiVote.score, 1)
+    eq('…and the vote row exists',
+      await prisma.answerVote.count({ where: { answerId: aiAnswer.id } }), 1)
+    eq('…but it mints NOTHING — the seed account cannot accrue points for content nobody wrote',
+      await getUserPoints(owner.id, root.id), ownerBefore)
+    eq('…and no ledger row was written at all',
+      await prisma.pointsEvent.count({ where: { sourceType: 'ANSWER_VOTE', sourceId: aiAnswer.id } }), 0)
+    eq('…which the caller is told, rather than left to infer', aiVote.minted, false)
+
+    // ── item 8: a claim pays on submission ─────────────────────────────────
+    const voterBefore = await getUserPoints(voter.id, root.id)
+    const claim = await createActivityClaim({
+      userId: voter.id, communityId: branch.id,
+      activityType: 'CANVASSING_SESSION', occurredAt: new Date(),
+    })
+    eq('a logged activity is AWARDED, not PENDING', claim.status, 'AWARDED')
+    eq('…and pays its tariff at once', claim.awarded, 24)
+    eq('…so the member\'s total moves immediately, with nobody to ask',
+      (await getUserPoints(voter.id, root.id)) - voterBefore, 24)
+    eq('…and there is no approval queue left to sit in',
+      (await listActivityClaims(branch.id, 'PENDING')).length, 0)
+    check('…while the award is visible to the whole Community in the log',
+      (await getCommunityActivityLog(root.id)).some((e) => e.id === claim.id))
+
+    // ── item 8: reversal, with a reason, at the original value ─────────────
+    const noReason = await refuses(() => reverseActivityClaim(claim.id, owner.id, '   '), 422)
+    check('a reversal without a reason is refused', noReason !== null, noReason ?? 'not refused')
+    const notManager = await refuses(() => reverseActivityClaim(claim.id, inviter.id, 'zz nope'), 403)
+    check('a plain member cannot reverse someone\'s award', notManager !== null, notManager ?? 'not refused')
+
+    // Retune the tariff BEFORE reversing: the reversal must use the original
+    // value, or a retune between award and reversal could be banked.
+    const retuned = await prisma.pointsTariff.create({
+      data: {
+        actionKey: 'CLAIM_CANVASSING_SESSION', points: 999, active: true,
+        effectiveFrom: new Date(), note: 'zz-check-h retune',
+      },
+    })
+    const reversal = await reverseActivityClaim(claim.id, owner.id, 'zz double-counted')
+    await prisma.pointsTariff.delete({ where: { id: retuned.id } })
+
+    // ⚠ READ BACK FROM THE LEDGER, not from the return value. Asserting
+    // `reversal.reversed` alone could not fail: the function returns
+    // `original.points` whatever it actually wrote, so a reversal priced at
+    // today's tariff sailed past that assertion and only surfaced two lines
+    // later, in a check about somebody's total.
+    eq('the reversal is at the ORIGINAL award value, not today\'s tariff',
+      (await prisma.pointsEvent.findFirstOrThrow({
+        where: { sourceType: 'ACTIVITY_CLAIM', sourceId: claim.id, type: 'CLAIM_REVERSED' },
+      })).points,
+      -24)
+    eq('…and the caller is told the same number', reversal.reversed, 24)
+    eq('…so the member is back where they started', await getUserPoints(voter.id, root.id), voterBefore)
+    eq('…the claim records who reversed it and why',
+      (await prisma.activityClaim.findUniqueOrThrow({ where: { id: claim.id } })).reversalReason,
+      'zz double-counted')
+    eq('…and BOTH events stay in the ledger — it only ever appends',
+      await prisma.pointsEvent.count({ where: { sourceType: 'ACTIVITY_CLAIM', sourceId: claim.id } }), 2)
+    const twice = await refuses(() => reverseActivityClaim(claim.id, owner.id, 'zz again'), 409)
+    check('a claim cannot be reversed twice', twice !== null, twice ?? 'not refused')
+
+    // A reversed claim frees the day, so the member can put it right.
+    const remade = await createActivityClaim({
+      userId: voter.id, communityId: branch.id,
+      activityType: 'CANVASSING_SESSION', occurredAt: new Date(),
+    })
+    eq('after a reversal the same day can be claimed again', remade.status, 'AWARDED')
+    const dup = await refuses(
+      () => createActivityClaim({
+        userId: voter.id, communityId: branch.id,
+        activityType: 'CANVASSING_SESSION', occurredAt: new Date(),
+      }),
+      409,
+    )
+    check('…but only once — the one-per-day guard still holds', dup !== null, dup ?? 'not refused')
+
+    // ── item 9: referral accrual keeps the fraction ────────────────────────
+    // inviter introduced writer. A constructive mark is 4; 10% of 4 is 0.4,
+    // which the old arithmetic floored to nothing.
+    await prisma.communityReferral.create({
+      data: { communityId: root.id, inviterUserId: inviter.id, inviteeUserId: writer.id },
+    })
+    const inviterBefore = await getUserPoints(inviter.id, root.id)
+
+    const answers: string[] = []
+    for (let i = 0; i < 10; i++) {
+      const a = await prisma.answer.create({
+        data: { questionId: question.id, authorId: writer.id, body: `zz chain answer ${i} ${stamp}` },
+      })
+      answers.push(a.id)
+      // Twelve distinct items for this voter across the whole part, against a
+      // daily budget of twenty — deliberately inside it, so this measures the
+      // accrual and not the budget.
+      await applyAnswerVote(a.id, voter.id, 'UP')
+    }
+    const link = await prisma.communityReferral.findFirstOrThrow({
+      where: { communityId: root.id, inviteeUserId: writer.id },
+    })
+    eq('ten 4-point marks pay the L1 inviter 4 points, where flooring paid 0',
+      (await getUserPoints(inviter.id, root.id)) - inviterBefore, 4)
+    check('…and the link carries no stray fraction afterwards',
+      Math.abs(link.bonusBalance) < 1e-9, String(link.bonusBalance))
+
+    // The control that makes the number mean something: ONE mark alone pays
+    // nothing yet, because 0.4 has not crossed 1.0 — the fraction is held, not
+    // discarded.
+    const singleAnswer = await prisma.answer.create({
+      data: { questionId: question.id, authorId: writer.id, body: `zz single ${stamp}` },
+    })
+    answers.push(singleAnswer.id)
+    const beforeSingle = await getUserPoints(inviter.id, root.id)
+    await applyAnswerVote(singleAnswer.id, voter.id, 'UP')
+    eq('one mark alone still pays the chain nothing…',
+      await getUserPoints(inviter.id, root.id), beforeSingle)
+    eq('…but the 0.4 is HELD on the link rather than thrown away',
+      Number(
+        (
+          await prisma.communityReferral.findFirstOrThrow({
+            where: { communityId: root.id, inviteeUserId: writer.id },
+          })
+        ).bonusBalance.toFixed(4),
+      ),
+      0.4)
+
+    // ── the standing hazard register (item 9b) ─────────────────────────────
+    const indexes = await prisma.$queryRaw<{ indexname: string; indexdef: string }[]>`
+      SELECT indexname, indexdef FROM pg_indexes
+      WHERE indexname IN ('ActivityClaim_one_per_day', 'CommunityJoinRequest_pending_unique')`
+    eq('both invisible-to-Prisma indexes are present', indexes.length, 2)
+    const onePerDay = indexes.find((i) => i.indexname === 'ActivityClaim_one_per_day')
+    check('the one-per-day guard is still expression + partial',
+      Boolean(onePerDay?.indexdef.includes('date') && onePerDay?.indexdef.includes('WHERE')),
+      onePerDay?.indexdef)
+    check('…and its predicate now frees a REVERSED claim as well as a DECLINED one',
+      Boolean(onePerDay?.indexdef.includes('REVERSED')), onePerDay?.indexdef)
+    const register = readFileSync(resolvePath(process.cwd(), '../docs/CLAUDE.md'), 'utf8')
+    for (const name of ['ActivityClaim_one_per_day', 'CommunityJoinRequest_pending_unique']) {
+      check(`${name} is named in the CLAUDE.md hazard register`, register.includes(name))
+    }
+  } finally {
+    const answerIds = (
+      await prisma.answer.findMany({ where: { questionId: { in: questionIds } }, select: { id: true } })
+    ).map((a) => a.id)
+    await prisma.answerVote.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answer.deleteMany({ where: { id: { in: answerIds } } })
+    await prisma.questionVote.deleteMany({ where: { questionId: { in: questionIds } } })
+    await prisma.question.deleteMany({ where: { id: { in: questionIds } } })
+    await prisma.questionTag.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.pointsEvent.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.activityClaim.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.communityReferral.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: { OR: communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })) },
+    })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    await prisma.pointsTariff.deleteMany({ where: { note: { startsWith: 'zz-check-h' } } })
+
+    eq('Stage 2e fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-h-' } } }), 0)
+    eq('no ledger rows left behind',
+      await prisma.pointsEvent.count({ where: { communityId: { in: communityIds } } }), 0)
+    eq('the live canvassing tariff is back to one row',
+      await prisma.pointsTariff.count({ where: { actionKey: 'CLAIM_CANVASSING_SESSION', active: true } }), 1)
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL not set')
-  console.log('CENTRAL Stage 1.1 + 1.2 + 2 + 2b + 2d checks — host:', new URL(url).hostname)
+  console.log('CENTRAL Stage 1.1 + 1.2 + 2 + 2b + 2d + 2e checks — host:', new URL(url).hostname)
 
   await partA()
   await partB()
@@ -1880,6 +2207,7 @@ async function main() {
   await partE()
   await partF()
   await partG()
+  await partH()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()

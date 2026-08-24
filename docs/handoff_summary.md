@@ -2,7 +2,41 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-24 02:07 UTC — ▼ **CENTRAL STAGE 2d IS BUILT — AND THE FIRST THING THE AUDIT
+*Last updated: 2026-08-24 15:36 UTC — ▼ **CENTRAL STAGE 2e: THE POINTS FAILURE IS DIAGNOSED, AND IT
+WAS NOT A BUG — AN ANSWER VOTE WAS NEVER WIRED TO THE LEDGER AT ALL.** `recordPointsEvent` had three
+call sites, all for bulletin marks and claim approval; `setAnswerVote` wrote a vote row and stopped.
+Stage 2b built the vote, Stage 2 built the ledger, **nobody joined them**. ⚠ **`PointsEvent` held
+ZERO rows across the whole database** — nothing had ever paid a point in Central by any route. ✅ And
+**"Log this session" worked exactly as designed**: two claims, both PENDING, both correct — the points
+were waiting for an approval nobody had told Charlie to give. ▶ **STAGE 2c's AI-ATTRIBUTION BLOCKER
+IS BUILT.** `Answer.authorType`/`aiModel`; **27 labelled before and after**; the answer card used to
+render **no author at all**, so all 27 Claude-written answers looked like members' work on every
+screen. One component now answers "who wrote this" and three surfaces use it — list, detail, pack —
+with the printed sheet using plain text, because a badge is what a printer loses. **An AI answer
+ranks but mints nothing.** ▶ **Answer votes now pay**, mirroring bulletin marks: same tariffs, same
+event types, ONE shared daily budget across both surfaces. Charlie's existing upvote was backfilled;
+**charlie is on 44, chas on 20.** ▶ **Pre-approval is gone** (Charlie's call): claims and logged
+sessions pay on submission, and a manager reverses with a **required** reason at the **original**
+award value, both events left in the ledger. The two claims the old gate stranded were awarded by the
+migration. ⚠⚠ **THE CHECK CAUGHT A BUG THIS SPRINT CREATED**: `logSessionForMatch` builds its claims
+directly (it raises the *other* person's), so with the gate gone it paid nothing and said nothing —
+both routes now go through one `awardClaimPoints`. ⚠ **It also caught an assertion of mine that could
+not fail** (it read a return value, not the ledger) and **its own collision with Charlie's live
+claims** — the one-per-day guard looks at real rows too, so a fixture reused his GAVE_TRAINING claim
+and silently paid zero. Fixtures now own their dates and assert `reused === false`. ▶ **The referral
+chain paid nothing and the reason was arithmetic** — 10% of a 4-point mark floors to 0. Links now
+accrue a decimal and mint on crossing 1.0: ten marks pay the L1 inviter 4, where flooring paid 0.
+▶ **The template is Charlie's file, edited in place** — Stage 2d's SheetJS-generated one made Excel
+offer to repair it. `styles.xml` and the Questions sheet come out byte-identical and the Context
+drop-down survives. ⚠ Two alignment defects it exposed would have broken a real upload: the Notes
+column is headed `Notes (not imported)`, and sheet ONE is "Read me first" — the parser now finds the
+Questions sheet by name. ⚠ **The topics dropdown is now 35 entries per node, not 11**, because the 24
+ministerial departments were added. ✅ `tsc` and `next build` clean; **check:central 344/344** (from
+295), self-cleaning; **four planted-break runs**, two of which found real defects rather than
+confirming a guard. ▶▶ **CHARLIE: the browser walk is yours** — open the template in Excel and confirm
+no repair prompt, then fill it in and upload it; and check an upvote moves the other account's total.
+No Clerk session exists from a CC session. **Events (the old 2c scope) stays deferred, per the brief.**
+Earlier: 2026-08-24 02:07 UTC — ▼ **CENTRAL STAGE 2d IS BUILT — AND THE FIRST THING THE AUDIT
 FOUND IS THAT STAGE 2c NEVER WAS.** The brief asks whether 2c is done before anyone is invited: **it
 is not.** No `central_stage2c.sql`, no Events model, no `TrainingSession`, and **no `authorType`
 column anywhere in the database** — so the AI-attribution item is still the pilot launch blocker and
@@ -4623,6 +4657,41 @@ unfiltered with the bare query (today's default) — never an empty result.
   before flipping. Both `tsc --noEmit` clean.
 
 ---
+
+## CURRENT STATE — CENTRAL Stage 2e: pilot polish + the AI-attribution blocker (2026-08-24 15:36 UTC)
+
+**Executes the "Central Stage 2e" brief and addendum (24 Aug 2026), after Charlie's 2d browser walk.**
+Account: CHANGE_LOG "CENTRAL Stage 2e"; design in `SCRUTINISE_CENTRAL_SPEC.md` §9, decisions §13.
+
+- ✅ **STAGE 2c's AI-ATTRIBUTION ITEM IS BUILT** — `Answer.authorType`/`aiModel`, 27 answers labelled,
+  visible in the library list, the question detail and the pack. **This was the pilot launch
+  blocker; it no longer is.** Events — the rest of the old 2c scope — stays deferred per the brief.
+- **The diagnosis, before the fix:** an answer vote was **never wired to the ledger**; `PointsEvent`
+  held **zero rows** database-wide; and "Log this session" worked correctly — its claims were simply
+  waiting for an approval step that has now been removed.
+- **Scope:** `scrutinise-web/**` plus `docs/CLAUDE.md`, the Central spec, CHANGE_LOG and handoff.
+- **Schema:** `prisma/central_stage2e.sql` — `Answer.authorType`/`aiModel` + backfill,
+  `ActivityClaim` reversal columns, `CommunityReferral.bonusBalance`, `TrainingMatch.authorMessage`,
+  the department topics, the pending-claim award, and a **DROP/CREATE of `ActivityClaim_one_per_day`**
+  to widen its predicate. Hand-written, applied to Neon, read back.
+- **Where the rules live:** `lib/central-points.ts` — `applyAnswerVote`, `awardClaimPoints`,
+  `reverseActivityClaim`, and the fractional `mintReferralBonuses`.
+  `components/central/AnswerByline.tsx` is the single answer to "who wrote this".
+- ⚠ **`docs/CLAUDE.md` §21 is new and standing**: the "indexes Prisma can't see" register, and the
+  rule that `prisma format` must never be run on the schema.
+- **Two one-off scripts, both idempotent and dry-run by default:**
+  `scripts/patch-question-template.ts` (rebuilds the shipped template from Charlie's source — rerun
+  after replacing it) and `scripts/backfill-answer-vote-points.ts` (already applied; one vote paid).
+- **Live totals after this sprint:** charlie **44**, chas_mn6bxqqn **20**. 2 claims AWARDED,
+  3 points events, 27 AI answers, 0 test fixtures left behind.
+- ⚠ **Charlie-visible consequence:** the "All topics" dropdown is now **35 entries per node**, up
+  from 11, because the 24 ministerial departments were seeded to match the template.
+- **Verified:** `npm run check:central` — **344/344**, self-cleaning; `tsc --noEmit` and
+  `next build` clean; delivery check 0 `--fast` passes. **Four planted-break runs** — and two of them
+  found real defects rather than confirming a guard.
+- **Not done, named:** the browser walk — open the template in Excel (no repair prompt, drop-down
+  present), upload a filled copy, and confirm an upvote moves the other account's total.
+
 
 ## CURRENT STATE — CENTRAL Stage 2d: training exchange, bulk upload, navigation (2026-08-24 02:07 UTC)
 

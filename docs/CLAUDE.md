@@ -783,3 +783,47 @@ import graph, and it turns the whole class into something that cannot recur.
 
 *(Companion rules: §12 on scoped commits, and the standing note that a push is not a deploy — this
 section is that note, given the evidence and the procedure to go with it.)*
+
+---
+
+## 21. THE INDEXES PRISMA CANNOT SEE — A STANDING HAZARD REGISTER (24 Aug 2026)
+
+`schema.prisma` cannot declare a **partial** index (`WHERE …`) or an **expression** index
+(`(("occurredAt")::date)`). Several of Central's most important rules are exactly that, so they live
+only in the hand-written SQL — and `prisma migrate diff` does not merely fail to generate them, it
+**proposes dropping them**, because to Prisma they are drift.
+
+Accept such a diff and nothing breaks visibly. The guard is simply gone, and the first evidence is
+duplicate rows in production weeks later.
+
+### The register
+
+| Index | Table | What it guards | Where it lives |
+|---|---|---|---|
+| `CommunityJoinRequest_pending_unique` | `CommunityJoinRequest` | One PENDING request per (user, community). Partial on `status = 'PENDING'`, so a declined request can be made again. | `prisma/central_stage1_2.sql` |
+| `ActivityClaim_one_per_day` | `ActivityClaim` | One claim per (user, activity type, calendar day). **Expression** (`("occurredAt")::date`) **and partial** (`status NOT IN ('DECLINED','REVERSED')`), so a declined or reversed claim frees the day again. | `prisma/central_stage2.sql`, predicate widened by `prisma/central_stage2e.sql` |
+
+Two entries today. **Add a row here the moment a third exists** — the register is only useful if it
+is complete, and a partial index nobody wrote down is the whole failure mode.
+
+### The rules
+
+1. **Never run `prisma migrate diff` against this database and apply the result.** §16 already says
+   so for the 914k-row `LegislationSection_DEPRECATED` table and `specialist_queue`; this is the
+   second reason and it is quieter, because dropping an index produces no error at all.
+2. **Every migration that adds a partial or expression index must say so in a `⚠` comment at the
+   index**, naming this section. Both entries above do.
+3. **The model's doc comment in `schema.prisma` must carry the same warning**, because that is where
+   someone reading the code will be — not in a `.sql` file they have no reason to open.
+4. **If the predicate changes, DROP and CREATE.** Do not add a second overlapping partial unique on
+   the same columns: two of them will both be satisfied by rows that violate the rule you meant.
+5. **`npm run check:central` asserts these indexes exist**, with their predicates. That is the
+   backstop for all of the above — a dropped guard fails a check rather than waiting for the
+   duplicate row that proves it is gone.
+
+### Never run `prisma format` either
+
+Unrelated to indexes, same file, same class of damage: `prisma format` (v7.5) realigns every trailing
+comment in the schema and rewrites the line endings. A 123-line addition came back as a 1,359-line
+diff on 24 Aug 2026, sweeping three other threads' work into one commit. Hand-edit the schema, then
+`prisma validate` and `prisma generate`. Never `prisma format`.
