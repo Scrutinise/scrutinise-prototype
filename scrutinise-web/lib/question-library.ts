@@ -152,6 +152,10 @@ export async function findNearMatches(
 
 export type ScoredAnswer = {
   id: string
+  /** MEMBER | AI — Stage 2e. Every surface that renders an answer must render
+   *  this too; check:central greps for it. */
+  authorType: string
+  aiModel: string | null
   body: string
   sources: string[]
   localExample: string | null
@@ -226,6 +230,8 @@ export async function getRankedAnswers(
       }
       return {
         id: a.id,
+        authorType: a.authorType,
+        aiModel: a.aiModel,
         body: a.body,
         sources: a.sources,
         localExample: a.localExample,
@@ -258,6 +264,10 @@ export type QuestionListItem = {
   myVote: boolean
   branchName: string | null
   answerPreview: string | null
+  /** Whether the previewed answer was written by AI. The list must say so, or
+   *  a Claude-written answer reads as a member's work in the one place most
+   *  people ever look. */
+  answerPreviewIsAI: boolean
   hasSources: boolean
   hasLocalExample: boolean
 }
@@ -302,7 +312,7 @@ export async function listQuestions(
       answers: {
         where: { hidden: false },
         select: {
-          body: true, sources: true, localExample: true,
+          body: true, sources: true, localExample: true, authorType: true,
           votes: { select: { direction: true, voteWeight: true } },
         },
       },
@@ -340,6 +350,7 @@ export async function listQuestions(
       // Missing previews are a real state, not an oversight — a question with
       // no answers yet renders without one.
       answerPreview: best ? best.a.body.slice(0, 160) + (best.a.body.length > 160 ? '…' : '') : null,
+      answerPreviewIsAI: best?.a.authorType === 'AI',
       hasSources: q.answers.some((a) => a.sources.length > 0),
       hasLocalExample: q.answers.some((a) => Boolean(a.localExample)),
     }
@@ -373,7 +384,7 @@ export async function setAnswerVote(
   answerId: string,
   userId: string,
   direction: VoteDirection,
-): Promise<{ myVote: VoteDirection | null; score: number }> {
+): Promise<{ myVote: VoteDirection | null; score: number; previousVote: VoteDirection | null }> {
   const answer = await prisma.answer.findUnique({ where: { id: answerId }, select: { authorId: true } })
   if (!answer) throw new CommunityRuleError('Answer not found', 404)
   if (answer.authorId === userId) {
@@ -383,6 +394,9 @@ export async function setAnswerVote(
   const existing = await prisma.answerVote.findUnique({
     where: { answerId_userId: { answerId, userId } },
   })
+  // Stage 2e: the caller needs to know what this replaced, because the ledger
+  // reverses the old award before writing the new one.
+  const previousVote = (existing?.direction as VoteDirection | undefined) ?? null
 
   let myVote: VoteDirection | null = direction
   if (existing && existing.direction === direction) {
@@ -399,7 +413,7 @@ export async function setAnswerVote(
     select: { direction: true, voteWeight: true },
   })
   const score = votes.reduce((s, v) => s + (v.direction === 'UP' ? v.voteWeight : -v.voteWeight), 0)
-  return { myVote, score }
+  return { myVote, score, previousVote }
 }
 
 /** Private to the owner. Returns only their own state — never a count. */
@@ -558,6 +572,10 @@ export type PackEntry = {
     localExample: string | null
     flag: { level: string; reason: string } | null
     isFavourite: boolean
+    /** MEMBER | AI. A pack is the output people carry into a room, so it is the
+     *  LAST place an AI-written answer may pass as a member's. */
+    authorType: string
+    aiModel: string | null
   } | null
   /** Present when the member has favourited a DIFFERENT answer to the top one. */
   favouriteAnswer: {
@@ -565,6 +583,8 @@ export type PackEntry = {
     sources: string[]
     localExample: string | null
     flag: { level: string; reason: string } | null
+    authorType: string
+    aiModel: string | null
   } | null
   pinned: boolean
 }
@@ -629,6 +649,8 @@ export async function buildPack(params: {
             localExample: top.localExample,
             flag: top.flag,
             isFavourite: top.myFavourite,
+            authorType: top.authorType,
+            aiModel: top.aiModel,
           }
         : null,
       // Only carried when it is a DIFFERENT answer — otherwise the pack would
@@ -640,6 +662,8 @@ export async function buildPack(params: {
               sources: favourite.sources,
               localExample: favourite.localExample,
               flag: favourite.flag,
+              authorType: favourite.authorType,
+              aiModel: favourite.aiModel,
             }
           : null,
       pinned: pinnedSet.has(q.id),

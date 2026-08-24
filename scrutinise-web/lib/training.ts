@@ -6,7 +6,7 @@ import {
   getRootCommunityId,
   getSubtreeIds,
 } from '@/lib/community'
-import { getConfig, resolveTariff } from '@/lib/central-points'
+import { awardClaimPoints, getConfig, resolveTariff } from '@/lib/central-points'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CENTRAL Stage 2d — the training exchange.
@@ -379,12 +379,20 @@ export async function proposeMatch(params: {
     },
   })
 
+  // ⚠ STAGE 2e: NAME THE PERSON AND THE LISTING. “Someone wants your training”
+  // told the author neither who nor which, which in a feed of several items is
+  // no more use than a bell.
+  const responder = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { name: true, username: true },
+  })
+  const who = responder?.name ?? responder?.username ?? 'A member'
   await prisma.notification.create({
     data: {
       userId: listing.authorId,
       type: 'SYSTEM',
-      title: listing.kind === 'OFFER' ? 'Someone wants your training' : 'Someone can help with your request',
-      message: `${listing.topic} — accept to swap contact details.`,
+      title: `${who} has proposed on your ${listing.kind === 'OFFER' ? 'offer' : 'request'} of ${listing.topic}`,
+      message: 'Accept to swap the contact details you have each agreed to share.',
       linkUrl: `/communities/${listing.communityId}?tab=training&listing=${listing.id}`,
     },
   })
@@ -396,7 +404,7 @@ export async function proposeMatch(params: {
  * acceptances, so this is the moment contact details become visible — to the
  * two participants and to nobody else.
  */
-export async function acceptMatch(matchId: string, userId: string) {
+export async function acceptMatch(matchId: string, userId: string, authorMessage?: string) {
   const match = await prisma.trainingMatch.findUnique({
     where: { id: matchId },
     include: { listing: true },
@@ -411,7 +419,12 @@ export async function acceptMatch(matchId: string, userId: string) {
   const now = new Date()
   const updated = await prisma.trainingMatch.update({
     where: { id: matchId },
-    data: { status: 'ACCEPTED', authorAcceptedAt: now, acceptedAt: now },
+    data: {
+      status: 'ACCEPTED',
+      authorAcceptedAt: now,
+      acceptedAt: now,
+      authorMessage: authorMessage?.trim() || null,
+    },
   })
   // Accepting one proposal takes the listing off the open board. The others
   // stay PROPOSED rather than being auto-declined — a silent mass-decline is a
@@ -425,15 +438,17 @@ export async function acceptMatch(matchId: string, userId: string) {
     data: {
       userId: match.responderId,
       type: 'SYSTEM',
-      title: 'Training match accepted',
-      message: `${match.listing.topic} — you can now see the contact details you were each given.`,
+      title: `Your proposal on ${match.listing.topic} was accepted`,
+      message:
+        authorMessage?.trim() ||
+        'You can now see the contact details you were each given.',
       linkUrl: `/communities/${match.listing.communityId}?tab=training&listing=${match.listingId}`,
     },
   })
   return updated
 }
 
-export async function declineMatch(matchId: string, userId: string) {
+export async function declineMatch(matchId: string, userId: string, authorMessage?: string) {
   const match = await prisma.trainingMatch.findUnique({
     where: { id: matchId },
     include: { listing: true },
@@ -445,7 +460,24 @@ export async function declineMatch(matchId: string, userId: string) {
   if (match.status === 'ACCEPTED') {
     throw new CommunityRuleError('That proposal was already accepted — close the match instead', 409)
   }
-  return prisma.trainingMatch.update({ where: { id: matchId }, data: { status: 'DECLINED' } })
+  const updated = await prisma.trainingMatch.update({
+    where: { id: matchId },
+    data: { status: 'DECLINED', authorMessage: authorMessage?.trim() || null },
+  })
+
+  // ⚠ A DECLINE IS TOLD, AND MAY CARRY A REASON. Leaving someone to work out
+  // from a status chip that they were turned down is the wrong shape for a
+  // branch of a dozen people who see each other on Saturday.
+  await prisma.notification.create({
+    data: {
+      userId: match.responderId,
+      type: 'SYSTEM',
+      title: `Your proposal on ${match.listing.topic} was declined`,
+      message: authorMessage?.trim() || 'No reason was given.',
+      linkUrl: `/communities/${match.listing.communityId}?tab=training`,
+    },
+  })
+  return updated
 }
 
 /**
@@ -484,6 +516,12 @@ export type MatchRow = {
   /** The viewer's side of the match. */
   role: 'author' | 'responder'
   otherParty: { id: string; name: string | null; username: string }
+  /** How many live proposals sit on the underlying listing. Stage 2e: BOTH
+   *  panels expose the proposal link, because “Your matches” showing a
+   *  “waiting on you” chip with no control reads as a dead panel. */
+  listingProposalCount: number
+  /** The author's line when they accepted or declined. */
+  authorMessage: string | null
   /** Non-null ONLY on a live match the viewer is in — see contactFor. */
   contact: ContactChannels | null
   /** What the viewer is showing the other side, so it is never a mystery. */
@@ -504,6 +542,7 @@ export async function listMyMatches(communityId: string, viewerId: string): Prom
         select: {
           id: true, topic: true, kind: true, authorId: true, shareEmail: true, sharePhone: true,
           author: { select: { id: true, name: true, username: true } },
+          matches: { select: { status: true } },
         },
       },
       responder: { select: { id: true, name: true, username: true } },
@@ -527,6 +566,8 @@ export async function listMyMatches(communityId: string, viewerId: string): Prom
       listingKind: m.listing.kind,
       status: m.status,
       message: m.message,
+      authorMessage: m.authorMessage,
+      listingProposalCount: m.listing.matches.filter((x) => x.status !== 'DECLINED').length,
       createdAt: m.createdAt,
       acceptedAt: m.acceptedAt,
       closedAt: m.closedAt,
@@ -561,6 +602,7 @@ export async function listProposalsOn(listingId: string, viewerId: string) {
     message: m.message,
     createdAt: m.createdAt,
     responder: m.responder,
+    authorMessage: m.authorMessage,
     // What they have agreed to show, NOT the values. The values arrive only
     // through contactFor, after this author accepts.
     willShare: { email: m.shareEmail, phone: m.sharePhone && phoneOn },
@@ -696,7 +738,7 @@ async function claimBranchFor(userId: string, standingOn: string): Promise<strin
  * membership rule and the one-per-day rule still apply — and a same-day
  * duplicate is REUSED rather than refused, because refusing would abort a
  * legitimate second session and leave the first participant claimed and the
- * second not.
+ * second not. A reused claim pays NOTHING further: it has already paid.
  */
 async function raiseClaim(
   userId: string,
@@ -713,8 +755,15 @@ async function raiseClaim(
   const dayEnd = new Date(dayStart)
   dayEnd.setDate(dayEnd.getDate() + 1)
 
+  // Mirrors the ActivityClaim_one_per_day index predicate: a DECLINED or
+  // REVERSED claim frees the day again.
   const duplicate = await prisma.activityClaim.findFirst({
-    where: { userId, activityType, status: { not: 'DECLINED' }, occurredAt: { gte: dayStart, lt: dayEnd } },
+    where: {
+      userId,
+      activityType,
+      status: { notIn: ['DECLINED', 'REVERSED'] },
+      occurredAt: { gte: dayStart, lt: dayEnd },
+    },
   })
   if (duplicate) return { claimId: duplicate.id, reused: true, points }
 
@@ -725,7 +774,17 @@ async function raiseClaim(
       activityType,
       occurredAt,
       note: `Training exchange — ${topic}`.slice(0, 1000),
+      status: 'AWARDED',
     },
+  })
+  // ⚠ STAGE 2e: PAY IT HERE. Under the old model this row sat PENDING until a
+  // manager approved it; with pre-approval gone, a claim created without an
+  // award is a claim that never pays and nothing says so.
+  await awardClaimPoints({
+    id: claim.id,
+    userId,
+    communityId,
+    activityType,
   })
   return { claimId: claim.id, reused: false, points }
 }

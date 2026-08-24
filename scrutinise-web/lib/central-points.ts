@@ -7,6 +7,7 @@ import {
   getSubtreeIds,
   applyBulletinVote,
 } from '@/lib/community'
+import { setAnswerVote } from '@/lib/question-library'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CENTRAL Stage 2 — the points engine.
@@ -25,12 +26,32 @@ export const POINTS_EVENT_TYPES = [
   'MARK_RECEIVED',
   'MARK_REMOVED',
   'CLAIM_APPROVED',
+  'CLAIM_REVERSED',
   'REFERRAL_BONUS',
 ] as const
 export type PointsEventType = (typeof POINTS_EVENT_TYPES)[number]
 
-export const CLAIM_STATUSES = ['PENDING', 'APPROVED', 'DECLINED'] as const
+/**
+ * ⚠ STAGE 2e — PRE-APPROVAL IS GONE (Charlie, 24 Aug 2026).
+ *
+ * A claim awards on submission and a manager may reverse it afterwards, with a
+ * reason. PENDING / APPROVED / DECLINED are kept only so historical rows still
+ * read; `central_stage2e.sql` awarded every PENDING row and renamed every
+ * APPROVED one, so nothing new is ever written with them.
+ */
+export const CLAIM_STATUSES = ['AWARDED', 'REVERSED', 'PENDING', 'APPROVED', 'DECLINED'] as const
 export type ClaimStatus = (typeof CLAIM_STATUSES)[number]
+
+/** The statuses that mean "this claim is currently paying". */
+export const LIVE_CLAIM_STATUSES = ['AWARDED', 'APPROVED'] as const
+
+/**
+ * Two surfaces mint marks now — bulletin posts and question-library answers —
+ * and they share one daily budget, because the budget is about how much one
+ * member can move other members' scores in a day, not about which page they
+ * were on when they did it.
+ */
+export const MARK_SOURCE_TYPES = ['BULLETIN_MARK', 'ANSWER_VOTE'] as const
 
 /** Offline activities a member can claim, and the tariff key each pays out on. */
 export const ACTIVITY_TYPES = [
@@ -272,15 +293,22 @@ export async function getBranchLeaderboard(
  * refund their own budget. Distinct items, so changing your mind about a post
  * you already marked today does not cost a second slot.
  */
-export async function assertCanMark(userId: string, post: { authorId: string; id: string }): Promise<void> {
+export async function assertCanMark(
+  userId: string,
+  post: { authorId: string; id: string },
+  noun: 'post' | 'answer' = 'post',
+): Promise<void> {
   if (post.authorId === userId) {
-    throw new CommunityRuleError('You cannot mark your own post', 403)
+    throw new CommunityRuleError(`You cannot vote on your own ${noun}`, 403)
   }
 
   const budget = await getConfig('DAILY_MARK_BUDGET')
   const since = new Date()
   since.setHours(0, 0, 0, 0)
 
+  // ⚠ Deliberately NOT filtered by sourceType: bulletin marks and answer votes
+  // share one daily budget. The limit is on how far one member can move other
+  // members' scores in a day, not on which page they did it from.
   const marksToday = await prisma.pointsEvent.findMany({
     where: { actorUserId: userId, type: 'MARK_RECEIVED', createdAt: { gte: since } },
     select: { sourceId: true },
@@ -393,6 +421,133 @@ export async function applyBulletinMark(
   }
 }
 
+// ── answer votes (Stage 2e — the library joins the ledger) ───────────────────
+
+/**
+ * ⚠ THE DEFECT THIS CLOSES: an answer vote was never wired to the ledger at
+ * all. Stage 2b built the vote as a ranking signal, Stage 2 built the ledger for
+ * bulletin marks, and nobody joined them — so a member could be upvoted all day
+ * and stay on zero. It was never a regression; it was never built.
+ *
+ * Mirrors bulletin marks exactly, and on purpose: the same two tariffs
+ * (MARK_CONSTRUCTIVE +4 / MARK_UNCONSTRUCTIVE −4), the same MARK_RECEIVED /
+ * MARK_REMOVED event types, and the same daily budget — one budget across both
+ * surfaces, because the budget is about how far one member can move other
+ * members' scores in a day, not about which page they did it from. Only
+ * `sourceType` differs, so the two are still tellable apart in the ledger.
+ */
+export async function recordAnswerVoteEvents(params: {
+  answer: { id: string; authorId: string; authorType: string; communityId: string }
+  voterUserId: string
+  previousDirection: VoteDirectionValue
+  newDirection: VoteDirectionValue
+}): Promise<void> {
+  const { answer, voterUserId, previousDirection, newDirection } = params
+  if (previousDirection === newDirection) return
+
+  // ⚠ AN AI-AUTHORED ANSWER MINTS NOTHING. The vote is still recorded and still
+  // ranks the answer — members should be able to say which answer is best
+  // regardless of what wrote it — but no PointsEvent is written, because the
+  // seed account must not accrue points for content nobody wrote.
+  if (answer.authorType === 'AI') return
+
+  const rootId = await getRootCommunityId(answer.communityId)
+
+  if (previousDirection !== 0) {
+    const original = await prisma.pointsEvent.findFirst({
+      where: {
+        sourceType: 'ANSWER_VOTE',
+        sourceId: answer.id,
+        actorUserId: voterUserId,
+        type: 'MARK_RECEIVED',
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (original) {
+      await recordPointsEvent({
+        userId: answer.authorId,
+        communityId: rootId,
+        sourceCommunityId: answer.communityId,
+        type: 'MARK_REMOVED',
+        // Reversed at the value the ORIGINAL award used, never today's tariff.
+        points: -original.points,
+        sourceType: 'ANSWER_VOTE',
+        sourceId: answer.id,
+        actorUserId: voterUserId,
+        tariff: { id: original.tariffId, actionKey: original.tariffKey, points: original.tariffPoints },
+      })
+    }
+  }
+
+  if (newDirection !== 0) {
+    const tariff = await resolveTariff(newDirection > 0 ? 'MARK_CONSTRUCTIVE' : 'MARK_UNCONSTRUCTIVE')
+    await recordPointsEvent({
+      userId: answer.authorId,
+      communityId: rootId,
+      sourceCommunityId: answer.communityId,
+      type: 'MARK_RECEIVED',
+      points: tariff.points,
+      sourceType: 'ANSWER_VOTE',
+      sourceId: answer.id,
+      actorUserId: voterUserId,
+      tariff,
+    })
+  }
+}
+
+type VoteDirectionValue = 1 | -1 | 0
+
+/**
+ * The whole answer-vote path in one call: guardrails, then the vote, then the
+ * ledger — the same composition as `applyBulletinMark`, for the same reason.
+ * `lib/question-library.ts` never imports the points engine; the engine imports
+ * it, and a cycle between the two would be a fragile way to save one function.
+ */
+export async function applyAnswerVote(
+  answerId: string,
+  voterUserId: string,
+  direction: 'UP' | 'DOWN',
+): Promise<{ myVote: 'UP' | 'DOWN' | null; score: number; authorPoints: number; minted: boolean }> {
+  const answer = await prisma.answer.findUnique({
+    where: { id: answerId },
+    select: {
+      id: true,
+      authorId: true,
+      authorType: true,
+      question: { select: { communityId: true } },
+    },
+  })
+  if (!answer) throw new CommunityRuleError('Answer not found', 404)
+
+  // The budget is only spent where a vote can actually pay. An AI answer mints
+  // nothing, so voting on one must not use up the day's allowance either.
+  const mints = answer.authorType !== 'AI'
+  if (mints) await assertCanMark(voterUserId, { authorId: answer.authorId, id: answer.id }, 'answer')
+
+  const result = await setAnswerVote(answerId, voterUserId, direction)
+
+  const asValue = (v: 'UP' | 'DOWN' | null): VoteDirectionValue => (v === 'UP' ? 1 : v === 'DOWN' ? -1 : 0)
+  await recordAnswerVoteEvents({
+    answer: {
+      id: answer.id,
+      authorId: answer.authorId,
+      authorType: answer.authorType,
+      communityId: answer.question.communityId,
+    },
+    voterUserId,
+    previousDirection: asValue(result.previousVote),
+    newDirection: asValue(result.myVote),
+  })
+
+  const rootId = await getRootCommunityId(answer.question.communityId)
+  return {
+    myVote: result.myVote,
+    score: result.score,
+    authorPoints: await getUserPoints(answer.authorId, rootId),
+    minted: mints,
+  }
+}
+
 // ── referrals ────────────────────────────────────────────────────────────────
 
 /**
@@ -480,8 +635,27 @@ export async function mintReferralBonuses(eventId: string): Promise<number> {
     if (!link) break
 
     const multiplier = await referralMultiplier(link.decayFrom)
-    // Rounded down: a bonus is a share, never a rounding-up gift.
-    const points = Math.floor(source.points * rates[layer] * multiplier)
+
+    // ⚠ STAGE 2e — ACCRUE THE FRACTION, DO NOT THROW IT AWAY.
+    //
+    // This used to be `Math.floor(source.points * rate * multiplier)`, which
+    // paid nothing at all for the events people actually generate: a
+    // constructive mark is worth 4, and 10% of 4 floors to 0. The chain earned
+    // zero from any number of marks, and raising the mark value would only have
+    // moved the threshold rather than removing it.
+    //
+    // The link now carries a decimal balance. A whole PointsEvent is minted
+    // when it crosses 1.0 and the remainder stays on the link, so ten 4-point
+    // marks pay the L1 inviter exactly 4 — the same total the old arithmetic
+    // was aiming at and never reached.
+    const accrued = link.bonusBalance + source.points * rates[layer] * multiplier
+    const points = Math.floor(accrued)
+    const remainder = accrued - points
+
+    await prisma.communityReferral.update({
+      where: { id: link.id },
+      data: { bonusBalance: remainder },
+    })
 
     if (points > 0) {
       await prisma.pointsEvent.create({
@@ -544,6 +718,15 @@ export async function maybeReboostReferral(earnerUserId: string, communityId: st
 
 // ── activity claims ──────────────────────────────────────────────────────────
 
+/**
+ * Log an offline activity — and pay it, now.
+ *
+ * ⚠ STAGE 2e: THE APPROVAL GATE IS GONE (Charlie, 24 Aug 2026). It used to
+ * create a PENDING row and wait for a manager. In a pilot that meant a member
+ * did the work, logged it, and watched their score stay at zero — which reads
+ * as the feature being broken rather than as a queue. Speed for members;
+ * accountability kept through visibility plus `reverseActivityClaim`.
+ */
 export async function createActivityClaim(params: {
   userId: string
   communityId: string
@@ -554,9 +737,8 @@ export async function createActivityClaim(params: {
 }) {
   const { userId, communityId, activityType, occurredAt } = params
 
-  if (!ACTIVITY_TYPES.some((a) => a.key === activityType)) {
-    throw new CommunityRuleError('Unknown activity type', 422)
-  }
+  const activity = ACTIVITY_TYPES.find((a) => a.key === activityType)
+  if (!activity) throw new CommunityRuleError('Unknown activity type', 422)
   if (occurredAt.getTime() > Date.now() + 60_000) {
     throw new CommunityRuleError('You cannot log an activity that has not happened yet', 422)
   }
@@ -572,11 +754,14 @@ export async function createActivityClaim(params: {
   const dayEnd = new Date(dayStart)
   dayEnd.setDate(dayEnd.getDate() + 1)
 
+  // A REVERSED claim frees the day again, exactly as a DECLINED one did: a
+  // reversal says the claim should not have paid, so the member has to be able
+  // to put it right. Mirrors the ActivityClaim_one_per_day index predicate.
   const duplicate = await prisma.activityClaim.findFirst({
     where: {
       userId,
       activityType,
-      status: { not: 'DECLINED' },
+      status: { notIn: ['DECLINED', 'REVERSED'] },
       occurredAt: { gte: dayStart, lt: dayEnd },
     },
   })
@@ -587,7 +772,7 @@ export async function createActivityClaim(params: {
     )
   }
 
-  return prisma.activityClaim.create({
+  const claim = await prisma.activityClaim.create({
     data: {
       userId,
       communityId,
@@ -595,86 +780,166 @@ export async function createActivityClaim(params: {
       occurredAt,
       evidenceUrl: params.evidenceUrl?.trim() || null,
       note: params.note?.trim() || null,
+      status: 'AWARDED',
     },
     include: { user: { select: { id: true, name: true, username: true } } },
   })
+
+  return { ...claim, awarded: await awardClaimPoints(claim) }
 }
 
-/** Approve or decline. Approval pays the tariff; a decline pays nothing. Both
- *  land in the Community activity log, which is the anti-abuse mechanism. */
-export async function decideActivityClaim(
+/**
+ * Pay one claim its tariff.
+ *
+ * ⚠ SHARED ON PURPOSE. `lib/training.ts` raises a claim for the OTHER
+ * participant when a training session is logged, and it does so directly rather
+ * than through `createActivityClaim` (that function is the self-claim path).
+ * Under the old model that was harmless — both routes produced a PENDING row
+ * and a manager paid it. With pre-approval gone, a claim that does not go
+ * through here is a claim that never pays, silently. So both go through here.
+ */
+export async function awardClaimPoints(claim: {
+  id: string
+  userId: string
+  communityId: string
+  activityType: string
+}): Promise<number> {
+  const activity = ACTIVITY_TYPES.find((a) => a.key === claim.activityType)
+  if (!activity) throw new CommunityRuleError('Unknown activity type on this claim', 422)
+
+  const tariff = await resolveTariff(activity.tariffKey)
+  const rootId = await getRootCommunityId(claim.communityId)
+  await recordPointsEvent({
+    userId: claim.userId,
+    communityId: rootId,
+    sourceCommunityId: claim.communityId,
+    type: 'CLAIM_APPROVED',
+    points: tariff.points,
+    sourceType: 'ACTIVITY_CLAIM',
+    sourceId: claim.id,
+    // Nobody decided this — it was logged and it paid. An actor here would name
+    // a manager who never touched it.
+    actorUserId: null,
+    tariff,
+  })
+  return tariff.points
+}
+
+/**
+ * Reverse an awarded claim. Managers of that node, or of any node above it.
+ *
+ * ⚠ THE LEDGER ONLY EVER APPENDS. This writes a second event at the value the
+ * ORIGINAL award used, read back from the ledger — never today's tariff, or a
+ * retune between award and reversal would let the difference be banked. Both
+ * rows stay, so the activity log shows that it was paid and then taken back.
+ *
+ * A reason is REQUIRED. An unaccountable clawback is precisely what
+ * award-then-reverse must not become.
+ */
+export async function reverseActivityClaim(
   claimId: string,
-  deciderId: string,
-  decision: 'APPROVED' | 'DECLINED',
-) {
+  managerId: string,
+  reason: string,
+): Promise<{ claim: { id: string; status: string }; reversed: number }> {
+  if (!reason.trim()) {
+    throw new CommunityRuleError('Say why you are reversing this — the claimant is told the reason', 422)
+  }
+
   const claim = await prisma.activityClaim.findUnique({
     where: { id: claimId },
     include: { community: { select: { id: true, name: true } } },
   })
   if (!claim) throw new CommunityRuleError('Claim not found', 404)
-  if (claim.status !== 'PENDING') {
-    throw new CommunityRuleError(`This claim was already ${claim.status.toLowerCase()}`, 409)
+  if (claim.status === 'REVERSED') {
+    throw new CommunityRuleError('That claim has already been reversed', 409)
   }
-  if (!(await canManageCommunity(deciderId, claim.communityId))) {
-    throw new CommunityRuleError('You cannot decide claims for this branch', 403)
+  if (!(LIVE_CLAIM_STATUSES as readonly string[]).includes(claim.status)) {
+    throw new CommunityRuleError(`That claim is ${claim.status.toLowerCase()} and paid nothing`, 409)
   }
-  if (claim.userId === deciderId) {
-    throw new CommunityRuleError('You cannot approve your own claim', 403)
+  if (!(await canManageCommunity(managerId, claim.communityId))) {
+    throw new CommunityRuleError('You cannot reverse claims for this branch', 403)
   }
 
-  let awarded = 0
-  if (decision === 'APPROVED') {
-    const activity = ACTIVITY_TYPES.find((a) => a.key === claim.activityType)
-    if (!activity) throw new CommunityRuleError('Unknown activity type on this claim', 422)
-    const tariff = await resolveTariff(activity.tariffKey)
-    const rootId = await getRootCommunityId(claim.communityId)
-    await recordPointsEvent({
-      userId: claim.userId,
-      communityId: rootId,
-      sourceCommunityId: claim.communityId,
-      type: 'CLAIM_APPROVED',
-      points: tariff.points,
-      sourceType: 'ACTIVITY_CLAIM',
-      sourceId: claim.id,
-      actorUserId: deciderId,
-      tariff,
-    })
-    awarded = tariff.points
+  const original = await prisma.pointsEvent.findFirst({
+    where: { sourceType: 'ACTIVITY_CLAIM', sourceId: claim.id, type: 'CLAIM_APPROVED' },
+    orderBy: { createdAt: 'desc' },
+  })
+  if (!original) {
+    throw new CommunityRuleError('That claim never paid, so there is nothing to reverse', 409)
   }
+
+  await recordPointsEvent({
+    userId: claim.userId,
+    communityId: original.communityId,
+    sourceCommunityId: original.sourceCommunityId,
+    type: 'CLAIM_REVERSED',
+    points: -original.points,
+    sourceType: 'ACTIVITY_CLAIM',
+    sourceId: claim.id,
+    actorUserId: managerId,
+    tariff: { id: original.tariffId, actionKey: original.tariffKey, points: original.tariffPoints },
+  })
 
   const updated = await prisma.activityClaim.update({
     where: { id: claimId },
-    data: { status: decision, decidedByUserId: deciderId, decidedAt: new Date() },
+    data: {
+      status: 'REVERSED',
+      reversedByUserId: managerId,
+      reversedAt: new Date(),
+      reversalReason: reason.trim(),
+    },
   })
 
   await prisma.notification.create({
     data: {
       userId: claim.userId,
       type: 'SYSTEM',
-      title: decision === 'APPROVED' ? 'Activity approved' : 'Activity declined',
+      title: 'Activity reversed',
       message:
-        decision === 'APPROVED'
-          ? `Your ${claim.activityType.toLowerCase().replace(/_/g, ' ')} in ${claim.community.name} was approved — ${awarded} points`
-          : `Your ${claim.activityType.toLowerCase().replace(/_/g, ' ')} claim in ${claim.community.name} was declined`,
+        `Your ${claim.activityType.toLowerCase().replace(/_/g, ' ')} in ${claim.community.name} ` +
+        `was reversed — ${original.points} points taken back. Reason: ${reason.trim()}`,
       linkUrl: `/communities/${claim.communityId}/activity`,
     },
   })
 
-  return { claim: updated, awarded }
-}
-
-export async function listActivityClaims(communityId: string, status: ClaimStatus = 'PENDING') {
-  return prisma.activityClaim.findMany({
-    where: { communityId, status },
-    include: { user: { select: { id: true, name: true, username: true } } },
-    orderBy: { createdAt: 'asc' },
-  })
+  return { claim: { id: updated.id, status: updated.status }, reversed: original.points }
 }
 
 /**
- * The Community activity log: every decided claim across the whole tree, who
- * decided it and what it paid. Visible to every member of the Community — the
- * point is that approvals are witnessed, not private.
+ * Claims on this node a manager can act on.
+ *
+ * Defaults to AWARDED — the reversible ones — because after Stage 2e there is
+ * no pending queue. PENDING is still a valid argument so that any row left over
+ * from the old model is reachable rather than stranded.
+ */
+export async function listActivityClaims(communityId: string, status: ClaimStatus = 'AWARDED') {
+  const claims = await prisma.activityClaim.findMany({
+    where: { communityId, status },
+    include: { user: { select: { id: true, name: true, username: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  })
+  const events = await prisma.pointsEvent.findMany({
+    where: {
+      sourceType: 'ACTIVITY_CLAIM',
+      sourceId: { in: claims.map((c) => c.id) },
+      type: 'CLAIM_APPROVED',
+    },
+    select: { sourceId: true, points: true },
+  })
+  const paid = new Map(events.map((e) => [e.sourceId, e.points]))
+  return claims.map((c) => ({ ...c, awarded: paid.get(c.id) ?? 0 }))
+}
+
+/**
+ * The Community activity log: every claim across the whole tree, what it paid,
+ * and — where one happened — who reversed it and why.
+ *
+ * ⚠ STAGE 2e: with pre-approval gone, THIS LOG IS THE ACCOUNTABILITY. There is
+ * no longer a manager standing between the claim and the points, so the fact
+ * that every award is witnessed by the whole Community, and reversible with a
+ * stated reason, is the whole of the anti-abuse mechanism. Ordered by when the
+ * claim was made, because an auto-awarded claim has no decision date.
  */
 export async function getCommunityActivityLog(rootCommunityId: string, limit = 100) {
   const nodeIds = await getSubtreeIds(rootCommunityId)
@@ -683,14 +948,21 @@ export async function getCommunityActivityLog(rootCommunityId: string, limit = 1
     include: {
       user: { select: { id: true, name: true, username: true } },
       decidedBy: { select: { id: true, name: true, username: true } },
+      reversedBy: { select: { id: true, name: true, username: true } },
       community: { select: { id: true, name: true } },
     },
-    orderBy: { decidedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
     take: limit,
   })
 
+  // Only the AWARD event, never the reversal — otherwise a reversed claim would
+  // read as having paid nothing rather than as having paid and been taken back.
   const events = await prisma.pointsEvent.findMany({
-    where: { sourceType: 'ACTIVITY_CLAIM', sourceId: { in: claims.map((c) => c.id) } },
+    where: {
+      sourceType: 'ACTIVITY_CLAIM',
+      sourceId: { in: claims.map((c) => c.id) },
+      type: 'CLAIM_APPROVED',
+    },
     select: { sourceId: true, points: true },
   })
   const pointsByClaim = new Map(events.map((e) => [e.sourceId, e.points]))
@@ -706,7 +978,11 @@ export async function getCommunityActivityLog(rootCommunityId: string, limit = 1
     claimant: c.user,
     decidedBy: c.decidedBy,
     decidedAt: c.decidedAt,
+    reversedBy: c.reversedBy,
+    reversedAt: c.reversedAt,
+    reversalReason: c.reversalReason,
     community: c.community,
     pointsAwarded: pointsByClaim.get(c.id) ?? 0,
+    createdAt: c.createdAt,
   }))
 }

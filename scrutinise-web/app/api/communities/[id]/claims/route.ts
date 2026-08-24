@@ -19,8 +19,11 @@ export async function GET(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const raw = new URL(req.url).searchParams.get('status') ?? 'PENDING'
-  const status = (CLAIM_STATUSES as readonly string[]).includes(raw) ? (raw as ClaimStatus) : 'PENDING'
+  // Stage 2e: AWARDED by default. There is no approval queue any more, so the
+  // useful default is “what has been paid on this node, and can still be
+  // reversed”.
+  const raw = new URL(req.url).searchParams.get('status') ?? 'AWARDED'
+  const status = (CLAIM_STATUSES as readonly string[]).includes(raw) ? (raw as ClaimStatus) : 'AWARDED'
 
   return NextResponse.json({ claims: await listActivityClaims(communityId, status) })
 }

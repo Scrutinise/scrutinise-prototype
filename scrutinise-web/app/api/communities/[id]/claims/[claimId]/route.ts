@@ -2,18 +2,20 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { CommunityRuleError } from '@/lib/community'
-import { decideActivityClaim } from '@/lib/central-points'
+import { reverseActivityClaim } from '@/lib/central-points'
 
 type Params = { params: Promise<{ id: string; claimId: string }> }
 
-const DecisionSchema = z.object({ decision: z.enum(['APPROVED', 'DECLINED']) })
+const ReverseSchema = z.object({ reason: z.string().min(1).max(1000) })
 
 // PATCH /api/communities/[id]/claims/[claimId]
-// Approve (pays the tariff) or decline (pays nothing). Both are written into the
-// Community activity log. Authorisation is checked inside decideActivityClaim
-// against the CLAIM's own node, not the [id] in the URL, so a claim from one
-// branch cannot be decided by aiming this route at another node the caller
-// happens to manage.
+//
+// ⚠ STAGE 2e: THIS NO LONGER APPROVES ANYTHING. Pre-approval is gone — a claim
+// pays on submission — so the only decision left for a manager is to REVERSE
+// one, and that needs a stated reason. Authorisation is checked inside
+// reverseActivityClaim against the CLAIM's own node, not the [id] in the URL,
+// so a claim from one branch cannot be acted on by aiming this route at another
+// node the caller happens to manage.
 export async function PATCH(req: Request, { params }: Params) {
   const { error, user } = await getAuthenticatedUser()
   if (error) return error
@@ -27,13 +29,16 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const parsed = DecisionSchema.safeParse(body)
+  const parsed = ReverseSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    return NextResponse.json(
+      { error: 'A reversal needs a reason — the claimant is told what it says.' },
+      { status: 422 },
+    )
   }
 
   try {
-    return NextResponse.json(await decideActivityClaim(claimId, user.id, parsed.data.decision))
+    return NextResponse.json(await reverseActivityClaim(claimId, user.id, parsed.data.reason))
   } catch (e) {
     if (e instanceof CommunityRuleError) {
       return NextResponse.json({ error: e.message }, { status: e.status })
