@@ -444,6 +444,11 @@ model User {
   /// on whether we may email the address at all, and the send path checks it.
   emailOnBuildComplete      Boolean             @default(false)
   bio                       String?
+  /// CENTRAL Stage 2d — optional, entered by the user in their own settings and
+  /// used for NOTHING except training contact sharing on an accepted
+  /// TrainingMatch. Never rendered in member lists, search, exports, packs or
+  /// admin panels; check:central asserts that.
+  phone                     String?
   // Role
   role                      UserRole            @default(CITIZEN)
   // Status
@@ -522,6 +527,12 @@ model User {
   answerFlagsSet            AnswerFlag[]        @relation("AnswerFlagger")
   editSuggestions           EditSuggestion[]    @relation("EditSuggester")
   questionPacks             Pack[]              @relation("PackOwner")
+  trainingListings          TrainingListing[]   @relation("TrainingListingAuthor")
+  trainingProposals         TrainingMatch[]     @relation("TrainingResponder")
+  trainingMatchesClosed     TrainingMatch[]     @relation("TrainingMatchCloser")
+  trainingGiven             TrainingSession[]   @relation("TrainingTrainer")
+  trainingReceived          TrainingSession[]   @relation("TrainingTrainee")
+  trainingSessionsLogged    TrainingSession[]   @relation("TrainingSessionLogger")
   bulletinPosts             BulletinPost[]
   bulletinVotes             BulletinVote[]
   partyMemberships          PartyMembership[]
@@ -1312,6 +1323,8 @@ model Community {
   branchQuestions   Question[]          @relation("QuestionBranch")
   questionPacks     Pack[]              @relation("PackCommunity")
   questionTags      QuestionTag[]       @relation("QuestionTagCommunity")
+  trainingListings  TrainingListing[]   @relation("TrainingListingCommunity")
+  trainingSessions  TrainingSession[]   @relation("TrainingSessionCommunity")
   // Ideas that originated in this Community — informational/display only, see note above.
   ideas             Idea[]
 
@@ -1718,6 +1731,116 @@ model QuestionTag {
 
   @@unique([communityId, kind, label])
   @@index([communityId, kind])
+}
+
+// ─── CENTRAL Stage 2d — the training exchange ────────────────────────────────
+// docs/SCRUTINISE_CENTRAL_SPEC.md §7. Scoped to ONE Community: `communityId` is
+// always the ROOT id, as in the question library. No cross-Community and no
+// public listings at this stage.
+model TrainingListing {
+  id           String    @id @default(uuid())
+  communityId  String
+  community    Community @relation("TrainingListingCommunity", fields: [communityId], references: [id])
+  authorId     String
+  author       User      @relation("TrainingListingAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  /// OFFER | REQUEST
+  kind         String
+  topic        String
+  description  String
+  /// Free text on purpose — "Tuesday evenings, or a Saturday at a push" is the
+  /// real answer and no structured field holds it.
+  availability String    @default("")
+  /// What the AUTHOR consents to share once BOTH sides have accepted a match.
+  shareEmail   Boolean   @default(false)
+  sharePhone   Boolean   @default(false)
+  /// OPEN | MATCHED | CLOSED
+  status       String    @default("OPEN")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  matches  TrainingMatch[]
+  sessions TrainingSession[] @relation("TrainingSessionListing")
+
+  @@index([communityId, status])
+  @@index([communityId, kind])
+  @@index([authorId])
+}
+
+/// A proposal on a listing. Several may exist; accepting one sets the listing
+/// to MATCHED.
+///
+/// TWO ACCEPTANCE TIMESTAMPS, NOT ONE. Contact details are revealed only when
+/// both are set, so "both sides accepted" is a condition that can be read back
+/// from the row rather than inferred from a status string.
+/// `responderAcceptedAt` is stamped at creation — the responder is shown
+/// exactly what of theirs will be shared, and with whom, before the request is
+/// sent. `authorAcceptedAt` is stamped when the listing's author accepts.
+///
+/// CLOSING IS NOT A STATUS: a closed match must still record that it WAS
+/// accepted, so closure is `closedAt`/`closedByUserId` and `status` keeps the
+/// brief's PROPOSED | ACCEPTED | DECLINED set.
+model TrainingMatch {
+  id                  String          @id @default(uuid())
+  listingId           String
+  listing             TrainingListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  responderId         String
+  responder           User            @relation("TrainingResponder", fields: [responderId], references: [id], onDelete: Cascade)
+  /// PROPOSED | ACCEPTED | DECLINED
+  status              String          @default("PROPOSED")
+  message             String?
+  /// What the RESPONDER consents to share. Independent of the listing's ticks:
+  /// if one side ticked email only, the other sees email only.
+  shareEmail          Boolean         @default(false)
+  sharePhone          Boolean         @default(false)
+  responderAcceptedAt DateTime?
+  authorAcceptedAt    DateTime?
+  acceptedAt          DateTime?
+  closedAt            DateTime?
+  closedByUserId      String?
+  closedBy            User?           @relation("TrainingMatchCloser", fields: [closedByUserId], references: [id])
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  sessions TrainingSession[] @relation("TrainingSessionMatch")
+
+  @@unique([listingId, responderId])
+  @@index([listingId, status])
+  @@index([responderId])
+}
+
+/// The Stage 2c record. STAGE 2c WAS NEVER BUILT — there is no
+/// central_stage2c.sql and no `authorType` anywhere — so this table is created
+/// by central_stage2d.sql because "Log this session" cannot exist without it.
+/// When 2c is built it must ADD to this table, not recreate it.
+///
+/// One session, two participants, two ActivityClaims. `matchId` is UNIQUE so
+/// logging twice does not raise four claims.
+model TrainingSession {
+  id             String           @id @default(uuid())
+  communityId    String
+  community      Community        @relation("TrainingSessionCommunity", fields: [communityId], references: [id])
+  matchId        String?          @unique
+  match          TrainingMatch?   @relation("TrainingSessionMatch", fields: [matchId], references: [id])
+  listingId      String?
+  listing        TrainingListing? @relation("TrainingSessionListing", fields: [listingId], references: [id])
+  trainerId      String
+  trainer        User             @relation("TrainingTrainer", fields: [trainerId], references: [id])
+  traineeId      String
+  trainee        User             @relation("TrainingTrainee", fields: [traineeId], references: [id])
+  topic          String
+  occurredAt     DateTime
+  notes          String?
+  loggedByUserId String
+  loggedBy       User             @relation("TrainingSessionLogger", fields: [loggedByUserId], references: [id])
+  /// The two claims this session raised. Nullable because a duplicate-per-day
+  /// claim is REUSED rather than re-raised, and the reuse is recorded here.
+  trainerClaimId String?
+  traineeClaimId String?
+  createdAt      DateTime         @default(now())
+
+  @@index([communityId, occurredAt])
+  @@index([trainerId])
+  @@index([traineeId])
 }
 
 // Bulletin board — thread + reply share one self-referential table (same
