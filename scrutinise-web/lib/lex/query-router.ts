@@ -21,6 +21,7 @@ import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { fuseWeightedRrf, streamVectorWeight } from './fusion'
 import { interleaveStreams } from './interleave'
+import { mergeByCoverage, mergeCoverageEnabled } from './merge-coverage'
 import { sortByScore } from './score-scope'
 import { activeStreamScopes, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
@@ -335,10 +336,43 @@ export async function runRoutedSearch(route: RouteResult, limit: number): Promis
     })
   }
   const total = perStream.reduce((n, s) => n + s.length, 0)
-  const results = interleaveStreams(perStream, total, {
-    names: active.map((s) => s.name),
-    label: 'runRoutedSearch',
-  })
+
+  // ── S13 §2 — the merge, with a flag-gated alternative arm ───────────────────────────────────
+  // ⚠ DEFAULT IS TODAY'S BEHAVIOUR, EXACTLY. With `LEX_MERGE_COVERAGE` off this is the same
+  // `interleaveStreams` call it always was, so "nothing changed until someone decides it should"
+  // is structural rather than something to test.
+  let results: SearchResult[]
+  if (mergeCoverageEnabled()) {
+    // The query the coverage signal is scored against is the ROUTER'S TAILORED QUERY for each
+    // stream — but a cross-stream comparison needs ONE query, so the union of the tailored
+    // strings is used. Using one stream's query would score every other stream's documents
+    // against terms they were never retrieved for.
+    const unionQuery = active.map((s) => route[s.name]!).join(' ')
+    const out = mergeByCoverage(perStream, unionQuery, total)
+    if (out.applied) {
+      results = out.results
+      console.log('[query-router] merge=COVERAGE', {
+        streams: active.map((s) => s.name),
+        taken: out.taken, meanCoverage: out.meanCoverage,
+      })
+    } else {
+      // ⚠ OFF, FAILED AND UNMEASURABLE ARE THREE STATES. This branch is the third: the flag is ON
+      // and the arm could not run. It is an error, not a log line, because a measurement taken
+      // here would report "no effect" while having measured nothing.
+      results = out.results
+      console.error(
+        `[query-router] merge=COVERAGE requested but NOT APPLIED (${out.reason}) — fell back to round-robin. ` +
+        (out.reason === 'signal-absent'
+          ? 'The retrieval services are not sending `snippetMatched`, i.e. fts-serve/vector-serve predate S13 §3. REDEPLOY THEM; a restart re-runs the existing build and will not fix this.'
+          : ''),
+        { streams: active.map((s) => s.name) })
+    }
+  } else {
+    results = interleaveStreams(perStream, total, {
+      names: active.map((s) => s.name),
+      label: 'runRoutedSearch',
+    })
+  }
   return {
     results,
     perStream: active.map((s, i) => ({ stream: s.name, ids: perStream[i].map((r) => r.id) })),

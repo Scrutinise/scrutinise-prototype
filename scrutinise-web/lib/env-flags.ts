@@ -120,6 +120,21 @@ export const CAPABILITY_FLAGS = [
   // ⚠ ONE BOOLEAN IS WHAT A ROLLBACK WANTS. Flipping this off restores 0.5 everywhere without
   // anyone having to remember what the weights string used to say.
   'LEX_FUSION_WEIGHTS',
+  // S13 §2. THE MERGE ARM — allocate the post-floor slots by cross-stream query-term coverage
+  // instead of by strict round-robin rotation. `lib/lex/merge-coverage.ts`.
+  //
+  // ⚠ DEFAULT OFF, and with it off `runRoutedSearch` makes the same `interleaveStreams` call it
+  // always made. What the §1 audit established is that the round-robin's visible window is
+  // arithmetic — with S streams routed a top-20 can show at most the first floor(20/S) of each —
+  // and that 12 of the 65 validated questions are recoverable by the merge alone. This flag is
+  // the mechanism for recovering them; whether it should be ON is a MEASUREMENT, not a default.
+  //
+  // ⚠ IT NEEDS S13 §3's SIGNAL. Coverage is scored over title+citation+snippet, and until
+  // `fts-serve`/`vector-serve` are redeployed the snippet is still the first 300 characters of
+  // the document. `mergeByCoverage` REFUSES to run without `snippetMatched` on the wire and logs
+  // an error rather than reporting a null — a measurement of a signal that is not there would
+  // look exactly like a measurement of a signal that does not help.
+  'LEX_MERGE_COVERAGE',
   // ⚠⚠ `LEX_GUIDANCE_CPS` WAS HERE AND WAS RETIRED ON 2026-08-21 (S11 §2.4). It admitted
   // `cps-guidance` to the guidance stream's EXTRA LEG as a bridge, because the collection was
   // display-typed GUIDANCE and indexed under tier `other`, so no router stream could select it.
