@@ -472,4 +472,23 @@ export interface SearchResult {
    *  out of `title`. NULL means the collection does not hold it structurally; it does NOT
    *  mean the source is anonymous. See lib/lex/attribution.ts. */
   attribution?: import('./attribution').Attribution | null
+  /**
+   * S13 §3 — WHETHER `snippet` IS THE PASSAGE THAT MATCHED, or the head of the document.
+   *
+   * Both retrieval services used to return `body.slice(0, 300)`: for a 5,714-word Lords speech
+   * that is 0.9% of the document, from the top, whatever the question was. They now return the
+   * passage carrying the query's own terms — the dense leg from the CHUNK the ANN actually
+   * matched (`vector-core.ts::VecSectionHit.chunkId`), the sparse leg by locating the terms in
+   * the body — both through the one shared selector, `scripts/ingest/search/passage.ts`.
+   *
+   * ⚠ FALSE MEANS NO QUERY TERM COULD BE LOCATED and `snippet` is the old head-of-document text.
+   * It is NOT a claim that the document is irrelevant, and it must never be rendered as though
+   * it were the matched passage. UNDEFINED means the service predates this field — an older
+   * `fts-serve`/`vector-serve` build — which is a THIRD state and is why this is not a bare
+   * boolean defaulting to false (CLAUDE.md §18: OFF, FAILED and NOT-MEASURED must not look alike).
+   */
+  snippetMatched?: boolean
+  /** Where in the document the passage sits, in readable words ("about 62% of the way through").
+   *  Null/undefined when there is no located passage to place. */
+  snippetLocation?: string | null
 }

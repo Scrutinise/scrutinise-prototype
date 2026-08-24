@@ -23,7 +23,13 @@ import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legisla
 import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 import { attributionFor } from './attribution'
 
-interface VecHit { id: string; corpus: string; tier: string; score: number; snippet: string }
+// S13 §3 — `chunkId` is WHICH chunk the ANN matched, and `snippetMatched`/`snippetLocation` are
+// the provenance of `snippet`. All three are optional: a `vector-serve` build older than this
+// sprint sends none of them, and that state must stay distinguishable from "sent, and false".
+interface VecHit {
+  id: string; corpus: string; tier: string; score: number; snippet: string
+  snippetMatched?: boolean; snippetLocation?: string | null; chunkId?: string
+}
 
 const VECTOR_URL = process.env.VECTOR_SEARCH_URL
 const VECTOR_TIMEOUT_MS = parseInt(process.env.VECTOR_TIMEOUT_MS ?? '25000', 10)
@@ -179,7 +185,11 @@ export async function runVectorSearch(
       // 'bm25' because a 0.83 and a 12.4 are not two views of the same quantity.
       // S8 §2 — same single construction site as the sparse adapter, columns only.
       const attribution = attributionFor(h.corpus, { speaker: meta?.speaker, attribution: meta?.attribution })
-      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'vector' as const, url, date, attribution }
+      return {
+        id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'vector' as const,
+        url, date, attribution,
+        snippetMatched: h.snippetMatched, snippetLocation: h.snippetLocation,
+      }
     })
     return { results: results.slice(0, limit * 3) }
   } catch (err) {

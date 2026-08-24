@@ -41,6 +41,11 @@ interface FtsHit {
   parentDocId: string | null
   score: number
   snippet: string
+  // S13 §3 — the provenance of `snippet`. OPTIONAL because an `fts-serve` build older than this
+  // sprint does not send them, and `undefined` (not measured) must stay distinguishable from
+  // `false` (measured, nothing located). See SearchResult.snippetMatched.
+  snippetMatched?: boolean
+  snippetLocation?: string | null
 }
 
 const FTS_URL = process.env.FTS_SEARCH_URL // e.g. https://fts-serve-production-xxxx.up.railway.app
@@ -292,7 +297,14 @@ export async function runFtsSearch(
         speaker: meta?.speaker ?? h.speaker,
         attribution: meta?.attribution,
       })
-      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'bm25' as const, url, date, attribution }
+      return {
+        id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'bm25' as const,
+        url, date, attribution,
+        // Passed straight through, never defaulted. `?? false` here would turn "this service is
+        // too old to say" into "we looked and found nothing", which is the one distinction the
+        // field exists to preserve.
+        snippetMatched: h.snippetMatched, snippetLocation: h.snippetLocation,
+      }
     })
 
     return { results: results.slice(0, limit * 3) } // groupForPanel caps downstream
