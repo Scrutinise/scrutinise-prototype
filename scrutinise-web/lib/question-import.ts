@@ -27,7 +27,15 @@ import { getRootCommunityId, getSubtreeIds } from '@/lib/community'
 // the upload screen, because it is the thing that goes wrong quietly.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The template's columns, in the template's order. */
+/**
+ * The template's columns, in the template's order — matched to the shipped
+ * workbook exactly.
+ *
+ * ⚠ Stage 2e: the Notes column is headed `Notes (not imported)` in the file
+ *   Charlie supplied, and this list is the validator's idea of what the file
+ *   looks like, so it says the same. `Notes` on its own is still accepted as a
+ *   heading (someone's older copy), and both are read for nothing.
+ */
 export const TEMPLATE_COLUMNS = [
   'Question',
   'Context',
@@ -35,11 +43,33 @@ export const TEMPLATE_COLUMNS = [
   'Answer',
   'Sources',
   'Local example',
-  'Notes',
+  'Notes (not imported)',
 ] as const
 
 /** Read for nothing, ever. Asserted by check:central. */
-export const NEVER_IMPORTED_COLUMNS = ['Notes'] as const
+export const NEVER_IMPORTED_COLUMNS = ['Notes (not imported)', 'Notes'] as const
+
+/**
+ * The sheet the questions are on.
+ *
+ * ⚠ NOT `SheetNames[0]`. The shipped template's first sheet is "Read me first",
+ *   so reading sheet one would have parsed the instructions as questions and
+ *   reported that the file has no Question column. Named sheet first, first
+ *   sheet only as a fallback for a plain .csv or a hand-rolled workbook.
+ */
+export const QUESTIONS_SHEET = 'Questions'
+
+/**
+ * Rows the template ships with, which are not data.
+ *
+ * The row under the header explains each column ("Required. One question, in
+ * the words it was actually asked."), and three grey rows carry worked examples
+ * the readme asks you to delete. Someone will forget. They are reported as
+ * skipped with the reason, not as errors — an unedited example row is a normal
+ * thing to leave in, not a mistake worth colouring red.
+ */
+const EXAMPLE_PREFIX = /^EXAMPLE\s*[—–-]\s*delete this row\.?\s*/i
+const GUIDANCE_CELL = /^(Required|Optional)\.\s/i
 
 export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 export const MAX_ROWS = 500
@@ -53,6 +83,8 @@ export type ParsedRow = {
   answer: string
   sources: string[]
   localExample: string
+  /** A row the template ships with: its column guidance, or a worked example. */
+  scaffold: 'guidance' | 'example' | null
 }
 
 export type RowPlan = {
@@ -118,7 +150,9 @@ function splitList(v: string): string[] {
  */
 export function parseUpload(buffer: Buffer): { rows: ParsedRow[]; columns: string[] } {
   const wb = XLSX.read(buffer, { type: 'buffer', raw: false, cellDates: false })
-  const sheetName = wb.SheetNames[0]
+  const sheetName =
+    wb.SheetNames.find((n) => n.trim().toLowerCase() === QUESTIONS_SHEET.toLowerCase()) ??
+    wb.SheetNames[0]
   if (!sheetName) throw new ImportFormatError('That file has no sheets in it.')
   const sheet = wb.Sheets[sheetName]
 
@@ -159,11 +193,18 @@ export function parseUpload(buffer: Buffer): { rows: ParsedRow[]; columns: strin
       answer: at(raw, 'Answer'),
       sources: splitList(at(raw, 'Sources')),
       localExample: at(raw, 'Local example'),
-      // 'Notes' is deliberately not read. See NEVER_IMPORTED_COLUMNS.
+      scaffold: null,
+      // The Notes column is deliberately not read. See NEVER_IMPORTED_COLUMNS.
     }
     // A row that is blank across every column we read is spreadsheet padding,
     // not an error the admin needs to see.
     if (!row.question && !row.context && !row.answer && row.topics.length === 0) continue
+
+    if (EXAMPLE_PREFIX.test(row.question)) {
+      row.scaffold = 'example'
+    } else if (GUIDANCE_CELL.test(row.question) && GUIDANCE_CELL.test(row.context)) {
+      row.scaffold = 'guidance'
+    }
     rows.push(row)
   }
 
@@ -220,6 +261,28 @@ export async function planImport(communityId: string, buffer: Buffer): Promise<I
   const plan: RowPlan[] = []
 
   for (const row of rows) {
+    // The template's own scaffolding is reported and skipped before anything
+    // else is judged. Its guidance row would otherwise fail on every column at
+    // once, which reads as a broken file rather than a row to delete.
+    if (row.scaffold) {
+      plan.push({
+        rowNumber: row.rowNumber,
+        question: row.question,
+        context: row.context,
+        topics: row.topics,
+        hasAnswer: Boolean(row.answer),
+        sources: row.sources,
+        localExample: row.localExample || null,
+        action: 'skip',
+        errors: [],
+        note:
+          row.scaffold === 'guidance'
+            ? 'This is the template’s column guidance, not a question. Skipped.'
+            : 'This is one of the template’s example rows. Skipped — delete it from the file if you like.',
+      })
+      continue
+    }
+
     const errors: string[] = []
     if (missingColumns.length) {
       errors.push(`The file has no ${missingColumns.join(' or ')} column.`)

@@ -96,7 +96,7 @@
     "measure:s10-stats": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s10-stats.ts",
     "diagnose:s10-misses": "tsx --env-file=.env --tsconfig tsconfig.json scripts/diagnose-s10-misses.ts",
     "measure:s10-guidance-fix": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s10-guidance-fix.ts",
-    "make:question-template": "tsx scripts/make-question-template.ts"
+    "patch:question-template": "tsx scripts/patch-question-template.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
