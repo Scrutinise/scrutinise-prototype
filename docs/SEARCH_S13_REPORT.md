@@ -404,6 +404,13 @@ number that had moved would have meant the two runs were not comparable.
 54/81) because routing is an LLM decision and this harness does not cache routes. The +18-point
 snippet gain and the +10.9-point coverage gain are both well outside that.
 
+⚠ **A LEGISLATION PROBE RETURNS `chunkId` ENDING `#0` FOR EVERY RESULT, AND THAT IS CORRECT.**
+`chunk.ts` emits ONE whole chunk for any body under `WHOLE_CHARS` (4,096), and a legislation section
+has a median of ~280 words — so chunk 0 is the only chunk there is. The mechanism is visible where
+documents are long: the case-law probe returns `#7`, the eighth chunk. Recorded because "all results
+say #0" is exactly what a broken carry-through would also look like, and the next person to probe
+the legislation tier will see it.
+
 **The single clearest instance** — GOLD V2 Q11, the Spring Statement, mean coverage **38% → 92%** —
 and the case-law probe returns `chunkId … #7`, i.e. **the eighth chunk**, with
 `snippetLocation: "about 42% of the way through"` and a snippet opening *"Courts within the British
