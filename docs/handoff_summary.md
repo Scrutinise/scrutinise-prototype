@@ -174,11 +174,27 @@ up**: idea `452c5ade` (cl@scrutinise.org) is **CONFIRMED, 2,934 chars of problem
 knowledge, a 750-char understanding paragraph, 0 builds** — and the page's OWN resume query, run
 verbatim against production for his user id, **returns that idea and not the blank 23 Aug shell**.
 So a bare visit to `https://www.scrutinise.org/ideas/build` should open on the build card with a
-working control (`?fresh=1` to start clean). ▶▶ **CHARLIE: THE ACCEPTANCE CRITERION IS UNCHANGED AND
-IT IS YOURS — complete the elicitation and START A BUILD. `IdeaBuild` still holds ZERO rows across
-the whole database; nobody ever has.** No Clerk session exists from here, so the click cannot be
-made from a CC session. Sections B–G of the walk remain untested because the build has still never
-run.**
+working control (`?fresh=1` to start clean). ⚠⚠⚠ **AND THEN CHARLIE RAN IT. THE ACCEPTANCE
+CRITERION IS MET: `IdeaBuild` HOLDS ITS FIRST ROW.** `a7f7151c` — **DONE, 7 of 7 passes, 5m 14s,
+107,380 in / 21,446 out, 6.78p**, framing `B_CONTEXTUALISED`, `failureReason` null — **on the
+RESUMED idea `452c5ade`**, so 25-E's resume did exactly the thing it was built to do rather than
+handing him a blank page. `Idea.lexPage` moved to `COHERENT_ACTIONS` as 25-A designed. ✅ **The
+kernel: 16 fields at `AWAITING_CONFIRMATION`, 3 `ACCEPTED` (his own words), 4 `EMPTY`; 10 fork rows
+over 5 decision points, 0 resolved; 4 coherent actions, 7 deepening passes, 70 evidence items, 34
+adversarial issues.** ⚠⚠ **THE CANONICAL `Idea` COLUMNS ARE ALL EMPTY AND THAT IS CORRECT** — the
+draft lives in `IdeaFieldState.proposal` until a human accepts it, so anyone reading the `Idea` row
+alone would conclude the build produced nothing. That warning leads the review document. ⚠ **The
+build's own most interesting output is a challenge to its premise:** pass 5 found that **CRaG 2010
+s.3(1) already confers the power to manage the civil service**, and the instrument fork now offers
+"use the existing power" against "new primary legislation" — Lex flagged it as the first thing to
+decide. ✅ **NEW, and temporary: `/ideas/build` now lists your previous ideas** (`RecentIdeasPanel`,
+`verify:recent-ideas-ui` **10/10 incl. a break-test**) — nothing in the product listed them, so that
+first build was reachable only by pasting a URL. ⚠ It is keyed on the user's OWN WORDS, not titles:
+11 of 11 ideas on this path are called "Untitled idea", so a title list renders eleven identical
+rows. The 10 blank shells are hidden **and counted on screen**. ✅ `npm run dump:kernel` renders any
+build for review → **`docs/LEX_FIRST_BUILD_KERNEL.md`** (287KB, complete, for CCh). ▶ **CHARLIE:
+sections B–G of your walk are now testable for the first time, and 25-C's decision agenda has never
+been walked — all 10 forks are unresolved.**
 Earlier: 2026-08-23 23:46 UTC — ▼ **BUILD FIXED AND PUSHED: production was failing for two
 days on a PACKAGE BOUNDARY, not a missing dependency.** Vercel died on
 `../scripts/ingest/search/lance.ts: Cannot find module '@lancedb/lancedb'`. Chain found with
