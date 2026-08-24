@@ -1,0 +1,17 @@
+import fs from 'fs'; import path from 'path'; import { OUT } from './db'
+const vs = fs.readFileSync(path.join(OUT,'C3_ots_classification.jsonl'),'utf8').split('\n').filter(Boolean).map(l=>JSON.parse(l))
+const NEWSY = new Set(['speech','news_story','press_release','oral_statement','written_statement'])
+const newsy = vs.filter((v:any)=>NEWSY.has(v.documentType))
+const notOts = vs.filter((v:any)=>v.verdict==='DELETE')
+const both = vs.filter((v:any)=>NEWSY.has(v.documentType) && v.verdict==='DELETE')
+console.log(`total rows                                  ${vs.length}`)
+console.log(`axis 1 — NOT published by the OTS           ${notOts.length}`)
+console.log(`axis 2 — a news story / speech / press rel. ${newsy.length}   <- the brief's authorised rule`)
+console.log(`both axes                                   ${both.length}`)
+console.log(`union                                       ${new Set([...newsy,...notOts].map((v:any)=>v.id)).size}`)
+console.log(`\naxis 2 breakdown by type`)
+const t = new Map<string,number>(); for (const v of newsy) t.set(v.documentType,(t.get(v.documentType)??0)+1)
+for (const [k,n] of [...t].sort((a,b)=>b[1]-a[1])) console.log(`   ${String(n).padStart(4)}  ${k}`)
+console.log(`\naxis 2 rows that ARE OTS-published (would be lost by the brief's rule): ${newsy.filter((v:any)=>v.verdict==='KEEP').length}`)
+for (const v of newsy.filter((v:any)=>v.verdict==='KEEP').slice(0,8)) console.log(`   [${v.documentType}] ${v.title}`)
+export {}
