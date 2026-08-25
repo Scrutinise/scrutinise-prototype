@@ -27,6 +27,45 @@ import {
 // TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
 // keeps importing its prop type from the component it renders.
 import RecentIdeasPanel, { type RecentIdea } from '@/components/lex/RecentIdeasPanel'
+import SurfaceSwitch from '@/components/lex/SurfaceSwitch'
+import HowItWorksModal from '@/components/lex/HowItWorksModal'
+import FeedbackDialog from '@/components/lex/FeedbackDialog'
+import type { SurfaceContext } from '@/lib/lex/surfaces'
+
+// ══ 25-G §3 — WHAT THE NEW DOOR LOST, RESTORED ═══════════════════════════════
+//
+// `docs/LEX_25F_CUTOVER.md` §9c inventoried eight things present at `/ideas/create` and
+// absent here, and 25-G §3 adopts the recommendation that they are built BEFORE the flag
+// is flipped — "shipping a validation door without the control that lets a user say it
+// isn't working is the wrong way round."
+//
+// ⚠ THE ORDER IS THE BRIEF'S AND IT IS NOT ALPHABETICAL. Feedback capture is first for
+// exactly that reason: the whole point of the flip is to find out whether this door works
+// on real users, and it would have shipped without the one control that lets them say it
+// does not.
+
+/**
+ * A5 — "say the word". A conservative match for a user asking how the platform works, so
+ * the tour opens instead of the answer being filed as their description of a problem.
+ *
+ * ⚠ COPIED FROM `CreateIdeaClient`, DELIBERATELY, AND THE DUPLICATION IS THE POINT: it is
+ * a UI affordance of one screen, not shared logic, and the two doors ask different
+ * questions. Extracting it would couple the elicitation's answer box to the create page's
+ * chat box, and the next person to widen one would silently widen the other.
+ *
+ * ⚠ AND IT IS NARROW ON PURPOSE. A false positive here is worse than on the create page:
+ * it would swallow an ANSWER — the user's own words about their problem — and show them a
+ * tour instead. So it matches only a whole message that is plainly the question.
+ */
+const HELP_INTENT =
+  /^(?:\s*(?:yes|sure|ok(?:ay)?|please|go on|yes please)[ ,.!]*)*(?:can|could)?\s*(?:you\s+)?(?:please\s+)?(?:show me (?:how (?:this|it) works|around|the ropes)|how (?:do|does) (?:this|it|i) (?:work|use this)|how (?:this|it) works|explain how (?:this|it) works|give me (?:a|the) tour|guided tour|walk me through (?:this|it))[ ?.!]*$/i
+
+/**
+ * A1 — the user has just criticised something Lex produced, so the offer to pass it back
+ * appears where the criticism was made. Same source as the create page (§20.5).
+ */
+const CRITIQUE_INTENT =
+  /\b(?:that(?:'s| is)|this(?:'s| is)|it(?:'s| is))\s+(?:not\s+right|wrong|incorrect|inaccurate|nonsense|rubbish|way off|miles off|misleading|too (?:low|high|vague|generic))\b|\b(?:you(?:'ve| have)?\s+(?:got|gotten)\s+(?:that|this|it)\s+wrong|you(?:'re| are)\s+wrong|that(?:'s| is)\s+made\s+up|you\s+made\s+that\s+up)\b|\bdoesn(?:'|\u2019)?t\s+(?:make\s+sense|reflect|match)\b|\bi\s+don(?:'|\u2019)?t\s+(?:agree|think\s+that(?:'s| is)\s+right)\b/i
 export type { RecentIdea }
 
 // The server's shapes, restated for the client. Kept structural rather than imported
@@ -113,6 +152,10 @@ export interface BuildState {
   emailDefault: boolean
   /** 25-F §7 — the idea's name, once the build has given it one. Null = still untitled. */
   ideaTitle: string | null
+  /** 25-G §1a — what a re-run would reuse, or null when there is nothing to reuse. */
+  reuse: { findings: number; cited: number; sources: number; fromVersion: number } | null
+  /** 25-G §1a — WHY reuse is unavailable, in words. Null when it is available. */
+  reuseBlockedReason: string | null
 }
 
 /**
@@ -159,12 +202,19 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
 
 
 export default function BuildIdeaClient(
-  { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0 }: {
+  { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0, surface = null,
+    isFirstIdea = false, displayName = null }: {
     initialIdeaId?: string
     resumed?: boolean
     /** TEMPORARY — the stopgap previous-ideas list. See `RecentIdea`. */
     recent?: RecentIdea[]
     hiddenEmpty?: number
+    /** 25-G §2 — what the proposal surface holds, so this screen can offer it. */
+    surface?: SurfaceContext | null
+    /** A3 — this user's very first idea: the tour opens unprompted, as it does at the old door. */
+    isFirstIdea?: boolean
+    /** A3 — how they want to be addressed. Falls back to nothing rather than to "there". */
+    displayName?: string | null
   },
 ) {
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
@@ -197,6 +247,16 @@ export default function BuildIdeaClient(
   /** AMENDMENT_25B §C4 — the checkbox, seeded from the user's remembered default. */
   const [emailWhenDone, setEmailWhenDone] = useState(false)
   const emailSeededRef = useRef(false)
+
+  // ── 25-G §3 — the restored affordances ───────────────────────────────────
+  // A3: on a user's very first idea the walkthrough opens unprompted, exactly as it does
+  // at the old door (`CreateIdeaClient`: `useState(Boolean(isFirstIdea))`).
+  const [showHelp, setShowHelp] = useState(Boolean(isFirstIdea))
+  // A1: the consent flow. Nothing is stored or sent until an explicit yes.
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [feedbackOffer, setFeedbackOffer] = useState(false)
+  // A6: Exit, and the prompt that stops a half-typed answer being thrown away.
+  const [exitPrompt, setExitPrompt] = useState(false)
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -303,6 +363,28 @@ export default function BuildIdeaClient(
     pollRef.current = setTimeout(() => { void refresh() }, 3000)
     return () => { if (pollRef.current) clearTimeout(pollRef.current) }
   }, [build, refresh])
+
+  /**
+   * ⚠ 25-G §2 — ONCE A BUILD EXISTS, SAY SO IN THE URL.
+   *
+   * §2 lands a returning user on the PROPOSAL, which the build page does by redirecting
+   * when the idea already has a finished build and the URL does not say `build=1`. That
+   * rule is right for someone arriving from a link and wrong for someone standing here
+   * watching their own build finish — a refresh would throw them off the screen they are
+   * reading.
+   *
+   * So the moment this page is showing a build, it writes the flag into its own URL.
+   * `replaceState`, not `pushState`: it is not a navigation the user made, and it must not
+   * put a step in their Back history. Same reasoning, and the same mechanism, as 25-E's
+   * `ideaId` line.
+   */
+  useEffect(() => {
+    if (!build?.latest || typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('build') === '1') return
+    url.searchParams.set('build', '1')
+    window.history.replaceState(null, '', url.toString())
+  }, [build?.latest])
 
   /**
    * §C4 — seed the checkbox from the remembered default, ONCE.
@@ -442,6 +524,19 @@ export default function BuildIdeaClient(
   const answer = useCallback(async (extra: Record<string, unknown> = {}) => {
     const step = elicit?.currentStep
     if (!step) return
+
+    // ⚠ A5 — "SAY THE WORD", AND IT MUST NOT COST THEM THEIR ANSWER. A user typing "how
+    // does this work" into the problem box is asking a question, not describing a problem;
+    // filing it would put it in front of every drafting pass as their account. The tour
+    // opens and the box is LEFT AS IT IS, so if the match was wrong they have lost nothing
+    // and can press Send again.
+    if (HELP_INTENT.test(text.trim())) {
+      setShowHelp(true)
+      return
+    }
+    // A1 — did they just criticise something Lex produced? The offer renders once the turn
+    // finishes. Display only; nothing is captured either way.
+    setFeedbackOffer(CRITIQUE_INTENT.test(text))
     const data = await post('/elicitation', {
       action: 'answer', step, text, goalKind: goalKind || undefined,
       ruledOut: ruledOut || undefined, readingUrl: readingUrl || undefined, ...extra,
@@ -473,7 +568,7 @@ export default function BuildIdeaClient(
    * which is the "user who cannot see what a five-minute job is doing assumes it has
    * hung" failure §2 names.
    */
-  const startBuild = useCallback(() => {
+  const startBuild = useCallback((mode: 'FULL' | 'REUSE' = 'FULL') => {
     if (!ideaId) return
     setError(null)
 
@@ -492,9 +587,12 @@ export default function BuildIdeaClient(
     void fetch(`/api/ideas/${ideaId}/build`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // §C4 — sent only when the offer was actually shown. Posting `false` on a build too
-      // short to have offered would silently clear a preference the user set elsewhere.
-      body: JSON.stringify(build?.estimate?.offerEmail ? { notifyEmail: emailWhenDone } : {}),
+      body: JSON.stringify({
+        mode,
+        // §C4 — sent only when the offer was actually shown. Posting `false` on a build too
+        // short to have offered would silently clear a preference the user set elsewhere.
+        ...(build?.estimate?.offerEmail ? { notifyEmail: emailWhenDone } : {}),
+      }),
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -565,6 +663,73 @@ export default function BuildIdeaClient(
     <div className="flex flex-col min-h-screen bg-white">
       <PublicNav />
 
+      {/* ══ 25-G §3 — THE PERSISTENT AFFORDANCES, ON EVERY SCREEN OF THIS SURFACE ══
+          Exit to the left, "How this works" to the right — the same arrangement and the
+          same prominence as the old door (§19-C Task 7 put Exit beside the help pill so
+          leaving is always in reach). Above the error banner because they must be usable
+          when something has gone wrong, which is when a user most wants both. */}
+      <div className="border-b border-zinc-100 px-4 py-2">
+        <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
+          <button
+            onClick={() => {
+              // A6 — a half-typed answer is work. Ask before throwing it away.
+              if (text.trim() || correction.trim() || ruledOut.trim()) setExitPrompt(true)
+              else window.location.href = '/dashboard'
+            }}
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
+          >
+            Exit
+          </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-5 py-2 shadow-sm transition-colors"
+          >
+            <span aria-hidden className="w-4 h-4 rounded-full border border-white/80 flex items-center justify-center text-[10px] font-bold">?</span>
+            How this works
+          </button>
+        </div>
+      </div>
+
+      {/* A2/A4 — the tour and the FAQ, in the build door's own words. */}
+      {showHelp && <HowItWorksModal variant="build" onClose={() => setShowHelp(false)} />}
+
+      {/* A1 — feedback capture. Stores and sends nothing until an explicit yes. */}
+      {feedbackOpen && ideaId && (
+        <FeedbackDialog
+          ideaId={ideaId}
+          stage="BUILD"
+          initialSurface="OTHER"
+          onClose={() => setFeedbackOpen(false)}
+        />
+      )}
+
+      {/* A6 — the unsaved-answer prompt. */}
+      {exitPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
+            <h2 className="text-base font-semibold text-zinc-900">Leave without sending that?</h2>
+            <p className="text-sm text-zinc-600 mt-1.5">
+              You’ve typed something you haven’t sent yet. Leave now and it’s gone — everything you
+              have already sent is saved.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button
+                onClick={() => { window.location.href = '/dashboard' }}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90"
+              >
+                Leave anyway
+              </button>
+              <button
+                onClick={() => setExitPrompt(false)}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+              >
+                Stay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-2 text-center">
           {error}
@@ -576,6 +741,11 @@ export default function BuildIdeaClient(
             the `booting` branch deliberately: it arrives from the server with the page, so
             it must still be there when the session fails to start — which is exactly the
             state in which you most want a way back to earlier work. */}
+        {/* 25-G §2 — the persistent route to the proposal, on every screen of this
+            surface: it sits above the phase switch so it is present during the
+            elicitation, during the build and after it. */}
+        <SurfaceSwitch context={surface} />
+
         <RecentIdeasPanel recent={recent} hiddenEmpty={hiddenEmpty} />
 
         {booting || !elicit ? (
@@ -595,6 +765,41 @@ export default function BuildIdeaClient(
                 <a href="/ideas/build?fresh=1" className="text-xs text-emerald-800 underline">
                   Start a different idea instead
                 </a>
+              </div>
+            )}
+
+            {/* ⚠ A3 — THE GREETING AND THE FIRST-IDEA INTRO.
+                The old door opens with "Good morning Charlie. What's the problem you want
+                to fix?" and, on a first idea, a paragraph explaining what the platform is.
+                This door opened with a bare question and no name — `elicitation-config`'s
+                `OPENING_ASK` and nothing else.
+
+                ⚠ RENDERED, NOT WRITTEN TO THE TRANSCRIPT. The create page seeds these as
+                chat bubbles because its transcript IS the conversation. Here the transcript
+                is the elicitation's own record of question-and-answer, and injecting a
+                greeting into it would put a message in the stored history that Lex never
+                said in a turn — and it would be re-sent to every drafting pass as context.
+                It belongs on the screen, not in the record. */}
+            {!elicit.messages.length && elicit.phase === 'QUESTION' && (
+              <div className="mb-5">
+                {displayName && (
+                  <p className="text-sm text-zinc-800">
+                    Good {timeOfDay()} {displayName}.
+                  </p>
+                )}
+                {isFirstIdea && (
+                  <p className="text-sm text-zinc-600 leading-relaxed mt-1.5">
+                    I’m here to help you turn an idea into a proposal a Member of Parliament could
+                    actually read. It’s four questions, then I go away and build a first version —
+                    the law as it stands, what’s been tried, where it’s weakest — and bring it back
+                    for you to argue with. Nothing I write is yours until you say it is. If you’d
+                    like the longer version, press{' '}
+                    <button onClick={() => setShowHelp(true)} className="underline text-blue-700 hover:text-blue-900">
+                      How this works
+                    </button>{' '}
+                    above.
+                  </p>
+                )}
               </div>
             )}
 
@@ -681,9 +886,33 @@ export default function BuildIdeaClient(
                 emailWhenDone={emailWhenDone}
                 onEmailWhenDone={setEmailWhenDone}
                 busy={busy}
-                onStart={startBuild}
+                onStart={() => startBuild('FULL')}
                 onRetryState={() => void refresh()}
               />
+            )}
+
+            {/* ⚠ A1 — THE OFFER, WHERE THE CRITICISM WAS MADE. Transient: it clears on the
+                next message either way, and the permanent route is below. */}
+            {feedbackOffer && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2 flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-sm text-amber-900">
+                  That didn’t land right — do you want to tell us what I got wrong?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setFeedbackOffer(false); setFeedbackOpen(true) }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-900 text-white hover:opacity-90"
+                  >
+                    Tell us
+                  </button>
+                  <button
+                    onClick={() => setFeedbackOffer(false)}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg text-amber-800 hover:bg-amber-100"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* ⚠ THE DEAD-END BACKSTOP. See `rendersAControl`. A user must never be looking
@@ -748,21 +977,93 @@ export default function BuildIdeaClient(
                     See it as others would
                   </a>
                 )}
-                {/* A re-run is the normal case after a correction, not an error path. */}
-                {build?.canStart && (
-                  <button
-                    onClick={startBuild}
-                    disabled={busy}
-                    className="text-sm font-medium px-4 py-2.5 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
-                  >
-                    Run it again
-                  </button>
+              </div>
+            )}
+
+            {/* ══ 25-G §1a/§1b — RUNNING IT AGAIN, AT TWO HONEST PRICES ═══════════
+                A re-run is the normal case after a correction, not an error path — and at
+                33.4p a time it was the case nobody could afford. Two thirds of a build's
+                input tokens are the orientation and the research, and neither depends on
+                the draft, so unless the elicitation has changed they should not run again.
+
+                ⚠ BOTH PRICES ARE ON SCREEN, and the expensive one is the one you have to
+                ask for. A cheap default that quietly reused a stale search would be worse
+                than the cost it saves. */}
+            {(finished || stopped) && ideaId && build?.canStart && (
+              <div className="mt-4 rounded-xl border border-zinc-200 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Run it again</p>
+
+                {build.reuse ? (
+                  <>
+                    <p className="text-sm text-zinc-700 mt-1.5">
+                      Re-running from the research already gathered — {build.reuse.findings} finding
+                      {build.reuse.findings === 1 ? '' : 's'}, {build.reuse.cited} cited source
+                      {build.reuse.cited === 1 ? '' : 's'}. Add new information above if you want me to
+                      search again.
+                    </p>
+                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => startBuild('REUSE')}
+                        disabled={busy}
+                        className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                      >
+                        Redraft from what I found
+                      </button>
+                      <button
+                        onClick={() => startBuild('FULL')}
+                        disabled={busy}
+                        className="text-sm font-medium px-4 py-2 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
+                      >
+                        Search again from scratch
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 mt-2">
+                      Redrafting skips the two search passes and costs roughly a third of a full build.
+                      Searching again reads the corpus from nothing — use it when what you have told me
+                      has really changed.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    {/* ⚠ THE REASON, NOT A MISSING BUTTON. A cheap option that is simply
+                        absent reads as broken; one that says why it does not apply does not. */}
+                    <p className="text-sm text-zinc-700 mt-1.5">
+                      {build.reuseBlockedReason ?? 'This will search the corpus again from scratch.'}
+                    </p>
+                    <button
+                      onClick={() => startBuild('FULL')}
+                      disabled={busy}
+                      className="mt-2.5 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                    >
+                      Run it again
+                    </button>
+                  </>
                 )}
               </div>
             )}
           </>
         )}
+
+        {/* ⚠ A1 — AND A PERMANENT ROUTE, not only the offer.
+            The offer fires on a phrase; this is always there. The whole purpose of the
+            flip is to find out whether this door works on real users, and a control that
+            only appears when we correctly guess they are unhappy is not that. */}
+        {ideaId && !booting && (
+          <p className="mt-8 text-center text-xs text-zinc-400">
+            <button onClick={() => setFeedbackOpen(true)} className="underline hover:text-zinc-700">
+              Something wrong with this? Tell us
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )
+}
+
+/** A3 — the same three-way split the create page uses, so the two doors greet alike. */
+function timeOfDay(): string {
+  const h = new Date().getUTCHours()
+  if (h >= 5 && h < 12) return 'morning'
+  if (h >= 12 && h < 18) return 'afternoon'
+  return 'evening'
 }

@@ -47,7 +47,58 @@ const PANELS: { name: string; side: string; blurb: string }[] = [
   { name: 'Legislation', side: 'right', blurb: "Once we have enough to search on, I'll pull the most relevant law, debates and committee work and put it here." },
 ]
 
-export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
+// ⚠ 25-G §3.2 — THE SAME TOUR, ADAPTED FOR THE OTHER DOOR.
+//
+// `docs/LEX_25F_CUTOVER.md` §9c names this modal as the single biggest thing `/ideas/build`
+// was missing — "losing the tour because it lived on the old route would be a silent
+// regression, and the tour was itself a fix from §19-D". But the copy above describes THREE
+// PANELS, and the build door has none of them: it is four questions, a build, then a
+// proposal. Showing a first-time user a tour of a screen they are not on is worse than
+// showing them nothing, because it teaches them the product is confused.
+//
+// So the CHROME and the FAQ are shared — one modal, one place to edit the FAQ — and only
+// the tour's own steps differ. A variant, not a second component.
+const BUILD_STEPS: { name: string; side: string; blurb: string }[] = [
+  {
+    name: 'Four questions',
+    side: 'first',
+    blurb: 'What the problem is, what you want to happen, what you know at first hand, and anything you want me to read. In your own words — there is no form.',
+  },
+  {
+    name: 'I read the record back',
+    side: 'then',
+    blurb: 'I show you what I understood before I do anything with it. If I have it wrong, say so and I will try again — nothing is built on a reading you have not seen.',
+  },
+  {
+    name: 'The build',
+    side: 'then',
+    blurb: 'Ten passes over about ten minutes: I search the corpus, draft a diagnosis and an approach, research what the draft raises, revise it against what I find, and read the whole thing back as a hostile committee clerk.',
+  },
+  {
+    name: 'Your proposal',
+    side: 'last',
+    blurb: 'Everything I drafted, as proposals you accept, edit or throw out — with the decisions I had to make laid out so you can take them yourself. Nothing is yours until you say it is.',
+  },
+]
+
+const BUILD_CLOSING =
+  'You can leave at any point and come back — everything is saved as you go. The build runs on our ' +
+  'servers, so you can close the tab while it works. And nothing it writes is agreed until you agree ' +
+  'to it: every field is a proposal with your name nowhere near it yet.'
+
+export default function HowItWorksModal({
+  onClose,
+  variant = 'create',
+}: {
+  onClose: () => void
+  /** 25-G §3.2 — which door's tour to show. The FAQ is the same either way. */
+  variant?: 'create' | 'build'
+}) {
+  const steps = variant === 'build' ? BUILD_STEPS : PANELS
+  const intro = variant === 'build'
+    ? 'This door is four questions and a build. Here is the whole of it:'
+    : TOUR_INTRO
+  const closing = variant === 'build' ? BUILD_CLOSING : TOUR_CLOSING
   const [view, setView] = useState<'tour' | 'faqs'>('tour')
 
   return (
@@ -89,10 +140,10 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
           {view === 'tour' ? (
             <div>
               <p className="text-base font-semibold text-zinc-900 mb-1">Welcome to Scrutinise.</p>
-              <p className="text-sm text-zinc-700 leading-relaxed mb-4">{TOUR_INTRO}</p>
+              <p className="text-sm text-zinc-700 leading-relaxed mb-4">{intro}</p>
 
               <div className="space-y-2.5 mb-4">
-                {PANELS.map((p, i) => (
+                {steps.map((p, i) => (
                   <div key={p.name} className="flex gap-3 rounded-xl border border-zinc-200 p-3">
                     <div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
                       {i + 1}
@@ -107,7 +158,7 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
                 ))}
               </div>
 
-              <p className="text-sm text-zinc-700 leading-relaxed">{TOUR_CLOSING}</p>
+              <p className="text-sm text-zinc-700 leading-relaxed">{closing}</p>
             </div>
           ) : (
             <ReactMarkdown components={MD}>{FAQ_MARKDOWN}</ReactMarkdown>
