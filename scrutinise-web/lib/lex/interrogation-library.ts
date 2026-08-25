@@ -35,7 +35,6 @@
 // ═════════════════════════════════════════════════════════════════════════════
 
 import type { SearchIntent } from './search-gateway'
-import { termsFrom } from './build-config'
 import type { HeadingKey } from './question-headings'
 
 export type QuestionKind = 'CORPUS' | 'DOMAIN_TRANSFER'
@@ -105,11 +104,26 @@ export interface InterrogationQuestion {
   /** The method block handed to the sift and the gather. What counts as a finding here. */
   method: string
   /**
-   * THE LEVER. What this question actually sends to retrieval, built from the draft.
-   * The engine adds nothing; a question that returns the bare draft terms is a question
-   * that will retrieve what every other question retrieved.
+   * ⚠⚠ 25-F §4 — `terms: (d) => withTerms(d, [...])` WAS HERE AND IS GONE. It is worth
+   * saying why rather than leaving an absence for someone to restore.
+   *
+   * It read `termsFrom(d.text, 14)` — a term-frequency count over the drafted kernel —
+   * and appended four or five literals. So the "lever" every question owned turned out
+   * to be the SAME fourteen words for all of them, differing by a handful. Nine
+   * questions, nine near-identical queries; on the first real build pass 1 reported
+   * "231 sources read; 0 cited".
+   *
+   * The query is now WRITTEN per question by `writeQueries` (build-query.ts), which is
+   * given this question's `question` and `mustAnswer` and composes for the job. What
+   * remains here is the part configuration is actually good at: the terms of art this
+   * question ALWAYS wants alongside whatever is composed, and which a writer working
+   * from the user's prose might not reach for.
+   *
+   * They are also the fallback: when the writer fails, `extractedQuery` reproduces the
+   * old behaviour exactly — extraction plus these anchors — and MARKS the query as
+   * extracted rather than letting it pass as written.
    */
-  terms: (d: DraftFacts) => string[]
+  anchors: string[]
   /**
    * §4 — "The instrument question comes first and can short-circuit the rest." Sorted on,
    * so the ordering is configuration rather than an array-index assumption.
@@ -120,14 +134,6 @@ export interface InterrogationQuestion {
    * must reconsider it. The engine keys off THIS, never off the question's id.
    */
   retiresTheInstrument?: boolean
-}
-
-/** Terms added to the draft's own, per question. Kept short: the router rewrites from
- *  these, and a query stuffed with boilerplate retrieves the boilerplate. */
-const withTerms = (d: DraftFacts, extra: string[], cap = 14): string[] => {
-  const base = termsFrom(d.text, cap)
-  const seen = new Set(base)
-  return [...base, ...extra.filter((t) => !seen.has(t))]
 }
 
 export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
@@ -169,10 +175,10 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       'if you looked. Do not report absence from a search that returned nothing about enabling powers',
       'at all; that is a gap in the search, and the two are not the same statement.',
     ].join('\n'),
-    terms: (d) => withTerms(d, [
-      'power', 'regulations', 'order', 'may by regulations', 'Secretary of State',
-      'confer', 'delegated', 'enabling',
-    ]),
+    anchors: [
+      'enabling provision', 'may by regulations', 'confer power', 'Secretary of State',
+      'delegated power', 'order', 'direction',
+    ],
   },
 
   // ── The standing legal map ────────────────────────────────────────────────
@@ -198,7 +204,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       '  · CONSEQUENTIALS and commencement, where the material shows them.',
       'Where the retrieved material does not settle something, say so rather than filling it in.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['Act', 'section', 'duty', 'regulations']),
+    anchors: ['statutory duty', 'section', 'regulations', 'commencement', 'interpretation'],
   },
 
   // ── How the courts have read it ───────────────────────────────────────────
@@ -227,7 +233,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       '    report it as one — a proposal that cites a case for something the case did not decide is',
       '    worse off than one that cites nothing.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['judgment', 'held', 'construction', 'interpretation', 'court']),
+    anchors: ['judicial review', 'judgment', 'held', 'statutory construction', 'court of appeal'],
   },
 
   // ── Why the rule reads the way it does ────────────────────────────────────
@@ -258,7 +264,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       'where this lives.',
       'If the material does not say, the honest answer is that the intention is not on the record.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['explanatory', 'introduced', 'purpose', 'amendment', 'second reading']),
+    anchors: ['explanatory notes', 'second reading', 'committee stage', 'amendment', 'policy intention'],
   },
 
   // ── Has it been tried ─────────────────────────────────────────────────────
@@ -288,7 +294,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       'been ACTUALLY TRIED. A false precedent is worse than a missing one: the user takes it into a',
       'committee room and is asked what happened, and nothing did.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['impact assessment', 'evaluation', 'review', 'scheme', 'pilot']),
+    anchors: ['impact assessment', 'post-implementation review', 'evaluation', 'pilot scheme'],
   },
 
   // ── Is the problem real ───────────────────────────────────────────────────
@@ -317,7 +323,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       '  · Distinguish a MEASURED causal claim from a plausible one. "X is associated with Y" and',
       '    "X causes Y" are different findings and the proposal may be resting on the wrong one.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['evidence', 'data', 'estimated', 'survey', 'statistics']),
+    anchors: ['official statistics', 'survey', 'estimated cost', 'measured outcome'],
   },
 
   // ── Where it has been examined ────────────────────────────────────────────
@@ -343,7 +349,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       '  · Where a debate shows the argument being made AGAINST a comparable measure, type it',
       '    CONTRADICTS. That is what the user is walking into.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['committee', 'inquiry', 'recommendation', 'report', 'evidence']),
+    anchors: ['select committee', 'inquiry', 'recommendation', 'written evidence', 'government response'],
   },
 
   // ── Reserved or devolved ──────────────────────────────────────────────────
@@ -372,7 +378,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       '  · Where the retrieved material does not settle it, say which schedule would settle it. A',
       '    named next step is worth more than a confident guess.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['Scotland', 'Wales', 'Northern Ireland', 'reserved', 'devolved', 'extent']),
+    anchors: ['reserved matter', 'devolved competence', 'legislative consent', 'extent', 'Scotland', 'Wales', 'Northern Ireland'],
   },
 
   // ── The one no corpus can answer ──────────────────────────────────────────
@@ -405,7 +411,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
       '    answer; "aviation solved anonymous incident reporting with a statutory no-blame channel,',
       '    and the UK built one in the CAA scheme" is.',
     ].join('\n'),
-    terms: (d) => withTerms(d, ['scheme', 'model', 'framework'], 10),
+    anchors: ['statutory scheme', 'regulatory model', 'framework'],
   },
 ]
 
