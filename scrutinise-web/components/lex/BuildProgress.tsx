@@ -68,6 +68,12 @@ function spendFor(build: BuildView, key: string): string | null {
   return `${tokens} — ${row.pence < 1 ? 'under 1p' : `${row.pence.toFixed(1)}p`}`
 }
 
+/** 25-F §2e — the models that actually answered for this pass, or null when none did. */
+function modelsFor(build: BuildView, key: string): string | null {
+  const row = build.modelsByPass?.find((m) => m.key === key)
+  return row?.models?.length ? row.models.join(', ') : null
+}
+
 /** Mirrors humaniseSeconds in lib/lex/build-estimate.ts — "about 7 minutes", never 6.8. */
 function humanise(seconds: number): string {
   if (seconds < 90) return 'about a minute'
@@ -176,6 +182,15 @@ export default function BuildProgress({
               )}
               {p.output && <p className="text-xs text-emerald-700 mt-1">{p.output}</p>}
               {p.failureReason && <p className="text-xs text-amber-700 mt-1">{p.failureReason}</p>}
+              {/* ⚠ 25-F §2e — "report which model ran each pass". The adversarial read
+                  had been running on the cheapest model we have, producing 407 output
+                  tokens for six issues against a whole constitutional proposal, and
+                  nothing on any screen said so. This is what a model swap has to be
+                  visible in for anyone to notice the next one. It reports the model that
+                  ANSWERED, not the one configured (25-D §1c: a 200 is not proof). */}
+              {modelsFor(build, p.key) && (
+                <p className="text-[11px] text-zinc-400 mt-1">read by {modelsFor(build, p.key)}</p>
+              )}
               {/* §8 — the spend for THIS pass. A build total cannot answer "which pass
                   cost that", which is the question the numbers exist to answer. */}
               {spendFor(build, p.key) && (
@@ -249,6 +264,30 @@ export default function BuildProgress({
           {' · '}ceiling {Math.round(ceiling.budgetMs / 1000)}s ({ceiling.binding}) / {ceiling.costPence}p
         </p>
         {build.queryUsed && <p className="truncate" title={build.queryUsed}>Query: {build.queryUsed}</p>}
+        {/* ⚠ 25-F §4 — EVERY QUERY, NOT JUST PASS 1'S. Until this sprint the only record
+            of what was searched was `queryUsed` — one string, from the opening pass — so
+            the nine near-identical bag-of-words queries the research pass issued left no
+            trace at all, and "231 sources read; 0 cited" had no diagnosable cause on the
+            row. A query that fell back to term extraction says so. */}
+        {build.queries?.length > 0 && (
+          <details>
+            <summary className="cursor-pointer hover:text-zinc-600">
+              {build.queries.length} search {build.queries.length === 1 ? 'query' : 'queries'} issued
+              {build.queries.some((q) => q.provenance === 'extracted') && ' ⚠'}
+            </summary>
+            <ul className="mt-1 space-y-1">
+              {build.queries.map((q, i) => (
+                <li key={`${q.by}-${i}`} className="text-[11px]">
+                  <span className="text-zinc-500">{q.terms.join(' · ')}</span>
+                  {q.provenance === 'extracted' && (
+                    <span className="text-amber-600"> — fell back to term extraction</span>
+                  )}
+                  <span className="block text-zinc-400">{q.purpose}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
     </div>
   )
