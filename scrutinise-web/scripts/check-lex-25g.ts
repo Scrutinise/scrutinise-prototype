@@ -475,11 +475,23 @@ const CHECKS: Check[] = [
 
   // ═══ §6 — THE CUTOVER, STILL GATED ═══════════════════════════════════════
   {
-    name: '§6 ⚠ THE FLIP HAS NOT HAPPENED — the default door is still `create`',
+    // ⚠⚠ RENAMED AFTER THE FLIP, BECAUSE THE OLD NAME BECAME FALSE.
+    //
+    // It read "THE FLIP HAS NOT HAPPENED", which was true while the cutover was pending and
+    // stopped being true the moment Charlie confirmed and the row was written. The
+    // ASSERTION never changed — it has always been about `DEFAULT_DOOR`, the CODE default,
+    // which is the state the platform falls back to when the row is absent, unreadable or
+    // deleted. That is the revert target, and it must stay `create` for the revert to be
+    // one row rather than a deploy.
+    //
+    // A check whose name says something false is worse than one with no name: the next
+    // reader trusts the name and not the code.
+    name: '§6 the REVERT TARGET is intact — the code default is still `create`',
     run: () => {
       if (DEFAULT_DOOR !== 'create') {
-        return `the default door is "${DEFAULT_DOOR}". §6 gates the flip on Charlie's confirmation `
-          + 'and says the ordering is not negotiable.'
+        return `the code default is "${DEFAULT_DOOR}". With the live flag on "build", a default of `
+          + '"build" would mean a deleted or unreadable row leaves users on the new door with no '
+          + 'one-row way back — which is the whole property §6 was built around.'
       }
       return doorPath(DEFAULT_DOOR) === '/ideas/create' ? null : 'the default does not resolve to /ideas/create'
     },
