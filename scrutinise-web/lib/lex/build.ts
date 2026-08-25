@@ -46,7 +46,8 @@ import {
   BUILD_PASSES, passDef, frameQuery, effectiveBudgetMs, COST_CEILING_PENCE,
   INSTRUMENT_FORK_KEY, trimForkAlternatives, DOMAIN_TRANSFER_QUESTION,
   HARD_STOP_MS, PASS_BUDGET_MS, perspectivesFor, modelForPass, buildDriver, WORKER_PICKUP_GRACE_MS,
-  type BuildDriver,
+  REUSABLE_PASSES, ORIENT_SOURCE_CAP,
+  type BuildDriver, type BuildMode,
   type BuildPassKey, type Framing,
 } from './build-config'
 import {
@@ -55,8 +56,8 @@ import {
   type RawFork, type RawUncertainty, type OrientOutput, type InstrumentAssessment,
 } from './build-client'
 import {
-  freshPassLog, readPassLog, carryInto, allUsages, nextPassKey, isResumable, passesComplete,
-  steppedOverFailures,
+  freshPassLog, reusedPassLog, readPassLog, carryInto, allUsages, nextPassKey, isResumable,
+  passesComplete, steppedOverFailures,
   type PassRecord, type PassStatus, type PassCarry,
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
@@ -65,6 +66,7 @@ import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { readKnownUnknowns } from './deepening'
 import { supersedeOlderProposals } from './evidence-layer'
+import { QUESTION_IDS } from './interrogation-library'
 import { buildHighlights, type BuildHighlights } from './build-highlights'
 import {
   writeQueries, extractedQuery, noteQueryDefects, queryProvenanceLine, type IssuedQuery,
@@ -185,6 +187,29 @@ export interface BuildState {
    * page headed "Untitled idea". Null while it is still the placeholder.
    */
   ideaTitle: string | null
+  /**
+   * 25-G §1a/§1b — THE TWO WAYS TO RUN IT AGAIN, AND WHAT EACH ONE COSTS.
+   *
+   * ⚠ NULL WHEN THERE IS NOTHING TO REUSE, which is a different statement from "reuse is
+   * off" and the client must be able to tell them apart: a first build, a build whose
+   * research never completed, and a build whose elicitation has since changed all produce
+   * null — and the third of those is the one worth saying out loud, because the user has
+   * just told us something new and the cheap option would answer the old question.
+   */
+  reuse: {
+    /** The findings and sources a re-run would read instead of searching again. */
+    findings: number
+    cited: number
+    sources: number
+    /** The version being reused, so the screen can say which build it came from. */
+    fromVersion: number
+  } | null
+  /**
+   * ⚠ WHY reuse is unavailable, in words, when it is. Null when it IS available.
+   * "No reason given" is how a user concludes the cheap option is broken rather than
+   * inapplicable.
+   */
+  reuseBlockedReason: string | null
 }
 
 function toView(
@@ -301,6 +326,39 @@ export async function buildState(ideaId: string): Promise<BuildState> {
   const finished = latestRow && latestRow.status !== 'QUEUED' && latestRow.status !== 'RUNNING'
   const highlights = finished ? await buildHighlights(ideaId, latestRow.version) : null
 
+  // ── 25-G §1a — can a re-run reuse the research, and if not, why not? ──────
+  //
+  // ⚠ COMPUTED ONLY WHEN A BUILD COULD ACTUALLY BE STARTED. `reuseSourceFor` reads the
+  // elicitation and the pass log; doing that on every three-second poll of a RUNNING build
+  // would be two queries a poll for an answer nobody can act on.
+  let reuse: BuildState['reuse'] = null
+  let reuseBlockedReason: string | null = null
+  if (confirmed && !active && rows.length) {
+    const source = await reuseSourceFor(ideaId)
+    if (source) {
+      const counts = await reuseSummary(ideaId, source.version)
+      reuse = { ...counts, fromVersion: source.version }
+      // Reusing nothing is not reuse. Say so rather than offering a saving that saves the
+      // user a search they needed.
+      if (!counts.findings) {
+        reuse = null
+        reuseBlockedReason = 'Your last build did not keep any findings, so there is nothing to re-run from — this will search again.'
+      }
+    } else {
+      const elicitation = await prisma.ideaElicitation.findUnique({
+        where: { ideaId }, select: { updatedAt: true },
+      })
+      const lastDone = rows.find((r) => r.status === 'DONE')
+      reuseBlockedReason = !lastDone
+        ? 'No build has finished yet, so there is no research to re-run from.'
+        : elicitation && lastDone.startedAt && elicitation.updatedAt > lastDone.startedAt
+          // ⚠ THE ONE WORTH SAYING OUT LOUD. They have told us something new; the cheap
+          // option would answer the question they stopped asking.
+          ? 'You’ve changed what you told me since the last build, so I’ll search again rather than reuse a search that never saw it.'
+          : 'The last build didn’t get far enough through the research to reuse it.'
+    }
+  }
+
   return {
     ideaId,
     canStart: confirmed && !active,
@@ -320,6 +378,8 @@ export async function buildState(ideaId: string): Promise<BuildState> {
     driver: buildDriver(),
     // Null for the placeholder, so the client can tell "not named yet" from "named".
     ideaTitle: owner?.title?.trim() && owner.title.trim() !== 'Untitled idea' ? owner.title.trim() : null,
+    reuse,
+    reuseBlockedReason,
   }
 }
 
@@ -348,6 +408,11 @@ export async function claimBuild(
    * means the caller expressed no preference and the user's remembered default stands.
    */
   notifyEmail?: boolean,
+  /**
+   * 25-G §1a — `REUSE` reads the previous build's orientation and research instead of
+   * running them. Ignored when there is nothing to reuse; see `reuseSourceFor`.
+   */
+  mode: BuildMode = 'FULL',
 ): Promise<string> {
   if (!(await isConfirmed(ideaId))) throw new ElicitationNotConfirmed()
 
@@ -381,13 +446,29 @@ export async function claimBuild(
     })
   }
 
+  // ── 25-G §1a — REUSE THE RESEARCH, WHEN THERE IS RESEARCH TO REUSE ────────
+  //
+  // ⚠ THE MODE IS A REQUEST, NOT A GUARANTEE, AND IT IS DOWNGRADED RATHER THAN REFUSED.
+  // A `REUSE` asked for on an idea whose only previous build FAILED in pass 1 has nothing
+  // to reuse; refusing it would leave the user with a button that does nothing, and
+  // obeying it would produce a build with no orientation. `reuseSourceFor` returns null
+  // and the build runs FULL — which is what they wanted anyway — and `reuseNote` says so
+  // on screen rather than silently charging them 33p for the cheap option.
+  const reuseFrom = mode === 'REUSE' ? await reuseSourceFor(ideaId) : null
+  const passes = reuseFrom
+    ? reusedPassLog(readPassLog(reuseFrom.passes), REUSABLE_PASSES, (key, output) =>
+        key === 'ORIENT'
+          ? `Reused from your last build — ${output ?? 'the corpus search it ran'}`
+          : `Reused from your last build — ${output ?? 'the research it ran'}`)
+    : freshPassLog()
+
   let created
   try {
     created = await prisma.ideaBuild.create({
       data: {
         ideaId, version, framing, status: 'QUEUED',
         notifyEmail: wantsEmail,
-        passes: freshPassLog() as never,
+        passes: passes as never,
       },
     })
   } catch (err) {
@@ -397,6 +478,10 @@ export async function claimBuild(
     if (code === 'P2002') throw new BuildAlreadyRunning()
     throw err
   }
+
+  // 25-G §1a — the reused findings move to this run's version, or nothing downstream
+  // will be able to see them. See `carryEvidenceForward` for why this is not optional.
+  if (reuseFrom) await carryEvidenceForward(ideaId, reuseFrom.version, version)
 
   // ⚠ AMENDMENT_25B §B — ON THE WORKER, THE ROW STAYS QUEUED AND THE REQUEST RETURNS.
   //
@@ -425,6 +510,109 @@ export async function claimBuild(
     ideaId, buildId: created.id, version, framing,
   })
   return created.id
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 25-G §1a — THE RE-RUN THAT REUSES THE RESEARCH
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * The build a `REUSE` run would read its orientation and research from, or null.
+ *
+ * Three conditions, and each one has a failure it prevents:
+ *
+ *  1. **A previous build that got past both passes.** Reusing from a build whose research
+ *     never completed reuses nothing and calls it a saving.
+ *  2. **THE ELICITATION HAS NOT CHANGED SINCE.** ⚠ This is the condition the brief names —
+ *     *"unless the elicitation changed, they should not run again"*, and its contrapositive
+ *     is the one that matters: if the user has told us something new, reusing a search that
+ *     never saw it is worse than not offering the cheap option at all. They would pay less
+ *     for an answer to the question they stopped asking.
+ *  3. **There is evidence still attached.** A previous run whose findings the user rejected
+ *     wholesale has nothing to hand forward.
+ */
+export async function reuseSourceFor(ideaId: string): Promise<{ id: string; version: number; passes: unknown } | null> {
+  const previous = await prisma.ideaBuild.findFirst({
+    where: { ideaId, status: 'DONE' },
+    orderBy: { version: 'desc' },
+    select: { id: true, version: true, passes: true, startedAt: true },
+  })
+  if (!previous) return null
+
+  const log = readPassLog(previous.passes)
+  const usable = REUSABLE_PASSES.every((k) => {
+    const p = log.find((q) => q.key === k)
+    return p?.status === 'DONE' || p?.status === 'SKIPPED'
+  })
+  if (!usable) return null
+
+  // ⚠ The elicitation test. `updatedAt` moves on every answer, correction and confirm.
+  const elicitation = await prisma.ideaElicitation.findUnique({
+    where: { ideaId }, select: { updatedAt: true },
+  })
+  if (elicitation && previous.startedAt && elicitation.updatedAt > previous.startedAt) {
+    console.log('[lex-diag] 25g reuse declined — the elicitation changed since the last build', {
+      ideaId, elicitationUpdatedAt: elicitation.updatedAt, buildStartedAt: previous.startedAt,
+    })
+    return null
+  }
+
+  return { id: previous.id, version: previous.version, passes: previous.passes }
+}
+
+/** What a REUSE run is actually reusing, counted — for the sentence the user reads. */
+export async function reuseSummary(ideaId: string, fromVersion: number): Promise<{
+  findings: number; cited: number; sources: number
+}> {
+  const [findings, cited, idea] = await Promise.all([
+    prisma.evidenceItem.count({ where: { ideaId, runVersion: fromVersion, status: { not: 'REJECTED' } } }),
+    prisma.evidenceItem.count({
+      where: { ideaId, runVersion: fromVersion, status: { not: 'REJECTED' }, citation: { not: null } },
+    }),
+    prisma.idea.findUnique({ where: { id: ideaId }, select: { legislationRefs: true } }),
+  ])
+  const raw = idea?.legislationRefs
+  return { findings, cited, sources: Array.isArray(raw) ? raw.length : 0 }
+}
+
+/**
+ * ⚠⚠ CARRY THE REUSED EVIDENCE FORWARD TO THE NEW RUN VERSION, AND THIS IS THE STEP THAT
+ * MAKES "REUSE" MEAN REUSE RATHER THAN "SKIP".
+ *
+ * Everything downstream is scoped by `runVersion`: `buildHighlights` reads the new
+ * version, the adversarial pass reads the new version, `supersedeOlderProposals` REJECTS
+ * anything PROPOSED at an older one. So a re-run that merely skipped the research passes
+ * would produce a build with no findings on its screen — and worse, the revision and the
+ * clerk would run against an empty evidence set while `carry.research` told them there
+ * were seventy-five findings. The two would disagree and only one of them would be on the
+ * page.
+ *
+ * ⚠ ONLY `PROPOSED` ROWS MOVE. An ACCEPTED finding is the user's judgement and an item they
+ * REJECTED is also their judgement; dragging either into a new run would overwrite a
+ * decision they made. Those stay where they are, at the version that produced them.
+ *
+ * ⚠ AND ONLY THE REUSED PASSES' ROWS. The previous run's REVISE contradictions and SMART
+ * critique are about a DRAFT that this run is rewriting — carrying them forward would put
+ * last week's "the critique rewrote summaryDiagnosis" beside this week's diagnosis.
+ */
+async function carryEvidenceForward(
+  ideaId: string, fromVersion: number, toVersion: number,
+): Promise<{ evidence: number; gaps: number }> {
+  const researchPassKeys = QUESTION_IDS
+  const evidence = await prisma.evidenceItem.updateMany({
+    where: { ideaId, runVersion: fromVersion, status: 'PROPOSED', passKey: { in: researchPassKeys } },
+    data: { runVersion: toVersion },
+  })
+  // The stated gaps travel too. §22's rule is that "we looked for this and could not reach
+  // it" is a result; a re-run that dropped them would report a cleaner search than it had.
+  const gaps = await prisma.deepeningPass.updateMany({
+    where: { ideaId, runVersion: fromVersion, passKey: { in: researchPassKeys } },
+    data: { runVersion: toVersion },
+  })
+  console.log('[lex-diag] 25g carried the reused evidence forward', {
+    ideaId, fromVersion, toVersion, evidence: evidence.count, gaps: gaps.count,
+  })
+  return { evidence: evidence.count, gaps: gaps.count }
 }
 
 /** Ask a running build to stop. Co-operative: the engine checks between passes. */
@@ -1069,6 +1257,38 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
     data: { legislationRefs: stripNullBytes(merged.slice(0, 20)) as never },
   })
 
+  // ══ 25-G §1c — WHAT THE ORIENT MODEL READS, CAPPED AND COUNTED ═════════════
+  //
+  // ⚠⚠ THIS PASS WAS 36% OF EVERY BUILD'S INPUT TOKENS AND NOBODY HAD LOOKED. Measured on
+  // build `42d68bea`: **77,970 input tokens across 2 calls** — ~39,000 each — out of
+  // 217,687 for the whole build. The cause is one line: `merged` is every result from both
+  // gateway calls (the gateway returns ~15× what it is asked for, so 16 becomes ~240 twice
+  // over) and ALL of it went into the prompt.
+  //
+  // ⚠ AND THE PASS ONLY EVER STORED 20. So the model was reading four hundred documents to
+  // reason over, citing ids from anywhere in that set, and the user could see twenty — with
+  // a citation to source #300 counted as "cited" against a source that was never kept.
+  // Three different numbers for one set.
+  //
+  // ⚠ THIS IS NOT §1c's FORBIDDEN TRUNCATION. The brief's warning is against showing a pass
+  // a SUMMARY in place of findings — which is the 25-F defect, and nothing here summarises
+  // anything. Every source the model reads is a whole source. What changes is how many, and
+  // a prefix is a fair sample rather than a biased one for the same reason 25-C's research
+  // cap is: `interleaveStreams` round-robins, so the head of the list is stream-balanced.
+  // (A prefix of a SCORE-ordered list would have been a silent bias — that distinction is
+  // the whole reason this is safe.)
+  //
+  // ⚠ AND THE RETRIEVED COUNT IS STILL REPORTED. "434 retrieved, 40 read" is the honest
+  // sentence; "40 sources read" alone would quietly shrink what the corpus returned.
+  const readCap = ORIENT_SOURCE_CAP
+  const forReading = merged.slice(0, readCap)
+  const readable = new Set(forReading.map((r) => r.id))
+  if (merged.length > forReading.length) {
+    console.log('[lex-diag] 25g orient capped what the model reads', {
+      buildId, retrieved: merged.length, read: forReading.length, stored: Math.min(merged.length, 20),
+    })
+  }
+
   // ── §7 — ONE READING PER PERSPECTIVE, AND THEY ARE NOT BLENDED. ────────────
   //
   // ⚠ THE MERGE RULE IS DIFFERENT HERE FROM PASS 3, AND DELIBERATELY SO. Pass 3 produces
@@ -1085,7 +1305,7 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
     if (perspectives.length > 1) await c.activity(`Reading the terrain — ${p.label}`)
     const r = await runOrientPass({
       promptBlock: framed.promptBlock,
-      results: merged,
+      results: forReading,
       lens: p.lens || undefined,
       model: p.model ?? modelForPass('ORIENT'),
     })
@@ -1110,8 +1330,12 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
   const o = result.value
   // Drop any cited id that is not in the set we handed over. A fabricated citation
   // cannot be persisted even if the model produces one.
+  // ⚠ AGAINST WHAT THE MODEL WAS HANDED, not against everything retrieved. `seen` is all
+  // ~434 ids; the model only ever saw `forReading`, so checking against `seen` would accept
+  // a citation to a document that was never in front of it — a fabricated id that happened
+  // to be real. Stricter, and it is the set the user can see.
   const citedAll = new Set<string>()
-  for (const r of readings) for (const id of r.value.citedSourceIds ?? []) if (seen.has(id)) citedAll.add(id)
+  for (const r of readings) for (const id of r.value.citedSourceIds ?? []) if (readable.has(id)) citedAll.add(id)
   const droppedIds = readings.reduce((n, r) => n + (r.value.citedSourceIds ?? []).length, 0) - citedAll.size
   if (droppedIds > 0) console.warn('[lex-diag] 25b orient dropped unknown source ids', { dropped: droppedIds })
 
@@ -1168,7 +1392,7 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
     ok: true,
     output: (searchFailed
       ? `${merged.length} sources — ⚠ at least one corpus search did not complete`
-      : `${merged.length} sources read; ${citedAll.size} cited` +
+      : `${merged.length} retrieved, ${forReading.length} read; ${citedAll.size} cited` +
         (readings.length > 1 ? ` across ${readings.length} readings` : ''))
       + ` · ${queryProvenanceLine([openingQuery])}`,
     carry: { orientation, searchFailed },
@@ -1298,8 +1522,26 @@ async function approachPass(c: PassContext): Promise<PassOutcome> {
   } else {
     console.warn('[lex-diag] 25f APPROACH returned no anticipated responses', { buildId })
   }
-  if (a.conditionsForSuccess?.trim()) {
-    await setProposal(ideaId, 'conditionsForSuccess', { value: a.conditionsForSuccess.trim() })
+  // ⚠ 25-G §4d — RENDERED AS A LIST, because it IS one.
+  //
+  // The field stores a string (`summarySchema`), so the list is joined here rather than
+  // changing the field's type — and it is joined with bullets, so the five conditions
+  // read as five conditions instead of the five-sentence paragraph the second build
+  // produced, every sentence of which opened "For this to work".
+  //
+  // ⚠ THE STEM IS STRIPPED IF IT SURVIVES THE PROMPT. Telling a model not to repeat an
+  // opener is a request; removing it afterwards is the guarantee. Only when it is the
+  // OPENING of the item — a "for this to work" inside a sentence is the author's own.
+  const conditions = (Array.isArray(a.conditionsForSuccess) ? a.conditionsForSuccess : [])
+    .map((c) => String(c ?? '').trim())
+    .filter(Boolean)
+    .map((c) => c.replace(/^for (this|it) to work,?\s*/i, '').trim())
+    .map((c) => (c ? c.charAt(0).toUpperCase() + c.slice(1) : c))
+    .filter(Boolean)
+  if (conditions.length) {
+    await setProposal(ideaId, 'conditionsForSuccess', {
+      value: conditions.map((c) => `• ${c}`).join('\n'),
+    })
   } else {
     console.warn('[lex-diag] 25f APPROACH returned no conditions for success', { buildId })
   }
@@ -2485,13 +2727,25 @@ async function composeSummary(
 async function stopBuild(buildId: string, stop: StopReason): Promise<BuildView> {
   const status = stop.kind === 'cancel' ? 'CANCELLED' : 'FAILED'
   // Passes that never ran are NOT_REACHED, not PENDING — see the note in runNextPass.
-  const row = await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { passes: true } })
+  const row = await prisma.ideaBuild.findUnique({
+    where: { id: buildId }, select: { passes: true, ideaId: true },
+  })
   const log = readPassLog(row?.passes).map((p) =>
     p.status === 'PENDING' || p.status === 'RUNNING'
       ? { ...p, status: 'NOT_REACHED' as PassStatus, completedAt: new Date().toISOString() }
       : p)
   await prisma.ideaBuild.update({ where: { id: buildId }, data: { passes: stripNullBytes(log) as never } })
   console.warn('[lex-diag] 25b build stopped early', { buildId, kind: stop.kind })
+
+  // ⚠ 25-G §5 — A BUILD THAT STOPPED EARLY STILL NAMES ITS IDEA.
+  //
+  // `nameTheIdea` ran only in `finishBuild`, so a build that hit a ceiling or was cancelled
+  // left its row called "Untitled idea" — and §5's whole point is that Charlie could not
+  // find his work afterwards. A stopped build is exactly the case where someone is MOST
+  // likely to go looking: it drafted a diagnosis, an approach and a title, and then
+  // stopped. The draft is real either way; only the name was missing.
+  if (row?.ideaId) await nameTheIdea(row.ideaId)
+
   return settleBuild(buildId, status, stopMessage(stop), allUsages(log))
 }
 

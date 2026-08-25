@@ -47,6 +47,20 @@ const BodySchema = z.object({
    * per user as a default they can change" means.
    */
   notifyEmail: z.boolean().optional(),
+  /**
+   * 25-G §1a/§1b — HOW MUCH OF THE BUILD TO RUN.
+   *
+   * `REUSE` reads the previous build's orientation and research instead of running them
+   * (measured: 65% of a build's input tokens and 6.14p of its 33.4p). `FULL` searches
+   * again from scratch and is the explicit, separately-offered choice of §1b.
+   *
+   * ⚠ THE DEFAULT IS `FULL`, and it is the safe direction rather than the cheap one. An
+   * omitted mode means the caller expressed no preference — a first build, an old tab, the
+   * worker — and a build that quietly reused a search nobody asked it to reuse would be
+   * indistinguishable on screen from one that had searched. The screen asks; the engine
+   * does not guess.
+   */
+  mode: z.enum(['FULL', 'REUSE']).optional(),
 })
 
 export async function GET(_req: Request, { params }: Params) {
@@ -108,7 +122,7 @@ export async function POST(req: Request, { params }: Params) {
   // ── START a build ────────────────────────────────────────────────────────
   let buildId: string
   try {
-    buildId = await claimBuild(id, framing, parsed.data.notifyEmail)
+    buildId = await claimBuild(id, framing, parsed.data.notifyEmail, parsed.data.mode ?? 'FULL')
   } catch (err) {
     if (err instanceof BuildAlreadyRunning) {
       return NextResponse.json({ error: err.message, state: await buildState(id) }, { status: 409 })

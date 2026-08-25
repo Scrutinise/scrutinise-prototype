@@ -359,6 +359,50 @@ export const ABANDONED_AFTER_MS = parseInt(process.env.LEX_BUILD_ABANDON_MS ?? '
 // verdict — it is simply the framing closest to what the rest of the product does
 // today, so that the experiment is the thing being tested and not the deployment.
 
+// ── 25-G §1a/§1b — HOW MUCH OF A BUILD A RE-RUN ACTUALLY RUNS ────────────────
+//
+// ⚠ THIS IS NOT A COLUMN, AND THAT IS DELIBERATE. The mode is expressed in the STORED PASS
+// LOG — a reused pass is `SKIPPED` with its reuse note as its output — so "what did this
+// build actually run" is answered by the same record that answers every other question
+// about it. A `mode` column would be a second place to look, and the two would drift the
+// first time a pass was skipped for a different reason.
+//
+// `REUSE` is the DEFAULT for a re-run and `FULL` is the explicit choice (§1b), because the
+// expensive option should be the one somebody asks for.
+
+export type BuildMode = 'FULL' | 'REUSE'
+
+export function isBuildMode(v: unknown): v is BuildMode {
+  return v === 'FULL' || v === 'REUSE'
+}
+
+/**
+ * The passes a `REUSE` run reads from the previous build instead of running.
+ *
+ * ⚠ EXACTLY THESE TWO, and the reason is that they are the only passes whose output does
+ * not depend on the draft. ORIENT and RESEARCH read the ELICITATION and the CORPUS; every
+ * other pass reads the DRAFT, which is the thing a re-run exists to change. Adding a
+ * drafting pass here would make a re-run re-present the same draft it was asked to redo.
+ */
+export const REUSABLE_PASSES: readonly BuildPassKey[] = ['ORIENT', 'RESEARCH']
+
+/**
+ * 25-G §1c — HOW MANY RETRIEVED SOURCES THE ORIENT MODEL ACTUALLY READS.
+ *
+ * ⚠ 40, AND THE NUMBER IS MEASURED. The pass was handing the model everything the gateway
+ * returned — ~434 documents, **77,970 input tokens across two calls, 36% of a whole
+ * build's input** — while storing 20 and showing the user 20. Forty is well above what is
+ * stored (so nothing the user can see is unread) and an order of magnitude below what was
+ * being sent.
+ *
+ * ⚠ It caps READING, never STORAGE and never the retrieved count, both of which are still
+ * reported. See the note at the call site for why a prefix is a fair sample here and would
+ * not be on a score-ordered list.
+ */
+export const ORIENT_SOURCE_CAP = Math.max(
+  20, parseInt(process.env.LEX_BUILD_ORIENT_SOURCE_CAP ?? '40', 10),
+)
+
 export type Framing = 'A_NAIVE' | 'B_CONTEXTUALISED'
 
 export const DEFAULT_FRAMING: Framing =

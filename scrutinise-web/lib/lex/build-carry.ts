@@ -101,6 +101,60 @@ export function freshPassLog(): PassRecord[] {
   }))
 }
 
+/**
+ * 25-G §1a — THE PASSES A RE-RUN REUSES RATHER THAN REPEATING.
+ *
+ * ⚠ THE ECONOMICS ARE THE WHOLE REASON, and they are not marginal. Measured on the second
+ * build of Charlie's idea (`42d68bea`, 217,687 input tokens, 33.4p):
+ *
+ *     ORIENT     77,970 in   2.26p   ← 36% of the input tokens
+ *     RESEARCH   63,956 in   3.88p   ← 29%
+ *
+ * Two passes are **65% of what a build reads** and 6.14p of what it costs. At 1,000 pilot
+ * users a free build each is £330, and "run it again" at full price makes iteration
+ * unaffordable exactly where it is most valuable. **Unless the elicitation changed, they
+ * should not run again.**
+ *
+ * ⚠⚠ THE CARRY IS COPIED AND THE USAGES ARE NOT. This is the line that decides whether the
+ * saving is real or merely reported. `carry.orientation` and `carry.research` are what the
+ * later passes actually read — and since 25-F `carry.research` carries the FINDINGS
+ * THEMSELVES rather than a count of them, so reusing it hands the revision the same
+ * material it had. `usages` are deliberately emptied: those tokens were spent on the
+ * PREVIOUS build and are recorded there. Copying them forward would make every re-run
+ * report the full price of a build it did not run, which is the opposite failure and
+ * harder to notice.
+ *
+ * ⚠ SKIPPED, NOT DONE. A pass that did not run this time must not claim it did.
+ * `nextPassKey` steps over SKIPPED; the progress display shows it as reused, with what is
+ * being reused named on the line.
+ */
+export function reusedPassLog(
+  previous: PassRecord[],
+  reuse: readonly BuildPassKey[],
+  note: (key: BuildPassKey, previousOutput: string | null) => string,
+): PassRecord[] {
+  return freshPassLog().map((p) => {
+    if (!reuse.includes(p.key)) return p
+    const before = previous.find((q) => q.key === p.key)
+    // A pass that did not complete last time has nothing worth reusing — it runs again.
+    if (!before || before.status !== 'DONE') return p
+    return {
+      ...p,
+      status: 'SKIPPED' as PassStatus,
+      startedAt: null,
+      completedAt: new Date().toISOString(),
+      output: note(p.key, before.output),
+      carry: { ...(before.carry ?? {}) },
+      // ⚠ EMPTY. See above — these tokens belong to the build that spent them.
+      usages: [],
+      // The queries are the record of what was ASKED, and the answers are being reused, so
+      // the questions travel with them. They cost nothing to carry and a re-run that
+      // showed no queries would look like a build that searched nothing.
+      queries: before.queries ?? [],
+    }
+  })
+}
+
 export function readPassLog(raw: unknown): PassRecord[] {
   if (!Array.isArray(raw) || !raw.length) return freshPassLog()
   // Reconcile against the configured passes, so adding a pass in a later sprint does
