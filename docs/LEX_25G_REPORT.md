@@ -272,6 +272,44 @@ and report the first three real builds — completion, cost, time, any failed pa
 
 ---
 
+## DELIVERY (CLAUDE.md §20) — CHECKS 1, 2 AND 4 PASS
+
+| | |
+|---|---|
+| **1. every file committed** | `check:committed` — 498 shipped source files scanned, all in the repository |
+| **2. the remote has the commits** | `git ls-remote` server ref == local HEAD, `merge-base --is-ancestor` confirms |
+| **3. green PRODUCTION deployment** | ⚠ **Charlie's** — the Vercel token is SAML-blocked (§19). Check 4 is indirect evidence it landed. |
+| **4. the running site serves the change** | ✅ **9/9** — `scripts/probe-25g-live.sh` |
+
+⚠⚠ **THE HTML OF `/ideas/build` IS USELESS FOR CHECK 4 AND LOOKS EXACTLY LIKE A FAILURE.**
+The route is Clerk-gated, so an unauthenticated fetch returns a ~13KB sign-in shell and
+every 25-G marker greps to zero — **and so does every 25-F marker**, which is the tell.
+"All markers absent" is equally what a probe that cannot see the bundle returns; 25-E
+recorded this exact trap and I walked into it once before reading it back.
+
+So the probe reads the **client bundle**, and carries controls in both directions:
+
+```
+  reading 18 chunk(s) referenced by /ideas/build · 987,495 bytes of JavaScript
+
+  ✓ §3 A1 the permanent feedback route      ✓ §1b the explicit re-search
+  ✓ §3 A6 the unsaved-answer prompt         ✓ §2 the surface switch names itself
+  ✓ §1a the reuse sentence                  ✓ §4c a fork says what is decided
+
+  controls — 25-F strings that must ALREADY be there:
+  ✓ 25-F §1 the findings heading            ✓ 25-E resume
+  ✓ control: a string that exists nowhere is absent, so a hit means something
+```
+
+The same probe, run two minutes after the push, returned **3 passed / 6 failed** — both
+controls green and all six markers absent. That is the honest intermediate state, and it is
+what makes the pass above mean something rather than being a grep that matches anything.
+
+**§6 re-verified after the push:** `PlatformConfig["newIdeaDoor"]` is **ABSENT**;
+`newIdeaDoorState()` resolves `{ door: "create", path: "/ideas/create", isDefault: true }`.
+
+---
+
 ## NOT DONE, AND WHY
 
 - **The §1a saving is arithmetic, not a measurement.** Taking it needs a real REUSE build
