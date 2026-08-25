@@ -34,6 +34,7 @@
 
 import { prisma } from '../lib/prisma'
 import { claimBuild, runBuildToCompletion, buildState } from '../lib/lex/build'
+import { confirmElicitation } from '../lib/lex/elicitation'
 import { DEFAULT_FRAMING } from '../lib/lex/build-config'
 import { buildHighlights } from '../lib/lex/build-highlights'
 import { SMART_VOCABULARY_PASS_KEY } from '../lib/lex/build-smart'
@@ -126,10 +127,30 @@ async function main() {
       readingUrl: source.readingUrl,
       readingFileName: source.readingFileName,
       understanding: source.understanding,
-      status: 'CONFIRMED',
-      confirmedAt: new Date(),
+      // ⚠⚠ NOT `status: 'CONFIRMED'` — SEE BELOW. Left IN PROGRESS so the real confirm runs.
     },
   })
+
+  // ⚠⚠ THE COPY IS CONFIRMED THROUGH `confirmElicitation`, NOT BY WRITING THE COLUMN.
+  //
+  // This script used to set `status: 'CONFIRMED', confirmedAt: new Date()` directly, and
+  // that made every copy it produced SUBTLY UNFAITHFUL in a way that cost a real user real
+  // time.
+  //
+  // `confirmElicitation` is the ONLY code that writes the page-one kernel fields — it calls
+  // `submitBox(ideaNarrative)` with the problem and `submitBox(youAndIdeaNarrative)` with
+  // the goal, the ruled-outs and the own-knowledge. Setting the column skips it. So a copy
+  // made by this script had a CONFIRMED elicitation and PERMANENTLY EMPTY page-one boxes,
+  // where a genuine walk-through fills them (452c5ade: 2,934 and 1,478 characters).
+  //
+  // On 25 Aug Charlie found one of these copies left behind, re-ran it, opened the proposal
+  // and reported the empty boxes as a product defect. They were an artefact of this line.
+  //
+  // ⚠ THE RULE THIS LEAVES BEHIND: a fixture that reaches a state by writing the state
+  // rather than by taking the path is not a fixture of that state. It is a different object
+  // that passes the same status check — and every downstream difference is invisible until
+  // somebody looks at the screen.
+  await confirmElicitation(copy.id, source.idea.creatorId)
   console.log(`\ncopied to        ${copy.id}`)
 
   const started = Date.now()
