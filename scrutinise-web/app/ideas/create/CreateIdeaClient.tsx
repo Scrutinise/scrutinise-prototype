@@ -15,6 +15,8 @@ import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
+import SurfaceSwitch from '@/components/lex/SurfaceSwitch'
+import type { SurfaceContext } from '@/lib/lex/surfaces'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import AgendaPanel from '@/components/lex/AgendaPanel'
@@ -33,6 +35,8 @@ interface Props {
   initialIdeaId?: string
   initialMessages?: unknown[]
   isFirstIdea?: boolean
+  /** 25-G §2 — the route back to the build, when there is a build to go back to. */
+  surface?: SurfaceContext | null
 }
 
 // §20.5 — a conservative match for the user criticising something Lex produced,
@@ -64,7 +68,7 @@ function Spinner() {
 
 type Tab = 'chat' | 'fields' | 'background'
 
-export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea }: Props) {
+export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea, surface = null }: Props) {
   const opening = openingBubbles?.length ? openingBubbles : DEFAULT_OPENING
 
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
@@ -408,6 +412,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       {/* Persistent help affordance — a prominent pill, centred above the chat column
           (the left column of the lg 3-col grid) so it's unmissable (Sprint 1.4).
           §19-C Task 7: Exit sits to its left, so leaving is always in reach. */}
+      {/* 25-G §2 — the persistent route to the build. In the header bar because that bar
+          is on EVERY screen of this surface (all three panels, all four pages), which is
+          the "persistent, in both directions" §2 asks for. */}
+      {surface && (
+        <div className="border-b border-zinc-100 px-4 pt-2">
+          <div className="max-w-3xl mx-auto">
+            <SurfaceSwitch context={surface} />
+          </div>
+        </div>
+      )}
+
       <div className="border-b border-zinc-100 px-4 py-2 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr]">
         <div className="flex items-center justify-center gap-3">
           <button

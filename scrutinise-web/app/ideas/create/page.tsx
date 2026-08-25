@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import CreateIdeaClient from './CreateIdeaClient'
+import { surfaceContext } from '@/lib/lex/surfaces'
 
 function getTimeOfDay(utcHour: number): string {
   if (utcHour >= 5 && utcHour < 12) return 'morning'
@@ -82,12 +83,16 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     ]
   }
 
+  // 25-G §2 — the route back to the build, when there is a build to go back to.
+  const surface = initialIdeaId ? await surfaceContext(initialIdeaId, 'proposal') : null
+
   return (
     <CreateIdeaClient
       openingBubbles={openingBubbles}
       initialIdeaId={initialIdeaId}
       initialMessages={initialMessages}
       isFirstIdea={isFirstIdea}
+      surface={surface}
     />
   )
 }
