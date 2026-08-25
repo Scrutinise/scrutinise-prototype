@@ -18,6 +18,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import PublicNav from '@/components/PublicNav'
 import BuildProgress from '@/components/lex/BuildProgress'
+import BuildFindings from '@/components/lex/BuildFindings'
+import type { BuildHighlights } from '@/lib/lex/build-highlights'
 import {
   QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
   Spinner, type StepView,
@@ -77,6 +79,18 @@ export interface BuildView {
     id: string; forkKey: string; fieldKey: string; chosen: string
     alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean
   }>
+  /**
+   * 25-F §1 — what the build actually produced, ranked for the screen.
+   *
+   * ⚠ THE TYPE IS IMPORTED, THE MODULE IS NOT. `import type` is erased at compile, so
+   * this carries no server code into the bundle — and restating a nine-field nested shape
+   * by hand is how the client and the server come to disagree about what a finding is.
+   */
+  highlights: BuildHighlights | null
+  /** 25-F §2e — which model actually answered, per pass. */
+  modelsByPass: Array<{ key: string; models: string[] }>
+  /** 25-F §4 — the queries this build issued, and how each was built. */
+  queries: Array<{ by: string; terms: string[]; purpose: string; provenance: 'written' | 'extracted' }>
 }
 export interface BuildState {
   ideaId: string; canStart: boolean; blockedReason: string | null
@@ -97,6 +111,8 @@ export interface BuildState {
   }
   /** §C4 — the user's remembered "email me when it's done" choice. */
   emailDefault: boolean
+  /** 25-F §7 — the idea's name, once the build has given it one. Null = still untitled. */
+  ideaTitle: string | null
 }
 
 /**
@@ -684,6 +700,13 @@ export default function BuildIdeaClient(
               />
             )}
 
+            {/* ⚠ 25-F §1 — THE FINDINGS, ON THE SCREEN. This is the whole of §1: the build
+                produced 70 cited findings on its first real run and rendered none of them,
+                so the user judged the product on a progress list and a keyword soup.
+                Below the progress panel deliberately — the passes say what happened, this
+                says what came of it. */}
+            {latest?.highlights && <BuildFindings highlights={latest.highlights} />}
+
             {/* AMENDMENT_25B §B/§C — say whether they can walk away, because the two
                 drivers give opposite answers and the user cannot tell by looking.
                 Under the worker this is the whole point of the change; under the
@@ -703,12 +726,28 @@ export default function BuildIdeaClient(
 
             {(finished || stopped) && ideaId && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
+                {/* ⚠ 25-F §7 — THE BUILD LINKS TO THE IDEA IT MADE, BY NAME.
+                    Charlie logged out and could not find the idea his five-minute build had
+                    produced. Two things were wrong and both are fixed here: the row was
+                    still called "Untitled idea" (see `nameTheIdea` — the title was drafted
+                    as a proposal and `Idea.title` is only written on acceptance), and this
+                    page offered one unlabelled button to an editing surface. */}
                 <a
                   href={`/ideas/create?ideaId=${ideaId}`}
                   className="text-sm font-semibold px-5 py-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  {finished ? 'Open the draft' : 'Open what was drafted'}
+                  {finished
+                    ? build?.ideaTitle ? `Open “${build.ideaTitle}”` : 'Open the draft'
+                    : 'Open what was drafted'}
                 </a>
+                {finished && (
+                  <a
+                    href={`/ideas/${ideaId}`}
+                    className="text-sm font-medium px-4 py-2.5 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+                  >
+                    See it as others would
+                  </a>
+                )}
                 {/* A re-run is the normal case after a correction, not an error path. */}
                 {build?.canStart && (
                   <button

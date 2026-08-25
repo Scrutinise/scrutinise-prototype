@@ -33,7 +33,7 @@ import { prisma } from '@/lib/prisma'
 import type { SearchResult } from './page1-config'
 import { runSearch } from './search-gateway'
 import { storeStageSearch, type StageSearchRecord } from './stage-search'
-import { setProposal, createCauses, createPolicyOptions, createActions } from './field-machine'
+import { setProposal, setLoopProposal, createCauses, createPolicyOptions, createActions } from './field-machine'
 import { appendTranscript, lexBubble } from './transcript'
 import { elicitationContext, isConfirmed, type ElicitationContext } from './elicitation'
 import { CREDIBILITY_NOTE, DIRECT_EDITING_NOTE } from './elicitation-config'
@@ -56,6 +56,7 @@ import {
 } from './build-client'
 import {
   freshPassLog, readPassLog, carryInto, allUsages, nextPassKey, isResumable, passesComplete,
+  steppedOverFailures,
   type PassRecord, type PassStatus, type PassCarry,
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
@@ -64,6 +65,21 @@ import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { readKnownUnknowns } from './deepening'
 import { supersedeOlderProposals } from './evidence-layer'
+import { buildHighlights, type BuildHighlights } from './build-highlights'
+import {
+  writeQueries, extractedQuery, noteQueryDefects, queryProvenanceLine, type IssuedQuery,
+} from './build-query'
+import { testimonyForFacts, testimonyForPrompt } from './testimony'
+import {
+  smartPanelModels, smartCritiqueModel, pageOnePayload, PAGE_ONE_CAP,
+  askPanelModel, testVocabulary, citeVocabulary, recordUnverifiedVocabulary,
+  coverageCheck, critiqueKernel, recordPrognosis, SMART_PASS_KEY,
+  type PanelAnswer,
+} from './build-smart'
+import {
+  runKernelCompliance, runLogicCheck, recordVerificationIssues,
+  complianceIssueText, logicIssueText, verifyModel, KERNEL_TESTS,
+} from './build-verify'
 
 export const BUILD_STAGE = 'BUILD'
 export type { PassRecord, PassStatus }
@@ -115,6 +131,22 @@ export interface BuildView {
     id: string; forkKey: string; fieldKey: string; chosen: string
     alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean
   }>
+  /**
+   * 25-F §1 — WHAT THE BUILD ACTUALLY PRODUCED, ranked for the screen.
+   *
+   * ⚠ NULL WHILE THE BUILD IS STILL RUNNING, and that is not laziness: reading and ranking
+   * the evidence layer on every three-second poll would run a join per poll for material
+   * that changes once. It is computed when the build reaches a terminal status, which is
+   * the moment there is something worth reading.
+   */
+  highlights: BuildHighlights | null
+  /**
+   * 25-F §2e — "report which model ran each pass." Derived from the usages the pass
+   * recorded, so it says what ANSWERED rather than what was configured.
+   */
+  modelsByPass: Array<{ key: string; models: string[] }>
+  /** 25-F §4 — the queries this build issued, and how each was built. */
+  queries: IssuedQuery[]
 }
 
 export interface BuildState {
@@ -147,11 +179,18 @@ export interface BuildState {
    * or leaves the build stalled for ever.
    */
   driver: BuildDriver
+  /**
+   * 25-F §7 — THE NAME OF THE IDEA THIS BUILD BELONGS TO, so the finished-build screen can
+   * link to it BY NAME rather than offering "Open the draft" and dropping the user on a
+   * page headed "Untitled idea". Null while it is still the placeholder.
+   */
+  ideaTitle: string | null
 }
 
 function toView(
   row: NonNullable<Awaited<ReturnType<typeof prisma.ideaBuild.findFirst>>>,
   forks: Array<{ id: string; forkKey: string; fieldKey: string; chosen: string; alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean }>,
+  highlights: BuildHighlights | null = null,
 ): BuildView {
   const passes = readPassLog(row.passes)
   const started = row.startedAt ? row.startedAt.getTime() : null
@@ -223,6 +262,14 @@ function toView(
     workerLate,
     resumable: isResumable(passes),
     forks,
+    highlights,
+    // 25-F §2e — what actually answered, per pass. `echoedModel` where the vendor told us
+    // (a 200 is not proof you got the model you asked for — 25-D §1c), else what we asked.
+    modelsByPass: passes.map((p) => ({
+      key: p.key,
+      models: [...new Set((p.usages ?? []).map((u) => u.echoedModel || u.model).filter(Boolean))],
+    })).filter((m) => m.models.length),
+    queries: passes.flatMap((p) => p.queries ?? []),
   }
 }
 
@@ -234,7 +281,7 @@ export async function buildState(ideaId: string): Promise<BuildState> {
   const estimate = await buildEstimate()
   const owner = await prisma.idea.findUnique({
     where: { id: ideaId },
-    select: { creator: { select: { emailOnBuildComplete: true } } },
+    select: { title: true, creator: { select: { emailOnBuildComplete: true } } },
   })
 
   const rows = await prisma.ideaBuild.findMany({ where: { ideaId }, orderBy: { version: 'desc' } })
@@ -250,6 +297,10 @@ export async function buildState(ideaId: string): Promise<BuildState> {
   const active = rows.some((r) => r.status === 'QUEUED' || r.status === 'RUNNING')
   const ceiling = effectiveBudgetMs()
 
+  // 25-F §1 — the ranked evidence, only once there is something finished to rank.
+  const finished = latestRow && latestRow.status !== 'QUEUED' && latestRow.status !== 'RUNNING'
+  const highlights = finished ? await buildHighlights(ideaId, latestRow.version) : null
+
   return {
     ideaId,
     canStart: confirmed && !active,
@@ -258,7 +309,7 @@ export async function buildState(ideaId: string): Promise<BuildState> {
       : active
         ? 'A build is already running for this idea.'
         : null,
-    latest: latestRow ? toView(latestRow, forks) : null,
+    latest: latestRow ? toView(latestRow, forks, highlights) : null,
     history: rows.map((r) => ({
       id: r.id, version: r.version, status: r.status,
       framing: r.framing as Framing, completedAt: r.completedAt?.toISOString() ?? null,
@@ -267,6 +318,8 @@ export async function buildState(ideaId: string): Promise<BuildState> {
     estimate,
     emailDefault: owner?.creator.emailOnBuildComplete ?? false,
     driver: buildDriver(),
+    // Null for the placeholder, so the client can tell "not named yet" from "named".
+    ideaTitle: owner?.title?.trim() && owner.title.trim() !== 'Untitled idea' ? owner.title.trim() : null,
   }
 }
 
@@ -536,15 +589,55 @@ async function claimPass(buildId: string, key: BuildPassKey): Promise<boolean> {
   return claimed.count > 0
 }
 
+/**
+ * A decision's identity for de-duplication: the field it bears on plus the road taken.
+ *
+ * ⚠ 25-F §6c — WHY THIS IS THE KEY AND NOT `forkKey`. On the first real build the SAME
+ * decision reached the user as two forks — `approach:chosen` and
+ * `policyOptions:chosenApproach` — with the identical `chosen` text, verbatim, and
+ * different alternatives. Two different keys, so nothing de-duplicated them; one decision,
+ * so the user reads it as confusion rather than choice. The model names its own keys and
+ * will keep inventing near-synonyms, so the key cannot be what identifies a decision.
+ * WHAT IT BEARS ON AND WHAT WAS CHOSEN can.
+ */
+function decisionIdentity(fieldKey: string, chosen: string): string {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  return `${norm(fieldKey)}::${norm(chosen).slice(0, 220)}`
+}
+
 /** Persist a pass's forks. Two alternatives per fork; extras are dropped and counted. */
 async function persistForks(
   buildId: string, ideaId: string, forks: RawFork[],
-): Promise<{ written: number; trimmed: number }> {
+): Promise<{ written: number; trimmed: number; droppedSameDecision: number }> {
   let written = 0
   let trimmed = 0
   let droppedDupes = 0
+  let droppedSameDecision = 0
+
+  // ⚠ 25-F §6c — THE DECISIONS THIS BUILD HAS ALREADY RECORDED, read once.
+  //
+  // Read from the DATABASE and not from the incoming list, because the duplicate is
+  // usually across PASSES, not within one: the approach pass emitted both halves of the
+  // chosen-approach pair, but the revision pass can equally re-open a decision the
+  // approach pass already recorded.
+  const already = await prisma.buildFork.findMany({
+    where: { buildId }, select: { fieldKey: true, chosen: true },
+  })
+  const seenDecisions = new Set(already.map((f) => decisionIdentity(f.fieldKey, f.chosen)))
+
   for (const f of forks) {
     if (!f?.forkKey?.trim() || !f?.chosen?.trim() || !Array.isArray(f.alternatives)) continue
+
+    // ⚠ ONE DECISION, ONE FORK. The FIRST one recorded wins — it is the one whose
+    // alternatives the earlier pass reasoned about — and the drop is COUNTED, because a
+    // silent de-duplication is indistinguishable from a model that stopped doing it.
+    // (That sentence is the instrument rule's, below, and it earned itself.)
+    const identity = decisionIdentity((f.fieldKey ?? '').trim() || 'unassigned', f.chosen.trim())
+    if (seenDecisions.has(identity)) {
+      droppedSameDecision++
+      continue
+    }
+    seenDecisions.add(identity)
 
     // ⚠ THE INSTRUMENT KEY IS THE PLATFORM'S, AND ASKING THE MODEL NOT TO USE IT DOES
     // NOT WORK.
@@ -596,7 +689,12 @@ async function persistForks(
       buildId, dropped: droppedDupes,
     })
   }
-  return { written, trimmed }
+  if (droppedSameDecision) {
+    console.log('[lex-diag] 25f dropped fork(s) restating a decision already recorded', {
+      buildId, dropped: droppedSameDecision,
+    })
+  }
+  return { written, trimmed, droppedSameDecision }
 }
 
 /** Merge this pass's uncertainties into the ones already on the row. Cross-request, so
@@ -695,6 +793,30 @@ export async function runNextPass(ideaId: string, userId: string, buildId: strin
       status: 'FAILED', completedAt: new Date().toISOString(),
       failureReason: outcome.reason, activity: null, usages: passUsages,
     })
+
+    // ⚠⚠ 25-F — A FAILURE THE BUILD IS ALLOWED TO SURVIVE.
+    //
+    // `continueOnFailure` marks the three passes 25-F added and nothing else. On the first
+    // live run of this sprint one panel model returned `coherentActions` as a string where
+    // the schema asked for an array, the smart pass threw on `.join`, and FOUR of ten
+    // passes died with it — the smart pass, both verification passes AND the hostile
+    // clerk. The kernel was already drafted, researched and revised. Losing the
+    // adversarial read because a critique misbehaved is the wrong trade.
+    //
+    // The pass stays FAILED with its reason, the later passes stay PENDING and run, and
+    // the summary names what was lost. This is not a step-over; it is a recorded failure
+    // the build carries.
+    if (passDef(key)?.continueOnFailure) {
+      console.warn('[lex-diag] 25f a continue-on-failure pass failed — the build carries on and says so', {
+        buildId, key, reason: outcome.reason,
+      })
+      const after = readPassLog((await prisma.ideaBuild.findUnique({
+        where: { id: buildId }, select: { passes: true },
+      }))?.passes)
+      if (!nextPassKey(after)) return finishBuild(ideaId, buildId)
+      return buildViewOf(buildId)
+    }
+
     for (const later of BUILD_PASSES.slice(BUILD_PASSES.findIndex((p) => p.key === key) + 1)) {
       // "PENDING" on a finished build reads as "still to come".
       await writePass(buildId, later.key, { status: 'NOT_REACHED' })
@@ -851,6 +973,9 @@ async function runOnePass(key: BuildPassKey, c: PassContext): Promise<PassOutcom
     case 'ACTIONS': return actionsPass(c)
     case 'RESEARCH': return researchPass(c)
     case 'REVISE': return revisePass(c)
+    case 'SMART': return smartPass(c)
+    case 'KERNEL_CHECK': return kernelCheckPass(c)
+    case 'LOGIC_CHECK': return logicCheckPass(c)
     case 'ADVERSARIAL': return adversarialPass(c)
   }
 }
@@ -858,6 +983,37 @@ async function runOnePass(key: BuildPassKey, c: PassContext): Promise<PassOutcom
 // §3 — one corpus search through the gateway, plus one domain-transfer question.
 async function orientPass(c: PassContext): Promise<PassOutcome> {
   const { ideaId, buildId, framed } = c
+
+  // ══ 25-F §4 — THE OPENING QUERY IS WRITTEN, NOT COUNTED ═══════════════════════
+  //
+  // `framed.keywords` is `termsFrom(ctx.problem)` — the eighteen most frequent content
+  // words in the user's prose, against a 45-word stopword list that does not contain
+  // `those`. That is the query on the row of the first real build, and pass 1 reported
+  // "231 sources read; 0 cited".
+  //
+  // ⚠ THE FRAMING EXPERIMENT IS NOT DISTURBED. `frameQuery` still decides what CONTEXT
+  // each arm carries and what the orient pass reasons over; what changes is how the
+  // KEYWORDS are composed, and it changes identically for both arms — so A and B remain
+  // comparable to each other, and neither is comparable to a pre-25-F run. That is
+  // recorded on the row: `queryUsed` now says which builder produced the terms.
+  await c.activity('Writing the opening search query')
+  const openingJob = {
+    id: 'ORIENT',
+    question: 'What does the record hold that bears on this problem, and what law governs it today?',
+    lookingFor:
+      'The statutes, committee reports, evaluations and judgments a specialist in this field would '
+      + 'reach for first — named by the terms the field actually uses.',
+  }
+  const writtenOpening = await writeQueries({
+    jobs: [openingJob],
+    context: [testimonyForFacts(c.ctx), framed.promptBlock].filter(Boolean).join('\n\n'),
+    onUsage: (u) => c.usages.push(u),
+  })
+  const openingQuery: IssuedQuery =
+    writtenOpening.get('ORIENT') ?? extractedQuery('ORIENT', c.ctx.problem || c.ctx.goalDetail || '')
+  noteQueryDefects(openingQuery, buildId)
+  await writePass(buildId, 'ORIENT', { queries: [openingQuery] })
+
   await c.activity('Searching the corpus')
   // ⚠ TWO INTENTS, ONE SEARCH EACH, exactly as §3 asks: BACKGROUND_BRIEFING and
   // LEGAL_LANDSCAPE. They are separate gateway calls because the intents route
@@ -871,7 +1027,7 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
   for (const intent of ['BACKGROUND_BRIEFING', 'LEGAL_LANDSCAPE'] as const) {
     try {
       const out = await runSearch({
-        keywords: framed.keywords,
+        keywords: openingQuery.terms,
         intent,
         ideaContext: framed.ideaContext,
         limit: 16,
@@ -900,7 +1056,7 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
     ranAt: new Date().toISOString(),
     ok: !searchFailed,
     failureReason: searchFailed ? 'one or more corpus searches did not complete' : undefined,
-    query: framed.keywords,
+    query: openingQuery.terms,
     results: merged.slice(0, 20),
   }
   await storeStageSearch(ideaId, 'ORIENTATION', record)
@@ -993,15 +1149,28 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
     },
   })
 
+  // 25-F §4 — the A/B artefact records the terms ACTUALLY ISSUED and how they were built,
+  // so a run whose query writer failed is distinguishable from one whose writer worked.
+  await prisma.ideaBuild.update({
+    where: { id: buildId },
+    data: {
+      queryUsed:
+        `${c.framed.queryUsed.split(' :: ')[0]} :: ${openingQuery.terms.join(' | ')} `
+        + `:: ${openingQuery.provenance} :: context(${framed.ideaContext.length} chars)`,
+    },
+  })
+
   console.log('[lex-diag] 25b orient done', {
     buildId, results: merged.length, searchFailed, cited: citedAll.size, readings: readings.length,
+    query: openingQuery.provenance,
   })
   return {
     ok: true,
-    output: searchFailed
+    output: (searchFailed
       ? `${merged.length} sources — ⚠ at least one corpus search did not complete`
       : `${merged.length} sources read; ${citedAll.size} cited` +
-        (readings.length > 1 ? ` across ${readings.length} readings` : ''),
+        (readings.length > 1 ? ` across ${readings.length} readings` : ''))
+      + ` · ${queryProvenanceLine([openingQuery])}`,
     carry: { orientation, searchFailed },
   }
 }
@@ -1047,9 +1216,10 @@ async function diagnosisPass(c: PassContext): Promise<PassOutcome> {
       whyPersisted: c.whyPersisted?.trim() || null,
       classification: c.classification === 'MATERIAL' ? 'MATERIAL' : 'CONTRIBUTORY',
     })), 'LEX_CORPUS')
-    // The loop field is marked AWAITING so it reads as "Lex has put candidates here for
-    // you to curate", which is what has happened.
-    await setProposal(ideaId, 'causes', { value: '' })
+    // 25-F §6a — the proposal RENDERS the child rows rather than claiming an empty one.
+    // The loop field is still marked AWAITING so it reads as "Lex has put candidates here
+    // for you to curate", which is what has happened — but the proposal now says what.
+    await setLoopProposal(ideaId, 'causes', causes.map((x) => `(${x.classification === 'MATERIAL' ? 'material' : 'contributory'}) ${x.cause.trim()}`))
   }
 
   // ⚠ `rootCause` is a REFERENCE field — the user picks one cause from the loop. Lex's
@@ -1102,12 +1272,37 @@ async function approachPass(c: PassContext): Promise<PassOutcome> {
       mechanismTypes: (o.mechanismTypes ?? []).map(String).filter(Boolean),
       source: 'LEX' as const,
     })), 'LEX')
-    await setProposal(ideaId, 'policyOptions', { value: '' })
+    await setLoopProposal(ideaId, 'policyOptions', options.map((o) => o.approach.trim()))
   }
   if (a.chosenApproach?.trim()) await setProposal(ideaId, 'chosenApproach', { value: a.chosenApproach.trim() })
   if (a.leverage?.trim()) await setProposal(ideaId, 'leverage', { value: a.leverage.trim() })
   if (a.whatItRulesOut?.trim()) await setProposal(ideaId, 'whatItRulesOut', { value: a.whatItRulesOut.trim() })
   if (a.summaryGuidingPolicy?.trim()) await setProposal(ideaId, 'summaryGuidingPolicy', { value: a.summaryGuidingPolicy.trim() })
+
+  // ── 25-F §6b — the two Rumelt tests the build has never drafted ────────────
+  //
+  // ⚠ EACH IS ONLY PROPOSED WHEN THERE IS SOMETHING IN IT. §19-D Task 2a: a "Proposed by
+  // Lex" badge over five empty inputs is a claim nobody made, and that is exactly the
+  // 6a defect this sprint is also fixing — so it must not be reintroduced here.
+  const responses = a.anticipatedResponses
+  if (responses && Object.values(responses).some((v) => String(v ?? '').trim())) {
+    await setProposal(ideaId, 'anticipatedResponses', {
+      value: {
+        avoidance: String(responses.avoidance ?? '').trim(),
+        gaming: String(responses.gaming ?? '').trim(),
+        enforcementBurden: String(responses.enforcementBurden ?? '').trim(),
+        legalChallenge: String(responses.legalChallenge ?? '').trim(),
+        politicalAttack: String(responses.politicalAttack ?? '').trim(),
+      },
+    })
+  } else {
+    console.warn('[lex-diag] 25f APPROACH returned no anticipated responses', { buildId })
+  }
+  if (a.conditionsForSuccess?.trim()) {
+    await setProposal(ideaId, 'conditionsForSuccess', { value: a.conditionsForSuccess.trim() })
+  } else {
+    console.warn('[lex-diag] 25f APPROACH returned no conditions for success', { buildId })
+  }
 
   // §4 — THE INSTRUMENT QUESTION. Named, recorded as a fork of its own, and folded into
   // the guiding-policy summary so it is visible without opening the fork list.
@@ -1183,7 +1378,7 @@ async function actionsPass(c: PassContext): Promise<PassOutcome> {
       // here would be carried into a cost-benefit case as though it had a source.
       source: 'LEX' as const,
     })), 'LEX')
-    await setProposal(ideaId, 'actions', { value: '' })
+    await setLoopProposal(ideaId, 'actions', actions.map((x) => `${x.practicalStep.trim()}${x.whoImplements?.trim() ? ` — ${x.whoImplements.trim()}` : ''}`))
   }
   if (v.summaryCoherentActions?.trim()) {
     await setProposal(ideaId, 'summaryCoherentActions', { value: v.summaryCoherentActions.trim() })
@@ -1219,9 +1414,13 @@ async function researchPass(c: PassContext): Promise<PassOutcome> {
     buildVersion: c.buildVersion,
     facts,
     costLines,
+    // 25-F §5 — the sift and the gather have never seen the proposer's own account.
+    testimony: testimonyForFacts(c.ctx),
     onActivity: c.activity,
   })
   c.usages.push(...outcome.usages)
+  // 25-F §4 — what this pass actually asked, on the record beside what came back.
+  await writePass(c.buildId, 'RESEARCH', { queries: outcome.queries })
 
   // ⚠ A RESEARCH PASS THAT FOUND NOTHING HAS NOT FAILED. Every question that fired and
   // came back empty has written a stated gap under its own panel heading, which is a
@@ -1262,7 +1461,8 @@ async function researchPass(c: PassContext): Promise<PassOutcome> {
       `${contradictions ? `, ${contradictions} contradicting the draft` : ''}; ` +
       `${gaps} stated gap${gaps === 1 ? '' : 's'}` +
       `${outcome.instrument?.powerFound ? ' — ⚠ an existing power may remove the need for a Bill' : ''}` +
-      `${outcome.stoppedEarly ? ' (stopped at its own spend ceiling)' : ''}`,
+      `${outcome.stoppedEarly ? ' (stopped at its own spend ceiling)' : ''}` +
+      ` · ${queryProvenanceLine(outcome.queries)}`,
     carry: { research: summary },
   }
 }
@@ -1282,18 +1482,76 @@ async function recordInstrumentRetirement(c: PassContext, assessment: Instrument
         : assessment.reach === 'unclear' ? 'exists, and what was retrieved does not settle whether it reaches this'
           : 'exists in this area but does not appear usable for this'
 
-  const moved = await prisma.buildFork.updateMany({
+  const alternative = `Use the existing power: ${assessment.provision}`
+  const caseFor =
+    `⚠ THE RESEARCH FOUND AN EXISTING POWER. ${assessment.provision} — it ${reachWord}. ` +
+    `${assessment.reachNote}`
+
+  // ⚠⚠ 25-F §6c — THIS `updateMany` USED TO CARRY NO `alternativeIndex`, AND THAT IS THE
+  // DUPLICATE FORK.
+  //
+  // The instrument fork has one ROW PER ALTERNATIVE (the unique key is
+  // buildId+forkKey+alternativeIndex). An unfiltered `updateMany` therefore wrote the
+  // SAME alternative and the SAME case onto every row of the group — which is exactly
+  // what the first real build shows: `guidingPolicy:instrument` offering
+  // "Use the existing power: CRaG 2010 s.3(1)" twice, verbatim, as alternatives 0 and 1.
+  //
+  // ⚠ THE BRIEF READS THIS AS "the duplicate-fork bug `persistForks` de-duplicated in
+  // 25-A, returned". IT IS NOT THE SAME BUG. 25-A's was a model emitting two instrument
+  // forks under different keys; this one is our own write clobbering a row it was never
+  // meant to touch, and no de-duplication rule in `persistForks` could have caught it
+  // because `persistForks` never ran on it.
+  //
+  // So the finding is now APPENDED as its own alternative rather than overwriting any: the
+  // approach pass's two alternatives are the model's reasoning and are not ours to
+  // destroy, and the research alternative is the most important of the three. Idempotent —
+  // a re-run updates the row already carrying it rather than adding a fourth.
+  const existingRows = await prisma.buildFork.findMany({
     where: { buildId: c.buildId, forkKey: INSTRUMENT_FORK_KEY },
-    data: {
-      // ⚠ NOT `resolved: true`. The evidence has REOPENED this decision, not settled it —
-      // marking it resolved would hide the very fork the finding makes urgent. 25-C turns
-      // a fork into a decision, and this is the decision it most needs to offer.
-      caseForAlternative:
-        `⚠ THE RESEARCH FOUND AN EXISTING POWER. ${assessment.provision} — it ${reachWord}. ` +
-        `${assessment.reachNote}`,
-      alternative: `Use the existing power: ${assessment.provision}`,
-    },
+    select: { id: true, alternativeIndex: true, alternative: true, chosen: true },
+    orderBy: { alternativeIndex: 'asc' },
   })
+  const alreadyCarrying = existingRows.find((r) => r.alternative.trim() === alternative.trim())
+  let moved = { count: 0 }
+  if (alreadyCarrying) {
+    // A re-run. Refresh the text in place rather than adding a fourth alternative.
+    //
+    // ⚠ NOT `resolved: true`. The evidence has REOPENED this decision, not settled it —
+    // marking it resolved would hide the very fork the finding makes urgent. 25-C turns
+    // a fork into a decision, and this is the decision it most needs to offer.
+    moved = await prisma.buildFork.updateMany({
+      where: { id: alreadyCarrying.id },
+      data: { alternative, caseForAlternative: caseFor, resolved: false },
+    })
+  } else if (existingRows.length) {
+    const nextIndex = Math.max(...existingRows.map((r) => r.alternativeIndex)) + 1
+    try {
+      await prisma.buildFork.create({
+        data: {
+          buildId: c.buildId,
+          ideaId: c.ideaId,
+          forkKey: INSTRUMENT_FORK_KEY,
+          fieldKey: 'summaryGuidingPolicy',
+          // ⚠ COPIED FROM THE ROWS ALREADY IN THE GROUP, not re-derived from the carry.
+          // Every row of a fork carries the same `chosen`, and the panel renders
+          // `group[0].chosen`; a row whose `chosen` disagreed with its siblings would make
+          // the displayed decision depend on which row sorted first.
+          chosen: existingRows[0].chosen,
+          alternativeIndex: nextIndex,
+          alternative,
+          caseForAlternative: caseFor,
+        },
+      })
+    } catch (err) {
+      // A duplicate means a concurrent write already put this alternative on the fork.
+      // The finding IS recorded either way, which is what `moved` is about to report.
+      if ((err as { code?: string })?.code !== 'P2002') throw err
+    }
+    // ⚠ The fork EXISTS and now carries the finding — by the create above or by whatever
+    // raced it. Reporting `moved: 0` here would send the code below on to create a second
+    // instrument fork, which is the duplicate this whole block exists to remove.
+    moved = { count: 1 }
+  }
 
   await mergeUncertainties(c.buildId, [{
     fieldKey: 'summaryGuidingPolicy',
@@ -1339,10 +1597,8 @@ async function recordInstrumentRetirement(c: PassContext, assessment: Instrument
       recommendationReason:
         'The draft assumed a new Act. It did not say why, which is itself worth questioning.',
       alternativeIndex: 0,
-      alternative: `Use the existing power: ${assessment.provision}`,
-      caseForAlternative:
-        `⚠ THE RESEARCH FOUND AN EXISTING POWER. ${assessment.provision} — it ${reachWord}. `
-        + `${assessment.reachNote}`,
+      alternative,
+      caseForAlternative: caseFor,
     },
   }).catch((err) => {
     // A duplicate means a fork appeared between the update and the create; the finding is already
@@ -1416,7 +1672,7 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
       whyPersisted: x.whyPersisted?.trim() || null,
       classification: x.classification === 'MATERIAL' ? 'MATERIAL' : 'CONTRIBUTORY',
     })), 'LEX_CORPUS')
-    await setProposal(ideaId, 'causes', { value: '' })
+    await setLoopProposal(ideaId, 'causes', causes.map((x) => `(${x.classification === 'MATERIAL' ? 'material' : 'contributory'}) ${x.cause.trim()}`))
   }
 
   if (r.rootCause?.trim()) await setProposal(ideaId, 'rootCause', { value: r.rootCause.trim() })
@@ -1544,6 +1800,350 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SPRINT 25-F — THE SMART PASS, AND THE TWO THAT VERIFY
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * §2 — THE SMART PASS. After revision, before the agenda.
+ *
+ * The work is in build-smart.ts; what lives here is the pass's contract with the engine —
+ * the order of the five steps, what is persisted, and the one rule the whole pass turns
+ * on: a term another model produced is a HYPOTHESIS ABOUT WHAT TO LOOK FOR, and it becomes
+ * a finding only once a retrieved document carries it.
+ *
+ * ⚠ IT DEGRADES IN PIECES, NOT ALL AT ONCE. A panel model that does not answer costs one
+ * perspective; a coverage check that fails costs the coverage issues; a critique that fails
+ * costs the rewrite. Each is reported separately and none of them fails the pass on its
+ * own — because the vocabulary half can be the most valuable thing in the build and it
+ * runs before any of them.
+ */
+async function smartPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId } = c
+  const notes: string[] = []
+
+  const { models, skipped } = smartPanelModels()
+  if (skipped.length) {
+    // ⚠ SAID, NOT SWALLOWED. A panel that silently shrank from three to one would make
+    // "the other models found nothing we missed" a claim about our configuration wearing
+    // the clothes of a claim about the proposal.
+    console.warn('[25f:smart] panel models skipped', { skipped })
+    notes.push(`${skipped.length} panel model${skipped.length === 1 ? '' : 's'} unavailable (${skipped.map((s) => `${s.model}: ${s.why}`).join('; ')})`)
+  }
+  if (!models.length) {
+    return { ok: false, reason: 'no outside model is reachable on this deployment, so there is nothing to compare against' }
+  }
+
+  const { text: pageOne, truncated } = pageOnePayload(c.ctx)
+  if (!pageOne.trim()) {
+    return { ok: false, reason: 'the elicitation recorded nothing to send, so there is nothing to ask about' }
+  }
+  if (truncated) {
+    // §2a asks for the whole of page one, verbatim. A cap that bites is a summary chosen
+    // by arithmetic, so it is said rather than hidden.
+    console.warn('[25f:smart] page one hit the payload cap', { ideaId, cap: PAGE_ONE_CAP })
+    notes.push(`your account was longer than the ${PAGE_ONE_CAP}-character limit and was cut at that point`)
+  }
+
+  const kernel = await kernelText(ideaId)
+
+  // ── 1 & 2: the whole of page one, out to each model, for a Rumelt-shaped answer ──
+  const answers: PanelAnswer[] = []
+  for (const model of models) {
+    await c.activity(`Putting your own words to ${model}`)
+    const a = await askPanelModel({ model, pageOne, onUsage: (u) => c.usages.push(u) })
+    if (a) answers.push(a)
+    else notes.push(`${model} did not answer`)
+  }
+  if (!answers.length) {
+    return { ok: false, reason: 'no outside model returned a usable answer, so nothing could be compared' }
+  }
+
+  // ── 3: every entity they name becomes a corpus query ──────────────────────
+  const vocabulary = await testVocabulary({
+    answers,
+    ideaContext: `${kernel}\n${pageOne}`.slice(0, 4000),
+    onActivity: c.activity,
+  })
+  const citedTerms = await citeVocabulary({
+    ideaId, buildVersion: c.buildVersion, vocabulary, kernel,
+    onUsage: (u) => c.usages.push(u),
+  })
+  const statedUnverified = await recordUnverifiedVocabulary({
+    ideaId, buildVersion: c.buildVersion, vocabulary,
+  })
+
+  // ── 4: the coverage check ─────────────────────────────────────────────────
+  await c.activity('Checking whether anything they found is missing from ours')
+  const coverage = await coverageCheck({ kernel, answers, onUsage: (u) => c.usages.push(u) })
+  let missedIssues = 0
+  if (coverage) {
+    for (const m of coverage.missed) {
+      await prisma.deepeningIssue.create({
+        data: {
+          ideaId,
+          passKey: SMART_PASS_KEY,
+          runVersion: c.buildVersion,
+          text:
+            `ANOTHER MODEL MADE THIS POINT AND OUR PROPOSAL DOES NOT ADDRESS IT — ${m.point.trim()} `
+            + `(${m.namedBy}). ${m.whyItMatters.trim()}`,
+          status: 'OPEN',
+        },
+      })
+      missedIssues++
+    }
+  } else {
+    notes.push('the coverage check did not complete, so nothing was compared point by point')
+  }
+
+  // ── 5: the critique, with the rewrite mandate ─────────────────────────────
+  await c.activity('Critiquing the kernel against Rumelt, and rewriting where it fails')
+  const forkRows = await prisma.buildFork.findMany({
+    where: { buildId }, orderBy: [{ forkKey: 'asc' }, { alternativeIndex: 'asc' }],
+  })
+  const forksByKey = new Map<string, { forkKey: string; chosen: string; alternatives: string[] }>()
+  for (const f of forkRows) {
+    const existing = forksByKey.get(f.forkKey)
+    if (existing) existing.alternatives.push(f.alternative)
+    else forksByKey.set(f.forkKey, { forkKey: f.forkKey, chosen: f.chosen, alternatives: [f.alternative] })
+  }
+
+  const critique = await critiqueKernel({
+    kernel,
+    pageOne,
+    findings: c.carry.research ?? '',
+    forks: [...forksByKey.values()],
+    panelAnswers: answers,
+    vocabulary,
+    onUsage: (u) => c.usages.push(u),
+  })
+
+  let rewritten = 0
+  let prognosis = 0
+  let complianceIssues = 0
+  if (critique) {
+    // ── The rewrite. A field is only touched when the critique actually rewrote it. ──
+    //
+    // ⚠ AN EMPTY STRING MEANS "LEAVE IT". Writing an empty proposal over a good field
+    // would be the §6a defect this same sprint is removing, arriving by a different door.
+    const rewrites: Array<[string, string]> = [
+      ['summaryDiagnosis', critique.rewrite?.summaryDiagnosis ?? ''],
+      ['pivotalObstacle', critique.rewrite?.pivotalObstacle ?? ''],
+      ['summaryGuidingPolicy', critique.rewrite?.summaryGuidingPolicy ?? ''],
+      ['whatItRulesOut', critique.rewrite?.whatItRulesOut ?? ''],
+      ['summaryCoherentActions', critique.rewrite?.summaryCoherentActions ?? ''],
+    ]
+    for (const [key, value] of rewrites) {
+      if (!value.trim()) continue
+      await setProposal(ideaId, key, { value: value.trim() })
+      rewritten++
+    }
+
+    // ── What it changed, in the revision pass's own shape (§2d). ─────────────
+    await supersedeOlderProposals(ideaId, SMART_PASS_KEY, c.buildVersion)
+    for (const ch of critique.changed ?? []) {
+      if (!ch?.fieldKey?.trim() || !ch?.nowSays?.trim()) continue
+      await prisma.evidenceItem.create({
+        data: {
+          ideaId,
+          passKey: SMART_PASS_KEY,
+          runVersion: c.buildVersion,
+          // Null for the same reason a REVISE contradiction is null (heading-map.ts): this
+          // is the build's headline output, not a source card, and filing it among the
+          // references is where 25-C §3b found it buried.
+          headingKey: null,
+          fieldRef: ch.fieldKey.trim(),
+          kind: 'CONTRADICTS',
+          title: `The critique rewrote ${ch.fieldKey.trim()}`,
+          body: [
+            `It was saying: ${ch.wasSaying?.trim() || '(not stated)'}`,
+            `It now says: ${ch.nowSays.trim()}`,
+            `Why that changed: ${ch.whyChanged?.trim() || '(not stated)'}`,
+          ].join('\n\n'),
+          sourceType: null, sourceId: null, citation: null, url: null,
+          status: 'PROPOSED',
+        },
+      })
+    }
+
+    // Rumelt failures the critique named become issues, exactly as §3's do.
+    for (const f of critique.failures ?? []) {
+      if (!f?.test?.trim() || !f?.whatFails?.trim()) continue
+      await prisma.deepeningIssue.create({
+        data: {
+          ideaId, passKey: SMART_PASS_KEY, runVersion: c.buildVersion,
+          text: `THE KERNEL FAILS A RUMELT TEST — ${f.test.trim()}. ${f.whatFails.trim()}`
+            + (f.theTextThatFails?.trim() ? ` The text: "${f.theTextThatFails.trim()}"` : ''),
+          status: 'OPEN',
+        },
+      })
+      complianceIssues++
+    }
+    for (const d of critique.forkDoubts ?? []) {
+      if (!d?.forkKey?.trim() || !d?.doubt?.trim()) continue
+      await prisma.deepeningIssue.create({
+        data: {
+          ideaId, passKey: SMART_PASS_KEY, runVersion: c.buildVersion,
+          text: `THE ROAD TAKEN AT "${d.forkKey.trim()}" MAY BE THE WRONG ONE — ${d.doubt.trim()}`,
+          status: 'OPEN',
+        },
+      })
+      complianceIssues++
+    }
+
+    prognosis = await recordPrognosis({
+      ideaId, buildVersion: c.buildVersion, critique, model: smartCritiqueModel(),
+    })
+  } else {
+    notes.push('the critique did not complete, so the kernel was not rewritten')
+  }
+
+  const smartCarry = [
+    critique ? `VERDICT ON THE KERNEL: ${critique.verdict} — ${critique.verdictReason}` : '',
+    critique?.failures?.length
+      ? `RUMELT TESTS IT FAILS:\n${critique.failures.map((f) => `- ${f.test}: ${f.whatFails}`).join('\n')}`
+      : '',
+    critique?.changed?.length
+      ? `WHAT THE CRITIQUE REWROTE:\n${critique.changed.map((ch) => `- ${ch.fieldKey}: ${ch.whyChanged}`).join('\n')}`
+      : '',
+    vocabulary.confirmed.length
+      ? `TERMS OF ART THE CORPUS CONFIRMED: ${vocabulary.confirmed.map((e) => e.name).join(', ')}`
+      : '',
+    vocabulary.unverified.length
+      ? `NAMED BUT UNVERIFIED (never assert these): ${vocabulary.unverified.map((e) => e.name).join(', ')}`
+      : '',
+    coverage?.missed?.length
+      ? `POINTS OTHER MODELS MADE THAT WE DO NOT ADDRESS:\n${coverage.missed.map((m) => `- ${m.point}`).join('\n')}`
+      : '',
+    critique ? `HOW HARD TO PASS: ${critique.howHardToPass}` : '',
+    critique?.mostLikelyToGoWrong ? `MOST LIKELY TO GO WRONG: ${critique.mostLikelyToGoWrong}` : '',
+  ].filter(Boolean).join('\n\n')
+
+  console.log('[lex-diag] 25f smart done', {
+    buildId,
+    panel: answers.map((a) => a.model),
+    entitiesNamed: vocabulary.confirmed.length + vocabulary.unverified.length,
+    confirmed: vocabulary.confirmed.length,
+    unverified: vocabulary.unverified.length,
+    droppedByCap: vocabulary.droppedByCap,
+    citedTerms, statedUnverified, missedIssues, rewritten, prognosis,
+    verdict: critique?.verdict ?? null,
+    critiqueModel: smartCritiqueModel(),
+  })
+
+  return {
+    ok: true,
+    output: [
+      `${answers.length} model${answers.length === 1 ? '' : 's'} answered your own words (${answers.map((a) => a.model).join(', ')})`,
+      `${vocabulary.confirmed.length + vocabulary.unverified.length} terms of art named — ${vocabulary.confirmed.length} confirmed by the corpus, ${vocabulary.unverified.length} unverified`,
+      citedTerms ? `${citedTerms} cited finding${citedTerms === 1 ? '' : 's'} from them` : '',
+      coverage ? `${coverage.coveredCount} of their points already covered, ${missedIssues} not` : '',
+      critique ? `verdict ${critique.verdict}; ${rewritten} field${rewritten === 1 ? '' : 's'} rewritten; read by ${smartCritiqueModel()}` : '',
+      ...notes.map((n) => `⚠ ${n}`),
+    ].filter(Boolean).join('; '),
+    carry: { smart: smartCarry },
+  }
+}
+
+/**
+ * §3a — IS THIS A KERNEL AT ALL? Nine tests from the method layer, each with a yes or a no
+ * and, where the answer is no, the text that fails it quoted back.
+ *
+ * ⚠ IT RUNS AFTER THE SMART PASS, ON PURPOSE. §2's rewrite mandate means the kernel this
+ * marks is the one the user will actually see. Marking the pre-rewrite version would
+ * produce a list of failures the rewrite had already fixed.
+ */
+async function kernelCheckPass(c: PassContext): Promise<PassOutcome> {
+  const model = verifyModel('KERNEL_CHECK')
+  await c.activity('Marking the kernel against the method')
+
+  const kernel = await kernelText(c.ideaId)
+  if (!kernel.trim()) {
+    return { ok: false, reason: 'nothing was drafted, so there is no kernel to check' }
+  }
+
+  const result = await runKernelCompliance({ kernel, model, onUsage: (u) => c.usages.push(u) })
+  if (!result) {
+    // ⚠ NOT AN EMPTY PASS LIST. "This kernel passes every test" is a strong claim and must
+    // never be made by accident — the same rule the adversarial pass holds.
+    return { ok: false, reason: 'the kernel-compliance check did not complete, so the kernel has not been marked' }
+  }
+
+  const failed = result.results.filter((r) => !r.passes)
+  const written = await recordVerificationIssues({
+    ideaId: c.ideaId,
+    buildVersion: c.buildVersion,
+    passKey: 'KERNEL_CHECK',
+    issues: failed.map((r) => ({
+      text: complianceIssueText(KERNEL_TESTS.find((t) => t.id === r.id)!, r),
+    })),
+  })
+
+  console.log('[lex-diag] 25f kernel check done', {
+    buildId: c.buildId, model, tests: result.results.length,
+    passed: result.results.length - failed.length, failed: failed.length, issues: written,
+  })
+
+  return {
+    ok: true,
+    output:
+      `${result.results.length - failed.length} of ${KERNEL_TESTS.length} kernel tests passed`
+      + `${failed.length ? `; ${failed.length} failed and are on your list` : ''}`
+      + ` — marked by ${model}`,
+    carry: {
+      verification: [
+        `KERNEL COMPLIANCE (${model}): ${result.verdict}`,
+        ...failed.map((r) => `- FAILS "${KERNEL_TESTS.find((t) => t.id === r.id)?.test ?? r.id}": ${r.whatFails}`),
+      ].join('\n'),
+    },
+  }
+}
+
+/** §3b — does the chain hold: causes → obstacle → approach → actions? */
+async function logicCheckPass(c: PassContext): Promise<PassOutcome> {
+  const model = verifyModel('LOGIC_CHECK')
+  await c.activity('Tracing the argument link by link')
+
+  const kernel = await kernelText(c.ideaId)
+  if (!kernel.trim()) {
+    return { ok: false, reason: 'nothing was drafted, so there is no argument to trace' }
+  }
+
+  const result = await runLogicCheck({ kernel, model, onUsage: (u) => c.usages.push(u) })
+  if (!result) {
+    return { ok: false, reason: 'the logical-consistency check did not complete, so the argument has not been traced' }
+  }
+
+  const written = await recordVerificationIssues({
+    ideaId: c.ideaId,
+    buildVersion: c.buildVersion,
+    passKey: 'LOGIC_CHECK',
+    issues: result.defects.map((d) => ({ text: logicIssueText(d) })),
+  })
+
+  console.log('[lex-diag] 25f logic check done', {
+    buildId: c.buildId, model, chainHolds: result.chainHolds, defects: result.defects.length, issues: written,
+  })
+
+  return {
+    ok: true,
+    output:
+      (result.chainHolds
+        ? 'the chain from causes to actions holds'
+        : '⚠ the chain from causes to actions does NOT hold')
+      + `; ${result.defects.length} defect${result.defects.length === 1 ? '' : 's'} in the argument`
+      + ` — traced by ${model}`,
+    carry: {
+      verification: [
+        c.carry.verification ?? '',
+        `LOGIC (${model}): the chain ${result.chainHolds ? 'holds' : 'DOES NOT HOLD'}.`,
+        result.chainAsRead ? `Read as: ${result.chainAsRead}` : '',
+        ...result.defects.map((d) => `- ${d.kind}: ${d.problem}`),
+      ].filter(Boolean).join('\n'),
+    },
+  }
+}
+
 /**
  * §6 — PASS 5. The adversarial read, against the WHOLE revised kernel.
  *
@@ -1587,10 +2187,34 @@ async function adversarialPass(c: PassContext): Promise<PassOutcome> {
       // ⚠ THE WHOLE KERNEL, NOT ONE PASS'S ANGLE. The clerk is told it is reading the
       // finished thing, so "look for what that reading was NOT covering" points at the
       // proposal's blind spots rather than at a neighbouring pass.
-      passMethod:
-        'This is the COMPLETE proposal after research and revision — the diagnosis, the approach, ' +
-        'the instrument and the actions, with every finding attached. You are not covering one angle ' +
+      //
+      // ⚠ 25-F §5 — AND IT NOW READS THE PROPOSER'S OWN ACCOUNT. `kernelText` is built from
+      // the persisted Idea columns; the user's own sentences are in none of them, so the
+      // hostile clerk has been reading the abstraction of a case rather than the case. A
+      // clerk who can see what actually happened to somebody asks a different question.
+      //
+      // ⚠ 25-F — IT ALSO READS WHAT THE THREE NEW PASSES FOUND, AND IT IS TOLD NOT TO
+      // REPEAT THEM. Without this the clerk re-derives the same objections the critique
+      // and the two verification passes have already put on the issues list, and the user
+      // works through the same point three times under three headings — which reads as
+      // three findings and is one.
+      passMethod: [
+        'This is the COMPLETE proposal after research and revision — the diagnosis, the approach, ',
+        'the instrument and the actions, with every finding attached. You are not covering one angle ',
         'of it; you are reading all of it, cold, for the first time.',
+        c.carry.smart
+          ? `\n═══ A CRITIQUE HAS ALREADY BEEN MADE OF THIS PROPOSAL ═══\n${c.carry.smart}\n`
+            + '⚠ DO NOT RESTATE ANY OF THAT. Those points are already on the user\'s list. Your value is '
+            + 'what it did NOT see — go somewhere else, and if you genuinely cannot find anything it '
+            + 'missed, say so rather than paraphrasing it.'
+          : '',
+        c.carry.verification
+          ? `\n═══ AND IT HAS BEEN MARKED AGAINST THE METHOD ═══\n${c.carry.verification}\n`
+            + '⚠ Same rule: these failures are recorded. Press on what they leave open.'
+          : '',
+        '',
+        testimonyForPrompt(c.ctx, 3000),
+      ].filter(Boolean).join('\n'),
       knownUnknowns,
     },
     {
@@ -1687,6 +2311,59 @@ async function openAllPages(ideaId: string): Promise<void> {
   await prisma.idea.update({ where: { id: ideaId }, data: { lexPage: 'COHERENT_ACTIONS' } })
 }
 
+/** The placeholder both entry points POST when they mint an idea. */
+const UNTITLED = 'Untitled idea'
+
+/**
+ * 25-F §7 — A COMPLETED BUILD MUST BE FINDABLE.
+ *
+ * ⚠ THE DIAGNOSIS. Charlie logged out and could not find the idea his five-minute build had
+ * produced, and the spend view showed it as "Untitled idea" — as does every other list on
+ * the platform, because `Idea.title` is still the placeholder both entry points POST when
+ * they mint the row. The DIAGNOSIS pass DOES draft a title; it writes it as a PROPOSAL, and
+ * `Idea.title` is only written by `mirrorValue` when a human accepts one. Nobody had.
+ *
+ * ⚠ AND THIS DOES NOT BREAK INVARIANT 5 ("nothing is accepted on the user's behalf"),
+ * which is the reason it is not simply an `acceptField` call. Two different things share
+ * the word "title":
+ *
+ *   · `IdeaFieldState.title` — a KERNEL FIELD. It stays at AWAITING_CONFIRMATION, the
+ *     title card still asks, and nothing here agrees to anything for them.
+ *   · `Idea.title`           — the row's NAME, which is what every list on the platform
+ *     renders. A row called "Untitled idea" is not an unanswered question, it is a filing
+ *     failure, and leaving it that way is not respect for the user's judgement — it is
+ *     five minutes of work they cannot find again.
+ *
+ * ⚠ IT ONLY EVER OVERWRITES THE PLACEHOLDER. A title the user has actually chosen, or an
+ * accepted proposal already mirrored, is left exactly as it is.
+ */
+async function nameTheIdea(ideaId: string): Promise<string | null> {
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { title: true } })
+  const current = idea?.title?.trim() ?? ''
+  if (current && current !== UNTITLED) return null
+
+  const row = await prisma.ideaFieldState.findUnique({
+    where: { ideaId_fieldKey: { ideaId, fieldKey: 'title' } },
+    select: { status: true, value: true, proposal: true },
+  })
+  const proposed = (row?.proposal as { value?: unknown } | null)?.value
+  const title =
+    (row?.status === 'ACCEPTED' && row.value?.trim())
+    || (typeof proposed === 'string' ? proposed.trim() : '')
+
+  if (!title) {
+    // ⚠ REPORTED, NOT PAPERED OVER. A build that drafted no title leaves an idea nobody
+    // can find, which is the very failure this function exists for — so it is visible in
+    // the log rather than being replaced by a manufactured name.
+    console.warn('[lex-diag] 25f the build drafted no title — the idea stays "Untitled idea"', { ideaId })
+    return null
+  }
+
+  await prisma.idea.update({ where: { id: ideaId }, data: { title: title.slice(0, 120) } })
+  console.log('[lex-diag] 25f named the built idea', { ideaId, title: title.slice(0, 120) })
+  return title.slice(0, 120)
+}
+
 /**
  * §1 — FINISH THE BUILD. Reached from the last pass's own request, and ALSO from a poll,
  * so a build whose final pass completed in a request the platform then killed still
@@ -1699,6 +2376,9 @@ async function finishBuild(ideaId: string, buildId: string): Promise<BuildView> 
 
   const log = readPassLog(row.passes)
   await openAllPages(ideaId)
+  // 25-F §7 — name the row before anything lists it. A five-minute build the user cannot
+  // find again is worse than no build.
+  await nameTheIdea(ideaId)
   const { message, usage } = await composeSummary(ideaId, buildId, log)
 
   // ⚠ THE SUMMARY CALL IS ATTRIBUTED TO A PASS, AND THIS IS A FIX FROM THE FIRST LIVE RUN.
@@ -1758,7 +2438,7 @@ async function composeSummary(
   // A failed summary is not a failed build — the draft is real either way. But it must
   // not be replaced with prose that implies Lex reviewed its own work when it did not,
   // so the deterministic version states only facts the row already holds.
-  const message = llmOk(result)
+  const baseMessage = llmOk(result)
     ? result.value.message.trim()
     : [
         `I’ve drafted, researched and revised a version from your four answers: ${done.join(', ')}.`,
@@ -1776,6 +2456,21 @@ async function composeSummary(
       reason: result.reason, detail: result.detail,
     })
   }
+
+  // ⚠⚠ 25-F — A PASS THE BUILD SURVIVED MUST BE NAMED IN THE MESSAGE THE USER READS FIRST.
+  //
+  // `continueOnFailure` lets the build finish DONE with a pass that failed. That is the
+  // right trade and it is also, exactly, the shape of a silent degradation — a green badge
+  // over work that did not happen. The summary is written by a model that was not told
+  // about the failure, so the sentence is APPENDED deterministically here rather than
+  // asked for: a warning that depends on a model remembering to include it is not a
+  // warning.
+  const lost = steppedOverFailures(log)
+  const message = lost.length
+    ? `${baseMessage}\n\n⚠ ${lost.length === 1 ? 'One part of this build did not run' : `${lost.length} parts of this build did not run`}: `
+      + `${lost.map((p) => `${p.label} (${p.failureReason ?? 'no reason recorded'})`).join('; ')}. `
+      + 'Everything else is here and is real; that part is simply missing rather than clean.'
+    : baseMessage
 
   // §5 — the message, then the credibility note, then the invitation to edit. The order
   // is the decision: the warning comes AFTER the work, where it reads as respect.
@@ -1847,7 +2542,11 @@ async function settleBuild(
   // early is exactly what someone who walked away needs to be told.
   await notifyByEmail(row, status)
 
-  return toView(row, forks)
+  // 25-F §1 — the ranked evidence travels back with the settle, so the request that
+  // FINISHES a build already carries what the user is about to read. Without this the
+  // screen would sit on a completed build with nothing on it until the next poll.
+  const highlights = await buildHighlights(row.ideaId, row.version)
+  return toView(row, forks, highlights)
 }
 
 /**

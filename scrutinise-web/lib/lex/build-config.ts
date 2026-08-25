@@ -24,6 +24,8 @@ export type BuildPassKey =
   | 'ORIENT' | 'DIAGNOSIS' | 'APPROACH' | 'ACTIONS'
   // ── 25-B: the three passes that make the draft worth reading ──
   | 'RESEARCH' | 'REVISE' | 'ADVERSARIAL'
+  // ── 25-F: the pass that asks whether any of it is good, and the two that verify it ──
+  | 'SMART' | 'KERNEL_CHECK' | 'LOGIC_CHECK'
 
 export interface BuildPassDef {
   key: BuildPassKey
@@ -49,6 +51,31 @@ export interface BuildPassDef {
    * configurable per pass and this is the pass where it matters".
    */
   model?: string
+  /**
+   * ⚠⚠ 25-F — MAY THE BUILD CARRY ON IF THIS PASS FAILS?
+   *
+   * The standing rule is that a FAILED pass STOPS the build (`nextPassKey`), and for the
+   * drafting passes that is right: there is no point researching a diagnosis that was
+   * never written.
+   *
+   * THE FIRST LIVE RUN OF 25-F SHOWED WHERE IT IS WRONG. One panel model returned
+   * `coherentActions` as a string where the schema asked for an array; the smart pass threw
+   * on `.join`; and because a thrown pass is a FAILED pass, **four of ten passes were lost
+   * — the smart pass, both verification passes and the hostile clerk — over one field of
+   * one model's reply.** The kernel was drafted, researched and revised by then. Throwing
+   * the adversarial read away because a critique misbehaved is the wrong trade.
+   *
+   * So the three passes ADDED BY 25-F are marked here, and only those three. They are
+   * enhancements over a kernel that already exists; passes 1–6 build it, and a build
+   * missing one of those has nothing to enhance.
+   *
+   * ⚠ THE FAILURE IS STILL RECORDED AS A FAILURE. It is not converted to SKIPPED, which
+   * would read as "we chose not to run this". The pass log keeps FAILED and its reason,
+   * `BuildProgress` renders it in amber, and `composeSummary` names it in the message the
+   * user reads first — because a DONE build that quietly lost its hostile reading is the
+   * silent-degradation failure this codebase has now recorded six times.
+   */
+  continueOnFailure?: boolean
 }
 
 export const BUILD_PASSES: BuildPassDef[] = [
@@ -84,16 +111,55 @@ export const BUILD_PASSES: BuildPassDef[] = [
     label: 'Revising in the light of it',
     detail: 'Rewriting the kernel — especially the causes — and keeping every place the evidence changed my mind.',
   },
+  // ── 25-F §2 — THE SMART PASS. After revision, before the agenda. ──────────
+  {
+    key: 'SMART',
+    label: 'Asking whether any of this is good',
+    detail:
+      'Putting your own words to other models, turning what they name into corpus queries, and '
+      + 'critiquing the kernel against Rumelt — rewriting it where it fails.',
+    // See `continueOnFailure`: this runs on a kernel that already exists.
+    continueOnFailure: true,
+    // ⚠ §2e — NOT THE CHEAPEST MODEL, AND THIS ONE IS A DECISION RATHER THAN A DEFAULT.
+    // The adversarial read ran on `gemini-2.5-flash` and produced 407 output tokens for
+    // six issues, on the pass where reasoning strength matters most. This pass reads the
+    // whole kernel, three outside answers and the research, and then rewrites. The panel
+    // of outside models is chosen separately, for vendor spread — see build-smart.ts.
+    model: 'gemini-2.5-pro',
+  },
+  // ── 25-F §3 — the two passes that verify. ─────────────────────────────────
+  {
+    key: 'KERNEL_CHECK',
+    label: 'Checking it is a kernel at all',
+    detail: 'Nine tests from the method: is the problem a problem, does the policy rule anything out, do the actions defeat the causes.',
+    model: 'gemini-2.5-pro',
+    continueOnFailure: true,
+  },
+  {
+    key: 'LOGIC_CHECK',
+    label: 'Checking the argument holds',
+    detail: 'Causes → obstacle → approach → actions, link by link: non-sequiturs, circularity, claims with nothing behind them.',
+    model: 'gemini-2.5-pro',
+    continueOnFailure: true,
+  },
   {
     key: 'ADVERSARIAL',
     label: 'Reading it back as a hostile clerk',
     detail: 'Where is it weakest, what can it not answer, what will it be asked that it has no answer to.',
-    // ⚠ NOT CHANGED FROM THE HOUSE DEFAULT HERE. §6 asks us to TRY a stronger model and
-    // report the difference in the findings; a swap made permanent in config before that
-    // comparison exists would be a verdict nobody measured. `LEX_BUILD_MODEL_ADVERSARIAL`
-    // is the one-line override the comparison is run with, and BUILD_25B_REPORT.md
-    // records what it produced.
-    model: 'gemini-2.5-flash',
+    // ⚠⚠ 25-F §2e — THIS WAS `gemini-2.5-flash` AND THAT IS NOW A MEASURED MISTAKE, NOT AN
+    // OPEN QUESTION.
+    //
+    // 25-B left it on the house default deliberately, so that a swap would be made on
+    // evidence rather than on preference: "a swap made permanent in config before that
+    // comparison exists would be a verdict nobody measured." The evidence arrived from the
+    // first real build — the cheapest model we have, on the pass where reasoning strength
+    // matters most, produced **407 output tokens for six issues** against a complete
+    // constitutional-reform proposal. That is not a close call about ranking quality; it
+    // is a pass that was not doing its job.
+    //
+    // `LEX_BUILD_MODEL_ADVERSARIAL` still overrides, and it is now what a comparison BACK
+    // to flash would be run with.
+    model: 'gemini-2.5-pro',
   },
 ]
 

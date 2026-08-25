@@ -40,6 +40,10 @@ import {
 } from './interrogation-library'
 import { assessInstrumentRetirement, type InstrumentAssessment } from './build-client'
 import { llmOk } from './build-llm'
+import {
+  writeQueries, extractedQuery, noteQueryDefects, type IssuedQuery,
+} from './build-query'
+import { TESTIMONY_INSTRUCTION } from './testimony'
 
 /** Why a question produced nothing. Named apart — see rule 1 in the header. */
 export type QuestionFailure = 'search-broke' | 'gather-failed' | 'nothing-bore-on-it' | 'corpus-silent' | null
@@ -64,6 +68,35 @@ export interface QuestionOutcome {
   divergence: string | null
 }
 
+/**
+ * A finding AS STORED — with the citation attached.
+ *
+ * ⚠⚠ 25-F §1/§5 — THIS TYPE EXISTS BECAUSE THE REVISION PASS HAS NEVER SEEN A FINDING.
+ *
+ * `researchSummary()` used to render one line per question — a panel heading and a COUNT
+ * ("Whether a power to do this already exists: 6 findings — reviewed 104, kept 12"). That
+ * string is `carry.research`, and `carry.research` is the entire "═══ WHAT THE RESEARCH
+ * FOUND ═══" block handed to pass 4. So the pass whose job is to rewrite the kernel in the
+ * light of the evidence was given the ARITHMETIC of the evidence and not the evidence.
+ *
+ * That is the mechanism behind the brief's §0: 70 evidence items with real citations —
+ * CRaG 2010 ss.1–3 with Explanatory Note paragraph numbers, the Lords Constitution
+ * Committee's 2012 report, PASC 2014 — sitting in the database while the revised kernel
+ * came out as "incentives encourage diffusion of responsibility". The material was never
+ * lost. It was never delivered.
+ */
+export interface CitedFinding {
+  questionId: string
+  panelHeading: string
+  kind: string
+  title: string
+  body: string
+  /** The source's own citation string, or null where the source carried none. */
+  citation: string | null
+  sourceType: string | null
+  url: string | null
+}
+
 export interface ResearchOutcome {
   outcomes: QuestionOutcome[]
   usages: LlmUsage[]
@@ -71,8 +104,12 @@ export interface ResearchOutcome {
   instrument: InstrumentAssessment | null
   /** Every finding, for the adversarial read in pass 5. */
   findings: RawFinding[]
+  /** 25-F — the same findings WITH their citations, for the revision and the screen. */
+  cited: CitedFinding[]
   /** Prose for the carry: what passes 4 and 5 are revising and reading against. */
   summary: string
+  /** 25-F §4 — every query this pass issued, and how each was built. */
+  queries: IssuedQuery[]
   /** TRUE when the per-pass ceiling stopped the pass before every question ran. */
   stoppedEarly: boolean
   stoppedReason: string | null
@@ -153,10 +190,16 @@ export async function draftFactsFor(ideaId: string, carry: {
  *  intents is answered by reasoning and retrieves nothing (the domain-transfer case). */
 async function retrieveFor(
   q: InterrogationQuestion, facts: DraftFacts,
+  /**
+   * 25-F §4 — the query WRITTEN for this question, when there is one. Absent means the
+   * writer did not produce a usable query for this job and the extraction is standing in;
+   * the caller has already recorded that, so this signature does not have to.
+   */
+  query: IssuedQuery,
 ): Promise<{ candidates: SearchResult[]; searchBroke: boolean; ran: boolean }> {
   if (!q.intents.length) return { candidates: [], searchBroke: false, ran: false }
 
-  const keywords = q.terms(facts)
+  const keywords = query.terms
   const perIntent = Math.max(1, Math.ceil(PER_QUESTION_LIMIT() / q.intents.length))
   const seen = new Set<string>()
   const candidates: SearchResult[] = []
@@ -220,6 +263,10 @@ async function askQuestion(input: {
   q: InterrogationQuestion
   facts: DraftFacts
   costLines: string[]
+  /** 25-F §4 — the query this question issues. Written, or the recorded fallback. */
+  query: IssuedQuery
+  /** 25-F §5 — the user's own words, verbatim. See `TESTIMONY_FOR_RESEARCH`. */
+  testimony: string
   onUsage: (u: LlmUsage) => void
 }): Promise<{
   outcome: Omit<QuestionOutcome, 'findings' | 'contradictions'>
@@ -237,7 +284,7 @@ async function askQuestion(input: {
     retrievalNote: retrievalNote(q),
   }
 
-  const { candidates, searchBroke, ran } = await retrieveFor(q, facts)
+  const { candidates, searchBroke, ran } = await retrieveFor(q, facts, input.query)
 
   // The reasoning-only question. No retrieval, no sift, and it says so — the gather is
   // still run because the question is answerable BY REASONING, which is the entire point
@@ -274,9 +321,16 @@ async function askQuestion(input: {
   }
 
   // ── The sift. The Deepening's, unchanged. ────────────────────────────────
+  //
+  // ⚠ 25-F §5 — THE SIFT NOW SEES THE PROPOSER'S OWN ACCOUNT, AND IT NEVER HAS BEFORE.
+  // `facts.text` is built from the persisted Idea columns and the carry; the user's own
+  // sentences are in neither. So the step that decides which of a hundred retrieved
+  // documents bear on the proposal was doing it without the first-hand account of what
+  // the proposal is about. Appended, not substituted — see testimony.ts.
+  const ideaWithTestimony = `${facts.text}${input.testimony}`
   const sift = candidates.length
     ? await siftCandidates({
-        passMethod: q.method, mustAnswer: q.mustAnswer, idea: facts.text, candidates,
+        passMethod: q.method, mustAnswer: q.mustAnswer, idea: ideaWithTestimony, candidates,
       })
     : { kept: [] as SearchResult[], judgements: new Map<string, SiftKeep>(), reviewed: 0, skipped: false, skipReason: undefined }
 
@@ -301,9 +355,9 @@ async function askQuestion(input: {
   for (const p of perspectives) {
     const result = await generateDeepeningFindings(
       {
-        method: `${q.method}\n\nTHE QUESTION YOU ARE ANSWERING: ${q.question}`,
+        method: `${q.method}\n\nTHE QUESTION YOU ARE ANSWERING: ${q.question}\n\n${TESTIMONY_INSTRUCTION}`,
         mustAnswer: q.mustAnswer,
-        idea: facts.text,
+        idea: ideaWithTestimony,
         costLines: input.costLines,
         results: sift.kept,
       },
@@ -382,6 +436,8 @@ export async function runResearch(input: {
   buildVersion: number
   facts: DraftFacts
   costLines: string[]
+  /** 25-F §5 — the proposer's own account, verbatim and labelled. '' when they gave none. */
+  testimony: string
   onActivity: (line: string) => Promise<void>
 }): Promise<ResearchOutcome> {
   const startedAt = Date.now()
@@ -390,6 +446,7 @@ export async function runResearch(input: {
   const onUsage = (u: LlmUsage) => { usages.push(u) }
   const outcomes: QuestionOutcome[] = []
   const allFindings: RawFinding[] = []
+  const cited: CitedFinding[] = []
   let instrument: InstrumentAssessment | null = null
   // 25-C §3a — remembered so the verdict can be taken after every question has run.
   let instrumentQuestion: InterrogationQuestion | null = null
@@ -400,6 +457,39 @@ export async function runResearch(input: {
     buildId: input.buildId, firing: questions.length, of: questions.length,
     leads: questions[0]?.id ?? null,
   })
+
+  // ══ 25-F §4 — WRITE A QUERY PER QUESTION, IN ONE CALL, BEFORE ANY OF THEM RUN ══════
+  //
+  // ⚠ THE DEFECT THIS REPLACES IS NOT THE ONE THE BRIEF NAMES. Nothing truncated a query
+  // mid-word (see build-query.ts for the byte-level diagnosis). What happened is that
+  // `withTerms()` gave EVERY question the same fourteen frequency-ranked words from the
+  // draft plus four or five literals — so nine questions issued nine near-identical
+  // queries, and "231 sources read; 0 cited" is the view of that from the other end.
+  //
+  // One call for all of them, not one per question: this pass already hits its
+  // 240-second budget, and nine extra round trips would buy better queries by losing two
+  // questions. A question the writer skipped falls back to the old extraction and SAYS SO
+  // on the record — a build where every query was written and one where none was must not
+  // read the same.
+  await input.onActivity('Writing a search query for each question')
+  const written = await writeQueries({
+    jobs: questions.map((q) => ({
+      id: q.id,
+      question: q.question,
+      lookingFor: q.mustAnswer.join(' · '),
+      anchors: q.anchors,
+    })),
+    // The proposer's own words lead: the terms of art we want are the ones a reader of
+    // THEIR account would reach for, and the drafted kernel has already lost them once.
+    context: [input.testimony, input.facts.text].filter(Boolean).join('\n\n'),
+    onUsage,
+  })
+  const queries = new Map<string, IssuedQuery>()
+  for (const q of questions) {
+    const w = written.get(q.id)
+    queries.set(q.id, w ?? extractedQuery(q.id, input.facts.text, q.anchors ?? []))
+  }
+  for (const q of queries.values()) noteQueryDefects(q, input.buildId)
 
   for (const q of questions) {
     // ⚠ §1/§8 — THE PER-PASS TIME CEILING, AND IT IS CHECKED HERE BECAUSE HERE IS THE
@@ -448,7 +538,10 @@ export async function runResearch(input: {
     await input.onActivity(`Asking: ${q.question}`)
 
     const { outcome, merged, kept, judgements } = await askQuestion({
-      q, facts: input.facts, costLines: input.costLines, onUsage,
+      q, facts: input.facts, costLines: input.costLines,
+      query: queries.get(q.id)!,
+      testimony: input.testimony,
+      onUsage,
     })
 
     // ── PERSIST. One evidence layer, the Deepening's (§2). ─────────────────
@@ -499,6 +592,17 @@ export async function runResearch(input: {
         })
         findingCount++
         allFindings.push(f)
+        // 25-F — the same finding, with the citation the row carries. See `CitedFinding`.
+        cited.push({
+          questionId: q.id,
+          panelHeading: q.panelHeading,
+          kind,
+          title: f.title,
+          body: f.body,
+          citation: src.citation ?? null,
+          sourceType: src.type ?? null,
+          url: src.url ?? null,
+        })
       }
 
       for (const text of merged.issues) {
@@ -597,7 +701,9 @@ export async function runResearch(input: {
     usages,
     instrument,
     findings: allFindings,
-    summary: researchSummary(outcomes, instrument),
+    cited,
+    summary: researchSummary(outcomes, instrument, cited),
+    queries: [...queries.values()],
     stoppedEarly,
     stoppedReason,
   }
@@ -613,8 +719,26 @@ function failureSentence(o: Pick<QuestionOutcome, 'failure' | 'reviewed'>): stri
   }
 }
 
-/** The carry passes 4 and 5 read. Prose, because both consumers are prompts. */
-function researchSummary(outcomes: QuestionOutcome[], instrument: InstrumentAssessment | null): string {
+/**
+ * The carry passes 4 and 5 read. Prose, because both consumers are prompts.
+ *
+ * ⚠⚠ 25-F — THE FINDINGS THEMSELVES ARE NOW IN IT. See `CitedFinding` for the diagnosis;
+ * in one sentence, this function used to emit counts and the revision pass was therefore
+ * revising against arithmetic. The counts and the gaps are KEPT — "we reviewed 104 and
+ * kept 12" and "still unanswered: …" are results in their own right and the §22 rule that
+ * an unlooked-for gap must not read as an absence depends on them — but they now sit
+ * BELOW the material rather than instead of it.
+ *
+ * ⚠ CONTRADICTIONS LEAD THE FINDINGS. A finding that cuts against the draft is the one the
+ * revision can still act on, and burying it among fifty supporting ones is how pass 4
+ * comes back with an empty `contradictions` list.
+ */
+const FINDING_BODY_CAP = parseInt(process.env.LEX_BUILD_FINDING_BODY_CAP ?? '700', 10)
+const FINDINGS_IN_CARRY = parseInt(process.env.LEX_BUILD_FINDINGS_IN_CARRY ?? '45', 10)
+
+function researchSummary(
+  outcomes: QuestionOutcome[], instrument: InstrumentAssessment | null, cited: CitedFinding[],
+): string {
   const lines: string[] = []
 
   // ⚠ THE INSTRUMENT VERDICT LEADS EVERYTHING (§4). A live power changes what the whole
@@ -627,6 +751,42 @@ function researchSummary(outcomes: QuestionOutcome[], instrument: InstrumentAsse
     )
   }
 
+  if (cited.length) {
+    // Contradictions first, then everything else in the order the questions ran.
+    const ordered = [
+      ...cited.filter((f) => f.kind === 'CONTRADICTS'),
+      ...cited.filter((f) => f.kind !== 'CONTRADICTS'),
+    ]
+    const shown = ordered.slice(0, FINDINGS_IN_CARRY)
+    lines.push('═══ THE FINDINGS THEMSELVES ═══')
+    lines.push(
+      'Each of these came from a document that was actually retrieved. The citation is the source\'s',
+      'own — use it, name the finding rather than the citation, and do not attach a citation to',
+      'anything not listed here.',
+      '',
+    )
+    for (const f of shown) {
+      lines.push(
+        `[${f.kind}] ${f.panelHeading} — ${f.title}`,
+        `    ${f.body.replace(/\s+/g, ' ').slice(0, FINDING_BODY_CAP)}`,
+        f.citation ? `    CITATION: ${f.citation}` : '    CITATION: (the source carried none)',
+        '',
+      )
+    }
+    if (ordered.length > shown.length) {
+      // ⚠ NEVER A SILENT CAP. §17's rule: if a step bounds coverage, say what was dropped.
+      lines.push(
+        `⚠ ${ordered.length - shown.length} further finding${ordered.length - shown.length === 1 ? '' : 's'} `
+        + 'were kept and are on the record but are not reproduced here, to keep this pass inside its '
+        + 'output budget. They are in the evidence layer and the user can see them.',
+        '',
+      )
+    }
+  } else {
+    lines.push('═══ THE FINDINGS THEMSELVES ═══', 'Nothing retrieved produced a finding. See the per-question account below.', '')
+  }
+
+  lines.push('═══ WHAT WAS ASKED, AND WHAT IS STILL UNANSWERED ═══')
   for (const o of outcomes) {
     if (o.failure) {
       lines.push(`${o.panelHeading}: ${failureSentence(o)}${o.retrievalNote ? ` ${o.retrievalNote}` : ''}`)

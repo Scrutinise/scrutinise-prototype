@@ -25,6 +25,7 @@
 
 import { BUILD_PASSES, type BuildPassKey } from './build-config'
 import type { LlmUsage } from './build-llm'
+import type { IssuedQuery } from './build-query'
 
 export type PassStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'NOT_REACHED' | 'SKIPPED'
 
@@ -50,6 +51,10 @@ export interface PassCarry {
   research?: string
   /** REVISE — what changed and what contradicted pass 2, for the adversarial read. */
   revision?: string
+  /** 25-F §2 — the smart pass's verdict, rewrites and prognosis, for the passes after it. */
+  smart?: string
+  /** 25-F §3 — what the two verification passes found, for the hostile clerk to press on. */
+  verification?: string
 }
 
 export interface PassRecord {
@@ -74,6 +79,17 @@ export interface PassRecord {
   carry?: PassCarry
   /** §8 — every model call this pass made. The build total is the sum of these. */
   usages?: LlmUsage[]
+  /**
+   * 25-F §4 — EVERY QUERY THIS PASS ISSUED, with how it was built.
+   *
+   * ⚠ Stored on the pass record for the same reason the carry is (see the header): it
+   * needs no migration, and it keeps "what was asked" inspectable next to "what came
+   * back". Before this existed the only record of a query was `IdeaBuild.queryUsed` —
+   * ONE string, from pass 1 — so the nine near-identical queries the research pass
+   * issued left no trace at all, and "231 sources read; 0 cited" had no diagnosable
+   * cause on the row.
+   */
+  queries?: IssuedQuery[]
 }
 
 export function freshPassLog(): PassRecord[] {
@@ -152,10 +168,31 @@ export function allUsages(log: PassRecord[]): LlmUsage[] {
  */
 export function nextPassKey(log: PassRecord[]): BuildPassKey | null {
   for (const p of log) {
-    if (p.status === 'FAILED') return null
+    // ⚠ 25-F — A FAILED PASS STILL STOPS THE BUILD, UNLESS IT IS DECLARED OTHERWISE.
+    //
+    // `continueOnFailure` (build-config.ts) marks the three passes 25-F added, and only
+    // those. They run on a kernel that has already been drafted, researched and revised,
+    // so losing the hostile clerk because a critique's panel model returned a string where
+    // the schema asked for a list — which is exactly what happened on the first live run —
+    // costs four passes to save none.
+    //
+    // ⚠ THE PASS IS STILL FAILED, NOT SKIPPED. It keeps its status and its reason, the
+    // progress display renders it in amber, and the build summary names it. Stepping over
+    // a failure quietly is the thing this whole file is written against.
+    if (p.status === 'FAILED') {
+      if (BUILD_PASSES.find((d) => d.key === p.key)?.continueOnFailure) continue
+      return null
+    }
     if (p.status === 'PENDING' || p.status === 'RUNNING') return p.key
   }
   return null
+}
+
+/** The passes that failed but were stepped over. Named so the build can say so. */
+export function steppedOverFailures(log: PassRecord[]): PassRecord[] {
+  return log.filter(
+    (p) => p.status === 'FAILED' && BUILD_PASSES.find((d) => d.key === p.key)?.continueOnFailure,
+  )
 }
 
 /**

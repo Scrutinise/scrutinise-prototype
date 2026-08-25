@@ -209,6 +209,48 @@ export async function setProposal(
   })
 }
 
+/**
+ * 25-F §6a — A LOOP FIELD'S PROPOSAL, RENDERED FROM THE CHILD ROWS THAT ARE ITS CONTENT.
+ *
+ * ⚠ THE DEFECT, AND WHICH OF THE BRIEF'S TWO OPTIONS THIS TAKES.
+ *
+ * `causes`, `policyOptions` and `actions` sat at AWAITING_CONFIRMATION on the first real
+ * build carrying `{"value": "", "rationale": null}`. Nothing was lost — the real content is
+ * in `DiagnosisCause`, `PolicyOption` and `LexCoherentAction` — but an EMPTY PROPOSAL
+ * CLAIMS SOMETHING WAS PROPOSED WHEN NOTHING WAS, which is the never-claim rule broken
+ * inside the field machine itself.
+ *
+ * §6a offers two ways out: render the child rows into the proposal, or do not let the
+ * field enter AWAITING_CONFIRMATION. **This takes the first**, and the reason is that the
+ * second would be a worse product: AWAITING_CONFIRMATION is precisely the right state —
+ * Lex HAS put candidates there and nobody has agreed to them — and dropping it would make
+ * a loop field Lex had filled indistinguishable from one nobody had touched.
+ *
+ * ⚠ THE PANEL DOES NOT READ THIS VALUE — the loop fields render their child rows directly
+ * (`CausesField`, `ActionsField` in FieldsPanel.tsx), which is why the empty proposal was
+ * invisible on screen for eight sprints and visible only in a dump. That does not make it
+ * harmless: the proposal is what an export, a report and the next reader of the row see.
+ */
+export async function setLoopProposal(
+  ideaId: string,
+  fieldKey: string,
+  rows: string[],
+  rationale?: string,
+) {
+  const items = rows.map((r) => String(r ?? '').trim()).filter(Boolean)
+  if (!items.length) {
+    // Nothing to claim. Leaving the field where it was is the honest outcome — see above.
+    console.warn('[field-machine] 25f refused an empty loop proposal', { ideaId, fieldKey })
+    return
+  }
+  await setProposal(ideaId, fieldKey, {
+    value: items.map((r, i) => `${i + 1}. ${r}`).join('\n'),
+    rationale: rationale
+      ?? `${items.length} candidate${items.length === 1 ? '' : 's'} drafted by Lex, listed in full above and `
+        + 'editable one by one in the panel. Nothing here is accepted until you say so.',
+  })
+}
+
 /** User accepts (optionally editing) → ACCEPTED. Returns whether keywords fired. */
 export async function acceptField(
   ideaId: string,

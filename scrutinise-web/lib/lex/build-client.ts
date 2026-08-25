@@ -34,6 +34,7 @@ import {
   modelForPass, DOMAIN_TRANSFER_QUESTION, INSTRUMENTS, INSTRUMENT_DIMENSIONS,
   ALTERNATIVES_PER_FORK, type BuildPassKey,
 } from './build-config'
+import { TESTIMONY_INSTRUCTION } from './testimony'
 
 const MAX_TOKENS = (key: BuildPassKey) =>
   parseInt(process.env[`LEX_BUILD_MAX_TOKENS_${key}`] ?? process.env.LEX_BUILD_MAX_TOKENS ?? '8000', 10)
@@ -126,6 +127,16 @@ const ROUGHNESS = [
   'aside. A vivid wrong answer the user can correct is worth more here than a cautious one they cannot.',
 ].join('\n')
 
+// ⚠ 25-F §5 — THE TESTIMONY INSTRUCTION IS NOW A POSITIVE ONE, and that is the change.
+//
+// This block used to end with a single sentence about the user's own knowledge, and that
+// sentence was a PROHIBITION: "never present it as a retrieved source". Nothing anywhere
+// said use it. Measured on the first real build: 2,934 characters of the proposer's account
+// were in front of five passes and reached exactly one drafted field. A model given a block
+// of text and only a rule about what it may not do with it leaves the text alone.
+//
+// `TESTIMONY_INSTRUCTION` (lib/lex/testimony.ts) is the positive half, with the
+// never-claim half restated inside it so the two cannot be separated.
 const GROUNDING = [
   'THREE KINDS OF STATEMENT, AND THEY MUST BE KEPT APART:',
   '  · CORPUS-GROUNDED — only what a SOURCE below actually says. Cite it by its `id=` value.',
@@ -133,8 +144,36 @@ const GROUNDING = [
   '    ("reasoning here rather than citing…").',
   '  · NEVER — a fabricated citation, statistic, date or case name, or any claim about a document',
   '    not listed below. This is the only hard line.',
-  'THE USER\'S OWN KNOWLEDGE, where it is given to you, is TESTIMONY. Rely on it, quote it back to',
-  'them as theirs — and never present it as a retrieved source or attach a citation to it.',
+  '',
+  TESTIMONY_INSTRUCTION,
+].join('\n')
+
+/**
+ * §25.7 — the six instructions for the method layer, which were specified and were not
+ * being honoured. All six are absent from the first real build's output; each is a
+ * property of a DRAFTING pass, so they live in one block every drafting pass includes
+ * rather than in four prompts that will drift apart.
+ */
+const ANSWER_QUALITY = [
+  'SIX THINGS THAT SEPARATE A GOOD ANSWER FROM A COMPETENT ONE. Every one of them is a property of',
+  'what you write, not an extra field:',
+  '  1. A CAUSAL CHAIN, NOT AN INVENTORY. Say what leads to what, and for each link name the SYMPTOM',
+  '     you would see if that link were the broken one. A list of five things that are wrong is not a',
+  '     diagnosis.',
+  '  2. THE COUNTERINTUITIVE RESULT GOES AT THE CENTRE, if one holds. If the record shows the obvious',
+  '     reading is wrong, that is the most valuable thing you have — lead with it rather than filing',
+  '     it as a caveat.',
+  '  3. CITE THE FINDING, NOT THE CITATION. "A 2012 Lords Constitution Committee report concluded that',
+  '     accountability to Parliament rests with Ministers, not officials" is a finding. "See the Lords',
+  '     Constitution Committee (2012)" is a footnote pretending to be one. Name the result, whose it',
+  '     is, and what it implies for THIS proposal.',
+  '  4. REFRAME THE INSTRUMENT IF IT IS WRONG. If what the proposal actually needs is a funding',
+  '     decision, a regulator rule or an organisational change rather than the instrument assumed, say',
+  '     so plainly and say what the right one is.',
+  '  5. GIVE A TEST THE USER CAN APPLY — one question that operationalises the analysis and that they',
+  '     could put to a civil servant or a committee and get a real answer to.',
+  '  6. PROPOSE THE NEXT ACTION, concretely. Not "further research is needed": who to ask, what to ask',
+  '     for, or what to read.',
 ].join('\n')
 
 function sourcesBlock(results: SearchResult[]): string {
@@ -178,7 +217,7 @@ export async function runOrientPass(input: {
   model?: string
 }): Promise<LlmResult<OrientOutput>> {
   const system = [
-    M_GENERAL, '', M_ANSWER, '', GROUNDING, '', ROUGHNESS,
+    M_GENERAL, '', M_ANSWER, '', GROUNDING, '', ANSWER_QUALITY, '', ROUGHNESS,
     input.lens ? `\n${input.lens}` : '',
     '',
     'YOU ARE ORIENTING. Four outputs:',
@@ -265,7 +304,7 @@ export async function runDiagnosisPass(input: {
   results: SearchResult[]
 }): Promise<LlmResult<DiagnosisOutput>> {
   const system = [
-    M_GENERAL, '', M_DIAGNOSIS, '', GROUNDING, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
+    M_GENERAL, '', M_DIAGNOSIS, '', GROUNDING, '', ANSWER_QUALITY, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
     '',
     'DRAFT THE DIAGNOSIS. Fields:',
     '  `title`      — a short working title for the idea, under 80 characters, in the user\'s register.',
@@ -314,6 +353,28 @@ export interface ApproachOutput {
   }
   leverage: string
   whatItRulesOut: string
+  /**
+   * ⚠ 25-F §6b — TWO OF RUMELT'S THREE TESTS FOR A GUIDING POLICY, AND THE BUILD HAS
+   * NEVER DRAFTED EITHER.
+   *
+   * `anticipatedResponses` and `conditionsForSuccess` came out EMPTY on the first real
+   * build with no proposal at all, and the audit answers the brief's question — they were
+   * not skipped and they did not fail: THEY WERE NEVER WIRED. No build pass has ever had
+   * a field for them in its schema. `M_GUIDING_POLICY` demands both in every prompt this
+   * pass sends ("Anticipate responses… and state conditions for success as testable
+   * bets"), and the model had nowhere to put the answer.
+   *
+   * They belong to this pass because they are properties OF THE APPROACH: what people do
+   * about it, and what has to be true for it to work.
+   */
+  anticipatedResponses: {
+    avoidance: string
+    gaming: string
+    enforcementBurden: string
+    legalChallenge: string
+    politicalAttack: string
+  }
+  conditionsForSuccess: string
   summaryGuidingPolicy: string
   forks: RawFork[]
   uncertainties: RawUncertainty[]
@@ -355,12 +416,24 @@ const APPROACH_SCHEMA = {
     },
     leverage: { type: 'string' },
     whatItRulesOut: { type: 'string' },
+    anticipatedResponses: {
+      type: 'object',
+      properties: {
+        avoidance: { type: 'string' },
+        gaming: { type: 'string' },
+        enforcementBurden: { type: 'string' },
+        legalChallenge: { type: 'string' },
+        politicalAttack: { type: 'string' },
+      },
+      required: ['avoidance', 'gaming', 'enforcementBurden', 'legalChallenge', 'politicalAttack'],
+    },
+    conditionsForSuccess: { type: 'string' },
     summaryGuidingPolicy: { type: 'string' },
     forks: FORK_SCHEMA,
     uncertainties: UNCERTAINTY_SCHEMA,
   },
   required: ['policyOptions', 'chosenApproach', 'instrument', 'leverage', 'whatItRulesOut',
-    'summaryGuidingPolicy', 'forks', 'uncertainties'],
+    'anticipatedResponses', 'conditionsForSuccess', 'summaryGuidingPolicy', 'forks', 'uncertainties'],
 }
 
 export async function runApproachPass(input: {
@@ -371,7 +444,7 @@ export async function runApproachPass(input: {
   results: SearchResult[]
 }): Promise<LlmResult<ApproachOutput>> {
   const system = [
-    M_GENERAL, '', M_GUIDING_POLICY, '', GROUNDING, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
+    M_GENERAL, '', M_GUIDING_POLICY, '', GROUNDING, '', ANSWER_QUALITY, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
     '',
     'DRAFT THE APPROACH. Fields:',
     '  `policyOptions` — 3–4 candidate approaches to the PIVOTAL OBSTACLE, each with a genuine case FOR',
@@ -395,6 +468,21 @@ export async function runApproachPass(input: {
     '                    pivot point it exploits.',
     '  `whatItRulesOut` — what choosing this puts off the table, and what is given up by not doing it.',
     '                    Ground it in the options you set aside; a policy that rules nothing out is fluff.',
+    '  `anticipatedResponses` — ⚠ ONE OF RUMELT\'S THREE TESTS, and it is not optional. How the people',
+    '                    affected will ACTUALLY BEHAVE once this exists. Five slots, each a sentence or',
+    '                    two and each about THIS proposal rather than about policy in general:',
+    '                      `avoidance`          — how they arrange their affairs to fall outside it.',
+    '                      `gaming`             — how they comply with the letter and defeat the point.',
+    '                      `enforcementBurden`  — who has to police it, with what, and at what cost.',
+    '                      `legalChallenge`     — the ground on which it would be challenged, and by whom.',
+    '                      `politicalAttack`    — the line of attack, in the words it would be made in.',
+    '                    Where you genuinely cannot see one, say so IN THAT SLOT ("I can see no obvious',
+    '                    avoidance route, which is itself worth testing") rather than leaving it empty.',
+    '  `conditionsForSuccess` — ⚠ THE SECOND OF THE THREE TESTS. Testable bets, in the form "for this to',
+    '                    work, X must be true" — three to five of them, each something a person could',
+    '                    actually go and check. "Sufficient political will" is not a testable bet;',
+    '                    "the Cabinet Office must be able to compel departments to publish outcome',
+    '                    owners, which s.3(1) CRaG may or may not reach" is.',
     '  `summaryGuidingPolicy` — the approach, its leverage, and what it rules out, in a short paragraph.',
   ].join('\n')
 
@@ -459,7 +547,7 @@ export async function runActionsPass(input: {
   instrument: string
 }): Promise<LlmResult<ActionsOutput>> {
   const system = [
-    M_GENERAL, '', M_COHERENT_ACTIONS, '', GROUNDING, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
+    M_GENERAL, '', M_COHERENT_ACTIONS, '', GROUNDING, '', ANSWER_QUALITY, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
     '',
     'DRAFT THE ACTIONS. Fields:',
     '  `actions` — 3–6 COORDINATED steps that execute the approach through the instrument named below.',
@@ -685,7 +773,7 @@ export async function runRevisePass(input: {
   forks: Array<{ forkKey: string; chosen: string; alternatives: string[] }>
 }): Promise<LlmResult<RevisionOutput>> {
   const system = [
-    M_GENERAL, '', M_DIAGNOSIS, '', M_GUIDING_POLICY, '', GROUNDING, '',
+    M_GENERAL, '', M_DIAGNOSIS, '', M_GUIDING_POLICY, '', GROUNDING, '', ANSWER_QUALITY, '',
     FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
     '',
     'YOU ARE REVISING A DRAFT YOU WROTE BEFORE YOU HAD DONE ANY RESEARCH. The research is below.',
