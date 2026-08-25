@@ -3,7 +3,8 @@
 import Link from 'next/link';
 
 const links = [
-  { label: 'Create', href: '/ideas/create' },
+  // 25-F §9 — creation entry; the door behind /ideas/new is a PlatformConfig row.
+  { label: 'Create', href: '/ideas/new' },
   { label: 'Browse', href: '/prototype/browse' },
   { label: 'Training', href: '/training' },
   { label: 'About', href: '/about' },

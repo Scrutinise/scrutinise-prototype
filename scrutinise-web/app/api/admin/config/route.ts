@@ -2,12 +2,22 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { NEW_IDEA_DOOR_KEY, DEFAULT_DOOR } from '@/lib/lex/new-idea-door'
 
 const ConfigUpdateSchema = z.object({
   credibilityWeightingActive: z.boolean().optional(),
   peerReviewRequired: z.boolean().optional(),
   minReviewersForStage4: z.number().int().min(1).optional(),
   minRatingForStage4: z.number().min(0).max(5).optional(),
+  // ⚠ 25-F §9 — THE CUTOVER SWITCH. Which elicitation a NEW idea gets.
+  //
+  // It is here, on an existing SUPER_ADMIN route that already writes an ActivityLog entry
+  // for every change, rather than in a script — because §9a asks that the flip and the
+  // REVERT both be cheap, and "cheap" for the revert means Charlie can do it himself from
+  // the admin panel at the moment a real user is failing on the new door.
+  //
+  // The enum is closed: a typo cannot put the platform on a door that does not exist.
+  [NEW_IDEA_DOOR_KEY]: z.enum(['create', 'build']).optional(),
 })
 
 // GET /api/admin/config — Admin+
@@ -27,6 +37,7 @@ export async function GET(_req: Request) {
           'peerReviewRequired',
           'minReviewersForStage4',
           'minRatingForStage4',
+          NEW_IDEA_DOOR_KEY,
         ],
       },
     },
@@ -36,6 +47,10 @@ export async function GET(_req: Request) {
   for (const c of configs) {
     result[c.key] = c.value
   }
+  // ⚠ 25-F §9 — REPORT THE DOOR EVEN WHEN NO ROW EXISTS. An absent key rendering as blank
+  // would leave the admin screen unable to tell "nobody has set it" from "it is off", and
+  // §19's rule is that a flag state you cannot read is not a flag state you may act on.
+  if (result[NEW_IDEA_DOOR_KEY] === undefined) result[NEW_IDEA_DOOR_KEY] = DEFAULT_DOOR
 
   return NextResponse.json(result)
 }
@@ -71,8 +86,8 @@ export async function PATCH(req: Request) {
     ...updates.map(([key, value]) =>
       prisma.platformConfig.upsert({
         where: { key },
-        update: { value: value as boolean | number, updatedByUserId: authUser.id },
-        create: { key, value: value as boolean | number, updatedByUserId: authUser.id },
+        update: { value: value as boolean | number | string, updatedByUserId: authUser.id },
+        create: { key, value: value as boolean | number | string, updatedByUserId: authUser.id },
       }),
     ),
     prisma.activityLog.create({

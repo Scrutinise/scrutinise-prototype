@@ -121,7 +121,8 @@ export default function HomePage() {
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <Button size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/ideas/create">
+                {/* 25-F §9 — the homepage creation entry. */}
+                <Link href="/ideas/new">
                   Get Started
                   <ArrowRight className="ml-2 size-4" />
                 </Link>

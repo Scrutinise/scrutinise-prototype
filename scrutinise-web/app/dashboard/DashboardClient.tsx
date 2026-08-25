@@ -114,7 +114,10 @@ export default function DashboardClient({
           {userName ? `Welcome back, ${userName}` : 'Dashboard'}
         </h1>
         <Button asChild>
-          <Link href="/ideas/create">Create new idea</Link>
+          {/* 25-F §9 — the creation entry. `/ideas/new` reads the door switch and
+              redirects; the flip is a PlatformConfig row, not a deploy. Editing links
+              (which carry ?ideaId=) are untouched. */}
+          <Link href="/ideas/new">Create new idea</Link>
         </Button>
       </div>
 
@@ -151,7 +154,7 @@ export default function DashboardClient({
                 You have not created any ideas yet.
               </p>
               <Button asChild size="sm" className="mt-4">
-                <Link href="/ideas/create">Start your first idea</Link>
+                <Link href="/ideas/new">Start your first idea</Link>
               </Button>
             </div>
           ) : (

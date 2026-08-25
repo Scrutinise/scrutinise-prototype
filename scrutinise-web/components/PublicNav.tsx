@@ -67,7 +67,9 @@ export default function PublicNav() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link href="/ideas/create" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          {/* 25-F §9 — creation entry. A CLIENT component, which is why the switch is a
+              redirect route rather than a prop: it cannot read the database. */}
+          <Link href="/ideas/new" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Create
           </Link>
           <Link href="/ideas" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -136,7 +138,7 @@ export default function PublicNav() {
         <div className="border-t border-border px-4 py-4 md:hidden">
           <div className="flex flex-col gap-3">
             <Link
-              href="/ideas/create"
+              href="/ideas/new"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >

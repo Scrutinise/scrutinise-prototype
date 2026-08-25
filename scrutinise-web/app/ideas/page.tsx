@@ -149,7 +149,8 @@ export default async function BrowseIdeasPage({ searchParams }: Props) {
               <p className="text-base text-muted-foreground">No public ideas yet.</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Be the first —{' '}
-                <Link href="/ideas/create" className="underline hover:text-foreground">
+                {/* 25-F §9 — creation entry; see lib/lex/new-idea-door.ts. */}
+                <Link href="/ideas/new" className="underline hover:text-foreground">
                   develop your idea
                 </Link>
                 .
