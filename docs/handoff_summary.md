@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-25 01:15 UTC — ▼ **LEX 25-F: THE REVISION PASS HAS NEVER BEEN SHOWN A
+*Last updated: 2026-08-25 07:07 UTC — ▼ **LEX 25-F: THE REVISION PASS HAS NEVER BEEN SHOWN A
 FINDING — IT WAS BEING HANDED THE ARITHMETIC OF THE EVIDENCE.** `researchSummary()` emitted one line
 per question — a heading and a COUNT — and that string IS the whole `═══ WHAT THE RESEARCH FOUND ═══`
 block given to pass 4. **That is the mechanism behind the brief's §0**: 70 cited findings in the

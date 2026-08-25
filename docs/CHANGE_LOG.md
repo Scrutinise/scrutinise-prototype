@@ -132,7 +132,7 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
-## LEX 25-F — THE REVISION PASS WAS BEING SHOWN THE ARITHMETIC OF THE EVIDENCE, NOT THE EVIDENCE (2026-08-25 01:15 UTC)
+## LEX 25-F — THE REVISION PASS WAS BEING SHOWN THE ARITHMETIC OF THE EVIDENCE, NOT THE EVIDENCE (2026-08-25 07:07 UTC)
 
 Executes `docs/BRIEF_25F.md` §1–§8 and §9 (the cutover), given in the session prompt. `tsc --noEmit`
 and `next build` clean; **`npm run check:lex-25f` 62/62**, every source-text assertion carrying a
