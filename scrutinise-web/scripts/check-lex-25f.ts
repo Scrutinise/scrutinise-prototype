@@ -295,7 +295,12 @@ const CHECKS: Check[] = [
     run: (src) => {
       const client = src['lib/lex/build-client.ts']
       if (!/anticipatedResponses: \{/.test(client)) return 'anticipatedResponses is still absent from every pass schema'
-      if (!/conditionsForSuccess: \{ type: 'string' \}/.test(client)) return 'conditionsForSuccess is still absent from every pass schema'
+      // ⚠ THE FIELD, NOT ITS TYPE. This matched `type: 'string'` and 25-G §4d made it an
+      // ARRAY — because the second build returned five sentences in one blob, every one
+      // opening "For this to work". The check called that a regression. What §6b actually
+      // requires is that the field is IN a pass schema at all; how it is shaped is §4d's
+      // business, and asserting both here made one section's fix another's failure.
+      if (!/conditionsForSuccess: \{ type: '(string|array)'/.test(client)) return 'conditionsForSuccess is still absent from every pass schema'
       const build = src['lib/lex/build.ts']
       if (!/setProposal\(ideaId, 'anticipatedResponses'/.test(build)) return 'anticipatedResponses is never persisted'
       if (!/setProposal\(ideaId, 'conditionsForSuccess'/.test(build)) return 'conditionsForSuccess is never persisted'

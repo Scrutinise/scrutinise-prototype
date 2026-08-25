@@ -482,12 +482,23 @@ const CHECKS: Check[] = [
   {
     name: '§3 a citation the corpus did not return cannot be persisted',
     run: (s) => {
+      // ⚠⚠ THIS ASSERTION NAMED A VARIABLE AND 25-G RENAMED IT — TO SOMETHING STRICTER.
+      //
+      // It matched `seen.has(id)`, where `seen` is every id the gateway returned. 25-G §1c
+      // caps what the orient MODEL is handed (~434 retrieved, 40 read), so the check
+      // against `seen` would have accepted a citation to a document the model never saw —
+      // a fabricated id that happened to be real. The code now checks `readable`, the set
+      // actually handed over.
+      //
+      // The check reported that as a REGRESSION, because it was written to match the code
+      // rather than to state the property. It now asserts the property: whatever the set is
+      // called, a cited id is checked against a set before it is kept.
       const src = s['lib/lex/build.ts']
-      return /citedSourceIds[\s\S]{0,90}seen\.has\(id\)/.test(src)
+      return /citedSourceIds[\s\S]{0,140}(readable|seen)\.has\(id\)/.test(src)
         ? null
-        : 'the orient pass no longer drops source ids that were never handed to the model'
+        : 'the orient pass no longer checks a cited id against the sources it was handed'
     },
-    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace(/citedSourceIds[\s\S]{0,90}seen\.has\(id\)/g, 'citedSourceIds') }),
+    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace(/citedSourceIds[\s\S]{0,140}(readable|seen)\.has\(id\)/g, 'citedSourceIds') }),
   },
 
   // ── §4 — forks and the instrument ──────────────────────────────────────────
