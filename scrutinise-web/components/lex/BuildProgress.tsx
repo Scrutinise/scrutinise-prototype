@@ -68,6 +68,50 @@ function spendFor(build: BuildView, key: string): string | null {
   return `${tokens} — ${row.pence < 1 ? 'under 1p' : `${row.pence.toFixed(1)}p`}`
 }
 
+/**
+ * ⚠⚠ 25-G §4c — WHAT IS BEING DECIDED AT THIS FORK.
+ *
+ * The second build recorded four decisions and rendered all four identically as a bare
+ * "I chose / instead of":
+ *
+ *     diagnosis:rootCause        ← a CAUSE
+ *     diagnosis:pivotalObstacle  ← an OBSTACLE
+ *     approach:primaryLever      ← an APPROACH
+ *     guidingPolicy:instrument   ← an INSTRUMENT
+ *
+ * Four different KINDS of question with nothing on screen to tell them apart. **A user
+ * cannot make four decisions well if they cannot tell what each one is about** — and these
+ * are the decisions 25-C turns into the review agenda, so the cost is not cosmetic.
+ *
+ * ⚠ IT KEYS ON `fieldKey`, NOT ON `forkKey`. The model invents its own fork keys
+ * (`approach:primaryLever` and `approach:chosen` are the same decision under two names
+ * across two builds), whereas `fieldKey` names the field the decision bears on and is
+ * drawn from the platform's own closed set. That is the same reasoning `decisionIdentity`
+ * uses to de-duplicate them in 25-F §6c.
+ *
+ * ⚠ AN UNKNOWN FIELD FALLS BACK TO THE KEY ITSELF rather than to a generic word. "A
+ * decision" on a fork nobody labelled tells the user less than the raw key does, and it
+ * hides the fact that a new fork kind has appeared that nobody has named.
+ */
+const FORK_LABELS: Record<string, { label: string; about: string }> = {
+  rootCause: { label: 'The root cause', about: 'why the problem happens' },
+  pivotalObstacle: { label: 'The pivotal obstacle', about: 'why nobody has fixed it' },
+  chosenApproach: { label: 'The approach', about: 'the way at the obstacle' },
+  summaryGuidingPolicy: { label: 'The instrument', about: 'what kind of tool this is' },
+  summaryDiagnosis: { label: 'The diagnosis', about: 'what is going wrong' },
+  summaryCoherentActions: { label: 'The plan', about: 'what would actually be done' },
+  policyOptions: { label: 'The approach', about: 'the way at the obstacle' },
+  challenge: { label: 'The problem', about: 'what is wrong, and for whom' },
+  actions: { label: 'The actions', about: 'the coordinated steps' },
+  causes: { label: 'The causes', about: 'what drives the problem' },
+}
+
+function forkLabel(fieldKey: string, forkKey: string): { label: string; about: string | null } {
+  const known = FORK_LABELS[fieldKey]
+  if (known) return known
+  return { label: forkKey, about: null }
+}
+
 /** 25-F §2e — the models that actually answered for this pass, or null when none did. */
 function modelsFor(build: BuildView, key: string): string | null {
   const row = build.modelsByPass?.find((m) => m.key === key)
@@ -207,11 +251,24 @@ export default function BuildProgress({
         </p>
       )}
 
-      {build.summaryMessage && (
-        <p className="px-4 py-3 text-sm text-zinc-800 whitespace-pre-wrap border-t border-zinc-100">
-          {build.summaryMessage}
-        </p>
-      )}
+      {/* ⚠⚠ 25-G §4a — `build.summaryMessage` WAS RENDERED HERE AND IT IS THE DUPLICATED
+          PARAGRAPH.
+
+          `composeSummary` does two things with the same string: it writes it into the
+          TRANSCRIPT (`appendTranscript` → `lexBubble(message, BUILD_STAGE, 'build:summary')`)
+          and it stores it on `IdeaBuild.summaryMessage`. `BuildIdeaClient` renders the
+          transcript above this panel and this panel rendered the column — so the same 537
+          characters appeared twice on one screen, verbatim, a few inches apart.
+
+          Measured on build `42d68bea`: transcript message [0] is byte-identical to
+          `summaryMessage`.
+
+          ⚠ THE TRANSCRIPT COPY IS THE ONE THAT STAYS, and the choice is not arbitrary. In
+          the transcript it is followed by its two companion bubbles — the credibility note
+          and the invitation to edit — in the order §5 specifies: the work, then the warning,
+          then the invitation. Dropping the transcript copy would leave those two orphaned
+          under a heading that no longer says what they are about. The column stays on the
+          row; nothing is lost, and a report or an export still reads it from there. */}
 
       {/* §4.2 — what Lex is unsure about, per field. "This is what the user reads first." */}
       {build.uncertainties.length > 0 && (
@@ -234,12 +291,18 @@ export default function BuildProgress({
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Where I had to choose ({new Set(build.forks.map((f) => f.forkKey)).size} decisions)
           </p>
-          <ul className="mt-2 space-y-3">
+          {/* 25-G §4c — grouped and labelled by WHAT IS BEING DECIDED. See `FORK_LABELS`. */}
+          <ul className="mt-2 space-y-4">
             {[...new Set(build.forks.map((f) => f.forkKey))].map((key) => {
               const group = build.forks.filter((f) => f.forkKey === key)
+              const { label, about } = forkLabel(group[0].fieldKey, key)
               return (
                 <li key={key} className="text-sm">
-                  <p className="text-zinc-900"><span className="text-zinc-500">I chose:</span> {group[0].chosen}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                    {label}
+                    {about && <span className="ml-2 normal-case tracking-normal font-normal text-zinc-400">{about}</span>}
+                  </p>
+                  <p className="text-zinc-900 mt-0.5"><span className="text-zinc-500">I chose:</span> {group[0].chosen}</p>
                   <ul className="mt-1 ml-3 space-y-1">
                     {group.map((f) => (
                       <li key={f.id} className="text-zinc-600 text-[13px]">
@@ -275,16 +338,36 @@ export default function BuildProgress({
               {build.queries.length} search {build.queries.length === 1 ? 'query' : 'queries'} issued
               {build.queries.some((q) => q.provenance === 'extracted') && ' ⚠'}
             </summary>
+            {/* ⚠ 25-G §4b — A COUNT WITH AN EMPTY LIST UNDER IT IS A CLAIM WITH NOTHING
+                BEHIND IT. The brief reports "7 search queries issued" followed by seven
+                empty bullets.
+
+                ⚠ I COULD NOT REPRODUCE IT FROM THE DATA. Build `42d68bea` stores seven
+                queries carrying 7–10 terms and a 240–290 character purpose each, and
+                `verify:lex-25g-ui` renders this component with that shape and finds every
+                term and every purpose in the markup. So this is not a fix for a diagnosed
+                cause; it is the guard that makes the reported symptom impossible whatever
+                caused it. A query that arrives with no terms now SAYS it has none, and the
+                harness asserts that too — an empty bullet cannot come back silently. */}
             <ul className="mt-1 space-y-1">
-              {build.queries.map((q, i) => (
-                <li key={`${q.by}-${i}`} className="text-[11px]">
-                  <span className="text-zinc-500">{q.terms.join(' · ')}</span>
-                  {q.provenance === 'extracted' && (
-                    <span className="text-amber-600"> — fell back to term extraction</span>
-                  )}
-                  <span className="block text-zinc-400">{q.purpose}</span>
-                </li>
-              ))}
+              {build.queries.map((q, i) => {
+                const terms = (q.terms ?? []).filter((t) => t && t.trim())
+                return (
+                  <li key={`${q.by}-${i}`} className="text-[11px]">
+                    {terms.length ? (
+                      <span className="text-zinc-500">{terms.join(' · ')}</span>
+                    ) : (
+                      <span className="text-amber-600">
+                        ⚠ {q.by} — no terms recorded for this query, so nothing was searched for
+                      </span>
+                    )}
+                    {q.provenance === 'extracted' && (
+                      <span className="text-amber-600"> — fell back to term extraction</span>
+                    )}
+                    {q.purpose?.trim() && <span className="block text-zinc-400">{q.purpose}</span>}
+                  </li>
+                )
+              })}
             </ul>
           </details>
         )}
