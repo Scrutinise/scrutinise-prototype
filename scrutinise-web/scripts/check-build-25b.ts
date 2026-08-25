@@ -155,10 +155,14 @@ const CHECKS: Check[] = [
     }),
   },
   {
-    name: '§3 every question declares a heading, a method, must-answers and terms',
+    name: '§3 every question declares a heading, a method, must-answers and anchors',
     run: () => {
+      // ⚠ 25-F §4 — `terms` became `anchors`. The field was a `(d) => string[]` builder
+      // that read `termsFrom(d.text, 14)`, so every question's "own query" was the same
+      // fourteen frequency-ranked words; the query is now WRITTEN per question by
+      // `writeQueries`, and what configuration owns is the terms of art it always wants.
       const bad = INTERROGATION_LIBRARY.filter(
-        (q) => !q.panelHeading?.trim() || q.method.length < 100 || !q.mustAnswer.length || typeof q.terms !== 'function',
+        (q) => !q.panelHeading?.trim() || q.method.length < 100 || !q.mustAnswer.length || !Array.isArray(q.anchors),
       )
       return bad.length ? `incomplete entries: ${bad.map((q) => q.id).join(', ')}` : null
     },
@@ -254,15 +258,28 @@ const CHECKS: Check[] = [
     },
   },
   {
-    name: '§4 a question builds its OWN query rather than reusing the draft terms unchanged',
+    name: '§4 a question contributes terms of art of its own, and no two questions contribute the same set',
     run: () => {
-      const bare = INTERROGATION_LIBRARY.filter((q) => q.intents.length).filter((q) => {
-        const terms = q.terms(PRIMARY_DRAFT)
-        // The audit finding: terms are the only lever that changes retrieval, so a
-        // question that adds nothing to them retrieves what every other question does.
-        return terms.length <= 8
-      })
-      return bare.length ? `these add nothing to the query: ${bare.map((q) => q.id).join(', ')}` : null
+      // ⚠⚠ 25-F §4 — THIS CHECK USED TO PASS ON A DEFECT IT WAS WRITTEN TO CATCH.
+      //
+      // It asserted `q.terms(PRIMARY_DRAFT).length > 8`, and every question passed —
+      // because `withTerms` returned fourteen shared draft words PLUS the question's own
+      // four or five, so the LENGTH was always comfortable while the CONTENT was 74%
+      // identical across all nine. A count cannot see a shared prefix.
+      //
+      // It now tests the thing that matters: does this question contribute anything of
+      // its own, and does it contribute something DIFFERENT from its neighbours.
+      const corpusQs = INTERROGATION_LIBRARY.filter((q) => q.intents.length)
+      const bare = corpusQs.filter((q) => (q.anchors ?? []).length < 3)
+      if (bare.length) return `these contribute fewer than three terms of art: ${bare.map((q) => q.id).join(', ')}`
+      const seen = new Map<string, string>()
+      for (const q of corpusQs) {
+        const key = [...q.anchors].map((t) => t.toLowerCase()).sort().join('|')
+        const prev = seen.get(key)
+        if (prev) return `${q.id} and ${prev} contribute an identical set of terms`
+        seen.set(key, q.id)
+      }
+      return null
     },
   },
 
@@ -901,7 +918,13 @@ const CHECKS: Check[] = [
         if (!def) return `${key} is not configured`
         if (!def.label?.trim() || !def.detail?.trim()) return `${key} has no label or detail for the progress display`
       }
-      return BUILD_PASSES.length === 7 ? null : `${BUILD_PASSES.length} passes configured, expected 7`
+      // ⚠ 25-F ADDED THREE (SMART, KERNEL_CHECK, LOGIC_CHECK), so this reads 10.
+      //
+      // The literal is kept rather than removed. Its job is not to know the number: it is
+      // to make a pass appearing or disappearing a DELIBERATE act, because `readPassLog`
+      // reconciles a stored log against this array and a pass added by accident changes
+      // what every historic build reports about itself.
+      return BUILD_PASSES.length === 10 ? null : `${BUILD_PASSES.length} passes configured, expected 10`
     },
   },
   {
