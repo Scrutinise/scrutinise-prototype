@@ -126,6 +126,40 @@ export function hasKeyFor(provider: Provider): boolean {
 }
 
 /**
+ * 25-F — CAN THIS PROVIDER ANSWER A STRUCTURED CALL AT ALL?
+ *
+ * ⚠ A KEY IS NOT A CLIENT, AND CONFLATING THEM SHIPPED A PERMANENT WARNING.
+ *
+ * `GROK_API_KEY` is set on this deployment, so `hasKeyFor('xai')` is TRUE — and
+ * `callModelJson` returns `unroutable` for every xAI model because the structured-output
+ * client has never been written. 25-F's smart pass picked its panel on `hasKeyFor` alone,
+ * which would have put `grok-4.6` in the default panel of every build, failed it every
+ * time, and printed "grok-4.6 did not answer" on every screen for ever — a warning that
+ * always fires is a warning nobody reads, and it would have made a genuine panel failure
+ * indistinguishable from the standing one.
+ *
+ * ⚠ IT IS DERIVED FROM THE SAME SWITCH THAT REFUSES THE CALL, not maintained beside it.
+ * The day an xAI structured client is written, `callModelJson` gains a case and this
+ * returns true — there is no second list to remember to update.
+ */
+export function hasStructuredClientFor(provider: Provider): boolean {
+  switch (provider) {
+    case 'google':
+    case 'anthropic':
+    case 'openai':
+      return true
+    case 'xai':
+      // The `unroutable` branch in callModelJson. Change both together or neither.
+      return false
+  }
+}
+
+/** Reachable in practice: a key AND a client that can use it. */
+export function canCallStructured(provider: Provider): boolean {
+  return hasKeyFor(provider) && hasStructuredClientFor(provider)
+}
+
+/**
  * 25-D §1b — THE SAMPLING DECISION IS TAKEN ONCE, FOR EVERY VENDOR, IN ONE PLACE.
  *
  * 25-C fixed `claude-sonnet-5`'s hard 400 on `temperature` with an Anthropic-local allow-list
