@@ -374,7 +374,13 @@ export interface ApproachOutput {
     legalChallenge: string
     politicalAttack: string
   }
-  conditionsForSuccess: string
+  /**
+   * ⚠ 25-G §4d — AN ARRAY, AND IT WAS A STRING. The second build produced five sentences
+   * in one blob, every one of them opening "For this to work" — a template showing
+   * through. Asking for the conditions as a LIST is what stops a model padding each item
+   * back up into a sentence with the same stem.
+   */
+  conditionsForSuccess: string[]
   summaryGuidingPolicy: string
   forks: RawFork[]
   uncertainties: RawUncertainty[]
@@ -427,7 +433,7 @@ const APPROACH_SCHEMA = {
       },
       required: ['avoidance', 'gaming', 'enforcementBurden', 'legalChallenge', 'politicalAttack'],
     },
-    conditionsForSuccess: { type: 'string' },
+    conditionsForSuccess: { type: 'array', items: { type: 'string' } },
     summaryGuidingPolicy: { type: 'string' },
     forks: FORK_SCHEMA,
     uncertainties: UNCERTAINTY_SCHEMA,
@@ -478,11 +484,15 @@ export async function runApproachPass(input: {
     '                      `politicalAttack`    — the line of attack, in the words it would be made in.',
     '                    Where you genuinely cannot see one, say so IN THAT SLOT ("I can see no obvious',
     '                    avoidance route, which is itself worth testing") rather than leaving it empty.',
-    '  `conditionsForSuccess` — ⚠ THE SECOND OF THE THREE TESTS. Testable bets, in the form "for this to',
-    '                    work, X must be true" — three to five of them, each something a person could',
-    '                    actually go and check. "Sufficient political will" is not a testable bet;',
-    '                    "the Cabinet Office must be able to compel departments to publish outcome',
-    '                    owners, which s.3(1) CRaG may or may not reach" is.',
+    '  `conditionsForSuccess` — ⚠ THE SECOND OF THE THREE TESTS. Three to five TESTABLE BETS, as a',
+    '                    LIST — each one something a person could actually go and check. "Sufficient',
+    '                    political will" is not a testable bet; "the Cabinet Office can compel',
+    '                    departments to publish outcome owners, which s.3(1) CRaG may or may not',
+    '                    reach" is.',
+    '                    ⚠ DO NOT START THEM ALL THE SAME WAY. The last build returned five entries',
+    '                    every one of which began "For this to work" — a template showing through,',
+    '                    and the reader stops reading at the third. State each condition directly:',
+    '                    what must be true, and how you would know. Vary the construction.',
     '  `summaryGuidingPolicy` — the approach, its leverage, and what it rules out, in a short paragraph.',
   ].join('\n')
 
