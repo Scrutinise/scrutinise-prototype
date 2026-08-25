@@ -132,6 +132,140 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-F — THE REVISION PASS WAS BEING SHOWN THE ARITHMETIC OF THE EVIDENCE, NOT THE EVIDENCE (2026-08-25 01:15 UTC)
+
+Executes `docs/BRIEF_25F.md` §1–§8 and §9 (the cutover), given in the session prompt. `tsc --noEmit`
+and `next build` clean; **`npm run check:lex-25f` 62/62**, every source-text assertion carrying a
+negative control that `--self-test` proves rejects a corrupted copy; `check:build-25a` 40/40,
+`check:build-25b` 54/54; `scripts/check-clean-build.sh --fast` PASS (0 cross-package files).
+Report `docs/LEX_25F_REPORT.md`, cutover `docs/LEX_25F_CUTOVER.md`.
+
+**⚠⚠ THE AUDIT'S LARGEST FINDING IS NOT IN THE BRIEF.** `researchSummary()` emitted one line per
+question — a panel heading and a COUNT (*"6 findings — reviewed 104 sources, 12 bore on this"*) — and
+that string IS the entire `═══ WHAT THE RESEARCH FOUND ═══` block handed to pass 4. **The pass whose
+job is to rewrite the kernel in the light of the evidence has never been shown a finding.** That is
+the mechanism behind the brief's §0: 70 evidence items with real citations sitting in the database
+while the revised kernel came out as *"incentives encourage diffusion of responsibility"*. The
+material was never lost; **it was never delivered.**
+
+**⚠ THREE OF THE BRIEF'S SPECIFICS ARE REFUTED, each with the measurement.** (1) **The query was not
+truncated** — `IdeaBuild.queryUsed` is an unbounded `String?`, `termsFrom` slices a term array rather
+than a string, and the stored value continues *"…northern lack :: context(1359 chars)"*; the `pr` is
+where the brief's own blockquote wrapped. What IS real is worse: `withTerms()` gave **every** library
+question the same fourteen frequency-ranked words, so nine questions issued nine near-identical
+queries. (2) **The testimony already reached five of seven passes** under framing arm B — what was
+missing was any instruction to USE it (the only sentence attached to it was a prohibition) and it
+reached **neither the sift, the gather nor the hostile clerk**, which is where it matters most. (3)
+**§6c is two different defects.** The duplicated instrument alternative is our own `updateMany` with
+**no `alternativeIndex`** writing one alternative onto every row of the fork; the split approach fork
+is two model-invented keys for one decision. `persistForks` never ran on the first and could not have
+caught it.
+
+**⚠⚠ AND THE FIRST LIVE RUN OF THE NEW CODE CRASHED, WHICH IS WHY IT WAS RUN.** One panel model
+returned `coherentActions` as a **string** where the schema asked for an array; the smart pass threw
+on `.join`; and because a thrown pass is a FAILED pass, **four of ten passes died with it — the smart
+pass, both verification passes AND the hostile clerk — over one field of one model's reply.**
+`?? []` defends against `null` and against nothing else. The reply is now normalised once at the
+boundary (a string becomes a one-item list; the content is not lost), and `continueOnFailure` marks
+the three passes 25-F added — and only those — so a failure in an enhancement cannot take the
+adversarial read down. **The pass stays FAILED, not SKIPPED**, and `composeSummary` appends the
+warning deterministically, because a summary written by a model that was never told about the failure
+cannot be relied on to mention it.
+
+▶ **§1 — the build produced 70 cited findings and rendered NONE of them.** `BuildProgress` showed a
+status badge, pass lines, the summary, the uncertainties, the forks and the spend; no build surface
+had ever read `EvidenceItem`. `build-highlights.ts` ranks it — contradictions +100, a citation +50,
+the sift's precedent verdict +25 — and `BuildFindings.tsx` renders it. ⚠ **The drafted kernel is read
+from `IdeaFieldState.proposal`**, because the `Idea` columns are empty after a build and anyone
+reading them alone concludes it produced nothing. "Delete the rubbish" is a SCREEN instruction: an
+uncited finding restating its own title is demoted **and the count is shown**; a cited one never is.
+
+▶ **§2 — the smart pass.** The whole of page one goes out verbatim to two outside models for a
+Rumelt-shaped answer; every statute, doctrine, office and mechanism they name becomes **its own**
+corpus query; every substantive point is either in our kernel or becomes an issue; the kernel is
+critiqued against Rumelt **with a mandate to rewrite it**, recording what changed in the revision
+pass's own shape. ⚠ **A term is CONFIRMED only by a retrieved document mentioning it** — not by a
+model saying it is real and not by a search returning results. What the corpus cannot confirm is kept
+as a stated gap labelled UNVERIFIED and may never be cited. ⚠⚠ **`grok-4.6` was in the panel and is
+out: `GROK_API_KEY` is set so `hasKeyFor` is TRUE, and `callModelJson` returns `unroutable` for every
+xAI model because the structured client has never been written. A KEY IS NOT A CLIENT**, and a
+warning that fires on every build is a warning nobody reads.
+
+▶ **§3 — two passes that ask whether it is a kernel at all.** Nine method-layer tests as DATA, each
+failure QUOTING the text that fails it; **a test the model did not answer is UNRUN, not a pass**. A
+logic pass tracing causes → obstacle → approach → actions, with first-hand testimony explicitly
+excluded from "unsupported" because it IS evidence. Neither rewrites — §2 has the rewrite mandate and
+runs first, and a pass that both judges and fixes has an obvious incentive to judge gently.
+
+▶ **§2e — the adversarial read leaves `gemini-2.5-flash`.** 25-B held the swap for evidence; the
+evidence arrived — **407 output tokens for six issues** against a whole constitutional proposal. Every
+pass now reports the model that ANSWERED (`echoedModel`), not the one configured.
+
+▶ **§6b — the four fields were NEVER WIRED**, not skipped and not failed: `anticipatedResponses` and
+`conditionsForSuccess` appear in no build pass's schema in any sprint, while `M_GUIDING_POLICY`
+demands both in every prompt. Both are now drafted by APPROACH. ⚠ **`costSummary` stays EMPTY with
+the reason stated**: the actions pass is forbidden to invent costs, and a cost summary with no cost
+lines under it would be exactly that.
+
+▶ **§7 — `Idea.title` is written from the drafted title, over the placeholder only.** The title was
+always drafted; it is a PROPOSAL, and `Idea.title` is only written when a human accepts one. ⚠ This
+does not break invariant 5 — `IdeaFieldState.title` stays at `AWAITING_CONFIRMATION` and the card
+still asks. A row called "Untitled idea" is a filing failure, not an unanswered question.
+
+▶▶ **§9 — THE CUTOVER IS PREPARED AND THE FLAG IS SET TO `create`.** All seven creation entries point
+at `/ideas/new`, a `force-dynamic` route reading one `PlatformConfig` row. ⚠ **It is a database row
+and NOT an environment variable**: a Vercel env change needs a redeploy, which would make the REVERT
+— the thing you reach for when the new door is failing a real user — a build-and-wait. **The check
+asserts the default is `create`**; a "prepared" cutover that had quietly happened would be the worst
+of both. **Nothing a returning user touches moved** — all four `?ideaId=` links are unchanged and the
+check asserts it in both directions. §9c inventories **eight things genuinely lost** at the creation
+entry, led by the "How this works" tour (the brief's named risk), the FAQ, the first-idea modal and
+intro, the greeting by preferred name, "say the word", **feedback capture** and Exit — and seven more
+that are DEFERRED rather than lost, because the build hands off to `/ideas/create?ideaId=`. **The
+recommendation is that those are built before the flag is flipped; that work is not in 25-F.**
+§9d: nothing was deleted.
+
+⚠⚠ **THE CHECK FOUND EIGHT DEFECTS BEFORE A HUMAN DID, AND FIVE WERE ITS OWN CONTROLS.** Three in the
+first run: an assertion matched **the comment explaining the defect it forbade** (a check that
+forbids explaining a defect will be answered by deleting the explanation), one looked in the wrong
+file, one tested a literal string the source spells as a computed key. Five in `--self-test`, every
+one a control that could not fail: `.replace` changes the **first** match only and the symbol
+appeared twice; a control renamed a symbol to a **superstring of itself**; two disabled a guard whose
+declaration still matched. ⚠ And `check:build-25b`'s *"a question builds its OWN query"* had been
+**passing on the very defect it was written to catch** — it counted terms, and `withTerms` always
+returned enough of them while 74% of the content was shared across all nine questions.
+
+✅✅ **AND IT WAS RUN — TWICE, END TO END, ON A COPY OF YOUR OWN ELICITATION. 10/10 PASSES, 621s,
+33.8p.** **§4's acceptance criterion is met and measured: pass 1 went from "231 sources read; 0
+cited" to "372 read; 12 cited", and 8 of 8 queries were WRITTEN with none falling back.** The
+opening query is now *Accounting Officer · Carltona Principle · Osmotherly Rules · Senior
+Responsible Owner · Ministerial Code · Treasury Officer Accounts · managing public money*.
+**§8's single measure is met decisively: all five of the terms it names — carltona, osmotherly,
+accounting officer, senior responsible owner, ministerial responsibility — were surfaced, none of
+them appears anywhere in your 2,934 characters, and 14 of 18 were CONFIRMED by the corpus with 14
+cited findings under them.** The screen shows 8 drafted fields, 8 leading findings of 85, six
+judgements and **56 cited sources** where it showed none. Verdict **WEAK**; **2 of 9 kernel tests
+passed**; the chain **did not hold** (2 defects) — and it HELD on the previous run of the same idea,
+which says the pass is reading rather than returning a constant and that one run of it is not a
+verdict.
+
+⚠⚠ **A THIRD DEFECT, FOUND BY THE RUN AND IN §1's OWN ORDERING.** The top of the screen was **eight
+rows of "The critique rewrote summaryDiagnosis" above 56 cited sources** — because `CONTRADICTS`
+scored 100 and a citation 50, and the revision and the critique both write their "where I changed my
+mind" records as an uncited CONTRADICTS. §1 says cited findings LEAD; the arithmetic said the
+opposite. Weights reversed, and the process notes given their own section below the record.
+⚠ **`check:lex-25f`'s own §1 assertion had been passing on the wrong ordering** — it read
+`CONTRADICTS += 100` out of the code and asserted that literal. **An assertion written from the code
+it guards agrees with the code by construction.**
+
+▶▶ **CHARLIE: the browser walk is yours.** No Clerk session exists from a CC session and local Clerk
+is a dev instance, so the new build screen has not been clicked. `verify:lex-25f -- --execute` runs a
+real build **on a COPY** of your elicitation — never on `452c5ade` itself, because a re-run
+supersedes the 70 findings that are `LEX_FIRST_BUILD_KERNEL.md`. ⚠ Three verification copies exist on
+production and can be deleted: `22406bd8`, `ce77b998`, `263ae5ae`.
+
+---
+
 ## CENTRAL Stage 2e — THE POINTS WERE NEVER WIRED, AND THE 27 AI ANSWERS ARE LABELLED AT LAST (2026-08-24 15:36 UTC)
 
 Executes the "Central Stage 2e" brief and its addendum (24 Aug 2026), after Charlie's browser walk of
