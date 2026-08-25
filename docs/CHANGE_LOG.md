@@ -132,6 +132,103 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-G — TWO PASSES ARE 65% OF WHAT A BUILD READS, AND A RE-RUN NEED NOT RUN THEM (2026-08-25 13:35 UTC)
+
+Executes `docs/BRIEF_25G.md` §1–§5. ⚠⚠ **§6's FLIP HAS NOT BEEN PERFORMED AND `check:lex-25g`
+ASSERTS IT** — the flag is `create`, and §6 gates it on §1a/§2/§3/§4 *and* on Charlie confirming the
+rebuild reads well. The first four are done; the fifth is a fact about a rebuild he has read, not a
+permission. `tsc` and `next build` clean; **`check:lex-25g` 27/27** with every source-level control
+proven by `--self-test`; **`verify:lex-25g-ui` 14/14**, which renders the components and reads the
+markup; 25-F 62/62, 25-a 40/40, 25-b 54/54; clean-build `--fast` PASS.
+`docs/LEX_25G_REPORT.md`.
+
+⚠⚠ **THE AUDIT'S HEADLINE: NOBODY HAD LOOKED AT WHERE THE MONEY GOES, AND IT IS NOT WHERE THE COST
+IS.** Per-pass on build `42d68bea`: **ORIENT 77,970 input tokens (36%) and RESEARCH 63,956 (29%) —
+two passes are 65% of what a build READS — while SMART is 17.75p of 33.4p, 53% of what it COSTS.**
+Those are different passes. §1a and §1c land on the first pair; §1d protects the second.
+
+⚠⚠ **AND THE ORIENT PASS WAS READING ~434 DOCUMENTS AND STORING 20.** `merged` is every result from
+both gateway calls, and the gateway returns ~15× what it is asked for — so `limit: 16` twice became
+~434, **all of it in the prompt at ~39,000 tokens a call**, while the pass stored 20 and the panel
+showed 20. Three numbers for one set, and a citation to source #300 counted as "cited" against a
+document that was never kept. `ORIENT_SOURCE_CAP = 40`: **~78,000 → ~8,000 input tokens, a 32% cut
+in a whole build's input.** ⚠ NOT §1c's forbidden truncation — nothing is summarised, every source
+read is a whole source, and a prefix is stream-balanced because `interleaveStreams` round-robins (a
+prefix of a SCORE-ordered list would have been a silent bias). The retrieved count is still reported,
+and the citation check got **stricter** as a side effect: a cited id is validated against what the
+model was HANDED, not against everything retrieved.
+
+▶ **§1a — A RE-RUN REUSES THE RESEARCH.** `claimBuild(…, 'REUSE')` copies the previous build's ORIENT
+and RESEARCH records — **the carry, not the usages**, and that distinction decides whether the saving
+is real: `carry.research` is what the later passes read (and since 25-F it carries the findings
+themselves), while the usages belong to the build that spent them. The passes are **SKIPPED, not
+DONE**. ⚠⚠ **The reused EVIDENCE is carried forward to the new `runVersion`, and that is what makes
+reuse mean reuse rather than skip** — everything downstream is version-scoped, so a re-run that
+merely skipped would show no findings while `carry.research` told the revision there were
+seventy-five. **Only PROPOSED rows move**; an ACCEPTED or REJECTED finding is the user's judgement.
+⚠ **Reuse is REFUSED when the elicitation changed since the last build**, with the reason on screen —
+the contrapositive is the point: if they have told us something new, the cheap option answers the
+question they stopped asking. The mode is **not a column** — it is expressed in the stored pass log.
+⚠ **The measured figure is NOT taken**: it needs a real REUSE build (~12p and a fourth production
+copy). The arithmetic is on the record — 141,926 of 217,687 input tokens and 6.14p of 33.4p are the
+two passes skipped — and the figure to report is the first real re-run's.
+
+▶ **§1b** both prices on screen, and ⚠ **the ROUTE defaults to `FULL`, the safe direction rather than
+the cheap one**: an omitted mode means no preference was expressed, and a build that quietly reused a
+search nobody asked it to would be indistinguishable from one that searched. ▶ **§1d untouched**, and
+three options recorded rather than chosen, per the brief.
+
+▶ **§2 — NAVIGATION.** One `SurfaceSwitch` rendered by BOTH screens so they cannot drift into
+describing each other differently. Each **names itself** as well as offering the other; the detail is
+**counted** — ⚠ decisions waiting is unresolved forks **plus** open issues, and counting only forks
+would have told the second build's user there were 4 when there were 21. **A returning user lands on
+the proposal**; ⚠ `build=1` is the escape and is not optional — the client writes it into its own URL
+the moment a build exists, or a refresh mid-build would throw the user off the screen they are
+reading, and the proposal's link back would bounce.
+
+▶ **§3 — ALL SEVEN BUILT, NOTHING DEFERRED.** Feedback capture first, per the brief — the offer where
+the criticism was made **and a permanent route**, because ⚠ a control that only appears when we
+correctly guess the user is unhappy is not a feedback route, and finding out whether this door works
+is the whole purpose of the flip. The tour is a **variant** of the same modal (the create copy
+describes three panels this door does not have) sharing the FAQ. First-idea detection uses
+`ideaCount === 0`, the same test the old door uses. ⚠ The greeting is **rendered, not written to the
+transcript** — injecting it would put a message in the stored history Lex never said in a turn and
+re-send it to every drafting pass. ⚠ "Say the word" **does not clear the box**: a false positive
+would swallow the user's own words about their problem.
+
+▶ **§4.** 4a: `composeSummary` writes the same string to the transcript AND to
+`IdeaBuild.summaryMessage`, and both were rendered — **537 characters, byte-identical, twice on one
+screen**; the transcript copy stays because its two companion bubbles follow it there. ⚠⚠ **4b COULD
+NOT BE REPRODUCED**: the build stores seven queries with 7–10 terms and a 240–290 character purpose
+each, and `verify:lex-25g-ui` finds every term and every purpose in the rendered markup — so the
+guard shipped is not a fix for a diagnosed cause but one that makes the reported symptom impossible
+whatever caused it. 4c: forks labelled and grouped, ⚠ keyed on `fieldKey` because the model invents
+its own fork keys (`approach:chosen` and `approach:primaryLever` are one decision across two builds).
+4d: asked for as an array, and ⚠ **the repeated stem is stripped in code if it survives the prompt** —
+telling a model not to repeat an opener is a request, removing it is the guarantee. **4e checked and
+PASSES: 6 of 6 kernel-test failures are issue rows and every one quotes the text that fails it.**
+
+▶ **§5.** 25-F already titles and lists; the one thing still open is fixed — **a build that STOPPED
+EARLY never named its idea**, because `nameTheIdea` ran only in `finishBuild`, and that is precisely
+when someone goes looking.
+
+⚠⚠ **FOUR DEFECTS THE CHECKS FOUND AND TWO WERE THE CHECKS THEMSELVES.** A control corrupted a
+**COMMENT** (`.replace` takes the first match, and the first occurrence was a comment quoting the
+code); the same control **broke the wrong condition** — the check reads the page first and returns on
+it, so **a control has to break the assertion's FIRST condition or it tests the order of the ifs**;
+and **two OTHER sprints' checks reported this sprint's fixes as regressions**, both because they
+matched a literal from the code they guard rather than stating a property — `check:build-25a` matched
+`seen.has(id)` where §1c renamed it to the **stricter** `readable`, and `check:lex-25f` matched
+`type: 'string'` where §4d made it an array.
+
+▶▶ **CHARLIE: §6 IS READY AND UNFLIPPED.** `PlatformConfig["newIdeaDoor"]` is ABSENT on production and
+resolves to `create`; `/ideas/new` is live (`X-Matched-Path: /ideas/new`, issuing
+`NEXT_REDIRECT;replace;/ideas/create;307`) against a control that matches `/ideas/[id]` and carries no
+redirect. The flip is `PATCH /api/admin/config { "newIdeaDoor": "build" }` and the revert is the same
+row. **No browser walk** — no Clerk session exists from a CC session.
+
+---
+
 ## LEX 25-F — THE REVISION PASS WAS BEING SHOWN THE ARITHMETIC OF THE EVIDENCE, NOT THE EVIDENCE (2026-08-25 07:07 UTC)
 
 Executes `docs/BRIEF_25F.md` §1–§8 and §9 (the cutover), given in the session prompt. `tsc --noEmit`

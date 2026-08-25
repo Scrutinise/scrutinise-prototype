@@ -2,7 +2,53 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-25 07:07 UTC — ▼ **LEX 25-F: THE REVISION PASS HAS NEVER BEEN SHOWN A
+*Last updated: 2026-08-25 13:35 UTC — ▼ **LEX 25-G: TWO PASSES ARE 65% OF WHAT A BUILD READS, AND A RE-RUN NEED
+NOT RUN THEM. ⚠⚠ §6'S FLIP HAS NOT BEEN PERFORMED AND THE CHECK ASSERTS IT** — the flag is `create`,
+and §6 gates it on §1a/§2/§3/§4 *and* on Charlie confirming the rebuild reads well. The first four
+are done; the fifth is a fact about a rebuild he has read, not a permission. ⚠⚠ **THE AUDIT'S
+HEADLINE: NOBODY HAD LOOKED AT WHERE THE MONEY GOES, AND IT IS NOT WHERE THE COST IS.** Per pass:
+**ORIENT 77,970 input tokens (36%) and RESEARCH 63,956 (29%) — two passes are 65% of what a build
+READS — while SMART is 17.75p of 33.4p, 53% of what it COSTS.** Different passes. ⚠⚠ **AND THE ORIENT
+PASS WAS READING ~434 DOCUMENTS AND STORING 20** — the gateway returns ~15× what it is asked, all of
+it went into the prompt at ~39,000 tokens a call, and a citation to source #300 counted as "cited"
+against a document never kept. Capped at 40: **~78,000 → ~8,000 input tokens, 32% of a whole build's
+input**, and the citation check got STRICTER as a side effect. ⚠ Not §1c's forbidden truncation —
+nothing is summarised, and a prefix is stream-balanced because `interleaveStreams` round-robins.
+▶ **§1a: a re-run reuses ORIENT and RESEARCH — the CARRY, not the usages**, which is what decides
+whether the saving is real rather than merely reported. ⚠⚠ **The reused EVIDENCE is carried forward to
+the new `runVersion`, and that is what makes reuse mean reuse rather than skip** — everything
+downstream is version-scoped, so a re-run that merely skipped would show no findings while the carry
+told the revision there were seventy-five. Only PROPOSED rows move. ⚠ **Reuse is REFUSED when the
+elicitation changed**, with the reason on screen. ⚠ **The measured figure is NOT taken** — it needs a
+real REUSE build (~12p, a fourth production copy); the arithmetic is on the record and the figure
+belongs to the first real re-run. ▶ **§1b** both prices on screen and ⚠ **the route defaults to FULL**,
+the safe direction not the cheap one. ▶ **§2: one `SurfaceSwitch` on BOTH screens**, each naming
+itself, the detail counted — ⚠ forks PLUS open issues, because forks alone would have said 4 where
+there were 21 — and a returning user lands on the proposal, with `build=1` as the escape that stops a
+refresh throwing someone off a running build. ▶ **§3: ALL SEVEN BUILT, NOTHING DEFERRED** — feedback
+first, with a PERMANENT route as well as the offer, because ⚠ a control that only appears when we
+guess the user is unhappy is not a feedback route; the tour is a variant of the same modal sharing
+the FAQ; ⚠ the greeting is RENDERED not written to the transcript; ⚠ "say the word" does not clear the
+box. ▶ **§4:** 4a was `composeSummary` writing one string to BOTH the transcript and the row —
+**537 characters twice on one screen**; ⚠⚠ **4b COULD NOT BE REPRODUCED** (the data has terms and the
+render shows them), so the guard makes the symptom impossible rather than fixing a diagnosed cause;
+4c forks labelled, ⚠ keyed on `fieldKey` because the model invents its own fork keys; 4d stripped in
+code, because telling a model not to repeat an opener is a request and removing it is the guarantee;
+**4e checked and PASSES — 6 of 6 failures quote the failing text.** ▶ **§5: a build that STOPPED EARLY
+never named its idea**, which is precisely when someone goes looking. ✅ `check:lex-25g` **27/27**
+with every source-level control proven; **`verify:lex-25g-ui` 14/14** — it RENDERS both components
+and reads the markup; 25-F 62/62, 25-a 40/40, 25-b 54/54; `tsc`, `next build`, clean-build `--fast`
+all clean. ⚠⚠ **FOUR DEFECTS THE CHECKS FOUND AND TWO WERE THE CHECKS THEMSELVES** — a control
+corrupted a COMMENT; the same control broke the wrong condition (**a control must break the
+assertion's FIRST condition or it tests the order of the ifs**); and **two OTHER sprints' checks
+called this sprint's fixes regressions**, both because they matched a literal from the code they
+guard rather than stating a property. ▶▶ **CHARLIE: §6 IS READY AND UNFLIPPED** —
+`PlatformConfig["newIdeaDoor"]` is ABSENT and resolves to `create`; `/ideas/new` is live
+(`X-Matched-Path: /ideas/new`, `NEXT_REDIRECT;replace;/ideas/create;307`) against a control that
+matches `/ideas/[id]`. Flip: `PATCH /api/admin/config { "newIdeaDoor": "build" }`; revert is the same
+row. **No browser walk** — no Clerk session exists from a CC session.
+`docs/LEX_25G_REPORT.md`.**
+Earlier: 2026-08-25 07:07 UTC — ▼ **LEX 25-F: THE REVISION PASS HAS NEVER BEEN SHOWN A
 FINDING — IT WAS BEING HANDED THE ARITHMETIC OF THE EVIDENCE.** `researchSummary()` emitted one line
 per question — a heading and a COUNT — and that string IS the whole `═══ WHAT THE RESEARCH FOUND ═══`
 block given to pass 4. **That is the mechanism behind the brief's §0**: 70 cited findings in the
