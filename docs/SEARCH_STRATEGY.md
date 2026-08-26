@@ -248,6 +248,71 @@ Our edge: existing legal search serves *lawyers looking up what the law is*; Scr
 1.  **Citation / amendment graph — ✅ BUILT 5 Jul** (2.35M edges in Neon; amends / repeals / commences / cites / made-under) with the **rescission traversal**: "rescind this — what breaks?" → amending law, citing law, orphaned SIs. Archetype D un-floored.
 2.  **Metadata graph** — department/policy-area, instrument type, year, committee. Cheap; queued.
 
+### Tier 1a — inbound statutory citation lookup (added 25-H, 26 Aug 2026)
+
+**The question it answers:** *if this Act — or this Part of it — were repealed, what else in the
+statute book is now pointing at something that does not exist?* This is the largest single
+deliverable of the Starkey Programme, and it is a data problem, not a legal one.
+
+**Table:** `citation_edge` (Neon). One row per citation **instance**, not per (source, target) pair,
+and **every row carries its own evidence** — `citation_text` (the literal words) and `raw_fragment`
+(the surrounding XML) are `NOT NULL`. An edge with no quotable source is a claim, not a fact.
+`target_uri` holds the URI **unmodified** beside the normalised `target_act_id`, so a normalisation
+bug is recoverable by re-deriving rather than by re-extracting from a 1.4 GB file.
+
+**API** — `scripts/ingest/graph/inbound.ts`:
+
+```ts
+inbound(targetActId, targetProvisionRef = null, includeUnresolved = false)
+  -> Array<{ source_doc_uri, source_provision_ref, citation_text, source_type }>
+
+inboundEvidence(targetActId, targetProvisionRef?, includeUnresolved?, detection?)
+  -> { rows: (the above + source_gid, target_uri, target_act_id, target_provision_ref,
+                raw_fragment, resolved, detection),
+       partExpansion }
+
+inboundSummary(targetActId, topSourceActs = 50)
+  -> { total, actLevel, provisionLevel, distinctSourceActs,
+       bySourceType[], bySourceAct[], byDetection[] }
+```
+
+`source_type` is `primary | SI | other`. Indexes are on `target_act_id` and `target_uri` — the
+dominant query is inbound, not outbound.
+
+**Three things a caller must know, because getting any of them wrong produces a confident wrong
+answer:**
+
+1. ⚠⚠ **`detection` is the most important column.** Only **2–5%** of body-text mentions of an Act
+   carry `<Citation>` markup (measured: 5.4% Human Rights Act, 1.8% Equality Act, **0%** CRAG 2010).
+   So rows come from two detectors: `markup` — the document asserted the identity by URI — and
+   `text` — we resolved the Act's *name* against `corpus_acts` titles. The second is weaker evidence
+   and its `target_uri` is **derived, not read from the document**. `inboundSummary` always reports
+   the split. Never quote a total without it. Full working: `docs/CITATION_AUDIT.md`.
+
+2. ⚠ **An act-level reference is not a Part-level reference.** Most rows name an Act and no
+   provision, because the markup usually does not carry one — "section 3 of the" is plain text
+   sitting outside the element. Those rows are **excluded** from a provision-scoped result and
+   returned separately as `actLevel`. For a repeal programme they are a **floor on unknown
+   exposure**, not noise: any of them may bear on the Part in question and the data does not say.
+
+3. **A Part is expanded to its member provisions from the Act's own CLML**, not from an assumption
+   about which sections a Part contains. Subsections match their section (`section-3` matches
+   `section-3-2` and `section-3a`, never `section-30`). If the bulk CLML is not on disk the
+   expansion cannot run and `partExpansion.available` says so, rather than quietly matching the
+   literal string and returning a smaller, wrong-looking answer.
+
+**Relationship to the existing `legislation_edges` graph.** That table's 121,279 `cites` rows are
+not superseded and not duplicated: they carry no evidence, collapse instances to pairs, and (as
+25-H found) **contain no pre-1963 Act as a source at all** — the extractor's zip-entry filter
+required a calendar year, so 1,650 regnal-named Acts were never opened. `citation_edge` reads all
+132,990 documents. Where both cover the same target, `citation_edge` returns ~30% more rows.
+
+**Extraction:** `graph/extract-citation-edges.ts` (`--pilot` first; `--detect markup|text|both`),
+over `best-collection-xml.zip`. `<Commentaries>`/`<Footnote>`/`<SecondaryPreamble>` are excluded and
+counted — those are amendment provenance and already exist as `amends`/`repeals` edges from TNA's
+effects data. Parser regression tests: `graph/check-25h-parser.ts`.
+
+***
 ### Tier 2 — semantic / inferred (LLM-extracted; confidence-tagged)
 
 3.  **Mechanism / principle graph ★** — the same *lever* across unrelated subjects (duty-to-report, licensing, time limits, sunset clauses, strict liability, regulator-powers). "Every way Parliament has implemented a duty-to-report, and how each fared." Backbone of the principle streams. Post-pilot.
