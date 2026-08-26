@@ -266,9 +266,12 @@ export async function planImport(communityId: string, buffer: Buffer): Promise<I
     tags.filter((t) => t.kind === 'TOPIC').map((t) => [t.label.toLowerCase(), t.label]),
   )
 
+  // ⚠ LIVE questions only. A question that was deleted must not block a
+  // re-import of the same text — the admin would get "already in the library"
+  // pointing at something nobody can see. Re-uploading it creates a fresh one.
   const existing = await prisma.question.findMany({
-    where: { communityId: rootId },
-    select: { id: true, text: true, answers: { select: { body: true } } },
+    where: { communityId: rootId, deletedAt: null },
+    select: { id: true, text: true, answers: { where: { deletedAt: null }, select: { body: true } } },
   })
   const byText = new Map(existing.map((q) => [q.text, q]))
 
@@ -493,7 +496,7 @@ export async function applyImport(params: {
       questions++
     } else {
       const found = await prisma.question.findFirst({
-        where: { communityId: plan.communityId, text: source.question },
+        where: { communityId: plan.communityId, text: source.question, deletedAt: null },
         select: { id: true },
       })
       if (!found) continue
@@ -502,7 +505,7 @@ export async function applyImport(params: {
 
     if (source.answer) {
       const already = await prisma.answer.findFirst({
-        where: { questionId, body: source.answer },
+        where: { questionId, body: source.answer, deletedAt: null },
         select: { id: true },
       })
       if (!already) {

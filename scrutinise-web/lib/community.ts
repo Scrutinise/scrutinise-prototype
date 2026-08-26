@@ -119,6 +119,11 @@ export async function getCommunityTreeIds(communityId: string): Promise<string[]
 export async function getBoardScopeFilter(communityId: string): Promise<Prisma.BulletinPostWhereInput> {
   const treeIds = await getCommunityTreeIds(communityId)
   return {
+    // ⚠ DELETED POSTS ARE INVISIBLE, AND THIS IS THE CHOKEPOINT (27 Aug 2026).
+    // The thread list, the detail route, the reply and vote routes and the
+    // unread count all build on this filter, so the exclusion lives here rather
+    // than being remembered at five call sites.
+    deletedAt: null,
     OR: [
       { communityId },
       { communityId: { in: treeIds }, scope: 'COMMUNITY' },

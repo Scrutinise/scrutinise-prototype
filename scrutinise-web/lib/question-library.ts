@@ -58,6 +58,11 @@ export async function getQuestionVisibilityFilter(viewerCommunityId: string) {
   const visibleBranchIds = await getSubtreeIds(viewerCommunityId)
   return {
     communityId: rootId,
+    // ⚠ DELETED CONTENT IS INVISIBLE, AND THIS IS THE CHOKEPOINT (27 Aug 2026).
+    // `listQuestions` and `findNearMatches` both build on this filter, so the
+    // exclusion lives here rather than being remembered at each call site —
+    // which is how one read gets missed and keeps serving removed content.
+    deletedAt: null,
     OR: [
       { scope: 'COMMUNITY' },
       { scope: 'BRANCH', branchId: { in: visibleBranchIds } },
@@ -186,7 +191,9 @@ export async function getRankedAnswers(
   opts: { includeHidden?: boolean } = {},
 ): Promise<ScoredAnswer[]> {
   const answers = await prisma.answer.findMany({
-    where: { questionId, ...(opts.includeHidden ? {} : { hidden: false }) },
+    // Deleted is not the same as hidden: `includeHidden` lets a manager see a
+    // moderated answer, and never a removed one.
+    where: { questionId, deletedAt: null, ...(opts.includeHidden ? {} : { hidden: false }) },
     include: {
       author: { select: { id: true, name: true, username: true } },
       votes: { select: { direction: true, voteWeight: true, userId: true } },
@@ -310,7 +317,7 @@ export async function listQuestions(
       branch: { select: { name: true } },
       votes: { select: { userId: true, createdAt: true } },
       answers: {
-        where: { hidden: false },
+        where: { hidden: false, deletedAt: null },
         select: {
           body: true, sources: true, localExample: true, authorType: true,
           votes: { select: { direction: true, voteWeight: true } },
@@ -693,11 +700,14 @@ export async function getAcrossBranches(rootCommunityId: string, since: Date | n
   const results = await Promise.all(
     branches.map(async (b) => {
       const questions = await prisma.question.findMany({
-        where: { communityId: rootCommunityId, branchId: b.id, ...(created ? { createdAt: created } : {}) },
+        where: {
+          communityId: rootCommunityId, branchId: b.id, deletedAt: null,
+          ...(created ? { createdAt: created } : {}),
+        },
         select: {
           id: true, text: true, createdAt: true,
           votes: { select: { createdAt: true, userId: true } },
-          answers: { select: { id: true, createdAt: true } },
+          answers: { where: { deletedAt: null }, select: { id: true, createdAt: true } },
         },
       })
 
@@ -797,8 +807,10 @@ export async function getTopicUsage(communityId: string): Promise<TopicUsage[]> 
     where: { communityId: rootId, kind: 'TOPIC' },
     orderBy: [{ promoted: 'desc' }, { sortOrder: 'asc' }],
   })
+  // Deleted questions must not inflate a topic count — "adding a topic is a
+  // data decision" only holds if the data is what people can actually see.
   const questions = await prisma.question.findMany({
-    where: { communityId: rootId },
+    where: { communityId: rootId, deletedAt: null },
     select: { topicTags: true },
   })
 
@@ -822,7 +834,7 @@ export async function getUntaggedQuestions(
 ): Promise<UntaggedQuestion[]> {
   const rootId = await getRootCommunityId(communityId)
   const questions = await prisma.question.findMany({
-    where: { communityId: rootId, topicTags: { isEmpty: true } },
+    where: { communityId: rootId, topicTags: { isEmpty: true }, deletedAt: null },
     include: {
       branch: { select: { name: true } },
       _count: { select: { answers: true } },
@@ -860,7 +872,7 @@ export async function getOrphanedTopicTags(communityId: string): Promise<{ label
     ).map((t) => t.label),
   )
   const questions = await prisma.question.findMany({
-    where: { communityId: rootId },
+    where: { communityId: rootId, deletedAt: null },
     select: { topicTags: true },
   })
   const counts = new Map<string, number>()
