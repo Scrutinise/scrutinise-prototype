@@ -220,9 +220,20 @@ what defect 3 produced); `check-25h-inbound` **11/11**, every assertion with a p
 one rule **declared untested** because the data does not exercise it; `check-25h-verify` **8/8**.
 `tsc --noEmit` clean for all eight new files.
 
-**⚠ SIZE:** `citation_edge` is **1,144 MB** and the database moves **18 GB → 19 GB**, against a
-17.5 GB alert line that was **already crossed before this sprint began**. The table is droppable and
-nothing live reads it. OI-17 — Charlie's call.
+**⚠⚠ SIZE — RETRACTED SAME DAY, AND THE RETRACTION IS THE POINT.** This entry originally read
+*"…against a 17.5 GB alert line already crossed before this sprint began. OI-17 — Charlie's call."*
+**There is no such line and there never was.** `neon.max_cluster_size` is 16 TiB; storage is a
+**bill, not a wall** — $0.35/GB-month against a $15/month budget. `citation_edge` is **1,144 MB**,
+the database moves **18 GB → 19 GB**, and that is **~$6.65/month, 44% of budget, quiet**; this
+table's share is about **$0.40 a month**. I took the figure from a July header comment in
+`setup-edges-table.ts` and never asked whether it was current. **It was not: GRAPH 3B §4.1 had
+already proved the constant was ours and its provenance circular, GRAPH 3C §5 retired it for the
+cost line, and `serve-observer.ts` prints "There is NO storage ceiling to hit… This is a bill, not
+a wall" in the live code.** So I re-raised an alarm the project had spent a sprint dismantling, and
+handed Charlie a decision that did not exist. ⚠ §19's rule, failed exactly: **18 GB was measured,
+the line it was measured against was inherited, and both went on the page at the same confidence.**
+The stale comment is now corrected in place — leaving it is how it came back. **OI-17 is closed as
+a false alarm.**
 
 **⚠ Two caveats on the deliverable, stated rather than buried.** (a) **11.3% of text rows sit in a
 document's title or metadata, not in a provision** — an SI named after an Act mentions it in its

@@ -55,9 +55,16 @@ instead of importing it, a heredoc ate its regex escapes, and it briefly "dispro
 result. **A control that is a copy tests the copy.**
 ✅ `check-25h-parser` **37/37**, `check-25h-inbound` **11/11** (one rule **declared untested** rather
 than counted as passed), `check-25h-verify` **8/8**; `tsc` clean for all eight new files.
-⚠ **SIZE: `citation_edge` is 1,144 MB and the database moves 18 GB → 19 GB**, against a 17.5 GB
-alert line **already crossed before this sprint began**. Droppable, nothing live reads it. **OI-17 —
-Charlie's call, and the only decision waiting.**
+⚠⚠ **SIZE — I RAISED A STORAGE ALARM AGAINST A FICTION THIS PROJECT HAD ALREADY RETIRED, AND IT IS
+RETRACTED.** `citation_edge` is **1,144 MB** and the database moves **18 GB → 19 GB** — those are
+measured. The "17.5 GB alert line" I measured them against **does not exist and never did**:
+`neon.max_cluster_size` is 16 TiB, storage is a **bill not a wall** ($0.35/GB-month, $15/month
+budget), 19 GB is **~$6.65 = 44%, quiet**, and this table's share is about **$0.40 a month**. I took
+it from a July header comment in `setup-edges-table.ts` without checking it was current — **GRAPH 3B
+§4.1 had proved the constant was ours and circular, GRAPH 3C §5 retired it, and `serve-observer.ts`
+says "There is NO storage ceiling to hit" in the live code.** ⚠ §19 failed precisely: the 18 GB was
+measured, the line was inherited, and both went on the page at one confidence. The stale comment is
+corrected in place. **OI-17 closed as a false alarm — there is NO decision waiting.**
 ⚠ Two caveats stated not buried: **11.3% of text rows are in a document's title/metadata, not a
 provision** (CRAG's 182 → 149 filtered), and **93,772 name-spans resolved to nothing**. **OI-18.**
 ▶▶ **Nothing here touches the live site** — no UI, no flags, no re-ingest, no Lex or search changes.

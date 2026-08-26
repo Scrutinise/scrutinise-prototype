@@ -35,11 +35,22 @@
  * Never mix them in a count without saying so. A measured fact and an inferred
  * one must not look identical on the page (docs/CLAUDE.md §19).
  *
- * SIZE DISCIPLINE. Neon measured 18 GB before this table existed, against a
- * 17.5 GB alert line that is already crossed. `raw_fragment` is capped at 600
- * characters and `citation_text` at 300 in the extractor for that reason — long
- * enough to quote and to check by hand, short enough that the table lands in
- * hundreds of megabytes rather than gigabytes. --status reports the real number.
+ * SIZE. `raw_fragment` is capped at 600 characters and `citation_text` at 300
+ * in the extractor — long enough to quote and to check by hand, short enough
+ * that the table lands in ~1.1 GB rather than several. --status reports the
+ * real number.
+ *
+ * ⚠ NOT because of a storage ceiling. There isn't one: `neon.max_cluster_size`
+ * is 16 TiB, and storage is a BILL, not a WALL — $0.35/GB-month against a
+ * $15/month budget (`search/serve-observer.ts`). This table's ~1.1 GB costs
+ * about **$0.40 a month**.
+ *
+ * ⚠⚠ The "17.5 GB alert line" quoted in `setup-edges-table.ts` is a RETIRED
+ * FICTION and must not be propagated again. It was never a Neon plan limit —
+ * it was our own constant whose comment cited the handoff while the handoff's
+ * figure was emitted by the constant. GRAPH 3B §4.1 traced the loop; GRAPH 3C
+ * §5 retired it for the cost line. 25-H repeated it anyway, by trusting a July
+ * header comment without checking whether it was still true.
  */
 import { getNeonPool, endNeonPool } from '../shared/neon-pool'
 

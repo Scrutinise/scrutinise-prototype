@@ -210,12 +210,39 @@ Set out at the top. It is not a defect in our code — it is a property of legis
 The consequence is that **any inbound-citation number sourced from `<Citation URI>` alone is a
 floor, not a count**, and must be reported as one.
 
-### 3. Neon is past its alert line before this table existed
+### 3. ⚠⚠ RETRACTED — I raised a storage alarm against a fiction this project had already retired
 
-`pg_database_size` reads **18 GB** against the 17.5 GB alert line recorded in
-`setup-edges-table.ts`. `citation_edge` adds to that. The size is reported in the build section
-below and the table is trivially droppable, but the headroom question is Charlie's, not this
-sprint's.
+**What this section originally said:** *"Neon is past its alert line before this table existed —
+`pg_database_size` reads 18 GB against the 17.5 GB alert line recorded in `setup-edges-table.ts`."*
+
+**That is wrong, and it was wrong before I wrote it.** There is no Neon storage ceiling:
+`neon.max_cluster_size` is **16 TiB**. Storage is a **bill, not a wall** — $0.35/GB-month against a
+$15/month budget. At 19 GB that is **~$6.65/month, about 44% of budget, quiet.** `citation_edge`'s
+1,144 MB costs roughly **$0.40 a month**.
+
+**Where I got it:** the header comment of `scripts/ingest/graph/setup-edges-table.ts`, written
+5 July, which I read while studying the existing edge table and took as authority without asking
+whether it was still true.
+
+**Why that was careless rather than unlucky.** The project had already investigated this exact
+figure and killed it:
+
+- **GRAPH 3B §4.1** — *"⚠ IT IS OURS, AND ITS PROVENANCE IS CIRCULAR."* The constant lived in
+  `search/serve-observer.ts` calling itself a "Neon plan ceiling"; its comment cited the handoff,
+  and the handoff's percentage was emitted *by that same observer*. Neither end of the citation was
+  a source.
+- **GRAPH 3C §5** — *"THE 17.5 GB CEILING IS RETIRED AND REPLACED BY A BILL."*
+- **`serve-observer.ts` today**, in the live code, prints: *"There is NO storage ceiling to hit:
+  `neon.max_cluster_size` is 16 TiB. This is a bill, not a wall."*
+
+So I did not merely repeat a stale number — **I contradicted our own running monitoring code, and
+re-raised an alarm the project had spent a sprint dismantling.** The stale comment in
+`setup-edges-table.ts` has now been corrected in place, with the reason, because leaving it is
+exactly how it came back.
+
+⚠ The family this belongs to is `docs/CLAUDE.md` §19: *a fact that was measured and a fact that was
+inherited must not look identical on the page.* **18 GB was measured. The line it was measured
+against was inherited, and I presented both in the same sentence at the same confidence.**
 
 ---
 
@@ -255,7 +282,9 @@ TEXT    spans(1,429,037)    = rows(649,202) + excludedZone(650,777) + alreadyMar
         target provision on 281,098 / 649,202 rows (43.3%)
 ```
 
-**1,034,548 rows · 1,144 MB · the database moves 18 GB → 19 GB.** Three numbers worth stopping on:
+**1,034,548 rows · 1,144 MB · the database moves 18 GB → 19 GB — about $0.40 a month.** (Storage is
+a bill, not a wall: `neon.max_cluster_size` is 16 TiB and 19 GB is ~44% of the $15/month budget. See
+the retraction above.) Three numbers worth stopping on:
 
 - **8,716 spans were already inside `<Citation>` markup** and were left to the markup detector.
   Counting them twice would have double-counted every reference that *is* properly marked up —

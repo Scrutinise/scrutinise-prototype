@@ -5,9 +5,22 @@
  *   npx tsx graph/setup-edges-table.ts          — create
  *   npx tsx graph/setup-edges-table.ts --status — row counts + table size only
  *
- * Size discipline: Neon is at ~15 GB of the 17.5 GB alert line (measured
- * 2026-07-05). The edge table is budgeted <1.5 GB; every extractor pilots and
- * extrapolates volume BEFORE a full load, and --status reports actual size.
+ * Size discipline: the edge table is budgeted <1.5 GB; every extractor pilots
+ * and extrapolates volume BEFORE a full load, and --status reports actual size.
+ *
+ * ⚠⚠ CORRECTED 2026-08-26. This header used to read "Neon is at ~15 GB of the
+ * 17.5 GB alert line (measured 2026-07-05)". **THERE IS NO SUCH LINE AND THERE
+ * NEVER WAS.** `neon.max_cluster_size` is 16 TiB; storage is a BILL, not a WALL
+ * — $0.35/GB-month against a $15/month budget (`search/serve-observer.ts`,
+ * which says so in as many words). The 17.5 figure was our own constant, and
+ * its provenance was a closed loop: the constant's comment cited the handoff,
+ * and the handoff's number was emitted by the constant. GRAPH 3B §4.1 traced
+ * it; GRAPH 3C §5 retired it.
+ *
+ * The correction is recorded HERE, in the file, because leaving it out is how
+ * it came back: sprint 25-H read this comment, took it as authority, and
+ * published "Neon is past its alert line" as a finding — a month after the
+ * project had proved the line did not exist.
  */
 import { getNeonPool, endNeonPool } from '../shared/neon-pool'
 import { EDGE_TABLE } from './graph-common'
