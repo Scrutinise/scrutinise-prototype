@@ -700,3 +700,30 @@ that costs.
 
 **D-6 · The `check:score-scope` failure in `lib/question-library.ts` is CENTRAL's, not search's**
 (§6.6). *Recommendation: hand it to that thread.* It has been red on Main since `4ffec90`.
+
+---
+
+## §8 — DELIVERY
+
+Five commits, `0c2138f … 68d4b32`, pushed to `Main`.
+
+| CLAUDE.md §20 | result |
+|---|---|
+| **0** clean-build `--fast` — no file outside `scrutinise-web` in the web program | ✅ 0 cross-package files |
+| **1** every file this sprint created is committed | ✅ 12 of 12, checked with `git ls-files` per path, not `git status` |
+| **2** the remote has the commits | ✅ `git fetch` + `merge-base --is-ancestor`; `git ls-remote` → `68d4b32` |
+| **3** the deployment is green **and Production** | ✅ `env: "production"` |
+| **4** **the running site serves this change** | ✅ `/api/health` → `68d4b3239c1e…`, **with the previous commit `a75cbb1` observed on the three polls before it** — that is the control |
+
+`tsc --noEmit` clean · `check:s14-merge` **20/20, 10 controls fired** · `check:flags` 54/54 ·
+`check:llm-guards` 9/9 · `check:model-registry` 25/25.
+⚠ `check:score-scope` 35/1 — the one failure is CENTRAL's and predates this sprint (D-6).
+
+⚠ **NO SERVICE REDEPLOY IS REQUIRED.** `git diff --stat a75cbb1..68d4b32 -- scripts/ingest/` is
+empty: `fts-serve` and `vector-serve` are untouched, and every change reaches production through
+Vercel. **A redeploy is not a rebuild** and this sprint needed neither.
+
+⚠⚠ **AND NOTHING IS ON.** Every flag ships OFF, so the running site's behaviour is unchanged and
+check 4 above can only prove the CODE arrived, not that anything behaves differently. That is the
+honest limit of what has been verified live: *pushed, deployed, and confirmed present at
+`www.scrutinise.org/api/health` — and behaviourally inert until Charlie throws a switch.*
