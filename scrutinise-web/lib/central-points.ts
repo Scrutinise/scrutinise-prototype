@@ -27,6 +27,12 @@ export const POINTS_EVENT_TYPES = [
   'MARK_REMOVED',
   'CLAIM_APPROVED',
   'CLAIM_REVERSED',
+  // 27 Aug 2026 — content soft-delete. Distinct from MARK_REMOVED on purpose:
+  // that means the VOTER withdrew, this means the content went away. Same effect
+  // on a total, different cause, and an activity log that cannot tell them apart
+  // cannot explain why somebody's score moved.
+  'CONTENT_DELETED',
+  'CONTENT_RESTORED',
   'REFERRAL_BONUS',
 ] as const
 export type PointsEventType = (typeof POINTS_EVENT_TYPES)[number]
@@ -398,9 +404,10 @@ export async function applyBulletinMark(
 ): Promise<{ score: number; myVote: number; authorPoints: number }> {
   const post = await prisma.bulletinPost.findUnique({
     where: { id: postId },
-    select: { id: true, authorId: true, communityId: true },
+    select: { id: true, authorId: true, communityId: true, deletedAt: true },
   })
   if (!post) throw new CommunityRuleError('Post not found', 404)
+  if (post.deletedAt) throw new CommunityRuleError('That post has been removed', 404)
 
   await assertCanMark(markerUserId, post)
 
@@ -514,10 +521,16 @@ export async function applyAnswerVote(
       id: true,
       authorId: true,
       authorType: true,
-      question: { select: { communityId: true } },
+      deletedAt: true,
+      question: { select: { communityId: true, deletedAt: true } },
     },
   })
   if (!answer) throw new CommunityRuleError('Answer not found', 404)
+  // A removed answer is not votable, and neither is one whose question went.
+  // Without this a stale tab keeps paying points into content nobody can see.
+  if (answer.deletedAt || answer.question.deletedAt) {
+    throw new CommunityRuleError('That answer has been removed', 404)
+  }
 
   // The budget is only spent where a vote can actually pay. An AI answer mints
   // nothing, so voting on one must not use up the day's allowance either.
