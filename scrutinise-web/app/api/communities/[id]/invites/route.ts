@@ -14,7 +14,14 @@ const CreateInviteSchema = z.object({
   // Invite a specific existing account. Their address is resolved server-side
   // so the panel never has to see (or send back) somebody's email.
   userId: z.string().min(1).optional(),
-  email: z.string().email().optional(),
+  // ⚠ NO `.email()` HERE, DELIBERATELY. This used to carry its own validation
+  //   while the lookup that offered the address applied a looser rule of its
+  //   own — so a pasted address with a zero-width space passed the lookup, got
+  //   offered in the panel, and was then refused here. Address validity is
+  //   decided in exactly one place, `createCommunityInvite`, which normalises
+  //   first and reports what it received. This bound is a size limit, not a
+  //   second opinion. (320 = the RFC 5321 maximum.)
+  email: z.string().max(320).optional(),
   maxUses: z.number().int().min(1).max(10_000).default(1),
   expiresInDays: z.number().int().min(1).max(365).optional(),
 })

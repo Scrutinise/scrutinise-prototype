@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
+import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
 import { sendCommunityInviteEmail } from '@/lib/email'
@@ -257,9 +258,59 @@ export async function applyBulletinVote(
   return { score: updated.score, myVote: result.myVote, previousVote: result.previousVote }
 }
 
-/** A pragmatic address shape check — enough to decide whether to offer
- *  "invite this address anyway", not a deliverability test. */
-export const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/**
+ * Characters that survive `String.trim()`, look like nothing on screen, and
+ * break a real email validator. Pasting an address out of Word, a web page, a
+ * PDF or a mail client puts them in.
+ *
+ * ⚠ JS `\s` does NOT include these, which is the whole of the 26 Aug 2026 bug:
+ *   U+00AD soft hyphen · U+200B zero-width space · U+200C ZWNJ · U+200D ZWJ ·
+ *   U+200E LRM · U+200F RLM · U+2060 word joiner · U+FEFF BOM.
+ *   (`\s` DOES cover U+00A0 NBFP and U+FEFF, so `.trim()` already removed
+ *   those from the ends — they were never the culprit.)
+ */
+const INVISIBLE_CHARS = /[­​-‏⁠-⁤﻿]/g
+
+/**
+ * The one way an address is cleaned, used by every path that touches one.
+ *
+ * Invisibles are stripped ANYWHERE in the string, because one in the middle of
+ * the local part is just as fatal as one on the end. Outer whitespace goes
+ * (`.trim()` covers NBSP). Case is folded, which matches how the address is
+ * compared when the invite is redeemed (`api/communities/join` lowercases both
+ * sides) and how the lookup matches an existing account.
+ *
+ * Internal whitespace is deliberately LEFT IN so that "john smith@x.com" fails
+ * validation and is reported, rather than being silently guessed into
+ * "johnsmith@x.com".
+ */
+export function normaliseEmail(raw: string): string {
+  return raw.replace(INVISIBLE_CHARS, '').trim().toLowerCase()
+}
+
+/**
+ * The one rule for whether an address is usable. ⚠ THERE MUST NEVER BE TWO.
+ *
+ * Until 26 Aug 2026 there were: the invite panel's lookup used a loose
+ * `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`, and the create route used Zod's `.email()`.
+ * A pasted address carrying a zero-width space passed the first and failed the
+ * second, so the panel offered to invite an address the endpoint then refused —
+ * and the two paths disagreeing is what made it look like a server fault.
+ */
+export function isValidEmail(candidate: string): boolean {
+  return z.string().email().safeParse(candidate).success
+}
+
+/** Renders a string as visible characters plus U+XXXX escapes, for diagnosing
+ *  exactly this class of fault from a log line rather than from a hypothesis. */
+export function describeChars(s: string): string {
+  return Array.from(s)
+    .map((c) => {
+      const cp = c.codePointAt(0)!
+      return cp >= 0x20 && cp <= 0x7e ? c : `U+${cp.toString(16).toUpperCase().padStart(4, '0')}`
+    })
+    .join(' ')
+}
 
 export type InviteCandidate = { id: string; name: string | null; username: string; isMember: boolean }
 
@@ -277,16 +328,23 @@ export async function lookupInviteCandidates(
   communityId: string,
   term: string,
 ): Promise<{ users: InviteCandidate[]; canInviteEmail: string | null }> {
+  // ⚠ The SAME cleaning the create path applies, so a string that gets offered
+  // here can never be refused there. A pasted address carrying a zero-width
+  // character used to fail the exact-email match too — silently offering to
+  // invite somebody who already had an account.
+  const cleaned = normaliseEmail(term)
+  const searchTerm = term.trim()
+
   const users = await prisma.user.findMany({
     where: {
       isHistoricalAccount: false,
       status: 'ACTIVE',
       OR: [
-        { email: { equals: term, mode: 'insensitive' } },
-        { name: { contains: term, mode: 'insensitive' } },
-        { firstName: { contains: term, mode: 'insensitive' } },
-        { lastName: { contains: term, mode: 'insensitive' } },
-        { username: { contains: term, mode: 'insensitive' } },
+        { email: { equals: cleaned, mode: 'insensitive' } },
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { firstName: { contains: searchTerm, mode: 'insensitive' } },
+        { lastName: { contains: searchTerm, mode: 'insensitive' } },
+        { username: { contains: searchTerm, mode: 'insensitive' } },
       ],
     },
     select: { id: true, name: true, username: true },
@@ -301,7 +359,10 @@ export async function lookupInviteCandidates(
 
   return {
     users: users.map((u) => ({ ...u, isMember: memberIds.has(u.id) })),
-    canInviteEmail: EMAIL_SHAPE.test(term) && users.length === 0 ? term : null,
+    // The CLEANED address, never the raw one: whatever the panel is handed here
+    // is what it posts back, so handing it the raw string is how an invisible
+    // character reached the create validator in the first place.
+    canInviteEmail: isValidEmail(cleaned) && users.length === 0 ? cleaned : null,
   }
 }
 
@@ -342,8 +403,45 @@ export async function createCommunityInvite(params: {
   expiresInDays?: number
 }): Promise<IssuedInvite> {
   const { communityId, createdByUserId, createdByName, userId } = params
-  let email = params.email?.trim() || undefined
   let targetName: string | null = null
+
+  // ── the address, cleaned once, validated once ───────────────────────────────
+  //
+  // ⚠ BYTES BEFORE HYPOTHESES (docs/CLAUDE.md §13). When an address arrives
+  // carrying something invisible, or fails validation, the exact string is
+  // logged character by character — length and U+XXXX for anything outside
+  // printable ASCII. On 26 Aug 2026 this fault cost a round trip precisely
+  // because nothing anywhere recorded what the server had actually received.
+  // It logs only on the anomalous path, so an ordinary invite writes nothing.
+  let email: string | undefined
+  if (params.email !== undefined) {
+    const raw = params.email
+    const cleaned = normaliseEmail(raw)
+    const valid = isValidEmail(cleaned)
+
+    if (raw !== cleaned || !valid) {
+      console.warn(
+        '[invites] address needed cleaning or failed validation',
+        JSON.stringify({
+          rawLength: raw.length,
+          cleanedLength: cleaned.length,
+          rawChars: describeChars(raw),
+          cleanedChars: describeChars(cleaned),
+          valid,
+        }),
+      )
+    }
+
+    if (!valid) {
+      throw new CommunityRuleError(
+        cleaned
+          ? `“${cleaned}” does not look like an email address`
+          : 'Enter an email address to invite',
+        422,
+      )
+    }
+    email = cleaned
+  }
 
   if (userId) {
     const target = await prisma.user.findUnique({
