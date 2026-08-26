@@ -2,7 +2,58 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-25 13:35 UTC — ▼ **LEX 25-G: TWO PASSES ARE 65% OF WHAT A BUILD READS, AND A RE-RUN NEED
+*Last updated: 2026-08-26 00:14 UTC — ▼ **LEX 25-H: THE PAGE-ONE FIELDS WERE WRITTEN ONCE AND NEVER
+AGAIN — THE BRIEF'S STATED CAUSE WAS WRONG, AND THE FIX IS A REFRESH PATH, NOT A WRITE PATH.**
+Charlie's amendment corrected the diagnosis before I could: `confirmElicitation` *did* write those
+fields — it wrote them **once**, and nothing wrote them again, so §3's pill-edit (added the same
+sprint) would have left page one showing an answer the user had since replaced. A write path passes
+*"the fields get filled"*; only a refresh path passes *"they change when the answer changes"*.
+`projectElicitationOntoPageOne` now runs on **every canonical-state read**; the four account fields
+are DERIVED, projected never copied, and the one-time copy inside `confirmElicitation` is gone —
+⚠ two writers for one field is how they come to disagree. ⚠⚠ **The check does not assert that
+something writes them** — it projects, edits one answer, projects again, and requires the value to
+change, to be verbatim, and the untouched answers not to churn; `--self-test` runs that assertion
+against a **write-once stub** (a projection that memoises its first result — precisely the defect)
+and requires it to FAIL. ▶ **§2:** the account fields are un-writeable, guarded in the STATE MACHINE
+not the panel, and it **throws** — ⚠ a silent refusal leaves the caller believing the write landed;
+`ideaNarrative` is NOT derived, seeded once as a PROPOSAL gated on the field being untouched.
+▶ **§3:** each pill opens its own answer POPULATED (⚠ a pill that opens an empty box is the same
+complaint one step along); `ElicitationClosed` narrowed not removed, so a stale-tab POST is still
+refused; an edit states **both** consequences together — stale reading *and* a costlier next build.
+▶ **§4: the document pipeline EXISTED and the new door had never been connected to it.** The three
+states are now named apart, because ⚠ "we have a filename" is not "we read it"; an old-shape record
+says **"NAMED but never uploaded"**. ▶ **§5:** a collapsed panel is a labelled EDGE, present not
+absent, and the state is `boolean | null` — ⚠ `null` means *nobody has said*, so it follows content;
+a boolean would freeze the first render's answer. ▶ **§6:** the vocabulary box now LEADS the panel
+(it sat fifth, under a heading about vocabulary, which is where it read as a footnote).
+▶▶ **§7a: THE MAP VIEW WAS NEVER BROKEN.** `CauseTreeView` draws from `parentCauseId` and the build
+never set one — every cause was a root, so the map rendered a flat list IDENTICAL to the list view.
+⚠⚠ **A view that silently looks like another view is indistinguishable from a view that failed.** It
+now nests via `drivenBy`, says so when there is genuinely no chain, keeps an unresolvable parent as a
+root with the loss counted, and breaks cycles. ▶ 7b title follows the goal not the loudest retrieved
+term; 7c the incentive reading JOINS the structural causes; 7d a queued field names its blocker
+(⚠ "next up" is a position, not a condition); 7f the 25-F/25-G surfaces verified undisturbed.
+▶ **§7e is HALF-ANSWERED**: the six qualities reach every drafting pass (checked, controlled), but
+**the output side is not measurable** — the only build left in the DB is 24 Aug, seven passes,
+pre-25-F; 3 of 6 qualities present and quality 1 fails at 0-of-4 nested, which is the §7a defect
+itself. Closing it needs one live build = spend = a stop. **FIRST ITEM FOR CHARLIE.**
+⚠⚠ **THREE VERIFICATION COPIES I REPORTED DELETED IN 25-G WERE STILL IN THE DATABASE FIVE DAYS
+LATER** — `22406bd8`, `ce77b998`, `263ae5ae`; **two carried the REAL title**, so on any list they
+were indistinguishable from Charlie's own ideas. Deleted now, each re-read after deletion. I reported
+the first deletion **without re-reading** — the same failure as the harness one: asserting a state
+instead of checking it. ⚠ Deleting them took the only post-25-F build with them, which is why §7e
+cannot be closed. ▶ Leftover copy `48388e8b` deleted and verified gone; `verify-lex-25f-live.ts`
+**fixed** — it now confirms through `confirmElicitation` instead of writing the column and bypassing
+the only code that writes the page-one fields. ⚠⚠ *A verification artefact that isn't a faithful copy
+produces findings about itself* — that bypass is why 48388e8b's page one was empty and why a brief
+got written on a false premise. ▶ **§8's signed-in walk: WALK BLOCKED — NO HOST PERMISSION**;
+acceptance rests on the checks, the build, and Charlie's own walk. ✅ `check:lex-25h` **20 passed, 18
+with negative controls**, all watched rejecting; 25a 40/40, 25b 54, 25c 32, 25d 77, 25e 27, 25f 62,
+25g 27; `tsc`, `next build`, clean-build `--fast` clean. Migration **idempotent** (11/10/1 first run,
+11/0/11 on the re-run). ⚠ One check FAILED FIRST RUN AND THE DEFECT WAS IN THE CHECK — §7f looked for
+`kind === 'CONTRADICTS'` in `build.ts`, which *writes* it and never compares it.
+`docs/LEX_25H_REPORT.md`.**
+Earlier: 2026-08-25 13:35 UTC — ▼ **LEX 25-G: TWO PASSES ARE 65% OF WHAT A BUILD READS, AND A RE-RUN NEED
 NOT RUN THEM. ⚠⚠ §6'S FLIP HAS NOT BEEN PERFORMED AND THE CHECK ASSERTS IT** — the flag is `create`,
 and §6 gates it on §1a/§2/§3/§4 *and* on Charlie confirming the rebuild reads well. The first four
 are done; the fifth is a fact about a rebuild he has read, not a permission. ⚠⚠ **THE AUDIT'S
