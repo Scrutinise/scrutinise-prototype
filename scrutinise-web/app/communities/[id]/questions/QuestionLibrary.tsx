@@ -210,9 +210,20 @@ export default function QuestionLibrary({
             className="h-[38px] rounded-lg border bg-background px-2 text-sm"
           >
             <option value="">All topics</option>
-            {orderedTopics.map((t) => (
-              <option key={t.label} value={t.label}>{t.label}</option>
-            ))}
+            {/* Two axes, grouped so they read as two (26 Aug 2026): nineteen
+                subjects and three about doing the job. `promoted` carries the
+                split — the chip row has been contexts-only since Stage 2d, so
+                that flag's only remaining job is this ordering. */}
+            <optgroup label="Subject">
+              {orderedTopics.filter((t) => t.promoted).map((t) => (
+                <option key={t.label} value={t.label}>{t.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Doing the job">
+              {orderedTopics.filter((t) => !t.promoted).map((t) => (
+                <option key={t.label} value={t.label}>{t.label}</option>
+              ))}
+            </optgroup>
           </select>
           <select
             value={sort}

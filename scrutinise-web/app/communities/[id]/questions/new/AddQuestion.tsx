@@ -219,17 +219,34 @@ export default function AddQuestion({
             })}
           </div>
 
-          <p className="mb-2 mt-5 text-[13px] font-medium">What is it about?</p>
+          <p className="mb-2 mt-5 text-[13px] font-medium">
+            What is it about? <span className="font-normal text-muted-foreground">(optional)</span>
+          </p>
+          {/* ⚠ OPTIONAL, AND THERE IS NO "OTHER" (26 Aug 2026). A catch-all
+              absorbs exactly the questions that would have told an admin which
+              topic is missing; leaving it blank puts the question in the admin
+              Untagged view instead, which is the evidence for adding one. */}
           <select
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             className="h-[38px] rounded-lg border bg-background px-2 text-sm"
           >
-            <option value="">No topic</option>
-            {tags.topics.map((t) => (
-              <option key={t.label} value={t.label}>{t.label}</option>
-            ))}
+            <option value="">Not sure — leave it blank</option>
+            <optgroup label="Subject">
+              {tags.topics.filter((t) => t.promoted).map((t) => (
+                <option key={t.label} value={t.label}>{t.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Doing the job">
+              {tags.topics.filter((t) => !t.promoted).map((t) => (
+                <option key={t.label} value={t.label}>{t.label}</option>
+              ))}
+            </optgroup>
           </select>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Topics are for browsing a slice you can’t name precisely. If you want one specific
+            question, search finds it faster.
+          </p>
 
           <p className="mb-2 mt-5 text-[13px] font-medium">Who should see it?</p>
           <div className="grid gap-2 sm:grid-cols-2">

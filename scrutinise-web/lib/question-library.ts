@@ -757,6 +757,119 @@ export async function getTags(communityId: string) {
   }
 }
 
+// ── the admin topic view ─────────────────────────────────────────────────────
+
+export type TopicUsage = {
+  label: string
+  /** true = one of the nineteen subjects; false = one of the three about doing
+   *  the job. See DEFAULT_QUESTION_TAGS. */
+  subject: boolean
+  sortOrder: number
+  questionCount: number
+}
+
+export type UntaggedQuestion = {
+  id: string
+  text: string
+  contextTags: string[]
+  createdAt: Date
+  answerCount: number
+  branchName: string | null
+}
+
+/**
+ * What each topic is actually carrying, and what has no topic at all.
+ *
+ * ⚠ THIS EXISTS BECAUSE THERE IS NO "OTHER" TOPIC (Charlie, 26 Aug 2026). A
+ * catch-all absorbs precisely the questions that would have told you which topic
+ * is missing — they go in, and the list never has to change again. The topic
+ * field is optional instead, and THIS VIEW IS THE EVIDENCE BASE: a cluster of
+ * untagged questions about the same thing is the argument for adding a topic,
+ * and a topic sitting at zero for months is the argument for removing one.
+ *
+ * Counts are over the whole Community, because the tag set lives on the root and
+ * is inherited — a per-branch count would answer a question nobody asked and
+ * would make the same topic look different depending on where you stood.
+ */
+export async function getTopicUsage(communityId: string): Promise<TopicUsage[]> {
+  const rootId = await getRootCommunityId(communityId)
+  const tags = await prisma.questionTag.findMany({
+    where: { communityId: rootId, kind: 'TOPIC' },
+    orderBy: [{ promoted: 'desc' }, { sortOrder: 'asc' }],
+  })
+  const questions = await prisma.question.findMany({
+    where: { communityId: rootId },
+    select: { topicTags: true },
+  })
+
+  const counts = new Map<string, number>()
+  for (const q of questions) {
+    for (const t of q.topicTags) counts.set(t, (counts.get(t) ?? 0) + 1)
+  }
+
+  return tags.map((t) => ({
+    label: t.label,
+    subject: t.promoted,
+    sortOrder: t.sortOrder,
+    questionCount: counts.get(t.label) ?? 0,
+  }))
+}
+
+/** Questions carrying no topic at all — the list that argues for a new one. */
+export async function getUntaggedQuestions(
+  communityId: string,
+  limit = 200,
+): Promise<UntaggedQuestion[]> {
+  const rootId = await getRootCommunityId(communityId)
+  const questions = await prisma.question.findMany({
+    where: { communityId: rootId, topicTags: { isEmpty: true } },
+    include: {
+      branch: { select: { name: true } },
+      _count: { select: { answers: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  })
+  return questions.map((q) => ({
+    id: q.id,
+    text: q.text,
+    contextTags: q.contextTags,
+    createdAt: q.createdAt,
+    answerCount: q._count.answers,
+    branchName: q.branch?.name ?? null,
+  }))
+}
+
+/**
+ * A question carrying a topic the tag set no longer has.
+ *
+ * ⚠ `Question.topicTags` is a string array, not a foreign key, so a topic can be
+ * renamed or deleted out from under a question and nothing complains — the
+ * question simply stops matching the filter that ought to find it. The 26 Aug
+ * taxonomy change renamed four labels across live questions for exactly this
+ * reason, and this is what notices if it ever happens again.
+ */
+export async function getOrphanedTopicTags(communityId: string): Promise<{ label: string; questionCount: number }[]> {
+  const rootId = await getRootCommunityId(communityId)
+  const known = new Set(
+    (
+      await prisma.questionTag.findMany({
+        where: { communityId: rootId, kind: 'TOPIC' },
+        select: { label: true },
+      })
+    ).map((t) => t.label),
+  )
+  const questions = await prisma.question.findMany({
+    where: { communityId: rootId },
+    select: { topicTags: true },
+  })
+  const counts = new Map<string, number>()
+  for (const q of questions) {
+    for (const t of q.topicTags) if (!known.has(t)) counts.set(t, (counts.get(t) ?? 0) + 1)
+  }
+  return [...counts].map(([label, questionCount]) => ({ label, questionCount }))
+}
+
 /** Membership of the Community is the entry ticket to its library. */
 export async function requireLibraryAccess(userId: string, communityId: string): Promise<string> {
   const rootId = await getRootCommunityId(communityId)

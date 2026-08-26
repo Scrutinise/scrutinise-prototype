@@ -337,9 +337,14 @@ export default function CommunityDashboardClient({
                   </div>
                 </details>
                 {isCommunityAdmin && (
-                  <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
-                    <Link href={`/communities/${community.id}/across-branches`}>Across branches</Link>
-                  </Button>
+                  <>
+                    <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                      <Link href={`/communities/${community.id}/across-branches`}>Across branches</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                      <Link href={`/communities/${community.id}/topics`}>Topics</Link>
+                    </Button>
+                  </>
                 )}
               </div>
             )}
