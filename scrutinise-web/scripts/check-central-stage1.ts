@@ -30,6 +30,9 @@ import {
   countUnreadBulletin,
   createCommunityInvite,
   createJoinRequest,
+  describeChars,
+  isValidEmail,
+  normaliseEmail,
   decideJoinRequest,
   findBoardPost,
   getBoardScopeFilter,
@@ -468,6 +471,64 @@ async function partB() {
     check('…the invite row is NOT lost when the email cannot go out',
       issued !== null &&
         (await prisma.communityInvite.count({ where: { id: issued.invite.id } })) === 1)
+
+    // — a pasted address, with what pasting brings with it ---------------------
+    //
+    // ⚠ THE 26 Aug 2026 FAULT, IN ONE ASSERTION. A zero-width space survives
+    // `.trim()` and is NOT matched by JS `\s`, so it passed the lookup's loose
+    // shape test and failed Zod's `.email()` on the create — the panel offered
+    // an address the endpoint then refused, which read as a server fault. The
+    // two paths now share one normaliser and one validator, so a string that is
+    // offered can never be refused.
+    const dirty = ` zz-Pasted-${stamp}​@Example.COM  `
+    const dirtyLookup = await lookupInviteCandidates(root.id, dirty)
+    const wanted = `zz-pasted-${stamp}@example.com`
+    eq('a pasted address is offered in its CLEANED form, not as typed',
+      dirtyLookup.canInviteEmail, wanted)
+
+    let dirtyIssued: Awaited<ReturnType<typeof createCommunityInvite>> | null = null
+    let dirtyError: string | null = null
+    try {
+      dirtyIssued = await createCommunityInvite({
+        communityId: root.id,
+        createdByUserId: alice.id,
+        createdByName: alice.name,
+        email: dirty,
+        expiresInDays: 30,
+      })
+      created.inviteIds.push(dirtyIssued.invite.id)
+    } catch (e) {
+      dirtyError = e instanceof Error ? e.message : String(e)
+    }
+    check('…and creating it raises no error, invisible characters and all',
+      dirtyError === null, dirtyError ?? '')
+    eq('…the invite is stored against the CLEANED address',
+      dirtyIssued?.invite.email ?? null, wanted)
+    check('…with nothing invisible left in the stored value',
+      !/[­​-‏⁠-⁤﻿\s]/.test(dirtyIssued?.invite.email ?? 'x'),
+      describeChars(dirtyIssued?.invite.email ?? ''))
+    check('…and the row reads back the same way',
+      dirtyIssued !== null &&
+        (await prisma.communityInvite.findUnique({ where: { id: dirtyIssued.invite.id } }))?.email === wanted)
+
+    // Whatever the lookup offers, the create must accept — asserted as the
+    // relationship, not as two separate facts that happen to agree today.
+    eq('the address the panel is handed is exactly the one that gets stored',
+      dirtyLookup.canInviteEmail, dirtyIssued?.invite.email ?? null)
+
+    // The normaliser and the validator, directly. `\s` not covering the
+    // zero-width characters is the reason the old loose test disagreed.
+    eq('normaliseEmail strips a zero-width space from the middle of a local part',
+      normaliseEmail('a​b@c.com'), 'ab@c.com')
+    eq('…and a non-breaking space from the end', normaliseEmail('a@b.com '), 'a@b.com')
+    eq('…and folds case', normaliseEmail('A@B.COM'), 'a@b.com')
+    check('…but leaves an internal space alone, so it fails loudly rather than being guessed at',
+      !isValidEmail(normaliseEmail('john smith@x.com')))
+    check('the shared validator accepts a clean address', isValidEmail('a@b.com'))
+    check('…and rejects one that is still dirty after nothing was stripped',
+      !isValidEmail('not-an-address'))
+    check('describeChars names an invisible character rather than printing nothing',
+      describeChars('a​').includes('U+200B'), describeChars('a​'))
 
     // The two refusals the route maps to a status. Both must carry a plain
     // STRING message: an error shape the panel cannot render is what turned a
