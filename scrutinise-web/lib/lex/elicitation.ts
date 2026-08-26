@@ -85,6 +85,8 @@ export interface ElicitationState {
   steps: ElicitationStepView[]
   /** The step the user is on. Null once CONFIRMED. */
   currentStep: ElicitationStepKey | null
+  /** 25-H §3 — an answer has changed since the reading was agreed. See `elicitationState`. */
+  staleUnderstanding: boolean
   /** §1c — the paragraph, when there is one. */
   understanding: string | null
   /** Problem-gate observability: whether it armed, and how many presses are spent. */
@@ -209,6 +211,22 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
   const current = steps.find((s) => !s.done)?.key ?? null
   const hasBuild = (await prisma.ideaBuild.count({ where: { ideaId } })) > 0
 
+  // ⚠ 25-H §3 — HAS AN ANSWER MOVED SINCE THE READING WAS AGREED?
+  //
+  // Editing a pill does not un-confirm (see `answerStep`), which keeps a one-word
+  // correction from throwing the user back to the start. The cost of that choice is that
+  // the agreed understanding can go stale — so it is DETECTED and SAID, rather than left
+  // for the user to notice that the paragraph they agreed to describes the answer they
+  // just changed.
+  //
+  // ⚠ AND IT IS ALSO WHAT DECIDES THE PRICE. 25-G's `reuseSourceFor` refuses to reuse the
+  // research when the elicitation has moved since the build that used it — so an edit here
+  // means the next build searches again. The screen quotes both facts together, because
+  // "your reading is out of date" and "this will now cost 33p rather than 12p" are the same
+  // event and a user should not have to join them up.
+  const staleUnderstanding =
+    row.status === 'CONFIRMED' && !!base.confirmedAt && base.updatedAt > base.confirmedAt
+
   // 25-E §1 — one value, derived once, here. See `ElicitationPhase`.
   //
   // ⚠ THE ORDER IS THE MEANING. CONFIRMED wins outright. Then a written paragraph waiting
@@ -227,6 +245,7 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
     phase,
     steps,
     currentStep: row.status === 'CONFIRMED' ? null : current,
+    staleUnderstanding,
     understanding: row.understanding,
     problemGate: {
       fired: row.problemGateFired,
@@ -249,6 +268,13 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
 // ── Answering a step ─────────────────────────────────────────────────────────
 
 export interface AnswerInput {
+  /**
+   * 25-H §3 — this is a deliberate EDIT of an answer already given, not a fresh answer.
+   * The only thing it unlocks is re-answering a CONFIRMED elicitation; everything else
+   * about the step behaves identically, so an edit cannot take a path a first answer
+   * could not.
+   */
+  editing?: boolean
   step: ElicitationStepKey
   /** Free text for problem / ownKnowledge / profile / goalDetail. */
   text?: string
@@ -275,7 +301,19 @@ export async function answerStep(
   ideaId: string, userId: string, input: AnswerInput,
 ): Promise<{ state: ElicitationState; messages: string[] }> {
   const base = await ensureRow(ideaId, userId)
-  if (base.status === 'CONFIRMED') throw new ElicitationClosed()
+  // ⚠⚠ 25-H §3 — A CONFIRMED ELICITATION IS EDITABLE, AND IT WAS NOT.
+  //
+  // `ElicitationClosed` was right when the only way back was to start again: it stopped a
+  // stale tab re-answering a question after the build had been agreed. But §3 makes the
+  // pills reopen each answer — "editing an answer and rebuilding is the natural iteration
+  // loop" — and that loop is unreachable if the first confirmation closes the door.
+  //
+  // ⚠ THE GUARD IS NOT REMOVED, IT IS NARROWED. An edit must SAY it is an edit
+  // (`input.editing`), so an ordinary answer POST from an old tab is still refused. And
+  // editing does NOT un-confirm: 25-E's gate stays satisfied so the user is not thrown
+  // back to the start for changing a word — instead the understanding becomes STALE and
+  // the screen says so, with Confirm offered to regenerate it.
+  if (base.status === 'CONFIRMED' && !input.editing) throw new ElicitationClosed()
   const def = stepDef(input.step)
   if (!def) throw new Error(`Unknown elicitation step: ${input.step}`)
 
@@ -549,22 +587,26 @@ export async function confirmElicitation(ideaId: string, userId: string): Promis
     throw new Error('There is nothing to confirm yet.')
   }
 
-  const problem = (row.problem ?? '').trim()
-  if (problem) await submitBox(ideaId, userId, 'ideaNarrative', problem)
-
-  // Exchange 2 + 3 compose the "you and the idea" narrative. The own-knowledge half is
-  // LABELLED where it is stored, so a reader of the field — human or model — can see
-  // which sentences are the user's testimony rather than anything retrieved.
-  const goalLabel = GOAL_KINDS.find((g) => g.key === row.goalKind)?.label
-  const parts = [
-    goalLabel ? `What I want to happen: ${goalLabel}${row.goalDetail ? ` — ${row.goalDetail}` : ''}` : '',
-    row.ruledOut ? `Already ruled out: ${row.ruledOut}` : '',
-    row.ownKnowledge ? `What I know that the record won’t show (my own experience): ${row.ownKnowledge}` : '',
-    row.readingUrl || row.readingFileName
-      ? `Given to read, NOT yet read by Lex: ${[row.readingUrl, row.readingFileName].filter(Boolean).join(' · ')}`
-      : '',
-  ].filter(Boolean)
-  if (parts.length) await submitBox(ideaId, userId, 'youAndIdeaNarrative', parts.join('\n\n'))
+  // ══ 25-H §1 — THE ONE-TIME COPY INTO PAGE ONE WAS HERE, AND IT IS GONE ═══════
+  //
+  // This block called `submitBox('ideaNarrative', problem)` and composed the goal, the
+  // ruled-outs, the own-knowledge and the reading into `submitBox('youAndIdeaNarrative')`.
+  // It worked — a genuine walk fills both — and it was still the wrong shape, for a reason
+  // that only became visible once §3 made every answer editable:
+  //
+  //   IT RAN ONCE. Edit an answer afterwards and page one still held the words from the
+  //   first confirm, with nothing on any screen to say the two disagreed.
+  //
+  // Page one is now a PROJECTION, recomputed on every canonical-state read
+  // (lib/lex/page-one.ts). The elicitation is the store; the fields are a view of it. So a
+  // re-confirm, a correction and a pill-edit all reach the proposal by the same path, and
+  // there is no path by which they can drift apart.
+  //
+  // ⚠ AND THE PROJECTION RUNS WHETHER OR NOT THIS FUNCTION IS EVER CALLED. That matters:
+  // the 25-F verification harness created elicitations already-CONFIRMED and so skipped
+  // this block entirely, producing copies with permanently empty page-one boxes — which
+  // Charlie found, re-ran, and reported as a product defect. A projection cannot be
+  // skipped by a caller taking a different route to the same state.
 
   await prisma.ideaElicitation.update({
     where: { ideaId },

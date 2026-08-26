@@ -29,6 +29,8 @@ const BodySchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('answer'),
     step: z.enum(STEP_KEYS),
+    /** 25-H §3 — reopening a pill on a CONFIRMED elicitation. See `answerStep`. */
+    editing: z.boolean().optional(),
     text: z.string().max(20_000).optional(),
     goalKind: z.string().max(64).optional(),
     ruledOut: z.string().max(5_000).optional(),
@@ -111,6 +113,8 @@ export async function POST(req: Request, { params }: Params) {
       ruledOut: parsed.data.ruledOut,
       readingUrl: parsed.data.readingUrl,
       readingFileName: parsed.data.readingFileName,
+      // 25-H §3 — the pill reopening an answer on a CONFIRMED elicitation.
+      editing: parsed.data.editing,
       skip: parsed.data.skip,
     })
     // The answer path returns the build half as well, for the same reason: answering the

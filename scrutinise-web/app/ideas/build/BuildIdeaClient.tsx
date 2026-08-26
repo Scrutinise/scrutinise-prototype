@@ -28,6 +28,7 @@ import {
 // keeps importing its prop type from the component it renders.
 import RecentIdeasPanel, { type RecentIdea } from '@/components/lex/RecentIdeasPanel'
 import SurfaceSwitch from '@/components/lex/SurfaceSwitch'
+import YourMaterial from '@/components/lex/YourMaterial'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import type { SurfaceContext } from '@/lib/lex/surfaces'
@@ -86,6 +87,8 @@ export interface ElicitationState {
   corrections: number
   messages: Msg[]
   hasBuild: boolean
+  /** 25-H §3 — an answer has moved since the reading was agreed. */
+  staleUnderstanding: boolean
 }
 export interface PassRecord {
   key: string; label: string; detail: string
@@ -257,6 +260,17 @@ export default function BuildIdeaClient(
   const [feedbackOffer, setFeedbackOffer] = useState(false)
   // A6: Exit, and the prompt that stops a half-typed answer being thrown away.
   const [exitPrompt, setExitPrompt] = useState(false)
+  /**
+   * ⚠ 25-H §3 — WHICH PILL IS OPEN.
+   *
+   * The step rail was five inert `<li>`s. Charlie: *"None of these pill buttons work. They
+   * should show up the initial data I wrote in so I can edit that before I do a rebuild."*
+   *
+   * The data was already on the wire — `steps[].answer` has carried each answer since 25-A
+   * — so nothing needed fetching. What was missing was somewhere to put it and a way back
+   * to the server with it.
+   */
+  const [editingStep, setEditingStep] = useState<string | null>(null)
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -547,6 +561,35 @@ export default function BuildIdeaClient(
     }
   }, [elicit?.currentStep, post, text, goalKind, ruledOut, readingUrl, applyMutation])
 
+  /**
+   * 25-H §3 — send an edited answer. Same route, same step handling; `editing: true` is
+   * the only difference, and all it unlocks is re-answering a CONFIRMED elicitation.
+   */
+  const saveEdit = useCallback(async (stepKey: string) => {
+    const data = await post('/elicitation', {
+      action: 'answer', step: stepKey, editing: true,
+      text, goalKind: goalKind || undefined,
+      ruledOut: ruledOut || undefined, readingUrl: readingUrl || undefined,
+    })
+    if (data?.state) {
+      applyMutation(data)
+      setEditingStep(null)
+      setText(''); setGoalKind(''); setRuledOut(''); setReadingUrl('')
+    }
+  }, [post, text, goalKind, ruledOut, readingUrl, applyMutation])
+
+  /** Open a pill, seeded with what the user actually wrote. */
+  const openStep = useCallback((stepKey: string) => {
+    const s = elicit?.steps.find((x) => x.key === stepKey)
+    // ⚠ SEEDED FROM THE ANSWER, NOT BLANK. A pill that opens an empty box is a pill that
+    // loses the answer it was supposed to show — which is the complaint, one step along.
+    setText(s?.answer ?? '')
+    setGoalKind('')
+    setRuledOut('')
+    setReadingUrl('')
+    setEditingStep(stepKey)
+  }, [elicit?.steps])
+
   const confirm = useCallback(async () => {
     applyMutation(await post('/elicitation', { action: 'confirm' }))
   }, [post, applyMutation])
@@ -804,22 +847,93 @@ export default function BuildIdeaClient(
             )}
 
             {/* The step rail — four questions, then a confirmation. Shows how short this is. */}
-            <ol className="flex flex-wrap gap-2 mb-6 text-[11px] font-medium">
-              {elicit.steps.map((s) => (
-                <li
-                  key={s.key}
-                  className={`px-2.5 py-1 rounded-full border ${
-                    s.done
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                      : s.key === elicit.currentStep
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'bg-white border-zinc-200 text-zinc-400'
-                  }`}
-                >
-                  {s.label}
-                </li>
-              ))}
+            {/* ⚠ 25-H §3 — THE RAIL IS NOW THE EDIT CONTROL, NOT A PROGRESS INDICATOR.
+                Each pill reopens its own answer, populated. A pill the user has not
+                reached yet stays inert — offering to edit an answer that does not exist
+                would be a control that does nothing, which is the complaint restated. */}
+            <ol className="flex flex-wrap gap-2 mb-4 text-[11px] font-medium">
+              {elicit.steps.map((s) => {
+                const openable = s.done || s.key === elicit.currentStep
+                const open = editingStep === s.key
+                return (
+                  <li key={s.key}>
+                    <button
+                      onClick={() => (open ? setEditingStep(null) : openStep(s.key))}
+                      disabled={!openable || busy}
+                      title={openable ? `Open “${s.label}” and edit what you wrote` : 'You haven’t reached this yet'}
+                      className={`px-2.5 py-1 rounded-full border transition-colors ${
+                        open
+                          ? 'bg-zinc-900 border-zinc-900 text-white'
+                          : s.done
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 cursor-pointer'
+                            : s.key === elicit.currentStep
+                              ? 'bg-blue-600 border-blue-600 text-white'
+                              : 'bg-white border-zinc-200 text-zinc-400 cursor-default'
+                      }`}
+                    >
+                      {s.label}
+                      {s.done && <span aria-hidden className="ml-1.5 opacity-60">✎</span>}
+                    </button>
+                  </li>
+                )
+              })}
             </ol>
+
+            {/* ⚠ 25-H §3 — AND WHAT THE EDIT WILL COST, SAID WITH THE EDIT.
+                25-G's reuse rule refuses to reuse the research once the elicitation has
+                moved, so changing an answer means the next build searches again. "Your
+                reading is out of date" and "this now costs a full build" are the same
+                event; a user should not have to join them up. */}
+            {elicit.staleUnderstanding && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">
+                <p className="text-sm text-amber-900">
+                  You’ve changed an answer since I read it back to you. The reading you agreed to is
+                  now out of date, and the next build will search the corpus again rather than reusing
+                  what it found.
+                </p>
+                <button
+                  onClick={() => void confirm()}
+                  disabled={busy}
+                  className="mt-1.5 text-xs font-semibold text-amber-900 underline hover:no-underline disabled:opacity-40"
+                >
+                  Read it back to me again
+                </button>
+              </div>
+            )}
+
+            {/* The open pill's answer, editable. */}
+            {editingStep && (() => {
+              const s = elicit.steps.find((x) => x.key === editingStep)
+              if (!s) return null
+              return (
+                <div className="mb-5 rounded-xl border border-zinc-300 bg-white p-3">
+                  <p className="text-sm font-semibold text-zinc-900">{s.label}</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">{s.cardPrompt ?? s.question}</p>
+                  <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    rows={Math.min(18, Math.max(4, Math.ceil((text.length || 1) / 80)))}
+                    className="mt-2 w-full rounded-lg border border-zinc-300 p-2 text-sm leading-relaxed"
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <button
+                      onClick={() => void saveEdit(s.key)}
+                      disabled={busy || !text.trim()}
+                      className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                    >
+                      Save this answer
+                    </button>
+                    <button
+                      onClick={() => { setEditingStep(null); setText('') }}
+                      disabled={busy}
+                      className="text-sm font-medium px-4 py-2 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* The transcript. Lex's questions and the user's answers, in the same store
                 the create page reads — so none of this is lost at the handover. */}
@@ -845,6 +959,22 @@ export default function BuildIdeaClient(
                 pure component so `verify:lex-25e-ui` can RENDER it and assert a usable
                 control comes out. That is the only kind of check that could have caught the
                 defect this sprint fixed. */}
+            {/* ⚠⚠ 25-H §4 — THE DOCUMENT CONTROL, ON THE STEP THAT ASKS FOR DOCUMENTS.
+                This screen asked "is there anything you'd like me to read?" and offered a
+                TEXT BOX. It captured a filename onto the elicitation row and no bytes ever
+                left the browser — so a user could attach a Word document, be thanked for
+                it, and have nothing read. That is the worst kind of failure: they believe
+                we have it.
+
+                `YourMaterial` is the 25-D §4 pipeline that stores, extracts, produces
+                findings and reports a failed read. It existed the whole time and was
+                rendered only by the OLD door's third panel. */}
+            {elicit.phase === 'QUESTION' && step?.key === 'reading' && ideaId && (
+              <div className="mb-4">
+                <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} />
+              </div>
+            )}
+
             {elicit.phase === 'QUESTION' && step && (
               <QuestionCard
                 step={step}
@@ -889,6 +1019,16 @@ export default function BuildIdeaClient(
                 onStart={() => startBuild('FULL')}
                 onRetryState={() => void refresh()}
               />
+            )}
+
+            {/* 25-H §4 — "available later". Once the elicitation is done the control stays,
+                so a document found halfway through is not a reason to start again. A
+                document added here is read on the spot and its findings join the next
+                build. */}
+            {elicit.phase === 'CONFIRMED' && ideaId && (
+              <div className="mb-4">
+                <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} />
+              </div>
             )}
 
             {/* ⚠ A1 — THE OFFER, WHERE THE CRITICISM WAS MADE. Transient: it clears on the
