@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
+import { sendCommunityInviteEmail } from '@/lib/email'
 
 /**
  * Default bulletin-board category set, in display order (Stage 1.1, agreed
@@ -301,6 +303,125 @@ export async function lookupInviteCandidates(
     users: users.map((u) => ({ ...u, isMember: memberIds.has(u.id) })),
     canInviteEmail: EMAIL_SHAPE.test(term) && users.length === 0 ? term : null,
   }
+}
+
+export type IssuedInvite = {
+  invite: { id: string; inviteCode: string; email: string | null; maxUses: number; expiresAt: Date | null }
+  targetName: string | null
+  notified: boolean
+  emailed: { sent: boolean; reason?: string } | null
+}
+
+/**
+ * Issue an invite. Three shapes, all landing on the same CommunityInvite row:
+ *
+ *   {}          — an open code to share by hand
+ *   { userId }  — an existing account: pinned to their address, announced in
+ *                 their Feed
+ *   { email }   — an address with no account yet, **which is the normal case**.
+ *                 Most people invited to a branch have never heard of us.
+ *
+ * ⚠ THIS LIVES HERE, NOT IN THE ROUTE, AND THAT IS THE POINT (26 Aug 2026).
+ * It sat inline in `POST /api/communities/[id]/invites`, which needs a Clerk
+ * session, so no check could reach it — and when the panel reported a failure
+ * on 26 Aug there was no way to run the real code and see what it did. The
+ * comment on `applyBulletinVote` says the same thing for the same reason: a
+ * test that re-implements the work proves nothing about what actually runs.
+ *
+ * Rule violations throw `CommunityRuleError` so the route maps them to a status
+ * with a plain-string message. The route must never invent an error shape of its
+ * own — see the note on the panel's error handling.
+ */
+export async function createCommunityInvite(params: {
+  communityId: string
+  createdByUserId: string
+  createdByName: string | null
+  userId?: string
+  email?: string
+  maxUses?: number
+  expiresInDays?: number
+}): Promise<IssuedInvite> {
+  const { communityId, createdByUserId, createdByName, userId } = params
+  let email = params.email?.trim() || undefined
+  let targetName: string | null = null
+
+  if (userId) {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, username: true },
+    })
+    if (!target) throw new CommunityRuleError('That account no longer exists', 404)
+
+    const alreadyMember = await prisma.communityMember.findUnique({
+      where: { communityId_userId: { communityId, userId } },
+    })
+    if (alreadyMember) throw new CommunityRuleError('That person is already a member', 409)
+
+    // Resolved server-side so the panel never has to see, or send back,
+    // somebody else's address.
+    email = target.email
+    targetName = target.name ?? target.username
+  }
+
+  const community = await prisma.community.findUnique({
+    where: { id: communityId },
+    select: { name: true, parentCommunityId: true },
+  })
+  if (!community) throw new CommunityRuleError('Not found', 404)
+
+  const rootId = await getRootCommunityId(communityId)
+  const rootName =
+    rootId === communityId
+      ? community.name
+      : (await prisma.community.findUniqueOrThrow({ where: { id: rootId }, select: { name: true } })).name
+
+  const invite = await prisma.communityInvite.create({
+    data: {
+      communityId,
+      inviteCode: randomBytes(16).toString('hex'),
+      email,
+      // An invite pinned to one person is single-use by definition.
+      maxUses: userId ? 1 : (params.maxUses ?? 1),
+      expiresAt: params.expiresInDays
+        ? new Date(Date.now() + params.expiresInDays * 24 * 60 * 60 * 1000)
+        : undefined,
+      createdByUserId,
+    },
+    select: { id: true, inviteCode: true, email: true, maxUses: true, expiresAt: true },
+  })
+
+  // An invited existing user also gets it in their Feed.
+  if (userId) {
+    await prisma.notification.create({
+      data: {
+        userId,
+        type: 'SYSTEM',
+        title: 'Community invitation',
+        message: `${createdByName ?? 'Someone'} invited you to join ${community.name}`,
+        linkUrl: `/community-invite/${invite.inviteCode}`,
+      },
+    })
+  }
+
+  // Email whenever the invite is tied to an address, registered or not. The
+  // result is REPORTED, never assumed: the invite row is already valid, so a
+  // mail failure must not lose it, and claiming "emailed" when nothing left the
+  // building is the exact failure this work exists to remove.
+  // `sendCommunityInviteEmail` returns {sent, reason} and never throws, so the
+  // row can never be orphaned by a mail problem.
+  let emailed: { sent: boolean; reason?: string } | null = null
+  if (email) {
+    emailed = await sendCommunityInviteEmail({
+      toEmail: email,
+      invitedByName: createdByName ?? 'Someone',
+      communityName: community.name,
+      isBranch: community.parentCommunityId !== null,
+      rootName,
+      inviteCode: invite.inviteCode,
+    })
+  }
+
+  return { invite, targetName, notified: Boolean(userId), emailed }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
