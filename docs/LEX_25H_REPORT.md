@@ -253,6 +253,33 @@ None of these is in 25-H's scope. They are the three I would put in front of a p
 | migration idempotency | 11 examined, 0 migrated, 11 skipped on re-run |
 | signed-in browser walk | **walk blocked: no host permission** |
 
+### Delivery — §20's four checks, all four passing
+
+| # | check | result |
+|---|---|---|
+| 1 | every file the sprint created is committed | ✓ all five, by `git ls-files`, not `git status` |
+| 2 | the remote has the commits | ✓ all five, by `merge-base --is-ancestor` against the server ref |
+| 3 | the deployment is green **and is Production** | ✓ `"env":"production"` |
+| 4 | **the running site serves the change** | ✓ production reports `59512b7`, and all six 25-H commits are ancestors of it |
+
+Check 4 needed something built to be answerable at all, and that is an addition beyond §1–§7
+that I want on the record explicitly.
+
+**Every change in this sprint sits behind Clerk, so there was no unauthenticated string to
+read back** — which means §20's only check that proves anything was the one check that could
+not be run. §20 itself calls this "a check worth building once". `/api/health` now returns
+`VERCEL_GIT_COMMIT_SHA` and `VERCEL_ENV`, `force-dynamic` (a cached response from the
+previous deployment would report the previous SHA and look exactly like a failed deploy), so
+check 4 is now one request compared against `git rev-parse HEAD` — for this sprint and every
+one after it. The SHA is a commit id in a public repository, not a secret; nothing else about
+the environment is exposed.
+
+That is why the live SHA is `59512b7` and not the `9abbb72` I pushed: the concurrent GRAPH
+25-H session pushed five commits on top while the deploy was building. All six of mine are
+ancestors of what production is serving, which is the property that matters.
+
+### The one that failed first
+
 One check failed on its first run, and the defect was in the check: §7f looked for
 `kind === 'CONTRADICTS'` in `build.ts`, which *writes* `kind: 'CONTRADICTS'` and never
 compares it — the comparison lives in the ranking, one file over. A guard aimed at the wrong
