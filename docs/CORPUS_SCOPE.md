@@ -4,7 +4,7 @@
 *counts come from the live database on every run, and the declared-scope wording lives in*
 *`SCOPE_DECLARATIONS` in that file, where a change shows up in a diff.*
 
-*Generated 2026-08-24 01:27 UTC against Neon.*
+*Generated 2026-08-26 20:39 UTC against Neon.*
 
 ## Why this file exists
 
@@ -27,14 +27,14 @@ The second number is the backlog. It is printed first so it cannot be skimmed pa
 |---|---:|---|---|---|
 | `pwdata-debates` | 6,387,304 | 1919-02-04 | 2026-07-16 | Every Commons sitting-day debate ParlParse publishes, 1919-02-04 to date. ⚠ Abuts `historic-hansard`, which ends 1918-11-21 — measured, they do NOT overlap. |
 | `historic-hansard` | 4,641,085 | 1013-06-24 | 1999-11-11 | The digitised Hansard bound volumes: Commons to 1918-11-21, Lords to 1999-11-11. A closed archive — it does not grow. |
-| `pwdata-wrans` | 1,233,016 | 2001-06-21 | 2026-08-21 | Commons written answers, one section per answer, from ParlParse. Supersedes `written-answers` and `lda-commonswrittenquestions`. |
+| `pwdata-wrans` | 1,233,048 | 2001-06-21 | 2026-08-25 | Commons written answers, one section per answer, from ParlParse. Supersedes `written-answers` and `lda-commonswrittenquestions`. |
 | `scottish-parliament-or` | 1,043,264 | 1999-06-09 | 2026-06-03 | Scottish Parliament Official Report, 1999 to date. |
 | `pwdata-lords` | 752,805 | 1999-11-17 | 2026-07-23 | Every Lords sitting-day debate ParlParse publishes, 1999-11-17 to date. Abuts `historic-hansard` Lords, which ends 1999-11-11. |
 | `committees-reports` | 323,922 | 2005-01-21 | 2026-07-30 | Select committee reports published through the Committees API, both Houses, for the sessions the API exposes. |
-| `et-decisions` | 293,399 | 2017-02-08 | 2026-06-11 | Employment tribunal decisions published on gov.uk. ⚠ Practical text coverage begins ~2013: measured on the 503 landing pages with nothing behind them, 179 of 200 have NO attachment at source, 131 of those are Scottish tribunals and 105 are from 2006 — gov.uk publishes those as a title-only listing, with no judgment ever. |
+| `et-decisions` | 293,399 | 2017-02-08 | 2026-06-11 | Employment tribunal decisions published on gov.uk, 2017 to date for England and Wales. **Scottish employment tribunal decisions before 2013 are not published and are not held.** ⚠ Measured over the WHOLE population of 503 landing pages with nothing behind them (not a sample): 51 carry a judgment PDF, 452 do not, none is a dead link. Of the 452, 332 use the six-digit pre-2013 Scottish case numbering and a further 93 use a 41xx Scottish office number — 425 of 452 (94%) are Scottish. Against that, 0 of the 51 WITH a judgment are six-digit or pre-2013. gov.uk lists those decisions by title and attaches no judgment, ever. ⚠ 27 seven-digit English rows have no attachment either and that is NOT explained by this boundary — see OI-22. |
 | `niassembly-hansard` | 196,348 | 2012-09-10 | 2026-06-09 | Northern Ireland Assembly Hansard, for the sittings the Assembly publishes. |
 | `senedd-cofnod` | 191,730 | 2016-05-11 | 2026-06-16 | Senedd plenary Cofnod y Trafodion. ⚠ Bilingual: ~95% of a 40-row sample has a WELSH body, so an English query can only match the English heading. A Welsh devolved question is not answerable in English today. |
-| `pwdata-lordswrans` | 175,592 | 1999-11-18 | 2026-08-20 | Lords written answers, one per section. Supersedes `lda-lordswrittenquestions`. |
+| `pwdata-lordswrans` | 175,634 | 1999-11-18 | 2026-08-25 | Lords written answers, one per section. Supersedes `lda-lordswrittenquestions`. |
 | `committees-evidence` | 140,567 | 2012-12-07 | 2026-06-12 | Written and oral evidence submitted to select committees, through the same API. |
 | `tna-caselaw` | 74,896 | 1965-08-09 | 2026-06-11 | Find Case Law (The National Archives). ⚠ COVERAGE BEGINS 2003, not 2001 — 29 items are dated 2001–02 against 74,657 from 2003 on. TNA does not publish UKHL at all, so the House of Lords 1996–2009 is absent entirely. |
 | `pwdata-wms` | 23,863 | 2002-11-14 | 2026-07-16 | Commons written ministerial statements, one per section. Supersedes `written-statements`. |
@@ -44,7 +44,7 @@ The second number is the backlog. It is printed first so it cannot be skimmed pa
 | `uk-treaties` | 3,250 | 1955-01-01 | 2026-06-10 | UK treaty series as published by the FCDO. ⚠ UNREACHABLE BY ANY QUERY today — see docs/OPEN_ITEMS.md OI-3. |
 | `erskine-may` | 1,873 | — | — | Erskine May, the parliamentary procedure text, as published online. |
 | `oecd` | 505 | — | — | ⚠ CONTAINS NONE OF ITS OWN SUBJECT. 505 of 505 rows are gov.uk URLs with no OECD content. Staged for deletion in docs/C3_EXECUTE.sh. |
-| `ots-reports` | 497 | — | — | ⚠ SCOPE NOT HONOURED BY THE DATA. Intended: publications of the Office of Tax Simplification (222 documents by the publisher's own organisation filter). Actual: the first 500 results of a free-text gov.uk relevance search over 347,938 — 421 of 497 rows were published by somebody else. See OI-1. |
+| `ots-reports` | 497 | — | — | Publications of the Office of Tax Simplification. The OTS was abolished in 2023, so the universe is CLOSED AND FINITE: **222 documents**, by the publisher's own `filter_organisations` field, re-confirmed live on 2026-08-26. ⚠ THE DATA DOES NOT HONOUR THAT SCOPE YET: the 497 rows held are the first 500 results of a free-text gov.uk relevance search over 348,062, and **421 of the 497 were published by somebody else** (same verdicts on two runs two days apart). 76 are genuine and all 76 are inside the 222. ⚠⚠ AND 222 DOCUMENTS IS NOT 222 REPORTS: every row in this collection has `format = null` and a median of 399 words, because what is stored is the gov.uk LANDING PAGE — 143 of the 222 (64.4%) keep their substance in a PDF attachment nobody fetches, the same shape as `building-regs`. Quote it as '222 OTS documents, landing pages held'. See OI-1 and OI-24. |
 | `tax-treaties-dta` | 324 | 1961-02-27 | 2026-06-10 | Double taxation agreements. ⚠ UNREACHABLE BY ANY QUERY today — see OI-3. |
 | `cps-guidance` | 270 | 2018-07-16 | 2025-01-31 | Crown Prosecution Service legal guidance, as published. |
 | `building-regs` | 21 | — | — | The Approved Documents to the Building Regulations. ⚠ 21 rows, all gov.uk landing pages with no document behind them — the PDF fetch was never written. Approved Documents also incorporate BSI standards by reference, and BSI standards are sold, not published, so they can never be in the corpus. |
