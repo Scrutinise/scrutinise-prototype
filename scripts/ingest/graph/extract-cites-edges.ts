@@ -28,6 +28,24 @@
  * Zip access via graph/zip-reader.ts (streaming central directory) — adm-zip's
  * whole-file 1.4 GB Buffer fails allocation on this machine.
  *
+ * ⚠⚠ OI-15, FIXED HERE 26 Aug 2026 (GRAPH 4A §2). `legEntries` used to require a
+ * CALENDAR year in the zip entry name (`-(\d{4})-`). UK Acts were cited by
+ * REGNAL session until 1963 — `ukpga-Geo3-41-52-revised-data.xml` — so this
+ * extractor silently never opened **2,431 of 132,990 documents: 1,650 ukpga
+ * (37% of every Act in the file), all 660 `aep`, all 58 `apgb`**. Measured, not
+ * read: `audit-4a-blast-radius.ts` counts the entries; and of the 121,279 `cites`
+ * rows in the table, exactly ZERO have a regnal-year source.
+ *
+ * It is now `ENTRY_RX`, the widened form, shared with the 25-H extractor —
+ * ⚠ **shared deliberately, because the defect was a fix applied to one of two
+ * places that must agree.** July widened the URI *parser* for regnal ids and
+ * never touched the entry *filter*. One exported constant cannot drift from
+ * itself. `check-4a-entry-filter.ts` asserts the shipped filter is gone.
+ *
+ * ⚠ `legislation_edges` HAS NOT BEEN RE-EXTRACTED — this fixes the code, not the
+ * table. See `docs/GRAPH_4A_REPORT.md` §2 for the measured size of the hole and
+ * the decision that goes with re-running it.
+ *
  *   npx tsx graph/extract-cites-edges.ts --pilot [N=2000]   — stats + projection, no writes
  *   npx tsx graph/extract-cites-edges.ts [--to-act]         — full run (checkpointed)
  */
@@ -36,6 +54,7 @@ import path from 'path'
 import { ZipReader, ZipEntryMeta } from './zip-reader'
 import { endNeonPool } from '../shared/neon-pool'
 import { EdgeRow, dedupeEdges, edgeId, granularityOf, insertEdges, parseLegUri } from './graph-common'
+import { ENTRY_RX, gidFromEntry } from './audit-25h-citations'
 
 const ZIP_PATH = 'C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip'
 const CHECKPOINT = path.join(__dirname, 'cites-checkpoint.json')
@@ -74,7 +93,7 @@ function provisionMarks(xml: string): Array<{ at: number; id: string }> {
   return marks
 }
 
-function extractDoc(gid: string, xml: string): EdgeRow[] {
+export function extractDoc(gid: string, xml: string): EdgeRow[] {
   stats.docs++
   const zones = exclusionZones(xml)
   const inZone = zoneCursor(zones)
@@ -115,9 +134,13 @@ function collapseToAct(edges: EdgeRow[]): EdgeRow[] {
   }))
 }
 
-function legEntries(zip: ZipReader) {
+/** ⚠ OI-15. `ENTRY_RX` matches regnal-year filenames as well as calendar ones.
+ *  The old form is kept in the comment ONLY so a reader can see what changed —
+ *  it must never come back as code: `/\/([a-z]+)-(\d{4})-(\d+)-\w+-data\.xml$/`
+ *  skipped 2,431 documents including 37% of every Act in the file. */
+export function legEntries(zip: ZipReader) {
   return zip.entries
-    .map(e => ({ e, m: e.name.match(/\/([a-z]+)-(\d{4})-(\d+)-\w+-data\.xml$/) }))
+    .map(e => ({ e, m: e.name.match(ENTRY_RX) }))
     .filter((x): x is { e: ZipEntryMeta; m: RegExpMatchArray } => x.m != null)
 }
 
@@ -152,7 +175,9 @@ async function main() {
   const t0 = Date.now()
   for (let i = 0; i < entries.length; i += step) {
     const { e, m } = entries[i]
-    const gid = `${m[1]}/${m[2]}/${m[3]}`
+    // ⚠ gidFromEntry, not `m[1]/m[2]/m[3]` — a regnal match group is `Geo3-41`
+    // and has to become `Geo3/41` or every pre-1963 gid is malformed.
+    const gid = gidFromEntry(m)
     if (done.has(gid)) continue
     try {
       const xml = zip.readText(e)
@@ -197,4 +222,9 @@ async function main() {
   }
   await endNeonPool()
 }
-main().catch(e => { console.error('[cites] FATAL', e); process.exit(1) })
+// ⚠ Guarded: audit-4a-t2-hole.ts imports extractDoc/legEntries from this file,
+// and an unguarded main() would run the whole extraction — and WRITE — as a side
+// effect of that import. (The same trap is documented in audit-25h-citations.ts.)
+if (require.main === module) {
+  main().catch(e => { console.error('[cites] FATAL', e); process.exit(1) })
+}
