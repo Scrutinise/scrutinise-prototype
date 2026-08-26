@@ -26,6 +26,17 @@ import { NextResponse } from 'next/server';
  *
  * ⚠ The SHA is public information — it is a commit id in a repository, not a secret — and
  * nothing else about the environment is exposed here.
+ *
+ * ⚠ `mail` is here for the same reason the SHA is (added 26 Aug 2026). §19 records that the
+ * Vercel token is SAML-blocked, so environment variables cannot be read from a session at
+ * all — and "is email configured in production?" then becomes a question nobody can answer
+ * without Charlie opening a dashboard. It blocked the invite work twice. §19's own advice is
+ * to *"prefer a counter to a config read — a behavioural measurement taken from a reachable
+ * surface beats an unreachable config file every time"*, and this is that surface.
+ *
+ * It is a BOOLEAN — whether a key is present, never the key, never a length, never a prefix.
+ * "This deployment can send email" is not a secret; it is already visible to any admin who
+ * issues one invite and reads what the panel says happened.
  */
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +48,7 @@ export async function GET() {
       // server is not a deployment and should not claim to be one.
       commit: process.env.VERCEL_GIT_COMMIT_SHA ?? 'local',
       env: process.env.VERCEL_ENV ?? 'local',
+      mail: Boolean(process.env.RESEND_API_KEY),
     },
     { status: 200 },
   );
