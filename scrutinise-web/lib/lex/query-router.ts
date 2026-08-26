@@ -21,7 +21,9 @@ import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { fuseWeightedRrf, streamVectorWeight } from './fusion'
 import { interleaveStreams } from './interleave'
-import { mergeByCoverage, mergeCoverageEnabled } from './merge-coverage'
+import { mergeJudged, judgedMergeEnabled, minPerStream, relevanceFloorFromEnv } from './merge-judged'
+import { coverageSignalPresent } from './term-coverage'
+import { rerankCandidates, rerankerEnabled, type RerankCandidate, type RerankOutcome } from './reranker'
 import { sortByScore } from './score-scope'
 import { activeStreamScopes, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
@@ -301,10 +303,52 @@ export const STREAMS: StreamConfig[] = new Proxy([] as StreamConfig[], {
  *  puts this on `meta` so a caller — and scripts/check-stream-coverage.ts — can state which
  *  streams reached the answer without re-deriving stream membership from corpus names. */
 export interface RoutedSearchResult {
-  /** Every stream's hits, interleaved (see interleave.ts). Nothing is dropped here. */
+  /** Every stream's hits, merged (see interleave.ts / merge-judged.ts). Nothing is dropped here. */
   results: SearchResult[]
   /** Retrieved ids per stream, in that stream's own rank order. */
   perStream: Array<{ stream: RouterStreamName; ids: string[] }>
+  /**
+   * S14 §2 — WHICH MERGE RAN, and what it did. Present on every routed search.
+   *
+   * ⚠ `merge` NAMES THE ARM RATHER THAN LEAVING IT TO BE INFERRED FROM A FLAG. A caller reading a
+   * ranking has no other way to tell "the judged merge ran and changed nothing" from "the judged
+   * merge did not run", and those are different facts (CLAUDE.md §18's corollary).
+   */
+  merge: {
+    mode: 'round-robin' | 'judged'
+    /**
+     * Slots each stream took inside the top-20 window, keyed by stream name. The number Charlie's
+     * rule is about: a source CAN hold all twenty, and this is where that is visible.
+     *
+     * ⚠ MEASURED BEFORE THE GATEWAY'S HOLLOW-REPEAL SUPPRESSION, because that filter runs one
+     * layer up in `search-gateway.ts` and this function cannot see it. A caller comparing this
+     * against what it displays will find small differences on legislation-heavy queries, where
+     * whole-body dot-leader rows are removed after the merge. Stated rather than left to be found.
+     */
+    windowShare?: Record<string, number>
+    /** The reranker's outcome when it ran — including when it ran and failed. */
+    rerank?: Pick<RerankOutcome, 'applied' | 'reason' | 'read' | 'omitted' | 'invented' | 'duplicated' | 'model' | 'pence' | 'ms'>
+  }
+}
+
+/**
+ * S14 §1(b)/§3 — everything the merge needs beyond the streams' own rankings.
+ *
+ * All optional, and every one of them absent is a defined state that reduces to today's ordering:
+ * no confidence ⇒ uniform weights; no question ⇒ the reranker cannot run and says so.
+ */
+export interface RoutedSearchOptions {
+  /** (b) The router's own view of where the answer sits, per stream, 0..1. */
+  confidence?: Record<string, number> | null
+  /**
+   * (c) The USER'S question, verbatim — what the reranker judges relevance against.
+   *
+   * ⚠ NOT the union of the streams' tailored queries. Those are BM25 strings the router wrote to
+   * maximise keyword overlap; a model asked to order documents against them would be scoring
+   * vocabulary rather than whether the document answers anything, which is exactly the failure
+   * term coverage already has and the reranker exists to avoid.
+   */
+  question?: string
 }
 
 /**
@@ -321,15 +365,32 @@ export interface RoutedSearchResult {
  * Truncation stays where it belongs — with the caller that knows its own context budget — and is
  * now safe, because any prefix of an interleaved list is stream-balanced.
  */
-export async function runRoutedSearch(route: RouteResult, limit: number): Promise<RoutedSearchResult> {
+export async function runRoutedSearch(
+  route: RouteResult,
+  limit: number,
+  opts: RoutedSearchOptions = {},
+): Promise<RoutedSearchResult> {
   const active = streams().filter((s) => route[s.name])
+  // ⚠⚠ S14 §2 — CHARLIE'S RULE, APPLIED AT RETRIEVAL: "we need at least 20 from each source … we
+  // should never cut back the visibility when we add sources." `limit` is already a PER-STREAM
+  // budget, so adding a stream has never reduced what any other stream RETRIEVES; what this adds
+  // is a FLOOR under a small caller limit, so the judged pool is never thin because the gateway's
+  // default is 12. It applies ONLY on the judged path — with the flag off, `perStreamLimit` is
+  // `limit` and every byte of this function is what it was.
+  //
+  // ⚠ IT COSTS SOMETHING, AND THE COST HAS A KNOWN VICTIM. `results` is the interleaved sum, so
+  // widening every stream widens `results` — and the Deepening's sift is the one caller that reads
+  // `results` UNFILTERED and pays a per-candidate model cost (S11 §5.1, where a fan-out nobody had
+  // noticed hit its output ceiling). That is why this is behind the flag rather than simply raised.
+  const judged = judgedMergeEnabled()
+  const perStreamLimit = judged ? Math.max(limit, minPerStream()) : limit
   // ⚠ BRIEF_SEARCH_S5 §2 — BATCHED, and this is a prerequisite rather than an optimisation.
   // This was `Promise.all(active.map(...))`: five streams fired at once against a search service
   // that handles four, so ONE USER SATURATED IT. S5 makes five streams the normal case for the
   // Lex conversation rather than the exception, which is what turns a latent problem into a live
   // one. `maxInFlight` below is OBSERVED, so a limiter that silently failed open would show.
   const { results: perStream, stats } = await mapWithLimit(
-    active, streamConcurrency(), (s) => s.search(route[s.name]!, limit))
+    active, streamConcurrency(), (s) => s.search(route[s.name]!, perStreamLimit))
   if (active.length > stats.limit) {
     console.log('[query-router] streams batched', {
       streams: active.length, cap: stats.limit, maxInFlight: stats.maxInFlight, ms: stats.ms,
@@ -337,44 +398,91 @@ export async function runRoutedSearch(route: RouteResult, limit: number): Promis
   }
   const total = perStream.reduce((n, s) => n + s.length, 0)
 
-  // ── S13 §2 — the merge, with a flag-gated alternative arm ───────────────────────────────────
-  // ⚠ DEFAULT IS TODAY'S BEHAVIOUR, EXACTLY. With `LEX_MERGE_COVERAGE` off this is the same
+  // ── S14 §2 — the merge ──────────────────────────────────────────────────────────────────────
+  //
+  // ⚠ DEFAULT IS TODAY'S BEHAVIOUR, EXACTLY. With `LEX_SEARCH_JUDGED_MERGE` off this is the same
   // `interleaveStreams` call it always was, so "nothing changed until someone decides it should"
   // is structural rather than something to test.
+  //
+  // ⚠⚠ S13's `LEX_MERGE_COVERAGE` ARM IS GONE, NOT DEFAULTED OFF. It bought +2 of 65 while moving
+  // 24 of 34 rankings and taking two documents their own stream ranked SECOND to merged 117 and
+  // 149; D-5 recommended leaving it off and S14 §2 replaces it. A flag that survives its own
+  // replacement is how a dead branch gets re-enabled by somebody reading an old note. The SIGNAL
+  // it was built on survives in `term-coverage.ts`, where the judged merge uses it as a GATE
+  // rather than as the whole ordering — which is the specific thing that made it too crude.
+  const names = active.map((s) => s.name)
   let results: SearchResult[]
-  if (mergeCoverageEnabled()) {
-    // The query the coverage signal is scored against is the ROUTER'S TAILORED QUERY for each
-    // stream — but a cross-stream comparison needs ONE query, so the union of the tailored
-    // strings is used. Using one stream's query would score every other stream's documents
-    // against terms they were never retrieved for.
-    const unionQuery = active.map((s) => route[s.name]!).join(' ')
-    const out = mergeByCoverage(perStream, unionQuery, total)
-    if (out.applied) {
-      results = out.results
-      console.log('[query-router] merge=COVERAGE', {
-        streams: active.map((s) => s.name),
-        taken: out.taken, meanCoverage: out.meanCoverage,
-      })
-    } else {
-      // ⚠ OFF, FAILED AND UNMEASURABLE ARE THREE STATES. This branch is the third: the flag is ON
-      // and the arm could not run. It is an error, not a log line, because a measurement taken
-      // here would report "no effect" while having measured nothing.
-      results = out.results
-      console.error(
-        `[query-router] merge=COVERAGE requested but NOT APPLIED (${out.reason}) — fell back to round-robin. ` +
-        (out.reason === 'signal-absent'
-          ? 'The retrieval services are not sending `snippetMatched`, i.e. fts-serve/vector-serve predate S13 §3. REDEPLOY THEM; a restart re-runs the existing build and will not fix this.'
-          : ''),
-        { streams: active.map((s) => s.name) })
-    }
+  const merge: RoutedSearchResult['merge'] = { mode: judged ? 'judged' : 'round-robin' }
+
+  if (!judged) {
+    results = interleaveStreams(perStream, total, { names, label: 'runRoutedSearch' })
   } else {
-    results = interleaveStreams(perStream, total, {
-      names: active.map((s) => s.name),
-      label: 'runRoutedSearch',
+    // The query the coverage GATE is scored against is the union of the streams' tailored queries.
+    // A cross-stream comparison needs ONE query, and using any single stream's would score every
+    // other stream's documents against terms they were never retrieved for.
+    const unionQuery = active.map((s) => route[s.name]!).join(' ')
+    const relevanceFloor = relevanceFloorFromEnv()
+
+    // ⚠ THE GATE REFUSES TO RUN WITHOUT THE SIGNAL, AND SAYS SO. Coverage is scored over
+    // title+citation+snippet; on an `fts-serve`/`vector-serve` build older than S13 §3 the snippet
+    // is the first 300 characters of the document, so the gate would be measuring how often a
+    // query term lands in a document's opening — and would look exactly like a gate that does not
+    // help. OFF, FAILED and NOT-MEASURABLE are three states (CLAUDE.md §18).
+    let gate = relevanceFloor
+    if (gate != null && !coverageSignalPresent(perStream)) {
+      console.error('[query-router] merge=JUDGED — the relevance GATE is configured but the retrieval ' +
+        'services are not sending `snippetMatched`, i.e. fts-serve/vector-serve predate S13 §3. ' +
+        'THE GATE IS OFF FOR THIS QUERY; the ordering still ran. REDEPLOY the services — a restart ' +
+        're-runs the existing build and will not fix this.', { streams: names })
+      gate = null
+    }
+
+    // (c) The reranker, over the pooled candidates from ALL streams, after retrieval and before
+    // display. It never sees the merged list, so the cap it reads cannot be shaped by the
+    // rationing this sprint exists to remove (see reranker.ts on why the cap is round-robin).
+    let priority: Map<string, number> | null = null
+    if (rerankerEnabled()) {
+      if (!opts.question || !opts.question.trim()) {
+        console.error('[query-router] LEX_SEARCH_RERANKER is ON but no `question` reached runRoutedSearch — ' +
+          'the reranker CANNOT run and the deterministic ordering stands. This is a wiring fault, not a model failure.')
+        merge.rerank = { applied: false, reason: 'no-candidates', read: 0, omitted: 0, invented: 0, duplicated: 0, model: '(not called)', pence: null, ms: 0 }
+      } else {
+        const pool: RerankCandidate[][] = perStream.map((s, i) => s.map((r) => ({
+          id: r.id, stream: names[i], title: r.title, citation: r.citation,
+          snippet: r.snippet, snippetMatched: r.snippetMatched,
+        })))
+        const out = await rerankCandidates(opts.question, pool, { label: names.join('+') })
+        if (out.applied) priority = out.priority
+        merge.rerank = { applied: out.applied, reason: out.reason, read: out.read, omitted: out.omitted,
+          invented: out.invented, duplicated: out.duplicated, model: out.model, pence: out.pence, ms: out.ms }
+      }
+    }
+
+    const out = mergeJudged(perStream, {
+      streamNames: names, query: unionQuery, budget: total,
+      confidence: opts.confidence ?? null, relevanceFloor: gate, priority,
+    })
+    results = out.results
+    merge.windowShare = Object.fromEntries(names.map((nm, i) => [nm, out.report.takenInWindow[i]]))
+    console.log('[query-router] merge=JUDGED', {
+      streams: names,
+      perStreamLimit,
+      // ⚠ THE WINDOW SHARE IS THE POINT OF THE WHOLE SPRINT, so it is logged on every call. The
+      // round-robin's share was floor(20/S) for every stream by construction; anything else here
+      // is the judgement doing something, and a share that is still flat is a null result stated
+      // rather than a null result hidden.
+      windowShare: merge.windowShare,
+      confidence: out.report.confidence,
+      gate: gate ?? 'off',
+      gatedOut: out.report.gated,
+      meanCoverage: out.report.meanCoverage,
+      rerank: merge.rerank ? `${merge.rerank.model} applied=${merge.rerank.applied} read=${merge.rerank.read} omitted=${merge.rerank.omitted} ${merge.rerank.pence ?? '?'}p` : 'off',
     })
   }
+
   return {
     results,
     perStream: active.map((s, i) => ({ stream: s.name, ids: perStream[i].map((r) => r.id) })),
+    merge,
   }
 }

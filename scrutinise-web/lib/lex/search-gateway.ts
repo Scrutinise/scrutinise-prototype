@@ -19,7 +19,7 @@ import { flagEnabled } from '@/lib/env-flags'
 import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { groupForPanel } from './search-stub'
-import { expandQuery, routeQuery, routerEnabled } from './query-expansion'
+import { expandQuery, routeQuery, routeQueryDetailed, routerEnabled } from './query-expansion'
 import { runRoutedSearch, perStreamVectorActive, STREAMS } from './query-router'
 import { fuseWeightedRrf } from './fusion'
 // SURFACE 1: the gateway is 'the SINGLE point of contact with search', so it is where repeal
@@ -221,6 +221,14 @@ export interface GatewayResult {
      *  from corpus names, i.e. guessed. */
     perStream?: Array<{ stream: string; ids: string[] }>
     /**
+     * S14 §2 — WHICH MERGE PRODUCED THIS ORDER, and what share of the window each stream took.
+     * Present only on the routed path. ⚠ A caller reading a ranking has no other way to tell "the
+     * judged merge ran and changed nothing" from "the judged merge did not run" — and those are
+     * different facts (CLAUDE.md §18's corollary). It also carries the reranker's outcome,
+     * including the count of candidates the model left out of its ordering.
+     */
+    merge?: import('./query-router').RoutedSearchResult['merge']
+    /**
      * S11 §5.1 — WHAT WAS ASKED FOR, BESIDE WHAT ARRIVED. Present on every non-empty search.
      *
      * `limit` is a per-stream budget and `results` is the interleaved sum across streams, each
@@ -277,6 +285,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   let expansionAdded: string[] = []
   let routedStreams: string[] | undefined
   let perStream: Array<{ stream: string; ids: string[] }> | undefined
+  let merge: import('./query-router').RoutedSearchResult['merge'] | undefined
   let statistics: CatalogueSearchOutcome | undefined
   // Used only by the vector-fusion step below (4b), which routing doesn't touch
   // (out of this brief's scope) — defaults to the bare keywords when routed.
@@ -355,7 +364,11 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       ftsResults = out.results; failed = !!out.failed; failureReason = out.reason
     }
   } else if (flags.router) {
-    const route = await routeQuery(keywords, q.ideaContext ?? '')
+    // S14 §1(b)/§3 — the DETAILED form, which carries the router's per-stream confidences as well
+    // as its queries. `routeQuery` is a thin wrapper over this one, so there is still exactly one
+    // routing code path; what changes here is only how much of its answer this caller reads.
+    const decision = await routeQueryDetailed(keywords, q.ideaContext ?? '')
+    const route = decision?.route ?? null
     const streamNames = route ? Object.keys(route) : []
     if (route && streamNames.length) {
       routedStreams = streamNames
@@ -370,16 +383,26 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       // ⚠ `runRoutedSearch` simply does not match `statistics` — there is no `StreamScope`
       // of that name — so the route object needs no filtering before it is passed on.
       const [routed, stats] = await Promise.all([
-        runRoutedSearch(route, limit),
+        // ⚠ THE QUESTION IS THE CALLER'S OWN KEYWORDS, NOT THE ROUTER'S TAILORED QUERIES. The
+        // reranker judges whether a document ANSWERS the question; the tailored queries are BM25
+        // strings written to maximise keyword overlap, and ordering against those would score
+        // vocabulary — the failure term coverage already has (SEARCH_CONTRACT §4, GOLD V2 Q9).
+        runRoutedSearch(route, limit, {
+          confidence: decision?.confidence ?? null,
+          question: keywords.join(' '),
+        }),
         retrieveStatistics(route.statistics, q.intent),
       ])
       ftsResults = routed.results
       perStream = routed.perStream
+      merge = routed.merge
       statistics = stats
       console.log('[search-gateway] router dispatched', {
         intent: q.intent,
         streams: streamNames,
         perStream: Object.fromEntries(routed.perStream.map((s) => [s.stream, s.ids.length])),
+        merge: routed.merge.mode,
+        windowShare: routed.merge.windowShare ?? 'equal share by construction (round-robin)',
         statistics: stats
           ? { series: stats.results.length, withheld: stats.licenceWithheld, unavailable: stats.unavailable }
           : 'not selected',
@@ -549,7 +572,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   })
   return {
     intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics,
-    meta: { flags, expansionAdded, routedStreams, perStream, requested },
+    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested },
   }
 }
 

@@ -322,13 +322,68 @@ function withStats(schema: { type: string; properties: Record<string, unknown>; 
 const ROUTER_SCHEMA_STATS = withStats(ROUTER_SCHEMA_BASE)
 const ROUTER_SCHEMA_V2_STATS = withStats(ROUTER_SCHEMA_V2)
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * S14 §1(b) — STREAM CONFIDENCE. `LEX_ROUTER_CONFIDENCE`, default OFF.
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * The router already decides WHICH streams are relevant, and that decision is made about the
+ * streams TOGETHER — which makes it the one judgement in the whole pipeline that is cross-stream
+ * by construction. Everything else a merge could compare is either a within-index statistic (BM25,
+ * incomparable across indexes) or a within-stream rank (which carries no information about whose
+ * rank 1 is better — see merge-judged.ts on why plain rank fusion rebuilds round-robin).
+ *
+ * ⚠ APPENDED, NEVER WOVEN IN. With the flag off the schema and the prompt reach the model
+ * BYTE-IDENTICAL, so a measured change in which streams get SELECTED is attributable to the
+ * confidence question existing rather than to the prompt having been rewritten around it. That is
+ * the same discipline S8 §4 and S9 §4 used for their appended blocks, and for the same reason.
+ *
+ * ⚠ IT IS LAST IN `propertyOrdering`. Gemini emits alphabetically in practice (measured 2026-08-09
+ * by forcing truncation), so the hint is the most that can be done to make the thing a truncation
+ * destroys first be the OPTIONAL signal rather than the routing itself. Either way, `parseRoute`
+ * treats a missing ranking as absent, and an absent ranking means uniform weights — i.e. exactly
+ * today's ordering. **A lost ranking costs nothing; a lost stream query costs the stream.**
+ *
+ * ⚠⚠ IT IS AN ORDERED LIST OF NAMES, AND THE FIRST VERSION WAS AN OBJECT OF NUMBERS, WHICH FAILED
+ * IN THREE WAYS AT ONCE. Measured on 55 live router calls over the validated set, 26 Aug 2026:
+ *
+ *   1. **DEGENERATE — 12 of 55 calls (21.8%) truncated, against 0 of 55 without the question.**
+ *      The tails are the model writing an endless decimal: `…ends: "0000000000000000…"`,
+ *      `"999999999…"`, `"7777777…"`. Asking Gemini for a `number` destabilises generation exactly
+ *      as `maxLength` on a string did on 2026-08-09, which this file already records ("the
+ *      truncated tails showed the model degenerating into repetition"). A truncated route loses
+ *      the signal AND has to be salvaged.
+ *   2. **PARTIAL** — where it did answer, it commonly gave a value for ONE of four routed streams,
+ *      so three quarters of the streams fell back to the uniform weight.
+ *   3. **FLAT** — where two or more streams did get a value, the spread was 0.20. Weights that
+ *      close to uniform ARE round-robin; the arm would have measured "no effect" while never
+ *      having had one to make.
+ *
+ * A PERMUTATION OF KNOWN STRINGS CANNOT DO ANY OF THAT. It is finite by construction (there are
+ * five names), it is total (the prompt asks for all of them), and it is spread by definition —
+ * a ranking has no flat case. The numbers the merge needs are derived from the position, ours,
+ * deterministically, and the model is not asked to invent a scale it has no basis for.
+ */
+function withConfidence(schema: { type: string; properties: Record<string, unknown>; propertyOrdering: string[] }) {
+  return {
+    ...schema,
+    properties: {
+      ...schema.properties,
+      streamRanking: { type: 'array', items: { type: 'string' } },
+    },
+    propertyOrdering: [...schema.propertyOrdering, 'streamRanking'],
+  }
+}
+
 const routerSchema = () => {
   const v2 = flagEnabled('LEX_ROUTER_STREAMS_V2')
   const stats = flagEnabled('LEX_STATS_STREAM')
-  if (v2 && stats) return ROUTER_SCHEMA_V2_STATS
-  if (v2) return ROUTER_SCHEMA_V2
-  if (stats) return ROUTER_SCHEMA_STATS
-  return ROUTER_SCHEMA_BASE
+  const base =
+    v2 && stats ? ROUTER_SCHEMA_V2_STATS
+    : v2 ? ROUTER_SCHEMA_V2
+    : stats ? ROUTER_SCHEMA_STATS
+    : ROUTER_SCHEMA_BASE
+  return flagEnabled('LEX_ROUTER_CONFIDENCE') ? withConfidence(base as any) : base
 }
 
 // ── measurement switches ─────────────────────────────────────────────────────
@@ -440,10 +495,37 @@ If in doubt, omit statistics. A question that would be no worse answered without
 
 ⚠⚠ THE statistics QUERY IS SHORTER THAN THE OTHERS — THREE TO SIX WORDS, not six to twelve. It is matched against series TITLES of about five words, not against document text, so every extra word is a chance to match the wrong series on an accident. Measured examples of exactly that: "Office Budget Responsibility" matched *Home Office*; "each year" matched *Life expectancy at birth (years)*; "international comparison" matched *GDP per capita, PPP (current international $)*. Write the geography and the quantity and STOP: "UK alcohol duty receipts", "UK unemployment rate", "UK tax gap", "UK public sector net borrowing". No publisher names, no words like series, data, figures, statistics, official, annual, comparison, or trend.`
 
+/**
+ * S14 §1(b). ⚠ THE INSTRUCTION IS WRITTEN AGAINST TWO FAILURE MODES, NEITHER OF WHICH IS "ERROR".
+ *
+ * FLATNESS — a model asked "how confident are you" about five options it has already judged
+ * relevant will happily return 0.8 for all five, and a flat set of weights is arithmetically
+ * identical to no weights at all: the merge falls straight back to round-robin while the
+ * measurement reports that confidence "made no difference". Asking for an ORDER removes the flat
+ * case entirely; a permutation cannot be flat.
+ *
+ * MISREADING THE QUESTION — "which corpus is most RELEVANT" and "which corpus HOLDS THE ANSWER"
+ * give different orders, and only the second is useful. The eviction example is in the prompt
+ * because it is the clearest case where they diverge: Hansard is highly relevant to the subject
+ * and does not contain the answer.
+ */
+const ROUTER_PROMPT_CONFIDENCE = `
+
+Finally, return "streamRanking": the corpora you named above, listed from the one MOST likely to
+contain the document that answers this question to the one LEAST likely.
+
+This is not a ranking of how relevant each corpus is to the SUBJECT. It is a bet on where the
+answer actually sits. "Is this eviction notice valid" is answered by the statute and by judgments;
+Hansard will discuss the subject at length and will not contain the answer, so debates ranks last.
+
+Include every corpus you named, exactly once, and nothing else. Names only — no numbers, no
+explanation.`
+
 function routerSystemPrompt(): string {
   const base = ROUTER_PROMPT_BASE
     + (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_PROMPT_V2_STREAMS : '')
     + (flagEnabled('LEX_STATS_STREAM') ? ROUTER_PROMPT_STATS_STREAM : '')
+    + (flagEnabled('LEX_ROUTER_CONFIDENCE') ? ROUTER_PROMPT_CONFIDENCE : '')
   return base + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)
 }
 
@@ -515,11 +597,115 @@ function salvageRoute(raw: string): RouteResult {
   return out
 }
 
-function parseRoute(raw: string): { route: RouteResult; mode: 'full' | 'partial' } | null {
+/**
+ * S14 §1(b) — the router's own view of where the answer sits, as a per-stream WEIGHT.
+ *
+ * ⚠ THE MODEL DOES NOT PRODUCE THESE NUMBERS. It produces an ORDER (`streamRanking`); the weights
+ * are derived from the position by `rankWeight`, ours and deterministic. See `withConfidence` for
+ * the measured reason — asking Gemini for numbers made it write an endless decimal on one call in
+ * five.
+ *
+ * ⚠ A STREAM ABSENT FROM THIS MAP IS NOT A ZERO. It means the model did not rank it, and the merge
+ * treats "did not say" as UNIFORM (weight 1) — i.e. exactly today's ordering for that stream.
+ * Defaulting a missing weight to 0 would silently delete a routed stream from the window on the
+ * strength of a field the model simply omitted.
+ */
+export type StreamConfidence = Partial<Record<RouterStreamName, number>>
+
+/** The ranking a route carried, in order, for a report that wants to show what the model said
+ *  rather than the weights derived from it. Recomputed from the weights: they are monotone in
+ *  position, so the order is recoverable and nothing has to be stored twice. */
+export function rankingOf(c: StreamConfidence | null | undefined): string[] {
+  if (!c) return []
+  return Object.entries(c).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([k]) => k)
+}
+
+export interface RouteDecision {
+  route: RouteResult
+  /** NULL when `LEX_ROUTER_CONFIDENCE` is off or the model returned nothing usable. Never `{}` for
+   *  the first of those — off and empty are different facts (CLAUDE.md §18's corollary). */
+  confidence: StreamConfidence | null
+}
+
+/**
+ * Position → weight. OURS, deterministic, and derived rather than asked for — see `withConfidence`
+ * on why the model is not given a scale to invent.
+ *
+ * ⚠⚠ THE DECAY IS A POLICY DIAL WITH AN EXACT MEANING, AND MY FIRST VALUE FOR IT WAS WRONG.
+ *
+ * `merge-judged.ts` orders by `w(stream) / (k + rank)` with k = 60. Work the inequality through and
+ * the dial says exactly one thing: **how many ranks a stream's priority is worth.** The top-ranked
+ * stream's rank-`r` result outranks the next stream's rank-0 result precisely when `d > r / 61`.
+ *
+ *     d = 0.07   priority is worth about  4 ranks
+ *     d = 0.16   priority is worth about 10 ranks
+ *     d = 0.35   priority is worth about 21 ranks  ← the first value shipped here
+ *
+ * ⚠ AT 0.35 THE TOP STREAM'S ENTIRE TOP-20 OUTRANKS EVERY OTHER STREAM'S BEST, so one source takes
+ * the whole window on every multi-stream query. Measured on the validated set: **mean maximum share
+ * 19.9 of 20, on 40 of 40 questions routing three or more streams**, and documents their own stream
+ * ranked FIRST landing at merged rank 59. Charlie's rule is *"it MIGHT be that one source has all
+ * the top 20"* — not that one always does.
+ *
+ * ⚠ 0.07 IS NOT A VALUE PICKED OFF A RECALL CURVE. That would be a value fitted to 64 questions,
+ * which BRIEF_SEARCH_S14 §6 forbids and which this project has the receipts for. It is the value at
+ * which the policy reads "a stream the router put first is worth about four ranks of in-stream
+ * evidence" — a statement about what the signal means, chosen before looking at what it scores.
+ * ⚠ It is therefore ALSO UNMEASURED; the arm in the report was taken at 0.35, and says so.
+ * `check-s14-merge.ts` asserts the constant still matches the stated policy.
+ */
+export const CONFIDENCE_DECAY_DEFAULT = 0.07
+export function rankWeight(position: number): number {
+  const decay = Number(process.env.LEX_ROUTER_CONFIDENCE_DECAY ?? String(CONFIDENCE_DECAY_DEFAULT))
+  const d = Number.isFinite(decay) && decay >= 0 ? decay : CONFIDENCE_DECAY_DEFAULT
+  return 1 / (1 + Math.max(0, position) * d)
+}
+
+/**
+ * Read `streamRanking` into per-stream weights.
+ *
+ * ⚠ THREE DIFFERENT ABSENCES, KEPT APART, because collapsing them is how a routed stream would be
+ * deleted from the window on the strength of a field the model simply did not write:
+ *   · no usable ranking at all      → `null`, i.e. UNIFORM weights, i.e. exactly today's ordering;
+ *   · a routed stream not in the ranking → it sorts after every stream that IS ranked (position
+ *     `ranking.length`), which is what "the model listed the others and not this one" means;
+ *   · a name in the ranking that was never routed → ignored, and counted in the log. It cannot
+ *     weight a stream that was not searched.
+ */
+function parseRanking(o: Record<string, unknown>, route: RouteResult): StreamConfidence | null {
+  const raw = o.streamRanking
+  if (!Array.isArray(raw)) return null
+  const routed = new Set(Object.keys(route))
+  const order: string[] = []
+  let unknown = 0
+  for (const v of raw) {
+    const name = typeof v === 'string' ? v.trim().toLowerCase() : ''
+    if (!routed.has(name)) { if (name) unknown++; continue }
+    if (!order.includes(name)) order.push(name)
+  }
+  if (!order.length) return null
+  const out: StreamConfidence = {}
+  for (const name of routed) {
+    const i = order.indexOf(name)
+    out[name as RouterStreamName] = rankWeight(i >= 0 ? i : order.length)
+  }
+  if (unknown) {
+    console.warn(`[query-router] streamRanking named ${unknown} corpus(es) that were not routed — IGNORED; a ranking cannot weight a stream that was never searched`)
+  }
+  return out
+}
+
+function parseRoute(raw: string): { route: RouteResult; confidence: StreamConfidence | null; mode: 'full' | 'partial' } | null {
   let obj: unknown
   try { obj = JSON.parse(raw) } catch {
+    // ⚠ NO CONFIDENCE IS SALVAGED FROM A TRUNCATED PAYLOAD. The salvage regex recovers stream
+    // QUERIES by matching a complete `"name": "value"` pair; a half-written confidence object
+    // would need its own parser, and the failure it would introduce (a partial set of weights, so
+    // some streams weighted and some uniform) is worse than no weights at all, which is today's
+    // ordering. A partial route with uniform weights is a well-defined state; a partial route with
+    // partial weights is a ranking nobody chose.
     const salvaged = salvageRoute(raw)
-    return Object.keys(salvaged).length ? { route: capRoute(salvaged), mode: 'partial' } : null
+    return Object.keys(salvaged).length ? { route: capRoute(salvaged), confidence: null, mode: 'partial' } : null
   }
   if (!obj || typeof obj !== 'object') return null
   const o = obj as Record<string, unknown>
@@ -528,7 +714,8 @@ function parseRoute(raw: string): { route: RouteResult; mode: 'full' | 'partial'
     const v = o[stream]
     if (typeof v === 'string' && v.trim().length > 0) out[stream] = v.trim()
   }
-  return { route: capRoute(out), mode: 'full' }
+  const route = capRoute(out)
+  return { route, confidence: flagEnabled('LEX_ROUTER_CONFIDENCE') ? parseRanking(o, route) : null, mode: 'full' }
 }
 
 /** Apply the word cap to every stream query. One place, so a salvaged route and a fully parsed
@@ -553,6 +740,17 @@ function capRoute(route: RouteResult): RouteResult {
  * against, so it degrades the same way.
  */
 export async function routeQuery(keywords: string[], ideaContext: string): Promise<RouteResult | null> {
+  return (await routeQueryDetailed(keywords, ideaContext))?.route ?? null
+}
+
+/**
+ * The same call, with the S14 §1(b) stream confidences attached.
+ *
+ * ⚠ `routeQuery` IS A THIN WRAPPER OVER THIS, NOT A SECOND IMPLEMENTATION. Every existing caller
+ * keeps the shape it was written against and there is exactly one routing code path, so a change
+ * to routing cannot reach one caller and not the other.
+ */
+export async function routeQueryDetailed(keywords: string[], ideaContext: string): Promise<RouteDecision | null> {
   // OFF is not a failure — but it is not nothing either, and it used to be silent.
   // It now emits its OWN counted outcome so a reader of the log, or of
   // routeOutcomeCounts(), can tell "never asked to route" from "asked and could not".
@@ -601,7 +799,7 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
     if (res.reason === 'truncated' && res.text && salvageEnabled()) {
       const salvaged = parseRoute(res.text)
       if (salvaged && Object.keys(salvaged.route).length) {
-        return routeSucceeded('partial', salvaged.route,
+        return routeSucceeded('partial', salvaged.route, salvaged.confidence,
           `recovered ${Object.keys(salvaged.route).length} stream(s) from a truncated payload; the trailing partial was discarded. ${res.detail}`)
       }
     }
@@ -615,7 +813,7 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
     // otherwise a router that has quietly stopped choosing looks exactly like one that is off.
     return routerFailOpen('no-streams-named', 'the model judged every stream irrelevant')
   }
-  return routeSucceeded(parsed.mode, parsed.route)
+  return routeSucceeded(parsed.mode, parsed.route, parsed.confidence)
 }
 
 // ── route_outcome, counted and logged (§2.3) ─────────────────────────────────
@@ -642,9 +840,22 @@ function logRouteOutcome(outcome: RouteOutcome, streams: string[], note?: string
   else console.log(line)
 }
 
-function routeSucceeded(mode: 'full' | 'partial', route: RouteResult, note?: string): RouteResult {
-  logRouteOutcome(mode, Object.keys(route), note)
-  return route
+function routeSucceeded(
+  mode: 'full' | 'partial',
+  route: RouteResult,
+  confidence: StreamConfidence | null,
+  note?: string,
+): RouteDecision {
+  // ⚠ THE RANKING IS LOGGED WITH THE OUTCOME, INCLUDING WHEN THERE IS NONE. A ranking that covers
+  // only some of the routed streams still weights the rest, so the log prints BOTH the order and
+  // how many streams it actually covered — "the signal arrived" and "the signal arrived for one
+  // stream out of four" are different facts, and the numeric version of this field failed mostly
+  // in the second way (see `withConfidence`).
+  const spread = confidence
+    ? ` streamRanking=${rankingOf(confidence).join('>')} covering ${Object.keys(confidence).length}/${Object.keys(route).length} routed`
+    : flagEnabled('LEX_ROUTER_CONFIDENCE') ? ' streamRanking=NONE-RETURNED(uniform weights stand)' : ''
+  logRouteOutcome(mode, Object.keys(route), `${note ?? ''}${spread}`.trim() || undefined)
+  return { route, confidence }
 }
 
 /**

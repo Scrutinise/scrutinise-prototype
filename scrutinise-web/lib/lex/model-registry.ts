@@ -95,6 +95,36 @@ export const PASS_DEFAULTS = {
   // ── retrieval support ──
   'search.query-expansion': 'gemini-2.5-flash',
   'search.query-router': 'gemini-2.5-flash',
+  /**
+   * S14 §3 — ordering the pooled candidates from every stream against the user's question.
+   *
+   * ⚠⚠ THIS WAS `gemini-2.5-pro` ON REASONING AND IS `gemini-2.5-flash` ON MEASUREMENT. The
+   * reasoning was sound and the measurement disagreed with it, so the measurement wins.
+   *
+   * The argument for Pro: every other retrieval-support pass here writes a search STRING, which
+   * Flash does well and cheaply, whereas this one makes a JUDGEMENT about which of sixty documents
+   * answers a question — the class `MODEL_CONTRACT.md` §5 names Pro for. BRIEF_SEARCH_S14 §3 warns
+   * against the opposite mistake by name: a recent Lex sprint found its adversarial pass running on
+   * the cheapest model available and producing 407 output tokens for six issues.
+   *
+   * Measured over the 64 validated questions, identical inputs, echoed model checked on every call
+   * (`docs/SEARCH_S14_REPORT.md` §3.1):
+   *
+   *                        recall@20   recall@5   cost/query   latency   completed
+   *     gemini-2.5-pro       18/64       10/64      2.551p      34.7 s     44/64
+   *     gemini-2.5-flash     19/64       15/64      0.221p       1.6 s     63/64
+   *
+   * Flash is **11.5× cheaper, 22× faster, better on both recall figures, and finished 63 of 64
+   * calls against Pro's 44** — Pro exhausts its output budget on a third of queries even with the
+   * full thinking headroom, because thinking tokens come out of the same ceiling. On a task whose
+   * entire output is a permutation of sixty integers, the reasoning model's advantage does not
+   * appear and its cost does.
+   *
+   * ⚠ Pro remains one override away (`LEX_MODEL__SEARCH_RERANKER=gemini-2.5-pro`) and remains
+   * reachable ONLY through `model-call.ts`: it REFUSES `thinkingBudget: 0` (400 — "This model only
+   * works in thinking mode"), so any caller hardcoding a zero budget cannot use it at all.
+   */
+  'search.reranker': 'gemini-2.5-flash',
   // ── the build (25-A) ──
   'build.draft': 'gemini-2.5-flash',
   'build.settle': 'gemini-2.5-flash',
