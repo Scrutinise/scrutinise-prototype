@@ -26,45 +26,28 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import JSZip from 'jszip'
+import { DEFAULT_QUESTION_TAGS } from '@/lib/community'
 
 const APPLY = process.argv.includes('--apply')
 const SRC = resolve(process.cwd(), '../docs/Central_Question_Upload_Template_CCh version.xlsx')
 const OUT = resolve(process.cwd(), 'public/central-question-upload-template.xlsx')
 
 /**
- * The 24 UK ministerial departments.
+ * The topic column is REPLACED with the canonical set, not appended to.
  *
- * Ministerial departments only — deliberately NOT the ~400 agencies, arm's
- * length bodies and non-ministerial departments, which would make the topic
- * list unusable as a drop-down. A Community admin can add any of those as an
- * ordinary topic if they turn out to be needed.
+ * ⚠ ONE SOURCE OF TRUTH (26 Aug 2026). The list lives in
+ * `DEFAULT_QUESTION_TAGS` in lib/community.ts, which is also what seeds a new
+ * Community and what the importer validates against. A second copy here is how
+ * the served template and the live tag set drift apart — which is exactly what
+ * happened when this script appended 24 ministerial department names that the
+ * taxonomy then dropped.
+ *
+ * Those departments are gone: wrong axis (a department is who answers, not what
+ * a question is about) and they are renamed at every reshuffle.
  */
-export const GOVERNMENT_DEPARTMENTS = [
-  'Attorney General’s Office',
-  'Cabinet Office',
-  'Department for Business and Trade',
-  'Department for Culture, Media and Sport',
-  'Department for Education',
-  'Department for Energy Security and Net Zero',
-  'Department for Environment, Food and Rural Affairs',
-  'Department for Science, Innovation and Technology',
-  'Department for Transport',
-  'Department for Work and Pensions',
-  'Department of Health and Social Care',
-  'Foreign, Commonwealth and Development Office',
-  'HM Treasury',
-  'Home Office',
-  'Ministry of Defence',
-  'Ministry of Housing, Communities and Local Government',
-  'Ministry of Justice',
-  'Northern Ireland Office',
-  'Office of the Advocate General for Scotland',
-  'Office of the Leader of the House of Commons',
-  'Office of the Leader of the House of Lords',
-  'Scotland Office',
-  'UK Export Finance',
-  'Wales Office',
-]
+function canonicalTopics(): string[] {
+  return DEFAULT_QUESTION_TAGS.filter((t) => t.kind === 'TOPIC').map((t) => t.label)
+}
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -125,16 +108,18 @@ async function main() {
   console.log(`contexts (col A)  : ${colA.length - 1} — untouched, the drop-down reads A2:A9`)
   console.log(`topics now        : ${currentTopics.length} — ${currentTopics.join(', ')}`)
 
-  const toAdd = GOVERNMENT_DEPARTMENTS.filter(
-    (d) => !currentTopics.some((t) => t.toLowerCase() === esc(d).toLowerCase()),
-  )
-  console.log(`departments to add: ${toAdd.length}`)
-  if (!toAdd.length) console.log('  (nothing to do)')
+  const wanted = canonicalTopics()
+  console.log(`topics wanted     : ${wanted.length} — ${wanted.join(', ')}`)
+  const dropped = currentTopics.filter((t) => !wanted.some((w) => esc(w) === t))
+  if (dropped.length) console.log(`dropped           : ${dropped.length} — ${dropped.join(', ')}`)
 
   // ── rebuild sheetData ──────────────────────────────────────────────────────
   // Column A and B keep their rows exactly. Column C grows. The footnote moves
   // to the row after the longest column so it never lands mid-list.
-  const topicSis = [...colC, ...toAdd.map((d) => stringIndex(d))]
+  // Column C is REBUILT from the canonical list — header cell kept, every value
+  // below it replaced. Appending was what let the served template and the live
+  // tag set drift apart.
+  const topicSis = [colC[0], ...wanted.map((t) => stringIndex(t))]
   const bodyRows = Math.max(colA.length, colB.length, topicSis.length)
   const footnoteRow = bodyRows + 2
 
