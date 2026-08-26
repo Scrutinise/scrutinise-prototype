@@ -138,6 +138,46 @@ export default function BuildFindings({ highlights }: { highlights: BuildHighlig
         </section>
       )}
 
+      {/* ══ 4. Terms of art — 25-H §6's "what we found that you didn't mention" ══
+          ⚠ MOVED TO THE TOP OF THIS PANEL AND RENAMED. Charlie: *"There should also be in
+          that P1 page, an additional box listing anything new discovered in the model
+          research."* This is that box, and it was already being computed — it sat fifth in
+          a list, under a heading about vocabulary, which is why it read as a footnote.
+
+          It is the clearest single demonstration that the platform did something the user
+          could not do themselves: a term they have never heard of, retrieved from the
+          record, that changes what is possible. Carltona is the example — none of four
+          public chat models found that it can be ousted by specific statutory language. */}
+      {(highlights.vocabulary.confirmed.length > 0 || highlights.vocabulary.unverified.length > 0) && (
+        <section className="px-4 py-4 border-b border-zinc-100">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            What I found that you didn’t mention
+          </h3>
+          <p className="text-[11px] text-zinc-400 mt-0.5">
+            Statutes, doctrines and offices the record uses for a problem like yours — none of them in
+            what you wrote. ⚠ Anything the corpus could not confirm is marked and is a lead worth
+            following, not a finding.
+          </p>
+          {highlights.vocabulary.confirmed.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {highlights.vocabulary.confirmed.map((t) => (
+                <li key={t} className="text-sm text-zinc-800">✓ {t}</li>
+              ))}
+            </ul>
+          )}
+          {highlights.vocabulary.unverified.length > 0 && (
+            <ul className="mt-2 space-y-1.5">
+              {highlights.vocabulary.unverified.map((u) => (
+                <li key={u.term} className="text-sm text-amber-800">
+                  <span className="font-medium">Unverified — {u.term}</span>
+                  <span className="block text-xs text-amber-700/90">{u.why}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {/* ══ 3. Cited findings, ranked ══════════════════════════════════════ */}
       {highlights.leading.length > 0 && (
         <section className="px-4 py-4 border-b border-zinc-100">
@@ -204,36 +244,6 @@ export default function BuildFindings({ highlights }: { highlights: BuildHighlig
               </li>
             ))}
           </ul>
-        </section>
-      )}
-
-      {/* ══ 4. Terms of art ════════════════════════════════════════════════ */}
-      {(highlights.vocabulary.confirmed.length > 0 || highlights.vocabulary.unverified.length > 0) && (
-        <section className="px-4 py-4 border-b border-zinc-100">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            The words this field actually uses
-          </h3>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            Terms of art other models reached for when given your own account. Anything the corpus could
-            not confirm is marked — it is a lead worth following, not a finding.
-          </p>
-          {highlights.vocabulary.confirmed.length > 0 && (
-            <ul className="mt-2 space-y-1">
-              {highlights.vocabulary.confirmed.map((t) => (
-                <li key={t} className="text-sm text-zinc-800">✓ {t}</li>
-              ))}
-            </ul>
-          )}
-          {highlights.vocabulary.unverified.length > 0 && (
-            <ul className="mt-2 space-y-1.5">
-              {highlights.vocabulary.unverified.map((u) => (
-                <li key={u.term} className="text-sm text-amber-800">
-                  <span className="font-medium">Unverified — {u.term}</span>
-                  <span className="block text-xs text-amber-700/90">{u.why}</span>
-                </li>
-              ))}
-            </ul>
-          )}
         </section>
       )}
 

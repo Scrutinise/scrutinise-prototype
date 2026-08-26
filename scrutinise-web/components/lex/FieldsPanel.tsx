@@ -368,14 +368,36 @@ function OutputField({
 
 // A field further down the ACTIVE stage — shown greyed-out so the user can see the
 // shape of what's coming, but not workable until the flow reaches it (§19-B Task 3).
-function QueuedField({ field }: { field: CanonicalField }) {
+/**
+ * ⚠ 25-H §7d — A QUEUED FIELD NOW SAYS WHAT IT IS WAITING FOR AND WHAT RELEASES IT.
+ *
+ * Charlie, on the coherence check: *"I guess I have to go through and approve and save
+ * before the coherence check can be carried out?"* He was right — a field becomes current
+ * only when every field before it on the page is terminal, so the coherence check waits on
+ * the actions loop being confirmed or skipped.
+ *
+ * §7d: *"Whatever the answer, the screen must say it: what is waiting, on what, and what
+ * the user must do to release it."* It said "next up", which is a position, not a
+ * condition — and a user who has to GUESS the rule will guess wrong and conclude the
+ * feature is broken.
+ *
+ * ⚠ THE BLOCKER IS NAMED, NOT DESCRIBED GENERICALLY. "Waiting on something above" is the
+ * same non-answer in more words; the field that is actually holding it up is passed in.
+ */
+function QueuedField({ field, waitingOn }: { field: CanonicalField; waitingOn?: string }) {
   return (
     <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-2">
       <div className="flex items-center gap-2">
         <span className="shrink-0 w-4 h-4 rounded-full bg-zinc-200" />
         <span className="text-sm text-zinc-400 flex-1">{field.label}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-300">next up</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-300">waiting</span>
       </div>
+      {waitingOn && (
+        <p className="text-[11px] text-zinc-400 mt-1 pl-6 leading-snug">
+          Waiting on <span className="font-medium text-zinc-500">{waitingOn}</span> — save or skip
+          that and this opens.
+        </p>
+      )}
     </div>
   )
 }
@@ -646,8 +668,31 @@ function CausesField({ field, causes, busy, api }: { field: CanonicalField; caus
       {/* §19-C Task 7 — cards stay editable AFTER the loop is confirmed. Previously a
           confirmed loop rendered read-only, which is why three Lex-seeded road-traffic
           causes could not be deleted from a data-protection idea. */}
+      {/* ⚠⚠ 25-H §7a — "the map view does not work — only the list renders".
+          It was not broken. `CauseTreeView` draws a nested tree from `parentCauseId`, and
+          the build never set one — every cause was a root, the tree had no edges, and the
+          map rendered a flat list identical to the list view. A view that silently looks
+          like another view is indistinguishable from a view that failed.
+
+          The build now emits `drivenBy` and nests the causes (lib/lex/build.ts
+          `nestByDrivenBy`), so there is usually a chain to draw. When there genuinely is
+          not — every cause independent, which is a real answer — the map SAYS so instead of
+          impersonating the list. */}
       {view === 'map' ? (
-        <CauseTreeView nodes={tree} busy={busy} api={api} />
+        tree.some((n) => n.kids.length > 0) ? (
+          <CauseTreeView nodes={tree} busy={busy} api={api} />
+        ) : (
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-amber-700 bg-amber-50/60 border border-amber-200 rounded-lg px-2 py-1.5">
+              Nothing here drives anything else yet, so the map is the same as the list. Use
+              “beneath” on a cause to say which one it follows from — that chain is the most useful
+              thing a diagnosis can say.
+            </p>
+            {causes.map((cause) => (
+              <CauseCard key={cause.id} cause={cause} depth={0} busy={busy} api={api} />
+            ))}
+          </div>
+        )
       ) : (
         <div className="space-y-1.5">
           {causes.map((cause) => (
@@ -1435,9 +1480,12 @@ export default function FieldsPanel({
               <div className={`space-y-2 ${isActive ? `border-l-2 ${accent.border} pl-3` : ''}`}>
                 {page.fields.map((f, i) => {
                   const queued = currentIdx >= 0 && i > currentIdx && !isTerminal(f)
+                  // 25-H §7d — the field actually holding this one up: the first
+                  // non-terminal one above it, which is what `currentIdx` points at.
+                  const blocker = queued ? page.fields[currentIdx]?.label : undefined
                   return (
                     <div key={f.key} ref={f.key === currentFieldKey ? activeRef : undefined}>
-                      {queued ? <QueuedField field={f} /> : renderField(f)}
+                      {queued ? <QueuedField field={f} waitingOn={blocker} /> : renderField(f)}
                     </div>
                   )
                 })}

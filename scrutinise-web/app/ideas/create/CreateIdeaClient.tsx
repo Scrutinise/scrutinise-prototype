@@ -68,6 +68,34 @@ function Spinner() {
 
 type Tab = 'chat' | 'fields' | 'background'
 
+/**
+ * 25-H §5 — a collapsed panel, as a slim labelled edge.
+ *
+ * ⚠ PRESENT, NOT ABSENT. §5: "collapse to slim, labelled edges — present, not absent, so
+ * the user knows what is coming." A panel that vanishes teaches the user it does not
+ * exist; one that is a labelled strip teaches them it is waiting. The hint says WHAT it is
+ * waiting for, so "empty" and "not yet" are not the same thing on screen.
+ *
+ * ⚠ DESKTOP ONLY. On mobile the three panels are already a tab bar — there is nothing to
+ * collapse, and rendering an edge beside the tabs would be a second navigation for the
+ * same thing.
+ */
+function PanelEdge({ label, hint, onOpen }: { label: string; hint: string; onOpen: () => void }) {
+  return (
+    <button
+      onClick={onOpen}
+      title={`Open ${label}`}
+      className="hidden lg:flex h-full w-full border-l border-zinc-200 bg-zinc-50/70 hover:bg-zinc-100 transition-colors items-start justify-center pt-4"
+    >
+      <span className="[writing-mode:vertical-rl] rotate-180 text-[11px] tracking-wide text-zinc-500 whitespace-nowrap">
+        <span className="font-semibold text-zinc-700">{label}</span>
+        <span className="mx-2 text-zinc-300">·</span>
+        {hint}
+      </span>
+    </button>
+  )
+}
+
 export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea, surface = null }: Props) {
   const opening = openingBubbles?.length ? openingBubbles : DEFAULT_OPENING
 
@@ -87,6 +115,22 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const [tab, setTab] = useState<Tab>('chat')
   // Sprint 1.4: on a user's very first idea, open the walkthrough unprompted.
   const [showHelp, setShowHelp] = useState(Boolean(isFirstIdea))
+  /**
+   * ⚠ 25-H §5 — PROGRESSIVE DISCLOSURE, AND `null` IS NOT `false`.
+   *
+   * Charlie: *"perhaps it's cleaner to minimise the RH panel when in this first stage, even
+   * collapse the middle and right hand panels at first, but there should be an easy and
+   * clear UI to get them back."*
+   *
+   * `null` means "nobody has said" — the panel follows CONTENT, opening by itself once
+   * there is something in it. A boolean would freeze the first render's answer: a user who
+   * arrived before the build finished would keep an empty-looking panel closed for ever,
+   * and one who arrived after would never see the uncluttered first stage. The moment the
+   * user touches a toggle their answer wins and stops being recomputed.
+   */
+  const [panelOpen, setPanelOpen] = useState<{ fields: boolean | null; background: boolean | null }>(
+    { fields: null, background: null },
+  )
   const bootedRef = useRef(false)
 
   // ── Boot: ensure an idea exists, then load canonical state ─────────────────
@@ -391,6 +435,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   // The accept CARD lives in chat for Lex-PROPOSED scalars (title/keywords/challenge/
   // pivotalObstacle/summaryDiagnosis). Box-authored fields (narrative/structured/loop/
   // reference) are their own accept surface in the Fields panel (§5/§13 + §7).
+  // ⚠ 25-H §5 — WHAT COUNTS AS "SOMETHING IN IT", measured rather than guessed.
+  //
+  // The proposal panel has content once any field has left EMPTY; the legislation panel
+  // once anything has been retrieved. Both are facts already on the canonical state, so
+  // neither panel needs to be told when to open — it follows the work.
+  const fieldsHaveContent = !!state?.pages.some((pg) => pg.fields.some((f) => f.status !== 'EMPTY'))
+  const backgroundHasContent =
+    !!state?.initialBackground || (state?.legislationRefs?.length ?? 0) > 0
+  const showFields = panelOpen.fields ?? fieldsHaveContent
+  const showBackground = panelOpen.background ?? backgroundHasContent
+
   const cf = state?.currentField
   const awaitingField: CanonicalField | null =
     cf?.status === 'AWAITING_CONFIRMATION'
@@ -501,7 +556,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             {error ?? 'Starting your session…'}
           </div>
         ) : (
-          <div className="h-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr]">
+          <div className={`h-full grid grid-cols-1 ${
+            showFields && showBackground ? 'lg:grid-cols-[1.2fr_1fr_1fr]'
+              : showFields ? 'lg:grid-cols-[1.4fr_1fr_2.5rem]'
+                : showBackground ? 'lg:grid-cols-[1.4fr_2.5rem_1fr]'
+                  : 'lg:grid-cols-[1fr_2.5rem_2.5rem]'
+          }`}>
             {/* Panel 1 — Chat */}
             <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'chat' ? 'block' : 'hidden'} lg:block`}>
               <ChatPanel
@@ -522,8 +582,25 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               />
             </div>
 
-            {/* Panel 2 — Fields */}
-            <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} lg:block`}>
+            {/* Panel 2 — Fields. 25-H §5: a slim labelled EDGE when there is nothing in
+                it yet, so the user knows what is coming rather than meeting it cold. */}
+            {!showFields && (
+              <PanelEdge
+                label="Your proposal"
+                hint={fieldsHaveContent ? 'open' : 'fills in as we go'}
+                onOpen={() => setPanelOpen((p) => ({ ...p, fields: true }))}
+              />
+            )}
+            <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} ${showFields ? 'lg:block' : 'lg:hidden'}`}>
+              <div className="flex justify-end px-2 pt-1.5">
+                <button
+                  onClick={() => setPanelOpen((p) => ({ ...p, fields: false }))}
+                  className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
+                  title="Collapse the proposal panel"
+                >
+                  collapse ›
+                </button>
+              </div>
               <FieldsPanel
                 pages={state.pages}
                 causes={state.diagnosisCauses}
@@ -562,8 +639,26 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               />
             </div>
 
-            {/* Panel 3 — Legislation / Background */}
-            <div className={`h-full min-h-0 ${tab === 'background' ? 'block' : 'hidden'} lg:block`}>
+            {/* Panel 3 — Legislation / Background. Collapsed until something is in it:
+                at stage one it is empty by definition, and an empty panel taking a third
+                of the screen is what made the first stage feel like a cockpit. */}
+            {!showBackground && (
+              <PanelEdge
+                label="Legislation"
+                hint={backgroundHasContent ? 'open' : 'once we have enough to search on'}
+                onOpen={() => setPanelOpen((p) => ({ ...p, background: true }))}
+              />
+            )}
+            <div className={`h-full min-h-0 ${tab === 'background' ? 'block' : 'hidden'} ${showBackground ? 'lg:block' : 'lg:hidden'}`}>
+              <div className="flex justify-end px-2 pt-1.5">
+                <button
+                  onClick={() => setPanelOpen((p) => ({ ...p, background: false }))}
+                  className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
+                  title="Collapse the legislation panel"
+                >
+                  collapse ›
+                </button>
+              </div>
               <BackgroundPanel
                 ideaId={state.ideaId}
                 initialBackground={state.initialBackground}

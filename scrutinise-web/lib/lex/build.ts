@@ -1399,6 +1399,70 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
   }
 }
 
+
+/**
+ * 25-H §7a — TURN A FLAT LIST WITH `drivenBy` INTO THE PARENT/CHILD SHAPE `createCauses`
+ * ALREADY UNDERSTANDS.
+ *
+ * ⚠ THE MATCH IS ON TEXT AND IT IS DEFENSIVE, because the model is copying a string back
+ * to us and a near-miss must not silently drop a cause. Anything whose parent cannot be
+ * resolved becomes a ROOT — the cause survives, only its edge is lost, and the count is
+ * logged so a model that stops copying accurately is visible rather than quietly
+ * flattening the map.
+ *
+ * ⚠ AND A CYCLE IS BROKEN RATHER THAN PERSISTED. Two causes each naming the other would
+ * make `buildCauseTree` recurse for ever on the client; a cause that is its own ancestor
+ * is demoted to a root.
+ */
+function nestByDrivenBy(
+  raw: Array<{ cause: string; whyPersisted?: string; classification?: string; drivenBy?: string }>,
+  buildId: string,
+): Array<{ cause: string; whyPersisted: string | null; classification: 'MATERIAL' | 'CONTRIBUTORY'; subCauses?: Array<{ cause: string; whyPersisted: string | null; classification: 'MATERIAL' | 'CONTRIBUTORY' }> }> {
+  const norm = (x: string) => x.toLowerCase().replace(/\s+/g, ' ').trim()
+  const clean = raw.filter((c) => c?.cause?.trim())
+  const shape = (c: typeof clean[number]) => ({
+    cause: c.cause.trim(),
+    whyPersisted: c.whyPersisted?.trim() || null,
+    classification: (c.classification === 'MATERIAL' ? 'MATERIAL' : 'CONTRIBUTORY') as 'MATERIAL' | 'CONTRIBUTORY',
+  })
+  const byText = new Map(clean.map((c) => [norm(c.cause), c]))
+
+  // A cause that is its own ancestor is a root. Walk up at most `clean.length` steps.
+  const isCyclic = (c: typeof clean[number]): boolean => {
+    const seen = new Set<string>([norm(c.cause)])
+    let cur = c
+    for (let i = 0; i < clean.length; i++) {
+      const parent = cur.drivenBy?.trim() ? byText.get(norm(cur.drivenBy)) : undefined
+      if (!parent) return false
+      if (seen.has(norm(parent.cause))) return true
+      seen.add(norm(parent.cause))
+      cur = parent
+    }
+    return true
+  }
+
+  const roots: ReturnType<typeof shape>[] = []
+  const kidsOf = new Map<string, ReturnType<typeof shape>[]>()
+  let unresolved = 0
+  let cycles = 0
+  for (const c of clean) {
+    const key = c.drivenBy?.trim() ? norm(c.drivenBy) : ''
+    if (!key) { roots.push(shape(c)); continue }
+    if (!byText.has(key)) { unresolved++; roots.push(shape(c)); continue }
+    if (isCyclic(c)) { cycles++; roots.push(shape(c)); continue }
+    kidsOf.set(key, [...(kidsOf.get(key) ?? []), shape(c)])
+  }
+  if (unresolved || cycles) {
+    console.warn('[lex-diag] 25h some causes could not be placed in the chain — kept as roots', {
+      buildId, unresolved, cycles, total: clean.length,
+    })
+  }
+  return roots.map((r) => {
+    const kids = kidsOf.get(norm(r.cause))
+    return kids?.length ? { ...r, subCauses: kids } : r
+  })
+}
+
 async function diagnosisPass(c: PassContext): Promise<PassOutcome> {
   const { ideaId, buildId, framed } = c
   await c.activity('Drafting the diagnosis')
@@ -1435,11 +1499,8 @@ async function diagnosisPass(c: PassContext): Promise<PassOutcome> {
 
   const causes = (d.causes ?? []).filter((c) => c?.cause?.trim())
   if (causes.length) {
-    await createCauses(ideaId, causes.map((c) => ({
-      cause: c.cause.trim(),
-      whyPersisted: c.whyPersisted?.trim() || null,
-      classification: c.classification === 'MATERIAL' ? 'MATERIAL' : 'CONTRIBUTORY',
-    })), 'LEX_CORPUS')
+    // 25-H §7a — nested, so the causal map has edges to draw.
+    await createCauses(ideaId, nestByDrivenBy(causes, buildId), 'LEX_CORPUS')
     // 25-F §6a — the proposal RENDERS the child rows rather than claiming an empty one.
     // The loop field is still marked AWAITING so it reads as "Lex has put candidates here
     // for you to curate", which is what has happened — but the proposal now says what.
@@ -1909,11 +1970,7 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
     // is not a revision, it is a duplicate — and the contradiction records below are what
     // preserve what the first set said, which is the honest way to keep it.
     await prisma.diagnosisCause.deleteMany({ where: { ideaId, source: 'LEX_CORPUS' } })
-    await createCauses(ideaId, causes.map((x) => ({
-      cause: x.cause.trim(),
-      whyPersisted: x.whyPersisted?.trim() || null,
-      classification: x.classification === 'MATERIAL' ? 'MATERIAL' : 'CONTRIBUTORY',
-    })), 'LEX_CORPUS')
+    await createCauses(ideaId, nestByDrivenBy(causes, buildId), 'LEX_CORPUS')
     await setLoopProposal(ideaId, 'causes', causes.map((x) => `(${x.classification === 'MATERIAL' ? 'material' : 'contributory'}) ${x.cause.trim()}`))
   }
 

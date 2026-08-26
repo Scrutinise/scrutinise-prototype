@@ -255,7 +255,24 @@ export interface DiagnosisOutput {
   keywords: string[]
   challenge: string
   whoAffectedImpactCost: { affectedGroups: string; impact: string; cost: string; evidence: string }
-  causes: Array<{ cause: string; whyPersisted: string; classification: 'MATERIAL' | 'CONTRIBUTORY' }>
+  /**
+   * ⚠ 25-H §7a — `drivenBy` IS WHAT MAKES THE CAUSAL MAP A MAP.
+   *
+   * The map view has existed since §16.2 and renders a nested tree from
+   * `DiagnosisCause.parentCauseId`. The build never set one — `createCauses` was called
+   * with flat causes — so every cause was a root, the tree had no edges, and the map drew
+   * exactly the same flat list as the list view. It was not broken; it had nothing to draw.
+   *
+   * It is also §25.7's first instruction ("a causal chain, not an inventory") arriving in
+   * the data rather than only in the prose.
+   */
+  causes: Array<{
+    cause: string
+    whyPersisted: string
+    classification: 'MATERIAL' | 'CONTRIBUTORY'
+    /** The cause this one sits BENEATH, copied verbatim from another entry, or ''. */
+    drivenBy: string
+  }>
   rootCause: string
   pivotalObstacle: string
   summaryDiagnosis: string
@@ -284,8 +301,10 @@ const DIAGNOSIS_SCHEMA = {
         properties: {
           cause: { type: 'string' }, whyPersisted: { type: 'string' },
           classification: { type: 'string', enum: ['MATERIAL', 'CONTRIBUTORY'] },
+          // 25-H §7a — the edge that turns the list into a tree. '' for a root cause.
+          drivenBy: { type: 'string' },
         },
-        required: ['cause', 'whyPersisted', 'classification'],
+        required: ['cause', 'whyPersisted', 'classification', 'drivenBy'],
       },
     },
     rootCause: { type: 'string' },
@@ -308,7 +327,17 @@ export async function runDiagnosisPass(input: {
     '',
     'DRAFT THE DIAGNOSIS. Fields:',
     '  `title`      — a short working title for the idea, under 80 characters, in the user\'s register.',
+    '                 ⚠⚠ IT FOLLOWS WHAT THE USER WANTS TO CHANGE, NOT THE LOUDEST TERM IN THE',
+    '                 SOURCES. Measured on a real build: the user\'s goal was CIVIL SERVANT',
+    '                 accountability and the retrieved material is dense with MINISTERIAL',
+    '                 responsibility — because that is what the constitutional literature is',
+    '                 about — so the title came back about ministers. Ministerial responsibility',
+    '                 was an OBSTACLE TO OVERCOME in their proposal, not its subject. Read the',
+    '                 goal and the problem again before you write this line, and if the title',
+    '                 names something the user is trying to get PAST rather than to change, it',
+    '                 is the wrong title.',
     '  `keywords`   — 4–8 search terms for this idea. Terms of art where they exist.',
+    '                 ⚠ Same rule: these describe the user\'s subject, not the corpus\'s.',
     '  `challenge`  — THE PROBLEM in one sentence: what is wrong, for whom, why it matters. NO remedy.',
     '  `whoAffectedImpactCost` — who is MOST ACUTELY affected (specific groups, not "everyone"), the',
     '                 impact on them, the cost, and what evidence there is. Say "not established" where',
@@ -316,6 +345,28 @@ export async function runDiagnosisPass(input: {
     '  `causes`     — 3–6 causes, each with WHY IT HAS PERSISTED, each classified MATERIAL (remove it',
     '                 and the problem largely goes) or CONTRIBUTORY. A cause is a causal claim, not a',
     '                 topic and not a document title.',
+    '                 ⚠⚠ INCLUDE THE PLAIN HUMAN READING, NOT ONLY THE INSTITUTIONAL ONE. Measured on',
+    '                 a real build: every drafted cause was structural — constitutional doctrine,',
+    '                 coordination gaps, statutory limits — and the most obvious cause was missing',
+    '                 entirely. The user put it like this: *"because civil servants like cushy jobs',
+    '                 with power but no responsibility, and there are no mechanisms to put',
+    '                 responsibility on them, and the entire culture is designed to provide endless',
+    '                 excuses."*',
+    '                 That is an INCENTIVE-AND-CULTURE cause and it belongs in the list. Ask, every',
+    '                 time: who benefits from this continuing, what does the current arrangement make',
+    '                 it rational for them to do, and what does the culture reward? Say it in the',
+    '                 register a person would use, not in the register of a select committee report —',
+    '                 a cause nobody would say out loud is a cause the proposer cannot argue for.',
+    '                 ⚠ It is a cause among causes, not a replacement for the structural ones. The',
+    '                 constitutional reading is usually right about MECHANISM; this one is usually',
+    '                 right about MOTIVE, and a diagnosis with only one of the two is incomplete.',
+    '                 ⚠ `drivenBy` — 25-H §7a AND §25.7\'s first instruction. Where one cause SITS',
+    '                 BENEATH another, copy the parent\'s `cause` text into `drivenBy` verbatim. A',
+    '                 root cause gets an empty string. This is what turns a list into a CAUSAL',
+    '                 CHAIN: "no mechanisms exist to attach responsibility" is not a sibling of',
+    '                 "the culture rewards avoiding it" — one drives the other, and which way round',
+    '                 is the most useful thing the diagnosis can say. Do not force a hierarchy that',
+    '                 is not there; two genuinely independent causes are two roots.',
     '  `rootCause`  — which cause is the main driver. Copy its text verbatim from `causes`.',
     '  `pivotalObstacle` — why a solution has NOT stuck. DISTINCT from the root cause: often',
     '                 enforcement failure, a coordination gap, a cost nobody will bear, or a party who',
@@ -694,7 +745,11 @@ export async function assessInstrumentRetirement(input: {
 export interface RevisionOutput {
   /** The rewritten causes. §5: "particularly the causes, which were written before
    *  anyone knew what the actions would imply." */
-  causes: Array<{ cause: string; whyPersisted: string; classification: 'MATERIAL' | 'CONTRIBUTORY' }>
+  causes: Array<{
+    cause: string; whyPersisted: string; classification: 'MATERIAL' | 'CONTRIBUTORY'
+    /** 25-H §7a — see DiagnosisOutput. The revision rewrites the chain, not just the nodes. */
+    drivenBy: string
+  }>
   rootCause: string
   pivotalObstacle: string
   summaryDiagnosis: string
@@ -729,8 +784,10 @@ const REVISION_SCHEMA = {
         properties: {
           cause: { type: 'string' }, whyPersisted: { type: 'string' },
           classification: { type: 'string', enum: ['MATERIAL', 'CONTRIBUTORY'] },
+          // 25-H §7a — the edge that turns the list into a tree. '' for a root cause.
+          drivenBy: { type: 'string' },
         },
-        required: ['cause', 'whyPersisted', 'classification'],
+        required: ['cause', 'whyPersisted', 'classification', 'drivenBy'],
       },
     },
     rootCause: { type: 'string' },
