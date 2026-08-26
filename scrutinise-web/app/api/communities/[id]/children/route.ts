@@ -6,6 +6,7 @@ import {
   canCreateBranchUnder,
   getCommunityMembership,
   joinCommunityAndRoot,
+  seedQuestionTags,
   DEFAULT_BULLETIN_CATEGORIES,
 } from '@/lib/community'
 
@@ -66,6 +67,10 @@ export async function POST(req: Request, { params }: Params) {
       bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
     },
   })
+
+  // The question-library tag set. Until 26 Aug 2026 this only ever came from a
+  // migration, so anything created afterwards had none — see seedQuestionTags.
+  await seedQuestionTags(branch.id)
 
   // OWNER of the new branch, and a member of the Community with it.
   await joinCommunityAndRoot(user.id, branch.id, 'OWNER')

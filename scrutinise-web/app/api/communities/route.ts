@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { countUnreadBulletin, DEFAULT_BULLETIN_CATEGORIES } from '@/lib/community'
+import { countUnreadBulletin, seedQuestionTags, DEFAULT_BULLETIN_CATEGORIES } from '@/lib/community'
 
 const CreateCommunitySchema = z.object({
   name: z.string().min(1).max(100),
@@ -72,6 +72,13 @@ export async function POST(req: Request) {
     })
     return created
   })
+
+  // ⚠ AND its question-library tag set. A top-level Community is its own root,
+  // so without this it has NO contexts at all — an empty chip row, an empty
+  // topic dropdown, and a bulk upload in which every row fails because its
+  // Context "is not a context in this Community". Until 26 Aug 2026 tags only
+  // ever came from a migration; see seedQuestionTags.
+  await seedQuestionTags(community.id)
 
   return NextResponse.json({ community }, { status: 201 })
 }

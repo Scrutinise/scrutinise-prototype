@@ -312,6 +312,97 @@ export function describeChars(s: string): string {
     .join(' ')
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// The question-library tag set a Community starts with.
+//
+// ⚠ SEEDED AT CREATION AS OF 26 Aug 2026, AND IT WAS NOT BEFORE. Every tag in
+// every Community came from a migration — `central_stage2b.sql` seeded the
+// contexts and six topics, 2d promoted five more, 2e added the departments —
+// and each of those ran once, against the nodes that existed at the time. A
+// Community created afterwards got `bulletinCategories` and NOTHING ELSE.
+//
+// For a new BRANCH that was survivable, because the library reads its ROOT's
+// tags. For a new top-level COMMUNITY it was not: an empty chip row, an empty
+// topic dropdown, and every row of a bulk upload failing with *"… is not a
+// context in this Community. Use one of:"* followed by an empty list.
+//
+// Found because a branch created at 13:40 on 26 Aug turned `check:central` red.
+//
+// The starter set is deliberately the same set every existing Community now
+// has — two Communities behaving differently for no reason is worse than either
+// choice of set.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STARTER_CONTEXTS_EXTERNAL = ['Doorstep', 'Media interview', 'Hustings', 'University AMA', 'Council chamber']
+const STARTER_CONTEXTS_INTERNAL = ['How-to', 'Party process', 'Tools & tech']
+
+/** Promoted topics order the "All topics" dropdown; unpromoted ones follow. */
+const STARTER_TOPICS_PROMOTED = [
+  'Local finance', 'Local services', 'Organising', 'Energy', 'Immigration',
+  'Party conduct', 'Media skills', 'Economy', 'Social issues', 'Law & rights',
+]
+const STARTER_TOPICS_UNPROMOTED = [
+  'Housing',
+  // The 24 UK ministerial departments, matching the shipped upload template's
+  // "Valid values" sheet. ⚠ Five contain commas — see `splitList` in
+  // lib/question-import.ts, where a comma is deliberately NOT a separator.
+  'Attorney General’s Office',
+  'Cabinet Office',
+  'Department for Business and Trade',
+  'Department for Culture, Media and Sport',
+  'Department for Education',
+  'Department for Energy Security and Net Zero',
+  'Department for Environment, Food and Rural Affairs',
+  'Department for Science, Innovation and Technology',
+  'Department for Transport',
+  'Department for Work and Pensions',
+  'Department of Health and Social Care',
+  'Foreign, Commonwealth and Development Office',
+  'HM Treasury',
+  'Home Office',
+  'Ministry of Defence',
+  'Ministry of Housing, Communities and Local Government',
+  'Ministry of Justice',
+  'Northern Ireland Office',
+  'Office of the Advocate General for Scotland',
+  'Office of the Leader of the House of Commons',
+  'Office of the Leader of the House of Lords',
+  'Scotland Office',
+  'UK Export Finance',
+  'Wales Office',
+]
+
+export type StarterTag = { kind: string; label: string; promoted: boolean; sortOrder: number }
+
+export const DEFAULT_QUESTION_TAGS: StarterTag[] = [
+  ...STARTER_CONTEXTS_EXTERNAL.map((label, i) => ({ kind: 'CONTEXT_EXTERNAL', label, promoted: true, sortOrder: i + 1 })),
+  ...STARTER_CONTEXTS_INTERNAL.map((label, i) => ({ kind: 'CONTEXT_INTERNAL', label, promoted: true, sortOrder: i + 1 })),
+  ...STARTER_TOPICS_PROMOTED.map((label, i) => ({ kind: 'TOPIC', label, promoted: true, sortOrder: i + 1 })),
+  ...STARTER_TOPICS_UNPROMOTED.map((label) => ({ kind: 'TOPIC', label, promoted: false, sortOrder: 50 })),
+]
+
+/**
+ * Give a Community its question-library tag set. Idempotent — safe to call on a
+ * node that already has one, which is what makes it usable as a backfill.
+ */
+export async function seedQuestionTags(communityId: string): Promise<number> {
+  const already = new Set(
+    (
+      await prisma.questionTag.findMany({
+        where: { communityId },
+        select: { kind: true, label: true },
+      })
+    ).map((t) => `${t.kind} ${t.label}`),
+  )
+  const missing = DEFAULT_QUESTION_TAGS.filter((t) => !already.has(`${t.kind} ${t.label}`))
+  if (!missing.length) return 0
+  const { count } = await prisma.questionTag.createMany({
+    data: missing.map((t) => ({ communityId, ...t })),
+    skipDuplicates: true,
+  })
+  return count
+}
+
 export type InviteCandidate = { id: string; name: string | null; username: string; isMember: boolean }
 
 /**
