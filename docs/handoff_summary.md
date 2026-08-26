@@ -2,7 +2,67 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-26 00:14 UTC — ▼ **LEX 25-H: THE PAGE-ONE FIELDS WERE WRITTEN ONCE AND NEVER
+*Last updated: 2026-08-26 01:13 UTC — ▼ **GRAPH 25-H: THE XML MARKS UP 2% OF THE CITATIONS THAT ARE
+ACTUALLY IN THE TEXT, AND A GRAPH BUILT ON IT ANSWERS "TWO" WHERE THE ANSWER IS 29.** Measured over
+6,045 documents: **5.4%** of body mentions of the Human Rights Act carry `<Citation>` markup, **1.8%**
+of the Equality Act, **0% of CRAG 2010** — the sprint's own pilot target. So a citation graph built
+the obvious way, from `<Citation URI>` attributes, is roughly **2% complete**, and it does not fail
+loudly: it returns a short, confident, wrong list. ⚠⚠ **For a repeal programme whose central
+deliverable is "every provision that refers to this Act", that is the worst failure mode there is.**
+▶ **`citation_edge` therefore has TWO detectors and keeps them apart in a `detection` column** —
+`markup` (the document asserted the identity by URI) and `text` (we resolved the Act's NAME against
+`corpus_acts` titles; `target_uri` is DERIVED, not read). `inboundSummary` always reports the split;
+they are never summed unnamed. **1,034,548 rows**, every one carrying `citation_text` and
+`raw_fragment` as `NOT NULL` — an edge with no quotable source is a claim, not a fact.
+▶ **Q1 REFUTES OUR OWN JULY REPORT**: `GRAPH_TIER1_REPORT.md` §1.1 says the per-section R2 store has
+"no `<Citation>` markup at all". It has **122 citations in 40 large sections** — and **0 in 40 random
+ones**, which is why July said zero: those 40 averaged **2.1 KB** and were mostly repealed dot-leader
+stubs. ⚠ What the markup does NOT carry is the provision: CLML wraps the Act's NAME and leaves
+"section 53 of" as running text (3 of 286,659 body elements carried a `SectionRef` on a
+`CitationSubRef`), so `target_provision_ref` is PARSED from the words. ▶ **98.9% of citation markup
+in Acts is amendment commentary**, excluded and counted — those edges already exist from TNA effects
+data. ⚠ **SIs, not Acts, are where the references live**: 261,599 body citations against the Acts'
+25,060. A repeal programme reading only primary legislation misses most of the damage.
+▶▶ **A DEFECT IN THE SHIPPED JULY EXTRACTOR — it never opened 37% of the Acts.**
+`extract-cites-edges.ts` requires a CALENDAR year in the zip entry name, so every regnal-year
+filename was skipped: **2,431 documents, 1,650 of them ukpga**, all pre-1963. Proved by consequence:
+of 121,279 `cites` edges, **exactly 0** have a regnal-year source against **29,800** edges of other
+types that do. July fixed regnal ids in the URI *parser* and never carried it to the entry *filter*.
+`legislation_edges` has NOT been re-extracted. **OI-15.**
+▶ **THE PILOT: CRAG 2010 Part 1 = 29 inbound references** (predicted 15); CRAG as a whole **182**
+from 75 instruments. `expandPart` derived Part 1 = sections 1–19 from the Act's own CLML and
+**legislation.gov.uk confirms it**. **Of the 29, only 2 came from markup.** They are one story — the
+statutory definition of "civil servant", borrowed by the Scotland Act 1998, the Government of Wales
+Act 2006, the Northern Ireland Act 1998, FOIA 2000, five Scottish SIs and a dozen more.
+▶ **CONTROLS RAN FIRST.** Negative control (Down Syndrome Act 2022): **13**, above the predicted 0–3,
+all read by hand and genuine — its own commencement SI and one consequential amendment. Scale
+control: **EqA 1,868 > HRA 938 > CRAG 182 > Down Syndrome 13 — the ordering HOLDS.**
+**Hand verification 20/20 against legislation.gov.uk.**
+⚠⚠ **THREE DEFECTS IN MY OWN EXTRACTOR, EVERY ONE PRODUCING A PLAUSIBLE NUMBER RATHER THAN AN
+ERROR**: a provision parser with no act-name anchor scraping SI **commencement tables**; a composed
+**`schedule-12-section-310`**, a provision that exists nowhere (3,130 rows); and ⚠⚠ **an act-name
+regex requiring every word before "Act" to be capitalised**, so *"Constitutional Reform **and**
+Governance Act 2010"* captured as *"Governance Act 2010"* and resolved to nothing — **the pilot
+target was invisible to the detector built to find it**, and the evidence had been on screen an hour
+earlier as "top unresolved names" (`taxes act 1988`, `markets act 2000`) which I read as names we do
+not hold. The fix moved unresolved spans **296,233 → 93,772** and CRAG Part 1 **2 → 29**.
+⚠⚠ **AND TWO IN THE CHECKS.** Verification first reported **18/20** and both failures were the
+verifier's — it anchored on the FIRST mention of the Act name, while `ukpga/2006/32` s.52 names CRAG
+six times and the one that mattered was the second. **Reporting those as parse errors would have put
+a false finding in the headline.** The corrected check was then made to fail on purpose (4 true
+claims accepted, 4 false rejected) — and ⚠ the first version of THAT control re-implemented the logic
+instead of importing it, a heredoc ate its regex escapes, and it briefly "disproved" a correct
+result. **A control that is a copy tests the copy.**
+✅ `check-25h-parser` **37/37**, `check-25h-inbound` **11/11** (one rule **declared untested** rather
+than counted as passed), `check-25h-verify` **8/8**; `tsc` clean for all eight new files.
+⚠ **SIZE: `citation_edge` is 1,144 MB and the database moves 18 GB → 19 GB**, against a 17.5 GB
+alert line **already crossed before this sprint began**. Droppable, nothing live reads it. **OI-17 —
+Charlie's call, and the only decision waiting.**
+⚠ Two caveats stated not buried: **11.3% of text rows are in a document's title/metadata, not a
+provision** (CRAG's 182 → 149 filtered), and **93,772 name-spans resolved to nothing**. **OI-18.**
+▶▶ **Nothing here touches the live site** — no UI, no flags, no re-ingest, no Lex or search changes.
+`docs/CITATION_AUDIT.md` · `docs/crag_part1_inbound.json` · `SEARCH_STRATEGY.md` §9 Tier 1a.**
+Earlier: 2026-08-26 00:14 UTC — ▼ **LEX 25-H: THE PAGE-ONE FIELDS WERE WRITTEN ONCE AND NEVER
 AGAIN — THE BRIEF'S STATED CAUSE WAS WRONG, AND THE FIX IS A REFRESH PATH, NOT A WRITE PATH.**
 Charlie's amendment corrected the diagnosis before I could: `confirmElicitation` *did* write those
 fields — it wrote them **once**, and nothing wrote them again, so §3's pill-edit (added the same

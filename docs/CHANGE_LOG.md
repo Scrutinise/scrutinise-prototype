@@ -132,6 +132,144 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 25-H — THE MARKUP FINDS 2% OF THE CITATIONS, AND A GRAPH BUILT ON IT ANSWERS "TWO" (2026-08-26 01:13 UTC)
+
+Executes `docs/CC_BRIEF_25-H_citation_graph.md`. Report: `docs/CITATION_AUDIT.md`. Code:
+`scripts/ingest/graph/{audit-25h-citations,setup-citation-edge-table,extract-citation-edges,inbound,pilot-25h-crag,check-25h-parser,check-25h-inbound,check-25h-verify}.ts`.
+Deliverables: `citation_edge` (1,034,548 rows), `docs/crag_part1_inbound.json`,
+`SEARCH_STRATEGY.md` §9 Tier 1a. Predictions logged 00:15 and 00:35 UTC, scored in the report.
+
+**▶ THE FINDING THE SPRINT TURNS ON.** legislation.gov.uk marks up only a small fraction of the
+cross-references its own text contains. Measured over 6,045 documents: **5.4%** of body mentions of
+the Human Rights Act carry `<Citation>` markup, **1.8%** of the Equality Act, **0%** of CRAG 2010.
+A citation graph built the obvious way — from `<Citation URI>` attributes — is roughly **2%
+complete**, and it does not fail loudly: it returns a short, confident, wrong list. ⚠⚠ **On markup
+alone, "what refers to CRAG Part 1?" answers TWO. The real answer is 29.**
+
+**▶ SO THE TABLE HAS TWO DETECTORS AND KEEPS THEM APART.** `detection = 'markup'` means the document
+asserted the identity by URI; `detection = 'text'` means we resolved the Act's NAME against
+`corpus_acts` titles and the `target_uri` is DERIVED, not read. `inboundSummary` always reports the
+split. A measured fact and an inferred one must not look identical on the page.
+
+**▶ Q1 REFUTES OUR OWN JULY REPORT.** `GRAPH_TIER1_REPORT.md` §1.1 records that the per-section R2
+store carries "no `<Citation>` markup at all", on 30 random fragments. It does carry it: **122
+citations in 40 large sections**, 22 in 40 amending ones — **0 in 40 random ones**, which is why the
+July sample said zero. Those 40 averaged **2.1 KB** and were mostly repealed dot-leader stubs.
+⚠ `<CommentaryRef>` is not a citation and appears in 18–43% of objects; conflating the two would
+have produced a false positive in every one.
+
+**▶ WHAT THE MARKUP DOES NOT CARRY IS THE PROVISION.** CLML wraps the Act's NAME and leaves "section
+53 of" as running text. 3 of 286,659 body elements were a `<CitationSubRef>` with a `SectionRef`.
+So `target_provision_ref` is parsed from the words — which is also why `citation_text` is `NOT NULL`:
+it is the evidence for the parse as well as for the edge.
+
+**▶ 98.9% of citation markup in Acts is amendment commentary**, not cross-reference — excluded and
+counted, because those edges already exist as `amends`/`repeals` rows from TNA's effects data.
+⚠ **SIs, not Acts, are where the references live**: 261,599 body citations against the Acts' 25,060;
+41% of SIs carry one against 14% of Acts. A repeal programme reading only primary legislation misses
+most of the damage.
+
+**▶▶ A DEFECT IN THE SHIPPED JULY EXTRACTOR: it never opened 37% of the Acts.**
+`extract-cites-edges.ts` matches `-(\d{4})-` on zip entry names, which requires a CALENDAR year, so
+every regnal-year filename was skipped — **2,431 documents, including 1,650 ukpga, all 660 `aep`,
+all 58 `apgb`**, all pre-1963. Proved by consequence rather than by reading the regex: of 121,279
+`cites` edges, **exactly 0** have a regnal-year source, while **29,800** edges of other types do.
+July fixed regnal ids in the URI *parser* and never carried it to the entry *filter* — ⚠ **a fix
+applied to one of two places that must agree, with no check that they agree.** `legislation_edges`
+has NOT been re-extracted. OI-15.
+
+**▶ THE PILOT.** CRAG 2010 Part 1 = **29 inbound references** (predicted 15), CRAG as a whole
+**182** from 75 instruments. `expandPart` derived Part 1 = sections 1–19 from the Act's own CLML and
+**legislation.gov.uk confirms it** (Part 2 begins at s.20). The 29 are one story: the statutory
+definition of "civil servant", borrowed by the Scotland Act 1998, the Government of Wales Act 2006,
+the Northern Ireland Act 1998, FOIA 2000, five Scottish SIs and a dozen more. Repeal Part 1 and
+every one of those definitions loses its referent.
+
+**▶ CONTROLS, RUN BEFORE THE PILOT RESULT WAS TRUSTED.** Negative control (Down Syndrome Act 2022 —
+recent, seven sections, borrows nothing, amends nothing): **13**, above the predicted 0–3, and all 13
+read by hand and genuine — its own commencement SI and one consequential amendment. The prediction
+missed because every Act has a commencement SI naming it. Scale control: **EqA 1,868 > HRA 938 >
+CRAG 182 > Down Syndrome 13 — the ordering HOLDS**, which was the load-bearing prediction.
+**Hand verification: 20 of 20 correct.**
+
+**⚠⚠ THREE DEFECTS IN MY OWN EXTRACTOR, EACH PRODUCING A PLAUSIBLE NUMBER RATHER THAN AN ERROR.**
+(1) the provision parser had no act-name anchor and scraped SI **commencement tables**, attributing
+"Arts. 15 to 24" to whichever instrument the next cell named — 4 of the first 15 sample rows.
+(2) it composed **`schedule-12-section-310`**, a provision that exists nowhere: schedules contain
+paragraphs, Parts and Chapters, never sections — 3,130 rows.
+(3) ⚠⚠ **the act-name regex required every word before "Act" to be capitalised**, so it broke at
+lowercase connectives: *"Constitutional Reform **and** Governance Act 2010"* captured as *"Governance
+Act 2010"* and resolved to nothing — **the sprint's own pilot target was invisible to the detector
+built to find it.** The evidence had been on screen an hour earlier as the "top unresolved names"
+list (`taxes act 1988`, `country planning act 1971`, `markets act 2000`) and I read it as names we
+do not hold instead of one bug wearing a disguise. Fixing it moved unresolved names **296,233 →
+93,772**, rows **452,756 → 649,202**, CRAG Part 1 **2 → 29**.
+
+**⚠⚠ AND TWO IN THE CHECKS THEMSELVES.** The hand verification first reported **18/20**, and both
+"failures" were the verifier's: it anchored on the FIRST mention of the Act's name, while
+`ukpga/2006/32` s.52 names CRAG six times and the one that mattered was the second. **Reporting
+those as parse errors would have put a false finding in the headline result.** Then the corrected
+check was made to fail on purpose — 4 true claims accepted, 4 false ones rejected on the same live
+documents — because 20/20 immediately after changing a checker is not evidence. ⚠ The first version
+of *that* control re-implemented the logic instead of importing it, a shell heredoc ate its regex
+escapes, and it briefly "disproved" a correct result. **A control that is a copy tests the copy.**
+
+**▶ CHECKS:** `check:25h-parser` **37/37** (the parser FIRES on 15 positives and REFUSES 6
+negatives — a suite of negatives alone would pass on a parser that never fires, which is exactly
+what defect 3 produced); `check-25h-inbound` **11/11**, every assertion with a paired opposite, and
+one rule **declared untested** because the data does not exercise it; `check-25h-verify` **8/8**.
+`tsc --noEmit` clean for all eight new files.
+
+**⚠ SIZE:** `citation_edge` is **1,144 MB** and the database moves **18 GB → 19 GB**, against a
+17.5 GB alert line that was **already crossed before this sprint began**. The table is droppable and
+nothing live reads it. OI-17 — Charlie's call.
+
+**⚠ Two caveats on the deliverable, stated rather than buried.** (a) **11.3% of text rows sit in a
+document's title or metadata, not in a provision** — an SI named after an Act mentions it in its
+title, long title and explanatory note. `source_provision_ref IS NULL` finds them; CRAG's 182 becomes
+149 with them removed. (b) **93,772 name-spans resolved to nothing** and are counted, not dropped
+silently — the biggest remaining lever on completeness. OI-18.
+
+**▶▶ CHARLIE: nothing here touches the live site.** No UI, no flags, no re-ingest, no Lex or search
+changes. The one decision waiting is the database headroom.
+
+## GRAPH 25-H — PREDICTIONS FOR THE PILOT AND THE TWO CONTROLS, LOGGED BEFORE EITHER RAN (2026-08-26 00:35 UTC)
+
+Brief §5.1 and §6. Written after `citation_edge` was populated but **before a single `inbound()` call
+was made** — the table exists, no query against it has been run, and no row count for any of these
+five instruments has been looked at. Scored in `docs/CITATION_AUDIT.md`.
+
+Clock cross-checked against an HTTP `date` header — machine `date -u` and google.com both read
+2026-08-26 00:33 UTC.
+
+**§5 — the pilot, CRAG 2010 Part 1 (`ukpga/2010/25`, `part-1`):**
+1. Inbound references matching **Part 1 or one of its member provisions**: **15**. Part 1 is the civil
+   service on a statutory footing — a constitutional settlement other statutes assume rather than
+   cross-refer to, which is why the number is small even though the subject is large.
+2. Inbound references to **CRAG as a whole**, provision unspecified: **120**. The gap between 1 and 2
+   is the point of the audit — most citations name the Act and no provision, so the honest answer to
+   "what refers to Part 1" has a large *unknown* band beside it, not a clean number.
+3. Of the hand-verified 20, **17 correct, 3 wrong**, and the wrong ones share one cause: the parsed
+   `target_provision_ref`, not the citation itself. I expect the act-level identification to be right
+   essentially always (it comes from a URI attribute) and the provision-level parse to carry the error.
+
+**§6 — negative control: Down Syndrome Act 2022 (`ukpga/2022/18`).** Chosen because it is (a) recent —
+four years is little time for the statute book to take it up, (b) genuinely single-purpose: seven
+sections requiring the Secretary of State to issue guidance, (c) creates no concept, office, power or
+definition another Act would need to borrow, and (d) amends nothing, so no consequential chain points
+back at it. If a narrow Act like this returns a large number, the query is matching on something other
+than the citation URI and the pilot result is worthless.
+4. Inbound total: **0–3**.
+
+**§6 — scale control.** Both should be far above CRAG; if CRAG exceeds either, stop.
+5. Equality Act 2010 (`ukpga/2010/15`) inbound total: **700**.
+6. Human Rights Act 1998 (`ukpga/1998/42`) inbound total: **450**.
+7. Ordering holds: **EqA > HRA > CRAG > Down Syndrome Act**.
+
+⚠ Prediction 7 is the load-bearing one. 5 and 6 could each be out by 3x without anything being wrong;
+if the ORDER breaks, something is matching text rather than identity and nothing else in this sprint
+can be trusted.
+
 ## LEX 25-H — THE PAGE-ONE FIELDS WERE WRITTEN ONCE AND NEVER AGAIN, AND THREE COPIES I REPORTED DELETED WERE STILL THERE (2026-08-26 00:14 UTC)
 
 Executes `docs/BRIEF_25H.md` §1–§7 plus Charlie's amendment of 25 Aug. Full report:
