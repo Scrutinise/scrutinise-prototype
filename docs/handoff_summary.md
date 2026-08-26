@@ -2,7 +2,77 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-26 13:13 UTC — ▼ **GRAPH 4A: THE 1,650-ACT HOLE IS 0.76% AND HAS NEVER REACHED A USER — AND T3 ANSWERED THE BRIEF'S QUESTION AND THEN REFUSED ITS PREMISE.**
+*Last updated: 2026-08-26 14:45 UTC — ▼ **SEARCH S14: THE MERGE STOPS RATIONING SLOTS — AND
+`vector-serve` CANNOT SERVE FOUR DENSE STREAMS, WHICH IS THE ONLY THING HERE HAPPENING ON A RUNNING
+SERVICE.**
+▶▶ **§0, FIRST, BECAUSE IT IS LIVE.** `vector-serve` runs **4 wide behind a 64-deep queue and a
+client abort does not cancel work already queued** — so a dense leg that times out at the 25 s
+client ceiling is still executed after the caller has gone, and every timeout ADDS load rather than
+shedding it. Measured: `inFlight 4 · queued 64/64 · rejections 101`, and `warm_p95` off the same
+counter at four points in one afternoon — **7,698 ms quiet → 205,754 → 351,301 → 706,954 ms**.
+⚠⚠ **It kept climbing for forty minutes after every client had been killed.** Every earlier
+measurement in this project used `LEX_VECTOR_STREAMS=legislation` — ONE dense call. **Production
+reads four.** The per-stream timings are their own control: at width 20 the four dense-enabled
+streams returned at **25,0xx ms** on all three probes, within 36 ms of each other, while `debates`
+— the one stream with no dense leg — returned in **4.0–6.1 s**, nine times out of nine. ⚠ It leaves
+no mark on the result: every hit keeps `scorer: 'bm25'`, byte-for-byte what a stream with no dense
+leg produces. ⚠ **I cannot confirm this is production's behaviour** (SAML, §19) — **what settles it
+in a minute: read `warm_p95_ms` and `concurrency.queued` off `vector-serve/stats` at a busy moment
+when nobody is running a harness.** **D-1, and it comes before every other decision.**
+▶ **THE DURABLE FINDING, on the record so nobody rebuilds it: plain rank fusion across streams IS
+round-robin.** The streams are disjoint — **0 of 10 stream pairs shared a single document on any of
+three probes** — and over disjoint sets unweighted RRF takes every stream's rank 1, then every
+stream's rank 2. Scores are no better: caselaw's rank-1 at **53.4** against legislation's **254.2**,
+with caselaw's BEST below legislation's MEDIAN every time. Normalisation is REJECTED — it promotes a
+stream that found nothing good to parity with one that found something excellent.
+▶ **`LEX_SEARCH_JUDGED_MERGE` (OFF).** ≥20 retrieved per routed stream always; the displayed twenty
+chosen over the whole pool; **one source may hold all twenty** (constructed case: round-robin 4 of
+20 → judged 20 of 20). Measured over the 40 questions routing 3+ streams: **the round-robin's mean
+maximum share is 5.4 and it never exceeds 7.** The degenerate case is today's behaviour **id for
+id**, which is what makes every arm attributable. `LEX_MERGE_COVERAGE` **deleted**, not defaulted
+off.
+▶▶ **§5, n = 64, keyword-only and labelled — AND THE RERANKER CLOSES THE GAP THE SPRINT EXISTS TO
+CLOSE.** in-stream@20 **19/64**, round-robin **14/64**, confidence 14/64, gate 11/64, both 12/64,
+**reranker 18/64 (pro) and 19/64 (flash) — which is in-stream@20 EXACTLY: everything retrieval found
+is displayed.** @5 goes **6/64 → 15/64**. Every gain is a document deeper than floor(20/S) in its own
+stream (in-stream 14, 16, 39, 47) — exactly the ones S13's arithmetic said could never be shown.
+⚠ Its one loss is the shape to watch: a document its own stream ranked FIRST taken to merged 27.
+▶▶ **AND THE MODEL COMPARISON REVERSED MY OWN CHOICE.** `gemini-2.5-flash` vs `gemini-2.5-pro`,
+identical inputs, echoed model checked every call: **19/64 vs 18/64 @20, 15/64 vs 10/64 @5, 0.221p
+vs 2.551p per query, 1.6 s vs 34.7 s, 63 of 64 calls completed vs 44.** Pro exhausts its output
+budget on a third of queries even with full thinking headroom. **Registry default moved to Flash on
+the measurement.** **D-4: reranker recommended ON, after D-1.**
+⚠⚠ **Against S13 on the same index, dense retrieval was worth ~12 points of in-stream recall
+(42% → 30%) — a bigger number than anything the merge does.** The deterministic arms are S13's
+coverage arm again: three quarters of rankings moved to buy nothing, with documents their own stream
+ranked SECOND landing at merged **143** and **161**.
+▶ **§1(b): ask for a PERMUTATION, not a number.** Numeric confidences **broke the router — 12 of 55
+calls truncated (21.8%) against 0 of 55 without the question**, the tails showing an endless decimal.
+The ranking encoding: **0 truncations, 64 of 64 usable.** ⚠ But it **widens routing** (27 of 64
+questions, fan-out 2.91 → 3.69), so it is a retrieval change wearing a ranking change's clothes —
+**D-3: not recommended.**
+⚠⚠ **FOUR DEFECTS OF MY OWN, ALL FOUND BY MEASUREMENT, ALL FIXED AND ALL RE-MEASURED:** a cost
+ceiling that refused its own configuration (1.5p against a 4.34p estimate); a reranker output budget
+that truncated **29 of 64** queries — each **naming itself**, because §18's guard is in the shared
+helper; ⚠⚠ **a model comparison that was never taken, because both arms ran `gemini-2.5-pro`**
+(`LEX_MODEL__SEARCH__RERANKER` vs the real `LEX_MODEL__SEARCH_RERANKER`) — and the evidence was in
+the output the whole time, two models priced four times apart returning **3.622p and 3.719p** and
+**29.1 s and 30.4 s**; the harness now compares the **ECHOED** model on every call. And a rank-decay
+of 0.35 that meant a stream's priority was worth **21 ranks**, so one source took **19.9 of 20 slots
+on 40 of 40** questions — corrected to 0.07 from the arithmetic.
+▶ The harness now also **saves and replays a retrieval pass** (`--save-retrieval` / `--load-retrieval`,
+refusing if the index stamp moved), which is what made re-measuring the model arms against
+byte-identical candidate lists possible at all after a three-hour retrieval.
+✅ `check:s14-merge` **20 assertions, 10 negative controls, every one watched firing** — constructed
+cases only, no network, no DB, no model. Arm A merged **IDENTICALLY** to `runRoutedSearch` 3 of 3;
+retrieval reproducibility **20/20/20**; index stamps matched; `fts +749`.
+▶ **§4 reported, NOT built:** statutes can be confirmed exactly TODAY against `corpus_acts.title`
+(250,808 rows, 135,531 titled) with no search and no LLM call; doctrines need positions in the index.
+▶▶ **Nothing is on by default and no service needs a redeploy** — every flag OFF, every change under
+`scrutinise-web`, `scripts/ingest/search/*` untouched.
+⚠ For CENTRAL: `check:score-scope` has been red on Main since `4ffec90` — a bare score sort in
+`lib/question-library.ts:250` and `:337`. **`docs/SEARCH_S14_REPORT.md`.**
+Earlier: 2026-08-26 13:13 UTC — ▼ **GRAPH 4A: THE 1,650-ACT HOLE IS 0.76% AND HAS NEVER REACHED A USER — AND T3 ANSWERED THE BRIEF'S QUESTION AND THEN REFUSED ITS PREMISE.**
 ▶ **§1 T1 — the blast radius is entirely internal.** Six code paths read `legislation_edges`; four touch rows the defective filter built; **zero files under `scrutinise-web/` reference either graph table**, so the graph has no user-facing surface and no user has ever seen an answer from it. Measured on the zip: **2,431 of 132,990 documents skipped — 1,650 ukpga (37% of every Act), all 660 `aep`, all 58 `apgb`, and 0 of 85,971 SIs.** Proved by consequence: of 121,279 `cites` edges **0** have a regnal source, against 29,800 from the CSV-fed in-force path.
 ▶ **The brief's real question — "what else did we get wrong the same way" — has three answers, all measured.** (a) The identical regex **is** in `extract-madeunder-edges.ts:125` and **costs nothing** (0 SI-type entries carry a regnal filename); it shares the exported constant now anyway, because the defect's shape was two places that must agree with no check that they agree. (b) The widening is **strict** — 0 entries matched by the old regex fail the new one; checked because `ENTRY_RX` tightens the suffix group and that is where a widening could fail to be one. (c) ⚠⚠ **A THIRD DIVERGENCE, FOUND WHILE LOOKING: the two graph tables do not agree on what a pre-1963 Act is called.** `legislation_edges` keeps the URI's calendar form (`ukpga/1961/33`); `citation_edge` normalises to the canonical regnal form (`ukpga/Eliz2/9-10/33`). Under the `citation_edge` form three sample Acts return **0 rows** where the URI form returns 59, 50 and 50 — **a join on gid silently drops every pre-1963 Act and the loss presents as a coverage result, not a bug. OI-19.**
 ▶ **§2 T2 — 924 edges, 0.76%, under the 3% threshold and non-zero.** Re-ran the real extractor (imported, never re-implemented) over the 2,431 skipped documents, **writing nothing**. Delta on all four control Acts: **zero on all four** — it lands on the Interpretation Act 1889, the Public Health Act 1936, the Education Act 1944. ⚠ **The brief's trap is real: 29 edges run from a pre-1963 source to a post-2000 target** (a 1932 Act citing the Data Protection Act 2018), because legislation.gov.uk serves revised text; my prediction of ≥50 is refuted on magnitude and confirmed on direction. ⚠ 718 documents produced ZERO and that was **checked, not assumed** — every one of their 1,220 `<Citation>` elements sits inside `<Commentaries>`, while `ukla` carries 2,759, so the counter can be non-zero.

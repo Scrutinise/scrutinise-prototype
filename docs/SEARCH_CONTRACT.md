@@ -245,6 +245,79 @@ search could not be completed, which is a different state from a completed searc
 
 ## 4. How to ask
 
+### ⚠⚠ WHAT DECIDES THE DISPLAYED TWENTY (added S14 §2)
+
+**Until 26 August 2026 it was an equal share, and that was arithmetic rather than judgement.**
+`runRoutedSearch` round-robins the routed streams, so with **S** streams routed a top-20 window can
+show at most the first **floor(20/S)** of each. Measured over the 65 validated questions, that
+relation held for 29 of the 34 keys that were found and merged (S13 §1.3): an answer at in-stream
+rank five could not be displayed whatever its score. The round-robin was not making bad trades —
+across all 65 questions there was ONE case where a weaker result displaced a stronger one, and it
+was misattributed. **The window was too small, and rationing was the defect.**
+
+`LEX_SEARCH_JUDGED_MERGE` (default OFF) replaces the quota with a judgement over the whole pool:
+
+| | round-robin (today's default) | judged (`LEX_SEARCH_JUDGED_MERGE`) |
+|---|---|---|
+| retrieved per routed stream | the caller's `limit` | **at least 20**, whatever the caller asked (`SEARCH_MIN_PER_STREAM`) |
+| who gets the twenty slots | floor(20/S) each, by construction | whoever earns them |
+| can ONE source hold all twenty? | **no, ever** | **yes** |
+| does adding a source cost the others slots? | **yes** | no — a new source takes a slot only by winning it |
+
+⚠ **A caller reading `results` cannot tell which merge produced it, so `meta.merge` says.** It
+carries `mode` (`round-robin` | `judged`), the per-stream `windowShare` of the top 20, and the
+reranker's outcome when one ran. *"The judged merge ran and changed nothing"* and *"the judged
+merge did not run"* are different facts.
+
+⚠ **The judged arm has NO stream floor, deliberately, and the risk is named rather than dismissed.**
+`interleave.ts` exists because four of five routed streams were once silently dropped and Lex told a
+user the sources contained nothing from select committees. A floor of 2 makes "one source may hold
+all twenty" arithmetically impossible, so the protection moves from a quota to a MEASUREMENT:
+`windowShare` is returned on every call and logged.
+
+**Two ordering signals, and they are the only two things in this system that are comparable across
+streams.** Everything else is either a within-index statistic (BM25 means different things in a
+250k-instrument index and a 78k-section one) or a within-stream rank, which carries no information
+about whose rank 1 is better.
+
+- **`LEX_ROUTER_CONFIDENCE`** (default OFF) — the router already decides which streams are relevant,
+  about the streams TOGETHER; asking it *how likely each is to hold the answer* makes that judgement
+  a weight. ⚠ It changes the router's prompt and schema, so it can change which streams are SELECTED
+  as well as how they are ordered — see `docs/SEARCH_S14_REPORT.md` §1 for the measured effect.
+- **`SEARCH_RELEVANCE_FLOOR`** (unset = no gate) — an absolute bar a result must clear to occupy a
+  slot, expressed as the fraction of the query's content terms visible in what it displays. ⚠ It is
+  a GATE and not a sort: S13 measured coverage-as-the-whole-ordering and it took two documents their
+  own stream ranked SECOND to merged ranks 117 and 149.
+
+⚠⚠ **`LEX_MERGE_COVERAGE` IS DELETED, not defaulted off** (S14 §2). It was S13's minimal
+experiment; D-5 recommended leaving it off and S14 replaces it. A flag that survives its own
+replacement is how a dead branch gets re-enabled by somebody reading an old note.
+
+### ⚠⚠ THE RERANKER — `LEX_SEARCH_RERANKER`, DECLARED SINCE JUNE, WIRED IN S14 §3
+
+A model reads the pooled candidates from every stream and orders them against the user's question.
+**It was declined in June for a reason that no longer holds**: the binding constraint then was
+recall (11 of 15 scored pairs turned on whether the document was retrieved at all). S13 reversed
+that — 28 of 65 answers are FOUND and 15 DISPLAYED — so ordering is the binding constraint now.
+
+What a caller is guaranteed, and what `meta.merge.rerank` reports:
+
+| | |
+|---|---|
+| it may **reorder** | the candidates it was given, in any order, including all twenty from one source |
+| it may **not invent** | an id not in the candidate list is discarded and counted as `invented` |
+| it may **not summarise** | it returns numbers; there is no free-text field a summary could travel in |
+| it may **not drop silently** | a candidate it omits keeps its place BEHIND the ones it ranked, and `omitted` counts it. ⚠ A model that quietly drops the right answer is indistinguishable from retrieval that never found it |
+
+**Bounded in three places, all config:** `SEARCH_RERANK_CANDIDATES` (60), `SEARCH_RERANK_SNIPPET_CHARS`
+(420), `SEARCH_RERANK_MAX_PENCE` (6p per query, refused BEFORE the call). ⚠ The candidate cap is
+taken ROUND-ROBIN across streams — a cap in merged order would let the model see only floor(N/S) of
+each stream, which is the rationing defect one layer up wearing a model's face.
+
+⚠ **The model is `gemini-2.5-pro`, and that is a decision.** Every other retrieval-support pass
+writes a search STRING; this one judges which of sixty documents answers a question. Cost per query
+and the measured comparison against `gemini-2.5-flash` are in `docs/SEARCH_S14_REPORT.md` §3.
+
 ### ⚠⚠ WHAT `snippet` IS — THE PASSAGE THAT MATCHED, NOT THE HEAD OF THE DOCUMENT (added S13 §3)
 
 **Until 2026-08-24 `snippet` was `body.slice(0, 300)` on both retrieval legs**, whatever the query
@@ -386,7 +459,8 @@ tier and switches off streams the gold set says help. It exists only for callers
 has nowhere to put anything else. **A caller that merely prefers legislation must not set it.**
 
 **Capability flags** (`LEX_QUERY_EXPANSION`, `LEX_QUERY_ROUTER`, `LEX_SEARCH_VECTOR`,
-`LEX_WEB_ORIENTATION`, `LEX_SEARCH_RERANKER`, `LEX_SEARCH_GRAPH`) each gate one capability, default
+`LEX_WEB_ORIENTATION`, `LEX_SEARCH_RERANKER`, `LEX_SEARCH_GRAPH`, and from S14
+`LEX_SEARCH_JUDGED_MERGE` and `LEX_ROUTER_CONFIDENCE`) each gate one capability, default
 OFF, read through `flagEnabled()` — never a bare `=== 'true'`, because a capitalised `TRUE` in Vercel
 silently disabled the router and expansion for an unknown period.
 
