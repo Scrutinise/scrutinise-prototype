@@ -131,11 +131,32 @@ function cell(v: unknown): string {
   return String(v).replace(/ /g, ' ').trim()
 }
 
-/** Topics and Sources are multi-valued in one cell. Commas, semicolons and
- *  newlines all read as separators, because all three turn up in real files. */
+/**
+ * Topics and Sources are multi-valued in one cell.
+ *
+ * ⚠ A COMMA IS NOT A SEPARATOR, AND CANNOT BE (26 Aug 2026). It used to be, and
+ * that quietly corrupted five of the thirty-five topics the shipped template
+ * offers in its own "Valid values" list — every one whose name contains a
+ * comma:
+ *
+ *     Department for Culture, Media and Sport
+ *     Department for Environment, Food and Rural Affairs
+ *     Department for Science, Innovation and Technology
+ *     Foreign, Commonwealth and Development Office
+ *     Ministry of Housing, Communities and Local Government
+ *
+ * Picking DCMS from the list produced the tags "Department for Culture" and
+ * "Media and Sport" — two new topics nobody asked for, created silently. It
+ * mangled citation text in Sources for the same reason.
+ *
+ * The template has always said "Separate several with a semicolon", so this is
+ * the parser being made to match its own documentation. Someone who commas them
+ * anyway now gets one long unknown topic, which the preview SHOWS them as a
+ * topic that would be created — visible and correctable, rather than silent.
+ */
 function splitList(v: string): string[] {
   return v
-    .split(/[\n;,]+/)
+    .split(/[\n;]+/)
     .map((s) => s.trim())
     .filter(Boolean)
 }
