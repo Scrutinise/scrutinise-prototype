@@ -1,0 +1,399 @@
+{
+  "takenAt": "2026-08-26T12:37:29.783Z",
+  "config": "[config] fts=fts-serve-production-4cea.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance,committees router=ON fully-configured",
+  "probes": [
+    {
+      "query": "landlords evicting tenants without a reason",
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "pairs": 10,
+      "overlappingPairs": 0,
+      "sharedIds": 0,
+      "streams": [
+        {
+          "stream": "legislation",
+          "query": "Housing Act 1988 section 21 assured shorthold tenancy possession",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 93.94281616210938,
+            "p25": 154.57742309570312,
+            "median": 174.734619140625,
+            "p75": 196.4087677001953,
+            "max": 254.24761962890625
+          },
+          "top": 254.24761962890625,
+          "ms": 25018
+        },
+        {
+          "stream": "debates",
+          "query": "no fault eviction section 21 abolition renters reform",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 101.85840606689453,
+            "p25": 105.71328163146973,
+            "median": 110.86921691894531,
+            "p75": 115.83002090454102,
+            "max": 126.69670104980469
+          },
+          "top": 126.69670104980469,
+          "ms": 6077
+        },
+        {
+          "stream": "committees",
+          "query": "select committee evidence private rented sector eviction",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 78.94569396972656,
+            "p25": 80.1424789428711,
+            "median": 81.44257545471191,
+            "p75": 83.14167022705078,
+            "max": 100.92514038085938
+          },
+          "top": 100.92514038085938,
+          "ms": 25018
+        },
+        {
+          "stream": "caselaw",
+          "query": "section 21 notice validity possession proceedings",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 20.93242073059082,
+            "p25": 21.619152069091797,
+            "median": 22.689455032348633,
+            "p75": 24.628585815429688,
+            "max": 53.417954444885254
+          },
+          "top": 53.417954444885254,
+          "ms": 25014
+        },
+        {
+          "stream": "guidance",
+          "query": "Ministry of Housing section 21 guidance landlords tenants",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 55.7335901260376,
+            "p25": 58.36075305938721,
+            "median": 62.280287742614746,
+            "p75": 66.35806560516357,
+            "max": 89.26077842712402
+          },
+          "top": 89.26077842712402,
+          "ms": 25016
+        }
+      ]
+    },
+    {
+      "query": "sewage discharge by water companies",
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "pairs": 10,
+      "overlappingPairs": 0,
+      "sharedIds": 0,
+      "streams": [
+        {
+          "stream": "legislation",
+          "query": "Water Industry Act 1991 Environmental Permitting Regulations discharge",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 160.64288330078125,
+            "p25": 162.85789489746094,
+            "median": 165.78848266601562,
+            "p75": 170.2829132080078,
+            "max": 196.93222045898438
+          },
+          "top": 196.93222045898438,
+          "ms": 25008
+        },
+        {
+          "stream": "debates",
+          "query": "storm overflows sewage discharge water companies",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 140.83051681518555,
+            "p25": 142.24824905395508,
+            "median": 144.50031280517578,
+            "p75": 146.79311752319336,
+            "max": 151.08522415161133
+          },
+          "top": 151.08522415161133,
+          "ms": 4092
+        },
+        {
+          "stream": "committees",
+          "query": "Environment Food Rural Affairs Committee water quality",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 85.62020301818848,
+            "p25": 87.88515090942383,
+            "median": 90.00006675720215,
+            "p75": 92.30942726135254,
+            "max": 100.80070495605469
+          },
+          "top": 100.80070495605469,
+          "ms": 25009
+        },
+        {
+          "stream": "caselaw",
+          "query": "water company nuisance discharge judicial review",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 35.595738887786865,
+            "p25": 39.266793727874756,
+            "median": 42.4949312210083,
+            "p75": 47.62318134307861,
+            "max": 64.53661918640137
+          },
+          "top": 64.53661918640137,
+          "ms": 24998
+        },
+        {
+          "stream": "guidance",
+          "query": "Ofwat Environment Agency storm overflow enforcement guidance",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 50.68079471588135,
+            "p25": 52.040019035339355,
+            "median": 54.69106197357178,
+            "p75": 61.590423583984375,
+            "max": 131.3175392150879
+          },
+          "top": 131.3175392150879,
+          "ms": 25011
+        }
+      ]
+    },
+    {
+      "query": "vicarious liability for an employee assault",
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "pairs": 10,
+      "overlappingPairs": 0,
+      "sharedIds": 0,
+      "streams": [
+        {
+          "stream": "legislation",
+          "query": "employer vicarious liability employee assault statutory duty",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 46.454445648193364,
+            "p25": 50.25484657287598,
+            "median": 99.13599014282227,
+            "p75": 112.77973079681396,
+            "max": 126.4830207824707
+          },
+          "top": 126.4830207824707,
+          "ms": 25030
+        },
+        {
+          "stream": "debates",
+          "query": "vicarious liability employee assault employer responsibility debate",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 49.22342777252197,
+            "p25": 51.41930103302002,
+            "median": 53.81314277648926,
+            "p75": 58.14523696899414,
+            "max": 108.34978103637695
+          },
+          "top": 108.34978103637695,
+          "ms": 4040
+        },
+        {
+          "stream": "committees",
+          "query": "Justice Committee inquiry vicarious liability employer employee",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 48.569092750549316,
+            "p25": 50.320329666137695,
+            "median": 52.97347068786621,
+            "p75": 55.58319568634033,
+            "max": 78.92845153808594
+          },
+          "top": 78.92845153808594,
+          "ms": 25034
+        },
+        {
+          "stream": "caselaw",
+          "query": "vicarious liability employee assault close connection test",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 26.067203521728516,
+            "p25": 28.752037048339844,
+            "median": 32.40253829956055,
+            "p75": 36.88412094116211,
+            "max": 46.94717025756836
+          },
+          "top": 46.94717025756836,
+          "ms": 25020
+        },
+        {
+          "stream": "guidance",
+          "query": "ACAS employer liability employee misconduct assault guidance",
+          "returned": 60,
+          "scorers": [
+            "bm25"
+          ],
+          "quantiles": {
+            "n": 60,
+            "min": 58.038930892944336,
+            "p25": 59.277873039245605,
+            "median": 60.7258939743042,
+            "p75": 62.85342216491699,
+            "max": 75.42014122009277
+          },
+          "top": 75.42014122009277,
+          "ms": 25006
+        }
+      ]
+    }
+  ],
+  "widths": [
+    {
+      "width": 20,
+      "fanoutMs": 25019,
+      "slowest": {
+        "stream": "guidance",
+        "ms": 25018
+      },
+      "perStream": [
+        {
+          "stream": "legislation",
+          "returned": 60,
+          "ms": 8010
+        },
+        {
+          "stream": "debates",
+          "returned": 60,
+          "ms": 25015
+        },
+        {
+          "stream": "guidance",
+          "returned": 60,
+          "ms": 25018
+        }
+      ]
+    },
+    {
+      "width": 30,
+      "fanoutMs": 25026,
+      "slowest": {
+        "stream": "legislation",
+        "ms": 25025
+      },
+      "perStream": [
+        {
+          "stream": "legislation",
+          "returned": 90,
+          "ms": 25025
+        },
+        {
+          "stream": "debates",
+          "returned": 90,
+          "ms": 4753
+        },
+        {
+          "stream": "guidance",
+          "returned": 90,
+          "ms": 25016
+        }
+      ]
+    },
+    {
+      "width": 50,
+      "fanoutMs": 25007,
+      "slowest": {
+        "stream": "legislation",
+        "ms": 25006
+      },
+      "perStream": [
+        {
+          "stream": "legislation",
+          "returned": 100,
+          "ms": 25006
+        },
+        {
+          "stream": "debates",
+          "returned": 100,
+          "ms": 5104
+        },
+        {
+          "stream": "guidance",
+          "returned": 100,
+          "ms": 25003
+        }
+      ]
+    }
+  ],
+  "served": "fts+42  vector+19"
+}
