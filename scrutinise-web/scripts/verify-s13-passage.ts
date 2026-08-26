@@ -24,7 +24,7 @@
  *
  * ── THE §3 METRIC, WITH ITS DENOMINATOR STATED ──────────────────────────────────────────────────
  * "Contains the words that caused the result to be retrieved" is measured as: at least one CONTENT
- * term of the query (stopwords removed — see the note in `merge-coverage.ts`, and the check that
+ * term of the query (stopwords removed — see the note in `term-coverage.ts`, and the check that
  * caught their absence) appears as a word prefix in what is DISPLAYED, i.e. title + citation +
  * snippet. ⚠ Measured over the WHOLE displayed set for each question, with n printed; it is not a
  * top-N sample. ⚠ Stopwords are removed because with them in, "the" scores every document in the
@@ -39,7 +39,7 @@ import path from 'node:path'
 import { prisma } from '../lib/prisma'
 import { runSearch } from '../lib/lex/search-gateway'
 import { SCOREABLE_V2 } from './gold/gold-v2-set'
-import { contentTerms, coverageOf } from '../lib/lex/merge-coverage'
+import { contentTerms, coverageOf } from '../lib/lex/term-coverage'
 import { capabilityLine } from '../lib/env-flags'
 
 export {}

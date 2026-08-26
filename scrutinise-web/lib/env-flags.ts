@@ -120,21 +120,57 @@ export const CAPABILITY_FLAGS = [
   // ⚠ ONE BOOLEAN IS WHAT A ROLLBACK WANTS. Flipping this off restores 0.5 everywhere without
   // anyone having to remember what the weights string used to say.
   'LEX_FUSION_WEIGHTS',
-  // S13 §2. THE MERGE ARM — allocate the post-floor slots by cross-stream query-term coverage
-  // instead of by strict round-robin rotation. `lib/lex/merge-coverage.ts`.
+  // ═══════════════════════════════════════════════════════════════════════════════════════════
+  // S14 §2. THE JUDGED MERGE — stop rationing slots, judge the whole pool. `lib/lex/merge-judged.ts`.
+  // ═══════════════════════════════════════════════════════════════════════════════════════════
   //
-  // ⚠ DEFAULT OFF, and with it off `runRoutedSearch` makes the same `interleaveStreams` call it
-  // always made. What the §1 audit established is that the round-robin's visible window is
-  // arithmetic — with S streams routed a top-20 can show at most the first floor(20/S) of each —
-  // and that 12 of the 65 validated questions are recoverable by the merge alone. This flag is
-  // the mechanism for recovering them; whether it should be ON is a MEASUREMENT, not a default.
+  // What it changes, in one sentence: the displayed twenty stop being an equal share of the routed
+  // streams and become the twenty best candidates across all of them, so **one source may hold all
+  // twenty if that is where the answer is** — which the round-robin makes arithmetically
+  // impossible, since with S streams a top-20 can show at most the first floor(20/S) of each.
   //
-  // ⚠ IT NEEDS S13 §3's SIGNAL. Coverage is scored over title+citation+snippet, and until
-  // `fts-serve`/`vector-serve` are redeployed the snippet is still the first 300 characters of
-  // the document. `mergeByCoverage` REFUSES to run without `snippetMatched` on the wire and logs
-  // an error rather than reporting a null — a measurement of a signal that is not there would
-  // look exactly like a measurement of a signal that does not help.
-  'LEX_MERGE_COVERAGE',
+  // It also raises the PER-STREAM retrieval budget to at least `SEARCH_MIN_PER_STREAM` (20), which
+  // is Charlie's other rule: "we should never cut back the visibility when we add sources."
+  //
+  // ⚠ DEFAULT OFF, and with it off `runRoutedSearch` makes the same `interleaveStreams` call at
+  // the same `limit` it always did. The equivalence is stronger than that and is asserted rather
+  // than claimed: with a stream floor of 2, uniform confidence and no gate, the judged merge
+  // returns the SAME LIST id-for-id (`npm run check:s14-merge`).
+  //
+  // ⚠ TWO ENV VALUES CONFIGURE IT AND NEITHER IS A BOOLEAN, so both stay out of this list:
+  //     SEARCH_MIN_PER_STREAM     the per-stream retrieval floor (default 20)
+  //     SEARCH_RELEVANCE_FLOOR    the absolute relevance gate, 0..1. UNSET = no gate, deliberately
+  //                               — S14 declines to adopt a point value tuned to 64 questions and
+  //                               reports the sweep instead.
+  //
+  // ⚠ IT WIDENS `results`, WHICH HAS A KNOWN VICTIM. The Deepening's sift is the one caller that
+  // reads `results` unfiltered and pays a per-candidate model cost (S11 §5.1). That is why the
+  // width is behind this flag rather than simply raised.
+  'LEX_SEARCH_JUDGED_MERGE',
+  // S14 §1(b). The router says how likely each stream is to hold the answer, and the judged merge
+  // weights the streams by it. `lib/lex/query-expansion.ts::routeQueryDetailed`.
+  //
+  // ⚠ DEFAULT OFF because it changes the ROUTER'S PROMPT AND SCHEMA, and adding a question to a
+  // choice can change the choice even when nothing else is reworded. With it off both reach the
+  // model byte-identical; with it on, any change in stream SELECTION is attributable to the
+  // confidence question existing, which is what makes the arm measurable.
+  //
+  // ⚠ A MISSING CONFIDENCE IS UNIFORM, NOT ZERO. Absent weights reduce the judged merge to exactly
+  // the round-robin ordering; defaulting them to zero would delete a routed stream from the window
+  // on the strength of a field the model simply omitted.
+  'LEX_ROUTER_CONFIDENCE',
+  //
+  // ⚠⚠ `LEX_MERGE_COVERAGE` WAS HERE AND WAS RETIRED ON 2026-08-26 (S14 §2). It was S13's minimal
+  // experiment — reallocate the post-floor slots by query-term coverage. Measured: **+2 of 65**
+  // (23% → 26%) while moving **24 of 34 rankings**, and its two regressions took documents their
+  // own stream ranked SECOND to merged ranks 117 and 149. S13 D-5 recommended leaving it off; S14
+  // replaces it with a merge that uses coverage as a GATE rather than as the entire ordering,
+  // which is the specific thing that made it too crude.
+  //
+  // It is DELETED rather than defaulted off, for the reason the brief gives: a flag that survives
+  // its own replacement is how a dead branch gets re-enabled by somebody reading an old note —
+  // the same reasoning that deleted `LEX_GUIDANCE_CPS` in S11. The SIGNAL survives in
+  // `lib/lex/term-coverage.ts`, which has three other readers.
   // ⚠⚠ `LEX_GUIDANCE_CPS` WAS HERE AND WAS RETIRED ON 2026-08-21 (S11 §2.4). It admitted
   // `cps-guidance` to the guidance stream's EXTRA LEG as a bridge, because the collection was
   // display-typed GUIDANCE and indexed under tier `other`, so no router stream could select it.

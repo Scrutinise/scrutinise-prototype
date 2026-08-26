@@ -24,7 +24,7 @@
 import { prisma } from '../lib/prisma'
 import { r2Get } from '../lib/r2'
 import { SCOREABLE_V2 } from './gold/gold-v2-set'
-import { contentTerms, coverageOf } from '../lib/lex/merge-coverage'
+import { contentTerms, coverageOf } from '../lib/lex/term-coverage'
 
 export {}
 
