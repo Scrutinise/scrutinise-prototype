@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { isDerivedPageOneField } from './page-one'
 import {
   ALL_FIELDS,
   EXPERIENCE_LEVEL_MAP,
@@ -193,7 +194,38 @@ async function setStatus(
 // ── Transitions ──────────────────────────────────────────────────────────────
 
 /** A box (narrative) field the user authored directly → ACCEPTED. */
+/**
+ * ⚠⚠ 25-H §1/§2 — A DERIVED FIELD IS NOT WRITEABLE, AND THE GUARD LIVES HERE.
+ *
+ * Page one's four answer fields are a PROJECTION of the elicitation (lib/lex/page-one.ts).
+ * A write to one would be overwritten by the next canonical-state read — silently, so the
+ * user would watch their edit disappear on the following poll with nothing to explain it.
+ * And `yourAccount` is worse than that: it is the user's own testimony, and §2's rule is
+ * that it is never edited and never overwritten.
+ *
+ * ⚠ THE RULE IS HERE AND NOT IN THE PANEL. The panel is one caller; `/api/ideas/[id]/fields`
+ * is another, and the conductor is a third. A rule a component honours is a rule with two
+ * holes in it — which is the shape `check:never-claim` and `check:panel-claims` exist to
+ * remove elsewhere in this file.
+ *
+ * ⚠ IT THROWS RATHER THAN NO-OPPING. A silent refusal would leave the caller believing the
+ * write landed, which is the same failure one level along.
+ */
+export class DerivedFieldNotWriteable extends Error {
+  constructor(fieldKey: string) {
+    super(
+      `"${fieldKey}" is projected from your answers, so it cannot be edited here — `
+      + 'change the answer it comes from and it updates everywhere.',
+    )
+  }
+}
+
+export function assertWriteable(fieldKey: string): void {
+  if (isDerivedPageOneField(fieldKey)) throw new DerivedFieldNotWriteable(fieldKey)
+}
+
 export async function submitBox(ideaId: string, userId: string, fieldKey: string, value: string) {
+  assertWriteable(fieldKey)
   await setStatus(ideaId, fieldKey, 'ACCEPTED', { value, proposal: null })
   await mirrorValue(ideaId, userId, fieldKey, value)
 }
@@ -258,6 +290,7 @@ export async function acceptField(
   fieldKey: string,
   editedValue?: unknown,
 ): Promise<void> {
+  assertWriteable(fieldKey)
   let value = editedValue
   if (value === undefined) {
     const row = await prisma.ideaFieldState.findUnique({
@@ -273,11 +306,13 @@ export async function acceptField(
 
 /** User declines → SKIPPED. */
 export async function skipField(ideaId: string, fieldKey: string) {
+  assertWriteable(fieldKey)
   await setStatus(ideaId, fieldKey, 'SKIPPED', { proposal: null })
 }
 
 /** User reopens an accepted field to change it → AWAITING_CONFIRMATION (§3.2). */
 export async function reopenField(ideaId: string, fieldKey: string) {
+  assertWriteable(fieldKey)
   const row = await prisma.ideaFieldState.findUnique({
     where: { ideaId_fieldKey: { ideaId, fieldKey } },
     select: { value: true },

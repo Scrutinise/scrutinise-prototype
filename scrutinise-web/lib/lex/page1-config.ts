@@ -43,6 +43,16 @@ export interface FieldDef {
   /** Slot keys for a `structured` field (e.g. whoAffectedImpactCost). The value is a
    *  JSON object keyed by these; the panel renders one labelled input per slot. */
   slots?: string[]
+  /**
+   * 25-H §1/§2 — A PROJECTION OF SOMETHING ELSE, NOT A BOX THE USER TYPES IN.
+   *
+   * A derived field is recomputed from its source on every canonical-state read, so an
+   * edit to the source shows here immediately. The field machine REFUSES a write to one:
+   * a rule that only the panel honoured would be a rule with the API route as its hole.
+   *
+   * Editing happens where the value lives — for page one, the elicitation pill (§3).
+   */
+  derived?: boolean
 }
 
 /** Where a field's accept surface lives. Box-authored fields (narrative/structured/
@@ -62,9 +72,62 @@ export interface PageDef {
 // Order: per-idea boxes first (fresh each idea), profile box last (reused), then
 // the two generated outputs. `keywords` accept fires the legislation search (§8.4).
 export const ORIENTATION_FIELDS: FieldDef[] = [
+  // ══ 25-H §1/§2 — THE ELICITATION'S ANSWERS ARE PAGE ONE ═══════════════════
+  //
+  // One field per question asked, in the order they were asked, rather than the two
+  // narrative blobs that preceded them. Charlie could not find "the new P1 fields"
+  // because they were there — concatenated into `youAndIdeaNarrative`, under a heading
+  // naming none of them.
+  //
+  // ⚠ ALL FOUR ARE `derived`. They are a PROJECTION of the elicitation, refreshed on every
+  // canonical-state read (lib/lex/page-one.ts), and the field machine refuses a write to
+  // them. Editing an answer happens where the answer lives — the pill on the build screen
+  // (§3) — and the projection carries it here.
+  {
+    key: 'yourAccount',
+    label: 'Your account',
+    type: 'narrative',
+    scope: 'idea',
+    origin: 'box',
+    derived: true,
+    // ⚠ §2 — THE PROVENANCE RULE. Verbatim, never edited, never overwritten. This is
+    // testimony, and it is the one thing in the kernel that must survive every rewrite.
+    question: 'The problem in your own words, exactly as you wrote it.',
+  },
+  {
+    key: 'yourGoal',
+    label: 'What you want to happen',
+    type: 'narrative',
+    scope: 'idea',
+    origin: 'box',
+    derived: true,
+    question: 'What you told me you want, and what you had already ruled out.',
+  },
+  {
+    key: 'yourKnowledge',
+    label: 'What you know at first hand',
+    type: 'narrative',
+    scope: 'idea',
+    origin: 'box',
+    derived: true,
+    question: 'What you know that the record will not show.',
+  },
+  {
+    key: 'yourReading',
+    label: 'What you gave me to read',
+    type: 'narrative',
+    scope: 'idea',
+    origin: 'box',
+    derived: true,
+    question: 'The documents and links you attached.',
+  },
   {
     key: 'ideaNarrative',
-    label: 'The idea',
+    // ⚠ 25-H §2 — THIS IS NOW THE *AGREED* STATEMENT, NOT THE RAW ACCOUNT.
+    // It is seeded once as a proposal from `yourAccount` and then owned by the user.
+    // Before this sprint it held the verbatim problem AND was editable, so the first
+    // edit destroyed the testimony with no copy anywhere.
+    label: 'The idea, as agreed',
     type: 'narrative',
     scope: 'idea',
     origin: 'box',
@@ -78,19 +141,17 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
       'any costs you know of',
     ],
   },
-  {
-    key: 'youAndIdeaNarrative',
-    label: 'You + the idea',
-    type: 'narrative',
-    scope: 'idea',
-    origin: 'box',
-    question: 'Why does this matter to you, and what would success look like?',
-    hints: [
-      'why it matters to you',
-      "anything you've already done, written, or researched (you can upload it)",
-      'what success would look like',
-    ],
-  },
+  // ⚠⚠ `youAndIdeaNarrative` ("You + the idea") WAS HERE AND IS RETIRED BY 25-H §1.
+  //
+  // It concatenated the goal, the ruled-outs, the own-knowledge and the reading into one
+  // narrative blob — which is why the four answers were unfindable, and why editing any
+  // one of them meant editing a paragraph that contained all four. The four `derived`
+  // fields above replace it, one per question.
+  //
+  // ⚠ Removing a field needs Charlie's explicit instruction (docs/CLAUDE.md §11), and
+  // BRIEF_25H §1 is it: "Retire the old fields — do not leave empty boxes that nothing
+  // fills." `migrateLegacyPageOne` moves any content in existing ideas across first, and
+  // reports the count.
   {
     key: 'aboutYou',
     label: 'About you',

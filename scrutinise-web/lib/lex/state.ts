@@ -10,6 +10,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { initializeFieldStates } from './field-machine'
+import { projectElicitationOntoPageOne } from './page-one'
 import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
 import {
   PAGE_SEQUENCE,
@@ -57,6 +58,18 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
 
   // Lazily ensure the field rows exist (idempotent).
   await initializeFieldStates(ideaId, idea.creatorId)
+
+  // ⚠⚠ 25-H §1 — PAGE ONE IS PROJECTED FROM THE ELICITATION ON EVERY READ.
+  //
+  // This is the refresh path, and it is here rather than at confirm-time deliberately.
+  // `confirmElicitation` used to copy the answers into the kernel ONCE; that is fine for
+  // exactly as long as nothing changes afterwards, and §3 makes every answer editable. A
+  // one-time copy would leave the proposal showing last week's words with nothing on any
+  // screen to say the two disagree.
+  //
+  // Idempotent and cheap — one row read, four string comparisons, a write only where a
+  // value differs. See lib/lex/page-one.ts.
+  await projectElicitationOntoPageOne(ideaId)
 
   const rows = await prisma.ideaFieldState.findMany({
     where: { ideaId },
