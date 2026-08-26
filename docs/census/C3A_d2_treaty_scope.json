@@ -1,0 +1,166 @@
+{
+  "generated": "2026-08-26T20:29:50.036Z",
+  "fts": "https://fts-serve-production.up.railway.app",
+  "optionA": {
+    "perQuestion": [
+      {
+        "id": "Q1",
+        "query": "Did MPs argue for or against letting terminally ill people choose to die?",
+        "keys": 2,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q2",
+        "query": "Did peers back the assisted dying bill when it reached the Lords?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q3",
+        "query": "What did ministers at Stormont say about the botched green energy scheme?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q4",
+        "query": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+        "keys": 2,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q5",
+        "query": "What did peers say about overturning the subpostmasters' convictions?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q6",
+        "query": "When did Parliament last seriously debate bringing back the death penalty?",
+        "keys": 2,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q7",
+        "query": "What happened to the plan to make the House of Lords elected?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q8",
+        "query": "What did MSPs say about making it easier to change your legal gender?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q9",
+        "query": "Why were energy companies forcing people onto prepayment meters?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q10",
+        "query": "What has the government promised to do about the Grenfell inquiry's findings?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      },
+      {
+        "id": "Q11",
+        "query": "What did the Chancellor announce in the Spring Statement?",
+        "keys": 1,
+        "before": 0,
+        "after": 0,
+        "treatyRowsInTop20": 0,
+        "displaced": 0,
+        "rowsBefore": 20,
+        "rowsAfter": 20
+      }
+    ],
+    "recallBefore": 0,
+    "recallAfter": 0,
+    "keyTotal": 14,
+    "treatySlots": 0,
+    "displaced": 0
+  },
+  "benefit": [
+    {
+      "corpus": "uk-treaties",
+      "probes": 12,
+      "control": 12,
+      "today": 0,
+      "optionA": 12,
+      "optionB": 12
+    },
+    {
+      "corpus": "tax-treaties-dta",
+      "probes": 12,
+      "control": 12,
+      "today": 0,
+      "optionA": 12,
+      "optionB": 12
+    }
+  ],
+  "optionBLatency": {
+    "five": [
+      769,
+      706,
+      739
+    ],
+    "six": [
+      901,
+      948,
+      1012
+    ],
+    "meanFive": 738,
+    "meanSix": 954
+  }
+}

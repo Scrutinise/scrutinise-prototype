@@ -1,0 +1,2081 @@
+{
+  "generated": "2026-08-26T13:24:38.126Z",
+  "orgFilterTotal": 222,
+  "enumerated": 222,
+  "freeTextTotal": 348054,
+  "heldToday": 497,
+  "alreadyInsideTheUniverse": 76,
+  "toFetch": 146,
+  "attachmentCensus": {
+    "read": 222,
+    "withPdf": 143,
+    "pdfCount": 300,
+    "medianBodyChars": 924
+  },
+  "fetchList": [
+    {
+      "id": "ots-reports:-government-publications-employee-share-schemes-review:1",
+      "url": "/government/publications/employee-share-schemes-review",
+      "title": "Employee share schemes review"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-employee-benefits-and-expenses-interim-report:1",
+      "url": "/government/publications/review-of-employee-benefits-and-expenses-interim-report",
+      "title": "Review of employee benefits and expenses: interim report"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-employee-benefits-and-expenses-second-report:1",
+      "url": "/government/publications/review-of-employee-benefits-and-expenses-second-report",
+      "title": "Review of employee benefits and expenses: second report"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-and-expenses-review:1",
+      "url": "/government/publications/employee-benefits-and-expenses-review",
+      "title": "Employee benefits and expenses review"
+    },
+    {
+      "id": "ots-reports:-government-publications-taxation-of-pensioners-review:1",
+      "url": "/government/publications/taxation-of-pensioners-review",
+      "title": "Taxation of pensioners review"
+    },
+    {
+      "id": "ots-reports:-government-organisations-office-of-tax-simplification:1",
+      "url": "/government/organisations/office-of-tax-simplification",
+      "title": "Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-inheritance-tax-review-simplifying-the-design-of-the-tax:1",
+      "url": "/government/publications/ots-inheritance-tax-review-simplifying-the-design-of-the-tax",
+      "title": "OTS Inheritance Tax review: Simplifying the design of the tax"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-publishes-its-report-on-paper-stamp-duty:1",
+      "url": "/government/publications/ots-publishes-its-report-on-paper-stamp-duty",
+      "title": "OTS publishes its report on paper stamp duty"
+    },
+    {
+      "id": "ots-reports:-government-publications-employment-status-review:1",
+      "url": "/government/publications/employment-status-review",
+      "title": "Employment status review"
+    },
+    {
+      "id": "ots-reports:-government-collections-ots-review-of-value-added-tax:1",
+      "url": "/government/collections/ots-review-of-value-added-tax",
+      "title": "OTS review of Value Added Tax"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-requests-ots-review-of-capital-gains-tax:1",
+      "url": "/government/publications/chancellor-requests-ots-review-of-capital-gains-tax",
+      "title": "Chancellor requests OTS review of Capital Gains Tax"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-responds-to-ots-reports-on-inheritance-tax-and-capital-gains-tax:1",
+      "url": "/government/publications/chancellor-responds-to-ots-reports-on-inheritance-tax-and-capital-gains-tax",
+      "title": "Chancellor responds to OTS reports on Inheritance Tax and Capital Gains Tax"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-from-the-financial-secretary-to-the-ots-on-budget-2015:1",
+      "url": "/government/publications/letter-from-the-financial-secretary-to-the-ots-on-budget-2015",
+      "title": "Letter from the Financial Secretary to the OTS on Budget 2015"
+    },
+    {
+      "id": "ots-reports:-government-publications-list-of-tax-thresholds:1",
+      "url": "/government/publications/list-of-tax-thresholds",
+      "title": "List of tax thresholds"
+    },
+    {
+      "id": "ots-reports:-government-news-update-on-the-closure-of-the-office-of-tax-simplification:1",
+      "url": "/government/news/update-on-the-closure-of-the-office-of-tax-simplification",
+      "title": "Update on the closure of the Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-to-explore-self-employed-tax-reporting-and-payment:1",
+      "url": "/government/publications/ots-to-explore-self-employed-tax-reporting-and-payment",
+      "title": "OTS to explore self-employed tax reporting and payment"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-review-of-tax-simplification:1",
+      "url": "/government/publications/ots-review-of-tax-simplification",
+      "title": "OTS Review of tax simplification"
+    },
+    {
+      "id": "ots-reports:-government-publications-partnerships-review:1",
+      "url": "/government/publications/partnerships-review",
+      "title": "Partnerships review"
+    },
+    {
+      "id": "ots-reports:-government-publications-the-gig-economy-an-updated-ots-focus-paper:1",
+      "url": "/government/publications/the-gig-economy-an-updated-ots-focus-paper",
+      "title": "The 'Gig' economy: an updated OTS focus paper"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-complexity-project:1",
+      "url": "/government/publications/tax-complexity-project",
+      "title": "Tax complexity project"
+    },
+    {
+      "id": "ots-reports:-government-publications-length-of-legislation:1",
+      "url": "/government/publications/length-of-legislation",
+      "title": "Length of legislation"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-from-ots-to-david-gauke-mp:1",
+      "url": "/government/publications/letter-from-ots-to-david-gauke-mp",
+      "title": "Letter from OTS to David Gauke MP"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-from-exchequer-secretary-to-ots-competitiveness-of-uk-tax-administration:1",
+      "url": "/government/publications/letter-from-exchequer-secretary-to-ots-competitiveness-of-uk-tax-administration",
+      "title": "Letter from Exchequer Secretary to OTS: competitiveness of UK tax administration"
+    },
+    {
+      "id": "ots-reports:-government-people-john-whiting--2:1",
+      "url": "/government/people/john-whiting--2",
+      "title": "John Whiting CBE"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-requests-ots-review-of-inheritance-tax:1",
+      "url": "/government/publications/chancellor-requests-ots-review-of-inheritance-tax",
+      "title": "Chancellor requests OTS review of Inheritance Tax"
+    },
+    {
+      "id": "ots-reports:-government-publications-competitiveness-of-uk-tax-administration-review:1",
+      "url": "/government/publications/competitiveness-of-uk-tax-administration-review",
+      "title": "Competitiveness of UK tax administration review"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-final-report-on-lookthrough-taxation:1",
+      "url": "/government/publications/ots-final-report-on-lookthrough-taxation",
+      "title": "OTS final report on Lookthrough Taxation"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-advertises-new-part-time-vacancies:1",
+      "url": "/government/news/office-of-tax-simplification-advertises-new-part-time-vacancies",
+      "title": "Office of Tax Simplification advertises new part time vacancies"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-to-review-smarter-ways-to-use-third-party-personal-tax-data:1",
+      "url": "/government/publications/ots-to-review-smarter-ways-to-use-third-party-personal-tax-data",
+      "title": "OTS to review smarter ways to use third party personal tax data"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-publishes-vat-review-terms-of-reference:1",
+      "url": "/government/publications/ots-publishes-vat-review-terms-of-reference",
+      "title": "OTS publishes VAT review terms of reference"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-simplification-scoping-document:1",
+      "url": "/government/publications/review-of-simplification-scoping-document",
+      "title": "Review of Simplification - Scoping document"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-looks-to-expand-board-membership:1",
+      "url": "/government/news/office-of-tax-simplification-looks-to-expand-board-membership",
+      "title": "Office of Tax Simplification looks to expand board membership"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-responds-to-ots-review-on-tax-relief-for-fixed-assets:1",
+      "url": "/government/publications/chancellor-responds-to-ots-review-on-tax-relief-for-fixed-assets",
+      "title": "Chancellor responds to OTS review on tax relief for fixed assets"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-response-to-joint-paper-on-improving-tax-policy-making:1",
+      "url": "/government/publications/ots-response-to-joint-paper-on-improving-tax-policy-making",
+      "title": "OTS response to joint paper on 'Improving tax policy making'"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-legislation:1",
+      "url": "/government/news/ots-legislation",
+      "title": "OTS legislation"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-responds-to-the-first-ots-report-on-inheritance-tax:1",
+      "url": "/government/publications/chancellor-responds-to-the-first-ots-report-on-inheritance-tax",
+      "title": "Chancellor responds to the first OTS report on Inheritance Tax"
+    },
+    {
+      "id": "ots-reports:-government-consultations-ots-tax-reporting-and-payment-surveys:1",
+      "url": "/government/consultations/ots-tax-reporting-and-payment-surveys",
+      "title": "OTS tax reporting and payment surveys"
+    },
+    {
+      "id": "ots-reports:-government-news-simplifying-tax-for-the-future:1",
+      "url": "/government/news/simplifying-tax-for-the-future",
+      "title": "Simplifying tax for the future"
+    },
+    {
+      "id": "ots-reports:-government-consultations-key-questions-published-for-ots-review-on-itnics:1",
+      "url": "/government/consultations/key-questions-published-for-ots-review-on-itnics",
+      "title": "Key questions published for OTS review on IT/NICs"
+    },
+    {
+      "id": "ots-reports:-government-publications-exploring-a-change-to-the-uk-tax-year-end-date:1",
+      "url": "/government/publications/exploring-a-change-to-the-uk-tax-year-end-date",
+      "title": "Exploring a change to the UK tax year end date"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-celebrates-tenth-anniversary-with-online-conference:1",
+      "url": "/government/news/ots-celebrates-tenth-anniversary-with-online-conference",
+      "title": "OTS celebrates tenth anniversary with online conference"
+    },
+    {
+      "id": "ots-reports:-government-publications-index-of-ots-reports-and-government-responses:1",
+      "url": "/government/publications/index-of-ots-reports-and-government-responses",
+      "title": "Index of OTS reports and government responses"
+    },
+    {
+      "id": "ots-reports:-government-calls-for-evidence-ots-depreciation-and-capital-allowances-review-call-for-evidence:1",
+      "url": "/government/calls-for-evidence/ots-depreciation-and-capital-allowances-review-call-for-evidence",
+      "title": "OTS Depreciation and Capital Allowances review call for evidence"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-guidance-review-update-paper:1",
+      "url": "/government/publications/ots-guidance-review-update-paper",
+      "title": "OTS Guidance Review update paper"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-seeks-a-new-board-member:1",
+      "url": "/government/news/ots-seeks-a-new-board-member",
+      "title": "OTS seeks a new board member"
+    },
+    {
+      "id": "ots-reports:-government-collections-small-company-taxation-survey-now-live:1",
+      "url": "/government/collections/small-company-taxation-survey-now-live",
+      "title": "Small company review of taxation survey"
+    },
+    {
+      "id": "ots-reports:-government-publications-small-company-taxation-review:1",
+      "url": "/government/publications/small-company-taxation-review",
+      "title": "Small company taxation review"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-webinar-video-and-slide-pack:1",
+      "url": "/government/news/ots-webinar-video-and-slide-pack",
+      "title": "OTS webinar video and slide pack"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-vacancies--2:1",
+      "url": "/government/news/office-of-tax-simplification-vacancies--2",
+      "title": "Office of Tax Simplification: Vacancies"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-review-on-simplifying-the-ct-computation:1",
+      "url": "/government/publications/ots-review-on-simplifying-the-ct-computation",
+      "title": "OTS review on simplifying the CT computation"
+    },
+    {
+      "id": "ots-reports:-government-news-kathryn-cearns-obe-appointed-as-new-chair-of-the-office-of-tax-simplification:1",
+      "url": "/government/news/kathryn-cearns-obe-appointed-as-new-chair-of-the-office-of-tax-simplification",
+      "title": "Kathryn Cearns OBE appointed as new Chair of the Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-publications-an-evaluation-of-ots-recommendations:1",
+      "url": "/government/publications/an-evaluation-of-ots-recommendations",
+      "title": "An evaluation of OTS recommendations"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-publishes-stamp-duty-review-terms-of-reference:1",
+      "url": "/government/publications/ots-publishes-stamp-duty-review-terms-of-reference",
+      "title": "OTS publishes Stamp Duty review terms of reference"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-looks-to-recruit-senior-policy-advisors:1",
+      "url": "/government/news/ots-looks-to-recruit-senior-policy-advisors",
+      "title": "OTS looks to recruit senior policy advisors"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-advertises-for-new-staff:1",
+      "url": "/government/news/ots-advertises-for-new-staff",
+      "title": "OTS advertises for new staff"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-new-board-member-announced:1",
+      "url": "/government/news/office-of-tax-simplification-new-board-member-announced",
+      "title": "Office of Tax Simplification: new board member announced"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-to-explore-potential-for-moving-the-end-of-the-tax-year:1",
+      "url": "/government/publications/ots-to-explore-potential-for-moving-the-end-of-the-tax-year",
+      "title": "OTS to explore potential for moving the end of the tax year"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-complexity-index-methodology:1",
+      "url": "/government/publications/ots-complexity-index-methodology",
+      "title": "OTS complexity index methodology"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-papers-on-aspects-of-complexity-in-the-tax-system:1",
+      "url": "/government/publications/ots-papers-on-aspects-of-complexity-in-the-tax-system",
+      "title": "OTS papers on aspects of Complexity in the tax system"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-writes-to-ots-following-first-inheritance-tax-report:1",
+      "url": "/government/publications/chancellor-writes-to-ots-following-first-inheritance-tax-report",
+      "title": "Chancellor writes to OTS following first Inheritance Tax report"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-response-to-off-payroll-working-consultation:1",
+      "url": "/government/publications/ots-response-to-off-payroll-working-consultation",
+      "title": "OTS response to 'Off-payroll working' consultation"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-suggests-paye-equivalent-for-online-platform-workers:1",
+      "url": "/government/publications/ots-suggests-paye-equivalent-for-online-platform-workers",
+      "title": "OTS suggests PAYE equivalent for online platform workers"
+    },
+    {
+      "id": "ots-reports:-government-publications-office-of-tax-simplification-complexity-index:1",
+      "url": "/government/publications/office-of-tax-simplification-complexity-index",
+      "title": "Office of Tax Simplification complexity index"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-property-income-scoping-document:1",
+      "url": "/government/publications/review-of-property-income-scoping-document",
+      "title": "Review of Property Income - Scoping document"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-starts-new-review-on-capital-allowances-and-depreciation:1",
+      "url": "/government/publications/ots-starts-new-review-on-capital-allowances-and-depreciation",
+      "title": "OTS starts new review on capital allowances and depreciation"
+    },
+    {
+      "id": "ots-reports:-government-news-treasury-seeks-permanent-tax-director-for-office-of-tax-simplification:1",
+      "url": "/government/news/treasury-seeks-permanent-tax-director-for-office-of-tax-simplification",
+      "title": "Treasury seeks permanent Tax Director for Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-publications-developing-a-tax-complexity-index-for-the-uk:1",
+      "url": "/government/publications/developing-a-tax-complexity-index-for-the-uk",
+      "title": "Developing a tax complexity index for the UK"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-board-changes-taking-place-in-the-next-few-months:1",
+      "url": "/government/news/ots-board-changes-taking-place-in-the-next-few-months",
+      "title": "OTS Board changes taking place in the next few months"
+    },
+    {
+      "id": "ots-reports:-government-collections-office-of-tax-simplification-small-companies-project:1",
+      "url": "/government/collections/office-of-tax-simplification-small-companies-project",
+      "title": "Small Companies project - Committee membership"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-and-expenses:1",
+      "url": "/government/publications/employee-benefits-and-expenses",
+      "title": "Letters between OTS and Exchequer Secretary: employee benefits and expenses"
+    },
+    {
+      "id": "ots-reports:-government-publications-letters-between-ots-and-exchequer-secretary-pensioner-taxation-and-share-schemes:1",
+      "url": "/government/publications/letters-between-ots-and-exchequer-secretary-pensioner-taxation-and-share-schemes",
+      "title": "Letters between OTS and Exchequer Secretary: pensioner taxation and share schemes"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-reliefs-review:1",
+      "url": "/government/publications/tax-reliefs-review",
+      "title": "Tax reliefs review"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-and-expenses-committee-minutes-29-april-2013:1",
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-29-april-2013",
+      "title": "Employee benefits and expenses committee minutes: 29 April 2013"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-and-expenses-committee-minutes-17-june-2013:1",
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-17-june-2013",
+      "title": "Employee benefits and expenses committee minutes: 17 June 2013"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-from-exchequer-secretary-to-ots-partnerships-taxation:1",
+      "url": "/government/publications/letter-from-exchequer-secretary-to-ots-partnerships-taxation",
+      "title": "Letter from Exchequer Secretary to OTS: partnerships taxation"
+    },
+    {
+      "id": "ots-reports:-government-publications-letters-between-ots-and-exchequer-secretary-employee-benefits-and-expenses-interim-report:1",
+      "url": "/government/publications/letters-between-ots-and-exchequer-secretary-employee-benefits-and-expenses-interim-report",
+      "title": "Letters between OTS and Exchequer Secretary: employee benefits and expenses interim report"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-and-expenses-committee-minutes-19-september-2013:1",
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-19-september-2013",
+      "title": "Employee benefits and expenses committee minutes: 19 September 2013"
+    },
+    {
+      "id": "ots-reports:-government-publications-definitions-in-tax-legislation-and-their-contribution-to-complexity:1",
+      "url": "/government/publications/definitions-in-tax-legislation-and-their-contribution-to-complexity",
+      "title": "Definitions in tax legislation and their contribution to complexity"
+    },
+    {
+      "id": "ots-reports:-government-publications-partnership-review-consultative-committee-minutes-23-september-2013:1",
+      "url": "/government/publications/partnership-review-consultative-committee-minutes-23-september-2013",
+      "title": "Partnership review consultative committee minutes: 23 September 2013"
+    },
+    {
+      "id": "ots-reports:-government-collections-employee-benefits-and-expenses-committee-minutes:1",
+      "url": "/government/collections/employee-benefits-and-expenses-committee-minutes",
+      "title": "Employee benefits and expenses committee minutes"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-final-report-on-sole-enterprise-with-protected-assets-sepa:1",
+      "url": "/government/publications/ots-final-report-on-sole-enterprise-with-protected-assets-sepa",
+      "title": "OTS Final report on Sole Enterprise with Protected Assets (SEPA)"
+    },
+    {
+      "id": "ots-reports:-government-publications-partnership-review-consultative-committee-minutes-6-november-2013:1",
+      "url": "/government/publications/partnership-review-consultative-committee-minutes-6-november-2013",
+      "title": "Partnership review consultative committee minutes: 6 November 2013"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-and-expenses-committee-minutes-12-november-2013:1",
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-12-november-2013",
+      "title": "Employee benefits and expenses committee minutes: 12 November 2013"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-from-exchequer-secretary-to-ots-response-to-partnerships-and-employee-benefits-reviews:1",
+      "url": "/government/publications/letter-from-exchequer-secretary-to-ots-response-to-partnerships-and-employee-benefits-reviews",
+      "title": "Letters between Exchequer Secretary and OTS: partnerships and employee benefits reviews"
+    },
+    {
+      "id": "ots-reports:-government-organisations-office-of-tax-simplification-about-our-governance:1",
+      "url": "/government/organisations/office-of-tax-simplification/about/our-governance",
+      "title": "Our governance"
+    },
+    {
+      "id": "ots-reports:-government-publications-partnership-review-consultative-committee-minutes-19-may-2014:1",
+      "url": "/government/publications/partnership-review-consultative-committee-minutes-19-may-2014",
+      "title": "Partnership review consultative committee minutes: 19 May 2014"
+    },
+    {
+      "id": "ots-reports:-government-publications-letters-between-exchequer-secretary-and-ots-employment-status-and-tax-penalties-reviews:1",
+      "url": "/government/publications/letters-between-exchequer-secretary-and-ots-employment-status-and-tax-penalties-reviews",
+      "title": "Letters between Exchequer Secretary and OTS: employment status and tax penalties reviews"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-penalties:1",
+      "url": "/government/publications/tax-penalties",
+      "title": "Tax penalties"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-between-the-ots-and-financial-secretary:1",
+      "url": "/government/publications/letter-between-the-ots-and-financial-secretary",
+      "title": "Letter between the OTS and Financial Secretary"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-list-of-recommendations:1",
+      "url": "/government/publications/ots-list-of-recommendations",
+      "title": "OTS list of recommendations"
+    },
+    {
+      "id": "ots-reports:-government-consultations-income-tax-and-national-insurance-contributions-closer-alignment-survey:1",
+      "url": "/government/consultations/income-tax-and-national-insurance-contributions-closer-alignment-survey",
+      "title": "Income tax and National Insurance contributions closer alignment survey"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-publishes-outline-of-its-future-work-programme:1",
+      "url": "/government/publications/ots-publishes-outline-of-its-future-work-programme",
+      "title": "OTS publishes outline of its future work programme"
+    },
+    {
+      "id": "ots-reports:-government-consultations-ots-review-of-the-corporation-tax-computation-consultation:1",
+      "url": "/government/consultations/ots-review-of-the-corporation-tax-computation-consultation",
+      "title": "OTS review of the Corporation Tax computation - Consultation"
+    },
+    {
+      "id": "ots-reports:-government-publications-the-otss-response-to-gift-aid-consultation-document:1",
+      "url": "/government/publications/the-otss-response-to-gift-aid-consultation-document",
+      "title": "The OTS’s response to Gift Aid consultation document"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-capital-gains-tax-review-scoping-document:1",
+      "url": "/government/publications/ots-capital-gains-tax-review-scoping-document",
+      "title": "OTS Capital Gains Tax review scoping document"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-requests-further-ots-review-of-the-business-lifecycle:1",
+      "url": "/government/publications/chancellor-requests-further-ots-review-of-the-business-lifecycle",
+      "title": "Chancellor requests further OTS review of the Business Lifecycle"
+    },
+    {
+      "id": "ots-reports:-government-consultations-sole-enterprise-protected-assets-discussion-document:1",
+      "url": "/government/consultations/sole-enterprise-protected-assets-discussion-document",
+      "title": "Sole Enterprise Protected Assets discussion document"
+    },
+    {
+      "id": "ots-reports:-government-news-new-vacancies-in-the-office-of-tax-simplification:1",
+      "url": "/government/news/new-vacancies-in-the-office-of-tax-simplification",
+      "title": "New vacancies in the Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-announces-paul-morton-as-new-tax-director:1",
+      "url": "/government/news/office-of-tax-simplification-announces-paul-morton-as-new-tax-director",
+      "title": "Office of Tax Simplification announces Paul Morton as new Tax Director"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-review-of-small-company-taxation-tor:1",
+      "url": "/government/publications/ots-review-of-small-company-taxation-tor",
+      "title": "Small company taxation review: terms of reference"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-tax-director-awarded-cbe-in-queens-birthday-honours:1",
+      "url": "/government/news/ots-tax-director-awarded-cbe-in-queens-birthday-honours",
+      "title": "OTS Tax Director awarded CBE in Queen’s Birthday honours"
+    },
+    {
+      "id": "ots-reports:-government-consultations-key-questions-for-ots-review-on-small-company-taxation:1",
+      "url": "/government/consultations/key-questions-for-ots-review-on-small-company-taxation",
+      "title": "Key questions for OTS review on small company taxation"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-evaluation-paper-on-the-high-income-child-benefit-charge:1",
+      "url": "/government/publications/ots-evaluation-paper-on-the-high-income-child-benefit-charge",
+      "title": "OTS evaluation paper on the High Income Child Benefit Charge"
+    },
+    {
+      "id": "ots-reports:-government-publications-disincorporation-relief-what-of-the-future:1",
+      "url": "/government/publications/disincorporation-relief-what-of-the-future",
+      "title": "Disincorporation relief - what of the future?"
+    },
+    {
+      "id": "ots-reports:-government-calls-for-evidence-review-of-property-income-survey-and-call-for-evidence:1",
+      "url": "/government/calls-for-evidence/review-of-property-income-survey-and-call-for-evidence",
+      "title": "Review of Property Income - Survey and Call for Evidence"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-review-of-income-tax-and-national-insurance-alignment-phase-2-tor:1",
+      "url": "/government/publications/ots-review-of-income-tax-and-national-insurance-alignment-phase-2-tor",
+      "title": "OTS review of income tax and national insurance alignment (phase 2) - TOR"
+    },
+    {
+      "id": "ots-reports:-government-publications-letter-between-the-financial-secretary-and-ots-competitiveness-and-other-reviews:1",
+      "url": "/government/publications/letter-between-the-financial-secretary-and-ots-competitiveness-and-other-reviews",
+      "title": "Letter between the Financial Secretary and OTS: competitiveness and other reviews"
+    },
+    {
+      "id": "ots-reports:-government-publications-the-gig-economy-an-ots-focus-paper:1",
+      "url": "/government/publications/the-gig-economy-an-ots-focus-paper",
+      "title": "The 'Gig' economy: an OTS focus paper"
+    },
+    {
+      "id": "ots-reports:-government-consultations-lookthrough-discussion-document:1",
+      "url": "/government/consultations/lookthrough-discussion-document",
+      "title": "Lookthrough discussion document"
+    },
+    {
+      "id": "ots-reports:-government-collections-tax-and-national-insurance-alignment:1",
+      "url": "/government/collections/tax-and-national-insurance-alignment",
+      "title": "Tax and national insurance alignment"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-hybrid-and-distance-working-scoping-document:1",
+      "url": "/government/publications/review-of-hybrid-and-distance-working-scoping-document",
+      "title": "Review of hybrid and distance working scoping document"
+    },
+    {
+      "id": "ots-reports:-government-news-new-chair-of-office-of-tax-simplification-announced:1",
+      "url": "/government/news/new-chair-of-office-of-tax-simplification-announced",
+      "title": "New Chair of Office of Tax Simplification announced"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-board-membership-changes:1",
+      "url": "/government/news/office-of-tax-simplification-board-membership-changes",
+      "title": "Office of Tax Simplification: Board membership changes"
+    },
+    {
+      "id": "ots-reports:-government-publications-summer-budget-2015-office-of-tax-simplification-and-new-projects:1",
+      "url": "/government/publications/summer-budget-2015-office-of-tax-simplification-and-new-projects",
+      "title": "Summer Budget 2015: Office of Tax Simplification and new projects"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-review-of-income-tax-and-national-insurance-tor:1",
+      "url": "/government/publications/ots-review-of-income-tax-and-national-insurance-tor",
+      "title": "OTS review of income tax and national insurance - TOR"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-to-review-claims-and-elections:1",
+      "url": "/government/publications/ots-to-review-claims-and-elections",
+      "title": "OTS to review claims and elections"
+    },
+    {
+      "id": "ots-reports:-government-news-five-yearly-review-of-the-office-of-tax-simplification:1",
+      "url": "/government/news/five-yearly-review-of-the-office-of-tax-simplification",
+      "title": "Five-yearly review of the Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-vacancies:1",
+      "url": "/government/news/office-of-tax-simplification-vacancies",
+      "title": "Office of Tax Simplification: Vacancies"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-new-board-members-announced:1",
+      "url": "/government/news/office-of-tax-simplification-new-board-members-announced",
+      "title": "Office of Tax Simplification: new board members announced"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-responds-to-office-of-tax-simplification-review-of-simplification:1",
+      "url": "/government/publications/chancellor-responds-to-office-of-tax-simplification-review-of-simplification",
+      "title": "Chancellor responds to Office of Tax Simplification review of simplification"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-board-changes:1",
+      "url": "/government/news/office-of-tax-simplification-board-changes",
+      "title": "Office of Tax Simplification: Board changes"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-evaluation-paper-on-simplification-issues-affecting-tax-agents-and-other-intermediaries:1",
+      "url": "/government/publications/ots-evaluation-paper-on-simplification-issues-affecting-tax-agents-and-other-intermediaries",
+      "title": "OTS evaluation paper on simplification issues affecting tax agents and other intermediaries"
+    },
+    {
+      "id": "ots-reports:-government-news-office-of-tax-simplification-advertises-new-vacancies:1",
+      "url": "/government/news/office-of-tax-simplification-advertises-new-vacancies",
+      "title": "Office of Tax Simplification advertises new vacancies"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-evaluation-paper-on-the-single-customer-account:1",
+      "url": "/government/publications/ots-evaluation-paper-on-the-single-customer-account",
+      "title": "OTS evaluation paper on the Single Customer Account"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-responds-to-corespondence-from-the-fst-and-chancellor:1",
+      "url": "/government/publications/ots-responds-to-corespondence-from-the-fst-and-chancellor",
+      "title": "OTS responds to corespondence from the FST and Chancellor"
+    },
+    {
+      "id": "ots-reports:-government-calls-for-evidence-ots-capital-gains-tax-review-call-for-evidence-and-survey:1",
+      "url": "/government/calls-for-evidence/ots-capital-gains-tax-review-call-for-evidence-and-survey",
+      "title": "OTS Capital Gains Tax review call for evidence and survey"
+    },
+    {
+      "id": "ots-reports:-government-news-aligning-national-insurance-and-income-tax:1",
+      "url": "/government/news/aligning-national-insurance-and-income-tax",
+      "title": "Aligning national insurance and income tax"
+    },
+    {
+      "id": "ots-reports:-government-publications-will-tax-simplification-still-be-needed-as-technology-advances:1",
+      "url": "/government/publications/will-tax-simplification-still-be-needed-as-technology-advances",
+      "title": "Will tax simplification still be needed as technology advances?"
+    },
+    {
+      "id": "ots-reports:-government-publications-evidence-for-hm-treasurys-five-yearly-review-of-the-ots:1",
+      "url": "/government/publications/evidence-for-hm-treasurys-five-yearly-review-of-the-ots",
+      "title": "Evidence for HM Treasury’s five-yearly review of the OTS"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-stakeholder-conference-18-july-2016:1",
+      "url": "/government/news/ots-stakeholder-conference-18-july-2016",
+      "title": "OTS Stakeholder Conference – 18 July 2016"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-responds-to-hmrc-consultations:1",
+      "url": "/government/publications/ots-responds-to-hmrc-consultations",
+      "title": "OTS responds to HMRC consultations"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-thresholds:1",
+      "url": "/government/publications/tax-thresholds",
+      "title": "Tax thresholds"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-welcomes-new-tax-director:1",
+      "url": "/government/news/ots-welcomes-new-tax-director",
+      "title": "OTS welcomes new Tax Director"
+    },
+    {
+      "id": "ots-reports:-government-publications-office-of-tax-simplification-vacancies:1",
+      "url": "/government/publications/office-of-tax-simplification-vacancies",
+      "title": "Office of Tax Simplification: Vacancies"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-evaluation-paper-on-improvements-to-the-operation-of-the-paye-system:1",
+      "url": "/government/publications/ots-evaluation-paper-on-improvements-to-the-operation-of-the-paye-system",
+      "title": "OTS evaluation paper on improvements to the operation of the PAYE system"
+    },
+    {
+      "id": "ots-reports:-government-news-claims-and-elections-call-for-evidence-update:1",
+      "url": "/government/news/claims-and-elections-call-for-evidence-update",
+      "title": "Claims and elections call for evidence - update"
+    },
+    {
+      "id": "ots-reports:-government-publications-how-to-avoid-complexity-in-the-tax-system:1",
+      "url": "/government/publications/how-to-avoid-complexity-in-the-tax-system",
+      "title": "How to avoid complexity in the tax system"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-review-of-the-corporation-tax-computation-tor:1",
+      "url": "/government/publications/ots-review-of-the-corporation-tax-computation-tor",
+      "title": "OTS review of the corporation tax computation - TOR"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-inheritance-tax-review-scoping-document:1",
+      "url": "/government/publications/ots-inheritance-tax-review-scoping-document",
+      "title": "OTS Inheritance Tax Review scoping document"
+    },
+    {
+      "id": "ots-reports:-government-news-new-vacancies-in-the-office-of-tax-simplification--2:1",
+      "url": "/government/news/new-vacancies-in-the-office-of-tax-simplification--2",
+      "title": "New vacancies in the Office of Tax Simplification"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-responds-to-ots-report-on-simplifying-everyday-tax-for-smaller-businesses:1",
+      "url": "/government/publications/chancellor-responds-to-ots-report-on-simplifying-everyday-tax-for-smaller-businesses",
+      "title": "Chancellor responds to OTS report on simplifying everyday tax for smaller businesses"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-everyday-tax-evaluation-paper:1",
+      "url": "/government/publications/ots-everyday-tax-evaluation-paper",
+      "title": "OTS everyday tax evaluation paper"
+    },
+    {
+      "id": "ots-reports:-government-news-the-chancellor-and-the-office-of-tax-simplification-announce-bill-dodwell-as-new-tax-director:1",
+      "url": "/government/news/the-chancellor-and-the-office-of-tax-simplification-announce-bill-dodwell-as-new-tax-director",
+      "title": "The Chancellor and the Office of Tax Simplification announce Bill Dodwell as new Tax Director"
+    },
+    {
+      "id": "ots-reports:-government-publications-ots-scoping-document-for-further-review-of-business-life-cycle:1",
+      "url": "/government/publications/ots-scoping-document-for-further-review-of-business-life-cycle",
+      "title": "OTS scoping document for further review of Business Life Cycle"
+    },
+    {
+      "id": "ots-reports:-government-news-ots-legislation-goes-live:1",
+      "url": "/government/news/ots-legislation-goes-live",
+      "title": "OTS legislation goes live"
+    },
+    {
+      "id": "ots-reports:-government-news-vacancies-in-the-office-of-tax-simplification:1",
+      "url": "/government/news/vacancies-in-the-office-of-tax-simplification",
+      "title": "Vacancies in the Office of Tax Simplification"
+    }
+  ],
+  "attachments": [
+    {
+      "url": "/government/publications/employee-share-schemes-review",
+      "title": "Employee share schemes review",
+      "pdfs": 9,
+      "bodyChars": 71
+    },
+    {
+      "url": "/government/publications/review-of-employee-benefits-and-expenses-interim-report",
+      "title": "Review of employee benefits and expenses: interim report",
+      "pdfs": 3,
+      "bodyChars": 809
+    },
+    {
+      "url": "/government/publications/small-business-tax-review",
+      "title": "Small business tax review",
+      "pdfs": 10,
+      "bodyChars": 542
+    },
+    {
+      "url": "/government/publications/review-of-employee-benefits-and-expenses-second-report",
+      "title": "Review of employee benefits and expenses: second report",
+      "pdfs": 2,
+      "bodyChars": 399
+    },
+    {
+      "url": "/government/publications/employee-benefits-and-expenses-review",
+      "title": "Employee benefits and expenses review",
+      "pdfs": 1,
+      "bodyChars": 482
+    },
+    {
+      "url": "/government/publications/taxation-of-pensioners-review",
+      "title": "Taxation of pensioners review",
+      "pdfs": 9,
+      "bodyChars": 373
+    },
+    {
+      "url": "/government/organisations/office-of-tax-simplification",
+      "title": "Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 115
+    },
+    {
+      "url": "/government/publications/ots-inheritance-tax-review-simplifying-the-design-of-the-tax",
+      "title": "OTS Inheritance Tax review: Simplifying the design of the tax",
+      "pdfs": 3,
+      "bodyChars": 4836
+    },
+    {
+      "url": "/government/publications/ots-capital-gains-tax-review-simplifying-by-design",
+      "title": "OTS Capital Gains Tax Review: Simplifying by design",
+      "pdfs": 1,
+      "bodyChars": 7116
+    },
+    {
+      "url": "/government/publications/ots-publishes-its-report-on-paper-stamp-duty",
+      "title": "OTS publishes its report on paper stamp duty",
+      "pdfs": 2,
+      "bodyChars": 350
+    },
+    {
+      "url": "/government/publications/employment-status-review",
+      "title": "Employment status review",
+      "pdfs": 4,
+      "bodyChars": 941
+    },
+    {
+      "url": "/government/publications/ots-report-on-hybrid-and-distance-working",
+      "title": "OTS report on hybrid and distance working",
+      "pdfs": 1,
+      "bodyChars": 4484
+    },
+    {
+      "url": "/government/publications/ots-capital-gains-tax-review-simplifying-practical-technical-and-administrative-issues",
+      "title": "OTS Capital Gains Tax Review: Simplifying practical, technical and administrative issues",
+      "pdfs": 1,
+      "bodyChars": 7410
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-inheritance-tax-review",
+      "title": "Office of Tax Simplification: Inheritance Tax Review",
+      "pdfs": 2,
+      "bodyChars": 4649
+    },
+    {
+      "url": "/government/calls-for-evidence/review-of-hybrid-and-distance-working-call-for-evidence",
+      "title": "Review of hybrid and distance working - Call for evidence",
+      "pdfs": 1,
+      "bodyChars": 3887
+    },
+    {
+      "url": "/government/collections/ots-review-of-value-added-tax",
+      "title": "OTS review of Value Added Tax",
+      "pdfs": 0,
+      "bodyChars": 643
+    },
+    {
+      "url": "/government/publications/chancellor-requests-ots-review-of-capital-gains-tax",
+      "title": "Chancellor requests OTS review of Capital Gains Tax",
+      "pdfs": 1,
+      "bodyChars": 576
+    },
+    {
+      "url": "/government/publications/chancellor-responds-to-ots-reports-on-inheritance-tax-and-capital-gains-tax",
+      "title": "Chancellor responds to OTS reports on Inheritance Tax and Capital Gains Tax",
+      "pdfs": 1,
+      "bodyChars": 249
+    },
+    {
+      "url": "/government/publications/closer-alignment-of-income-tax-and-national-insurance-contributions",
+      "title": "Closer alignment of income tax and national insurance contributions",
+      "pdfs": 1,
+      "bodyChars": 1825
+    },
+    {
+      "url": "/government/publications/letter-from-the-financial-secretary-to-the-ots-on-budget-2015",
+      "title": "Letter from the Financial Secretary to the OTS on Budget 2015",
+      "pdfs": 1,
+      "bodyChars": 272
+    },
+    {
+      "url": "/government/publications/list-of-tax-thresholds",
+      "title": "List of tax thresholds",
+      "pdfs": 0,
+      "bodyChars": 95
+    },
+    {
+      "url": "/government/organisations/office-of-tax-simplification/about",
+      "title": "About us",
+      "pdfs": 0,
+      "bodyChars": 1028
+    },
+    {
+      "url": "/government/news/update-on-the-closure-of-the-office-of-tax-simplification",
+      "title": "Update on the closure of the Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 498
+    },
+    {
+      "url": "/government/publications/ots-to-explore-self-employed-tax-reporting-and-payment",
+      "title": "OTS to explore self-employed tax reporting and payment",
+      "pdfs": 1,
+      "bodyChars": 1408
+    },
+    {
+      "url": "/government/publications/ots-tax-reporting-and-payment-arrangements-review",
+      "title": "OTS Tax reporting and payment arrangements review",
+      "pdfs": 1,
+      "bodyChars": 3949
+    },
+    {
+      "url": "/government/publications/ots-review-of-tax-simplification",
+      "title": "OTS Review of tax simplification",
+      "pdfs": 1,
+      "bodyChars": 5152
+    },
+    {
+      "url": "/government/publications/ots-review-of-residential-property-income",
+      "title": "OTS Review of residential property income",
+      "pdfs": 1,
+      "bodyChars": 5465
+    },
+    {
+      "url": "/government/publications/ots-publishes-further-report-on-the-closer-alignment-of-it-and-nics",
+      "title": "OTS publishes further report on the closer alignment of IT and NICs",
+      "pdfs": 5,
+      "bodyChars": 1227
+    },
+    {
+      "url": "/government/publications/ots-life-events-review-simplifying-tax-for-individuals",
+      "title": "OTS Life Events review: Simplifying tax for individuals",
+      "pdfs": 1,
+      "bodyChars": 6261
+    },
+    {
+      "url": "/government/publications/partnerships-review",
+      "title": "Partnerships review",
+      "pdfs": 4,
+      "bodyChars": 1286
+    },
+    {
+      "url": "/government/publications/the-gig-economy-an-updated-ots-focus-paper",
+      "title": "The 'Gig' economy: an updated OTS focus paper",
+      "pdfs": 1,
+      "bodyChars": 423
+    },
+    {
+      "url": "/government/publications/tax-complexity-project",
+      "title": "Tax complexity project",
+      "pdfs": 8,
+      "bodyChars": 1828
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-publishes-2017-18-annual-report",
+      "title": "Office of Tax Simplification publishes 2017-18 Annual Report",
+      "pdfs": 2,
+      "bodyChars": 3506
+    },
+    {
+      "url": "/government/publications/length-of-legislation",
+      "title": "Length of legislation",
+      "pdfs": 1,
+      "bodyChars": 178
+    },
+    {
+      "url": "/government/publications/letter-from-ots-to-david-gauke-mp",
+      "title": "Letter from OTS to David Gauke MP",
+      "pdfs": 1,
+      "bodyChars": 138
+    },
+    {
+      "url": "/government/publications/letter-from-exchequer-secretary-to-ots-competitiveness-of-uk-tax-administration",
+      "title": "Letter from Exchequer Secretary to OTS: competitiveness of UK tax administration",
+      "pdfs": 1,
+      "bodyChars": 86
+    },
+    {
+      "url": "/government/people/john-whiting--2",
+      "title": "John Whiting CBE",
+      "pdfs": 0,
+      "bodyChars": 369
+    },
+    {
+      "url": "/government/publications/chancellor-requests-ots-review-of-inheritance-tax",
+      "title": "Chancellor requests OTS review of Inheritance Tax",
+      "pdfs": 1,
+      "bodyChars": 181
+    },
+    {
+      "url": "/government/publications/competitiveness-of-uk-tax-administration-review",
+      "title": "Competitiveness of UK tax administration review",
+      "pdfs": 3,
+      "bodyChars": 600
+    },
+    {
+      "url": "/government/collections/tax-for-self-employed-people-in-a-changing-world",
+      "title": "Tax for self-employed people in a changing world",
+      "pdfs": 0,
+      "bodyChars": 1141
+    },
+    {
+      "url": "/government/collections/tax-complexity",
+      "title": "Tax complexity",
+      "pdfs": 0,
+      "bodyChars": 1368
+    },
+    {
+      "url": "/government/publications/ots-final-report-on-lookthrough-taxation",
+      "title": "OTS final report on Lookthrough Taxation",
+      "pdfs": 1,
+      "bodyChars": 701
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-advertises-new-part-time-vacancies",
+      "title": "Office of Tax Simplification advertises new part time vacancies",
+      "pdfs": 0,
+      "bodyChars": 199
+    },
+    {
+      "url": "/government/publications/ots-to-review-smarter-ways-to-use-third-party-personal-tax-data",
+      "title": "OTS to review smarter ways to use third party personal tax data",
+      "pdfs": 1,
+      "bodyChars": 2316
+    },
+    {
+      "url": "/government/publications/ots-publishes-vat-review-terms-of-reference",
+      "title": "OTS publishes VAT review terms of reference",
+      "pdfs": 1,
+      "bodyChars": 184
+    },
+    {
+      "url": "/government/publications/review-of-simplification-scoping-document",
+      "title": "Review of Simplification - Scoping document",
+      "pdfs": 1,
+      "bodyChars": 1571
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-looks-to-expand-board-membership",
+      "title": "Office of Tax Simplification looks to expand board membership",
+      "pdfs": 0,
+      "bodyChars": 517
+    },
+    {
+      "url": "/government/news/simplifying-tax-for-small-companies",
+      "title": "Simplifying tax for small companies",
+      "pdfs": 0,
+      "bodyChars": 3578
+    },
+    {
+      "url": "/government/publications/chancellor-responds-to-ots-review-on-tax-relief-for-fixed-assets",
+      "title": "Chancellor responds to OTS review on tax relief for fixed assets",
+      "pdfs": 1,
+      "bodyChars": 281
+    },
+    {
+      "url": "/government/publications/ots-response-to-joint-paper-on-improving-tax-policy-making",
+      "title": "OTS response to joint paper on 'Improving tax policy making'",
+      "pdfs": 1,
+      "bodyChars": 506
+    },
+    {
+      "url": "/government/news/ots-legislation",
+      "title": "OTS legislation",
+      "pdfs": 2,
+      "bodyChars": 355
+    },
+    {
+      "url": "/government/publications/chancellor-responds-to-the-first-ots-report-on-inheritance-tax",
+      "title": "Chancellor responds to the first OTS report on Inheritance Tax",
+      "pdfs": 1,
+      "bodyChars": 195
+    },
+    {
+      "url": "/government/consultations/ots-tax-reporting-and-payment-surveys",
+      "title": "OTS tax reporting and payment surveys",
+      "pdfs": 0,
+      "bodyChars": 1412
+    },
+    {
+      "url": "/government/news/simplifying-tax-for-the-future",
+      "title": "Simplifying tax for the future",
+      "pdfs": 0,
+      "bodyChars": 2715
+    },
+    {
+      "url": "/government/news/potential-tax-demand-scam-using-the-ots-logo",
+      "title": "Potential tax demand scam using the OTS logo",
+      "pdfs": 0,
+      "bodyChars": 565
+    },
+    {
+      "url": "/government/consultations/key-questions-published-for-ots-review-on-itnics",
+      "title": "Key questions published for OTS review on IT/NICs",
+      "pdfs": 0,
+      "bodyChars": 508
+    },
+    {
+      "url": "/government/publications/exploring-a-change-to-the-uk-tax-year-end-date",
+      "title": "Exploring a change to the UK tax year end date",
+      "pdfs": 1,
+      "bodyChars": 5704
+    },
+    {
+      "url": "/government/news/ots-celebrates-tenth-anniversary-with-online-conference",
+      "title": "OTS celebrates tenth anniversary with online conference",
+      "pdfs": 0,
+      "bodyChars": 138
+    },
+    {
+      "url": "/government/publications/index-of-ots-reports-and-government-responses",
+      "title": "Index of OTS reports and government responses",
+      "pdfs": 1,
+      "bodyChars": 122
+    },
+    {
+      "url": "/government/calls-for-evidence/ots-depreciation-and-capital-allowances-review-call-for-evidence",
+      "title": "OTS Depreciation and Capital Allowances review call for evidence",
+      "pdfs": 1,
+      "bodyChars": 924
+    },
+    {
+      "url": "/government/publications/ots-guidance-review-update-paper",
+      "title": "OTS Guidance Review update paper",
+      "pdfs": 1,
+      "bodyChars": 1624
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-2021-22-annual-report",
+      "title": "Office of Tax Simplification 2021-22 Annual Report",
+      "pdfs": 1,
+      "bodyChars": 3289
+    },
+    {
+      "url": "/government/news/ots-seeks-a-new-board-member",
+      "title": "OTS seeks a new board member",
+      "pdfs": 0,
+      "bodyChars": 249
+    },
+    {
+      "url": "/government/collections/small-company-taxation-survey-now-live",
+      "title": "Small company review of taxation survey",
+      "pdfs": 0,
+      "bodyChars": 1034
+    },
+    {
+      "url": "/government/publications/small-company-taxation-review",
+      "title": "Small company taxation review",
+      "pdfs": 1,
+      "bodyChars": 1146
+    },
+    {
+      "url": "/government/news/ots-webinar-video-and-slide-pack",
+      "title": "OTS webinar video and slide pack",
+      "pdfs": 0,
+      "bodyChars": 417
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-vacancies--2",
+      "title": "Office of Tax Simplification: Vacancies",
+      "pdfs": 0,
+      "bodyChars": 468
+    },
+    {
+      "url": "/government/publications/ots-review-on-simplifying-the-ct-computation",
+      "title": "OTS review on simplifying the CT computation",
+      "pdfs": 2,
+      "bodyChars": 304
+    },
+    {
+      "url": "/government/news/government-announces-closure-of-office-of-tax-simplification",
+      "title": "Government announces closure of Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 570
+    },
+    {
+      "url": "/government/news/kathryn-cearns-obe-appointed-as-new-chair-of-the-office-of-tax-simplification",
+      "title": "Kathryn Cearns OBE appointed as new Chair of the Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 3394
+    },
+    {
+      "url": "/government/publications/an-evaluation-of-ots-recommendations",
+      "title": "An evaluation of OTS recommendations",
+      "pdfs": 2,
+      "bodyChars": 438
+    },
+    {
+      "url": "/government/publications/ots-publishes-stamp-duty-review-terms-of-reference",
+      "title": "OTS publishes Stamp Duty review terms of reference",
+      "pdfs": 1,
+      "bodyChars": 170
+    },
+    {
+      "url": "/government/news/ots-online-webinar",
+      "title": "OTS online webinar",
+      "pdfs": 0,
+      "bodyChars": 1494
+    },
+    {
+      "url": "/government/news/ots-looks-to-recruit-senior-policy-advisors",
+      "title": "OTS looks to recruit senior policy advisors",
+      "pdfs": 0,
+      "bodyChars": 299
+    },
+    {
+      "url": "/government/news/ots-advertises-for-new-staff",
+      "title": "OTS advertises for new staff",
+      "pdfs": 0,
+      "bodyChars": 245
+    },
+    {
+      "url": "/government/news/ots-publishes-its-first-review-of-vat",
+      "title": "OTS publishes its first review of VAT",
+      "pdfs": 0,
+      "bodyChars": 5814
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-new-board-member-announced",
+      "title": "Office of Tax Simplification: new board member announced",
+      "pdfs": 0,
+      "bodyChars": 1648
+    },
+    {
+      "url": "/government/publications/ots-to-explore-potential-for-moving-the-end-of-the-tax-year",
+      "title": "OTS to explore potential for moving the end of the tax year",
+      "pdfs": 1,
+      "bodyChars": 1660
+    },
+    {
+      "url": "/government/publications/correspondence-between-the-chancellor-and-the-office-of-tax-simplification-regarding-recent-ots-publications",
+      "title": "Correspondence between the Chancellor and the Office of Tax Simplification regarding recent OTS publications",
+      "pdfs": 2,
+      "bodyChars": 555
+    },
+    {
+      "url": "/government/collections/stamp-duty-review-of-remaining-paper-duty-on-shares-etc",
+      "title": "OTS review of Stamp Duty on paper transactions",
+      "pdfs": 0,
+      "bodyChars": 1173
+    },
+    {
+      "url": "/government/publications/ots-complexity-index-methodology",
+      "title": "OTS complexity index methodology",
+      "pdfs": 1,
+      "bodyChars": 150
+    },
+    {
+      "url": "/government/publications/simplifying-the-taxation-of-savings-income",
+      "title": "Simplifying the taxation of savings income",
+      "pdfs": 1,
+      "bodyChars": 3466
+    },
+    {
+      "url": "/government/publications/ots-papers-on-aspects-of-complexity-in-the-tax-system",
+      "title": "OTS papers on aspects of Complexity in the tax system",
+      "pdfs": 7,
+      "bodyChars": 2402
+    },
+    {
+      "url": "/government/publications/chancellor-writes-to-ots-following-first-inheritance-tax-report",
+      "title": "Chancellor writes to OTS following first Inheritance Tax report",
+      "pdfs": 1,
+      "bodyChars": 158
+    },
+    {
+      "url": "/government/publications/ots-response-to-off-payroll-working-consultation",
+      "title": "OTS response to 'Off-payroll working' consultation",
+      "pdfs": 1,
+      "bodyChars": 348
+    },
+    {
+      "url": "/government/publications/letter-ots-to-chair-of-the-treasury-committee-on-ots-reports",
+      "title": "Letter: OTS to Chair of the Treasury Committee on OTS reports",
+      "pdfs": 2,
+      "bodyChars": 645
+    },
+    {
+      "url": "/government/publications/ots-suggests-paye-equivalent-for-online-platform-workers",
+      "title": "OTS suggests PAYE equivalent for online platform workers",
+      "pdfs": 1,
+      "bodyChars": 4059
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-complexity-index",
+      "title": "Office of Tax Simplification complexity index",
+      "pdfs": 1,
+      "bodyChars": 1335
+    },
+    {
+      "url": "/government/publications/review-of-property-income-scoping-document",
+      "title": "Review of Property Income - Scoping document",
+      "pdfs": 1,
+      "bodyChars": 1087
+    },
+    {
+      "url": "/government/publications/ots-starts-new-review-on-capital-allowances-and-depreciation",
+      "title": "OTS starts new review on capital allowances and depreciation",
+      "pdfs": 1,
+      "bodyChars": 305
+    },
+    {
+      "url": "/government/calls-for-evidence/ots-business-lifecycle-review-call-for-evidence-and-survey",
+      "title": "OTS business lifecycle review call for evidence and survey",
+      "pdfs": 1,
+      "bodyChars": 2561
+    },
+    {
+      "url": "/government/publications/ots-publishes-interim-paper-on-review-of-value-added-tax",
+      "title": "OTS publishes interim paper on review of Value Added Tax",
+      "pdfs": 1,
+      "bodyChars": 1349
+    },
+    {
+      "url": "/government/news/treasury-seeks-permanent-tax-director-for-office-of-tax-simplification",
+      "title": "Treasury seeks permanent Tax Director for Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 1016
+    },
+    {
+      "url": "/government/publications/correspondence-between-the-chancellor-financial-secretary-to-the-treasury-and-the-office-of-tax-simplification-regarding-recent-ots-publications",
+      "title": "Correspondence between the Chancellor, Financial Secretary to the Treasury and the Office of Tax Simplification regarding recent OTS publications",
+      "pdfs": 2,
+      "bodyChars": 875
+    },
+    {
+      "url": "/government/publications/developing-a-tax-complexity-index-for-the-uk",
+      "title": "Developing a tax complexity index for the UK",
+      "pdfs": 1,
+      "bodyChars": 87
+    },
+    {
+      "url": "/government/news/ots-board-changes-taking-place-in-the-next-few-months",
+      "title": "OTS Board changes taking place in the next few months",
+      "pdfs": 0,
+      "bodyChars": 2724
+    },
+    {
+      "url": "/government/publications/letter-from-the-chancellor-to-the-office-of-tax-simplification-ots",
+      "title": "Letter from the Chancellor to the Office of Tax Simplification (OTS)",
+      "pdfs": 1,
+      "bodyChars": 369
+    },
+    {
+      "url": "/government/publications/ots-claims-and-elections-review",
+      "title": "OTS Claims and Elections review",
+      "pdfs": 1,
+      "bodyChars": 3909
+    },
+    {
+      "url": "/government/collections/office-of-tax-simplification-small-companies-project",
+      "title": "Small Companies project - Committee membership",
+      "pdfs": 0,
+      "bodyChars": 1879
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification",
+      "title": "Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 6696
+    },
+    {
+      "url": "/government/news/tax-simplification-team-to-review-pensioner-taxation-and-share-schemes",
+      "title": "Tax simplification team to review pensioner taxation and share schemes",
+      "pdfs": 0,
+      "bodyChars": 5614
+    },
+    {
+      "url": "/government/news/pensioner-tax-simplification-proposals-put-forward",
+      "title": "Pensioner tax simplification proposals put forward",
+      "pdfs": 0,
+      "bodyChars": 5930
+    },
+    {
+      "url": "/government/news/recommendations-to-simplify-uks-tax-system-for-small-businesses",
+      "title": "Recommendations to simplify UK’s tax system for small businesses",
+      "pdfs": 0,
+      "bodyChars": 5447
+    },
+    {
+      "url": "/government/news/share-schemes-simplification-recommendations-put-forward",
+      "title": "Share schemes simplification recommendations put forward",
+      "pdfs": 0,
+      "bodyChars": 5118
+    },
+    {
+      "url": "/government/news/tax-simplification-team-to-review-pensioner-taxation-and-share-schemes--2",
+      "title": "Tax simplification team to review pensioner taxation and share schemes",
+      "pdfs": 0,
+      "bodyChars": 5539
+    },
+    {
+      "url": "/government/news/pensioner-tax-and-share-schemes-next-areas-for-simplification",
+      "title": "Pensioner tax and Share Schemes next areas for simplification",
+      "pdfs": 0,
+      "bodyChars": 3515
+    },
+    {
+      "url": "/government/news/initial-simplification-ideas-for-small-businesses-tax-unveiled",
+      "title": "Initial simplification ideas for small businesses tax unveiled",
+      "pdfs": 0,
+      "bodyChars": 3021
+    },
+    {
+      "url": "/government/news/recommendations-to-simplify-uks-spaghetti-bowl-of-tax-reliefs-put-to-chancellor",
+      "title": "Recommendations to simplify UK’s “spaghetti bowl” of tax reliefs put to Chancellor",
+      "pdfs": 0,
+      "bodyChars": 3236
+    },
+    {
+      "url": "/government/news/tax-teams-roadshows-reveal-common-ground-on-simplification",
+      "title": "Tax team’s roadshows reveal common ground on simplification",
+      "pdfs": 0,
+      "bodyChars": 3353
+    },
+    {
+      "url": "/government/news/tax-simplification-team-publish-initial-recommendations",
+      "title": "Tax simplification team publish initial recommendations",
+      "pdfs": 0,
+      "bodyChars": 3397
+    },
+    {
+      "url": "/government/news/uks-tax-system-has-over-1000-reliefs",
+      "title": "UK’s tax system has over 1000 reliefs",
+      "pdfs": 0,
+      "bodyChars": 2779
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-announces-expert-team-for-tax-reviews",
+      "title": "Office of Tax Simplification announces expert team for tax reviews",
+      "pdfs": 0,
+      "bodyChars": 3066
+    },
+    {
+      "url": "/government/publications/employee-benefits-and-expenses",
+      "title": "Letters between OTS and Exchequer Secretary: employee benefits and expenses",
+      "pdfs": 2,
+      "bodyChars": 802
+    },
+    {
+      "url": "/government/publications/letters-between-ots-and-exchequer-secretary-pensioner-taxation-and-share-schemes",
+      "title": "Letters between OTS and Exchequer Secretary: pensioner taxation and share schemes",
+      "pdfs": 2,
+      "bodyChars": 76
+    },
+    {
+      "url": "/government/publications/tax-reliefs-review",
+      "title": "Tax reliefs review",
+      "pdfs": 3,
+      "bodyChars": 290
+    },
+    {
+      "url": "/government/publications/tax-avoidance-the-role-of-large-accountancy-firms",
+      "title": "OTS response to Public Accounts Committee report on tax avoidance",
+      "pdfs": 2,
+      "bodyChars": 547
+    },
+    {
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-29-april-2013",
+      "title": "Employee benefits and expenses committee minutes: 29 April 2013",
+      "pdfs": 1,
+      "bodyChars": 105
+    },
+    {
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-17-june-2013",
+      "title": "Employee benefits and expenses committee minutes: 17 June 2013",
+      "pdfs": 0,
+      "bodyChars": 104
+    },
+    {
+      "url": "/government/publications/letter-from-exchequer-secretary-to-ots-partnerships-taxation",
+      "title": "Letter from Exchequer Secretary to OTS: partnerships taxation",
+      "pdfs": 1,
+      "bodyChars": 131
+    },
+    {
+      "url": "/government/news/tax-rules-for-employee-benefits-and-expenses-under-review",
+      "title": "Tax rules for employee benefits and expenses under review",
+      "pdfs": 0,
+      "bodyChars": 3742
+    },
+    {
+      "url": "/government/publications/letters-between-ots-and-exchequer-secretary-employee-benefits-and-expenses-interim-report",
+      "title": "Letters between OTS and Exchequer Secretary: employee benefits and expenses interim report",
+      "pdfs": 1,
+      "bodyChars": 156
+    },
+    {
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-19-september-2013",
+      "title": "Employee benefits and expenses committee minutes: 19 September 2013",
+      "pdfs": 1,
+      "bodyChars": 109
+    },
+    {
+      "url": "/government/publications/definitions-in-tax-legislation-and-their-contribution-to-complexity",
+      "title": "Definitions in tax legislation and their contribution to complexity",
+      "pdfs": 2,
+      "bodyChars": 381
+    },
+    {
+      "url": "/government/publications/partnership-review-consultative-committee-minutes-23-september-2013",
+      "title": "Partnership review consultative committee minutes: 23 September 2013",
+      "pdfs": 1,
+      "bodyChars": 103
+    },
+    {
+      "url": "/government/collections/employee-benefits-and-expenses-committee-minutes",
+      "title": "Employee benefits and expenses committee minutes",
+      "pdfs": 0,
+      "bodyChars": 514
+    },
+    {
+      "url": "/government/publications/ots-final-report-on-sole-enterprise-with-protected-assets-sepa",
+      "title": "OTS Final report on Sole Enterprise with Protected Assets (SEPA)",
+      "pdfs": 1,
+      "bodyChars": 610
+    },
+    {
+      "url": "/government/publications/partnership-review-consultative-committee-minutes-6-november-2013",
+      "title": "Partnership review consultative committee minutes: 6 November 2013",
+      "pdfs": 0,
+      "bodyChars": 101
+    },
+    {
+      "url": "/government/publications/employee-benefits-and-expenses-committee-minutes-12-november-2013",
+      "title": "Employee benefits and expenses committee minutes: 12 November 2013",
+      "pdfs": 1,
+      "bodyChars": 108
+    },
+    {
+      "url": "/government/publications/letter-from-exchequer-secretary-to-ots-response-to-partnerships-and-employee-benefits-reviews",
+      "title": "Letters between Exchequer Secretary and OTS: partnerships and employee benefits reviews",
+      "pdfs": 2,
+      "bodyChars": 147
+    },
+    {
+      "url": "/government/organisations/office-of-tax-simplification/about/our-governance",
+      "title": "Our governance",
+      "pdfs": 68,
+      "bodyChars": 4854
+    },
+    {
+      "url": "/government/collections/small-company-taxation",
+      "title": "Small company taxation",
+      "pdfs": 0,
+      "bodyChars": 1364
+    },
+    {
+      "url": "/government/publications/partnership-review-consultative-committee-minutes-19-may-2014",
+      "title": "Partnership review consultative committee minutes: 19 May 2014",
+      "pdfs": 0,
+      "bodyChars": 97
+    },
+    {
+      "url": "/government/publications/letters-between-exchequer-secretary-and-ots-employment-status-and-tax-penalties-reviews",
+      "title": "Letters between Exchequer Secretary and OTS: employment status and tax penalties reviews",
+      "pdfs": 2,
+      "bodyChars": 210
+    },
+    {
+      "url": "/government/publications/review-of-employee-benefits-and-expenses-final-report",
+      "title": "Review of employee benefits and expenses: final report",
+      "pdfs": 1,
+      "bodyChars": 350
+    },
+    {
+      "url": "/government/news/simpler-rules-for-accommodation-benefits-and-termination-payments-recommended",
+      "title": "Simpler rules for accommodation benefits and termination payments recommended",
+      "pdfs": 0,
+      "bodyChars": 2999
+    },
+    {
+      "url": "/government/publications/tax-penalties",
+      "title": "Tax penalties",
+      "pdfs": 1,
+      "bodyChars": 220
+    },
+    {
+      "url": "/government/publications/letter-between-the-ots-and-financial-secretary",
+      "title": "Letter between the OTS and Financial Secretary",
+      "pdfs": 1,
+      "bodyChars": 111
+    },
+    {
+      "url": "/government/publications/ots-list-of-recommendations",
+      "title": "OTS list of recommendations",
+      "pdfs": 1,
+      "bodyChars": 432
+    },
+    {
+      "url": "/government/consultations/income-tax-and-national-insurance-contributions-closer-alignment-survey",
+      "title": "Income tax and National Insurance contributions closer alignment survey",
+      "pdfs": 0,
+      "bodyChars": 1164
+    },
+    {
+      "url": "/government/publications/ots-publishes-outline-of-its-future-work-programme",
+      "title": "OTS publishes outline of its future work programme",
+      "pdfs": 1,
+      "bodyChars": 729
+    },
+    {
+      "url": "/government/consultations/ots-review-of-the-corporation-tax-computation-consultation",
+      "title": "OTS review of the Corporation Tax computation - Consultation",
+      "pdfs": 4,
+      "bodyChars": 1583
+    },
+    {
+      "url": "/government/publications/guidance-for-taxpayers",
+      "title": "Guidance for taxpayers",
+      "pdfs": 1,
+      "bodyChars": 2742
+    },
+    {
+      "url": "/government/publications/the-otss-response-to-gift-aid-consultation-document",
+      "title": "The OTS’s response to Gift Aid consultation document",
+      "pdfs": 1,
+      "bodyChars": 456
+    },
+    {
+      "url": "/government/publications/ots-capital-gains-tax-review-scoping-document",
+      "title": "OTS Capital Gains Tax review scoping document",
+      "pdfs": 1,
+      "bodyChars": 200
+    },
+    {
+      "url": "/government/publications/chancellor-requests-further-ots-review-of-the-business-lifecycle",
+      "title": "Chancellor requests further OTS review of the Business Lifecycle",
+      "pdfs": 1,
+      "bodyChars": 250
+    },
+    {
+      "url": "/government/consultations/sole-enterprise-protected-assets-discussion-document",
+      "title": "Sole Enterprise Protected Assets discussion document",
+      "pdfs": 1,
+      "bodyChars": 1084
+    },
+    {
+      "url": "/government/news/proposals-to-simplify-tax-complexities-of-employment-status-published",
+      "title": "Proposals to simplify tax complexities of employment status published",
+      "pdfs": 0,
+      "bodyChars": 3305
+    },
+    {
+      "url": "/government/news/new-vacancies-in-the-office-of-tax-simplification",
+      "title": "New vacancies in the Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 266
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-announces-paul-morton-as-new-tax-director",
+      "title": "Office of Tax Simplification announces Paul Morton as new Tax Director",
+      "pdfs": 0,
+      "bodyChars": 3567
+    },
+    {
+      "url": "/government/publications/ots-review-of-small-company-taxation-tor",
+      "title": "Small company taxation review: terms of reference",
+      "pdfs": 1,
+      "bodyChars": 109
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-annual-report-2016-17",
+      "title": "Office of Tax Simplification: Annual Report 2016-17",
+      "pdfs": 0,
+      "bodyChars": 4067
+    },
+    {
+      "url": "/government/publications/simplifying-everyday-tax-for-smaller-businesses",
+      "title": "Simplifying everyday tax for smaller businesses",
+      "pdfs": 2,
+      "bodyChars": 4952
+    },
+    {
+      "url": "/government/news/ots-tax-director-awarded-cbe-in-queens-birthday-honours",
+      "title": "OTS Tax Director awarded CBE in Queen’s Birthday honours",
+      "pdfs": 0,
+      "bodyChars": 312
+    },
+    {
+      "url": "/government/news/online-conference-to-mark-ots-tenth-anniversary",
+      "title": "Online conference to mark OTS tenth anniversary",
+      "pdfs": 0,
+      "bodyChars": 1935
+    },
+    {
+      "url": "/government/publications/simplifying-tax-for-the-future-a-consultation-on-our-future-strategy",
+      "title": "Simplifying tax for the future – a consultation on our future strategy and summary of responses",
+      "pdfs": 2,
+      "bodyChars": 1926
+    },
+    {
+      "url": "/government/consultations/key-questions-for-ots-review-on-small-company-taxation",
+      "title": "Key questions for OTS review on small company taxation",
+      "pdfs": 0,
+      "bodyChars": 413
+    },
+    {
+      "url": "/government/publications/ots-evaluation-paper-on-the-high-income-child-benefit-charge",
+      "title": "OTS evaluation paper on the High Income Child Benefit Charge",
+      "pdfs": 1,
+      "bodyChars": 3723
+    },
+    {
+      "url": "/government/calls-for-evidence/claims-and-elections-call-for-evidence",
+      "title": "Claims and elections call for evidence",
+      "pdfs": 1,
+      "bodyChars": 2165
+    },
+    {
+      "url": "/government/publications/disincorporation-relief-what-of-the-future",
+      "title": "Disincorporation relief - what of the future?",
+      "pdfs": 1,
+      "bodyChars": 459
+    },
+    {
+      "url": "/government/calls-for-evidence/review-of-property-income-survey-and-call-for-evidence",
+      "title": "Review of Property Income - Survey and Call for Evidence",
+      "pdfs": 1,
+      "bodyChars": 1887
+    },
+    {
+      "url": "/government/publications/ots-evaluation-and-stock-take-note",
+      "title": "OTS evaluation and stock take note",
+      "pdfs": 1,
+      "bodyChars": 3082
+    },
+    {
+      "url": "/government/publications/ots-publishes-its-2016-17-annual-report",
+      "title": "OTS publishes its 2016-17 annual report",
+      "pdfs": 2,
+      "bodyChars": 359
+    },
+    {
+      "url": "/government/publications/ots-review-of-income-tax-and-national-insurance-alignment-phase-2-tor",
+      "title": "OTS review of income tax and national insurance alignment (phase 2) - TOR",
+      "pdfs": 1,
+      "bodyChars": 127
+    },
+    {
+      "url": "/government/publications/ots-letter-to-the-chancellor",
+      "title": "OTS letter to the Chancellor",
+      "pdfs": 1,
+      "bodyChars": 199
+    },
+    {
+      "url": "/government/publications/letter-between-the-financial-secretary-and-ots-competitiveness-and-other-reviews",
+      "title": "Letter between the Financial Secretary and OTS: competitiveness and other reviews",
+      "pdfs": 1,
+      "bodyChars": 469
+    },
+    {
+      "url": "/government/publications/the-gig-economy-an-ots-focus-paper",
+      "title": "The 'Gig' economy: an OTS focus paper",
+      "pdfs": 2,
+      "bodyChars": 1065
+    },
+    {
+      "url": "/government/consultations/lookthrough-discussion-document",
+      "title": "Lookthrough discussion document",
+      "pdfs": 1,
+      "bodyChars": 1171
+    },
+    {
+      "url": "/government/news/the-ots-points-the-way-to-simplify-corporation-tax",
+      "title": "The OTS points the way to simplify corporation tax",
+      "pdfs": 0,
+      "bodyChars": 4406
+    },
+    {
+      "url": "/government/collections/tax-and-national-insurance-alignment",
+      "title": "Tax and national insurance alignment",
+      "pdfs": 0,
+      "bodyChars": 1048
+    },
+    {
+      "url": "/government/publications/review-of-hybrid-and-distance-working-scoping-document",
+      "title": "Review of hybrid and distance working scoping document",
+      "pdfs": 1,
+      "bodyChars": 1790
+    },
+    {
+      "url": "/government/news/new-chair-of-office-of-tax-simplification-announced",
+      "title": "New Chair of Office of Tax Simplification announced",
+      "pdfs": 0,
+      "bodyChars": 2478
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-board-membership-changes",
+      "title": "Office of Tax Simplification: Board membership changes",
+      "pdfs": 0,
+      "bodyChars": 1099
+    },
+    {
+      "url": "/government/publications/summer-budget-2015-office-of-tax-simplification-and-new-projects",
+      "title": "Summer Budget 2015: Office of Tax Simplification and new projects",
+      "pdfs": 1,
+      "bodyChars": 439
+    },
+    {
+      "url": "/government/publications/ots-review-of-income-tax-and-national-insurance-tor",
+      "title": "OTS review of income tax and national insurance - TOR",
+      "pdfs": 1,
+      "bodyChars": 129
+    },
+    {
+      "url": "/government/publications/ots-to-review-claims-and-elections",
+      "title": "OTS to review claims and elections",
+      "pdfs": 1,
+      "bodyChars": 1543
+    },
+    {
+      "url": "/government/news/five-yearly-review-of-the-office-of-tax-simplification",
+      "title": "Five-yearly review of the Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 242
+    },
+    {
+      "url": "/government/publications/ots-publishes-an-evaluation-update-on-its-vat-report",
+      "title": "OTS publishes an evaluation update on its VAT report",
+      "pdfs": 1,
+      "bodyChars": 1234
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-vacancies",
+      "title": "Office of Tax Simplification: Vacancies",
+      "pdfs": 0,
+      "bodyChars": 411
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-new-board-members-announced",
+      "title": "Office of Tax Simplification: new board members announced",
+      "pdfs": 0,
+      "bodyChars": 4035
+    },
+    {
+      "url": "/government/publications/chancellor-responds-to-office-of-tax-simplification-review-of-simplification",
+      "title": "Chancellor responds to Office of Tax Simplification review of simplification",
+      "pdfs": 1,
+      "bodyChars": 273
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-board-changes",
+      "title": "Office of Tax Simplification: Board changes",
+      "pdfs": 0,
+      "bodyChars": 2130
+    },
+    {
+      "url": "/government/news/ots-says-it-is-high-time-to-digitise-paper-stamp-duty-on-shares",
+      "title": "OTS says it is high time to digitise paper stamp duty on shares",
+      "pdfs": 0,
+      "bodyChars": 3635
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-publishes-2018-19-annual-report",
+      "title": "Office of Tax Simplification publishes 2018-19 Annual Report",
+      "pdfs": 2,
+      "bodyChars": 3460
+    },
+    {
+      "url": "/government/publications/ots-evaluation-paper-on-simplification-issues-affecting-tax-agents-and-other-intermediaries",
+      "title": "OTS evaluation paper on simplification issues affecting tax agents and other intermediaries",
+      "pdfs": 1,
+      "bodyChars": 3865
+    },
+    {
+      "url": "/government/news/office-of-tax-simplification-advertises-new-vacancies",
+      "title": "Office of Tax Simplification advertises new vacancies",
+      "pdfs": 0,
+      "bodyChars": 250
+    },
+    {
+      "url": "/government/publications/ots-evaluation-paper-on-the-single-customer-account",
+      "title": "OTS evaluation paper on the Single Customer Account",
+      "pdfs": 1,
+      "bodyChars": 4031
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-publishes-2020-21-annual-report",
+      "title": "Office of Tax Simplification publishes 2020-21 Annual Report",
+      "pdfs": 2,
+      "bodyChars": 2826
+    },
+    {
+      "url": "/government/publications/ots-responds-to-corespondence-from-the-fst-and-chancellor",
+      "title": "OTS responds to corespondence from the FST and Chancellor",
+      "pdfs": 2,
+      "bodyChars": 221
+    },
+    {
+      "url": "/government/publications/letter-financial-secretary-to-ots-on-budget-2016",
+      "title": "Letter: Financial Secretary to OTS on Budget 2016",
+      "pdfs": 1,
+      "bodyChars": 660
+    },
+    {
+      "url": "/government/calls-for-evidence/ots-capital-gains-tax-review-call-for-evidence-and-survey",
+      "title": "OTS Capital Gains Tax review call for evidence and survey",
+      "pdfs": 1,
+      "bodyChars": 2170
+    },
+    {
+      "url": "/government/news/aligning-national-insurance-and-income-tax",
+      "title": "Aligning national insurance and income tax",
+      "pdfs": 0,
+      "bodyChars": 5426
+    },
+    {
+      "url": "/government/publications/will-tax-simplification-still-be-needed-as-technology-advances",
+      "title": "Will tax simplification still be needed as technology advances?",
+      "pdfs": 1,
+      "bodyChars": 3209
+    },
+    {
+      "url": "/government/publications/evidence-for-hm-treasurys-five-yearly-review-of-the-ots",
+      "title": "Evidence for HM Treasury’s five-yearly review of the OTS",
+      "pdfs": 1,
+      "bodyChars": 299
+    },
+    {
+      "url": "/government/news/ots-stakeholder-conference-18-july-2016",
+      "title": "OTS Stakeholder Conference – 18 July 2016",
+      "pdfs": 0,
+      "bodyChars": 337
+    },
+    {
+      "url": "/government/publications/making-better-use-of-third-party-data-a-vision-for-the-future",
+      "title": "Making better use of third party data: a vision for the future",
+      "pdfs": 1,
+      "bodyChars": 3724
+    },
+    {
+      "url": "/government/publications/ots-review-on-simplifying-tax-relief-for-fixed-assets",
+      "title": "OTS review on simplifying tax relief for fixed assets",
+      "pdfs": 2,
+      "bodyChars": 2938
+    },
+    {
+      "url": "/government/publications/ots-responds-to-hmrc-consultations",
+      "title": "OTS responds to HMRC consultations",
+      "pdfs": 4,
+      "bodyChars": 446
+    },
+    {
+      "url": "/government/publications/tax-thresholds",
+      "title": "Tax thresholds",
+      "pdfs": 1,
+      "bodyChars": 154
+    },
+    {
+      "url": "/government/consultations/making-tax-easier-through-smarter-use-of-third-party-data",
+      "title": "Making tax easier through smarter use of third party data",
+      "pdfs": 1,
+      "bodyChars": 2610
+    },
+    {
+      "url": "/government/publications/simplifying-the-taxation-of-key-events-in-the-life-of-a-business",
+      "title": "Simplifying the taxation of key events in the life of a business",
+      "pdfs": 1,
+      "bodyChars": 2975
+    },
+    {
+      "url": "/government/news/ots-welcomes-new-tax-director",
+      "title": "OTS welcomes new Tax Director",
+      "pdfs": 0,
+      "bodyChars": 153
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-vacancies",
+      "title": "Office of Tax Simplification: Vacancies",
+      "pdfs": 1,
+      "bodyChars": 350
+    },
+    {
+      "url": "/government/publications/letter-financial-secretary-to-ots-with-autumn-statement-2015",
+      "title": "Letter: Financial Secretary to OTS with Autumn Statement 2015",
+      "pdfs": 2,
+      "bodyChars": 344
+    },
+    {
+      "url": "/government/publications/ots-evaluation-paper-on-improvements-to-the-operation-of-the-paye-system",
+      "title": "OTS evaluation paper on improvements to the operation of the PAYE system",
+      "pdfs": 1,
+      "bodyChars": 4038
+    },
+    {
+      "url": "/government/news/claims-and-elections-call-for-evidence-update",
+      "title": "Claims and elections call for evidence - update",
+      "pdfs": 0,
+      "bodyChars": 295
+    },
+    {
+      "url": "/government/news/ots-calls-for-simpler-and-fairer-national-insurance",
+      "title": "OTS calls for simpler and fairer national insurance",
+      "pdfs": 0,
+      "bodyChars": 4860
+    },
+    {
+      "url": "/government/consultations/office-of-tax-simplification-itnics-closer-alignment-project",
+      "title": "IT/NICs closer alignment project - committee membership",
+      "pdfs": 0,
+      "bodyChars": 1928
+    },
+    {
+      "url": "/government/publications/how-to-avoid-complexity-in-the-tax-system",
+      "title": "How to avoid complexity in the tax system",
+      "pdfs": 1,
+      "bodyChars": 355
+    },
+    {
+      "url": "/government/publications/ots-review-of-the-corporation-tax-computation-tor",
+      "title": "OTS review of the corporation tax computation - TOR",
+      "pdfs": 1,
+      "bodyChars": 102
+    },
+    {
+      "url": "/government/calls-for-evidence/inheritance-tax-review-call-for-evidence-and-survey",
+      "title": "Inheritance Tax Review Call for evidence and Survey",
+      "pdfs": 1,
+      "bodyChars": 3218
+    },
+    {
+      "url": "/government/news/otss-first-review-of-vat-triggers-debate",
+      "title": "OTS's first review of VAT triggers debate",
+      "pdfs": 2,
+      "bodyChars": 2688
+    },
+    {
+      "url": "/government/publications/ots-inheritance-tax-review-scoping-document",
+      "title": "OTS Inheritance Tax Review scoping document",
+      "pdfs": 1,
+      "bodyChars": 188
+    },
+    {
+      "url": "/government/news/new-vacancies-in-the-office-of-tax-simplification--2",
+      "title": "New vacancies in the Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 248
+    },
+    {
+      "url": "/government/publications/chancellor-responds-to-ots-report-on-simplifying-everyday-tax-for-smaller-businesses",
+      "title": "Chancellor responds to OTS report on simplifying everyday tax for smaller businesses",
+      "pdfs": 1,
+      "bodyChars": 195
+    },
+    {
+      "url": "/government/publications/ots-report-on-routes-to-simplification-for-vat-is-published",
+      "title": "OTS report on routes to simplification for VAT is published",
+      "pdfs": 2,
+      "bodyChars": 389
+    },
+    {
+      "url": "/government/publications/ots-publishes-progress-report-on-stamp-duty-on-paper-transactions",
+      "title": "OTS publishes progress report on Stamp Duty on paper transactions",
+      "pdfs": 1,
+      "bodyChars": 1523
+    },
+    {
+      "url": "/government/publications/ots-everyday-tax-evaluation-paper",
+      "title": "OTS everyday tax evaluation paper",
+      "pdfs": 1,
+      "bodyChars": 3711
+    },
+    {
+      "url": "/government/news/the-chancellor-and-the-office-of-tax-simplification-announce-bill-dodwell-as-new-tax-director",
+      "title": "The Chancellor and the Office of Tax Simplification announce Bill Dodwell as new Tax Director",
+      "pdfs": 0,
+      "bodyChars": 2666
+    },
+    {
+      "url": "/government/publications/ots-scoping-document-for-further-review-of-business-life-cycle",
+      "title": "OTS scoping document for further review of Business Life Cycle",
+      "pdfs": 1,
+      "bodyChars": 213
+    },
+    {
+      "url": "/government/news/ots-legislation-goes-live",
+      "title": "OTS legislation goes live",
+      "pdfs": 0,
+      "bodyChars": 319
+    },
+    {
+      "url": "/government/publications/office-of-tax-simplification-publishes-2019-20-annual-report",
+      "title": "Office of Tax Simplification publishes 2019-20 Annual report",
+      "pdfs": 2,
+      "bodyChars": 3137
+    },
+    {
+      "url": "/government/news/vacancies-in-the-office-of-tax-simplification",
+      "title": "Vacancies in the Office of Tax Simplification",
+      "pdfs": 0,
+      "bodyChars": 283
+    }
+  ]
+}

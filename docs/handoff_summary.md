@@ -2,7 +2,60 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-26 20:45 UTC — CENTRAL item 10: **the topic taxonomy is replaced — 22 controlled topics, the 24 ministerial departments dropped, root-only and inherited by branches.** ⚠ Four labels were renamed ON LIVE QUESTIONS as well as on the tag, because `topicTags` is a string array and not a foreign key — renaming the tag alone strands every question using it. No "Other": the topic field is optional and a new admin view at `/communities/[id]/topics` shows counts per topic plus an Untagged list, which is the evidence base for adding one. Template aligned and rebuilt from one source of truth; the Harrogate handover file re-mapped (13 questions, 0 errors). **387/387**, five planted breaks. ⚠ Found on the way: a raw NUL byte in two source files made grep treat them as BINARY, so they had silently dropped out of every code search; and one of my own new guards could not fail. ▶▶ **ITEM 11 IS BLOCKED AND NOT STARTED** — it depends on a content soft-delete pattern, a `deletedWithParent` marker, a content points-reversal rule and a deleted-items view, and NONE of the four exists in the repo; items 1–9 of this sprint never reached disk (`docs/SPRINT.md` still holds the 6 Aug search brief). Earlier: 2026-08-26 15:08 UTC — CENTRAL: **filling the upload template with a real branch’s Q&A found two faults that reading the code did not.** (1) A comma counted as a separator, so **five of the thirty-five topics the template itself offers** — every department name with a comma in it — were silently split into junk tags; the template always said "separate with a semicolon", so the parser now matches its own documentation. (2) **A Community created after the migrations has NO question tags at all** — creation seeded bulletin categories and nothing else — which for a new top-level Community means an empty chip row and a bulk upload where every row fails; found because a branch created at 13:40 turned check:central red. Creation seeds them now, backfill script added, the one bare node seeded. ▶ `docs/ReformUK_Harrogate_Questions_UPLOAD.xlsx` — 13 questions, 0 errors, drop-down intact, template XML edited in place. **377/377.** ⚠ Eleven of the thirteen questions had to be written from the scripts they answer (the source records topics, not questions), and the Tom Gordon MP row’s division numbers are NOT verified — both flagged in the file’s Notes column.
+*Last updated: 2026-08-26 20:52 UTC — ▼ **INGEST C3-A (the addendum): ONE LINE OF SEEDER MADE A COLLECTION 84.7% NOT-OTS, AND A SECOND SEEDER PARAMETER HAS BEEN RETURNING HTTP 422 AND YIELDING NOTHING, SILENTLY.**
+`searchGovUk('office of tax simplification report', …, 500)` is a relevance search over **348,062**
+results; we kept the first 500. Re-classified all 497 rows against the gov.uk content API and the
+verdicts are **identical to 24 August, 497 of 497** — 76 KEEP / 421 DELETE / 0 HOLD. The delete now
+runs across **all three layers** instead of ending by printing *"INDEX LAYER NOT DONE HERE"* (421 in
+`corpus_fts`, 740 chunk rows in each of `corpus_chunks`/`corpus_vec`), and **⛔ `--execute` was refused
+by the classifier, exactly as in C3.** ▶ Seeder fixed to `filter_organisations=` (**222** documents, a
+closed universe — the OTS was abolished in 2023); the re-seed is a **146-document fetch**, every one of
+the 76 held rows resolving by exact id into the 222.
+⚠⚠ **222 DOCUMENTS IS NOT 222 REPORTS.** Every row is `format = null`, median **399 words** — the gov.uk
+landing page — and **143 of the 222 (64.4%) keep their substance in a PDF attachment nobody fetches**.
+Same shape as `building-regs`; the fix exists one function along (`processGovukContent` fetches
+attachments, `processGovUk` does not). **OI-24.**
+⚠⚠ **AND THE ADDENDUM'S §2 IS REFUTED IN ITS MECHANISM.** The OTS rule in `source-audit.ts` has NOT
+"passed for months": the URL 404s, `!r.ok` short-circuits every later check, and it has printed **⛔**
+since the file was written on 2026-06-04 — `minSize: 5000` is never reached. The real defect is worse:
+**14 of 50 rules print ⛔ and nothing acts on the output**, and that one column merges **6 dead URLs**
+with **5 bot challenges** and a transient. Simulation validated against a live run **44 of 44**. Also:
+**1 rule that CANNOT PASS** (`jsOnly` tests `bodySnippet.length > 200` against a 200-char slice), **10
+that cannot fail**, **5 that assert the gov.uk SEARCH answers rather than that the source publishes
+what the collection claims** — the `oecd` rule is green off `q=OECD` while that collection holds no OECD
+content — and **BAILII reported ✅ 200 while serving a bot check**. Nothing changed: the list comes first.
+▶▶ **THE HOUSE OF LORDS ARCHIVE IS REACHABLE — GATE 1 IS GREEN.** The route §7 nominated first, the
+National Archives' web archive, is the one that does NOT work (**405 "Human Verification"**);
+**the Internet Archive answers Node's own fetch**. **2,820 archived judgment pages, 1,088 distinct
+cases, ~2.2 s each — under two hours**, an afternoon not a multi-day job. ⚠ The C3 quality gate was
+wrong **three ways** against real bytes: it **accepted raw HTML**, its `[YYYY] UKHL n` rule would have
+**rejected every pre-2001 judgment** (neutral citations began in 2001), and its 4–7% stopword band sits
+below the measured distribution (**min 7.2 · median 9.0 · max 10.7%**; navigation chrome is **0.0%**).
+⚠⚠ **Hand-reading five then found two more** — one page passed everything while opening *"Search
+Advanced Search Home Glossary Index Contact Us…"* (a different era's navigation vocabulary), and **4 of
+20 pages end with the word "Continue"** because a Lords opinion is paginated. **NOT READY TO INGEST:**
+the unit is the case, assembled across opinion pages and across pagination.
+▶ **D-2 measured, no search file edited:** reachability **0/12 → 12/12** for both treaty collections
+under option A, identical to a sixth stream; **0 treaty rows entered the top 20** of any of the 11
+validated Gold v2 debates questions, all 11 returning a full 20-row set. ⚠ The recall half could NOT be
+taken — **0 of 14 keys are retrievable in this BM25-only harness even when the query is the document's
+own title**, so a 0-vs-0 says nothing. ▶ **Recommend option A**, with the definitive before-and-after
+re-taken through the hybrid gateway. ▶ **D-5: Lane D's seven predictions are logged in `CHANGE_LOG.md`
+BEFORE the run**, and they record a **2.7× disagreement** the sprint refused to average away (the brief
+says ~91,500 sections; A5's own projection says 250,725).
+▶ **The 503 ET orphans, now read in full rather than sampled: 51 have a judgment · 452 do not · 0 gone ·
+0 error.** The boundary separates cleanly — **425 of the 452 (94%) are Scottish** by the six-digit
+pre-2013 numbering or a 41xx office, against **0 of the 51** — and is declared in `CORPUS_SCOPE.md` in
+B1's words. ⚠ 27 English rows are unexplained (**OI-22**). The 51 are staged through the general path.
+✅ **LanceDB quoted-identifier sweep: 65 call sites, ZERO** — detector watched flagging both broken
+forms first, and its two undecidable call sites named rather than counted clean.
+⚠⚠ **31 OF 77 LIVE COLLECTIONS ANSWER "HOW COMPLETE ARE WE?" WITH THEIR OWN ROW COUNT** (23 flagged
+confirmed) — completeness is 100% by arithmetic, whatever is missing. **OI-25.**
+▶▶ **CHARLIE: `bash docs/C3_EXECUTE.sh` — STILL UNRUN, all eight purge collections measured at full
+count at 13:05 UTC — then `bash docs/C3A_EXECUTE.sh`.** Four decisions in `docs/INGEST_C3A_REPORT.md`.
+⚠ **B1 is blocked on a document: `BRIEF_INGEST_REPEALED.md` is not in the repository** (OI-23), and §9
+requires its wording and B1's to match. Nothing here touches the live site.
+Earlier: 2026-08-26 20:45 UTC — CENTRAL item 10: **the topic taxonomy is replaced — 22 controlled topics, the 24 ministerial departments dropped, root-only and inherited by branches.** ⚠ Four labels were renamed ON LIVE QUESTIONS as well as on the tag, because `topicTags` is a string array and not a foreign key — renaming the tag alone strands every question using it. No "Other": the topic field is optional and a new admin view at `/communities/[id]/topics` shows counts per topic plus an Untagged list, which is the evidence base for adding one. Template aligned and rebuilt from one source of truth; the Harrogate handover file re-mapped (13 questions, 0 errors). **387/387**, five planted breaks. ⚠ Found on the way: a raw NUL byte in two source files made grep treat them as BINARY, so they had silently dropped out of every code search; and one of my own new guards could not fail. ▶▶ **ITEM 11 IS BLOCKED AND NOT STARTED** — it depends on a content soft-delete pattern, a `deletedWithParent` marker, a content points-reversal rule and a deleted-items view, and NONE of the four exists in the repo; items 1–9 of this sprint never reached disk (`docs/SPRINT.md` still holds the 6 Aug search brief). Earlier: 2026-08-26 15:08 UTC — CENTRAL: **filling the upload template with a real branch’s Q&A found two faults that reading the code did not.** (1) A comma counted as a separator, so **five of the thirty-five topics the template itself offers** — every department name with a comma in it — were silently split into junk tags; the template always said "separate with a semicolon", so the parser now matches its own documentation. (2) **A Community created after the migrations has NO question tags at all** — creation seeded bulletin categories and nothing else — which for a new top-level Community means an empty chip row and a bulk upload where every row fails; found because a branch created at 13:40 turned check:central red. Creation seeds them now, backfill script added, the one bare node seeded. ▶ `docs/ReformUK_Harrogate_Questions_UPLOAD.xlsx` — 13 questions, 0 errors, drop-down intact, template XML edited in place. **377/377.** ⚠ Eleven of the thirteen questions had to be written from the scripts they answer (the source records topics, not questions), and the Tom Gordon MP row’s division numbers are NOT verified — both flagged in the file’s Notes column.
 ▶▶ **CHARLIE: the file is at `docs/ReformUK_Harrogate_Questions_UPLOAD.xlsx`** (untracked, as its source PDF is). Read the Notes column before handing it on. Earlier: 2026-08-26 14:45 UTC — ▼ **SEARCH S14: THE MERGE STOPS RATIONING SLOTS — AND
 `vector-serve` CANNOT SERVE FOUR DENSE STREAMS, WHICH IS THE ONLY THING HERE HAPPENING ON A RUNNING
 SERVICE.**

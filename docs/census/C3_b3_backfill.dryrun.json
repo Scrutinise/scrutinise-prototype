@@ -1,10 +1,10 @@
 {
-  "generated": "2026-08-24T01:16:51.063Z",
+  "generated": "2026-08-26T20:37:32.770Z",
   "executed": false,
   "totals": {
-    "read": 8000,
-    "partial": 1209,
-    "hollowNew": 26,
+    "read": 20000,
+    "partial": 2830,
+    "hollowNew": 86,
     "missingFromIndex": 0,
     "written": 0
   }

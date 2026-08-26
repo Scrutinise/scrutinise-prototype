@@ -1,0 +1,487 @@
+{
+  "generated": "2026-08-26T13:05:09.788Z",
+  "filesScanned": 1642,
+  "lanceFiles": [
+    "scripts/ingest/ann-recall-check.ts",
+    "scripts/ingest/c2/b3-backfill-partial.ts",
+    "scripts/ingest/c2/b3-partial-census.ts",
+    "scripts/ingest/c2/c3-probe-pred2.ts",
+    "scripts/ingest/c2/l2-purge-index.ts",
+    "scripts/ingest/c3a/sweep-lance-predicates.ts",
+    "scripts/ingest/caselaw-text/probe-fts-titles.ts",
+    "scripts/ingest/caselaw-text/refresh-fts-caselaw.ts",
+    "scripts/ingest/caselaw-text/verify-caselaw-retrieval.ts",
+    "scripts/ingest/entity-decode-search-test.ts",
+    "scripts/ingest/labels/remove-retired.ts",
+    "scripts/ingest/position-graph/cost-2d3.ts",
+    "scripts/ingest/position-graph/graph-common.ts",
+    "scripts/ingest/search/backfill-citations.ts",
+    "scripts/ingest/search/build-chunks-scalar-index.ts",
+    "scripts/ingest/search/build-corpus-chunks.ts",
+    "scripts/ingest/search/build-fts-index.ts",
+    "scripts/ingest/search/build-vector-index.ts",
+    "scripts/ingest/search/check-chunk-stability.ts",
+    "scripts/ingest/search/check-s12-chunk0.ts",
+    "scripts/ingest/search/check-s12-isolation.ts",
+    "scripts/ingest/search/corpus-reachability.ts",
+    "scripts/ingest/search/diag-archetype-a.ts",
+    "scripts/ingest/search/embed-census.ts",
+    "scripts/ingest/search/embed-observer.ts",
+    "scripts/ingest/search/fts-catchup.ts",
+    "scripts/ingest/search/fts-core.ts",
+    "scripts/ingest/search/fts-drift.ts",
+    "scripts/ingest/search/fts-hygiene.ts",
+    "scripts/ingest/search/fts-optimize.ts",
+    "scripts/ingest/search/fts-query-service.ts",
+    "scripts/ingest/search/fts-railway-run.ts",
+    "scripts/ingest/search/fts-refresh.ts",
+    "scripts/ingest/search/gemini-batch.ts",
+    "scripts/ingest/search/gemini-sync.ts",
+    "scripts/ingest/search/gemini-tier-probe.ts",
+    "scripts/ingest/search/index-state.ts",
+    "scripts/ingest/search/lance.ts",
+    "scripts/ingest/search/pilot-chunk.ts",
+    "scripts/ingest/search/pilot-embed.ts",
+    "scripts/ingest/search/pilot-fusion.ts",
+    "scripts/ingest/search/pilot-score.ts",
+    "scripts/ingest/search/pilot-subset.ts",
+    "scripts/ingest/search/probe-committee-composition.ts",
+    "scripts/ingest/search/probe-committee-conclusions.ts",
+    "scripts/ingest/search/probe-committee-content.ts",
+    "scripts/ingest/search/probe-committee-corpora.ts",
+    "scripts/ingest/search/probe-committee-drafting.ts",
+    "scripts/ingest/search/probe-committee-phrases.ts",
+    "scripts/ingest/search/probe-committee-prefilter.ts",
+    "scripts/ingest/search/probe-committee-reports.ts",
+    "scripts/ingest/search/probe-committee-yield.ts",
+    "scripts/ingest/search/score-fts.ts",
+    "scripts/ingest/search/score-stream-fusion.ts",
+    "scripts/ingest/search/score-vector-full.ts",
+    "scripts/ingest/search/vec-hygiene.ts",
+    "scripts/ingest/search/vec-replace.ts",
+    "scripts/ingest/search/vector-common.ts",
+    "scripts/ingest/search/vector-core.ts",
+    "scripts/ingest/search/vector-handle-pool-probe.ts",
+    "scripts/ingest/search/vector-query-service.ts",
+    "scripts/ingest/search/vector-snippet-probe.ts",
+    "scripts/ingest/search/verify-vector-index.ts",
+    "scripts/ingest/v32-check-stale-titles.ts",
+    "scripts/ingest/v32-predict-scale.ts",
+    "scripts/ingest/v32-refresh-stale-titles.ts",
+    "scripts/ingest/v32-state-check.ts",
+    "scripts/ingest/v33-vec-catchup.ts",
+    "scripts/ingest/v33-vec-delta.ts",
+    "scripts/ingest/v35-verify-chunk-tiers.ts",
+    "scripts/ingest/v36-repair-canary-ckpt.ts",
+    "scripts/ingest/v37-gap-filler.ts",
+    "scrutinise-web/scripts/audit-s13-merge.ts",
+    "scrutinise-web/scripts/measure-s14-merge.ts"
+  ],
+  "callSites": [
+    {
+      "file": "scripts/ingest/ann-recall-check.ts",
+      "line": 167,
+      "method": "where",
+      "pred": "tier = '${opts.tier.replace(/'/g, \"''\")}'"
+    },
+    {
+      "file": "scripts/ingest/c2/b3-backfill-partial.ts",
+      "line": 100,
+      "method": "where",
+      "pred": "id IN (${ids.map((i) => "
+    },
+    {
+      "file": "scripts/ingest/c2/b3-partial-census.ts",
+      "line": 95,
+      "method": "where",
+      "pred": "id IN (${b.map((i) => "
+    },
+    {
+      "file": "scripts/ingest/c2/c3-probe-pred2.ts",
+      "line": 14,
+      "method": "countRows",
+      "pred": "${variant} = '${esc(one)}'"
+    },
+    {
+      "file": "scripts/ingest/c2/c3-probe-pred2.ts",
+      "line": 17,
+      "method": "countRows",
+      "pred": "${variant} IN (${list})"
+    },
+    {
+      "file": "scripts/ingest/c2/l2-purge-index.ts",
+      "line": 147,
+      "method": "countRows",
+      "pred": "corpus = '${PARTIAL_CORPUS}'"
+    },
+    {
+      "file": "scripts/ingest/c2/l2-purge-index.ts",
+      "line": 186,
+      "method": "countRows",
+      "pred": "corpus = '${PARTIAL_CORPUS}'"
+    },
+    {
+      "file": "scripts/ingest/caselaw-text/probe-fts-titles.ts",
+      "line": 18,
+      "method": "where",
+      "pred": "corpus = '${CORPUS}'"
+    },
+    {
+      "file": "scripts/ingest/caselaw-text/refresh-fts-caselaw.ts",
+      "line": 93,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/caselaw-text/refresh-fts-caselaw.ts",
+      "line": 136,
+      "method": "delete",
+      "pred": "id IN (${idList})"
+    },
+    {
+      "file": "scripts/ingest/caselaw-text/refresh-fts-caselaw.ts",
+      "line": 146,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/labels/remove-retired.ts",
+      "line": 62,
+      "method": "countRows",
+      "pred": "corpus = '${esc(c)}'"
+    },
+    {
+      "file": "scripts/ingest/labels/remove-retired.ts",
+      "line": 129,
+      "method": "delete",
+      "pred": "corpus = '${esc(c)}'"
+    },
+    {
+      "file": "scripts/ingest/labels/remove-retired.ts",
+      "line": 130,
+      "method": "countRows",
+      "pred": "corpus = '${esc(c)}'"
+    },
+    {
+      "file": "scripts/ingest/search/backfill-citations.ts",
+      "line": 117,
+      "method": "where",
+      "pred": "corpus IN (${inList}) AND id > '${ck.cursor.replace(/'/g, \"''\")}'"
+    },
+    {
+      "file": "scripts/ingest/search/build-corpus-chunks.ts",
+      "line": 105,
+      "method": "delete",
+      "pred": "sectionId > '${cp.lastId.replace(/'/g, \"''\")}'"
+    },
+    {
+      "file": "scripts/ingest/search/build-fts-index.ts",
+      "line": 196,
+      "method": "delete",
+      "pred": "id > '${cp.lastId.replace(/'/g, \"''\")}'"
+    },
+    {
+      "file": "scripts/ingest/search/build-vector-index.ts",
+      "line": 158,
+      "method": "where",
+      "pred": "chunkId >= '${esc(s.lo)}' AND chunkId <= '${esc(s.hi)}'"
+    },
+    {
+      "file": "scripts/ingest/search/build-vector-index.ts",
+      "line": 177,
+      "method": "delete",
+      "pred": "chunkId >= '${esc(s.lo)}' AND chunkId <= '${esc(s.hi)}'"
+    },
+    {
+      "file": "scripts/ingest/search/check-chunk-stability.ts",
+      "line": 96,
+      "method": "where",
+      "pred": "sectionId IN (${rows.map((r) => sql(r.id)).join(',')})"
+    },
+    {
+      "file": "scripts/ingest/search/check-s12-chunk0.ts",
+      "line": 71,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/search/diag-archetype-a.ts",
+      "line": 94,
+      "method": "where",
+      "pred": "id LIKE '%${safe}%'"
+    },
+    {
+      "file": "scripts/ingest/search/fts-catchup.ts",
+      "line": 168,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/fts-hygiene.ts",
+      "line": 199,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/fts-refresh.ts",
+      "line": 179,
+      "method": "delete",
+      "pred": "id IN (${inList(records.map((r) => r.id))})"
+    },
+    {
+      "file": "scripts/ingest/search/fts-refresh.ts",
+      "line": 217,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/fts-refresh.ts",
+      "line": 235,
+      "method": "delete",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/fts-refresh.ts",
+      "line": 306,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/fts-refresh.ts",
+      "line": 309,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/pilot-embed.ts",
+      "line": 79,
+      "method": "delete",
+      "pred": "chunkId > '${cp.cursor.replace(/'/g, \"''\")}'"
+    },
+    {
+      "file": "scripts/ingest/search/probe-committee-composition.ts",
+      "line": 28,
+      "method": "where",
+      "pred": "tier = 'parliamentary' AND corpus = '${corpus}'"
+    },
+    {
+      "file": "scripts/ingest/search/probe-committee-content.ts",
+      "line": 38,
+      "method": "where",
+      "pred": "tier = 'parliamentary' AND (corpus = 'committees-reports' OR corpus = 'committees-evidence')"
+    },
+    {
+      "file": "scripts/ingest/search/probe-committee-corpora.ts",
+      "line": 27,
+      "method": "where",
+      "pred": "tier = 'parliamentary'"
+    },
+    {
+      "file": "scripts/ingest/search/probe-committee-drafting.ts",
+      "line": 41,
+      "method": "where",
+      "pred": "tier = 'parliamentary' AND corpus = 'committees-evidence' AND sectionTitle LIKE '${inq.replace(/'/g, \"''\")}%'"
+    },
+    {
+      "file": "scripts/ingest/search/probe-committee-reports.ts",
+      "line": 27,
+      "method": "where",
+      "pred": "tier = 'parliamentary' AND corpus = 'committees-reports'"
+    },
+    {
+      "file": "scripts/ingest/search/probe-committee-yield.ts",
+      "line": 55,
+      "method": "where",
+      "pred": "tier = 'parliamentary' AND (corpus = 'committees-reports' OR corpus = 'committees-evidence')"
+    },
+    {
+      "file": "scripts/ingest/search/score-stream-fusion.ts",
+      "line": 134,
+      "method": "where",
+      "pred": "id IN (${missing.map((i) => "
+    },
+    {
+      "file": "scripts/ingest/search/score-vector-full.ts",
+      "line": 90,
+      "method": "where",
+      "pred": "id IN (${inList})"
+    },
+    {
+      "file": "scripts/ingest/search/vec-hygiene.ts",
+      "line": 153,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-hygiene.ts",
+      "line": 154,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 166,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 171,
+      "method": "where",
+      "pred": "corpus = '${esc(corpus)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 226,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 227,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 270,
+      "method": "delete",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 335,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 390,
+      "method": "delete",
+      "pred": "chunkId >= '${esc(s.lo)}' AND chunkId <= '${esc(s.hi)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 401,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/search/vec-replace.ts",
+      "line": 409,
+      "method": "delete",
+      "pred": "chunkId IN (${list})"
+    },
+    {
+      "file": "scripts/ingest/search/vector-query-service.ts",
+      "line": 234,
+      "method": "where",
+      "pred": "sectionId IN (${inList})"
+    },
+    {
+      "file": "scripts/ingest/search/vector-snippet-probe.ts",
+      "line": 72,
+      "method": "where",
+      "pred": "sectionId IN (${inList})"
+    },
+    {
+      "file": "scripts/ingest/search/vector-snippet-probe.ts",
+      "line": 92,
+      "method": "where",
+      "pred": "sectionId IN (${inList})"
+    },
+    {
+      "file": "scripts/ingest/v32-check-stale-titles.ts",
+      "line": 40,
+      "method": "where",
+      "pred": "id IN (${list})"
+    },
+    {
+      "file": "scripts/ingest/v32-refresh-stale-titles.ts",
+      "line": 54,
+      "method": "where",
+      "pred": "corpus = '${esc(CORPUS)}'"
+    },
+    {
+      "file": "scripts/ingest/v32-state-check.ts",
+      "line": 34,
+      "method": "where",
+      "pred": "corpus = 'committees-reports'"
+    },
+    {
+      "file": "scripts/ingest/v33-vec-catchup.ts",
+      "line": 194,
+      "method": "delete",
+      "pred": "sectionId IN (${slice.map((s) => "
+    },
+    {
+      "file": "scripts/ingest/v33-vec-catchup.ts",
+      "line": 233,
+      "method": "delete",
+      "pred": "sectionId IN (${slice.map((s) => "
+    },
+    {
+      "file": "scripts/ingest/v33-vec-catchup.ts",
+      "line": 263,
+      "method": "where",
+      "pred": "sectionId IN (${slice.map((s) => "
+    },
+    {
+      "file": "scripts/ingest/v33-vec-catchup.ts",
+      "line": 304,
+      "method": "where",
+      "pred": "chunkId IN (${part.map((c) => "
+    },
+    {
+      "file": "scripts/ingest/v33-vec-catchup.ts",
+      "line": 321,
+      "method": "delete",
+      "pred": "chunkId IN (${s.ids.slice(i, i + 500).map((c) => "
+    },
+    {
+      "file": "scripts/ingest/v33-vec-delta.ts",
+      "line": 128,
+      "method": "where",
+      "pred": "corpus = '${corpus.replace(/'/g, \"''\")}'"
+    },
+    {
+      "file": "scripts/ingest/v35-verify-chunk-tiers.ts",
+      "line": 32,
+      "method": "where",
+      "pred": "corpus = '${corpus}'"
+    },
+    {
+      "file": "scripts/ingest/v36-repair-canary-ckpt.ts",
+      "line": 53,
+      "method": "where",
+      "pred": "sectionId IN (${slice.map((s) => "
+    },
+    {
+      "file": "scripts/ingest/v36-repair-canary-ckpt.ts",
+      "line": 70,
+      "method": "countRows",
+      "pred": "chunkId IN (${part.map((c) => "
+    },
+    {
+      "file": "scripts/ingest/v36-repair-canary-ckpt.ts",
+      "line": 86,
+      "method": "delete",
+      "pred": "chunkId IN (${part.map((c) => "
+    }
+  ],
+  "quotedIdentifierHits": [],
+  "composedPredicatesToReadByHand": [
+    {
+      "file": "scripts/ingest/c2/c3-probe-pred2.ts",
+      "line": 14,
+      "method": "countRows",
+      "pred": "${variant} = '${esc(one)}'"
+    },
+    {
+      "file": "scripts/ingest/c2/c3-probe-pred2.ts",
+      "line": 17,
+      "method": "countRows",
+      "pred": "${variant} IN (${list})"
+    }
+  ]
+}

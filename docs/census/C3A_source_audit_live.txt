@@ -1,0 +1,56 @@
+=== SOURCE AUDIT — 2026-08-26T13:13:09.766Z ===
+
+RESULT TABLE:
+
+⚠️  TNA Legislation                            HTTP 200   ~30KB    XML tag '<?xml' not in sample
+✅ TNA Caselaw                                HTTP 200   ~59KB    application/xml
+✅ LDA Parliament (oral Q)                    HTTP 200   ~2KB     JSON, items field present
+⛔ EUR-Lex SPARQL                             HTTP 502            HTTP 502
+✅ OECD (gov.uk)                              HTTP 200   ~6KB     application/json
+✅ Scottish Law Commission                    HTTP 200   ~156KB   text/html
+⛔ NI Law Commission                          HTTP 404   ~1KB     ERROR: <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/x
+✅ Law Commission (E&W)                       HTTP 200   ~125KB   text/html
+✅ HMRC TIINs (gov.uk)                        HTTP 200   ~884KB   text/html
+⛔ OTS Reports (gov.uk)                       HTTP 404   ~51KB    ERROR:  <!DOCTYPE html> <html class="govuk-template" lang="en"> <head> <meta charset="u
+⛔ FCA Handbook                               HTTP 200   ~14KB    JS SPA — no server-rendered content
+✅ FCA Publications                           HTTP 200   ~170KB   text/html
+⛔ ECHR HUDOC (alt 1 — api.echr)              HTTP ---   0B       ERROR: TypeError: fetch failed
+⛔ ECHR HUDOC (alt 2 — query)                 HTTP 404   ~37KB    ERROR: <!DOCTYPE html> <html lang="en" class="csp coe-static-page-404"> <meta content="
+✅ BAILII                                     HTTP 200   ~11KB    text/html
+✅ TWFY parser.theyworkforyou.com             HTTP 200   ~8KB     text/html
+✅ TWFY pwdata/scrapedxml                     HTTP 200   ~6KB     text/html
+✅ WQS Written Answers API                    HTTP 200   ~1KB     application/json
+⚠️  WQS Written Statements API                 HTTP 200   ~0KB     Body too small (31 bytes)
+⛔ LDA Hansard debates                        HTTP 404   ~1KB     ERROR: <html> <head> <title>Not Found</title> <style> body { background-color: pink } <
+✅ Sentencing Council                         HTTP 200   ~287KB   text/html
+✅ College of Policing APP                    HTTP 200   ~72KB    text/html
+⛔ Erskine May                                HTTP 403   ~5KB     ERROR: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta htt
+⛔ Bill Pages (Parliament)                    HTTP 403   ~5KB     ERROR: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta htt
+✅ Bills API                                  HTTP 200   ~1KB     application/json
+⛔ PACE Codes (gov.uk)                        HTTP 404   ~51KB    ERROR:  <!DOCTYPE html> <html class="govuk-template" lang="en"> <head> <meta charset="u
+✅ Civil Service Code (gov.uk)                HTTP 200   ~68KB    text/html
+✅ Treasury Green Book (gov.uk)               HTTP 200   ~82KB    text/html
+✅ Planning Policy NPPF                       HTTP 200   ~79KB    text/html
+✅ Building Regulations (gov.uk)              HTTP 200   ~87KB    text/html
+✅ CMA Guidelines                             HTTP 200   ~173KB   text/html
+✅ Ofcom (rules)                              HTTP 200   ~116KB   text/html
+✅ Ofgem (rules)                              HTTP 200   ~183KB   text/html
+⛔ Ofwat (rules)                              HTTP 403   ~472KB   ERROR: <!doctype html> <html lang="en"> <head> <!-- Required meta tags --> <meta charse
+✅ Ofsted (rules)                             HTTP 200   ~71KB    text/html
+✅ Public Consultations (gov.uk)              HTTP 200   ~762KB   text/html
+✅ NAO Reports                                HTTP 200   ~79KB    text/html
+✅ NHS Guidance                               HTTP 200   ~61KB    text/html
+⛔ ONS Datasets API                           HTTP 404   0B       ERROR: 
+⛔ SSRN UK Legal                              HTTP 403   ~6KB     ERROR: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta htt
+⛔ HoC Library (research)                     HTTP 403   ~6KB     ERROR: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta htt
+✅ White/Green Papers (gov.uk API)            HTTP 200   ~6KB     application/json
+✅ Impact Assessments (gov.uk)                HTTP 200   ~4KB     application/json
+⚠️  Post-Leg Memoranda (gov.uk)                HTTP 200   ~0KB     Body too small (118 bytes)
+✅ Explanatory Notes (legislation.gov.uk)     HTTP 200   ~18KB    text/html
+✅ LDA commonswrittenquestions                HTTP 200   ~2KB     JSON, items field present
+✅ LDA lordswrittenquestions                  HTTP 200   ~2KB     JSON, items field present
+✅ LDA commonsdivisions                       HTTP 200   ~1KB     JSON, items field present
+✅ LDA lordsdivisions                         HTTP 200   ~1KB     JSON, items field present
+✅ HMRC Manuals (gov.uk API)                  HTTP 200   ~2KB     application/json
+
+Summary: 33 accessible / 3 warnings / 14 blocked / 50 total

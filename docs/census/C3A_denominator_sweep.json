@@ -1,0 +1,801 @@
+{
+  "generated": "2026-08-26T20:42:00.375Z",
+  "liveTargets": 77,
+  "selfReferential": [
+    {
+      "corpus_key": "niassembly-hansard",
+      "est_sections": 196348,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 196348
+    },
+    {
+      "corpus_key": "tna-caselaw",
+      "est_sections": 74896,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 74896
+    },
+    {
+      "corpus_key": "lda-commonsoralquestions",
+      "est_sections": 69529,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 69529
+    },
+    {
+      "corpus_key": "early-day-motions",
+      "est_sections": 60737,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 60737
+    },
+    {
+      "corpus_key": "uk-treaties-fcdo",
+      "est_sections": 23372,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 23372
+    },
+    {
+      "corpus_key": "cma-cases",
+      "est_sections": 22898,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 22898
+    },
+    {
+      "corpus_key": "impact-assessments",
+      "est_sections": 18759,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 18759
+    },
+    {
+      "corpus_key": "hmrc-codes-guidance",
+      "est_sections": 14067,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 14067
+    },
+    {
+      "corpus_key": "scottish-courts",
+      "est_sections": 13070,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 13070
+    },
+    {
+      "corpus_key": "consultations",
+      "est_sections": 7448,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 7448
+    },
+    {
+      "corpus_key": "lda-commonsdivisions",
+      "est_sections": 5553,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 5553
+    },
+    {
+      "corpus_key": "ofcom",
+      "est_sections": 4169,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 4169
+    },
+    {
+      "corpus_key": "fca-handbook",
+      "est_sections": 3661,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 3661
+    },
+    {
+      "corpus_key": "lords-divisions-votes",
+      "est_sections": 3284,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 3284
+    },
+    {
+      "corpus_key": "commons-divisions-votes",
+      "est_sections": 2361,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 2361
+    },
+    {
+      "corpus_key": "lda-lordsdivisions",
+      "est_sections": 2089,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 2089
+    },
+    {
+      "corpus_key": "erskine-may",
+      "est_sections": 2038,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 2038
+    },
+    {
+      "corpus_key": "hmrc-tiins",
+      "est_sections": 791,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 791
+    },
+    {
+      "corpus_key": "oecd",
+      "est_sections": 505,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 505
+    },
+    {
+      "corpus_key": "ots-reports",
+      "est_sections": 497,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 497
+    },
+    {
+      "corpus_key": "scotlawcom",
+      "est_sections": 350,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 350
+    },
+    {
+      "corpus_key": "college-of-policing",
+      "est_sections": 332,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 332
+    },
+    {
+      "corpus_key": "parliament-treaties",
+      "est_sections": 328,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 328
+    },
+    {
+      "corpus_key": "tax-treaties-dta",
+      "est_sections": 324,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 324
+    },
+    {
+      "corpus_key": "cps-guidance",
+      "est_sections": 270,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 270
+    },
+    {
+      "corpus_key": "sentencing-council",
+      "est_sections": 253,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 253
+    },
+    {
+      "corpus_key": "written-answers",
+      "est_sections": 143,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 143
+    },
+    {
+      "corpus_key": "inquiry-evidence",
+      "est_sections": 90,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 90
+    },
+    {
+      "corpus_key": "planning-policy",
+      "est_sections": 64,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 64
+    },
+    {
+      "corpus_key": "building-regs",
+      "est_sections": 21,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 21
+    },
+    {
+      "corpus_key": "nilawcom",
+      "est_sections": 17,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 17
+    }
+  ],
+  "within0_1pct": [
+    {
+      "corpus_key": "pwdata-debates",
+      "est_sections": 6387304,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 6391345
+    },
+    {
+      "corpus_key": "historic-hansard",
+      "est_sections": 4641085,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 4641117
+    },
+    {
+      "corpus_key": "et-decisions",
+      "est_sections": 293399,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 293403
+    },
+    {
+      "corpus_key": "senedd-cofnod",
+      "est_sections": 191730,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 191756
+    },
+    {
+      "corpus_key": "ico",
+      "est_sections": 26576,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 26591
+    }
+  ],
+  "all": [
+    {
+      "corpus_key": "pwdata-debates",
+      "est_sections": 6387304,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 6391345
+    },
+    {
+      "corpus_key": "historic-hansard",
+      "est_sections": 4641085,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 4641117
+    },
+    {
+      "corpus_key": "pwdata-wrans",
+      "est_sections": 1232751,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 1235313
+    },
+    {
+      "corpus_key": "scottish-parliament-or",
+      "est_sections": 1042819,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 1044188
+    },
+    {
+      "corpus_key": "pwdata-lords",
+      "est_sections": 752805,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 754546
+    },
+    {
+      "corpus_key": "si-pre-2010",
+      "est_sections": 419250,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 489450
+    },
+    {
+      "corpus_key": "regional",
+      "est_sections": 331124,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 357161
+    },
+    {
+      "corpus_key": "committees-reports",
+      "est_sections": 24876,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 344773
+    },
+    {
+      "corpus_key": "retained-eu",
+      "est_sections": 187555,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 319346
+    },
+    {
+      "corpus_key": "et-decisions",
+      "est_sections": 293399,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 293403
+    },
+    {
+      "corpus_key": "si-2010plus",
+      "est_sections": 270339,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 287078
+    },
+    {
+      "corpus_key": "eur-lex",
+      "est_sections": 90260,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 241571
+    },
+    {
+      "corpus_key": "pwdata-westminster",
+      "est_sections": 239262,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 240582
+    },
+    {
+      "corpus_key": "niassembly-hansard",
+      "est_sections": 196348,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 196348
+    },
+    {
+      "corpus_key": "senedd-cofnod",
+      "est_sections": 191730,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 191756
+    },
+    {
+      "corpus_key": "primary-acts-pre-2000",
+      "est_sections": 165438,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 179435
+    },
+    {
+      "corpus_key": "pwdata-lordswrans",
+      "est_sections": 175174,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 176173
+    },
+    {
+      "corpus_key": "quangos-govuk",
+      "est_sections": 170985,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 171190
+    },
+    {
+      "corpus_key": "primary-acts-2000plus",
+      "est_sections": 145704,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 147975
+    },
+    {
+      "corpus_key": "committees-evidence",
+      "est_sections": 140567,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 142315
+    },
+    {
+      "corpus_key": "hmrc-manuals",
+      "est_sections": 69136,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 85197
+    },
+    {
+      "corpus_key": "tna-caselaw",
+      "est_sections": 74896,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 74896
+    },
+    {
+      "corpus_key": "lda-commonsoralquestions",
+      "est_sections": 69529,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 69529
+    },
+    {
+      "corpus_key": "early-day-motions",
+      "est_sections": 60737,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 60737
+    },
+    {
+      "corpus_key": "petitions",
+      "est_sections": 66075,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 49529
+    },
+    {
+      "corpus_key": "explanatory-memoranda",
+      "est_sections": 5420,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 27428
+    },
+    {
+      "corpus_key": "ico",
+      "est_sections": 26576,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 26591
+    },
+    {
+      "corpus_key": "pwdata-wms",
+      "est_sections": 23863,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 24962
+    },
+    {
+      "corpus_key": "uk-treaties-fcdo",
+      "est_sections": 23372,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 23372
+    },
+    {
+      "corpus_key": "cma-cases",
+      "est_sections": 22898,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 22898
+    },
+    {
+      "corpus_key": "pwdata-lordswms",
+      "est_sections": 20932,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 21463
+    },
+    {
+      "corpus_key": "explanatory-notes",
+      "est_sections": 410,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 18801
+    },
+    {
+      "corpus_key": "impact-assessments",
+      "est_sections": 18759,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 18759
+    },
+    {
+      "corpus_key": "ofgem",
+      "est_sections": 17142,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 17161
+    },
+    {
+      "corpus_key": "hmrc-codes-guidance",
+      "est_sections": 14067,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 14067
+    },
+    {
+      "corpus_key": "tax-tribunals",
+      "est_sections": 12089,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 13099
+    },
+    {
+      "corpus_key": "scottish-courts",
+      "est_sections": 13070,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 13070
+    },
+    {
+      "corpus_key": "ni-judgments",
+      "est_sections": 7772,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 7927
+    },
+    {
+      "corpus_key": "consultations",
+      "est_sections": 7448,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 7448
+    },
+    {
+      "corpus_key": "bills-api",
+      "est_sections": 6535,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 6574
+    },
+    {
+      "corpus_key": "lda-commonsdivisions",
+      "est_sections": 5553,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 5553
+    },
+    {
+      "corpus_key": "echr-hudoc",
+      "est_sections": 4410,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 4460
+    },
+    {
+      "corpus_key": "ofcom",
+      "est_sections": 4169,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 4169
+    },
+    {
+      "corpus_key": "nao-reports",
+      "est_sections": 2570,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 3983
+    },
+    {
+      "corpus_key": "fca-handbook",
+      "est_sections": 3661,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 3661
+    },
+    {
+      "corpus_key": "members-interests",
+      "est_sections": 3415,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 3448
+    },
+    {
+      "corpus_key": "lords-divisions-votes",
+      "est_sections": 3284,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 3284
+    },
+    {
+      "corpus_key": "uk-treaties",
+      "est_sections": 3250,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 3264
+    },
+    {
+      "corpus_key": "commons-divisions-votes",
+      "est_sections": 2361,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 2361
+    },
+    {
+      "corpus_key": "lda-lordsdivisions",
+      "est_sections": 2089,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 2089
+    },
+    {
+      "corpus_key": "erskine-may",
+      "est_sections": 2038,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 2038
+    },
+    {
+      "corpus_key": "hmrc-tiins",
+      "est_sections": 791,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 791
+    },
+    {
+      "corpus_key": "independent-reviews",
+      "est_sections": 672,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 667
+    },
+    {
+      "corpus_key": "oecd",
+      "est_sections": 505,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 505
+    },
+    {
+      "corpus_key": "ots-reports",
+      "est_sections": 497,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 497
+    },
+    {
+      "corpus_key": "hmrc-ancillary",
+      "est_sections": 472,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 479
+    },
+    {
+      "corpus_key": "scotlawcom",
+      "est_sections": 350,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 350
+    },
+    {
+      "corpus_key": "college-of-policing",
+      "est_sections": 332,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 332
+    },
+    {
+      "corpus_key": "parliament-treaties",
+      "est_sections": 328,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 328
+    },
+    {
+      "corpus_key": "tax-treaties-dta",
+      "est_sections": 324,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 324
+    },
+    {
+      "corpus_key": "cps-guidance",
+      "est_sections": 270,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 270
+    },
+    {
+      "corpus_key": "lawcom",
+      "est_sections": 262,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 263
+    },
+    {
+      "corpus_key": "sentencing-council",
+      "est_sections": 253,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 253
+    },
+    {
+      "corpus_key": "govuk-core-docs",
+      "est_sections": 175,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 176
+    },
+    {
+      "corpus_key": "inquiry-reports",
+      "est_sections": 140,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 146
+    },
+    {
+      "corpus_key": "written-answers",
+      "est_sections": 143,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 143
+    },
+    {
+      "corpus_key": "inquiry-evidence",
+      "est_sections": 90,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 90
+    },
+    {
+      "corpus_key": "planning-policy",
+      "est_sections": 64,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 64
+    },
+    {
+      "corpus_key": "lgsco",
+      "est_sections": 100,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 40
+    },
+    {
+      "corpus_key": "building-regs",
+      "est_sections": 21,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 21
+    },
+    {
+      "corpus_key": "nilawcom",
+      "est_sections": 17,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 17
+    },
+    {
+      "corpus_key": "ssrn",
+      "est_sections": 50000,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 0
+    },
+    {
+      "corpus_key": "ukci",
+      "est_sections": null,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 0
+    },
+    {
+      "corpus_key": "financial-corpus",
+      "est_sections": null,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 0
+    },
+    {
+      "corpus_key": "apni",
+      "est_sections": null,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 0
+    },
+    {
+      "corpus_key": "ukcm",
+      "est_sections": null,
+      "est_is_confirmed": false,
+      "retired": false,
+      "held": 0
+    },
+    {
+      "corpus_key": "legacy-legislation-section",
+      "est_sections": 914274,
+      "est_is_confirmed": true,
+      "retired": false,
+      "held": 0
+    }
+  ]
+}

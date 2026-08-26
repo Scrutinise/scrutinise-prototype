@@ -311,7 +311,7 @@ disagree, the disagreement is recorded rather than averaged away.
   `CORPUS_SCOPE.md` in B1's form: *"Scottish employment tribunal decisions before 2013 are not
   published and are not held."* ⚠ 27 seven-digit English rows are NOT explained by it — OI-22.
 - ⚠⚠ **31 OF 77 LIVE COLLECTIONS ANSWER "HOW COMPLETE ARE WE?" WITH THEIR OWN ROW COUNT.**
-  `corpus_targets.est_sections` equals the held count exactly, 22 of them flagged
+  `corpus_targets.est_sections` equals the held count exactly, 23 of them flagged
   `est_is_confirmed = true` — so completeness is 100% by arithmetic, whatever is missing.
   `ots-reports` was one of them; it now has a real external denominator (222) waiting in
   `c3a/ots-measured.ts`. The other 30 need one each. **OI-25.**

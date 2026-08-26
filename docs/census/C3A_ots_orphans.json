@@ -1,0 +1,2293 @@
+{
+  "generated": "2026-08-26T13:19:37.789Z",
+  "classification": "C3_ots_classification.2026-08-26T13-16-40-105Z.jsonl",
+  "deleting": 421,
+  "heldElsewhere": 273,
+  "heldNowhereElse": 148,
+  "samePathDifferentString": [],
+  "substantive": [
+    {
+      "id": "ots-reports:-government-calls-for-evidence-remuneration-practices-call-for-evidence:1",
+      "url": "https://www.gov.uk/government/calls-for-evidence/remuneration-practices-call-for-evidence",
+      "basePath": "/government/calls-for-evidence/remuneration-practices-call-for-evidence",
+      "status": 200,
+      "title": "Remuneration practices: call for evidence",
+      "documentType": "closed_call_for_evidence",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 289,
+      "proposedHome": "consultations"
+    },
+    {
+      "id": "ots-reports:-government-calls-for-evidence-taxation-of-employee-expenses-call-for-evidence:1",
+      "url": "https://www.gov.uk/government/calls-for-evidence/taxation-of-employee-expenses-call-for-evidence",
+      "basePath": "/government/calls-for-evidence/taxation-of-employee-expenses-call-for-evidence",
+      "status": 200,
+      "title": "Taxation of employee expenses call for evidence",
+      "documentType": "call_for_evidence_outcome",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 511,
+      "proposedHome": "consultations"
+    },
+    {
+      "id": "ots-reports:-government-collections-tax-policies-and-consultations-spring-2021:1",
+      "url": "https://www.gov.uk/government/collections/tax-policies-and-consultations-spring-2021",
+      "basePath": "/government/collections/tax-policies-and-consultations-spring-2021",
+      "status": 200,
+      "title": "Tax policies and consultations (Spring 2021)",
+      "documentType": "document_collection",
+      "orgs": [
+        "hm-revenue-customs",
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs, hm-treasury — not the OTS",
+      "wordCount": 699,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-2021-review-of-the-office-of-tax-simplification-final-report:1",
+      "url": "https://www.gov.uk/government/publications/2021-review-of-the-office-of-tax-simplification-final-report",
+      "basePath": "/government/publications/2021-review-of-the-office-of-tax-simplification-final-report",
+      "status": 200,
+      "title": "2021 Review of the Office of Tax Simplification: Final Report",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 234,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-accelerating-green-finance-green-finance-taskforce-report:1",
+      "url": "https://www.gov.uk/government/publications/accelerating-green-finance-green-finance-taskforce-report",
+      "basePath": "/government/publications/accelerating-green-finance-green-finance-taskforce-report",
+      "status": 200,
+      "title": "Accelerating green finance: Green Finance Taskforce report",
+      "documentType": "independent_report",
+      "orgs": [
+        "department-for-energy-security-and-net-zero",
+        "department-for-business-energy-and-industrial-strategy"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-energy-security-and-net-zero, department-for-business-energy-and-industrial-strategy — not the OTS",
+      "wordCount": 299,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-amendments-to-uk-law-relating-to-transfer-pricing-permanent-establishment-and-diverted-profits-tax:1",
+      "url": "https://www.gov.uk/government/publications/amendments-to-uk-law-relating-to-transfer-pricing-permanent-establishment-and-diverted-profits-tax",
+      "basePath": "/government/publications/amendments-to-uk-law-relating-to-transfer-pricing-permanent-establishment-and-diverted-profits-tax",
+      "status": 200,
+      "title": "Amendments to UK law relating to transfer pricing, permanent establishment and Diverted Profits Tax",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 300,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-annual-report-on-english-devolution-2024-to-2025:1",
+      "url": "https://www.gov.uk/government/publications/annual-report-on-english-devolution-2024-to-2025",
+      "basePath": "/government/publications/annual-report-on-english-devolution-2024-to-2025",
+      "status": 200,
+      "title": "​​Annual report on English devolution 2024 to 2025​",
+      "documentType": "policy_paper",
+      "orgs": [
+        "ministry-of-housing-communities-local-government"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government — not the OTS",
+      "wordCount": 271,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-annual-review-of-performance-201617:1",
+      "url": "https://www.gov.uk/government/publications/annual-review-of-performance-201617",
+      "basePath": "/government/publications/annual-review-of-performance-201617",
+      "status": 200,
+      "title": "Annual Review of Performance 2016/17",
+      "documentType": "corporate_report",
+      "orgs": [
+        "sellafield-ltd"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by sellafield-ltd — not the OTS",
+      "wordCount": 241,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-autumn-budget-2017-documents:1",
+      "url": "https://www.gov.uk/government/publications/autumn-budget-2017-documents",
+      "basePath": "/government/publications/autumn-budget-2017-documents",
+      "status": 200,
+      "title": "Autumn Budget 2017: documents",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 692,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-autumn-budget-2024-overview-of-tax-legislation-and-rates-ootlar:1",
+      "url": "https://www.gov.uk/government/publications/autumn-budget-2024-overview-of-tax-legislation-and-rates-ootlar",
+      "basePath": "/government/publications/autumn-budget-2024-overview-of-tax-legislation-and-rates-ootlar",
+      "status": 200,
+      "title": "Autumn Budget 2024: Overview of tax legislation and rates (OOTLAR)",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 249,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-autumn-statement-2016-documents:1",
+      "url": "https://www.gov.uk/government/publications/autumn-statement-2016-documents",
+      "basePath": "/government/publications/autumn-statement-2016-documents",
+      "status": 200,
+      "title": "Autumn Statement 2016: documents",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 656,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-cameroon-overseas-business-risk:1",
+      "url": "https://www.gov.uk/government/publications/cameroon-overseas-business-risk",
+      "basePath": "/government/publications/cameroon-overseas-business-risk",
+      "status": 200,
+      "title": "Overseas business risk for Cameroon",
+      "documentType": "guidance",
+      "orgs": [
+        "foreign-commonwealth-development-office",
+        "foreign-commonwealth-office",
+        "department-for-international-trade",
+        "department-for-business-and-trade"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by foreign-commonwealth-development-office, foreign-commonwealth-office, department-for-international-trade, department-for-business-and-trade — not the OTS",
+      "wordCount": 183,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-calculation-of-profits-of-property-businesses:1",
+      "url": "https://www.gov.uk/government/publications/calculation-of-profits-of-property-businesses",
+      "basePath": "/government/publications/calculation-of-profits-of-property-businesses",
+      "status": 200,
+      "title": "Calculation of profits of property businesses",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 228,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-cash-basis-treatment-of-capital:1",
+      "url": "https://www.gov.uk/government/publications/cash-basis-treatment-of-capital",
+      "basePath": "/government/publications/cash-basis-treatment-of-capital",
+      "status": 200,
+      "title": "Cash basis: treatment of capital",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 288,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-chancellor-responds-to-the-office-of-tax-simplification:1",
+      "url": "https://www.gov.uk/government/publications/chancellor-responds-to-the-office-of-tax-simplification",
+      "basePath": "/government/publications/chancellor-responds-to-the-office-of-tax-simplification",
+      "status": 200,
+      "title": "Chancellor responds to the Office of Tax Simplification",
+      "documentType": "correspondence",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 237,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-charity-commission-annual-report-and-accounts-2023-to-2024:1",
+      "url": "https://www.gov.uk/government/publications/charity-commission-annual-report-and-accounts-2023-to-2024",
+      "basePath": "/government/publications/charity-commission-annual-report-and-accounts-2023-to-2024",
+      "status": 200,
+      "title": "Charity Commission annual report and accounts 2023 to 2024",
+      "documentType": "corporate_report",
+      "orgs": [
+        "charity-commission"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by charity-commission — not the OTS",
+      "wordCount": 150,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-companies-house-annual-report-and-accounts-2014-to-2015:1",
+      "url": "https://www.gov.uk/government/publications/companies-house-annual-report-and-accounts-2014-to-2015",
+      "basePath": "/government/publications/companies-house-annual-report-and-accounts-2014-to-2015",
+      "status": 200,
+      "title": "Companies House: annual report and accounts, 2014 to 2015",
+      "documentType": "corporate_report",
+      "orgs": [
+        "companies-house"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by companies-house — not the OTS",
+      "wordCount": 186,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-crown-commercial-service-annual-report-and-accounts-2020-to-2021:1",
+      "url": "https://www.gov.uk/government/publications/crown-commercial-service-annual-report-and-accounts-2020-to-2021",
+      "basePath": "/government/publications/crown-commercial-service-annual-report-and-accounts-2020-to-2021",
+      "status": 200,
+      "title": "Crown Commercial Service annual report and accounts 2020 to 2021",
+      "documentType": "corporate_report",
+      "orgs": [
+        "crown-commercial-service",
+        "government-commercial-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by crown-commercial-service, government-commercial-agency — not the OTS",
+      "wordCount": 349,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-crown-commercial-service-annual-report-and-accounts-2021-to-2022:1",
+      "url": "https://www.gov.uk/government/publications/crown-commercial-service-annual-report-and-accounts-2021-to-2022",
+      "basePath": "/government/publications/crown-commercial-service-annual-report-and-accounts-2021-to-2022",
+      "status": 200,
+      "title": "Crown Commercial Service annual report and accounts 2021 to 2022",
+      "documentType": "corporate_report",
+      "orgs": [
+        "crown-commercial-service",
+        "government-commercial-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by crown-commercial-service, government-commercial-agency — not the OTS",
+      "wordCount": 413,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-decision-for-graham-byrne-of0231732-and-gb-digger-hire-ltd-of2036945:1",
+      "url": "https://www.gov.uk/government/publications/decision-for-graham-byrne-of0231732-and-gb-digger-hire-ltd-of2036945",
+      "basePath": "/government/publications/decision-for-graham-byrne-of0231732-and-gb-digger-hire-ltd-of2036945",
+      "status": 200,
+      "title": "Decision for Graham Byrne (OF0231732) and GB Digger Hire Ltd (OF2036945)",
+      "documentType": "decision",
+      "orgs": [
+        "traffic-commissioners"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by traffic-commissioners — not the OTS",
+      "wordCount": 163,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-employee-benefits-in-kind-and-expenses-an-update:1",
+      "url": "https://www.gov.uk/government/publications/employee-benefits-in-kind-and-expenses-an-update",
+      "basePath": "/government/publications/employee-benefits-in-kind-and-expenses-an-update",
+      "status": 200,
+      "title": "Employee benefits in kind and expenses: an update",
+      "documentType": "guidance",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 276,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-environmental-impact-of-taxes-study:1",
+      "url": "https://www.gov.uk/government/publications/environmental-impact-of-taxes-study",
+      "basePath": "/government/publications/environmental-impact-of-taxes-study",
+      "status": 200,
+      "title": "Environmental Impact of Taxes study",
+      "documentType": "research",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 254,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-equality-and-human-rights-commission-annual-report-and-accounts-2023-to-2024:1",
+      "url": "https://www.gov.uk/government/publications/equality-and-human-rights-commission-annual-report-and-accounts-2023-to-2024",
+      "basePath": "/government/publications/equality-and-human-rights-commission-annual-report-and-accounts-2023-to-2024",
+      "status": 200,
+      "title": "Equality and Human Rights Commission: annual report and accounts 2023 to 2024",
+      "documentType": "corporate_report",
+      "orgs": [
+        "government-equalities-office",
+        "women-and-equalities-unit"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by government-equalities-office, women-and-equalities-unit — not the OTS",
+      "wordCount": 178,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-evaluation-of-the-alcohol-duty-reforms:1",
+      "url": "https://www.gov.uk/government/publications/evaluation-of-the-alcohol-duty-reforms",
+      "basePath": "/government/publications/evaluation-of-the-alcohol-duty-reforms",
+      "status": 200,
+      "title": "Evaluation of the Alcohol Duty Reforms",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 165,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-english-devolution-accountability-framework:1",
+      "url": "https://www.gov.uk/government/publications/english-devolution-accountability-framework",
+      "basePath": "/government/publications/english-devolution-accountability-framework",
+      "status": 200,
+      "title": "English Devolution Accountability Framework",
+      "documentType": "guidance",
+      "orgs": [
+        "ministry-of-housing-communities-local-government",
+        "department-for-levelling-up-housing-and-communities"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government, department-for-levelling-up-housing-and-communities — not the OTS",
+      "wordCount": 174,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-extending-the-real-time-collection-of-tax-on-benefits-in-kind-voluntary-payrolling:1",
+      "url": "https://www.gov.uk/government/publications/extending-the-real-time-collection-of-tax-on-benefits-in-kind-voluntary-payrolling",
+      "basePath": "/government/publications/extending-the-real-time-collection-of-tax-on-benefits-in-kind-voluntary-payrolling",
+      "status": 200,
+      "title": "Extending the real time collection of tax on benefits in kind: voluntary payrolling",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 131,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-finance-bill-2014-tiins:1",
+      "url": "https://www.gov.uk/government/publications/finance-bill-2014-tiins",
+      "basePath": "/government/publications/finance-bill-2014-tiins",
+      "status": 200,
+      "title": "Finance Bill 2014 TIINs",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 63,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-fcdo-services-annual-report-and-accounts-2020-to-2021:1",
+      "url": "https://www.gov.uk/government/publications/fcdo-services-annual-report-and-accounts-2020-to-2021",
+      "basePath": "/government/publications/fcdo-services-annual-report-and-accounts-2020-to-2021",
+      "status": 200,
+      "title": "FCDO Services annual report and accounts 2020 to 2021",
+      "documentType": "corporate_report",
+      "orgs": [
+        "fcdo-services"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by fcdo-services — not the OTS",
+      "wordCount": 203,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-funding-for-levelling-up-government-response-to-the-select-committee-report:1",
+      "url": "https://www.gov.uk/government/publications/funding-for-levelling-up-government-response-to-the-select-committee-report",
+      "basePath": "/government/publications/funding-for-levelling-up-government-response-to-the-select-committee-report",
+      "status": 200,
+      "title": "Funding for Levelling Up: government response to the Select Committee report",
+      "documentType": "policy_paper",
+      "orgs": [
+        "department-for-levelling-up-housing-and-communities"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-levelling-up-housing-and-communities — not the OTS",
+      "wordCount": 315,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-hm-treasury-outcome-delivery-plan:1",
+      "url": "https://www.gov.uk/government/publications/hm-treasury-outcome-delivery-plan",
+      "basePath": "/government/publications/hm-treasury-outcome-delivery-plan",
+      "status": 200,
+      "title": "HM Treasury Outcome Delivery Plan",
+      "documentType": "corporate_report",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 124,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-hmrcs-pensioner-review:1",
+      "url": "https://www.gov.uk/government/publications/hmrcs-pensioner-review",
+      "basePath": "/government/publications/hmrcs-pensioner-review",
+      "status": 200,
+      "title": "HMRC's pensioner review",
+      "documentType": "research",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 207,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-holiday-activities-and-food-programme:1",
+      "url": "https://www.gov.uk/government/publications/holiday-activities-and-food-programme",
+      "basePath": "/government/publications/holiday-activities-and-food-programme",
+      "status": 200,
+      "title": "Holiday activities and food programme",
+      "documentType": "guidance",
+      "orgs": [
+        "department-for-education"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-education — not the OTS",
+      "wordCount": 471,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-horizon-convictions-redress-scheme-hcrs-assessment-framework:1",
+      "url": "https://www.gov.uk/government/publications/horizon-convictions-redress-scheme-hcrs-assessment-framework",
+      "basePath": "/government/publications/horizon-convictions-redress-scheme-hcrs-assessment-framework",
+      "status": 200,
+      "title": "Horizon Convictions Redress Scheme (HCRS): assessment framework",
+      "documentType": "guidance",
+      "orgs": [
+        "department-for-business-and-trade"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-and-trade — not the OTS",
+      "wordCount": 370,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-income-tax-simplifying-the-paye-settlement-agreement-process:1",
+      "url": "https://www.gov.uk/government/publications/income-tax-simplifying-the-paye-settlement-agreement-process",
+      "basePath": "/government/publications/income-tax-simplifying-the-paye-settlement-agreement-process",
+      "status": 200,
+      "title": "Income Tax: simplifying the PAYE Settlement Agreement process",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 106,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-income-tax-exemption-for-trivial-benefits-in-kind:1",
+      "url": "https://www.gov.uk/government/publications/income-tax-exemption-for-trivial-benefits-in-kind",
+      "basePath": "/government/publications/income-tax-exemption-for-trivial-benefits-in-kind",
+      "status": 200,
+      "title": "Income Tax: exemption for trivial benefits in kind",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 274,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-increasing-cash-basis-thresholds-for-unincorporated-businesses:1",
+      "url": "https://www.gov.uk/government/publications/increasing-cash-basis-thresholds-for-unincorporated-businesses",
+      "basePath": "/government/publications/increasing-cash-basis-thresholds-for-unincorporated-businesses",
+      "status": 200,
+      "title": "Increasing cash basis thresholds for unincorporated businesses",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 220,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-investment-zones-in-wales-technical-document:1",
+      "url": "https://www.gov.uk/government/publications/investment-zones-in-wales-technical-document",
+      "basePath": "/government/publications/investment-zones-in-wales-technical-document",
+      "status": 200,
+      "title": "Investment Zones in Wales: technical document",
+      "documentType": "guidance",
+      "orgs": [
+        "ministry-of-housing-communities-local-government"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government — not the OTS",
+      "wordCount": 152,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-industrial-injuries-disablement-benefits-technical-guidance:1",
+      "url": "https://www.gov.uk/government/publications/industrial-injuries-disablement-benefits-technical-guidance",
+      "basePath": "/government/publications/industrial-injuries-disablement-benefits-technical-guidance",
+      "status": 200,
+      "title": "Industrial Injuries Disablement Benefits: technical guidance",
+      "documentType": "guidance",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 597,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-local-government-finance-policy-statement-2026-27-to-2028-29:1",
+      "url": "https://www.gov.uk/government/publications/local-government-finance-policy-statement-2026-27-to-2028-29",
+      "basePath": "/government/publications/local-government-finance-policy-statement-2026-27-to-2028-29",
+      "status": 200,
+      "title": "Local government finance policy statement 2026-27 to 2028-29",
+      "documentType": "policy_paper",
+      "orgs": [
+        "ministry-of-housing-communities-local-government"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government — not the OTS",
+      "wordCount": 272,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-mhclg-accounting-officer-system-statement-2025:1",
+      "url": "https://www.gov.uk/government/publications/mhclg-accounting-officer-system-statement-2025",
+      "basePath": "/government/publications/mhclg-accounting-officer-system-statement-2025",
+      "status": 200,
+      "title": "MHCLG Accounting Officer System Statement 2025",
+      "documentType": "corporate_report",
+      "orgs": [
+        "ministry-of-housing-communities-local-government"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government — not the OTS",
+      "wordCount": 97,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-migration-advisory-committee-annual-report-2021:1",
+      "url": "https://www.gov.uk/government/publications/migration-advisory-committee-annual-report-2021",
+      "basePath": "/government/publications/migration-advisory-committee-annual-report-2021",
+      "status": 200,
+      "title": "Migration Advisory Committee: annual report, 2021",
+      "documentType": "corporate_report",
+      "orgs": [
+        "migration-advisory-committee"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by migration-advisory-committee — not the OTS",
+      "wordCount": 487,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-qualitative-research-on-changes-in-trader-behaviour:1",
+      "url": "https://www.gov.uk/government/publications/qualitative-research-on-changes-in-trader-behaviour",
+      "basePath": "/government/publications/qualitative-research-on-changes-in-trader-behaviour",
+      "status": 200,
+      "title": "Qualitative research on changes in trader behaviour",
+      "documentType": "research",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 273,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-related-party-transactions-information-for-academy-trusts:1",
+      "url": "https://www.gov.uk/government/publications/related-party-transactions-information-for-academy-trusts",
+      "basePath": "/government/publications/related-party-transactions-information-for-academy-trusts",
+      "status": 200,
+      "title": "Related party transactions: information for academy trusts",
+      "documentType": "guidance",
+      "orgs": [
+        "department-for-education",
+        "education-and-skills-funding-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-education, education-and-skills-funding-agency — not the OTS",
+      "wordCount": 756,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-report-to-parliament-on-the-2025-re-rating-and-up-rating-orders:1",
+      "url": "https://www.gov.uk/government/publications/report-to-parliament-on-the-2025-re-rating-and-up-rating-orders",
+      "basePath": "/government/publications/report-to-parliament-on-the-2025-re-rating-and-up-rating-orders",
+      "status": 200,
+      "title": "Report to Parliament on the 2025 re-rating and up-rating orders",
+      "documentType": "independent_report",
+      "orgs": [
+        "government-actuarys-department"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by government-actuarys-department — not the OTS",
+      "wordCount": 211,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-report-to-parliament-on-the-2026-re-rating-and-up-rating-orders:1",
+      "url": "https://www.gov.uk/government/publications/report-to-parliament-on-the-2026-re-rating-and-up-rating-orders",
+      "basePath": "/government/publications/report-to-parliament-on-the-2026-re-rating-and-up-rating-orders",
+      "status": 200,
+      "title": "Report to Parliament on the 2026 re-rating and up-rating orders",
+      "documentType": "independent_report",
+      "orgs": [
+        "government-actuarys-department"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by government-actuarys-department — not the OTS",
+      "wordCount": 211,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-the-aggregates-levy:1",
+      "url": "https://www.gov.uk/government/publications/review-of-the-aggregates-levy",
+      "basePath": "/government/publications/review-of-the-aggregates-levy",
+      "status": 200,
+      "title": "Review of the Aggregates Levy",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 351,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-review-of-the-intra-company-transfer-ict-route-2021:1",
+      "url": "https://www.gov.uk/government/publications/review-of-the-intra-company-transfer-ict-route-2021",
+      "basePath": "/government/publications/review-of-the-intra-company-transfer-ict-route-2021",
+      "status": 200,
+      "title": "Review of the Intra-company Transfer (ICT) route 2021",
+      "documentType": "independent_report",
+      "orgs": [
+        "migration-advisory-committee"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by migration-advisory-committee — not the OTS",
+      "wordCount": 627,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-rural-payments-agency-annual-report-and-accounts-2020-to-2021:1",
+      "url": "https://www.gov.uk/government/publications/rural-payments-agency-annual-report-and-accounts-2020-to-2021",
+      "basePath": "/government/publications/rural-payments-agency-annual-report-and-accounts-2020-to-2021",
+      "status": 200,
+      "title": "Rural Payments Agency annual report and accounts 2020 to 2021",
+      "documentType": "corporate_report",
+      "orgs": [
+        "rural-payments-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by rural-payments-agency — not the OTS",
+      "wordCount": 171,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-rural-payments-agency-annual-report-and-accounts-2022-to-2023:1",
+      "url": "https://www.gov.uk/government/publications/rural-payments-agency-annual-report-and-accounts-2022-to-2023",
+      "basePath": "/government/publications/rural-payments-agency-annual-report-and-accounts-2022-to-2023",
+      "status": 200,
+      "title": "Rural Payments Agency annual report and accounts 2022 to 2023",
+      "documentType": "corporate_report",
+      "orgs": [
+        "rural-payments-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by rural-payments-agency — not the OTS",
+      "wordCount": 181,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-rural-payments-agency-annual-report-and-accounts-2023-to-2024:1",
+      "url": "https://www.gov.uk/government/publications/rural-payments-agency-annual-report-and-accounts-2023-to-2024",
+      "basePath": "/government/publications/rural-payments-agency-annual-report-and-accounts-2023-to-2024",
+      "status": 200,
+      "title": "Rural Payments Agency annual report and accounts 2023 to 2024",
+      "documentType": "corporate_report",
+      "orgs": [
+        "rural-payments-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by rural-payments-agency — not the OTS",
+      "wordCount": 221,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-self-employed-tax-credit-claimants-research:1",
+      "url": "https://www.gov.uk/government/publications/self-employed-tax-credit-claimants-research",
+      "basePath": "/government/publications/self-employed-tax-credit-claimants-research",
+      "status": 200,
+      "title": "Self-Employed Tax Credit Claimants Research",
+      "documentType": "research",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 525,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-single-data-list:1",
+      "url": "https://www.gov.uk/government/publications/single-data-list",
+      "basePath": "/government/publications/single-data-list",
+      "status": 200,
+      "title": "Single Data List",
+      "documentType": "guidance",
+      "orgs": [
+        "ministry-of-housing-communities-local-government",
+        "ministry-of-housing-communities-and-local-government-2018-2021",
+        "department-for-levelling-up-housing-and-communities"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government, ministry-of-housing-communities-and-local-government-2018-2021, department-for-levelling-up-housing-and-communities — not the OTS",
+      "wordCount": 842,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-slc-annual-report-and-accounts-2022-to-2023:1",
+      "url": "https://www.gov.uk/government/publications/slc-annual-report-and-accounts-2022-to-2023",
+      "basePath": "/government/publications/slc-annual-report-and-accounts-2022-to-2023",
+      "status": 200,
+      "title": "SLC Annual Report and Accounts 2022 to 2023",
+      "documentType": "corporate_report",
+      "orgs": [
+        "student-loans-company"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by student-loans-company — not the OTS",
+      "wordCount": 112,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-spending-review-2025-document:1",
+      "url": "https://www.gov.uk/government/publications/spending-review-2025-document",
+      "basePath": "/government/publications/spending-review-2025-document",
+      "status": 200,
+      "title": "Spending Review 2025 document",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 296,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-spring-budget-2017-documents:1",
+      "url": "https://www.gov.uk/government/publications/spring-budget-2017-documents",
+      "basePath": "/government/publications/spring-budget-2017-documents",
+      "status": 200,
+      "title": "Spring Budget 2017: documents",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 615,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-spring-budget-2023:1",
+      "url": "https://www.gov.uk/government/publications/spring-budget-2023",
+      "basePath": "/government/publications/spring-budget-2023",
+      "status": 200,
+      "title": "Spring Budget 2023",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 1219,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-administration-and-maintenance-autumn-2021:1",
+      "url": "https://www.gov.uk/government/publications/tax-administration-and-maintenance-autumn-2021",
+      "basePath": "/government/publications/tax-administration-and-maintenance-autumn-2021",
+      "status": 200,
+      "title": "Tax Administration and Maintenance: Autumn 2021",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury",
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury, hm-revenue-customs — not the OTS",
+      "wordCount": 258,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-administration-strategy:1",
+      "url": "https://www.gov.uk/government/publications/tax-administration-strategy",
+      "basePath": "/government/publications/tax-administration-strategy",
+      "status": 200,
+      "title": "Tax administration strategy",
+      "documentType": "corporate_report",
+      "orgs": [
+        "hm-revenue-customs",
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs, hm-treasury — not the OTS",
+      "wordCount": 177,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-tax-policies-and-consultations-spring-2021:1",
+      "url": "https://www.gov.uk/government/publications/tax-policies-and-consultations-spring-2021",
+      "basePath": "/government/publications/tax-policies-and-consultations-spring-2021",
+      "status": 200,
+      "title": "Tax policies and consultations (Spring 2021)",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury",
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury, hm-revenue-customs — not the OTS",
+      "wordCount": 195,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-publications-tcfd-aligned-disclosure-application-guidance:1",
+      "url": "https://www.gov.uk/government/publications/tcfd-aligned-disclosure-application-guidance",
+      "basePath": "/government/publications/tcfd-aligned-disclosure-application-guidance",
+      "status": 200,
+      "title": "TCFD-aligned disclosure guidance for public sector annual reports",
+      "documentType": "guidance",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 1108,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-the-growth-plan-2022-documents:1",
+      "url": "https://www.gov.uk/government/publications/the-growth-plan-2022-documents",
+      "basePath": "/government/publications/the-growth-plan-2022-documents",
+      "status": 200,
+      "title": "The Growth Plan 2022: documents",
+      "documentType": "policy_paper",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 611,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-the-treasury-committees-scrutiny-of-appointments-government-response:1",
+      "url": "https://www.gov.uk/government/publications/the-treasury-committees-scrutiny-of-appointments-government-response",
+      "basePath": "/government/publications/the-treasury-committees-scrutiny-of-appointments-government-response",
+      "status": 200,
+      "title": "The Treasury Committee's scrutiny of appointments: government response",
+      "documentType": "corporate_report",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 356,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-uk-gulf-cooperation-council-free-trade-agreement-technical-note:1",
+      "url": "https://www.gov.uk/government/publications/uk-gulf-cooperation-council-free-trade-agreement-technical-note",
+      "basePath": "/government/publications/uk-gulf-cooperation-council-free-trade-agreement-technical-note",
+      "status": 200,
+      "title": "UK-Gulf Cooperation Council Free Trade Agreement: technical note",
+      "documentType": "guidance",
+      "orgs": [
+        "department-for-business-and-trade"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-and-trade — not the OTS",
+      "wordCount": 170,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-universal-credit-and-the-patterns-of-rent-balances-in-the-social-rented-sector-social-researchrent-analysis:1",
+      "url": "https://www.gov.uk/government/publications/universal-credit-and-the-patterns-of-rent-balances-in-the-social-rented-sector-social-researchrent-analysis",
+      "basePath": "/government/publications/universal-credit-and-the-patterns-of-rent-balances-in-the-social-rented-sector-social-researchrent-analysis",
+      "status": 200,
+      "title": "Universal Credit and the patterns of rent balances in the Social Rented Sector: Social Research/Rent Analysis",
+      "documentType": "research",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 484,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-publications-validated-costs-and-benefits-to-business-of-regulations:1",
+      "url": "https://www.gov.uk/government/publications/validated-costs-and-benefits-to-business-of-regulations",
+      "basePath": "/government/publications/validated-costs-and-benefits-to-business-of-regulations",
+      "status": 200,
+      "title": "Validated costs and benefits to business of regulations",
+      "documentType": "research",
+      "orgs": [
+        "regulatory-policy-committee"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by regulatory-policy-committee — not the OTS",
+      "wordCount": 371,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-chancellor-george-osbornes-budget-2015-speech:1",
+      "url": "https://www.gov.uk/government/speeches/chancellor-george-osbornes-budget-2015-speech",
+      "basePath": "/government/speeches/chancellor-george-osbornes-budget-2015-speech",
+      "status": 200,
+      "title": "Chancellor George Osborne's Budget 2015 speech",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 8176,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-federation-of-small-businesses-conference-2014:1",
+      "url": "https://www.gov.uk/government/speeches/federation-of-small-businesses-conference-2014",
+      "basePath": "/government/speeches/federation-of-small-businesses-conference-2014",
+      "status": 200,
+      "title": "Federation of Small Businesses conference 2014",
+      "documentType": "speech",
+      "orgs": [
+        "department-for-business-innovation-skills"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-innovation-skills — not the OTS",
+      "wordCount": 2440,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-financial-secretary-a-tax-system-that-works-for-individuals-and-businesses-alike-is-steady-measured-and-consultative:1",
+      "url": "https://www.gov.uk/government/speeches/financial-secretary-a-tax-system-that-works-for-individuals-and-businesses-alike-is-steady-measured-and-consultative",
+      "basePath": "/government/speeches/financial-secretary-a-tax-system-that-works-for-individuals-and-businesses-alike-is-steady-measured-and-consultative",
+      "status": 200,
+      "title": "Financial Secretary: \"a tax system that works for individuals and businesses alike is steady, measured and consultative\"",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury",
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury, hm-revenue-customs — not the OTS",
+      "wordCount": 2027,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-speeches-financial-secretary-on-the-governments-business-taxation-plans:1",
+      "url": "https://www.gov.uk/government/speeches/financial-secretary-on-the-governments-business-taxation-plans",
+      "basePath": "/government/speeches/financial-secretary-on-the-governments-business-taxation-plans",
+      "status": 200,
+      "title": "Financial Secretary on the government's business taxation plans",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 2166,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-secretary-of-state-for-wales-to-the-cbi-annual-lunch:1",
+      "url": "https://www.gov.uk/government/speeches/secretary-of-state-for-wales-to-the-cbi-annual-lunch",
+      "basePath": "/government/speeches/secretary-of-state-for-wales-to-the-cbi-annual-lunch",
+      "status": 200,
+      "title": "Secretary of State for Wales to the CBI annual lunch",
+      "documentType": "speech",
+      "orgs": [
+        "office-of-the-secretary-of-state-for-wales"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by office-of-the-secretary-of-state-for-wales — not the OTS",
+      "wordCount": 2281,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-david-gauke-exchequer-secretary-to-the-treasury-at-the-financial-executive-network-group-london:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-david-gauke-exchequer-secretary-to-the-treasury-at-the-financial-executive-network-group-london",
+      "basePath": "/government/speeches/speech-by-david-gauke-exchequer-secretary-to-the-treasury-at-the-financial-executive-network-group-london",
+      "status": 200,
+      "title": "Speech by David Gauke, Exchequer Secretary to the Treasury, at the Financial Executive Network Group, London",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 2085,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-exchequer-secretary-to-the-treasury-david-gauke-mp-at-oxford-centre-for-business-taxation:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-exchequer-secretary-to-the-treasury-david-gauke-mp-at-oxford-centre-for-business-taxation",
+      "basePath": "/government/speeches/speech-by-exchequer-secretary-to-the-treasury-david-gauke-mp-at-oxford-centre-for-business-taxation",
+      "status": 200,
+      "title": "Speech by Exchequer Secretary to the Treasury, David Gauke MP, at Oxford Centre for Business Taxation",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 2484,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-david-gauke-mp-exchequer-secretary-to-the-treasury-at-the-centre-for-business-taxation-oxford:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-david-gauke-mp-exchequer-secretary-to-the-treasury-at-the-centre-for-business-taxation-oxford",
+      "basePath": "/government/speeches/speech-by-david-gauke-mp-exchequer-secretary-to-the-treasury-at-the-centre-for-business-taxation-oxford",
+      "status": 200,
+      "title": "Speech by David Gauke MP, Exchequer Secretary to the Treasury, at the Centre for Business Taxation, Oxford",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 3666,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-exchequer-secretary-to-the-treasury-david-gauke-mp-tax-competitiveness:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-exchequer-secretary-to-the-treasury-david-gauke-mp-tax-competitiveness",
+      "basePath": "/government/speeches/speech-by-exchequer-secretary-to-the-treasury-david-gauke-mp-tax-competitiveness",
+      "status": 200,
+      "title": "Speech by Exchequer Secretary to the Treasury, David Gauke MP; Tax competitiveness",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 2442,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-the-chancellor-of-the-exchequer-rt-hon-george-osborne-mp-at-the-national-business-awards:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-the-chancellor-of-the-exchequer-rt-hon-george-osborne-mp-at-the-national-business-awards",
+      "basePath": "/government/speeches/speech-by-the-chancellor-of-the-exchequer-rt-hon-george-osborne-mp-at-the-national-business-awards",
+      "status": 200,
+      "title": "Speech by the Chancellor of the Exchequer, Rt Hon George Osborne MP, at the National Business Awards",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 1830,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-the-exchequer-secretary-to-the-treasury-david-gauke-mp-to-the-centre-for-business-taxation-oxford-university:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-the-exchequer-secretary-to-the-treasury-david-gauke-mp-to-the-centre-for-business-taxation-oxford-university",
+      "basePath": "/government/speeches/speech-by-the-exchequer-secretary-to-the-treasury-david-gauke-mp-to-the-centre-for-business-taxation-oxford-university",
+      "status": 200,
+      "title": "Speech by the Exchequer Secretary to the Treasury, David Gauke MP, to the Centre for Business Taxation, Oxford University",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 3377,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-the-financial-secretary-to-the-treasury-mark-hoban-mp-at-the-private-equity-seminar:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-the-financial-secretary-to-the-treasury-mark-hoban-mp-at-the-private-equity-seminar",
+      "basePath": "/government/speeches/speech-by-the-financial-secretary-to-the-treasury-mark-hoban-mp-at-the-private-equity-seminar",
+      "status": 200,
+      "title": "Speech by the Financial Secretary to the Treasury, Mark Hoban MP, at the Private Equity Seminar",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 2048,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-speech-by-the-permanent-secretary-to-the-treasury-sir-nicholas-macpherson-at-nuffield-college-oxford-university:1",
+      "url": "https://www.gov.uk/government/speeches/speech-by-the-permanent-secretary-to-the-treasury-sir-nicholas-macpherson-at-nuffield-college-oxford-university",
+      "basePath": "/government/speeches/speech-by-the-permanent-secretary-to-the-treasury-sir-nicholas-macpherson-at-nuffield-college-oxford-university",
+      "status": 200,
+      "title": "Speech by the Permanent Secretary to the Treasury, Sir Nicholas Macpherson at Nuffield College, Oxford University",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 4041,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-the-growth-plan-2022-speech:1",
+      "url": "https://www.gov.uk/government/speeches/the-growth-plan-2022-speech",
+      "basePath": "/government/speeches/the-growth-plan-2022-speech",
+      "status": 200,
+      "title": "The Growth Plan 2022 speech",
+      "documentType": "speech",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 3409,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-the-uk-right-for-business-right-for-scotland:1",
+      "url": "https://www.gov.uk/government/speeches/the-uk-right-for-business-right-for-scotland",
+      "basePath": "/government/speeches/the-uk-right-for-business-right-for-scotland",
+      "status": 200,
+      "title": "The UK: right for business, right for Scotland",
+      "documentType": "speech",
+      "orgs": [
+        "office-of-the-secretary-of-state-for-scotland"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by office-of-the-secretary-of-state-for-scotland — not the OTS",
+      "wordCount": 1831,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-what-has-competition-ever-done-for-us:1",
+      "url": "https://www.gov.uk/government/speeches/what-has-competition-ever-done-for-us",
+      "basePath": "/government/speeches/what-has-competition-ever-done-for-us",
+      "status": 200,
+      "title": "What has competition ever done for us?",
+      "documentType": "speech",
+      "orgs": [
+        "competition-and-markets-authority"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by competition-and-markets-authority — not the OTS",
+      "wordCount": 6649,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-fraud-and-error-in-the-benefit-system-financial-year-201516-estimates:1",
+      "url": "https://www.gov.uk/government/statistics/fraud-and-error-in-the-benefit-system-financial-year-201516-estimates",
+      "basePath": "/government/statistics/fraud-and-error-in-the-benefit-system-financial-year-201516-estimates",
+      "status": 200,
+      "title": "Fraud and error in the benefit system: financial year 2015/16 estimates",
+      "documentType": "national_statistics",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 543,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-fraud-and-error-in-the-benefit-system-financial-year-2022-to-2023-estimates:1",
+      "url": "https://www.gov.uk/government/statistics/fraud-and-error-in-the-benefit-system-financial-year-2022-to-2023-estimates",
+      "basePath": "/government/statistics/fraud-and-error-in-the-benefit-system-financial-year-2022-to-2023-estimates",
+      "status": 200,
+      "title": "Fraud and error in the benefit system: financial year 2022 to 2023 estimates",
+      "documentType": "national_statistics",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 376,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-income-related-benefits-estimates-of-take-up-financial-year-2018-to-2019:1",
+      "url": "https://www.gov.uk/government/statistics/income-related-benefits-estimates-of-take-up-financial-year-2018-to-2019",
+      "basePath": "/government/statistics/income-related-benefits-estimates-of-take-up-financial-year-2018-to-2019",
+      "status": 200,
+      "title": "Income-related benefits: estimates of take-up: financial year 2018 to 2019",
+      "documentType": "official_statistics",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 398,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-income-tax-liabilities-statistics-tax-year-2018-to-2019-to-tax-year-2021-to-2022:1",
+      "url": "https://www.gov.uk/government/statistics/income-tax-liabilities-statistics-tax-year-2018-to-2019-to-tax-year-2021-to-2022",
+      "basePath": "/government/statistics/income-tax-liabilities-statistics-tax-year-2018-to-2019-to-tax-year-2021-to-2022",
+      "status": 200,
+      "title": "Income Tax liabilities statistics: tax year 2018 to 2019 to tax year 2021 to 2022",
+      "documentType": "national_statistics",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 327,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-statistics-income-tax-liabilities-statistics-tax-year-2019-to-2020-to-tax-year-2022-to-2023:1",
+      "url": "https://www.gov.uk/government/statistics/income-tax-liabilities-statistics-tax-year-2019-to-2020-to-tax-year-2022-to-2023",
+      "basePath": "/government/statistics/income-tax-liabilities-statistics-tax-year-2019-to-2020-to-tax-year-2022-to-2023",
+      "status": 200,
+      "title": "Income Tax liabilities statistics: tax year 2019 to 2020 to tax year 2022 to 2023",
+      "documentType": "national_statistics",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 327,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-statistics-income-tax-liabilities-statistics-tax-year-2020-to-2021-to-tax-year-2023-to-2024:1",
+      "url": "https://www.gov.uk/government/statistics/income-tax-liabilities-statistics-tax-year-2020-to-2021-to-tax-year-2023-to-2024",
+      "basePath": "/government/statistics/income-tax-liabilities-statistics-tax-year-2020-to-2021-to-tax-year-2023-to-2024",
+      "status": 200,
+      "title": "Income Tax liabilities statistics: tax year 2020 to 2021 to tax year 2023 to 2024",
+      "documentType": "national_statistics",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 378,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-statistics-income-tax-liabilities-statistics-tax-year-2022-to-2023-to-tax-year-2025-to-2026:1",
+      "url": "https://www.gov.uk/government/statistics/income-tax-liabilities-statistics-tax-year-2022-to-2023-to-tax-year-2025-to-2026",
+      "basePath": "/government/statistics/income-tax-liabilities-statistics-tax-year-2022-to-2023-to-tax-year-2025-to-2026",
+      "status": 200,
+      "title": "Income Tax liabilities statistics: tax year 2022 to 2023 to tax year 2025 to 2026",
+      "documentType": "national_statistics",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 327,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-statistics-main-tax-expenditures-and-structural-reliefs:1",
+      "url": "https://www.gov.uk/government/statistics/main-tax-expenditures-and-structural-reliefs",
+      "basePath": "/government/statistics/main-tax-expenditures-and-structural-reliefs",
+      "status": 200,
+      "title": "Non-structural tax reliefs",
+      "documentType": "official_statistics",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 928,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-statistics-income-tax-liabilities-statistics-tax-year-2021-to-2022-to-tax-year-2024-to-2025:1",
+      "url": "https://www.gov.uk/government/statistics/income-tax-liabilities-statistics-tax-year-2021-to-2022-to-tax-year-2024-to-2025",
+      "basePath": "/government/statistics/income-tax-liabilities-statistics-tax-year-2021-to-2022-to-tax-year-2024-to-2025",
+      "status": 200,
+      "title": "Income Tax liabilities statistics: tax year 2021 to 2022 to tax year 2024 to 2025",
+      "documentType": "national_statistics",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 327,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-statistics-mhclg-enabled-spend-statistics-2023-24:1",
+      "url": "https://www.gov.uk/government/statistics/mhclg-enabled-spend-statistics-2023-24",
+      "basePath": "/government/statistics/mhclg-enabled-spend-statistics-2023-24",
+      "status": 200,
+      "title": "MHCLG enabled spend statistics, 2023-24",
+      "documentType": "official_statistics",
+      "orgs": [
+        "ministry-of-housing-communities-local-government"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-local-government — not the OTS",
+      "wordCount": 151,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-non-domestic-rating-challenges-and-changes-2017-and-2010-rating-lists-december-2021:1",
+      "url": "https://www.gov.uk/government/statistics/non-domestic-rating-challenges-and-changes-2017-and-2010-rating-lists-december-2021",
+      "basePath": "/government/statistics/non-domestic-rating-challenges-and-changes-2017-and-2010-rating-lists-december-2021",
+      "status": 200,
+      "title": "Non-domestic rating: challenges and changes, 2017 and 2010 rating lists, December 2021",
+      "documentType": "official_statistics",
+      "orgs": [
+        "valuation-office-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by valuation-office-agency — not the OTS",
+      "wordCount": 666,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-non-domestic-rating-challenges-and-changes-2017-rating-list-march-2022:1",
+      "url": "https://www.gov.uk/government/statistics/non-domestic-rating-challenges-and-changes-2017-rating-list-march-2022",
+      "basePath": "/government/statistics/non-domestic-rating-challenges-and-changes-2017-rating-list-march-2022",
+      "status": 200,
+      "title": "Non-domestic Rating: Challenges and Changes, 2017 Rating List, March 2022",
+      "documentType": "official_statistics",
+      "orgs": [
+        "valuation-office-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by valuation-office-agency — not the OTS",
+      "wordCount": 508,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-non-domestic-rating-challenges-and-changes-2017-rating-list-march-2023:1",
+      "url": "https://www.gov.uk/government/statistics/non-domestic-rating-challenges-and-changes-2017-rating-list-march-2023",
+      "basePath": "/government/statistics/non-domestic-rating-challenges-and-changes-2017-rating-list-march-2023",
+      "status": 200,
+      "title": "Non-domestic rating: challenges and changes, 2017 rating list, March 2023",
+      "documentType": "official_statistics",
+      "orgs": [
+        "valuation-office-agency"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by valuation-office-agency — not the OTS",
+      "wordCount": 439,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-statistics-prison-population-projections-2024-to-2029:1",
+      "url": "https://www.gov.uk/government/statistics/prison-population-projections-2024-to-2029",
+      "basePath": "/government/statistics/prison-population-projections-2024-to-2029",
+      "status": 200,
+      "title": "Prison Population Projections: 2024 to 2029",
+      "documentType": "national_statistics",
+      "orgs": [
+        "ministry-of-justice"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-justice — not the OTS",
+      "wordCount": 231,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-guidance-apply-for-an-sia-licence:1",
+      "url": "https://www.gov.uk/guidance/apply-for-an-sia-licence",
+      "basePath": "/guidance/apply-for-an-sia-licence",
+      "status": 200,
+      "title": "Apply for an SIA licence",
+      "documentType": "detailed_guide",
+      "orgs": [
+        "security-industry-authority"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by security-industry-authority — not the OTS",
+      "wordCount": 4828,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-guidance-removing-cider-from-your-premises-without-paying-excise-duty:1",
+      "url": "https://www.gov.uk/guidance/removing-cider-from-your-premises-without-paying-excise-duty",
+      "basePath": "/guidance/removing-cider-from-your-premises-without-paying-excise-duty",
+      "status": 200,
+      "title": "Removing cider from your premises without paying Excise Duty",
+      "documentType": "detailed_guide",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 3867,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-guidance-universal-credit-money-savings-and-investments:1",
+      "url": "https://www.gov.uk/guidance/universal-credit-money-savings-and-investments",
+      "basePath": "/guidance/universal-credit-money-savings-and-investments",
+      "status": 200,
+      "title": "Universal Credit: money, savings and investments",
+      "documentType": "detailed_guide",
+      "orgs": [
+        "department-for-work-pensions"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions — not the OTS",
+      "wordCount": 2008,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-guidance-valuing-imported-goods-using-method-1-transaction-value:1",
+      "url": "https://www.gov.uk/guidance/valuing-imported-goods-using-method-1-transaction-value",
+      "basePath": "/guidance/valuing-imported-goods-using-method-1-transaction-value",
+      "status": 200,
+      "title": "Valuing imported goods using Method 1 (transaction value)",
+      "documentType": "detailed_guide",
+      "orgs": [
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs — not the OTS",
+      "wordCount": 5355,
+      "proposedHome": "hmrc-codes-guidance"
+    }
+  ],
+  "notSubstantive": [
+    {
+      "id": "ots-reports:-administrative-appeals-tribunal-decisions-hk-v-south-hams-district-council-hb-2017-ukut-254-aac:1",
+      "url": "https://www.gov.uk/administrative-appeals-tribunal-decisions/hk-v-south-hams-district-council-hb-2017-ukut-254-aac",
+      "basePath": "/administrative-appeals-tribunal-decisions/hk-v-south-hams-district-council-hb-2017-ukut-254-aac",
+      "status": 200,
+      "title": "HK v South Hams District Council (HB): [2017] UKUT 254 (AAC)",
+      "documentType": "utaac_decision",
+      "orgs": [
+        "hm-courts-and-tribunals-service",
+        "/courts-tribunals/upper-tribunal-administrative-appeals-chamber"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-courts-and-tribunals-service, /courts-tribunals/upper-tribunal-administrative-appeals-chamber — not the OTS",
+      "wordCount": 91,
+      "proposedHome": "tax-tribunals / et-decisions (a tribunal collection, not a publication one)"
+    },
+    {
+      "id": "ots-reports:-administrative-appeals-tribunal-decisions-gdc-v-sswp-uc-2020-ukut-108-aac:1",
+      "url": "https://www.gov.uk/administrative-appeals-tribunal-decisions/gdc-v-sswp-uc-2020-ukut-108-aac",
+      "basePath": "/administrative-appeals-tribunal-decisions/gdc-v-sswp-uc-2020-ukut-108-aac",
+      "status": 200,
+      "title": "GDC v Secretary of State for Work and Pensions (UC):[2020] UKUT 108 (AAC)",
+      "documentType": "utaac_decision",
+      "orgs": [
+        "hm-courts-and-tribunals-service",
+        "/courts-tribunals/upper-tribunal-administrative-appeals-chamber"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-courts-and-tribunals-service, /courts-tribunals/upper-tribunal-administrative-appeals-chamber — not the OTS",
+      "wordCount": 166,
+      "proposedHome": "tax-tribunals / et-decisions (a tribunal collection, not a publication one)"
+    },
+    {
+      "id": "ots-reports:-apply-renew-passport:1",
+      "url": "https://www.gov.uk/apply-renew-passport",
+      "basePath": "/apply-renew-passport",
+      "status": 200,
+      "title": "Apply online for a UK passport",
+      "documentType": "transaction",
+      "orgs": [
+        "hm-passport-office",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-passport-office, government-digital-service — not the OTS",
+      "wordCount": 303,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-apply-blue-badge:1",
+      "url": "https://www.gov.uk/apply-blue-badge",
+      "basePath": "/apply-blue-badge",
+      "status": 200,
+      "title": "Apply for or renew a Blue Badge",
+      "documentType": "transaction",
+      "orgs": [
+        "department-for-transport",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-transport, government-digital-service — not the OTS",
+      "wordCount": 301,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-algorithmic-transparency-records-money-and-pensions-service-pension-calculator:1",
+      "url": "https://www.gov.uk/algorithmic-transparency-records/money-and-pensions-service-pension-calculator",
+      "basePath": "/algorithmic-transparency-records/money-and-pensions-service-pension-calculator",
+      "status": 200,
+      "title": "Money and Pensions Service: Pension Calculator",
+      "documentType": "algorithmic_transparency_record",
+      "orgs": [
+        "cabinet-office",
+        "department-for-science-innovation-and-technology",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by cabinet-office, department-for-science-innovation-and-technology, government-digital-service — not the OTS",
+      "wordCount": 6511,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-council-tax-bands:1",
+      "url": "https://www.gov.uk/council-tax-bands",
+      "basePath": "/council-tax-bands",
+      "status": 200,
+      "title": "Check your Council Tax band",
+      "documentType": "transaction",
+      "orgs": [
+        "hm-revenue-customs",
+        "ministry-of-housing-communities-local-government",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs, ministry-of-housing-communities-local-government, government-digital-service — not the OTS",
+      "wordCount": 112,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-corporation-tax:1",
+      "url": "https://www.gov.uk/corporation-tax",
+      "basePath": "/corporation-tax",
+      "status": 200,
+      "title": "Corporation Tax",
+      "documentType": "guide",
+      "orgs": [
+        "hm-revenue-customs",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-revenue-customs, government-digital-service — not the OTS",
+      "wordCount": 320,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-dla-disability-living-allowance-benefit:1",
+      "url": "https://www.gov.uk/dla-disability-living-allowance-benefit",
+      "basePath": "/dla-disability-living-allowance-benefit",
+      "status": 200,
+      "title": "Disability Living Allowance (DLA) for adults",
+      "documentType": "guide",
+      "orgs": [
+        "department-for-work-pensions",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions, government-digital-service — not the OTS",
+      "wordCount": 176,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-driver-vehicles-account:1",
+      "url": "https://www.gov.uk/driver-vehicles-account",
+      "basePath": "/driver-vehicles-account",
+      "status": 200,
+      "title": "Driver and vehicles account: sign in or set up",
+      "documentType": "answer",
+      "orgs": [
+        "driver-and-vehicle-licensing-agency",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by driver-and-vehicle-licensing-agency, government-digital-service — not the OTS",
+      "wordCount": 406,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-employment-support-allowance:1",
+      "url": "https://www.gov.uk/employment-support-allowance",
+      "basePath": "/employment-support-allowance",
+      "status": 200,
+      "title": "Employment and Support Allowance (ESA)",
+      "documentType": "guide",
+      "orgs": [
+        "department-for-work-pensions",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions, government-digital-service — not the OTS",
+      "wordCount": 92,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-get-help-with-court-fees:1",
+      "url": "https://www.gov.uk/get-help-with-court-fees",
+      "basePath": "/get-help-with-court-fees",
+      "status": 200,
+      "title": "Get help paying court and tribunal fees",
+      "documentType": "answer",
+      "orgs": [
+        "hm-courts-and-tribunals-service",
+        "ministry-of-justice",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-courts-and-tribunals-service, ministry-of-justice, government-digital-service — not the OTS",
+      "wordCount": 765,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-get-vehicle-information-from-dvla:1",
+      "url": "https://www.gov.uk/get-vehicle-information-from-dvla",
+      "basePath": "/get-vehicle-information-from-dvla",
+      "status": 200,
+      "title": "Get vehicle information from DVLA",
+      "documentType": "transaction",
+      "orgs": [
+        "driver-and-vehicle-licensing-agency",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by driver-and-vehicle-licensing-agency, government-digital-service — not the OTS",
+      "wordCount": 441,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-3000-regulations-to-be-reformed-or-slashed:1",
+      "url": "https://www.gov.uk/government/news/3000-regulations-to-be-reformed-or-slashed",
+      "basePath": "/government/news/3000-regulations-to-be-reformed-or-slashed",
+      "status": 200,
+      "title": "3,000 regulations to be reformed or slashed",
+      "documentType": "press_release",
+      "orgs": [
+        "department-for-business-innovation-skills",
+        "prime-ministers-office-10-downing-street",
+        "cabinet-office"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-innovation-skills, prime-ministers-office-10-downing-street, cabinet-office — not the OTS",
+      "wordCount": 2122,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-all-about-the-budget:1",
+      "url": "https://www.gov.uk/government/news/all-about-the-budget",
+      "basePath": "/government/news/all-about-the-budget",
+      "status": 200,
+      "title": "All about the Budget",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury",
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury, hm-revenue-customs — not the OTS",
+      "wordCount": 840,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-news-business-plans-show-radical-reform-of-public-services:1",
+      "url": "https://www.gov.uk/government/news/business-plans-show-radical-reform-of-public-services",
+      "basePath": "/government/news/business-plans-show-radical-reform-of-public-services",
+      "status": 200,
+      "title": "Business plans show radical reform of public services",
+      "documentType": "news_story",
+      "orgs": [
+        "prime-ministers-office-10-downing-street"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by prime-ministers-office-10-downing-street — not the OTS",
+      "wordCount": 673,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-complexities-of-unapproved-share-schemes-identified:1",
+      "url": "https://www.gov.uk/government/news/complexities-of-unapproved-share-schemes-identified",
+      "basePath": "/government/news/complexities-of-unapproved-share-schemes-identified",
+      "status": 200,
+      "title": "Complexities of unapproved share schemes identified",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 703,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-department-for-communities-and-local-government-publishes-2010-to-2011-annual-report-and-accounts:1",
+      "url": "https://www.gov.uk/government/news/department-for-communities-and-local-government-publishes-2010-to-2011-annual-report-and-accounts",
+      "basePath": "/government/news/department-for-communities-and-local-government-publishes-2010-to-2011-annual-report-and-accounts",
+      "status": 200,
+      "title": "Department for Communities and Local Government publishes 2010 to 2011 annual report and accounts",
+      "documentType": "news_story",
+      "orgs": [
+        "ministry-of-housing-communities-and-local-government-2018-2021"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by ministry-of-housing-communities-and-local-government-2018-2021 — not the OTS",
+      "wordCount": 678,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-first-steps-on-review-of-pensioner-taxation-simplification:1",
+      "url": "https://www.gov.uk/government/news/first-steps-on-review-of-pensioner-taxation-simplification",
+      "basePath": "/government/news/first-steps-on-review-of-pensioner-taxation-simplification",
+      "status": 200,
+      "title": "First steps on review of pensioner taxation simplification",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 710,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-government-and-frc-consider-reducing-financial-reporting-burdens-for-the-smallest-businesses:1",
+      "url": "https://www.gov.uk/government/news/government-and-frc-consider-reducing-financial-reporting-burdens-for-the-smallest-businesses",
+      "basePath": "/government/news/government-and-frc-consider-reducing-financial-reporting-burdens-for-the-smallest-businesses",
+      "status": 200,
+      "title": "Government and FRC consider reducing financial reporting burdens for the smallest businesses",
+      "documentType": "news_story",
+      "orgs": [
+        "department-for-business-innovation-skills"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-innovation-skills — not the OTS",
+      "wordCount": 656,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-government-consults-on-simplifying-employee-benefits-in-kind-and-expenses:1",
+      "url": "https://www.gov.uk/government/news/government-consults-on-simplifying-employee-benefits-in-kind-and-expenses",
+      "basePath": "/government/news/government-consults-on-simplifying-employee-benefits-in-kind-and-expenses",
+      "status": 200,
+      "title": "Government consults on simplifying employee benefits in kind and expenses",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury",
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury, hm-revenue-customs — not the OTS",
+      "wordCount": 440,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-news-government-gives-150-000-funding-to-kick-start-copyright-hub:1",
+      "url": "https://www.gov.uk/government/news/government-gives-150-000-funding-to-kick-start-copyright-hub",
+      "basePath": "/government/news/government-gives-150-000-funding-to-kick-start-copyright-hub",
+      "status": 200,
+      "title": "Government gives £150,000 funding to kick-start copyright hub",
+      "documentType": "press_release",
+      "orgs": [
+        "department-for-business-innovation-skills",
+        "intellectual-property-office"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-innovation-skills, intellectual-property-office — not the OTS",
+      "wordCount": 1199,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-government-publishes-draft-tax-legislation:1",
+      "url": "https://www.gov.uk/government/news/government-publishes-draft-tax-legislation",
+      "basePath": "/government/news/government-publishes-draft-tax-legislation",
+      "status": 200,
+      "title": "Government publishes draft tax legislation",
+      "documentType": "press_release",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 536,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-government-response-to-the-gift-aid-forum:1",
+      "url": "https://www.gov.uk/government/news/government-response-to-the-gift-aid-forum",
+      "basePath": "/government/news/government-response-to-the-gift-aid-forum",
+      "status": 200,
+      "title": "Government response to the Gift Aid Forum",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury",
+        "hm-revenue-customs"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury, hm-revenue-customs — not the OTS",
+      "wordCount": 419,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-government-news-governments-sets-out-steps-to-modernise-and-simplify-uk-tax-system:1",
+      "url": "https://www.gov.uk/government/news/governments-sets-out-steps-to-modernise-and-simplify-uk-tax-system",
+      "basePath": "/government/news/governments-sets-out-steps-to-modernise-and-simplify-uk-tax-system",
+      "status": 200,
+      "title": "Governments sets out steps to modernise and simplify UK tax system",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 899,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-kathryn-cearns-obe-joins-nda-board-as-a-non-executive-board-member:1",
+      "url": "https://www.gov.uk/government/news/kathryn-cearns-obe-joins-nda-board-as-a-non-executive-board-member",
+      "basePath": "/government/news/kathryn-cearns-obe-joins-nda-board-as-a-non-executive-board-member",
+      "status": 200,
+      "title": "Kathryn Cearns (OBE) joins NDA Board as a Non-Executive Board Member",
+      "documentType": "news_story",
+      "orgs": [
+        "nuclear-decommissioning-authority"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by nuclear-decommissioning-authority — not the OTS",
+      "wordCount": 394,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-labour-markets-evaluation-and-pilots-lmep-fund-funded-projects:1",
+      "url": "https://www.gov.uk/government/news/labour-markets-evaluation-and-pilots-lmep-fund-funded-projects",
+      "basePath": "/government/news/labour-markets-evaluation-and-pilots-lmep-fund-funded-projects",
+      "status": 200,
+      "title": "Labour Markets Evaluation and Pilots (LMEP) Fund: funded projects",
+      "documentType": "news_story",
+      "orgs": [
+        "evaluation-task-force",
+        "hm-treasury",
+        "cabinet-office"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by evaluation-task-force, hm-treasury, cabinet-office — not the OTS",
+      "wordCount": 4576,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-ministers-ask-simplification-team-to-review-small-business-tax-administration:1",
+      "url": "https://www.gov.uk/government/news/ministers-ask-simplification-team-to-review-small-business-tax-administration",
+      "basePath": "/government/news/ministers-ask-simplification-team-to-review-small-business-tax-administration",
+      "status": 200,
+      "title": "Ministers ask simplification team to review small business tax administration",
+      "documentType": "press_release",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 753,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-more-cuts-in-business-red-tape-and-bureaucracy:1",
+      "url": "https://www.gov.uk/government/news/more-cuts-in-business-red-tape-and-bureaucracy",
+      "basePath": "/government/news/more-cuts-in-business-red-tape-and-bureaucracy",
+      "status": 200,
+      "title": "More cuts in business red tape and bureaucracy",
+      "documentType": "news_story",
+      "orgs": [
+        "department-for-business-innovation-skills"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-innovation-skills — not the OTS",
+      "wordCount": 842,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-overhaul-of-unapproved-share-scheme-tax-rules-recommended:1",
+      "url": "https://www.gov.uk/government/news/overhaul-of-unapproved-share-scheme-tax-rules-recommended",
+      "basePath": "/government/news/overhaul-of-unapproved-share-scheme-tax-rules-recommended",
+      "status": 200,
+      "title": "Overhaul of unapproved share scheme tax rules recommended",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 814,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-pensioner-tax-review-leads-to-hmrc-changes-for-the-better:1",
+      "url": "https://www.gov.uk/government/news/pensioner-tax-review-leads-to-hmrc-changes-for-the-better",
+      "basePath": "/government/news/pensioner-tax-review-leads-to-hmrc-changes-for-the-better",
+      "status": 200,
+      "title": "Pensioner tax review leads to HMRC changes for the better",
+      "documentType": "news_story",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 581,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-permanent-chair-and-tax-director-appointed-to-office-of-tax-simplification:1",
+      "url": "https://www.gov.uk/government/news/permanent-chair-and-tax-director-appointed-to-office-of-tax-simplification",
+      "basePath": "/government/news/permanent-chair-and-tax-director-appointed-to-office-of-tax-simplification",
+      "status": 200,
+      "title": "Permanent Chair and Tax Director appointed to Office of Tax Simplification",
+      "documentType": "press_release",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 680,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-red-tape-spotlight-shines-on-company-and-commercial-law:1",
+      "url": "https://www.gov.uk/government/news/red-tape-spotlight-shines-on-company-and-commercial-law",
+      "basePath": "/government/news/red-tape-spotlight-shines-on-company-and-commercial-law",
+      "status": 200,
+      "title": "Red tape spotlight shines on company and commercial law",
+      "documentType": "news_story",
+      "orgs": [
+        "department-for-business-innovation-skills"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-business-innovation-skills — not the OTS",
+      "wordCount": 1366,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-news-treasury-seeks-permanent-chair-and-tax-director-for-office-of-tax-simplification:1",
+      "url": "https://www.gov.uk/government/news/treasury-seeks-permanent-chair-and-tax-director-for-office-of-tax-simplification",
+      "basePath": "/government/news/treasury-seeks-permanent-chair-and-tax-director-for-office-of-tax-simplification",
+      "status": 200,
+      "title": "Treasury seeks permanent Chair and Tax Director for Office of Tax Simplification",
+      "documentType": "press_release",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 604,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-jobseekers-allowance:1",
+      "url": "https://www.gov.uk/jobseekers-allowance",
+      "basePath": "/jobseekers-allowance",
+      "status": 200,
+      "title": "Jobseeker's Allowance (JSA)",
+      "documentType": "guide",
+      "orgs": [
+        "department-for-work-pensions",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions, government-digital-service — not the OTS",
+      "wordCount": 329,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-make-a-sorn:1",
+      "url": "https://www.gov.uk/make-a-sorn",
+      "basePath": "/make-a-sorn",
+      "status": 200,
+      "title": "Register your vehicle as off the road (SORN)",
+      "documentType": "transaction",
+      "orgs": [
+        "driver-and-vehicle-licensing-agency",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by driver-and-vehicle-licensing-agency, government-digital-service — not the OTS",
+      "wordCount": 438,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-manage-lasting-power-attorney:1",
+      "url": "https://www.gov.uk/manage-lasting-power-attorney",
+      "basePath": "/manage-lasting-power-attorney",
+      "status": 200,
+      "title": "Manage a lasting power of attorney",
+      "documentType": "guide",
+      "orgs": [
+        "office-of-the-public-guardian",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by office-of-the-public-guardian, government-digital-service — not the OTS",
+      "wordCount": 574,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-pay-dartford-crossing-charge:1",
+      "url": "https://www.gov.uk/pay-dartford-crossing-charge",
+      "basePath": "/pay-dartford-crossing-charge",
+      "status": 200,
+      "title": "Pay the Dartford Crossing charge (Dart Charge)",
+      "documentType": "guide",
+      "orgs": [
+        "highways-england",
+        "national-highways",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by highways-england, national-highways, government-digital-service — not the OTS",
+      "wordCount": 486,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-report-immigration-crime:1",
+      "url": "https://www.gov.uk/report-immigration-crime",
+      "basePath": "/report-immigration-crime",
+      "status": 200,
+      "title": "Report an immigration or border crime",
+      "documentType": "transaction",
+      "orgs": [
+        "border-force",
+        "uk-visas-and-immigration",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by border-force, uk-visas-and-immigration, government-digital-service — not the OTS",
+      "wordCount": 200,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-running-a-limited-company:1",
+      "url": "https://www.gov.uk/running-a-limited-company",
+      "basePath": "/running-a-limited-company",
+      "status": 200,
+      "title": "Running a limited company: your responsibilities",
+      "documentType": "guide",
+      "orgs": [
+        "companies-house",
+        "hm-revenue-customs",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by companies-house, hm-revenue-customs, government-digital-service — not the OTS",
+      "wordCount": 138,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-self-employment-and-universal-credit:1",
+      "url": "https://www.gov.uk/self-employment-and-universal-credit",
+      "basePath": "/self-employment-and-universal-credit",
+      "status": 200,
+      "title": "Self-employment and Universal Credit",
+      "documentType": "answer",
+      "orgs": [
+        "department-for-work-pensions",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-work-pensions, government-digital-service — not the OTS",
+      "wordCount": 760,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-sign-in-childcare-account:1",
+      "url": "https://www.gov.uk/sign-in-childcare-account",
+      "basePath": "/sign-in-childcare-account",
+      "status": 200,
+      "title": "Sign in to your childcare account",
+      "documentType": "answer",
+      "orgs": [
+        "department-for-education",
+        "hm-revenue-customs",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by department-for-education, hm-revenue-customs, government-digital-service — not the OTS",
+      "wordCount": 493,
+      "proposedHome": "hmrc-codes-guidance"
+    },
+    {
+      "id": "ots-reports:-sign-in-to-manage-your-student-loan-balance:1",
+      "url": "https://www.gov.uk/sign-in-to-manage-your-student-loan-balance",
+      "basePath": "/sign-in-to-manage-your-student-loan-balance",
+      "status": 200,
+      "title": "Manage your student loan balance",
+      "documentType": "transaction",
+      "orgs": [
+        "student-loans-company",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by student-loans-company, government-digital-service — not the OTS",
+      "wordCount": 235,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-sold-bought-vehicle:1",
+      "url": "https://www.gov.uk/sold-bought-vehicle",
+      "basePath": "/sold-bought-vehicle",
+      "status": 200,
+      "title": "Tell DVLA you've sold, transferred or bought a vehicle",
+      "documentType": "simple_smart_answer",
+      "orgs": [
+        "driver-and-vehicle-licensing-agency",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by driver-and-vehicle-licensing-agency, government-digital-service — not the OTS",
+      "wordCount": 238,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-vehicle-log-book:1",
+      "url": "https://www.gov.uk/vehicle-log-book",
+      "basePath": "/vehicle-log-book",
+      "status": 200,
+      "title": "Get a vehicle log book (V5C)",
+      "documentType": "guide",
+      "orgs": [
+        "driver-and-vehicle-licensing-agency",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by driver-and-vehicle-licensing-agency, government-digital-service — not the OTS",
+      "wordCount": 542,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-vehicle-tax:1",
+      "url": "https://www.gov.uk/vehicle-tax",
+      "basePath": "/vehicle-tax",
+      "status": 200,
+      "title": "Tax your vehicle",
+      "documentType": "transaction",
+      "orgs": [
+        "driver-and-vehicle-licensing-agency",
+        "government-digital-service"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by driver-and-vehicle-licensing-agency, government-digital-service — not the OTS",
+      "wordCount": 496,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    }
+  ],
+  "unclassified": [
+    {
+      "id": "ots-reports:-foreign-travel-advice-spain:1",
+      "url": "https://www.gov.uk/foreign-travel-advice/spain",
+      "basePath": "/foreign-travel-advice/spain",
+      "status": 200,
+      "title": "Spain travel advice",
+      "documentType": "travel_advice",
+      "orgs": [
+        "foreign-commonwealth-development-office"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by foreign-commonwealth-development-office — not the OTS",
+      "wordCount": 237,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-groups-cross-government-working-group-on-employment-status:1",
+      "url": "https://www.gov.uk/government/groups/cross-government-working-group-on-employment-status",
+      "basePath": "/government/groups/cross-government-working-group-on-employment-status",
+      "status": 200,
+      "title": "Cross-Government Working Group on Employment Status",
+      "documentType": "working_group",
+      "orgs": [],
+      "verdict": "DELETE",
+      "reason": "published by (no organisation recorded) — not the OTS",
+      "wordCount": 503,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-people-kathryn-cearns:1",
+      "url": "https://www.gov.uk/government/people/kathryn-cearns",
+      "basePath": "/government/people/kathryn-cearns",
+      "status": 200,
+      "title": "Kathryn Cearns OBE, FCA, FCCA",
+      "documentType": "person",
+      "orgs": [],
+      "verdict": "DELETE",
+      "reason": "published by (no organisation recorded) — not the OTS",
+      "wordCount": 433,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    },
+    {
+      "id": "ots-reports:-government-speeches-chancellor-george-osbornes-autumn-statement-2014-speech:1",
+      "url": "https://www.gov.uk/government/speeches/chancellor-george-osbornes-autumn-statement-2014-speech",
+      "basePath": "/government/speeches/chancellor-george-osbornes-autumn-statement-2014-speech",
+      "status": 200,
+      "title": "Chancellor George Osborne's Autumn Statement 2014 speech",
+      "documentType": "oral_statement",
+      "orgs": [
+        "hm-treasury"
+      ],
+      "verdict": "DELETE",
+      "reason": "published by hm-treasury — not the OTS",
+      "wordCount": 6903,
+      "proposedHome": "⚠ NO COLLECTION EXISTS — there is no `govuk-content` corpus in the database; this needs a target before it can be re-ingested"
+    }
+  ],
+  "duplicatesLiveIn": {
+    "hmrc-codes-guidance": 241,
+    "et-decisions": 3,
+    "consultations": 48,
+    "oecd": 14,
+    "hmrc-tiins": 15,
+    "hmrc-ancillary": 6
+  }
+}

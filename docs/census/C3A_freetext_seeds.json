@@ -1,0 +1,355 @@
+{
+  "generated": "2026-08-26T20:22:04.660Z",
+  "sampleSize": 25,
+  "results": [
+    {
+      "line": 62,
+      "fn": "searchGovUk",
+      "arg": "HMRC manual site:gov.uk/hmrc-internal-manuals",
+      "corpus": "hmrc-manuals",
+      "cap": 5000,
+      "held": 85197,
+      "universe": 123543,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "the URL must be under /hmrc-internal-manuals — that is what the query asks for with `site:`",
+      "failures": []
+    },
+    {
+      "line": 67,
+      "fn": "searchGovUkByOrg",
+      "arg": "national-audit-office",
+      "corpus": "nao-reports",
+      "cap": 3000,
+      "held": 3983,
+      "universe": 0,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "published by the National Audit Office, or hosted on nao.org.uk",
+      "failures": []
+    },
+    {
+      "line": 110,
+      "fn": "searchGovUkByOrg",
+      "arg": "financial-conduct-authority",
+      "corpus": "fca-publications",
+      "cap": 3000,
+      "held": 0,
+      "universe": 57,
+      "sampled": 0,
+      "failing": 0,
+      "claim": null
+    },
+    {
+      "line": 145,
+      "fn": "searchGovUk",
+      "arg": "college of policing authorised professional practice",
+      "corpus": "college-of-policing",
+      "cap": 2000,
+      "held": 332,
+      "universe": 145121,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "published by the College of Policing, or hosted on college.police.uk",
+      "failures": []
+    },
+    {
+      "line": 149,
+      "fn": "searchGovUk",
+      "arg": "House of Commons Library research briefing",
+      "corpus": "hocl-briefings",
+      "cap": 3000,
+      "held": 0,
+      "universe": 165409,
+      "sampled": 0,
+      "failing": 0,
+      "claim": "published by the House of Commons Library, or hosted on commonslibrary.parliament.uk"
+    },
+    {
+      "line": 153,
+      "fn": "searchGovUk",
+      "arg": "explanatory notes legislation",
+      "corpus": "explanatory-notes",
+      "cap": 2000,
+      "held": 18801,
+      "universe": 174839,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "an explanatory note or memorandum — by document_type, or by a legislation.gov.uk /notes path",
+      "failures": []
+    },
+    {
+      "line": 157,
+      "fn": "searchGovUk",
+      "arg": "impact assessment gov.uk",
+      "corpus": "impact-assessments",
+      "cap": 2000,
+      "held": 18759,
+      "universe": 155029,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "document_type impact_assessment, or a legislation.gov.uk /ukia/ path",
+      "failures": []
+    },
+    {
+      "line": 161,
+      "fn": "searchGovUk",
+      "arg": "consultation response gov.uk",
+      "corpus": "consultations",
+      "cap": 3000,
+      "held": 7448,
+      "universe": 166642,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "a consultation or call for evidence, by document_type",
+      "failures": []
+    },
+    {
+      "line": 177,
+      "fn": "searchGovUk",
+      "arg": "tax information impact note TIIN",
+      "corpus": "hmrc-tiins",
+      "cap": 3000,
+      "held": 791,
+      "universe": 356696,
+      "sampled": 25,
+      "matching": 25,
+      "failing": 0,
+      "unjudgeable": 0,
+      "contamination": 0,
+      "claim": "published by HMRC (the TIIN collection is HMRC's own series)",
+      "failures": []
+    },
+    {
+      "line": 214,
+      "fn": "searchGovUkByOrg",
+      "arg": "office-of-tax-simplification",
+      "corpus": "ots-reports",
+      "cap": 500,
+      "held": 497,
+      "universe": 222,
+      "sampled": 25,
+      "matching": 4,
+      "failing": 21,
+      "unjudgeable": 0,
+      "contamination": 0.84,
+      "claim": "published by the Office of Tax Simplification — the collection this whole lane is about",
+      "failures": [
+        {
+          "id": "ots-reports:-administrative-appeals-tribunal-decisions-bb-v-secretary-of-state-for-work-and-pensions-and-cb-csm-2019-ukut-314-aac:1",
+          "url": "https://www.gov.uk/administrative-appeals-tribunal-decisions/bb-v-secretary-of-state-for-work-and-pensions-and-cb-csm-2019-ukut-314-aac",
+          "title": "BB v Secretary of State for Work and Pensions and CB (CSM): [2019] UKUT 314 (AAC)",
+          "type": "utaac_decision",
+          "orgs": [
+            "hm-courts-and-tribunals-service",
+            "/courts-tribunals/upper-tribunal-administrative-appeals-chamber"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-publications-attitudes-and-awareness-before-state-pension-age:1",
+          "url": "https://www.gov.uk/government/publications/attitudes-and-awareness-before-state-pension-age",
+          "title": "Attitudes and Awareness before State Pension age",
+          "type": "research",
+          "orgs": [
+            "department-for-work-pensions"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-consultations-introducing-a-voluntary-standard-for-customs-intermediaries:1",
+          "url": "https://www.gov.uk/government/consultations/introducing-a-voluntary-standard-for-customs-intermediaries",
+          "title": "Introducing a voluntary standard for customs intermediaries",
+          "type": "consultation_outcome",
+          "orgs": [
+            "hm-revenue-customs"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-consultations-review-of-tribunal-non-legal-member-fees-consultation:1",
+          "url": "https://www.gov.uk/government/consultations/review-of-tribunal-non-legal-member-fees-consultation",
+          "title": "Review of Tribunal Non-Legal Member Fees Consultation",
+          "type": "closed_consultation",
+          "orgs": [
+            "office-of-manpower-economics",
+            "review-body-on-senior-salaries"
+          ]
+        },
+        {
+          "id": "ots-reports:-report-immigration-crime:1",
+          "url": "https://www.gov.uk/report-immigration-crime",
+          "title": "Report an immigration or border crime",
+          "type": "transaction",
+          "orgs": [
+            "border-force",
+            "uk-visas-and-immigration",
+            "government-digital-service"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-publications-rural-payments-agency-annual-report-and-accounts-2023-to-2024:1",
+          "url": "https://www.gov.uk/government/publications/rural-payments-agency-annual-report-and-accounts-2023-to-2024",
+          "title": "Rural Payments Agency annual report and accounts 2023 to 2024",
+          "type": "corporate_report",
+          "orgs": [
+            "rural-payments-agency"
+          ]
+        },
+        {
+          "id": "ots-reports:-self-employment-and-universal-credit:1",
+          "url": "https://www.gov.uk/self-employment-and-universal-credit",
+          "title": "Self-employment and Universal Credit",
+          "type": "answer",
+          "orgs": [
+            "department-for-work-pensions",
+            "government-digital-service"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-news-permanent-chair-and-tax-director-appointed-to-office-of-tax-simplification:1",
+          "url": "https://www.gov.uk/government/news/permanent-chair-and-tax-director-appointed-to-office-of-tax-simplification",
+          "title": "Permanent Chair and Tax Director appointed to Office of Tax Simplification",
+          "type": "press_release",
+          "orgs": [
+            "hm-treasury"
+          ]
+        },
+        {
+          "id": "ots-reports:-renew-driving-licence:1",
+          "url": "https://www.gov.uk/renew-driving-licence",
+          "title": "Renew your driving licence",
+          "type": "answer",
+          "orgs": [
+            "driver-and-vehicle-licensing-agency",
+            "government-digital-service"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-publications-la-welfare-direct-bulletins-2024:1",
+          "url": "https://www.gov.uk/government/publications/la-welfare-direct-bulletins-2024",
+          "title": "LA Welfare Direct bulletins: 2024",
+          "type": "guidance",
+          "orgs": [
+            "department-for-work-pensions"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-news-business-plans-show-radical-reform-of-public-services:1",
+          "url": "https://www.gov.uk/government/news/business-plans-show-radical-reform-of-public-services",
+          "title": "Business plans show radical reform of public services",
+          "type": "news_story",
+          "orgs": [
+            "prime-ministers-office-10-downing-street"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-statistics-income-tax-liabilities-statistics-tax-year-2021-to-2022-to-tax-year-2024-to-2025:1",
+          "url": "https://www.gov.uk/government/statistics/income-tax-liabilities-statistics-tax-year-2021-to-2022-to-tax-year-2024-to-2025",
+          "title": "Income Tax liabilities statistics: tax year 2021 to 2022 to tax year 2024 to 2025",
+          "type": "national_statistics",
+          "orgs": [
+            "hm-revenue-customs"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-statistics-fraud-and-error-in-the-benefit-system-financial-year-201516-estimates:1",
+          "url": "https://www.gov.uk/government/statistics/fraud-and-error-in-the-benefit-system-financial-year-201516-estimates",
+          "title": "Fraud and error in the benefit system: financial year 2015/16 estimates",
+          "type": "national_statistics",
+          "orgs": [
+            "department-for-work-pensions"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-publications-hmrcs-pensioner-review:1",
+          "url": "https://www.gov.uk/government/publications/hmrcs-pensioner-review",
+          "title": "HMRC's pensioner review",
+          "type": "research",
+          "orgs": [
+            "hm-revenue-customs"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-news-first-steps-on-review-of-pensioner-taxation-simplification:1",
+          "url": "https://www.gov.uk/government/news/first-steps-on-review-of-pensioner-taxation-simplification",
+          "title": "First steps on review of pensioner taxation simplification",
+          "type": "news_story",
+          "orgs": [
+            "hm-treasury"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-publications-la-welfare-direct-bulletins-2023:1",
+          "url": "https://www.gov.uk/government/publications/la-welfare-direct-bulletins-2023",
+          "title": "LA Welfare Direct bulletins: 2023",
+          "type": "guidance",
+          "orgs": [
+            "department-for-work-pensions"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-publications-annual-review-of-performance-201617:1",
+          "url": "https://www.gov.uk/government/publications/annual-review-of-performance-201617",
+          "title": "Annual Review of Performance 2016/17",
+          "type": "corporate_report",
+          "orgs": [
+            "sellafield-ltd"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-consultations-digitalising-business-rates-connecting-business-rates-and-tax-data:1",
+          "url": "https://www.gov.uk/government/consultations/digitalising-business-rates-connecting-business-rates-and-tax-data",
+          "title": "Digitalising Business Rates: connecting business rates and tax data",
+          "type": "consultation_outcome",
+          "orgs": [
+            "hm-revenue-customs"
+          ]
+        },
+        {
+          "id": "ots-reports:-government-speeches-speech-by-the-chancellor-of-the-exchequer-rt-hon-george-osborne-mp-at-the-national-business-awards:1",
+          "url": "https://www.gov.uk/government/speeches/speech-by-the-chancellor-of-the-exchequer-rt-hon-george-osborne-mp-at-the-national-business-awards",
+          "title": "Speech by the Chancellor of the Exchequer, Rt Hon George Osborne MP, at the National Business Awards",
+          "type": "speech",
+          "orgs": [
+            "hm-treasury"
+          ]
+        },
+        {
+          "id": "ots-reports:-guidance-removing-cider-from-your-premises-without-paying-excise-duty:1",
+          "url": "https://www.gov.uk/guidance/removing-cider-from-your-premises-without-paying-excise-duty",
+          "title": "Removing cider from your premises without paying Excise Duty",
+          "type": "detailed_guide",
+          "orgs": [
+            "hm-revenue-customs"
+          ]
+        },
+        {
+          "id": "ots-reports:-tax-and-chancery-tribunal-decisions-hampton-george-hewitt-v-the-commissioners-for-hm-revenue-and-customs-2021-ukut-0231-tcc:1",
+          "url": "https://www.gov.uk/tax-and-chancery-tribunal-decisions/hampton-george-hewitt-v-the-commissioners-for-hm-revenue-and-customs-2021-ukut-0231-tcc",
+          "title": "Hampton George Hewitt v The Commissioners for HM Revenue and Customs [2021] UKUT 0231 (TCC)",
+          "type": "tax_tribunal_decision",
+          "orgs": [
+            "hm-courts-and-tribunals-service",
+            "/courts-tribunals/upper-tribunal-tax-and-chancery-chamber"
+          ]
+        }
+      ]
+    }
+  ]
+}
