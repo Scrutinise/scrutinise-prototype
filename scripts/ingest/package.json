@@ -20,7 +20,9 @@
     "backfill:committees": "bash v32-finish-backfill.sh",
     "check:dot-guard": "tsx c2/check-dot-guard.ts",
     "check:partial-guard": "tsx c2/check-partial-guard.ts",
-    "check:b5-regnal": "tsx c2/check-b5-regnal.ts"
+    "check:b5-regnal": "tsx c2/check-b5-regnal.ts",
+    "check:4a-coverage": "tsx graph/check-4a-coverage.ts",
+    "audit:4a": "tsx graph/audit-4a-blast-radius.ts --json graph/audit-4a-blast-radius.json && tsx graph/audit-4a-t2-hole.ts --json graph/audit-4a-t2-hole.json && tsx graph/audit-4a-t3-spans.ts --json graph/audit-4a-t3-spans.json && tsx graph/audit-4a-unresolved-cause.ts --json graph/audit-4a-unresolved-cause.json && tsx graph/audit-4a-tables.ts --json graph/audit-4a-tables.json && tsx graph/audit-4a-layer2.ts --json graph/audit-4a-layer2.json && tsx graph/record-4a-facts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

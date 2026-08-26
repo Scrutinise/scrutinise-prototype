@@ -166,7 +166,7 @@ async function main() {
 
   const { rows: partRows } = await inboundEvidence(CRAG, CRAG_PART)
   const four = await inbound(CRAG, CRAG_PART)
-  console.log(`\n  inbound('${CRAG}', '${CRAG_PART}') → ${partRows.length} rows (the 4-field surface returned ${four.length})`)
+  console.log(`\n  inbound('${CRAG}', '${CRAG_PART}') → ${partRows.length} rows (the 4-field surface returned ${four.rows.length})`)
   console.log(`  inbound to CRAG as a whole, no provision named : ${cragSummary.actLevel}`)
   console.log(`  inbound to CRAG with SOME provision named      : ${cragSummary.provisionLevel}`)
   const markupPart = partRows.filter(r => r.detection === 'markup').length

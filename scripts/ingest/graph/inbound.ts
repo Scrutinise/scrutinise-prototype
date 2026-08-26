@@ -32,12 +32,24 @@
  *    query for s.3 that missed s.3(2) would be wrong in the direction that
  *    matters. It does NOT match `section-30` — the prefix is followed by a
  *    separator or a letter, never another digit.
+ *
+ * ⚠⚠ 4. EVERY RESULT CARRIES A COVERAGE BLOCK (GRAPH 4A §7). A list of rows is a
+ *    CLAIM ABOUT COMPLETENESS, and this graph is knowingly incomplete in named,
+ *    quantified ways. So `inbound()` no longer returns a bare array: it returns
+ *    `{ rows, coverage }`, and the coverage half says which layers were
+ *    searched, which are not built, what each missing layer costs the reader,
+ *    the detector split, the not-in-a-provision share, and the extraction
+ *    statistics WITH THEIR AGE. Generated live on every call — see
+ *    `coverage.ts` for why a hardcoded caveat is forbidden here.
+ *    ▶ A gap that announces itself beats a gap that looks like an absence of
+ *    evidence. A user reading a list of 29 must be able to see what is not in it.
  */
 import fs from 'fs'
 import { getNeonPool } from '../shared/neon-pool'
 import { ZipReader } from './zip-reader'
 import { ENTRY_RX, gidFromEntry } from './audit-25h-citations'
 import { CITATION_TABLE } from './setup-citation-edge-table'
+import { getCoverage, Coverage, CoverageOptions } from './coverage'
 
 const ZIP_PATH = 'C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip'
 
@@ -149,14 +161,29 @@ async function query(
   return { rows: rows as InboundEvidenceRow[], partExpansion }
 }
 
-/** The brief's signature, returning exactly the four fields it names. */
+export type InboundResult = {
+  rows: InboundRow[]
+  /** ⚠ NOT optional. A caller that wants only the rows must destructure them
+   *  and is thereby made to see that a coverage block exists. */
+  coverage: Coverage
+}
+
+/**
+ * The four fields the brief names, plus what the answer could not see.
+ *
+ * ⚠ The return type changed in GRAPH 4A §7 from `InboundRow[]` to
+ * `{ rows, coverage }`. That is deliberate and it is the point: a bare array
+ * lets a caller present a short list as a complete one, and this graph is
+ * incomplete in ways the caller has no other way to learn.
+ */
 export async function inbound(
   targetActId: string,
   targetProvisionRef: string | null = null,
   includeUnresolved = false,
-): Promise<InboundRow[]> {
+  coverageOpts: CoverageOptions = {},
+): Promise<InboundResult> {
   const { rows } = await query(targetActId, targetProvisionRef, includeUnresolved, {})
-  return rows
+  return { rows, coverage: await getCoverage(coverageOpts) }
 }
 
 /** Same query, every column, for export and for hand-verification. */
@@ -165,8 +192,9 @@ export async function inboundEvidence(
   targetProvisionRef: string | null = null,
   includeUnresolved = false,
   detection?: 'markup' | 'text',
-): Promise<{ rows: InboundEvidenceRow[]; partExpansion: ReturnType<typeof expandPart> | null }> {
-  return query(targetActId, targetProvisionRef, includeUnresolved, { evidence: true, detection })
+): Promise<{ rows: InboundEvidenceRow[]; partExpansion: ReturnType<typeof expandPart> | null; coverage: Coverage }> {
+  const r = await query(targetActId, targetProvisionRef, includeUnresolved, { evidence: true, detection })
+  return { ...r, coverage: await getCoverage() }
 }
 
 export type InboundSummary = {
@@ -180,9 +208,11 @@ export type InboundSummary = {
   /** ⚠ Always reported. A total that hides the markup/text split invites the
    *  reader to treat an inferred edge as an asserted one. */
   byDetection: Array<{ detection: string; n: number; distinct_sources: number }>
+  /** ⚠ GRAPH 4A §7 — what this summary could not see. Live, never a constant. */
+  coverage: Coverage
 }
 
-export async function inboundSummary(targetActId: string, topSourceActs = 50): Promise<InboundSummary> {
+export async function inboundSummary(targetActId: string, topSourceActs = 50, coverageOpts: CoverageOptions = {}): Promise<InboundSummary> {
   const pool = getNeonPool()
   const { rows: t } = await pool.query(
     `SELECT COUNT(*)::int AS total,
@@ -209,5 +239,6 @@ export async function inboundSummary(targetActId: string, topSourceActs = 50): P
     bySourceType: byType,
     bySourceAct: byAct,
     byDetection,
+    coverage: await getCoverage(coverageOpts),
   }
 }

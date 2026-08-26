@@ -26,9 +26,15 @@ function assert(ok: boolean, label: string, detail = '') {
 async function main() {
   console.log('── the target must actually gate the query ──')
   const nonsense = await inbound('ukpga/9999/999')
-  assert(nonsense.length === 0, 'an Act that does not exist returns 0 rows', `got ${nonsense.length}`)
+  assert(nonsense.rows.length === 0, 'an Act that does not exist returns 0 rows', `got ${nonsense.rows.length}`)
   const real = await inbound(CRAG)
-  assert(real.length > 0, 'CRAG returns rows (the negative above is not a broken query)', `got ${real.length}`)
+  assert(real.rows.length > 0, 'CRAG returns rows (the negative above is not a broken query)', `got ${real.rows.length}`)
+  // ⚠ GRAPH 4A §7 — the EMPTY result is the one that most needs the coverage
+  // block, because an empty list is the answer most easily read as "nothing
+  // refers to this" rather than "nothing that this graph can see".
+  assert(nonsense.coverage != null && nonsense.coverage.layers.length > 0,
+    'an EMPTY result still carries a coverage block',
+    `${nonsense.coverage?.layers.length ?? 0} layers named`)
 
   console.log('\n── Part expansion is read from the Act, and confirmed externally ──')
   const p1 = expandPart(CRAG, 'part-1')
