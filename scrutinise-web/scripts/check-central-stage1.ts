@@ -91,6 +91,15 @@ import {
   PACK_DISCLAIMER,
 } from '@/lib/question-library'
 import {
+  deleteAnswer,
+  deletePost,
+  deleteQuestion,
+  listDeletedContent,
+  restoreAnswer,
+  restorePost,
+  restoreQuestion,
+} from '@/lib/content-deletion'
+import {
   CLOSE_WARNING,
   acceptMatch,
   closeMatch,
@@ -2486,6 +2495,250 @@ async function partH() {
   }
 }
 
+async function partI() {
+  console.log('\nI. Content soft-delete — the pattern the rest of the sprint matches')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+  const questionIds: string[] = []
+  const postIds: string[] = []
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 3,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 3) throw new Error('need at least three active users to run part I')
+  const [owner, author, voter] = users
+
+  try {
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-i-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: owner.id, role: 'OWNER' },
+            { userId: author.id, role: 'MEMBER' },
+            { userId: voter.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+    await prisma.questionTag.createMany({
+      data: [
+        { communityId: root.id, kind: 'CONTEXT_EXTERNAL', label: 'Doorstep', promoted: true },
+        { communityId: root.id, kind: 'TOPIC', label: 'Housing', promoted: true },
+      ],
+    })
+
+    // ── a question, two answers, and points on one of them ──────────────────
+    const question = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: author.id,
+        text: `zz I question ${stamp}?`, scope: 'COMMUNITY',
+        contextTags: ['Doorstep'], topicTags: ['Housing'],
+      },
+    })
+    questionIds.push(question.id)
+
+    const paidAnswer = await prisma.answer.create({
+      data: { questionId: question.id, authorId: author.id, body: `zz paid answer ${stamp}` },
+    })
+    const ownDeleted = await prisma.answer.create({
+      data: { questionId: question.id, authorId: voter.id, body: `zz own-deleted answer ${stamp}` },
+    })
+
+    const before = await getUserPoints(author.id, root.id)
+    await applyAnswerVote(paidAnswer.id, voter.id, 'UP')
+    eq('an upvote pays the answer author, as it did before', (await getUserPoints(author.id, root.id)) - before, 4)
+
+    // ── the author deletes their OWN answer, separately, first ──────────────
+    // This is the row that must NOT come back when the question is restored.
+    await deleteAnswer({ answerId: ownDeleted.id, actorUserId: voter.id })
+    eq('a member can delete their own content with no reason required',
+      (await prisma.answer.findUniqueOrThrow({ where: { id: ownDeleted.id } })).deletedAt !== null, true)
+    eq('…and it is NOT marked as collateral, because nothing cascaded onto it',
+      (await prisma.answer.findUniqueOrThrow({ where: { id: ownDeleted.id } })).deletedWithParent, false)
+
+    // ── a manager must say why, deleting somebody else's ────────────────────
+    const noReason = await refuses(
+      () => deleteQuestion({ questionId: question.id, actorUserId: owner.id }),
+      422,
+    )
+    check('a manager deleting somebody else\'s content must give a reason',
+      noReason !== null, noReason ?? 'not refused')
+    const stranger = await refuses(
+      () => deleteAnswer({ answerId: paidAnswer.id, actorUserId: voter.id, reason: 'zz nope' }),
+      403,
+    )
+    check('…and a plain member cannot delete another member\'s content at all',
+      stranger !== null, stranger ?? 'not refused')
+
+    // ── delete the question: cascade, marking, points ───────────────────────
+    const deleted = await deleteQuestion({
+      questionId: question.id, actorUserId: owner.id, reason: 'zz removed by the check',
+    })
+    eq('deleting a question takes its LIVE answers with it', deleted.cascaded.answers, 1)
+    eq('…and reverses the points they had earned', deleted.pointsReversed, 4)
+    eq('…so the author is back where they started', await getUserPoints(author.id, root.id), before)
+
+    const paidRow = await prisma.answer.findUniqueOrThrow({ where: { id: paidAnswer.id } })
+    eq('the cascaded answer is MARKED as collateral', paidRow.deletedWithParent, true)
+    eq('…and records who removed it and why',
+      [paidRow.deletedByUserId === owner.id, paidRow.deletionReason], [true, 'zz removed by the check'])
+
+    eq('the ledger APPENDS the reversal rather than deleting the award',
+      await prisma.pointsEvent.count({ where: { sourceType: 'ANSWER_VOTE', sourceId: paidAnswer.id } }), 2)
+    check('…and names the cause distinctly, so the log can say why a score moved',
+      (await prisma.pointsEvent.findFirst({
+        where: { sourceType: 'ANSWER_VOTE', sourceId: paidAnswer.id, type: 'CONTENT_DELETED' },
+      })) !== null)
+
+    // ── it is invisible EVERYWHERE, asserted surface by surface ─────────────
+    //
+    // ⚠ THE ONE THAT MATTERS. A soft delete that one read forgets is worse than
+    // no delete at all: the content is "removed" and still on somebody's screen.
+    // Each of these calls the real function rather than trusting the filter.
+    check('deleted: gone from the library list',
+      !(await listQuestions(root.id, voter.id, {})).some((q) => q.id === question.id))
+    check('deleted: gone from near-match lookup',
+      !(await findNearMatches(root.id, `zz I question ${stamp}?`)).some((m) => m.id === question.id))
+    eq('deleted: gone from the ranked answers', (await getRankedAnswers(question.id, voter.id)).length, 0)
+    check('deleted: gone from packs',
+      !(await buildPack({ viewerCommunityId: root.id, viewerId: voter.id })).entries
+        .some((e) => e.questionId === question.id))
+    check('deleted: not counted in the across-branches view',
+      (await getAcrossBranches(root.id, null)).totals.questionsLive === 0)
+    eq('deleted: not counted against a topic', (await getTopicUsage(root.id)).find((t) => t.label === 'Housing')?.questionCount, 0)
+    check('deleted: not listed as untagged either',
+      !(await getUntaggedQuestions(root.id)).some((q) => q.id === question.id))
+
+    // Voting on removed content is refused rather than silently paying.
+    const voteGone = await refuses(() => applyAnswerVote(paidAnswer.id, voter.id, 'UP'), 404)
+    check('deleted: cannot be voted on, so a stale tab cannot pay into it',
+      voteGone !== null, voteGone ?? 'not refused')
+
+    // ── the deleted-items view ──────────────────────────────────────────────
+    const binned = await listDeletedContent(root.id)
+    check('the deleted-items view lists the question', binned.some((i) => i.id === question.id))
+    check('…and the answer that went with it, LABELLED as collateral',
+      binned.some((i) => i.id === paidAnswer.id && i.deletedWithParent))
+    check('…and the answer its own author removed, labelled as its own act',
+      binned.some((i) => i.id === ownDeleted.id && !i.deletedWithParent))
+    check('…naming who removed each one',
+      binned.find((i) => i.id === question.id)?.deletedBy?.id === owner.id)
+
+    // ── restore ─────────────────────────────────────────────────────────────
+    const restored = await restoreQuestion({ questionId: question.id, actorUserId: owner.id })
+    eq('restoring brings back the answers that went down WITH it', restored.restored.answers, 1)
+    eq('…and returns exactly the points the deletion took', restored.pointsRestored, 4)
+    eq('…so the author is whole again', await getUserPoints(author.id, root.id), before + 4)
+
+    // ⚠ THE ASSERTION `deletedWithParent` EXISTS FOR. The answer its own author
+    // deleted a moment earlier must STAY deleted — restoring a question is not
+    // permission to undo somebody else's separate decision.
+    eq('the answer its own author had already deleted STAYS deleted',
+      (await prisma.answer.findUniqueOrThrow({ where: { id: ownDeleted.id } })).deletedAt !== null, true)
+    eq('…while the collateral one is back',
+      (await prisma.answer.findUniqueOrThrow({ where: { id: paidAnswer.id } })).deletedAt, null)
+
+    check('restored: visible in the library again',
+      (await listQuestions(root.id, voter.id, {})).some((q) => q.id === question.id))
+    eq('restored: its live answer is rankable again',
+      (await getRankedAnswers(question.id, voter.id)).length, 1)
+
+    eq('the ledger now holds award, reversal and restore — three rows, nothing edited',
+      await prisma.pointsEvent.count({ where: { sourceType: 'ANSWER_VOTE', sourceId: paidAnswer.id } }), 3)
+
+    // Restoring twice must not mint points from nothing.
+    const twice = await refuses(() => restoreQuestion({ questionId: question.id, actorUserId: owner.id }), 409)
+    check('restoring twice is refused', twice !== null, twice ?? 'not refused')
+    eq('…and the total has not moved', await getUserPoints(author.id, root.id), before + 4)
+
+    // ── the same pattern on a bulletin post ─────────────────────────────────
+    const thread = await prisma.bulletinPost.create({
+      data: {
+        communityId: root.id, authorId: author.id, title: `zz thread ${stamp}`,
+        category: 'Questions', body: 'zz thread body', scope: 'BRANCH',
+      },
+    })
+    postIds.push(thread.id)
+    const reply = await prisma.bulletinPost.create({
+      data: { communityId: root.id, authorId: voter.id, parentId: thread.id, body: 'zz reply body' },
+    })
+    postIds.push(reply.id)
+
+    const beforePost = await getUserPoints(author.id, root.id)
+    await applyBulletinMark(thread.id, voter.id, 1)
+    eq('a constructive mark pays the post author', (await getUserPoints(author.id, root.id)) - beforePost, 4)
+
+    const postDeleted = await deletePost({ postId: thread.id, actorUserId: author.id })
+    eq('deleting a thread takes its replies with it', postDeleted.cascaded.replies, 1)
+    eq('…and reverses its marks', postDeleted.pointsReversed, 4)
+    eq('…leaving the author where they were', await getUserPoints(author.id, root.id), beforePost)
+    eq('deleted: gone from the board',
+      (await prisma.bulletinPost.findMany({ where: await getBoardScopeFilter(root.id) })).length, 0)
+    eq('deleted: not counted as unread either',
+      await countUnreadBulletin(root.id, new Date(Date.now() - 600_000)), 0)
+
+    const postBack = await restorePost({ postId: thread.id, actorUserId: author.id })
+    eq('restoring a thread brings its replies back', postBack.restored.replies, 1)
+    eq('…and its marks', await getUserPoints(author.id, root.id), beforePost + 4)
+    eq('restored: on the board again',
+      (await prisma.bulletinPost.findMany({ where: await getBoardScopeFilter(root.id) })).length, 2)
+
+    // ── hidden is not deleted ───────────────────────────────────────────────
+    // ⚠ Two different states that would collapse into one if either were
+    // overloaded, and every later query about hidden answers would silently
+    // include removed ones.
+    await prisma.answer.update({ where: { id: paidAnswer.id }, data: { hidden: true } })
+    eq('a HIDDEN answer is still visible to a manager who asks for hidden ones',
+      (await getRankedAnswers(question.id, owner.id, { includeHidden: true })).length, 1)
+    await deleteAnswer({ answerId: paidAnswer.id, actorUserId: author.id })
+    eq('…but a DELETED one is not, even then',
+      (await getRankedAnswers(question.id, owner.id, { includeHidden: true })).length, 0)
+    await restoreAnswer({ answerId: paidAnswer.id, actorUserId: author.id })
+    await prisma.answer.update({ where: { id: paidAnswer.id }, data: { hidden: false } })
+
+    // ── the reads that must not forget, grepped as a backstop ───────────────
+    // The behavioural assertions above are the real guard; this catches a NEW
+    // surface that nobody thought to add an assertion for.
+    const libSrc = readFileSync(resolvePath(process.cwd(), 'lib/question-library.ts'), 'utf8')
+    check('the question visibility filter still excludes deleted rows',
+      /getQuestionVisibilityFilter[\s\S]{0,600}deletedAt: null/.test(libSrc))
+    const commSrc = readFileSync(resolvePath(process.cwd(), 'lib/community.ts'), 'utf8')
+    check('the board scope filter still excludes deleted rows',
+      /getBoardScopeFilter[\s\S]{0,600}deletedAt: null/.test(commSrc))
+  } finally {
+    const answerIds = (
+      await prisma.answer.findMany({ where: { questionId: { in: questionIds } }, select: { id: true } })
+    ).map((a) => a.id)
+    await prisma.answerVote.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answer.deleteMany({ where: { id: { in: answerIds } } })
+    await prisma.questionVote.deleteMany({ where: { questionId: { in: questionIds } } })
+    await prisma.question.deleteMany({ where: { id: { in: questionIds } } })
+    await prisma.bulletinVote.deleteMany({ where: { postId: { in: postIds } } })
+    await prisma.bulletinPost.deleteMany({ where: { parentId: { in: postIds } } })
+    await prisma.bulletinPost.deleteMany({ where: { id: { in: postIds } } })
+    await prisma.questionTag.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.pointsEvent.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: { OR: communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })) },
+    })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    eq('content-deletion fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-i-' } } }), 0)
+    eq('no ledger rows left behind',
+      await prisma.pointsEvent.count({ where: { communityId: { in: communityIds } } }), 0)
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL not set')
@@ -2499,6 +2752,7 @@ async function main() {
   await partF()
   await partG()
   await partH()
+  await partI()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()

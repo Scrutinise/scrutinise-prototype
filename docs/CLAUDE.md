@@ -802,8 +802,12 @@ duplicate rows in production weeks later.
 |---|---|---|---|
 | `CommunityJoinRequest_pending_unique` | `CommunityJoinRequest` | One PENDING request per (user, community). Partial on `status = 'PENDING'`, so a declined request can be made again. | `prisma/central_stage1_2.sql` |
 | `ActivityClaim_one_per_day` | `ActivityClaim` | One claim per (user, activity type, calendar day). **Expression** (`("occurredAt")::date`) **and partial** (`status NOT IN ('DECLINED','REVERSED')`), so a declined or reversed claim frees the day again. | `prisma/central_stage2.sql`, predicate widened by `prisma/central_stage2e.sql` |
+| `Question_live_idx` | `Question` | The live-row index for the library list. Partial on `deletedAt IS NULL`, so it stays small as deleted rows accumulate. | `prisma/central_content_delete.sql` |
+| `Answer_live_idx` | `Answer` | The same, for answers under a question. | `prisma/central_content_delete.sql` |
+| `BulletinPost_live_idx` | `BulletinPost` | The same, for a board's threads and replies. | `prisma/central_content_delete.sql` |
+| `Idea_creatorId_live_idx` | `Idea` | The live-row index for a creator's dashboard list. Partial on `deletedAt IS NULL`. Predates Central and was missing from this register until 27 Aug. | `prisma/idea_soft_delete.sql` |
 
-Two entries today. **Add a row here the moment a third exists** — the register is only useful if it
+Six entries today. **Add a row here the moment a seventh exists** — the register is only useful if it
 is complete, and a partial index nobody wrote down is the whole failure mode.
 
 ### The rules
