@@ -116,26 +116,51 @@ export interface ServiceReadback {
   reachable: boolean
   served: number | null
   startedAt: string | null
+  /**
+   * ⚠⚠ S14 §0 — QUEUE DEPTH, BECAUSE A SATURATED SERVICE IS NOT A SLOW ONE AND THE TWO NEED
+   * DIFFERENT ANSWERS. `vector-serve` is 4 wide with a 64-deep queue, and a client abort does NOT
+   * cancel work already queued — so a harness that times out and retries FEEDS the queue rather
+   * than shedding load. Once it reaches its cap, `warm_p95` went from 7.7 s to **206 s** and every
+   * dense leg after that returned nothing, silently, with the ranking falling back to BM25.
+   *
+   * A harness that reports a recall number taken in that state is reporting a keyword-only figure
+   * under a configuration that names four dense streams. Reading this BEFORE the run is what makes
+   * that visible rather than discoverable weeks later.
+   */
+  queued: number | null
+  rejections: number | null
   detail: string
 }
 
 async function readStats(name: ServiceReadback['name'], url: string | null): Promise<ServiceReadback> {
-  if (!url) return { name, url, reachable: false, served: null, startedAt: null, detail: 'URL unset' }
+  const dead = (detail: string): ServiceReadback =>
+    ({ name, url, reachable: false, served: null, startedAt: null, queued: null, rejections: null, detail })
+  if (!url) return dead('URL unset')
   try {
     const ctrl = new AbortController()
     const t = setTimeout(() => ctrl.abort(), 15000)
     const res = await fetch(`${url.replace(/\/$/, '')}/stats`, { signal: ctrl.signal })
     clearTimeout(t)
-    if (!res.ok) return { name, url, reachable: false, served: null, startedAt: null, detail: `HTTP ${res.status}` }
-    const j = (await res.json()) as { served?: number; started_at?: string; concurrency?: { max?: number } }
+    if (!res.ok) return dead(`HTTP ${res.status}`)
+    const j = (await res.json()) as {
+      served?: number; started_at?: string; warm_p95_ms?: number
+      concurrency?: { max?: number; queued?: number; maxQueue?: number; rejections?: number }
+    }
+    const c = j.concurrency ?? {}
+    const saturated = typeof c.queued === 'number' && typeof c.maxQueue === 'number' && c.maxQueue > 0
+      && c.queued >= c.maxQueue * 0.5
     return {
       name, url, reachable: true,
       served: typeof j.served === 'number' ? j.served : null,
       startedAt: j.started_at ?? null,
-      detail: `served=${j.served ?? '?'} width=${j.concurrency?.max ?? '?'} since=${j.started_at ?? '?'}`,
+      queued: typeof c.queued === 'number' ? c.queued : null,
+      rejections: typeof c.rejections === 'number' ? c.rejections : null,
+      detail: `served=${j.served ?? '?'} width=${c.max ?? '?'} queued=${c.queued ?? '?'}/${c.maxQueue ?? '?'}` +
+        ` rejected=${c.rejections ?? '?'} p95=${j.warm_p95_ms ?? '?'}ms since=${j.started_at ?? '?'}` +
+        (saturated ? '  ⚠⚠ SATURATED — a measurement taken now will silently be keyword-only' : ''),
     }
   } catch (err) {
-    return { name, url, reachable: false, served: null, startedAt: null, detail: err instanceof Error ? err.message : String(err) }
+    return dead(err instanceof Error ? err.message : String(err))
   }
 }
 
