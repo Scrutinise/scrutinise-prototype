@@ -67,11 +67,37 @@ export async function* listNaoReports(): AsyncGenerator<GovDocument> {
   yield* searchGovUkByOrg('national-audit-office', 'nao-reports', 3000)
 }
 
+/**
+ * Seed from the PUBLISHING ORGANISATION rather than from a phrase.
+ *
+ * ⚠⚠ `organisations[]=` IS DEAD. Measured 26 Aug 2026: gov.uk answers that parameter with
+ * **HTTP 422 and an HTML error page** — for every organisation, not just one. `fetchJson` returns
+ * null on a non-OK response, the loop `break`s on the first page, and the generator yields NOTHING.
+ * It fails silently: no throw, no log, an empty run that looks like "no new documents".
+ *
+ *     organisations[]=national-audit-office           → 422  (52 KB of HTML)
+ *     filter_organisations=national-audit-office      → 200  application/json
+ *
+ * The supported parameter is `filter_organisations=`. That is what the `ots-reports` repair rests
+ * on and it is what this function now sends.
+ *
+ * ⚠⚠ THE FIX DOES NOT RESURRECT `nao-reports`, AND SAYING SO MATTERS MORE THAN THE FIX. The two
+ * collections that used the broken form were seeding nothing, but the parameter was only the
+ * outer cause. Measured the same day:
+ *
+ *     filter_organisations=national-audit-office   → total **0**
+ *     /api/content/government/organisations/national-audit-office → **404**
+ *
+ * The NAO is not a gov.uk publishing organisation at all — it publishes on `nao.org.uk`, which is
+ * what `sources/nao.ts` is for. So `listNaoReports()` yields zero under EITHER parameter, and the
+ * 3,983 rows we hold did not come from here. `fca-publications` is retired and blocked in
+ * `corpus_targets` and holds zero rows. See `docs/INGEST_C3A_REPORT.md` §1.
+ */
 async function* searchGovUkByOrg(org: string, corpus: string, count = 1000): AsyncGenerator<GovDocument> {
   let start = 0
   const pageSize = 50
   while (start < count) {
-    const url = `${GOV_SEARCH}?organisations[]=${encodeURIComponent(org)}&count=${pageSize}&start=${start}`
+    const url = `${GOV_SEARCH}?filter_organisations=${encodeURIComponent(org)}&count=${pageSize}&start=${start}`
     const data = await fetchJson(url) as {
       results?: Array<{ title?: string; link?: string; _id?: string }>
     } | null
@@ -170,10 +196,37 @@ export async function* listHmrcTiins(): AsyncGenerator<GovDocument> {
 }
 
 // ── Office of Tax Simplification Reports ─────────────────────────────────────
-// OTS was abolished in 2021 — historical reports remain on gov.uk.
-
+/**
+ * ⚠⚠ THIS WAS A FREE-TEXT RELEVANCE SEARCH AND IT MADE THE COLLECTION 84.7% NOT-OTS.
+ *
+ *     searchGovUk('office of tax simplification report', 'ots-reports', 500)
+ *
+ * That query reports **348,062** results. We kept the first 500 and called them OTS reports.
+ * Classified row by row against the publisher's own organisation field (497 of 497 readable, and
+ * the same verdicts on two runs two days apart):
+ *
+ *     76   published by the Office of Tax Simplification
+ *    421   published by somebody else — 187 HMRC, 69 HM Treasury, 53 GDS…
+ *
+ * Ten bodies read at random included *Renew your driving licence*, *Apply online for a UK passport*
+ * and *Spain travel advice*. Ranks 481–485 are Spring Budget 2017 and customs notices: relevance
+ * decays continuously, so there is no category of contamination to strip — the cut has to come from
+ * OUTSIDE the query. `document_type` cannot make it either (policy_paper is 23 KEEP / 62 DELETE).
+ *
+ * The instrument that works is who published it. The OTS was abolished in 2023, so
+ * `filter_organisations=office-of-tax-simplification` is a CLOSED universe of **222** documents —
+ * a denominator the publisher maintains rather than one we inferred from our own row count.
+ *
+ * ⚠ 222 documents ANNOUNCED is not 222 documents HELD: what this fetch stores is the gov.uk
+ * landing page, and most of these documents keep their substance in a PDF attachment.
+ */
 export async function* listOtsReports(): AsyncGenerator<GovDocument> {
-  yield* searchGovUk('office of tax simplification report', 'ots-reports', 500)
+  yield* searchGovUkByOrgFiltered('office-of-tax-simplification', 'ots-reports', 500)
+}
+
+/** Named separately so a re-seed script can assert the publisher filter is in place before queueing. */
+async function* searchGovUkByOrgFiltered(org: string, corpus: string, count: number): AsyncGenerator<GovDocument> {
+  yield* searchGovUkByOrg(org, corpus, count)
 }
 
 // ── Planning Policy (NPPF + PPG) ──────────────────────────────────────────────
