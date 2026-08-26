@@ -2,7 +2,8 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-26 01:13 UTC — ▼ **GRAPH 25-H: THE XML MARKS UP 2% OF THE CITATIONS THAT ARE
+*Last updated: 2026-08-26 12:27 UTC — CENTRAL invite panel: **the red "Could not create the invite" was the PANEL losing the evidence, not the endpoint refusing an email-only invite.** Production is serving the code in question (`/api/health` → `918cde8`), and against the live database every step succeeds: the lookup offers the address, the schema accepts the panel’s exact body, Charlie is OWNER of all four nodes, and the insert works. The message is the panel’s FALLBACK, fired when a JSON body carries no string `error` — and the route’s 422 returned `error.flatten()`, an object. ⚠ `CommunityInvite` holds two rows in its entire history, both open links: **no email-tied invite has ever been written in production.** Now: the route always returns a string, the panel prints the server’s words or `HTTP <status>` plus the raw body, the "invite this address anyway" dead end is one line and one primary action, and the invite logic moved out of the Clerk-gated route into `createCommunityInvite` so a check can run it. **359/359.** ⚠ A Resend send to an unregistered address is NOT confirmed — no key on this machine, Vercel unreadable (§19).
+▶▶ **CHARLIE: try the invite again.** If it fails now it will name the status and the server’s own words instead of a generic line — that is the artefact that settles the original cause. Earlier: 2026-08-26 01:13 UTC — ▼ **GRAPH 25-H: THE XML MARKS UP 2% OF THE CITATIONS THAT ARE
 ACTUALLY IN THE TEXT, AND A GRAPH BUILT ON IT ANSWERS "TWO" WHERE THE ANSWER IS 29.** Measured over
 6,045 documents: **5.4%** of body mentions of the Human Rights Act carry `<Citation>` markup, **1.8%**
 of the Equality Act, **0% of CRAG 2010** — the sprint's own pilot target. So a citation graph built

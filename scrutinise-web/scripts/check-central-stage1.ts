@@ -28,6 +28,7 @@ import {
   canManageCommunity,
   categoriesFor,
   countUnreadBulletin,
+  createCommunityInvite,
   createJoinRequest,
   decideJoinRequest,
   findBoardPost,
@@ -414,18 +415,107 @@ async function partB() {
     eq('an unregistered address is offered as an invite instead of an empty result',
       byUnknown.canInviteEmail, unknown)
 
-    // …and that invite can actually be created against the address.
-    const invite = await prisma.communityInvite.create({
-      data: {
+    // — inviting an address with no account behind it ------------------------
+    //
+    // ⚠ THE WHOLE POINT OF THIS BLOCK (26 Aug 2026). It used to call
+    // `prisma.communityInvite.create` directly, which proved the COLUMN worked
+    // and nothing about the code that runs when an admin presses the button —
+    // that lived inline in a Clerk-gated route no script could reach. When the
+    // panel reported a failure on this exact path there was no way to run the
+    // real thing. It now calls `createCommunityInvite`, which is what the route
+    // calls.
+    // ⚠ THE THROW IS CAPTURED, NOT ALLOWED TO KILL THE RUN. The first version
+    // asserted `check('…raises no error', true)` — a literal, which cannot
+    // fail — and when the failure was planted the script simply died with a
+    // stack trace instead of naming the broken promise. An unhandled throw is
+    // loud but it is not a check.
+    let issued: Awaited<ReturnType<typeof createCommunityInvite>> | null = null
+    let inviteError: string | null = null
+    try {
+      issued = await createCommunityInvite({
         communityId: root.id,
-        inviteCode: `zz-check-${stamp}`,
-        email: unknown,
-        maxUses: 1,
         createdByUserId: alice.id,
-      },
-    })
-    created.inviteIds.push(invite.id)
-    eq('CommunityInvite stores the invited address', invite.email, unknown)
+        createdByName: alice.name,
+        email: unknown,
+        expiresInDays: 30,
+      })
+      created.inviteIds.push(issued.invite.id)
+    } catch (e) {
+      inviteError = e instanceof Error ? e.message : String(e)
+    }
+
+    check('inviting an address with no account raises no error at all',
+      inviteError === null, inviteError ?? '')
+    eq('…an invite row is created', issued?.invite.email ?? null, unknown)
+    eq('…single-use', issued?.invite.maxUses ?? null, 1)
+    check('…with the expiry the panel asked for', issued?.invite.expiresAt != null)
+    check('…and a usable code', (issued?.invite.inviteCode.length ?? 0) >= 24)
+    eq('…nobody is notified in-app, because there is no account to notify',
+      issued?.notified ?? null, false)
+    check('…and the invite is readable back from the database, tied to that address',
+      issued !== null &&
+        (await prisma.communityInvite.findUnique({ where: { id: issued.invite.id } }))?.email === unknown)
+
+    // The result-not-silence contract: the mail outcome is REPORTED, and the
+    // invite survives whatever it says. Both branches are real — this runs with
+    // RESEND_API_KEY set on a deployment and unset on a developer machine.
+    check('…the email outcome is reported as a result, never assumed',
+      issued?.emailed != null && typeof issued.emailed.sent === 'boolean',
+      JSON.stringify(issued?.emailed ?? null))
+    check('…and when it did not send, it says why',
+      Boolean(issued?.emailed?.sent || issued?.emailed?.reason),
+      JSON.stringify(issued?.emailed ?? null))
+    check('…the invite row is NOT lost when the email cannot go out',
+      issued !== null &&
+        (await prisma.communityInvite.count({ where: { id: issued.invite.id } })) === 1)
+
+    // The two refusals the route maps to a status. Both must carry a plain
+    // STRING message: an error shape the panel cannot render is what turned a
+    // real failure into "Could not create the invite" and hid its cause.
+    const alreadyIn = await refuses(
+      () => createCommunityInvite({
+        communityId: root.id,
+        createdByUserId: alice.id,
+        createdByName: alice.name,
+        userId: bob.id,
+      }),
+      409,
+    )
+    check('inviting an existing member is refused, in words', alreadyIn !== null, alreadyIn ?? 'not refused')
+    const ghost = await refuses(
+      () => createCommunityInvite({
+        communityId: root.id,
+        createdByUserId: alice.id,
+        createdByName: alice.name,
+        userId: `zz-no-such-user-${stamp}`,
+      }),
+      404,
+    )
+    check('inviting an account that does not exist is refused, in words', ghost !== null, ghost ?? 'not refused')
+
+    // The panel's framing, grepped: an address with no account is the NORMAL
+    // case for a branch invite, so the panel must not treat it as a concession
+    // or a dead end.
+    // ⚠ COMMENTS ARE STRIPPED FIRST. The first version of these three greps
+    // failed on their own explanation — the comment saying what the wording
+    // used to be matched the grep looking for that wording. A check that fires
+    // on prose is not checking the code.
+    const codeOnly = (p: string) =>
+      readFileSync(resolvePath(process.cwd(), p), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '')
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+
+    const panelSrc = codeOnly('app/communities/[id]/InvitePanel.tsx')
+    check('the panel does not offer to invite an unknown address "anyway"',
+      !panelSrc.includes('anyway'))
+    check('…it says plainly that they will be emailed',
+      panelSrc.includes('No account yet'))
+    check('…and it reports the server\'s own words on a failure, not a generic line',
+      panelSrc.includes('HTTP ${res.status}') && !panelSrc.includes("'Could not create the invite'"))
+    const routeSrc = codeOnly('app/api/communities/[id]/invites/route.ts')
+    check('the invite route never returns a non-string error shape',
+      !routeSrc.includes('error.flatten()'))
 
     // — category set on a brand-new Community --------------------------------
     eq('a new Community starts with the six categories',
