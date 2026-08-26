@@ -521,6 +521,9 @@ model User {
   centralClaimDecisions     ActivityClaim[]     @relation("CentralClaimDecider")
   centralClaimReversals     ActivityClaim[]     @relation("CentralClaimReverser")
   questionsAsked            Question[]          @relation("QuestionAuthor")
+  questionsDeleted          Question[]          @relation("QuestionDeleter")
+  answersDeleted            Answer[]            @relation("AnswerDeleter")
+  bulletinPostsDeleted      BulletinPost[]      @relation("BulletinPostDeleter")
   questionVotes             QuestionVote[]      @relation("QuestionVoter")
   answersGiven              Answer[]            @relation("AnswerAuthor")
   answerVotes               AnswerVote[]        @relation("AnswerVoter")
@@ -1596,6 +1599,16 @@ model Question {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  /// CENTRAL content soft-delete (27 Aug 2026). See prisma/central_content_delete.sql.
+  /// `deletedWithParent` marks content that went down BECAUSE its parent did, so a
+  /// restore brings back exactly that and never resurrects something its own author
+  /// had already deleted separately.
+  deletedAt         DateTime?
+  deletedByUserId   String?
+  deletedBy         User?     @relation("QuestionDeleter", fields: [deletedByUserId], references: [id])
+  deletionReason    String?
+  deletedWithParent Boolean   @default(false)
+
   answers   Answer[]
   votes     QuestionVote[]
 
@@ -1624,7 +1637,17 @@ model Answer {
   /// distinct from sources.
   localExample String?
   /// Managers can hide an answer outright as well as flagging it.
+  /// ⚠ HIDDEN IS NOT DELETED. Hidden is moderation — the answer exists, its author
+  /// still sees it, and a manager has said "not this one" with a reason. Deleted is
+  /// gone. Overloading one for the other would make every query about hidden answers
+  /// silently include deleted ones.
   hidden       Boolean  @default(false)
+  /// CENTRAL content soft-delete (27 Aug 2026).
+  deletedAt         DateTime?
+  deletedByUserId   String?
+  deletedBy         User?    @relation("AnswerDeleter", fields: [deletedByUserId], references: [id])
+  deletionReason    String?
+  deletedWithParent Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1912,6 +1935,12 @@ model BulletinPost {
   // Cached net (upvotes - downvotes), maintained alongside BulletinVote writes
   // — avoids a COUNT aggregate on every thread-list render.
   score       Int      @default(0)
+  /// CENTRAL content soft-delete (27 Aug 2026).
+  deletedAt         DateTime?
+  deletedByUserId   String?
+  deletedBy         User?    @relation("BulletinPostDeleter", fields: [deletedByUserId], references: [id])
+  deletionReason    String?
+  deletedWithParent Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
