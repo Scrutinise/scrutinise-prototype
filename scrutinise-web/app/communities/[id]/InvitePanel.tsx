@@ -75,16 +75,42 @@ export default function InvitePanel({ communityId }: { communityId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, expiresInDays: 30 }),
       })
-      const data = await res.json()
+
+      // ⚠ READ THE BODY AS TEXT FIRST. This used to be `await res.json()`, which
+      // threw on any non-JSON response and collapsed every failure into
+      // "Network error", and on a JSON body without a string `error` fell back
+      // to a bare "Could not create the invite" that named nothing. On 26 Aug
+      // 2026 that left a real failure undiagnosable: the panel had thrown away
+      // the only evidence of what the server actually said.
+      const raw = await res.text()
+      let data: Record<string, unknown> = {}
+      try {
+        data = raw ? JSON.parse(raw) : {}
+      } catch {
+        data = {}
+      }
+
       if (!res.ok) {
-        setError(typeof data.error === 'string' ? data.error : 'Could not create the invite')
+        const serverSaid = typeof data.error === 'string' ? data.error : ''
+        setError(
+          serverSaid
+            ? serverSaid
+            : `The server refused this (HTTP ${res.status})${
+                raw ? ` — ${raw.slice(0, 200)}` : ' with an empty response'
+              }`,
+        )
+        return
+      }
+      const invite = data.invite as { inviteCode?: string } | undefined
+      if (!invite?.inviteCode) {
+        setError(`The invite came back without a code (HTTP ${res.status}) — nothing was sent.`)
         return
       }
       setIssued({
         label,
-        link: `${window.location.origin}/community-invite/${data.invite.inviteCode}`,
+        link: `${window.location.origin}/community-invite/${invite.inviteCode}`,
         notified: Boolean(data.notified),
-        emailed: data.emailed ?? null,
+        emailed: (data.emailed as { sent: boolean; reason?: string } | null) ?? null,
       })
       setQ('')
       setResults([])
@@ -140,26 +166,37 @@ export default function InvitePanel({ communityId }: { communityId: string }) {
         </ul>
       )}
 
+      {/* ⚠ AN ADDRESS WITH NO ACCOUNT IS THE NORMAL CASE, NOT AN EXCEPTION.
+          Most people invited to a branch have never heard of Scrutinise, so a
+          branch chair's address matching nobody is the expected outcome of this
+          search. This used to read "No account for X yet." above a button
+          labelled "Invite this address anyway" — a dead end and a word that
+          framed the ordinary path as a concession. One line, one primary
+          action, no red. */}
       {emailFallback && (
-        <div className="rounded border border-dashed border-border p-2">
+        <div className="rounded border border-border bg-muted/40 p-2">
           <p className="text-xs text-muted-foreground">
-            No account for <span className="font-medium text-foreground">{emailFallback}</span> yet.
+            No account yet — they&rsquo;ll get an invitation by email.
           </p>
+          <p className="mt-0.5 truncate text-xs font-medium">{emailFallback}</p>
           <Button
             size="sm"
-            variant="outline"
             className="mt-1.5 h-7 px-2 text-xs"
             disabled={busyId === emailFallback}
             onClick={() => createInvite({ email: emailFallback }, emailFallback, emailFallback)}
           >
-            {busyId === emailFallback ? 'Creating…' : 'Invite this address anyway'}
+            {busyId === emailFallback ? 'Sending…' : 'Send invitation'}
           </Button>
         </div>
       )}
 
+      {/* Only when the term is not a usable address — otherwise the block above
+          has already offered the invitation, and this would read as a refusal
+          of something that just worked. */}
       {searched && !searching && results.length === 0 && !emailFallback && (
         <p className="text-xs text-muted-foreground">
-          No one found. Enter a full email address to invite someone who has not joined Scrutinise yet.
+          Nobody by that name. Type their full email address to invite someone who has not joined
+          Scrutinise yet.
         </p>
       )}
 
