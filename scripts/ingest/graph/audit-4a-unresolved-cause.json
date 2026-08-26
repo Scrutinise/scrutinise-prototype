@@ -1,0 +1,372 @@
+{
+ "at": "2026-08-26T13:08:58.554Z",
+ "namesClassified": 60,
+ "spansCounted": 30472,
+ "totals": {
+  "short-form": 2825,
+  "title-absent": 18025,
+  "title-mismatch": 9622
+ },
+ "rows": [
+  {
+   "span": "the interpretation act (northern ireland) 1954",
+   "spans": 2331,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "financial services act 1986",
+   "spans": 2035,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1986/52 \"Dockyard Services Act 1986\""
+  },
+  {
+   "span": "taxes act 1988",
+   "spans": 1443,
+   "cause": "short-form",
+   "evidence": "short for \"Income and Corporation Taxes Act 1988\" (ukpga/1988/1)"
+  },
+  {
+   "span": "interpretation act (northern ireland) 1954",
+   "spans": 1401,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "european communities act 1972",
+   "spans": 1352,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "air force act 1955",
+   "spans": 943,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "army act 1955",
+   "spans": 879,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "banking act 1987",
+   "spans": 864,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/1987/65 \"The Banking Act 1979 (Exempt Transactions) (Amendment) Regulations 198\""
+  },
+  {
+   "span": "planning (wales) act 2026",
+   "spans": 787,
+   "cause": "title-mismatch",
+   "evidence": "nearest: asc/2026/11 \"Prohibition of Greyhound Racing (Wales) Act 2026\""
+  },
+  {
+   "span": "naval discipline act 1957",
+   "spans": 762,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "charities act 1993",
+   "spans": 663,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "insurance companies act 1982",
+   "spans": 631,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "bankruptcy (scotland) act 1985",
+   "spans": 619,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1985/33 \"Rating (Revaluation Rebates) (Scotland) Act 1985\""
+  },
+  {
+   "span": "police (scotland) act 1967",
+   "spans": 598,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1967/43 \"Legal Aid (Scotland) Act 1967\""
+  },
+  {
+   "span": "education act 1993",
+   "spans": 591,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/1993/560 \"The Further and Higher Education Act 1992 (Consequential Amendments) O\""
+  },
+  {
+   "span": "incapacity (scotland) act 2000",
+   "spans": 570,
+   "cause": "short-form",
+   "evidence": "short for \"Adults with Incapacity (Scotland) Act 2000\" (asp/2000/4)"
+  },
+  {
+   "span": "education act 1944",
+   "spans": 540,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "gaming act 1968",
+   "spans": 533,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "town and country planning (scotland) act 1972",
+   "spans": 500,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1972/58 \"National Health Service (Scotland) Act 1972\""
+  },
+  {
+   "span": "race relations act 1976",
+   "spans": 478,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "person act 1861",
+   "spans": 472,
+   "cause": "short-form",
+   "evidence": "short for \"Offences against the Person Act 1861\" (ukpga/1861/100)"
+  },
+  {
+   "span": "local government act (northern ireland) 1972",
+   "spans": 449,
+   "cause": "title-mismatch",
+   "evidence": "nearest: nisi/1972/1073 \"Superannuation (Northern Ireland) Order 1972\""
+  },
+  {
+   "span": "industrial and provident societies act 1965",
+   "spans": 430,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/1965/2051 \"The Industrial and Provident Societies Act 1965 (Commencement) Order 1\""
+  },
+  {
+   "span": "powers of criminal courts act 1973",
+   "spans": 408,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "education act 1962",
+   "spans": 407,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "supreme court act 1981",
+   "spans": 403,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1981/49 \"Contempt of Court Act 1981\""
+  },
+  {
+   "span": "children and young persons act (northern ireland) 1968",
+   "spans": 395,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1968/21 \"Criminal Appeal (Northern Ireland) Act 1968\""
+  },
+  {
+   "span": "wireless telegraphy act 1949",
+   "spans": 364,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "sex discrimination act 1975",
+   "spans": 353,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/1975/1845 \"The Sex Discrimination Act 1975 (Commencement) Order 1975\""
+  },
+  {
+   "span": "harassment act 1997",
+   "spans": 340,
+   "cause": "short-form",
+   "evidence": "short for \"Protection from Harassment Act 1997\" (ukpga/1997/40)"
+  },
+  {
+   "span": "employment and training act (northern ireland) 1950",
+   "spans": 328,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "northern ireland act 1974",
+   "spans": 328,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "value added tax act 1983",
+   "spans": 321,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "ecclesiastical jurisdiction measure 1963",
+   "spans": 321,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "(f) of the interpretation act (northern ireland) 1954",
+   "spans": 315,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "licensing act 1964",
+   "spans": 305,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "land registration act 1925",
+   "spans": 302,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1925/50 \"Theatrical Employers Registration Act 1925\""
+  },
+  {
+   "span": "children and families (wales) measure 2010",
+   "spans": 300,
+   "cause": "title-mismatch",
+   "evidence": "nearest: wsi/2010/2994 \"The Children and Families (Wales) Measure 2010 (Commencement No. 3 and\""
+  },
+  {
+   "span": "audit commission act 1998",
+   "spans": 300,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/1998/1336 \"The Special Immigration Appeals Commission Act 1997 (Commencement No. \""
+  },
+  {
+   "span": "education (student loans) act 1990",
+   "spans": 293,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "justices of the peace act 1979",
+   "spans": 285,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "restrictive trade practices act 1976",
+   "spans": 284,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "clergy discipline measure 2003",
+   "spans": 283,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "income and corporation taxes act 1970",
+   "spans": 279,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "dustrial and provident societies act (northern ireland) 1969",
+   "spans": 272,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "capital gains tax act 1979",
+   "spans": 272,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "vehicles (excise) act 1971",
+   "spans": 263,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "pensions (increase) act (northern ireland) 1971",
+   "spans": 237,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "alcoholic liquor duties act 1979",
+   "spans": 236,
+   "cause": "title-mismatch",
+   "evidence": "nearest: ukpga/1979/5 \"Hydrocarbon Oil Duties Act 1979\""
+  },
+  {
+   "span": "prevention of terrorism (temporary provisions) act 1989",
+   "spans": 236,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/1989/1501 \"The Northern Ireland (Emergency Provisions) Act 1978 (Amendment) Order\""
+  },
+  {
+   "span": "betting, gaming and lotteries act 1963",
+   "spans": 235,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "ecclesiastical fees measure 1986",
+   "spans": 230,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "electoral law act (northern ireland) 1962",
+   "spans": 226,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "northern ireland act 2000",
+   "spans": 224,
+   "cause": "title-mismatch",
+   "evidence": "nearest: uksi/2000/1787 \"The Northern Ireland Act 1998 (Designation of Public Authorities) Orde\""
+  },
+  {
+   "span": "extradition act 1989",
+   "spans": 216,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "petroleum (consolidation) act 1928",
+   "spans": 216,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "prison act (northern ireland) 1953",
+   "spans": 214,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "child care act 1980",
+   "spans": 210,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "charities act 1960",
+   "spans": 202,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  },
+  {
+   "span": "justices of the peace act 1997",
+   "spans": 198,
+   "cause": "title-absent",
+   "evidence": "no instrument of that name in corpus_acts under any title"
+  }
+ ]
+}

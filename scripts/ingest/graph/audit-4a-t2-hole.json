@@ -1,0 +1,225 @@
+{
+ "at": "2026-08-26T12:45:02.981Z",
+ "skippedDocs": 2431,
+ "docs": 2431,
+ "docErrors": 0,
+ "recoveredEdges": 924,
+ "shippedTotal": 121279,
+ "pctOfShipped": 0.7618796329125405,
+ "underThreePercent": true,
+ "oldCitesModern": 29,
+ "oldModernSample": [
+  "ukpga/Vict/38/39/17 → uksi/2011/1881",
+  "ukpga/Edw7/5/11 → eudr/2001/13",
+  "ukpga/Edw7/5/11 → eudr/2004/49",
+  "ukpga/Edw7/7/24 → asp/2010/10",
+  "ukpga/Geo5/15/16/38 → asp/2006/11",
+  "ukpga/Geo5/23/24/12 → anaw/2019/4",
+  "ukpga/Geo5/23/24/12 → ukpga/2018/12",
+  "ukpga/Geo5/23/24/12 → eudr/2000/31",
+  "ukpga/Edw8and1Geo6/1/37 → asp/2010/10",
+  "ukpga/Edw8and1Geo6/1/37 → ukpga/2018/12"
+ ],
+ "distinctTargets": 623,
+ "byType": {
+  "aep": 0,
+  "aip": 0,
+  "apgb": 0,
+  "apni": 0,
+  "ukcm": 0,
+  "ukla": 0,
+  "ukpga": 924
+ },
+ "controls": [
+  {
+   "gid": "ukpga/2010/15",
+   "name": "Equality Act 2010",
+   "before": 61,
+   "delta": 0,
+   "after": 61
+  },
+  {
+   "gid": "ukpga/1998/42",
+   "name": "Human Rights Act 1998",
+   "before": 28,
+   "delta": 0,
+   "after": 28
+  },
+  {
+   "gid": "ukpga/2010/25",
+   "name": "CRAG 2010",
+   "before": 8,
+   "delta": 0,
+   "after": 8
+  },
+  {
+   "gid": "ukpga/2022/18",
+   "name": "Down Syndrome Act 2022",
+   "before": 0,
+   "delta": 0,
+   "after": 0
+  }
+ ],
+ "topTargets": [
+  [
+   "ukpga/1889/63",
+   12
+  ],
+  [
+   "ukpga/1936/49",
+   9
+  ],
+  [
+   "ukpga/1919/57",
+   7
+  ],
+  [
+   "ukpga/1930/43",
+   7
+  ],
+  [
+   "ukpga/1933/51",
+   7
+  ],
+  [
+   "ukpga/1944/47",
+   7
+  ],
+  [
+   "ukpga/1845/18",
+   6
+  ],
+  [
+   "ukpga/1925/68",
+   6
+  ],
+  [
+   "ukpga/1936/50",
+   6
+  ],
+  [
+   "ukpga/1939/40",
+   6
+  ],
+  [
+   "ukpga/1945/18",
+   6
+  ],
+  [
+   "ukpga/1855/120",
+   5
+  ],
+  [
+   "ukpga/1875/55",
+   5
+  ],
+  [
+   "ukpga/1894/73",
+   5
+  ],
+  [
+   "ukpga/1925/16",
+   5
+  ],
+  [
+   "ukpga/1929/17",
+   5
+  ],
+  [
+   "ukpga/1925/22",
+   5
+  ],
+  [
+   "ukpga/1935/47",
+   5
+  ],
+  [
+   "ukpga/1946/49",
+   5
+  ],
+  [
+   "eur/2002/6",
+   5
+  ],
+  [
+   "ukpga/1882/50",
+   4
+  ],
+  [
+   "ukpga/1897/38",
+   4
+  ],
+  [
+   "ukpga/1889/50",
+   4
+  ],
+  [
+   "ukpga/1888/41",
+   4
+  ],
+  [
+   "ukpga/1893/39",
+   4
+  ],
+  [
+   "ukpga/1925/20",
+   4
+  ],
+  [
+   "asp/2006/11",
+   4
+  ],
+  [
+   "ukpga/1927/23",
+   4
+  ],
+  [
+   "ukpga/1875/83",
+   4
+  ],
+  [
+   "ukpga/1909/47",
+   4
+  ],
+  [
+   "ukpga/1929/25",
+   4
+  ],
+  [
+   "ukpga/1921/31",
+   4
+  ],
+  [
+   "ukpga/1945/33",
+   4
+  ],
+  [
+   "ukpga/1947/51",
+   4
+  ],
+  [
+   "ukpga/1959/53",
+   4
+  ],
+  [
+   "ukpga/1871/112",
+   3
+  ],
+  [
+   "ukpga/1862/89",
+   3
+  ],
+  [
+   "ukpga/1891/39",
+   3
+  ],
+  [
+   "ukpga/1890/70",
+   3
+  ],
+  [
+   "ukpga/1907/53",
+   3
+  ]
+ ]
+}

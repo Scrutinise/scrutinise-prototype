@@ -320,6 +320,31 @@ export function resolveActName(span: string, titles: Map<string, string>): { gid
   return null
 }
 
+/**
+ * title → gid for the text detector. Titles that map to more than one
+ * instrument are DROPPED, not guessed: an ambiguous name resolved by coin toss
+ * is a wrong edge with evidence attached, which is worse than no edge.
+ *
+ * ⚠ Exported (GRAPH 4A §3) so a caller re-running the detector gets THE SAME
+ * map. A second copy built from the same query would drift the moment either
+ * side changed, and the unresolved count is defined relative to this map.
+ */
+export async function loadActTitles(): Promise<Map<string, string>> {
+  const pool = getNeonPool()
+  const titles = new Map<string, string>()
+  const { rows } = await pool.query(
+    `SELECT gid, title FROM corpus_acts WHERE title IS NOT NULL AND title <> ''`)
+  const ambiguous = new Set<string>()
+  for (const r of rows as Array<{ gid: string; title: string }>) {
+    const k = normTitle(r.title)
+    if (titles.has(k) && titles.get(k) !== r.gid) { ambiguous.add(k); continue }
+    titles.set(k, r.gid)
+  }
+  for (const k of ambiguous) titles.delete(k)
+  console.log(`[cite-edge] ${titles.size.toLocaleString()} unambiguous act titles for the text detector (${ambiguous.size} names dropped as ambiguous)`)
+  return titles
+}
+
 function extractDoc(gid: string, xml: string, held: Set<string>, alias: Map<string, string>): CitationRow[] {
   stats.docs++
   const zones = exclusionZones(xml)
@@ -401,8 +426,18 @@ function extractDoc(gid: string, xml: string, held: Set<string>, alias: Map<stri
   return rows
 }
 
-/** The text detector, over the same body zones and with the same evidence. */
-function extractDocText(gid: string, xml: string, titles: Map<string, string>, held: Set<string>): CitationRow[] {
+/** The text detector, over the same body zones and with the same evidence.
+ *
+ *  ⚠ `onUnresolved` (added by GRAPH 4A §3/T3) is how a caller gets at the spans
+ *  behind the 93,772 unresolved-name counter. That number is a STATISTIC — the
+ *  spans themselves were never stored — so the only honest way to ask "where do
+ *  they sit?" is to run THIS detector again and watch it, rather than write a
+ *  second one that would answer questions about itself. The callback is passed
+ *  the raw span; it does not affect what is extracted. */
+export function extractDocText(
+  gid: string, xml: string, titles: Map<string, string>, held: Set<string>,
+  onUnresolved?: (span: string) => void,
+): CitationRow[] {
   const zones = exclusionZones(xml)
   const inZone = zoneCursor(zones)
   const marks = provisionMarks(xml)
@@ -430,7 +465,7 @@ function extractDocText(gid: string, xml: string, titles: Map<string, string>, h
     if (inZone(at)) { stats.textExcludedZone++; continue }
     if (claimed(at)) { stats.textAlreadyMarkedUp++; continue }
     const hit = resolveActName(m[0], titles)
-    if (!hit) { stats.textUnresolved++; continue }
+    if (!hit) { stats.textUnresolved++; onUnresolved?.(m[0]); continue }
     if (hit.gid === gid) { stats.textSelf++; continue }
 
     while (mi < marks.length && marks[mi].at < at) mi++
@@ -517,22 +552,7 @@ async function main() {
   const alias = buildAliasMap()
   console.log(`[cite-edge] ${held.size.toLocaleString()} held instruments · ${(alias.size / 2).toLocaleString()} regnal/calendar alias pairs`)
 
-  // title → gid for the text detector. Titles that map to more than one
-  // instrument are DROPPED, not guessed: an ambiguous name resolved by coin
-  // toss is a wrong edge with evidence attached, which is worse than no edge.
-  const titles = new Map<string, string>()
-  if (wantText) {
-    const { rows: titleRows } = await pool.query(
-      `SELECT gid, title FROM corpus_acts WHERE title IS NOT NULL AND title <> ''`)
-    const ambiguous = new Set<string>()
-    for (const r of titleRows as Array<{ gid: string; title: string }>) {
-      const k = normTitle(r.title)
-      if (titles.has(k) && titles.get(k) !== r.gid) { ambiguous.add(k); continue }
-      titles.set(k, r.gid)
-    }
-    for (const k of ambiguous) titles.delete(k)
-    console.log(`[cite-edge] ${titles.size.toLocaleString()} unambiguous act titles for the text detector (${ambiguous.size} names dropped as ambiguous)`)
-  }
+  const titles = wantText ? await loadActTitles() : new Map<string, string>()
   console.log(`[cite-edge] detectors: ${[wantMarkup && 'markup', wantText && 'text'].filter(Boolean).join(' + ')}`)
 
   const zipStat = fs.statSync(ZIP_PATH)

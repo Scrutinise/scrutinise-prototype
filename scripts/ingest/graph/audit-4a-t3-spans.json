@@ -1,0 +1,392 @@
+{
+ "at": "2026-08-26T12:56:19.794Z",
+ "sampled": false,
+ "docs": 132990,
+ "docErrors": 0,
+ "targets": [
+  {
+   "gid": "ukpga/2010/15",
+   "name": "Equality Act 2010",
+   "corpusTitle": "Equality Act 2010"
+  },
+  {
+   "gid": "ukpga/1998/42",
+   "name": "Human Rights Act 1998",
+   "corpusTitle": "Human Rights Act 1998"
+  },
+  {
+   "gid": "ukpga/2010/25",
+   "name": "Constitutional Reform and Governance Act 2010",
+   "corpusTitle": "Constitutional Reform and Governance Act 2010"
+  },
+  {
+   "gid": "ukpga/2022/18",
+   "name": "Down Syndrome Act 2022",
+   "corpusTitle": "Down Syndrome Act 2022"
+  },
+  {
+   "gid": "ukpga/2010/8",
+   "name": "Taxation (International and Other Provisions) Act 2010",
+   "corpusTitle": "Taxation (International and Other Provisions) Act 2010"
+  },
+  {
+   "gid": "ukpga/2018/12",
+   "name": "Data Protection Act 2018",
+   "corpusTitle": "Data Protection Act 2018"
+  },
+  {
+   "gid": "ukpga/2006/46",
+   "name": "Companies Act 2006",
+   "corpusTitle": "Companies Act 2006"
+  },
+  {
+   "gid": "ukpga/2000/36",
+   "name": "Freedom of Information Act 2000",
+   "corpusTitle": "Freedom of Information Act 2000"
+  },
+  {
+   "gid": "ukpga/1998/46",
+   "name": "Scotland Act 1998",
+   "corpusTitle": "Scotland Act 1998"
+  },
+  {
+   "gid": "ukpga/2006/32",
+   "name": "Government of Wales Act 2006",
+   "corpusTitle": "Government of Wales Act 2006"
+  },
+  {
+   "gid": "ukpga/1998/47",
+   "name": "Northern Ireland Act 1998",
+   "corpusTitle": "Northern Ireland Act 1998"
+  },
+  {
+   "gid": "ukpga/1988/1",
+   "name": "Income and Corporation Taxes Act 1988",
+   "corpusTitle": "Income and Corporation Taxes Act 1988"
+  }
+ ],
+ "documentsCitingATarget": 5633,
+ "unresolvedTotal": 97095,
+ "unresolvedInCiters": 29009,
+ "pctInCiters": 29.87692466141408,
+ "docsWithUnresolved": 20307,
+ "citerDocsWithUnresolved": 2704,
+ "urgent": false,
+ "leaveOneOut": [
+  {
+   "gid": "ukpga/1988/1",
+   "name": "Income and Corporation Taxes Act 1988",
+   "pctWithout": 23.017663113445593,
+   "spansWithout": 22349
+  },
+  {
+   "gid": "ukpga/2006/46",
+   "name": "Companies Act 2006",
+   "pctWithout": 24.89623564550183,
+   "spansWithout": 24173
+  },
+  {
+   "gid": "ukpga/1998/47",
+   "name": "Northern Ireland Act 1998",
+   "pctWithout": 26.347391729749216,
+   "spansWithout": 25582
+  },
+  {
+   "gid": "ukpga/1998/46",
+   "name": "Scotland Act 1998",
+   "pctWithout": 26.688294968844946,
+   "spansWithout": 25913
+  },
+  {
+   "gid": "ukpga/1998/42",
+   "name": "Human Rights Act 1998",
+   "pctWithout": 27.12601060816726,
+   "spansWithout": 26338
+  },
+  {
+   "gid": "ukpga/2010/15",
+   "name": "Equality Act 2010",
+   "pctWithout": 27.229002523301922,
+   "spansWithout": 26438
+  },
+  {
+   "gid": "ukpga/2006/32",
+   "name": "Government of Wales Act 2006",
+   "pctWithout": 27.293887429836758,
+   "spansWithout": 26501
+  },
+  {
+   "gid": "ukpga/2000/36",
+   "name": "Freedom of Information Act 2000",
+   "pctWithout": 27.459704413203564,
+   "spansWithout": 26662
+  },
+  {
+   "gid": "ukpga/2018/12",
+   "name": "Data Protection Act 2018",
+   "pctWithout": 27.557546732581493,
+   "spansWithout": 26757
+  },
+  {
+   "gid": "ukpga/2010/25",
+   "name": "Constitutional Reform and Governance Act 2010",
+   "pctWithout": 27.961275039909367,
+   "spansWithout": 27149
+  },
+  {
+   "gid": "ukpga/2010/8",
+   "name": "Taxation (International and Other Provisions) Act 2010",
+   "pctWithout": 27.9664246356661,
+   "spansWithout": 27154
+  },
+  {
+   "gid": "ukpga/2022/18",
+   "name": "Down Syndrome Act 2022",
+   "pctWithout": 27.991142695298418,
+   "spansWithout": 27178
+  }
+ ],
+ "decisionSurvivesLeaveOneOut": true,
+ "topUnresolvedNames": [
+  [
+   "the interpretation act (northern ireland) 1954",
+   2331
+  ],
+  [
+   "financial services act 1986",
+   2035
+  ],
+  [
+   "taxes act 1988",
+   1443
+  ],
+  [
+   "interpretation act (northern ireland) 1954",
+   1401
+  ],
+  [
+   "european communities act 1972",
+   1352
+  ],
+  [
+   "air force act 1955",
+   943
+  ],
+  [
+   "army act 1955",
+   879
+  ],
+  [
+   "banking act 1987",
+   864
+  ],
+  [
+   "planning (wales) act 2026",
+   787
+  ],
+  [
+   "naval discipline act 1957",
+   762
+  ],
+  [
+   "charities act 1993",
+   663
+  ],
+  [
+   "insurance companies act 1982",
+   631
+  ],
+  [
+   "bankruptcy (scotland) act 1985",
+   619
+  ],
+  [
+   "police (scotland) act 1967",
+   598
+  ],
+  [
+   "education act 1993",
+   591
+  ],
+  [
+   "incapacity (scotland) act 2000",
+   570
+  ],
+  [
+   "education act 1944",
+   540
+  ],
+  [
+   "gaming act 1968",
+   533
+  ],
+  [
+   "town and country planning (scotland) act 1972",
+   500
+  ],
+  [
+   "race relations act 1976",
+   478
+  ],
+  [
+   "person act 1861",
+   472
+  ],
+  [
+   "local government act (northern ireland) 1972",
+   449
+  ],
+  [
+   "industrial and provident societies act 1965",
+   430
+  ],
+  [
+   "powers of criminal courts act 1973",
+   408
+  ],
+  [
+   "education act 1962",
+   407
+  ],
+  [
+   "supreme court act 1981",
+   403
+  ],
+  [
+   "children and young persons act (northern ireland) 1968",
+   395
+  ],
+  [
+   "wireless telegraphy act 1949",
+   364
+  ],
+  [
+   "sex discrimination act 1975",
+   353
+  ],
+  [
+   "harassment act 1997",
+   340
+  ],
+  [
+   "employment and training act (northern ireland) 1950",
+   328
+  ],
+  [
+   "northern ireland act 1974",
+   328
+  ],
+  [
+   "value added tax act 1983",
+   321
+  ],
+  [
+   "ecclesiastical jurisdiction measure 1963",
+   321
+  ],
+  [
+   "(f) of the interpretation act (northern ireland) 1954",
+   315
+  ],
+  [
+   "licensing act 1964",
+   305
+  ],
+  [
+   "land registration act 1925",
+   302
+  ],
+  [
+   "children and families (wales) measure 2010",
+   300
+  ],
+  [
+   "audit commission act 1998",
+   300
+  ],
+  [
+   "education (student loans) act 1990",
+   293
+  ],
+  [
+   "justices of the peace act 1979",
+   285
+  ],
+  [
+   "restrictive trade practices act 1976",
+   284
+  ],
+  [
+   "clergy discipline measure 2003",
+   283
+  ],
+  [
+   "income and corporation taxes act 1970",
+   279
+  ],
+  [
+   "dustrial and provident societies act (northern ireland) 1969",
+   272
+  ],
+  [
+   "capital gains tax act 1979",
+   272
+  ],
+  [
+   "vehicles (excise) act 1971",
+   263
+  ],
+  [
+   "pensions (increase) act (northern ireland) 1971",
+   237
+  ],
+  [
+   "alcoholic liquor duties act 1979",
+   236
+  ],
+  [
+   "prevention of terrorism (temporary provisions) act 1989",
+   236
+  ],
+  [
+   "betting, gaming and lotteries act 1963",
+   235
+  ],
+  [
+   "ecclesiastical fees measure 1986",
+   230
+  ],
+  [
+   "electoral law act (northern ireland) 1962",
+   226
+  ],
+  [
+   "northern ireland act 2000",
+   224
+  ],
+  [
+   "extradition act 1989",
+   216
+  ],
+  [
+   "petroleum (consolidation) act 1928",
+   216
+  ],
+  [
+   "prison act (northern ireland) 1953",
+   214
+  ],
+  [
+   "child care act 1980",
+   210
+  ],
+  [
+   "charities act 1960",
+   202
+  ],
+  [
+   "justices of the peace act 1997",
+   198
+  ]
+ ]
+}

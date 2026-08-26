@@ -1,0 +1,138 @@
+{
+ "at": "2026-08-26T12:50:56.424Z",
+ "legislationEdges": [
+  {
+   "edge_type": "amends",
+   "source": "tna-bulk-amendments",
+   "n": "1015960"
+  },
+  {
+   "edge_type": "commences",
+   "source": "tna-bulk-amendments",
+   "n": "477946"
+  },
+  {
+   "edge_type": "made-under",
+   "source": "clml-si-preamble",
+   "n": "230681"
+  },
+  {
+   "edge_type": "repeals",
+   "source": "tna-bulk-amendments",
+   "n": "215312"
+  },
+  {
+   "edge_type": "modifies",
+   "source": "tna-bulk-amendments",
+   "n": "180781"
+  },
+  {
+   "edge_type": "cites",
+   "source": "clml-body-citation",
+   "n": "121279"
+  },
+  {
+   "edge_type": "repeals",
+   "source": "tna-inforce-dataset",
+   "n": "107034"
+  }
+ ],
+ "citationEdge": [
+  {
+   "detection": "text",
+   "source_type": "SI",
+   "n": "445243"
+  },
+  {
+   "detection": "markup",
+   "source_type": "SI",
+   "n": "348373"
+  },
+  {
+   "detection": "text",
+   "source_type": "primary",
+   "n": "202634"
+  },
+  {
+   "detection": "markup",
+   "source_type": "primary",
+   "n": "22810"
+  },
+  {
+   "detection": "markup",
+   "source_type": "other",
+   "n": "14163"
+  },
+  {
+   "detection": "text",
+   "source_type": "other",
+   "n": "1325"
+  }
+ ],
+ "overlap": {
+  "edges_pairs": "111193",
+  "citation_pairs": "335615",
+  "both": "109099",
+  "only_edges": "2094",
+  "only_citation": "226516"
+ },
+ "identity": {
+  "counts": {
+   "edges_regnal_targets": "0",
+   "citation_regnal_targets": "717",
+   "citation_regnal_rows": "3531"
+  },
+  "examples": [
+   {
+    "citation_form": "ukpga/Eliz2/9-10/33",
+    "target_uri": "http://www.legislation.gov.uk/id/ukpga/1961/33",
+    "edges_rows_under_uri_form": 59,
+    "edges_rows_under_citation_form": 0
+   },
+   {
+    "citation_form": "ukpga/Geo6/12-13-14/54",
+    "target_uri": "http://www.legislation.gov.uk/id/ukpga/1949/54",
+    "edges_rows_under_uri_form": 50,
+    "edges_rows_under_citation_form": 0
+   },
+   {
+    "citation_form": "ukpga/Geo5and1Edw8/26/49",
+    "target_uri": "http://www.legislation.gov.uk/id/ukpga/1936/49",
+    "edges_rows_under_uri_form": 50,
+    "edges_rows_under_citation_form": 0
+   },
+   {
+    "citation_form": "ukpga/Eliz2/9-10/34",
+    "target_uri": "http://www.legislation.gov.uk/id/ukpga/1961/34",
+    "edges_rows_under_uri_form": 40,
+    "edges_rows_under_citation_form": 0
+   },
+   {
+    "citation_form": "ukpga/Eliz2/2-3/56",
+    "target_uri": "http://www.legislation.gov.uk/id/ukpga/1954/56",
+    "edges_rows_under_uri_form": 38,
+    "edges_rows_under_citation_form": 0
+   },
+   {
+    "citation_form": "ukpga/Geo5/15-16/20",
+    "target_uri": "http://www.legislation.gov.uk/id/ukpga/1925/20",
+    "edges_rows_under_uri_form": 37,
+    "edges_rows_under_citation_form": 0
+   }
+  ]
+ },
+ "evidenceColumns": [
+  "extracted_at",
+  "to_id",
+  "edge_type",
+  "sub_type",
+  "from_id",
+  "granularity",
+  "detail",
+  "source"
+ ],
+ "retirement": {
+  "cites_rows": "121279",
+  "table_size": "938 MB"
+ }
+}

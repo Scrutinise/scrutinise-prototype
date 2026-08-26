@@ -1,0 +1,340 @@
+{
+ "at": "2026-08-26T12:42:18.061Z",
+ "zip": {
+  "dataEntries": 132994,
+  "widenedTotal": 132990,
+  "shippedTotal": 130559,
+  "missedTotal": 2431,
+  "siMissed": 0,
+  "shippedNotWidened": [],
+  "byType": [
+   {
+    "type": "ukpga",
+    "widened": 4426,
+    "shipped": 2776,
+    "missed": 1650,
+    "siType": false
+   },
+   {
+    "type": "aep",
+    "widened": 660,
+    "shipped": 0,
+    "missed": 660,
+    "siType": false
+   },
+   {
+    "type": "apgb",
+    "widened": 58,
+    "shipped": 0,
+    "missed": 58,
+    "siType": false
+   },
+   {
+    "type": "ukcm",
+    "widened": 160,
+    "shipped": 122,
+    "missed": 38,
+    "siType": false
+   },
+   {
+    "type": "ukla",
+    "widened": 199,
+    "shipped": 188,
+    "missed": 11,
+    "siType": false
+   },
+   {
+    "type": "aip",
+    "widened": 11,
+    "shipped": 0,
+    "missed": 11,
+    "siType": false
+   },
+   {
+    "type": "apni",
+    "widened": 286,
+    "shipped": 283,
+    "missed": 3,
+    "siType": false
+   },
+   {
+    "type": "uksi",
+    "widened": 61996,
+    "shipped": 61996,
+    "missed": 0,
+    "siType": true
+   },
+   {
+    "type": "eur",
+    "widened": 24491,
+    "shipped": 24491,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "eudn",
+    "widened": 13173,
+    "shipped": 13173,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "nisr",
+    "widened": 10097,
+    "shipped": 10097,
+    "missed": 0,
+    "siType": true
+   },
+   {
+    "type": "ssi",
+    "widened": 8996,
+    "shipped": 8996,
+    "missed": 0,
+    "siType": true
+   },
+   {
+    "type": "wsi",
+    "widened": 4882,
+    "shipped": 4882,
+    "missed": 0,
+    "siType": true
+   },
+   {
+    "type": "eudr",
+    "widened": 2035,
+    "shipped": 2035,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "nisi",
+    "widened": 558,
+    "shipped": 558,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "asp",
+    "widened": 425,
+    "shipped": 425,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "nia",
+    "widened": 256,
+    "shipped": 256,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "aosp",
+    "widened": 106,
+    "shipped": 106,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "ukci",
+    "widened": 60,
+    "shipped": 60,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "asc",
+    "widened": 45,
+    "shipped": 45,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "anaw",
+    "widened": 44,
+    "shipped": 44,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "mwa",
+    "widened": 22,
+    "shipped": 22,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "mnia",
+    "widened": 2,
+    "shipped": 2,
+    "missed": 0,
+    "siType": false
+   },
+   {
+    "type": "nisro",
+    "widened": 1,
+    "shipped": 1,
+    "missed": 0,
+    "siType": true
+   },
+   {
+    "type": "ukmo",
+    "widened": 1,
+    "shipped": 1,
+    "missed": 0,
+    "siType": false
+   }
+  ],
+  "missedSample": [
+   "1267/aep-Hen3c23-52-23-revised-data.xml → aep/Hen3c23/52/23",
+   "1267/aep-Hen3cc1415-52-1-revised-data.xml → aep/Hen3cc1415/52/1",
+   "1275/aep-Edw1-3-5-revised-data.xml → aep/Edw1/3/5",
+   "1285/aep-Edw1-13-1-revised-data.xml → aep/Edw1/13/1",
+   "1285/aep-Edw1-13-46-revised-data.xml → aep/Edw1/13/46",
+   "1290/aep-Edw1-18-1-revised-data.xml → aep/Edw1/18/1",
+   "1297/aep-Edw1-25-1-revised-data.xml → aep/Edw1/25/1",
+   "1297/aep-Edw1cc16-25-6-revised-data.xml → aep/Edw1cc16/25/6"
+  ]
+ },
+ "legislationEdges": [
+  {
+   "edge_type": "amends",
+   "source": "tna-bulk-amendments",
+   "n": "1015960",
+   "regnal_from": "0",
+   "regnal_to": "10872"
+  },
+  {
+   "edge_type": "commences",
+   "source": "tna-bulk-amendments",
+   "n": "477946",
+   "regnal_from": "0",
+   "regnal_to": "2313"
+  },
+  {
+   "edge_type": "made-under",
+   "source": "clml-si-preamble",
+   "n": "230681",
+   "regnal_from": "0",
+   "regnal_to": "0"
+  },
+  {
+   "edge_type": "repeals",
+   "source": "tna-bulk-amendments",
+   "n": "215312",
+   "regnal_from": "0",
+   "regnal_to": "4709"
+  },
+  {
+   "edge_type": "modifies",
+   "source": "tna-bulk-amendments",
+   "n": "180781",
+   "regnal_from": "0",
+   "regnal_to": "7891"
+  },
+  {
+   "edge_type": "cites",
+   "source": "clml-body-citation",
+   "n": "121279",
+   "regnal_from": "0",
+   "regnal_to": "0"
+  },
+  {
+   "edge_type": "repeals",
+   "source": "tna-inforce-dataset",
+   "n": "107034",
+   "regnal_from": "29800",
+   "regnal_to": "37735"
+  }
+ ],
+ "citationEdge": [
+  {
+   "detection": "text",
+   "n": "649202",
+   "regnal_src": "8144",
+   "regnal_docs": "1393"
+  },
+  {
+   "detection": "markup",
+   "n": "385346",
+   "regnal_src": "1092",
+   "regnal_docs": "62"
+  }
+ ],
+ "consumers": [
+  {
+   "file": "scripts/ingest/graph/traverse-edges.ts",
+   "what": "impactSet() — the rescission-impact traversal, depth 2",
+   "edgeTypes": [
+    "cites",
+    "made-under",
+    "amends",
+    "repeals",
+    "commences",
+    "modifies"
+   ],
+   "affected": true,
+   "rowsFromDefectiveFilter": 351960
+  },
+  {
+   "file": "scripts/ingest/graph/edges-query-service.ts",
+   "what": "HTTP service over impactSet() on :8091",
+   "edgeTypes": [
+    "cites",
+    "made-under",
+    "amends",
+    "repeals",
+    "commences",
+    "modifies"
+   ],
+   "affected": true,
+   "rowsFromDefectiveFilter": 351960
+  },
+  {
+   "file": "scripts/ingest/graph/score-gold-d.ts",
+   "what": "scores the gold-D question set through impactSet()",
+   "edgeTypes": [
+    "cites",
+    "made-under",
+    "amends",
+    "repeals",
+    "commences",
+    "modifies"
+   ],
+   "affected": true,
+   "rowsFromDefectiveFilter": 351960
+  },
+  {
+   "file": "scripts/ingest/v37-citation-gaps.ts",
+   "what": "the corpus citation-gap census → CORPUS_CITATION_GAPS.md",
+   "edgeTypes": [
+    "*"
+   ],
+   "affected": true,
+   "rowsFromDefectiveFilter": 351960
+  },
+  {
+   "file": "scripts/ingest/v37-repeal-census.ts",
+   "what": "section_repeals — repealing instrument per dead provision",
+   "edgeTypes": [
+    "repeals"
+   ],
+   "affected": false,
+   "rowsFromDefectiveFilter": 0
+  },
+  {
+   "file": "scripts/ingest/c2/l2-recensus-eu.ts",
+   "what": "retained-EU re-census of section_repeals",
+   "edgeTypes": [
+    "repeals"
+   ],
+   "affected": false,
+   "rowsFromDefectiveFilter": 0
+  }
+ ],
+ "webConsumers": [],
+ "gapCensus": {
+  "instruments": 151612,
+  "only_from_ours": 12748,
+  "none_from_ours": 111029
+ }
+}

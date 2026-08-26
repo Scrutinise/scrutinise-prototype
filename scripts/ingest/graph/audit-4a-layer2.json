@@ -1,0 +1,217 @@
+{
+ "at": "2026-08-26T12:59:19.308Z",
+ "layer2Existing": [
+  {
+   "source_type": "SI",
+   "rows": "793616",
+   "docs": "64189",
+   "targets": "38645",
+   "from_schedule": "137296",
+   "no_provision": "70001"
+  },
+  {
+   "source_type": "primary",
+   "rows": "225444",
+   "docs": "4771",
+   "targets": "7952",
+   "from_schedule": "108582",
+   "no_provision": "5566"
+  },
+  {
+   "source_type": "other",
+   "rows": "15488",
+   "docs": "1668",
+   "targets": "397",
+   "from_schedule": "0",
+   "no_provision": "229"
+  }
+ ],
+ "madeUnder": {
+  "rows": "230681",
+  "instruments": "70255",
+  "enabling_acts": "5060",
+  "to_provision": "130430",
+  "siInstrumentsHeld": "109202"
+ },
+ "sizing": {
+  "bytesPerRow": 1159.5121193023426,
+  "madeUnderBytes": 267477415.1927837,
+  "scaledRows": 358563,
+  "scaledBytes": 415757863.4101824,
+  "usdPerGbMonth": 0.35
+ },
+ "dta": {
+  "instruments": 288,
+  "noText": 0,
+  "textNoSched": 249,
+  "withSched": 39,
+  "era": {
+   "pre2018": {
+    "n": 256,
+    "sched": 26
+   },
+   "from2018": {
+    "n": 32,
+    "sched": 13
+   }
+  }
+ },
+ "reverse": {
+  "tiopaInbound": {
+   "inbound": 374,
+   "srcs": 95,
+   "s2": 4,
+   "s6": 4
+  },
+  "dtaOutbound": {
+   "rows": 275,
+   "srcs": 109,
+   "tgts": 129
+  },
+  "dtaMadeUnder": {
+   "n": 841,
+   "srcs": 211,
+   "under_tiopa": 238
+  }
+ },
+ "mli": {
+  "actsMatching": [
+   {
+    "gid": "eudr/2007/18",
+    "title": "Commission Directive 2007/18/EC of 27 March 2007 amending Directive 2006/48/EC of the European Parliament and of the Council as regards the exclusion or inclusion of certain institutions from its scope of application and the treatment of exposures to multilateral development banks (Text with EEA relevance) (repealed)"
+   },
+   {
+    "gid": "eur/1987/1638",
+    "title": "Council Regulation (EEC) No 1638/87 of 9 June 1987 fixing the minimum mesh size for pelagic trawls used in fishing for blue whiting in that part of the area covered by the Convention on Future Multilateral Cooperation in the North-East Atlantic Fisheries which extends beyond the maritime waters falling within the fisheries jurisdiction of Contracting Parties to the Convention"
+   },
+   {
+    "gid": "ukpga/1988/8",
+    "title": "Multilateral Investment Guarantee Agency Act 1988"
+   },
+   {
+    "gid": "eudn/2018/145",
+    "title": "Council Decision (EU) 2018/145 of 9 October 2017 on the conclusion, on behalf of the Union, of the Multilateral Agreement between the European Community and its Member States, the Republic of Albania, Bosnia and Herzegovina, the Republic of Bulgaria, the Republic of Croatia, the former Yugoslav Republic of Macedonia, the Republic of Iceland, the Republic of Montenegro, the Kingdom of Norway, Romania, the Republic of Serbia and the United Nations Interim Administration Mission in KosovoThis designation is without prejudice to positions on status, and is in line with UN Security Council Resolution 1244 (1999) and the Opinion of the International Court of Justice on Kosovo's declaration of independence. on the establishment of a European Common Aviation Area (ECAA)"
+   },
+   {
+    "gid": "eudn/2019/510",
+    "title": "Council Decision (EU) 2019/510 of 25 March 2019 on the position to be taken on behalf of the European Union in the framework of the Convention on future multilateral cooperation in the North-East Atlantic fisheries as regards the application for accession to that Convention submitted by the United Kingdom (repealed)"
+   },
+   {
+    "gid": "uksi/1951/1801",
+    "title": "The National Insurance and Industrial Injuries (Reciprocal Multilateral Agreement) (Belgium) Order 1951"
+   },
+   {
+    "gid": "eudn/2010/717",
+    "title": "Council Decision of 8 November 2010 on the approval, on behalf of the European Union, of the Amendment to the Convention on Future Multilateral Cooperation in the Northwest Atlantic Fisheries (2010/717/EU) (revoked)"
+   },
+   {
+    "gid": "uksi/2014/3056",
+    "title": "The International Development Association (Multilateral Debt Relief Initiative) (Amendment) Order 2014"
+   },
+   {
+    "gid": "uksi/2020/1428",
+    "title": "The African Development Fund (Multilateral Debt Relief Initiative) (Amendment) Order 2020"
+   },
+   {
+    "gid": "uksi/1988/715",
+    "title": "The Multilateral Investment Guarantee Agency Act 1988 (Commencement) Order 1988"
+   },
+   {
+    "gid": "eur/1998/1406",
+    "title": "Commission Regulation (EC) No 1406/98 of 1 July 1998 repealing the measures set out in Article 1 of Council Regulation (EC) No 703/98 suspending certain concessions set out in Regulation (EC) No 3066/95 establishing certain concessions in the form of Community tariff quotas for certain agricultural products and providing for the adjustment, as an autonomous and transitional measure, of certain agricultural concessions provided for in the Europe Agreements to take account of the Agreement on agriculture concluded during the Uruguay Round multilateral trade negotiations"
+   },
+   {
+    "gid": "uksi/1951/972",
+    "title": "The National Insurance and Industrial Injuries (Reciprocal Multilateral Agreement) (France and the Netherlands) Order 1951"
+   },
+   {
+    "gid": "uksi/2008/2089",
+    "title": "The African Development Fund (Multilateral Debt Relief Initiative) (Amendment) Order 2008"
+   },
+   {
+    "gid": "eur/2016/171",
+    "title": "Commission Delegated Regulation (EU) 2016/171 of 20 November 2015 amending Delegated Regulation (EU) 2015/98 on the implementation of the Union's international obligations, as referred to in Article 15(2) of Regulation (EU) No 1380/2013 of the European Parliament and of the Council, under the International Convention for the Conservation of Atlantic Tunas and the Convention on Future Multilateral Cooperation in the Northwest Atlantic Fisheries"
+   },
+   {
+    "gid": "eur/2012/433",
+    "title": "Commission Implementing Regulation (EU) No 433/2012of 23 May 2012laying down detailed rules for the application of Regulation (EU) No 1236/2010 of the European Parliament and of the Council laying down a scheme of control and enforcement applicable in the area covered by the Convention on future multilateral cooperation in the North-East Atlantic fisheries"
+   },
+   {
+    "gid": "uksi/2023/73",
+    "title": "The International Development Association (Multilateral Debt Relief Initiative) (Amendment) Order 2023"
+   },
+   {
+    "gid": "eudn/2020/1325",
+    "title": "Council Decision (EU) 2020/1325 of 21 September 2020 on the position to be taken on behalf of the European Union in the framework of the Convention on Future Multilateral Cooperation in the North-East Atlantic Fisheries as regards the application for accession to that Convention submitted by the United Kingdom, and repealing Decision (EU) 2019/510 (revoked)"
+   },
+   {
+    "gid": "uksi/2006/2321",
+    "title": "African Development Fund (Multilateral Debt Relief Initiative) Order 2006"
+   },
+   {
+    "gid": "eur/2015/746",
+    "title": "Commission Implementing Regulation (EU) 2015/746 of 11 May 2015 amending Implementing Regulation (EU) No 433/2012 laying down detailed rules for the application of Regulation (EU) No 1236/2010 of the European Parliament and of the Council laying down a scheme of control and enforcement applicable in the area covered by the Convention on future multilateral cooperation in the North-East Atlantic fisheries"
+   },
+   {
+    "gid": "eur/2015/98",
+    "title": "Commission Delegated Regulation (EU) 2015/98 of 18 November 2014 on the implementation of the Union's international obligations, as referred to in Article 15(2) of Regulation (EU) No 1380/2013 of the European Parliament and of the Council, under the International Convention for the Conservation of Atlantic Tunas and the Convention on Future Multilateral Cooperation in the Northwest Atlantic Fisheries"
+   }
+  ],
+  "sectionTitlesMatching": [
+   {
+    "corpus": "pwdata-debates",
+    "n": 373
+   },
+   {
+    "corpus": "committees-reports",
+    "n": 265
+   },
+   {
+    "corpus": "historic-hansard",
+    "n": 239
+   },
+   {
+    "corpus": "pwdata-lords",
+    "n": 50
+   },
+   {
+    "corpus": "committees-evidence",
+    "n": 50
+   },
+   {
+    "corpus": "uk-treaties-fcdo",
+    "n": 36
+   },
+   {
+    "corpus": "quangos-govuk",
+    "n": 26
+   },
+   {
+    "corpus": "pwdata-wrans",
+    "n": 18
+   }
+  ]
+ },
+ "treatyCorpora": [
+  {
+   "corpus": "uk-treaties-fcdo",
+   "sections": 23372,
+   "docs": 21843
+  },
+  {
+   "corpus": "uk-treaties",
+   "sections": 3264,
+   "docs": 1519
+  },
+  {
+   "corpus": "parliament-treaties",
+   "sections": 328,
+   "docs": 328
+  },
+  {
+   "corpus": "tax-treaties-dta",
+   "sections": 324,
+   "docs": 172
+  }
+ ]
+}
