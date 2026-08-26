@@ -1,0 +1,1254 @@
+{
+  "partA": {
+    "totals": {
+      "sampled": 40,
+      "read": 40,
+      "errors": 0,
+      "bytes": 85848,
+      "citation": 0,
+      "citationSubRef": 0,
+      "commentaryRef": 39,
+      "objectsWithAnyCitation": 0,
+      "objectsWithCommentaryRef": 18,
+      "previewChecked": 0,
+      "previewWithCitation": 0
+    },
+    "results": [
+      {
+        "id": "primary-acts-2000plus:ukpga/2008/4:schedule-19-paragraph-2A",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2008/4/sections/schedule-19-paragraph-2A/raw.xml",
+        "bytes": 450,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2007/29:section-120",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2007/29/sections/section-120/raw.xml",
+        "bytes": 1205,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2005/5:schedule-1-paragraph-476",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2005/5/sections/schedule-1-paragraph-476/raw.xml",
+        "bytes": 340,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2002/23:schedule-36-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2002/23/sections/schedule-36-paragraph-1/raw.xml",
+        "bytes": 400,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2007/3:section-856",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2007/3/sections/section-856/raw.xml",
+        "bytes": 4378,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2023/30:section-51",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2023/30/sections/section-51/raw.xml",
+        "bytes": 5498,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 3
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2007/3:section-198",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2007/3/sections/section-198/raw.xml",
+        "bytes": 3535,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2001/2:schedule-2-paragraph-48",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2001/2/sections/schedule-2-paragraph-48/raw.xml",
+        "bytes": 383,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2006/25:schedule-10-paragraph-27",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2006/25/sections/schedule-10-paragraph-27/raw.xml",
+        "bytes": 451,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2000/38:schedule-16-paragraph-11",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2000/38/sections/schedule-16-paragraph-11/raw.xml",
+        "bytes": 429,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/Eliz2/8-9/55:schedule-SECOND-paragraph-15",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/Eliz2/8-9/55/sections/schedule-SECOND-paragraph-15/raw.xml",
+        "bytes": 427,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1984/27:section-3",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1984/27/sections/section-3/raw.xml",
+        "bytes": 4093,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 5
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1988/36:section-21",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1988/36/sections/section-21/raw.xml",
+        "bytes": 321,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1985/72:schedule-7-paragraph-2",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1985/72/sections/schedule-7-paragraph-2/raw.xml",
+        "bytes": 3364,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1988/1:schedule-15B-paragraph-3",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1988/1/sections/schedule-15B-paragraph-3/raw.xml",
+        "bytes": 9921,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 3
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1986/45:section-265",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1986/45/sections/section-265/raw.xml",
+        "bytes": 10413,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 4
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/Vict/26-27/92:section-5",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/Vict/26-27/92/sections/section-5/raw.xml",
+        "bytes": 1010,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 9
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1967/13:section-8",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1967/13/sections/section-8/raw.xml",
+        "bytes": 4049,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1995/25:schedule-7-paragraph-4",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1995/25/sections/schedule-7-paragraph-4/raw.xml",
+        "bytes": 3886,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/Vict/26-27/49:section-35",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/Vict/26-27/49/sections/section-35/raw.xml",
+        "bytes": 1687,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "si-2010plus:uksi/2019/201:article-8",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2019/201/sections/article-8/raw.xml",
+        "bytes": 2199,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2018/1288:regulation-28",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2018/1288/sections/regulation-28/raw.xml",
+        "bytes": 285,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2022/1054:regulation-1",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2022/1054/sections/regulation-1/raw.xml",
+        "bytes": 959,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2010/2088:schedule-2-paragraph-8",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2010/2088/sections/schedule-2-paragraph-8/raw.xml",
+        "bytes": 433,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2016/779:schedule-7-paragraph-39",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2016/779/sections/schedule-7-paragraph-39/raw.xml",
+        "bytes": 781,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2020/1406:regulation-16",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2020/1406/sections/regulation-16/raw.xml",
+        "bytes": 4837,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "si-2010plus:uksi/2013/363:schedule-2-paragraph-14",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2013/363/sections/schedule-2-paragraph-14/raw.xml",
+        "bytes": 1447,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2020/966:regulation-12",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2020/966/sections/regulation-12/raw.xml",
+        "bytes": 426,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2020/924:regulation-3",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2020/924/sections/regulation-3/raw.xml",
+        "bytes": 448,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2013/2036:article-1",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2013/2036/sections/article-1/raw.xml",
+        "bytes": 1112,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1985/1884:schedule-3-paragraph-5",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1985/1884/sections/schedule-3-paragraph-5/raw.xml",
+        "bytes": 783,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1998/2514:regulation-53",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1998/2514/sections/regulation-53/raw.xml",
+        "bytes": 4696,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-pre-2010:uksi/1992/1814:regulation-33",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1992/1814/sections/regulation-33/raw.xml",
+        "bytes": 1301,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-pre-2010:uksi/2008/3168:article-1",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2008/3168/sections/article-1/raw.xml",
+        "bytes": 1445,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1996/2908:regulation-4",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1996/2908/sections/regulation-4/raw.xml",
+        "bytes": 1666,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2000/2912:regulation-13",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2000/2912/sections/regulation-13/raw.xml",
+        "bytes": 4275,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1996/1974:regulation-3",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1996/1974/sections/regulation-3/raw.xml",
+        "bytes": 372,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1990/879:schedule-paragraph-11",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1990/879/sections/schedule-paragraph-11/raw.xml",
+        "bytes": 484,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1994/1497:schedule-paragraph-22",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1994/1497/sections/schedule-paragraph-22/raw.xml",
+        "bytes": 394,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2008/1697:regulation-4",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2008/1697/sections/regulation-4/raw.xml",
+        "bytes": 1265,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      }
+    ],
+    "firstFragment": null,
+    "firstCommentaryRef": {
+      "id": "primary-acts-2000plus:ukpga/2008/4:schedule-19-paragraph-2A",
+      "text": "/2A\" IdURI=\"http://www.legislation.gov.uk/id/ukpga/2008/4/schedule/19/paragraph/2A\" RestrictStartDate=\"2020-12-31\" id=\"schedule-19-paragraph-2A\" Status=\"Repealed\" Match=\"false\"><Pnumber PuncAfter=\".\"><CommentaryRef Ref=\"key-REDACTED-CLML-COMMENTARY-HANDLE\"/>2A</Pnumber><P1para><Text>. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</Text></P1para></P1>"
+    }
+  },
+  "generatedAt": "2026-08-26T00:24:16.417Z",
+  "partA_big": {
+    "profile": "big",
+    "totals": {
+      "sampled": 40,
+      "read": 40,
+      "errors": 0,
+      "bytes": 8613182,
+      "citation": 122,
+      "citationSubRef": 0,
+      "commentaryRef": 470,
+      "objectsWithAnyCitation": 8,
+      "objectsWithCommentaryRef": 13,
+      "previewChecked": 0,
+      "previewWithCitation": 0
+    },
+    "results": [
+      {
+        "id": "primary-acts-2000plus:ukpga/2026/10:schedule-1-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2026/10/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 283917,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2024/4:schedule-1-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2024/4/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 280904,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2025/6:schedule-1-paragraph-2",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2025/6/sections/schedule-1-paragraph-2/raw.xml",
+        "bytes": 275878,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2020/4:schedule-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2020/4/sections/schedule-paragraph-1/raw.xml",
+        "bytes": 242663,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2015/10:schedule-1-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2015/10/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 237741,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2014/5:schedule-1-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2014/5/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 278200,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2019/6:schedule-1-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2019/6/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 241818,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2013/12:schedule-1-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2013/12/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 262784,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2011/1:schedule-4-paragraph-8",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2011/1/sections/schedule-4-paragraph-8/raw.xml",
+        "bytes": 70580,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2009/10:schedule-56-paragraph-1",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2009/10/sections/schedule-56-paragraph-1/raw.xml",
+        "bytes": 93498,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 19
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1990/8:schedule-20-paragraph-4",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1990/8/sections/schedule-20-paragraph-4/raw.xml",
+        "bytes": 771790,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1996/56:schedule-n45-paragraph-5",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1996/56/sections/schedule-n45-paragraph-5/raw.xml",
+        "bytes": 98470,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1987/26:schedule-24-paragraph-4",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1987/26/sections/schedule-24-paragraph-4/raw.xml",
+        "bytes": 65789,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1997/8:schedule-18-paragraph-5",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1997/8/sections/schedule-18-paragraph-5/raw.xml",
+        "bytes": 136252,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1992/7:schedule-n15-paragraph-3",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1992/7/sections/schedule-n15-paragraph-3/raw.xml",
+        "bytes": 50222,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1995/46:schedule-n14-paragraph-2",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1995/46/sections/schedule-n14-paragraph-2/raw.xml",
+        "bytes": 66026,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1990/9:schedule-4-paragraph-7",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1990/9/sections/schedule-4-paragraph-7/raw.xml",
+        "bytes": 42963,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 3
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1993/48:schedule-n9-paragraph-6",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1993/48/sections/schedule-n9-paragraph-6/raw.xml",
+        "bytes": 78891,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1996/18:schedule-3-paragraph-2",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1996/18/sections/schedule-3-paragraph-2/raw.xml",
+        "bytes": 55577,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1997/61:schedule-3-paragraph-13",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1997/61/sections/schedule-3-paragraph-13/raw.xml",
+        "bytes": 58995,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 8
+      },
+      {
+        "id": "si-2010plus:uksi/2019/855:schedule-3E-paragraph-2A",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2019/855/sections/schedule-3E-paragraph-2A/raw.xml",
+        "bytes": 664193,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2016/765:schedule-1-paragraph-1",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2016/765/sections/schedule-1-paragraph-1/raw.xml",
+        "bytes": 123196,
+        "citation": 30,
+        "citationSubRef": 0,
+        "commentaryRef": 66
+      },
+      {
+        "id": "si-2010plus:uksi/2011/1986:regulation-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2011/1986/sections/regulation-2/raw.xml",
+        "bytes": 184846,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 103
+      },
+      {
+        "id": "si-2010plus:uksi/2021/1203:regulation-29",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2021/1203/sections/regulation-29/raw.xml",
+        "bytes": 83217,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2021/1414:schedule-1-paragraph-wrapper7-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2021/1414/sections/schedule-1-paragraph-wrapper7-2/raw.xml",
+        "bytes": 522488,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2012/444:schedule-4-paragraph-1",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2012/444/sections/schedule-4-paragraph-1/raw.xml",
+        "bytes": 115678,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 107
+      },
+      {
+        "id": "si-2010plus:uksi/2012/1916:regulation-8",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2012/1916/sections/regulation-8/raw.xml",
+        "bytes": 136360,
+        "citation": 30,
+        "citationSubRef": 0,
+        "commentaryRef": 53
+      },
+      {
+        "id": "si-2010plus:uksi/2024/564:schedule-1-part-1-paragraph-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2024/564/sections/schedule-1-part-1-paragraph-2/raw.xml",
+        "bytes": 501683,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2024/1338:schedule-paragraph-1",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2024/1338/sections/schedule-paragraph-1/raw.xml",
+        "bytes": 116055,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2016/765:schedule-6-part-1-paragraph-5",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2016/765/sections/schedule-6-part-1-paragraph-5/raw.xml",
+        "bytes": 136339,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-pre-2010:uksi/2004/2608:full-doc",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2004/2608/sections/full-doc/raw.xml",
+        "bytes": 684520,
+        "citation": 8,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1993/893:full-doc",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1993/893/sections/full-doc/raw.xml",
+        "bytes": 275209,
+        "citation": 7,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1997/1529:full-doc",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1997/1529/sections/full-doc/raw.xml",
+        "bytes": 237201,
+        "citation": 24,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1987/2156:full-doc",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1987/2156/sections/full-doc/raw.xml",
+        "bytes": 114220,
+        "citation": 6,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1990/735:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1990/735/sections/article-2/raw.xml",
+        "bytes": 176145,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2004/629:schedule-1-paragraph-",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2004/629/sections/schedule-1-paragraph-/raw.xml",
+        "bytes": 239415,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 39
+      },
+      {
+        "id": "si-pre-2010:uksi/2006/1663:full-doc",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2006/1663/sections/full-doc/raw.xml",
+        "bytes": 131622,
+        "citation": 14,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1987/2174:full-doc",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1987/2174/sections/full-doc/raw.xml",
+        "bytes": 177904,
+        "citation": 3,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2006/213:regulation-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2006/213/sections/regulation-2/raw.xml",
+        "bytes": 180123,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 68
+      },
+      {
+        "id": "si-pre-2010:uksi/2008/2160:article-3",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2008/2160/sections/article-3/raw.xml",
+        "bytes": 119810,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      }
+    ],
+    "firstFragment": {
+      "id": "si-2010plus:uksi/2016/765:schedule-1-paragraph-1",
+      "where": "r2RawKey",
+      "text": "78424e5\">Balloon Regulation</Addition></Term><Addition ChangeId=\"key-REDACTED-CLML-COMMENTARY-HANDLE-1759498455967\" CommentaryRef=\"key-REDACTED-CLML-COMMENTARY-HANDLE\">” means Commission </Addition><Citation URI=\"http://www.legislation.gov.uk/european/regulation/2018/0395\" id=\"c00001\" Year=\"2018\" Number=\"395\" Class=\"EuropeanUnionRegulation\"><Addition ChangeId=\"key-REDACTED-CLML-COMMENTARY-HANDLE-1759498455967\" CommentaryRef=\"key-REDACTED-CLML-COMMENTARY-HANDLE\">Regulation (EU) 2018/395</Addition></Ci"
+    },
+    "firstCommentaryRef": {
+      "id": "primary-acts-2000plus:ukpga/2026/10:schedule-1-paragraph-1",
+      "text": "/schedule/1/paragraph/1\" IdURI=\"http://www.legislation.gov.uk/id/ukpga/2026/10/schedule/1/paragraph/1\" id=\"schedule-1-paragraph-1\" RestrictExtent=\"E+W+S+N.I.\" RestrictStartDate=\"2026-03-18\">\n<Pnumber><CommentaryRef Ref=\"key-REDACTED-CLML-COMMENTARY-HANDLE\"/>1</Pnumber>\n<P1para>\n<P2 DocumentURI=\"http://www.legislation.gov.uk/ukpga/2026/10/schedule/1/paragraph/1/1\" IdURI=\"http://www.legislation.gov.uk/id/ukpga/2"
+    }
+  },
+  "partA_amend": {
+    "profile": "amend",
+    "totals": {
+      "sampled": 40,
+      "read": 40,
+      "errors": 0,
+      "bytes": 1269563,
+      "citation": 22,
+      "citationSubRef": 0,
+      "commentaryRef": 67,
+      "objectsWithAnyCitation": 4,
+      "objectsWithCommentaryRef": 17,
+      "previewChecked": 0,
+      "previewWithCitation": 0
+    },
+    "results": [
+      {
+        "id": "primary-acts-2000plus:ukpga/2026/2:section-24",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2026/2/sections/section-24/raw.xml",
+        "bytes": 20049,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2022/7:section-92",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2022/7/sections/section-92/raw.xml",
+        "bytes": 21296,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2022/32:section-38",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2022/32/sections/section-38/raw.xml",
+        "bytes": 15352,
+        "citation": 2,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2006/40:section-162",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2006/40/sections/section-162/raw.xml",
+        "bytes": 16172,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2023/40:section-2",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2023/40/sections/section-2/raw.xml",
+        "bytes": 13658,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2023/50:section-221",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2023/50/sections/section-221/raw.xml",
+        "bytes": 12257,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2026/11:section-69",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2026/11/sections/section-69/raw.xml",
+        "bytes": 10605,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2022/7:section-94",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2022/7/sections/section-94/raw.xml",
+        "bytes": 13450,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2022/6:section-23",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2022/6/sections/section-23/raw.xml",
+        "bytes": 10748,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "primary-acts-2000plus:ukpga/2008/32:section-88",
+        "corpus": "primary-acts-2000plus",
+        "r2Key": "primary-acts-2000plus/ukpga/2008/32/sections/section-88/raw.xml",
+        "bytes": 15908,
+        "citation": 1,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1970/40:section-32",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1970/40/sections/section-32/raw.xml",
+        "bytes": 32991,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 7
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1967/9:section-117",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1967/9/sections/section-117/raw.xml",
+        "bytes": 12106,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1970/32:section-2",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1970/32/sections/section-2/raw.xml",
+        "bytes": 7773,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1972/62:section-9",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1972/62/sections/section-9/raw.xml",
+        "bytes": 20961,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 6
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1977/45:section-53",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1977/45/sections/section-53/raw.xml",
+        "bytes": 7416,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1983/56:section-5",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1983/56/sections/section-5/raw.xml",
+        "bytes": 9186,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1965/44:section-9",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1965/44/sections/section-9/raw.xml",
+        "bytes": 6967,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1970/40:section-33",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1970/40/sections/section-33/raw.xml",
+        "bytes": 14858,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 6
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1978/22:section-60",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1978/22/sections/section-60/raw.xml",
+        "bytes": 8045,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "primary-acts-pre-2000:ukpga/1989/42:section-36",
+        "corpus": "primary-acts-pre-2000",
+        "r2Key": "primary-acts-pre-2000/ukpga/1989/42/sections/section-36/raw.xml",
+        "bytes": 8934,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 2
+      },
+      {
+        "id": "si-2010plus:uksi/2014/1923:article-10",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2014/1923/sections/article-10/raw.xml",
+        "bytes": 27453,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2018/1332:article-4",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2018/1332/sections/article-4/raw.xml",
+        "bytes": 147012,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2016/392:article-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2016/392/sections/article-2/raw.xml",
+        "bytes": 39409,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 28
+      },
+      {
+        "id": "si-2010plus:uksi/2018/1332:article-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2018/1332/sections/article-2/raw.xml",
+        "bytes": 140586,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2021/985:article-6",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2021/985/sections/article-6/raw.xml",
+        "bytes": 28360,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2023/1394:article-110",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2023/1394/sections/article-110/raw.xml",
+        "bytes": 42647,
+        "citation": 17,
+        "citationSubRef": 0,
+        "commentaryRef": 1
+      },
+      {
+        "id": "si-2010plus:uksi/2019/1184:article-22",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2019/1184/sections/article-22/raw.xml",
+        "bytes": 32238,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2016/1040:article-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2016/1040/sections/article-2/raw.xml",
+        "bytes": 17724,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2010/248:article-2",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2010/248/sections/article-2/raw.xml",
+        "bytes": 17770,
+        "citation": 2,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-2010plus:uksi/2022/177:article-5",
+        "corpus": "si-2010plus",
+        "r2Key": "si-2010plus/uksi/2022/177/sections/article-5/raw.xml",
+        "bytes": 35950,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2008/2160:article-3",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2008/2160/sections/article-3/raw.xml",
+        "bytes": 119810,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2006/1438:article-18",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2006/1438/sections/article-18/raw.xml",
+        "bytes": 94431,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1996/1756:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1996/1756/sections/article-2/raw.xml",
+        "bytes": 69209,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1991/189:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1991/189/sections/article-2/raw.xml",
+        "bytes": 38462,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2002/1348:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2002/1348/sections/article-2/raw.xml",
+        "bytes": 29956,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2004/924:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2004/924/sections/article-2/raw.xml",
+        "bytes": 28380,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2009/1889:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2009/1889/sections/article-2/raw.xml",
+        "bytes": 31755,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2001/3268:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2001/3268/sections/article-2/raw.xml",
+        "bytes": 19084,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/1990/568:article-2",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/1990/568/sections/article-2/raw.xml",
+        "bytes": 11526,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      },
+      {
+        "id": "si-pre-2010:uksi/2006/1358:article-3",
+        "corpus": "si-pre-2010",
+        "r2Key": "si-pre-2010/uksi/2006/1358/sections/article-3/raw.xml",
+        "bytes": 19069,
+        "citation": 0,
+        "citationSubRef": 0,
+        "commentaryRef": 0
+      }
+    ],
+    "firstFragment": {
+      "id": "primary-acts-2000plus:ukpga/2022/32:section-38",
+      "where": "r2RawKey",
+      "text": "uk/id/ukpga/2022/32/section/38/8/e\" id=\"section-38-8-e\"><Pnumber>e</Pnumber><P3para><Text>a person authorised under an intervention order under section 53 of the Adults with Incapacity (Scotland) Act <Citation URI=\"http://www.legislation.gov.uk/id/asp/2000/4\" id=\"c00006\" Class=\"ScottishAct\" Year=\"2000\" Number=\"0004\">2000 (asp 4)</Citation> who may make decisions for the purposes of subsection (7)(a) and (b) on behalf of the adult without capacity by virtue of that authorisation, or</Text></P3para></P3><P"
+    },
+    "firstCommentaryRef": {
+      "id": "primary-acts-2000plus:ukpga/2026/2:section-24",
+      "text": "<P1 DocumentURI=\"http://www.legislation.gov.uk/ukpga/2026/2/section/24\" IdURI=\"http://www.legislation.gov.uk/id/ukpga/2026/2/section/24\" id=\"section-24\">\n<Pnumber><CommentaryRef Ref=\"key-REDACTED-CLML-COMMENTARY-HANDLE\"/>24</Pnumber>\n<P1para>\n<P2 DocumentURI=\"http://www.legislation.gov.uk/ukpga/2026/2/section/24/1\" IdURI=\"http://www.legislation.gov.uk/id/ukpga/2026/2/sectio"
+    }
+  },
+  "partB": {
+    "zip": {
+      "path": "C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip",
+      "bytes": 1437177815,
+      "dataEntries": 132994,
+      "matchedWidened": 132990,
+      "matchedShipped": 130559
+    },
+    "byType": {
+      "ukpga": {
+        "docs": 4426,
+        "docsWithBodyCitation": 638,
+        "docErrors": 0,
+        "elementsTotal": 2359047,
+        "elementsBody": 25060,
+        "elementsExcluded": 2333987,
+        "elementsSelf": 12,
+        "elementsBadUri": 1858,
+        "subRefTotal": 1618968,
+        "subRefBody": 1,
+        "subRefBodyWithSectionRef": 1,
+        "bodyWithProvisionText": 3782,
+        "docsInZip": 4426,
+        "sampled": 4426,
+        "distinctUrisAll": 485369,
+        "distinctUrisBody": 5723,
+        "distinctTargetGidsBody": 3574,
+        "resolvedHeldDirect": 1949,
+        "resolvedByAlias": 558,
+        "resolvedTotal": 2507,
+        "resolvedPct": 70.1,
+        "missing": 1067,
+        "missingByDoctype": {
+          "ukpga": 645,
+          "ukla": 231,
+          "uksi": 82,
+          "apni": 33,
+          "eudr": 16,
+          "apgb": 15,
+          "uksro": 14,
+          "aep": 6,
+          "eur": 6,
+          "aosp": 5,
+          "ukcm": 4,
+          "eud": 2,
+          "nisi": 2,
+          "eudn": 1,
+          "ukpa": 1
+        },
+        "elapsedSec": 20
+      },
+      "uksi": {
+        "docs": 61996,
+        "docsWithBodyCitation": 25126,
+        "docErrors": 0,
+        "elementsTotal": 1923524,
+        "elementsBody": 261599,
+        "elementsExcluded": 1661925,
+        "elementsSelf": 285,
+        "elementsBadUri": 49185,
+        "subRefTotal": 753231,
+        "subRefBody": 2,
+        "subRefBodyWithSectionRef": 2,
+        "bodyWithProvisionText": 17507,
+        "docsInZip": 61996,
+        "sampled": 61996,
+        "distinctUrisAll": 370224,
+        "distinctUrisBody": 29856,
+        "distinctTargetGidsBody": 28627,
+        "resolvedHeldDirect": 23021,
+        "resolvedByAlias": 806,
+        "resolvedTotal": 23827,
+        "resolvedPct": 83.2,
+        "missing": 4800,
+        "missingByDoctype": {
+          "uksi": 3321,
+          "ukla": 591,
+          "nisr": 200,
+          "ukpga": 127,
+          "eudr": 111,
+          "uksro": 88,
+          "nisro": 73,
+          "eur": 57,
+          "eud": 54,
+          "european": 45,
+          "apni": 43,
+          "ukcm": 37,
+          "eudn": 17,
+          "ssi": 11,
+          "wsi": 7
+        },
+        "elapsedSec": 46
+      }
+    }
+  }
+}
