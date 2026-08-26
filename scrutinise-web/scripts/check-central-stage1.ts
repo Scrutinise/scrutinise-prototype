@@ -30,6 +30,7 @@ import {
   countUnreadBulletin,
   createCommunityInvite,
   createJoinRequest,
+  DEFAULT_QUESTION_TAGS,
   describeChars,
   isValidEmail,
   normaliseEmail,
@@ -263,6 +264,24 @@ async function partA() {
     await prisma.questionTag.count({ where: { kind: 'TOPIC', label: 'Housing', promoted: true } }), 0)
   eq('…while the row itself survives, so it is still in the dropdown',
     await prisma.questionTag.count({ where: { kind: 'TOPIC', label: 'Housing' } }), nodeCount)
+
+  // ⚠ EVERY node, including ones created after the migrations ran (26 Aug 2026).
+  // Tags only ever came from a migration, so a Community created afterwards had
+  // none — for a new top-level Community that means an empty chip row, an empty
+  // topic dropdown, and a bulk upload where every row fails because its Context
+  // "is not a context in this Community". Creation seeds them now
+  // (`seedQuestionTags`); this is what notices if that ever stops happening.
+  const bare: string[] = []
+  for (const c of await prisma.community.findMany({ select: { id: true, name: true } })) {
+    const contexts = await prisma.questionTag.count({
+      where: { communityId: c.id, kind: { startsWith: 'CONTEXT' } },
+    })
+    if (contexts === 0) bare.push(c.name)
+  }
+  check('every Community has a context tag set — without one it can accept no upload at all',
+    bare.length === 0, bare.join(', '))
+  check('…and the starter set the code seeds is the set the live Communities actually have',
+    DEFAULT_QUESTION_TAGS.length === 43, `${DEFAULT_QUESTION_TAGS.length} tags`)
 
   const partyConduct = await prisma.question.count({ where: { topicTags: { has: 'Party conduct' } } })
   const housing = await prisma.question.count({ where: { topicTags: { has: 'Housing' } } })
@@ -1882,7 +1901,10 @@ async function partG() {
   const rows = [
     HEADER,
     [`zz Q1 how will you pay for this ${stamp}?`, 'Doorstep', 'Housing', 'zz A1 body', 'https://example.com/1', 'zz local one', NOTE],
-    [`zz Q2 why trust you ${stamp}?`, 'Media interview', 'Housing, zz New Topic', 'zz A2 body', '', '', NOTE],
+    // Semicolon-separated, as the template's own guidance says. A comma is NOT
+    // a separator — see splitList — because five of the topics the template
+    // offers have commas in their names.
+    [`zz Q2 why trust you ${stamp}?`, 'Media interview', 'Housing; zz New Topic', 'zz A2 body', '', '', NOTE],
     [`zz Q3 how do I use the app ${stamp}?`, 'How-to', '', '', '', '', NOTE],
   ]
 
@@ -1938,6 +1960,31 @@ async function partG() {
     eq('…and none of which is an error', plan.counts.errors, 0)
     eq('the unknown topic is planned, unpromoted, because a topic has no ambiguous side',
       plan.topicsToCreate, ['zz New Topic'])
+
+    // ⚠ A TOPIC WITH A COMMA IN ITS OWN NAME (26 Aug 2026). Five of the thirty-
+    // five topics the shipped template offers are like this — "Department for
+    // Culture, Media and Sport" and four others — and while a comma counted as a
+    // separator, choosing one from the template's own list silently created two
+    // junk tags instead. Asserted against a REAL value from that list.
+    const commaTopic = 'Department for Culture, Media and Sport'
+    const commaRows = [
+      HEADER,
+      [`zz Q-comma ${stamp}?`, 'Doorstep', `Housing; ${commaTopic}`, 'zz body', '', '', NOTE],
+    ]
+    const commaParsed = parseUpload(sheet(commaRows))
+    eq('a topic whose NAME contains a comma survives the parser in one piece',
+      commaParsed.rows[0].topics, ['Housing', commaTopic])
+    const commaPlan = await planImport(root.id, sheet(commaRows))
+    eq('…so it is not reported as two new topics that nobody asked for',
+      commaPlan.topicsToCreate, [commaTopic])
+    // The same cell comma-separated instead: one unknown topic, VISIBLE in the
+    // preview as something that would be created, rather than silently split.
+    const commaMisused = parseUpload(sheet([
+      HEADER,
+      [`zz Q-comma2 ${stamp}?`, 'Doorstep', `Housing, Energy`, 'zz body', '', '', NOTE],
+    ]))
+    eq('…and commas are not separators, so a misuse shows up rather than half-working',
+      commaMisused.rows[0].topics, ['Housing, Energy'])
 
     // ── the Notes column reaches nothing ────────────────────────────────────
     // Asserted on the PARSED ROWS, not on the plan: the plan carries only
