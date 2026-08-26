@@ -99,8 +99,23 @@ const CHECKS: Check[] = [
       if (pages !== 'ORIENTATION,DIAGNOSIS,GUIDING_POLICY,COHERENT_ACTIONS') {
         return `PAGE_SEQUENCE changed: ${pages}`
       }
+      // ⚠⚠ `youAndIdeaNarrative` WAS IN THIS LIST AND IS RETIRED BY 25-H §1.
+      //
+      // This assertion exists so 25-A could not quietly remove a field the existing kernel
+      // depends on — "25-A adds a path, it does not remove one". It is still doing that
+      // job: the list is the closed set of fields the kernel is entitled to, and removing
+      // one has to be a deliberate edit HERE as well as in the config.
+      //
+      // CLAUDE.md §11 requires Charlie's explicit instruction to remove a field, and
+      // BRIEF_25H §1 is it: "Retire the old fields — do not leave empty boxes that nothing
+      // fills." The blob concatenated four separate answers under a heading naming none of
+      // them; the four `derived` page-one fields replace it one-for-one, and they are added
+      // to this list so the same guard now covers them.
+      //
+      // `migrateLegacyPageOne` moves content out of it first, and reports the count.
       const required = [
-        'ideaNarrative', 'youAndIdeaNarrative', 'aboutYou', 'title', 'keywords',
+        'ideaNarrative', 'yourAccount', 'yourGoal', 'yourKnowledge', 'yourReading',
+        'aboutYou', 'title', 'keywords',
         'challenge', 'whoAffectedImpactCost', 'causes', 'rootCause', 'legalLandscape',
         'pivotalObstacle', 'summaryDiagnosis', 'policyOptions', 'chosenApproach',
         'whatItRulesOut', 'leverage', 'anticipatedResponses', 'conditionsForSuccess',

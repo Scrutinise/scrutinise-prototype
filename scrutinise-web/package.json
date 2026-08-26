@@ -58,6 +58,7 @@
     "check:lex-25e": "tsx scripts/check-lex-25e.ts",
     "check:lex-25f": "tsx scripts/check-lex-25f.ts",
     "check:lex-25g": "tsx scripts/check-lex-25g.ts",
+    "check:lex-25h": "tsx scripts/check-lex-25h.ts",
     "verify:lex-25f": "tsx --env-file=.env scripts/verify-lex-25f-live.ts",
     "verify:lex-25g-ui": "tsx scripts/verify-lex-25g-ui.tsx",
     "verify:lex-25e-ui": "tsx scripts/verify-lex-25e-ui.tsx",
