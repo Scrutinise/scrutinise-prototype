@@ -336,65 +336,95 @@ export function describeChars(s: string): string {
 const STARTER_CONTEXTS_EXTERNAL = ['Doorstep', 'Media interview', 'Hustings', 'University AMA', 'Council chamber']
 const STARTER_CONTEXTS_INTERNAL = ['How-to', 'Party process', 'Tools & tech']
 
-/** Promoted topics order the "All topics" dropdown; unpromoted ones follow. */
-const STARTER_TOPICS_PROMOTED = [
-  'Local finance', 'Local services', 'Organising', 'Energy', 'Immigration',
-  'Party conduct', 'Media skills', 'Economy', 'Social issues', 'Law & rights',
-]
-const STARTER_TOPICS_UNPROMOTED = [
+/**
+ * ⚠ THE TOPIC TAXONOMY (Charlie, 26 Aug 2026). A CONTROLLED LIST, NO FREE TEXT.
+ *
+ * What a topic is FOR: browsing a slice you cannot name precisely. Finding a
+ * specific word is search's job, and the two were being confused — which is how
+ * the list drifted into 24 ministerial department names. Those are gone: wrong
+ * axis (a department is who answers, not what it is about) and they get renamed
+ * at every reshuffle, so the tag set would rot on a timetable set by somebody
+ * else.
+ *
+ * ⚠ THERE IS NO "OTHER". A catch-all absorbs exactly the questions that would
+ * have told you which topic is missing. The topic field is OPTIONAL instead,
+ * and the admin Untagged view lists what has no topic — that list IS the
+ * evidence for adding one.
+ *
+ * ⚠ FOUR OF THESE HAVE COMMAS IN THEIR NAMES. That is safe only because a comma
+ * stopped being a separator on 26 Aug — see `splitList` in lib/question-import.ts.
+ */
+const SUBJECT_TOPICS = [
+  'Immigration & asylum',
+  'Crime, justice & policing',
+  'Health & care',
+  'Education',
   'Housing',
-  // The 24 UK ministerial departments, matching the shipped upload template's
-  // "Valid values" sheet. ⚠ Five contain commas — see `splitList` in
-  // lib/question-import.ts, where a comma is deliberately NOT a separator.
-  'Attorney General’s Office',
-  'Cabinet Office',
-  'Department for Business and Trade',
-  'Department for Culture, Media and Sport',
-  'Department for Education',
-  'Department for Energy Security and Net Zero',
-  'Department for Environment, Food and Rural Affairs',
-  'Department for Science, Innovation and Technology',
-  'Department for Transport',
-  'Department for Work and Pensions',
-  'Department of Health and Social Care',
-  'Foreign, Commonwealth and Development Office',
-  'HM Treasury',
-  'Home Office',
-  'Ministry of Defence',
-  'Ministry of Housing, Communities and Local Government',
-  'Ministry of Justice',
-  'Northern Ireland Office',
-  'Office of the Advocate General for Scotland',
-  'Office of the Leader of the House of Commons',
-  'Office of the Leader of the House of Lords',
-  'Scotland Office',
-  'UK Export Finance',
-  'Wales Office',
+  'Transport & roads',
+  'Energy & net zero',
+  'Environment, farming & rural',
+  'Economy & tax',
+  'Welfare & pensions',
+  'Business & jobs',
+  'Culture, media & sport',
+  'Science, technology & digital',
+  'Defence & foreign affairs',
+  'Constitution, devolution & elections',
+  'Law & rights',
+  'Social & moral issues',
+  'Local finance',
+  'Local services',
 ]
+
+/** The three that are about doing the job, not about a subject. */
+const INTERNAL_TOPICS = ['Party conduct', 'Media skills', 'Organising']
+
+/**
+ * `promoted` now carries the SUBJECT/INTERNAL split rather than a curation
+ * judgement: the chip row has been contexts-only since Stage 2d, so the flag's
+ * only remaining job is ordering the "All topics" dropdown, and grouping the
+ * nineteen subjects above the three internal ones is what that ordering is
+ * actually for.
+ */
+export const SUBJECT_TOPIC_LABELS: readonly string[] = SUBJECT_TOPICS
+export const INTERNAL_TOPIC_LABELS: readonly string[] = INTERNAL_TOPICS
 
 export type StarterTag = { kind: string; label: string; promoted: boolean; sortOrder: number }
 
 export const DEFAULT_QUESTION_TAGS: StarterTag[] = [
   ...STARTER_CONTEXTS_EXTERNAL.map((label, i) => ({ kind: 'CONTEXT_EXTERNAL', label, promoted: true, sortOrder: i + 1 })),
   ...STARTER_CONTEXTS_INTERNAL.map((label, i) => ({ kind: 'CONTEXT_INTERNAL', label, promoted: true, sortOrder: i + 1 })),
-  ...STARTER_TOPICS_PROMOTED.map((label, i) => ({ kind: 'TOPIC', label, promoted: true, sortOrder: i + 1 })),
-  ...STARTER_TOPICS_UNPROMOTED.map((label) => ({ kind: 'TOPIC', label, promoted: false, sortOrder: 50 })),
+  ...SUBJECT_TOPICS.map((label, i) => ({ kind: 'TOPIC', label, promoted: true, sortOrder: i + 1 })),
+  ...INTERNAL_TOPICS.map((label, i) => ({ kind: 'TOPIC', label, promoted: false, sortOrder: i + 1 })),
 ]
 
 /**
  * Give a Community its question-library tag set. Idempotent — safe to call on a
  * node that already has one, which is what makes it usable as a backfill.
+ *
+ * ⚠ THE TAG SET LIVES ON THE ROOT ONLY (Charlie, 26 Aug 2026); a branch inherits
+ * it. Per-node copies drift apart and break filtering across branches — rename a
+ * topic on one branch and the same question stops matching the same filter
+ * depending on where you happen to be standing.
+ *
+ * ⚠ The per-node copies were ALREADY dead weight. Every read resolves the root
+ * id first — `getTags`, the side-tag query in `listQuestions`, `planImport` — so
+ * a branch's rows had never once been read by anything. The brief scopes this
+ * rule to topics; it is applied to contexts too, because seeding rows nothing
+ * reads is a bug in either direction and two rules here would be worse than one.
  */
 export async function seedQuestionTags(communityId: string): Promise<number> {
+  if ((await getRootCommunityId(communityId)) !== communityId) return 0
+
   const already = new Set(
     (
       await prisma.questionTag.findMany({
         where: { communityId },
         select: { kind: true, label: true },
       })
-    ).map((t) => `${t.kind} ${t.label}`),
+    ).map((t) => `${t.kind}\u0000${t.label}`),
   )
-  const missing = DEFAULT_QUESTION_TAGS.filter((t) => !already.has(`${t.kind} ${t.label}`))
+  const missing = DEFAULT_QUESTION_TAGS.filter((t) => !already.has(`${t.kind}\u0000${t.label}`))
   if (!missing.length) return 0
   const { count } = await prisma.questionTag.createMany({
     data: missing.map((t) => ({ communityId, ...t })),

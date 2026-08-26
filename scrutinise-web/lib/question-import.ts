@@ -452,11 +452,11 @@ export async function applyImport(params: {
           where: { communityId: { in: nodeIds }, kind: 'TOPIC', label: { in: plan.topicsToCreate } },
           select: { communityId: true, label: true },
         })
-      ).map((t) => `${t.communityId} ${t.label}`),
+      ).map((t) => `${t.communityId}\u0000${t.label}`),
     )
     const toCreate = nodeIds.flatMap((nodeId) =>
       plan.topicsToCreate
-        .filter((label) => !present.has(`${nodeId} ${label}`))
+        .filter((label) => !present.has(`${nodeId}\u0000${label}`))
         .map((label) => ({ communityId: nodeId, kind: 'TOPIC', label, promoted: false, sortOrder: 99 })),
     )
     if (toCreate.length) {
