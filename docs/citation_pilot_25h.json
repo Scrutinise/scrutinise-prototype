@@ -1,0 +1,1071 @@
+{
+  "generatedAt": "2026-08-26T01:18:51.455Z",
+  "tableRows": 1034548,
+  "negativeControl": {
+    "gid": "ukpga/2022/18",
+    "summary": {
+      "target_act_id": "ukpga/2022/18",
+      "total": 13,
+      "actLevel": 13,
+      "provisionLevel": 0,
+      "distinctSourceActs": 2,
+      "bySourceType": [
+        {
+          "source_type": "SI",
+          "n": 13,
+          "distinct_sources": 2
+        }
+      ],
+      "bySourceAct": [
+        {
+          "source_gid": "uksi/2024/373",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "uksi/2025/1312",
+          "source_type": "SI",
+          "n": 5
+        }
+      ],
+      "byDetection": [
+        {
+          "detection": "text",
+          "n": 13,
+          "distinct_sources": 2
+        }
+      ]
+    }
+  },
+  "scaleControl": {
+    "ukpga/2010/15": {
+      "target_act_id": "ukpga/2010/15",
+      "total": 1868,
+      "actLevel": 1181,
+      "provisionLevel": 687,
+      "distinctSourceActs": 530,
+      "bySourceType": [
+        {
+          "source_type": "SI",
+          "n": 1347,
+          "distinct_sources": 354
+        },
+        {
+          "source_type": "primary",
+          "n": 520,
+          "distinct_sources": 175
+        },
+        {
+          "source_type": "other",
+          "n": 1,
+          "distinct_sources": 1
+        }
+      ],
+      "bySourceAct": [
+        {
+          "source_gid": "uksi/2010/2279",
+          "source_type": "SI",
+          "n": 75
+        },
+        {
+          "source_gid": "ukpga/2006/3",
+          "source_type": "primary",
+          "n": 31
+        },
+        {
+          "source_gid": "wsi/2011/1651",
+          "source_type": "SI",
+          "n": 31
+        },
+        {
+          "source_gid": "uksi/2010/2317",
+          "source_type": "SI",
+          "n": 26
+        },
+        {
+          "source_gid": "uksi/2012/1569",
+          "source_type": "SI",
+          "n": 26
+        },
+        {
+          "source_gid": "uksi/2011/2646",
+          "source_type": "SI",
+          "n": 25
+        },
+        {
+          "source_gid": "uksi/2011/1636",
+          "source_type": "SI",
+          "n": 23
+        },
+        {
+          "source_gid": "uksi/2011/1066",
+          "source_type": "SI",
+          "n": 21
+        },
+        {
+          "source_gid": "uksi/2023/1425",
+          "source_type": "SI",
+          "n": 20
+        },
+        {
+          "source_gid": "ssi/2016/200",
+          "source_type": "SI",
+          "n": 19
+        },
+        {
+          "source_gid": "ukpga/2025/36",
+          "source_type": "primary",
+          "n": 19
+        },
+        {
+          "source_gid": "uksi/2011/96",
+          "source_type": "SI",
+          "n": 19
+        },
+        {
+          "source_gid": "ukpga/2013/24",
+          "source_type": "primary",
+          "n": 18
+        },
+        {
+          "source_gid": "uksi/2011/857",
+          "source_type": "SI",
+          "n": 14
+        },
+        {
+          "source_gid": "uksi/2011/1060",
+          "source_type": "SI",
+          "n": 12
+        },
+        {
+          "source_gid": "ssi/2010/340",
+          "source_type": "SI",
+          "n": 11
+        },
+        {
+          "source_gid": "ukpga/1996/18",
+          "source_type": "primary",
+          "n": 11
+        },
+        {
+          "source_gid": "uksi/2023/1308",
+          "source_type": "SI",
+          "n": 11
+        },
+        {
+          "source_gid": "ssi/2015/254",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "ukpga/2000/38",
+          "source_type": "primary",
+          "n": 10
+        },
+        {
+          "source_gid": "ukpga/2017/4",
+          "source_type": "primary",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/2010/1736",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/2010/2337",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/2012/2184",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/2017/353",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "ssi/2012/162",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "ssi/2016/159",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "ssi/2023/375",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "ukpga/2012/7",
+          "source_type": "primary",
+          "n": 9
+        },
+        {
+          "source_gid": "ukpga/2022/31",
+          "source_type": "primary",
+          "n": 9
+        },
+        {
+          "source_gid": "ukpga/2025/24",
+          "source_type": "primary",
+          "n": 9
+        },
+        {
+          "source_gid": "uksi/2010/1966",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "uksi/2026/787",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "anaw/2013/1",
+          "source_type": "primary",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2011/233",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2013/170",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2015/83",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2018/101",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2018/220",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2020/313",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2020/403",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2021/471",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2021/473",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2022/151",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2024/175",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2024/176",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2025/368",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2025/369",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ukpga/1996/56",
+          "source_type": "primary",
+          "n": 8
+        },
+        {
+          "source_gid": "ukpga/2004/12",
+          "source_type": "primary",
+          "n": 8
+        }
+      ],
+      "byDetection": [
+        {
+          "detection": "text",
+          "n": 1789,
+          "distinct_sources": 526
+        },
+        {
+          "detection": "markup",
+          "n": 79,
+          "distinct_sources": 59
+        }
+      ]
+    },
+    "ukpga/1998/42": {
+      "target_act_id": "ukpga/1998/42",
+      "total": 938,
+      "actLevel": 454,
+      "provisionLevel": 484,
+      "distinctSourceActs": 368,
+      "bySourceType": [
+        {
+          "source_type": "SI",
+          "n": 527,
+          "distinct_sources": 212
+        },
+        {
+          "source_type": "primary",
+          "n": 409,
+          "distinct_sources": 154
+        },
+        {
+          "source_type": "other",
+          "n": 2,
+          "distinct_sources": 2
+        }
+      ],
+      "bySourceAct": [
+        {
+          "source_gid": "uksi/2000/2267",
+          "source_type": "SI",
+          "n": 13
+        },
+        {
+          "source_gid": "nisr/2000/387",
+          "source_type": "SI",
+          "n": 12
+        },
+        {
+          "source_gid": "ukpga/2006/32",
+          "source_type": "primary",
+          "n": 11
+        },
+        {
+          "source_gid": "ukpga/2024/21",
+          "source_type": "primary",
+          "n": 11
+        },
+        {
+          "source_gid": "ukpga/2002/41",
+          "source_type": "primary",
+          "n": 10
+        },
+        {
+          "source_gid": "ukpga/2014/12",
+          "source_type": "primary",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/1998/3132",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/2004/2333",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "uksi/2004/753",
+          "source_type": "SI",
+          "n": 10
+        },
+        {
+          "source_gid": "ukpga/1998/47",
+          "source_type": "primary",
+          "n": 9
+        },
+        {
+          "source_gid": "ukpga/2000/8",
+          "source_type": "primary",
+          "n": 9
+        },
+        {
+          "source_gid": "ukpga/2023/32",
+          "source_type": "primary",
+          "n": 9
+        },
+        {
+          "source_gid": "uksi/2000/2092",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "uksi/2000/2228",
+          "source_type": "SI",
+          "n": 9
+        },
+        {
+          "source_gid": "nisr/2000/243",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ssi/2024/195",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "ukpga/2003/41",
+          "source_type": "primary",
+          "n": 8
+        },
+        {
+          "source_gid": "ukpga/2005/4",
+          "source_type": "primary",
+          "n": 8
+        },
+        {
+          "source_gid": "ukpga/2018/16",
+          "source_type": "primary",
+          "n": 8
+        },
+        {
+          "source_gid": "uksi/2004/1574",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "uksi/2005/1071",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "uksi/2020/1160",
+          "source_type": "SI",
+          "n": 8
+        },
+        {
+          "source_gid": "nisr/2000/282",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "ukpga/1998/46",
+          "source_type": "primary",
+          "n": 7
+        },
+        {
+          "source_gid": "ukpga/2004/35",
+          "source_type": "primary",
+          "n": 7
+        },
+        {
+          "source_gid": "ukpga/2006/3",
+          "source_type": "primary",
+          "n": 7
+        },
+        {
+          "source_gid": "ukpga/2009/1",
+          "source_type": "primary",
+          "n": 7
+        },
+        {
+          "source_gid": "uksi/2000/1851",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "uksi/2000/2036",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "uksi/2001/1185",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "uksi/2003/694",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "uksi/2005/2795",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "uksi/2008/680",
+          "source_type": "SI",
+          "n": 7
+        },
+        {
+          "source_gid": "nisr/1980/346",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "nisr/1981/225",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "nisr/2012/301",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "ssi/2000/301",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "ukpga/2022/36",
+          "source_type": "primary",
+          "n": 6
+        },
+        {
+          "source_gid": "ukpga/2025/33",
+          "source_type": "primary",
+          "n": 6
+        },
+        {
+          "source_gid": "uksi/1998/2882",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "uksi/2001/443",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "uksi/2005/3429",
+          "source_type": "SI",
+          "n": 6
+        },
+        {
+          "source_gid": "nisi/2005/255",
+          "source_type": "SI",
+          "n": 5
+        },
+        {
+          "source_gid": "ssi/2000/315",
+          "source_type": "SI",
+          "n": 5
+        },
+        {
+          "source_gid": "ssi/2000/316",
+          "source_type": "SI",
+          "n": 5
+        },
+        {
+          "source_gid": "ssi/2024/174",
+          "source_type": "SI",
+          "n": 5
+        },
+        {
+          "source_gid": "ukpga/1983/20",
+          "source_type": "primary",
+          "n": 5
+        },
+        {
+          "source_gid": "ukpga/2000/11",
+          "source_type": "primary",
+          "n": 5
+        },
+        {
+          "source_gid": "ukpga/2007/6",
+          "source_type": "primary",
+          "n": 5
+        },
+        {
+          "source_gid": "ukpga/2009/25",
+          "source_type": "primary",
+          "n": 5
+        }
+      ],
+      "byDetection": [
+        {
+          "detection": "text",
+          "n": 901,
+          "distinct_sources": 366
+        },
+        {
+          "detection": "markup",
+          "n": 37,
+          "distinct_sources": 26
+        }
+      ]
+    }
+  },
+  "crag": {
+    "target_act_id": "ukpga/2010/25",
+    "total": 182,
+    "actLevel": 88,
+    "provisionLevel": 94,
+    "distinctSourceActs": 75,
+    "bySourceType": [
+      {
+        "source_type": "SI",
+        "n": 109,
+        "distinct_sources": 31
+      },
+      {
+        "source_type": "primary",
+        "n": 73,
+        "distinct_sources": 44
+      }
+    ],
+    "bySourceAct": [
+      {
+        "source_gid": "uksi/2012/3001",
+        "source_type": "SI",
+        "n": 8
+      },
+      {
+        "source_gid": "uksi/2014/3245",
+        "source_type": "SI",
+        "n": 8
+      },
+      {
+        "source_gid": "uksi/2010/1931",
+        "source_type": "SI",
+        "n": 7
+      },
+      {
+        "source_gid": "uksi/2010/2703",
+        "source_type": "SI",
+        "n": 7
+      },
+      {
+        "source_gid": "uksi/2011/1274",
+        "source_type": "SI",
+        "n": 7
+      },
+      {
+        "source_gid": "uksi/2011/2485",
+        "source_type": "SI",
+        "n": 7
+      },
+      {
+        "source_gid": "uksi/2011/46",
+        "source_type": "SI",
+        "n": 7
+      },
+      {
+        "source_gid": "uksi/2013/2826",
+        "source_type": "SI",
+        "n": 7
+      },
+      {
+        "source_gid": "ukpga/2022/37",
+        "source_type": "primary",
+        "n": 5
+      },
+      {
+        "source_gid": "ukpga/2026/12",
+        "source_type": "primary",
+        "n": 5
+      },
+      {
+        "source_gid": "uksi/2010/1277",
+        "source_type": "SI",
+        "n": 5
+      },
+      {
+        "source_gid": "uksi/2012/3028",
+        "source_type": "SI",
+        "n": 5
+      },
+      {
+        "source_gid": "uksi/2012/3029",
+        "source_type": "SI",
+        "n": 5
+      },
+      {
+        "source_gid": "uksi/2014/3249",
+        "source_type": "SI",
+        "n": 5
+      },
+      {
+        "source_gid": "uksi/2018/1242",
+        "source_type": "SI",
+        "n": 5
+      },
+      {
+        "source_gid": "ukpga/1983/2",
+        "source_type": "primary",
+        "n": 3
+      },
+      {
+        "source_gid": "ukpga/2013/25",
+        "source_type": "primary",
+        "n": 3
+      },
+      {
+        "source_gid": "ukpga/2020/1",
+        "source_type": "primary",
+        "n": 3
+      },
+      {
+        "source_gid": "ukpga/2020/29",
+        "source_type": "primary",
+        "n": 3
+      },
+      {
+        "source_gid": "ukpga/2025/8",
+        "source_type": "primary",
+        "n": 3
+      },
+      {
+        "source_gid": "uksi/2010/1278",
+        "source_type": "SI",
+        "n": 3
+      },
+      {
+        "source_gid": "uksi/2012/2595",
+        "source_type": "SI",
+        "n": 3
+      },
+      {
+        "source_gid": "uksi/2022/77",
+        "source_type": "SI",
+        "n": 3
+      },
+      {
+        "source_gid": "anaw/2013/4",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "asc/2024/4",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/1992/61",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/1993/48",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/1998/46",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/2006/32",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/2009/13",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/2011/11",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/2012/9",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/2013/29",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "ukpga/2015/8",
+        "source_type": "primary",
+        "n": 2
+      },
+      {
+        "source_gid": "uksi/2015/892",
+        "source_type": "SI",
+        "n": 2
+      },
+      {
+        "source_gid": "uksi/2020/38",
+        "source_type": "SI",
+        "n": 2
+      },
+      {
+        "source_gid": "asp/2016/16",
+        "source_type": "primary",
+        "n": 1
+      },
+      {
+        "source_gid": "nisr/2023/209",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ssi/2013/365",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ssi/2021/174",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ssi/2022/54",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ssi/2023/302",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ssi/2024/166",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ssi/2025/3",
+        "source_type": "SI",
+        "n": 1
+      },
+      {
+        "source_gid": "ukpga/1971/56",
+        "source_type": "primary",
+        "n": 1
+      },
+      {
+        "source_gid": "ukpga/1978/36",
+        "source_type": "primary",
+        "n": 1
+      },
+      {
+        "source_gid": "ukpga/1997/50",
+        "source_type": "primary",
+        "n": 1
+      },
+      {
+        "source_gid": "ukpga/1999/2",
+        "source_type": "primary",
+        "n": 1
+      },
+      {
+        "source_gid": "ukpga/2000/23",
+        "source_type": "primary",
+        "n": 1
+      },
+      {
+        "source_gid": "ukpga/2000/36",
+        "source_type": "primary",
+        "n": 1
+      }
+    ],
+    "byDetection": [
+      {
+        "detection": "text",
+        "n": 171,
+        "distinct_sources": 75
+      },
+      {
+        "detection": "markup",
+        "n": 11,
+        "distinct_sources": 8
+      }
+    ]
+  },
+  "orderingHolds": true,
+  "partExpansion": {
+    "available": true,
+    "refs": [
+      "part-1",
+      "section-1",
+      "section-2",
+      "section-3",
+      "section-4",
+      "section-5",
+      "section-6",
+      "section-7",
+      "section-8",
+      "section-9",
+      "section-10",
+      "section-11",
+      "section-12",
+      "section-13",
+      "section-14",
+      "section-15",
+      "section-16",
+      "section-17",
+      "section-18",
+      "section-19"
+    ],
+    "note": "19 provisions read from ukpga/2010/25 part-1"
+  },
+  "partScoped": 29,
+  "verification": [
+    {
+      "url": "https://www.legislation.gov.uk/asp/2016/16/section/47/data.xml",
+      "ok": true,
+      "reason": "Act named in the live provision text",
+      "source": "asp/2016/16:section-47",
+      "provision": "section-8-11"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/uksi/2012/2595/article/20/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "uksi/2012/2595:article-20",
+      "provision": "section-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ssi/2024/166/regulation/11/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ssi/2024/166:regulation-11",
+      "provision": "section-1-4"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2008/18/schedule/12/paragraph/20/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/2008/18:schedule-12-paragraph-20",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ssi/2023/302/regulation/8/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ssi/2023/302:regulation-8",
+      "provision": "section-1-4"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/1978/36/section/2/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/1978/36:section-2",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/asc/2024/4/section/14/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "asc/2024/4:section-14",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/1992/61/section/1/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/1992/61:section-1",
+      "provision": "section-3"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/uksi/2014/1964/schedule/2/paragraph/36/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "uksi/2014/1964:schedule-2-paragraph-36",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2006/32/section/52/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/2006/32:section-52",
+      "provision": "section-3"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ssi/2022/54/regulation/17/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ssi/2022/54:regulation-17",
+      "provision": "section-1-4"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2000/23/section/81/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/2000/23:section-81",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/asc/2024/4/section/14/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "asc/2024/4:section-14",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/1997/50/section/94/data.xml",
+      "ok": true,
+      "reason": "Act named in the live provision text",
+      "source": "ukpga/1997/50:section-94",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2003/41/section/101/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/2003/41:section-101",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2002/21/section/52/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/2002/21:section-52",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2021/12/schedule/8/paragraph/12/data.xml",
+      "ok": true,
+      "reason": "Act named in the live provision text",
+      "source": "ukpga/2021/12:schedule-8-paragraph-12",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ssi/2025/3/regulation/12/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ssi/2025/3:regulation-12",
+      "provision": "section-1-4"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/1999/2/section/24/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/1999/2:section-24",
+      "provision": "part-1"
+    },
+    {
+      "url": "https://www.legislation.gov.uk/ukpga/2006/32/section/52/data.xml",
+      "ok": true,
+      "reason": "target URI present in the live provision",
+      "source": "ukpga/2006/32:section-52",
+      "provision": "part-1"
+    }
+  ]
+}
