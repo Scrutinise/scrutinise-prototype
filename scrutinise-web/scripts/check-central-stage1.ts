@@ -47,6 +47,7 @@ import {
   listJoinRequests,
   lookupInviteCandidates,
   removeMember,
+  seedQuestionTags,
   setMemberRole,
   CommunityRuleError,
 } from '@/lib/community'
@@ -77,7 +78,10 @@ import {
   decideEditSuggestion,
   findNearMatches,
   getAcrossBranches,
+  getOrphanedTopicTags,
   getRankedAnswers,
+  getTopicUsage,
+  getUntaggedQuestions,
   getTags,
   listQuestions,
   setAnswerFlag,
@@ -251,19 +255,50 @@ async function partA() {
   check('the phone-sharing switch is a row Charlie can flip, not a constant in the code',
     (await prisma.pointsConfig.findUnique({ where: { key: 'TRAINING_PHONE_SHARING' } })) !== null)
 
-  // The §B promotion update, asserted per node rather than in aggregate — the
-  // tag set is seeded per Community node, so "promoted" being right at the root
-  // says nothing about what a member standing at a branch sees.
-  const nodeCount = await prisma.community.count()
-  const promoted = ['Party conduct', 'Media skills', 'Economy', 'Social issues', 'Law & rights']
-  for (const label of promoted) {
-    eq(`"${label}" is promoted on every Community node`,
-      await prisma.questionTag.count({ where: { kind: 'TOPIC', label, promoted: true } }), nodeCount)
+  // ── the topic taxonomy (Charlie, 26 Aug 2026) ──────────────────────────────
+  //
+  // ⚠ TAGS LIVE ON THE ROOT ONLY. Per-node copies drift apart and break
+  // filtering across branches, and they were never read anyway — every read
+  // resolves the root id first. So these are asserted per ROOT, not per node.
+  const roots = await prisma.community.findMany({
+    where: { parentCommunityId: null },
+    select: { id: true, name: true },
+  })
+  const branches = await prisma.community.count({ where: { parentCommunityId: { not: null } } })
+
+  eq('the taxonomy is 22 topics: 19 subjects and 3 about doing the job',
+    [
+      DEFAULT_QUESTION_TAGS.filter((t) => t.kind === 'TOPIC').length,
+      DEFAULT_QUESTION_TAGS.filter((t) => t.kind === 'TOPIC' && t.promoted).length,
+      DEFAULT_QUESTION_TAGS.filter((t) => t.kind === 'TOPIC' && !t.promoted).length,
+    ],
+    [22, 19, 3])
+  check('…and there is no "Other" — the topic field is optional instead',
+    !DEFAULT_QUESTION_TAGS.some((t) => /^other$/i.test(t.label)))
+  check('…no ministerial department survived the taxonomy change',
+    !DEFAULT_QUESTION_TAGS.some((t) => /^(Department|Ministry|Office of|HM Treasury|Home Office|Cabinet Office)/.test(t.label)))
+
+  for (const root of roots) {
+    eq(`"${root.name}" carries all 22 topics`,
+      await prisma.questionTag.count({ where: { communityId: root.id, kind: 'TOPIC' } }), 22)
+    eq('…and its 8 contexts',
+      await prisma.questionTag.count({ where: { communityId: root.id, kind: { startsWith: 'CONTEXT' } } }), 8)
   }
-  eq('Housing is promoted nowhere — it has no questions',
-    await prisma.questionTag.count({ where: { kind: 'TOPIC', label: 'Housing', promoted: true } }), 0)
-  eq('…while the row itself survives, so it is still in the dropdown',
-    await prisma.questionTag.count({ where: { kind: 'TOPIC', label: 'Housing' } }), nodeCount)
+  eq('no branch holds a tag row of its own — they inherit the root\'s',
+    await prisma.questionTag.count({ where: { community: { parentCommunityId: { not: null } } } }), 0)
+  check(`…across ${branches} branch(es), so that is a real absence and not an empty tree`, branches > 0)
+
+  // ⚠ A QUESTION CARRYING A TOPIC THE TAG SET NO LONGER HAS. `topicTags` is a
+  // string array, not a foreign key, so a rename or a deletion strands the
+  // questions using it — they keep a label that matches no filter, and nothing
+  // complains. The 26 Aug change renamed four labels across live questions for
+  // exactly this reason.
+  for (const root of roots) {
+    const orphaned = await getOrphanedTopicTags(root.id)
+    check(`no question in "${root.name}" carries a topic the list no longer has`,
+      orphaned.length === 0,
+      orphaned.map((o) => `${o.label} (${o.questionCount})`).join(', '))
+  }
 
   // ⚠ EVERY node, including ones created after the migrations ran (26 Aug 2026).
   // Tags only ever came from a migration, so a Community created afterwards had
@@ -272,21 +307,16 @@ async function partA() {
   // "is not a context in this Community". Creation seeds them now
   // (`seedQuestionTags`); this is what notices if that ever stops happening.
   const bare: string[] = []
-  for (const c of await prisma.community.findMany({ select: { id: true, name: true } })) {
+  for (const c of roots) {
     const contexts = await prisma.questionTag.count({
       where: { communityId: c.id, kind: { startsWith: 'CONTEXT' } },
     })
     if (contexts === 0) bare.push(c.name)
   }
-  check('every Community has a context tag set — without one it can accept no upload at all',
+  check('every Community root has a context tag set — without one it can accept no upload at all',
     bare.length === 0, bare.join(', '))
-  check('…and the starter set the code seeds is the set the live Communities actually have',
-    DEFAULT_QUESTION_TAGS.length === 43, `${DEFAULT_QUESTION_TAGS.length} tags`)
-
-  const partyConduct = await prisma.question.count({ where: { topicTags: { has: 'Party conduct' } } })
-  const housing = await prisma.question.count({ where: { topicTags: { has: 'Housing' } } })
-  check(`"Party conduct" has questions to show (${partyConduct}) and Housing has none (${housing})`,
-    partyConduct > 0 && housing === 0, `Party conduct ${partyConduct}, Housing ${housing}`)
+  eq('…and the starter set the code seeds is 8 contexts + 22 topics',
+    DEFAULT_QUESTION_TAGS.length, 30)
 
   // The chip row is contexts only. Grepped rather than reasoned about, because
   // the regression this prevents is one line of JSX coming back.
@@ -1266,6 +1296,69 @@ async function partE() {
     })
     const tags = await getTags(root.id)
     eq('context tags split into the two sides', [tags.contextExternal.length, tags.contextInternal.length], [1, 1])
+
+    // ── the admin topic view, on a Community whose data we control ───────────
+    //
+    // ⚠ THIS IS WHY THERE IS NO "OTHER" TOPIC. The topic field is optional, and
+    // the Untagged list is the evidence base for adding one — so a question with
+    // no topic must land there rather than vanishing into a catch-all.
+    const untaggedQ = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: alice.id, branchId: branchA.id,
+        text: `zz untagged question ${stamp}?`, scope: 'COMMUNITY',
+        contextTags: ['Doorstep'], topicTags: [],
+      },
+    })
+    questionIds.push(untaggedQ.id)
+
+    const taggedQ = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: alice.id, branchId: branchA.id,
+        text: `zz tagged question ${stamp}?`, scope: 'COMMUNITY',
+        contextTags: ['Doorstep'], topicTags: ['Housing'],
+      },
+    })
+    questionIds.push(taggedQ.id)
+
+    check('a question can be created with NO topic at all — the field is optional',
+      (await prisma.question.findUniqueOrThrow({ where: { id: untaggedQ.id } })).topicTags.length === 0)
+
+    // ⚠ CALLED, NOT JUST OBSERVED. Asserting "no branch holds a tag row" against
+    // live data cannot fail when nothing in the run seeds a branch — a planted
+    // regression that put per-node seeding back sailed straight through it. So
+    // the function is invoked on a branch here and its refusal is the assertion.
+    const branchSeeded = await seedQuestionTags(branchA.id)
+    eq('seedQuestionTags refuses a branch — the tag set lives on the root', branchSeeded, 0)
+    eq('…and the branch still holds no tag rows afterwards',
+      await prisma.questionTag.count({ where: { communityId: branchA.id } }), 0)
+    check('…while the same call on the root does seed it',
+      (await prisma.questionTag.count({ where: { communityId: root.id } })) > 0)
+
+    const untagged = await getUntaggedQuestions(root.id)
+    check('…and it appears in the admin Untagged view',
+      untagged.some((q) => q.id === untaggedQ.id))
+    check('…while a question that HAS a topic does not',
+      !untagged.some((q) => q.id === taggedQ.id))
+
+    const usage = await getTopicUsage(root.id)
+    eq('the admin topic view counts questions per topic, so adding one is a data decision',
+      usage.find((t) => t.label === 'Housing')?.questionCount, 1)
+    check('…and lists topics carrying nothing, which is the argument for removing one',
+      usage.every((t) => typeof t.questionCount === 'number'))
+
+    // The orphan detector: a topic renamed out from under a question strands it,
+    // because topicTags is a string array and not a foreign key.
+    await prisma.question.update({
+      where: { id: taggedQ.id },
+      data: { topicTags: ['zz-vanished-topic'] },
+    })
+    const orphans = await getOrphanedTopicTags(root.id)
+    check('a question carrying a topic the tag set does not have is REPORTED, not silently unfindable',
+      orphans.some((o) => o.label === 'zz-vanished-topic' && o.questionCount === 1),
+      JSON.stringify(orphans))
+    await prisma.question.update({ where: { id: taggedQ.id }, data: { topicTags: ['Housing'] } })
+    eq('…and it reports nothing once the question is put back',
+      (await getOrphanedTopicTags(root.id)).length, 0)
 
     // ── question votes: up only, self-vote allowed ──────────────────────────
     const q1 = await prisma.question.create({
