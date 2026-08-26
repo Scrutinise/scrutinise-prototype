@@ -336,6 +336,9 @@ export default function CommunityDashboardClient({
                     </div>
                   </div>
                 </details>
+                <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                  <Link href={`/communities/${community.id}/deleted`}>Deleted items</Link>
+                </Button>
                 {isCommunityAdmin && (
                   <>
                     <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
