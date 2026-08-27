@@ -147,7 +147,7 @@ export default function DashboardClient({
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Ideas list */}
         <div className="lg:col-span-2">
-          <h2 className="mb-4 text-base font-semibold">Your ideas</h2>
+          <h2 className="mb-4 text-base font-semibold">My ideas</h2>
           {ideas.length === 0 ? (
             <div className="rounded-lg border border-border p-8 text-center">
               <p className="text-sm text-muted-foreground">
@@ -200,7 +200,7 @@ export default function DashboardClient({
           {/* My Communities and teams */}
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold">My Communities and teams</h2>
+              <h2 className="text-base font-semibold">My communities and teams</h2>
               <Link href="/communities" className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
                 View all
               </Link>

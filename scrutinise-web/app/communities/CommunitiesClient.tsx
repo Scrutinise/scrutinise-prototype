@@ -51,7 +51,7 @@ export default function CommunitiesClient({ communities }: { communities: Commun
         <div>
           {/* The module is Central; the things inside it are Communities. */}
           <h1 className="text-2xl font-semibold tracking-tight">Central</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your Communities and branches.</p>
+          <p className="mt-1 text-sm text-muted-foreground">My communities and branches.</p>
         </div>
         <div className="flex items-center gap-2">
           <form onSubmit={handleJoin} className="flex items-center gap-2">

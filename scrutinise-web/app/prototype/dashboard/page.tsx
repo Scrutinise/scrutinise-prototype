@@ -87,7 +87,7 @@ export default function DashboardPage() {
 
       {/* My Ideas */}
       <div>
-        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Your Ideas</h2>
+        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">My ideas</h2>
         {myIdeas.length === 0 ? (
           <div className="bg-card border border-border rounded-lg p-6 text-center">
             <p className="text-muted-foreground text-sm mb-4">You haven't created any ideas yet.</p>

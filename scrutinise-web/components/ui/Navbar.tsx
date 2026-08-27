@@ -4,7 +4,15 @@ import Link from 'next/link';
 
 const links = [
   // 25-F §9 — creation entry; the door behind /ideas/new is a PlatformConfig row.
-  { label: 'Create', href: '/ideas/new' },
+  //
+  // ⚠ 25-J §2 — "MY IDEAS", NOT "CREATE". The page behind this is no longer a form to fill
+  // once; it is where a user lives. A nav item named for an action sends someone who wants
+  // to find yesterday's work looking somewhere else.
+  //
+  // ⚠ AND THIS IS THE NAV LABEL, NOT THE STAGE. `STAGE_1` is still called Create
+  // (Create/Draft/Develop/Campaign/Legislate — docs/CLAUDE.md §4, "use exactly, never
+  // substitute"). Renaming the stage would break the vocabulary the whole product shares.
+  { label: 'My ideas', href: '/ideas/new' },
   { label: 'Browse', href: '/prototype/browse' },
   { label: 'Training', href: '/training' },
   { label: 'About', href: '/about' },

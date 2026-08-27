@@ -119,11 +119,11 @@ export default async function BrowseIdeasPage({ searchParams }: Props) {
           Policy ideas developed by citizens and reviewed by the Scrutinise community.
         </p>
 
-        {/* Your Ideas section — authenticated only */}
+        {/* My ideas section — authenticated only */}
         {myIdeas.length > 0 && (
           <section className="mt-10">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your Ideas</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">My ideas</h2>
               <Link href="/dashboard" className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline">
                 View all →
               </Link>

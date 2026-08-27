@@ -249,7 +249,7 @@ export default function TrainingExchange({
       {/* ── my matches — where contact details live, and nowhere else ─────── */}
       {data.matches.length > 0 && (
         <section>
-          <h3 className="mb-2 text-sm font-semibold">Your matches</h3>
+          <h3 className="mb-2 text-sm font-semibold">My matches</h3>
           <div className="flex flex-col gap-2.5">
             {data.matches.map((m) => (
               <MatchCard
@@ -269,7 +269,7 @@ export default function TrainingExchange({
 
       {/* ── my listings ───────────────────────────────────────────────────── */}
       <section>
-        <h3 className="mb-2 text-sm font-semibold">Your listings</h3>
+        <h3 className="mb-2 text-sm font-semibold">My listings</h3>
         {data.mine.length === 0 ? (
           <p className="central-card p-5 text-[13px] text-muted-foreground">
             You haven’t posted an offer or a request yet.
@@ -809,7 +809,7 @@ function MatchCard({
 
       {/* Stage 2e — the proposal link lives on BOTH panels. A “waiting on you”
           chip with no control was a dead end: the only way to act on a proposal
-          was to find the same listing again under Your listings. */}
+          was to find the same listing again under My listings. */}
       {match.role === 'author' && (
         <button
           type="button"
