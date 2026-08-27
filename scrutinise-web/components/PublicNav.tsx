@@ -1,11 +1,109 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUser, useClerk } from '@clerk/nextjs'
+
+/**
+ * CENTRAL Stage 2i item 1 — the avatar menu.
+ *
+ * ⚠ THERE WAS NO AVATAR MENU. The avatar was a bare `<Link href="/dashboard">`,
+ * so `/settings` — which holds the phone number, the experience level and, as of
+ * 2h, the platform accent — was reachable from exactly ONE place in the whole
+ * app: an inline sentence inside the Training exchange, shown only when you have
+ * no phone number saved. The page had existed for sprints; nothing pointed at it.
+ * That is why Charlie could not find the accent picker, and it was never going to
+ * be found by looking harder.
+ */
+function AccountMenu({
+  user,
+  onSignOut,
+}: {
+  user: NonNullable<ReturnType<typeof useUser>['user']>
+  onSignOut: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on an outside click and on Escape — a menu that only closes by
+  // re-clicking the trigger traps the pointer on touch.
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Your account"
+        className="flex items-center gap-1 rounded-full transition-opacity hover:opacity-80"
+      >
+        <Avatar user={user} />
+        <span aria-hidden className="text-[10px] text-muted-foreground">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-background shadow-lg"
+        >
+          <p className="truncate border-b border-border px-3 py-2 text-xs text-muted-foreground">
+            {user.fullName ?? user.primaryEmailAddress?.emailAddress ?? 'Signed in'}
+          </p>
+          <Link
+            href="/dashboard"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm hover:bg-muted"
+          >
+            Your dashboard
+          </Link>
+          <Link
+            href="/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm hover:bg-muted"
+          >
+            Account settings
+            {/* Named so somebody looking for the accent picker has a reason to
+                click, rather than having to guess that "settings" includes it. */}
+            <span className="block text-[11px] text-muted-foreground">
+              Platform accent, phone, your data
+            </span>
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false)
+              onSignOut()
+            }}
+            className="block w-full border-t border-border px-3 py-2 text-left text-sm hover:bg-muted"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function Avatar({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
   const initials =
@@ -112,14 +210,7 @@ export default function PublicNav() {
           )}
 
           {isLoaded && isSignedIn && user && (
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" title="Your dashboard">
-                <Avatar user={user} />
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                Sign out
-              </Button>
-            </div>
+            <AccountMenu user={user} onSignOut={handleSignOut} />
           )}
         </div>
 
@@ -206,7 +297,17 @@ export default function PublicNav() {
             )}
 
             {isLoaded && isSignedIn && user && (
-              <div className="flex items-center gap-3 pt-1">
+              <div className="flex flex-col gap-3 pt-1">
+                {/* No dropdown inside a drawer — the items are already a list, so
+                    Account settings is a peer link rather than a nested menu. */}
+                <Link
+                  href="/settings"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Account settings
+                </Link>
+                <div className="flex items-center gap-3">
                 <Link href="/dashboard" title="Your dashboard" onClick={() => setMobileMenuOpen(false)}>
                   <Avatar user={user} />
                 </Link>
@@ -221,6 +322,7 @@ export default function PublicNav() {
                 >
                   Sign out
                 </Button>
+                </div>
               </div>
             )}
           </div>

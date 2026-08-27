@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import FilePicker from '@/components/central/FilePicker'
 
 /**
  * CENTRAL Stage 2d — bulk question upload.
@@ -114,42 +115,23 @@ export default function BulkUpload({
         still show your name against them.
       </p>
 
-      {/* Stage 2e — the file picker is a real button. The browser default is a
-          grey “Choose File” that reads as disabled next to the primary actions
-          around it, so the input is hidden and the Button drives it. */}
-      <div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-          onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null)
-            setPlan(null)
-            setWritten(null)
-            setError(null)
-          }}
-          className="sr-only"
-          id="bulk-upload-file"
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={() => fileRef.current?.click()}>
-            Choose File
-          </Button>
-          <Button size="sm" variant="outline" disabled={!file || busy} onClick={() => send('preview')}>
-            {busy && !plan ? 'Checking…' : 'Check this file'}
-          </Button>
-        </div>
-        {file && (
-          <p className="mt-2 text-[12.5px]">
-            <span className="text-muted-foreground">File selected</span>
-            <br />
-            <span className="font-medium">{file.name}</span>
-            <span className="tabular ml-2 text-muted-foreground">
-              {(file.size / 1024).toFixed(0)} KB
-            </span>
-          </p>
-        )}
-      </div>
+      {/* Stage 2i — now the shared FilePicker. This markup was written for 2e and
+          the resource form, two sprints later, did not inherit it. */}
+      <FilePicker
+        id="bulk-upload-file"
+        accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+        file={file}
+        onSelect={(f) => {
+          setFile(f)
+          setPlan(null)
+          setWritten(null)
+          setError(null)
+        }}
+      >
+        <Button size="sm" variant="outline" disabled={!file || busy} onClick={() => send('preview')}>
+          {busy && !plan ? 'Checking…' : 'Check this file'}
+        </Button>
+      </FilePicker>
 
       {error && <p className="text-[13px] text-red-600">{error}</p>}
 

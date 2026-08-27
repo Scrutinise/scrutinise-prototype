@@ -327,6 +327,26 @@ export default function CommunityDashboardClient({
                 />
                 <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
                 <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
+                {/* ⚠ STAGE 2i ITEM 1. This was an outline button at the BOTTOM of
+                    the panel, fourth in a stack of four identical ones below the
+                    cards — and Charlie could not find it. The controls people
+                    actually look for (Requests, Members, Invite) are cards; a
+                    settings link that is not one reads as a footnote to them.
+                    It is now a peer of the three, in their idiom and among them. */}
+                {isCommunityAdmin && (
+                  <Link
+                    href={`/communities/${community.id}/settings`}
+                    className="central-card central-card-hover flex items-center justify-between p-4 transition-colors"
+                  >
+                    <span>
+                      <span className="block text-sm font-medium">Community settings</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Organisation name and colour, and who may approve content
+                      </span>
+                    </span>
+                    <span aria-hidden className="text-muted-foreground">→</span>
+                  </Link>
+                )}
                 <details className="central-card p-4">
                   <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
                   <div className="mt-3 space-y-3">
@@ -356,12 +376,6 @@ export default function CommunityDashboardClient({
                     </Button>
                     <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
                       <Link href={`/communities/${community.id}/topics`}>Topics</Link>
-                    </Button>
-                    {/* Item 12. Root-only — the page redirects a branch id up to
-                        its root rather than 404ing, so this link is safe from a
-                        branch too. */}
-                    <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
-                      <Link href={`/communities/${community.id}/settings`}>Community settings</Link>
                     </Button>
                   </>
                 )}

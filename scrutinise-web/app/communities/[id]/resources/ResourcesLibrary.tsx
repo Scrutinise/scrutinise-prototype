@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import FilePicker from '@/components/central/FilePicker'
 import { AiLabel, isAiAnswer } from '@/components/central/AnswerByline'
 import ApprovalFrame, {
   ApprovalCheckbox,
@@ -614,12 +615,23 @@ function AddResource({ communityId, onDone }: { communityId: string; onDone: () 
   const [externalUrl, setExternalUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [rights, setRights] = useState(false)
+  const [rightsError, setRightsError] = useState(false)
+  const rightsRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const linkOnly = LINK_ONLY.has(type)
 
   async function submit() {
+    // ⚠ THE GATE RUNS BEFORE THE UPLOAD. It used to run on the server, after
+    // the file had already been written to R2 — so a refused submission left an
+    // orphaned object in the bucket, and the only thing the user saw was an
+    // error beside a button. Refusing here costs nothing and stores nothing.
+    if (!rights) {
+      setRightsError(true)
+      rightsRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      return
+    }
     setBusy(true)
     setError(null)
 
@@ -729,16 +741,17 @@ function AddResource({ communityId, onDone }: { communityId: string; onDone: () 
         </div>
       ) : (
         <div>
-          <input
-            type="file"
+          {/* Stage 2i item 3 — the SHARED picker. This was a bare
+              `input type=file`, so the browser drew "Choose File" and the
+              filename as one run-on line. */}
+          <FilePicker
+            id="resource-file"
             accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm"
+            file={file}
+            onSelect={setFile}
+            hint="Images and PDFs only, up to 10 MB. Programs and archives are never accepted."
           />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Images and PDFs only, up to 10 MB. Programs and archives are never accepted.
-            Or paste a link instead:
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Or paste a link instead:</p>
           <Input
             value={externalUrl}
             onChange={(e) => setExternalUrl(e.target.value)}
@@ -749,27 +762,52 @@ function AddResource({ communityId, onDone }: { communityId: string; onDone: () 
       )}
 
       {/* ⚠ A HARD GATE, recorded against the row — not a nudge. Without it the
-          platform is hosting other people's material on nobody's word. */}
-      <label className="flex cursor-pointer items-start gap-2 text-[13px]">
-        <input
-          type="checkbox"
-          checked={rights}
-          onChange={(e) => setRights(e.target.checked)}
-          className="mt-0.5 size-4 rounded border-border"
-        />
-        <span className="pretty">
-          I have the right to share this material — I made it, it is licensed for this use, or the
-          rights holder has agreed.
-        </span>
-      </label>
+          platform is hosting other people's material on nobody's word.
+          ⚠ STAGE 2i ITEM 2: the refusal used to be grey text BESIDE THE BUTTON
+          ("Confirm the rights box to continue"), thirty pixels from the control
+          it was talking about. Charlie read the whole thing as a dead button.
+          The message now appears AT the checkbox, in the error colour, worded as
+          an instruction — and the row is outlined so the eye lands on it. */}
+      <div
+        ref={rightsRef}
+        className={`rounded-lg p-2 transition-colors ${
+          rightsError ? 'border-2 border-destructive bg-destructive/[0.05]' : 'border-2 border-transparent'
+        }`}
+      >
+        <label className="flex cursor-pointer items-start gap-2 text-[13px]">
+          <input
+            type="checkbox"
+            checked={rights}
+            onChange={(e) => {
+              setRights(e.target.checked)
+              if (e.target.checked) setRightsError(false)
+            }}
+            aria-invalid={rightsError}
+            aria-describedby={rightsError ? 'rights-error' : undefined}
+            className={`mt-0.5 size-4 rounded ${rightsError ? 'border-destructive' : 'border-border'}`}
+          />
+          <span className="pretty">
+            I have the right to share this material — I made it, it is licensed for this use, or the
+            rights holder has agreed.
+          </span>
+        </label>
+        {rightsError && (
+          <p id="rights-error" className="mt-1.5 pl-6 text-[13px] font-medium text-destructive pretty">
+            {/* An instruction, not an aside: it says what to do, not what is wrong. */}
+            Tick this box to confirm you have the right to share this file.
+          </p>
+        )}
+      </div>
 
       {error && <p className="text-xs text-red-600 pretty">{error}</p>}
 
       <div className="flex items-center gap-2">
+        {/* ⚠ NOT `disabled={!rights}`. A disabled button cannot be clicked, so it
+            cannot explain itself — which is the state Charlie hit. It stays live,
+            and the click is what surfaces the reason. */}
         <Button size="sm" disabled={busy} onClick={submit}>
           {busy ? 'Adding…' : 'Add resource'}
         </Button>
-        {!rights && <span className="text-xs text-muted-foreground">Confirm the rights box to continue.</span>}
       </div>
     </div>
   )

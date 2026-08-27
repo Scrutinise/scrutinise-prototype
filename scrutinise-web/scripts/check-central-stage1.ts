@@ -3863,6 +3863,111 @@ async function partL() {
     !/type="color"/.test(settingsSrc))
 }
 
+async function partM() {
+  console.log('\nM. Stage 2i — discoverability, the rights gate and the file picker')
+
+  const read = (f: string) =>
+    readFileSync(resolvePath(process.cwd(), f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+
+  // ── item 1: both settings screens are reachable ─────────────────────────
+  console.log('\n  Item 1 — reachability')
+
+  // ⚠ A ROUTE THAT EXISTS IS NOT A ROUTE ANYONE CAN FIND. `/settings` had
+  // existed for sprints and was linked from exactly ONE place in the app: an
+  // inline sentence in the Training exchange, shown only when the viewer had no
+  // phone number saved. Nothing in this file asserted a path to it, so nothing
+  // failed. Count the LINKS, not the pages.
+  const dash = read('app/communities/[id]/CommunityDashboardClient.tsx')
+  check('the Teams tab links to Community settings',
+    dash.includes('/settings`}'), 'CommunityDashboardClient.tsx')
+  check('…as a card in the management panel, not a button below it',
+    /central-card[^`]*`}\s*>\s*<span>\s*<span className="block text-sm font-medium">Community settings/.test(
+      dash.replace(/\s+/g, ' ').replace(/ /g, ' '),
+    ) || dash.includes('Community settings</span>'),
+    'expected the settings entry to use the central-card idiom')
+  check('…and only for Community admins',
+    /isCommunityAdmin && \(\s*<Link\s+href=\{`\/communities\/\$\{community\.id\}\/settings`\}/.test(dash),
+    'the settings link must be inside an isCommunityAdmin guard')
+
+  const nav = read('components/PublicNav.tsx')
+  check('the nav offers an account menu behind the avatar',
+    nav.includes('AccountMenu') && nav.includes('aria-haspopup="menu"'), 'PublicNav.tsx')
+  // ⚠ SCOPED TO THE MENU BODY. `nav.includes('href="/settings"')` passed under a
+  // planted break that redirected the menu's link, because the MOBILE link still
+  // matched — a presence check over a whole file passes on any one occurrence,
+  // wherever it is. Only the paired count assertion caught it.
+  const menuBody = nav.slice(nav.indexOf('function AccountMenu'), nav.indexOf('function PublicNav'))
+  check('…which links to the account settings page from the menu itself',
+    menuBody.includes('href="/settings"'), 'PublicNav.tsx')
+  check('…and names what is behind it, so the accent picker is findable',
+    nav.includes('Platform accent'), 'PublicNav.tsx')
+  check('…on mobile too, where a dropdown is the wrong shape',
+    (nav.match(/href="\/settings"/g) ?? []).length >= 2, 'PublicNav.tsx')
+
+  // The pages themselves must exist at the routes reported to Charlie.
+  for (const f of ['app/communities/[id]/settings/page.tsx', 'app/settings/page.tsx']) {
+    check(`${f} exists`, existsSync(resolvePath(process.cwd(), f)), f)
+  }
+
+  // ── item 2: the rights gate is visible, at the checkbox ─────────────────
+  console.log('\n  Item 2 — the rights gate')
+
+  const res = read('app/communities/[id]/resources/ResourcesLibrary.tsx')
+  check('a refused submission sets a dedicated rights error, not a generic one',
+    res.includes('setRightsError(true)'), 'ResourcesLibrary.tsx')
+  check('…the message sits AT the checkbox, keyed to it for assistive tech',
+    res.includes("id=\"rights-error\"") && res.includes('aria-describedby'), 'ResourcesLibrary.tsx')
+  check('…in the error colour, not grey',
+    /rights-error[\s\S]{0,200}text-destructive/.test(res), 'ResourcesLibrary.tsx')
+  check('…and the row is outlined so the eye lands on it',
+    /rightsError \?[^\n]*border-destructive/.test(res), 'ResourcesLibrary.tsx')
+  check('…worded as an instruction rather than an aside',
+    res.includes('Tick this box to confirm'), 'ResourcesLibrary.tsx')
+  // ⚠ The old copy sat beside the BUTTON, which is what made the whole control
+  // read as dead. Its absence is the assertion.
+  check('the grey aside beside the button is gone',
+    !res.includes('Confirm the rights box to continue'), 'ResourcesLibrary.tsx')
+  // ⚠ A DISABLED BUTTON CANNOT EXPLAIN ITSELF. That was the reported symptom.
+  check('the submit button stays clickable so the click can surface the reason',
+    !/disabled=\{busy \|\| !rights\}/.test(res) && !/disabled=\{!rights\}/.test(res),
+    'ResourcesLibrary.tsx')
+  // ⚠ AND THE GATE RUNS BEFORE THE UPLOAD. It used to be enforced only on the
+  // server, AFTER the file had been written to R2 — so every refused submission
+  // left an orphaned object in the bucket.
+  const submitBody = res.slice(res.indexOf('async function submit()'), res.indexOf('resources/upload'))
+  check('the gate refuses before anything is uploaded to R2',
+    submitBody.includes('if (!rights)'), 'the rights check must precede the upload call')
+
+  // ── item 3: one file picker, used by both screens ───────────────────────
+  console.log('\n  Item 3 — the file picker')
+
+  const picker = read('components/central/FilePicker.tsx')
+  check('the shared picker hides the native control rather than restyling it',
+    picker.includes('sr-only'), 'FilePicker.tsx')
+  check('…drives it with a primary Button', picker.includes('<Button'), 'FilePicker.tsx')
+  check('…and puts the filename on its OWN line under a label',
+    picker.includes('File selected') && picker.includes('<br />'), 'FilePicker.tsx')
+
+  // ⚠ THE POINT OF THE COMPONENT. Stage 2e specified this treatment and the
+  // bulk-upload screen got it; the resource form, written two sprints later,
+  // did not inherit it and shipped with a bare native input. Asserting that BOTH
+  // use the shared component is what stops the next screen diverging too.
+  for (const [label, file] of [
+    ['the bulk upload', 'app/communities/[id]/questions/BulkUpload.tsx'],
+    ['the resource form', 'app/communities/[id]/resources/ResourcesLibrary.tsx'],
+  ] as const) {
+    const src = read(file)
+    // ⚠ A WORD BOUNDARY. `includes('<FilePicker')` matched `<FilePickerX` under a
+    // planted break — a substring check on a component name passes for every
+    // component whose name starts with it.
+    check(`${label} uses the shared FilePicker`, /<FilePicker[\s>]/.test(src), file)
+    check(`…and has no raw file input of its own`,
+      !/type="file"/.test(src), file)
+  }
+}
+
 /** Flatten a tree node to its ids, for the "is it still in the tree" checks. */
 function treeIds(node: { id: string; children: { id: string; children: unknown[] }[] }): string[] {
   const out = [node.id]
@@ -3887,6 +3992,7 @@ async function main() {
   await partJ()
   await partK()
   await partL()
+  await partM()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()
