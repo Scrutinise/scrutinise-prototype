@@ -32,7 +32,22 @@ interface VecHit {
 }
 
 const VECTOR_URL = process.env.VECTOR_SEARCH_URL
-const VECTOR_TIMEOUT_MS = parseInt(process.env.VECTOR_TIMEOUT_MS ?? '25000', 10)
+
+/**
+ * ⚠⚠ A COLD-START ALLOWANCE, NOT A LATENCY TARGET. See `FTS_COLD_START_MS` for the full
+ * reasoning; the same rule applies here and the measurement is worse.
+ *
+ * Restart → first SERVED QUERY on `vector-serve` was **13.5 s** (27 Aug 2026), and
+ * `/health` answered at **6.7 s** — a **6.8 second gap** in which the container is up, the
+ * health check is green, and a search still fails. Nearly half the wait happens after the
+ * thing most people would have measured. Sizing from `/health` would have set this budget
+ * at half what it needs to be.
+ *
+ * 75 s is ~5.5× the measured figure, because a restart is a proxy for a wake and a wake
+ * schedules a container from cold.
+ */
+export const VECTOR_COLD_START_MS = 75_000
+const VECTOR_TIMEOUT_MS = parseInt(process.env.VECTOR_TIMEOUT_MS ?? String(VECTOR_COLD_START_MS), 10)
 
 /** Server-side stream scope — the dense twin of fts-search.ts's FtsScope. */
 export interface VectorScope { tier?: string; corpora?: string[]; excludeCorpora?: string[] }

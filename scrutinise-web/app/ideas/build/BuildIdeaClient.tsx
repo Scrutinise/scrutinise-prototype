@@ -32,6 +32,7 @@ import YourMaterial from '@/components/lex/YourMaterial'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import type { SurfaceContext } from '@/lib/lex/surfaces'
+import { WAIT_MESSAGE } from '@/lib/lex/search-wait'
 
 // ══ 25-G §3 — WHAT THE NEW DOOR LOST, RESTORED ═══════════════════════════════
 //
@@ -285,6 +286,47 @@ export default function BuildIdeaClient(
    * to the server with it.
    */
   const [editingStep, setEditingStep] = useState<string | null>(null)
+
+  /**
+   * ⚠ WARM THE SEARCH SERVICES ON INTENT — the ideas hub is one of exactly two callers.
+   *
+   * `fts-serve` and `vector-serve` sleep on inactivity to cut the standing cost, and a wake
+   * costs ~13 s. Firing it here means the wake overlaps with the user reading the first
+   * question and typing their answer, so by the time they press Send the services are up
+   * and nobody waits for anything.
+   *
+   * ⚠ ONCE PER MOUNT, NOT ON EVERY RENDER, and NOT in a layout. Warming on every page in
+   * the app would keep both services permanently awake and undo the entire saving.
+   */
+  const warmedRef = useRef(false)
+  /**
+   * ⚠ WHETHER A SERVICE WAS ACTUALLY ASLEEP WHEN WE ARRIVED — measured, not guessed.
+   *
+   * The warm probe reports `alreadyAwake` per service. That is real information about the
+   * system at this moment, and it is what lets the screen say "waking" honestly instead of
+   * inferring it from a slow response later (which would label every slow query a wake and
+   * make the message worthless on the day it mattered).
+   */
+  const [waking, setWaking] = useState(false)
+  useEffect(() => {
+    if (warmedRef.current) return
+    warmedRef.current = true
+    void fetch('/api/search/warm', { method: 'POST' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { results?: Array<{ alreadyAwake?: boolean }> } | null) => {
+        // Asleep on arrival → the wake is happening NOW, while they read the question.
+        if (j?.results?.some((x) => x.alreadyAwake === false)) {
+          setWaking(true)
+          // ⚠ CLEARED ON A TIMER, NOT ON A SECOND PROBE. Polling would cost another request
+          // per second for a message; the measured wake is ~13 s and the copy promises
+          // "about half a minute", so clearing at 30 s is the promise keeping itself.
+          setTimeout(() => setWaking(false), 30_000)
+        }
+      })
+      // Silent: this is a courtesy to a later request, and surfacing an error here would
+      // report a problem the user does not have.
+      .catch(() => {})
+  }, [])
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -843,6 +885,25 @@ export default function BuildIdeaClient(
             surface: it sits above the phase switch so it is present during the
             elicitation, during the build and after it. */}
         <SurfaceSwitch context={surface} />
+
+        {/* ⚠⚠ A WAKE IS NOT A SLOW SEARCH AND NOT A FAILURE, AND THIS SAYS WHICH.
+            The two search services sleep on inactivity to cut the standing cost; the first
+            request after a quiet period waits ~13 s (measured) for a container and an index.
+            Thirteen unexplained seconds read as "this is broken"; the same thirteen with a
+            sentence read as "this is starting up".
+
+            ⚠ IT IS SHOWN ONLY WHEN A SERVICE REALLY WAS ASLEEP — the warm probe reports it
+            per service. Inferring a wake from a slow response would label every heavy query
+            a wake, and the message would then mean nothing on the day it was true. */}
+        {waking && (
+          <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50/70 px-3 py-2">
+            <p className="text-sm text-sky-900">{WAIT_MESSAGE.waking}</p>
+            <p className="mt-0.5 text-[11px] text-sky-700">
+              Nothing is wrong — it sleeps when nobody is using it, which is what keeps it cheap
+              to run. Carry on writing; it will be ready before you are.
+            </p>
+          </div>
+        )}
 
         {booting || !elicit ? (
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>

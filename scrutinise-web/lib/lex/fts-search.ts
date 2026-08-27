@@ -49,11 +49,34 @@ interface FtsHit {
 }
 
 const FTS_URL = process.env.FTS_SEARCH_URL // e.g. https://fts-serve-production-xxxx.up.railway.app
-// 25s default: the FIRST query after a serve-service (re)deploy is cold — LanceDB
-// fetches the FTS index files from R2 on first touch (~15s observed), which blew the
-// old 8s budget and silently fell back to the stub. The service now self-warms at
-// boot (fts-query-service.ts) so this is belt-and-braces for the redeploy window.
-const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? '25000', 10)
+/**
+ * ⚠⚠ THIS BUDGET COVERS A COLD START, NOT A SLOW SEARCH. Do not "tune" it down as if it
+ * were a latency target — it is a wake-up allowance, and shrinking it breaks the first
+ * query after every doze rather than making anything faster.
+ *
+ * `fts-serve` now sleeps on inactivity to cut the standing cost, so the first request after
+ * a quiet period has to pay for a container being scheduled, the process booting, and
+ * LanceDB paging the FTS index in from R2.
+ *
+ * ⚠ SIZED FROM A MEASUREMENT, AND FROM THE RIGHT ONE. Restart → first SERVED QUERY was
+ * **12.1 s** (`scripts/ingest/ops/measure-cold-start.ts`, 27 Aug 2026). `/health` answered
+ * at 10.0 s — two seconds earlier — so a budget sized from the health probe would have been
+ * short by exactly the part that matters, and would have failed on the first user every
+ * time. On `vector-serve` that gap is 6.8 s. Measure the query, never the health check.
+ *
+ * The headroom is deliberate and large: a restart is a PROXY for a wake, and a wake has to
+ * schedule a container from cold, so it can be several times slower. 75 s is roughly 6× the
+ * measured figure.
+ *
+ * ⚠ THE COST OF THE HEADROOM IS PAID BY A GENUINELY DEAD SERVICE, which now takes 75 s to
+ * fail rather than 25 s. That is acceptable only because the user is TOLD they are waiting
+ * on a wake (`SearchWaitState` in `search-wait.ts`) instead of watching an unexplained
+ * spinner. If that message is ever removed, this number has to come back down.
+ *
+ * The route that runs searches allows `maxDuration = 300`, so this fits inside it.
+ */
+export const FTS_COLD_START_MS = 75_000
+const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? String(FTS_COLD_START_MS), 10)
 
 // ── citation/url derivation for legislation ──────────────────────────────────
 // §19-D Task 5: this moved to lib/lex/legislation-url.ts, shared with

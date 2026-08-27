@@ -133,6 +133,22 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   )
   const bootedRef = useRef(false)
 
+  /**
+   * ⚠ THE SECOND (AND LAST) WARM-ON-INTENT CALLER. See `/api/search/warm`.
+   *
+   * The proposal surface searches — the legislation panel and every field-level
+   * interrogation go through the same two services — so arriving here predicts a search
+   * just as the hub does. Two callers, both chosen because they precede a search; nothing
+   * in a layout, because warming on every navigation would keep both services awake and
+   * remove the saving.
+   */
+  const warmedRef = useRef(false)
+  useEffect(() => {
+    if (warmedRef.current) return
+    warmedRef.current = true
+    void fetch('/api/search/warm', { method: 'POST' }).catch(() => {})
+  }, [])
+
   // ── Boot: ensure an idea exists, then load canonical state ─────────────────
   useEffect(() => {
     if (bootedRef.current) return
