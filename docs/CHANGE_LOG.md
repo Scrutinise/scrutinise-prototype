@@ -503,6 +503,117 @@ drop mid-run left orphaned `zz-check-*` fixtures that the next run reported as f
 
 ---
 
+## SEARCH S16 — WHY HALF THE QUESTIONS FIND NOTHING, AND WHY PART OF THAT IS THE RULER (2026-08-27 14:23 UTC)
+
+Executes `docs/BRIEF_SEARCH_S16.md`. Report: `docs/SEARCH_S16_REPORT.md`. Artefacts:
+`docs/census/s16-autopsy.json`, `s16-routerv2-arms.json`, `s16-routerv2-routes.json`.
+
+**§2 — THE AUTOPSY IS THE SPRINT: 32 failing questions, one row each, classified by probing.**
+ABSENT **1** · UNREACHABLE **4** · NOT-ROUTED **4** · RANKING **4** · NOT-MATCHED **19**, with
+**12 of 32** carrying a unit modifier (key ≥ 1,500 words, scored whole). The classifier **refuses to
+run against a degraded artefact** — S14's numbers were read for a fortnight as though dense
+retrieval were live while its own file said `streams=NONE … DEGRADED(1)`.
+⚠ Tier is read from the INDEX, not derived from the corpus name, because `stream-scopes.ts` says
+the tier that matters is the one baked in at build time; reachability is recomputed from the LIVE
+scopes so a scope change is reflected rather than inherited.
+
+⚠⚠ **AND THE FINDING THAT CHANGES WHAT "RETRIEVAL FINDS NOTHING" MEANS. Probing committees'
+failures individually, the documents are INDEXED AND RETRIEVABLE — each key's own title returns it
+at rank 1, 1, 2 and 4. The answer keys are not what the questions ask for.** 10 of committees'
+19 keys are `Correspondence:` ministerial letters (against **0 of 19** in every other collection)
+while the questions ask what a *committee* said; 3 more are ONE written-evidence submission out of
+an inquiry holding many equally valid ones — **1 of 525**, 1 of 115, 1 of 54. **The control is
+exact: the only evidence-keyed committees question that IS found is drawn from the smallest class,
+1 of 26.** With a 20-wide window and 525 equally good documents, perfect retrieval scores wrong
+~96% of the time. ▶ **8 of 10 committees questions cannot be scored fairly as posed.**
+
+**§1 — `fts-serve` hardened, and one premise of the brief corrected.** ⚠ Its width is **16**, not
+the 4 the brief states — the code default is 4 and `FTS_MAX_CONCURRENT` is set on Railway, which is
+exactly why width must be read off `/stats`. The two real defects are fixed: cancellation of
+abandoned work, and a queue **bounded at 2× width** replacing an unbounded one whose `/stats`
+reported `maxQueue: null, rejections: null` — so a saturated service and a healthy one printed the
+same two nulls. ✅ Verified live on `build: S16-fts-cancel-bounded`: **`check-fts-shed` 9/9** (48
+fired at capacity → **0 shed**; 56 fired → **8 shed for 8 excess**, slowest refusal **468 ms**) and
+**`check-fts-cancel` 3/3** — 40 requests abandoned, **`served +16` (exactly the width) and
+`abandoned +24` (exactly the queue)**, recovery **6 s**, where before all 40 would have run.
+⚠ **The index question was asked and the answer is NO:** `corpus_fts` 18,272,377 indexed / **0**
+unindexed, `corpus_vec` and `corpus_chunks` likewise. `check-index-coverage.ts` states row counts
+rather than existence, and its `--self-test` adds a column measured to have no index and requires
+MISSING.
+
+**§3.2 — ✅ DENSE RETRIEVAL FOR `debates` REVERSES THE JUNE DECISION: 0/11 → 3/11 in-stream@20,
+3 gained, 0 lost**, ranks moved on 5 of 11, one answer going from not-found to **rank 2**. The June
+measurement asked *"does this find the right debate?"*, where keyword matching is near-unbeatable;
+asked *"does this find the right passage?"* dense finds three answers keyword search never returns.
+Both arms alternate in ONE process, so they share the same warm services and index.
+
+**§3.1 — ⚠ `LEX_ROUTER_STREAMS_V2` IS NOT RECOMMENDED, AND MY PREDICTION WAS WRONG IN DIRECTION.**
+Predicted in-stream@20 32 → 34–36; **measured 32 → 29**, and impact-assessments **4/9 → 2/9**.
+Given eight streams instead of five the router becomes MORE selective: **34 of 64 questions route to
+a single stream, against 20 before.** The dedicated stream works exactly as designed — S10-Q33 goes
+from unreachable to **rank 1** — but losing the general `legislation` leg costs Q31 (8 → 47) and
+Q36 (9 → not found). ⚠ **The comparison is confounded**: `--reroute` re-rolled the routes, and a
+re-route control with V2 OFF was not run. ⚠ It also **silently overwrote the shared route cache**
+S15's baseline was measured against — restored from git, V2 routes preserved separately.
+
+**§4 — the gold-set queries are CLEAN, and that is the finding.** 41 of 41 written, median 7
+tokens, **0 truncated, 0 carrying an orphan referent, 0 degenerate**. The `… those system pr`
+defect the brief cites is on the BUILD path and is handed to the Lex stream with this as contrast.
+⚠⚠ **The guard caught a fault in ITSELF first:** it counted stopwords and failed at 3+, but the real
+defect contains exactly ONE — so it could not catch the only example it exists for, while a
+threshold of 1 would have flagged every good query. **The discriminator is not the count but which
+word:** a written query carries grammatical function words and never an orphan referent. A second
+self-inflicted false alarm is recorded too — the debates arrival check looked for
+`scorer: 'fused'` when `fuseWeightedRrf` writes **`'rrf'`**, and cried wolf on 11 of 11 while three
+were gaining answers.
+
+**Handed on, with counts:** ingest **1** (a 10-word stub) plus the `other`-tier collections;
+argument stream **12** (long documents scored whole); Lex stream the build-side query; **gold set
+8 of 10 committees questions.** Six decisions in the report; **D-3 (re-key committees) is the
+highest-value item.**
+
+⚠ **Nothing was enabled in production.** Debates dense, V2 and the merge are all decisions, not
+changes. **45 of 64 questions still return nothing correct today. This is not a report about a
+fixed platform.**
+
+---
+
+## SEARCH S16 — PREDICTIONS FOR THE TWO CHEAP WINS, LOGGED BEFORE EITHER RESULT WAS READ (2026-08-27 14:06 UTC)
+
+Executes `docs/BRIEF_SEARCH_S16.md` §3. ⚠ The router-V2 run was already in flight when this was
+written and **its output is deliberately unread**; the debates run has not started. Stated rather
+than quietly dropped.
+
+**§3.1 — `LEX_ROUTER_STREAMS_V2` (built in S8, never enabled).**
+S16 §2's autopsy found **4 of 32 failures are NOT-ROUTED, all impact-assessments**, each admitted by
+the `legislation` stream but routed to debates/committees/guidance — and each covered by V2's
+dedicated `impact-assessments` stream. So:
+- **in-stream@20 rises from 32/64 to between 34 and 36.** It cannot exceed 36 — only 4 questions
+  are in the NOT-ROUTED class, and nothing else V2 adds is implicated by the autopsy.
+- ⚠ **A-round-robin does NOT rise proportionally, and may fall.** V2 adds three streams, so more
+  questions route 3+ streams and the round-robin's window share is `floor(20/S)` by construction.
+  **Predicted 17–21 against today's 19** — a wash, with the gain in retrieval and the loss in
+  display.
+- **impact-assessments in-stream goes 4/9 → 8/9 or 9/9**, and its *displayed* figure goes 0/9 to
+  something non-zero for the first time.
+
+**§3.2 — dense retrieval for debates (currently no dense leg, on a June measurement).**
+⚠ The June result found dense 15 points *worse* — but it asked *"does this find the right
+debate?"*, where keyword matching is near-unbeatable because a debate about e-scooters says
+"e-scooter" constantly. It has never been asked *"does this find the right argument?"*
+- **Predicted 1 to 4 of 11**, up from **0 of 11**. The reasoning cuts both ways and both halves are
+  stated: `corpus_vec` is **chunk-level** and `vectorSearchSections` collapses chunks to their
+  parent section, so dense retrieval matches at roughly paragraph scale — which is exactly the
+  remedy for the unit mismatch the autopsy flags on debates (median key length **2,634 words**,
+  8 of 11 failures carrying the unit modifier). Against that, the answer keys themselves are under
+  review (`GOLD_V2_DEBATES_REKEY.md`), so a key that is wrong stays wrong however well we retrieve.
+- ⚠ **If it comes back 0/11 again, that is NOT evidence dense retrieval fails on debates** — it is
+  evidence the question set cannot measure it, and the report must say which.
+
+**Both are scored in `docs/SEARCH_S16_REPORT.md` §3.**
+
+---
+
 ## SEARCH S15-CAPACITY — THE FOUR HYPOTHESES ANSWERED, AND THE FIRST REAL FOUR-STREAM BASELINE (2026-08-27 10:44 UTC)
 
 Executes `docs/BRIEF_SEARCH_S15_CAPACITY.md`, which supersedes the earlier S15 draft. §§2, 3, 5 and

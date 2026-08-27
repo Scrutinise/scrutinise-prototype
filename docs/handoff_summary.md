@@ -2,7 +2,42 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 10:44 UTC — ▼ **SEARCH S15-CAPACITY: THE BLOCK IS THE OBJECT STORE, AND THE PLATFORM HAS NEVER ONCE MEASURED ITSELF WITH DENSE RETRIEVAL ACTUALLY WORKING — UNTIL NOW.**
+*Last updated: 2026-08-27 14:23 UTC — ▼ **SEARCH S16: HALF THE QUESTIONS FIND NOTHING — AND FOR COMMITTEES THE RULER IS BROKEN, NOT THE RETRIEVER.**
+▶▶ **§2 IS THE SPRINT: all 32 failing questions classified one at a time, by probing.**
+ABSENT **1** · UNREACHABLE **4** · NOT-ROUTED **4** · RANKING **4** · NOT-MATCHED **19**, with
+**12 of 32** on long documents scored whole. Artefact `docs/census/s16-autopsy.json`; the classifier
+**refuses to run against a degraded arms file**, so S14's mistake cannot repeat.
+⚠⚠ **THE FINDING THAT CHANGES WHAT THE NUMBER MEANS: committees' documents ARE indexed and
+retrievable — each key's own title returns it at rank 1, 1, 2 and 4. The ANSWER KEYS are not what
+the questions ask for.** 10 of committees' 19 keys are `Correspondence:` ministerial letters
+(**0 of 19** in every other collection) while the questions ask what a *committee* said; 3 more are
+ONE evidence submission out of **525 · 115 · 54** equally valid ones. **Control: the only
+evidence-keyed committees question that IS found comes from the smallest class, 1 of 26.**
+▶ **8 of 10 committees questions cannot be scored fairly as posed. D-3 — re-key it, as debates is
+already being re-keyed. Highest-value item in the sprint.**
+▶ **§1 `fts-serve` HARDENED AND PROVEN LIVE** on `build: S16-fts-cancel-bounded`. ⚠ Its width is
+**16, not the 4 the brief states** (code default 4, env override on Railway — read `/stats`, never
+the file). `check-fts-shed` **9/9** (48 at capacity → **0 shed**; 56 → **8 for 8 excess**, slowest
+refusal **468 ms**), `check-fts-cancel` **3/3** — 40 abandoned, **served +16 (exactly the width),
+abandoned +24 (exactly the queue)**, recovery **6 s**. Its `/stats` reported `maxQueue: null,
+rejections: null` before, so a saturated service and a healthy one looked identical.
+⚠ **The index question was asked: `corpus_fts` 18,272,377 indexed / 0 unindexed.** Not S15's defect.
+▶▶ **§3.2 DENSE FOR `debates` REVERSES THE JUNE DECISION: 0/11 → 3/11, 3 gained 0 lost**, one answer
+not-found → **rank 2**. June asked "does this find the right debate?"; this asks "the right
+passage?". **D-1.**
+⚠ **§3.1 `LEX_ROUTER_STREAMS_V2` NOT RECOMMENDED, and my prediction was wrong in direction** —
+predicted 32 → 34-36, **measured 32 → 29**; impact-assessments **4/9 → 2/9**. With 8 streams the
+router gets MORE selective: **34 of 64 questions route to ONE stream, against 20.** The dedicated
+stream works (S10-Q33 unreachable → **rank 1**) and costs more than it gains. ⚠ Confounded by
+`--reroute`, which **also silently overwrote the shared route cache** — restored from git.
+▶ **§4 the gold queries are CLEAN: 41 of 41 written, median 7 tokens, 0 truncated.** The
+`… those system pr` defect is on the BUILD path → Lex stream. ⚠⚠ **Two of my own guards were caught
+being wrong by their own self-tests** — a stopword *threshold* that could not catch the one real
+example, and an arrival check looking for `'fused'` when fusion writes **`'rrf'`**.
+❌ **NOTHING WAS ENABLED IN PRODUCTION. 45 of 64 questions still return nothing correct.**
+▶▶ **CHARLIE: six decisions in `docs/SEARCH_S16_REPORT.md`** — D-3 re-key committees, D-1 debates
+dense, D-2 who owns the unreachable `other` tier (`cps-guidance`, `scottish-parliament-or`).
+Earlier: 2026-08-27 10:44 UTC — ▼ **SEARCH S15-CAPACITY: THE BLOCK IS THE OBJECT STORE, AND THE PLATFORM HAS NEVER ONCE MEASURED ITSELF WITH DENSE RETRIEVAL ACTUALLY WORKING — UNTIL NOW.**
 ▶▶ **§1, four hypotheses, predictions logged before testing. TWO OF THREE WERE WRONG.**
 **H1 arbitrary constant ✅** · **H2 processor ⚠ PARTLY** · **H3 memory ❌** · **H4 storage/network ✅ DOMINANT.**
 ⚠⚠ **`os.cpus()` ON RAILWAY REPORTS THE HOST, NOT OUR QUOTA. The container has 8 vCPU, not 48**, and

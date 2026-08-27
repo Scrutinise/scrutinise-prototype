@@ -421,6 +421,33 @@ const res = await runSearch({
 // res.meta.denseDegraded — S15 §3. Streams whose DENSE half did not run, and why. See below.
 ```
 
+### ⚠⚠ WHAT THE PUBLISHED RECALL FIGURES DO AND DO NOT MEASURE (added S16 §2)
+
+**Quoting `committees 2/10` or `debates 0/11` as retrieval figures is wrong, and this section
+exists so nobody does it again.**
+
+S16 classified all 32 failing questions individually and then probed committees' failures against
+the live index. **The documents are indexed and retrievable** — searching each answer key's own
+title returns it at rank **1, 1, 2 and 4**. What fails is the key, not the retriever:
+
+| | committees | every other collection |
+|---|---:|---:|
+| keys that are `Correspondence:` ministerial letters | **10 of 19** | **0 of 19** |
+| keys that are ONE submission from an inquiry holding many | 3 more (1 of **525**, 1 of 115, 1 of 54) | — |
+
+⚠ **The control is exact:** the only evidence-keyed committees question that IS found, S10-Q7, is
+drawn from the smallest class — 1 of 26. With a 20-wide window and 525 equally good documents,
+**perfect retrieval scores wrong about 96% of the time.**
+
+▶ **Until committees is re-keyed, its figure means *"2 of 10 against a key set that 8 of them
+cannot match"*.** `debates` is under the same review (`GOLD_V2_DEBATES_REKEY.md`).
+`scripts/audit-s16-gold-keys.ts` reproduces the counts.
+
+⚠ **The general rule, which outlives these two collections: when the answer key is one member of a
+large equivalence class, recall@k measures the key's luck, not the retriever.** A question whose
+answer could legitimately be any of hundreds of documents needs either a key SET or a different
+metric.
+
 ### ⚠⚠ `meta.denseDegraded` — A PARTIAL GAP, AND WHAT LEX MAY SAY ABOUT IT (added S15 §3)
 
 Present only when at least one routed stream's dense (vector) half failed to run. Each entry is
