@@ -307,6 +307,64 @@ function statsUrl(): string {
   if (explicit) return `${explicit.replace(/\/$/, '')}/stats`
   return `https://${SERVICE_NAME}-production.up.railway.app/stats`
 }
+/**
+ * S15-CAPACITY §1 (H4) — set a RETRIEVAL dial and read it back off the running process.
+ *
+ * ⚠⚠ THESE ARE DIAGNOSTICS, NOT TUNING. `VECTOR_NPROBES` and `VECTOR_REFINE_FACTOR` both trade
+ * RECALL for latency: S2C5 measured 24 probes of 4,096 returning **70.4%** of what the same index
+ * returns fully probed, which is why the value was raised to 64 in the first place. Lowering either
+ * one to make the service faster, without re-scoring the gold set, would be buying latency with
+ * answers and calling it a capacity win.
+ *
+ * What they ARE good for is settling H4. Both dials change ONLY how many bytes a query pulls out of
+ * R2 — `nprobes` decides how many IVF partitions are read, and `refineFactor` decides how many
+ * ORIGINAL f32 vectors are fetched from the 130 GB `data` directory for exact re-ranking. If
+ * latency moves sharply with them and CPU does not, the service is I/O-bound on the object store.
+ *
+ * ⚠ The read-back is the point, exactly as for `width`: `/stats` reports `config.nprobes` and
+ * `config.refineFactor` from `retrievalConfig()` in the live process, so "the setting probably took
+ * effect" never has to be written down (BRIEF_SEARCH_S2C5 §1).
+ */
+async function tune() {
+  const name = process.argv[3]
+  const value = process.argv[4]
+  const ALLOWED: Record<string, string> = { nprobes: 'VECTOR_NPROBES', refine: 'VECTOR_REFINE_FACTOR', overscan: 'VECTOR_CHUNK_OVERSCAN' }
+  const envName = ALLOWED[name ?? '']
+  if (!envName || !value || !/^\d+$/.test(value)) {
+    console.error(`usage: vector-serve-run.ts tune <${Object.keys(ALLOWED).join('|')}> <n>`)
+    process.exit(1)
+  }
+  const id = loadId()
+  const before = await readStats()
+  console.log(`current config: ${JSON.stringify(before.config)}`)
+
+  await gql(
+    `mutation($input: VariableUpsertInput!) { variableUpsert(input: $input) }`,
+    { input: { projectId: PROJECT_ID, environmentId: ENV_ID, serviceId: id, name: envName, value } },
+  )
+  console.log(`set ${envName}=${value}; restarting (same build)…`)
+  await restart()
+
+  const key = name === 'nprobes' ? 'nprobes' : name === 'refine' ? 'refineFactor' : 'chunkOverscan'
+  const deadline = Date.now() + 8 * 60_000
+  let after: any = null
+  while (Date.now() < deadline) {
+    await sleep(10_000)
+    try {
+      const s = await readStats()
+      if (s.started_at !== before.started_at || String(s.config?.[key]) === value) { after = s; break }
+      after = s
+    } catch { /* booting */ }
+  }
+  if (!after) { console.error('⛔ the service never became readable. Config UNKNOWN.'); process.exit(1) }
+  console.log(`observed on the running service: ${JSON.stringify(after.config)} started_at=${after.started_at}`)
+  if (String(after.config?.[key]) !== value) {
+    console.error(`⛔ SET ${envName}=${value}, SERVICE REPORTS ${key}=${after.config?.[key]}. Did not take effect.`)
+    process.exit(1)
+  }
+  console.log(`✅ ${key} is ${value}, read off the running process.`)
+}
+
 async function readStats(): Promise<any> {
   const res = await fetch(statsUrl())
   if (!res.ok) throw new Error(`/stats ${res.status}`)
@@ -447,6 +505,7 @@ const fn = mode === 'plan' ? plan
   : mode === 'redeploy' ? redeploy
   : mode === 'restart' ? restart
   : mode === 'width' ? width
+  : mode === 'tune' ? tune
   : mode === 'logs' ? logs
   : mode === 'stats' ? stats
   : mode === 'teardown' ? teardown
