@@ -132,6 +132,46 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-I ADDENDUM — THE FIRST REUSE BUILD THAT HAS EVER COMPLETED, AND A SECOND DEFECT UNDER THE FIRST (2026-08-27 12:28 UTC)
+
+Charlie approved the re-run 25-I stopped for. It took two more builds.
+
+⚠⚠ **TWO INDEPENDENT DEFECTS SAT ON ONE PATH AND EACH PRODUCED THE IDENTICAL ERROR.** 25-I
+fixed `carryEvidenceForward` (which really was MOVING rather than copying) and the same
+message came straight back. The fix HAD worked — **69 evidence rows were now at v4 where v3
+had zero** — but `carryInto` accepted only `DONE` passes, and a reused pass is written as
+`SKIPPED` with the previous build's carry copied onto it. So `carry.research` — 6,031
+characters sitting on the record — was **stored correctly and discarded on read**. The ROWS
+carried and the STRING did not. ⚠ **The second was invisible until the first was fixed**, and
+no amount of reading either function would have separated them: that is the argument for the
+run-it-live discipline in one sentence.
+
+▶▶ **v5: DONE. The first reuse build in the platform's history to complete.** 4m 21s, **8
+passes executed and 2 reused** (all ten accounted for — ⚠ the "8 of 10" counter under-reads a
+reuse build and should be fixed), 55,626 in / 30,609 out, **24.83p**.
+
+⚠⚠ **THE REUSE SAVING, ON A COMPLETED BUILD: 107,380 → 55,626 = 51,754 tokens, 48%.**
+**48% replaces the 85% in the 25-I report** — that figure came from builds that died at pass 5
+and looked cheaper only because they stopped early. It was flagged as a ceiling; this is the
+floor beneath it. ⚠⚠ **AND THE REUSE BUILD COST MORE THAN THE FULL BUILD IT REUSED FROM —
+24.83p vs 6.78p — which must never be quoted without the reason: v1 is a SEVEN-pass pre-25-F
+build**, and v5 ran SMART/KERNEL_CHECK/LOGIC_CHECK, of which 25-G measured SMART alone at 53%
+of a build's cost. **A like-for-like figure needs a full 10-pass baseline, which does not
+exist yet.** "48% cheaper" as a headline would be wrong.
+
+▶ **§25.7's six qualities, measured in the OUTPUT at last: THREE of six.** ✓ counterintuitive
+finding (8 CONTRADICTS), ✓ finding-not-citation (80 of 82 substantive), ✓ instrument reframed.
+⚠ **Quality 1 FAILS AT 0 OF 4 CAUSES NESTED — a real regression against 25-H's own fix**:
+`nestByDrivenBy` is in the code and `check:lex-25h` asserts it, but the model is not
+populating `drivenBy`. It is the most valuable of the six ("a causal chain, not an
+inventory"). ⚠ **Qualities 5 and 6 have NEVER been observed in any output** across every build
+measured in 25-H and 25-I, although the instructions demonstrably reach every drafting pass —
+**reaching the prompt is not sufficient**, and the next step is whether any pass's output
+CONTRACT asks for them rather than only its method block. Both are first items for the next
+sprint, neither is in scope here.
+
+---
+
 ## LEX — STATUTORY CONSEQUENCES: THE COUNT IS THE SCALE, THE CLASSIFICATION IS THE WORK (2026-08-27 11:58 UTC)
 
 Executes `docs/BRIEF_STATUTORY_CONSEQUENCES.md`. Full report:

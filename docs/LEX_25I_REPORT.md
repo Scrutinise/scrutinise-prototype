@@ -273,6 +273,89 @@ answer the question properly. **Say the word and I will run it.**
 
 ---
 
+## ADDENDUM — 27 Aug, the approved re-run, and a second defect underneath the first
+
+Charlie approved the re-run. It took **two more builds**, because fixing the evidence carry
+revealed a second, independent defect on the same path — and I ran a third to actually
+deliver the measurement he approved. Both are now fixed.
+
+**v4 — the approved second build. FAILED, 1.41p.** Same message as v3. But the fix *had*
+worked: **69 evidence rows were now at v4** where v3 had zero. The rows carried; something
+else did not.
+
+**The second defect: `carryInto` accepted only `DONE` passes.** A reused pass is written to
+the log as `SKIPPED` with the previous build's carry copied onto it — so `carry.research`
+(6,031 characters, sitting right there on the record) was **stored correctly and discarded on
+read**. REVISE received nothing and died with the identical sentence.
+
+⚠ **Two independent defects on one path, and the second was invisible until the first was
+fixed.** The rows were carried and the string was not; each alone produced the same error
+message. That is the strongest argument I have for the "run it live" discipline: no amount of
+reading either function would have separated them.
+
+**v5 — DONE. The first reuse build that has ever completed.**
+
+| | |
+|---|---|
+| status | **DONE**, 4m 21s |
+| passes | **8 executed, 2 reused** — all ten accounted for |
+| tokens | 55,626 in / 30,609 out |
+| cost | **24.83p** |
+
+⚠ **The counter says "8 of 10 passes", which under-reads a reuse build.** Two passes were
+reused, not missed. Worth fixing so a complete re-run does not look partial.
+
+### The reuse saving — the real figure replaces the ceiling
+
+| | input tokens |
+|---|---|
+| full build v1 | 107,380 |
+| **completed** reuse build v5 | **55,626** |
+| **measured saving** | **51,754 — 48%** |
+| the earlier failed-run figure | 85% |
+| 25-G predicted | 65% |
+
+**48% is the honest number.** The 85% in the main report came from builds that died at pass 5
+— they looked cheaper because they stopped early. I flagged it as a ceiling at the time; it
+was, and this is the floor beneath it.
+
+⚠⚠ **AND THE REUSE BUILD COST MORE THAN THE FULL BUILD IT REUSED FROM — 24.83p against
+6.78p.** That is not a contradiction and it must not be quoted without the reason: **v1 is a
+seven-pass build from before 25-F**. v5 ran SMART, KERNEL_CHECK and LOGIC_CHECK, which v1
+never had, and 25-G measured SMART alone at 53% of a build's cost. Reuse saved 48% of the
+*input tokens on the two passes it skipped*; it did not make this build cheaper than a build
+that did less work. **A like-for-like reuse saving needs a full 10-pass baseline, which does
+not exist yet.** Quoting "48% cheaper" as a headline would be wrong.
+
+### §25.7's six qualities, in the output at last
+
+| quality | v5 | evidence |
+|---|---|---|
+| 1 a causal chain, not an inventory | ✗ | **0 of 4 causes nested** |
+| 2 a counterintuitive finding | ✓ | 8 CONTRADICTS |
+| 3 the finding, not the citation | ✓ | 80 of 82 substantive |
+| 4 reframes the instrument if wrong | ✓ | — |
+| 5 a test the user can apply | ✗ | — |
+| 6 the next action | ✗ | — |
+
+**Three of six reach the output.** Two things to say plainly about the three that do not:
+
+⚠ **Quality 1 failing is a real regression against 25-H's own fix.** `nestByDrivenBy` is in
+the code and `check:lex-25h` asserts it; the output still has **0 of 4 causes nested**. The
+wiring exists and the model is not populating `drivenBy`. That is a live defect, not a
+measurement artefact, and it is the single most valuable of the six — the brief calls it "a
+causal chain, not an inventory".
+
+⚠ **Qualities 5 and 6 have never been observed in any output**, across every build measured
+in 25-H and 25-I. The instructions reach every drafting pass (checked, controlled) and
+nothing comes back. On the evidence, *reaching the prompt is not sufficient* for these two,
+and the next step is to look at whether any pass is actually asked to produce them in its
+output contract rather than merely told to in its method block.
+
+**Neither is in this sprint's scope. Both are first items for the next.**
+
+---
+
 ## §6 — The citation pass: prepared, not built
 
 `docs/CITATION_PASS_PREP.md`. It records the four §5 decisions as a table awaiting your
