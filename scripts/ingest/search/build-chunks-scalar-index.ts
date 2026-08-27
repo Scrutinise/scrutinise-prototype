@@ -70,6 +70,35 @@ async function listIndices(tbl: lancedb.Table) {
   try { return await tbl.listIndices() } catch { return [] }
 }
 
+/**
+ * ⚠⚠ S15 — COVERAGE, NOT EXISTENCE. THIS IS THE CHECK THAT WAS MISSING, AND ITS ABSENCE
+ * COST THE WHOLE OF THE SERVICE'S LATENCY BUDGET FOR THREE WEEKS.
+ *
+ * `--verify-only` used to ask "is there an index on this column?" and stop there. A LanceDB
+ * scalar index covers only the rows that existed when it was built; an APPEND leaves the new
+ * rows outside it, to be brute-force scanned by every subsequent query, forever
+ * (docs/CLAUDE.md §17, INGEST_PLAYBOOK.md §20). The warning is written in this very file's
+ * header — "THIS INDEX WILL NEED REBUILDING IF THE MAX_CHUNKS TOP-UP HAPPENS" — and then the
+ * check that was supposed to catch it could not, because an index with 6.5% of the table
+ * outside it still satisfies `.some(i => i.columns.includes('sectionId'))`.
+ *
+ * Measured 27 Aug 2026: 22,670,808 rows, 21,191,844 indexed, **1,478,964 unindexed (6.5%)**,
+ * and `--verify-only` printed "an index on sectionId EXISTS. Nothing to do." while a
+ * single-id equality lookup against that table took 133 seconds.
+ *
+ * So the verify now reads the index's own statistics and FAILS on uncovered rows. It is the
+ * difference between a check that can fail and one that cannot.
+ */
+async function indexCoverage(tbl: lancedb.Table, name: string): Promise<{ indexed: number; unindexed: number } | null> {
+  try {
+    const s = await (tbl as any).indexStats(name)
+    const indexed = s?.numIndexedRows ?? s?.num_indexed_rows
+    const unindexed = s?.numUnindexedRows ?? s?.num_unindexed_rows
+    if (typeof indexed !== 'number' || typeof unindexed !== 'number') return null
+    return { indexed, unindexed }
+  } catch { return null }
+}
+
 async function main() {
   const t0 = Date.now()
   const timer = setInterval(sampleMem, 2_000)
@@ -83,21 +112,47 @@ async function main() {
   console.log(`[chunks-index] rows=${rows.toLocaleString()}`)
   console.log(`[chunks-index] existing indices: ${before.length ? before.map((i: any) => `${i.name} on [${(i.columns ?? []).join(',')}]`).join(', ') : 'NONE'}`)
 
-  const already = before.some((i: any) => (i.columns ?? []).includes(COLUMN))
+  const existing = before.find((i: any) => (i.columns ?? []).includes(COLUMN))
+  const already = !!existing
+  // Coverage, read off the index rather than assumed from its existence — see indexCoverage.
+  const cov = existing ? await indexCoverage(tbl, (existing as any).name) : null
+  if (cov) {
+    const pctUn = rows ? ((cov.unindexed / rows) * 100).toFixed(1) : '0.0'
+    console.log(`[chunks-index] coverage: ${cov.indexed.toLocaleString()} indexed · ${cov.unindexed.toLocaleString()} UNINDEXED (${pctUn}%)`)
+  } else if (already) {
+    console.log('[chunks-index] ⚠ coverage could not be read (indexStats unavailable) — treating as UNKNOWN, not as covered.')
+  }
+  // ⚠ UNKNOWN IS NOT COVERED. If the statistics cannot be read we must not report "nothing
+  // to do": that is the same silent pass this check was rewritten to remove.
+  const stale = already && (cov === null || cov.unindexed > 0)
 
   if (VERIFY_ONLY) {
     // §17: "check whether the job is already done before running it" — a metadata read
     // that costs nothing, and is how a duplicate FTS rebuild was avoided on 4 Aug.
-    console.log(already
-      ? `[chunks-index] VERIFY: an index on "${COLUMN}" EXISTS. Nothing to do.`
-      : `[chunks-index] VERIFY: NO index on "${COLUMN}". The build is still required.`)
-    process.exit(already ? 0 : 3)
+    if (!already) {
+      console.log(`[chunks-index] VERIFY: NO index on "${COLUMN}". The build is still required.`)
+      process.exit(3)
+    }
+    if (stale) {
+      console.log(`[chunks-index] VERIFY: ⚠⚠ the index on "${COLUMN}" EXISTS but is STALE — ` +
+        `${cov ? `${cov.unindexed.toLocaleString()} rows are outside it` : 'coverage unreadable'}. ` +
+        'Every snippet lookup brute-force scans them. REBUILD REQUIRED.')
+      console.log('[chunks-index] run: heavy-job run chunks-scalar-index   (CHUNKS_INDEX_REPLACE=true)')
+      process.exit(4)
+    }
+    console.log(`[chunks-index] VERIFY: an index on "${COLUMN}" exists and covers all ${rows.toLocaleString()} rows. Nothing to do.`)
+    process.exit(0)
   }
 
-  if (already) {
-    console.log(`[chunks-index] an index on "${COLUMN}" already exists — refusing to rebuild it blindly.`)
+  // A COMPLETE index is still refused, as before — that is the duplicate-rebuild guard and
+  // it was always right. A STALE one is a different fact and rebuilding it is the whole job.
+  if (already && !stale) {
+    console.log(`[chunks-index] the index on "${COLUMN}" already covers every row — refusing to rebuild it blindly.`)
     console.log('[chunks-index] pass CHUNKS_INDEX_REPLACE=true to replace it deliberately.')
     if (process.env.CHUNKS_INDEX_REPLACE !== 'true') { clearInterval(timer); return }
+  }
+  if (stale) {
+    console.log(`[chunks-index] the index is STALE — proceeding, which is what this job is for.`)
   }
 
   console.log(`[chunks-index] building BTREE scalar index on "${COLUMN}" (no compaction)…`)
