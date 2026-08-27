@@ -377,6 +377,53 @@ the fix DOCUMENTS that expression, so the guard matched its own explanation; it 
 transaction orphaned 4 findings and the reconciliation caught it; I was one step from reporting it
 as a product defect. **A cleanup path must be as faithful as the path under test.**
 `docs/LEX_25I_REPORT.md`, `docs/CITATION_PASS_PREP.md`.**
+2026-08-27 22:55 UTC — ▼ **CENTRAL STAGE 2i — THE RESOURCE GRID COULD NOT RENDER AN UPLOADED
+FILE AT ALL, AND NEITHER SETTINGS SCREEN COULD BE FOUND.** Verified by walking production as
+Charlie in the browser, which is how three of the four items were settled.
+
+⚠⚠ **Item 4, the acceptance item never verified from either side, FAILED.** I uploaded a real PDF
+and a real image through the live form: both saved, both appeared in the grid, and **both rendered
+the generic type-icon tile**. The bucket is private, so a card needs a signed URL to show anything
+— and **only the DETAIL view ever fetched one**, so `isImage && signedUrl` was false for every card
+and each fell through to the fallback. `listResources` now mints a short-lived signed URL per
+file-backed row (presigning is local HMAC, no network call); PDFs render their first page.
+**⚠ Both existing checks passed throughout and were not wrong — they asked whether a resource was
+CREATED and never whether it could be SEEN.** After the fix both URLs return HTTP 200 with the
+right Content-Type and full byte counts (430,278 PNG / 49,680 PDF).
+
+**Item 1 — the routes are `/communities/{id}/settings` (Community admins; a branch id redirects up
+to its root) and `/settings` (per-user).** Both existed; neither was findable. ⚠ **THERE WAS NO
+AVATAR MENU** — the avatar was a bare Link to /dashboard, and `/settings` was linked from **exactly
+one place in the whole app**: an inline sentence in the Training exchange, shown only when you had
+no phone number saved. No amount of looking would have found the accent picker. There is a menu
+now and it names what is behind it. Community settings WAS in the Managing panel — as the fourth of
+four identical outline buttons *below* the cards; it is now a peer card among Requests, Members and
+Invite, which is where the eye goes.
+
+**Item 2 — the rights gate was not a dead button.** It submitted, the server refused, and the
+message appeared beside the BUTTON rather than the checkbox it was about. Now a dedicated error AT
+the checkbox, in the error colour, row outlined and scrolled to, worded as an instruction. ⚠ The
+button deliberately stays clickable: `disabled={!rights}` is the obvious fix and the wrong one,
+because a disabled button cannot explain itself — which is exactly the reported state. ⚠ Second
+defect found while fixing it: **the gate ran only server-side, AFTER the file was written to R2**,
+so every refusal orphaned an object in the bucket.
+
+**Item 3 — 2e specified the styled picker and the bulk-upload screen got it; the resource form,
+written two sprints later, did not inherit it** and shipped a bare native input. **A specification
+applied to one screen is not inherited by the next; a component is.** One shared `FilePicker` now,
+asserted per screen.
+
+⚠ **Two of my own new guards were too loose, and only their paired absence-checks caught them:** a
+presence check for `href="/settings"` over the whole nav passed when the MENU's link was broken
+because the mobile one still matched, and `includes('<FilePicker')` matched `<FilePickerX`. Scope a
+presence check to the block under test, and use a word boundary on a component name.
+
+✅ **720/720** (was 693), `tsc` and `next build` clean, deployed `9170bf2` and verified.
+▶ **Two verification resources are left in Reform Branch Community**, both titled as such and both
+saying “Safe to delete” in the note, so the thumbnails can be SEEN rather than taken on trust.
+▶ Not verified: the PDF first page RENDERING in the card. The browser went to a 0×0 viewport near
+the end and I stopped rather than thrash it; the data path is proven, the pixels are not.
+
 2026-08-27 08:41 UTC — ▼ **CENTRAL STAGE 2h ITEMS 6–8 ARE BUILT — AND CHARLIE FOUND, IN THE
 BROWSER, THAT THE APPROVAL FRAME HAD BEEN WIRED TO ONE SURFACE OUT OF TWO.**
 
