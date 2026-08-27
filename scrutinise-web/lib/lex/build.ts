@@ -599,16 +599,51 @@ async function carryEvidenceForward(
   ideaId: string, fromVersion: number, toVersion: number,
 ): Promise<{ evidence: number; gaps: number }> {
   const researchPassKeys = QUESTION_IDS
-  const evidence = await prisma.evidenceItem.updateMany({
+
+  // ⚠⚠ 25-I §5 — IT COPIES. IT USED TO **MOVE**, AND THAT DESTROYED THE RESEARCH IT REUSED.
+  //
+  // `updateMany({ data: { runVersion: toVersion } })` took the rows OFF the source build.
+  // The carry happens in `claimBuild` — before a single pass runs — so any re-run that was
+  // claimed and then failed, was cancelled, or simply crashed took the previous build's
+  // findings with it, permanently. The next re-run then reused from a source that no longer
+  // had any evidence and died with *"the research pass produced nothing to revise against"*.
+  //
+  // Measured on Charlie's own idea while running §5's build: **69 evidence rows stranded on
+  // a CANCELLED v2 that ran zero passes**, v1 left with none of its research, v3 failed.
+  // One aborted re-run was enough to lose the whole of a build he had already paid for, and
+  // nothing anywhere said so.
+  //
+  // ⚠ A VERSION'S EVIDENCE MUST BE A FACT ABOUT THAT VERSION. Moving made `runVersion` mean
+  // "the newest run that happens to be interested in this row", which is not a version at
+  // all — v1's screen would go blank the moment somebody clicked Re-run. Copying costs some
+  // duplicated rows and makes each version independently readable, which is what every
+  // version-scoped reader downstream already assumes.
+  const source = await prisma.evidenceItem.findMany({
     where: { ideaId, runVersion: fromVersion, status: 'PROPOSED', passKey: { in: researchPassKeys } },
-    data: { runVersion: toVersion },
   })
+  const evidence = source.length
+    ? await prisma.evidenceItem.createMany({
+      data: source.map(({ id: _id, createdAt: _c, updatedAt: _u, ...row }) => ({
+        ...row, runVersion: toVersion,
+      })),
+    })
+    : { count: 0 }
+
   // The stated gaps travel too. §22's rule is that "we looked for this and could not reach
   // it" is a result; a re-run that dropped them would report a cleaner search than it had.
-  const gaps = await prisma.deepeningPass.updateMany({
+  // ⚠ Copied for the same reason, and `skipDuplicates` because a re-run of a re-run would
+  // otherwise collide on (ideaId, passKey, runVersion).
+  const sourceGaps = await prisma.deepeningPass.findMany({
     where: { ideaId, runVersion: fromVersion, passKey: { in: researchPassKeys } },
-    data: { runVersion: toVersion },
   })
+  const gaps = sourceGaps.length
+    ? await prisma.deepeningPass.createMany({
+      data: sourceGaps.map(({ id: _id, createdAt: _c, updatedAt: _u, ...row }) => ({
+        ...row, runVersion: toVersion,
+      })),
+      skipDuplicates: true,
+    })
+    : { count: 0 }
   console.log('[lex-diag] 25g carried the reused evidence forward', {
     ideaId, fromVersion, toVersion, evidence: evidence.count, gaps: gaps.count,
   })
