@@ -16,6 +16,7 @@ import ApprovalFrame, {
 } from '@/components/central/ApprovalFrame'
 import { canApproveWith, type ApprovalMode, type ApproverCaps } from '@/lib/approval-rule'
 import { answerDisplayText, linkThumbnail } from '@/lib/video'
+import { SELECTED_WEIGHT, UNSELECTED_WEIGHT, downGlyph, upGlyph } from '@/lib/state-cues'
 
 interface Answer {
   id: string
@@ -103,10 +104,16 @@ function AnswerVote({
           aria-label="Vote up"
           aria-pressed={myVote === 'UP'}
           className={`h-9 text-xs transition-colors disabled:opacity-40 ${
-            myVote === 'UP' ? 'bg-primary/[0.08] text-primary' : 'text-muted-foreground hover:bg-muted'
+            myVote === 'UP'
+              ? 'bg-primary/[0.08] font-bold text-primary'
+              : 'text-muted-foreground hover:bg-muted'
           }`}
         >
-          ▲
+          {/* ⚠ 2h item 6: solid when the vote is yours, hollow when it is not.
+              These two states differed only by hue and an 8% tint, so a
+              colour-blind reader could not see which way they had voted — or
+              whether they had. The glyph and the weight carry it now. */}
+          {upGlyph(myVote === 'UP')}
         </button>
         <span className="tabular border-y border-border py-1 text-center text-sm font-semibold">
           {score}
@@ -118,10 +125,12 @@ function AnswerVote({
           aria-label="Vote down"
           aria-pressed={myVote === 'DOWN'}
           className={`h-9 text-xs transition-colors disabled:opacity-40 ${
-            myVote === 'DOWN' ? 'bg-destructive/[0.07] text-destructive' : 'text-muted-foreground hover:bg-muted'
+            myVote === 'DOWN'
+              ? 'bg-destructive/[0.07] font-bold text-destructive'
+              : 'text-muted-foreground hover:bg-muted'
           }`}
         >
-          ▼
+          {downGlyph(myVote === 'DOWN')}
         </button>
       </div>
       {hover && !disabled && (
@@ -379,11 +388,17 @@ export default function QuestionDetail({
             type="button"
             onClick={voteQuestion}
             aria-pressed={qVoted}
-            className={`flex min-w-[52px] flex-col items-center gap-0.5 rounded-[10px] border px-2 py-2 transition-colors ${
-              qVoted ? 'border-primary bg-primary/[0.07] text-primary' : 'border-border bg-white text-muted-foreground'
+            className={`flex min-w-[52px] flex-col items-center gap-0.5 rounded-[10px] px-2 py-2 transition-colors ${
+              qVoted
+                ? `border-primary bg-primary/[0.07] text-primary ${SELECTED_WEIGHT}`
+                : `border-border bg-white text-muted-foreground ${UNSELECTED_WEIGHT}`
             }`}
           >
-            <span className="text-[11px] leading-none">▲</span>
+            {/* ⚠ 2h item 6. A SECOND question-vote control, on the detail header,
+                that the first sweep missed — the check caught it, which is the
+                argument for asserting the absence of the bare literal rather than
+                the presence of the fix. */}
+            <span className="text-[11px] leading-none">{upGlyph(qVoted)}</span>
             <span className="tabular text-base font-semibold leading-none">{qCount}</span>
             <span className="text-[9px] uppercase tracking-wider">votes</span>
           </button>

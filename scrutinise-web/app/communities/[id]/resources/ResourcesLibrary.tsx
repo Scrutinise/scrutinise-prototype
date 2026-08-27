@@ -14,6 +14,7 @@ import ApprovalFrame, {
 } from '@/components/central/ApprovalFrame'
 import { canApproveWith, type ApprovalMode, type ApproverCaps } from '@/lib/approval-rule'
 import { linkHost, linkThumbnail } from '@/lib/video'
+import { SELECTED_WEIGHT, UNSELECTED_WEIGHT, downGlyph, upGlyph } from '@/lib/state-cues'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CENTRAL Stage 2g — the Resources tab.
@@ -248,11 +249,13 @@ export default function ResourcesLibrary({
             type="button"
             onClick={() => setType('')}
             aria-pressed={type === ''}
-            className={`rounded-full border px-2.5 py-1 text-[12px] transition-colors ${
-              type === '' ? 'border-primary bg-primary/[0.07] font-medium text-primary' : 'border-border text-muted-foreground hover:text-foreground'
+            className={`rounded-full px-2.5 py-1 text-[12px] transition-colors ${
+              type === ''
+                ? `border-primary bg-primary/[0.07] text-primary ${SELECTED_WEIGHT}`
+                : `border-border text-muted-foreground hover:text-foreground ${UNSELECTED_WEIGHT}`
             }`}
           >
-            All
+            {type === '' ? '✓ ' : ''}All
           </button>
           {RESOURCE_TYPES.map((t) => (
             <button
@@ -260,11 +263,15 @@ export default function ResourcesLibrary({
               type="button"
               onClick={() => setType((prev) => (prev === t.key ? '' : t.key))}
               aria-pressed={type === t.key}
-              className={`rounded-full border px-2.5 py-1 text-[12px] transition-colors ${
-                type === t.key ? 'border-primary bg-primary/[0.07] font-medium text-primary' : 'border-border text-muted-foreground hover:text-foreground'
+              className={`rounded-full px-2.5 py-1 text-[12px] transition-colors ${
+                type === t.key
+                  ? `border-primary bg-primary/[0.07] text-primary ${SELECTED_WEIGHT}`
+                  : `border-border text-muted-foreground hover:text-foreground ${UNSELECTED_WEIGHT}`
               }`}
             >
-              {t.label}
+              {/* ⚠ 2h item 6: a 7% tint and font-medium was not a visible second
+                  cue. Border weight is. */}
+              {type === t.key ? '✓ ' : ''}{t.label}
             </button>
           ))}
         </div>
@@ -351,11 +358,14 @@ function VoteButtons({
         aria-pressed={resource.myVote === 'UP'}
         aria-label="This was useful"
         title={own ? 'You cannot vote on your own resource' : 'This was useful'}
-        className={`rounded-md border px-1.5 py-0.5 text-[11px] disabled:opacity-30 ${
-          resource.myVote === 'UP' ? 'border-primary text-primary' : 'border-border text-muted-foreground'
+        className={`rounded-md px-1.5 py-0.5 text-[11px] disabled:opacity-30 ${
+          resource.myVote === 'UP'
+            ? `border-primary text-primary ${SELECTED_WEIGHT}`
+            : `border-border text-muted-foreground ${UNSELECTED_WEIGHT}`
         }`}
       >
-        ▲
+        {/* ⚠ 2h item 6 — shape and border weight, not hue alone. */}
+        {upGlyph(resource.myVote === 'UP')}
       </button>
       <span className="tabular text-[13px] font-semibold">{resource.score}</span>
       <button
@@ -365,11 +375,13 @@ function VoteButtons({
         aria-pressed={resource.myVote === 'DOWN'}
         aria-label="This did not work"
         title={own ? 'You cannot vote on your own resource' : 'This did not work'}
-        className={`rounded-md border px-1.5 py-0.5 text-[11px] disabled:opacity-30 ${
-          resource.myVote === 'DOWN' ? 'border-red-500 text-red-600' : 'border-border text-muted-foreground'
+        className={`rounded-md px-1.5 py-0.5 text-[11px] disabled:opacity-30 ${
+          resource.myVote === 'DOWN'
+            ? `border-red-500 text-red-600 ${SELECTED_WEIGHT}`
+            : `border-border text-muted-foreground ${UNSELECTED_WEIGHT}`
         }`}
       >
-        ▼
+        {downGlyph(resource.myVote === 'DOWN')}
       </button>
     </div>
   )
@@ -667,11 +679,13 @@ function AddResource({ communityId, onDone }: { communityId: string; onDone: () 
             type="button"
             onClick={() => setType(t.key)}
             aria-pressed={type === t.key}
-            className={`rounded-full border px-2.5 py-1 text-[12px] ${
-              type === t.key ? 'border-primary bg-primary/[0.07] font-medium text-primary' : 'border-border text-muted-foreground'
+            className={`rounded-full px-2.5 py-1 text-[12px] ${
+              type === t.key
+                ? `border-primary bg-primary/[0.07] text-primary ${SELECTED_WEIGHT}`
+                : `border-border text-muted-foreground ${UNSELECTED_WEIGHT}`
             }`}
           >
-            {t.label}
+            {type === t.key ? '✓ ' : ''}{t.label}
           </button>
         ))}
       </div>

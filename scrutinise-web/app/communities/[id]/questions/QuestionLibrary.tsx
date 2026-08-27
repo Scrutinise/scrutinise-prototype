@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import BulkUpload from './BulkUpload'
 import { AiLabel } from '@/components/central/AnswerByline'
+import { SELECTED_WEIGHT, UNSELECTED_WEIGHT, VOTE_GLYPH, upGlyph } from '@/lib/state-cues'
 
 export interface QuestionRow {
   id: string
@@ -36,7 +37,7 @@ export interface TagSet {
  * Up only. There is no downvote because the vote records FREQUENCY, not
  * quality, and self-voting is allowed because the asker demonstrably was asked.
  * The tooltip says so in as many words; on touch it is unreachable, which is
- * why the control shows an explicit ▲ and a count rather than a bare icon.
+ * why the control shows an explicit triangle and a count rather than a bare icon.
  */
 function QuestionVote({
   count,
@@ -57,13 +58,17 @@ function QuestionVote({
         onMouseLeave={() => setHover(false)}
         aria-pressed={voted}
         aria-label={voted ? 'You have been asked this. Click to undo.' : 'Click if you have been asked this too'}
-        className={`flex w-12 min-h-12 flex-col items-center justify-center gap-0.5 rounded-[10px] border transition-colors ${
+        className={`flex w-12 min-h-12 flex-col items-center justify-center gap-0.5 rounded-[10px] transition-colors ${
           voted
-            ? 'border-primary bg-primary/[0.07] text-primary'
-            : 'border-border bg-white text-muted-foreground hover:border-[var(--central-border-hover)]'
+            ? `border-primary bg-primary/[0.07] text-primary ${SELECTED_WEIGHT}`
+            : `border-border bg-white text-muted-foreground hover:border-[var(--central-border-hover)] ${UNSELECTED_WEIGHT}`
         }`}
       >
-        <span className="text-[11px] leading-none">▲</span>
+        {/* ⚠ 2h item 6: a SOLID triangle when the vote is yours, a hollow one
+            when it is not. This state used to be teal-versus-grey and nothing
+            else, so whether your own click had registered was unreadable to a
+            colour-blind reader. */}
+        <span className="text-[11px] leading-none">{upGlyph(voted)}</span>
         <span className="tabular text-sm font-semibold leading-none">{count}</span>
       </button>
       {hover && (
@@ -297,7 +302,13 @@ export default function QuestionLibrary({
       <p className="mb-3 text-[13px] text-muted-foreground">
         <span className="tabular">{loading ? '…' : countLine}</span>
         <span className="ml-2 text-[12px]">
-          ▲ You get one vote per question — click it again to take it back.
+          {/* ⚠ The hint draws its glyph from the same vocabulary as the control
+              (2h item 6). Hard-coding ▲ here would leave the hint pointing at a
+              shape the button no longer draws the moment the vocabulary changes
+              — and it is the SOLID one, which the button only shows once you have
+              already voted. The hint describes the un-voted state, so it shows
+              the hollow glyph. */}
+          {VOTE_GLYPH.upOff} You get one vote per question — click it again to take it back.
         </span>
         {activeSearch && (
           <>

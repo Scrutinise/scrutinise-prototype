@@ -198,7 +198,10 @@
   --central-radius-card: 12px;
   --central-radius-inset: 10px;
   --central-teal: #14b8a6;
-  --central-teal-text: #0f8b7f;
+  /* ⚠ 2h item 6: this was #0f8b7f, which scores 4.18:1 on white — below the
+     WCAG AA floor of 4.5 for body text. The platform's own accent text had
+     never been measured. #0d7a6f scores 5.21 and is the same hue. */
+  --central-teal-text: #0d7a6f;
   --central-teal-text-deep: #0b6f66;
   --central-teal-fill-faint: #14b8a60a;
   --central-teal-fill: #14b8a60f;
