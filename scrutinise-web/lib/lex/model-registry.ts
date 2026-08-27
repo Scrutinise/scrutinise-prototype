@@ -139,6 +139,14 @@ export const PASS_DEFAULTS = {
    *  MODEL_CONTRACT.md §5. It is a one-line override away, and it is NOT changed here,
    *  because a model swap belongs behind an A/B on a gold set. */
   'deepening.adversarial': 'gemini-2.5-flash',
+  /**
+   * ⚠ ONE CALL PER RUN, OVER GROUPS — NEVER PER REFERENCE. The Equality Act returns 1,868
+   * inbound references; classifying them one at a time would be ruinous and would produce a
+   * list nobody can read. They group into single figures of KINDS in code, and only the
+   * kinds are sent. The cost is therefore a function of how many sorts of reference exist,
+   * not how many references — which is what makes the pass affordable on a large Act.
+   */
+  'deepening.consequences': 'gemini-2.5-flash',
   // ── orientation ──
   'orientation.web': 'gemini-2.5-flash',
   'orientation.x': 'grok-4.3',
