@@ -2,7 +2,45 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-26 23:32 UTC — CENTRAL: **the content soft-delete pattern is built — the thing item 11 was blocked on.** Four columns on Question, Answer and BulletinPost; ⚠ `deletedWithParent` is the load-bearing one, because restoring a question must bring back the answers that went WITH it and must not resurrect one its own author had deleted separately — without the flag those rows are identical and the difference is unrecoverable. Points reverse at the value they were awarded and the ledger only appends: award, reversal, restore is three rows, nothing edited. ⚠ `Answer.hidden` is moderation, NOT deletion, and stays — asserted both ways. Deleted means invisible, enforced at the two chokepoints every read flows through and asserted surface by surface, because a soft delete one read forgets is worse than none. Deleted-items view at `/communities/[id]/deleted`, cascaded rows labelled. **436/436**, six planted breaks all watched failing. ▶ Item 11 is now unblocked and is next. Earlier: 2026-08-26 20:52 UTC — ▼ **INGEST C3-A (the addendum): ONE LINE OF SEEDER MADE A COLLECTION 84.7% NOT-OTS, AND A SECOND SEEDER PARAMETER HAS BEEN RETURNING HTTP 422 AND YIELDING NOTHING, SILENTLY.**
+*Last updated: 2026-08-27 03:15 UTC — ▼ **PRINCIPLE 7: THE LICENCE APPLICATION'S CLAIM WAS FALSE IN
+EVERY PART, AND ITS PREMISE WAS WRONG TOO.** The draft says judgment pages carry `noindex, nofollow`
+and that `robots.txt` disallows those paths. Read off production before touching anything:
+`robots.txt` said **`Allow: /ideas/`**, **no page carried a meta robots tag**, **no response carried
+an `X-Robots-Tag`**, and **GPTBot / ClaudeBot / CCBot / Bytespider were each served the full 42 KB**
+of a public proposal page. No rate limit (20 sequential and 10 concurrent all 200), no WAF.
+⚠⚠ **AND THERE IS NO JUDGMENT PAGE TO NOINDEX.** Judgment text reaches a reader only as a
+**252-character median extract** inside a PROPOSAL page — the surface the product had deliberately
+made public, and which `sitemap.ts` was written to advertise to Google **the day any proposal
+reached Stage 4**. It produced 0 entries only because none has: the sitemap was clean by accident,
+not by design.
+▶ **Every `/ideas` page is now `noindex, nofollow` in THREE places** — the meta tag, the
+`X-Robots-Tag` header (which also covers the public JSON reads that have no HTML to tag), and
+`robots.txt`, because a crawler may honour any one and ignore the others. **`robots.txt` names 27 AI
+and bulk-collection crawlers individually**; a wildcard does not bind an agent that looks for its own
+name. Proposals are out of the sitemap.
+⚠ **A per-proposal flag was REJECTED — Charlie's call, and the right one.** It would have kept
+proposals discoverable by noindexing only the ones carrying a judgment extract, but the application
+states this as a **fact**, and a detector that silently stops firing turns a legal claim false with
+nobody watching. **Cost accepted: no proposal page appears in any search engine.**
+✅ **VERIFIED FROM OUTSIDE on `b093e89`, with a control**: the three proposal pages return
+`noindex, nofollow, noarchive, nosnippet` on both the header and the meta tag, the sitemap has
+**0 of 25** entries under `/ideas/`, all five named AI crawler User-Agents get the noindex header —
+and **`/` and `/about` still read `(none)`**, which is what distinguishes a targeted rule from a
+blanket one.
+▶ A **120/min per-hashed-IP speed bump** now covers the corpus-bearing paths, **watched firing at
+request 141 with `Retry-After: 60`**. ⚠ It fired at 141 rather than 121 because the counter lives in
+one edge instance's memory — **reported as a speed bump, never as a control**, since a collector
+that spreads its requests gets a fresh budget from each instance.
+▶▶ **Q21 = NO.** An extract is 252 characters at the median (max 776) against a median stored
+case-law section of ~37,575 — about **0.7% of one section** — and **74,896 of 74,896** case-law
+records carry their Find Case Law URL. Today **0 of 135** evidence rows carry any judgment text at
+all.
+▶▶ **CHARLIE: two things before 4 September.** (1) `docs/PRINCIPLE_7_EVIDENCE.md` is written and
+every line in it was read off production — attach or paraphrase it. (2) ⚠ **The definitive index
+check is Google Search Console, which cannot be read from this machine (§19)** — one minute of your
+time, and the number belongs in §5 of the pack before submission. ⚠ Nothing here touches retrieval:
+Lex's corpus search is server-side and reads no robots directive.
+Earlier: 2026-08-26 23:32 UTC — CENTRAL: **the content soft-delete pattern is built — the thing item 11 was blocked on.** Four columns on Question, Answer and BulletinPost; ⚠ `deletedWithParent` is the load-bearing one, because restoring a question must bring back the answers that went WITH it and must not resurrect one its own author had deleted separately — without the flag those rows are identical and the difference is unrecoverable. Points reverse at the value they were awarded and the ledger only appends: award, reversal, restore is three rows, nothing edited. ⚠ `Answer.hidden` is moderation, NOT deletion, and stays — asserted both ways. Deleted means invisible, enforced at the two chokepoints every read flows through and asserted surface by surface, because a soft delete one read forgets is worse than none. Deleted-items view at `/communities/[id]/deleted`, cascaded rows labelled. **436/436**, six planted breaks all watched failing. ▶ Item 11 is now unblocked and is next. Earlier: 2026-08-26 20:52 UTC — ▼ **INGEST C3-A (the addendum): ONE LINE OF SEEDER MADE A COLLECTION 84.7% NOT-OTS, AND A SECOND SEEDER PARAMETER HAS BEEN RETURNING HTTP 422 AND YIELDING NOTHING, SILENTLY.**
 `searchGovUk('office of tax simplification report', …, 500)` is a relevance search over **348,062**
 results; we kept the first 500. Re-classified all 497 rows against the gov.uk content API and the
 verdicts are **identical to 24 August, 497 of 497** — 76 KEEP / 421 DELETE / 0 HOLD. The delete now
