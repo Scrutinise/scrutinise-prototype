@@ -195,7 +195,23 @@ export function carryInto(log: PassRecord[], key: BuildPassKey): PassCarry {
   const upto = log.findIndex((p) => p.key === key)
   const out: PassCarry = {}
   for (const p of log.slice(0, upto < 0 ? log.length : upto)) {
-    if (p.status !== 'DONE') continue
+    // ⚠⚠ `SKIPPED` COUNTS, AND LEAVING IT OUT BROKE EVERY REUSE BUILD.
+    //
+    // A reused pass is written to the log as SKIPPED with the previous build's carry copied
+    // onto it (`reusedPassLog`). This filter accepted only DONE, so the carry was stored
+    // correctly and then discarded on the way back out — `carry.research` arrived at REVISE
+    // empty and the build died with "the research pass produced nothing to revise against".
+    //
+    // ⚠ IT LOOKED LIKE A DIFFERENT BUG, TWICE. 25-I fixed the evidence carry (which really
+    // was moving rather than copying) and the same message came back, because two
+    // independent defects sat on the same path: the ROWS were carried and the STRING was
+    // not. The second was invisible until the first was fixed — measured on v4, which has
+    // `research=6031ch` sitting on a SKIPPED record that nothing would read.
+    //
+    // The distinction the filter was reaching for is "a pass that produced nothing has
+    // nothing to contribute". SKIPPED-with-a-carry is the opposite of that: it is a pass
+    // whose output we deliberately kept. FAILED and PENDING still contribute nothing.
+    if (p.status !== 'DONE' && p.status !== 'SKIPPED') continue
     for (const [k, v] of Object.entries(p.carry ?? {})) {
       if (v === undefined || v === null || v === '') continue
       ;(out as Record<string, unknown>)[k] = v
