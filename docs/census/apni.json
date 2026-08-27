@@ -1,0 +1,13 @@
+{
+  "corpus_key": "apni",
+  "state": "NOT_STARTED",
+  "unit": "document",
+  "method": "nothing ingested yet",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 0,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": null
+}

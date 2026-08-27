@@ -1,0 +1,13 @@
+{
+  "corpus_key": "pwdata-westminster",
+  "state": "MEASURED",
+  "unit": "Westminster Hall sitting day",
+  "method": "entry walk of the https://www.theyworkforyou.com/pwdata/scrapedxml/westminhall/ directory index; 3,966 files reduced to sitting days by stripping the revision letter",
+  "walked_at": "2026-08-27T15:05:54.090Z",
+  "published_units": 2646,
+  "held_units": 2646,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "EXACT: every day the index lists is held. The denominator is the publisher's 3,966-file directory listing reduced to days, not our row count; the identical comparison reports an absence for pwdata-lordswrans, so it is capable of disagreeing. 3,966 files → 2,646 distinct sitting days."
+}

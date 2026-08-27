@@ -1,0 +1,152 @@
+{
+  "generated": "2026-08-27T15:07:47.897Z",
+  "before": {
+    "absent": 10,
+    "decoy": 3,
+    "of": 10,
+    "source": "CASEREF_baseline_2026-08-27.json"
+  },
+  "afterSimulated": {
+    "correct": 8,
+    "of": 10
+  },
+  "rows": [
+    {
+      "authority": "Anisminic Ltd v Foreign Compensation Commission",
+      "citation": "[1969] 2 AC 147",
+      "before": "ABSENT",
+      "afterTop": "[1969] 2 AC 147",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Anisminic Ltd v Foreign Compensation Commission",
+        "citation": "[1969] 2 AC 147",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 1,
+        "discussion": 1
+      }
+    },
+    {
+      "authority": "Pepper (Inspector of Taxes) v Hart",
+      "citation": "[1993] AC 593",
+      "before": "ABSENT",
+      "afterTop": "[1993] AC 593",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Pepper v Hart",
+        "citation": "[1993] AC 593",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 2,
+        "discussion": 3
+      }
+    },
+    {
+      "authority": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+      "citation": "[1948] 1 KB 223",
+      "before": "ABSENT",
+      "afterTop": null,
+      "afterCorrect": false,
+      "wouldSay": null
+    },
+    {
+      "authority": "Council of Civil Service Unions v Minister for the Civil Service (GCHQ)",
+      "citation": "[1985] AC 374",
+      "before": "DECOY",
+      "afterTop": "[1985] AC 374",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Council for Civil Service Unions v Minister for the Civil Service",
+        "citation": "[1985] AC 374",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 1,
+        "discussion": 5
+      }
+    },
+    {
+      "authority": "Caparo Industries plc v Dickman",
+      "citation": "[1990] 2 AC 605",
+      "before": "DECOY",
+      "afterTop": "[1990] 2 AC 605",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Caparo Industries Plc v Dickman",
+        "citation": "[1990] 2 AC 605",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 7,
+        "discussion": 4
+      }
+    },
+    {
+      "authority": "Donoghue v Stevenson",
+      "citation": "[1932] AC 562",
+      "before": "ABSENT",
+      "afterTop": "[1932] AC 562",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Donoghue v Stevenson",
+        "citation": "[1932] AC 562",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 0,
+        "discussion": 3
+      }
+    },
+    {
+      "authority": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+      "citation": "[1991] 1 AC 603",
+      "before": "ABSENT",
+      "afterTop": "[1991] 1 AC 603",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+        "citation": "[1991] 1 AC 603",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 0,
+        "discussion": 2
+      }
+    },
+    {
+      "authority": "M v Home Office",
+      "citation": "[1994] 1 AC 377",
+      "before": "ABSENT",
+      "afterTop": "[1994] 1 AC 377",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "M v Home Office",
+        "citation": "[1994] 1 AC 377",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 1,
+        "discussion": 0
+      }
+    },
+    {
+      "authority": "R v North and East Devon Health Authority, ex p Coughlan",
+      "citation": "[2001] QB 213",
+      "before": "DECOY",
+      "afterTop": "[2001] QB 213",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "R v. North and East Devon Health Authority ex parte Coughlan",
+        "citation": "[2001] QB 213",
+        "court": "Court of Appeal",
+        "held": "not-held",
+        "citedBy": 1,
+        "discussion": 5
+      }
+    },
+    {
+      "authority": "Ridge v Baldwin",
+      "citation": "[1964] AC 40",
+      "before": "ABSENT",
+      "afterTop": null,
+      "afterCorrect": false,
+      "wouldSay": null
+    }
+  ],
+  "note": "AFTER is a SIMULATION over the reference records, not the shipped ranking. It shows the data is sufficient; CC-Search owns the change and the real after-measurement."
+}

@@ -1,0 +1,16 @@
+{
+  "generated": "2026-08-27T14:49:28.251Z",
+  "stamp": "2026-08-27T02-20-26-375Z",
+  "executed": false,
+  "report": [
+    {
+      "table": "corpus_chunks",
+      "versionBefore": 18448,
+      "rowsBefore": 22670808,
+      "wholeCount": 39139,
+      "partialCount": 131650,
+      "etTotal": 504686,
+      "executed": false
+    }
+  ]
+}

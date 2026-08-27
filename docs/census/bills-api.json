@@ -1,0 +1,13 @@
+{
+  "corpus_key": "bills-api",
+  "state": "MEASURED",
+  "unit": "Bill",
+  "method": "server-side total from https://bills-api.parliament.uk/api/v1/Bills?Take=1",
+  "walked_at": "2026-08-27T15:12:06.082Z",
+  "published_units": 4035,
+  "held_units": 421,
+  "hollow_units": 0,
+  "absent_total": 3614,
+  "absent_ids": [],
+  "notes": "Unit is a Bill, not a publication: we hold documents attached to bills, and one bill can carry many."
+}

@@ -1,0 +1,584 @@
+{
+  "generated": "2026-08-27T15:15:21.000Z",
+  "source": "CASEREF_citations.pilot.jsonl",
+  "records": [
+    {
+      "citation": "[1969] 2 AC 147",
+      "kind": "law-report",
+      "year": 1969,
+      "names": [
+        {
+          "name": "Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        }
+      ],
+      "observedName": "Anisminic Ltd v Foreign Compensation Commission",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 1,
+        "byCorpus": {
+          "tna-caselaw": 1
+        }
+      },
+      "discussion": [
+        {
+          "id": "explanatory-notes:en:ukpga/2022/35:1-0010",
+          "corpus": "explanatory-notes",
+          "title": "Explanatory Notes: ukpga/2022/35 (10)",
+          "date": null,
+          "evidence": "citation",
+          "snippet": "This was removed during the passage of the Bill and is not part of the Act. 22 Since Anisminic v FCC [1969] 2 AC 147, [1969] 2 WLR 163 and subsequent cases dealing with the question as to whether any error of law constitutes a jurisdictional error thus invalidating the act in question, there has been arguable ambiguity as to what kind of errors make a decision invalid and which do not."
+        }
+      ],
+      "description": {
+        "text": "This was removed during the passage of the Bill and is not part of the Act. 22 Since Anisminic v FCC [1969] 2 AC 147, [1969] 2 WLR 163 and subsequent cases dealing with the question as to whether any error of law constitutes a jurisdictional error thus invalidating the act in question, there has been arguable ambiguity as to what kind of errors make a decision invalid and which do not.",
+        "sourceId": "explanatory-notes:en:ukpga/2022/35:1-0010",
+        "sourceCorpus": "explanatory-notes",
+        "sourceTitle": "Explanatory Notes: ukpga/2022/35 (10)"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [1969] 2 AC 147",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1993] AC 593",
+      "kind": "law-report",
+      "year": 1993,
+      "names": [
+        {
+          "name": "Pepper v Hart",
+          "seen": 1
+        }
+      ],
+      "observedName": "Pepper v Hart",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 2,
+        "byCorpus": {
+          "tna-caselaw": 2
+        }
+      },
+      "discussion": [
+        {
+          "id": "committees-reports:publication:9655:arc-0037",
+          "corpus": "committees-reports",
+          "title": "Report: Parliamentary Privilege - Report of 2013-14 (Report, together with formal minutes and an\r\nappendix) — Parliamentary Privilege (Joint Committee) — Parliamentary Privilege 27",
+          "date": "2013-07-03",
+          "evidence": "citation",
+          "snippet": "Hart [1993] AC 593 102 Q 31 103 Q 251 104 Cm 8318, paragraph 84."
+        },
+        {
+          "id": "committees-reports:publication:25263:arc-0138",
+          "corpus": "committees-reports",
+          "title": "Report: 13th Report - EU police and criminal justice measures: The UK's 2014 opt-out decision — EU Sub Committee E - Justice, Institutions and Consumer Protection — OTHER",
+          "date": "2013-04-23",
+          "evidence": "citation",
+          "snippet": "Parliamentary material relating to the debates before the enactment of the 2003 Act were held by the majority to be inadmissible as an aid to construction under the rule in Pepper v Hart [1993] AC 593, given the need to ensure that the phrase ‘judicial authority’ had the same meaning as it had in the Framework Decision [12][92][98]."
+        },
+        {
+          "id": "committees-reports:publication:9146:159562-0007",
+          "corpus": "committees-reports",
+          "title": "Report: Sixth Report - Review of fairness and natural justice in the House’s standards system — Committee on Standards",
+          "date": "2022-03-04",
+          "evidence": "citation",
+          "snippet": "Hart [1993] AC 593 per Lord Browne-Wilkinson at 638. 17 Bradlaugh v."
+        }
+      ],
+      "description": {
+        "text": "Parliamentary material relating to the debates before the enactment of the 2003 Act were held by the majority to be inadmissible as an aid to construction under the rule in Pepper v Hart [1993] AC 593, given the need to ensure that the phrase ‘judicial authority’ had the same meaning as it had in the Framework Decision [12][92][98].",
+        "sourceId": "committees-reports:publication:25263:arc-0138",
+        "sourceCorpus": "committees-reports",
+        "sourceTitle": "Report: 13th Report - EU police and criminal justice measures: The UK's 2014 opt-out decision — EU Sub Committee E - Justice, Institutions and Consumer Protection — OTHER"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [1993] AC 593",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1948] 1 KB 223",
+      "kind": "law-report",
+      "year": 1948,
+      "names": [],
+      "observedName": null,
+      "court": "Court of Appeal",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 1,
+        "byCorpus": {
+          "tna-caselaw": 1
+        }
+      },
+      "discussion": [
+        {
+          "id": "committees-reports:publication:23911:arc-0220",
+          "corpus": "committees-reports",
+          "title": "Report: 6th Report - The Coastguard, Emergency Towing Vessels and the Maritime Incident Response Group - additional written evidence — Transport Committee — “smallest” ever [here in Aberaeron at 3.4 metres — ¶26",
+          "date": "2011-06-23",
+          "evidence": "citation",
+          "snippet": "If we refer to the judgments in the cases of R v ILEA Ex parte Westminster City Council [1948] 1 KB 223 and Padfield v Ministry of Agriculture, Fisheries and Food [1968] 1 All ER 694, it is clear that (while the ETV network still remains valid for its purpose, which it clearly does) pure economic pressure should not be a relevant consideration in deciding on its future. 31."
+        }
+      ],
+      "description": {
+        "text": "If we refer to the judgments in the cases of R v ILEA Ex parte Westminster City Council [1948] 1 KB 223 and Padfield v Ministry of Agriculture, Fisheries and Food [1968] 1 All ER 694, it is clear that (while the ETV network still remains valid for its purpose, which it clearly does) pure economic pressure should not be a relevant consideration in deciding on its future. 31.",
+        "sourceId": "committees-reports:publication:23911:arc-0220",
+        "sourceCorpus": "committees-reports",
+        "sourceTitle": "Report: 6th Report - The Coastguard, Emergency Towing Vessels and the Maritime Incident Response Group - additional written evidence — Transport Committee — “smallest” ever [here in Aberaeron at 3.4 metres — ¶26"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [1948] 1 KB 223",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1985] AC 374",
+      "kind": "law-report",
+      "year": 1985,
+      "names": [
+        {
+          "name": "Council for Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        }
+      ],
+      "observedName": "Council for Civil Service Unions v Minister for the Civil Service",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 1,
+        "byCorpus": {
+          "tna-caselaw": 1
+        }
+      },
+      "discussion": [
+        {
+          "id": "committees-reports:publication:24831:arc-0010",
+          "corpus": "committees-reports",
+          "title": "Report: 7th Report - The Agreement on a referendum on independence for Scotland — Constitution Committee — THE AGREEMENT ON A REFERENDUM ON INDEPENDENCE FOR SCOTLAND 7 — ¶28",
+          "date": "2012-11-13",
+          "evidence": "citation",
+          "snippet": "for example, of Council of Civil Service Unions v Minister for the Civil Service [1985] AC 374 and R v North and East Devon Health Authority, ex p Coughlan [2001] QB 213, respectively. 31 See Wheeler, op. cit."
+        },
+        {
+          "id": "committees-reports:publication:5190:52402-0037",
+          "corpus": "committees-reports",
+          "title": "Report: Report — 33 Report statutory intention.104 — Joint Committee on the Fixed-Term Parliaments Act",
+          "date": "2021-03-24",
+          "evidence": "citation",
+          "snippet": "justiciable (see Council of Civil Service Unions v Minister of State for Civil Service [1985] AC 374, per Lord Roskill)."
+        },
+        {
+          "id": "committees-reports:publication:24695:arc-0074",
+          "corpus": "committees-reports",
+          "title": "Report: 3rd Report - The work of the Local Government Ombudsman - Volume I (Volume I: Report, together with formal minutes, oral and written evidence) — Housing, Communities and Local Government Committee — The work of the Local Government Ombudsman 35",
+          "date": "2012-07-17",
+          "evidence": "citation",
+          "snippet": "It should be giving children a voice. 16 R v Ministry of Defence ex parte Smith[1996] QB 517, per Lord Bingham at [556] 17 Council of Civil Service Unions v Minister for the Civil Service[1985] AC 374"
+        },
+        {
+          "id": "committees-reports:publication:51867:287741-0003",
+          "corpus": "committees-reports",
+          "title": "Report: Forty-ninth Report - 3 Statutory Instruments Reported — Statutory Instruments (Joint Committee)",
+          "date": "2026-02-27",
+          "evidence": "citation",
+          "snippet": "For instance, a duty to consult may arise where there has been an established practice of consultation (see Medical Justice v Secretary of State for the Home Department [2025] EWCA Civ 251 at [50] - [51], citing Council of Civil Service Unions v Minister for the Civil Service [1985] AC 374)."
+        },
+        {
+          "id": "committees-reports:publication:24256:arc-0121",
+          "corpus": "committees-reports",
+          "title": "Report: 61st Report - HM Revenue & Customs 2010-11 Accounts: tax disputes (Report, together with formal minutes, oral and written evidence) — Public Accounts Committee — Fifty-second Report",
+          "date": "2011-12-20",
+          "evidence": "citation",
+          "snippet": "InCouncil of Civil Service Unions v Minister for the Civil Service[1985] AC 374, Lord Diplock (while expounding the classic grounds for the judicial review of administrative decision) stated (at 410): “By “illegality” as a ground for judicial review I mean that the decision-maker must understand correctly the law that regulates his decision-making power and must give effect to it”. 12."
+        }
+      ],
+      "description": {
+        "text": "for example, of Council of Civil Service Unions v Minister for the Civil Service [1985] AC 374 and R v North and East Devon Health Authority, ex p Coughlan [2001] QB 213, respectively. 31 See Wheeler, op. cit.",
+        "sourceId": "committees-reports:publication:24831:arc-0010",
+        "sourceCorpus": "committees-reports",
+        "sourceTitle": "Report: 7th Report - The Agreement on a referendum on independence for Scotland — Constitution Committee — THE AGREEMENT ON A REFERENDUM ON INDEPENDENCE FOR SCOTLAND 7 — ¶28"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [1985] AC 374",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1990] 2 AC 605",
+      "kind": "law-report",
+      "year": 1990,
+      "names": [
+        {
+          "name": "Caparo Industries Plc v Dickman",
+          "seen": 2
+        },
+        {
+          "name": "Caparo Industries Plc v Dickman and others",
+          "seen": 1
+        },
+        {
+          "name": "a leading case in this area is Caparo Industries Plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries plc v Dickman and Others",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries plc v. Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo plc v. Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries plc v Dickman",
+          "seen": 1
+        }
+      ],
+      "observedName": "Caparo Industries Plc v Dickman",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 7,
+        "byCorpus": {
+          "tna-caselaw": 7
+        }
+      },
+      "discussion": [
+        {
+          "id": "committees-reports:publication:25375:arc-0324",
+          "corpus": "committees-reports",
+          "title": "Report: Final Report - Changing banking for good - Volume IX (Volume IX: Oral and written evidence given to Sub-Committees H and I) — Parliamentary Commission on Banking Standards (Joint Committee) — December 1992. Washington: USGPO",
+          "date": "2013-06-19",
+          "evidence": "citation",
+          "snippet": "It was also the view of Lord Oliver of Aylmerton given in Caparo Industries v Dickman [1990] 2 AC 605 at 630F-G, where he said, \"It is the auditors' function to ensure, so far as possible, that the financial information as to the company's affairs prepared by the directors accurately reflects the company's position in order ... to protect the company itself from the consequences of undetected erro"
+        },
+        {
+          "id": "committees-reports:publication:23732:arc-0354",
+          "corpus": "committees-reports",
+          "title": "Report: 2nd Report - Auditors: Market concentration and their role - Volume II: evidence — Economic Affairs Committee — Transparency for accountability to members",
+          "date": "2011-03-30",
+          "evidence": "name-and-year",
+          "snippet": "shareholders with reliable intelligence) that were articulated in the Caparo case (Caparo Industries plc v Dickman,House of Lords (1990), 1 All ER 568 [1990] 2 WLR 358); [Note: See answer to Q.10, in particular paragraph 10.12, in my written evidence provided on 11 January 2011] (ii) amend the provisions of the Act, including those relating to the duties to prepare accounts (eg section 394 on indi"
+        },
+        {
+          "id": "committees-reports:publication:23732:arc-0351",
+          "corpus": "committees-reports",
+          "title": "Report: 2nd Report - Auditors: Market concentration and their role - Volume II: evidence — Economic Affairs Committee — Transparency for accountability to members",
+          "date": "2011-03-30",
+          "evidence": "name-and-year",
+          "snippet": "on the two principal purposes of the audit that was articulated in the Caparo case (Caparo Industries plc v Dickman,House of Lords (1990), 1 All ER 568 [1990] 2 WLR 358)."
+        },
+        {
+          "id": "committees-reports:publication:25375:arc-0192",
+          "corpus": "committees-reports",
+          "title": "Report: Final Report - Changing banking for good - Volume IX (Volume IX: Oral and written evidence given to Sub-Committees H and I) — Parliamentary Commission on Banking Standards (Joint Committee) — December 1992. Washington: USGPO",
+          "date": "2013-06-19",
+          "evidence": "name-and-year",
+          "snippet": "In contrast to the direction of accounting standards, the 1990 House of Lords judgement in Caparo Industries plc v Dickman & Others [1990] 1 All ER HL 568 stated “I see no grounds for believing that, in enacting the statutory provisions [requiring publication of audited company accounts] Parliament had in mind the provision of information for the assistance of purchasers of shares or debentures in"
+        }
+      ],
+      "description": {
+        "text": "It was also the view of Lord Oliver of Aylmerton given in Caparo Industries v Dickman [1990] 2 AC 605 at 630F-G, where he said, \"It is the auditors' function to ensure, so far as possible, that the financial information as to the company's affairs prepared by the directors accurately reflects the company's position in order ... to protect the company itself from the consequences of undetected erro",
+        "sourceId": "committees-reports:publication:25375:arc-0324",
+        "sourceCorpus": "committees-reports",
+        "sourceTitle": "Report: Final Report - Changing banking for good - Volume IX (Volume IX: Oral and written evidence given to Sub-Committees H and I) — Parliamentary Commission on Banking Standards (Joint Committee) — December 1992. Washington: USGPO"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [1990] 2 AC 605",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1932] AC 562",
+      "kind": "law-report",
+      "year": 1932,
+      "names": [
+        {
+          "name": "Donoghue v Stevenson",
+          "seen": 1
+        }
+      ],
+      "observedName": "Donoghue v Stevenson",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 0,
+        "byCorpus": {}
+      },
+      "discussion": [
+        {
+          "id": "pwdata-lords:daylord2023-04-24a:126",
+          "corpus": "pwdata-lords",
+          "title": "Levelling-up and Regeneration Bill - Committee (11th Day) — Amendment 274",
+          "date": "2023-04-24",
+          "evidence": "name-and-year",
+          "snippet": "One of the very few cases I still vividly remember from my original legal training is the landmark decision in Donoghue v Stevenson in 1932, which involved a Mrs May Donoghue discovering a decomposed snail at the bottom of her bottle of ginger beer, and a Mr David Stevenson, the owner of the ginger beer company."
+        },
+        {
+          "id": "committees-reports:publication:6878:72529-0019",
+          "corpus": "committees-reports",
+          "title": "Report: 1st Report - Free for all? Freedom of expression in the digital age — Communications and Digital Committee",
+          "date": "2021-07-22",
+          "evidence": "name-and-year",
+          "snippet": "The ‘duty of care’ principle was developed by Donoghue v Stevenson in 1932, involving a woman who found a snail in a bottle of ginger beer she had drunk from."
+        },
+        {
+          "id": "pwdata-lords:daylord2009-10-23a:12",
+          "corpus": "pwdata-lords",
+          "title": "Consumer Rights (EUC Report) — Motion to Take Note",
+          "date": "2009-10-23",
+          "evidence": "name-and-year",
+          "snippet": "Finally, I was really delighted to hear from the noble Lord, Lord Kirkwood, about the case of Donoghue v Stevenson in 1932."
+        }
+      ],
+      "description": null,
+      "links": [
+        {
+          "label": "Search BAILII for [1932] AC 562",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1991] 1 AC 603",
+      "kind": "law-report",
+      "year": 1990,
+      "names": [
+        {
+          "name": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+          "seen": 1
+        }
+      ],
+      "observedName": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 0,
+        "byCorpus": {}
+      },
+      "discussion": [
+        {
+          "id": "committees-reports:publication:10547:arc-0047",
+          "corpus": "committees-reports",
+          "title": "Report: 43rd Report - The application of the EU Charter of Fundamental Rights in the UK: a state of confusion — European Scrutiny Committee — 181 Q115 182 Q96 183 Q121 184 Q117 185 Q123",
+          "date": "2014-04-02",
+          "evidence": "citation",
+          "snippet": "Factortame (No 1) [1990] 2 AC 85; Factortame (No 2) [1991] 1 AC 603. 218 Sections 4 and 10 of the Human Rights Act 1998 The application of the EU Charter of Fundamental Rights in the UK: a state of confusion 51 But the Charter does not apply to all areas of national law or action, only those that fall within the scope of EU law 148."
+        },
+        {
+          "id": "committees-evidence:writtenevidence:87396:133281",
+          "corpus": "committees-evidence",
+          "title": "Brexit: enforcement and dispute resolution inquiry — BED0016",
+          "date": "2018-03-07",
+          "evidence": "citation",
+          "snippet": "Regina v Secretary of State for Transport, Ex parte Factortame Ltd. and Others (No. 2) [1991] 1 AC 603 (HL) per Lord Bridge. [6] Article 30.6 CETA expressly excludes such effect. [7] A more elaborated version of this exposition can be found in: T."
+        }
+      ],
+      "description": {
+        "text": "Factortame (No 1) [1990] 2 AC 85; Factortame (No 2) [1991] 1 AC 603. 218 Sections 4 and 10 of the Human Rights Act 1998 The application of the EU Charter of Fundamental Rights in the UK: a state of confusion 51 But the Charter does not apply to all areas of national law or action, only those that fall within the scope of EU law 148.",
+        "sourceId": "committees-reports:publication:10547:arc-0047",
+        "sourceCorpus": "committees-reports",
+        "sourceTitle": "Report: 43rd Report - The application of the EU Charter of Fundamental Rights in the UK: a state of confusion — European Scrutiny Committee — 181 Q115 182 Q96 183 Q121 184 Q117 185 Q123"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [1991] 1 AC 603",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1994] 1 AC 377",
+      "kind": "law-report",
+      "year": 1994,
+      "names": [
+        {
+          "name": "M v Home Office",
+          "seen": 1
+        }
+      ],
+      "observedName": "M v Home Office",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 1,
+        "byCorpus": {
+          "tna-caselaw": 1
+        }
+      },
+      "discussion": [],
+      "description": null,
+      "links": [
+        {
+          "label": "Search BAILII for [1994] 1 AC 377",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[2001] QB 213",
+      "kind": "law-report",
+      "year": 2001,
+      "names": [
+        {
+          "name": "R v. North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        }
+      ],
+      "observedName": "R v. North and East Devon Health Authority ex parte Coughlan",
+      "court": "Court of Appeal",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 1,
+        "byCorpus": {
+          "tna-caselaw": 1
+        }
+      },
+      "discussion": [
+        {
+          "id": "committees-reports:publication:24831:arc-0010",
+          "corpus": "committees-reports",
+          "title": "Report: 7th Report - The Agreement on a referendum on independence for Scotland — Constitution Committee — THE AGREEMENT ON A REFERENDUM ON INDEPENDENCE FOR SCOTLAND 7 — ¶28",
+          "date": "2012-11-13",
+          "evidence": "citation",
+          "snippet": "Civil Service [1985] AC 374 and R v North and East Devon Health Authority, ex p Coughlan [2001] QB 213, respectively. 31 See Wheeler, op."
+        },
+        {
+          "id": "committees-reports:publication:25167:arc-0021",
+          "corpus": "committees-reports",
+          "title": "Report: Report - Draft Care and Support Bill (Report, together with formal minutes) — Draft Care and Support Bill (Joint Committee) — 18 Draft Care and Support Bill — ¶56",
+          "date": "2013-03-19",
+          "evidence": "citation",
+          "snippet": "made to clarify the limits of 40 R v North and East Devon Health Authority ex p Coughlan [2001] QB 213, 232. 41 This does not do justice to the complexity of the legislation and its interpretation by the courts: see pages 147-152 of the Law Commission report. 42 Report, recommendation 51 at pages 151-152. 43 Q 9."
+        },
+        {
+          "id": "explanatory-notes:en:ukpga/2014/23:1-0024",
+          "corpus": "explanatory-notes",
+          "title": "Explanatory Notes: ukpga/2014/23 — ¶159 (24)",
+          "date": null,
+          "evidence": "citation",
+          "snippet": "This reflects what has become known as the “quantity and quality test”, arising out of the case of R v North and East Devon Health Authority ex parte Coughlan [2001] QB 213 (“Coughlan”). 161."
+        },
+        {
+          "id": "committees-evidence:writtenevidence:83060:128276",
+          "corpus": "committees-evidence",
+          "title": "Investigation into NHS continuing healthcare funding — CHF0025",
+          "date": "2017-11-08",
+          "evidence": "citation",
+          "snippet": "other cases such as R v North and East Devon Health Authority ex p Coughlan 51 BMLR 1, [2001] QB 213 [90-93]."
+        },
+        {
+          "id": "committees-evidence:writtenevidence:56537:102112",
+          "corpus": "committees-evidence",
+          "title": "Transatlantic Trade and Investment Partnership inquiry — TIP0023",
+          "date": "2015-02-24",
+          "evidence": "citation",
+          "snippet": "Coughlan [2001] QB 213 ."
+        }
+      ],
+      "description": {
+        "text": "Civil Service [1985] AC 374 and R v North and East Devon Health Authority, ex p Coughlan [2001] QB 213, respectively. 31 See Wheeler, op.",
+        "sourceId": "committees-reports:publication:24831:arc-0010",
+        "sourceCorpus": "committees-reports",
+        "sourceTitle": "Report: 7th Report - The Agreement on a referendum on independence for Scotland — Constitution Committee — THE AGREEMENT ON A REFERENDUM ON INDEPENDENCE FOR SCOTLAND 7 — ¶28"
+      },
+      "links": [
+        {
+          "label": "Search BAILII for [2001] QB 213",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    },
+    {
+      "citation": "[1964] AC 40",
+      "kind": "law-report",
+      "year": 1964,
+      "names": [
+        {
+          "name": "Ridge v Baldwin",
+          "seen": 1
+        }
+      ],
+      "observedName": "Ridge v Baldwin",
+      "court": "House of Lords",
+      "courtSource": "curated",
+      "held": "not-held",
+      "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
+      "heldId": null,
+      "citedBy": {
+        "documents": 1,
+        "byCorpus": {
+          "tna-caselaw": 1
+        }
+      },
+      "discussion": [],
+      "description": null,
+      "links": [
+        {
+          "label": "Search BAILII for [1964] AC 40",
+          "url": "https://www.bailii.org/form/search_cases.html",
+          "derived": false
+        }
+      ]
+    }
+  ]
+}

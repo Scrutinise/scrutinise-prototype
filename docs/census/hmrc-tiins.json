@@ -1,0 +1,13 @@
+{
+  "corpus_key": "hmrc-tiins",
+  "state": "UNMEASURED",
+  "unit": "tax information and impact note",
+  "method": "proxy index, deliberately not used as a denominator: server-side total from https://www.gov.uk/api/search.json?count=0&filter_organisations=hm-revenue-customs&filter_content_store_document_type=tax_information_and_impact_note",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 791,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "⚠ gov.uk publishes NO `tax_information_and_impact_note` document type — measured 27 Aug, both the doctype and format filters return 0 against 791 held. TIINs are published as attachments to other documents, so there is no page-level universe to count. UNMEASURED until somebody finds the real index; a 0 denominator would have printed as ∞% complete. The proxy returned 0 against 791 held. No denominator recorded. An endpoint that fails, or one that counts a different universe, does not become a number."
+}

@@ -1,0 +1,13 @@
+{
+  "corpus_key": "members-interests",
+  "state": "MEASURED",
+  "unit": "registered interest",
+  "method": "server-side total from https://interests-api.parliament.uk/api/v1/Interests?Take=1",
+  "walked_at": "2026-08-27T15:12:08.066Z",
+  "published_units": 4100,
+  "held_units": 3448,
+  "hollow_units": 0,
+  "absent_total": 652,
+  "absent_ids": [],
+  "notes": null
+}

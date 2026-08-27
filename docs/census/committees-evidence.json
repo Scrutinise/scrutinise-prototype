@@ -1,0 +1,13 @@
+{
+  "corpus_key": "committees-evidence",
+  "state": "MEASURED",
+  "unit": "evidence submission",
+  "method": "oral 16098 + written 128080 from committees-api.parliament.uk",
+  "walked_at": "2026-08-27T15:12:35.880Z",
+  "published_units": 144178,
+  "held_units": 140567,
+  "hollow_units": 0,
+  "absent_total": 3611,
+  "absent_ids": [],
+  "notes": null
+}

@@ -1,0 +1,13 @@
+{
+  "corpus_key": "ssrn",
+  "state": "BLOCKED",
+  "unit": "document",
+  "method": "collection blocked; not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 0,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "Former corpus_targets.est_sections was 50,000 sections, provenance unproven. blocked: licence-hostile (author copyright, no open licence); WAF intermittent — V21 probe got 200 JSON where V20 got hard 403"
+}

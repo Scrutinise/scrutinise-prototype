@@ -1,0 +1,13 @@
+{
+  "corpus_key": "college-of-policing",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 332,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "Former corpus_targets.est_sections was 332 sections — EXACTLY the compiled row count, i.e. self-referential, which is why it is not used here. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

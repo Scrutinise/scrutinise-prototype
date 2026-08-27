@@ -1,0 +1,13 @@
+{
+  "corpus_key": "tax-tribunals",
+  "state": "UNMEASURED",
+  "unit": "tax tribunal decision",
+  "method": "proxy index, deliberately not used as a denominator: server-side total from https://www.gov.uk/api/search.json?count=0&filter_format=tax_tribunal_decision",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 12027,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "⚠ gov.uk lists 1,434 tax tribunal decisions; we hold 12,027 from financeandtax.decisions.tribunals.gov.uk, the tribunal's OWN archive. Two different universes — gov.uk carries only the recent ones — so the gov.uk figure is recorded here and used for nothing. The tribunal archive has no countable index. The proxy returned 1,434 against 12,027 held. No denominator recorded. An endpoint that fails, or one that counts a different universe, does not become a number."
+}

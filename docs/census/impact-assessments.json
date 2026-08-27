@@ -1,0 +1,13 @@
+{
+  "corpus_key": "impact-assessments",
+  "state": "CLAIMED",
+  "unit": "impact assessment",
+  "method": "server-side total from https://www.gov.uk/api/search.json?count=0&filter_content_store_document_type=impact_assessment",
+  "walked_at": "2026-08-27T15:12:46.244Z",
+  "published_units": 1932,
+  "held_units": 1090,
+  "hollow_units": 0,
+  "absent_total": 842,
+  "absent_ids": [],
+  "notes": "⚠ We hold impact assessments from legislation.gov.uk (ukia/…), gov.uk publishes its own; the two universes are not identical, so this is a CROSS-PUBLISHER denominator and the row is CLAIMED."
+}

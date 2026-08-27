@@ -1,0 +1,13 @@
+{
+  "corpus_key": "lda-commonswrittenquestions",
+  "state": "RETIRED",
+  "unit": "document",
+  "method": "collection retired; rows removed",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 0,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "Former corpus_targets.est_sections was 619,000 sections, provenance unproven. blocked: Retired V16 — content covered by pwdata-wrans bulk XML from TWFY (2001–present) · C2 Lane 2: rows and vectors purged 2026-08-27T02-20-26-375Z"
+}

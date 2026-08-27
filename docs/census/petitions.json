@@ -1,0 +1,13 @@
+{
+  "corpus_key": "petitions",
+  "state": "MEASURED",
+  "unit": "petition",
+  "method": "open (page walk of https://petition.parliament.uk/petitions.json?page=1 — 625 pages of 50, last page holds 21) + archived (page walk of https://petition.parliament.uk/archived/petitions.json?page=1 — 2082 pages of 50, last page holds 8)",
+  "walked_at": "2026-08-27T15:12:38.546Z",
+  "published_units": 135279,
+  "held_units": 49529,
+  "hollow_units": 0,
+  "absent_total": 85750,
+  "absent_ids": [],
+  "notes": null
+}

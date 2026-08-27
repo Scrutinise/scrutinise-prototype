@@ -1,0 +1,13 @@
+{
+  "corpus_key": "pwdata-lordswms",
+  "state": "MEASURED",
+  "unit": "Lords written-statements day",
+  "method": "entry walk of the https://www.theyworkforyou.com/pwdata/scrapedxml/lordswms/ directory index; 3,700 files reduced to sitting days by stripping the revision letter",
+  "walked_at": "2026-08-27T15:06:06.477Z",
+  "published_units": 3168,
+  "held_units": 3168,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "EXACT: every day the index lists is held. The denominator is the publisher's 3,700-file directory listing reduced to days, not our row count; the identical comparison reports an absence for pwdata-lordswrans, so it is capable of disagreeing. 3,700 files → 3,168 distinct sitting days."
+}

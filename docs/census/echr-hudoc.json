@@ -1,0 +1,13 @@
+{
+  "corpus_key": "echr-hudoc",
+  "state": "MEASURED",
+  "unit": "judgment or decision against the UK",
+  "method": "server-side total from https://hudoc.echr.coe.int/app/query/results?query=contentsitename%3DECHR%20AND%20(NOT%20(doctype%3DPR%20OR%20doctype%3DHFCOMOLD%20OR%20doctype%3DHECOMOLD))%20AND%20respondent%3D%22GBR%22&select=itemid&sort=&start=0&length=1",
+  "walked_at": "2026-08-27T15:12:39.345Z",
+  "published_units": 8018,
+  "held_units": 4410,
+  "hollow_units": 0,
+  "absent_total": 3608,
+  "absent_ids": [],
+  "notes": "respondent=GBR, the same filter the ingest uses."
+}

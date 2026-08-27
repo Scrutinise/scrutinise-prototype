@@ -1,0 +1,13 @@
+{
+  "corpus_key": "et-decisions",
+  "state": "MEASURED",
+  "unit": "employment tribunal decision",
+  "method": "server-side total from https://www.gov.uk/api/search.json?count=0&filter_content_store_document_type=employment_tribunal_decision",
+  "walked_at": "2026-08-27T15:12:44.462Z",
+  "published_units": 133641,
+  "held_units": 131161,
+  "hollow_units": 0,
+  "absent_total": 2480,
+  "absent_ids": [],
+  "notes": "The 131,650 landing-page rows were deleted from Neon on 27 Aug; this counts the decisions that remain. ⚠ Its corpus_targets row was retired AND blocked by that same purge even though the collection still holds 161,753 real judgments — see the sprint report."
+}

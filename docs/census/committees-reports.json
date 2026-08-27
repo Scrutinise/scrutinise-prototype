@@ -1,0 +1,13 @@
+{
+  "corpus_key": "committees-reports",
+  "state": "MEASURED",
+  "unit": "committee publication",
+  "method": "server-side total from https://committees-api.parliament.uk/api/Publications?Take=1",
+  "walked_at": "2026-08-27T15:12:34.479Z",
+  "published_units": 51866,
+  "held_units": 30149,
+  "hollow_units": 0,
+  "absent_total": 21717,
+  "absent_ids": [],
+  "notes": "The publisher counts every publication type; we hold reports and their sections."
+}

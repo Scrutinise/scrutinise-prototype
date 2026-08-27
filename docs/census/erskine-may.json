@@ -1,0 +1,13 @@
+{
+  "corpus_key": "erskine-may",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 1873,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "DECLARED SCOPE (ours, not the publisher's): Erskine May, the parliamentary procedure text, as published online. Former corpus_targets.est_sections was 2,038 sections, flagged confirmed, provenance unproven. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

@@ -1,0 +1,13 @@
+{
+  "corpus_key": "ofgem",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 12881,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "Former corpus_targets.est_sections was 17,142 sections, provenance unproven. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

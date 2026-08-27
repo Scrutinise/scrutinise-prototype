@@ -1,0 +1,13 @@
+{
+  "corpus_key": "pwdata-debates",
+  "state": "MEASURED",
+  "unit": "Commons sitting day",
+  "method": "entry walk of the https://www.theyworkforyou.com/pwdata/scrapedxml/debates/ directory index; 20,080 files reduced to sitting days by stripping the revision letter",
+  "walked_at": "2026-08-27T15:05:49.363Z",
+  "published_units": 16039,
+  "held_units": 16039,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "EXACT: every day the index lists is held. The denominator is the publisher's 20,080-file directory listing reduced to days, not our row count; the identical comparison reports an absence for pwdata-lordswrans, so it is capable of disagreeing. 20,080 files → 16,039 distinct sitting days."
+}

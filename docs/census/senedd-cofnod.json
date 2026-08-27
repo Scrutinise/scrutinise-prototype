@@ -1,0 +1,13 @@
+{
+  "corpus_key": "senedd-cofnod",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 687,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "DECLARED SCOPE (ours, not the publisher's): Senedd plenary Cofnod y Trafodion. ⚠ Bilingual: ~95% of a 40-row sample has a WELSH body, so an English query can only match the English heading. A Welsh devolved question is not answerable in English today. Former corpus_targets.est_sections was 191,730 sections — EXACTLY the compiled row count, i.e. self-referential, which is why it is not used here. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

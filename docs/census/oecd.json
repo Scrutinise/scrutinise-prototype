@@ -1,0 +1,13 @@
+{
+  "corpus_key": "oecd",
+  "state": "RETIRED",
+  "unit": "document",
+  "method": "collection retired; rows removed",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 0,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "DECLARED SCOPE (ours, not the publisher's): ⚠ CONTAINS NONE OF ITS OWN SUBJECT. 505 of 505 rows are gov.uk URLs with no OECD content. Staged for deletion in docs/C3_EXECUTE.sh. Former corpus_targets.est_sections was 505 sections, flagged confirmed, provenance unproven. blocked: · C2 Lane 2: rows and vectors purged 2026-08-27T02-20-26-375Z"
+}

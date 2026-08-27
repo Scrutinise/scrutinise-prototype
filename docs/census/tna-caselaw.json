@@ -1,0 +1,13 @@
+{
+  "corpus_key": "tna-caselaw",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 74896,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "DECLARED SCOPE (ours, not the publisher's): Find Case Law (The National Archives). ⚠ COVERAGE BEGINS 2003, not 2001 — 29 items are dated 2001–02 against 74,657 from 2003 on. TNA does not publish UKHL at all, so the House of Lords 1996–2009 is absent entirely. Former corpus_targets.est_sections was 74,896 sections — EXACTLY the compiled row count, i.e. self-referential, which is why it is not used here. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

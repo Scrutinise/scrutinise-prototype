@@ -1,0 +1,13 @@
+{
+  "corpus_key": "consultations",
+  "state": "MEASURED",
+  "unit": "consultation",
+  "method": "server-side total from https://www.gov.uk/api/search.json?count=0&filter_content_store_document_type[]=open_consultation&filter_content_store_document_type[]=closed_consultation&filter_content_store_document_type[]=consultation_outcome",
+  "walked_at": "2026-08-27T15:12:42.779Z",
+  "published_units": 7461,
+  "held_units": 7448,
+  "hollow_units": 0,
+  "absent_total": 13,
+  "absent_ids": [],
+  "notes": "All three gov.uk consultation states: open, closed, and outcome."
+}

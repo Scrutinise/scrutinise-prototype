@@ -1,0 +1,13 @@
+{
+  "corpus_key": "commons-divisions-votes",
+  "state": "MEASURED",
+  "unit": "division",
+  "method": "server-side total from https://commonsvotes-api.parliament.uk/data/divisions.json/searchTotalResults?queryParameters.startDate=1900-01-01",
+  "walked_at": "2026-08-27T15:12:06.700Z",
+  "published_units": 2361,
+  "held_units": 2361,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "EXACT: the denominator is the publisher's own server-side count (server-side total from https://commonsvotes-api.parliament.uk/data/divisions.json/searchTotalResults?queryParameters.startDate=1900-01-01) and the numerator is a DISTINCT count over corpus_sections; they agree because the collection is complete, not because one was copied from the other."
+}

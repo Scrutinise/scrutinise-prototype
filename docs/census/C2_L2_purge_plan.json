@@ -1,30 +1,62 @@
 {
-  "generated": "2026-08-23T08:53:07.068Z",
-  "executed": false,
+  "generated": "2026-08-27T02:20:54.352Z",
+  "executed": true,
   "summary": [
     {
       "key": "et-decisions-landing",
       "rows": 131650,
       "words": 2941258,
-      "executed": false
+      "executed": true,
+      "after": 0
     },
     {
       "key": "retired-lda-lords-wq",
       "rows": 20500,
       "words": 1072407,
-      "executed": false
+      "executed": true,
+      "after": 0
     },
     {
       "key": "retired-lda-commons-wq",
       "rows": 8000,
       "words": 402315,
-      "executed": false
+      "executed": true,
+      "after": 0
     },
     {
       "key": "retired-written-statements",
       "rows": 129,
       "words": 852742,
-      "executed": false
+      "executed": true,
+      "after": 0
+    },
+    {
+      "key": "dup-lda-commonsdivisions",
+      "rows": 5553,
+      "words": 90527,
+      "executed": true,
+      "after": 0
+    },
+    {
+      "key": "dup-lda-lordsdivisions",
+      "rows": 2089,
+      "words": 17753,
+      "executed": true,
+      "after": 0
+    },
+    {
+      "key": "truncated-written-answers",
+      "rows": 143,
+      "words": 43748825,
+      "executed": true,
+      "after": 0
+    },
+    {
+      "key": "wrong-content-oecd",
+      "rows": 505,
+      "words": 332565,
+      "executed": true,
+      "after": 0
     }
   ]
 }

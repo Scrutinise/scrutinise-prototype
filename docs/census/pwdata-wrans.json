@@ -1,0 +1,13 @@
+{
+  "corpus_key": "pwdata-wrans",
+  "state": "MEASURED",
+  "unit": "written-answers day",
+  "method": "entry walk of the https://www.theyworkforyou.com/pwdata/scrapedxml/wrans/ directory index; 6,918 files reduced to sitting days by stripping the revision letter",
+  "walked_at": "2026-08-27T15:06:00.197Z",
+  "published_units": 4652,
+  "held_units": 4652,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "EXACT: every day the index lists is held. The denominator is the publisher's 6,918-file directory listing reduced to days, not our row count; the identical comparison reports an absence for pwdata-lordswrans, so it is capable of disagreeing. 6,918 files → 4,652 distinct sitting days."
+}

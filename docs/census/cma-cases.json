@@ -1,0 +1,13 @@
+{
+  "corpus_key": "cma-cases",
+  "state": "MEASURED",
+  "unit": "CMA case",
+  "method": "server-side total from https://www.gov.uk/api/search.json?count=0&filter_format=cma_case",
+  "walked_at": "2026-08-27T15:12:44.996Z",
+  "published_units": 2579,
+  "held_units": 2536,
+  "hollow_units": 0,
+  "absent_total": 43,
+  "absent_ids": [],
+  "notes": null
+}

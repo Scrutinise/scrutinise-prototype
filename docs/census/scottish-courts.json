@@ -1,0 +1,13 @@
+{
+  "corpus_key": "scottish-courts",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 13056,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "DECLARED SCOPE (ours, not the publisher's): Scottish Courts and Tribunals judgments, 1999-02-06 to date. Former corpus_targets.est_sections was 13,070 sections, flagged confirmed, provenance unproven. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

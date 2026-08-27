@@ -1,0 +1,13 @@
+{
+  "corpus_key": "building-regs",
+  "state": "UNMEASURED",
+  "unit": "document",
+  "method": "no publisher index identified — not walked",
+  "walked_at": null,
+  "published_units": null,
+  "held_units": 21,
+  "hollow_units": 0,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "DECLARED SCOPE (ours, not the publisher's): The Approved Documents to the Building Regulations. ⚠ 21 rows, all gov.uk landing pages with no document behind them — the PDF fetch was never written. Approved Documents also incorporate BSI standards by reference, and BSI standards are sold, not published, so they can never be in the corpus. Former corpus_targets.est_sections was 21 sections — EXACTLY the compiled row count, i.e. self-referential, which is why it is not used here. No publisher index has been found for this collection. Held count is real; the fraction it represents is unknown."
+}

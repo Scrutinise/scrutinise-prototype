@@ -1,0 +1,13 @@
+{
+  "corpus_key": "hmrc-manuals",
+  "state": "MEASURED",
+  "unit": "manual page",
+  "method": "server-side total from https://www.gov.uk/api/search.json?count=0&filter_content_store_document_type=hmrc_manual_section",
+  "walked_at": "2026-08-27T15:12:41.515Z",
+  "published_units": 85435,
+  "held_units": 69136,
+  "hollow_units": 0,
+  "absent_total": 16299,
+  "absent_ids": [],
+  "notes": "Unit is a manual PAGE (hmrc_manual_section), not a manual — gov.uk publishes 253 manuals."
+}

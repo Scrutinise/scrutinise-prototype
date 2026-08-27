@@ -1,0 +1,13 @@
+{
+  "corpus_key": "ots-reports",
+  "state": "MEASURED",
+  "unit": "OTS document",
+  "method": "server-side total from https://www.gov.uk/api/search.json?count=0&filter_organisations=office-of-tax-simplification",
+  "walked_at": "2026-08-27T15:12:46.862Z",
+  "published_units": 222,
+  "held_units": 497,
+  "hollow_units": 497,
+  "absent_total": 0,
+  "absent_ids": [],
+  "notes": "The publisher's own organisation field — the external denominator OI-25 called for. ⚠ Every held row is a LANDING PAGE (OI-24): held is counted, hollow is counted, and coverage is reported net. ⚠ held EXCEEDS published (497 > 222) — the denominator is suspect, or the two sides count different things. No tick may be printed. hollow_units is a CANDIDATE detector (A3): it flags units whose text is a landing page, and it over-flags."
+}

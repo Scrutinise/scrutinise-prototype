@@ -1,0 +1,70 @@
+{
+  "walked_at": "2026-08-27T15:06:06.478Z",
+  "streams": {
+    "pwdata-debates": {
+      "dir": "debates",
+      "files": 20080,
+      "published_days": 16039,
+      "held_days": 16039,
+      "stale_revisions": 0,
+      "absent_days": [],
+      "extra_days": []
+    },
+    "pwdata-lords": {
+      "dir": "lordspages",
+      "files": 5718,
+      "published_days": 3977,
+      "held_days": 3977,
+      "stale_revisions": 0,
+      "absent_days": [],
+      "extra_days": []
+    },
+    "pwdata-westminster": {
+      "dir": "westminhall",
+      "files": 3966,
+      "published_days": 2646,
+      "held_days": 2646,
+      "stale_revisions": 0,
+      "absent_days": [],
+      "extra_days": []
+    },
+    "pwdata-wrans": {
+      "dir": "wrans",
+      "files": 6918,
+      "published_days": 4652,
+      "held_days": 4652,
+      "stale_revisions": 0,
+      "absent_days": [],
+      "extra_days": []
+    },
+    "pwdata-lordswrans": {
+      "dir": "lordswrans",
+      "files": 5222,
+      "published_days": 4682,
+      "held_days": 4681,
+      "stale_revisions": 0,
+      "absent_days": [
+        "lordswrans2026-08-11"
+      ],
+      "extra_days": []
+    },
+    "pwdata-wms": {
+      "dir": "wms",
+      "files": 4487,
+      "published_days": 3388,
+      "held_days": 3388,
+      "stale_revisions": 0,
+      "absent_days": [],
+      "extra_days": []
+    },
+    "pwdata-lordswms": {
+      "dir": "lordswms",
+      "files": 3700,
+      "published_days": 3168,
+      "held_days": 3168,
+      "stale_revisions": 0,
+      "absent_days": [],
+      "extra_days": []
+    }
+  }
+}
