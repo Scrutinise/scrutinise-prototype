@@ -20,6 +20,14 @@ capability offer) · **Written:** 2026-08-28 · **Report of record for this spri
    with the leak detector watched catching a planted secret and one of my own assertions caught
    being wrong about the world.
 
+4. ⚠⚠ **AND THE FIRST READING OFF THE LIVE ENDPOINT ALREADY CONTRADICTS WHAT EVERY RECENT
+   MEASUREMENT ASSUMED.** Production runs with **`LEX_SEARCH_JUDGED_MERGE` ON**, **`LEX_QUERY_EXPANSION`
+   ON** and **`LEX_SEARCH_RERANKER` ON**. Every gold harness run since S14 records
+   `QUERY_EXPANSION=off`, and S15's *"today's production configuration returns 19 of 64"* describes
+   the merge-**off** arm. **The instrument and the product are differently configured, and nobody
+   could see it until this endpoint existed.** §3b — and it is a reading, not a history: I cannot
+   date either change.
+
 **No recall figure is published in this report and none is superseded.** §4 says why.
 
 ---
@@ -102,7 +110,8 @@ line each, the keyed document's own text printed underneath.
 
 **What the run counted:** questions re-keyed **10** · keys proposed **50** · bodies read out of R2
 **50** · bodies containing their declared confirming term **50** · keys with no row or no readable
-body **0** · keys whose body reads as front matter **0**.
+body **0** · keys whose body reads as front matter **0** · keys whose confirming sentence reads as a
+table of contents **0** · keys whose confirming sentence is a header fragment **2**.
 
 ⚠ **That last zero is only worth having because the detector was watched firing.**
 `npm run rekey:s17-selftest` runs it against two chunks known to be cover pages and one known to be
@@ -127,6 +136,31 @@ substantive: **3 of 3 as expected**, two FLAG and one silent.
 | C8 | RE-WORD AND RE-KEY | 1 of **525** → names the National Association of Head Teachers |
 | C9 | RE-WORD AND RE-KEY | 1 of **54** → names the National Police Chiefs' Council |
 | C10 | RE-KEY | two letters → the **five** PAC reports on NHS waiting times, 2014–2025, all keyed |
+
+### ⚠⚠ AND I REPRODUCED C1'S DEFECT MYSELF, IN THE SAME FILE, ON THE SAME AFTERNOON
+
+The first run reported **front matter: 0** and it was telling the truth by its own definition — and
+**four of C10's five confirming sentences were a table of CONTENTS**: *"Contents Summary 3
+Introduction 4 Conclusions and recommendations 5 1 Realism about the current situation 8"*. The term
+was present, the document was right, and the sentence printed into the file for Charlie to judge the
+re-key by answered nothing. **That is C1's defect — the one this sprint drops a key for — committed
+by me two hundred lines below the paragraph describing it.**
+
+The guard was the wrong shape, not the wrong idea: a cover page and a contents run look nothing
+alike, and several substantive chunks straddle a contents list, so the test belongs on the QUOTE and
+not on the chunk. Three now run, on the sentence:
+
+| guard | shape | count over the 50 keys |
+|---|---|---|
+| front matter | membership list / "ordered to be printed" / "all correspondence should be addressed" in the first 2,500 characters | **0** (watched firing 2 of 2 on known cover pages, silent on 1 substantive) |
+| contents line | four or more `heading number` pairs | **0** — after four C10 keys were moved to later chunks and one confirming term was made more specific |
+| header fragment | ends in a bare page/paragraph number, or under eight words | **2**, both C7 evidence quotes whose keys are right and whose quotes are weak; reported, not suppressed |
+
+⚠ **A length threshold alone was also wrong and the run showed that too.** Twelve words flagged four
+quotes and three of them were real submissions saying something in eleven — *"Ensures trade policy
+accelerates the deployment and take-up of sustainable practices."* **Tuning the number until only the
+bad one failed would have been fitting a threshold to four examples.** The bad one has a shape
+instead: it ends in the running header's page and paragraph numbers.
 
 ### Two findings that came out of doing it
 
@@ -283,6 +317,34 @@ machine"* is replaced with the request that now answers it, and says explicitly 
 on `VERCEL_TOKEN` is unchanged — what changed is that the answer no longer has to come from a
 dashboard.
 
+### §3b — AND THE FIRST READING IS ALREADY WORTH MORE THAN THE ENDPOINT
+
+Read off `https://www.scrutinise.org/api/health` on commit `d048738`, **production**, minutes after
+the deploy. **This is the first time the live flag state has been read from this machine at all.**
+
+| ON in production | OFF in production |
+|---|---|
+| `LEX_QUERY_EXPANSION` · `LEX_QUERY_ROUTER` · `LEX_SEARCH_RERANKER` · `LEX_TIER_FUSION` · `LEX_STATS_STREAM` · **`LEX_SEARCH_JUDGED_MERGE`** | `LEX_WEB_ORIENTATION` · `LEX_SEARCH_VECTOR` · `LEX_SEARCH_GRAPH` · `LEX_COHERENCE_CORPUS` · `LEX_SEARCH_STUB` · `LEX_BUILD_PERSPECTIVES` · `LEX_ROUTER_STREAMS_V2` · `LEX_FUSION_WEIGHTS` · `LEX_ROUTER_CONFIDENCE` |
+
+`retrieval`: `vectorSearchUrl` **true** · `ftsSearchUrl` **true** · `geminiKey` **true**.
+
+⚠⚠ **TWO OF THESE DISAGREE WITH WHAT EVERY RECENT MEASUREMENT ASSUMED, AND I CANNOT DATE EITHER
+CHANGE — the endpoint reports a state, not a history.**
+
+1. **`LEX_SEARCH_JUDGED_MERGE` is ON.** S15's D-5 recommended turning it on and S15's own headline
+   sentence — *"with today's production configuration 45 of 64 questions return nothing correct"* —
+   describes the arm with it **off**. If it was flipped before that sentence was written it was
+   already wrong; if after, it is simply out of date. **Either way, "today's production
+   configuration" is no longer 19 of 64 and nobody can say what it is without a run.**
+2. **`LEX_QUERY_EXPANSION` is ON.** Every gold harness run since S14 records
+   `QUERY_EXPANSION=off` in its own config line, because the local `.env` sets no `LEX_*` flag.
+   **The instrument and the product have been differently configured, and the artefacts say so on
+   their face — nobody had the other half to compare them with.**
+
+⚠ **This is exactly the class §19 warns about and it is why the endpoint was worth the hour.** It is
+also a reading, not an explanation: I am not asserting when either flag was set, only what they say
+now. **D-6.**
+
 ---
 
 ## §4 — MEASUREMENT: WHAT WAS NOT RE-RUN, AND WHY
@@ -373,6 +435,18 @@ its entry says so. *Consequence of yes:* one committees question is easy by cons
 carry that label wherever it is reported. *Consequence of no:* the archetype disappears from the set
 and all four evidence questions become named-submitter lookups.
 
+**D-6 — Re-take the baseline under PRODUCTION's actual flag string?** *(Recommended: yes, and it is
+now the cheapest measurement available.)*
+The endpoint says production runs with `LEX_SEARCH_JUDGED_MERGE` **on**, `LEX_SEARCH_RERANKER` **on**
+and `LEX_QUERY_EXPANSION` **on**. Every gold run since S14 was taken with expansion off and the merge
+off, and S15's *"today's production configuration returns 19 of 64"* describes the merge-off arm.
+**The instrument and the product are differently configured and we could not see it until today.**
+*Consequence of yes:* one run, and for the first time the headline describes what a user gets.
+*Consequence of no:* every figure we quote continues to describe a configuration nobody is running,
+which is the S14 mistake with the evidence now sitting in plain sight.
+⚠ Order it AFTER D-2. Re-running against unvalidated keys would confound a configuration change with
+an instrument change, and neither number would mean anything.
+
 ---
 
 ## STANDING-RULE NOTES
@@ -394,5 +468,29 @@ and all four evidence questions become named-submitter lookups.
   edits **no file under `scripts/ingest/search/`** — every new script is under `scrutinise-web/`. No
   measurement was interrupted and no service was restarted.
 - **Git:** no git during the sprint; one `commit-search-s17.sh`, scoped by explicit path.
-- **Delivery:** `tsc --noEmit` clean; `scripts/check-clean-build.sh --fast` PASS (0 cross-package
-  files). §20 checks 1–4 are run against the push, not claimed in advance.
+- ⚠ **Two of my instruments were wrong and both were caught by running them** — see §1b and §3.
+  Neither was quietly rewritten.
+
+---
+
+## DELIVERY (docs/CLAUDE.md §20)
+
+- **Check 0** — `scripts/check-clean-build.sh --fast`: **PASS**, 0 cross-package files in the web
+  program. `tsc --noEmit` clean.
+- **Check 1 — every file created is committed.** `git ls-files` returns all ten new paths
+  (four scripts, five artefacts, the modified route). Not `git status`, which never lists an
+  ignored file.
+- **Check 2 — the remote has the commits.** `git merge-base --is-ancestor HEAD origin/Main` after a
+  real fetch: **yes**, at `d048738`.
+- **Check 3 — the deployment is Production.** `/api/health` reports `"env":"production"`.
+- ✅ **Check 4 — the running site serves the change, and this is the only step that proves
+  anything.** Production moved `0b21633` → **`d048738`** and the payload now carries the
+  `capabilities` object, which no earlier build had. Read back at
+  `https://www.scrutinise.org/api/health`. The pre-existing `commit`, `env` and `mail` fields are
+  still present, which is the control: the probe is reading the right endpoint rather than reading
+  nothing.
+
+⚠ **`docs/GOLD_COMMITTEES_REKEY.md`, `docs/census/s17-committees-rekey.json` and
+`scripts/rekey-s17-committees.ts` were regenerated after that push** (the quote guards in §1b) and
+ship in a follow-up commit. They are documents and a harness — nothing in them reaches the running
+site, so check 4 does not apply to them and is not claimed for them.

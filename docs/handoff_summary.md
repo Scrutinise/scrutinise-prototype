@@ -48,6 +48,18 @@ booleans. `check:s17-flags` **11 passed**, leak detector watched naming a plante
 my own assertions was wrong about the world and the first run caught it** — I required a capitalised
 `TRUE` to report FALSE, but `env-flags.ts` normalises it; the real test is a value set and
 UNRECOGNISED. `SEARCH_CONTRACT` §4's "the live flag state is NOT readable" is replaced.
+⚠⚠ **AND THE FIRST READING OFF PRODUCTION CONTRADICTS WHAT EVERY RECENT MEASUREMENT ASSUMED**
+(`d048738`, verified live): **`LEX_SEARCH_JUDGED_MERGE` ON · `LEX_QUERY_EXPANSION` ON ·
+`LEX_SEARCH_RERANKER` ON.** Every gold run since S14 records `QUERY_EXPANSION=off`, and S15's
+*"today's production configuration returns 19 of 64"* describes the merge-**OFF** arm. **The
+instrument and the product are differently configured and nobody could see it until this endpoint
+existed.** A reading, not a history — neither change can be dated from here. **D-6: re-take the
+baseline under production's real flag string, AFTER the re-keys are validated.**
+⚠⚠ **AND I REPRODUCED C1'S DEFECT TWO HUNDRED LINES BELOW THE PARAGRAPH DESCRIBING IT** — the first
+run reported front-matter 0 truthfully while **four of C10's five confirming sentences were a table
+of CONTENTS**. The guard belongs on the printed QUOTE, not on the chunk. Three now run; ⚠ and a
+length threshold was wrong too (twelve words flagged three real eleven-word submissions), so the
+rule is a SHAPE, not a number tuned to four examples.
 ❌ **NO recall figure published and none superseded** — the baseline is NOT re-run until Charlie
 validates the re-keys, per the brief. ⚠ When it is, **expect the headline to rise for a reason that
 is not an improvement in search.**
