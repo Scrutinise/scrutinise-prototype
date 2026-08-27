@@ -1,12 +1,12 @@
 {
-  "corpus_key": "primary-acts-2000plus",
+  "corpus_key": "devolved-asc",
   "state": "MEASURED",
   "unit": "instrument (an Act, SI, Measure or Order the publisher lists)",
-  "method": "entry walk of legislation.gov.uk/ukpga/<year>/data.feed, both id forms recorded",
+  "method": "entry walk of legislation.gov.uk/asc/<year>/data.feed, both id forms recorded",
   "walked_at": "2026-08-27T20:35:05.475Z",
-  "published_units": 938,
-  "held_units": 938,
-  "hollow_units": 77,
+  "published_units": 34,
+  "held_units": 34,
+  "hollow_units": 1,
   "absent_total": 0,
   "absent_ids": [],
   "notes": "EXACT: the denominator is legislation.gov.uk's own entry walk and the numerator is a lookup of those ids against corpus_sections; the same comparison reports gaps for every other type. matched on either id form (regnal and calendar). hollow = instruments whose every section is a dot leader; a FLOOR, section_repeals does not hold them all (OI-6)."

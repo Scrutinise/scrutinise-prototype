@@ -1,0 +1,15 @@
+{
+  "corpus_key": "devolved-asp",
+  "state": "MEASURED",
+  "unit": "instrument (an Act, SI, Measure or Order the publisher lists)",
+  "method": "entry walk of legislation.gov.uk/asp/<year>/data.feed, both id forms recorded",
+  "walked_at": "2026-08-27T20:35:05.475Z",
+  "published_units": 402,
+  "held_units": 401,
+  "hollow_units": 15,
+  "absent_total": 1,
+  "absent_ids": [
+    "asp/2013/12"
+  ],
+  "notes": "matched on either id form (regnal and calendar). hollow = instruments whose every section is a dot leader; a FLOOR, section_repeals does not hold them all (OI-6)."
+}

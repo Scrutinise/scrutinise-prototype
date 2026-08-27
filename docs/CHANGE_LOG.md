@@ -259,15 +259,42 @@ archive → UNMEASURED. A `proxy:true` flag now forces UNMEASURED however good a
 S16 says the answer keys are wrong, this says **42% of the publications Parliament lists are not
 held at all.** Two different problems, both real.
 
-✅ **Legislation walked by ENTRY, never by header** — re-measured on six feeds today,
-`totalResults` present on `ukpga/2020` and `asp/2020` and **absent on `uksi/2020`, `apni`, `ukcm`,
-`nisr/2020`**, i.e. absent on precisely the dense feeds where a denominator matters. Four types the
-brief named now have a published count for the first time: **`apni` 288 · `ukcm` 244 · `ukci` 60 ·
-`ukla` 20,132+, held 0 for all four.** `asp` 401/402 · `nia` 236/236 · `anaw` 44/44 · `asc` 34/34.
-⚠ The walk is **still running** (530 of ~800 feeds); `ukpga`, `uksi`, `ssi`, `wsi`, `nisr`, `nisi`,
-`mwa` and the three EU types read UNMEASURED until it finishes, which is the honest state.
-⚠ Devolved types print **individually**, not as `regional` — one blend would hide a type at 40%
-behind one at 99%; the aggregate rows are deleted as the per-type rows land.
+✅ **Legislation: 1,280 feeds walked by ENTRY, 0 unreadable, 20 census rows** — `totalResults` was
+re-measured on six feeds and is present on `ukpga/2020` and `asp/2020` and **absent on `uksi/2020`,
+`apni`, `ukcm`, `nisr/2020`**, i.e. absent on precisely the dense feeds where a denominator matters.
+**`primary-acts-pre-2000` 3,599/16,622 = 21.7%, independently reproducing the brief's 21.4%** six
+weeks on, from a fresh walk and a different held-side query · `si-pre-2010` **72.2%** ·
+`si-2010plus` **69.9%** · `devolved-nisr` **63.4%** · `devolved-wsi` **70.1%** · `devolved-ssi`
+80.4% · `asp` 99.8% · `nia`/`anaw`/`asc`/`mwa` 100%.
+▶▶ **FOUR TYPES AT 0% AND 20,764 PUBLISHED INSTRUMENTS, none of which had a row of any kind before
+today: `ukla` 20,172 UK Local Acts · `apni` 288 · `ukcm` 244 · `ukci` 60.** `ukla` is the largest
+single absence the census found; `apni` is the small one worth doing first, because OI-18 already
+names absent NI primary legislation as the dominant cause of unresolved citations.
+⚠⚠ **THE RETRY WAS WORTH MORE THAN THE FIRST WALK.** 31 feeds were throttled and **correctly
+recorded as nothing rather than as zero**; recovering them moved `uksi` 80,418 → **109,212** and
+`eur` 73,981 → **124,855**, about **79,000 instruments, 32% of the universe**. Had a 429 been
+written down as a 0, `si-pre-2010` would have read ~97% instead of 72.2%. **The rule that a rate
+limit is not an absence is the only reason this number is usable.**
+⚠ **UNIVERSE CAVEAT ON THE THREE EU ROWS, carried in the row itself.** `/eur/` publishes the EU
+instruments legislation.gov.uk holds for the UK (159,773 across three types); our collection is
+scoped to **assimilated** law, a subset. 20.2%/44.9%/63.1% is a **floor on a possibly larger
+universe**, not a measure of what is missing — **decision B-6, the one percentage in the census I
+would not defend without further work, and it says so in its own notes.**
+⚠ Devolved types print **individually**, not as `regional`, and the split earns itself: `asp` 99.8%
+against `nisr` 63.4%, neither of which a blend would have shown. The aggregate `regional` and
+`retained-eu` rows were deleted as the per-type rows landed.
+⚠⚠ **TWO PERFORMANCE DEFECTS IN MY OWN WALKER, SAME SHAPE, THE SECOND ~30 MIN PER TYPE.** `heldFor`
+sent a 109,212-element array into `split_part(id,':',2) = ANY($2)` — an unindexed expression — once
+per type, i.e. twenty sequential scans of an 18M-row table; `hollowFor` did a whole-corpus GROUP BY
+with a correlated `section_repeals` subquery, also per type. Both now read **once per corpus key**
+and bucket in memory. **And eight `walk-legislation` processes were still alive while I diagnosed
+it** — every run the harness called "killed" was still running and contending for Neon, so part of
+the slowness was four processes queueing. Confirmed by `Win32_Process`, killed explicitly. **I
+trusted the notification instead of the process tree, which is the one thing the recorded pattern
+says not to do.**
+
+**FINAL CENSUS: MEASURED 40 · CLAIMED 1 · UNMEASURED 40 · RETIRED 18 · NOT_STARTED 2 · BLOCKED 1,
+and 331,751 units measurably absent — a number that did not exist this morning.**
 
 ✅ **Part C — the email reads `corpus_census` and CANNOT fall back.** An absent table prints "THE
 CENSUS TABLE IS EMPTY OR ABSENT" and says why a fallback would restore the defect. Seven states;
@@ -295,8 +322,8 @@ but drops 161,753 sections out of every report that filters on `retired`. The ce
 98.1%, which is how it surfaced. **Decision B-2, one UPDATE.**
 
 ❌ **Still unrun:** the serving-index purge (B-1) and everything downstream of it · C3 steps 6–8 ·
-all of C3A · the legislation walk's remaining types · historic-hansard, Find Case Law and the three
-devolved Official Report walkers · Parts D, E, F.
+all of C3A · historic-hansard, Find Case Law and the three devolved Official Report walkers ·
+Parts D, E, F.
 ✅ `tsc` clean on everything this sprint added; §20 check 0 `--fast` PASS (0 cross-package files).
 ▶▶ **CHARLIE: five numbered decisions in `docs/INGEST_CENSUS_C1_B_REPORT.md`.** B-1 is the only one
 currently costing a user something.

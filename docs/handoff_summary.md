@@ -103,11 +103,25 @@ in this same email's ISSUES block**.
 55.0% · `committees-reports` 58.1% · `hmrc-manuals` 80.9% · `members-interests` 84.1%.**
 `committees-reports` is S16's finding from the ingest side — **42% of the publications Parliament
 lists are not held at all**, which is a different problem from S16's broken answer keys.
-✅ **Legislation walked by ENTRY, never by header** (`totalResults` absent on exactly the dense
-feeds). Four types now have a published count for the first time: **`apni` 288 · `ukcm` 244 ·
-`ukci` 60 · `ukla` 20,172 — held 0 for all four.** ⚠ The walk is **STILL RUNNING** (570 of ~800
-feeds); `ukpga`, `uksi`, `ssi`, `nisr`, `nisi`, `mwa` and the EU types read UNMEASURED until it
-finishes. Resume with `census/b/walk-legislation.ts` — it is checkpointed.
+✅ **LEGISLATION DONE — 1,280 feeds walked by ENTRY, 0 unreadable, 20 rows.**
+**`primary-acts-pre-2000` 21.7%, independently reproducing the brief's 21.4%** · `si-pre-2010`
+**72.2%** · `si-2010plus` **69.9%** · `devolved-nisr` **63.4%** · `devolved-wsi` **70.1%** ·
+`asp` 99.8%. ▶▶ **FOUR TYPES AT 0%, 20,764 PUBLISHED INSTRUMENTS: `ukla` 20,172 · `apni` 288 ·
+`ukcm` 244 · `ukci` 60** — none had a row of any kind before today. **B-7: do `apni` first**, it is
+288 instruments and OI-18 already blames absent NI legislation for the commonest unresolved
+citation in the corpus.
+⚠⚠ **THE RETRY WAS WORTH MORE THAN THE FIRST WALK: 31 throttled feeds were recorded as NOTHING, not
+as zero**, and recovering them moved `uksi` 80,418 → **109,212** and `eur` 73,981 → **124,855** —
+79,000 instruments, 32% of the universe. A 429 written down as a 0 would have made `si-pre-2010`
+read ~97% instead of 72.2%.
+⚠ **THE ONE PERCENTAGE I WOULD NOT DEFEND: the three EU rows.** `/eur/` publishes what
+legislation.gov.uk holds for the UK; our collection is scoped to **assimilated** law, a subset. So
+20.2% is a floor on a possibly larger universe. Caveat carried in the census row itself. **B-6.**
+⚠⚠ **TWO PERFORMANCE DEFECTS IN MY OWN WALKER** (a 109,212-element array against an unindexed
+expression, and a per-type correlated GROUP BY costing ~30 min each) — both now read once per corpus
+key. **And eight `walk-legislation` processes were still alive while I diagnosed it: every run the
+harness reported "killed" was still running and contending for Neon. I trusted the notification
+instead of the process tree.**
 ✅ **Part C: the email reads `corpus_census` and CANNOT fall back to `est_sections`.** Headline is
 now the **SEARCHABLE** corpus (18,103,959) with the legacy 914,274 beneath it and never added in.
 `100% complete` lives behind ONE clamp in ONE function. **The negative control was watched printing
@@ -118,7 +132,10 @@ sections; the new one ticks 0/7.** ⚠ It also caught **a shortfall that ROUNDS 
 landing pages were deleted — 161,753 real judgments sit under a retired flag.** Hides nothing from
 users (`runSearch()` does not read `corpus_targets` — checked), but drops them out of every report
 that filters on it. **DECISION B-2, one UPDATE.**
-▶▶ **CHARLIE: five decisions in `docs/INGEST_CENSUS_C1_B_REPORT.md`.** Parts D, E, F not started.
+**FINAL CENSUS: MEASURED 40 · CLAIMED 1 · UNMEASURED 40 · RETIRED 18 · NOT_STARTED 2 · BLOCKED 1,
+and 331,751 units measurably absent — a number that did not exist this morning.**
+▶▶ **CHARLIE: seven decisions in `docs/INGEST_CENSUS_C1_B_REPORT.md`.** Parts D, E, F not started;
+historic-hansard, Find Case Law and the three devolved Official Reports not walked.
 Earlier: 2026-08-27 14:23 UTC — ▼ **SEARCH S16: HALF THE QUESTIONS FIND NOTHING — AND FOR COMMITTEES THE RULER IS BROKEN, NOT THE RETRIEVER.**
 ▶▶ **§2 IS THE SPRINT: all 32 failing questions classified one at a time, by probing.**
 ABSENT **1** · UNREACHABLE **4** · NOT-ROUTED **4** · RANKING **4** · NOT-MATCHED **19**, with

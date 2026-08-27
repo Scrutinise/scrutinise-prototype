@@ -165,36 +165,78 @@ it prints as fact.**
 A `proxy: true` flag now means "this endpoint counts a different universe" and forces UNMEASURED
 however good the number looks.
 
-### Legislation — running, partial at the time of writing
+### Legislation — 1,280 feeds walked, 0 unreadable, 20 rows
 
-The walk is checkpointed per (type, year) into `docs/census/walks/legislation-entries.json` and was
-at 530 feeds when this report was written. **It re-walks entries rather than reading
-`<openSearch:totalResults>`**, because that header is emitted only when the result set fits on one
-page — re-measured on six feeds this afternoon, present on `ukpga/2020` and `asp/2020`, absent on
-`uksi/2020`, `apni`, `ukcm` and `nisr/2020`, i.e. absent on precisely the dense feeds where a
-denominator matters. V36 found the same in July.
+**It walks entries and never reads `<openSearch:totalResults>`**, because that header is emitted
+only when the result set fits on one page — re-measured on six feeds this afternoon, present on
+`ukpga/2020` and `asp/2020`, absent on `uksi/2020`, `apni`, `ukcm` and `nisr/2020`, i.e. absent on
+precisely the dense feeds where a denominator matters. V36 found the same in July.
 
-Complete so far, and **four of these types have never had a published count at all**:
+| collection | held | published | | hollow |
+|---|---:|---:|---:|---:|
+| `primary-acts-pre-2000` | 3,599 | 16,622 | **21.7%** | 199 |
+| `primary-acts-2000plus` | 938 | 938 | 100% | 77 |
+| `si-pre-2010` | 58,309 | 80,801 | **72.2%** | 1,490 |
+| `si-2010plus` | 19,869 | 28,411 | **69.9%** | 1,690 |
+| `retained-eu-eur` | 25,249 | 124,855 | 20.2% ⚠ | 4,502 |
+| `retained-eu-eudn` | 13,800 | 30,750 | 44.9% ⚠ | 2,272 |
+| `retained-eu-eudr` | 2,631 | 4,168 | 63.1% ⚠ | 711 |
+| `devolved-asp` | 401 | 402 | 99.8% | 15 |
+| `devolved-ssi` | 9,175 | 11,411 | 80.4% | 817 |
+| `devolved-wsi` | 4,744 | 6,763 | **70.1%** | 664 |
+| `devolved-nisr` | 11,754 | 18,529 | **63.4%** | 1,809 |
+| `devolved-nisi` | 673 | 691 | 97.4% | 14 |
+| `devolved-nia` | 236 | 236 | 100% | 20 |
+| `devolved-anaw` · `asc` · `mwa` | 44 · 34 · 22 | 44 · 34 · 22 | 100% | 2 · 1 · 3 |
+| **`apni`** | **0** | **288** | **0%** | — |
+| **`ukcm`** | **0** | **244** | **0%** | — |
+| **`ukci`** | **0** | **60** | **0%** | — |
+| **`ukla`** | **0** | **20,172** | **0%** | — |
 
-| type | published | held | note |
-|---|---:|---:|---|
-| `apni` — Acts of the NI Parliament | **288** | 0 | brief's new type; we hold none |
-| `ukcm` — Church Measures | **244** | 0 | brief's new type |
-| `ukci` — Church Instruments | **60** | 0 | brief's new type |
-| `ukla` — UK Local Acts | **20,132+** | 0 | brief's new type; walk still in the 2000s |
-| `asp` | 402 | 401 | |
-| `nia` | 236 | 236 | |
-| `anaw` | 44 | 44 | |
-| `asc` | 34 | 34 | |
+✅ **`primary-acts-pre-2000` at 21.7% independently reproduces the brief's 21.4%**, six weeks later,
+from a fresh entry walk and a different held-side query. That is the first evidence the walker
+agrees with a number nobody who wrote it had seen.
 
-⚠ `ukpga`, `uksi`, `ssi`, `wsi`, `nisr`, `nisi`, `mwa`, `eur`, `eudn`, `eudr` are **still walking**
-and their collections read UNMEASURED in the email until it finishes. That is the honest state:
-their old self-referential targets are gone and no denominator has replaced them yet.
+▶▶ **`ukla` — 20,172 UK Local Acts, none held — is the largest single absence the census found**,
+and it is a type that had no row of any kind before today. With `apni`, `ukcm` and `ukci` that is
+**20,764 published instruments in four collections we hold nothing of.**
 
-⚠ **The devolved types are printed individually, not as `regional`.** `regional` holds ssi, wsi,
-nisr, nisi, asp, nia, anaw, asc and mwa together — one blended percentage would hide a type at 40%
-behind one at 99%. The aggregate `regional` and `retained-eu` census rows are deleted when the
-per-type rows land, so nothing double-counts.
+⚠⚠ **THE RETRY WAS WORTH MORE THAN THE FIRST WALK: 31 FEEDS WERE THROTTLED AND CORRECTLY RECORDED
+AS NOTHING RATHER THAN AS ZERO.** They were 16 `uksi` years (1990–2005) and 15 `eur` years, and
+recovering them moved `uksi` from 80,418 to **109,212** published and `eur` from 73,981 to
+**124,855** — about **79,000 instruments**, 32% of the legislation universe. Had the walker written
+a zero for a 429, `si-pre-2010` would have shown a denominator a quarter too small and its 72.2%
+would have read as ~97%. **The rule that a rate limit is not an absence is the whole reason this
+number is usable.**
+
+⚠ **UNIVERSE CAVEAT ON THE THREE EU ROWS, carried in the census row itself and not only here.**
+legislation.gov.uk's `/eur/`, `/eudn/` and `/eudr/` publish the EU instruments it holds for the UK —
+159,773 across the three. Our `retained-eu` collection is scoped to **assimilated** (formerly
+retained) EU law, which is a **subset**: an instrument that never applied here, or that lapsed
+before exit day, is published there and is correctly not held. So 20.2% / 44.9% / 63.1% is a
+**floor on coverage of a possibly larger universe**, not a measure of what is missing. The rows stay
+MEASURED because the walk is real; settling the caveat is **decision B-6**.
+
+⚠ **The devolved types are printed individually, not as `regional`** — and the split earns itself:
+`asp` is at 99.8% and `nisr` at 63.4%, and a blended `regional` figure would have shown neither. The
+aggregate `regional` and `retained-eu` census rows were deleted as the per-type rows landed, so
+nothing double-counts.
+
+⚠⚠ **TWO PERFORMANCE DEFECTS IN MY OWN WALKER, BOTH THE SAME SHAPE, AND THE SECOND COST ~30 MINUTES
+PER TYPE.** `heldFor` sent the type's whole published id list — 109,212 elements for `uksi` — into
+`split_part(id,':',2) = ANY($2)`, an expression with no index, once per type: a sequential scan of
+an 18M-row table twenty times. `hollowFor` did a whole-corpus `GROUP BY` with a correlated
+`section_repeals` subquery, also once per type. Both now read **once per corpus key** and bucket in
+memory: five scans instead of forty, and the id list never crosses the wire. Same family as
+`docs/CLAUDE.md`'s one-object-two-readers note — the query that reads naturally is not the query the
+planner can serve.
+
+⚠⚠ **AND EIGHT `walk-legislation` PROCESSES WERE STILL ALIVE WHILE I DIAGNOSED THAT.** Every run the
+harness reported as "killed" — the original walk, the retry and both census passes — was still
+running and contending for Neon connections, so part of the slowness I attributed to query shape was
+four processes queueing behind each other. Confirmed by `Win32_Process` and killed explicitly
+(`remaining: 0`). This is the recorded pattern in this project and I trusted the notification
+instead of the process tree.
 
 ### Everything else — 67 collections swept
 
@@ -203,8 +245,8 @@ Every remaining collection gets a row so it cannot fall out of the email: **RETI
 scope from `docs/CORPUS_SCOPE.md` where one exists, and quotes the old `est_sections` **as prose**,
 saying explicitly where it was self-referential — recorded, never used as a denominator.
 
-**The census now stands at: MEASURED 20 · CLAIMED 1 · UNMEASURED 46 · RETIRED 18 · NOT_STARTED 5 ·
-BLOCKED 1.**
+**The census now stands at: MEASURED 40 · CLAIMED 1 · UNMEASURED 40 · RETIRED 18 · NOT_STARTED 2 ·
+BLOCKED 1 — and 331,751 units are measurably absent**, a number that did not exist this morning.
 
 ---
 
@@ -293,7 +335,7 @@ The census contradicts it — `et-decisions` is MEASURED at 98.1% — which is h
 | C3 step 7 — B3 partial-repeal backfill | **unrun** — `section_repeals` holds 249,256 rows, all dot leaders, no partial-repeal rows | OI-7 |
 | C3 step 8 — B5 legislation title refresh into the index | unrun | OI-5 |
 | C3A steps 1–6 — `ots-filter`, re-seed, ET orphans | unrun — `ots-reports` still reads 497 | OI-1, OI-8 |
-| C1 Part B — legislation walk | **running**, 530 of ~800 feeds | resumes from checkpoint |
+| C1 Part B — legislation walk | **DONE** — 1,280 feeds, 0 unreadable, 20 census rows | |
 | C1 Part B — historic-hansard, Find Case Law, Holyrood, Senedd, NI Assembly walks | not written | see B-3 |
 | C1 Parts D, E, F | not started | D is ~5× smaller than briefed (A5); E is BAILII, shut by its own terms (23 Aug); F2 is 503 fetches not 131,650 |
 
@@ -344,6 +386,23 @@ answer "how complete are we?" for the second- and fourth-largest collections we 
 **B-4. `bills-api` at 10.4% and `petitions` at 36.6%.** ▶ **Recommend: size them before deciding.**
 Both printed complete yesterday and neither has been costed. *Consequence:* two collections a user
 would reasonably expect to be complete are not, and nothing currently says so outside this table.
+
+**B-6. The three EU rows measure against a universe that may be bigger than ours.** ▶ **Recommend:
+one comparison against the assimilated-law list, then either keep the figure or scope the
+denominator to it.** `/eur/` publishes 124,855 EU instruments; we hold 25,249 and are scoped to
+assimilated law only. *Consequence otherwise:* the email carries `retained-eu-eur 20.2%` with a
+caveat, and a reader who skips the caveat concludes we are missing 99,606 instruments we may never
+have been meant to hold. *This is the one row in the census whose percentage I would not defend
+without further work, and it says so in its own notes.*
+
+**B-7. Four collections at 0%, 20,764 published instruments.** `ukla` (20,172 UK Local Acts),
+`apni` (288), `ukcm` (244), `ukci` (60). ▶ **Recommend: `apni` first, then decide on `ukla`
+separately.** `apni` is 288 instruments and OI-18 already names it as the dominant cause of
+unresolved citations — *"the Interpretation Act (Northern Ireland) 1954"* is the commonest
+unresolved name in the corpus at 3,732 spans, and fifty years of NI primary legislation is absent.
+It is small, cheap and unblocks a measured graph defect. `ukla` is 70× bigger and its value is a
+product question, not an ingest one. *Consequence of doing neither:* the citation graph keeps
+resolving NI references to nothing, and the census keeps printing four honest zeroes.
 
 **B-5. Should the census walk become a scheduled job?** ▶ **Recommend: weekly, per source group.**
 Every denominator here has a date, and a denominator with a date drifts. *Consequence otherwise:*

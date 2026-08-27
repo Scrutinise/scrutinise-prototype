@@ -1,0 +1,32 @@
+{
+  "corpus_key": "devolved-nisi",
+  "state": "MEASURED",
+  "unit": "instrument (an Act, SI, Measure or Order the publisher lists)",
+  "method": "entry walk of legislation.gov.uk/nisi/<year>/data.feed, both id forms recorded",
+  "walked_at": "2026-08-27T20:35:05.475Z",
+  "published_units": 691,
+  "held_units": 673,
+  "hollow_units": 14,
+  "absent_total": 18,
+  "absent_ids": [
+    "nisi/1975/416",
+    "nisi/1976/426",
+    "nisi/1976/423",
+    "nisi/1976/59",
+    "nisi/1976/58",
+    "nisi/1977/596",
+    "nisi/1977/53",
+    "nisi/1978/1038",
+    "nisi/1978/1037",
+    "nisi/1978/1036",
+    "nisi/1978/458",
+    "nisi/1978/457",
+    "nisi/1978/456",
+    "nisi/1981/155",
+    "nisi/1982/157",
+    "nisi/1982/155",
+    "nisi/1986/593",
+    "nisi/1986/221"
+  ],
+  "notes": "matched on either id form (regnal and calendar). hollow = instruments whose every section is a dot leader; a FLOOR, section_repeals does not hold them all (OI-6)."
+}
