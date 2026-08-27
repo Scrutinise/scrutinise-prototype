@@ -40,6 +40,43 @@ all"; `s15-run.sh` uses production's 3/25 s and finished clean.
 ▶▶ **CHARLIE: eight decisions in `docs/SEARCH_S15_REPORT.md`.** D-5 turn the merge+reranker ON
 (+11 questions, ZERO lost, 0.214p/query). D-3 the next sprint is RETRIEVAL, not ranking. D-4 needs
 one dashboard action (connect the `vector-serve` repo trigger). **Spend: €0.008 + 13.68p.**
+Earlier: 2026-08-27 11:58 UTC — ▼ **LEX STATUTORY CONSEQUENCES: THE FIFTH DEEPENING PASS IS BUILT,
+WIRED AND DRIVEN LIVE — AND THE COUNT IS THE SCALE, THE CLASSIFICATION IS THE WORK.** ⚠⚠ Charlie's
+question answered with real numbers: **repealing the Equality Act does NOT mean 1,868 consequential
+amendments.** CRaG 2010's 149 provision references classify **92 no-action, 44 replace, 13
+amendment-related**. ⚠⚠ **§5'S SUGGESTED CAVEAT IS FALSE AND WOULD HAVE MISLED EVERY USER** — the
+brief says SIs are not indexed; **SIs are the LARGEST source type, 793,616 of 1,034,548 rows, and
+1,347 of the Equality Act's 1,868 references come FROM SIs**, so that sentence would tell a user we
+cannot see the layer supplying 72% of their answer. What IS missing is the **made-under** relation.
+⚠ **This is the case FOR the computed rule**: a hand-written caveat was wrong within a fortnight.
+⚠⚠ **A THIRD OF `citation_text` IS LEAKED XML — 334,740 of 1,034,548 rows (32.4%)**, which matters
+most here because §3 requires every disposition to be traceable to those words; cleaned at read
+time, what cannot be cleaned is **counted not dropped**, and **reported upstream rather than fixed**
+(the extractor owns the column). ⚠ **`inbound()` CANNOT BE CALLED FROM THE WEB APP** — different
+package, §20 check 0, plus `fs` and a 4GB zip absent on serverless; the TABLE is reachable, so
+`statutory-graph.ts` is a **second reader**, a drift risk made LOUD by `verify:statutory-parity`
+which **found a real gap on its first run** (the `amendment-effects` layer was missing — the one
+this feature can least afford to lose). Parity now holds row-for-row 182/182 and 1,868/1,868.
+⚠ **INDEX DEFEAT**: `lower(target_act_id)` = seq scan over 1M rows, **474ms vs 3.7ms — 127×**; but
+dropping `lower()` naively would be WRONG — **3,531 rows are the pre-1963 regnal-year Acts**
+(`ukpga/Vict/24-25/100`), exactly what a repeal programme touches. Measured first: **no id is
+stored in two casings**, so equality against both forms is complete AND indexable. 25,005ms →
+4,771ms. ▶▶ **§6 COST: the large target costs the SAME as the small one** — 1,552 refs and 149 both
+give **6 groups, ONE call** — and a wired run is **0.1007p, re-read from `LlmSpend`, ~1.5% of a
+6.8p build. It does NOT double a build.** ▶ **DECISION FOR CHARLIE: include it in every build, or
+offer on request?** §6 said report the figure, do not choose. ▶ **check:deepening fired 3× and was
+right every time** — job key == pass key (now `CITATION_CONSEQUENCES`); the hardcoded four-pass
+count; and "every pass must declare intents", whose real invariant is *a pass must be able to
+retrieve* — ⚠ as written it would have FORCED the defect §7 forbids. `jobQuestion`'s two-way
+ternary would have silently handed a third job the devolution question; now a `Record<JobKey,…>`.
+✅ `check:statutory` **17 passed, 7 controlled**, all watched rejecting, incl. §8's *"a check fails
+if any coverage wording is a literal"*; deepening all pass; 25a–25i green; `tsc`, `next build`,
+clean-build `--fast` (0 cross-package files). ⚠ **check:statutory failed twice first and both
+defects were in the CHECK** — it matched a template literal containing code and read an array index
+as a corpus figure. **A guard for prose has to know what prose looks like.** ▶ **TO SEARCH/GRAPH,
+reported as sent, none of their files edited**: (1) the cross-reference graph should be its OWN
+listed graph in `SEARCH_STRATEGY` §9; (2) the **32.4% XML-in-`citation_text`** defect.
+`docs/LEX_STATUTORY_CONSEQUENCES_REPORT.md`.**
 Earlier: 2026-08-27 04:12 UTC — ▼ **SEARCH S15: `vector-serve` NOW REFUSES WORK NOBODY IS WAITING FOR — AND THE REASON IT WAS SLOW WAS NEVER ITS WIDTH.**
 ▶▶ **§1, FIRST, BECAUSE IT REWROTE THE BRIEF. 1,478,964 rows of `corpus_chunks` (6.5% of
 22,670,808) had fallen outside its `sectionId` index and were brute-force scanned on every single

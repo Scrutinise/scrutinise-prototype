@@ -132,6 +132,100 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX — STATUTORY CONSEQUENCES: THE COUNT IS THE SCALE, THE CLASSIFICATION IS THE WORK (2026-08-27 11:58 UTC)
+
+Executes `docs/BRIEF_STATUTORY_CONSEQUENCES.md`. Full report:
+`docs/LEX_STATUTORY_CONSEQUENCES_REPORT.md`.
+
+The fifth Deepening pass is built, wired and driven live. ⚠⚠ **Charlie's question is answered
+with real numbers: repealing the Equality Act does NOT mean 1,868 consequential amendments.**
+CRaG 2010's 149 provision-level references classify as **92 no-action, 44 replace, 13
+amendment-related** — some are dead letters, some need a substitute reference, most are
+untouched.
+
+### ⚠⚠ §5'S SUGGESTED CAVEAT IS FALSE, AND IT WOULD HAVE MISLED EVERY USER
+
+The brief offers: *"It does not yet cover statutory instruments — the regulations made under
+Acts."* **SIs are the LARGEST source type in the graph: 793,616 of 1,034,548 rows, and 1,347
+of the Equality Act's 1,868 references come FROM SIs.** A user shown that sentence would be
+told we cannot see the layer supplying **72%** of their answer. What IS missing is the
+**made-under** relationship — a different and stronger fact — which the `enabling-power`
+layer reports as not-built from its own live count. ⚠ **This is the case FOR the computed
+rule, not against the brief**: a hand-written caveat was wrong within a fortnight of a layer
+landing; a queried one cannot be.
+
+### ⚠⚠ A THIRD OF `citation_text` IS LEAKED XML, NOT THE SOURCE'S WORDS
+
+**334,740 of 1,034,548 rows (32.4%)** carry XML attributes — `IdURI="…"
+NumberOfProvisions="3"> Citation 1 This Order may be cited as…`; 34.9% of CRaG's
+provision-level rows. It matters more here than anywhere else because §3 requires every
+disposition to be **traceable to those words**, and a quotation that renders as XML soup
+looks like a bug and teaches the reader to distrust the panel. Cleaned at read time, and what
+cannot be cleaned is **counted, never dropped**: *"150 of the 1,552 have no quotable words."*
+⚠ **Reported upstream rather than fixed** — the extractor owns the column and repairing it in
+one consumer leaves every other consumer wrong.
+
+### ⚠ `inbound()` CANNOT BE CALLED FROM THE WEB APP — the brief assumed it could
+
+It lives in `scripts/ingest/graph/`; §20 check 0 forbids a file outside `scrutinise-web` from
+entering the web program (a cross-package import caused a two-day outage on ~22 Aug), and it
+reaches for `fs` and a 4GB zip that does not exist on a serverless filesystem. The TABLE is
+reachable — same Neon database. So `lib/lex/statutory-graph.ts` is a **second reader of one
+table**: a drift risk not removed, only made LOUD by `verify:statutory-parity`, which runs
+both readers and fails on disagreement. ⚠ **It found a real gap on its first run** — the
+`amendment-effects` layer was missing, the one this feature can least afford to lose
+(*"a repeal or an amendment is not a citation and is not returned by this query"*). Parity now
+holds row-for-row: CRaG 182/182, Equality Act 1,868/1,868.
+
+### ⚠ THE INDEX DEFEAT, AND WHY THE OBVIOUS FIX WOULD HAVE BEEN WRONG
+
+`WHERE lower(target_act_id) = $1` defeats `citation_edge_target_act`: **parallel seq scan over
+1,034,548 rows at 474ms against 3.7ms on the index — 127×**. ⚠ But dropping `lower()` naively
+would have been wrong in the direction that matters: **3,531 rows (0.34%) are not lower-case
+— the pre-1963 regnal-year Acts** (`ukpga/Eliz2/9-10/33`, `ukpga/Vict/24-25/100`), i.e.
+exactly the old heavily-referenced statutes a repeal programme touches. Measured before
+choosing: **no Act id is stored in more than one casing**, so equality against both candidate
+forms is complete AND indexable. End to end **25,005ms → 4,771ms**, identical results.
+
+### §6 — THE COST, MEASURED
+
+⚠⚠ **The large target costs the same as the small one**: 1,552 references and 149 both produce
+**6 groups and ONE model call** (2,337ms vs 2,315ms), because classification runs over KINDS
+and never over references. **Measured cost of a wired run, re-read from `LlmSpend`: 0.1007p**
+— about **1.5% of a ~6.8p build. It does not double a build's cost.** §6 said report the
+figure and do not choose; the include-always-or-on-request decision is Charlie's.
+
+### §1 — the mechanism's own test met, and check:deepening fired three times correctly
+
+A `PASSES` entry plus a job; no new route, component or engine branch. ⚠ **No search intents,
+deliberately** — it reads a graph, and intents would run a keyword search and file the result
+beside verified references, which §7 forbids. The guard fired on: **the job key and pass key
+being the same string** (two registries sharing one name are indistinguishable to a source
+guard and to a reader — now `CITATION_CONSEQUENCES`); the hardcoded **four-pass count**; and
+**"every pass must declare intents"** — whose real invariant is *a pass must be able to
+retrieve*, so it now accepts intents OR jobs. ⚠ **As written it would have forced the defect.**
+`jobQuestion` was a two-way ternary that would have silently handed a third job the devolution
+question; now a `Record<JobKey, string>` where omission is a compile error.
+
+### Verified, and watched failing
+
+`check:statutory` **17 passed, 7 with negative controls**, all watched rejecting — including
+§8's required *"a check fails if any coverage wording is a literal"*. `check:deepening` all
+pass; 25a 40, 25b 54, 25c 32, 25d 77, 25e 28, 25f 62, 25g 27, 25h 20, 25i 14. `tsc`,
+`next build`, clean-build `--fast` clean (0 cross-package files).
+⚠ **`check:statutory` failed twice on its first runs and both defects were in the check** —
+the figure guard matched a TEMPLATE LITERAL CONTAINING CODE and reported an array index as a
+corpus figure, then an unterminated backtick let a match span half the file. **A guard for
+prose has to know what prose looks like**, or the next person to hit a false positive deletes
+it.
+
+### ▶ Carried to Search/Graph, reported as sent, no files of theirs edited
+
+(1) the cross-reference graph should be **its own listed graph** in `SEARCH_STRATEGY` §9, not
+folded into the citation/amendment row; (2) **the 32.4% XML-in-`citation_text` defect** above.
+
+---
+
 ## CENTRAL Stage 2h items 6–8 — colour is never the only cue, and the frame that was wired to one surface (2026-08-27 08:41 UTC)
 
 Closes the 2h brief. `npm run check:central` **693/693** (was 620), `next build` clean.
