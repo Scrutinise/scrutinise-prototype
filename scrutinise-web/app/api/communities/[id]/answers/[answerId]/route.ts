@@ -9,6 +9,7 @@ import {
   requireLibraryAccess,
   FLAG_LEVELS,
 } from '@/lib/question-library'
+import { setApproval } from '@/lib/approval'
 
 type Params = { params: Promise<{ id: string; answerId: string }> }
 
@@ -22,6 +23,11 @@ const PatchSchema = z.union([
   }),
   z.object({ action: z.literal('unflag') }),
   z.object({ action: z.literal('hide'), hidden: z.boolean() }),
+  // ⚠ ITEM 13 — NOT A MANAGER ACTION. Under the default mode the person
+  // allowed to approve is the ANSWER'S OWN AUTHOR, so this branch is gated by
+  // the Community's approval mode inside `setApproval`, not by the manage rights
+  // the three actions above require.
+  z.object({ action: z.literal('approve'), approved: z.boolean() }),
 ])
 
 // PATCH /api/communities/[id]/answers/[answerId]
@@ -60,6 +66,16 @@ export async function PATCH(req: Request, { params }: Params) {
         reason: parsed.data.reason,
       })
       return NextResponse.json({ flag })
+    }
+    if (parsed.data.action === 'approve') {
+      return NextResponse.json(
+        await setApproval({
+          kind: 'answer',
+          itemId: answerId,
+          userId: user.id,
+          approved: parsed.data.approved,
+        }),
+      )
     }
     if (parsed.data.action === 'unflag') {
       await clearAnswerFlag(answerId, user.id)

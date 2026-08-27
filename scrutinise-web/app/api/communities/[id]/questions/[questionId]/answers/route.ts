@@ -10,11 +10,24 @@ import {
 
 type Params = { params: Promise<{ id: string; questionId: string }> }
 
-const AnswerSchema = z.object({
-  body: z.string().min(2).max(8000),
-  sources: z.array(z.string().url().max(500)).max(10).default([]),
-  localExample: z.string().max(4000).optional(),
-})
+const AnswerSchema = z
+  .object({
+    // ⚠ ITEM 14 MADE THE BODY OPTIONAL. A video answer is a link and a title
+    // with nothing typed underneath, so a `min(2)` on `body` refuses it outright.
+    // The `.refine` below keeps the real rule: an answer must say SOMETHING.
+    body: z.string().max(8000).optional(),
+    sources: z.array(z.string().url().max(500)).max(10).default([]),
+    localExample: z.string().max(4000).optional(),
+    /** Item 13. Permanent, and never hidden by the approval setting. */
+    context: z.string().max(4000).optional(),
+    /** Item 14. Link only — no hosting, per the standing decision. */
+    videoUrl: z.string().url().max(500).optional(),
+    videoTitle: z.string().max(200).optional(),
+  })
+  .refine((v) => (v.body?.trim().length ?? 0) >= 2 || Boolean(v.videoUrl), {
+    message: 'Write an answer or link a video',
+    path: ['body'],
+  })
 
 // POST /api/communities/[id]/questions/[questionId]/answers
 // Answer a question. Sources and a local example are optional and stay
@@ -54,9 +67,16 @@ export async function POST(req: Request, { params }: Params) {
     data: {
       questionId,
       authorId: user.id,
-      body: parsed.data.body.trim(),
+      body: parsed.data.body?.trim() ?? '',
       sources: parsed.data.sources,
       localExample: parsed.data.localExample?.trim() || null,
+      context: parsed.data.context?.trim() || null,
+      videoUrl: parsed.data.videoUrl?.trim() || null,
+      // A video with no title still has to read as something in a pack, so the
+      // fallback is applied here rather than left to each surface.
+      videoTitle: parsed.data.videoUrl
+        ? parsed.data.videoTitle?.trim() || 'Video answer'
+        : null,
     },
   })
 
