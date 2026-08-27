@@ -232,9 +232,25 @@ function main() {
   // ⚠ READ FROM THE SOURCE, not called: `buildEstimate()` reads the database, and this
   // harness is pure by design so it runs identically in CI and on a laptop.
   const estimate = code('lib/lex/build-estimate.ts')
-  const zeroLine = /durations\.length < MIN_SAMPLE[\s\S]*?line: '([^']*)'/.exec(estimate)?.[1] ?? ''
+  // ⚠ 25-I §4a WRAPPED THIS LINE, AND THE PROPERTY BELOW IS UNCHANGED.
+  //
+  // It used to be a bare literal — `line: 'This usually takes a few minutes.'` — and this
+  // regex read it directly. §4a requires the sentence to carry the COST as well as the
+  // duration ("Nothing currently says a build costs money or takes minutes until it is
+  // already running"), so it is now `costLine('This usually takes a few minutes.', pence)`.
+  //
+  // ⚠ THAT IS NOT THE "TWO THINGS" THIS CHECK EXISTS TO STOP. 25-E's objection was to
+  // answering the user's question and then disclaiming OUR sample size at the moment they
+  // are deciding to commit. What the user is about to spend is their business, not our
+  // apology — so the assertion is on the DURATION half, which is what 25-E owns, and the
+  // sample-size prohibition below now reads the whole composed sentence.
+  const zeroLine = /durations\.length < MIN_SAMPLE[\s\S]*?line: costLine\('([^']*)'/.exec(estimate)?.[1] ?? ''
   ok('§4c — the zero-data estimate says one thing, not two',
     zeroLine === 'This usually takes a few minutes.', JSON.stringify(zeroLine))
+  // The composed sentence, as the user reads it, with no measured figure available.
+  const composed = `${zeroLine} It uses one of your builds.`
+  ok('§4c — and the composed line still quotes no figure it does not have',
+    !/\d/.test(composed), composed)
   ok('§4c — and it no longer confesses our sample size at the moment of commitment',
     !/enough builds/.test(zeroLine) && !/\d/.test(zeroLine))
   expectBreak('break: a line that answers the question and then disclaims itself',
