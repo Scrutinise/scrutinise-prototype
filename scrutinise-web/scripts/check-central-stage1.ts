@@ -3300,6 +3300,19 @@ async function partK() {
     check('the YouTube thumbnail travels with the row',
       (all.find((r) => r.id === video.id)?.thumbnailUrl ?? '').includes('img.youtube.com'))
 
+    // ⚠⚠ THE GRID COULD NOT RENDER AN UPLOADED FILE AT ALL. The bucket is
+    // private, so the card needs a signed URL, and only the DETAIL view ever
+    // fetched one — every uploaded image and PDF fell through to the type-icon
+    // tile. Both checks below passed as "a resource was created" and neither
+    // asked whether it could be SEEN. Charlie's browser walk found it.
+    const flyerRow = all.find((r) => r.id === flyer.id)
+    check('a file-backed resource carries a usable URL for its thumbnail',
+      Boolean(flyerRow?.fileUrl), 'fileUrl was null — the grid renders a type tile instead')
+    check('…which is a signed URL, not the bare key',
+      (flyerRow?.fileUrl ?? '').includes('X-Amz-Signature'), flyerRow?.fileUrl ?? 'null')
+    eq('…and a link-only resource has none to carry',
+      all.find((r) => r.id === video.id)?.fileUrl, null)
+
     // ⚠ A BRANCH-SCOPED RESOURCE IS INVISIBLE FROM A SIBLING. Posted at the
     // root, `flyer` is scope COMMUNITY, so it stays visible — the check that
     // matters is that the branch filter runs at all.

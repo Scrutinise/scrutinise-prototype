@@ -4,6 +4,7 @@ import { assertCanMark, recordPointsEvent, resolveTariff } from '@/lib/central-p
 // One implementation of "what picture goes with this link", shared with the
 // pack output — which is a client component and cannot import this file.
 import { linkThumbnail } from '@/lib/video'
+import { r2SignedUrl } from '@/lib/r2'
 
 export { linkThumbnail, youTubeId } from '@/lib/video'
 
@@ -122,6 +123,18 @@ export type ResourceRow = {
   fileKey: string | null
   fileName: string | null
   fileType: string | null
+  /**
+   * ⚠ A SHORT-LIVED SIGNED URL, MINTED PER LIST. The card grid could not render
+   * an uploaded file at all without this: the bucket is private, so an <img>
+   * pointed at the key 403s, and the detail view was the only place that ever
+   * fetched a URL. Every uploaded image and PDF therefore fell through to the
+   * type-icon tile — which is what Charlie's walk found on 27 Aug, and what
+   * "thumbnails" in the 2g brief was asking for.
+   *
+   * Presigning is local HMAC with no network call, so one per row is cheap. It
+   * is never persisted: a stored URL would be a stored expiry.
+   */
+  fileUrl: string | null
   externalUrl: string | null
   thumbnailUrl: string | null
   author: { id: string; name: string | null; username: string }
@@ -163,6 +176,17 @@ export async function listResources(
     take: 200,
   })
 
+  // 10 minutes: long enough to browse the grid, short enough that a URL copied
+  // out of the DOM is not a lasting handle on a private object.
+  const fileUrls = new Map<string, string>()
+  await Promise.all(
+    rows
+      .filter((r) => r.fileKey)
+      .map(async (r) => {
+        fileUrls.set(r.id, await r2SignedUrl(r.fileKey!, { expiresIn: 60 * 10 }))
+      }),
+  )
+
   const mapped = rows.map((r) => {
     let score = 0
     let myVote: 'UP' | 'DOWN' | null = null
@@ -180,6 +204,7 @@ export async function listResources(
       fileKey: r.fileKey,
       fileName: r.fileName,
       fileType: r.fileType,
+      fileUrl: fileUrls.get(r.id) ?? null,
       externalUrl: r.externalUrl,
       thumbnailUrl: r.externalUrl ? linkThumbnail(r.externalUrl) : null,
       author: r.author,

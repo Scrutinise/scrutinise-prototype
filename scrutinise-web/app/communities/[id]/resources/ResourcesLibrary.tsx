@@ -53,6 +53,7 @@ export type ResourceRowView = {
   fileKey: string | null
   fileName: string | null
   fileType: string | null
+  fileUrl: string | null
   externalUrl: string | null
   thumbnailUrl: string | null
   author: { id: string; name: string | null; username: string }
@@ -82,8 +83,39 @@ type Payload = {
  * null. Both land here.
  */
 function Thumbnail({ resource, signedUrl }: { resource: ResourceRowView; signedUrl?: string }) {
+  // ⚠ `fileUrl` comes from the LIST now. It used to rely on `signedUrl`, which
+  // only the detail view ever fetched, so every uploaded image and PDF in the
+  // grid fell through to the type tile — the acceptance item that had never been
+  // verified from either side, found in a browser walk on 27 Aug.
+  const url = signedUrl ?? resource.fileUrl ?? undefined
   const isImage = resource.fileType?.startsWith('image/')
-  const src = isImage && signedUrl ? signedUrl : resource.thumbnailUrl ?? (resource.externalUrl ? linkThumbnail(resource.externalUrl) : null)
+  const isPdf = resource.fileType === 'application/pdf'
+
+  if (isPdf && url) {
+    // The first page, which is what a PDF's thumbnail is. `<object>` embeds the
+    // browser's own viewer; the toolbar flags and `pointer-events-none` keep it
+    // reading as a picture rather than a document you can scroll inside a card.
+    return (
+      <div className="relative h-full w-full bg-[oklch(0.97_0.004_250)]">
+        <object
+          data={url + '#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0'}
+          type="application/pdf"
+          className="pointer-events-none h-full w-full"
+          aria-label={'First page of ' + (resource.fileName ?? resource.title)}
+        >
+          <span className="flex h-full w-full flex-col items-center justify-center gap-1">
+            <span className="text-3xl">{typeIcon(resource.type)}</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">PDF</span>
+          </span>
+        </object>
+        <span className="absolute bottom-1 right-1 rounded bg-white/85 px-1 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+          PDF
+        </span>
+      </div>
+    )
+  }
+
+  const src = isImage && url ? url : resource.thumbnailUrl ?? (resource.externalUrl ? linkThumbnail(resource.externalUrl) : null)
 
   if (src) {
     return (
