@@ -122,6 +122,10 @@ import {
   setResourceFlag,
 } from '@/lib/resources'
 import { answerDisplayText, answerIsEmpty, linkThumbnail, youTubeId } from '@/lib/video'
+import { SELECTED_WEIGHT, UNSELECTED_WEIGHT, downGlyph, upGlyph } from '@/lib/state-cues'
+import {
+  ACCENT_PALETTE, DEFAULT_ACCENT_KEY, accentByKey, accentVariables, isAccentKey,
+} from '@/lib/accent'
 import {
   deleteBranch,
   describeBranchDeletion,
@@ -3694,6 +3698,171 @@ async function partK() {
   }
 }
 
+/** WCAG relative luminance, for the contrast assertions in part L. */
+function luminance(hex: string): number {
+  const m = hex.replace('#', '').match(/.{2}/g)!
+  const [r, g, b] = m.slice(0, 3).map((h) => {
+    const c = parseInt(h, 16) / 255
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+function contrast(a: string, b: string): number {
+  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p)
+  return (x + 0.05) / (y + 0.05)
+}
+
+async function partL() {
+  console.log('\nL. Stage 2h items 6 + 7 — no state by colour alone, and a per-user accent')
+
+  // ── item 6: every vote control carries a second, non-colour cue ──────────
+  console.log('\n  Item 6 — colour independence')
+
+  // ⚠ THE REASON IS NOT ABSTRACT: Charlie is colour blind. A voted state that
+  // differs from an unvoted one only by teal-versus-grey means he cannot tell
+  // whether his own click registered.
+  const VOTE_SURFACES: { label: string; file: string }[] = [
+    { label: 'the question vote', file: 'app/communities/[id]/questions/QuestionLibrary.tsx' },
+    { label: 'the answer vote', file: 'app/communities/[id]/questions/[questionId]/QuestionDetail.tsx' },
+    { label: 'the resource vote', file: 'app/communities/[id]/resources/ResourcesLibrary.tsx' },
+  ]
+  for (const s of VOTE_SURFACES) {
+    const src = readFileSync(resolvePath(process.cwd(), s.file), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+    // Every up control AND every down control, not "at least one of them":
+    // replacing one call site and leaving the other is exactly the half-fix this
+    // is here to catch.
+    const ups = (src.match(/upGlyph\(/g) ?? []).length
+    const downs = (src.match(/downGlyph\(/g) ?? []).length
+    check(`${s.label} takes its glyph from the shared cue vocabulary (${ups} up, ${downs} down)`,
+      ups >= 1, s.file)
+    // ⚠ A HARD-CODED ▲ IS THE DEFECT ITSELF. If the literal is still in the
+    // file, some branch is rendering the same shape whichever state it is in —
+    // which is what shipped, and what Charlie could not read.
+    // ⚠ ANY occurrence, not one in quotes or between tags. The first version of
+    // this looked for a triangle wrapped in quotes or sitting directly between
+    // `>` and `<`, and a planted break that dropped a bare ▲ into JSX text
+    // after a comment sailed straight past it — the guard was narrower than the
+    // property. A file that uses the helpers has no solid triangle left at all,
+    // so that is what to assert. (▶ in the video fallbacks is a different
+    // character and is deliberately not matched.)
+    check(`…and no longer hard-codes a state-independent triangle`,
+      !/[▲▼]/.test(src), s.file)
+  }
+
+  const cues = readFileSync(resolvePath(process.cwd(), 'lib/state-cues.ts'), 'utf8')
+  eq('the on and off glyphs are DIFFERENT characters, not one character recoloured',
+    new Set(['▲', '△', '▼', '▽']).size, 4)
+  check('the cue vocabulary pairs solid with hollow', cues.includes('▲') && cues.includes('△'))
+  eq('upGlyph is solid when the vote is yours', upGlyph(true), '▲')
+  eq('…and hollow when it is not', upGlyph(false), '△')
+  eq('downGlyph likewise', [downGlyph(true), downGlyph(false)], ['▼', '▽'])
+  check('the selected weight is the 2px the approval frame also uses',
+    SELECTED_WEIGHT.includes('border-2'))
+  check('…and the unselected weight is not', !UNSELECTED_WEIGHT.includes('border-2'))
+
+  // The surfaces the sweep found ALREADY carrying a second cue. Asserted so a
+  // later edit cannot quietly remove the cue and leave the colour.
+  for (const [label, file, needle] of [
+    ['the flag badge names the level in words',
+      'app/communities/[id]/questions/[questionId]/QuestionDetail.tsx', 'Do not use'],
+    ['the role badge prints the role',
+      'app/communities/[id]/CommunityDashboardClient.tsx', '{myRole}</span>'],
+    ['the favourite toggle uses a filled vs hollow star',
+      'app/communities/[id]/questions/[questionId]/QuestionDetail.tsx', "on ? '★' : '☆'"],
+    ['the bulletin vote changes stroke weight',
+      'app/communities/[id]/BulletinBoard.tsx', 'strokeWidth={myVote'],
+    ['the leaderboard delta prints a sign',
+      'app/communities/[id]/Leaderboards.tsx', "points > 0 ? '+' : ''"],
+  ] as const) {
+    const src = readFileSync(resolvePath(process.cwd(), file), 'utf8')
+    check(label, src.includes(needle), file)
+  }
+
+  // ── item 7: the accent palette ───────────────────────────────────────────
+  console.log('\n  Item 7 — the per-user accent')
+
+  check('the palette offers a real choice', ACCENT_PALETTE.length >= 5)
+  eq('teal stays first and stays the default', ACCENT_PALETTE[0].key, DEFAULT_ACCENT_KEY)
+  eq('…and is still the platform colour, so nobody who never chooses sees a change',
+    ACCENT_PALETTE[0].base.toLowerCase(), '#14b8a6')
+
+  const keys = ACCENT_PALETTE.map((a) => a.key)
+  eq('every palette key is distinct', keys.length, new Set(keys).size)
+  const bases = ACCENT_PALETTE.map((a) => a.base.toLowerCase())
+  eq('…and so is every base colour', bases.length, new Set(bases).size)
+
+  // ⚠ THIS IS WHAT "PRE-VETTED" HAS TO MEAN, or the word is decoration. Free hex
+  // entry was ruled out precisely because it yields unreadable text; a palette
+  // that has never been measured yields exactly the same thing, more slowly.
+  for (const a of ACCENT_PALETTE) {
+    const onWhite = contrast(a.text, '#ffffff')
+    check(`${a.label}: body text on white clears WCAG AA (${onWhite.toFixed(2)}:1)`,
+      onWhite >= 4.5, `${a.text} scores ${onWhite.toFixed(2)}`)
+    const deep = contrast(a.textDeep, '#ffffff')
+    check(`${a.label}: heading text on white clears AA (${deep.toFixed(2)}:1)`,
+      deep >= 4.5, `${a.textDeep} scores ${deep.toFixed(2)}`)
+    check(`${a.label}: the deep text is at least as dark as the body text`,
+      luminance(a.textDeep) <= luminance(a.text) + 1e-9,
+      `${a.textDeep} is lighter than ${a.text}`)
+    check(`${a.label}: all three values are six-digit hex`,
+      [a.base, a.text, a.textDeep].every((h) => /^#[0-9a-fA-F]{6}$/.test(h)))
+  }
+
+  // ⚠ THE SET OF TOKENS MUST MATCH globals.css EXACTLY. A ninth `--central-teal*`
+  // added to the stylesheet and not here would leave one token stuck on the old
+  // teal for every member who chose another colour — a half-applied accent,
+  // which is worse than none and shows up on one surface nobody thinks to check.
+  const css = readFileSync(resolvePath(process.cwd(), 'app/globals.css'), 'utf8')
+  // ⚠ globals.css has TWO `:root` blocks and the accent tokens are in the
+  // SECOND. Slicing from the first `:root {` returned a block with no
+  // `--central-teal*` in it at all, so the comparison was [] against [] — an
+  // assertion that could not fail, caught only because the other side was
+  // non-empty. Scan the whole file instead; there is nothing to be gained by
+  // guessing which block it is in.
+  const declared = Array.from(css.matchAll(/(--central-teal[\w-]*)\s*:\s*#/g))
+    .map((m) => m[1])
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .sort()
+  check('globals.css actually declares the accent tokens', declared.length >= 8,
+    JSON.stringify(declared))
+  const produced = Object.keys(accentVariables(ACCENT_PALETTE[1])).sort()
+  eq('the accent overrides exactly the tokens globals.css declares', produced, declared)
+
+  const swapped = accentVariables(ACCENT_PALETTE[1])
+  check('choosing another accent moves every token off the default teal',
+    Object.values(swapped).every((v) => !v.toLowerCase().startsWith('#14b8a6')),
+    JSON.stringify(swapped))
+  eq('the default accent reproduces the stylesheet values byte for byte',
+    accentVariables(ACCENT_PALETTE[0])['--central-teal-border'], '#14b8a64d')
+
+  // The closed set is the feature. A free hex must be refused.
+  eq('a free hex value is not a palette key', isAccentKey('#ff0000'), false)
+  eq('…nor is an unknown name', isAccentKey('chartreuse'), false)
+  eq('…while a real key is accepted', isAccentKey('indigo'), true)
+  eq('an unknown key falls back to the default rather than to nothing',
+    accentByKey('nonsense').key, DEFAULT_ACCENT_KEY)
+  eq('…as does null, for everyone who has never chosen', accentByKey(null).key, DEFAULT_ACCENT_KEY)
+
+  // The column exists and is nullable, which is what "never chosen" is stored as.
+  const col = await prisma.$queryRaw<{ is_nullable: string; data_type: string }[]>`
+    SELECT is_nullable, data_type FROM information_schema.columns
+    WHERE table_name = 'User' AND column_name = 'accentColour'`
+  eq('User.accentColour exists', col.length, 1)
+  eq('…and is nullable, so "never chosen" is distinguishable from "chose the default"',
+    col[0]?.is_nullable, 'YES')
+
+  const settingsSrc = readFileSync(resolvePath(process.cwd(), 'app/settings/page.tsx'), 'utf8')
+  check('the accent picker labels each swatch by NAME, not by colour alone (item 6)',
+    settingsSrc.includes('{a.label}'), 'app/settings/page.tsx')
+  check('…and marks the selected one with a tick and a heavier border',
+    settingsSrc.includes('border-2 border-foreground'))
+  check('the picker is a fixed palette, not a colour input',
+    !/type="color"/.test(settingsSrc))
+}
+
 /** Flatten a tree node to its ids, for the "is it still in the tree" checks. */
 function treeIds(node: { id: string; children: { id: string; children: unknown[] }[] }): string[] {
   const out = [node.id]
@@ -3717,6 +3886,7 @@ async function main() {
   await partI()
   await partJ()
   await partK()
+  await partL()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()

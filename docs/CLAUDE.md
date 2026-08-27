@@ -831,6 +831,38 @@ originally named, so the next omission fails a check instead of waiting for a sw
    backstop for all of the above — a dropped guard fails a check rather than waiting for the
    duplicate row that proves it is gone.
 
+### Colour is never the only cue (2h item 6, 27 Aug 2026)
+
+Charlie is colour blind. A state that differs from its opposite only by hue is a state he cannot
+read — including whether his own click registered.
+
+**The rule: every state carries a second, non-colour cue.** The vocabulary lives in
+`lib/state-cues.ts` so surfaces cannot invent their own:
+
+1. **Shape** — a filled glyph on, a hollow glyph off (▲/△, ▼/▽, ★/☆). Four different
+   characters, not one character recoloured; survives greyscale and a photocopier.
+2. **Weight** — `border-2` and bolder type on the active state. The same 2px the approval frame
+   uses, and nothing in Central's resting state draws it.
+
+A **filled background against a white one** already counts (it is a lightness difference, which
+colour blindness preserves), as does **text in the badge**, a **sign** on a number, and a
+**stroke-width** change. Colour stays — it is the fastest cue for people who can see it. It is just
+never alone.
+
+`check:central` asserts this per surface: every vote control draws its glyph from the vocabulary,
+**and no state-carrying file contains a bare ▲ or ▼ at all**. The narrow first version of that guard
+(a triangle in quotes, or between `>` and `<`) missed a planted bare glyph in JSX text — assert the
+absence totally, and route even explanatory copy through the vocabulary so the hint cannot drift
+from the control.
+
+⚠ **Measure the palette, do not eyeball it.** The check computes WCAG contrast for every accent's
+text on white and fails below 4.5:1. It immediately found that the platform's OWN teal text
+(`--central-teal-text: #0f8b7f`) scored **4.18:1** and had never been measured; it is now `#0d7a6f`
+at 5.21. A "pre-vetted palette" that has not been measured is the same unreadable-combination
+problem free hex entry was rejected for, arrived at more slowly.
+
+---
+
 ### Never run `prisma format` either
 
 Unrelated to indexes, same file, same class of damage: `prisma format` (v7.5) realigns every trailing
