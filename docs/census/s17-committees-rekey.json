@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-27 23:03 UTC",
+  "generatedAt": "2026-08-27 23:29 UTC",
   "proposals": [
     {
       "n": 1,
@@ -515,31 +515,31 @@
           "frontMatter": false
         },
         {
-          "id": "committees-reports:publication:34131:187908-0002",
+          "id": "committees-reports:publication:34131:187908-0004",
           "status": "confirmed",
-          "words": 572,
-          "title": "Report: Thirty-Eighth Report - Managing NHS backlogs and waiting times in England — Public Accounts Committee",
+          "words": 533,
+          "title": "Report: Thirty-Eighth Report - Managing NHS backlogs and waiting times in England — ¶2 — Public Accounts Committee",
           "frontMatter": false
         },
         {
-          "id": "committees-reports:publication:9266:160332-0002",
+          "id": "committees-reports:publication:9266:160332-0004",
           "status": "confirmed",
-          "words": 535,
-          "title": "Report: Forty-Fourth Report - NHS backlogs and waiting times in England — Public Accounts Committee",
+          "words": 412,
+          "title": "Report: Forty-Fourth Report - NHS backlogs and waiting times in England — ¶2 — Public Accounts Committee",
           "frontMatter": false
         },
         {
-          "id": "committees-reports:publication:20216:arc-0002",
+          "id": "committees-reports:publication:20216:arc-0006",
           "status": "confirmed",
-          "words": 615,
-          "title": "Report: 100th Report - NHS waiting times for elective and cancer treatment — Public Accounts Committee",
+          "words": 775,
+          "title": "Report: 100th Report - NHS waiting times for elective and cancer treatment — Public Accounts Committee — ¶7",
           "frontMatter": false
         },
         {
-          "id": "committees-reports:publication:10612:arc-0002",
+          "id": "committees-reports:publication:10612:arc-0004",
           "status": "confirmed",
-          "words": 527,
-          "title": "Report: 55th Report - NHS waiting times for elective care in England — Public Accounts Committee",
+          "words": 430,
+          "title": "Report: 55th Report - NHS waiting times for elective care in England — Public Accounts Committee — ¶6",
           "frontMatter": false
         }
       ]

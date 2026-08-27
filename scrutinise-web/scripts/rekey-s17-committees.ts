@@ -168,7 +168,11 @@ const PROPOSALS: Proposal[] = [
       'second and third chapters and states the committee\'s own conclusions.',
     answeringDocs: ['publication:44438'],
     keys: [
-      { id: 'committees-reports:publication:44438:220821-0002', confirm: 'universal credit' },
+      // ⚠ `moving 900,000 claimants` and not `universal credit`: this chunk straddles the contents
+      // list and the Summary, and the shorter term matches the contents line first — the confirming
+      // sentence came back as "Contents Summary 3 Introduction 4 …", which proves the document and
+      // answers nothing.
+      { id: 'committees-reports:publication:44438:220821-0002', confirm: 'moving 900,000 claimants' },
       { id: 'committees-reports:publication:44438:220821-0003', confirm: 'universal credit' },
     ],
   },
@@ -303,11 +307,15 @@ const PROPOSALS: Proposal[] = [
       'publication:50242', 'publication:34131', 'publication:9266', 'publication:20216', 'publication:10612',
     ],
     keys: [
+      // ⚠ The four `-0004`s are DELIBERATE. `-0002` in each of these reports is the contents list,
+      // and the first run's confirming sentences came back as "Contents Summary 3 Introduction 4
+      // Conclusions and recommendations 5" — C1's defect, reproduced by my own choice of key. The
+      // contents guard below now catches it and these keys were moved rather than the guard relaxed.
       { id: 'committees-reports:publication:50242:271529-0002', confirm: 'waiting' },
-      { id: 'committees-reports:publication:34131:187908-0002', confirm: 'waiting' },
-      { id: 'committees-reports:publication:9266:160332-0002', confirm: 'waiting' },
-      { id: 'committees-reports:publication:20216:arc-0002', confirm: 'waiting' },
-      { id: 'committees-reports:publication:10612:arc-0002', confirm: 'waiting' },
+      { id: 'committees-reports:publication:34131:187908-0004', confirm: 'waiting' },
+      { id: 'committees-reports:publication:9266:160332-0004', confirm: 'waiting' },
+      { id: 'committees-reports:publication:20216:arc-0006', confirm: 'waiting' },
+      { id: 'committees-reports:publication:10612:arc-0004', confirm: 'waiting' },
     ],
   },
 ]
@@ -320,6 +328,42 @@ const FRONT_MATTER = [
 ]
 function looksLikeFrontMatter(body: string): string[] {
   return FRONT_MATTER.filter((r) => r.test(body.slice(0, 2500))).map((r) => String(r))
+}
+
+/**
+ * ⚠⚠ THE FRONT-MATTER FLAG IS NOT ENOUGH, AND MY OWN FIRST RUN PROVED IT. It reported 0 across all
+ * fifty keys — correctly, by its own definition — while FOUR of C10's five confirming sentences
+ * were a table of CONTENTS: *"Contents Summary 3 Introduction 4 Conclusions and recommendations 5"*.
+ * That is C1's defect, the one this sprint drops a key for, reproduced by my own choice of key.
+ *
+ * A cover page and a contents run are different shapes, and the thing that matters is not whether
+ * the CHUNK contains a contents list — several substantive chunks straddle one — but whether the
+ * SENTENCE PRINTED INTO THE FILE is prose. So the test is applied to the quote, which is the thing
+ * a reader will judge the re-key by.
+ *
+ * The signature is `word number` repeated: a heading followed by its page number, four or more
+ * times. Page numbers are 1–3 digits, which is why a year (2021) does not trip it.
+ */
+function looksLikeContentsLine(sentence: string): boolean {
+  return (sentence.match(/[A-Za-z]{3,}\s+\d{1,3}(?=\s|$)/g) ?? []).length >= 4
+}
+
+/**
+ * ⚠ AND A THIRD SHAPE, FOUND THE SAME WAY. With the contents guard satisfied, one C10 quote came
+ * back as *"NHS waiting times for elective and cancer treatment 6 3."* — a running header and a
+ * paragraph number. It contains the term, it is not a contents list, and it answers nothing.
+ * A confirming sentence has to be long enough to BE an answer; twelve words is the floor, and it is
+ * a floor a real committee sentence clears without trying.
+ */
+function looksLikeHeaderFragment(sentence: string): boolean {
+  const s = sentence.replace(/^…\s*/, '').trim()
+  // ⚠ A LENGTH THRESHOLD ALONE WAS WRONG AND THE RUN SHOWED IT. Twelve words flagged four quotes;
+  // three were real submissions saying something in eleven words ("Ensures trade policy accelerates
+  // the deployment and take-up of sustainable practices"). Tuning the number until only the bad one
+  // failed would have been fitting a threshold to four examples. The bad one has a SHAPE instead:
+  // it ends in the running header's page and paragraph numbers — "…elective and cancer treatment 6 3."
+  if (/\s\d{1,3}(\s+\d{1,3})*\s*[.:]?$/.test(s)) return true
+  return s.split(/\s+/).filter((w) => /[A-Za-z]/.test(w)).length < 8
 }
 
 /** The sentence that carries the confirming term, trimmed to something quotable.
@@ -387,7 +431,7 @@ async function main() {
   const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
   const goldByN = new Map(GOLD_CORPUS.map((q) => [q.n, q]))
 
-  let proposed = 0, read = 0, confirmed = 0, missing = 0, frontMatter = 0
+  let proposed = 0, read = 0, confirmed = 0, missing = 0, frontMatter = 0, contentsQuotes = 0, headerFragments = 0
   const out: string[] = []
   const json: any[] = []
 
@@ -469,7 +513,23 @@ async function main() {
       out.push(`  <br>*${String(m.sectionTitle ?? '').slice(0, 160)}*`)
       out.push('')
       if (sentence) {
+        const contentsy = looksLikeContentsLine(sentence)
+        const fragment = looksLikeHeaderFragment(sentence)
+        if (contentsy) contentsQuotes++
+        if (fragment) headerFragments++
         out.push(`  > ${sentence}`)
+        if (contentsy) {
+          out.push('')
+          out.push('  ⚠ **The confirming sentence reads as a table of CONTENTS, not as prose.** The term')
+          out.push('  is present and the chunk is the right document, but a heading followed by a page')
+          out.push('  number is not the document answering the question. Choose a later chunk.')
+        }
+        if (fragment) {
+          out.push('')
+          out.push('  ⚠ **The confirming sentence ends in a bare page or paragraph number, or is under')
+          out.push('  eight words** — a running header rather than the document answering anything. The')
+          out.push('  KEY is still the right document; the quote is weak and a better term would fix it.')
+        }
       } else {
         out.push(`  > ⚠ **UNCONFIRMED — the declared term \`${k.confirm}\` is not in the stored body.**`)
         out.push(`  > First 300 characters as read: ${body.replace(/\s+/g, ' ').trim().slice(0, 300)}`)
@@ -497,6 +557,8 @@ async function main() {
   out.push(`- Bodies containing their declared confirming term: **${confirmed}**`)
   out.push(`- Keys with no row or no readable body: **${missing}**`)
   out.push(`- Keys whose body reads as front matter: **${frontMatter}**`)
+  out.push(`- Keys whose confirming sentence reads as a table of contents: **${contentsQuotes}**`)
+  out.push(`- Keys whose confirming sentence is a header fragment (ends in a bare number, or under eight words): **${headerFragments}**`)
   out.push('')
   out.push('*This states what it counted. It does not assert that the re-key is right — that is')
   out.push('Charlie\'s validation, and until it happens the gold set is unchanged and no figure in any')
