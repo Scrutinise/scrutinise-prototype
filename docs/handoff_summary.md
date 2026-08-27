@@ -2,7 +2,94 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 16:35 UTC — ▼ **THE CASE REFERENCE LAYER: WE CAN SAY WHAT A CASE IS
+*Last updated: 2026-08-27 23:22 UTC — ▼ **SEARCH S17: THE COMMITTEES KEYS ARE RE-KEYED, AND S16's
+UNREACHABLE CLASS IS ZERO — NOT FOUR.**
+⚠⚠ **`cps-guidance` HAS BEEN REACHABLE SINCE 21 AUGUST AND NOBODY RE-READ THE INDEX.** It sits in
+the `guidance` tier of the SERVED index and the guidance stream returns all three of its keys today
+(**ranks 36 / 2 / 18** BM25-only, **70 / 34 / 33** fused, raw query, configuration in the artefact).
+S16 published them as UNREACHABLE because its autopsy took the tier from
+`corpus_reachability.json` — generated **2026-08-20 23:59 UTC, one day before S11's re-tier** — and
+because its `admits()` was a **re-implementation** that compares `s.tier !== tier` FIRST and
+**never looks at `extraCorpora`**, so `scottish-parliament-or` (reached by the debates stream's
+extra corpus-only leg) came out "admitted by NO stream". `stream-scopes.ts`'s own header warns that
+a COPY of the scope test is how a matrix keeps saying *reachable* after a filter narrows; **this was
+that failure from the other direction.** Both fixed — the scope test is imported, and every tier is
+now read back off `fts-serve` from hits carrying their own `tier` field.
+▶ **RECOUNT, same 32 failures, same arms data, only the tier source and the scope test changed:
+UNREACHABLE 4→0 · NOT-ROUTED 4→5 · RANKING 4→6 · NOT-MATCHED 19→20 · search owns 12→11.**
+⚠ The unit modifier moves 12→15 as arithmetic, not a finding (it is set only on NOT-MATCHED/RANKING
+and three of the four reclassified rows are ≥1,500 words). S16's artefact is untouched; the recount
+has its own path.
+▶▶ **§2's ANSWER: NOBODY NEEDS TO FIX THE `other` TIER — not ingest, not search.** Twelve
+collections enumerated; **seven have already moved to `guidance`**; the only two with no stream
+(`early-day-motions` 60,737 · `petitions` 49,529) are `DEFERRED_TO_GRAPH` by a written decision and
+`members-interests` is excluded by design. **A scope change made on S16's account would have widened
+a stream to admit collections it already admits.**
+▶ **§1 — `docs/GOLD_COMMITTEES_REKEY.md`: 10 questions · 50 keys · 50 bodies READ OUT OF R2 · 50
+confirming terms found · 0 missing · 0 front matter**, and that last zero counts only because the
+front-matter detector was watched firing on two known cover pages and staying silent on a
+substantive one (3/3). ⚠⚠ **C1's currently-PASSING key is the report's COVER PAGE** — crest,
+membership list, the clerk's telephone number — retrieving on its title and answering nothing;
+dropped, and the pass may go with it. ⚠ **C3's correspondence key was RIGHT all along**: *"what has
+Parliament been TOLD"* asks for a letter; the defect was 1-of-8, and all eight are keyed. ⚠ A
+`%Grenfell%` match takes correspondence from **Michael Grenfell of the CMA** — a surname, not the
+tower. ⚠⚠ **The leasehold report is held THREE TIMES (standard / Large Print / Easy Read) as
+separate documents**, so a hit on the Large Print copy scores WRONG while giving the user the right
+report — this sprint's own defect arriving from the ingest side, reported not fixed.
+▶ **The durable artefact is the key-kind distribution: committees 52.6% off-kind, every other
+collection 0.0% across 76 keys — there is NO second instance of the wrong-kind defect.** The
+one-of-many HAZARD is elsewhere though: a debates key is 1 of a **369-speech median sitting day**
+(max 3,594), a legislation key 1 of a **200-section median Act**. ⚠⚠ **My own first version printed
+`1` there and the 1 was a DEFAULT** — those corpora carry a NULL `parentDocId`; an undeterminable
+group now prints `n/a` and is counted.
+▶ **§3 — the flag state is readable in one request.** `/api/health` reports all 15 capability flags
+through `capabilitySnapshot()`, so it says what is IN FORCE not what was SET, plus three presence
+booleans. `check:s17-flags` **11 passed**, leak detector watched naming a planted key. ⚠⚠ **One of
+my own assertions was wrong about the world and the first run caught it** — I required a capitalised
+`TRUE` to report FALSE, but `env-flags.ts` normalises it; the real test is a value set and
+UNRECOGNISED. `SEARCH_CONTRACT` §4's "the live flag state is NOT readable" is replaced.
+❌ **NO recall figure published and none superseded** — the baseline is NOT re-run until Charlie
+validates the re-keys, per the brief. ⚠ When it is, **expect the headline to rise for a reason that
+is not an improvement in search.**
+▶▶ **CHARLIE: five decisions in `docs/SEARCH_S17_REPORT.md`** — D-1 a document-level match rule,
+**D-2 validate the ten re-keys (the gate on everything else)**, D-3 regenerate the eight-day-old
+`corpus_reachability.json` that is wrong for seven collections. ⚠ No file under
+`scripts/ingest/search/` was touched, so `vector-serve`'s auto-deploy was not triggered and no
+measurement was interrupted — checked, not assumed.
+Earlier: 2026-08-27 23:23 UTC — ▼ **OPS: THE TWO SEARCH SERVICES NOW SLEEP, AND THE LEGACY DATABASE
+`pg_stat` CALLS EMPTY HOLDS 1.25M ROWS.** ⚠ **Order kept**: search timeouts raised **and confirmed
+in the live build** before `sleepApplication` was touched — the other order breaks search for
+whoever arrives first after each doze. ⚠⚠ **`scrutinise-db` IS NOT EMPTY.**
+`pg_stat_user_tables.n_live_tup` reported **0 rows for all 68 tables**; real counts are
+**1,251,338 rows over 2,029 MB**, incl. **29 Users and 54 Ideas from before the Neon migration**.
+Stats were reset; the data was not. **Anyone reading that view would have deleted it.** ▶ No
+`pg_dump`/Docker here, so the dump goes through the wire protocol (catalogue DDL + `COPY … TO
+STDOUT`): **585.3 MB gz in R2 → 1,918.2 MB SQL**, verified by re-download against **all 68 live
+row counts**. ⚠ **The verifier is streamed because v1 could not read its own backup** — held the
+SQL in a string, died on V8's 512 MB cap. **A verification step that cannot run on the real
+artefact verifies nothing.** ▶▶ **CHARLIE: THE DELETION IS PREPARED, NOT DONE** (it destroys a
+volume, no undo) — one command in `docs/OPS_SLEEP_AND_DECOMMISSION.md`; it **refuses unless it
+re-verifies the backup against live in the same run**. ⚠⚠ **THE MEASUREMENT PREVENTED THE THING IT
+MEASURED** — the first cold-start script polled `/health` every 15s, which IS inbound traffic, so
+it held both services awake and reported they never slept (reads as "sleep doesn't work on this
+plan"). Now waits in SILENCE, one request, and refuses to call anything under 3s a cold start. ⚠ **I
+made the same mistake by hand with curl.** ⚠ **DO NOT SIZE THE TIMEOUT FROM `/health`**: restart →
+first SERVED QUERY was fts **12.1s** (health 10.0s) and vector **13.5s** (health **6.7s**) — a
+**6.8s window where the container is up, health is green and a search still fails.** Budgets
+**25s → 75s**, named `*_COLD_START_MS` and commented as a wake allowance so nobody tunes them as a
+latency target; **code defaults, not env vars** (Vercel token is SAML-blocked). ▶ `sleepApplication`
+confirmed available **by querying the GraphQL schema**, set and **read back** on both. ▶
+`POST /api/search/warm` from **exactly two places** (ideas hub, proposal surface) — ⚠ **never a
+layout: that would keep both awake and silently undo the saving**; signed-in only, **401 verified
+live**. ▶ `search-wait.ts` keeps **waking/searching/failed** apart, shown only when the probe says a
+service really was asleep. ⚠ **THE COST MODEL WAS OUT BY 60×** — `MEMORY_USAGE_GB` is a SUM OF
+PER-MINUTE SAMPLES, not GB-hours ($2,530/mo for a project billing tens); corrected and calibrated
+against the one known figure (bill $3.11 vs computed $2.59). ▶▶ **$42.17/month, of which fts-serve
+$18.30 + vector-serve $19.44 = $37.74 — 89% — for two services idle almost all the time.** After
+sleeping + removing the legacy DB: **≈$5–9/mo plus awake time**; ⚠ no single saving figure claimed
+until pilot traffic exists — re-run `ops/cost-estimate.ts` in a week.
+`docs/OPS_SLEEP_AND_DECOMMISSION.md`.**
+Earlier: 2026-08-27 16:35 UTC — ▼ **THE CASE REFERENCE LAYER: WE CAN SAY WHAT A CASE IS
 WITHOUT HOLDING IT, AND FIVE OF SEVEN PREDICTIONS WERE REFUTED.**
 Ask about **Caparo** today and rank 3 is *Unite The Union v Caparo Atlas Fastenings Ltd*; ask about
 **ex p Coughlan** and you get *Mrs M Coughlan v Brookes Jordan Ltd*. Re-measured live: **10/10
