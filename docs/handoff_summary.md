@@ -2,7 +2,49 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 14:23 UTC — ▼ **SEARCH S16: HALF THE QUESTIONS FIND NOTHING — AND FOR COMMITTEES THE RULER IS BROKEN, NOT THE RETRIEVER.**
+*Last updated: 2026-08-27 15:21 UTC — ▼ **INGEST CENSUS C1 PARTS B AND C: THE EMAIL FINALLY READS A DENOMINATOR SOMEBODY ELSE SET — AND THIS MORNING'S PURGE IS ONE LAYER SHORT.**
+⚠⚠⚠ **READ THIS FIRST: THE PURGE RAN AT 02:20 TODAY BUT ONLY INTO NEON. `corpus_fts` STILL HOLDS
+18,272,377 ROWS INCLUDING 36,919 FROM THE SEVEN PURGED COLLECTIONS**, measured 15:00. Rows deleted
+twelve hours ago are still being returned with no source row behind them. ⚠ `l2-purge-index.ts`
+**cannot run from this machine** — OOM in LanceDB's Rust layer at batch 4,000 and again at 400
+(131,650 ids against 18M rows, no scalar index on `id`). §17. **DECISION B-1, and the only item
+currently costing a user anything.** C3 steps 6–8 and ALL of C3A also still unrun.
+✅ **Part A confirmed complete**; nothing needed re-running.
+▶▶ **`corpus_census` EXISTS, AND ITS CHECK CONSTRAINTS ARE THE DELIVERABLE.** It refuses MEASURED
+without a denominator, without a walk artefact, an undefined state, hollow>held, and published==held
+without a deliberate `EXACT:` token. Seven refusals + one acceptance, watched.
+⚠⚠ **TWO OF MY OWN CONSTRAINTS WERE WRONG AND THE TEST CAUGHT BOTH.** The first accepted any
+non-null `notes` — and every walker writes notes, so it waved through **six** exact matches. Then
+`notes LIKE '%EXACT:%'` let through the one row it most needed to refuse, because **`NULL LIKE …`
+is NULL and a CHECK constraint PASSES on NULL**.
+✅ **pwdata 7/7 MEASURED, unit = sitting DAY not file** (20,080 files → 16,039 days). CCh predicted
+>98%; measured **100% on six streams, one day short on the seventh — and that day is the HTTP 503
+in this same email's ISSUES block**.
+⚠⚠ **FOUR API DENOMINATORS WERE BROKEN ON THE FIRST RUN AND WERE DEMOTED, NOT SHIPPED**
+(`quangos-govuk` 126,306.5% · `consultations` 647.7% · `hmrc-tiins` 791/0 · `tax-tribunals`).
+**A wrong denominator is worse than none — it prints as fact.** consultations was a missing
+`consultation_outcome` filter → **99.8%**; the rest are UNMEASURED behind a new `proxy:true` flag.
+▶ **GAPS THAT PRINTED AS COMPLETE YESTERDAY: `bills-api` 10.4% · `petitions` 36.6% · `echr-hudoc`
+55.0% · `committees-reports` 58.1% · `hmrc-manuals` 80.9% · `members-interests` 84.1%.**
+`committees-reports` is S16's finding from the ingest side — **42% of the publications Parliament
+lists are not held at all**, which is a different problem from S16's broken answer keys.
+✅ **Legislation walked by ENTRY, never by header** (`totalResults` absent on exactly the dense
+feeds). Four types now have a published count for the first time: **`apni` 288 · `ukcm` 244 ·
+`ukci` 60 · `ukla` 20,172 — held 0 for all four.** ⚠ The walk is **STILL RUNNING** (570 of ~800
+feeds); `ukpga`, `uksi`, `ssi`, `nisr`, `nisi`, `mwa` and the EU types read UNMEASURED until it
+finishes. Resume with `census/b/walk-legislation.ts` — it is checkpointed.
+✅ **Part C: the email reads `corpus_census` and CANNOT fall back to `est_sections`.** Headline is
+now the **SEARCHABLE** corpus (18,103,959) with the legacy 914,274 beneath it and never added in.
+`100% complete` lives behind ONE clamp in ONE function. **The negative control was watched printing
+the tick first: the old rule ticks 7/7 of the 22 Aug fixture including a corpus holding ZERO
+sections; the new one ticks 0/7.** ⚠ It also caught **a shortfall that ROUNDS to 100.0%**
+(4,681 of 4,682) — now prints the missing day in words.
+⚠⚠ **AND THE CENSUS CONTRADICTED THE PURGE: `et-decisions` was retired AND blocked though only its
+landing pages were deleted — 161,753 real judgments sit under a retired flag.** Hides nothing from
+users (`runSearch()` does not read `corpus_targets` — checked), but drops them out of every report
+that filters on it. **DECISION B-2, one UPDATE.**
+▶▶ **CHARLIE: five decisions in `docs/INGEST_CENSUS_C1_B_REPORT.md`.** Parts D, E, F not started.
+Earlier: 2026-08-27 14:23 UTC — ▼ **SEARCH S16: HALF THE QUESTIONS FIND NOTHING — AND FOR COMMITTEES THE RULER IS BROKEN, NOT THE RETRIEVER.**
 ▶▶ **§2 IS THE SPRINT: all 32 failing questions classified one at a time, by probing.**
 ABSENT **1** · UNREACHABLE **4** · NOT-ROUTED **4** · RANKING **4** · NOT-MATCHED **19**, with
 **12 of 32** on long documents scored whole. Artefact `docs/census/s16-autopsy.json`; the classifier

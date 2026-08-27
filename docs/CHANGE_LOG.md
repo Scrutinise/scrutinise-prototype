@@ -132,6 +132,127 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST CENSUS C1 PARTS B AND C — THE EMAIL NOW READS A DENOMINATOR SOMEBODY ELSE SET, AND THE PURGE IS ONE LAYER SHORT (2026-08-27 15:21 UTC)
+
+**Executes `docs/BRIEF_INGEST_CENSUS_C1.md` Parts B and C. Report:
+`docs/INGEST_CENSUS_C1_B_REPORT.md`. Spend US$0.00 of the $250 ceiling.**
+
+✅ **Part A confirmed complete** — all seven sub-parts have artefacts and the A-report is written.
+Nothing needed re-running.
+
+⚠⚠ **AND THE PURGE CHARLIE WAS HANDED ON 24 AUGUST RAN AT 02:20 THIS MORNING — BUT ONLY LAYER ONE.**
+18,272,452 → **18,103,959** compiled sections, `et-decisions` 293,403 → 161,753, seven collections
+at zero, `ftsVector` dropped. **`corpus_fts` still reports 18,272,377 rows and still holds 36,919
+rows from the seven purged collections**, measured this afternoon: the rows were deleted from Neon
+twelve hours ago and are **still being returned to users with no source row behind them**. The
+purge's own header warned about exactly this. ⚠ `l2-purge-index.ts` **cannot run from this machine** —
+OOM inside LanceDB's Rust layer at batch 4,000 and again at 400, counting 131,650 ids against an
+18M-row table with no scalar index on `id`. §17's signature. **Decision B-1.**
+
+▶▶ **`corpus_census` EXISTS AND ITS CONSTRAINTS ARE THE DELIVERABLE, NOT THE TABLE.** One row per
+collection, counted in UNITS, every MEASURED row carrying a dated walk artefact. The schema refuses
+MEASURED-without-a-denominator, MEASURED-without-a-walk-artefact, DECLARED-without-a-denominator,
+an undefined state, hollow>held, and published==held without a deliberate `EXACT:` assertion.
+`apply-schema.ts` **watches all seven refuse inside aborted transactions, plus one valid row that
+must be accepted** so the test cannot pass by rejecting everything.
+
+⚠⚠ **TWO OF MY OWN CONSTRAINTS WERE WRONG AND BOTH WERE CAUGHT BY THE TEST, NOT BY READING THE SQL.**
+(1) The first `exact_match_explained` accepted any non-null `notes` — and **every walker writes
+notes**, so on its first real run it waved through SIX exact matches without a murmur. *A guard
+satisfied by something the writer was always going to do anyway is not a guard.* (2) The tightened
+`notes LIKE '%EXACT:%'` then let through **the one row it most needed to refuse**: `NULL LIKE '…'`
+is NULL and **a CHECK constraint PASSES on NULL**. `coalesce(notes,'')`. ⚠ The tightening was applied
+to the live table and `ADD CONSTRAINT` **validated the existing rows and failed loudly** — which is
+the only reason the six unexplained matches surfaced at all.
+
+✅ **pwdata: 7 collections MEASURED, unit = SITTING DAY not file** (20,080 files → 16,039 days for
+debates; ParlParse republishes a day as `…a`…`…f` and counting files would make the denominator
+climb every time Hansard fixes a typo). **CCh predicted >98% with gaps in the last 14 days; measured
+100% on six streams and ONE day short on the seventh — `lordswrans2026-08-11`, which appears in this
+same email's ISSUES block as HTTP 503.** ⚠ Six exact matches is the result that should be
+distrusted, so its independence is established three ways: different systems on each side, a real
+absence found by the identical comparison, and a harness self-test where a mistyped corpus key
+reports **0%, not 100%**.
+
+⚠⚠ **FOUR DENOMINATORS WERE BROKEN ON THE FIRST API RUN AND WERE DEMOTED, NOT SHIPPED.**
+`quangos-govuk 126,306.5%` · `consultations 647.7%` · `hmrc-tiins 791/0` — **a wrong denominator is
+worse than none, because it prints as fact**, which is this sprint's own defect from the opposite
+direction. consultations was a filter missing `consultation_outcome` (6,311 of 7,461) → **fixed,
+99.8%**; gov.uk publishes **no** TIIN document type → UNMEASURED; quangos was ONE organisation of
+many → UNMEASURED; `tax-tribunals` counts gov.uk's 1,434 against our 12,027 from the tribunal's own
+archive → UNMEASURED. A `proxy:true` flag now forces UNMEASURED however good a number looks.
+⚠ `ots-reports` 497 held / **222** published is **not** broken and stays MEASURED — it prints
+`⚠ denominator suspect (224%)` and never a tick.
+
+▶ **THE GAPS THAT WERE PRINTING AS COMPLETE YESTERDAY: `bills-api` 10.4% · `petitions` 36.6% ·
+`echr-hudoc` 55.0% · `committees-reports` 58.1% · `hmrc-manuals` 80.9% · `members-interests` 84.1%.**
+`committees-reports` at 58.1% is the ingest-side counterpart of SEARCH S16's finding this morning —
+S16 says the answer keys are wrong, this says **42% of the publications Parliament lists are not
+held at all.** Two different problems, both real.
+
+✅ **Legislation walked by ENTRY, never by header** — re-measured on six feeds today,
+`totalResults` present on `ukpga/2020` and `asp/2020` and **absent on `uksi/2020`, `apni`, `ukcm`,
+`nisr/2020`**, i.e. absent on precisely the dense feeds where a denominator matters. Four types the
+brief named now have a published count for the first time: **`apni` 288 · `ukcm` 244 · `ukci` 60 ·
+`ukla` 20,132+, held 0 for all four.** `asp` 401/402 · `nia` 236/236 · `anaw` 44/44 · `asc` 34/34.
+⚠ The walk is **still running** (530 of ~800 feeds); `ukpga`, `uksi`, `ssi`, `wsi`, `nisr`, `nisi`,
+`mwa` and the three EU types read UNMEASURED until it finishes, which is the honest state.
+⚠ Devolved types print **individually**, not as `regional` — one blend would hide a type at 40%
+behind one at 99%; the aggregate rows are deleted as the per-type rows land.
+
+✅ **Part C — the email reads `corpus_census` and CANNOT fall back.** An absent table prints "THE
+CENSUS TABLE IS EMPTY OR ABSENT" and says why a fallback would restore the defect. Seven states;
+a percentage only for MEASURED/DECLARED; `100% complete` behind ONE clamp in ONE function
+(MEASURED and `published ≤ held ≤ published×1.02` and zero hollow); sections and units never share
+a column; **the headline is the SEARCHABLE corpus — 18,103,959 — with the legacy table's 914,274
+printed beneath and never added in** (the subject line quoted the combined 19,018,233 until today);
+`CENSUS C1` in the footer.
+
+▶ **The negative control was watched printing the tick first.** `check-email.ts` keeps the OLD rule
+and runs the 22 August fixture (`est == compiled` everywhere) through both: **old ticks 7 of 7,
+including a corpus holding ZERO sections; new ticks 0 of 7 and prints UNMEASURED 7 of 7.** It also
+asserts the positive direction so the renderer cannot pass by refusing everything — 16,039/16,039
+must tick, 30,149/51,866 must not, 497/222 must warn, and **both sides of the clamp boundary**
+(102/100 ticks, 103/100 warns). ⚠ It found a defect in my own renderer: **a shortfall that ROUNDS to
+100.0%** — `pwdata-lordswrans` 4,681 of 4,682 printed `100.0%` with no tick; it now says
+`(1 Lords written-answers day not held)` in words.
+
+⚠⚠ **A DEFECT THIS MORNING'S PURGE INTRODUCED, FOUND BY THE CENSUS CONTRADICTING IT.** `l2-purge.ts`
+retires AND blocks the `corpus_targets` row for every collection it touches. For seven that is
+right. For the eighth the target was `et-decisions-landing` — only the landing pages went — and
+**`et-decisions` still holds 161,753 real judgments while its row now reads retired and blocked.**
+It hides nothing from users (`runSearch()` does not read `corpus_targets` — checked, not assumed)
+but drops 161,753 sections out of every report that filters on `retired`. The census says MEASURED
+98.1%, which is how it surfaced. **Decision B-2, one UPDATE.**
+
+❌ **Still unrun:** the serving-index purge (B-1) and everything downstream of it · C3 steps 6–8 ·
+all of C3A · the legislation walk's remaining types · historic-hansard, Find Case Law and the three
+devolved Official Report walkers · Parts D, E, F.
+✅ `tsc` clean on everything this sprint added; §20 check 0 `--fast` PASS (0 cross-package files).
+▶▶ **CHARLIE: five numbered decisions in `docs/INGEST_CENSUS_C1_B_REPORT.md`.** B-1 is the only one
+currently costing a user something.
+
+## INGEST CENSUS C1 PART B — PREDICTIONS, LOGGED BEFORE THE WALKERS RAN (2026-08-27 14:35 UTC)
+
+Predict–measure–compare, per the brief's standing rule. Written before any walker was started;
+scored in `docs/INGEST_CENSUS_C1_B_REPORT.md`.
+
+1. **pwdata streams** (CCh's prior, adopted): >98% of sitting-day files held, gaps concentrated in
+   the last 14 days. **My refinement: I expect 99–100%, because the same directory index drives
+   both the ingest and the walk, so the only gaps should be days that failed to fetch.**
+   → **Measured: 100% on six of seven; one day short on the seventh, and it is a 503 from ten days
+   ago.** Shape right, size pessimistic.
+2. **The exact-match trap:** I predict at least one collection will come out at exactly 100% and
+   that this will be genuine rather than tautological — and that I will not be able to tell the
+   difference without a third piece of evidence. → **Six did. The third piece was the seventh
+   stream disagreeing.**
+3. **At least one denominator I fetch will be wrong in a way that prints a percentage over 100.**
+   → **Four were.** Predicted one, measured four.
+4. **`committees-reports`**: I expect well under 100%, because S16 measured committees failing on
+   retrieval this morning and a missing document cannot be retrieved. → **58.1%.**
+5. **legislation `totalResults`:** absent on the dense feeds, present on the sparse ones, as V36
+   found in July. → **Confirmed on six feeds, unchanged in six weeks.**
+
 ## LEX 25-I ADDENDUM — THE FIRST REUSE BUILD THAT HAS EVER COMPLETED, AND A SECOND DEFECT UNDER THE FIRST (2026-08-27 12:28 UTC)
 
 Charlie approved the re-run 25-I stopped for. It took two more builds.
@@ -1175,6 +1296,57 @@ per-node seeding restored, the Untagged view inverted, and the orphan detector s
 
 ---
 
+
+## INGEST — CASE REFERENCE LAYER: the predictions, logged BEFORE the extraction runs (2026-08-27 14:55 UTC)
+
+Running `docs/BRIEF_CASE_REFERENCE_LAYER.md`. This entry exists before any full extraction, because a
+prediction written after the measurement is not a prediction.
+
+### The baseline, re-measured live today rather than quoted
+
+`probe-pre2001-caselaw.ts` against the real gateway, 27 Aug 14:0x UTC, `fts+83 vector+28` (so the
+services were reached — a run that reaches nothing returns zeros that look exactly like absence):
+
+```
+  authority NOT held:                                        10/10
+  of those, a same-name DIFFERENT case returned instead:      3/10
+  absent AND the lay query still returned a full answer set: 10/10
+```
+
+The three decoys, verbatim: **GCHQ** → *COUNCIL OF CIVIL SERVICE UNIONS et al v. THE UNITED KINGDOM*
+(1987, Strasbourg) at **rank 0** · **Caparo** → *Unite The Union v Caparo Atlas Fastenings Ltd* (2017)
+at **rank 3** · **ex p Coughlan** → *Mrs M Coughlan v Brookes Jordan Ltd* (2020) at **rank 23**.
+Artefact: `docs/census/CASEREF_baseline_2026-08-27.json`.
+
+### What is already measured, before the predictions rest on it
+
+- **The parser is watched failing.** `check-citations.ts` is **46/46** against the real parser and
+  **22 failures** against a deliberately modern-only one — including all ten pre-2001 authorities,
+  which is the exact defect §1.1 names.
+- **The read rate is measured, and the batch size with it.** `corpus_fts` has no scalar index on
+  `id`, so each `id IN (…)` predicate is a full scan and the cost is per PREDICATE:
+  **400 ids → 6 docs/s · 2,000 ids → 32 docs/s · 5,000 ids → out of memory.** Parsing itself is free
+  (0.0 s per 100 documents); every second of this job is the read.
+- **A 400-judgment pilot of `tna-caselaw`** found **2,297 distinct citations**, of which
+  **1,749 (76.1%) are pre-2003**.
+
+### The predictions
+
+| # | prediction | basis |
+|---|---|---|
+| **C1** | a full `tna-caselaw` scan yields **90,000–160,000 distinct citations** | 2,297 from 400 documents, discounted hard for saturation: the commonest authorities repeat immediately, so distinct-per-document must fall away sharply |
+| **C2** | **70–80% of distinct citations are pre-2003**, and that share stays within the pilot's 76.1% ± 5 | the pilot, and the fact that modern judgments cite old authorities far more than each other |
+| **C3** | `tna-caselaw` takes **35–50 minutes** at 32 docs/s | 74,896 ÷ 32 = 39 min, and the rate has been measured on this table today |
+| **C4** | **all ten** probe authorities appear in the extracted set, with **Donoghue and Wednesbury each cited in more than 100 documents** | they are the most-cited authorities in English law; if they do NOT appear, the parser is wrong and the whole layer is void |
+| **C5** | the ten most common malformed matches are dominated by **statutory section references and paragraph numbers**, not by real citations | that is what the negative controls in `check-citations.ts` were written against |
+| **C6** | `committees-reports` (344,773 sections) will be **REPORTED AND NOT RUN** this sprint — projected ~3 hours at the measured rate | it is a cost decision, not a technical one, and §1.2 asks for the report before the build |
+| **C7** | BAILII's terms will **prohibit** automated access but **permit** a plain hyperlink; the links ship as deep links | ⚠ this is the one prediction that is a GUESS about a document I have not yet read. §2 requires it to be verified before a single link ships, and if it is wrong the links go to their search page instead |
+
+⚠ **C7 is flagged as a guess on purpose.** Every other row rests on something measured today. Scoring
+a guess that agrees with the brief's framing would be the `ots-reports` mistake again — a prediction
+that restates the brief is the brief, repeated.
+
+---
 
 ## SURFACE — PRINCIPLE 7: THE APPLICATION'S CLAIM WAS FALSE, AND ITS PREMISE WAS WRONG TOO (2026-08-27 03:10 UTC)
 
