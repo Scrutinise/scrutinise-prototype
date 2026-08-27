@@ -418,7 +418,42 @@ const res = await runSearch({
 // res.grouped         — ≤3 per display type, ~20 total, panel-ready
 // res.failed          — TRUE = the search could not run. NOT the same as "found nothing".
 // res.meta.requested  — {limit, returned, streams, fanout} — what you asked for vs what arrived
+// res.meta.denseDegraded — S15 §3. Streams whose DENSE half did not run, and why. See below.
 ```
+
+### ⚠⚠ `meta.denseDegraded` — A PARTIAL GAP, AND WHAT LEX MAY SAY ABOUT IT (added S15 §3)
+
+Present only when at least one routed stream's dense (vector) half failed to run. Each entry is
+`{ stream, tier, reason, detail }`, where `reason` is one of:
+
+| reason | what happened | is it a gap to tell the user about? |
+|---|---|---|
+| `overloaded` | the dense service's bounded queue **refused** the request (HTTP 503) | **yes** |
+| `timeout` | it did not answer inside `VECTOR_TIMEOUT_MS` | **yes** |
+| `unreachable` | the service could not be contacted, or is too old for the route | yes, as an outage |
+| `error` | it answered with a fault | yes, as an outage |
+| `unscoped` | it did not honour the stream's `tier`, so its results were refused | yes |
+
+⚠ **A stream that is simply not in `LEX_VECTOR_STREAMS` produces NO entry.** *Not configured* is
+not *degraded*, and the two must not read the same — that is `CLAUDE.md` §18's corollary, and until
+S15 they were literally indistinguishable: a refused dense leg returned a BM25-only ranking
+byte-for-byte identical to a stream that never had a dense leg.
+
+⚠⚠ **PRESENCE HERE IS NOT `failed`.** The BM25 half of the same stream ran, so the results are real
+and `failed` stays FALSE. `failed` is reserved for a search that returned **nothing** while a leg was
+refused — the case where *"I found nothing"* would be a claim about the corpus based on a search
+that did not happen.
+
+**What Lex may say, and what it may not:**
+
+> ✅ *"I searched the case law and found these, though the semantic index was unavailable, so I may
+> have missed things phrased differently."*
+> ❌ *"I could not search the corpus for this."* — untrue when twenty documents are on the page.
+> ❌ Saying nothing at all — that is the silent degradation §6 exists to prevent.
+
+The never-claim rule is unchanged and is what this serves: **never report an absence that was not
+looked for.** `npm run check:dense-degraded` asserts the distinctions above, each against the
+arrangement that must not trigger it.
 
 ### ⚠⚠ `limit` IS A PER-STREAM BUDGET AND THIS DOCUMENT USED TO SAY OTHERWISE (S11 §5.1)
 

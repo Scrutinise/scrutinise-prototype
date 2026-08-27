@@ -2,7 +2,46 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 03:15 UTC — ▼ **PRINCIPLE 7: THE LICENCE APPLICATION'S CLAIM WAS FALSE IN
+*Last updated: 2026-08-27 04:12 UTC — ▼ **SEARCH S15: `vector-serve` NOW REFUSES WORK NOBODY IS WAITING FOR — AND THE REASON IT WAS SLOW WAS NEVER ITS WIDTH.**
+▶▶ **§1, FIRST, BECAUSE IT REWROTE THE BRIEF. 1,478,964 rows of `corpus_chunks` (6.5% of
+22,670,808) had fallen outside its `sectionId` index and were brute-force scanned on every single
+snippet lookup.** An equality lookup on the **indexed** column took **133,401 ms**; the same table's
+**unindexed** `chunkId` answered in **21,470 ms**; the ANN it decorates takes **1,301 ms**. Corroborated
+on the bill — `vector-serve` shows **3,168.5 GB of ingress** month-to-date.
+⚠⚠ **The file's own header predicted it in writing** ("THIS INDEX WILL NEED REBUILDING IF THE
+MAX_CHUNKS TOP-UP HAPPENS") **and its `--verify-only` could not fail**: it asked *"is there an index on
+this column?"*, which an index missing 6.5% of the table answers YES, and printed **"Nothing to do."**
+It now reads coverage and exits 4, watched firing against the real state first.
+▶ **Rebuild: 45.1 s, €0.008, 0 unindexed. Snippet stage 3,296 → 1,233 ms · total 5,421 → 3,394 ms ·
+peak RSS under load 5,586 MB (73% of cap) → 1,253 MB — with the ANN unchanged (1,889 → 1,934) as the
+control.** ⚠ **This is a RECURRING job: every append to `corpus_chunks` leaves new rows outside the
+index. Run `build-chunks-scalar-index.ts --verify-only` after any ingest that appends chunks.**
+▶ **§2 proven from OUTSIDE, both ways.** Before: **12 of 12** abandoned requests executed after every
+client was killed, recovery **19 s**. After: `served +0 · abandoned +48`, recovery **6 s** — and not
+even the four already running finished, because the between-stages check dropped them before the
+expensive scan. ⚠ Abandonment is counted **per cache key, not per socket**, or coalesced requests
+would be stranded.
+▶ **§3:** queue cap is now `2 × width` (was 64 on a 4-wide service — sixteen service times);
+**6 shed for 6 excess, slowest refusal 420 ms** against the 25,000 ms timeout it replaces, with a
+negative control at exactly-capacity that refuses nothing. A shed now reaches the gateway as
+`meta.denseDegraded` / `reason: 'overloaded'` — **closing S14 §0, where a refused dense leg was
+byte-for-byte identical to a stream that never had one.** `check:dense-degraded` **14/14**, and it
+caught a real `Promise.all` fault turning one stream's fault into a total batch failure.
+▶ **§5: width 4 → 16, throughput 2.20 → 4.43 req/s, cost £0.00** (one env var, same single replica,
+peak 16.4% of cap). The 4 was a constant **copied from `fts-query-service.ts`**, whose own 7 Aug note
+already recorded that 64 concurrent survived here.
+▶ **§6: eight concurrent users × four dense streams = 96 legs, 0 shed, 0 timed out**, per-stream p50
+4.3–5.9 s — against S14 where ONE user saturated it and `warm_p95` hit 706,954 ms, still climbing
+forty minutes after every client had died.
+⚠⚠ **§4 IS REFUTED BY ITS OWN MEASUREMENT.** The batch endpoint is **126% SLOWER** (6,495 vs 2,873 ms)
+— it serialises four ANNs inside one slot while four solo requests parallelise theirs. Built, live,
+**id-for-id identical 20/20**, and **not recommended for wiring**.
+❌ **NOT DONE, NAMED: the 64-question recall baseline is NOT re-taken** — the next sprint's first job,
+and possible for the first time. ⚠ **`fts-serve` still has an unbounded queue, no cancellation and the
+same copied width of 4** — recommended as the next sprint.
+▶▶ **CHARLIE: six decisions in `docs/SEARCH_S15_REPORT.md`.** D-4 needs one dashboard action —
+connect the GitHub repo trigger for `vector-serve`, which the project token cannot do.
+**Total sprint spend €0.008.** Earlier: 2026-08-27 03:15 UTC — ▼ **PRINCIPLE 7: THE LICENCE APPLICATION'S CLAIM WAS FALSE IN
 EVERY PART, AND ITS PREMISE WAS WRONG TOO.** The draft says judgment pages carry `noindex, nofollow`
 and that `robots.txt` disallows those paths. Read off production before touching anything:
 `robots.txt` said **`Allow: /ideas/`**, **no page carried a meta robots tag**, **no response carried
