@@ -166,3 +166,5 @@ scripts/ingest/c2/recensus-eu-checkpoint.json
 docs/census/CASEREF_citations.jsonl
 docs/census/CASEREF_citations.pilot.jsonl
 docs/census/caseref-shards/
+# per-run resume state for caseref/extract.ts — regenerated on every run, never committed
+scripts/ingest/caseref/extract-checkpoint.json
