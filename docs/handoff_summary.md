@@ -186,7 +186,7 @@ because `assertCanMark` also refuses self-marking — saying “your own **post*
 was `.includes('your own')`. Now the exact wording, plus a case on an **AI-authored** resource where
 nothing is minted so the backstop never runs at all.
 
-✅ **620/620** (was 472; 126 new), `tsc` and `next build` clean, four planted-break batches watched
+✅ **620/620** (was 472; 148 new), `tsc` and `next build` clean, four planted-break batches watched
 failing. `prisma/central_2g_resources.sql` applied. ⚠ A Neon connection drop mid-run left orphaned
 `zz-check-*` fixtures that the next run reported as failures — swept; worth knowing that a crashed
 check run makes the NEXT one lie.

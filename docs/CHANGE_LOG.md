@@ -135,7 +135,7 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 ## CENTRAL Stage 2g + items 12–15 — resources, whose approval it is, and the empty block a video answer printed (2026-08-27 04:39 UTC)
 
 Executes Stage 2g and items 12–15 of the 2g brief. `npm run check:central` **620/620** (was 472),
-`next build` clean, 126 new assertions, four planted-break batches watched failing.
+`next build` clean, 148 new assertions, four planted-break batches watched failing.
 
 ### Stage 2g — the Resources library
 
