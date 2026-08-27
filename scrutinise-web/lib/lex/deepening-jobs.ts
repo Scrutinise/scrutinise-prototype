@@ -49,7 +49,7 @@ import {
 import { gidFromId } from './legislation-url'
 import type { HeadingKey } from './question-headings'
 import { inboundFor, describeCoverage } from './statutory-graph'
-import { groupReferences, classifyGroups, describeScale } from './statutory-consequences'
+import { groupReferences, classifyGroups, describeScale, describeMembers } from './statutory-consequences'
 
 /** The structured retrieval jobs a pass can declare. Adding one is an entry here plus a case in
  *  `runJob` — never a branch in the engine, which must not know a pass key or a job key. */
@@ -435,7 +435,7 @@ async function runStatutoryConsequences(
           ideaId,
           passKey,
           runVersion,
-          headingKey: 'LAW_NOW',
+          headingKey: 'REFERS_TO_THIS',
           fieldRef: null,
           kind: 'FINDING',
           title: `${g.members.length} ${g.members.length === 1 ? 'reference' : 'references'} that ${g.label} — ${g.disposition}`,
@@ -451,6 +451,9 @@ async function runStatutoryConsequences(
             g.unquotable > 0 && g.evidence
               ? `\n(${g.unquotable} of the ${g.members.length} have no quotable words.)`
               : '',
+            // ⚠ 25-J §4 — the group OPENS TO ITS MEMBERS: where these references actually
+            // are, bounded, with the remainder counted rather than trimmed away.
+            describeMembers(g),
             `\n\n${describeScale(grouped)}`,
             `\n${coverage}`,
           ].filter(Boolean).join('\n'),

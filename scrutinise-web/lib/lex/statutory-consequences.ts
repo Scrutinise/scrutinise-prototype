@@ -401,3 +401,39 @@ export async function classifyGroups(
       : null,
   }
 }
+
+/**
+ * ⚠ 25-J §4 — "A GROUP OPENS TO ITS MEMBERS; THE TAIL IS COUNTED."
+ *
+ * A group of 760 references cannot list 760 provisions — that is the unreadable list the
+ * grouping exists to prevent. It lists the ones a reader can go and look at and SAYS how
+ * many it did not, so the block is a sample that admits it is a sample rather than a list
+ * that looks complete.
+ *
+ * ⚠ THE MEMBERS ARE PROVISIONS, DEDUPLICATED ON (document, provision). Two references in
+ * the same section are one place to go and read; printing it twice would inflate the
+ * apparent work in exactly the direction §3 warns about — and the count above the list
+ * would then disagree with the number of places a reader can actually visit.
+ */
+export const MEMBERS_SHOWN = 12
+
+export function describeMembers(g: ReferenceGroup): string {
+  const seen = new Set<string>()
+  const places: string[] = []
+  for (const m of g.members) {
+    const key = `${m.sourceGid}${m.sourceProvisionRef ? ` ${m.sourceProvisionRef}` : ''}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    places.push(key)
+  }
+  if (!places.length) return ''
+  const shown = places.slice(0, MEMBERS_SHOWN)
+  const rest = places.length - shown.length
+  const lines = shown.map((p) => `  · ${p}`).join('\n')
+  const tail = rest > 0
+    ? `\n  …and ${rest.toLocaleString()} more ${rest === 1 ? 'provision' : 'provisions'} not listed here.`
+    : ''
+  const head = `${places.length.toLocaleString()} distinct ${places.length === 1 ? 'provision' : 'provisions'}`
+  return `\nWhere they are — ${head}:\n${lines}${tail}`
+}
+

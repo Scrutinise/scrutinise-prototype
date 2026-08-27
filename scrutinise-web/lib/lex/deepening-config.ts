@@ -366,10 +366,18 @@ export const PASSES: PassDef[] = [
     // structured retrieval that produces a rendered block rather than candidates.
     // ═══════════════════════════════════════════════════════════════════════
     key: 'STATUTORY_CONSEQUENCES',
-    // ⚠ `LAW_NOW`, deliberately shared with LEGAL. A user reading "what the law says now"
-    // wants both what it says and what else depends on it; these are two answers to one
-    // question, not two questions.
-    heading: 'LAW_NOW',
+    // ⚠ 25-J §4 — ITS OWN HEADING, AND THIS IS A CORRECTION OF MY OWN EARLIER REASONING.
+    //
+    // The statutory-consequences sprint put this under `LAW_NOW` on the argument that "a
+    // user reading what the law says now wants both what it says and what else depends on
+    // it". That was wrong, and 25-J §4 is right: they are two questions, not two answers to
+    // one. "What the law says now" is the ground; "what else refers to this law" is what
+    // would break if you moved it — a different shape of answer (groups with dispositions,
+    // not findings with citations) and a different meaning when empty.
+    //
+    // Sharing a heading also made the pass invisible: its output landed among the legal
+    // map's findings, where a reader with no reason to expect it would not look for it.
+    heading: 'REFERS_TO_THIS',
     label: 'Statutory consequences',
     strapline: 'What else in the statute book points at the law you want to change.',
     training:

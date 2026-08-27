@@ -44,6 +44,7 @@
 
 export type HeadingKey =
   | 'LAW_NOW'
+  | 'REFERS_TO_THIS'
   | 'COURTS'
   | 'TRIED_BEFORE'
   | 'ELSEWHERE'
@@ -80,6 +81,26 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
     key: 'LAW_NOW',
     heading: 'What the law says now',
     lookingFor: 'the Acts, instruments and existing powers that govern this today',
+  },
+  {
+    // ══ 25-J §4 — STATUTORY CONSEQUENCES GETS ITS OWN HEADING ══════════════════
+    //
+    // ⚠ NOT FOLDED INTO `LAW_NOW`, and the distinction is the whole value of the pass.
+    // "What the law says now" answers what governs this today. This answers what would
+    // BREAK if you changed it — a different question, with a different shape of answer
+    // (groups with dispositions rather than findings with citations) and a different
+    // failure mode when empty. A user who has read the current law still has no idea what
+    // depends on it, and burying the second under the first hides exactly the thing
+    // nobody else surfaces to a non-lawyer.
+    //
+    // ⚠ IMMEDIATELY AFTER `LAW_NOW`. The order here IS the panel order
+    // (`HEADING_ORDER`), and the two questions are read together: what this law says, then
+    // what else leans on it.
+    key: 'REFERS_TO_THIS',
+    heading: 'What else refers to this law',
+    lookingFor:
+      'other provisions in the statute book that point at the enactment this proposal would '
+      + 'change, grouped by what each kind of reference does and what it would need',
   },
   {
     key: 'COURTS',
