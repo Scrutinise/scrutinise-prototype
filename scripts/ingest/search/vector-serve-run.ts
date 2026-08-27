@@ -224,6 +224,95 @@ async function restart() {
   console.log(`restart triggered on deployment ${dep.id.slice(0, 8)} (same build, fresh openTable snapshot).`)
 }
 
+/**
+ * S15 §5 — SET THE SERVICE'S WIDTH, THEN READ BACK WHAT IT ACTUALLY IS.
+ *
+ * ⚠ THE READ-BACK IS THE POINT, NOT A COURTESY. The brief: "Prove the new width is real. Read
+ * the concurrency off /stats on the running service, not from the configuration you set. A
+ * limiter that silently failed open would look identical to one that worked — this project has
+ * already shipped that exact defect once, which is why `maxInFlight` is observed rather than
+ * assumed."
+ *
+ * So this sets `VECTOR_MAX_CONCURRENT`, restarts, waits for the service to answer, and prints
+ * the value the RUNNING PROCESS reports. If the two disagree it says so and exits non-zero —
+ * a variable that was accepted by the API and ignored by the process is exactly the shape that
+ * would otherwise be written up as a successful capacity change.
+ *
+ * ⚠ `restart` and not `redeploy`: this changes an environment variable, not code. A redeploy
+ * would rebuild from Main and confuse "the width changed" with "the code changed" in the same
+ * measurement.
+ */
+async function width() {
+  const n = parseInt(process.argv[3] ?? '', 10)
+  if (!Number.isFinite(n) || n < 1 || n > 64) {
+    console.error('usage: vector-serve-run.ts width <1..64>   (also sets the queue cap to 2x by default)')
+    process.exit(1)
+  }
+  const id = loadId()
+  const before = await readStats()
+  console.log(`current: max=${before.concurrency.max} maxQueue=${before.concurrency.maxQueue} (build ${before.build ?? '?'})`)
+
+  await gql(
+    `mutation($input: VariableUpsertInput!) { variableUpsert(input: $input) }`,
+    { input: { projectId: PROJECT_ID, environmentId: ENV_ID, serviceId: id, name: 'VECTOR_MAX_CONCURRENT', value: String(n) } },
+  )
+  console.log(`set VECTOR_MAX_CONCURRENT=${n}; restarting (same build)…`)
+  await restart()
+
+  // Wait for the NEW process: `started_at` moving is how a restart is told from a service that
+  // never went away. Comparing `max` alone would pass instantly against the old process if the
+  // restart had silently failed.
+  // ⚠ THE WAIT TOLERATES 502s, BECAUSE THE CONTAINER SWAP PRODUCES THEM AND AN UNREADABLE
+  // SERVICE IS NOT A FAILED ONE. The first version of this treated "started_at never moved" as
+  // the failure condition, and reported ⛔ against a service that had in fact restarted and was
+  // already reporting max=16 — it had simply been 502ing through the whole poll window. A guard
+  // that cries wolf gets ignored, which is the same end state as no guard.
+  const deadline = Date.now() + 8 * 60_000
+  let after: any = null
+  let lastErr = ''
+  while (Date.now() < deadline) {
+    await sleep(10_000)
+    try {
+      const s = await readStats()
+      // Either signal is enough: a new process, or the value we asked for. Requiring BOTH is
+      // what made this brittle — the restart can complete between two polls.
+      if (s.started_at !== before.started_at || s.concurrency.max === n) { after = s; break }
+      after = s
+    } catch (e) { lastErr = (e as Error).message }
+  }
+  if (!after) {
+    console.error(`⛔ the service never became readable within 8 minutes (last error: ${lastErr}). Width UNKNOWN — check /stats before recording anything.`)
+    process.exit(1)
+  }
+  console.log(`observed on the running service: max=${after.concurrency.max} maxQueue=${after.concurrency.maxQueue} started_at=${after.started_at}`)
+  if (after.concurrency.max !== n) {
+    console.error(`⛔ SET ${n}, SERVICE REPORTS ${after.concurrency.max}. The configuration did not take effect — do not record this as a capacity change.`)
+    process.exit(1)
+  }
+  if (after.started_at === before.started_at) {
+    console.error('⛔ the width reads correct but the process never restarted — that cannot both be true. Investigate before recording.')
+    process.exit(1)
+  }
+  console.log(`✅ width is ${n}, read off the running process. Queue cap ${after.concurrency.maxQueue} (2x by default).`)
+}
+
+/**
+ * ⚠ DELIBERATELY NOT `ensureDomain`. That helper's existence-query is wrapped in
+ * `.catch(() => null)`, so a transient GraphQL blip makes it fall through to CREATING a domain —
+ * and on 27 Aug that turned a read of /stats into "You have reached the limit for service domains
+ * per service on your plan". A function whose job is to observe must not be able to mutate.
+ */
+function statsUrl(): string {
+  const explicit = process.env.VECTOR_SEARCH_URL
+  if (explicit) return `${explicit.replace(/\/$/, '')}/stats`
+  return `https://${SERVICE_NAME}-production.up.railway.app/stats`
+}
+async function readStats(): Promise<any> {
+  const res = await fetch(statsUrl())
+  if (!res.ok) throw new Error(`/stats ${res.status}`)
+  return await res.json()
+}
+
 async function plan() {
   console.log('PLAN — nothing below is executed.\n')
   const exists = fs.existsSync(STATE_KEY)
@@ -357,6 +446,7 @@ const fn = mode === 'plan' ? plan
   : mode === 'url' ? url
   : mode === 'redeploy' ? redeploy
   : mode === 'restart' ? restart
+  : mode === 'width' ? width
   : mode === 'logs' ? logs
   : mode === 'stats' ? stats
   : mode === 'teardown' ? teardown
