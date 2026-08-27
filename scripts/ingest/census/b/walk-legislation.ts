@@ -84,6 +84,15 @@ const HELD_BY: Record<string, { corpusKeys: string[]; label: string; yearFilter?
   // `regional`) but the publisher indexes them by type, and the brief requires the types printed
   // individually — `regional` at "89% complete" hides an `nia` at 40% behind an `ssi` at 99%. So
   // each type gets its own census row and the held side is filtered to that type's gid prefix.
+  // ⚠⚠ THE EU TYPES CARRY A UNIVERSE CAVEAT AND THEIR PERCENTAGE MUST BE READ WITH IT.
+  // legislation.gov.uk's /eur/, /eudn/ and /eudr/ collections publish the EU instruments it holds
+  // for the UK — 159,773 across the three. Our `retained-eu` collection is scoped to ASSIMILATED
+  // (formerly retained) EU law, which is a SUBSET: an EU instrument that never applied to the UK,
+  // or that lapsed before exit day, is published there and is correctly not held by us. So
+  // 20.2%/44.9%/63.1% is a floor on coverage of a universe that may be larger than ours, not a
+  // measure of what we are missing. It is recorded as MEASURED because the walk is real, and the
+  // caveat travels with it in `notes`. Settling it needs one comparison against the assimilated-law
+  // list, which nobody has done — decision B-6.
   eur:  [{ corpusKeys: ['retained-eu'], label: 'retained-eu-eur' }],
   eudn: [{ corpusKeys: ['retained-eu'], label: 'retained-eu-eudn' }],
   eudr: [{ corpusKeys: ['retained-eu'], label: 'retained-eu-eudr' }],
@@ -150,18 +159,38 @@ async function walk() {
   return unreadable
 }
 
+/**
+ * Every gid we hold for a corpus key, read ONCE and cached.
+ *
+ * ⚠ THE OBVIOUS QUERY IS THE SLOW ONE, AND IT IS SLOW BY THREE ORDERS OF MAGNITUDE. The first
+ * version asked `split_part(id,':',2) = ANY($2)` with the type's whole published id list — 109,212
+ * elements for `uksi` — once per type. `split_part(id,':',2)` is an EXPRESSION with no index, so
+ * each call is a sequential scan of an 18M-row table, and there are twenty types. It ran for over
+ * ten minutes without producing a single row and was killed.
+ *
+ * One scan per CORPUS KEY, intersected in memory, is the same answer: five scans instead of twenty,
+ * and the id list never crosses the wire. Same shape as [[feedback-one-object-two-readers]] — the
+ * query that reads naturally is not the query the planner can serve.
+ */
+const gidCache = new Map<string, Set<string>>()
+async function heldGidsFor(p: any, corpusKeys: string[]): Promise<Set<string>> {
+  const key = corpusKeys.join(',')
+  const hit = gidCache.get(key)
+  if (hit) return hit
+  const rows = (await p.query(
+    `SELECT DISTINCT split_part(id, ':', 2) gid FROM corpus_sections
+      WHERE corpus = ANY($1) AND status='compiled'`, [corpusKeys])).rows
+  const set = new Set<string>(rows.map((r: any) => r.gid))
+  gidCache.set(key, set)
+  console.log(`   [held] ${key}: ${set.size.toLocaleString()} distinct gids`)
+  return set
+}
+
 /** Held-side: which of these published ids do we hold at least one compiled section for?
  *  Matches on EITHER id form, because the corpus stores pre-1963 Acts under the regnal form. */
 async function heldFor(p: any, corpusKeys: string[], entries: Entry[]) {
   if (corpusKeys.length === 0 || entries.length === 0) return { held: 0, absent: entries.map(e => e.docId) }
-  const ids = new Set<string>()
-  for (const e of entries) { ids.add(e.docId); if (e.calendarId) ids.add(e.calendarId) }
-  // gid is the middle field of the section id: '<corpus>:<gid>:<sectionRef>'
-  const rows = (await p.query(
-    `SELECT DISTINCT split_part(id, ':', 2) gid FROM corpus_sections
-      WHERE corpus = ANY($1) AND status='compiled' AND split_part(id, ':', 2) = ANY($2)`,
-    [corpusKeys, [...ids]])).rows
-  const heldGids = new Set(rows.map((r: any) => r.gid))
+  const heldGids = await heldGidsFor(p, corpusKeys)
   const absent: string[] = []
   let held = 0
   for (const e of entries) {
@@ -173,21 +202,39 @@ async function heldFor(p: any, corpusKeys: string[], entries: Entry[]) {
 
 /** Dot-leader instruments: every section is `Article 31 . . . .` — the unit is held and hollow.
  *  section_repeals is the register B2 built; it is a FLOOR (OI-6), so this is reported as one. */
+/**
+ * Instruments whose EVERY section is a dot leader — held, and hollow.
+ *
+ * ⚠ ONE QUERY PER CORPUS KEY, GROUPED BY TYPE, CACHED — for the same reason as `heldGidsFor`, and
+ * this one was the worse offender. The per-type version ran a whole-corpus GROUP BY with a
+ * correlated `IN (SELECT … FROM section_repeals)` once for each of twenty types, and took ~30
+ * MINUTES for `primary-acts-pre-2000` alone. A LEFT JOIN counted once per corpus and bucketed by
+ * type gives the identical answer in one pass.
+ *
+ * ⚠ The type prefix is still not decoration: `regional` holds ssi, wsi, nisr, nisi, asp, nia, anaw,
+ * asc and mwa together, so an unbucketed count would attribute every devolved dot leader to
+ * whichever type happened to be asking.
+ */
+const hollowCache = new Map<string, Map<string, number>>()
 async function hollowFor(p: any, corpusKeys: string[], typePrefix: string) {
   if (corpusKeys.length === 0) return 0
-  // ⚠ The type prefix is not decoration: `regional` holds ssi, wsi, nisr, nisi, asp, nia, anaw,
-  // asc and mwa together, so an unfiltered count would attribute every devolved dot leader to
-  // whichever type happened to be asking.
-  const r = await p.query(
-    `SELECT count(*)::int n FROM (
-        SELECT split_part(cs.id, ':', 2) gid
-          FROM corpus_sections cs
-         WHERE cs.corpus = ANY($1) AND cs.status='compiled'
-           AND split_part(split_part(cs.id, ':', 2), '/', 1) = $2
-         GROUP BY 1
-        HAVING count(*) = count(*) FILTER (WHERE cs.id IN (SELECT section_id FROM section_repeals))
-     ) x`, [corpusKeys, typePrefix])
-  return r.rows[0].n
+  const key = corpusKeys.join(',')
+  let byType = hollowCache.get(key)
+  if (!byType) {
+    const r = await p.query(
+      `SELECT split_part(gid, '/', 1) typ, count(*)::int n FROM (
+          SELECT split_part(cs.id, ':', 2) gid
+            FROM corpus_sections cs
+            LEFT JOIN section_repeals sr ON sr.section_id = cs.id
+           WHERE cs.corpus = ANY($1) AND cs.status='compiled'
+           GROUP BY 1
+          HAVING count(*) = count(sr.section_id)
+       ) x GROUP BY 1`, [corpusKeys])
+    byType = new Map(r.rows.map((x: any) => [x.typ, x.n]))
+    hollowCache.set(key, byType)
+    console.log(`   [hollow] ${key}: ${[...byType].map(([t, n]) => `${t}=${n}`).join(' ') || 'none'}`)
+  }
+  return byType.get(typePrefix) ?? 0
 }
 
 async function main() {
@@ -217,6 +264,7 @@ async function main() {
           notes: 'the walk has not reached this type', walk_artifact_path: null, walked_at: null })
         continue
       }
+      process.stdout.write(`  · ${b.label} (${entries.length.toLocaleString()} published) …\n`)
       const { held, absent } = await heldFor(p, b.corpusKeys, entries)
       const hollow = await hollowFor(p, b.corpusKeys, type)
       const unread = unreadable.filter(u => u.startsWith(`${type}/`))
@@ -237,6 +285,15 @@ async function main() {
             ? `EXACT: the denominator is legislation.gov.uk's own entry walk and the numerator is a lookup of those ids against corpus_sections; the same comparison reports gaps for every other type.`
             : null,
           b.corpusKeys.length === 0 ? 'HELD = 0: no collection exists for this type yet.' : null,
+          // ⚠ The caveat travels with the row, not in a report nobody re-reads.
+          type === 'eur' || type === 'eudn' || type === 'eudr'
+            ? '⚠ UNIVERSE CAVEAT: legislation.gov.uk publishes the EU instruments it holds for the UK; ' +
+              'our collection is scoped to ASSIMILATED (formerly retained) EU law, which is a SUBSET — an ' +
+              'instrument that never applied here, or lapsed before exit day, is published and correctly ' +
+              'not held. Read this as a FLOOR on coverage of a larger universe, not as a measure of what ' +
+              'is missing. Settling it needs one comparison against the assimilated-law list; nobody has ' +
+              'done it (decision B-6).'
+            : null,
           `matched on either id form (regnal and calendar).`,
           hollow > 0 ? `hollow = instruments whose every section is a dot leader; a FLOOR, section_repeals does not hold them all (OI-6).` : null,
           unread.length ? `⚠ ${unread.length} feed(s) unreadable at walk time and NOT counted: ${unread.slice(0, 10).join(', ')} — published_units is a floor.` : null,
