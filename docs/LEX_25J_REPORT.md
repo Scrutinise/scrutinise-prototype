@@ -89,10 +89,46 @@ scan, not a diagnostic paragraph that wraps to four lines.
 
 ## §3 — Progressive disclosure
 
-Verified in code and asserted; **the live half is in the walk below**. `PanelEdge` renders a
-collapsed panel as a slim labelled edge; `panelOpen` is `boolean | null` so a panel follows
-content until the user decides; both a collapse and a restore control exist; and the landing
-redirect still sends a returning user with a finished build to the proposal.
+`PanelEdge` renders a collapsed panel as a slim labelled edge; `panelOpen` is
+`boolean | null` so a panel follows content until the user decides; both a collapse and a
+restore control exist; and the landing redirect still sends a returning user with a finished
+build to the proposal. All asserted by `check:lex-25j`, each with a control.
+
+⚠ **The collapsed-edge state was NOT walked, and the reason is a tooling limit rather than a
+finding.** See the walk below.
+
+---
+
+## The walk — signed in, on production, after this sprint deployed
+
+**What I verified live:**
+
+| | |
+|---|---|
+| `/ideas/new` resolves through the door to `/ideas/build` | ✓ the 25-G cutover holds |
+| the first question is dominant — prompt, hints, Send | ✓ |
+| **"My ideas (1)"** beneath it | ✓ §2's hub |
+| the idea shows a **real title** — *"Enhancing Civil Service Accountability and Performance"* | ✓ not "Untitled idea" |
+| stage, build state and last-worked-on | ✓ *"Create · built · last worked on 22 Aug, 01:56 UTC"* |
+| the surface switch routes to the build and reports **8 passes** | ✓ §3's both-ways route, and it is reading the completed v5 build |
+| **loading the page created nothing** | ✓ 68 live ideas before and after; newest still 26 Aug |
+
+⚠ **What I could not walk: the three-column desktop layout.** `read_page` reports
+**`Viewport: 0x0`** for the extension's window, so Tailwind's `lg:` breakpoints never match
+and the page renders its mobile tab layout (`Chat | Progress | Background`) whatever I resize
+the window to. Resizing to 1600×1000 did not change it.
+
+That means the **collapsed-edge and expand-on-content states of §3 are verified by
+`check:lex-25j` and by the render harness, not by the walk.** I stopped after three attempts
+rather than keep pulling at it. It is worth noting for future sprints: **any acceptance
+criterion that depends on a desktop breakpoint cannot currently be walked from a Claude Code
+session**, and briefs should assume that until the viewport reporting is fixed.
+
+⚠ One naming judgement I made and want on the record: `PanelEdge`'s labels are **"Your
+proposal"** and **"Legislation"**. I left "Your proposal" in the second person. §1 names
+*ideas, communities, teams* — collections — and this is a label on the single working
+document the product is discussing with you, the same register as "Your account" (25-H §2)
+and "Your material". If you want it as "My proposal", say so and it is a one-line change.
 
 ---
 
