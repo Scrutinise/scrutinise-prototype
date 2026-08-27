@@ -90,9 +90,12 @@ export const JOBS: Record<string, HeavyJob> = {
   'chunks-scalar-index': {
     name: 'chunks-scalar-index',
     description:
-      'Build the BTREE scalar index on corpus_chunks.sectionId (21.8M rows, currently NO index). ' +
-      'Snippet hydration does `where("sectionId IN (…)")` on every vector query; unindexed that is a ' +
-      'full scan, measured at 76% of total query latency vs 21% for the ANN search itself.',
+      'Build (or REFRESH) the BTREE scalar index on corpus_chunks.sectionId. Snippet hydration does ' +
+      '`where("sectionId IN (…)")` on every vector query; rows outside the index are brute-force ' +
+      'scanned, measured at 76% of total query latency vs 21% for the ANN search itself. ' +
+      '⚠ THIS IS A RECURRING JOB, NOT A ONE-OFF: a LanceDB scalar index covers only the rows that ' +
+      'existed when it was built, so EVERY append to corpus_chunks leaves new rows outside it. Run ' +
+      '`--verify-only` after any ingest that appends chunks; it exits 4 on uncovered rows.',
     // createIndex ONLY. optimize() is the pathological v0.30 step that OOM'd the FTS build
     // repeatedly (§17) — do not add a compaction step here.
     command: 'R2_MAX_SOCKETS=256 npx tsx search/build-chunks-scalar-index.ts',
@@ -108,9 +111,13 @@ export const JOBS: Record<string, HeavyJob> = {
     // knowable in advance (§17's whole point), and the first attempt DID fail, just not for
     // a memory reason. cpx62 is over-sized for it; cpx52 would do, and the list already
     // falls through to it.
-    expectedPeakGb: 1.72,
+    expectedPeakGb: 1.82,
     peakSource:
-      '7 Aug 2026, cpx62 (32 GB), 21,839,900 rows, 39.1s → 1.72 GB peak, €0.010. ' +
+      '27 Aug 2026 (S15), cpx62 (32 GB), 22,670,808 rows, 45.1s → 1.82 GB peak, €0.008. ' +
+      'That run was a REFRESH: 1,478,964 rows (6.5%) had fallen outside the index since 7 Aug and ' +
+      'were being brute-force scanned on every snippet lookup, which was 61% of the service time. ' +
+      'After it: 22,670,808 indexed, 0 unindexed, snippet stage 3,296ms → 1,233ms. ' +
+      'Earlier: 7 Aug 2026, cpx62 (32 GB), 21,839,900 rows, 39.1s → 1.72 GB peak, €0.010. ' +
       'First attempt failed at 42 MB RSS with a DataFusion ExternalSorterMerge pool exhaustion ' +
       '("138.4 KB remain available for the total pool") — fixed with LANCE_MEM_POOL_SIZE=8GiB, ' +
       'NOT with a bigger box. A size increase would have failed identically.',
