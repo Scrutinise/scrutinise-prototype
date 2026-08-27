@@ -133,6 +133,64 @@ the fix DOCUMENTS that expression, so the guard matched its own explanation; it 
 transaction orphaned 4 findings and the reconciliation caught it; I was one step from reporting it
 as a product defect. **A cleanup path must be as faithful as the path under test.**
 `docs/LEX_25I_REPORT.md`, `docs/CITATION_PASS_PREP.md`.**
+2026-08-27 04:39 UTC — ▼ **CENTRAL STAGE 2g + ITEMS 12–15 ARE BUILT — AND TWO PARTIAL INDEXES HAD
+BEEN ADDED WITH NO REGISTER ROW BECAUSE THE CHECK THAT ENFORCES §21 NAMED TWO INDEXES LITERALLY.**
+
+**Resources tab** — nine types, card grid with thumbnails (image, PDF first page, YouTube still
+derived from the URL with no API key and no render-time fetch), type chips primary + topic dropdown
+secondary, top/newest. Voting is the answer vote: up/down, one per member, no self-voting, same
+tariffs, same ledger, AI-authored content ranks and mints nothing. Delete/restore is the 2f pattern
+unchanged. ⚠ **The upload gate is an ALLOW-LIST against the SNIFFED BYTES** — “no executables or
+archives” as a deny-list is whack-a-mole, and a client declares any MIME it likes, so a renamed
+`setup.exe` → `poster.png` changes the declaration and not the bytes. Images and PDFs only, 10 MB,
+**gated before R2 sees it** (checking after storing means the rejected file was already reachable by
+key). Copyright confirmation is a hard gate **recorded against the row**; Report is on every
+resource for **every member**, because the person who recognises their own work has no rights over
+the Community that posted it.
+
+**Item 12** — root-only settings (name, colour, show/hide, four modes, default SELF), Reform UK /
+`#17B9D1` seeded. ⚠ **The brief asked me to check that colour against the platform teal and it
+failed the check**: ΔE2000 **15.14**, hue gap 15° — plainly different side by side, indistinguishable
+at the size a 1px border and a 10px superscript render. The frame is therefore carried by **2px
+border weight and its words**, colour reinforcing only: a party stamp must not read as a platform
+live-state.
+
+**Item 13** — ⚠ **the stamp names whoever marked it in EVERY mode.** Under the default the tick is
+the poster’s own claim about their own material, and an unverified self-tick rendered as a bare
+organisational endorsement puts the organisation’s name on something it has never seen. Hiding the
+feature **retains** the data — approve, hide, assert the stamp stops rendering, assert the column is
+still populated, re-enable, same name back. A `Do not use` flag takes visual precedence and the two
+**coexist in the data**. Context box is permanent, placeholder not pre-filled (pre-filled text is
+submitted verbatim by everyone who ignores it). ⚠ The four modes are ONE pure function both the
+route gate and the client control call — two copies drift into a tick that appears for people the
+route refuses, silently.
+
+**Item 14** — ⚠ **a video answer has an EMPTY body**, so every surface rendering `answer.body`
+printed a blank block: the library preview, the collapsed row, and all four pack formats. One
+function now decides what a text-only surface prints, and all four formats plus the list call it.
+The submit guard was `!body.trim()` and silently swallowed a link-only answer. **Item 15** — the
+three headings verbatim; tab order Questions · Training · Resources · Leaderboard · Teams, asserted
+by index order.
+
+⚠⚠ **`Community_live_children_idx` (item 11) and `Resource_live_idx` (2g) were both created in
+hand-written SQL with NO §21 register row, and I found them by sweeping `pg_indexes` by hand — not
+by any check.** §21 rule 5 says `check:central` asserts these indexes exist; the assertion named two
+of them literally and had never been widened, so it had been passing on a quarter of the register.
+Both registered (eight entries), both models carry the rule-3 doc comment, and the check now
+enumerates every guarded index AND sweeps `pg_indexes` for a partial index on a Central table that
+is missing from the register. Watched failing both ways.
+
+⚠ **A planted break found one of my own new assertions reading the wrong guard.** Removing the
+no-self-voting check from `applyResourceVote` left “you cannot vote on your own resource” **green**,
+because `assertCanMark` also refuses self-marking — saying “your own **post**” — and the assertion
+was `.includes('your own')`. Now the exact wording, plus a case on an **AI-authored** resource where
+nothing is minted so the backstop never runs at all.
+
+✅ **620/620** (was 472; 126 new), `tsc` and `next build` clean, four planted-break batches watched
+failing. `prisma/central_2g_resources.sql` applied. ⚠ A Neon connection drop mid-run left orphaned
+`zz-check-*` fixtures that the next run reported as failures — swept; worth knowing that a crashed
+check run makes the NEXT one lie.
+
 Earlier: 2026-08-26 23:32 UTC — CENTRAL: **the content soft-delete pattern is built — the thing item 11 was blocked on.** Four columns on Question, Answer and BulletinPost; ⚠ `deletedWithParent` is the load-bearing one, because restoring a question must bring back the answers that went WITH it and must not resurrect one its own author had deleted separately — without the flag those rows are identical and the difference is unrecoverable. Points reverse at the value they were awarded and the ledger only appends: award, reversal, restore is three rows, nothing edited. ⚠ `Answer.hidden` is moderation, NOT deletion, and stays — asserted both ways. Deleted means invisible, enforced at the two chokepoints every read flows through and asserted surface by surface, because a soft delete one read forgets is worse than none. Deleted-items view at `/communities/[id]/deleted`, cascaded rows labelled. **436/436**, six planted breaks all watched failing. ▶ Item 11 is now unblocked and is next. Earlier: 2026-08-26 20:52 UTC — ▼ **INGEST C3-A (the addendum): ONE LINE OF SEEDER MADE A COLLECTION 84.7% NOT-OTS, AND A SECOND SEEDER PARAMETER HAS BEEN RETURNING HTTP 422 AND YIELDING NOTHING, SILENTLY.**
 `searchGovUk('office of tax simplification report', …, 500)` is a relevance search over **348,062**
 results; we kept the first 500. Re-classified all 497 rows against the gov.uk content API and the
