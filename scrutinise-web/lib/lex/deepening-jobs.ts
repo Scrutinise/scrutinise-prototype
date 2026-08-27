@@ -48,10 +48,12 @@ import {
 } from './deepening-retrieval'
 import { gidFromId } from './legislation-url'
 import type { HeadingKey } from './question-headings'
+import { inboundFor, describeCoverage } from './statutory-graph'
+import { groupReferences, classifyGroups, describeScale } from './statutory-consequences'
 
 /** The structured retrieval jobs a pass can declare. Adding one is an entry here plus a case in
  *  `runJob` — never a branch in the engine, which must not know a pass key or a job key. */
-export type JobKey = 'PRECEDENT' | 'DEVOLUTION_SCOPE'
+export type JobKey = 'PRECEDENT' | 'DEVOLUTION_SCOPE' | 'CITATION_CONSEQUENCES'
 
 /** How an instrument came to be on the list. Carried into the artefact so a user is never shown
  *  "this instrument" without being told why we think it is theirs. */
@@ -161,8 +163,26 @@ const DEVOLUTION_QUESTION = 'Which parliaments and assemblies have legislated on
  * `jobQuestion(k)` takes the key as a value; `k === 'PRECEDENT' ? …` would be the branch this
  * whole arrangement exists to keep out of the engine.
  */
+const CONSEQUENCES_QUESTION =
+  'What else in the statute book refers to the enactment this proposal would change, and what would each kind of reference need?'
+
+/**
+ * ⚠ A MAP, NOT A TERNARY, AND THE FILE PREDICTED THIS EXACT MOMENT.
+ *
+ * It read `key === 'PRECEDENT' ? PRECEDENT_QUESTION : DEVOLUTION_QUESTION`, which is correct
+ * for two jobs and silently WRONG for three — a third key would have been handed the
+ * devolution question, and the failure would have surfaced as a known-unknown about
+ * parliaments and assemblies attached to a statutory-consequences skip. A `Record` keyed by
+ * `JobKey` cannot do that: leaving an entry out is a compile error.
+ */
+const JOB_QUESTIONS: Record<JobKey, string> = {
+  PRECEDENT: PRECEDENT_QUESTION,
+  DEVOLUTION_SCOPE: DEVOLUTION_QUESTION,
+  CITATION_CONSEQUENCES: CONSEQUENCES_QUESTION,
+}
+
 export function jobQuestion(key: JobKey): string {
-  return key === 'PRECEDENT' ? PRECEDENT_QUESTION : DEVOLUTION_QUESTION
+  return JOB_QUESTIONS[key]
 }
 
 const PROVENANCE_WORDS: Record<InstrumentProvenance, string> = {
@@ -338,5 +358,125 @@ export async function runJob(
     })
     return runPrecedent(ctx.ideaId, ctx.passKey, ctx.runVersion, instruments)
   }
+  if (key === 'CITATION_CONSEQUENCES') {
+    // ⚠ THE SAME RESOLVER THE PRECEDENT JOB USES — see `runStatutoryConsequences`. It
+    // refuses to guess an instrument, which is precisely §2's requirement for this pass.
+    const instruments = await identifiedInstruments(ctx.ideaId, ctx.kept)
+    console.log('[deepening-jobs] CITATION_CONSEQUENCES instruments', {
+      passKey: ctx.passKey, instruments: instruments.map((i) => `${i.gid} (${i.provenance})`),
+    })
+    return runStatutoryConsequences(ctx.ideaId, ctx.passKey, ctx.runVersion, instruments)
+  }
   return runDevolutionScope(ctx.ideaId, ctx.passKey, ctx.runVersion, ctx.keywords)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CITATION_CONSEQUENCES — what else in the statute book points at the target.
+//
+// ⚠ THE JOB KEY DIFFERS FROM THE PASS KEY ON PURPOSE, and `check:deepening` is what forced
+// it. Both were `STATUTORY_CONSEQUENCES`, and the guard that asserts *no pass key appears
+// outside the config* fired on this file — correctly, because from a source-text guard's
+// point of view a pass key had leaked into the engine's neighbourhood. Two different things
+// in two different registries must not share a name: the check cannot tell them apart, and
+// neither could a reader.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * ⚠⚠ THE TARGET IS RESOLVED BY `identifiedInstruments`, WHICH REFUSES TO GUESS.
+ *
+ * §2: *"Resolve the user's plain-language target to a legislation identifier. ⚠ This can
+ * fail. When it does, ask; never guess. A confidently wrong target produces a confidently
+ * wrong consequence list."*
+ *
+ * That is already the contract of `identifiedInstruments` — an explicit link, or something
+ * the SIFT kept, and *"deliberately no third fallback — no most-cited-Act-in-the-policy-area,
+ * no keyword-to-instrument lookup"*. Writing a second, looser resolver here would give this
+ * pass the guess the rest of the platform refuses, and it is the pass where a wrong target
+ * does the most damage: a list of 1,868 consequences for the wrong Act reads as authoritative.
+ *
+ * So a skip here is a real answer, and `no-target-resolved` turns it into a question.
+ */
+async function runStatutoryConsequences(
+  ideaId: string, passKey: string, runVersion: number, instruments: IdentifiedInstrument[],
+): Promise<JobOutcome> {
+  if (!instruments.length) {
+    return {
+      job: 'CITATION_CONSEQUENCES',
+      written: 0,
+      skipReason:
+        'No enactment is identified for this idea, so there is nothing to trace references to. '
+        + 'Link the Act you want to change, or name it in the proposal.',
+      unmetQuestion: jobQuestion('CITATION_CONSEQUENCES'),
+      detail: 'no identified instrument',
+      subjects: [],
+    }
+  }
+
+  let written = 0
+  const details: string[] = []
+  for (const inst of instruments) {
+    const inbound = await inboundFor(inst.gid)
+    const grouped = groupReferences(inbound.rows, inbound.titleOnly.length)
+
+    if (!grouped.totalReferences && !grouped.titleOnly) {
+      details.push(`${inst.gid}: nothing in the graph refers to it`)
+      continue
+    }
+
+    const classified = await classifyGroups(inst.gid, grouped, { ideaId })
+    const coverage = describeCoverage(inbound.coverage)
+
+    for (const g of classified.groups) {
+      // ⚠ ONE EVIDENCE ROW PER GROUP, NOT PER REFERENCE. §4: group, classify the group, then
+      // let the user open it. Writing 1,868 rows would be the unreadable list the grouping
+      // exists to prevent, and would cost a database write per reference.
+      await prisma.evidenceItem.create({
+        data: {
+          ideaId,
+          passKey,
+          runVersion,
+          headingKey: 'LAW_NOW',
+          fieldRef: null,
+          kind: 'FINDING',
+          title: `${g.members.length} ${g.members.length === 1 ? 'reference' : 'references'} that ${g.label} — ${g.disposition}`,
+          // ⚠⚠ THE QUOTE TRAVELS WITH THE DISPOSITION, in the same row. §3: "a disposition
+          // with no visible source words is Lex putting confident prose on top of a verified
+          // fact and destroying its verifiability". And ⚠ THE COVERAGE IS ADJACENT TO THE
+          // COUNT (§5) — in the same body, not in a footer a renderer might drop.
+          body: [
+            g.reason,
+            g.evidence
+              ? `\nOne of them, in ${g.evidence.sourceGid}${g.evidence.provision ? ` ${g.evidence.provision}` : ''}:\n“${g.evidence.words}”`
+              : '\n⚠ None of the references in this group has quotable words in our extract, so this grouping is counted but not evidenced.',
+            g.unquotable > 0 && g.evidence
+              ? `\n(${g.unquotable} of the ${g.members.length} have no quotable words.)`
+              : '',
+            `\n\n${describeScale(grouped)}`,
+            `\n${coverage}`,
+          ].filter(Boolean).join('\n'),
+          sourceType: 'CITATION_GRAPH',
+          sourceId: inst.gid,
+          citation: g.evidence ? `${g.evidence.sourceGid}${g.evidence.provision ? ` ${g.evidence.provision}` : ''}` : null,
+          url: `https://www.legislation.gov.uk/${inst.gid}`,
+          status: 'PROPOSED',
+          siftReason: `From the citation graph: what refers to ${inst.gid}.`,
+        },
+      })
+      written++
+    }
+    details.push(
+      `${inst.gid}: ${grouped.totalGroups} groups over ${grouped.totalReferences} provision references`
+      + ` (+${grouped.titleOnly} title-only)${classified.classified ? '' : ' — NOT fully classified'}`
+      + `${classified.spend ? `, ${classified.spend.pence.toFixed(4)}p` : ''}`,
+    )
+  }
+
+  return {
+    job: 'CITATION_CONSEQUENCES',
+    written,
+    skipReason: written === 0 ? 'Nothing in the citation graph refers to the identified enactment.' : null,
+    unmetQuestion: jobQuestion('CITATION_CONSEQUENCES'),
+    detail: details.join('; '),
+    subjects: instruments.map((i) => i.gid),
+  }
 }

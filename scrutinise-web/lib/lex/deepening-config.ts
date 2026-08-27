@@ -18,7 +18,9 @@ import type { SearchResultType } from './page1-config'
 import type { JobKey } from './deepening-jobs'
 import type { HeadingKey } from './question-headings'
 
-export type PassKey = 'EVIDENCE_PRECEDENT' | 'LEGAL' | 'FINANCIAL' | 'POLITICAL_RISK'
+export type PassKey =
+  | 'EVIDENCE_PRECEDENT' | 'LEGAL' | 'FINANCIAL' | 'POLITICAL_RISK'
+  | 'STATUTORY_CONSEQUENCES'
 
 export interface PassDef {
   key: PassKey
@@ -346,6 +348,73 @@ export const PASSES: PassDef[] = [
       },
     ],
     emphasise: ['DEBATE', 'COMMITTEE', 'DIVISION'],
+  },
+  {
+    // ═══════════════════════════════════════════════════════════════════════
+    // THE FIFTH PASS — what else in the statute book points at what you want to change.
+    //
+    // ⚠ ITS OWN PASS, NOT FOLDED INTO LEGAL (Charlie's decision 1). Distinct trigger — it
+    // fires only where a proposal touches an EXISTING enactment — distinct output shape
+    // (groups with dispositions, not findings with citations), and it skips cleanly for a
+    // proposal that creates new law without amending old law. Folding it into LEGAL would
+    // make a pass that answers "what does the law say now" also answer "what breaks if you
+    // change it", and a skip in one half would look like an empty answer in the other.
+    //
+    // ⚠ THIS IS THE FILE'S OWN TEST, MET: *"Adding a fifth pass must be an entry in PASSES
+    // and nothing else — no new route, no new component, no new engine branch."* It is an
+    // entry here plus a JOB, which is the second axis this file already declares for
+    // structured retrieval that produces a rendered block rather than candidates.
+    // ═══════════════════════════════════════════════════════════════════════
+    key: 'STATUTORY_CONSEQUENCES',
+    // ⚠ `LAW_NOW`, deliberately shared with LEGAL. A user reading "what the law says now"
+    // wants both what it says and what else depends on it; these are two answers to one
+    // question, not two questions.
+    heading: 'LAW_NOW',
+    label: 'Statutory consequences',
+    strapline: 'What else in the statute book points at the law you want to change.',
+    training:
+      'When you change an existing Act, other provisions that refer to it may stop making sense. This ' +
+      'pass finds them and says what each kind would need — repealed, reworded, given a substitute ' +
+      'reference, expressly saved, or left alone. Expect the count to be large and the work to be much ' +
+      'smaller than the count: most references to a well-known Act are untouched by changing it. Expect ' +
+      'gaps too — the reference graph is knowingly incomplete, and it says so beside every number.',
+    // ⚠ NO SEARCH INTENTS. This pass does not search the corpus for material to sift; it
+    // reads a graph. Giving it intents would run a general keyword search and file whatever
+    // came back beside a verified reference list, which is exactly the confusion §7 forbids.
+    intents: [],
+    jobs: ['CITATION_CONSEQUENCES'],
+    method: [
+      'You are reporting what else in the statute book refers to the enactment this proposal would',
+      'change, and what would have to happen to each kind of reference.',
+      '',
+      '⚠ THE GRAPH RETURNS FACTS, NOT ADVICE. Every reference is a real form of words in a real',
+      'provision. Your job is to say what those words would need if the target changed — never to',
+      'assert a consequence the words do not support.',
+      '',
+      '⚠ THE COUNT IS THE SCALE; THE CLASSIFICATION IS THE WORK. Do not say that every reference',
+      'needs amending. Some become dead letters, some need a substitute reference, some must be',
+      'expressly saved, and many are untouched.',
+      '',
+      '⚠ NEVER PRESENT A COUNT AS COMPLETE. The graph is incomplete in named ways and the coverage',
+      'statement travels with the number. A figure quoted without it is a claim we cannot support.',
+    ].join('\n'),
+    mustAnswer: [
+      'Which enactment does this proposal actually change?',
+      'What else in the statute book refers to it, and how many of each kind?',
+      'For each kind, what would have to happen to it — and what are the words that say so?',
+    ],
+    issueTemplates: [
+      {
+        id: 'no-target-resolved',
+        text:
+          'I could not work out which enactment this proposal changes, so I have not looked for ' +
+          'consequences. Name the Act — and the section if you know it — and I will.',
+        // ⚠ FIRES ON A SKIP, WHICH IS THE POINT. §2: "This can fail. When it does, ask; never
+        // guess. A confidently wrong target produces a confidently wrong consequence list."
+        when: (c) => c.findingCount === 0,
+      },
+    ],
+    emphasise: [],
   },
 ]
 
