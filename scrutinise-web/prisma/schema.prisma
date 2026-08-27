@@ -522,6 +522,16 @@ model User {
   centralClaimReversals     ActivityClaim[]     @relation("CentralClaimReverser")
   questionsAsked            Question[]          @relation("QuestionAuthor")
   questionsDeleted          Question[]          @relation("QuestionDeleter")
+  answersApproved           Answer[]            @relation("AnswerApprover")
+  communityApproverFor      CommunityApprover[] @relation("CommunityApprover")
+  resourcesAuthored         Resource[]          @relation("ResourceAuthor")
+  resourcesRightsConfirmed  Resource[]          @relation("ResourceRightsConfirmer")
+  resourcesApproved         Resource[]          @relation("ResourceApprover")
+  resourcesDeleted          Resource[]          @relation("ResourceDeleter")
+  resourceVotes             ResourceVote[]      @relation("ResourceVoter")
+  resourceFlagsSet          ResourceFlag[]      @relation("ResourceFlagger")
+  resourceReports           ResourceReport[]    @relation("ResourceReporter")
+  resourceReportsResolved   ResourceReport[]    @relation("ResourceReportResolver")
   communitiesDeleted        Community[]         @relation("CommunityDeleter")
   answersDeleted            Answer[]            @relation("AnswerDeleter")
   bulletinPostsDeleted      BulletinPost[]      @relation("BulletinPostDeleter")
@@ -1291,6 +1301,12 @@ model UserInvite {
 // (branches/sub-teams via parentCommunityId, mirroring RootCause.parentId /
 // DiagnosisCause.parentCauseId). Idea.communityId (see SECTION 1) links an Idea
 // to its originating Community for display only — it grants no permissions.
+//
+// ⚠ THIS TABLE CARRIES A PARTIAL INDEX PRISMA CANNOT SEE:
+// `Community_live_children_idx` on ("parentCommunityId") WHERE "deletedAt" IS
+// NULL, created in `prisma/central_branch_delete.sql` for item 11.
+// `prisma migrate diff` will propose DROPPING it and say nothing when it does.
+// See docs/CLAUDE.md §21.
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Community {
@@ -1338,6 +1354,10 @@ model Community {
   questionTags      QuestionTag[]       @relation("QuestionTagCommunity")
   trainingListings  TrainingListing[]   @relation("TrainingListingCommunity")
   trainingSessions  TrainingSession[]   @relation("TrainingSessionCommunity")
+  settings          CommunitySettings?
+  approvers         CommunityApprover[]
+  resources         Resource[]          @relation("ResourceCommunity")
+  branchResources   Resource[]          @relation("ResourceBranch")
   // Ideas that originated in this Community — informational/display only, see note above.
   ideas             Idea[]
 
@@ -1632,6 +1652,18 @@ model Answer {
   question     Question @relation(fields: [questionId], references: [id])
   authorId     String
   author       User     @relation("AnswerAuthor", fields: [authorId], references: [id])
+  /// Item 13 — free text, PERMANENT, never hidden by the approval toggle.
+  context      String?
+  /// Item 13 — who asserted the approval. ALWAYS displayed by name: under mode
+  /// (a) the stamp is the poster's own claim, and showing an unverified self-tick
+  /// as a bare organisational endorsement would put the organisation's name on
+  /// material it has not seen.
+  approvedByUserId String?
+  approvedBy       User?    @relation("AnswerApprover", fields: [approvedByUserId], references: [id])
+  approvedAt       DateTime?
+  /// Item 14 — an external video, link only, no hosting.
+  videoUrl     String?
+  videoTitle   String?
   /// CENTRAL Stage 2e (the Stage 2c launch blocker) — MEMBER | AI.
   /// An AI-authored answer is labelled wherever it appears and mints NO points:
   /// a vote on one still ranks it, and emits no PointsEvent, because otherwise
@@ -3821,4 +3853,152 @@ enum UserMaterialStatus {
   PENDING
   READY
   FAILED
+}
+
+/// CENTRAL item 12 — what "approved" means in ONE Community. Root only.
+/// Generic platform machinery: nothing party-specific is hard-coded, every
+/// Community sets its own values, and Reform UK's are a seeded ROW.
+model CommunitySettings {
+  id                     String    @id @default(uuid())
+  communityId            String    @unique
+  community              Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  /// Shown wherever the approval label appears.
+  organisationName       String?
+  /// Hex, for the approval frame.
+  /// ⚠ #17B9D1 against the platform's live-state teal #14b8a6 is ΔE2000 15.14 —
+  /// plainly different side by side, but both read as "teal" at the size a
+  /// border and a superscript render. The frame is therefore distinguished by
+  /// BORDER WEIGHT and LABEL, with colour as reinforcement only: a party stamp
+  /// must not read as a platform state.
+  organisationColour     String?
+  /// Hidden removes the name, the colour frame and the superscript entirely.
+  /// ⚠ It does NOT delete approval data — re-enabling restores it, so turning
+  /// the feature off is never a destructive act.
+  approvalFeatureEnabled Boolean   @default(true)
+  /// SELF | BRANCH_ADMIN | COMMUNITY_ADMIN | NAMED
+  approvalMode           String    @default("SELF")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+/// The NAMED approval mode's picker.
+model CommunityApprover {
+  id          String    @id @default(uuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation("CommunityApprover", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([communityId, userId])
+}
+
+/// CENTRAL Stage 2g — a shared asset: a graphic, a flyer, a template, a link.
+///
+/// ⚠ EITHER a file OR a link. Video and websites are links only — no hosting,
+/// per the standing decision — so `fileKey` stays null for those.
+///
+/// ⚠ THIS TABLE CARRIES A PARTIAL INDEX PRISMA CANNOT SEE: `Resource_live_idx`
+/// on ("communityId", "createdAt") WHERE "deletedAt" IS NULL, created in
+/// `prisma/central_2g_resources.sql`. `prisma migrate diff` will propose
+/// DROPPING it and say nothing when it does. See docs/CLAUDE.md §21.
+model Resource {
+  id          String    @id @default(uuid())
+  /// The ROOT Community, as everything else in Central is scoped.
+  communityId String
+  community   Community @relation("ResourceCommunity", fields: [communityId], references: [id])
+  branchId    String?
+  branch      Community? @relation("ResourceBranch", fields: [branchId], references: [id])
+  authorId    String
+  author      User      @relation("ResourceAuthor", fields: [authorId], references: [id])
+  /// MEME | FLYER | SOCIAL | VIDEO | TRAINING | EVENT_PACK | WEBSITE | MERCH | TEMPLATE
+  type        String
+  title       String
+  /// REQUIRED. The poster's note on why it is worth using — it is what makes the
+  /// tab worth browsing rather than a file dump.
+  whyUseful   String
+  /// Item 13. Free text, PERMANENT, never hidden by the approval toggle.
+  context     String?
+  topicTags   String[]  @default([])
+  /// R2 object key. The bucket stays private; the app serves a signed URL.
+  fileKey     String?
+  fileName    String?
+  fileType    String?
+  fileSize    Int?
+  externalUrl String?
+  /// COMMUNITY | BRANCH
+  scope       String    @default("COMMUNITY")
+  /// ⚠ THE COPYRIGHT ASSERTION, RECORDED AGAINST THE ROW rather than being a
+  /// checkbox that vanishes on submit. Who said they had the right to share
+  /// this, and when.
+  rightsConfirmedByUserId String
+  rightsConfirmedBy       User   @relation("ResourceRightsConfirmer", fields: [rightsConfirmedByUserId], references: [id])
+  rightsConfirmedAt       DateTime @default(now())
+  /// Item 13 — who asserted the approval, always displayed by name.
+  approvedByUserId String?
+  approvedBy       User?    @relation("ResourceApprover", fields: [approvedByUserId], references: [id])
+  approvedAt       DateTime?
+  /// MEMBER | AI. An AI-authored resource ranks and mints nothing, as answers do.
+  authorType  String    @default("MEMBER")
+  aiModel     String?
+  /// The 2f content soft-delete pattern, unchanged.
+  deletedAt         DateTime?
+  deletedByUserId   String?
+  deletedBy         User?    @relation("ResourceDeleter", fields: [deletedByUserId], references: [id])
+  deletionReason    String?
+  deletedWithParent Boolean  @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  votes   ResourceVote[]
+  flags   ResourceFlag[]
+  reports ResourceReport[]
+
+  @@index([communityId, type])
+  @@index([authorId])
+}
+
+model ResourceVote {
+  id         String   @id @default(uuid())
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("ResourceVoter", fields: [userId], references: [id], onDelete: Cascade)
+  /// UP | DOWN
+  direction  String
+  voteWeight Float    @default(1.0)
+  createdAt  DateTime @default(now())
+
+  @@unique([resourceId, userId])
+}
+
+/// The existing Do not use / Use with care levels, unchanged, reason required.
+model ResourceFlag {
+  id          String   @id @default(uuid())
+  resourceId  String   @unique
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  /// DO_NOT_USE | USE_WITH_CARE
+  level       String
+  reason      String
+  setByUserId String
+  setBy       User     @relation("ResourceFlagger", fields: [setByUserId], references: [id])
+  setAt       DateTime @default(now())
+}
+
+/// A visible Report action on every resource, routing to Community admins.
+model ResourceReport {
+  id               String    @id @default(uuid())
+  resourceId       String
+  resource         Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  reportedByUserId String
+  reportedBy       User      @relation("ResourceReporter", fields: [reportedByUserId], references: [id], onDelete: Cascade)
+  reason           String
+  /// OPEN | RESOLVED
+  status           String    @default("OPEN")
+  resolvedByUserId String?
+  resolvedBy       User?     @relation("ResourceReportResolver", fields: [resolvedByUserId], references: [id])
+  resolvedAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([resourceId, status])
 }
