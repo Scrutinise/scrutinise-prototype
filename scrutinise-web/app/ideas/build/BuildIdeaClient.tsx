@@ -26,7 +26,7 @@ import {
 } from '@/components/lex/ElicitationCards'
 // TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
 // keeps importing its prop type from the component it renders.
-import RecentIdeasPanel, { type RecentIdea } from '@/components/lex/RecentIdeasPanel'
+import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
 import SurfaceSwitch from '@/components/lex/SurfaceSwitch'
 import YourMaterial from '@/components/lex/YourMaterial'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
@@ -67,7 +67,7 @@ const HELP_INTENT =
  */
 const CRITIQUE_INTENT =
   /\b(?:that(?:'s| is)|this(?:'s| is)|it(?:'s| is))\s+(?:not\s+right|wrong|incorrect|inaccurate|nonsense|rubbish|way off|miles off|misleading|too (?:low|high|vague|generic))\b|\b(?:you(?:'ve| have)?\s+(?:got|gotten)\s+(?:that|this|it)\s+wrong|you(?:'re| are)\s+wrong|that(?:'s| is)\s+made\s+up|you\s+made\s+that\s+up)\b|\bdoesn(?:'|\u2019)?t\s+(?:make\s+sense|reflect|match)\b|\bi\s+don(?:'|\u2019)?t\s+(?:agree|think\s+that(?:'s| is)\s+right)\b/i
-export type { RecentIdea }
+export type { MyIdea }
 
 // The server's shapes, restated for the client. Kept structural rather than imported
 // wholesale so this file cannot accidentally pull server-only code into the bundle.
@@ -209,8 +209,8 @@ export default function BuildIdeaClient(
     isFirstIdea = false, displayName = null, blankState = null }: {
     initialIdeaId?: string
     resumed?: boolean
-    /** TEMPORARY — the stopgap previous-ideas list. See `RecentIdea`. */
-    recent?: RecentIdea[]
+    /** 25-J §2 — the user's own ideas, listed on the hub. See `MyIdea`. */
+    recent?: MyIdea[]
     hiddenEmpty?: number
     /** 25-G §2 — what the proposal surface holds, so this screen can offer it. */
     surface?: SurfaceContext | null
@@ -839,16 +839,10 @@ export default function BuildIdeaClient(
       )}
 
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
-        {/* TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Rendered OUTSIDE
-            the `booting` branch deliberately: it arrives from the server with the page, so
-            it must still be there when the session fails to start — which is exactly the
-            state in which you most want a way back to earlier work. */}
         {/* 25-G §2 — the persistent route to the proposal, on every screen of this
             surface: it sits above the phase switch so it is present during the
             elicitation, during the build and after it. */}
         <SurfaceSwitch context={surface} />
-
-        <RecentIdeasPanel recent={recent} hiddenEmpty={hiddenEmpty} />
 
         {booting || !elicit ? (
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>
@@ -1063,6 +1057,23 @@ export default function BuildIdeaClient(
                 onSend={() => void answer()}
                 onSkip={() => void answer({ skip: true })}
               />
+            )}
+
+            {/* ══ 25-J §2 — MY IDEAS, BENEATH THE FIRST QUESTION ══════════════════
+                §2: the first question is "dominant on the page. Not a button that leads to
+                a form; the form itself" — with the user's ideas listed beneath it.
+
+                ⚠ ONLY BEFORE AN IDEA EXISTS, which is what makes the transition a
+                transition. Once the first answer is given, `ideaId` is set and this list
+                gives way to the working view. A hub list that persisted alongside the
+                three-column view would be a permanent invitation to abandon what you are
+                doing.
+
+                ⚠ AND ONLY ON THE FIRST STEP. A user part-way through the four questions is
+                working, not choosing — they arrived here with an idea resumed and their
+                own list underneath it would be noise. */}
+            {!ideaId && elicit.phase === 'QUESTION' && (
+              <MyIdeasList ideas={recent} hiddenEmpty={hiddenEmpty} />
             )}
 
             {elicit.phase === 'UNDERSTANDING_FAILED' && (

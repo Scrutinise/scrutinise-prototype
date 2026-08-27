@@ -14,7 +14,8 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import BuildIdeaClient, { type RecentIdea } from './BuildIdeaClient'
+import BuildIdeaClient from './BuildIdeaClient'
+import type { MyIdea } from '@/components/lex/MyIdeasList'
 import { surfaceContext } from '@/lib/lex/surfaces'
 import { blankElicitationState } from '@/lib/lex/elicitation'
 
@@ -165,7 +166,7 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   // them silently would make this list lie about what is in the database, so the client
   // prints how many were hidden.
   // ═══════════════════════════════════════════════════════════════════════════
-  let recent: RecentIdea[] = []
+  let recent: MyIdea[] = []
   let hiddenEmpty = 0
   if (dbUser) {
     const rows = await prisma.ideaElicitation.findMany({
@@ -178,6 +179,8 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
         idea: {
           select: {
             title: true,
+            // 25-J §2 — the hub lists the stage, so it is selected rather than derived.
+            stage: true,
             builds: {
               orderBy: { createdAt: 'desc' },
               take: 1,
@@ -194,7 +197,11 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
       recent.push({
         ideaId: r.ideaId,
         title: r.idea.title,
-        excerpt: excerpt.length > 180 ? excerpt.slice(0, 180).trimEnd() + '…' : excerpt,
+        // ⚠ 25-J §2 — SHORTER THAN THE STOPGAP'S 180. This is a list row now, not a
+        // diagnostic paragraph: a line the eye can scan is what makes an untitled idea
+        // recognisable, and 180 characters wraps to four lines and stops being scannable.
+        excerpt: excerpt.length > 110 ? excerpt.slice(0, 110).trimEnd() + '…' : excerpt,
+        stage: r.idea.stage,
         elicitationStatus: r.status,
         buildStatus: b?.status ?? null,
         passesComplete: b?.passesComplete ?? null,
