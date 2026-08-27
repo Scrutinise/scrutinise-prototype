@@ -382,11 +382,24 @@ export async function runMaterialFindings(materialId: string): Promise<{ written
     // sometimes reconstruct, and a reconstructed quote attributed to the user's own
     // document is the most damaging thing this feature could produce. A finding whose quote
     // is not in the text is DROPPED, and the drop is counted and logged.
-    if (!quoteIsInText(quote, storedText)) {
-      console.warn('[material] finding DROPPED — its quote is not in the document', {
+    // ⚠ `verbatimSpan`, NOT `quoteIsInText`. See its comment: the all-or-nothing check
+    // dropped 11 of 15 findings on Charlie's own document, ten of whose quotes were in it.
+    // What is stored below is the DOCUMENT'S text for the matched span, never the model's.
+    const verbatim = verbatimSpan(quote, storedText)
+    if (!verbatim) {
+      console.warn('[material] finding DROPPED — the model diverges from the document too early', {
         materialId: material.id, title: title.slice(0, 60), quote: quote.slice(0, 80),
       })
       continue
+    }
+    // How much the model had tidied. Zero on a clean quote; the interesting case is the
+    // long tail, and it is worth being able to see it without re-running anything.
+    if (quoteNorm(verbatim).length < quoteNorm(quote).length) {
+      console.log('[material] quote anchored to the document', {
+        materialId: material.id,
+        offered: quoteNorm(quote).length,
+        anchored: quoteNorm(verbatim).length,
+      })
     }
 
     const headingKey: HeadingKey = isHeadingKey(f.headingKey) ? f.headingKey : 'YOUR_MATERIAL'
@@ -399,7 +412,7 @@ export async function runMaterialFindings(materialId: string): Promise<{ written
         fieldRef: null,
         kind: 'FINDING',
         title,
-        body: `${body}\n\n“${quote}”${typeof f.locator === 'string' && f.locator.trim() ? ` — ${f.locator.trim()}` : ''}`,
+        body: `${body}\n\n“${verbatim}”${typeof f.locator === 'string' && f.locator.trim() ? ` — ${f.locator.trim()}` : ''}`,
         // ⚠ The badge the panel reads. `USER_DOCUMENT` is what marks this visibly as the
         // user's own source rather than something we found.
         sourceType: 'USER_DOCUMENT',
@@ -424,7 +437,7 @@ export async function runMaterialFindings(materialId: string): Promise<{ written
         ? res.value.nothingUseful.trim()
         : 'Nothing in this document bore on the proposal.')
     : dropped > 0
-      ? `${dropped} finding${dropped === 1 ? '' : 's'} dropped — the quote could not be found in the document.`
+      ? `${dropped} finding${dropped === 1 ? '' : 's'} dropped — what they quoted was not in the document.`
       : null
   console.log('[material] findings pass', { materialId: material.id, offered: findings.length, written, dropped })
   return { written, note }
@@ -440,15 +453,112 @@ export async function runMaterialFindings(materialId: string): Promise<{ written
  * score — would let a reconstruction through, which is the failure it exists to stop.
  */
 export function quoteIsInText(quote: string, text: string): boolean {
-  const norm = (s: string) => s
+  const q = quoteNorm(quote)
+  // A very short "quote" is not provenance — it is a phrase that appears everywhere.
+  if (q.length < 20) return false
+  return quoteNorm(text).includes(q)
+}
+
+function quoteNorm(s: string): string {
+  return s
     .replace(/[‘’‚‛]/g, "'")
     .replace(/[“”„‟]/g, '"')
     .replace(/[‐-―]/g, '-')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase()
-  const q = norm(quote)
-  // A very short "quote" is not provenance — it is a phrase that appears everywhere.
-  if (q.length < 20) return false
-  return norm(text).includes(q)
+}
+
+/**
+ * The shortest quote we will treat as provenance, in characters of matched text.
+ *
+ * ⚠ THIS IS THREE TIMES THE OLD FLOOR, NOT A RELAXATION. `quoteIsInText` accepted any
+ * exact match of 20 characters; this requires 60 contiguous characters that are demonstrably
+ * the document's own. The change below makes the check STRICTER on what it accepts and
+ * stops it discarding honest findings — those are the same change, not a trade.
+ */
+const MIN_SPAN = 60
+
+/**
+ * ⚠⚠ 25-I §2 — THE VERBATIM CHECK WAS THROWING AWAY 73% OF WHAT IT FOUND.
+ *
+ * Measured on Charlie's own document (42,264 chars): the pass offered 15 findings and
+ * DROPPED 11 of them as "the quote could not be found in the document". Ten of those
+ * eleven quotes were in the document. The eleventh diverged in a way that shows the whole
+ * mechanism:
+ *
+ *     document : …advantage over government there are imperfect but ultimately fair…
+ *     model    : …advantage over government. there
+ *
+ * The model added a full stop. `quoteIsInText` is all-or-nothing over the whole passage, so
+ * one tidied character at position 200 of a 300-character quote discarded the entire
+ * finding — and told the user their document had produced nothing, which reads as *the
+ * document was useless* rather than *our comparison is brittle*. Same shape as the
+ * "fabrication rate" that turned out to be our own undecoded HTML entities.
+ *
+ * ⚠ THE FIX MAKES PROVENANCE STRONGER, WHICH IS WHY IT IS THIS AND NOT A LOOSER MATCH.
+ * Matching on the first few words, or on a similarity score, would let a reconstruction
+ * through — the very thing the check exists to stop. Instead we find the longest PREFIX of
+ * the model's quote that really is in the document, and then return **the document's own
+ * words for that span**. The model's string is never stored. A stored quote is therefore
+ * verbatim BY CONSTRUCTION rather than by having passed a test, and no amount of tidying
+ * downstream of the anchor can put words in the document's mouth.
+ *
+ * Returns null when the model diverges before `MIN_SPAN` — at that point it is not quoting.
+ */
+export function verbatimSpan(quote: string, text: string): string | null {
+  const nq = quoteNorm(quote)
+  if (nq.length < MIN_SPAN) return null
+  const nt = quoteNorm(text)
+
+  // Longest matching prefix, by binary search on the normalised forms.
+  let lo = 0
+  let hi = nq.length
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2)
+    if (nt.includes(nq.slice(0, mid))) lo = mid
+    else hi = mid - 1
+  }
+  if (lo < MIN_SPAN) return null
+
+  // ⚠ TRIM TO A WORD BOUNDARY. Cutting mid-word would store "…over governme", which reads
+  // as a transcription error and invites exactly the doubt the quote exists to remove.
+  const cut = nq.lastIndexOf(' ', lo)
+  const end = cut >= MIN_SPAN ? cut : lo
+  const matched = nq.slice(0, end)
+
+  // ⚠ NOW RECOVER THE DOCUMENT'S OWN TEXT FOR THAT SPAN. The match was made on a
+  // lower-cased, whitespace-collapsed form; returning that would strip the document's
+  // capitals and punctuation from a quotation. Walking the original text in step with the
+  // normalised one restores it exactly as written.
+  const at = nt.indexOf(matched)
+  if (at < 0) return null
+  return sliceOriginal(text, at, matched.length)
+}
+
+/**
+ * Map a span located in `quoteNorm(text)` back onto `text` itself.
+ *
+ * Normalisation only ever collapses runs of whitespace and rewrites single characters
+ * one-for-one, so walking both strings together and counting consumed normalised
+ * characters recovers the original span. Done by scanning rather than by index arithmetic,
+ * because the collapse means the two strings do not share offsets.
+ */
+function sliceOriginal(text: string, normStart: number, normLength: number): string {
+  let consumed = 0
+  let start = -1
+  let i = 0
+  // Mirror `quoteNorm`'s leading trim: skip whitespace the normalised form dropped.
+  while (i < text.length && /\s/.test(text[i])) i++
+  for (; i < text.length; i++) {
+    const isSpaceRun = /\s/.test(text[i])
+    if (isSpaceRun) {
+      // A whitespace run collapses to exactly one normalised space.
+      while (i + 1 < text.length && /\s/.test(text[i + 1])) i++
+    }
+    if (consumed === normStart && start < 0) start = i
+    consumed++
+    if (start >= 0 && consumed >= normStart + normLength) return text.slice(start, i + 1).trim()
+  }
+  return start >= 0 ? text.slice(start).trim() : ''
 }
