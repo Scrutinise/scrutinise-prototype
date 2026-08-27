@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
 type Item = {
-  kind: 'question' | 'answer' | 'post'
+  kind: 'question' | 'answer' | 'post' | 'branch'
   id: string
   preview: string
   deletedAt: string
@@ -21,6 +21,7 @@ const KIND_LABEL: Record<Item['kind'], string> = {
   question: 'Question',
   answer: 'Answer',
   post: 'Post',
+  branch: 'Branch',
 }
 
 const who = (u: { name: string | null; username: string } | null) =>
@@ -44,22 +45,39 @@ export default function DeletedItems({
     setError(null)
     setDone(null)
     try {
-      const res = await fetch(`/api/communities/${communityId}/deleted`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: item.kind, id: item.id }),
-      })
+      // A branch restores through its own route: it is a different object with
+      // its own rules (parent must be live, manage rights on the branch).
+      const res =
+        item.kind === 'branch'
+          ? await fetch(`/api/communities/${item.id}/branch`, { method: 'POST' })
+          : await fetch(`/api/communities/${communityId}/deleted`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ kind: item.kind, id: item.id }),
+            })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(typeof data.error === 'string' ? data.error : `That did not work (HTTP ${res.status}).`)
         return
       }
-      const r = data.result as { restored: { answers: number; replies: number }; pointsRestored: number }
-      const alsoBack = r.restored.answers + r.restored.replies
-      setDone(
-        `Restored${alsoBack ? `, with ${alsoBack} item${alsoBack === 1 ? '' : 's'} that went down with it` : ''}` +
-          `${r.pointsRestored ? ` — ${r.pointsRestored} points returned` : ''}.`,
-      )
+      if (item.kind === 'branch') {
+        const r = data.result as { questionsRestored: number; postsRestored: number; pointsRestored: number }
+        const back = r.questionsRestored + r.postsRestored
+        // ⚠ Says what did NOT come back. Omitting it would let the reader assume
+        // the branch is exactly as it was, and then wonder where everyone went.
+        setDone(
+          `${item.preview} is back${back ? `, with ${back} item${back === 1 ? '' : 's'}` : ''}` +
+            `${r.pointsRestored ? ` and ${r.pointsRestored} points` : ''}. ` +
+            `Its members were not restored — they will need to rejoin.`,
+        )
+      } else {
+        const r = data.result as { restored: { answers: number; replies: number }; pointsRestored: number }
+        const alsoBack = r.restored.answers + r.restored.replies
+        setDone(
+          `Restored${alsoBack ? `, with ${alsoBack} item${alsoBack === 1 ? '' : 's'} that went down with it` : ''}` +
+            `${r.pointsRestored ? ` — ${r.pointsRestored} points returned` : ''}.`,
+        )
+      }
       setItems((prev) => prev.filter((i) => i.id !== item.id))
       router.refresh()
     } catch {
@@ -103,7 +121,7 @@ export default function DeletedItems({
             <p className="mt-1.5 text-[14px] leading-snug pretty">{item.preview}</p>
 
             <p className="mt-1 text-[12px] text-muted-foreground">
-              by {who(item.author)} · removed by {who(item.deletedBy)}
+              {item.kind === 'branch' ? 'branch of ' + (item.communityName || 'this Community') : `by ${who(item.author)}`} · removed by {who(item.deletedBy)}
               {' · '}
               <span className="tabular">
                 {new Date(item.deletedAt).toLocaleDateString('en-GB', {

@@ -39,6 +39,7 @@ import {
   getBoardScopeFilter,
   getCommunityMembership,
   getCommunityTree,
+  getSubtreeIds,
   getCommunityTreeIds,
   getNodeManagerIds,
   getRootCommunityId,
@@ -99,6 +100,12 @@ import {
   restorePost,
   restoreQuestion,
 } from '@/lib/content-deletion'
+import {
+  deleteBranch,
+  describeBranchDeletion,
+  listDeletedBranches,
+  restoreBranch,
+} from '@/lib/branch-deletion'
 import {
   CLOSE_WARNING,
   acceptMatch,
@@ -2739,6 +2746,227 @@ async function partI() {
   }
 }
 
+async function partJ() {
+  console.log('\nJ. Item 11 — delete and restore a branch')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 3,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 3) throw new Error('need at least three active users to run part J')
+  const [owner, member, voter] = users
+
+  try {
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-j-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: owner.id, role: 'OWNER' },
+            { userId: member.id, role: 'MEMBER' },
+            { userId: voter.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+    await prisma.questionTag.createMany({
+      data: [{ communityId: root.id, kind: 'CONTEXT_EXTERNAL', label: 'Doorstep', promoted: true }],
+    })
+
+    const empty = await prisma.community.create({
+      data: { name: `zz-check-j-empty-${stamp}`, parentCommunityId: root.id, bulletinCategories: [] },
+    })
+    const parent = await prisma.community.create({
+      data: {
+        name: `zz-check-j-parent-${stamp}`, parentCommunityId: root.id, bulletinCategories: [],
+        members: { create: [{ userId: member.id, role: 'OWNER' }] },
+      },
+    })
+    const child = await prisma.community.create({
+      data: { name: `zz-check-j-child-${stamp}`, parentCommunityId: parent.id, bulletinCategories: [] },
+    })
+    const populated = await prisma.community.create({
+      data: {
+        name: `zz-check-j-full-${stamp}`, parentCommunityId: root.id, bulletinCategories: [],
+        members: {
+          create: [
+            { userId: member.id, role: 'OWNER' },
+            { userId: voter.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(empty.id, child.id, parent.id, populated.id)
+
+    // ── the root is never deletable ─────────────────────────────────────────
+    const rootRefused = await refuses(() => deleteBranch({ branchId: root.id, actorUserId: owner.id }), 403)
+    check('the Community root cannot be deleted at all', rootRefused !== null, rootRefused ?? 'not refused')
+
+    // ── a parent with live children is refused, and SAYS WHY ────────────────
+    const parentRefused = await refuses(() => deleteBranch({ branchId: parent.id, actorUserId: owner.id }), 409)
+    check('a branch with children inside it is refused', parentRefused !== null, parentRefused ?? 'not refused')
+    check('…and the refusal names the branch blocking it, so it is actionable',
+      Boolean(parentRefused?.includes(`zz-check-j-child-${stamp}`)), parentRefused ?? '')
+    check('…and says which way to work',
+      Boolean(parentRefused?.toLowerCase().includes('bottom up')), parentRefused ?? '')
+
+    // ── somebody without rights is refused ──────────────────────────────────
+    const strangerRefused = await refuses(() => deleteBranch({ branchId: empty.id, actorUserId: voter.id }), 403)
+    check('a member with no rights over the branch cannot delete it',
+      strangerRefused !== null, strangerRefused ?? 'not refused')
+
+    // ── acceptance: delete an EMPTY branch ──────────────────────────────────
+    const emptyPreview = await describeBranchDeletion(empty.id)
+    eq('the dialog\'s counts for an empty branch are all zero',
+      [emptyPreview.memberCount, emptyPreview.questionCount, emptyPreview.postCount], [0, 0, 0])
+    const emptyResult = await deleteBranch({ branchId: empty.id, actorUserId: owner.id, reason: 'zz empty' })
+    eq('an empty branch deletes cleanly', emptyResult.questionsDeleted + emptyResult.postsDeleted, 0)
+    check('…and is gone from the Teams tree',
+      !treeIds(await getCommunityTree(root.id)).includes(empty.id))
+    check('…and out of the subtree ids every visibility filter is built from',
+      !(await getSubtreeIds(root.id)).includes(empty.id))
+
+    // ── acceptance: delete a POPULATED branch, confirm points reverse ───────
+    const branchQ = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: member.id, branchId: populated.id,
+        text: `zz branch question ${stamp}?`, scope: 'BRANCH', contextTags: ['Doorstep'],
+      },
+    })
+    const branchAnswer = await prisma.answer.create({
+      data: { questionId: branchQ.id, authorId: member.id, body: `zz branch answer ${stamp}` },
+    })
+    // ⚠ A Community-wide question written ON this branch. It must SURVIVE — it
+    // was addressed to everybody, not to the branch.
+    const communityQ = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: member.id, branchId: populated.id,
+        text: `zz community-wide question ${stamp}?`, scope: 'COMMUNITY', contextTags: ['Doorstep'],
+      },
+    })
+    const post = await prisma.bulletinPost.create({
+      data: {
+        communityId: populated.id, authorId: member.id, title: `zz branch post ${stamp}`,
+        category: 'Questions', body: 'zz body', scope: 'BRANCH',
+      },
+    })
+
+    const before = await getUserPoints(member.id, root.id)
+    await applyAnswerVote(branchAnswer.id, voter.id, 'UP')
+    await applyBulletinMark(post.id, voter.id, 1)
+    eq('the branch content earns its author 8', (await getUserPoints(member.id, root.id)) - before, 8)
+
+    const preview = await describeBranchDeletion(populated.id)
+    eq('the dialog counts the members it will remove', preview.memberCount, 2)
+    eq('…the branch-scoped question and post, and NOT the Community-wide one',
+      [preview.questionCount, preview.postCount], [1, 1])
+    eq('…and the points that will come off', preview.pointsAtRisk, 8)
+
+    const result = await deleteBranch({
+      branchId: populated.id, actorUserId: owner.id, reason: 'zz closing the branch',
+    })
+    eq('deleting takes the branch-scoped content', [result.questionsDeleted, result.postsDeleted], [1, 1])
+    eq('…reverses its points', result.pointsReversed, 8)
+    eq('…so the author is back where they started', await getUserPoints(member.id, root.id), before)
+    eq('…and removes the branch memberships', result.membershipsRemoved, 2)
+
+    // ⚠ THE RULE THAT MATTERS MOST: people keep the Community.
+    check('members KEEP their root membership — a closed branch is not an expulsion',
+      (await getCommunityMembership(member.id, root.id)) !== null &&
+        (await getCommunityMembership(voter.id, root.id)) !== null)
+    check('…while the branch membership is gone',
+      (await getCommunityMembership(member.id, populated.id)) === null)
+
+    check('the branch-scoped question is gone from the library',
+      !(await listQuestions(root.id, owner.id, {})).some((q) => q.id === branchQ.id))
+    check('…and the Community-wide one written on the same branch SURVIVES',
+      (await listQuestions(root.id, owner.id, {})).some((q) => q.id === communityQ.id))
+
+    // ── it appears in the deleted-items view ────────────────────────────────
+    const branches = await listDeletedBranches(root.id)
+    check('the deleted branch is listed for the manager',
+      branches.some((b) => b.id === populated.id))
+    check('…with who closed it and why',
+      branches.find((b) => b.id === populated.id)?.deletedBy?.id === owner.id &&
+        branches.find((b) => b.id === populated.id)?.deletionReason === 'zz closing the branch')
+    check('…and a branch from another Community is NOT listed here',
+      branches.every((b) => communityIds.includes(b.id)))
+
+    // ── acceptance: restore returns content and points, NOT memberships ─────
+    const restored = await restoreBranch({ branchId: populated.id, actorUserId: owner.id })
+    eq('restoring brings the content back', [restored.questionsRestored, restored.postsRestored], [1, 1])
+    eq('…and the points with it', restored.pointsRestored, 8)
+    eq('…so the author is whole again', await getUserPoints(member.id, root.id), before + 8)
+    eq('…and memberships are NOT restored — people rejoin', restored.membershipsRestored, 0)
+    check('…which the data agrees with',
+      (await getCommunityMembership(member.id, populated.id)) === null)
+    check('the branch is back in the Teams tree',
+      treeIds(await getCommunityTree(root.id)).includes(populated.id))
+    check('…and its question is findable again',
+      (await listQuestions(root.id, owner.id, {})).some((q) => q.id === branchQ.id))
+
+    // ── restoring under a deleted parent is refused ─────────────────────────
+    await deleteBranch({ branchId: child.id, actorUserId: owner.id })
+    await deleteBranch({ branchId: parent.id, actorUserId: owner.id })
+    const orphanRestore = await refuses(() => restoreBranch({ branchId: child.id, actorUserId: owner.id }), 409)
+    check('a branch cannot be restored under a parent that is still deleted',
+      orphanRestore !== null, orphanRestore ?? 'not refused')
+    await restoreBranch({ branchId: parent.id, actorUserId: owner.id })
+    const nowFine = await restoreBranch({ branchId: child.id, actorUserId: owner.id })
+    eq('…and can once the parent is back', nowFine.branchId, child.id)
+
+    // The dialog's promise, grepped: the asymmetry must be stated where the
+    // decision is made, not in a help page nobody opens.
+    const dialogSrc = readFileSync(
+      resolvePath(process.cwd(), 'app/communities/[id]/DeleteBranch.tsx'), 'utf8')
+    check('the confirmation dialog says memberships do not come back',
+      /not the memberships/i.test(dialogSrc) || /People rejoin/i.test(dialogSrc))
+    check('…and that members keep the Community',
+      /stay in the Community/i.test(dialogSrc))
+  } finally {
+    const qs = await prisma.question.findMany({
+      where: { communityId: { in: communityIds } }, select: { id: true },
+    })
+    const answerIds = (
+      await prisma.answer.findMany({ where: { questionId: { in: qs.map((q) => q.id) } }, select: { id: true } })
+    ).map((a) => a.id)
+    await prisma.answerVote.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answer.deleteMany({ where: { id: { in: answerIds } } })
+    await prisma.questionVote.deleteMany({ where: { questionId: { in: qs.map((q) => q.id) } } })
+    await prisma.question.deleteMany({ where: { id: { in: qs.map((q) => q.id) } } })
+    const posts = await prisma.bulletinPost.findMany({
+      where: { communityId: { in: communityIds } }, select: { id: true },
+    })
+    await prisma.bulletinVote.deleteMany({ where: { postId: { in: posts.map((p) => p.id) } } })
+    await prisma.bulletinPost.deleteMany({ where: { id: { in: posts.map((p) => p.id) } } })
+    await prisma.questionTag.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.pointsEvent.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: { OR: communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })) },
+    })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    eq('branch-deletion fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-j-' } } }), 0)
+  }
+}
+
+/** Flatten a tree node to its ids, for the "is it still in the tree" checks. */
+function treeIds(node: { id: string; children: { id: string; children: unknown[] }[] }): string[] {
+  const out = [node.id]
+  for (const c of node.children as typeof node[]) out.push(...treeIds(c))
+  return out
+}
+
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL not set')
@@ -2753,6 +2981,7 @@ async function main() {
   await partG()
   await partH()
   await partI()
+  await partJ()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()

@@ -86,7 +86,7 @@ const SOURCE_TYPE: Record<ContentKind, string | null> = {
  * Reverse whatever this content has earned. Returns the amount taken back.
  * Zero is a normal answer — most content has never been marked.
  */
-async function reverseContentPoints(params: {
+export async function reverseContentPoints(params: {
   kind: ContentKind
   contentId: string
   authorId: string
@@ -119,7 +119,7 @@ async function reverseContentPoints(params: {
  * than re-deriving it. Symmetry is the point: if the two ever disagree, the
  * author's total is silently wrong and nothing says so.
  */
-async function restoreContentPoints(params: {
+export async function restoreContentPoints(params: {
   kind: ContentKind
   contentId: string
   authorId: string

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import { canManageCommunity } from '@/lib/community'
 import { listDeletedContent } from '@/lib/content-deletion'
+import { listDeletedBranches } from '@/lib/branch-deletion'
 import DeletedItems from './DeletedItems'
 import type { Metadata } from 'next'
 
@@ -38,7 +39,10 @@ export default async function DeletedPage({ params }: Props) {
     where: { id },
     select: { id: true, name: true },
   })
-  const items = await listDeletedContent(id)
+  // ⚠ Branches sit in the SAME list as content (item 11). They are deleted by
+  // the same shape, so listing them apart would make a reader learn two ideas
+  // where there is one.
+  const [items, branches] = await Promise.all([listDeletedContent(id), listDeletedBranches(id)])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -57,7 +61,21 @@ export default async function DeletedPage({ params }: Props) {
 
         <DeletedItems
           communityId={id}
-          initial={items.map((i) => ({ ...i, deletedAt: i.deletedAt.toISOString() }))}
+          initial={[
+            ...branches.map((b) => ({
+              kind: 'branch' as const,
+              id: b.id,
+              preview: b.name,
+              deletedAt: b.deletedAt!.toISOString(),
+              deletionReason: b.deletionReason,
+              deletedWithParent: false,
+              author: { id: '', name: null, username: '—' },
+              deletedBy: b.deletedBy,
+              communityName: b.parent?.name ?? '',
+              parentId: b.parent?.id ?? null,
+            })),
+            ...items.map((i) => ({ ...i, deletedAt: i.deletedAt.toISOString() })),
+          ]}
         />
       </main>
     </div>

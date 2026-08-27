@@ -522,6 +522,7 @@ model User {
   centralClaimReversals     ActivityClaim[]     @relation("CentralClaimReverser")
   questionsAsked            Question[]          @relation("QuestionAuthor")
   questionsDeleted          Question[]          @relation("QuestionDeleter")
+  communitiesDeleted        Community[]         @relation("CommunityDeleter")
   answersDeleted            Answer[]            @relation("AnswerDeleter")
   bulletinPostsDeleted      BulletinPost[]      @relation("BulletinPostDeleter")
   questionVotes             QuestionVote[]      @relation("QuestionVoter")
@@ -1312,6 +1313,14 @@ model Community {
   // Stored per-Community rather than hardcoded so that UI can be added later
   // without a second migration.
   bulletinCategories String[] @default([])
+  /// CENTRAL item 11 (27 Aug 2026) — branch soft-delete, same shape as the content
+  /// pattern. ⚠ No `deletedWithParent`: deleting a parent that still has children is
+  /// REFUSED, so a Community row is never collateral and the column would imply a
+  /// cascade that cannot happen.
+  deletedAt         DateTime?
+  deletedByUserId   String?
+  deletedBy         User?     @relation("CommunityDeleter", fields: [deletedByUserId], references: [id])
+  deletionReason    String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

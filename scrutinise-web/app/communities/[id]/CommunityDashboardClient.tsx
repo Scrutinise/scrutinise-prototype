@@ -16,6 +16,7 @@ import ClaimsPanel from './ClaimsPanel'
 import LogActivity from './LogActivity'
 import Leaderboards from './Leaderboards'
 import TrainingExchange from './TrainingExchange'
+import DeleteBranch from './DeleteBranch'
 import QuestionLibrary, { type QuestionRow, type TagSet } from './questions/QuestionLibrary'
 
 export type CentralTab = 'questions' | 'board' | 'training' | 'leaderboard' | 'teams'
@@ -291,14 +292,19 @@ export default function CommunityDashboardClient({
                   isCommunityMember={isCommunityMember}
                 />
               </div>
-              {isMember && myRole !== 'OWNER' && (
-                <div>
+              <div className="flex flex-wrap items-center gap-2">
+                {isMember && myRole !== 'OWNER' && (
                   <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={handleLeave}>
                     Leave {isBranch ? 'this branch' : 'this Community'}
                   </Button>
-                  {leaveError && <p className="mt-1 text-xs text-red-600">{leaveError}</p>}
-                </div>
-              )}
+                )}
+                {/* Item 11 — a branch only. The Community itself is never
+                    deletable, so the control does not appear on the root. */}
+                {isBranch && canManage && (
+                  <DeleteBranch communityId={community.id} branchName={community.name} rootId={root.id} />
+                )}
+              </div>
+              {leaveError && <p className="mt-1 text-xs text-red-600">{leaveError}</p>}
             </div>
             {canManage && (
               <div className="space-y-2.5">

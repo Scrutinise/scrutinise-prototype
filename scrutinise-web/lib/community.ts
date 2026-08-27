@@ -973,7 +973,7 @@ export type CommunityTreeNode = {
  */
 export async function getCommunityTree(communityId: string, viewerId?: string): Promise<CommunityTreeNode> {
   const nodes = await prisma.community.findMany({
-    where: { id: { in: await getSubtreeIds(communityId) } },
+    where: { id: { in: await getSubtreeIds(communityId) }, deletedAt: null },
     include: {
       manager: { select: { name: true } },
       members: {
@@ -1055,8 +1055,15 @@ export async function getSubtreeIds(communityId: string): Promise<string[]> {
   let frontier = [communityId]
   let guard = 0
   while (frontier.length > 0 && guard++ < 50) {
+    // ⚠ LIVE CHILDREN ONLY (item 11, 27 Aug 2026). This walk feeds the Teams
+    // tree, the question visibility filter and the board scope filter, so a
+    // deleted branch that stayed in it would keep its content reachable from
+    // every one of them — the branch would be "deleted" and still be a place.
+    //
+    // The ROOT is never excluded here: it cannot be deleted, and dropping the
+    // starting node would silently return an empty subtree.
     const children = await prisma.community.findMany({
-      where: { parentCommunityId: { in: frontier } },
+      where: { parentCommunityId: { in: frontier }, deletedAt: null },
       select: { id: true },
     })
     frontier = children.map((c) => c.id)
