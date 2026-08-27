@@ -4,6 +4,7 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import AccentProvider from '@/components/central/AccentProvider';
 
 export const metadata: Metadata = {
   title: {
@@ -32,6 +33,10 @@ export default function RootLayout({
     >
       <html lang="en">
         <body className="min-h-screen">
+          {/* Stage 2h item 7 — a client component on purpose: reading the accent
+              here on the server would opt every page, including the static
+              signed-out ones, into dynamic rendering. */}
+          <AccentProvider />
           {children}
           {process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID && (
             <>

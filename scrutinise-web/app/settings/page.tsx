@@ -4,6 +4,8 @@ import { useRef, useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import PublicNav from '@/components/PublicNav'
+import { ACCENT_PALETTE, DEFAULT_ACCENT_KEY } from '@/lib/accent'
+import { applyAccentNow } from '@/components/central/AccentProvider'
 
 export default function SettingsPage() {
   const { user, isLoaded } = useUser()
@@ -23,6 +25,8 @@ export default function SettingsPage() {
   const [savingPhone, setSavingPhone] = useState(false)
   const [phoneSaved, setPhoneSaved] = useState(false)
   const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [accent, setAccent] = useState<string>(DEFAULT_ACCENT_KEY)
+  const [accentSaved, setAccentSaved] = useState(false)
 
   // Fetch current profile fields on mount
   useEffect(() => {
@@ -33,7 +37,29 @@ export default function SettingsPage() {
         if (typeof data.phone === 'string') setPhone(data.phone)
       })
       .catch(() => {})
+    fetch('/api/user/accent')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.key) setAccent(d.key) })
+      .catch(() => {})
   }, [])
+
+  async function handleAccentChange(key: string) {
+    // ⚠ Applied to the document BEFORE the request settles. The whole point of
+    // choosing a colour is seeing it; a swatch that only takes effect after a
+    // round trip reads as a control that did not work.
+    setAccent(key)
+    applyAccentNow(key)
+    setAccentSaved(false)
+    const res = await fetch('/api/user/accent', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+    })
+    if (res.ok) {
+      setAccentSaved(true)
+      setTimeout(() => setAccentSaved(false), 2000)
+    }
+  }
 
   async function handleSavePhone() {
     setSavingPhone(true)
@@ -241,6 +267,45 @@ export default function SettingsPage() {
                 <span className="text-xs text-green-600">Saved</span>
               )}
             </div>
+          </div>
+
+          {/* Platform accent — CENTRAL Stage 2h item 7.
+              A fixed palette, not a colour picker: free hex entry produces
+              unreadable and non-compliant combinations, and every entry here has
+              its text colours hand-set rather than derived. */}
+          <div className="mt-6">
+            <span className="block text-sm font-medium mb-1.5">Platform accent</span>
+            <p className="text-xs text-muted-foreground mb-2">
+              The highlight colour used across Central. Yours alone — it changes nothing
+              for anyone else.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ACCENT_PALETTE.map(a => (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={() => handleAccentChange(a.key)}
+                  aria-pressed={accent === a.key}
+                  className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+                    accent === a.key
+                      ? 'border-2 border-foreground font-semibold'
+                      : 'border border-border font-normal text-muted-foreground hover:border-foreground/40'
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className="size-4 shrink-0 rounded-full border border-black/10"
+                    style={{ background: a.base }}
+                  />
+                  {/* ⚠ The NAME, not just the swatch — item 6. A row of coloured
+                      circles is a control a colour-blind member cannot read at
+                      all, and this is the one screen where that would be absurd.
+                      The tick and the heavier border say which is selected. */}
+                  {accent === a.key ? '✓ ' : ''}{a.label}
+                </button>
+              ))}
+            </div>
+            {accentSaved && <p className="mt-2 text-xs text-green-600">Saved</p>}
           </div>
 
           {/* Phone number — CENTRAL Stage 2d.

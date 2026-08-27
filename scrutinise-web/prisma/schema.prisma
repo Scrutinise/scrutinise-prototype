@@ -449,6 +449,12 @@ model User {
   /// TrainingMatch. Never rendered in member lists, search, exports, packs or
   /// admin panels; check:central asserts that.
   phone                     String?
+  /// CENTRAL Stage 2h item 7 — the PALETTE KEY of this member's chosen platform
+  /// accent (see lib/accent.ts), or null for the platform default.
+  /// ⚠ A key, deliberately not a hex value: a hex column is a free-hex feature
+  /// with extra steps, and free hex is what produces unreadable and
+  /// non-compliant colour combinations.
+  accentColour              String?
   // Role
   role                      UserRole            @default(CITIZEN)
   // Status
