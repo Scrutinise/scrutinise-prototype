@@ -16,6 +16,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import BuildIdeaClient, { type RecentIdea } from './BuildIdeaClient'
 import { surfaceContext } from '@/lib/lex/surfaces'
+import { blankElicitationState } from '@/lib/lex/elicitation'
 
 interface Props {
   /**
@@ -205,6 +206,23 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   // 25-G §2 — what the OTHER surface holds, so this screen can offer it specifically.
   const surface = initialIdeaId ? await surfaceContext(initialIdeaId, 'build') : null
 
+  // ══ 25-I §1 — THE FIRST QUESTION, DRAWN WITHOUT CREATING ANYTHING ══════════
+  //
+  // ⚠⚠ LOADING THIS PAGE USED TO CREATE AN IDEA. The client had nothing to render the
+  // first question from, so it POSTed `/api/ideas` on mount purely to have a row — and
+  // Charlie's list filled with drafts he never started. The one place he goes to find his
+  // real work became unreliable, which is a worse fault than the litter.
+  //
+  // ⚠ 25-E's resume made this *less* visible without fixing it. A returning user with an
+  // unfinished elicitation reopens that row, so the minting only happens to someone whose
+  // rows are all empty or all built — which is to say, it kept happening and stopped being
+  // obvious. Resume is not creation control.
+  //
+  // The blank state is computed here and passed down, so the client can draw the question
+  // with no row behind it. The idea is created on the FIRST ANSWER (see `ensureIdea` in
+  // BuildIdeaClient), which is the moment a person actually starts one.
+  const blankState = !initialIdeaId && dbUser ? await blankElicitationState(dbUser.id) : null
+
   // ── 25-G §3 (A3) — the first-idea tour and the greeting by preferred name ──
   //
   // ⚠ THE SAME TEST THE OLD DOOR USES — `ideaCount === 0` — and not "has no elicitation".
@@ -222,6 +240,7 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
       surface={surface}
       isFirstIdea={ideaCount === 0}
       displayName={displayName}
+      blankState={blankState}
     />
   )
 }

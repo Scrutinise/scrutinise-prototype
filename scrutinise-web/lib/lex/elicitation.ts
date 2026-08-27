@@ -190,9 +190,67 @@ function activeSteps(row: { profileSkipped: boolean }) {
 export async function elicitationState(ideaId: string, userId: string): Promise<ElicitationState> {
   const base = await ensureRow(ideaId, userId)
   const messages = await readTranscript(ideaId)
-  const row = hydrate(base, messages)
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { aboutYouNarrative: true } })
+  const hasBuild = (await prisma.ideaBuild.count({ where: { ideaId } })) > 0
+  return projectState(ideaId, base, messages, user?.aboutYouNarrative ?? null, hasBuild)
+}
+
+/**
+ * ⚠⚠ 25-I §1 — THE STATE OF AN IDEA THAT DOES NOT EXIST YET.
+ *
+ * Charlie found that **loading the page created an idea in his account**. Nobody asked for
+ * one. His list filled with things he did not make, and the one place he goes to find his
+ * real work stopped being trustworthy.
+ *
+ * The cause was that the client had no way to draw the first question without a row to draw
+ * it from, so it minted one on mount to have something to render. The answer is not to mint
+ * it later — it is to be able to render the first question **from nothing**, so an idea is
+ * created when a person *starts* one.
+ *
+ * ⚠ IT IS THE SAME PROJECTION, DELIBERATELY. A hand-written "empty view" beside the real one
+ * is two shapes for one screen, and they drift — which is exactly the defect 25-H fixed on
+ * page one, where two writers for one field came to disagree. This runs `projectState` over
+ * a blank row, so the pre-creation view and the post-creation view cannot differ.
+ *
+ * ⚠ `ideaId: ''` IS THE SIGNAL, and the client switches on it. An empty string rather than a
+ * plausible-looking id, because a fake id is something a caller can accidentally use.
+ *
+ * Nothing is written. No row, no transcript, no idea.
+ */
+export async function blankElicitationState(userId: string): Promise<ElicitationState> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId }, select: { aboutYouNarrative: true },
+  })
   const aboutYou = user?.aboutYouNarrative ?? null
+  const now = new Date()
+  // ⚠ TYPED AS `Row`, NOT CAST. If the schema gains a column, this stops compiling — which
+  // is the point: a blank state that silently lacks a field the projection reads would
+  // render a first question subtly unlike the real one.
+  const blank: Row = {
+    id: '', ideaId: '',
+    problem: null, problemPresses: 0, problemGateFired: false,
+    goalKind: null, goalDetail: null, ruledOut: null,
+    ownKnowledge: null, ownKnowledgeProvenance: 'USER_TESTIMONY',
+    readingUrl: null, readingFileName: null, readingNote: null, readingStatus: 'NOT_READ',
+    // §1a — a returning user never sees the profile step, and that must be true of the
+    // first question they are shown, not just of the row once it exists.
+    profileSkipped: !!aboutYou?.trim(),
+    understanding: null, corrections: 0, status: 'IN_PROGRESS', confirmedAt: null,
+    createdAt: now, updatedAt: now,
+  }
+  // The opening ask is what `ensureRow` writes to the transcript on creation. Showing it
+  // here — unsaved — is what lets the user read the question before anything is stored.
+  return projectState('', blank, [lexBubble(OPENING_ASK, ELICITATION_STAGE, 'elicitation:problem')], aboutYou, false)
+}
+
+function projectState(
+  ideaId: string,
+  base: Row,
+  messages: TranscriptMessage[],
+  aboutYou: string | null,
+  hasBuild: boolean,
+): ElicitationState {
+  const row = hydrate(base, messages)
 
   const steps: ElicitationStepView[] = activeSteps(row).map((s) => ({
     key: s.key,
@@ -209,7 +267,6 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
   }))
 
   const current = steps.find((s) => !s.done)?.key ?? null
-  const hasBuild = (await prisma.ideaBuild.count({ where: { ideaId } })) > 0
 
   // ⚠ 25-H §3 — HAS AN ANSWER MOVED SINCE THE READING WAS AGREED?
   //
@@ -226,6 +283,7 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
   // event and a user should not have to join them up.
   const staleUnderstanding =
     row.status === 'CONFIRMED' && !!base.confirmedAt && base.updatedAt > base.confirmedAt
+
 
   // 25-E §1 — one value, derived once, here. See `ElicitationPhase`.
   //

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import CreateIdeaClient from './CreateIdeaClient'
 import { surfaceContext } from '@/lib/lex/surfaces'
+import { newIdeaDoor, doorPath } from '@/lib/lex/new-idea-door'
 
 function getTimeOfDay(utcHour: number): string {
   if (utcHour >= 5 && utcHour < 12) return 'morning'
@@ -36,6 +37,27 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   }
 
   const params = await searchParams
+
+  // ══ 25-I §1 — THE OLD DOOR MINTS TOO, AND THE SWEEP WOULD REFILL WITHOUT THIS ══
+  //
+  // `CreateIdeaClient`'s boot has the identical defect the build door had: no `ideaId`
+  // means POST `/api/ideas` on mount, purely so `/state` has something to read. Fixing
+  // only the flipped door would leave a second tap running into the bucket we are emptying.
+  //
+  // ⚠ THIS SURFACE IS NO LONGER A CREATION ENTRY. Since 25-G's cutover it is the PROPOSAL,
+  // always reached with an `ideaId` — from the build hand-off, the surface switch, or a
+  // link. Arriving bare is a stale entry point, so it goes to whatever the current door is
+  // rather than manufacturing an idea to justify itself.
+  //
+  // ⚠ GUARDED AGAINST A LOOP, WHICH IS WHY IT TESTS THE RESOLVED PATH AND NOT THE FLAG.
+  // If the door is ever flipped back to `create`, `doorPath()` returns `/ideas/create` and
+  // redirecting here would bounce for ever. In that case this page IS the creation entry
+  // and minting on boot is its correct behaviour — so the redirect only fires when the door
+  // points somewhere else.
+  if (!params.ideaId) {
+    const door = doorPath(await newIdeaDoor())
+    if (door !== '/ideas/create') redirect(door)
+  }
 
   // Resume an existing idea session if ideaId param provided
   let initialIdeaId: string | undefined

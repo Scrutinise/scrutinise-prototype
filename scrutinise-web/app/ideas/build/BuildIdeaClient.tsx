@@ -206,7 +206,7 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
 
 export default function BuildIdeaClient(
   { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0, surface = null,
-    isFirstIdea = false, displayName = null }: {
+    isFirstIdea = false, displayName = null, blankState = null }: {
     initialIdeaId?: string
     resumed?: boolean
     /** TEMPORARY — the stopgap previous-ideas list. See `RecentIdea`. */
@@ -218,9 +218,23 @@ export default function BuildIdeaClient(
     isFirstIdea?: boolean
     /** A3 — how they want to be addressed. Falls back to nothing rather than to "there". */
     displayName?: string | null
+    /**
+     * 25-I §1 — the first question, with no idea behind it. `ideaId: ''`.
+     * Present only when there is nothing to resume; see `blankElicitationState`.
+     */
+    blankState?: ElicitationState | null
   },
 ) {
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
+  /**
+   * ⚠ 25-I §1 — THE ID, READABLE SYNCHRONOUSLY.
+   *
+   * `ensureIdea` creates the idea inside an event handler and the very next line needs the
+   * id to POST the answer. `setIdeaId` does not update the closed-over `ideaId` until the
+   * next render, so a state read there would be `null` and the first answer would be
+   * dropped — the exact failure this section exists to remove, wearing different clothes.
+   */
+  const ideaIdRef = useRef<string | null>(initialIdeaId ?? null)
   const [elicit, setElicit] = useState<ElicitationState | null>(null)
   const [build, setBuild] = useState<BuildState | null>(null)
   const [booting, setBooting] = useState(true)
@@ -282,15 +296,21 @@ export default function BuildIdeaClient(
       // to every console line below.
       const cid = Math.random().toString(36).slice(2, 8).toUpperCase()
       try {
-        let id = ideaId
+        const id = ideaId
+        // ══ 25-I §1 — NOTHING IS CREATED BY ARRIVING ═══════════════════════════
+        //
+        // ⚠⚠ THIS BLOCK USED TO POST `/api/ideas` AND MINT A DRAFT ON EVERY VISIT that had
+        // nothing to resume. It was not doing it to record intent — it was doing it because
+        // the screen had no way to draw the first question without a row. Charlie's idea
+        // list filled with drafts he never started, and the place he goes to find his real
+        // work stopped being trustworthy.
+        //
+        // The server now hands us the first question with no row behind it
+        // (`blankElicitationState`), so we render and wait. The idea is created by
+        // `ensureIdea` on the first answer — when a person actually starts one.
         if (!id) {
-          const created = await getJson('/api/ideas', cid, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: 'Untitled idea' }),
-          })
-          id = created.id as string
-          setIdeaId(id)
+          if (blankState) setElicit(blankState)
+          return
         }
         // ⚠⚠ 25-E §2 — PUT THE ID IN THE URL. THE SINGLE MOST IMPORTANT LINE IN THIS FILE.
         //
@@ -512,11 +532,50 @@ export default function BuildIdeaClient(
   }, [build, ideaId, refresh])
 
   // ── Actions ────────────────────────────────────────────────────────────────
+  /**
+   * ⚠⚠ 25-I §1 — THE IDEA IS CREATED HERE, ON THE FIRST ANSWER, AND NOWHERE ELSE.
+   *
+   * §1: *"an idea is created when a person **starts** one, not when a page loads."* Every
+   * action on this screen goes through `post`, and `post` goes through here — so there is
+   * exactly one place an idea can come into existence, and it is downstream of a user
+   * doing something deliberate.
+   *
+   * ⚠ THE URL IS WRITTEN THE MOMENT THE ID EXISTS, exactly as 25-E's boot did it. That line
+   * is what stops a refresh orphaning the answer they just gave; moving creation later must
+   * not lose it. `replaceState`, not `pushState` — the id is not a navigation they made.
+   *
+   * ⚠ THE REF, NOT THE STATE. `setIdeaId` does not update the closed-over `ideaId` until the
+   * next render, and the caller needs the id on the very next line.
+   */
+  const ensureIdea = useCallback(async (): Promise<string | null> => {
+    if (ideaIdRef.current) return ideaIdRef.current
+    const res = await fetch('/api/ideas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Untitled idea' }),
+    })
+    if (!res.ok) return null
+    const created = await res.json().catch(() => null)
+    const id = created?.id as string | undefined
+    if (!id) return null
+    ideaIdRef.current = id
+    setIdeaId(id)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('ideaId') !== id) {
+        url.searchParams.set('ideaId', id)
+        window.history.replaceState(null, '', url.toString())
+      }
+    }
+    return id
+  }, [])
+
   const post = useCallback(async (path: string, body: unknown): Promise<Record<string, unknown> | null> => {
-    if (!ideaId) return null
+    const id = await ensureIdea()
+    if (!id) { setError('Could not start an idea — please try again.'); return null }
     setBusy(true); setError(null)
     try {
-      const res = await fetch(`/api/ideas/${ideaId}${path}`, {
+      const res = await fetch(`/api/ideas/${id}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -533,7 +592,7 @@ export default function BuildIdeaClient(
     } finally {
       setBusy(false)
     }
-  }, [ideaId])
+  }, [ensureIdea])
 
   const answer = useCallback(async (extra: Record<string, unknown> = {}) => {
     const step = elicit?.currentStep
@@ -886,10 +945,26 @@ export default function BuildIdeaClient(
                 event; a user should not have to join them up. */}
             {elicit.staleUnderstanding && (
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">
+                {/* ⚠⚠ 25-I — THE COST HALF OF THIS SENTENCE WAS ASSERTED, NOT CHECKED, AND
+                    IT WAS WRONG ON THE LIVE SITE.
+
+                    25-H coupled two facts here on the reasoning that they are one event.
+                    They are not: they have DIFFERENT CONDITIONS. `staleUnderstanding` is
+                    `updatedAt > confirmedAt` — an answer moved after the reading was agreed.
+                    `reuseSourceFor` refuses on `updatedAt > previousBuild.startedAt` — an
+                    answer moved after the last build read it. Charlie edited an answer after
+                    confirming but BEFORE the build ran, so the reading really is stale AND
+                    reuse is still perfectly available. The banner told him a re-run would
+                    cost three times what it will.
+
+                    So the price is now read from the build state, which is the thing that
+                    decides it, rather than inferred from a neighbouring flag. */}
                 <p className="text-sm text-amber-900">
-                  You’ve changed an answer since I read it back to you. The reading you agreed to is
-                  now out of date, and the next build will search the corpus again rather than reusing
-                  what it found.
+                  You’ve changed an answer since I read it back to you, so the reading you agreed to
+                  is now out of date.
+                  {build?.reuse
+                    ? ' The research I already gathered still stands, so a re-run can reuse it.'
+                    : ' The next build will search the corpus again rather than reusing what it found.'}
                 </p>
                 <button
                   onClick={() => void confirm()}
