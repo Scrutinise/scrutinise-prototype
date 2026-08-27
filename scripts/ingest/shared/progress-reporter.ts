@@ -201,6 +201,109 @@ async function queryCorpusTargets(): Promise<CorpusTarget[]> {
   return res.rows
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// CENSUS C1 PART C — THE EMAIL READS `corpus_census`, NEVER `corpus_targets.est_sections`
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// `est_sections` counts SECTIONS and was, for 41 of 71 live collections on 27 Aug 2026, a copy of
+// the collection's own compiled row count. `corpus_census` counts UNITS — the thing the publisher
+// counts and we can match one for one — and every MEASURED row in it carries a walk artefact with
+// a date. The two columns are not interchangeable and are never printed in the same column.
+//
+// `est_sections` still appears in this email, ONCE, in the projection line, clearly labelled as a
+// section estimate. It no longer decides whether anything is complete.
+
+export type CensusState =
+  | 'MEASURED'      // publisher walk on disk, dated — the only state that may print a % as fact
+  | 'CLAIMED'       // a denominator exists but describes a different or unproven universe
+  | 'DECLARED'      // no publisher index; counted against a scope we wrote down
+  | 'UNMEASURED'    // held count is real, the fraction it represents is unknown
+  | 'NOT_STARTED'
+  | 'BLOCKED'
+  | 'RETIRED'
+
+export interface CorpusCensusRow {
+  corpus_key: string
+  state: CensusState
+  unit: string
+  method: string
+  walked_at: Date | null
+  published_units: number | null
+  held_units: number | null
+  hollow_units: number
+  absent_total: number
+  notes: string | null
+  walk_artifact_path: string | null
+}
+
+export async function queryCorpusCensus(): Promise<CorpusCensusRow[]> {
+  try {
+    const res = await getNeonPool().query<CorpusCensusRow>(`
+      SELECT corpus_key, state, unit, method, walked_at, published_units, held_units,
+             hollow_units, absent_total, notes, walk_artifact_path
+        FROM corpus_census
+       ORDER BY state, coalesce(held_units,0) DESC, corpus_key
+    `)
+    return res.rows
+  } catch {
+    // ⚠ The table not existing is a real state and must READ as one. Returning [] here makes the
+    // renderer print "THE CENSUS TABLE IS EMPTY" rather than silently falling back to the
+    // est_sections arithmetic this sprint removed — a silent fallback would restore the defect.
+    return []
+  }
+}
+
+/**
+ * ⚠⚠ THE ONE PLACE `100% complete` MAY BE PRODUCED, AND THE ONLY CONDITIONS UNDER WHICH IT MAY.
+ *
+ * The string is forbidden anywhere else in this file. It prints only when the state is MEASURED
+ * and held sits inside `published .. published × 1.02`. Held ABOVE 102% is not completeness, it is
+ * a denominator that does not describe what we hold — `ots-reports` measured 497 held against a
+ * publisher universe of 222 on 27 Aug — and prints a warning, never a tick.
+ *
+ * Everything else prints its two numbers and its state word.
+ */
+export function coverageLine(r: CorpusCensusRow): string {
+  const held = r.held_units ?? 0
+  const pub = r.published_units
+
+  if (r.state === 'RETIRED')     return `RETIRED — rows removed; not part of the searchable corpus`
+  if (r.state === 'BLOCKED')     return `⛔ BLOCKED — not walked, not fetched`
+  if (r.state === 'NOT_STARTED') return `○ NOT STARTED — 0 units held${pub != null ? ` of ${pub.toLocaleString()} published` : ''}`
+
+  if (r.state === 'UNMEASURED' || pub == null) {
+    // No percentage. Not "probably fine". The held count, and the word.
+    return `${held.toLocaleString()} ${r.unit}(s) held   [UNMEASURED — no publisher denominator]`
+  }
+
+  const pct = pub > 0 ? (100 * held) / pub : 0
+  const net = held - (r.hollow_units ?? 0)
+  const netPart = r.hollow_units > 0
+    ? `; net of ${r.hollow_units.toLocaleString()} hollow = ${net.toLocaleString()} (${pub > 0 ? ((100 * net) / pub).toFixed(1) : '0.0'}%)`
+    : ''
+
+  if (held > pub * 1.02) {
+    return `${held.toLocaleString()} held / ${pub.toLocaleString()} published   ` +
+           `⚠ denominator suspect (${pct.toFixed(0)}% of published)${netPart}`
+  }
+  if (r.state === 'CLAIMED') {
+    return `${held.toLocaleString()} held / ${pub.toLocaleString()} claimed = ${pct.toFixed(1)}%   [CLAIMED — provenance unproven]${netPart}`
+  }
+  if (r.state === 'DECLARED') {
+    return `${held.toLocaleString()} held / ${pub.toLocaleString()} declared = ${pct.toFixed(1)}%   [DECLARED — our scope, not the publisher's]${netPart}`
+  }
+  // MEASURED
+  const complete = held >= pub && held <= pub * 1.02 && (r.hollow_units ?? 0) === 0
+  // ⚠ A shortfall that rounds to 100.0% must not READ as complete. `pwdata-lordswrans` is 4,681 of
+  // 4,682 — one sitting day short, and at one decimal place that prints "100.0%" with no tick,
+  // which is exactly the ambiguity this whole sprint is about. When any unit is missing, the count
+  // of missing units is printed in words beside the percentage.
+  const short = pub - held
+  const shortPart = short > 0 ? `   (${short.toLocaleString()} ${r.unit}${short === 1 ? '' : 's'} not held)` : ''
+  const tail = complete ? '   ✓ 100% complete' : ''
+  return `${held.toLocaleString()} held / ${pub.toLocaleString()} published = ${pct.toFixed(1)}%${shortPart}${netPart}${tail}`
+}
+
 // ── corpus_snapshots write ────────────────────────────────────────────────────
 
 export interface CorpusSnapshotEntry {
@@ -550,6 +653,10 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
   let targets: CorpusTarget[] = []
   try { targets = await queryCorpusTargets() } catch { /* non-fatal */ }
 
+  // CENSUS C1 §C1 — the coverage source of record. An empty array is a state the renderer prints,
+  // not a condition it papers over with est_sections.
+  const census = await queryCorpusCensus()
+
   // Per-corpus queue breakdown
   interface QueueCorpusRow { corpus: string; status: string; n: number }
   let queueByCorpus: QueueCorpusRow[] = []
@@ -647,7 +754,10 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
   const breakerWarn = breakerIssues.length > 0 ? ` | 🔴 ${breakerIssues.length} breaker` : ''
   const wordsSubj = totalWordsB != null ? ` | ${totalWordsB}B words` : ''
   const periodSubjLabel = periodHours >= 24 ? 'today' : `last ${periodHours}h`
-  const subject = `Ingest ${bstTime} | ${deltaStr} ${periodSubjLabel} | ${grandTotalCompiled.toLocaleString()} sections${wordsSubj}${dbWarn}${breakerWarn}`
+  // ⚠ The subject carries the SEARCHABLE number, not searchable + legacy. The subject line is the
+  // only part of this email that always gets read, and it was quoting a total that includes
+  // 914,274 rows runSearch() cannot return.
+  const subject = `Ingest ${bstTime} | ${deltaStr} ${periodSubjLabel} | ${newPipelineCompiled.toLocaleString()} searchable sections${wordsSubj}${dbWarn}${breakerWarn}`
 
   const SEP = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
   const parts: string[] = [SEP, `SCRUTINISE INGEST — ${bst} BST`, SEP]
@@ -689,13 +799,17 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
   // ── TOTAL CORPUS ──────────────────────────────────────────────────────────
   // V24: two exact hard numbers up top (sections + words). No headline % — see
   // the comment at the completion-count computation above for why.
+  // ⚠⚠ CENSUS C1 §C4 — THE HEADLINE IS THE SEARCHABLE CORPUS. The legacy `LegislationSection`
+  // table is NOT searchable (runSearch() does not read it) and retired collections have had their
+  // rows removed, so adding either into the headline overstates what a user can be given. They are
+  // printed beneath, labelled, and never summed in. Until 27 Aug the headline added the legacy
+  // 914,274 straight in, which is how "19.19M" was quoted for a corpus that could serve 18.2M.
   parts.push('', SEP, 'TOTAL CORPUS', SEP)
-  parts.push(`  ${grandTotalCompiled.toLocaleString()} sections ingested   (exact)`)
+  parts.push(`  SEARCHABLE: ${newPipelineCompiled.toLocaleString()} sections   (exact — compiled corpus_sections, what runSearch() can return)`)
   if (totalWords != null) parts.push(`  ${totalWordsB}B words   (${totalWords.toLocaleString()}, exact at ingest)`)
-  // V18: show the breakdown — this total is legacy LegislationSection + compiled-only
-  // corpus_sections, so it will never match a raw count(*) of corpus_sections
-  // (which also holds unavailable/failed classification rows).
-  parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
+  parts.push(`  beneath it, and NOT added in:`)
+  parts.push(`    ${neonCount.toLocaleString()} legacy LegislationSection rows — a second copy of legislation the search path does not read`)
+  parts.push(`    (legacy + searchable = ${grandTotalCompiled.toLocaleString()}, a number no user can be served and which this email no longer leads with)`)
 
   // ── C3 LANE B2/B4 — USABLE TEXT, which is not the same number as sections ingested ────────
   // ⚠ A dot leader is an ingested section and NOT usable text. It has been counted in the
@@ -707,9 +821,12 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
     parts.push(`  ⚠ USABLE TEXT: UNMEASURED — nobody passed the dot-leader count, so this total still`)
     parts.push(`    includes sections whose entire text is "Article 31 . . . .". It is NOT a usable-text figure.`)
   } else {
-    const usable = grandTotalCompiled - hollowSections
-    parts.push(`  USABLE TEXT: ${usable.toLocaleString()}   (${grandTotalCompiled.toLocaleString()} ingested − ${hollowSections.toLocaleString()} whole-body dot leaders,`)
-    parts.push(`    ${((100 * hollowSections) / grandTotalCompiled).toFixed(2)}% — a repealed provision rendered as punctuation. Excluded from retrieval too, not just labelled.)`)
+    // ⚠ Subtracted from the SEARCHABLE total, not from searchable+legacy. The dot leaders are
+    // corpus_sections rows; netting them off a total that also contains the legacy table mixes two
+    // populations and understates the percentage.
+    const usable = newPipelineCompiled - hollowSections
+    parts.push(`  USABLE TEXT: ${usable.toLocaleString()}   (${newPipelineCompiled.toLocaleString()} searchable − ${hollowSections.toLocaleString()} whole-body dot leaders,`)
+    parts.push(`    ${((100 * hollowSections) / newPipelineCompiled).toFixed(2)}% — a repealed provision rendered as punctuation. Excluded from retrieval too, not just labelled.)`)
     if (partiallyRepealedSections === 0) {
       parts.push(`    ⚠ PARTIALLY REPEALED: 0 recorded — the backfill has NOT run. A measured ~32,040 sections`)
       parts.push(`      [95% CI 25,956–40,088] carry live law with removed subsections, and until b3-backfill-partial.ts`)
@@ -721,16 +838,40 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
     }
   }
   parts.push('')
-  parts.push(`  COMPLETION  (${liveTargets.length} corpora, excl. retired):`)
-  parts.push(`    ▶ in progress: ${inProgressCount}   ○ not started: ${notStartedCount}   ⛔ blocked: ${blockedCount}   unsized: ${unsizedCount}`)
-  parts.push('')
-  parts.push(`  ⚠ THERE IS NO "COMPLETE" COUNT ANY MORE, AND THAT IS THE POINT.`)
-  parts.push(`    ${selfRefCount} of ${liveTargets.length} corpora have a section target that is at or below their own compiled count —`)
-  parts.push(`    it was set FROM that count when the queue drained, so it can only ever agree with it. Those`)
-  parts.push(`    used to print "100% complete". They now print UNMEASURED, because that is what they are.`)
-  parts.push(`    Only ${Object.keys(SOURCE_WALK).length} collections have been walked against their publisher's own list (walk date ${SOURCE_WALK_DATE}):`)
-  for (const k of Object.keys(SOURCE_WALK)) parts.push(`      ✓ ${k.padEnd(24)} ${instrumentLine(k)}`)
-  parts.push(`    Every other collection's instrument coverage is UNKNOWN — not 100%, not "probably fine".`)
+  // ── CENSUS C1 §C2 — seven states, counted from `corpus_census`, not from est_sections ──────
+  if (census.length === 0) {
+    parts.push(`  ⚠⚠ COVERAGE: THE CENSUS TABLE IS EMPTY OR ABSENT.`)
+    parts.push(`     No collection can report coverage until Part B's walkers have run. This email will`)
+    parts.push(`     NOT fall back to corpus_targets.est_sections — that denominator was the collection's`)
+    parts.push(`     own row count for 41 of 71 live collections, and reinstating it here would restore`)
+    parts.push(`     the "100% complete" the census was built to end.`)
+  } else {
+    const byState = new Map<CensusState, number>()
+    for (const c of census) byState.set(c.state, (byState.get(c.state) ?? 0) + 1)
+    const n = (s: CensusState) => byState.get(s) ?? 0
+    const walkable = census.filter(c => c.state === 'MEASURED' || c.state === 'DECLARED')
+    const suspect = walkable.filter(c => (c.held_units ?? 0) > (c.published_units ?? 0) * 1.02)
+    const complete = walkable.filter(c =>
+      c.published_units != null && (c.held_units ?? 0) >= c.published_units &&
+      (c.held_units ?? 0) <= c.published_units * 1.02 && (c.hollow_units ?? 0) === 0)
+
+    parts.push(`  COVERAGE  (${census.length} collections in the census):`)
+    parts.push(`    ✓ MEASURED: ${n('MEASURED')}   ~ CLAIMED: ${n('CLAIMED')}   § DECLARED: ${n('DECLARED')}   ` +
+               `? UNMEASURED: ${n('UNMEASURED')}`)
+    parts.push(`    ○ NOT STARTED: ${n('NOT_STARTED')}   ⛔ BLOCKED: ${n('BLOCKED')}   ✗ RETIRED: ${n('RETIRED')}`)
+    parts.push('')
+    parts.push(`    ${complete.length} collection(s) are complete against a publisher-walked denominator.`)
+    parts.push(`    ${n('UNMEASURED')} print no percentage at all, because nobody has found an index to walk.`)
+    if (suspect.length) {
+      parts.push(`    ⚠ ${suspect.length} hold MORE than the publisher lists (>102%) — the denominator is suspect,`)
+      parts.push(`      not the coverage: ${suspect.map(s => s.corpus_key).join(', ')}`)
+    }
+    parts.push('')
+    parts.push(`  ⚠ A PERCENTAGE HERE MEANS A PUBLISHER WAS COUNTED, NOT THAT A QUEUE DRAINED.`)
+    parts.push(`    Until 27 Aug this email printed "100% complete" for 62 of 77 collections, on a`)
+    parts.push(`    denominator copied from the numerator. ${selfRefCount} of ${liveTargets.length} corpus_targets rows still carry`)
+    parts.push(`    such a target; it is now read for nothing but the projection line below.`)
+  }
   // Labelled PROJECTION, never a percentage that can exceed 100 (Charlie-directed V24).
   parts.push(`  Eventual total ≈ ${grandTotalEstimated.toLocaleString()} est. when the open corpora land — a projection, NOT a % (numerators exact, denominators still estimates).`)
   parts.push(`  (per-corpus detail below. On the SECTIONS line: ~ = our estimate ·`)
@@ -829,40 +970,58 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
   }
 
   // ── ALL CORPORA STATUS ────────────────────────────────────────────────────
+  //
+  // ⚠ CENSUS C1 §C5 — SECTIONS AND UNITS NEVER SHARE A COLUMN. The first line is what we fetched
+  // (sections, ours). The second is coverage in the publisher's units, from `corpus_census`. They
+  // are different quantities and the old email printed them as if one implied the other.
   parts.push('', SEP, 'ALL CORPORA STATUS', SEP)
-  for (const target of targets.filter(t => !t.retired)) {
-    const compiled = corpusCounts[target.corpus_key]?.compiled ?? 0
-    const est = target.est_sections
-    const isActive = activeCorpusKeys.has(target.corpus_key)
+  parts.push(`  state       collection                              sections held (ours)`)
+  parts.push(`                                                      coverage in the publisher's units`)
+  parts.push('')
 
-    if (target.blocked) {
-      const reason = target.blocked_reason ? `: ${target.blocked_reason}` : ''
-      parts.push(`  ⛔ ${target.corpus_key.padEnd(38)} blocked${reason}`)
-      continue
-    }
-
-    // ── TWO NUMBERS, BOTH LABELLED. Sections first (what we fetched), instruments second (what
-    //    the publisher publishes) — and never one without saying which it is.
-    const prov = denominatorProvenance(est, compiled)
-    const instruments = instrumentLine(target.corpus_key)
-    const activeFlag = isActive ? '  — active' : ''
-
-    let sectionsPart: string
-    if (prov === 'self-referential') {
-      // ⚠ NOT "100% complete". The target was set from this count, so it can only ever agree
-      // with it. Coverage here is UNMEASURED, which is a different statement from complete.
-      sectionsPart = `${compiled.toLocaleString().padStart(9)} sections   [⚠ UNMEASURED — the target was set from this count, not from the source]`
-    } else if (prov === 'none') {
-      sectionsPart = `${compiled.toLocaleString().padStart(9)} sections   [? no denominator]`
-    } else if (compiled === 0) {
-      sectionsPart = `        0 / ${provenanceMark(prov)}${(est ?? 0).toLocaleString()} sections   — not started`
-    } else {
-      const pct = est != null ? `${((compiled / est) * 100).toFixed(1)}%` : '?%'
-      sectionsPart = `${compiled.toLocaleString().padStart(9)} / ${provenanceMark(prov)}${(est ?? 0).toLocaleString()} sections   [${pct} of a ${prov} denominator]`
-    }
-    parts.push(`  ${compiled === 0 ? '○ ' : '▶ '} ${target.corpus_key.padEnd(38)} ${sectionsPart}${activeFlag}`)
-    parts.push(`     ${' '.repeat(38)} instruments: ${instruments ?? 'NOT WALKED — no publisher enumeration exists for this source, so coverage is unknown'}`)
+  const censusByKey = new Map(census.map(c => [c.corpus_key, c]))
+  const STATE_MARK: Record<CensusState, string> = {
+    MEASURED: '✓', CLAIMED: '~', DECLARED: '§', UNMEASURED: '?',
+    NOT_STARTED: '○', BLOCKED: '⛔', RETIRED: '✗',
   }
+
+  // Order: MEASURED first (they carry evidence), then the rest by size, retired last. A
+  // collection with no census row is printed too — its absence from the census is itself news.
+  const RANK: Record<CensusState, number> = {
+    MEASURED: 0, DECLARED: 1, CLAIMED: 2, UNMEASURED: 3, NOT_STARTED: 4, BLOCKED: 5, RETIRED: 6,
+  }
+  const keys = [...new Set([...census.map(c => c.corpus_key), ...targets.map(t => t.corpus_key)])]
+  keys.sort((a, b) => {
+    const ca = censusByKey.get(a), cb = censusByKey.get(b)
+    const ra = ca ? RANK[ca.state] : 3, rb = cb ? RANK[cb.state] : 3
+    if (ra !== rb) return ra - rb
+    return (corpusCounts[b]?.compiled ?? 0) - (corpusCounts[a]?.compiled ?? 0)
+  })
+
+  for (const key of keys) {
+    const c = censusByKey.get(key)
+    const compiled = corpusCounts[key]?.compiled ?? 0
+    if (c?.state === 'RETIRED' && compiled === 0) continue          // listed in the retired block below
+    const mark = c ? STATE_MARK[c.state] : '!'
+    const activeFlag = activeCorpusKeys.has(key) ? '  — active' : ''
+    parts.push(`  ${mark} ${key.padEnd(38)} ${compiled.toLocaleString().padStart(11)} sections${activeFlag}`)
+    parts.push(`     ${' '.repeat(38)} ${c ? coverageLine(c)
+      : '⚠ NO CENSUS ROW — this collection is not in corpus_census at all, so its coverage is not merely unknown, it is unasked'}`)
+  }
+
+  // ── RETIRED AND LEGACY, BENEATH THE HEADLINE AND NEVER ADDED INTO IT (§C4) ─────────────────
+  const retiredRows = census.filter(c => c.state === 'RETIRED')
+  if (retiredRows.length) {
+    parts.push('')
+    parts.push(`  ✗ RETIRED (${retiredRows.length}) — outside the searchable corpus, never added to the headline:`)
+    parts.push(`     ${retiredRows.map(r => r.corpus_key).join(' · ')}`)
+  }
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────
+  parts.push('', SEP)
+  parts.push(`  CENSUS C1 — coverage read from corpus_census (${census.length} rows), never from`)
+  parts.push(`  corpus_targets.est_sections. A percentage prints only where a publisher was walked.`)
+  parts.push(SEP)
 
   const body = parts.join('\n')
   return { subject, body, summary: `${grandTotalCompiled.toLocaleString()} sections, delta ${deltaStr}` }
