@@ -1297,6 +1297,96 @@ per-node seeding restored, the Untagged view inverted, and the orphan detector s
 ---
 
 
+## INGEST — THE CASE REFERENCE LAYER: results, and five predictions refuted (2026-08-27 16:28 UTC)
+
+Ran `docs/BRIEF_CASE_REFERENCE_LAYER.md`. Report: `docs/CASE_REFERENCE_LAYER_REPORT.md`.
+The predictions this scores were logged at 14:55 UTC, before any extraction ran.
+
+### What came out
+
+**74,894 judgments read in 25 minutes (49 documents/second) · 708,371 citation occurrences ·
+184,613 distinct citations · 49,666 of them pre-2003 · 641,617 citing-document links.**
+
+The most-cited authorities are what a lawyer would name: *ICS v West Bromwich* (798 citing
+documents), *Easyair* (771), *Johnson v Gore Wood* (587), *Arnold v Britton* (511), *Ladd v
+Marshall* (436), **Wednesbury (400)**. All ten probe authorities are present with clean names.
+
+**200 reference records built** — 54 held, 88 not held, **58 unknown**; 38 carry a description
+quoted from a source we hold and **162 say only that the case exists and is cited**, which is the
+design working rather than a shortfall.
+
+### ⚠⚠ Three defects found by READING THE OUTPUT, and one in the run itself
+
+- **The "malformed matches" list was not malformed — it was the family-law canon.** Nine of the ten
+  most-cited-but-never-named citations are reported as `Re B`, `Re H`, `In re E`. A `X v Y` pattern
+  cannot match a case name with no "v" in it, so **the entire family-law canon was arriving
+  unnamed** — and an unnamed record cannot be found by a user typing the name. Fixed, four
+  assertions added, extraction re-run: **unnamed among the top 200 fell from 10 to 1.**
+- **Every judgment cites itself.** Its header carries its own neutral citation; **176 of a random
+  200 (88.0%)** contain it. The correction is measured per record, not applied at 88% to all — and
+  it then fired on **54 of 54** held records.
+- **A description taken from the top of a document is not about the case.** The loader's dry run put
+  an Explanatory Note about remedial powers under *Anisminic*'s name. A description must now carry
+  the citation itself. Separately, `". "` is not a sentence boundary in legal text (`www.sec.gov`,
+  `Ex p.`, `No. 3`), so quotes were opening mid-word.
+- ⚠ **And the first full run lost itself.** It read 36,000 of 74,896 judgments, found 97,940 distinct
+  citations, and died on `memory allocation of 1785264 bytes failed` — with everything in a Map and
+  the JSONL written once at the end. **The exact defect that file's own header warned about.** It
+  also **exited with code 0**, because the Rust allocator aborts without setting a failure status,
+  so `--resume` would have produced an aggregate covering only the tail with nothing saying so. The
+  aggregate is now sharded every 6,000 documents and the merge refuses to write an aggregate smaller
+  than its largest input.
+
+### The before-and-after for CC-Search
+
+Before, re-measured live: **10/10 authorities not held, 3/10 returning a DIFFERENT same-name case.**
+After: **10/10 resolve to the right reference record** — as a sufficiency demonstration over the
+records, NOT the shipped ranking, and labelled that way everywhere. The three numbers in order:
+**6/10** (all-words matcher, pilot data) → **8/10** (overlap matcher, pilot data) → **10/10**
+(overlap matcher **unchanged**, full data). The last step came from the data, not from the matcher.
+**No search file was edited.**
+
+### BAILII, read rather than assumed
+
+*"BAILII has no objection to links from other websites to material on BAILII's website, and
+encourages this practice"* — so we link. They forbid bulk downloading and storing HTML versions of
+judgments — so we never fetch. A link is deep only where the citation determines the path (75 of
+200); the rest carry BAILII's search page and the citation. **No URL is invented and none was
+verified by fetching, because fetching is the thing their terms forbid.**
+
+### Predictions, scored
+
+| # | prediction | outcome |
+|---|---|---|
+| C1 | 90,000–160,000 distinct citations | ❌ **REFUTED — 184,613** |
+| C2 | 70–80% pre-2003 | ❌ **BADLY REFUTED — 26.9%** |
+| C3 | 35–50 minutes | ❌ **REFUTED — 25 minutes** |
+| C4 | all ten present; Donoghue and Wednesbury each >100 documents | ⚠ **HALF** — all ten present; Wednesbury 400, **Donoghue 67** |
+| C5 | malformed matches dominated by section references | ❌ **REFUTED — they were real `Re X` cases**, and this was the sprint's most useful finding |
+| C6 | `committees-reports` reported, not run | ✅ CORRECT |
+| C7 | BAILII permits linking, forbids automated access | ✅ CORRECT — and it was flagged in advance as the one row that was a guess |
+
+⚠⚠ **C2 is the one to learn from: the pilot was not a random sample and I treated it as one.** The
+400-document pilot said 76.1% pre-2003; the full corpus says 26.9%. The pilot took the first 400 ids
+in sort order — and a `tna-caselaw` id BEGINS WITH ITS CITATION, so id order is chronological. All
+400 were from 2003, the earliest year we hold, and a 2003 judgment cites almost nothing but older
+authority. **Sample by `md5(id)` on this corpus, never by `id`.**
+
+⚠ **C4's miss is real:** *Donoghue v Stevenson* is cited in **67** of 74,894 judgments, a sixth as
+often as *Wednesbury*. Foundational authority is assumed rather than cited, so a "most important
+cases" list built on citation count ranks the neighbourhood principle below a 2009 summary-judgment
+decision.
+
+### Not done, named
+
+`committees-reports` (344,773 sections, ~3 hours) was not scanned · `historic-hansard` and `pwdata-*`
+(~14M sections, ~5 days) were never going to be and are queried per case instead · parallel citations
+are not linked (*Arnold v Britton* is two records, `[2015] UKSC 36` and `[2015] AC 1619`) · the
+collection is **staged, not loaded** — and a row in the database is not a row a user can find until
+the index is rebuilt and the rebuild verified through the real gateway.
+
+---
+
 ## INGEST — CASE REFERENCE LAYER: the predictions, logged BEFORE the extraction runs (2026-08-27 14:55 UTC)
 
 Running `docs/BRIEF_CASE_REFERENCE_LAYER.md`. This entry exists before any full extraction, because a

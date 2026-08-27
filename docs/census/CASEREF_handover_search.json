@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-27T15:07:47.897Z",
+  "generated": "2026-08-27T16:21:25.294Z",
   "before": {
     "absent": 10,
     "decoy": 3,
@@ -7,7 +7,7 @@
     "source": "CASEREF_baseline_2026-08-27.json"
   },
   "afterSimulated": {
-    "correct": 8,
+    "correct": 10,
     "of": 10
   },
   "rows": [
@@ -22,7 +22,7 @@
         "citation": "[1969] 2 AC 147",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 1,
+        "citedBy": 85,
         "discussion": 1
       }
     },
@@ -37,7 +37,7 @@
         "citation": "[1993] AC 593",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 2,
+        "citedBy": 312,
         "discussion": 3
       }
     },
@@ -45,9 +45,16 @@
       "authority": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
       "citation": "[1948] 1 KB 223",
       "before": "ABSENT",
-      "afterTop": null,
-      "afterCorrect": false,
-      "wouldSay": null
+      "afterTop": "[1948] 1 KB 223",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+        "citation": "[1948] 1 KB 223",
+        "court": "Court of Appeal",
+        "held": "not-held",
+        "citedBy": 400,
+        "discussion": 4
+      }
     },
     {
       "authority": "Council of Civil Service Unions v Minister for the Civil Service (GCHQ)",
@@ -56,11 +63,11 @@
       "afterTop": "[1985] AC 374",
       "afterCorrect": true,
       "wouldSay": {
-        "name": "Council for Civil Service Unions v Minister for the Civil Service",
+        "name": "Council of Civil Service Unions v Minister for the Civil Service",
         "citation": "[1985] AC 374",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 1,
+        "citedBy": 188,
         "discussion": 5
       }
     },
@@ -71,11 +78,11 @@
       "afterTop": "[1990] 2 AC 605",
       "afterCorrect": true,
       "wouldSay": {
-        "name": "Caparo Industries Plc v Dickman",
+        "name": "Caparo Industries plc v Dickman",
         "citation": "[1990] 2 AC 605",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 7,
+        "citedBy": 254,
         "discussion": 4
       }
     },
@@ -90,7 +97,7 @@
         "citation": "[1932] AC 562",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 0,
+        "citedBy": 67,
         "discussion": 3
       }
     },
@@ -101,11 +108,11 @@
       "afterTop": "[1991] 1 AC 603",
       "afterCorrect": true,
       "wouldSay": {
-        "name": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+        "name": "R v Secretary of State for Transport ex parte Factortame",
         "citation": "[1991] 1 AC 603",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 0,
+        "citedBy": 51,
         "discussion": 2
       }
     },
@@ -120,7 +127,7 @@
         "citation": "[1994] 1 AC 377",
         "court": "House of Lords",
         "held": "not-held",
-        "citedBy": 1,
+        "citedBy": 40,
         "discussion": 0
       }
     },
@@ -131,11 +138,11 @@
       "afterTop": "[2001] QB 213",
       "afterCorrect": true,
       "wouldSay": {
-        "name": "R v. North and East Devon Health Authority ex parte Coughlan",
+        "name": "R v North and East Devon Health Authority ex parte Coughlan",
         "citation": "[2001] QB 213",
         "court": "Court of Appeal",
         "held": "not-held",
-        "citedBy": 1,
+        "citedBy": 276,
         "discussion": 5
       }
     },
@@ -143,9 +150,16 @@
       "authority": "Ridge v Baldwin",
       "citation": "[1964] AC 40",
       "before": "ABSENT",
-      "afterTop": null,
-      "afterCorrect": false,
-      "wouldSay": null
+      "afterTop": "[1964] AC 40",
+      "afterCorrect": true,
+      "wouldSay": {
+        "name": "Ridge v Baldwin",
+        "citation": "[1964] AC 40",
+        "court": "House of Lords",
+        "held": "not-held",
+        "citedBy": 40,
+        "discussion": 0
+      }
     }
   ],
   "note": "AFTER is a SIMULATION over the reference records, not the shipped ranking. It shows the data is sufficient; CC-Search owns the change and the real after-measurement."

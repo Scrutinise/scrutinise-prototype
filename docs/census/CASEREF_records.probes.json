@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-27T15:15:21.000Z",
-  "source": "CASEREF_citations.pilot.jsonl",
+  "generated": "2026-08-27T16:11:11.494Z",
+  "source": "CASEREF_citations.jsonl",
   "records": [
     {
       "citation": "[1969] 2 AC 147",
@@ -9,19 +9,96 @@
       "names": [
         {
           "name": "Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 53
+        },
+        {
+          "name": "Anisminic v Foreign Compensation Commission",
+          "seen": 21
+        },
+        {
+          "name": "Anisminic Ltd v. Foreign Compensation Commission",
+          "seen": 4
+        },
+        {
+          "name": "Anisminic Ltd. v Foreign Compensation Commission",
+          "seen": 2
+        },
+        {
+          "name": "Anisminic Limited v Foreign Compensation Commission",
+          "seen": 2
+        },
+        {
+          "name": "Anisminic Ltd. v. Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "Anisminic v. Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "He cites Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "reference to such authorities as Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "A conspicuous case is the seminal authority of Anisminic v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "Anisminic v The FCO",
+          "seen": 1
+        },
+        {
+          "name": "Then came Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "Anisminic ( Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "They note that while true ouster clauses are deprecated following Anisminic v. Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "Lord Dyson pointed out that Anisminic Ltd. v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "Upper Tribunal. Her reliance on Anisminic v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "House of Lords in the seminal case of Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "A conspicuous case is the seminal authority of Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "ECROs. He relied on Anisminic Ltd v Foreign Compensation Commission",
+          "seen": 1
+        },
+        {
+          "name": "Anisminic v Foreign Compensation Commission and anor",
           "seen": 1
         }
       ],
       "observedName": "Anisminic Ltd v Foreign Compensation Commission",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 1,
+        "documents": 85,
         "byCorpus": {
-          "tna-caselaw": 1
+          "tna-caselaw": 85
         }
       },
       "discussion": [
@@ -55,19 +132,196 @@
       "names": [
         {
           "name": "Pepper v Hart",
+          "seen": 254
+        },
+        {
+          "name": "Pepper v. Hart",
+          "seen": 20
+        },
+        {
+          "name": "Pepper (Inspector of Taxes) v Hart",
+          "seen": 13
+        },
+        {
+          "name": "Pepper v Hart (",
+          "seen": 2
+        },
+        {
+          "name": "Pepper (Inspector of Taxes) v. Hart",
+          "seen": 2
+        },
+        {
+          "name": "Mr. Lee Barber wished to adduce in accordance with Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Mr Townsend also relies on Pepper v. Hart",
+          "seen": 1
+        },
+        {
+          "name": "Howell’s appeal to an application of the principle established by Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Public Record Office until next year. Like Hansard (see Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Parliamentary materials which might be admitted and relevant under Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "seventh reason is extracts from Hansard pursuant to Pepper v. Hart",
+          "seen": 1
+        },
+        {
+          "name": "We doubt whether the provisions of Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Minister’s words when interpreting the section. In Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Statute was aimed (see Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Pepper (HMIT) v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Explanatory Notes or Ministerial Statement admissible under the rule in Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Invoking Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Parliamentary materials in accordance with Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Parliament. Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Parliament. None of that material meets the stringent requirements of Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Act under the doctrine of Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "I would certainly have been prepared to apply Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "proper scope of Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Parliamentary debate on LASPO in the House of Lords. In Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Lord Steyn. This is so without satisfying the requirements which Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Subject to narrowly defined exceptions (such as under Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Secretary of State. I should record that no Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "I do not consider that the Pepper v. Hart",
+          "seen": 1
+        },
+        {
+          "name": "Hansard reports of relevant Parliamentary debates ( Pepper (Inspector of Taxes) v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Mr. Taylor draws my attention (with nodding reference only to Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Bill of Rights. In Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Court of Appeal itself drew. That passage from Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Minister to be admissible under Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Divisional Court erred in refusing to admit evidence pursuant to Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Hansard for guidance as to its meaning ( Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Pepper (Inspector of taxes) v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Hansard (applying Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "D of Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Hansard. In Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Parliament by the minister promoting the Bill pursuant to Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Act ). (v) Although (applying Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "LC) Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Although I was also reminded of Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "Pepper v Hart analysis and examine extracts from Hansard ( Pepper v Hart",
+          "seen": 1
+        },
+        {
+          "name": "HMRC referred could not be admitted under the terms of Pepper v Hart",
           "seen": 1
         }
       ],
       "observedName": "Pepper v Hart",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 2,
+        "documents": 312,
         "byCorpus": {
-          "tna-caselaw": 2
+          "tna-caselaw": 312
         }
       },
       "discussion": [
@@ -114,20 +368,530 @@
       "citation": "[1948] 1 KB 223",
       "kind": "law-report",
       "year": 1948,
-      "names": [],
-      "observedName": null,
+      "names": [
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 69
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 49
+        },
+        {
+          "name": "Associated Picture Houses Ltd v Wednesbury Corp",
+          "seen": 15
+        },
+        {
+          "name": "Associated Provincial Picture Houses v Wednesbury Corporation",
+          "seen": 12
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 10
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v Wednesbury Corporation",
+          "seen": 9
+        },
+        {
+          "name": "Wednesbury irrationality test ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 9
+        },
+        {
+          "name": "Associated Wednesbury Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 9
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v. Wednesbury Corporation",
+          "seen": 8
+        },
+        {
+          "name": "Associated Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 8
+        },
+        {
+          "name": "Wednesbury challenge ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 7
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd. v. Wednesbury Corporation",
+          "seen": 5
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd. v Wednesbury Corporation",
+          "seen": 5
+        },
+        {
+          "name": "Wednesbury principles (see Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 5
+        },
+        {
+          "name": "Wednesbury grounds ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 4
+        },
+        {
+          "name": "Wednesbury grounds (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 4
+        },
+        {
+          "name": "Associated Provincial Pictures Houses Ltd v Wednesbury Corporation",
+          "seen": 4
+        },
+        {
+          "name": "Wednesbury (see Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 4
+        },
+        {
+          "name": "Wednesbury irrationality (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 3
+        },
+        {
+          "name": "Wednesbury principles ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 3
+        },
+        {
+          "name": "Associated Provincial Picture Houses v Wednesbury Corp",
+          "seen": 3
+        },
+        {
+          "name": "Wednesbury sense ( Associated Provincial Picture House Ltd v Wednesbury Corporation",
+          "seen": 3
+        },
+        {
+          "name": "Wednesbury unreasonableness category ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 3
+        },
+        {
+          "name": "Associated Provincial Picture Houses v Wednesbury Corpn",
+          "seen": 3
+        },
+        {
+          "name": "Wednesbury challenge (Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 3
+        },
+        {
+          "name": "Wednesbury irrational ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 3
+        },
+        {
+          "name": "Wednesbury principle (see Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury principle ( Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "English administrative law established well before Associated Provincial Picture Houses Limited v. Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v. Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Associated Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury sense ( Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corpn.",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury unreasonable ( Associated Provincial Picture Houses Ltd v. Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury sense ( Associated Provincial Picture Houses Limited v Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury sense (see Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Associated Provincial Picture Houses v Wednesbury Cooperation",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury jurisdiction ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury unreasonable ( Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury principles (see Associated Provincial Picture Houses ltd v Wednesbury Corp",
+          "seen": 2
+        },
+        {
+          "name": "Wednesbury ( Associated Provincial Picture Houses Limited v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Associated Picture Houses Ltd v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principles ( Associated Provincial Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury test ( Associated Provincial Picture Houses Ltd v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonableness. That is a reference to Associated Provincial Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury ground of review ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "A ssociated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Assoc Provincial Picture House Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses v The Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associate Provincial Picture Houses Ltd v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury Associated Provincial Picture House s Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds. Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principle. Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v Wednesbury Operation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v Wendesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury sense ( Associated Provincial Picture House’s Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "English cases of Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses v Wednesbury Co-operation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principles ( see Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonable ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury approach (see Associated Provincial Picture Houses Ltd. v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "AP Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principles See Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v. Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds ( Associated Provincial Picture Houses Ltd v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses v. Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Associated Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury (i.e. Associated Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation.",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury challenge (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonableness (see Associated Provincial Picture Houses Limited v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury test ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v. Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury formulation ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds ( Associated Provincial Picture Houses Limited v. Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds ( Associated Provincial Picture Houses Ltd. v Wednesbury Corp.",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principles (cf. Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury test ( Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonableness (see Associated Provincial Picture Houses Ltd v Wednesbury Cooperation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principle’ ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provinicial Picture House Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury principle after Associated Provincial Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonableness (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury sense ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury rationality standard ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury ( Associated Provincial Picture Houses Ltd v Wednesbury Corp .",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonable ( Associated Provincial Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonable (Associated Provincial Picture Houses v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v. Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonableness’ ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonable (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury Coprn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury sense ( Associated Provincial Picture House's Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury irrational or perverse (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonableness ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury case was of discrimination ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury irrational way ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Limited v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds ( Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses v Wednesbury",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Ltd v Wednesbury",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds (see Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury type approach (see Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury type approach' (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "List ( Associated Provincial Picture Houses Ltd. v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "I set out Lord Greene’s classic ruling from Associated Provincial v Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury irrationality test (Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury standard (Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury sense (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "A modern approach to the Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Picture Houses Limited v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Pictures Houses Ltd. v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury rationality grounds ( Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonable way (see Associated Provincial Picture Houses Ltd v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury unreasonable’ within the meaning of Associated Provisional Picture House v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picturehouses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Associated Provincial Picture Houses Limited v Wednesbury Corpn",
+          "seen": 1
+        },
+        {
+          "name": "Lord Greene MR Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
+          "seen": 1
+        },
+        {
+          "name": "Wednesbury grounds ( Associated Provincial Picture Houses Ltd v Wednesbury Corp",
+          "seen": 1
+        }
+      ],
+      "observedName": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation",
       "court": "Court of Appeal",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 1,
+        "documents": 400,
         "byCorpus": {
-          "tna-caselaw": 1
+          "tna-caselaw": 400
         }
       },
       "discussion": [
+        {
+          "id": "committees-reports:publication:9597:162420-0035",
+          "corpus": "committees-reports",
+          "title": "Report: Thirteenth Report - Human Rights Act Reform — Human Rights (Joint Committee)",
+          "date": "2022-04-13",
+          "evidence": "citation",
+          "snippet": "Positive obligations are discussed in Chapter 7. 140 Ministry of Justice, Human Rights Act Reform: A Modern Bill of Rights, CP 588, December 2021, Para 289 141 Set out in Associated Provincial Picture Houses Ltd v Wednesbury Corporation Ltd. [1948] 1 KB 223, it is unlawful for a public authority to act in such a way that is so unreasonable that no reasonable public authority would have so acted. 1"
+        },
+        {
+          "id": "committees-evidence:writtenevidence:56537:102112",
+          "corpus": "committees-evidence",
+          "title": "Transatlantic Trade and Investment Partnership inquiry — TIP0023",
+          "date": "2015-02-24",
+          "evidence": "citation",
+          "snippet": "Wednesbury Corporation [1948] 1 KB 223 ."
+        },
+        {
+          "id": "committees-evidence:writtenevidence:46450:91730",
+          "corpus": "committees-evidence",
+          "title": "The constitutional role of the judiciary if there were a codified constitution — CRJ0003",
+          "date": "2013-11-07",
+          "evidence": "citation",
+          "snippet": "Wednesbury Corporation [1948] 1 KB 223, 230 . [5] River Wear Commissioners v."
+        },
         {
           "id": "committees-reports:publication:23911:arc-0220",
           "corpus": "committees-reports",
@@ -138,10 +902,10 @@
         }
       ],
       "description": {
-        "text": "If we refer to the judgments in the cases of R v ILEA Ex parte Westminster City Council [1948] 1 KB 223 and Padfield v Ministry of Agriculture, Fisheries and Food [1968] 1 All ER 694, it is clear that (while the ETV network still remains valid for its purpose, which it clearly does) pure economic pressure should not be a relevant consideration in deciding on its future. 31.",
-        "sourceId": "committees-reports:publication:23911:arc-0220",
+        "text": "Positive obligations are discussed in Chapter 7. 140 Ministry of Justice, Human Rights Act Reform: A Modern Bill of Rights, CP 588, December 2021, Para 289 141 Set out in Associated Provincial Picture Houses Ltd v Wednesbury Corporation Ltd. [1948] 1 KB 223, it is unlawful for a public authority to act in such a way that is so unreasonable that no reasonable public authority would have so acted. 1",
+        "sourceId": "committees-reports:publication:9597:162420-0035",
         "sourceCorpus": "committees-reports",
-        "sourceTitle": "Report: 6th Report - The Coastguard, Emergency Towing Vessels and the Maritime Incident Response Group - additional written evidence — Transport Committee — “smallest” ever [here in Aberaeron at 3.4 metres — ¶26"
+        "sourceTitle": "Report: Thirteenth Report - Human Rights Act Reform — Human Rights (Joint Committee)"
       },
       "links": [
         {
@@ -157,20 +921,181 @@
       "year": 1985,
       "names": [
         {
+          "name": "Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 89
+        },
+        {
+          "name": "CCSU v Minister for the Civil Service",
+          "seen": 15
+        },
+        {
           "name": "Council for Civil Service Unions v Minister for the Civil Service",
+          "seen": 14
+        },
+        {
+          "name": "CCSU v Minister for Civil Service",
+          "seen": 7
+        },
+        {
+          "name": "Council of Civil Service Unions v. Minister for the Civil Service",
+          "seen": 5
+        },
+        {
+          "name": "Council of Civil Service Unions and Others v Minister for the Civil Service",
+          "seen": 4
+        },
+        {
+          "name": "Council of the Civil Service Unions v Minister for the Civil Service",
+          "seen": 3
+        },
+        {
+          "name": "Council for the Civil Service Unions v Minister for the Civil Service",
+          "seen": 2
+        },
+        {
+          "name": "GCHQ case ( Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 2
+        },
+        {
+          "name": "Council of Civil Service Union v Minister for the Civil Service",
+          "seen": 2
+        },
+        {
+          "name": "Council of Civil Service Unions v Minister for Civil Service",
+          "seen": 2
+        },
+        {
+          "name": "CCSU v. Minister for the Civil Service",
+          "seen": 2
+        },
+        {
+          "name": "CCSU v Minister of the Civil Service",
+          "seen": 2
+        },
+        {
+          "name": "CCSU v. Minister of Civil Servants",
+          "seen": 1
+        },
+        {
+          "name": "Lord Diplock in the GCHQ case Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "House of Lords judgment in the Council of Civil Service Unions v The Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Crown after Council of Civil Service Unions v. Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "We turn now to Council of Civil Service Unions and others v. Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "CCSU v Minister of Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "CSSU v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council for Civil Service Union & Ors v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "CCSU criteria ( Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "R(on the application of Council of Civil Service Unions) v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council of Civil Unions v. Minister of State for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Lords in the landmark case of Council of Civil Service Unions v Minister for Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council of Civil Service Unions v Minister for the Civil Service (the GCHQ Case)",
+          "seen": 1
+        },
+        {
+          "name": "Council of Civil Service Unions v Minster for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council of Civil Service Unions v The Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Guantanamo Bay. Following Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council for the Civil Service Unions v Minister of the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Lords in the case of Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Mr Brown also referred to Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Admin) and CCSU v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council of Civil Service Unions and others v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Council of Civil Service Unions v Minister of the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Courts. It is non-justiciable. In CCSU v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "Chandler v Director of Public Prosecutions",
+          "seen": 1
+        },
+        {
+          "name": "Claimants relied on CCSU v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "This appears from Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "House in the GCHQ case ( Council of Civil Service Unions v Minister for the Civil Service",
+          "seen": 1
+        },
+        {
+          "name": "CCSU v MCS",
           "seen": 1
         }
       ],
-      "observedName": "Council for Civil Service Unions v Minister for the Civil Service",
+      "observedName": "Council of Civil Service Unions v Minister for the Civil Service",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 1,
+        "documents": 188,
         "byCorpus": {
-          "tna-caselaw": 1
+          "tna-caselaw": 188
         }
       },
       "discussion": [
@@ -207,12 +1132,12 @@
           "snippet": "For instance, a duty to consult may arise where there has been an established practice of consultation (see Medical Justice v Secretary of State for the Home Department [2025] EWCA Civ 251 at [50] - [51], citing Council of Civil Service Unions v Minister for the Civil Service [1985] AC 374)."
         },
         {
-          "id": "committees-reports:publication:24256:arc-0121",
+          "id": "committees-reports:publication:23829:arc-0025",
           "corpus": "committees-reports",
-          "title": "Report: 61st Report - HM Revenue & Customs 2010-11 Accounts: tax disputes (Report, together with formal minutes, oral and written evidence) — Public Accounts Committee — Fifty-second Report",
-          "date": "2011-12-20",
-          "evidence": "citation",
-          "snippet": "InCouncil of Civil Service Unions v Minister for the Civil Service[1985] AC 374, Lord Diplock (while expounding the classic grounds for the judicial review of administrative decision) stated (at 410): “By “illegality” as a ground for judicial review I mean that the decision-maker must understand correctly the law that regulates his decision-making power and must give effect to it”. 12."
+          "title": "Report: 8th Report - Parliament's role in conflict decisions — Political and Constitutional Reform Committee — Parliament’s role in conflict decisions 9 — ¶8",
+          "date": "2011-05-17",
+          "evidence": "name-and-year",
+          "snippet": "Cir. 2000) (individual congressmen have no standing to sue over the President’s alleged violation of theWar Powers Act), andOrlandov.Laird, 443 F.2d 1039 (2d Cir. 1971) (courts will not question the means by which Congress approves military action). 11 SeeCouncil of Civil Service Unions v Minister for the Civil Service, [1985] A.C. 374 (H.L.) [G.C.H.Q.] (the prerogative is subject to judicial revi"
         }
       ],
       "description": {
@@ -235,12 +1160,72 @@
       "year": 1990,
       "names": [
         {
+          "name": "Caparo Industries plc v Dickman",
+          "seen": 113
+        },
+        {
           "name": "Caparo Industries Plc v Dickman",
-          "seen": 2
+          "seen": 39
+        },
+        {
+          "name": "Caparo v Dickman",
+          "seen": 32
+        },
+        {
+          "name": "Caparo Industries v Dickman",
+          "seen": 23
+        },
+        {
+          "name": "Caparo Industries PLC v Dickman",
+          "seen": 11
+        },
+        {
+          "name": "Caparo Industries Plc v. Dickman",
+          "seen": 10
+        },
+        {
+          "name": "Caparo Industries Ltd v Dickman",
+          "seen": 8
+        },
+        {
+          "name": "Caparo Industries plc v. Dickman",
+          "seen": 7
         },
         {
           "name": "Caparo Industries Plc v Dickman and others",
-          "seen": 1
+          "seen": 4
+        },
+        {
+          "name": "Caparo v. Dickman",
+          "seen": 4
+        },
+        {
+          "name": "Caparo Industries v. Dickman",
+          "seen": 4
+        },
+        {
+          "name": "Both of these requirements are illustrated by Caparo Industries Plc v. Dickman",
+          "seen": 3
+        },
+        {
+          "name": "To use the language of Caparo Industries plc v Dickman",
+          "seen": 3
+        },
+        {
+          "name": "Caparo plc v. Dickman",
+          "seen": 2
+        },
+        {
+          "name": "Caparo Industries PLC v. Dickman",
+          "seen": 2
+        },
+        {
+          "name": "Caparo test ( Caparo Industries plc v Dickman",
+          "seen": 2
+        },
+        {
+          "name": "English decisions. In Caparo Plc v Dickman",
+          "seen": 2
         },
         {
           "name": "a leading case in this area is Caparo Industries Plc v Dickman",
@@ -251,32 +1236,157 @@
           "seen": 1
         },
         {
-          "name": "Caparo Industries plc v. Dickman",
+          "name": "Caparo Plc. v Dickman",
           "seen": 1
         },
         {
-          "name": "Caparo plc v. Dickman",
+          "name": "Bourhill itself. In Caparo v. Dickman",
           "seen": 1
         },
         {
-          "name": "Caparo Industries v Dickman",
+          "name": "I was referred to Hedley Byrne (ibid) and to Caparo v Dickman",
           "seen": 1
         },
         {
-          "name": "Caparo Industries plc v Dickman",
+          "name": "Caparo plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Both of these requirements are illustrated by Caparo Industries Plc. v. Dickman",
+          "seen": 1
+        },
+        {
+          "name": "He referred us to Caparo Industries PLC v. Dickman and Others",
+          "seen": 1
+        },
+        {
+          "name": "One can then move onto Caparo Industries Plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Lord Bridge’s judgment in the Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries Limited v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "judge referred to Caparo v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries plc v Dickman & Ors",
+          "seen": 1
+        },
+        {
+          "name": "Mr. Leech submitted that Smith v. Bush",
+          "seen": 1
+        },
+        {
+          "name": "House of Lords case of Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Harris v Wyre Forest would rely on the valuation -",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries PLC v Dickman and Others",
+          "seen": 1
+        },
+        {
+          "name": "Before I look at Caparo Industries Plc v Dickman & Ors",
+          "seen": 1
+        },
+        {
+          "name": "years before the tripartite test of Caparo Industries PLC v Dickson",
+          "seen": 1
+        },
+        {
+          "name": "Claimants (see Caparo Industries Plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Miss Widdett accepted that in the later decision of Caparo v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Claimant a common law duty of care. In Caparo Industries PLC v Dickman and others",
+          "seen": 1
+        },
+        {
+          "name": "Lords in the well known case of Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Mr Tager relied on Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Clubhire ( Caparo Industries v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries PLC v Dickman and others",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries Plc. v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries PLC v Dickman & Ors",
+          "seen": 1
+        },
+        {
+          "name": "correct starting point is Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "first is Caparo Industries v. Dickman",
+          "seen": 1
+        },
+        {
+          "name": "AssetCo also points to Caparo v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo test ( Caparo Industries Ltd v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Notable examples include Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries Plc v Dickman and Oths",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Industries plc v Dickson",
+          "seen": 1
+        },
+        {
+          "name": "Caparo Caparo Industries plc v Dickman",
+          "seen": 1
+        },
+        {
+          "name": "House of Lords negligence case of Caparo Industries plc v Dickman",
           "seen": 1
         }
       ],
-      "observedName": "Caparo Industries Plc v Dickman",
+      "observedName": "Caparo Industries plc v Dickman",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 7,
+        "documents": 254,
         "byCorpus": {
-          "tna-caselaw": 7
+          "tna-caselaw": 254
         }
       },
       "discussion": [
@@ -334,18 +1444,57 @@
       "names": [
         {
           "name": "Donoghue v Stevenson",
+          "seen": 59
+        },
+        {
+          "name": "Donoghue v. Stevenson",
+          "seen": 8
+        },
+        {
+          "name": "Donohue v Stevenson",
+          "seen": 1
+        },
+        {
+          "name": "Murphy v Brentwood District Council and Baxall Securities Ltd v Sheard Walshaw Partnership . Respectively",
+          "seen": 1
+        },
+        {
+          "name": "Lord Devlin’s speech about the development of the law since Donoghue v Stevenson",
+          "seen": 1
+        },
+        {
+          "name": "It is worth remembering that Donoghue v. Stevenson",
+          "seen": 1
+        },
+        {
+          "name": "Although Donoghue v Stevenson",
+          "seen": 1
+        },
+        {
+          "name": "Lord Devlin's speech about the development of the law since Donoghue v Stevenson",
+          "seen": 1
+        },
+        {
+          "name": "Referring to the example of Donoghue v Stevenson",
+          "seen": 1
+        },
+        {
+          "name": "Donoghue won her appeal to the House of Lords ( Donoghue v Stevenson",
           "seen": 1
         }
       ],
       "observedName": "Donoghue v Stevenson",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 0,
-        "byCorpus": {}
+        "documents": 67,
+        "byCorpus": {
+          "tna-caselaw": 67
+        }
       },
       "discussion": [
         {
@@ -385,22 +1534,29 @@
     {
       "citation": "[1991] 1 AC 603",
       "kind": "law-report",
-      "year": 1990,
+      "year": 1991,
       "names": [
         {
-          "name": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+          "name": "R v Secretary of State for Transport ex parte Factortame",
+          "seen": 2
+        },
+        {
+          "name": "R v Secretary of State for Transport ex parte Factortame Ltd and Others",
           "seen": 1
         }
       ],
-      "observedName": "R v Secretary of State for Transport, ex p Factortame (No 2)",
+      "observedName": "R v Secretary of State for Transport ex parte Factortame",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 0,
-        "byCorpus": {}
+        "documents": 51,
+        "byCorpus": {
+          "tna-caselaw": 51
+        }
       },
       "discussion": [
         {
@@ -441,19 +1597,32 @@
       "names": [
         {
           "name": "M v Home Office",
+          "seen": 30
+        },
+        {
+          "name": "M v The Home Office",
+          "seen": 3
+        },
+        {
+          "name": "It has been firmly established since the case of M v Home Office",
+          "seen": 1
+        },
+        {
+          "name": "Mr Hermer relied on the speech of Lord Woolf M v Home Office",
           "seen": 1
         }
       ],
       "observedName": "M v Home Office",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 1,
+        "documents": 40,
         "byCorpus": {
-          "tna-caselaw": 1
+          "tna-caselaw": 40
         }
       },
       "discussion": [],
@@ -472,24 +1641,245 @@
       "year": 2001,
       "names": [
         {
+          "name": "R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 51
+        },
+        {
+          "name": "R v North and East Devon Health Authority ex p Coughlan",
+          "seen": 28
+        },
+        {
           "name": "R v. North and East Devon Health Authority ex parte Coughlan",
+          "seen": 6
+        },
+        {
+          "name": "R v North and East Devon HA ex p Coughlan",
+          "seen": 6
+        },
+        {
+          "name": "R v North East Devon Health Authority ex parte Coughlan",
+          "seen": 5
+        },
+        {
+          "name": "R v North and East Devon HA ex parte Coughlan",
+          "seen": 4
+        },
+        {
+          "name": "R v North & East Devon HA ex p Coughlan",
+          "seen": 3
+        },
+        {
+          "name": "R v North & East Devon Health Authority ex parte Coughlan",
+          "seen": 2
+        },
+        {
+          "name": "R v North and East Devon Health Authority Ex p Coughlan",
+          "seen": 2
+        },
+        {
+          "name": "R v. North and East Devon Health Authority ex p. Coughlan",
+          "seen": 2
+        },
+        {
+          "name": "R (Coughlan) v North and East Devon Health Authority",
           "seen": 1
         },
         {
-          "name": "R v North and East Devon Health Authority ex parte Coughlan",
+          "name": "R (Coughlan) v. North East Devon HA",
+          "seen": 1
+        },
+        {
+          "name": "R v. Northern East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority Ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Reference is then made to the decision of R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "I add that I do not believe that R v. North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority ex parte Coughlan )",
+          "seen": 1
+        },
+        {
+          "name": "After referring to R v North and East Devon Health Authority (ex parte Coughlan)",
+          "seen": 1
+        },
+        {
+          "name": "Mr Beloff Q.C. relied upon R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Court ( R v North and East Devon Health Authority Ex Parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v Brent London Borough Council ex parte Gunning and R v North & East Devon HA ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority Ex Parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North & East Devon HA Ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "SCI. The effect of R v N and E Devon Health Authority ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Coughlan v North and East Devon Health Authority",
+          "seen": 1
+        },
+        {
+          "name": "R v East and North Devon Health Authority ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Referring to R v North and East Devon Health Authority ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Coughlin ( R v. North and East Devon HA ex p Coughlin",
+          "seen": 1
+        },
+        {
+          "name": "Dr Stookes refers to R v North and East Devon Health Authority ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R. v North & East Devon Health Authority Ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health authority ex p. Coughlin",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v N E Devon Health Authority exparte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Coughlan v. North and East Devon Health Authority",
+          "seen": 1
+        },
+        {
+          "name": "Mr Adams places reliance upon R v North and East Devon Health Authority ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R (Coughlan) v North and Eat Devon Health Authority",
+          "seen": 1
+        },
+        {
+          "name": "R v. North Devon H.A ex p Coughlen",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Authority ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North East Devon Health Authority ex parte Coghlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon HA Ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "There is clear authority to this effect. In R v North and East Devon Health Authority ex parte Couglan",
+          "seen": 1
+        },
+        {
+          "name": "R v NE Devon Health Authority Ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "earlier case of R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "reference to Coughlan is to R (Coughlan & Ors) v North and East Devon Health Authority",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority ex p Coughlin",
+          "seen": 1
+        },
+        {
+          "name": "R. v North and East Devon Health Authority Ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "A legitimate expectation may be procedural or substantive. In R v North and East Devon HA ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "It also embraces decisions which proceed by flawed logic (R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon HA",
+          "seen": 1
+        },
+        {
+          "name": "R v North East Devon Health Authority ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "well-known case of R v North and East Devon Health Authority ex parte Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v North and East Devon Health Authority ex p. Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R v NE Devon Health Authority ex p Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "R (Coughlan) v North & East Devon Health Authority",
+          "seen": 1
+        },
+        {
+          "name": "R v North East Devon Health Authority exp Coughlan",
+          "seen": 1
+        },
+        {
+          "name": "Baker and R v North East Devon Health Authority exp Coughlan",
           "seen": 1
         }
       ],
-      "observedName": "R v. North and East Devon Health Authority ex parte Coughlan",
+      "observedName": "R v North and East Devon Health Authority ex parte Coughlan",
       "court": "Court of Appeal",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 1,
+        "documents": 276,
         "byCorpus": {
-          "tna-caselaw": 1
+          "tna-caselaw": 276
         }
       },
       "discussion": [
@@ -555,19 +1945,52 @@
       "names": [
         {
           "name": "Ridge v Baldwin",
+          "seen": 38
+        },
+        {
+          "name": "leading modern authority was Ridge v Baldwin",
+          "seen": 2
+        },
+        {
+          "name": "Ridge v. Baldwin",
+          "seen": 1
+        },
+        {
+          "name": "light of Ridge v Baldwin",
+          "seen": 1
+        },
+        {
+          "name": "He relies on Ridge v Baldwin",
+          "seen": 1
+        },
+        {
+          "name": "All this was confirmed in the well-known case of Ridge v Baldwin",
+          "seen": 1
+        },
+        {
+          "name": "Company cites Ridge v Baldwin",
+          "seen": 1
+        },
+        {
+          "name": "House of Lords decided the case of Ridge v Baldwin",
+          "seen": 1
+        },
+        {
+          "name": "House of Lords in cases such as Ridge v Baldwin",
           "seen": 1
         }
       ],
       "observedName": "Ridge v Baldwin",
       "court": "House of Lords",
       "courtSource": "curated",
+      "selfCitationRemoved": false,
       "held": "not-held",
       "heldNote": "our English case law begins in 2003; no pre-2003 judgment is held, and this is a permanent boundary — BAILII refused in writing on 16 June 2026 and The National Archives will not license digitisation of its pre-2001 paper holdings",
       "heldId": null,
       "citedBy": {
-        "documents": 1,
+        "documents": 40,
         "byCorpus": {
-          "tna-caselaw": 1
+          "tna-caselaw": 40
         }
       },
       "discussion": [],

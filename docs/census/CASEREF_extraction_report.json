@@ -1,1526 +1,1587 @@
 {
-  "generated": "2026-08-27T15:02:27.264Z",
-  "source": "CASEREF_citations.pilot.jsonl",
-  "distinct": 2297,
-  "pre2003": 1749,
-  "neutral": 668,
-  "lawReport": 1629,
-  "citingDocumentTotal": 2589,
+  "generated": "2026-08-27T15:40:42.808Z",
+  "source": "CASEREF_citations.jsonl",
+  "distinct": 184613,
+  "pre2003": 49666,
+  "neutral": 108656,
+  "lawReport": 75957,
+  "citingDocumentTotal": 641617,
   "byDecade": {
-    "1860": 3,
-    "1870": 10,
-    "1880": 16,
-    "1890": 16,
-    "1900": 13,
-    "1910": 22,
-    "1920": 16,
-    "1930": 16,
-    "1940": 33,
-    "1950": 42,
-    "1960": 74,
-    "1970": 141,
-    "1980": 259,
-    "1990": 477,
-    "2000": 1159
+    "1610": 1,
+    "1620": 1,
+    "1660": 1,
+    "1670": 2,
+    "1700": 3,
+    "1710": 2,
+    "1720": 6,
+    "1730": 2,
+    "1750": 6,
+    "1760": 2,
+    "1770": 3,
+    "1780": 4,
+    "1790": 4,
+    "1800": 6,
+    "1810": 5,
+    "1820": 7,
+    "1830": 15,
+    "1840": 80,
+    "1850": 71,
+    "1860": 99,
+    "1870": 493,
+    "1880": 1025,
+    "1890": 998,
+    "1900": 930,
+    "1910": 943,
+    "1920": 850,
+    "1930": 900,
+    "1940": 1009,
+    "1950": 1705,
+    "1960": 2555,
+    "1970": 4650,
+    "1980": 8512,
+    "1990": 14309,
+    "2000": 49219,
+    "2010": 58497,
+    "2020": 37693,
+    "2030": 4,
+    "2070": 1
   },
   "bySeries": {
-    "EWCA": 559,
-    "WLR": 290,
-    "UKHL": 39,
-    "QB": 128,
-    "Lloyd's Rep": 6,
-    "AC": 300,
-    "FSR": 14,
-    "RPC": 39,
-    "EHRR": 95,
-    "Imm AR": 19,
-    "EMLR": 19,
-    "Lloyd’s Rep": 34,
-    "Lloyds Rep": 7,
-    "INLR": 13,
-    "All ER": 113,
-    "Cr App R": 3,
-    "EWHC": 56,
-    "Ch D": 10,
-    "Con LR": 6,
-    "Fam": 11,
-    "CCLR": 4,
-    "KB": 38,
-    "ICR": 36,
-    "Crim LR": 1,
-    "Ch": 69,
-    "BCLC": 20,
-    "IRLR": 41,
-    "FLR": 49,
-    "FCR": 13,
-    "LGR": 8,
-    "UKIAT": 13,
-    "BCC": 9,
-    "LR": 9,
-    "All ER (D)": 3,
-    "ITR": 1,
-    "EGLR": 18,
-    "QBD": 6,
-    "SJ": 4,
-    "P & CR": 11,
-    "Med LR": 1,
-    "App Cas": 3,
-    "BPIR": 3,
-    "HLR": 12,
-    "WTLR": 2,
-    "P&CR": 12,
-    "PIQR": 1,
-    "BLR": 13,
-    "TC": 4,
-    "ELR": 2,
-    "STC": 80,
-    "JPL": 7,
-    "ECR": 21,
-    "CMLR": 4,
-    "All ER (Comm)": 7,
-    "Cr App R (S)": 1,
-    "UKHRR": 1,
-    "Env LR": 1,
-    "NIJB": 1,
-    "SLT": 1,
-    "CPD": 1,
-    "RTR": 1,
-    "UKPC": 1,
-    "EG": 1,
-    "SC": 1,
-    "RVR": 1
+    "EWCA": 30203,
+    "WLR": 11975,
+    "UKHL": 894,
+    "QB": 4272,
+    "Lloyd's Rep": 611,
+    "AC": 6332,
+    "FSR": 1050,
+    "RPC": 1275,
+    "EHRR": 3243,
+    "Imm AR": 565,
+    "EMLR": 602,
+    "Lloyd’s Rep": 2553,
+    "Lloyds Rep": 747,
+    "INLR": 255,
+    "All ER": 4470,
+    "Cr App R": 2056,
+    "EWHC": 56829,
+    "Ch D": 610,
+    "Con LR": 208,
+    "Fam": 465,
+    "CCLR": 132,
+    "KB": 1702,
+    "ICR": 2181,
+    "Crim LR": 637,
+    "Ch": 3450,
+    "BCLC": 1422,
+    "IRLR": 1873,
+    "FLR": 3857,
+    "FCR": 484,
+    "LGR": 311,
+    "UKIAT": 381,
+    "BCC": 1070,
+    "LR": 268,
+    "All ER (D)": 455,
+    "ITR": 10,
+    "EGLR": 827,
+    "QBD": 429,
+    "SJ": 65,
+    "P & CR": 828,
+    "Med LR": 98,
+    "App Cas": 257,
+    "BPIR": 583,
+    "HLR": 1061,
+    "WTLR": 238,
+    "P&CR": 1025,
+    "PIQR": 119,
+    "BLR": 741,
+    "TC": 326,
+    "ELR": 313,
+    "STC": 2010,
+    "JPL": 587,
+    "ECR": 625,
+    "CMLR": 1046,
+    "All ER (Comm)": 785,
+    "Cr App R (S)": 1005,
+    "UKHRR": 45,
+    "Env LR": 323,
+    "NIJB": 15,
+    "SLT": 202,
+    "CPD": 29,
+    "RTR": 471,
+    "UKPC": 1109,
+    "EG": 173,
+    "SC": 204,
+    "RVR": 81,
+    "BHRC": 149,
+    "JP": 276,
+    "All ER Rep": 27,
+    "Admin LR": 80,
+    "NI": 102,
+    "CBNS": 32,
+    "Ex D": 17,
+    "ER": 148,
+    "COD": 91,
+    "SCLR": 18,
+    "TCLR": 23,
+    "Sol Jo": 34,
+    "NICA": 163,
+    "NIQB": 192,
+    "UKAIT": 453,
+    "STI": 7,
+    "CSIH": 238,
+    "CSOH": 210,
+    "UKEAT": 216,
+    "Lloyd’s Law Rep": 149,
+    "HCJAC": 75,
+    "UKFTT": 6122,
+    "UKSC": 1274,
+    "UKUT": 6565,
+    "LGLR": 13,
+    "SCCR": 9,
+    "PTSR": 682,
+    "EWFC": 2003,
+    "ACD": 78,
+    "SFTD": 89,
+    "LS Gaz R": 3,
+    "EWCOP": 784,
+    "NIFam": 6,
+    "KBD": 1,
+    "EWCC": 135,
+    "SLCR": 1,
+    "WLUK": 284,
+    "EAT": 796
   },
   "top": [
     {
-      "citation": "[2003] 1 WLR 770",
-      "docs": 7,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "R (Ullah) v Special Adjudicator"
-    },
-    {
-      "citation": "[1990] 2 AC 605",
-      "docs": 7,
-      "year": 1990,
-      "kind": "law-report",
-      "name": "Lord Oliver of Aylmerton in Caparo Industries Plc v Dickman and others"
-    },
-    {
-      "citation": "[2003] EWCA Civ 840",
-      "docs": 7,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Razgar v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "(1985) 7 EHRR 528",
-      "docs": 6,
-      "year": 1985,
-      "kind": "law-report",
-      "name": "Thus in Ashingdane v United Kingdom"
-    },
-    {
-      "citation": "[1994] 1 WLR 1360",
-      "docs": 5,
-      "year": 1994,
-      "kind": "law-report",
-      "name": "Galoo Ltd v Bright Grahame Murray"
-    },
-    {
-      "citation": "[1995] 2 AC 633",
-      "docs": 5,
-      "year": 1995,
-      "kind": "law-report",
-      "name": "Sir Thomas Bingham MR in E (A Minor) v Dorset CC"
-    },
-    {
-      "citation": "[2001] 2 AC 603",
-      "docs": 5,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "House of Lords in Berkeley v Secretary of State"
-    },
-    {
-      "citation": "[2003] 1 WLR 577",
-      "docs": 5,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "Asscicurazioni Generali SpA v Arab Insurance Group"
-    },
-    {
-      "citation": "[1998] QB 929",
-      "docs": 4,
-      "year": 1998,
-      "kind": "law-report",
-      "name": "R v Secretary of State for the Home Department ex parte Robinson"
-    },
-    {
-      "citation": "[2000] 3 All ER 449",
-      "docs": 4,
-      "year": 2000,
-      "kind": "law-report",
-      "name": "Karanakaran v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "[1995] 2 AC 145",
-      "docs": 4,
-      "year": 1995,
-      "kind": "law-report",
-      "name": "Henderson v Merrett"
-    },
-    {
       "citation": "[1998] 1 WLR 896",
-      "docs": 4,
+      "docs": 798,
       "year": 1998,
       "kind": "law-report",
-      "name": "Lord Hoffmann in ICS Ltd. v West Bromwich Building Society"
+      "name": "Investors Compensation Scheme Ltd v West Bromwich Building Society"
     },
     {
-      "citation": "[1982] AC 529",
-      "docs": 4,
-      "year": 1982,
-      "kind": "law-report",
-      "name": "Hunter v Chief Constable of West Midland Police"
-    },
-    {
-      "citation": "[2002] EWCA Civ 1642",
-      "docs": 4,
-      "year": 2002,
+      "citation": "[2009] EWHC 339 (Ch)",
+      "docs": 771,
+      "year": 2009,
       "kind": "neutral",
-      "name": "Clarke LJ in Assicurazioni Generali SpA v. Arab Insurance Group"
+      "name": "Easyair Ltd v Opal Telecom Ltd"
     },
     {
-      "citation": "[2001] 2 WLR 1389",
-      "docs": 4,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "Lord Slynn of Hadley in R. (Alconbury Developments Ltd) v Secretary of State for the Environment"
-    },
-    {
-      "citation": "[2002] EWCA Civ 277",
-      "docs": 4,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Jolly v. Jay & Jay"
-    },
-    {
-      "citation": "[1956] AC 14",
-      "docs": 4,
-      "year": 1956,
-      "kind": "law-report",
-      "name": "Edwards v. Bairstow"
-    },
-    {
-      "citation": "[2001] 1 WLR 196",
-      "docs": 3,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "House of Lords in Government of the United States of America v Montgomery"
-    },
-    {
-      "citation": "[2002] EWCA Civ 1856",
-      "docs": 3,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Regina (Ullah) v Special Adjudicator"
-    },
-    {
-      "citation": "(1998) 29 EHRR 245",
-      "docs": 3,
-      "year": 1998,
-      "kind": "law-report",
-      "name": "Osman v United Kingdom"
-    },
-    {
-      "citation": "[2001] QB 967",
-      "docs": 3,
-      "year": 2001,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[1985] 1 WLR 647",
-      "docs": 3,
-      "year": 1985,
-      "kind": "law-report",
-      "name": "Lord Fraser in G v G"
-    },
-    {
-      "citation": "[1996] AC 563",
-      "docs": 3,
-      "year": 1996,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2003] EWCA Civ 1043",
-      "docs": 3,
+      "citation": "[2003] EWCA Civ 472",
+      "docs": 616,
       "year": 2003,
       "kind": "neutral",
-      "name": "In Beck v Ministry of Defence"
-    },
-    {
-      "citation": "[1999] 1 All ER 400",
-      "docs": 3,
-      "year": 1999,
-      "kind": "law-report",
-      "name": "In Paragon Finance plc v. DB Thackerar & Co"
-    },
-    {
-      "citation": "[2003] EWCA Civ 175",
-      "docs": 3,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "These include A v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "[1988] AC 1074",
-      "docs": 3,
-      "year": 1988,
-      "kind": "law-report",
-      "name": "Wilsher v. Essex Health Authority"
-    },
-    {
-      "citation": "[1956] AC 613",
-      "docs": 3,
-      "year": 1956,
-      "kind": "law-report",
-      "name": "Lord Reid in Bonnington Castings v Wardlaw"
-    },
-    {
-      "citation": "[2001] QB 351",
-      "docs": 3,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "Rahman v Arearose Ltd"
-    },
-    {
-      "citation": "[1984] Ch 290",
-      "docs": 3,
-      "year": 1984,
-      "kind": "law-report",
-      "name": "In Cutts v Head"
-    },
-    {
-      "citation": "[1971] 1 WLR 1381",
-      "docs": 3,
-      "year": 1971,
-      "kind": "law-report",
-      "name": "Prenn v Simmonds"
-    },
-    {
-      "citation": "[1997] AC 191",
-      "docs": 3,
-      "year": 1997,
-      "kind": "law-report",
-      "name": "Lord Hoffmann in Banque Bruxelles SA v Eagle Star"
-    },
-    {
-      "citation": "[2002] EWCA Civ 90",
-      "docs": 3,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Taylor v Lawrence"
-    },
-    {
-      "citation": "[2002] 3 WLR 640",
-      "docs": 3,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "Taylor v Lawrence"
-    },
-    {
-      "citation": "[1995] 1 WLR 1602",
-      "docs": 3,
-      "year": 1995,
-      "kind": "law-report",
-      "name": "Allied Maples Group v Simmons & Simmons"
-    },
-    {
-      "citation": "[2003] 1 WLR 705",
-      "docs": 3,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "In R (West) v The Parole Board"
-    },
-    {
-      "citation": "[2002] UKHL 19",
-      "docs": 3,
-      "year": 2002,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[1994] 1 WLR 1409",
-      "docs": 3,
-      "year": 1994,
-      "kind": "law-report",
-      "name": "Welsh Development Agency v Redpath Dorman Long Ltd"
-    },
-    {
-      "citation": "[2003] 2 All ER 905",
-      "docs": 3,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "R (Q) v Secretary of State"
-    },
-    {
-      "citation": "[2001] 2 AC 619",
-      "docs": 3,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "In Phelps v Hillingdon London Borough Council"
-    },
-    {
-      "citation": "[1997] RPC 1",
-      "docs": 3,
-      "year": 1997,
-      "kind": "law-report",
-      "name": "In Biogen Inc v Medeva Plc"
-    },
-    {
-      "citation": "[2002] 2 AC 883",
-      "docs": 3,
-      "year": 2002,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2000] 1 WLR 1311",
-      "docs": 3,
-      "year": 2000,
-      "kind": "law-report",
-      "name": "In Tanfern Ltd v Cameron-MacDonald (Practice Note)"
-    },
-    {
-      "citation": "[2001] INLR 354",
-      "docs": 3,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "Kacaj v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "[1997] AC 749",
-      "docs": 3,
-      "year": 1997,
-      "kind": "law-report",
-      "name": "Mannai Investment Co Ltd v Eagle Star Assurance Co Ltd"
-    },
-    {
-      "citation": "[1954] 1 WLR 1489",
-      "docs": 3,
-      "year": 1954,
-      "kind": "law-report",
-      "name": "Ladd v Marshall"
-    },
-    {
-      "citation": "[2002] EWCA Civ 605",
-      "docs": 3,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Reliance was placed on such authorities as English v Emery Reimbold and Strick Ltd"
-    },
-    {
-      "citation": "(1989) 11 EHRR 439",
-      "docs": 3,
-      "year": 1989,
-      "kind": "law-report",
-      "name": "The court then proceeded to examine the case of Soering v United Kingdom"
-    },
-    {
-      "citation": "(1996) 23 EHRR 413",
-      "docs": 3,
-      "year": 1996,
-      "kind": "law-report",
-      "name": "Chahal v United Kingdom"
-    },
-    {
-      "citation": "[2002] EWCA Civ 365",
-      "docs": 3,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Lownds v Home Office"
-    },
-    {
-      "citation": "[2002] 1 WLR 2450",
-      "docs": 3,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "Lord Woolf CJ in Lownds v Home Office"
-    },
-    {
-      "citation": "[1964] AC 465",
-      "docs": 3,
-      "year": 1964,
-      "kind": "law-report",
-      "name": "Hedley Byrne & Co Ltd v Heller & Partners Ltd"
-    },
-    {
-      "citation": "[2001] 2 AC 349",
-      "docs": 3,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "R v. Secretary of State for the Environment ex p. Spath Holme Ltd."
-    },
-    {
-      "citation": "[2003] 1 AC 32",
-      "docs": 3,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "Lord Bingham of Cornhill in Fairchild v Glenhaven Funeral Services"
+      "name": "ED & F Man Liquid Products v Patel"
     },
     {
       "citation": "[2002] 2 AC 1",
-      "docs": 3,
+      "docs": 587,
       "year": 2002,
       "kind": "law-report",
       "name": "Johnson v Gore Wood & Co"
     },
     {
-      "citation": "[2003] 3 WLR 792",
-      "docs": 3,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "House of Lords delivered their opinions in Qazi v. London Borough of Harrow"
+      "citation": "[2008] UKHL 35",
+      "docs": 567,
+      "year": 2008,
+      "kind": "neutral",
+      "name": "Francis and Others v Wales and Churchill Insurance and Re B (Children)"
     },
     {
-      "citation": "[2001] 1 WLR 1388",
-      "docs": 2,
-      "year": 2001,
+      "citation": "[2015] UKSC 36",
+      "docs": 511,
+      "year": 2015,
+      "kind": "neutral",
+      "name": "Arnold v Britton"
+    },
+    {
+      "citation": "[2015] AC 1619",
+      "docs": 504,
+      "year": 2015,
       "kind": "law-report",
+      "name": "Arnold v Britton"
+    },
+    {
+      "citation": "[2013] UKSC 33",
+      "docs": 503,
+      "year": 2013,
+      "kind": "neutral",
       "name": null
     },
     {
-      "citation": "[1981] AC 374",
-      "docs": 2,
+      "citation": "[2011] 1 WLR 2900",
+      "docs": 497,
+      "year": 2011,
+      "kind": "law-report",
+      "name": "Rainy Sky SA v Kookmin Bank"
+    },
+    {
+      "citation": "[2013] EWHC 3560 (Comm)",
+      "docs": 477,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "Gestmin SGPS SA v Credit Suisse (UK) Ltd"
+    },
+    {
+      "citation": "[2014] EWCA Civ 906",
+      "docs": 464,
+      "year": 2014,
+      "kind": "neutral",
+      "name": "Denton v TH White Ltd"
+    },
+    {
+      "citation": "[1981] QB 720",
+      "docs": 451,
       "year": 1981,
       "kind": "law-report",
-      "name": null
+      "name": "R v Lucas"
     },
     {
-      "citation": "[1982] 1 WLR 86",
-      "docs": 2,
-      "year": 1982,
-      "kind": "law-report",
-      "name": "Forsted v Outred"
+      "citation": "[2007] EWCA Civ 725",
+      "docs": 451,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "ICI Chemicals & Polymers Ltd v TTE Training Ltd"
     },
     {
-      "citation": "[2003] 2 WLR 196",
-      "docs": 2,
+      "citation": "[2001] EWCA Civ 550",
+      "docs": 450,
+      "year": 2001,
+      "kind": "neutral",
+      "name": "Royal Brompton Hospital NHS Trust v. Hammond"
+    },
+    {
+      "citation": "[2017] UKSC 24",
+      "docs": 447,
+      "year": 2017,
+      "kind": "neutral",
+      "name": "Wood v Capita Insurance Services Ltd"
+    },
+    {
+      "citation": "[2003] 2 AC 1",
+      "docs": 441,
       "year": 2003,
       "kind": "law-report",
-      "name": "Regina (Giles) v Parole Board and another"
+      "name": "Three Rivers District Council v Bank of England"
     },
     {
-      "citation": "[1917] AC 309",
-      "docs": 2,
-      "year": 1917,
+      "citation": "[2004] 1 WLR 1953",
+      "docs": 441,
+      "year": 2004,
       "kind": "law-report",
-      "name": "The second was the statement of Lord Atkinson in Adam v Wall"
+      "name": "South Bucks District Council v Porter"
     },
     {
-      "citation": "[2001] AC 489",
-      "docs": 2,
-      "year": 2001,
+      "citation": "[1954] 1 WLR 1489",
+      "docs": 436,
+      "year": 1954,
       "kind": "law-report",
-      "name": "House of Lords in Horvath v. SSHD"
+      "name": "Ladd v Marshall"
     },
     {
-      "citation": "[2002] INLR 34",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "(1997) 23 EHRR 213",
-      "docs": 2,
-      "year": 1997,
+      "citation": "[1996] AC 563",
+      "docs": 409,
+      "year": 1996,
       "kind": "law-report",
       "name": null
-    },
-    {
-      "citation": "[1984] AC 437",
-      "docs": 2,
-      "year": 1984,
-      "kind": "law-report",
-      "name": "Mohammed-Holgate v Duke"
-    },
-    {
-      "citation": "(2002) 35 EHRR 1",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "As the Strasbourg Court observed in Pretty v United Kingdom"
-    },
-    {
-      "citation": "(1992) 15 EHRR 437",
-      "docs": 2,
-      "year": 1992,
-      "kind": "law-report",
-      "name": "Herczegfalvy v Austria"
     },
     {
       "citation": "[1975] AC 396",
-      "docs": 2,
+      "docs": 405,
       "year": 1975,
       "kind": "law-report",
-      "name": "As Lord Diplock said in American Cyanamid Co v Ethicon Ltd"
+      "name": "American Cyanamid Co v Ethicon Ltd"
     },
     {
-      "citation": "[2002] 3 WLR 542",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[1948] 1 KB 223",
+      "docs": 400,
+      "year": 1948,
       "kind": "law-report",
-      "name": "A v. B plc"
+      "name": "Associated Provincial Picture Houses Ltd v Wednesbury Corporation"
     },
     {
-      "citation": "[2001] 2 AC 127",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[1993] AC 593",
-      "docs": 2,
-      "year": 1993,
-      "kind": "law-report",
-      "name": "Lord Browne-Wilkinson’s speech in Pepper v Hart"
-    },
-    {
-      "citation": "[1993] AC 205",
-      "docs": 2,
-      "year": 1993,
-      "kind": "law-report",
-      "name": "GVDC as a joint venture company. Kelly v. Cooper"
-    },
-    {
-      "citation": "[2002] UKHL 12",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[2011] UKSC 50",
+      "docs": 395,
+      "year": 2011,
       "kind": "neutral",
-      "name": "House of Lords in Twinsectra Ltd v Yardley"
+      "name": "Rainy Sky SA v Kookmin Bank"
     },
     {
-      "citation": "[1967] 2 QB 786",
-      "docs": 2,
-      "year": 1967,
+      "citation": "[2017] AC 1173",
+      "docs": 378,
+      "year": 2017,
       "kind": "law-report",
-      "name": "Diplock LJ in Snook v London and West Riding Investments Ltd"
-    },
-    {
-      "citation": "[2003] EWCA Civ 530",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Khan v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "[1969] 2 Ch 365",
-      "docs": 2,
-      "year": 1969,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[1961] AC 388",
-      "docs": 2,
-      "year": 1961,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2002] EWCA Civ 1100",
-      "docs": 2,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Waterloo Plant) v Cawley"
-    },
-    {
-      "citation": "[1998] 1 WLR 830",
-      "docs": 2,
-      "year": 1998,
-      "kind": "law-report",
-      "name": "Williams v Natural Life"
-    },
-    {
-      "citation": "[1977] AC 239",
-      "docs": 2,
-      "year": 1977,
-      "kind": "law-report",
-      "name": "Lord Wilberforce in Liverpool City Council v Irwin"
-    },
-    {
-      "citation": "(1871) LR 6",
-      "docs": 2,
-      "year": 1871,
-      "kind": "law-report",
-      "name": "Blackburn J in Smith v Hughes"
+      "name": "Wood v Capita Insurance Services Ltd"
     },
     {
       "citation": "[2001] 1 All ER 91",
-      "docs": 2,
+      "docs": 369,
       "year": 2001,
       "kind": "law-report",
       "name": "Swain v Hillman"
     },
     {
-      "citation": "[2003] EWCA Civ 1107",
-      "docs": 2,
-      "year": 2003,
+      "citation": "[2014] EWCA Civ 5",
+      "docs": 345,
+      "year": 2014,
       "kind": "neutral",
-      "name": "Eagle v Chambers"
+      "name": "Fage UK Ltd v Chobani UK Ltd"
     },
     {
-      "citation": "[1968] 1 WLR 1003",
-      "docs": 2,
-      "year": 1968,
+      "citation": "[2009] 1 AC 1101",
+      "docs": 344,
+      "year": 2009,
       "kind": "law-report",
-      "name": "He points to the case of Brown v Thompson"
+      "name": "Chartbrook Ltd v Persimmon Homes Ltd"
     },
     {
-      "citation": "[1964] AC 1254",
-      "docs": 2,
-      "year": 1964,
+      "citation": "[2014] AC 700",
+      "docs": 344,
+      "year": 2014,
       "kind": "law-report",
-      "name": "Lord Morris of Borth-y-Gest in Connelly v DPP"
+      "name": "Bank Mellat v HM Treasury"
     },
     {
-      "citation": "[1981] AC 909",
-      "docs": 2,
-      "year": 1981,
+      "citation": "[2007] FSR 63",
+      "docs": 342,
+      "year": 2007,
       "kind": "law-report",
-      "name": "Lord Diplock in Bremer Vulkan Schiffbau und Maschinenfabrik v South India Shipping Corporation Ltd"
+      "name": "Doncaster Pharmaceuticals v Bolton"
     },
     {
-      "citation": "[2001] UKHL 16",
-      "docs": 2,
-      "year": 2001,
+      "citation": "[2011] UKSC 12",
+      "docs": 341,
+      "year": 2011,
       "kind": "neutral",
-      "name": "Lord Hope in Three Rive rs DC v Bank of England"
+      "name": "R (Lumba) v Secretary of State for the Home Department"
     },
     {
-      "citation": "[1958] 1 WLR 563",
-      "docs": 2,
-      "year": 1958,
-      "kind": "law-report",
-      "name": "See Kitchen v Royal Air Force Association"
-    },
-    {
-      "citation": "[1999] BPIR 376",
-      "docs": 2,
-      "year": 1999,
-      "kind": "law-report",
-      "name": "May LJ in Mayson v Vooght"
-    },
-    {
-      "citation": "[1999] 1 WLR 1482",
-      "docs": 2,
-      "year": 1999,
-      "kind": "law-report",
-      "name": "Bradford and Bingley Building Society v Seddon"
-    },
-    {
-      "citation": "[1975] 1 WLR 468",
-      "docs": 2,
-      "year": 1975,
+      "citation": "[2005] 1 AC 593",
+      "docs": 334,
+      "year": 2005,
       "kind": "law-report",
       "name": null
     },
     {
-      "citation": "[1981] 1 All ER 843",
-      "docs": 2,
-      "year": 1981,
+      "citation": "[1995] 1 WLR 759",
+      "docs": 332,
+      "year": 1995,
       "kind": "law-report",
-      "name": "Griffith LJ in Scarfe v Adams"
-    },
-    {
-      "citation": "[2002] EWCA Civ 390",
-      "docs": 2,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "Lord Woolf CJ described in R (Amin) v Home Secretary"
-    },
-    {
-      "citation": "[2003] QB 581",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "R (Amin) v Home Secretary"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1130",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "The same point is made by this court in Uttley v Secretary Of State for the Home Department"
-    },
-    {
-      "citation": "[2003] 1 WLR 882",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "R v Field"
-    },
-    {
-      "citation": "[1987] AC 514",
-      "docs": 2,
-      "year": 1987,
-      "kind": "law-report",
-      "name": "House of Lords in Bugdaycay v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "[2000] 1 WLR 2539",
-      "docs": 2,
-      "year": 2000,
-      "kind": "law-report",
-      "name": "I do not find references to dicta in R v Wandsworth LBC ex parte O"
-    },
-    {
-      "citation": "[1994] Ch 205",
-      "docs": 2,
-      "year": 1994,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2002] 1 WLR 2409",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "English v Emery Reimbold and Strick Ltd"
-    },
-    {
-      "citation": "[1970] 1 WLR 1469",
-      "docs": 2,
-      "year": 1970,
-      "kind": "law-report",
-      "name": "Miss Gumbel also relied upon a series of cases including Poel v Poel"
-    },
-    {
-      "citation": "[2001] 1 WLR 443",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2003] EWCA Civ 364",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Applying the approach of this court in R (Q) v Secretary of State for the Home Department"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1151",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "D v East Berkshire Community Health NHS Trust"
-    },
-    {
-      "citation": "[2001] 2 AC 550",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "This decision perplexed common law judges and jurists. In Barrett v Enfield Borough Council"
-    },
-    {
-      "citation": "[2003] 2 WLR 435",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "Strasbourg jurisprudence made by Lord Walker of Gestingthorpe in Matthews v Ministry of Defence"
-    },
-    {
-      "citation": "(1994) 18 EHRR 393",
-      "docs": 2,
-      "year": 1994,
-      "kind": "law-report",
-      "name": "Walker referred to the decision of the Strasbourg Court in Fayed v United Kingdom"
-    },
-    {
-      "citation": "[1989] AC 1280",
-      "docs": 2,
-      "year": 1989,
-      "kind": "law-report",
-      "name": "Rush & Tompkins Ltd v Greater London Council and anor"
-    },
-    {
-      "citation": "[1985] RPC 59",
-      "docs": 2,
-      "year": 1985,
-      "kind": "law-report",
-      "name": "Oliver LJ in Windsurfing International Inc v Tabur Marine (Great Britain) Ltd"
-    },
-    {
-      "citation": "[1985] 1 Lloyd’s Rep 1",
-      "docs": 2,
-      "year": 1985,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[1973] 1 WLR 19",
-      "docs": 2,
-      "year": 1973,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2003] EWCA Civ 1162",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Jones v T Mobile (UK) Ltd"
-    },
-    {
-      "citation": "[2003] EWCA Civ 888",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "In Price v Price"
-    },
-    {
-      "citation": "[2003] QB 633",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "CA and Campbell v MGM"
-    },
-    {
-      "citation": "[2001] INLR 325",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "European Court of Human Rights in Bensaid v United Kingdom"
-    },
-    {
-      "citation": "[1997] EHRR 423",
-      "docs": 2,
-      "year": 1997,
-      "kind": "law-report",
-      "name": "She referred us to D v United Kingdom"
-    },
-    {
-      "citation": "[1983] 2 AC 714",
-      "docs": 2,
-      "year": 1983,
-      "kind": "law-report",
-      "name": "In Waite v Government Communication Headquarters"
-    },
-    {
-      "citation": "[2003] 1 WLR 60",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "Adamson v Halifax Plc"
-    },
-    {
-      "citation": "[2003] EWCA Civ 11",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Bhamjee v Forsdick & others"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1203",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "The decision of this court in R(Idubo) v Home Secretary"
-    },
-    {
-      "citation": "[1997] 1 WLR 314",
-      "docs": 2,
-      "year": 1997,
-      "kind": "law-report",
-      "name": "In Nicholls v Nicholls"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1269",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[1996] 22 EHRR 1",
-      "docs": 2,
-      "year": 1996,
-      "kind": "law-report",
-      "name": "Those three decisions are Hussain v UK"
-    },
-    {
-      "citation": "[2003] UKHL 42",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Mr Giles’s case ( R (Giles) v Parole Board"
-    },
-    {
-      "citation": "[2002] EWCA Civ 1641",
-      "docs": 2,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "As Sedley LJ said in R (West) v Parole Board"
-    },
-    {
-      "citation": "[2003] 2 WLR 388",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "Runa Begum v. Tower Hamlets LBC"
-    },
-    {
-      "citation": "(2001) 34 EHRR 97",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "Z v UK"
-    },
-    {
-      "citation": "[2003] EWCA Civ 130",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[2001] STC 1568",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "It was held by this Court in Lex Services Plc v Commissioners of Customs & Excise"
-    },
-    {
-      "citation": "[1990] STC 387",
-      "docs": 2,
-      "year": 1990,
-      "kind": "law-report",
-      "name": "Boots Co. plc v Customs & Excise Commissioners"
-    },
-    {
-      "citation": "[1996] STC 1387",
-      "docs": 2,
-      "year": 1996,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[1996] STC 1359",
-      "docs": 2,
-      "year": 1996,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[1999] STC 270",
-      "docs": 2,
-      "year": 1999,
-      "kind": "law-report",
-      "name": "Commissioners relies on Card Protection Plan Ltd v Customs & Excise Commissioners"
-    },
-    {
-      "citation": "[2001] STC 803",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": "Mr Vajda was Customs & Excise Commissioners v. Primback Ltd"
-    },
-    {
-      "citation": "[1999] STC 488",
-      "docs": 2,
-      "year": 1999,
-      "kind": "law-report",
-      "name": "Kuwait Petroleum (GB) Ltd. v Customs & Excise Commissioners"
-    },
-    {
-      "citation": "[1980] AC 827",
-      "docs": 2,
-      "year": 1980,
-      "kind": "law-report",
-      "name": "Diplock’s analysis of primary and secondary obligations in Photo Production Ltd v. Securicor Transport Ltd"
-    },
-    {
-      "citation": "[2001] 1 WLR 700",
-      "docs": 2,
-      "year": 2001,
-      "kind": "law-report",
-      "name": null
+      "name": "Tesco Stores Ltd v Secretary of State for the Environment"
     },
     {
       "citation": "[2002] 2 AC 357",
-      "docs": 2,
+      "docs": 317,
       "year": 2002,
       "kind": "law-report",
-      "name": "House of Lords in Porter v McGill"
+      "name": "Porter v Magill"
     },
     {
-      "citation": "[2003] 1 WLR 617",
-      "docs": 2,
+      "citation": "[2012] 1 AC 245",
+      "docs": 316,
+      "year": 2012,
+      "kind": "law-report",
+      "name": "R (Lumba) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2012] UKSC 25",
+      "docs": 316,
+      "year": 2012,
+      "kind": "neutral",
+      "name": "HH v Italy"
+    },
+    {
+      "citation": "[1993] AC 593",
+      "docs": 312,
+      "year": 1993,
+      "kind": "law-report",
+      "name": "Pepper v Hart"
+    },
+    {
+      "citation": "[1977] AC 1014",
+      "docs": 312,
+      "year": 1977,
+      "kind": "law-report",
+      "name": "Secretary of State for Education and Science v Tameside Metropolitan Borough Council"
+    },
+    {
+      "citation": "[2013] EWCA Civ 1146",
+      "docs": 290,
+      "year": 2013,
+      "kind": "neutral",
+      "name": null
+    },
+    {
+      "citation": "[1997] AC 749",
+      "docs": 286,
+      "year": 1997,
+      "kind": "law-report",
+      "name": "Mannai Investment Co Ltd v Eagle Star Life Assurance Co Ltd"
+    },
+    {
+      "citation": "[2012] UKSC 13",
+      "docs": 286,
+      "year": 2012,
+      "kind": "neutral",
+      "name": "Tesco Stores Ltd v Dundee City Council"
+    },
+    {
+      "citation": "[2014] 1 WLR 3926",
+      "docs": 284,
+      "year": 2014,
+      "kind": "law-report",
+      "name": "Denton v TH White Ltd"
+    },
+    {
+      "citation": "[2009] UKHL 38",
+      "docs": 278,
+      "year": 2009,
+      "kind": "neutral",
+      "name": "Chartbrook Ltd v Persimmon Homes Ltd"
+    },
+    {
+      "citation": "[2001] QB 213",
+      "docs": 276,
+      "year": 2001,
+      "kind": "law-report",
+      "name": "R v North and East Devon Health Authority ex parte Coughlan"
+    },
+    {
+      "citation": "[1999] 1 WLR 1360",
+      "docs": 274,
+      "year": 1999,
+      "kind": "law-report",
+      "name": "Piglowska v Piglowski"
+    },
+    {
+      "citation": "[1987] AC 460",
+      "docs": 273,
+      "year": 1987,
+      "kind": "law-report",
+      "name": "Spiliada Maritime Corp v Cansulex Ltd"
+    },
+    {
+      "citation": "[1997] RPC 1",
+      "docs": 264,
+      "year": 1997,
+      "kind": "law-report",
+      "name": "Biogen Inc v Medeva plc"
+    },
+    {
+      "citation": "[1984] 1 WLR 704",
+      "docs": 261,
+      "year": 1984,
+      "kind": "law-report",
+      "name": "R v Governor of Durham Prison ex parte Hardial Singh"
+    },
+    {
+      "citation": "[2011] UKSC 4",
+      "docs": 256,
+      "year": 2011,
+      "kind": "neutral",
+      "name": "ZH (Tanzania) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[1990] 2 AC 605",
+      "docs": 254,
+      "year": 1990,
+      "kind": "law-report",
+      "name": "Caparo Industries plc v Dickman"
+    },
+    {
+      "citation": "[2002] 1 WLR 2409",
+      "docs": 248,
+      "year": 2002,
+      "kind": "law-report",
+      "name": "English v Emery Reimbold & Strick Ltd"
+    },
+    {
+      "citation": "[2003] 1 WLR 577",
+      "docs": 248,
       "year": 2003,
       "kind": "law-report",
-      "name": "London Borough of Wandsworth v. Michalak"
+      "name": "Assicurazioni Generali SpA v Arab Insurance Group"
     },
     {
-      "citation": "[2003] EWCA Civ 797",
-      "docs": 2,
-      "year": 2003,
+      "citation": "[2015] UKSC 72",
+      "docs": 244,
+      "year": 2015,
       "kind": "neutral",
-      "name": "Court in Carson & Reynolds v Secretary of State for Work and Pensions"
+      "name": "Marks and Spencer plc v BNP Paribas Securities Services Trust Co (Jersey) Ltd"
     },
     {
-      "citation": "[2003] EWCA Civ 1346",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "R (Mount Cook Land Limited) v Westminster City Council"
-    },
-    {
-      "citation": "[1994] IRLR 124",
-      "docs": 2,
+      "citation": "[1994] 1 AC 531",
+      "docs": 242,
       "year": 1994,
       "kind": "law-report",
-      "name": "He referred to Chapman v Simon"
+      "name": "R v Secretary of State for the Home Department ex parte Doody"
     },
     {
-      "citation": "[2003] UKHL 7",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Cf CR Smith Glaziers (Dunfermline) Ltd. v. Commissioners of Customs & Excise"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1369",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Laws LJ observed in N v. SSHD"
-    },
-    {
-      "citation": "(1997) 24 EHRR 423",
-      "docs": 2,
-      "year": 1997,
+      "citation": "[2009] 1 WLR 1988",
+      "docs": 241,
+      "year": 2009,
       "kind": "law-report",
-      "name": "D v UK"
+      "name": "Attorney General of Belize v Belize Telecom Ltd"
     },
     {
-      "citation": "(2001) 33 EHRR 205",
-      "docs": 2,
-      "year": 2001,
+      "citation": "[2005] QB 946",
+      "docs": 240,
+      "year": 2005,
       "kind": "law-report",
-      "name": "Bensaid v United Kingdom"
+      "name": "Jameel v Dow Jones"
     },
     {
-      "citation": "[2002] 1 AC 384",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "House of Lords in Dimond v Lovell"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1370",
-      "docs": 2,
-      "year": 2003,
+      "citation": "[2015] EWHC 1274 (Admin)",
+      "docs": 240,
+      "year": 2015,
       "kind": "neutral",
-      "name": "The case of Cooke v United Bristol Health Care"
+      "name": "Celinski v Poland"
     },
     {
-      "citation": "[1999] 1 AC 345",
-      "docs": 2,
-      "year": 1999,
-      "kind": "law-report",
-      "name": "Wells v Wells"
-    },
-    {
-      "citation": "[1979] AC 556",
-      "docs": 2,
-      "year": 1979,
-      "kind": "law-report",
-      "name": "Lord Diplock in Cookson v Knowles"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1371",
-      "docs": 2,
-      "year": 2003,
+      "citation": "[2004] UKHL 33",
+      "docs": 234,
+      "year": 2004,
       "kind": "neutral",
-      "name": null
+      "name": "South Bucks DC v Porter"
     },
     {
-      "citation": "[2001] EWCA Civ 406",
-      "docs": 2,
-      "year": 2001,
-      "kind": "neutral",
-      "name": "Mamidoil-Jetoil Greek Petroleum Co SA v. Okta Crude Oil Refinery Ad"
-    },
-    {
-      "citation": "[1997] RPC 443",
-      "docs": 2,
-      "year": 1997,
-      "kind": "law-report",
-      "name": "Gerber Garments Technology Inc. v Lectra Systems"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1406",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Alan & Another v London Borough of Southwark"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1408",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[1990] ECR 1",
-      "docs": 2,
-      "year": 1990,
-      "kind": "law-report",
-      "name": null
-    },
-    {
-      "citation": "[2003] EWCA Civ 170",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[1971] Ch 949",
-      "docs": 2,
-      "year": 1971,
-      "kind": "law-report",
-      "name": "Cuckmere Brick Co v. Mutual Finance Limited"
-    },
-    {
-      "citation": "[1982] 1 WLR 1410",
-      "docs": 2,
+      "citation": "[1982] AC 529",
+      "docs": 232,
       "year": 1982,
       "kind": "law-report",
-      "name": "Lord Denning MR in Standard Chartered Bank v. Walker"
+      "name": "Hunter v Chief Constable of the West Midlands Police"
     },
     {
-      "citation": "[1993] AC 295",
-      "docs": 2,
-      "year": 1993,
-      "kind": "law-report",
-      "name": "Privy Council in Downsview Nominees Ltd v. First City Corporation Ltd"
-    },
-    {
-      "citation": "[2000] Ch 86",
-      "docs": 2,
-      "year": 2000,
-      "kind": "law-report",
-      "name": "Similarly in Medforth v. Blake"
-    },
-    {
-      "citation": "[1993] Ch 330",
-      "docs": 2,
-      "year": 1993,
-      "kind": "law-report",
-      "name": "Palk v. Mortgage Services Funding Plc"
-    },
-    {
-      "citation": "[2002] EWCA Civ 1965",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[2009] EWCA Civ 1098",
+      "docs": 231,
+      "year": 2009,
       "kind": "neutral",
-      "name": "Raja v. Austin Gray"
+      "name": "AC Ward & Sons Ltd v Catlin (Five) Ltd"
     },
     {
-      "citation": "[1990] 1 AC 536",
-      "docs": 2,
-      "year": 1990,
-      "kind": "law-report",
-      "name": "China and South Sea Bank Limited v. Tan Soon Gin"
+      "citation": "[2022] UKSC 3",
+      "docs": 231,
+      "year": 2022,
+      "kind": "neutral",
+      "name": "R (O) v Secretary of State for the Home Department"
     },
     {
-      "citation": "[1983] 1 WLR 1349",
-      "docs": 2,
-      "year": 1983,
-      "kind": "law-report",
-      "name": "Tse Kwong Lam v. Wong Chit Sen"
-    },
-    {
-      "citation": "[1913] AC 299",
-      "docs": 2,
+      "citation": "[1913] AC 417",
+      "docs": 230,
       "year": 1913,
       "kind": "law-report",
-      "name": "Privy Council in McHugh v. Union Bank of Canada"
+      "name": "Scott v Scott"
     },
     {
-      "citation": "[1999] 1 WLR 1713",
-      "docs": 2,
-      "year": 1999,
+      "citation": "[2004] 2 AC 557",
+      "docs": 229,
+      "year": 2004,
       "kind": "law-report",
-      "name": "Yorkshire Bank plc v. Hall"
+      "name": "Ghaidan v Godin-Mendoza"
     },
     {
-      "citation": "[2001] Ch 210",
-      "docs": 2,
+      "citation": "[2004] UKHL 27",
+      "docs": 226,
+      "year": 2004,
+      "kind": "neutral",
+      "name": "R (Razgar) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2002] EWCA Civ 605",
+      "docs": 225,
+      "year": 2002,
+      "kind": "neutral",
+      "name": "English v Emery Reimbold & Strick Ltd"
+    },
+    {
+      "citation": "[2007] UKHL 11",
+      "docs": 225,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "Huang v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2004] 2 AC 457",
+      "docs": 223,
+      "year": 2004,
+      "kind": "law-report",
+      "name": "Campbell v MGN Ltd"
+    },
+    {
+      "citation": "[2012] 1 WLR 1804",
+      "docs": 222,
+      "year": 2012,
+      "kind": "law-report",
+      "name": "Altimo Holdings and Investment Ltd v Kyrgyz Mobil Tel Ltd"
+    },
+    {
+      "citation": "[2016] AC 742",
+      "docs": 221,
+      "year": 2016,
+      "kind": "law-report",
+      "name": "Marks and Spencer plc v BNP Paribas Securities Services Trust Co (Jersey) Ltd"
+    },
+    {
+      "citation": "[1956] AC 14",
+      "docs": 219,
+      "year": 1956,
+      "kind": "law-report",
+      "name": "Edwards v Bairstow"
+    },
+    {
+      "citation": "[2001] 2 All ER 91",
+      "docs": 218,
       "year": 2001,
       "kind": "law-report",
-      "name": "Gillett v. Holt"
+      "name": "Swain v Hillman"
     },
     {
-      "citation": "[2003] EWCA Civ 1446",
-      "docs": 2,
-      "year": 2003,
+      "citation": "[2011] EWCA Civ 31",
+      "docs": 218,
+      "year": 2011,
       "kind": "neutral",
-      "name": "Niru Battery Manufacturing Co & anor v. Milestone Trading Limited & ors"
+      "name": "R. (Hope and Glory Public House Ltd) v City of Westminster Magistrates Court & Ors"
     },
     {
-      "citation": "[2002] UKHL 14",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[2013] UKSC 39",
+      "docs": 218,
+      "year": 2013,
       "kind": "neutral",
-      "name": "House of Lords in Royal Brompton Hospital NHS Trust v Hammond"
+      "name": "Bank Mellat v HM Treasury"
     },
     {
-      "citation": "[2002] 1 WLR 1397",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[2007] 2 AC 167",
+      "docs": 217,
+      "year": 2007,
+      "kind": "law-report",
+      "name": "Huang v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2013] 1 WLR 1911",
+      "docs": 216,
+      "year": 2013,
       "kind": "law-report",
       "name": null
     },
     {
-      "citation": "[1955] AC 370",
-      "docs": 2,
-      "year": 1955,
+      "citation": "[2004] 2 AC 323",
+      "docs": 213,
+      "year": 2004,
       "kind": "law-report",
-      "name": "Benmax v Austin Motor Co Ltd"
+      "name": "R (Ullah) v Special Adjudicator"
+    },
+    {
+      "citation": "[2013] 1 AC 338",
+      "docs": 212,
+      "year": 2013,
+      "kind": "law-report",
+      "name": "H(H) v Deputy Prosecutor of the Italian Republic"
+    },
+    {
+      "citation": "[2016] UKSC 60",
+      "docs": 210,
+      "year": 2016,
+      "kind": "neutral",
+      "name": "Hesham Ali (Iraq) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[1999] 1 All ER 400",
+      "docs": 205,
+      "year": 1999,
+      "kind": "law-report",
+      "name": "Paragon Finance v Thakerar"
+    },
+    {
+      "citation": "[2001] 2 AC 532",
+      "docs": 205,
+      "year": 2001,
+      "kind": "law-report",
+      "name": "R (Daly) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2002] 1 AC 251",
+      "docs": 204,
+      "year": 2002,
+      "kind": "law-report",
+      "name": "Bank of Credit and Commerce International SA v Ali"
+    },
+    {
+      "citation": "[2017] UKSC 67",
+      "docs": 204,
+      "year": 2017,
+      "kind": "neutral",
+      "name": "Ivey v Genting Casinos (UK) Ltd"
+    },
+    {
+      "citation": "[2010] UKSC 9",
+      "docs": 202,
+      "year": 2010,
+      "kind": "neutral",
+      "name": "Norris v USA"
+    },
+    {
+      "citation": "[1998] Ch 1",
+      "docs": 200,
+      "year": 1998,
+      "kind": "law-report",
+      "name": "Bristol and West Building Society v Mothew"
+    },
+    {
+      "citation": "[2013] UKSC 67",
+      "docs": 197,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "Aintree University Hospitals NHS Foundation Trust v James"
+    },
+    {
+      "citation": "[2004] 1 AC 816",
+      "docs": 196,
+      "year": 2004,
+      "kind": "law-report",
+      "name": "Wilson v First County Trust"
+    },
+    {
+      "citation": "[1994] 1 WLR 512",
+      "docs": 194,
+      "year": 1994,
+      "kind": "law-report",
+      "name": "Bolton v Law Society"
+    },
+    {
+      "citation": "[2013] EWCA Civ 1537",
+      "docs": 192,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "Mitchell v News Group Newspapers Ltd"
+    },
+    {
+      "citation": "[2011] EWCA Civ 12",
+      "docs": 190,
+      "year": 2011,
+      "kind": "neutral",
+      "name": "Iqbal v Dean Manson Solicitors"
+    },
+    {
+      "citation": "[2002] EWCA Civ 879",
+      "docs": 189,
+      "year": 2002,
+      "kind": "neutral",
+      "name": "Excelsior Commercial & Industrial Holdings Ltd v Salisbury Hammer Aspden & Johnson"
+    },
+    {
+      "citation": "[1985] AC 374",
+      "docs": 188,
+      "year": 1985,
+      "kind": "law-report",
+      "name": "Council of Civil Service Unions v Minister for the Civil Service"
+    },
+    {
+      "citation": "[2004] UKHL 47",
+      "docs": 188,
+      "year": 2004,
+      "kind": "neutral",
+      "name": "Tomlinson v Congleton BC"
+    },
+    {
+      "citation": "[2001] 2 AC 349",
+      "docs": 187,
+      "year": 2001,
+      "kind": "law-report",
+      "name": "R v Secretary of State for the Environment ex parte Spath Holme Ltd"
+    },
+    {
+      "citation": "[2012] PTSR 983",
+      "docs": 187,
+      "year": 2012,
+      "kind": "law-report",
+      "name": "Tesco Stores Ltd v Dundee City Council"
+    },
+    {
+      "citation": "[2022] EWCA Civ 464",
+      "docs": 185,
+      "year": 2022,
+      "kind": "neutral",
+      "name": "Volpi v Volpi"
+    },
+    {
+      "citation": "[2001] UKHL 67",
+      "docs": 182,
+      "year": 2001,
+      "kind": "neutral",
+      "name": "Porter v Magill"
+    },
+    {
+      "citation": "[1968] AC 997",
+      "docs": 181,
+      "year": 1968,
+      "kind": "law-report",
+      "name": "Padfield v Minister of Agriculture"
+    },
+    {
+      "citation": "[2009] AC 1101",
+      "docs": 181,
+      "year": 2009,
+      "kind": "law-report",
+      "name": "Chartbrook Ltd v Persimmon Homes Ltd"
+    },
+    {
+      "citation": "[2023] AC 255",
+      "docs": 181,
+      "year": 2023,
+      "kind": "law-report",
+      "name": "R (O) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2014] UKSC 41",
+      "docs": 180,
+      "year": 2014,
+      "kind": "neutral",
+      "name": "Henderson v Foxworth Investments Ltd"
+    },
+    {
+      "citation": "[1971] 1 WLR 1381",
+      "docs": 179,
+      "year": 1971,
+      "kind": "law-report",
+      "name": "Prenn v Simmonds"
+    },
+    {
+      "citation": "[2001] EWHC Admin 74",
+      "docs": 179,
+      "year": 2001,
+      "kind": "neutral",
+      "name": "Newsmith v Secretary of State for"
+    },
+    {
+      "citation": "[2011] UKPC 7",
+      "docs": 179,
+      "year": 2011,
+      "kind": "neutral",
+      "name": "Altimo Holdings and Investment Ltd v Kyrgyz Mobil Tel Ltd"
+    },
+    {
+      "citation": "[2004] EWCA Civ 49",
+      "docs": 178,
+      "year": 2004,
+      "kind": "neutral",
+      "name": "E v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2011] 2 AC 166",
+      "docs": 178,
+      "year": 2011,
+      "kind": "law-report",
+      "name": "ZH (Tanzania) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2000] 2 AC 115",
+      "docs": 176,
+      "year": 2000,
+      "kind": "law-report",
+      "name": "R v Secretary of State for the Home Department ex p Simms"
+    },
+    {
+      "citation": "[1997] AC 191",
+      "docs": 176,
+      "year": 1997,
+      "kind": "law-report",
+      "name": "South Australia Asset Management Corp v York Montague Ltd"
+    },
+    {
+      "citation": "[2004] 2 AC 368",
+      "docs": 175,
+      "year": 2004,
+      "kind": "law-report",
+      "name": "R (Razgar) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2009] EWHC 231 (Admin)",
+      "docs": 174,
+      "year": 2009,
+      "kind": "neutral",
+      "name": "Szombathely City Court v Fenyvesi"
+    },
+    {
+      "citation": "[2007] EWCA Civ 804",
+      "docs": 173,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "R (A) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[1985] AC 191",
+      "docs": 171,
+      "year": 1985,
+      "kind": "law-report",
+      "name": "Antaios Cia Naviera SA v Salen Rederierna AB (The Antaios)"
+    },
+    {
+      "citation": "[2004] QB 1044",
+      "docs": 170,
+      "year": 2004,
+      "kind": "law-report",
+      "name": "E v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2014] 1 WLR 2600",
+      "docs": 170,
+      "year": 2014,
+      "kind": "law-report",
+      "name": "Henderson v Foxworth Investments Ltd"
+    },
+    {
+      "citation": "[1991] 2 AC 93",
+      "docs": 169,
+      "year": 1991,
+      "kind": "law-report",
+      "name": "Arnold v National Westminster Bank plc"
+    },
+    {
+      "citation": "[1957] 1 WLR 582",
+      "docs": 169,
+      "year": 1957,
+      "kind": "law-report",
+      "name": "Bolam v Friern Hospital Management Committee"
+    },
+    {
+      "citation": "[2005] QB 37",
+      "docs": 169,
+      "year": 2005,
+      "kind": "law-report",
+      "name": "R (Khatun) v Newham London Borough Council"
+    },
+    {
+      "citation": "[1995] 1 WLR 1602",
+      "docs": 168,
+      "year": 1995,
+      "kind": "law-report",
+      "name": "Allied Maples Group Ltd v Simmons & Simmons"
+    },
+    {
+      "citation": "[2014] AC 160",
+      "docs": 168,
+      "year": 2014,
+      "kind": "law-report",
+      "name": "Virgin Atlantic Airways Ltd v Zodiac Seats UK Ltd"
+    },
+    {
+      "citation": "[1985] 1 WLR 647",
+      "docs": 167,
+      "year": 1985,
+      "kind": "law-report",
+      "name": "Lord Fraser in G v G"
+    },
+    {
+      "citation": "[1964] AC 465",
+      "docs": 166,
+      "year": 1964,
+      "kind": "law-report",
+      "name": "Hedley Byrne & Co Ltd v Heller & Partners Ltd"
+    },
+    {
+      "citation": "[1998] AC 232",
+      "docs": 166,
+      "year": 1998,
+      "kind": "law-report",
+      "name": "Bolitho v City and Hackney Health Authority"
+    },
+    {
+      "citation": "[2008] 1 AC 1",
+      "docs": 166,
+      "year": 2008,
+      "kind": "law-report",
+      "name": "OBG Ltd v Allan"
+    },
+    {
+      "citation": "[2011] UKSC 27",
+      "docs": 166,
+      "year": 2011,
+      "kind": "neutral",
+      "name": null
+    },
+    {
+      "citation": "[2005] EWCA Civ 982",
+      "docs": 165,
+      "year": 2005,
+      "kind": "neutral",
+      "name": "R (Iran) v SSHD"
+    },
+    {
+      "citation": "[2009] 1 AC 11",
+      "docs": 165,
+      "year": 2009,
+      "kind": "law-report",
+      "name": "Chartbrook v Persimmon Homes"
+    },
+    {
+      "citation": "[1995] 2 AC 633",
+      "docs": 161,
+      "year": 1995,
+      "kind": "law-report",
+      "name": "X (Minors) v Bedfordshire County Council"
+    },
+    {
+      "citation": "[2002] EWCA Civ 1642",
+      "docs": 160,
+      "year": 2002,
+      "kind": "neutral",
+      "name": "Assicurazioni Generali SpA v Arab Insurance Group"
+    },
+    {
+      "citation": "[2010] 2 AC 487",
+      "docs": 160,
+      "year": 2010,
+      "kind": "law-report",
+      "name": "Norris v Government of the United States of America"
+    },
+    {
+      "citation": "[2015] EWHC 759 (Comm)",
+      "docs": 160,
+      "year": 2015,
+      "kind": "neutral",
+      "name": "Quah Su-Ling v Goldman Sachs International"
+    },
+    {
+      "citation": "[2004] 2 FLR 838",
+      "docs": 159,
+      "year": 2004,
+      "kind": "law-report",
+      "name": null
+    },
+    {
+      "citation": "[2007] 1 WLR 1460",
+      "docs": 159,
+      "year": 2007,
+      "kind": "law-report",
+      "name": "Raschid v General Medical Council"
+    },
+    {
+      "citation": "[2013] EWCA Civ 1345",
+      "docs": 159,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "Bracking v Secretary of State for Work and Pensions"
+    },
+    {
+      "citation": "[2013] UKSC 46",
+      "docs": 158,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "Virgin Atlantic Airways Ltd v Zodiac Seats UK Ltd"
+    },
+    {
+      "citation": "[2001] UKHL 16",
+      "docs": 156,
+      "year": 2001,
+      "kind": "neutral",
+      "name": "Three Rivers District Council v Bank of England"
+    },
+    {
+      "citation": "[1978] 1 WLR 779",
+      "docs": 156,
+      "year": 1978,
+      "kind": "law-report",
+      "name": "Kakis v Government of the Republic of Cyprus"
+    },
+    {
+      "citation": "[2007] 1 WLR 1325",
+      "docs": 156,
+      "year": 2007,
+      "kind": "law-report",
+      "name": "Datec Electronics Holdings Ltd v United Parcels Service Ltd"
+    },
+    {
+      "citation": "[1998] 1 WLR 547",
+      "docs": 155,
+      "year": 1998,
+      "kind": "law-report",
+      "name": "Canada Trust Co v Stolzenberg"
+    },
+    {
+      "citation": "[2007] EWCA Civ 588",
+      "docs": 155,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "Pozzoli v BDMO"
+    },
+    {
+      "citation": "[2003] 2 AC 295",
+      "docs": 154,
+      "year": 2003,
+      "kind": "law-report",
+      "name": "R (Alconbury Developments Ltd) v Secretary of State for the Environment"
+    },
+    {
+      "citation": "[2006] EWCA Civ 1495",
+      "docs": 153,
+      "year": 2006,
+      "kind": "neutral",
+      "name": "WM (DRC) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[1967] 2 QB 786",
+      "docs": 152,
+      "year": 1967,
+      "kind": "law-report",
+      "name": "Snook v London and West Riding Investments Ltd"
     },
     {
       "citation": "[2002] 2 AC 164",
-      "docs": 2,
+      "docs": 151,
       "year": 2002,
       "kind": "law-report",
-      "name": "Twinsectra Ltd v. Yardley"
+      "name": "Twinsectra Ltd v Yardley"
     },
     {
-      "citation": "[1991] 2 AC 548",
-      "docs": 2,
-      "year": 1991,
+      "citation": "[1990] 1 AC 109",
+      "docs": 151,
+      "year": 1990,
       "kind": "law-report",
-      "name": "Lipkin Gorman v Karpnale Ltd"
+      "name": "AG v The Observer Ltd"
     },
     {
-      "citation": "[2002] 1 All ER (Comm) 193",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "Privy Council in Dextra Bank & Trust Co Ltd v Bank of Jamaica"
-    },
-    {
-      "citation": "[2000] STC 16",
-      "docs": 2,
-      "year": 2000,
-      "kind": "law-report",
-      "name": "Marks and Spencer v C & E Commissioners"
-    },
-    {
-      "citation": "[2003] EWCA Civ 173",
-      "docs": 2,
-      "year": 2003,
+      "citation": "[2021] EWCA Civ 448",
+      "docs": 151,
+      "year": 2021,
       "kind": "neutral",
-      "name": "Neuberger J) and Melham v Mrs J Burton (Collector of Taxes)"
+      "name": "Whilst K v K post-dates Re H-N"
     },
     {
-      "citation": "[2002] UKHL 38",
-      "docs": 2,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "R (Westminster City Council) v National Asylum Support Service"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1494",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Simon Brown LJ said in Thomas-Fredric’s (Construction) Limited v Keith Wilson"
-    },
-    {
-      "citation": "[2002] 1 WLR 2344",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[1990] 1 WLR 1545",
+      "docs": 150,
+      "year": 1990,
       "kind": "law-report",
-      "name": "RJT Consulting Engineers Ltd v DM Engineering Ltd"
+      "name": "R v Inland Revenue Comrs Ex p MFK Underwriting Agents Ltd"
     },
     {
-      "citation": "[1999] BLR 377",
-      "docs": 2,
+      "citation": "[1999] 2 AC 143",
+      "docs": 150,
       "year": 1999,
       "kind": "law-report",
-      "name": "The Project Consultancy Group v The Trustees of the Gray Trust"
+      "name": "Boddington v British Transport Police"
     },
     {
-      "citation": "[2003] EWCA Civ 1507",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "The most recent case is Koci v Secretary of State for Home Department"
+      "citation": "[2005] RPC 9",
+      "docs": 150,
+      "year": 2005,
+      "kind": "law-report",
+      "name": "Kirin-Amgen v Hoechst Marion Roussel"
     },
     {
-      "citation": "[2002] EWCA Civ 1906",
-      "docs": 2,
+      "citation": "[2002] EWCA Civ 888",
+      "docs": 149,
       "year": 2002,
       "kind": "neutral",
-      "name": "In Oleed v Secretary of State for Home Department"
+      "name": "R (I) v Secretary of State for the Home Department"
     },
     {
-      "citation": "[2003] INLR 179",
-      "docs": 2,
+      "citation": "[2005] 1 AC 253",
+      "docs": 149,
+      "year": 2005,
+      "kind": "law-report",
+      "name": "Cream Holdings Ltd v Banerjee"
+    },
+    {
+      "citation": "[2013] UKSC 60",
+      "docs": 149,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "Court in the recent cases of A v A"
+    },
+    {
+      "citation": "[1999] 1 WLR 1092",
+      "docs": 148,
+      "year": 1999,
+      "kind": "law-report",
+      "name": "O’Neill v Phillips"
+    },
+    {
+      "citation": "[2004] UKHL 30",
+      "docs": 148,
+      "year": 2004,
+      "kind": "neutral",
+      "name": "Ghaidan v Godin-Mendoza"
+    },
+    {
+      "citation": "[2003] 2 AC 687",
+      "docs": 148,
       "year": 2003,
       "kind": "law-report",
-      "name": null
+      "name": "R (Quintavalle) v Secretary of State for Health"
     },
     {
-      "citation": "[2002] INLR 139",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "McPherson v Secretary of State for the Home Department"
+      "citation": "[2017] EWCA Civ 1314",
+      "docs": 148,
+      "year": 2017,
+      "kind": "neutral",
+      "name": "Mansell v Tonbridge and Malling Borough Council"
     },
     {
-      "citation": "[2003] 3 WLR 736",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": null
+      "citation": "[2008] EWCA Civ 130",
+      "docs": 144,
+      "year": 2008,
+      "kind": "neutral",
+      "name": "Jeynes v News Magazines Ltd"
     },
     {
-      "citation": "(1982) 4 EHRR 443",
-      "docs": 2,
-      "year": 1982,
-      "kind": "law-report",
-      "name": "Van Droogenbroeck v Belgium"
-    },
-    {
-      "citation": "[1996] 3 All ER 834",
-      "docs": 2,
+      "citation": "[1996] AC 669",
+      "docs": 143,
       "year": 1996,
       "kind": "law-report",
-      "name": "County Ltd and Another v Girozentrale Securities"
+      "name": "Westdeutsche Landesbank Girozentrale v Islington London Borough Council"
     },
     {
-      "citation": "[2003] EWCA Civ 154",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "See also Matlaszek v Bloom Camillin"
-    },
-    {
-      "citation": "[2003] IRLR 199",
-      "docs": 2,
-      "year": 2003,
-      "kind": "law-report",
-      "name": "It is the comparatively recent case of Commissioners of Inland Revenue v Post Office"
-    },
-    {
-      "citation": "[2002] INLR 416",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "Laws LJ in S v Home Secretary"
-    },
-    {
-      "citation": "[2003] EWCA Civ 752",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": "Motorola Credit Corporation v Uzan & Others"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1684",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[1985] AC 809",
-      "docs": 2,
-      "year": 1985,
-      "kind": "law-report",
-      "name": "Street v. Mountford"
-    },
-    {
-      "citation": "[1972] AC 1027",
-      "docs": 2,
-      "year": 1972,
-      "kind": "law-report",
-      "name": "L.C. in Broome v Cassell & Co"
-    },
-    {
-      "citation": "[2003] EWCA Civ 1677",
-      "docs": 2,
-      "year": 2003,
-      "kind": "neutral",
-      "name": null
-    },
-    {
-      "citation": "[2002] EWCA Civ 1738",
-      "docs": 2,
-      "year": 2002,
-      "kind": "neutral",
-      "name": "R (Sivasubramaniam) v Wandsworth County Court"
-    },
-    {
-      "citation": "[2002] 2 AC 773",
-      "docs": 2,
-      "year": 2002,
-      "kind": "law-report",
-      "name": "House of Lords in Royal Bank of Scotland v Etridge"
-    },
-    {
-      "citation": "[2001] 1 WLR 1001",
-      "docs": 2,
+      "citation": "[2001] 1 WLR 1915",
+      "docs": 143,
       "year": 2001,
       "kind": "law-report",
+      "name": "Ghosh v General Medical Council"
+    },
+    {
+      "citation": "[2006] 2 AC 465",
+      "docs": 143,
+      "year": 2006,
+      "kind": "law-report",
+      "name": "Kay v Lambeth London Borough Council"
+    },
+    {
+      "citation": "[2016] 1 WLR 551",
+      "docs": 143,
+      "year": 2016,
+      "kind": "law-report",
+      "name": "Polish Judicial Authority v Celinski"
+    },
+    {
+      "citation": "[1995] 2 AC 145",
+      "docs": 142,
+      "year": 1995,
+      "kind": "law-report",
+      "name": "Henderson v Merrett Syndicates Ltd"
+    },
+    {
+      "citation": "[2010] 1 All ER 571",
+      "docs": 142,
+      "year": 2010,
+      "kind": "law-report",
       "name": null
     },
     {
-      "citation": "[2002] EWCA Civ 10",
-      "docs": 2,
-      "year": 2002,
+      "citation": "[2018] UKUT 178 (TCC)",
+      "docs": 142,
+      "year": 2018,
       "kind": "neutral",
-      "name": "Audergon v La Baguette"
+      "name": "Martland v HMRC"
+    },
+    {
+      "citation": "[1985] AC 318",
+      "docs": 139,
+      "year": 1985,
+      "kind": "law-report",
+      "name": "Findlay v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[1988] 1 WLR 1350",
+      "docs": 139,
+      "year": 1988,
+      "kind": "law-report",
+      "name": "Brink’s Mat Ltd v Elcombe"
+    },
+    {
+      "citation": "[2004] EWCA Civ 558",
+      "docs": 139,
+      "year": 2004,
+      "kind": "neutral",
+      "name": "We had regard to Jones v Post Office"
+    },
+    {
+      "citation": "[2007] UKHL 49",
+      "docs": 139,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "AH (Sudan) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2007] UKHL 40",
+      "docs": 138,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "Fiona Trust & Holding Corporation v Privalov"
+    },
+    {
+      "citation": "[2012] 1 AC 144",
+      "docs": 138,
+      "year": 2012,
+      "kind": "law-report",
+      "name": null
+    },
+    {
+      "citation": "[1987] IRLR 250",
+      "docs": 137,
+      "year": 1987,
+      "kind": "law-report",
+      "name": "Meek v City of Birmingham District Council"
+    },
+    {
+      "citation": "[2001] 2 AC 550",
+      "docs": 137,
+      "year": 2001,
+      "kind": "law-report",
+      "name": "Barrett v Enfield London Borough Council"
+    },
+    {
+      "citation": "[2007] UKHL 23",
+      "docs": 137,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "Datec Electronics Holdings Ltd v United Parcels Service Ltd"
+    },
+    {
+      "citation": "[2014] 1 WLR 795",
+      "docs": 137,
+      "year": 2014,
+      "kind": "law-report",
+      "name": "Mitchell v News Group Newspapers Ltd"
+    },
+    {
+      "citation": "[1997] 1 WLR 1447",
+      "docs": 136,
+      "year": 1997,
+      "kind": "law-report",
+      "name": "City of Edinburgh Council v Secretary of State for Scotland"
+    },
+    {
+      "citation": "[2008] 1 WLR 748",
+      "docs": 136,
+      "year": 2008,
+      "kind": "law-report",
+      "name": "Aldi Stores Ltd v WSP Group plc"
+    },
+    {
+      "citation": "[1976] 1 WLR 989",
+      "docs": 135,
+      "year": 1976,
+      "kind": "law-report",
+      "name": "Reardon Smith Line Ltd v Yngvar Hansen-Tangen"
+    },
+    {
+      "citation": "[1985] 1 WLR 948",
+      "docs": 135,
+      "year": 1985,
+      "kind": "law-report",
+      "name": "Rhesa Shipping Co SA v Fenton Insurance Co Ltd"
+    },
+    {
+      "citation": "[2014] EWHC 754 (Admin)",
+      "docs": 135,
+      "year": 2014,
+      "kind": "neutral",
+      "name": "Bloor Homes East Midlands Ltd v Secretary of State for Communities and Local Government"
+    },
+    {
+      "citation": "[2014] AC 1115",
+      "docs": 135,
+      "year": 2014,
+      "kind": "law-report",
+      "name": "R (Osborn) v Parole Board"
+    },
+    {
+      "citation": "[1995] 2 AC 378",
+      "docs": 134,
+      "year": 1995,
+      "kind": "law-report",
+      "name": "Royal Brunei Airlines Sdn Bhd v Tan"
+    },
+    {
+      "citation": "[2007] FSR 37",
+      "docs": 134,
+      "year": 2007,
+      "kind": "law-report",
+      "name": "Pozzoli v BDMO"
+    },
+    {
+      "citation": "[2006] UKHL 24",
+      "docs": 133,
+      "year": 2006,
+      "kind": "neutral",
+      "name": "McFarlane v McFarlane"
+    },
+    {
+      "citation": "[2001] 1 AC 596",
+      "docs": 132,
+      "year": 2001,
+      "kind": "law-report",
+      "name": "White v White"
+    },
+    {
+      "citation": "[2013] EWCA Civ 965",
+      "docs": 132,
+      "year": 2013,
+      "kind": "neutral",
+      "name": null
+    },
+    {
+      "citation": "[1975] AC 591",
+      "docs": 131,
+      "year": 1975,
+      "kind": "law-report",
+      "name": "Black-Clawson International Ltd v Papierwerke Waldhof-Aschaffenburg AG"
+    },
+    {
+      "citation": "[1974] AC 235",
+      "docs": 130,
+      "year": 1974,
+      "kind": "law-report",
+      "name": "Wickman Machine Tools Sales Ltd v L Schuler AG"
+    },
+    {
+      "citation": "[2007] 1 AC 100",
+      "docs": 130,
+      "year": 2007,
+      "kind": "law-report",
+      "name": "R (SB) v Governors of Denbigh High School"
+    },
+    {
+      "citation": "[2013] UKSC 58",
+      "docs": 130,
+      "year": 2013,
+      "kind": "neutral",
+      "name": "McGraddie v McGraddie"
+    },
+    {
+      "citation": "[2010] EWCA Civ 808",
+      "docs": 129,
+      "year": 2010,
+      "kind": "neutral",
+      "name": "Harris v Registrar of Approved Driving Instructors"
+    },
+    {
+      "citation": "[2007] EWCA Civ 46",
+      "docs": 128,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "Fatnani and Raschid v General Medical Council"
+    },
+    {
+      "citation": "[2015] EWFC 11",
+      "docs": 128,
+      "year": 2015,
+      "kind": "neutral",
+      "name": "Darlington Borough Council v M"
+    },
+    {
+      "citation": "[2006] 1 AC 340",
+      "docs": 127,
+      "year": 2006,
+      "kind": "law-report",
+      "name": "R v Soneji"
+    },
+    {
+      "citation": "[2004] EWCA Civ 266",
+      "docs": 126,
+      "year": 2004,
+      "kind": "neutral",
+      "name": "Hughes v Colin Richards & Co"
+    },
+    {
+      "citation": "[2005] 2 AC 68",
+      "docs": 126,
+      "year": 2005,
+      "kind": "law-report",
+      "name": "A v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2003] INLR 196",
+      "docs": 125,
+      "year": 2003,
+      "kind": "law-report",
+      "name": "R (I) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2006] 1 AC 173",
+      "docs": 125,
+      "year": 2006,
+      "kind": "law-report",
+      "name": "R (Carson) v Secretary of State for Work and Pensions"
+    },
+    {
+      "citation": "[2007] QB 462",
+      "docs": 125,
+      "year": 2007,
+      "kind": "law-report",
+      "name": "Meadow v General Medical Council"
+    },
+    {
+      "citation": "[2012] 1 AC 621",
+      "docs": 123,
+      "year": 2012,
+      "kind": "law-report",
+      "name": "R (Aguilar Quila) v Secretary of Stage for the Home Department"
+    },
+    {
+      "citation": "[2013] 2 AC 415",
+      "docs": 123,
+      "year": 2013,
+      "kind": "law-report",
+      "name": "Prest v Prest"
+    },
+    {
+      "citation": "[2018] UKUT 72 (AAC)",
+      "docs": 123,
+      "year": 2018,
+      "kind": "neutral",
+      "name": "Information Commissioner v Malnick"
+    },
+    {
+      "citation": "[2007] EWCA Civ 369",
+      "docs": 122,
+      "year": 2007,
+      "kind": "neutral",
+      "name": "General Medical Council v Hiew"
+    },
+    {
+      "citation": "[2014] EWCA Civ 1633",
+      "docs": 122,
+      "year": 2014,
+      "kind": "neutral",
+      "name": "R (Hysaj) v Secretary of State for the Home Department"
+    },
+    {
+      "citation": "[2021] EWCA Civ 672",
+      "docs": 122,
+      "year": 2021,
+      "kind": "neutral",
+      "name": "DPP Law Ltd v Greenberg"
     }
   ],
   "malformedCandidates": [
     {
-      "citation": "[2001] QB 967",
-      "kind": "law-report",
-      "year": 2001,
-      "series": "QB",
-      "docs": 3,
+      "citation": "[2013] UKSC 33",
+      "kind": "neutral",
+      "year": 2013,
+      "series": "UKSC",
+      "docs": 503,
       "byCorpus": {
-        "tna-caselaw": 3
+        "tna-caselaw": 503
       },
       "names": {},
       "samples": [
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 103:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1007:1",
           "corpus": "tna-caselaw",
-          "raw": "[2001] QB 967",
-          "sentence": "In Douglas -v- Hello! Limited [2001] QB 967 , Keene LJ in paragraph 149 of his judgment recorded Mr Tugendhat QC’s argument for the claimants as follows: “…."
+          "raw": "[2013] UKSC 33",
+          "sentence": "The second context is that following the Supreme Court decision of ten days ago in the case of Re B [2013] UKSC 33 , the test I have to apply is not to look and see whether Judge Hallam was \"plainly wrong\" before the Court of Appeal could intervene, but simply to question whether she was \"wrong\" or not."
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 103:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1018:1",
           "corpus": "tna-caselaw",
-          "raw": "[2001] QB 967",
-          "sentence": "(See Douglas -v- Hello! Ltd [2001] QB 967 ; Keene LJ paragraph 150) … 12."
+          "raw": "[2013] UKSC 33",
+          "sentence": "tion 52 as explained by this court in Re P (Placement Orders: Parental Consent) [2008] EWCA Civ 535 , [2008] 2 FLR 625 CA at paragraphs 113 to 119 inclusive and, most recently as reiterated by the Supreme Court In the matter of B (A Child) [2013] UKSC 33 ."
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 103:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1026:1",
           "corpus": "tna-caselaw",
-          "raw": "[2001] QB 967",
-          "sentence": "As Keene LJ said in Douglas -v- Hello! Ltd [2001] QB 967 9 at paragraph 150, section 12(3) requires the court to focus on the situation at trial."
+          "raw": "[2013] UKSC 33",
+          "sentence": "Again, in discussing the approach of the court, it is right to record that counsel referred in opening to the recent decision of the Supreme Court in Re B [2013] UKSC 33 , which indicates that in certain circumstances the previously accepted test of establishing that the judge was \"plainly wrong\" now has to be substituted for a finding merely that the judge was \"wrong\"."
         }
       ]
     },
@@ -1529,9 +1590,9 @@
       "kind": "law-report",
       "year": 1996,
       "series": "AC",
-      "docs": 3,
+      "docs": 409,
       "byCorpus": {
-        "tna-caselaw": 3
+        "tna-caselaw": 409
       },
       "names": {},
       "samples": [
@@ -1556,220 +1617,250 @@
       ]
     },
     {
-      "citation": "[2002] UKHL 19",
+      "citation": "[2005] 1 AC 593",
+      "kind": "law-report",
+      "year": 2005,
+      "series": "AC",
+      "docs": 334,
+      "byCorpus": {
+        "tna-caselaw": 334
+      },
+      "names": {},
+      "samples": [
+        {
+          "id": "tna-caselaw:[2005] EWHC 1651 (QB):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2005] 1 AC 593",
+          "sentence": "quirements of s.12 of the Human Rights Act 1998 which has recently received the attention of appellate courts, including in Cream Holdings Ltd v Banerjee [2005] 1 AC 253 , Greene v Associated Newspapers Ltd [2005] 1 All ER 30 and Re S (FC) [2005] 1 AC 593 ."
+        },
+        {
+          "id": "tna-caselaw:[2005] EWHC 3522 (Fam):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2005] 1 AC 593",
+          "sentence": "y protected by Article 8 of the Convention, and moreover in circumstances where it was said that, notwithstanding the recent decision of the House of Lords in In re S (A Child) (Identification: Restrictions on Publication) [2004] UKHL 47 , [2005] 1 AC 593 , there was a cause of action under the inherent jurisdiction of the Family Division."
+        },
+        {
+          "id": "tna-caselaw:[2006] EWCA Civ 1714:1",
+          "corpus": "tna-caselaw",
+          "raw": "[2005] 1 AC 593",
+          "sentence": "In a passage headed “A need to balance Convention rights” the Judge, basing himself on Campbell and on Re S(FC)(A child) [2005] 1 AC 593 , set out the principles to be applied when article 8 rights were relied on to restrain publication."
+        }
+      ]
+    },
+    {
+      "citation": "[2013] EWCA Civ 1146",
       "kind": "neutral",
-      "year": 2002,
-      "series": "UKHL",
-      "docs": 3,
+      "year": 2013,
+      "series": "EWCA",
+      "docs": 290,
       "byCorpus": {
-        "tna-caselaw": 3
+        "tna-caselaw": 290
       },
       "names": {},
       "samples": [
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 113:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1146:1",
           "corpus": "tna-caselaw",
-          "raw": "[2002] UKHL 19",
-          "sentence": "So far as the law of conversion is concerned, the Judge adopted the following passage from the decision of the Court of Appeal in Kuwait Airways Corporation v Iraq Airways Co (Nos 4 and 5) [2002] UKHL 19 ; [2002] 2AC 883 at paragraph 538: “It appears to us that as the law now stands, in conversion cases a court has to ask whether at the time of the conversion the type of loss that occurred (as opp"
+          "raw": "[2013] EWCA Civ 1146",
+          "sentence": "Neutral Citation Number: [2013] EWCA Civ 1146 Case No: B4/2013/1377 IN THE COURT OF APPEAL (CIVIL DIVISION) ON APPEAL FROM CHELMSFORD COUNTY COURT Mrs Justice PARKER Royal Courts of Justice Strand, London, WC2A 2LL Date: 17 September 2013 Before : LORD DYSON MASTER OF THE ROLLS SIR JA"
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 1156:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1177:1",
           "corpus": "tna-caselaw",
-          "raw": "[2002] UKHL 19",
-          "sentence": "An instance of such a qualification of the first facet arose in Kuwait Airways Corp v Iraqi Airways Co (Nos 4 and 5) [2002] UKHL 19 ; [2002] 2 AC 883 ."
+          "raw": "[2013] EWCA Civ 1146",
+          "sentence": "Each case has, of course, to be determined on its own particular facts, but each raises very similar issues and each has to be determined in accordance with the recent decision of this court in Re B-S (Children( [2013] EWCA Civ 1146 ."
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 1156:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1227:1",
           "corpus": "tna-caselaw",
-          "raw": "[2002] UKHL 19",
-          "sentence": "4 and 5) [2002] UKHL 19 ; [2002] 2 AC 883 ."
+          "raw": "[2013] EWCA Civ 1146",
+          "sentence": "As has recently been explained in Re B-S (Children [2013] EWCA Civ 1146 at [36], it may be helpful to those who have to perform this task (and the associated task where placement applications are made under the Adoption and Children Act 2002 where the separate and distinct welfare checklist in s 1(4) of that A"
         }
       ]
     },
     {
-      "citation": "[2002] 2 AC 883",
+      "citation": "[2013] 1 WLR 1911",
       "kind": "law-report",
-      "year": 2002,
-      "series": "AC",
-      "docs": 3,
-      "byCorpus": {
-        "tna-caselaw": 3
-      },
-      "names": {},
-      "samples": [
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 1156:1",
-          "corpus": "tna-caselaw",
-          "raw": "[2002] 2 AC 883",
-          "sentence": "An instance of such a qualification of the first facet arose in Kuwait Airways Corp v Iraqi Airways Co (Nos 4 and 5) [2002] UKHL 19 ; [2002] 2 AC 883 ."
-        },
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 1156:1",
-          "corpus": "tna-caselaw",
-          "raw": "[2002] 2 AC 883",
-          "sentence": "4 and 5) [2002] UKHL 19 ; [2002] 2 AC 883 ."
-        },
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 1490:1",
-          "corpus": "tna-caselaw",
-          "raw": "[2002] 2 AC 883",
-          "sentence": "That would be apparent without authority, but the proposition is strongly supported by the respected analysis of Lord Hoffmann in the Kuwait Airways case [2002] 2 AC 883 [128], cited with strong approval by Lord Bingham of Cornhill in Fairchild v Glenhaven Funeral Services [2003] 1 AC 32[12]: \"There is no uniform causal requirement for liability in tort."
-        }
-      ]
-    },
-    {
-      "citation": "[2001] 1 WLR 1388",
-      "kind": "law-report",
-      "year": 2001,
+      "year": 2013,
       "series": "WLR",
-      "docs": 2,
+      "docs": 216,
       "byCorpus": {
-        "tna-caselaw": 2
+        "tna-caselaw": 216
       },
       "names": {},
       "samples": [
         {
-          "id": "tna-caselaw:[2002] EWCA Civ 215:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1146:1",
           "corpus": "tna-caselaw",
-          "raw": "[2001] 1 WLR 1388",
-          "sentence": "Since the decisions of the House of Lords in Government of the United States of America v Montgomery [2001] 1 WLR 196 and Re Norris [2001] 1 WLR 1388 , it is clear that in relation to confiscation orders there is a division of responsibility and function between the Crown Court, which is concerned with what order to make under sections 1 to 4, and the High Court exercising the civil jur"
+          "raw": "[2013] 1 WLR 1911",
+          "sentence": "He was concerned that the full court should have the opportunity of considering the then very recent decision of the Supreme Court in In re B (A Child) (Care Proceedings: Threshold Criteria) [2013] UKSC 33 , [2013] 1 WLR 1911 ."
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 1115:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1146:1",
           "corpus": "tna-caselaw",
-          "raw": "[2001] 1 WLR 1388",
-          "sentence": "Mr Hodge drew our attention to the observation of Lord Hobhouse of Woodborough in re Norris [2001] UKHL 34 , [2001] 1 WLR 1388 , at para 26 that it would be “a rare case” where litigation of an issue which had not previously been decided between the same parties or their privies would amount to an abuse of process."
+          "raw": "[2013] 1 WLR 1911",
+          "sentence": "and YC v United Kingdom (2012) 55 EHRR 967 , are set out by the Supreme Court in In re B (A Child) (Care Proceedings: Threshold Criteria) [2013] UKSC 33 , [2013] 1 WLR 1911 ."
+        },
+        {
+          "id": "tna-caselaw:[2013] EWCA Civ 1146:1",
+          "corpus": "tna-caselaw",
+          "raw": "[2013] 1 WLR 1911",
+          "sentence": "Just how stringent and demanding has been spelt out very recently by the Supreme Court in In re B (A Child) (Care Proceedings: Threshold Criteria) [2013] UKSC 33 , [2013] 1 WLR 1911 ."
         }
       ]
     },
     {
-      "citation": "[1981] AC 374",
+      "citation": "[2011] UKSC 27",
+      "kind": "neutral",
+      "year": 2011,
+      "series": "UKSC",
+      "docs": 166,
+      "byCorpus": {
+        "tna-caselaw": 166
+      },
+      "names": {},
+      "samples": [
+        {
+          "id": "tna-caselaw:[2011] EWCA Civ 1385:1",
+          "corpus": "tna-caselaw",
+          "raw": "[2011] UKSC 27",
+          "sentence": "uggested that Coleridge J crafted this direction but rather that it was laid before him for approval by juniors who drew their inspiration from paragraph 36 of the leading judgment in the case of Re E (Children) (abduction: custody appeal) [2011] UKSC 27 , [2011] 2 FLR 758 ."
+        },
+        {
+          "id": "tna-caselaw:[2011] EWHC 2317 (Admin):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2011] UKSC 27",
+          "sentence": "However, Mr Westgate also relied on a statement of principle made by Baroness Hale of Richmond and Lord Wilson JJSC in In re E (Children) (Abduction: Custody Appeal) [2011] UKSC 27 at paragraph 12 as follows: “ Article 3(1) of UNCRC 12."
+        },
+        {
+          "id": "tna-caselaw:[2011] EWHC 3390 (Admin):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2011] UKSC 27",
+          "sentence": "Article 8 has to be interpreted and applied in the light of the UNCRC: see In re E (Children) (Abduction: Custody Appeal) [2011] UKSC 27 ; [2011] 2 WLR 1326 at [26]."
+        }
+      ]
+    },
+    {
+      "citation": "[2004] 2 FLR 838",
       "kind": "law-report",
-      "year": 1981,
+      "year": 2004,
+      "series": "FLR",
+      "docs": 159,
+      "byCorpus": {
+        "tna-caselaw": 159
+      },
+      "names": {},
+      "samples": [
+        {
+          "id": "tna-caselaw:[2005] EWHC 1936 (Admin):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2004] 2 FLR 838",
+          "sentence": "oof) [1996] AC 563 (see A Local Authority v K, D & L [2005] 1 FLR 851 , the cases referred to therein and naturally in particular Re U (Serious Injury: standard of proof); Re B [2004] 2 FLR 263 and see also Re T (Abuse : Standard of Proof) [2004] 2 FLR 838 , and Re G (a child) (non-accidental injury:standard of proof) [2001] 1 FCR 97)."
+        },
+        {
+          "id": "tna-caselaw:[2005] EWHC 587 (Admin):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2004] 2 FLR 838",
+          "sentence": "inue to be followed by the judiciary trying family cases and by magistrates sitting in the family proceedings courts.” The President said almost exactly the same only five days later in Re T (Abuse: Standard of Proof) [2004] EWCA Civ 558 , [2004] 2 FLR 838 , at para [28]."
+        },
+        {
+          "id": "tna-caselaw:[2006] EWHC 2987 (Fam):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2004] 2 FLR 838",
+          "sentence": "I have taken that from the judgment of Dame Elizabeth Butler Sloss DBE in Re T (children) [2004] 2 FLR 838 ."
+        }
+      ]
+    },
+    {
+      "citation": "[2010] 1 All ER 571",
+      "kind": "law-report",
+      "year": 2010,
+      "series": "All ER",
+      "docs": 142,
+      "byCorpus": {
+        "tna-caselaw": 142
+      },
+      "names": {},
+      "samples": [
+        {
+          "id": "tna-caselaw:[2010] EWCA Civ 1248:1",
+          "corpus": "tna-caselaw",
+          "raw": "[2010] 1 All ER 571",
+          "sentence": "to the grammatical meaning of the words of the claim and ignored the wider context of the overall scheme of the ICA, just as the Court of Appeal had in Re Sigma Finance Corporation , only to find itself being reversed by the Supreme Court, [2010] 1 All ER 571 , and criticised by Lord Mance for attaching too much weight to what they perceived to be the natural meaning of the words in a particular s"
+        },
+        {
+          "id": "tna-caselaw:[2011] EWHC 1822 (Ch):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2010] 1 All ER 571",
+          "sentence": "Persimmon Homes Limited & another [2009] 1 AC 1101 and Re Sigma Finance Corp [2010] 1 All ER 571 ."
+        },
+        {
+          "id": "tna-caselaw:[2011] EWHC 2117 (Ch):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2010] 1 All ER 571",
+          "sentence": "In Re Sigma Finance Corp (in administrative receivership) [2010] 1 All ER 571 , a case which concerned the construction of complex financial instruments:- i) Lord Mance said this at paragraph 12:- “ In my opinion, the conclusion reached below attaches too much weight to what the courts perceived as the natural meani"
+        }
+      ]
+    },
+    {
+      "citation": "[2012] 1 AC 144",
+      "kind": "law-report",
+      "year": 2012,
       "series": "AC",
-      "docs": 2,
+      "docs": 138,
       "byCorpus": {
-        "tna-caselaw": 2
+        "tna-caselaw": 138
       },
       "names": {},
       "samples": [
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 1007:1",
+          "id": "tna-caselaw:[2012] EWCA Civ 1157:1",
           "corpus": "tna-caselaw",
-          "raw": "[1981] AC 374",
-          "sentence": "In so ruling, Hutchison LJ took the same course as the House of Lords had done many years before in In Re Racal Communications Ltd [1981] AC 374 , when considering the statutory predecessor of section 18 of the 1981 Act , which, as I have indicated, is section 33(1) (d) of the 1925 Act -- in that instance, in the context of a finality bar imposed by section 441 of the Companies Act"
+          "raw": "[2012] 1 AC 144",
+          "sentence": "s of the European Union or by the European Convention for the Protection of Human Rights and Fundamental Freedoms, she said that the speech of Baroness Hale and Lord Wilson in In re E (Children) (Abduction: Custody Appeal) [2011] UKSC 27 , [2012] 1 AC 144 , para [18], makes clear that “if the court faithfully applies [the provisions of BIIR] that it too will be complying with Art 3 (1) of the UNCR"
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 183:1",
+          "id": "tna-caselaw:[2012] EWHC 2838 (Fam):1",
           "corpus": "tna-caselaw",
-          "raw": "[1981] AC 374",
-          "sentence": "He had earlier referred to a passage, in Re Racal Communications Ltd [1981] AC 374 , 383, where Lord Diplock had described the effect of the House of Lords decision in Anisminic Ltd v Foreign Compensation Commission [1969] 2 AC 147 , as destroying, as respects administrative tribunals and authorities, “the old distinctio"
+          "raw": "[2012] 1 AC 144",
+          "sentence": "More recently, Article 13(b) has received further consideration by the Supreme Court in Re E (Children) (Abduction: Custody Appeal) [2011] UKSC27 [2012] 1 AC 144 ."
+        },
+        {
+          "id": "tna-caselaw:[2012] EWHC 3128 (Admin):1",
+          "corpus": "tna-caselaw",
+          "raw": "[2012] 1 AC 144",
+          "sentence": "The impact of that decision in the domestic context was considered by the Supreme Court in Re E (Children) (Abduction: Custody Appeal) [2012] 1 AC 144 , 157 when Baroness Hale and Lord Wilson JJSC in giving the judgment of the Supreme Court stated (with emphasis added) that:- “26 The most that can be said, therefore, is that both Maumousseau and Neulinger acknowledge that the guarantees"
         }
       ]
     },
     {
-      "citation": "[2002] INLR 34",
-      "kind": "law-report",
-      "year": 2002,
-      "series": "INLR",
-      "docs": 2,
+      "citation": "[2013] EWCA Civ 965",
+      "kind": "neutral",
+      "year": 2013,
+      "series": "EWCA",
+      "docs": 132,
       "byCorpus": {
-        "tna-caselaw": 2
+        "tna-caselaw": 132
       },
       "names": {},
       "samples": [
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 1032:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1073:1",
           "corpus": "tna-caselaw",
-          "raw": "[2002] INLR 34",
-          "sentence": "A distinction is drawn, so far as domestic rights are concerned, between those who enjoy refugee status and those who do not – see Saad, Diriye and Osorio v Secretary of State for the Home Department [2001] EWCA Civ 2008 ; [2002] INLR 34."
+          "raw": "[2013] EWCA Civ 965",
+          "sentence": "Very recently, in Re G (a child) [2013] EWCA Civ 965 , McFarlane LJ made some extremely important observations about the proper approach to the judicial task in cases such as the present one."
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 114:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1104:1",
           "corpus": "tna-caselaw",
-          "raw": "[2002] INLR 34",
-          "sentence": "See too in this connection paragraph 72(ii) and (iii) of this court’s decision in Saad, Diriye and Osorio -v- Secretary of State for the Home Department [2002] INLR 34, 52-53."
-        }
-      ]
-    },
-    {
-      "citation": "(1997) 23 EHRR 213",
-      "kind": "law-report",
-      "year": 1997,
-      "series": "EHRR",
-      "docs": 2,
-      "byCorpus": {
-        "tna-caselaw": 2
-      },
-      "names": {},
-      "samples": [
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 1034:1",
-          "corpus": "tna-caselaw",
-          "raw": "(1997) 23 EHRR 213",
-          "sentence": "To my mind Stubbings -v- UK (1997) 23 EHRR 213 is fatal to their success."
+          "raw": "[2013] EWCA Civ 965",
+          "sentence": "In Re G (A Child) [2013] EWCA Civ 965 at paragraphs 32 to 35 I purported to summarise the impact of the Supreme Court’s decision in Re B in the appellate context."
         },
         {
-          "id": "tna-caselaw:[2003] EWCA Civ 1345:1",
+          "id": "tna-caselaw:[2013] EWCA Civ 1146:1",
           "corpus": "tna-caselaw",
-          "raw": "(1997) 23 EHRR 213",
-          "sentence": "As the ECtHR put it in Stubbings -v- United Kingdom (1997) 23 EHRR 213 , paragraph 70: “[N]ot every difference in treatment will amount to a violation of [article 14]."
-        }
-      ]
-    },
-    {
-      "citation": "[2001] 2 AC 127",
-      "kind": "law-report",
-      "year": 2001,
-      "series": "AC",
-      "docs": 2,
-      "byCorpus": {
-        "tna-caselaw": 2
-      },
-      "names": {},
-      "samples": [
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 103:1",
-          "corpus": "tna-caselaw",
-          "raw": "[2001] 2 AC 127",
-          "sentence": "There is no inconsistency between A -v- B guideline (xii) and what, for example, Lord Steyn said in Reynolds -v- Times Newspapers Ltd [2001] 2 AC 127 , 207 as to the right to freedom of expression being a constitutional right and that “[b]y categorising this basic and fundamental right as a constitutional right its higher normative force is emphasised”."
-        },
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 103:1",
-          "corpus": "tna-caselaw",
-          "raw": "[2001] 2 AC 127",
-          "sentence": "This was echoed by Lord Nicholls in Reynolds -v- Times Newspapers Ltd [2001] 2 AC 127 at 200 when he said that the need for restriction must be “convincingly established by a compelling countervailing consideration and the means employed must be proportionate to the end sought to be achieved.” Accordingly, even though the j"
-        },
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 1694:1",
-          "corpus": "tna-caselaw",
-          "raw": "[2001] 2 AC 127",
-          "sentence": "I should, however, refer to May LJ’s leading judgment in the case in which, having cited a passage from Lord Nicholls’ speech in Reynolds -v- Times Newspapers Limited [2001] 2 AC 127 , 205, including his non-exhaustive list of ten factors to be taken into account in deciding whether or not the defence of qualified privilege arises, he continued (at p406): “This passage, in my judgment, clearly sup"
-        }
-      ]
-    },
-    {
-      "citation": "[1969] 2 Ch 365",
-      "kind": "law-report",
-      "year": 1969,
-      "series": "Ch",
-      "docs": 2,
-      "byCorpus": {
-        "tna-caselaw": 2
-      },
-      "names": {},
-      "samples": [
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 105:1",
-          "corpus": "tna-caselaw",
-          "raw": "[1969] 2 Ch 365",
-          "sentence": "The deputy judge applied the Duomatic principle, so called because its formulation by Buckley J in Re Duomatic [1969] 2 Ch 365 at 373C-D, following a review of the authorities, is familiar to Company Law practitioners in the context of the validity of actions by, or on behalf of a company, without formal authorisation by a resolution of a properly constituted and"
-        },
-        {
-          "id": "tna-caselaw:[2003] EWCA Civ 1805:1",
-          "corpus": "tna-caselaw",
-          "raw": "[1969] 2 Ch 365",
-          "sentence": "It is referred to as the Duomatic principle after the decision in Re Duomatic Limited [1969] 2 Ch 365 ."
+          "raw": "[2013] EWCA Civ 965",
+          "sentence": "The significance of Re B was rightly emphasised in two judgments of this court handed down on 30 July 2013: Re P (A Child) [2013] EWCA Civ 963 , para 102 (Black LJ), and Re G (A Child) [2013] EWCA Civ 965 , paras 29-31 (McFarlane LJ)."
         }
       ]
     }

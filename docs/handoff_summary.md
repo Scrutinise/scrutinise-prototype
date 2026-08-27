@@ -2,7 +2,52 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 15:21 UTC — ▼ **INGEST CENSUS C1 PARTS B AND C: THE EMAIL FINALLY READS A DENOMINATOR SOMEBODY ELSE SET — AND THIS MORNING'S PURGE IS ONE LAYER SHORT.**
+*Last updated: 2026-08-27 16:35 UTC — ▼ **THE CASE REFERENCE LAYER: WE CAN SAY WHAT A CASE IS
+WITHOUT HOLDING IT, AND FIVE OF SEVEN PREDICTIONS WERE REFUTED.**
+Ask about **Caparo** today and rank 3 is *Unite The Union v Caparo Atlas Fastenings Ltd*; ask about
+**ex p Coughlan** and you get *Mrs M Coughlan v Brookes Jordan Ltd*. Re-measured live: **10/10
+authorities not held, 3/10 returning a DIFFERENT same-name case, and 10/10 still returning a full
+answer set.** Nothing returns nothing — a confident wrong answer is worse than an empty one.
+▶ **74,894 judgments read in 25 minutes · 708,371 citation occurrences · 184,613 distinct citations ·
+49,666 pre-2003 · 641,617 citing-document links.** The top of the list is what a lawyer would name:
+ICS v West Bromwich 798, Easyair 771, Johnson v Gore Wood 587, Ladd v Marshall 436, **Wednesbury
+400**. **200 reference records built** — 54 held, 88 not held, **58 UNKNOWN** (a law-report citation
+dated 2003+ may be held under its neutral form; claiming "not held" would tell a user we lack
+something we have). **162 of 200 say only that the case exists and is cited** — nothing we hold says
+what they decided, so the record says nothing. That is the design, not a shortfall.
+⚠⚠ **THREE DEFECTS FOUND BY READING THE OUTPUT, NOT THE CODE.** (1) The "malformed matches" list was
+not malformed — **nine of the ten most-cited-but-never-named citations are `Re B`, `Re H`, `In re E`**.
+A `X v Y` pattern cannot match a name with no "v" in it, so **the entire family-law canon was
+arriving unnamed and therefore unfindable by name**; fixed, and unnamed among the top 200 fell
+**10 → 1**. (2) **Every judgment cites itself** — its header carries its own neutral citation, 176 of
+a random 200 (88.0%) — so every held case overstated its citation count by one; corrected per record,
+and it fired on **54 of 54**. (3) A description taken from the top of a document **is not about the
+case**: the dry run put an Explanatory Note about remedial powers under *Anisminic*'s name.
+⚠⚠ **AND THE FIRST FULL RUN LOST ITSELF** — 36,000 judgments and 97,940 citations gone to
+`memory allocation failed`, with everything in a Map and the JSONL written once at the end: **the
+exact defect that file's own header warned about**, and it **exited with code 0** because the Rust
+allocator aborts without setting a failure status. Sharded now; the merge refuses to write an
+aggregate smaller than its largest input.
+▶ **FOR CC-SEARCH — the handover, no search file edited.** Before **10/10 absent, 3/10 decoy**;
+after **10/10 resolve to the right reference record**, as a SUFFICIENCY DEMONSTRATION over the
+records and not the shipped ranking. The three numbers in order: **6/10** (all-words matcher, pilot
+data) → **8/10** (overlap matcher, pilot data) → **10/10** (matcher UNCHANGED, full data). ⚠ Do not
+suppress the decoys — *Mrs M Coughlan* is a real case.
+▶ **BAILII read, not assumed:** linking is *"encouraged"*; bulk downloading and storing HTML versions
+of judgments are forbidden. **So we link and never fetch.** 75 of 200 links are deep (the neutral
+citation determines the path, flagged `derived`, unverified because verifying means fetching); the
+other 125 carry BAILII's search page. No URL is invented.
+⚠⚠ **THE PREDICTION LESSON: THE PILOT WAS NOT A RANDOM SAMPLE AND I TREATED IT AS ONE.** It said
+76.1% pre-2003; the corpus says **26.9%**. A `tna-caselaw` id BEGINS WITH ITS CITATION, so id order
+is chronological and the "first 400" were all from 2003, our earliest year. **Sample by `md5(id)` on
+this corpus, never by `id`.** Also: *Donoghue v Stevenson* is cited in **67** of 74,894 judgments, a
+sixth as often as *Wednesbury* — foundational authority is assumed, not cited.
+▶▶ **CHARLIE: four numbered decisions in `docs/CASE_REFERENCE_LAYER_REPORT.md`** — how many records
+ship, whether derived BAILII links ship unverified, whether held cases get records too, and whether
+`committees-reports` gets its ~3-hour scan. ⚠ **The collection is STAGED, not loaded**, and a row in
+the database is not a row a user can find until the index is rebuilt and the rebuild verified through
+the real gateway. Nothing here touched the live site.
+Earlier: 2026-08-27 15:21 UTC — ▼ **INGEST CENSUS C1 PARTS B AND C: THE EMAIL FINALLY READS A DENOMINATOR SOMEBODY ELSE SET — AND THIS MORNING'S PURGE IS ONE LAYER SHORT.**
 ⚠⚠⚠ **READ THIS FIRST: THE PURGE RAN AT 02:20 TODAY BUT ONLY INTO NEON. `corpus_fts` STILL HOLDS
 18,272,377 ROWS INCLUDING 36,919 FROM THE SEVEN PURGED COLLECTIONS**, measured 15:00. Rows deleted
 twelve hours ago are still being returned with no source row behind them. ⚠ `l2-purge-index.ts`

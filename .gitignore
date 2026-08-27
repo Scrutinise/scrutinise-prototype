@@ -156,3 +156,13 @@ scripts/ingest/v36/repeal-census.log
 scripts/ingest/c2/purge-manifests/
 scripts/ingest/c2/*.log
 scripts/ingest/c2/recensus-eu-checkpoint.json
+
+# ── the case reference layer's bulk artefacts (2026-08-27) ────────────────────────────────────
+# The merged citation aggregate is 152 MB and the shards it is built from are 255 MB. They are
+# REGENERABLE in one command and about 25 minutes:
+#     tsx caseref/extract.ts --corpus=tna-caselaw && tsx caseref/merge-shards.ts
+# The small, reviewable outputs built FROM them — the records, the extraction report, the probes —
+# are committed. ⚠ Do not "fix" this by committing the big files: a 152 MB blob is permanent.
+docs/census/CASEREF_citations.jsonl
+docs/census/CASEREF_citations.pilot.jsonl
+docs/census/caseref-shards/
