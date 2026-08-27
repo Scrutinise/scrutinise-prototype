@@ -61,7 +61,7 @@ const FILES = [
   'app/ideas/build/page.tsx',
   'components/lex/BuildFindings.tsx',
   'components/lex/BuildProgress.tsx',
-  'components/lex/RecentIdeasPanel.tsx',
+  'components/lex/MyIdeasList.tsx',
   'components/PublicNav.tsx',
   'components/ui/Navbar.tsx',
   'app/dashboard/DashboardClient.tsx',
@@ -1010,7 +1010,11 @@ const CHECKS: Check[] = [
     run: (src) => {
       const editing: Array<[string, RegExp]> = [
         ['app/ideas/[id]/IdeaDetailClient.tsx', /\/ideas\/create\?ideaId=\$\{idea\.id\}/],
-        ['components/lex/RecentIdeasPanel.tsx', /\/ideas\/create\?ideaId=\$\{r\.ideaId\}/],
+        // ⚠ 25-J §2 renamed this surface. `RecentIdeasPanel` was a stopgap whose own header
+        // said to delete it once a real "my ideas" surface existed; `MyIdeasList` is it.
+        // The PROPERTY is unchanged and still asserted: a built idea opens on the PROPOSAL,
+        // never through the creation switch.
+        ['components/lex/MyIdeasList.tsx', /\/ideas\/create\?ideaId=\$\{i\.ideaId\}/],
         ['app/ideas/build/BuildIdeaClient.tsx', /\/ideas\/create\?ideaId=\$\{ideaId\}/],
         ['lib/email.ts', /\/ideas\/create\?ideaId=\$\{ideaId\}/],
       ]
@@ -1027,8 +1031,8 @@ const CHECKS: Check[] = [
     },
     break: (src) => ({
       ...src,
-      'components/lex/RecentIdeasPanel.tsx': src['components/lex/RecentIdeasPanel.tsx']
-        .replace('/ideas/create?ideaId=${r.ideaId}', '/ideas/new?ideaId=${r.ideaId}'),
+      'components/lex/MyIdeasList.tsx': src['components/lex/MyIdeasList.tsx']
+        .replace('/ideas/create?ideaId=${i.ideaId}', '/ideas/new?ideaId=${i.ideaId}'),
     }),
   },
   {

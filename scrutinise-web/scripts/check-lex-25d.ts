@@ -289,8 +289,12 @@ function main() {
   // ══ §3 — the panel by question ════════════════════════════════════════════
   console.log('\n§3 — the panel, organised by question')
 
-  ok('§3 — the ten §25.5 headings are the library',
-    QUESTION_HEADINGS.length === 10 && HEADING_ORDER.length === 10)
+  // ⚠ ELEVEN SINCE 25-J §4 ADDED `REFERS_TO_THIS`. The count is still asserted rather
+  // than dropped: this file's claim is that the panel is organised by a FIXED library of
+  // questions, and a check that stopped counting would stop noticing a heading appearing
+  // by accident — which is how a panel grows a section nobody designed.
+  ok('§3 — the eleven §25.5 headings are the library',
+    QUESTION_HEADINGS.length === 11 && HEADING_ORDER.length === 11)
   ok('§3 — every interrogation question declares a real heading',
     INTERROGATION_LIBRARY.every((q) => isHeadingKey(q.heading)))
   expectBreak('§3 — break: a question naming a heading that does not exist',
