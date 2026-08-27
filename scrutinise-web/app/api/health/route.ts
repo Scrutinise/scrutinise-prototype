@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { capabilitySnapshot } from '@/lib/env-flags';
 
 /**
  * ⚠ THIS ENDPOINT ANSWERS "WHAT IS PRODUCTION ACTUALLY RUNNING?" — see docs/CLAUDE.md §20.
@@ -37,6 +38,31 @@ import { NextResponse } from 'next/server';
  * It is a BOOLEAN — whether a key is present, never the key, never a length, never a prefix.
  * "This deployment can send email" is not a secret; it is already visible to any admin who
  * issues one invite and reads what the panel says happened.
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════════════
+ * ⚠⚠ `capabilities` — SEARCH S17 §3, added 2026-08-28. THE SAME ARGUMENT, FOR THE FLAGS.
+ * ════════════════════════════════════════════════════════════════════════════════════════════
+ * This closes a blindness with a three-incident history and no other cure:
+ *
+ *   · A capitalised `TRUE` in Vercel disabled `LEX_QUERY_ROUTER` and `LEX_QUERY_EXPANSION`
+ *     SILENTLY, for an unknown period. The router's measured gold-set gains had never reached
+ *     a user, and it was found by counting requests arriving at a downstream service from
+ *     outside. `lib/env-flags.ts` exists because of it.
+ *   · `docs/RAILWAY_ROLE.md` recorded "`VECTOR_SEARCH_URL` is unset in Vercel" — an inference
+ *     from a local `.env`, wearing a measurement's grammar, and WRONG. It made a live scoring
+ *     defect look latent for a day (docs/CLAUDE.md §19).
+ *   · Every sprint report since June carries a sentence saying the live flag state cannot be
+ *     read from a development machine. §19's own advice is to prefer a behavioural reading on
+ *     a reachable surface over an unreadable config file. This is that surface.
+ *
+ * ⚠ READ THROUGH THE CODE'S OWN PATH, NOT FROM `process.env`. `capabilitySnapshot()` calls the
+ * same `flagEnabled()` every read site calls, so this reports what is IN FORCE rather than what
+ * was SET — which is the entire distinction that makes the endpoint worth building. A `TRUE`
+ * would appear here as `false`, exactly as the app sees it, and that is the bug being caught.
+ *
+ * ⚠ NAMES AND BOOLEANS ONLY. No key, no length, no prefix, no model id, no URL, no stream list
+ * — nothing that reveals account configuration. A capability NAME is the same class of public
+ * fact as the commit SHA that already sits beside it.
  */
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +75,17 @@ export async function GET() {
       commit: process.env.VERCEL_GIT_COMMIT_SHA ?? 'local',
       env: process.env.VERCEL_ENV ?? 'local',
       mail: Boolean(process.env.RESEND_API_KEY),
+      // Every boolean capability flag, resolved exactly as the app resolves it.
+      capabilities: capabilitySnapshot(),
+      // ⚠ The three things that decide whether an ON flag can DO anything. Presence booleans in
+      // the same class as `mail`: a router that is on with no GEMINI_API_KEY, or dense streams
+      // named with no VECTOR_SEARCH_URL, both degrade silently, so the flags alone would still
+      // mislead. §18's rule — a degradation must announce itself — applied to configuration.
+      retrieval: {
+        vectorSearchUrl: Boolean(process.env.VECTOR_SEARCH_URL?.trim()),
+        ftsSearchUrl: Boolean(process.env.FTS_SEARCH_URL?.trim()),
+        geminiKey: Boolean(process.env.GEMINI_API_KEY?.trim()),
+      },
     },
     { status: 200 },
   );

@@ -526,10 +526,36 @@ has nowhere to put anything else. **A caller that merely prefers legislation mus
 OFF, read through `flagEnabled()` — never a bare `=== 'true'`, because a capitalised `TRUE` in Vercel
 silently disabled the router and expansion for an unknown period.
 
-⚠ **The live flag state is NOT readable from a development machine** (`VERCEL_TOKEN` is SAML-blocked).
-Local `.env` sets `VECTOR_SEARCH_URL` and none of the `LEX_*` flags, so **a local harness runs
-keyword-only and will look like a regression.** Confirm production state from the Vercel dashboard or
-by reading a `served` counter off the running service — never by inference.
+✅ **The live flag state IS readable, in one unauthenticated request** (S17 §3, 28 Aug 2026):
+
+```
+curl -s https://www.scrutinise.org/api/health
+→ { "commit": "…", "env": "production", "mail": true,
+    "capabilities": { "LEX_QUERY_ROUTER": true, "LEX_SEARCH_VECTOR": false, … },
+    "retrieval": { "vectorSearchUrl": true, "ftsSearchUrl": true, "geminiKey": true } }
+```
+
+⚠ **The values are resolved through `flagEnabled()`, so the endpoint reports what is IN FORCE, not
+what was SET** — a variable set to something unrecognised reads `false` there exactly as the app
+reads it, which is the whole reason it is worth asking. `retrieval` carries presence booleans for
+the three things that decide whether an ON flag can do anything; a router that is on with no
+`GEMINI_API_KEY` degrades silently and the flag alone would still mislead. Names and booleans only —
+no key, no URL, no model id, no stream list. `npm run check:s17-flags` asserts the shape, the
+in-force property and the absence of any secret-shaped value, with the leak detector watched
+catching a planted one.
+
+⚠ **This supersedes the previous paragraph here**, which read *"the live flag state is NOT readable
+from a development machine (`VERCEL_TOKEN` is SAML-blocked)"*. The SAML block is unchanged and
+`vercel env ls` is still unusable from a session — what changed is that the answer no longer has to
+come from the dashboard.
+
+⚠ **Local `.env` still sets `VECTOR_SEARCH_URL` and none of the `LEX_*` flags, so a local harness
+runs keyword-only and will look like a regression.** The endpoint answers for PRODUCTION; a local
+`/api/health` reports `commit: "local"` and the local flags, which is a different question.
+⚠ **`LEX_VECTOR_STREAMS` is deliberately NOT exposed** — it is a value, not a boolean, and §3's rule
+was names and booleans. It is also the single string whose silent emptiness made a fortnight of S14
+figures describe a keyword-only system, so whether it should be added is a decision on the table
+(`SEARCH_S17_REPORT.md` D-4), not an oversight.
 
 ---
 
