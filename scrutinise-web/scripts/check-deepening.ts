@@ -214,12 +214,24 @@ ok('the route validates the key through the config, not a literal list', /isPass
 
 // ── 10. the passes themselves, and their templates ───────────────────────────
 console.log('\n§2.3/§2.6 — the four passes')
-ok('there are exactly four Pilot A passes', PASSES.length === 4, `${PASSES.length}`)
+// ⚠ FIVE SINCE STATUTORY_CONSEQUENCES. The count is still asserted rather than dropped:
+// this file's whole claim is that a pass is configuration, and a test that stopped counting
+// would stop noticing a pass appearing by accident.
+ok('there are exactly five passes', PASSES.length === 5, `${PASSES.length}`)
 for (const p of PASSES) {
   const issues: string[] = []
   if (!p.training.trim()) issues.push('no training copy')
   if (!p.method.trim()) issues.push('no method block')
-  if (!p.intents.length) issues.push('no intents')
+  // ⚠⚠ INTENTS **OR** JOBS, AND THIS ASSERTION WAS WRONG BEFORE, NOT RELAXED NOW.
+  //
+  // It required every pass to declare search intents. The invariant it is actually
+  // protecting is *"a pass must have some way to retrieve"* — half-configured passes that
+  // gather nothing. STATUTORY_CONSEQUENCES retrieves from the citation graph through a JOB
+  // and declares no intents deliberately: giving it intents would run a general keyword
+  // search and file whatever came back beside a verified reference list, which is exactly
+  // what that brief's §7 forbids ("do not let Lex assert a consequence the graph did not
+  // return"). Requiring intents here would have forced the defect.
+  if (!p.intents.length && !(p.jobs?.length)) issues.push('no intents and no jobs — it cannot retrieve anything')
   if (!p.mustAnswer.length) issues.push('no must-answer questions')
   ok(`${p.key} is fully configured`, issues.length === 0, issues.join('; '))
 }
