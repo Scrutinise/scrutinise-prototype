@@ -132,6 +132,75 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-J — THE IDEAS HUB, AND A GUARD THAT CRIES WOLF GETS TURNED OFF (2026-08-27 18:54 UTC)
+
+Executes `docs/BRIEF_25J.md`. Full report: `docs/LEX_25J_REPORT.md`.
+
+### ⚠ §5 IS SUPERSEDED AND ITS CEILING IS UNSPENT
+
+The brief says §25.7's six qualities "have never been measured" and authorises one build.
+**They were measured at 12:28 UTC today**, before this brief was written (25-I addendum).
+Running another would be spend for a number already in hand, so I have not. From v5, a build
+that FINISHED: **three of six in the output**, and the reuse saving §5 asks for —
+**107,380 → 55,626 input tokens, 48%** — which replaces the 85% ceiling taken from runs that
+died at pass 5 and looked cheaper for stopping early.
+
+### §1 — one voice, swept; and the guard I had to write three times
+
+Nine collection labels to "my" across six surfaces; the nav item **Create → My ideas**.
+⚠ **The five-stage vocabulary is untouched** — `STAGE_1` is still *Create* (CLAUDE.md §4,
+"use exactly, never substitute"); a sweep that renamed it would have broken the vocabulary
+the whole product shares and looked like tidying up. The check asserts both halves.
+
+⚠⚠ **THE SWEEP GUARD FIRED ON CORRECT PROSE TWICE.** Matching `ideas?` flagged *"Your idea
+has reached Parliament"*; narrowing to the plural still flagged *"Export all your ideas,
+contributions and votes"*. **The real distinction is HEADING vs SENTENCE, and a heading IS
+the whole label** — the phrase must occupy the entire text node, bounded by `>`/quote and
+`<`/quote/`(`. That is a rule about structure, not a list of exceptions, so a new
+`<h2>Your ideas</h2>` fails the day it is written. ▶ **A guard that cries wolf gets turned
+off, and a guard that is off protects nothing.**
+
+### §2 — the hub, and the stopgap that said to delete it
+
+`RecentIdeasPanel` is gone; its own header said *"it should be deleted the moment a real 'my
+ideas' surface exists"*. ⚠ **It carried `title` on its type and deliberately never displayed
+it** — right for a stopgap (11 of 11 ideas were "Untitled idea", so a title list rendered
+eleven identical rows), wrong for a front door. Now a real title wins, and the user's own
+opening words stand in when there is none — **labelled as their words**, never dressed up as
+a title we chose. ⚠ The placeholder test is an EXACT match on `Untitled idea`: "does it look
+generated" would misfire silently the day somebody names an idea *Untitled thoughts on
+buses*. The list shows only before an idea exists, so the transition is a transition — a hub
+list beside the working view would be a standing invitation to abandon what you are doing.
+⚠ **25-I §1 held and is re-asserted**: nothing is created by arriving.
+
+### §4 — statutory consequences gets its own heading, correcting my own reasoning
+
+Last sprint I filed the pass under `LAW_NOW`, arguing a user wants both together. **§4 is
+right and that was wrong: they are two questions, not two answers to one** — and sharing a
+heading made the pass INVISIBLE, its output landing among the legal map's findings where
+nobody had reason to look. New heading `REFERS_TO_THIS` — *"What else refers to this law"* —
+immediately after `LAW_NOW`, because `HEADING_ORDER` is the panel order. ▶ **A group now
+opens to its members**, deduplicated on (document, provision) and capped at 12 with the
+remainder counted: two references in one section are ONE place to go and read, and counting
+it twice would inflate the apparent work. Verified on a written row: heading, disposition,
+on-point quotation, member list, tail count and coverage all present.
+
+### Other sprints' guards that fired, and were right every time
+
+**`check:lex-25f`** pinned the deleted `RecentIdeasPanel`; repointed at `MyIdeasList` with
+the property unchanged. **`check:lex-25d`**'s "the ten §25.5 headings" is now eleven — still
+counted, because a check that stopped counting would stop noticing a heading appearing by
+accident. **`check:deepening`** had already fired three times over the statutory sprint.
+
+### Verified
+
+`check:lex-25j` **12 passed, 7 with negative controls**, all watched rejecting;
+`verify:my-ideas-ui` **15 passed** (renders markup, three controls); deepening all pass;
+statutory 17; 25c 32, **25d 77**, 25e 28, 25f 62, 25g 27, 25h 20, 25i 14, 25a 40, 25b 54.
+`tsc`, `next build`, clean-build `--fast` all clean.
+
+---
+
 ## INGEST CENSUS C1 PARTS B AND C — THE EMAIL NOW READS A DENOMINATOR SOMEBODY ELSE SET, AND THE PURGE IS ONE LAYER SHORT (2026-08-27 15:21 UTC)
 
 **Executes `docs/BRIEF_INGEST_CENSUS_C1.md` Parts B and C. Report:

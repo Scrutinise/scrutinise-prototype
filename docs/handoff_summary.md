@@ -47,6 +47,36 @@ ship, whether derived BAILII links ship unverified, whether held cases get recor
 `committees-reports` gets its ~3-hour scan. ⚠ **The collection is STAGED, not loaded**, and a row in
 the database is not a row a user can find until the index is rebuilt and the rebuild verified through
 the real gateway. Nothing here touched the live site.
+Earlier: 2026-08-27 18:54 UTC — ▼ **LEX 25-J: THE IDEAS HUB, AND A GUARD THAT CRIES WOLF GETS TURNED
+OFF.** ⚠ **§5 IS SUPERSEDED AND ITS ONE-BUILD CEILING IS UNSPENT** — the brief says the six qualities
+"have never been measured"; they were measured at 12:28 UTC the same day (25-I addendum), so running
+another would be spend for a number already in hand. From v5, a build that FINISHED: **three of six
+in the output**, and the figure §5 wanted — **107,380 → 55,626 input tokens, 48% reuse saving**,
+replacing the 85% ceiling taken from runs that died at pass 5 and looked cheaper for stopping early.
+▶ **§1 one voice**: nine collection labels to "my" across six surfaces, nav **Create → My ideas**.
+⚠ **The five-stage vocabulary is UNTOUCHED** — `STAGE_1` is still *Create* (CLAUDE.md §4); a sweep
+that renamed it would have broken the shared vocabulary and looked like tidying. ⚠⚠ **THE SWEEP
+GUARD FIRED ON CORRECT PROSE TWICE** — `ideas?` flagged *"Your idea has reached Parliament"*, the
+plural still flagged *"Export all your ideas, contributions and votes"*. **The distinction is HEADING
+vs SENTENCE: a heading IS the whole label**, so the phrase must occupy the entire text node. A rule
+about structure, not a list of exceptions — a new `<h2>Your ideas</h2>` fails the day it is written.
+▶ **§2 the hub**: `RecentIdeasPanel` deleted (its own header said to, once a real surface existed).
+⚠ **It carried `title` and deliberately never showed it** — right for a stopgap when 11 of 11 ideas
+were "Untitled idea", wrong for a front door. Now a real title wins and the user's **own opening
+words** stand in otherwise, LABELLED as theirs. ⚠ Placeholder test is an EXACT match — "looks
+generated" would misfire silently on *Untitled thoughts on buses*. The list shows only before an idea
+exists, so the transition is a transition. ⚠ **25-I §1 HELD and is re-asserted: nothing is created by
+arriving.** ▶ **§4 — I CORRECTED MY OWN REASONING**: last sprint filed statutory consequences under
+`LAW_NOW`; §4 is right that they are **two questions, not two answers to one**, and sharing a heading
+made the pass INVISIBLE among the legal map's findings. New heading **`REFERS_TO_THIS` — "What else
+refers to this law"**, immediately after `LAW_NOW` since `HEADING_ORDER` is the panel order. **A
+group now OPENS TO ITS MEMBERS**, deduplicated on (document, provision), capped at 12 with the
+remainder counted — two references in one section are ONE place to read. ▶ Other sprints' guards
+fired and were right every time: **25-F** pinned the deleted panel (repointed, property unchanged);
+**25-D**'s "ten headings" is now eleven (still counted — a check that stops counting stops noticing a
+section nobody designed). ✅ `check:lex-25j` **12 passed, 7 controlled**; `verify:my-ideas-ui` **15
+passed** (renders markup); deepening pass, statutory 17, 25a–25i green; `tsc`, `next build`,
+clean-build `--fast` clean. `docs/LEX_25J_REPORT.md`.**
 Earlier: 2026-08-27 15:21 UTC — ▼ **INGEST CENSUS C1 PARTS B AND C: THE EMAIL FINALLY READS A DENOMINATOR SOMEBODY ELSE SET — AND THIS MORNING'S PURGE IS ONE LAYER SHORT.**
 ⚠⚠⚠ **READ THIS FIRST: THE PURGE RAN AT 02:20 TODAY BUT ONLY INTO NEON. `corpus_fts` STILL HOLDS
 18,272,377 ROWS INCLUDING 36,919 FROM THE SEVEN PURGED COLLECTIONS**, measured 15:00. Rows deleted
