@@ -1,12 +1,123 @@
+# Scrutinise — robots.txt
+#
+# PRINCIPLE 7 (The National Archives computational analysis licence): judgment and decision text
+# must not be indexed by search engines, and third-party crawling of the records — or of data
+# extracted from them — must be prevented so far as we can.
+#
+# There is no judgment page on this site. Judgment text reaches a reader only as a short extract
+# inside an idea, so /ideas/ is the surface that rule is about, together with the public JSON reads
+# under /api/ that serve the same content.
+#
+# A Disallow is a REQUEST, not a control. The controls are the `X-Robots-Tag` header (next.config.js)
+# and the `<meta name="robots">` tag (app/ideas/layout.tsx), which apply to a crawler that fetches
+# anyway. All three are deliberate: a crawler may honour any one of them and ignore the others.
+#
+# ⚠ Note the interaction, stated rather than assumed: a path disallowed here is not fetched, so a
+# well-behaved crawler never reads the noindex on it. That is the right order for pages that are
+# NOT currently indexed — checked 2026-08-27, no idea page appears in any search result — because
+# it prevents the first crawl rather than asking for a later removal. If a page ever DOES appear in
+# an index, remove its Disallow temporarily so the crawler can see the noindex and drop it.
+
 User-agent: *
 Allow: /
-Allow: /ideas/
 Allow: /user/
+Disallow: /ideas/
+Disallow: /legislation/
+Disallow: /legislation-compare/
+Disallow: /demo/
+Disallow: /general/
 Disallow: /admin/
 Disallow: /onboarding/
 Disallow: /api/
 Disallow: /prototype/
 Disallow: /settings/
 Disallow: /dashboard/
+
+# ── AI and bulk-collection crawlers, named individually ────────────────────────────────────────
+# Principle 7 asks specifically what we do to prevent third-party services from scraping the
+# records or the data extracted from them. A wildcard rule does not bind a crawler that looks for
+# its own name, so each is disallowed from the whole site. Enumerated 2026-08-27; add to this list
+# as new agents appear rather than assuming `*` covers them.
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Perplexity-User
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: omgili
+Disallow: /
+
+User-agent: omgilibot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: AI2Bot
+Disallow: /
+
+User-agent: Kangaroo Bot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
 
 Sitemap: https://www.scrutinise.org/sitemap.xml

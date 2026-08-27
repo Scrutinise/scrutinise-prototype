@@ -10,9 +10,45 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+/**
+ * ⚠⚠ PRINCIPLE 7 — EVERY IDEA PAGE IS `noindex, nofollow`, WITHOUT EXCEPTION.
+ *
+ * The National Archives' computational analysis licence, principle 7:
+ *
+ *   "Licence holders must not index the contents of judgments and decisions on search engines…
+ *    You should consider what you will do to prevent third party services from crawling or
+ *    scraping either the text of the records or the data you have extracted from the records."
+ *
+ * There is no judgment PAGE on this site. Judgment text reaches a reader only as a short
+ * Lex-written extract inside an idea — `EvidenceItem.body` (measured 26 Aug 2026: median 252
+ * characters, max 776, against a median `tna-caselaw` section of ~37,575) or `Research.snippet`
+ * (schema cap 500). So the idea page IS the surface principle 7 is about, and this is the control.
+ *
+ * ⚠ IT IS UNCONDITIONAL ON PURPOSE. A per-idea flag ("noindex only the ones that carry a judgment
+ * extract") would keep ideas discoverable, and Charlie rejected it on 27 Aug for the right reason:
+ * the licence application states this as a FACT, and a detector that silently stops firing turns a
+ * legal claim false with nobody watching. A blanket rule cannot silently stop applying.
+ *
+ * ⚠ THE COST IS REAL AND WAS ACCEPTED: no idea page appears in any search engine. `sitemap.ts` no
+ * longer lists them either.
+ *
+ * ⚠ THIS DOES NOT TOUCH RETRIEVAL. Lex's own search over the corpus — the licensed activity — runs
+ * server-side through `fts-serve`/`vector-serve` and is unaffected by any robots directive.
+ *
+ * Paired with `X-Robots-Tag` in `next.config.js` (a crawler may honour either) and `Disallow` in
+ * `public/robots.txt`. Evidence: `docs/PRINCIPLE_7_EVIDENCE.md`.
+ */
+const NOINDEX: Metadata['robots'] = {
+  index: false,
+  follow: false,
+  nocache: true,
+  googleBot: { index: false, follow: false },
+}
+
 const PRIVATE_METADATA: Metadata = {
   title: 'Scrutinise — Policy Development Platform',
   description: 'A not-for-profit platform helping citizens develop policy ideas into Parliament-ready legislation.',
+  robots: NOINDEX,
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -30,6 +66,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: idea.title,
     description,
+    // ⚠ A PUBLIC IDEA IS STILL noindex. See NOINDEX above — the openGraph/twitter cards below are
+    //   for a human pasting a link into a message, which is a different thing from a search index.
+    robots: NOINDEX,
     openGraph: {
       title: idea.title,
       description,

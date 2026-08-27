@@ -12,22 +12,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/community-rules`, changeFrequency: 'monthly', priority: 0.4 },
   ]
 
-  // Stage 4+ publicly listed ideas
-  const ideas = await prisma.idea.findMany({
-    where: {
-      stage: { in: ['STAGE_4', 'STAGE_5'] },
-      visibility: 'PLATFORM_LISTED',
-      status: { not: 'WITHDRAWN' },
-    },
-    select: { id: true, updatedAt: true },
-  })
-
-  const ideaEntries: MetadataRoute.Sitemap = ideas.map((idea) => ({
-    url: `${APP_URL}/ideas/${idea.id}`,
-    lastModified: idea.updatedAt,
-    changeFrequency: 'daily',
-    priority: 0.8,
-  }))
+  /**
+   * ⚠⚠ IDEA PAGES ARE NOT LISTED HERE, AND THE REMOVAL IS THE POINT (PRINCIPLE 7, 27 Aug 2026).
+   *
+   * This block used to add every Stage 4/5 PLATFORM_LISTED idea. Nothing appeared in the served
+   * sitemap only because no idea has reached Stage 4 yet — measured 26 Aug: 25 <loc> entries, all
+   * static pages and user profiles, 0 ideas. So the sitemap was clean BY ACCIDENT, and would have
+   * started advertising idea pages to Google the day the first one was promoted, contradicting the
+   * `noindex` served on those same pages.
+   *
+   * An idea can carry a judgment extract (a Lex-written passage from `tna-caselaw`), and The
+   * National Archives' computational analysis licence forbids indexing judgment content. So the
+   * whole `/ideas` tree is `noindex, nofollow` — `app/ideas/layout.tsx`, `next.config.js` and
+   * `public/robots.txt` — and a sitemap entry would be this codebase asking a crawler to index a
+   * page it simultaneously tells the crawler not to index.
+   *
+   * ⚠ The cost was accepted deliberately by Charlie on 27 Aug: idea pages are no longer discoverable
+   * through search. Sharing is by link. Do not restore this block without revisiting the licence
+   * position in `docs/PRINCIPLE_7_EVIDENCE.md`.
+   */
 
   // Public user profiles with at least one Stage 3+ idea
   const users = await prisma.user.findMany({
@@ -53,5 +56,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }))
 
-  return [...staticPages, ...ideaEntries, ...userEntries]
+  // ⚠ no idea entries — see the block above. Static pages and public user profiles only.
+  return [...staticPages, ...userEntries]
 }
