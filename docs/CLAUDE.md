@@ -806,9 +806,15 @@ duplicate rows in production weeks later.
 | `Answer_live_idx` | `Answer` | The same, for answers under a question. | `prisma/central_content_delete.sql` |
 | `BulletinPost_live_idx` | `BulletinPost` | The same, for a board's threads and replies. | `prisma/central_content_delete.sql` |
 | `Idea_creatorId_live_idx` | `Idea` | The live-row index for a creator's dashboard list. Partial on `deletedAt IS NULL`. Predates Central and was missing from this register until 27 Aug. | `prisma/idea_soft_delete.sql` |
+| `Community_live_children_idx` | `Community` | The live-children index behind `getSubtreeIds` and the Teams tree. Partial on `deletedAt IS NULL`, so a deleted branch drops out of every tree walk. Added with item 11 and, like the row above it, missed this register on the day — which is why the check below now enumerates every one of these rather than two of them. | `prisma/central_branch_delete.sql` |
+| `Resource_live_idx` | `Resource` | The live-row index for the Resources card grid. Partial on `deletedAt IS NULL`. | `prisma/central_2g_resources.sql` |
 
-Six entries today. **Add a row here the moment a seventh exists** — the register is only useful if it
+Eight entries today. **Add a row here the moment a ninth exists** — the register is only useful if it
 is complete, and a partial index nobody wrote down is the whole failure mode.
+
+⚠ Two of the eight were added without a register row and only found on a later sweep of
+`pg_indexes`. Rule 5 below is now enforced against the WHOLE list rather than the two entries it
+originally named, so the next omission fails a check instead of waiting for a sweep.
 
 ### The rules
 

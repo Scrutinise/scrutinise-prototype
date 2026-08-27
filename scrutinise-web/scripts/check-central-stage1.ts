@@ -99,7 +99,29 @@ import {
   restoreAnswer,
   restorePost,
   restoreQuestion,
+  deleteResource,
+  restoreResource,
 } from '@/lib/content-deletion'
+import {
+  APPROVAL_MODES,
+  approvalStampFor,
+  canApprove,
+  getCommunityBranding,
+  setApproval,
+  updateCommunitySettings,
+  type ApprovalMode,
+} from '@/lib/approval'
+import { canApproveWith, type ApproverCaps } from '@/lib/approval-rule'
+import {
+  MAX_RESOURCE_BYTES,
+  applyResourceVote,
+  checkUpload,
+  createResource,
+  listResources,
+  reportResource,
+  setResourceFlag,
+} from '@/lib/resources'
+import { answerDisplayText, answerIsEmpty, linkThumbnail, youTubeId } from '@/lib/video'
 import {
   deleteBranch,
   describeBranchDeletion,
@@ -2458,20 +2480,46 @@ async function partH() {
       0.4)
 
     // ── the standing hazard register (item 9b) ─────────────────────────────
+    // ⚠ THE WHOLE LIST, NOT TWO OF IT. This block named only the two indexes
+    // that existed when it was written, so `Community_live_children_idx` (item
+    // 11) and `Resource_live_idx` (2g) were both added WITHOUT a register row
+    // and neither failed anything — they were found by sweeping pg_indexes by
+    // hand on 27 Aug. Enumerating every one here is what makes §21 rule 5 true.
+    const GUARDED_INDEXES: { name: string; predicate: string }[] = [
+      { name: 'CommunityJoinRequest_pending_unique', predicate: "'PENDING'" },
+      { name: 'ActivityClaim_one_per_day', predicate: 'REVERSED' },
+      { name: 'Question_live_idx', predicate: 'deletedAt' },
+      { name: 'Answer_live_idx', predicate: 'deletedAt' },
+      { name: 'BulletinPost_live_idx', predicate: 'deletedAt' },
+      { name: 'Idea_creatorId_live_idx', predicate: 'deletedAt' },
+      { name: 'Community_live_children_idx', predicate: 'deletedAt' },
+      { name: 'Resource_live_idx', predicate: 'deletedAt' },
+    ]
     const indexes = await prisma.$queryRaw<{ indexname: string; indexdef: string }[]>`
-      SELECT indexname, indexdef FROM pg_indexes
-      WHERE indexname IN ('ActivityClaim_one_per_day', 'CommunityJoinRequest_pending_unique')`
-    eq('both invisible-to-Prisma indexes are present', indexes.length, 2)
-    const onePerDay = indexes.find((i) => i.indexname === 'ActivityClaim_one_per_day')
-    check('the one-per-day guard is still expression + partial',
-      Boolean(onePerDay?.indexdef.includes('date') && onePerDay?.indexdef.includes('WHERE')),
-      onePerDay?.indexdef)
-    check('…and its predicate now frees a REVERSED claim as well as a DECLINED one',
-      Boolean(onePerDay?.indexdef.includes('REVERSED')), onePerDay?.indexdef)
+      SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'`
     const register = readFileSync(resolvePath(process.cwd(), '../docs/CLAUDE.md'), 'utf8')
-    for (const name of ['ActivityClaim_one_per_day', 'CommunityJoinRequest_pending_unique']) {
-      check(`${name} is named in the CLAUDE.md hazard register`, register.includes(name))
+    for (const g of GUARDED_INDEXES) {
+      const found = indexes.find((i) => i.indexname === g.name)
+      check(`${g.name} still exists`, Boolean(found), 'index missing')
+      check(`…and is still partial on ${g.predicate}`,
+        Boolean(found?.indexdef.includes('WHERE') && found?.indexdef.includes(g.predicate)),
+        found?.indexdef ?? 'index missing')
+      check(`…and is named in the CLAUDE.md hazard register`, register.includes(g.name))
     }
+    const onePerDay = indexes.find((i) => i.indexname === 'ActivityClaim_one_per_day')
+    check('the one-per-day guard is still expression as well as partial',
+      Boolean(onePerDay?.indexdef.includes('date')), onePerDay?.indexdef)
+
+    // ⚠ AND THE OTHER DIRECTION: a Central table that grows a partial index
+    // without a register row. Checking only the known list would never notice.
+    const centralTables = ['Community', 'Question', 'Answer', 'BulletinPost', 'Resource',
+      'ActivityClaim', 'CommunityJoinRequest', 'CommunitySettings', 'ResourceVote', 'PointsEvent']
+    const unregistered = indexes
+      .filter((i) => i.indexdef.includes('WHERE'))
+      .filter((i) => centralTables.some((t) => i.indexdef.includes(`"${t}"`)))
+      .filter((i) => !register.includes(i.indexname))
+      .map((i) => i.indexname)
+    eq('no Central partial index is missing from the register', unregistered, [])
   } finally {
     const answerIds = (
       await prisma.answer.findMany({ where: { questionId: { in: questionIds } }, select: { id: true } })
@@ -2960,6 +3008,669 @@ async function partJ() {
   }
 }
 
+async function partK() {
+  console.log('\nK. Stage 2g + items 12–15 — resources, settings, approval, video, headings')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+  const resourceIds: string[] = []
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 4,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 4) throw new Error('need at least four active users to run part K')
+  const [owner, poster, voter, outsider] = users
+
+  try {
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-k-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: owner.id, role: 'OWNER' },
+            { userId: poster.id, role: 'MEMBER' },
+            { userId: voter.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+    const branch = await prisma.community.create({
+      data: {
+        name: `zz-check-k-branch-${stamp}`,
+        parentCommunityId: root.id,
+        bulletinCategories: [],
+        members: { create: [{ userId: poster.id, role: 'OWNER' }] },
+      },
+    })
+    communityIds.push(branch.id)
+
+    // ── item 12: the settings row ───────────────────────────────────────────
+    console.log('\n  Item 12 — Community settings')
+
+    const fresh = await getCommunityBranding(root.id)
+    eq('a Community that has never opened settings defaults to mode SELF', fresh.approvalMode, 'SELF')
+    eq('…with the feature on', fresh.approvalFeatureEnabled, true)
+    eq('…and no organisation name, so nothing party-specific is assumed',
+      fresh.organisationName, null)
+
+    let refusedRights = ''
+    try {
+      await updateCommunitySettings({
+        communityId: root.id, actorUserId: outsider.id, organisationName: 'Hijack',
+      })
+    } catch (e) {
+      refusedRights = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a non-admin cannot change the settings', refusedRights.includes('Community admins'), refusedRights)
+
+    let refusedHex = ''
+    try {
+      await updateCommunitySettings({
+        communityId: root.id, actorUserId: owner.id, organisationColour: 'teal-ish',
+      })
+    } catch (e) {
+      refusedHex = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a colour that is not six-digit hex is refused', refusedHex.includes('hex'), refusedHex)
+
+    await updateCommunitySettings({
+      communityId: root.id,
+      actorUserId: owner.id,
+      organisationName: 'Test Party',
+      organisationColour: '#17B9D1',
+      approvalFeatureEnabled: true,
+      approvalMode: 'SELF',
+    })
+    const saved = await getCommunityBranding(root.id)
+    eq('the organisation name saves', saved.organisationName, 'Test Party')
+    eq('…and the colour', saved.organisationColour, '#17B9D1')
+
+    // ⚠ A BRANCH READS ITS ROOT'S SETTINGS. If it did not, a branch would show
+    // no stamp at all and the whole feature would be invisible where members
+    // actually stand.
+    eq('a branch resolves the ROOT settings, not its own',
+      (await getCommunityBranding(branch.id)).organisationName, 'Test Party')
+
+    // ── the four modes permit and refuse the right people ───────────────────
+    console.log('\n  Item 12.4 — the four approval modes')
+
+    // The rule under test is `canApproveWith`, which BOTH the route gate and the
+    // client control call. Testing the pure function is testing both.
+    const caps = (u: { id: string }, over: Partial<ApproverCaps> = {}): ApproverCaps => ({
+      viewerId: u.id, canManageBranch: false, canManageCommunity: false, isNamed: false, ...over,
+    })
+    const may = (mode: ApprovalMode, c: ApproverCaps, authorId: string) =>
+      canApproveWith({ mode, featureEnabled: true, caps: c, authorId })
+
+    eq('SELF lets the author mark their own', may('SELF', caps(poster), poster.id), true)
+    eq('…and refuses everybody else', may('SELF', caps(voter), poster.id), false)
+    eq('…including a Community admin, who is not the author',
+      may('SELF', caps(owner, { canManageCommunity: true }), poster.id), false)
+
+    eq('BRANCH_ADMIN lets a branch manager mark somebody else’s',
+      may('BRANCH_ADMIN', caps(owner, { canManageBranch: true }), poster.id), true)
+    eq('…and refuses a plain member', may('BRANCH_ADMIN', caps(voter), poster.id), false)
+    eq('…and refuses the author, when the author is not a manager',
+      may('BRANCH_ADMIN', caps(poster), poster.id), false)
+
+    eq('COMMUNITY_ADMIN lets a Community admin mark',
+      may('COMMUNITY_ADMIN', caps(owner, { canManageCommunity: true }), poster.id), true)
+    eq('…and refuses a branch admin who is not one',
+      may('COMMUNITY_ADMIN', caps(poster, { canManageBranch: true }), poster.id), false)
+
+    eq('NAMED lets a named person mark', may('NAMED', caps(voter, { isNamed: true }), poster.id), true)
+    eq('…and refuses a Community admin who is not named',
+      may('NAMED', caps(owner, { canManageCommunity: true }), poster.id), false)
+    eq('…and refuses the author, who is not named either',
+      may('NAMED', caps(poster), poster.id), false)
+
+    // ⚠ THE FEATURE FLAG BEATS EVERY MODE. A control that appears while the
+    // display is hidden would let people mark things nothing ever shows.
+    eq('the feature being off refuses even the person the mode allows',
+      canApproveWith({ mode: 'SELF', featureEnabled: false, caps: caps(poster), authorId: poster.id }),
+      false)
+
+    // The named set is stored, and REPLACED wholesale rather than merged.
+    await updateCommunitySettings({
+      communityId: root.id, actorUserId: owner.id, approvalMode: 'NAMED',
+      namedApproverIds: [voter.id, outsider.id],
+    })
+    eq('the named picker stores both',
+      (await getCommunityBranding(root.id)).namedApproverIds.slice().sort().join(','),
+      [voter.id, outsider.id].sort().join(','))
+    await updateCommunitySettings({
+      communityId: root.id, actorUserId: owner.id, namedApproverIds: [voter.id],
+    })
+    eq('…and un-ticking somebody removes them, rather than the set only growing',
+      (await getCommunityBranding(root.id)).namedApproverIds, [voter.id])
+    eq('…and canApprove agrees with the stored set',
+      await canApprove({ userId: outsider.id, communityId: root.id, authorId: poster.id }), false)
+    eq('…for the person who is still named, too',
+      await canApprove({ userId: voter.id, communityId: root.id, authorId: poster.id }), true)
+
+    await updateCommunitySettings({
+      communityId: root.id, actorUserId: owner.id, approvalMode: 'SELF', namedApproverIds: [],
+    })
+
+    // ── Stage 2g: the upload gate ───────────────────────────────────────────
+    console.log('\n  Stage 2g — the upload gate')
+
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64)])
+    const pdf = Buffer.concat([Buffer.from('%PDF-1.7\n'), Buffer.alloc(64)])
+    const exe = Buffer.concat([Buffer.from([0x4d, 0x5a, 0x90, 0x00]), Buffer.alloc(64)])
+    const zip = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(64)])
+
+    eq('a PNG is accepted', checkUpload(png, 'image/png', 'poster.png').type, 'image/png')
+    eq('a PDF is accepted', checkUpload(pdf, 'application/pdf', 'leaflet.pdf').type, 'application/pdf')
+    eq('an executable is refused', checkUpload(exe, 'application/octet-stream', 'setup.exe').ok, false)
+    eq('an archive is refused', checkUpload(zip, 'application/zip', 'pack.zip').ok, false)
+
+    // ⚠ THE DECLARED TYPE IS NEVER TRUSTED ON ITS OWN. Renaming an executable
+    // changes the declaration and not the bytes, which is the whole reason the
+    // gate sniffs.
+    const renamed = checkUpload(exe, 'image/png', 'poster.png')
+    eq('an executable renamed .png is still refused', renamed.ok, false)
+    check('…and the refusal says what IS allowed, rather than just "no"',
+      (renamed.reason ?? '').includes('Images and PDFs only'), renamed.reason ?? '')
+
+    eq('an empty file is refused', checkUpload(Buffer.alloc(0), 'image/png', 'x.png').ok, false)
+    const big = Buffer.concat([png, Buffer.alloc(MAX_RESOURCE_BYTES)])
+    eq('a file over the cap is refused', checkUpload(big, 'image/png', 'huge.png').ok, false)
+    check('…and the refusal states the cap',
+      (checkUpload(big, 'image/png', 'huge.png').reason ?? '').includes('10 MB'))
+
+    // ── creating a resource ─────────────────────────────────────────────────
+    console.log('\n  Stage 2g — creating a resource')
+
+    let refusedNoRights = ''
+    try {
+      await createResource({
+        communityId: root.id, authorId: poster.id, type: 'FLYER',
+        title: 'Leaflet', whyUseful: 'It worked',
+        file: { key: 'k', name: 'n.pdf', type: 'application/pdf', size: 10 },
+        rightsConfirmed: false,
+      })
+    } catch (e) {
+      refusedNoRights = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('upload without the rights confirmation is refused',
+      refusedNoRights.includes('right to share'), refusedNoRights)
+
+    let refusedNoNote = ''
+    try {
+      await createResource({
+        communityId: root.id, authorId: poster.id, type: 'FLYER',
+        title: 'Leaflet', whyUseful: '   ',
+        externalUrl: 'https://example.org/x', rightsConfirmed: true,
+      })
+    } catch (e) {
+      refusedNoNote = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a resource with no "why it is worth using" note is refused',
+      refusedNoNote.includes('worth using'), refusedNoNote)
+
+    let refusedNoPayload = ''
+    try {
+      await createResource({
+        communityId: root.id, authorId: poster.id, type: 'FLYER',
+        title: 'Leaflet', whyUseful: 'Good', rightsConfirmed: true,
+      })
+    } catch (e) {
+      refusedNoPayload = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a resource with neither a file nor a link is refused',
+      refusedNoPayload.includes('Attach a file or paste a link'), refusedNoPayload)
+
+    let refusedOutsider = ''
+    try {
+      await createResource({
+        communityId: root.id, authorId: outsider.id, type: 'FLYER',
+        title: 'Leaflet', whyUseful: 'Good',
+        externalUrl: 'https://example.org/x', rightsConfirmed: true,
+      })
+    } catch (e) {
+      refusedOutsider = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    eq('a non-member cannot post a resource', refusedOutsider, 'Not found')
+
+    const flyer = await createResource({
+      communityId: branch.id,
+      authorId: poster.id,
+      type: 'FLYER',
+      title: `zz-check-k flyer ${stamp}`,
+      whyUseful: 'Two doorsteps in three took one.',
+      context: 'Hand out at the door, not in a letterbox.',
+      topicTags: ['Housing'],
+      file: { key: `zz/${stamp}.pdf`, name: 'leaflet.pdf', type: 'application/pdf', size: 2048 },
+      rightsConfirmed: true,
+    })
+    resourceIds.push(flyer.id)
+
+    eq('the copyright assertion is recorded against the row, not just checked',
+      flyer.rightsConfirmedByUserId, poster.id)
+    check('…with when it was made', flyer.rightsConfirmedAt instanceof Date)
+    eq('a resource posted from a branch is scoped to the ROOT', flyer.communityId, root.id)
+    eq('…and remembers which branch it came from', flyer.branchId, branch.id)
+    eq('the Context field is stored', flyer.context, 'Hand out at the door, not in a letterbox.')
+
+    const video = await createResource({
+      communityId: root.id,
+      authorId: poster.id,
+      type: 'VIDEO',
+      title: `zz-check-k video ${stamp}`,
+      whyUseful: 'Three minutes on the precept question.',
+      topicTags: ['Council tax'],
+      externalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      rightsConfirmed: true,
+    })
+    resourceIds.push(video.id)
+    eq('a video resource stores the link and hosts nothing', video.fileKey, null)
+
+    // ── thumbnails ──────────────────────────────────────────────────────────
+    eq('a watch?v= link yields its id',
+      youTubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ')
+    eq('…a youtu.be link too', youTubeId('https://youtu.be/dQw4w9WgXcQ'), 'dQw4w9WgXcQ')
+    eq('…an /embed/ link too', youTubeId('https://www.youtube.com/embed/dQw4w9WgXcQ'), 'dQw4w9WgXcQ')
+    eq('…a /shorts/ link too', youTubeId('https://www.youtube.com/shorts/dQw4w9WgXcQ'), 'dQw4w9WgXcQ')
+    check('a YouTube link renders a thumbnail',
+      (linkThumbnail('https://youtu.be/dQw4w9WgXcQ') ?? '').includes('img.youtube.com'))
+    eq('a link we cannot make a picture of returns null rather than a broken image',
+      linkThumbnail('https://example.org/some-page'), null)
+
+    // ── listing and filtering ───────────────────────────────────────────────
+    console.log('\n  Stage 2g — listing and filters')
+
+    const all = await listResources(root.id, voter.id)
+    check('both resources are listed from the root', all.length >= 2)
+    eq('the type chip filters',
+      (await listResources(root.id, voter.id, { type: 'VIDEO' })).some((r) => r.id === flyer.id), false)
+    eq('…and keeps what matches',
+      (await listResources(root.id, voter.id, { type: 'VIDEO' })).some((r) => r.id === video.id), true)
+    eq('the topic dropdown filters',
+      (await listResources(root.id, voter.id, { topic: 'Housing' })).map((r) => r.id), [flyer.id])
+    check('the YouTube thumbnail travels with the row',
+      (all.find((r) => r.id === video.id)?.thumbnailUrl ?? '').includes('img.youtube.com'))
+
+    // ⚠ A BRANCH-SCOPED RESOURCE IS INVISIBLE FROM A SIBLING. Posted at the
+    // root, `flyer` is scope COMMUNITY, so it stays visible — the check that
+    // matters is that the branch filter runs at all.
+    const sibling = await prisma.community.create({
+      data: { name: `zz-check-k-sib-${stamp}`, parentCommunityId: root.id, bulletinCategories: [] },
+    })
+    communityIds.push(sibling.id)
+    eq('a Community-scoped resource is visible from a sibling branch',
+      (await listResources(sibling.id, voter.id)).some((r) => r.id === flyer.id), true)
+
+    // ── voting and the ledger ───────────────────────────────────────────────
+    console.log('\n  Stage 2g — voting and points')
+
+    let refusedSelf = ''
+    try {
+      await applyResourceVote(flyer.id, poster.id, 'UP')
+    } catch (e) {
+      refusedSelf = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    // ⚠ THE EXACT WORDING, not `.includes('your own')`. A planted break that
+    // removed this guard left the check GREEN, because `assertCanMark` refuses
+    // self-marking too and says "your own post" — so the loose assertion was
+    // testing the backstop, not the guard it is named after. And the backstop
+    // does not run at all on AI-authored material, which is checked below.
+    eq('you cannot vote on your own resource', refusedSelf, 'You cannot vote on your own resource')
+
+    const before = await getUserPoints(poster.id, root.id)
+    const up = await applyResourceVote(flyer.id, voter.id, 'UP')
+    const afterUp = await getUserPoints(poster.id, root.id)
+    eq('an upvote on a resource pays the author the mark tariff', afterUp - before, 4)
+    eq('…and the caller is told the new total', up.authorPoints, afterUp)
+    // ⚠ READ THE LEDGER ROW, not the return value. An assertion that reads what
+    // the function said it did cannot fail when the function is wrong.
+    eq('…recorded against RESOURCE_VOTE, so it is tellable apart from an answer',
+      (await prisma.pointsEvent.findFirst({
+        where: { sourceType: 'RESOURCE_VOTE', sourceId: flyer.id, type: 'MARK_RECEIVED' },
+        select: { tariffKey: true },
+      }))?.tariffKey,
+      'MARK_CONSTRUCTIVE')
+
+    await applyResourceVote(flyer.id, voter.id, 'UP')
+    eq('clicking the same direction again withdraws the vote',
+      (await listResources(root.id, voter.id)).find((r) => r.id === flyer.id)?.myVote, null)
+    eq('…and takes the points back with it', await getUserPoints(poster.id, root.id), before)
+
+    // AI-authored material ranks and mints nothing — the answer rule, unchanged.
+    const aiResource = await prisma.resource.create({
+      data: {
+        communityId: root.id, authorId: poster.id, type: 'MEME',
+        title: `zz-check-k ai ${stamp}`, whyUseful: 'Generated', authorType: 'AI',
+        aiModel: 'claude-opus-5', externalUrl: 'https://example.org/ai',
+        rightsConfirmedByUserId: poster.id,
+      },
+    })
+    resourceIds.push(aiResource.id)
+    const beforeAi = await getUserPoints(poster.id, root.id)
+    // ⚠ The AI path SKIPS assertCanMark entirely (nothing is minted, so there is
+    // nothing to budget), which makes the resource-level guard the only thing
+    // standing between an author and their own vote here.
+    let refusedSelfAi = ''
+    try {
+      await applyResourceVote(aiResource.id, poster.id, 'UP')
+    } catch (e) {
+      refusedSelfAi = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    eq('…and you cannot self-vote an AI resource either, where no backstop runs',
+      refusedSelfAi, 'You cannot vote on your own resource')
+
+    const aiVote = await applyResourceVote(aiResource.id, voter.id, 'UP')
+    eq('an AI-authored resource still ranks', aiVote.score, 1)
+    eq('…and mints nothing', await getUserPoints(poster.id, root.id), beforeAi)
+    eq('…and says so, rather than silently paying zero', aiVote.minted, false)
+
+    // ── item 13: the approval stamp ─────────────────────────────────────────
+    console.log('\n  Item 13 — approval and context')
+
+    await updateCommunitySettings({
+      communityId: root.id, actorUserId: owner.id, approvalMode: 'SELF', approvalFeatureEnabled: true,
+    })
+
+    let refusedApprove = ''
+    try {
+      await setApproval({ kind: 'resource', itemId: flyer.id, userId: voter.id, approved: true })
+    } catch (e) {
+      refusedApprove = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('under mode SELF, somebody else cannot approve your resource',
+      refusedApprove.includes('own content') || refusedApprove.includes('Approval here is set to'),
+      refusedApprove)
+
+    const marked = await setApproval({
+      kind: 'resource', itemId: flyer.id, userId: poster.id, approved: true,
+    })
+    check('the author can mark their own under mode SELF', marked.approvedAt !== null)
+    eq('…and WHO marked it is recorded', marked.markedByName, poster.name ?? poster.username)
+
+    const branding = await getCommunityBranding(root.id)
+    const stampNow = approvalStampFor(
+      { approvedAt: marked.approvedAt, approvedBy: { name: poster.name, username: poster.username } },
+      branding,
+    )
+    eq('the stamp is visible', stampNow.visible, true)
+    eq('…and approved', stampNow.approved, true)
+    // ⚠ THE NAME IS ALWAYS SHOWN, IN EVERY MODE. Under SELF the stamp is the
+    // poster's own claim about their own material, and presenting an unverified
+    // self-tick as a bare organisational endorsement would put the organisation's
+    // name on something it has never seen.
+    eq('…and always carries the name of whoever marked it',
+      stampNow.markedByName, poster.name ?? poster.username)
+
+    const unmarked = approvalStampFor({ approvedAt: null, approvedBy: null }, branding)
+    eq('an unmarked item is the neutral default, not a warning', unmarked.approved, false)
+    eq('…and names nobody', unmarked.markedByName, null)
+
+    // ── a Do-not-use flag coexists with an approval, and comes first ────────
+    await setResourceFlag({
+      resourceId: flyer.id, userId: owner.id, level: 'DO_NOT_USE',
+      reason: 'The figure on page 2 is out of date',
+    })
+    const flagged = (await listResources(root.id, voter.id)).find((r) => r.id === flyer.id)
+    eq('a Do-not-use flag can sit on an approved item', flagged?.flag?.level, 'DO_NOT_USE')
+    check('…without clearing the approval — one person’s mark is not another’s to remove',
+      flagged?.approvedAt !== null)
+
+    let refusedFlag = ''
+    try {
+      await setResourceFlag({
+        resourceId: flyer.id, userId: voter.id, level: 'DO_NOT_USE', reason: 'no',
+      })
+    } catch (e) {
+      refusedFlag = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a plain member cannot flag', refusedFlag.includes('managers'), refusedFlag)
+
+    let refusedNoReason = ''
+    try {
+      await setResourceFlag({
+        resourceId: flyer.id, userId: owner.id, level: 'USE_WITH_CARE', reason: '  ',
+      })
+    } catch (e) {
+      refusedNoReason = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a flag without a reason is refused', refusedNoReason.includes('reason'), refusedNoReason)
+
+    // ── hiding the feature RETAINS the data ────────────────────────────────
+    await updateCommunitySettings({
+      communityId: root.id, actorUserId: owner.id, approvalFeatureEnabled: false,
+    })
+    const hidden = await getCommunityBranding(root.id)
+    eq('hiding the feature stops the stamp rendering',
+      approvalStampFor({ approvedAt: marked.approvedAt, approvedBy: null }, hidden).visible, false)
+    eq('…and the organisation name with it',
+      approvalStampFor({ approvedAt: null, approvedBy: null }, hidden).organisationName, null)
+    // ⚠ THE POINT OF THE ITEM: hiding is not a destructive act.
+    check('…but the approval data is RETAINED in the row',
+      (await prisma.resource.findUnique({ where: { id: flyer.id }, select: { approvedAt: true } }))
+        ?.approvedAt !== null)
+    eq('…and no control is offered while it is hidden',
+      await canApprove({ userId: poster.id, communityId: root.id, authorId: poster.id }), false)
+
+    await updateCommunitySettings({
+      communityId: root.id, actorUserId: owner.id, approvalFeatureEnabled: true,
+    })
+    eq('re-enabling restores exactly what was there',
+      approvalStampFor(
+        { approvedAt: marked.approvedAt, approvedBy: { name: poster.name, username: poster.username } },
+        await getCommunityBranding(root.id),
+      ).markedByName,
+      poster.name ?? poster.username)
+
+    // ── report ──────────────────────────────────────────────────────────────
+    await reportResource({ resourceId: flyer.id, userId: voter.id, reason: 'That is my photograph' })
+    const reports = await prisma.resourceReport.findMany({ where: { resourceId: flyer.id } })
+    eq('a report is recorded', reports.length, 1)
+    eq('…as open', reports[0]?.status, 'OPEN')
+    check('…and the Community admins are notified',
+      (await prisma.notification.count({
+        where: { userId: owner.id, title: 'A resource has been reported' },
+      })) > 0)
+
+    // ── delete and restore, the 2f pattern ──────────────────────────────────
+    console.log('\n  Stage 2g — delete and restore')
+
+    await applyResourceVote(flyer.id, voter.id, 'UP')
+    const earned = await getUserPoints(poster.id, root.id)
+    const removed = await deleteResource({ resourceId: flyer.id, userId: poster.id })
+    eq('deleting a resource takes back what it earned', removed.pointsReversed, earned - before)
+    eq('…and the author loses exactly that', await getUserPoints(poster.id, root.id), before)
+    eq('…and it drops out of the live list',
+      (await listResources(root.id, voter.id)).some((r) => r.id === flyer.id), false)
+
+    const deletedList = await listDeletedContent(root.id)
+    check('…and appears in the deleted-items view as a resource',
+      deletedList.some((d) => d.kind === 'resource' && d.id === flyer.id))
+
+    const back = await restoreResource({ resourceId: flyer.id, userId: poster.id })
+    eq('restoring returns exactly what the deletion took', back.pointsRestored, earned - before)
+    eq('…so the author is whole again', await getUserPoints(poster.id, root.id), earned)
+    eq('…and it is live again',
+      (await listResources(root.id, voter.id)).some((r) => r.id === flyer.id), true)
+
+    let refusedDelete = ''
+    try {
+      await deleteResource({ resourceId: flyer.id, userId: voter.id })
+    } catch (e) {
+      refusedDelete = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a member cannot delete somebody else’s resource',
+      refusedDelete.includes('your own content'), refusedDelete)
+
+    let refusedNoWhy = ''
+    try {
+      await deleteResource({ resourceId: flyer.id, userId: owner.id })
+    } catch (e) {
+      refusedNoWhy = e instanceof CommunityRuleError ? e.message : String(e)
+    }
+    check('a manager removing somebody else’s resource must say why',
+      refusedNoWhy.includes('Say why'), refusedNoWhy)
+
+    // ── item 14: video answers ──────────────────────────────────────────────
+    console.log('\n  Item 14 — video answers')
+
+    eq('an answer with only text reads as its text',
+      answerDisplayText({ body: 'Say this.', videoUrl: null, videoTitle: null }), 'Say this.')
+    // ⚠ THE ACCEPTANCE CRITERION. A video answer has an EMPTY body, so any
+    // surface that renders `body` directly prints a blank block.
+    eq('a video answer reads as its title plus the URL',
+      answerDisplayText({ body: '', videoUrl: 'https://youtu.be/abc', videoTitle: 'Precept, in three minutes' }),
+      'Precept, in three minutes — https://youtu.be/abc')
+    eq('…with a fallback title rather than a bare dash',
+      answerDisplayText({ body: '', videoUrl: 'https://youtu.be/abc', videoTitle: null }),
+      'Video answer — https://youtu.be/abc')
+    eq('…and alongside text, not instead of it',
+      answerDisplayText({ body: 'Say this.', videoUrl: 'https://youtu.be/abc', videoTitle: 'Clip' }),
+      'Say this.\n\nClip — https://youtu.be/abc')
+    eq('a genuinely empty answer is still recognised as empty',
+      answerIsEmpty({ body: '  ', videoUrl: null, videoTitle: null }), true)
+    eq('…and a video answer is NOT empty', answerIsEmpty({ body: '', videoUrl: 'https://youtu.be/abc' }), false)
+
+    const q = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: poster.id,
+        text: `zz-check-k question ${stamp}`, scope: 'COMMUNITY',
+        contextTags: [], topicTags: [],
+      },
+    })
+    const videoAnswer = await prisma.answer.create({
+      data: {
+        questionId: q.id, authorId: poster.id, body: '', sources: [],
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        videoTitle: 'On the doorstep, in two minutes',
+        context: 'Use when they raise the precept.',
+      },
+    })
+
+    const ranked = await getRankedAnswers(q.id, voter.id)
+    eq('a video answer carries its link through the ranked list',
+      ranked[0]?.videoUrl, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    eq('…and its title', ranked[0]?.videoTitle, 'On the doorstep, in two minutes')
+    eq('…and its Context, which is permanent', ranked[0]?.context, 'Use when they raise the precept.')
+
+    const listed = (await listQuestions(root.id, voter.id, {})).find((x) => x.id === q.id)
+    // ⚠ The library list previews `answerPreview`. Built from `body` alone, a
+    // video answer makes the question look unanswered in the one list most
+    // people read.
+    check('the library list previews a video answer rather than showing a blank',
+      Boolean(listed?.answerPreview?.includes('On the doorstep')), String(listed?.answerPreview))
+
+    const pack = await buildPack({ viewerCommunityId: root.id, viewerId: voter.id, size: 50 })
+    const entry = pack.entries.find((e) => e.questionId === q.id)
+    check('the pack carries the video link', Boolean(entry?.answer?.videoUrl))
+    check('…and the title', Boolean(entry?.answer?.videoTitle))
+    check('…so every format has something to print rather than an empty block',
+      answerDisplayText(entry?.answer).includes('On the doorstep, in two minutes'))
+
+    // The four formats are grepped, because "all four" is the requirement and a
+    // fifth added later must not quietly opt out.
+    const packSrc = readFileSync(
+      resolvePath(process.cwd(), 'app/communities/[id]/packs/new/PackOutput.tsx'), 'utf8')
+    const usages = (packSrc.match(/answerDisplayText\(/g) ?? []).length
+    check(`all four pack formats print through answerDisplayText (${usages} call sites)`,
+      usages >= 6, `found ${usages}`)
+    for (const fmt of ['GLANCE', 'FLASHCARD', 'LIST', 'PRINT']) {
+      const block = packSrc.split(`format === '${fmt}'`)[1] ?? ''
+      check(`…including the ${fmt} format`, block.slice(0, 3500).includes('answerDisplayText('))
+    }
+
+    // ── item 13 on answers ──────────────────────────────────────────────────
+    const answerMark = await setApproval({
+      kind: 'answer', itemId: videoAnswer.id, userId: poster.id, approved: true,
+    })
+    check('an answer can be approved too', answerMark.approvedAt !== null)
+    eq('…carrying the marker’s name', answerMark.markedByName, poster.name ?? poster.username)
+    eq('…and the ranked list carries the stamp',
+      (await getRankedAnswers(q.id, voter.id))[0]?.approvedBy?.id, poster.id)
+
+    const cleared = await setApproval({
+      kind: 'answer', itemId: videoAnswer.id, userId: poster.id, approved: false,
+    })
+    eq('un-approving clears the stamp', cleared.approvedAt, null)
+    eq('…and the name with it', cleared.markedByName, null)
+
+    // ── item 15: the three headings, verbatim ───────────────────────────────
+    console.log('\n  Item 15 — section headings')
+
+    for (const [label, file, snippet] of [
+      ['Questions', 'app/communities/[id]/questions/QuestionLibrary.tsx',
+        'This section is for sharing best practice answers to common questions.'],
+      ['Resources', 'app/communities/[id]/resources/ResourcesLibrary.tsx',
+        'This section is for sharing best practice content, assets and resources'],
+      ['Training', 'app/communities/[id]/TrainingExchange.tsx',
+        'This section is for connecting up with others in the group for one-to-one training'],
+    ] as const) {
+      const src = readFileSync(resolvePath(process.cwd(), file), 'utf8')
+      // Whitespace is collapsed because JSX wraps the sentence across lines.
+      const flat = src.replace(/\s+/g, ' ')
+      check(`the ${label} tab carries its standing description`, flat.includes(snippet), file)
+    }
+
+    const dashSrc = readFileSync(
+      resolvePath(process.cwd(), 'app/communities/[id]/CommunityDashboardClient.tsx'), 'utf8')
+    const order = ['questions', 'training', 'resources', 'leaderboard', 'teams']
+      .map((k) => dashSrc.indexOf(`key: '${k}'`))
+    check('the tab order is Questions · Training · Resources · Leaderboard · Teams',
+      order.every((n, i) => n > 0 && (i === 0 || n > order[i - 1])), JSON.stringify(order))
+
+    // ⚠ A control the platform never draws elsewhere is the signal, not the
+    // colour: #17B9D1 against the platform teal is ΔE2000 15.14 and both read as
+    // "teal" at border size.
+    const frameSrc = readFileSync(
+      resolvePath(process.cwd(), 'components/central/ApprovalFrame.tsx'), 'utf8')
+    check('the approval frame is distinguished by border weight',
+      frameSrc.includes('borderWidth: 2'))
+    check('…and by its label, not by colour alone',
+      frameSrc.includes('{stamp.organisationName} approved'))
+    check('a Do-not-use flag takes visual precedence over the stamp',
+      frameSrc.includes("flag?.level === 'DO_NOT_USE'"))
+    check('the Context box uses a placeholder rather than pre-filled text',
+      frameSrc.includes('placeholder="When / Where / How to be used"'))
+    check('…and is not gated on the approval feature',
+      !/ContextField[\s\S]{0,400}visible/.test(frameSrc))
+
+    await prisma.answer.deleteMany({ where: { questionId: q.id } })
+    await prisma.question.deleteMany({ where: { id: q.id } })
+  } finally {
+    await prisma.resourceReport.deleteMany({ where: { resourceId: { in: resourceIds } } })
+    await prisma.resourceFlag.deleteMany({ where: { resourceId: { in: resourceIds } } })
+    await prisma.resourceVote.deleteMany({ where: { resourceId: { in: resourceIds } } })
+    await prisma.resource.deleteMany({ where: { communityId: { in: communityIds } } })
+    const qs = await prisma.question.findMany({
+      where: { communityId: { in: communityIds } }, select: { id: true },
+    })
+    await prisma.answer.deleteMany({ where: { questionId: { in: qs.map((x) => x.id) } } })
+    await prisma.question.deleteMany({ where: { id: { in: qs.map((x) => x.id) } } })
+    await prisma.communityApprover.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.communitySettings.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.questionTag.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.pointsEvent.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: {
+        OR: [
+          ...communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })),
+          { title: 'A resource has been reported' },
+        ],
+      },
+    })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    eq('resources fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-k-' } } }), 0)
+  }
+}
+
 /** Flatten a tree node to its ids, for the "is it still in the tree" checks. */
 function treeIds(node: { id: string; children: { id: string; children: unknown[] }[] }): string[] {
   const out = [node.id]
@@ -2982,6 +3693,7 @@ async function main() {
   await partH()
   await partI()
   await partJ()
+  await partK()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()
