@@ -1,0 +1,5146 @@
+{
+  "takenAt": "2026-08-27T10:40:31.325Z",
+  "config": "[config] fts=fts-serve-production-4cea.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance,committees router=ON fully-configured",
+  "capabilities": "[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=off SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=off BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=off FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=off ROUTER_CONFIDENCE=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation,caselaw,guidance,committees GEMINI_API_KEY=set",
+  "indexStampBefore": [
+    "    corpus_fts       version   7308   18,272,377 rows",
+    "    corpus_vec       version   4011   22,670,808 rows",
+    "    corpus_chunks    version  18448   22,670,808 rows"
+  ],
+  "indexStampAfter": [
+    "    corpus_fts       version   7308   18,272,377 rows",
+    "    corpus_vec       version   4011   22,670,808 rows",
+    "    corpus_chunks    version  18448   22,670,808 rows"
+  ],
+  "indexMoved": false,
+  "n": 64,
+  "width": 20,
+  "top": 20,
+  "excluded": {
+    "V2-Q15": "UNSCOREABLE — corpus gap: the keyed section's stored body is 66 characters of dot leaders (S13 §1.4, D-3)"
+  },
+  "smokeTest": null,
+  "degraded": [],
+  "retrievalReplayedFrom": null,
+  "routerConfidence": {
+    "sameSelection": 37,
+    "differing": 27,
+    "narrowed": 0,
+    "widened": 27,
+    "meanStreamsOff": 2.90625,
+    "meanStreamsOn": 3.6875,
+    "withRanking": 64,
+    "meanDistinctWeights": 3.6875,
+    "unselectedWeight": 0.7407407407407407,
+    "weightScale": [
+      1,
+      0.9345794392523364,
+      0.8771929824561403,
+      0.8264462809917356,
+      0.78125
+    ],
+    "routeCost": null,
+    "rankings": {
+      "S10-Q1": [
+        "committees",
+        "debates",
+        "guidance"
+      ],
+      "S10-Q2": [
+        "committees",
+        "debates",
+        "guidance"
+      ],
+      "S10-Q3": [
+        "committees",
+        "debates",
+        "guidance"
+      ],
+      "S10-Q4": [
+        "committees",
+        "debates",
+        "guidance"
+      ],
+      "S10-Q5": [
+        "debates",
+        "committees"
+      ],
+      "S10-Q6": [
+        "committees",
+        "guidance"
+      ],
+      "S10-Q7": [
+        "committees",
+        "guidance"
+      ],
+      "S10-Q8": [
+        "committees"
+      ],
+      "S10-Q9": [
+        "committees"
+      ],
+      "S10-Q10": [
+        "committees",
+        "debates",
+        "guidance"
+      ],
+      "S10-Q12": [
+        "caselaw",
+        "guidance",
+        "debates",
+        "legislation",
+        "committees"
+      ],
+      "S10-Q13": [
+        "caselaw",
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q14": [
+        "caselaw",
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q15": [
+        "caselaw",
+        "legislation",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "S10-Q16": [
+        "caselaw",
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q20": [
+        "caselaw"
+      ],
+      "S10-Q21": [
+        "guidance",
+        "legislation",
+        "caselaw",
+        "committees",
+        "debates"
+      ],
+      "S10-Q22": [
+        "guidance",
+        "caselaw",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q23": [
+        "guidance",
+        "caselaw",
+        "legislation",
+        "debates",
+        "committees"
+      ],
+      "S10-Q24": [
+        "legislation",
+        "guidance",
+        "caselaw",
+        "committees",
+        "debates"
+      ],
+      "S10-Q25": [
+        "guidance"
+      ],
+      "S10-Q26": [
+        "legislation",
+        "caselaw",
+        "guidance",
+        "committees",
+        "debates"
+      ],
+      "S10-Q27": [
+        "caselaw",
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q28": [
+        "guidance"
+      ],
+      "S10-Q29": [
+        "caselaw",
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q30": [
+        "caselaw",
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q31": [
+        "guidance",
+        "debates",
+        "committees",
+        "legislation"
+      ],
+      "S10-Q32": [
+        "guidance",
+        "debates",
+        "committees",
+        "legislation"
+      ],
+      "S10-Q33": [
+        "debates",
+        "guidance",
+        "committees"
+      ],
+      "S10-Q34": [
+        "guidance",
+        "committees",
+        "debates",
+        "legislation"
+      ],
+      "S10-Q35": [
+        "debates",
+        "guidance",
+        "legislation",
+        "committees"
+      ],
+      "S10-Q36": [
+        "guidance",
+        "legislation",
+        "committees",
+        "debates"
+      ],
+      "S10-Q37": [
+        "debates",
+        "guidance",
+        "committees",
+        "legislation"
+      ],
+      "S10-Q38": [
+        "legislation",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "S10-Q39": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "S10-Q41": [
+        "guidance",
+        "committees",
+        "debates",
+        "legislation"
+      ],
+      "S10-Q42": [
+        "legislation",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "S10-Q43": [
+        "legislation",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "S10-Q44": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "S10-Q45": [
+        "debates",
+        "committees",
+        "guidance",
+        "legislation"
+      ],
+      "S10-Q46": [
+        "guidance",
+        "committees",
+        "debates",
+        "legislation"
+      ],
+      "S10-Q47": [
+        "guidance",
+        "legislation",
+        "debates",
+        "committees"
+      ],
+      "S10-Q48": [
+        "guidance",
+        "committees",
+        "debates"
+      ],
+      "S10-Q49": [
+        "guidance",
+        "committees",
+        "debates",
+        "legislation"
+      ],
+      "V2-Q1": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "V2-Q2": [
+        "debates",
+        "committees"
+      ],
+      "V2-Q3": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "V2-Q4": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "V2-Q5": [
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "V2-Q6": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "V2-Q7": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "V2-Q8": [
+        "debates",
+        "committees"
+      ],
+      "V2-Q9": [
+        "guidance",
+        "debates",
+        "committees",
+        "legislation",
+        "caselaw"
+      ],
+      "V2-Q10": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "V2-Q11": [
+        "debates",
+        "guidance",
+        "committees"
+      ],
+      "V2-Q12": [
+        "legislation",
+        "caselaw",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "V2-Q13": [
+        "legislation",
+        "debates",
+        "guidance",
+        "committees",
+        "caselaw"
+      ],
+      "V2-Q14": [
+        "legislation",
+        "guidance",
+        "caselaw",
+        "committees",
+        "debates"
+      ],
+      "V2-Q16": [
+        "legislation",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "V2-Q17": [
+        "legislation",
+        "caselaw",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "V2-Q18": [
+        "legislation",
+        "guidance",
+        "caselaw",
+        "committees",
+        "debates"
+      ],
+      "V2-Q19": [
+        "legislation",
+        "guidance",
+        "caselaw",
+        "debates",
+        "committees"
+      ],
+      "V2-Q20": [
+        "legislation",
+        "guidance",
+        "debates",
+        "committees"
+      ],
+      "V2-Q21": [
+        "guidance",
+        "legislation",
+        "caselaw",
+        "committees",
+        "debates"
+      ]
+    },
+    "examples": [
+      "S10-Q2: [committees] → [committees,debates,guidance]",
+      "S10-Q3: [committees,debates] → [committees,debates,guidance]",
+      "S10-Q4: [committees] → [committees,debates,guidance]",
+      "S10-Q6: [committees] → [committees,guidance]",
+      "S10-Q7: [committees] → [committees,guidance]",
+      "S10-Q12: [caselaw,committees,debates] → [caselaw,committees,debates,guidance,legislation]",
+      "S10-Q13: [caselaw] → [caselaw,committees,debates,guidance,legislation]",
+      "S10-Q15: [caselaw] → [caselaw,committees,debates,guidance,legislation]",
+      "S10-Q16: [caselaw] → [caselaw,committees,debates,guidance,legislation]",
+      "S10-Q21: [guidance,legislation] → [caselaw,committees,debates,guidance,legislation]"
+    ]
+  },
+  "arms": [
+    {
+      "key": "A-round-robin",
+      "label": "A · round-robin (today, the baseline)",
+      "model": null
+    },
+    {
+      "key": "B-confidence",
+      "label": "B · judged, ROUTER CONFIDENCE only (§1 b)",
+      "model": null
+    },
+    {
+      "key": "B-gate",
+      "label": "B · judged, ABSOLUTE RELEVANCE FLOOR only (§1 d, gate=0.34)",
+      "model": null
+    },
+    {
+      "key": "B-both",
+      "label": "B · judged, CONFIDENCE + FLOOR (§1 b+d, gate=0.34)",
+      "model": null
+    },
+    {
+      "key": "C-rerank-pro",
+      "label": "C · judged + RERANKER (gemini-2.5-flash)",
+      "model": "gemini-2.5-flash"
+    },
+    {
+      "key": "C-rerank-flash",
+      "label": "C · judged + RERANKER (gemini-2.5-flash — the cheap comparison)",
+      "model": "gemini-2.5-flash"
+    }
+  ],
+  "totals": {
+    "A-round-robin": {
+      "at20": 19,
+      "at5": 8,
+      "n": 64
+    },
+    "B-confidence": {
+      "at20": 23,
+      "at5": 13,
+      "n": 64
+    },
+    "B-gate": {
+      "at20": 16,
+      "at5": 8,
+      "n": 64
+    },
+    "B-both": {
+      "at20": 20,
+      "at5": 14,
+      "n": 64
+    },
+    "C-rerank-pro": {
+      "at20": 30,
+      "at5": 26,
+      "n": 64
+    },
+    "C-rerank-flash": {
+      "at20": 30,
+      "at5": 26,
+      "n": 64
+    }
+  },
+  "perCollection": [
+    {
+      "collection": "caselaw",
+      "n": 6,
+      "inStream20": 5,
+      "A-round-robin": 5,
+      "B-confidence": 5,
+      "B-gate": 5,
+      "B-both": 5,
+      "C-rerank-pro": 5,
+      "C-rerank-flash": 5
+    },
+    {
+      "collection": "committees",
+      "n": 10,
+      "inStream20": 2,
+      "A-round-robin": 2,
+      "B-confidence": 2,
+      "B-gate": 2,
+      "B-both": 2,
+      "C-rerank-pro": 2,
+      "C-rerank-flash": 2
+    },
+    {
+      "collection": "consultations",
+      "n": 9,
+      "inStream20": 9,
+      "A-round-robin": 7,
+      "B-confidence": 6,
+      "B-gate": 6,
+      "B-both": 5,
+      "C-rerank-pro": 9,
+      "C-rerank-flash": 9
+    },
+    {
+      "collection": "debates",
+      "n": 11,
+      "inStream20": 0,
+      "A-round-robin": 0,
+      "B-confidence": 0,
+      "B-gate": 0,
+      "B-both": 0,
+      "C-rerank-pro": 0,
+      "C-rerank-flash": 0
+    },
+    {
+      "collection": "guidance",
+      "n": 10,
+      "inStream20": 5,
+      "A-round-robin": 2,
+      "B-confidence": 3,
+      "B-gate": 3,
+      "B-both": 4,
+      "C-rerank-pro": 5,
+      "C-rerank-flash": 5
+    },
+    {
+      "collection": "impact-assessments",
+      "n": 9,
+      "inStream20": 4,
+      "A-round-robin": 0,
+      "B-confidence": 1,
+      "B-gate": 0,
+      "B-both": 0,
+      "C-rerank-pro": 3,
+      "C-rerank-flash": 3
+    },
+    {
+      "collection": "legislation",
+      "n": 9,
+      "inStream20": 7,
+      "A-round-robin": 3,
+      "B-confidence": 6,
+      "B-gate": 0,
+      "B-both": 4,
+      "C-rerank-pro": 6,
+      "C-rerank-flash": 6
+    }
+  ],
+  "churn": [
+    {
+      "arm": "B-confidence",
+      "gained": [
+        "S10-Q22",
+        "S10-Q23",
+        "S10-Q38",
+        "S10-Q42",
+        "V2-Q16",
+        "V2-Q18",
+        "V2-Q20"
+      ],
+      "lost": [
+        "S10-Q29",
+        "S10-Q44",
+        "S10-Q45"
+      ],
+      "moved": 29,
+      "ofFound": 38
+    },
+    {
+      "arm": "B-gate",
+      "gained": [
+        "S10-Q23",
+        "S10-Q25"
+      ],
+      "lost": [
+        "S10-Q29",
+        "S10-Q46",
+        "V2-Q12",
+        "V2-Q17",
+        "V2-Q19"
+      ],
+      "moved": 28,
+      "ofFound": 38
+    },
+    {
+      "arm": "B-both",
+      "gained": [
+        "S10-Q22",
+        "S10-Q23",
+        "S10-Q25",
+        "S10-Q42",
+        "V2-Q16",
+        "V2-Q20"
+      ],
+      "lost": [
+        "S10-Q29",
+        "S10-Q44",
+        "S10-Q45",
+        "S10-Q46",
+        "V2-Q17"
+      ],
+      "moved": 32,
+      "ofFound": 38
+    },
+    {
+      "arm": "C-rerank-pro",
+      "gained": [
+        "S10-Q23",
+        "S10-Q24",
+        "S10-Q25",
+        "S10-Q31",
+        "S10-Q36",
+        "S10-Q38",
+        "S10-Q42",
+        "S10-Q43",
+        "V2-Q16",
+        "V2-Q20",
+        "V2-Q21"
+      ],
+      "lost": [],
+      "moved": 30,
+      "ofFound": 38
+    },
+    {
+      "arm": "C-rerank-flash",
+      "gained": [
+        "S10-Q23",
+        "S10-Q24",
+        "S10-Q25",
+        "S10-Q31",
+        "S10-Q36",
+        "S10-Q38",
+        "S10-Q42",
+        "S10-Q43",
+        "V2-Q16",
+        "V2-Q20",
+        "V2-Q21"
+      ],
+      "lost": [],
+      "moved": 30,
+      "ofFound": 38
+    }
+  ],
+  "shareRows": [
+    {
+      "arm": "A-round-robin",
+      "n": 40,
+      "meanMaxShare": 5.4,
+      "dominant": 0,
+      "max": 7
+    },
+    {
+      "arm": "B-confidence",
+      "n": 40,
+      "meanMaxShare": 20,
+      "dominant": 40,
+      "max": 20
+    },
+    {
+      "arm": "B-gate",
+      "n": 40,
+      "meanMaxShare": 7.8,
+      "dominant": 12,
+      "max": 13
+    },
+    {
+      "arm": "B-both",
+      "n": 40,
+      "meanMaxShare": 14.8,
+      "dominant": 38,
+      "max": 20
+    },
+    {
+      "arm": "C-rerank-pro",
+      "n": 40,
+      "meanMaxShare": 11.4,
+      "dominant": 32,
+      "max": 19
+    },
+    {
+      "arm": "C-rerank-flash",
+      "n": 40,
+      "meanMaxShare": 11.4,
+      "dominant": 33,
+      "max": 18
+    }
+  ],
+  "sweep": [],
+  "rerank": {
+    "C-rerank-pro": {
+      "calls": 64,
+      "applied": 64,
+      "omitted": 18,
+      "invented": 0,
+      "duplicated": 1,
+      "pence": 13.681399999999998,
+      "unpriced": 0,
+      "ms": 97086,
+      "read": 3840,
+      "echoedMatch": 64,
+      "echoedOther": []
+    },
+    "C-rerank-flash": {
+      "calls": 64,
+      "applied": 64,
+      "omitted": 17,
+      "invented": 0,
+      "duplicated": 1,
+      "pence": 13.681099999999997,
+      "unpriced": 0,
+      "ms": 95153,
+      "read": 3840,
+      "echoedMatch": 64,
+      "echoedOther": []
+    }
+  },
+  "control": {
+    "mergeIdentical": 3,
+    "of": 3,
+    "retrievalOverlapTop20": [
+      20,
+      20,
+      20
+    ]
+  },
+  "fanout": {
+    "1": 20,
+    "2": 4,
+    "3": 15,
+    "4": 12,
+    "5": 13
+  },
+  "rows": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 6,
+      "foundInStream": "committees",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 19,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 6,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": 10,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 10,
+            "guidance": 3
+          }
+        },
+        "B-both": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 17,
+            "debates": 3
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 2,
+            "debates": 18
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 2,
+            "debates": 18
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "set": "S10",
+      "query": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "inStream": 30,
+      "foundInStream": "committees",
+      "total": 120,
+      "arms": {
+        "A-round-robin": {
+          "rank": 61,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 10
+          }
+        },
+        "B-confidence": {
+          "rank": 37,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": 56,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 10
+          }
+        },
+        "B-both": {
+          "rank": 37,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 61,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 10
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 61,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "inStream": 20,
+      "foundInStream": "committees",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-both": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 21,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 32,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "set": "S10",
+      "query": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 120,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 10
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 17,
+            "debates": 3
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 6,
+            "committees": 14
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "inStream": 2,
+      "foundInStream": "committees",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-both": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "set": "S10",
+      "query": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 9,
+            "guidance": 1
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 17,
+            "debates": 3
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 18,
+            "debates": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 18,
+            "debates": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What did the Supreme Court decide about prorogation of Parliament?",
+      "keys": [
+        "tna-caselaw:[2019] UKSC 41:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "caselaw"
+      ],
+      "inStream": 1,
+      "foundInStream": "caselaw",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "caselaw": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 7,
+            "caselaw": 5
+          }
+        },
+        "B-both": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 11,
+            "debates": 9
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 5,
+            "debates": 15
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 5,
+            "debates": 15
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "keys": [
+        "tna-caselaw:[2021] UKSC 5:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "inStream": 15,
+      "foundInStream": "caselaw",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 15,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 15,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": 15,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-both": {
+          "rank": 15,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "keys": [
+        "tna-caselaw:[2014] UKSC 19:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 1,
+      "foundInStream": "caselaw",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 7,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 6,
+            "committees": 6,
+            "guidance": 3,
+            "caselaw": 4,
+            "legislation": 1
+          }
+        },
+        "B-both": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 12,
+            "guidance": 7,
+            "legislation": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 11,
+            "debates": 3,
+            "legislation": 5,
+            "guidance": 1
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 10,
+            "debates": 9,
+            "legislation": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "Is there a Supreme Court case about employment tribunal fees?",
+      "keys": [
+        "tna-caselaw:[2017] UKSC 51:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "inStream": 3,
+      "foundInStream": "caselaw",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-both": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What did the court decide about the duty to investigate deaths in custody?",
+      "keys": [
+        "tna-caselaw:[2011] UKSC 20:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "keys": [
+        "tna-caselaw:[2003] EWCA Civ 1769:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "inStream": 9,
+      "foundInStream": "caselaw",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-both": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1"
+      ],
+      "routed": [
+        "legislation",
+        "guidance"
+      ],
+      "inStream": 2,
+      "foundInStream": "guidance",
+      "total": 120,
+      "arms": {
+        "A-round-robin": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 10,
+            "guidance": 10
+          }
+        },
+        "B-confidence": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 10,
+            "guidance": 10
+          }
+        },
+        "B-both": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 12,
+            "legislation": 8
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 10,
+            "legislation": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/domestic-abuse:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 17,
+      "foundInStream": "guidance",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 89,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 17,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 26,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 2,
+            "debates": 9,
+            "caselaw": 4,
+            "guidance": 4,
+            "committees": 1
+          }
+        },
+        "B-both": {
+          "rank": 6,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 17,
+            "caselaw": 3
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 89,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 1,
+            "caselaw": 11,
+            "debates": 7,
+            "committees": 1
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 89,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 1,
+            "caselaw": 11,
+            "debates": 8
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What happens when someone is accused of making a false allegation of rape?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 8,
+      "foundInStream": "guidance",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 44,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 8,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 10,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 13,
+            "guidance": 4,
+            "committees": 2,
+            "caselaw": 1
+          }
+        },
+        "B-both": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 12,
+            "caselaw": 4,
+            "debates": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 2,
+            "debates": 6,
+            "legislation": 1,
+            "caselaw": 10,
+            "committees": 1
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 2,
+            "debates": 6,
+            "legislation": 1,
+            "caselaw": 10,
+            "committees": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What are the rules police have to follow when stopping and searching someone?",
+      "keys": [
+        "college-of-policing:app-content/stop-and-search:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 7,
+      "foundInStream": "guidance",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 39,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 38,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 120,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 8,
+            "debates": 4,
+            "committees": 5,
+            "guidance": 3
+          }
+        },
+        "B-both": {
+          "rank": 120,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 17,
+            "guidance": 3
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 11,
+            "legislation": 4,
+            "debates": 3,
+            "committees": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 11,
+            "legislation": 4,
+            "debates": 3,
+            "committees": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What is the CPS guidance on abuse of process?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/abuse-process:1"
+      ],
+      "routed": [
+        "guidance"
+      ],
+      "inStream": 27,
+      "foundInStream": "guidance",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 27,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 27,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 16,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-both": {
+          "rank": 16,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 22,
+      "foundInStream": "guidance",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 112,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 130,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 189,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 7,
+            "committees": 4,
+            "guidance": 3,
+            "debates": 4,
+            "caselaw": 2
+          }
+        },
+        "B-both": {
+          "rank": 190,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 18,
+            "caselaw": 2
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 112,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 1,
+            "legislation": 11,
+            "debates": 1,
+            "caselaw": 7
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 112,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 1,
+            "legislation": 11,
+            "debates": 5,
+            "caselaw": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "How do I appeal a decision to the Administrative Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/appeals-administrative-court:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1"
+      ],
+      "routed": [
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "When can HMRC depart from the strict letter of the law?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "guidance",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 8,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 22,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": 28,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 5,
+            "caselaw": 6,
+            "committees": 5,
+            "debates": 3,
+            "legislation": 1
+          }
+        },
+        "B-both": {
+          "rank": 43,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "caselaw": 8,
+            "guidance": 5,
+            "committees": 6,
+            "legislation": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "caselaw": 9
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "caselaw": 9
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What happens if HMRC gives a taxpayer wrong advice?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "caselaw": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 3,
+            "debates": 4,
+            "committees": 5,
+            "legislation": 4,
+            "caselaw": 4
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 1,
+            "committees": 2,
+            "debates": 1,
+            "caselaw": 16
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 4,
+            "guidance": 12,
+            "committees": 1,
+            "legislation": 3
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 4,
+            "guidance": 12,
+            "committees": 1,
+            "legislation": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government think banning plastic straws would cost?",
+      "keys": [
+        "impact-assessments:2020-57:1",
+        "impact-assessments:2020-57:2"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 8,
+      "foundInStream": "legislation",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 32,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 135,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 23,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 7,
+            "debates": 6,
+            "committees": 2,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": 64,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 10,
+            "debates": 10
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 7,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "committees": 1,
+            "debates": 4,
+            "legislation": 11,
+            "guidance": 4
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 7,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "committees": 1,
+            "debates": 4,
+            "legislation": 11,
+            "guidance": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government predict the building safety levy scheme would do?",
+      "keys": [
+        "impact-assessments:2023-77:1",
+        "impact-assessments:2023-77:2",
+        "impact-assessments:2023-77:3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 6,
+            "debates": 6,
+            "committees": 6,
+            "guidance": 2
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "guidance": 10,
+            "debates": 8,
+            "committees": 2
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 5,
+            "guidance": 5,
+            "legislation": 3
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 3,
+            "guidance": 5,
+            "legislation": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What was the predicted cost of the residual waste reduction target?",
+      "keys": [
+        "impact-assessments:2023-14:1",
+        "impact-assessments:2023-14:3"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 6,
+            "committees": 9,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 16,
+            "guidance": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 18,
+            "committees": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 14,
+            "committees": 6
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "keys": [
+        "impact-assessments:2017-78:2"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 7,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 19,
+            "committees": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 15,
+            "debates": 5
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 15,
+            "debates": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government say the tobacco fee changes would cost business?",
+      "keys": [
+        "impact-assessments:2017-78:3"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 7,
+            "debates": 12,
+            "committees": 1
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 18,
+            "guidance": 2
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 17,
+            "debates": 3
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 17,
+            "debates": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What was the impact assessment for the environmental permitting changes?",
+      "keys": [
+        "impact-assessments:2018-21:1",
+        "impact-assessments:2018-21:2",
+        "impact-assessments:2018-21:3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 9,
+      "foundInStream": "legislation",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 36,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 43,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 36,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": 42,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 11,
+            "committees": 5,
+            "debates": 1,
+            "guidance": 3
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 11,
+            "committees": 5,
+            "debates": 1,
+            "guidance": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government expect from the data adequacy decision for South Korea?",
+      "keys": [
+        "impact-assessments:2022-92:1",
+        "impact-assessments:2022-92:2"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 17,
+      "foundInStream": "legislation",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 68,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 169,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": 25,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 2,
+            "guidance": 7,
+            "committees": 7
+          }
+        },
+        "B-both": {
+          "rank": 46,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 10,
+            "guidance": 10
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 68,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 7,
+            "guidance": 6,
+            "committees": 7
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 68,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 7,
+            "guidance": 6,
+            "committees": 7
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What was the justification for raising the Public Guardian's fees?",
+      "keys": [
+        "impact-assessments:2017-92:4",
+        "impact-assessments:2017-92:3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 5,
+      "foundInStream": "legislation",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 98,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "guidance": 5,
+            "debates": 7,
+            "committees": 4
+          }
+        },
+        "B-both": {
+          "rank": 89,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 9,
+            "guidance": 7,
+            "debates": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 6,
+            "guidance": 4,
+            "debates": 10
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 9,
+            "debates": 7,
+            "guidance": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What options did the government consider before setting the Public Guardian fee?",
+      "keys": [
+        "impact-assessments:2017-92:6",
+        "impact-assessments:2017-92:7"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 11,
+            "committees": 3,
+            "guidance": 6
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "debates": 19,
+            "committees": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 8,
+            "debates": 8,
+            "committees": 4
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-ROUTED",
+          "windowStreams": {
+            "guidance": 14,
+            "debates": 6
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What did the government consult on about reducing sewage discharges?",
+      "keys": [
+        "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+        "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "guidance",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 9,
+            "committees": 6,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "committees": 9
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "debates": 9
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "debates": 9
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Was there a consultation on the smoking age ban?",
+      "keys": [
+        "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 14,
+      "foundInStream": "guidance",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 44,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 14,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 18,
+            "debates": 2
+          }
+        },
+        "B-gate": {
+          "rank": 31,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "committees": 8,
+            "guidance": 5,
+            "debates": 7
+          }
+        },
+        "B-both": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 15,
+            "debates": 5
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 12,
+            "debates": 4,
+            "committees": 4
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 12,
+            "debates": 4,
+            "committees": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What did the government propose to change about building safety regulation?",
+      "keys": [
+        "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 5,
+      "foundInStream": "guidance",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 23,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 34,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 6,
+            "debates": 6,
+            "committees": 4,
+            "guidance": 4
+          }
+        },
+        "B-both": {
+          "rank": 25,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 18,
+            "guidance": 2
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 6,
+            "debates": 11,
+            "legislation": 3
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 4,
+            "guidance": 4,
+            "legislation": 12
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Has the government consulted on gambling sponsorship?",
+      "keys": [
+        "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "guidance",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 59,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 5,
+            "guidance": 7
+          }
+        },
+        "B-both": {
+          "rank": 41,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 19,
+            "committees": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 1,
+            "debates": 19
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 1,
+            "debates": 14,
+            "committees": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What has the government asked about AI and copyright?",
+      "keys": [
+        "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+        "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "guidance",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 59,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 8,
+            "guidance": 8,
+            "debates": 4
+          }
+        },
+        "B-both": {
+          "rank": 35,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 16,
+            "committees": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "debates": 9
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 11,
+            "debates": 9
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What was consulted on for leasehold reform?",
+      "keys": [
+        "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 4,
+      "foundInStream": "guidance",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 19,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 126,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 3,
+            "committees": 4,
+            "guidance": 6,
+            "debates": 7
+          }
+        },
+        "B-both": {
+          "rank": 120,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 16,
+            "committees": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 8,
+            "debates": 8,
+            "legislation": 2,
+            "committees": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 8,
+            "debates": 9,
+            "legislation": 2,
+            "committees": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Is there guidance being consulted on for storm overflows?",
+      "keys": [
+        "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "guidance",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 6,
+            "guidance": 7
+          }
+        },
+        "B-both": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 15,
+            "debates": 5
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 5,
+            "debates": 15
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What did the government consult on for net zero aviation?",
+      "keys": [
+        "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 1,
+      "foundInStream": "guidance",
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 5,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-both": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 15,
+            "guidance": 5
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "debates": 15,
+            "guidance": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Was there a consultation about electrical safety in building regulations?",
+      "keys": [
+        "consultations:government_consultations_building-regulations-electrical-safety:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "guidance",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 6,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 3,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 2,
+            "debates": 6,
+            "committees": 6,
+            "guidance": 6
+          }
+        },
+        "B-both": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 19,
+            "committees": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 3,
+            "debates": 7,
+            "legislation": 1,
+            "committees": 9
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "guidance": 3,
+            "debates": 7,
+            "legislation": 1,
+            "committees": 9
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "keys": [
+        "pwdata-debates:debates2024-11-29d:3",
+        "pwdata-debates:debates2024-11-29d:78"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Did peers back the assisted dying bill when it reached the Lords?",
+      "keys": [
+        "pwdata-lords:daylord2025-09-12c:4"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": 39,
+      "foundInStream": "debates",
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": 39,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": 39,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": 39,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": 39,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 42,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 42,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did ministers at Stormont say about the botched green energy scheme?",
+      "keys": [
+        "niassembly-hansard:286438:151"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 120,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 10,
+            "committees": 10
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 9,
+            "committees": 11
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 15,
+            "committees": 5
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 12
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 12
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "keys": [
+        "pwdata-westminster:westminster2022-04-21a:27",
+        "pwdata-westminster:westminster2018-11-27c:55"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did peers say about overturning the subpostmasters' convictions?",
+      "keys": [
+        "pwdata-lords:daylord2024-05-13a:113"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "set": "V2",
+      "query": "When did Parliament last seriously debate bringing back the death penalty?",
+      "keys": [
+        "historic-hansard:S5LV0198P0:1798",
+        "historic-hansard:S5LV0306P0:1905"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What happened to the plan to make the House of Lords elected?",
+      "keys": [
+        "pwdata-lords:daylord2012-04-30a:76"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 11,
+            "guidance": 3,
+            "committees": 6
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 11,
+            "guidance": 3,
+            "committees": 6
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did MSPs say about making it easier to change your legal gender?",
+      "keys": [
+        "scottish-parliament-or:14066:193"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Why were energy companies forcing people onto prepayment meters?",
+      "keys": [
+        "pwdata-debates:debates2022-12-15b:298"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 33,
+      "foundInStream": "debates",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 133,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 108,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 69,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 9,
+            "guidance": 4,
+            "committees": 7
+          }
+        },
+        "B-both": {
+          "rank": 62,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 16,
+            "debates": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 133,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 13,
+            "committees": 1,
+            "guidance": 2,
+            "legislation": 4
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 133,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 13,
+            "committees": 1,
+            "guidance": 3,
+            "legislation": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "keys": [
+        "pwdata-debates:debates2024-12-02c:452"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 180,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 6
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 5,
+            "debates": 13,
+            "guidance": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "committees": 5,
+            "debates": 13,
+            "guidance": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did the Chancellor announce in the Spring Statement?",
+      "keys": [
+        "pwdata-debates:debates2025-03-26b:130"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 60,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 20
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Can my landlord evict me without giving a reason?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/50:section-21"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "legislation",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 21,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 8,
+            "guidance": 4,
+            "legislation": 4,
+            "committees": 3,
+            "caselaw": 1
+          }
+        },
+        "B-both": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 14,
+            "caselaw": 3,
+            "guidance": 3
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 3,
+            "debates": 7,
+            "legislation": 8,
+            "caselaw": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 9,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "guidance": 3,
+            "debates": 7,
+            "legislation": 8,
+            "caselaw": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Has the law on no-fault evictions actually changed?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2025/26:section-146",
+        "primary-acts-2000plus:ukpga/2025/26:section-147"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 5,
+            "legislation": 7
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 14,
+            "debates": 6
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 9,
+            "guidance": 4,
+            "debates": 5,
+            "committees": 2
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 9,
+            "guidance": 4,
+            "debates": 5,
+            "committees": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "My employer won't make changes for my disability — what does the law require?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2010/15:section-20"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": -1,
+      "foundInStream": null,
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 9,
+            "caselaw": 3,
+            "guidance": 4,
+            "committees": 3,
+            "legislation": 1
+          }
+        },
+        "B-both": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "legislation": 5,
+            "guidance": 12,
+            "caselaw": 3
+          }
+        },
+        "C-rerank-pro": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 5,
+            "caselaw": 5,
+            "guidance": 6,
+            "committees": 1,
+            "legislation": 3
+          }
+        },
+        "C-rerank-flash": {
+          "rank": -1,
+          "verdict": "NOT-RETRIEVED",
+          "windowStreams": {
+            "debates": 5,
+            "caselaw": 10,
+            "guidance": 4,
+            "committees": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "What exactly did the government ban when it banned plastic straws?",
+      "keys": [
+        "si-2010plus:uksi/2020/971:regulation-2",
+        "si-2010plus:uksi/2020/971:regulation-20"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 14,
+      "foundInStream": "legislation",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 56,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 14,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 26,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 7,
+            "committees": 7,
+            "guidance": 4,
+            "legislation": 2
+          }
+        },
+        "B-both": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 7,
+            "guidance": 9,
+            "debates": 4
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 12,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 6,
+            "debates": 10,
+            "guidance": 4
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 12,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 6,
+            "debates": 10,
+            "guidance": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Does Scotland have a minimum price for alcohol?",
+      "keys": [
+        "regional:ssi/2024/127:article-2"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 0,
+      "foundInStream": "legislation",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 97,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "debates": 8,
+            "committees": 8,
+            "caselaw": 3,
+            "legislation": 1
+          }
+        },
+        "B-both": {
+          "rank": 97,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "caselaw": 4,
+            "guidance": 2,
+            "debates": 9,
+            "committees": 1
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 7,
+            "committees": 4,
+            "debates": 8,
+            "caselaw": 1
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 0,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 7,
+            "committees": 4,
+            "debates": 8,
+            "caselaw": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1985/70:section-11"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 19,
+      "foundInStream": "legislation",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 95,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 19,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 141,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 2,
+            "debates": 9,
+            "committees": 5,
+            "guidance": 4
+          }
+        },
+        "B-both": {
+          "rank": 92,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "guidance": 10,
+            "committees": 5
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 95,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "caselaw": 4,
+            "debates": 5,
+            "guidance": 6
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 95,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "caselaw": 2,
+            "debates": 6,
+            "guidance": 7
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2006/28:section-2",
+        "primary-acts-2000plus:ukpga/2006/28:section-3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 2,
+      "foundInStream": "legislation",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 10,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 10,
+            "caselaw": 2,
+            "guidance": 1,
+            "committees": 3
+          }
+        },
+        "B-both": {
+          "rank": 4,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 8,
+            "guidance": 1,
+            "caselaw": 3,
+            "debates": 8
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 1,
+            "legislation": 6,
+            "caselaw": 3,
+            "debates": 10
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "committees": 1,
+            "legislation": 6,
+            "caselaw": 5,
+            "debates": 8
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "What does the law make social media companies do to protect children?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2023/50:section-12"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "inStream": 12,
+      "foundInStream": "legislation",
+      "total": 240,
+      "arms": {
+        "A-round-robin": {
+          "rank": 48,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-confidence": {
+          "rank": 12,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 20
+          }
+        },
+        "B-gate": {
+          "rank": 42,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 5,
+            "debates": 5,
+            "committees": 5,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": 8,
+          "verdict": "HIT@20",
+          "windowStreams": {
+            "legislation": 13,
+            "guidance": 7
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 10,
+            "guidance": 10
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 1,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 10,
+            "guidance": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "How do I find out what a company holds about me?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2018/12:section-45"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "inStream": 5,
+      "foundInStream": "legislation",
+      "total": 300,
+      "arms": {
+        "A-round-robin": {
+          "rank": 25,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 4,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 4
+          }
+        },
+        "B-confidence": {
+          "rank": 34,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 20
+          }
+        },
+        "B-gate": {
+          "rank": 20,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "legislation": 4,
+            "debates": 3,
+            "committees": 4,
+            "caselaw": 4,
+            "guidance": 5
+          }
+        },
+        "B-both": {
+          "rank": 26,
+          "verdict": "DILUTED",
+          "windowStreams": {
+            "guidance": 18,
+            "legislation": 2
+          }
+        },
+        "C-rerank-pro": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 6,
+            "caselaw": 9,
+            "guidance": 5
+          }
+        },
+        "C-rerank-flash": {
+          "rank": 2,
+          "verdict": "HIT@5",
+          "windowStreams": {
+            "legislation": 6,
+            "caselaw": 8,
+            "guidance": 6
+          }
+        }
+      }
+    }
+  ]
+}

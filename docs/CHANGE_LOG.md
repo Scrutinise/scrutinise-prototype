@@ -369,6 +369,155 @@ drop mid-run left orphaned `zz-check-*` fixtures that the next run reported as f
 
 ---
 
+## SEARCH S15-CAPACITY — THE FOUR HYPOTHESES ANSWERED, AND THE FIRST REAL FOUR-STREAM BASELINE (2026-08-27 10:44 UTC)
+
+Executes `docs/BRIEF_SEARCH_S15_CAPACITY.md`, which supersedes the earlier S15 draft. §§2, 3, 5 and
+7 were delivered against that draft at 04:12 UTC; what follows is what the capacity brief added.
+
+**§1 — the four hypotheses, with predictions logged at 10:30 before any was tested. Two of the
+three predictions were wrong, and the wrong ones were worth more than the right one.**
+
+| | verdict | the number |
+|---|---|---|
+| **H1** arbitrary constant | ✅ TRUE | `VECTOR_MAX_CONCURRENT ?? '4'`, copied from `fts-query-service.ts` |
+| **H2** processor-bound | ⚠ PARTLY | the container has **8 vCPU**, not the 48 `os.cpus()` reports; width 16 burns **4.1–4.6** of them |
+| **H3** memory-bound | ❌ FALSE | 1.95 GB of an 8 GB limit — but the index is **147.58 GB**, and I predicted 2–8 |
+| **H4** storage/network | ✅ TRUE, DOMINANT | 193 GB in R2, **no local cache**, `cpu/wall 0.53` on a quiet query |
+
+⚠⚠ **`os.cpus()` ON RAILWAY REPORTS THE HOST, NOT THE CGROUP QUOTA.** The 04:12 draft of this report
+printed "a host reporting 48 cores" as evidence of headroom; the real limit is **8**, read from
+Railway's `CPU_LIMIT`. That was an inference in the grammar of a measurement (§19) and it is the
+most consequential correction here, because it is the number every future width decision rests on —
+and it retro-explains the width-32 result the earlier draft could only call "confounded by drift":
+at 4.1–4.6 of 8 vCPU, doubling the width would run into the quota.
+
+⚠⚠ **H3's size prediction was wrong by more than twenty times, and the reason is the finding.**
+Predicted 2–8 GB on the reasoning that IVF_PQ compresses 3,072 bytes per vector to ~96–192.
+Measured: `corpus_vec.lance` is **147.58 GB** — `data` 130.55, `_indices` 16.92 — or **6,990 bytes
+per vector, 2.3× LARGER than raw f32, not smaller.** Both halves of the reasoning were true and
+combined wrongly: the PQ compression is real but lives **only** in `_indices` (746 bytes/vector, a
+genuine 4.1×), while `data` keeps the original vectors AND the string columns. ⚠ And that matters
+per query, because **`refineFactor: 2` re-ranks with EXACT distance and so must fetch original f32
+vectors out of the 130 GB `data` directory** — ~1.8 MB per query on top of the `nprobes: 64`
+partition reads. Also named: **`corpus_chunks/_versions` is 13.39 GB of stale manifests**, 29% of
+that dataset, serving no query.
+
+⚠ **What could NOT be measured, stated rather than glossed: bytes per query.** Railway's
+`NETWORK_RX_GB` did not move across a controlled 20-query window. H4 rests on four converging
+indirect lines (no cache in code; `cpu/wall` 0.53; a ten-fold warm-up curve; the same code taking
+130 s from a laptop for what the container does in ~2 s) and is stated as indicated, not measured.
+**H4's fix — co-location on a Railway volume — is costed at ~$31/month for 193 GB, inside the
+brief's $50 threshold, and deliberately NOT done: D-8.**
+
+**§6 — THE BASELINE RETAKEN, AND IT IS THE FIRST NON-DEGRADED FOUR-STREAM MEASUREMENT THIS PROJECT
+HAS EVER HAD.** `degraded: []`, `fully-configured`, `vector+209` engagement, index stamps matched.
+⚠ S14's surviving artefact is named **`s14-arms-bm25.json`** and records `streams=NONE …
+DEGRADED(1)` — its published recall figures describe a **keyword-only** system.
+
+| | S13 (1 dense stream) | S14 (dense OFF) | **S15 (4 streams, arriving)** |
+|---|---|---|---|
+| in-stream@20 — what retrieval finds | 27/64 | 19/64 | **32/64 (50%)** |
+| merged@20, round-robin — production today | 15/64 | 14/64 | **19/64 (30%)** |
+| merged@20, judged + reranker | — | 19/64 | **30/64 (47%)** |
+| @5, judged + reranker | — | 15/64 | **26/64 (41%)** |
+
+**Both S13 and S14 are VOID as statements about production retrieval, for opposite reasons.**
+▶ **Dense retrieval is worth THIRTEEN points of in-stream recall (19 → 32); S14 predicted "roughly
+twelve".** My own predictions, logged before the run: in-stream@20 **24–32 → actual 32**; arm A
+**18–24 → actual 19**; dense observed to arrive; rejection rate 0. All four held.
+
+⚠⚠ **AND THE SENTENCE THAT SHOULD BE READ BEFORE ANY OF IT: with today's production configuration,
+45 of 64 questions return nothing correct. With the judged merge and reranker on, 34 of 64. And a
+PERFECT merge could only reach 32 of 64, because for half the set retrieval finds nothing at all.
+The merge is no longer the constraint; retrieval is.** `debates` is **0/11** on every arm;
+`committees` **2/10**; `impact-assessments` finds 4/9 and displays **0/9**.
+
+**§3's acceptance measure — the rejection rate — is ZERO on every real workload**: 40 legs at two
+users, 64 at four, 96 at eight, and **209 across the whole gold sweep**. Non-zero only when
+`check-vector-shed` deliberately overfills the queue (6 of 54, by design), which is the shed path
+proving it still works.
+
+▶ **The clearest proof the capacity work landed: the gold harness no longer needs its throttle.**
+`s14-run.sh` had to run at `LEX_STREAM_CONCURRENCY=1` and a 90 s timeout — its own comment says
+that was "what makes the measurement possible at all". `s15-run.sh` uses production's 3 and 25 s
+and completed with 0 rejections. ⚠ `LEX_STREAM_CONCURRENCY=3`'s stated justification ("under the
+service's 4") is now void, but a void reason is not evidence for a new number — **D-7, measure it,
+do not raise it blind.**
+
+**Total spend: €0.008 (the index rebuild) + 13.68p (the reranker arms over 64 questions).**
+
+---
+
+## SEARCH S15-CAPACITY — PREDICTIONS FOR H2, H3 AND H4, LOGGED BEFORE ANY OF THEM WAS TESTED (2026-08-27 10:30 UTC)
+
+Executes `docs/BRIEF_SEARCH_S15_CAPACITY.md` §1, which requires a prediction per hypothesis
+recorded before testing. Written before the index size, the compression parameters, the
+per-query byte count or the CPU utilisation had been read.
+
+⚠ **H1 is NOT predicted here because it is already answered** (earlier S15 draft, 04:12 UTC):
+`vector-query-service.ts:86` is `parseInt(process.env.VECTOR_MAX_CONCURRENT ?? '4', 10)` — a plain
+constant, copied from `fts-query-service.ts`'s `FTS_MAX_CONCURRENT`, whose justifying measurement
+was taken on the FTS service. Predicting a thing already measured would be scoring myself on a
+known answer.
+
+**H2 — processor-bound. Predicted FALSE as the primary constraint.**
+- CPU during ONE isolated query will be **under 3 cores' worth sustained** (`cpu/wall < 3.0`).
+- The container will report a vCPU limit **far below** the 48 `os.cpus()` reports (that is the
+  HOST, not our cgroup quota) — I predict a limit of **8 or fewer**.
+- The dominant stage will be the ANN, not the embed and not response assembly.
+
+**H3 — memory-bound. Predicted FALSE.**
+- `corpus_vec` on disk will be **2–8 GB**, not the ~70 GB the brief's uncompressed arithmetic
+  gives, because the index is **IVF_PQ** — product-quantised, so a 768-dim float32 vector
+  (3,072 bytes) is stored as roughly **96–192 bytes** plus overhead.
+- The working set will **not** fit in the process's resident memory and **will not need to**:
+  peak RSS is 1,773 MB against a 7,629 MB cap (23%), so nothing is paging.
+- Adding RAM will therefore buy **nothing**.
+
+**H4 — storage/network-bound. Predicted TRUE, and the primary constraint.**
+- `lance.ts` opens both tables at `s3://{bucket}/_search` with **no local cache directory**, so
+  every query is HTTP range reads against Cloudflare R2 from Railway `europe-west4`.
+- Bytes read per dense query will be **more than 10 MB**, essentially all of it from object
+  storage rather than local disk.
+- This is consistent with the already-measured `cpu_over_wall` of **0.53** on a quiet service.
+
+⚠ **The consequence if H4 is right is the expensive one:** more processor and more RAM both buy
+nothing, replicas MULTIPLY the dominant cost because each re-reads R2 independently, and the fix
+is to co-locate the index with the service — which is a different and larger change than any
+capacity dial.
+
+**Scored in `docs/SEARCH_S15_REPORT.md` §1.**
+
+### And a second prediction, for §6.2's baseline retake (2026-08-27 10:47 UTC)
+
+⚠ **Logged with the run already in flight and its output DELIBERATELY UNREAD** — the harness was
+started before I had worked out what the retake actually measures, and a prediction written after
+reading the answer is worthless. Stated here rather than quietly dropped.
+
+**What the retake is, and why it is not a re-run of S14.** S14's headline
+**in-stream@20 = 19/64 (30%)** was taken while **every dense leg was timing out and silently
+falling back to BM25** (S14 §0). It is a **keyword-only** figure wearing a four-stream label. S13's
+**27–28/64 (42%)** was taken with dense on `legislation` ALONE. So there has never been a
+measurement of this platform with four dense streams actually arriving — S15 makes one possible for
+the first time, and S14 sized the unmeasured gap at "roughly twelve points".
+
+**Predicted:**
+- **in-stream@20 lands between 24 and 32 of 64**, i.e. at or above S13's 27 — three more streams
+  now have a dense leg than S13 had, so if dense is worth anything the four-stream figure should
+  not be below the one-stream figure.
+- **merged@20 (arm A, round-robin) rises from 14/64 to 18–24.**
+- **The dense legs are OBSERVED to arrive**, not assumed: `meta.denseDegraded` empty, the vector
+  service's `served` counter moving per routed stream, and hits carrying a fused scorer rather than
+  `bm25`. ⚠ If they do not arrive, every number above is void and the retake has measured S14 again.
+- **Rejection rate 0** (§3's acceptance measure).
+
+⚠ **The honest downside case:** if in-stream@20 comes back at ~19/64, then either dense adds
+nothing across the three streams S13 never tested it on, or the legs are still not arriving. Those
+are very different findings and the `denseDegraded` channel built this sprint is what tells them
+apart.
+
+---
+
 ## SEARCH S15 — THE SERVICE WAS NOT SLOW BECAUSE IT WAS FOUR WIDE (2026-08-27 04:12 UTC)
 
 Executes `docs/BRIEF_SEARCH_S15.md`. Full report: `docs/SEARCH_S15_REPORT.md`.

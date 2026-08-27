@@ -2,7 +2,45 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 04:12 UTC — ▼ **SEARCH S15: `vector-serve` NOW REFUSES WORK NOBODY IS WAITING FOR — AND THE REASON IT WAS SLOW WAS NEVER ITS WIDTH.**
+*Last updated: 2026-08-27 10:44 UTC — ▼ **SEARCH S15-CAPACITY: THE BLOCK IS THE OBJECT STORE, AND THE PLATFORM HAS NEVER ONCE MEASURED ITSELF WITH DENSE RETRIEVAL ACTUALLY WORKING — UNTIL NOW.**
+▶▶ **§1, four hypotheses, predictions logged before testing. TWO OF THREE WERE WRONG.**
+**H1 arbitrary constant ✅** · **H2 processor ⚠ PARTLY** · **H3 memory ❌** · **H4 storage/network ✅ DOMINANT.**
+⚠⚠ **`os.cpus()` ON RAILWAY REPORTS THE HOST, NOT OUR QUOTA. The container has 8 vCPU, not 48**, and
+at width 16 it already burns **4.1–4.6** of them. The 04:12 draft called CPU "nowhere near a limit…
+against a host reporting 48 cores" — that was an inference wearing a measurement's grammar (§19),
+and it is the number every future width decision rests on. It also retro-explains why width 32 was
+worse.
+⚠⚠ **H3's size prediction was wrong by 20×, and the reason is the finding.** `corpus_vec.lance` is
+**147.58 GB** (`data` 130.55 + `_indices` 16.92) = **6,990 bytes/vector, 2.3× LARGER than raw f32.**
+PQ compression is real but lives ONLY in `_indices` (746 B/vector, 4.1×); `data` keeps the original
+vectors — and **`refineFactor: 2` fetches them on every query**. Also: `corpus_chunks/_versions` is
+**13.39 GB of stale manifests**, 29% of that dataset, serving nothing.
+⚠ **NOT measured, named: bytes per query.** Railway's `NETWORK_RX_GB` never moved. H4 rests on four
+converging indirect lines. **Its fix — co-location on a volume — is costed at ~$31/month for 193 GB,
+inside the brief's $50 line, and deliberately NOT done: D-8.**
+▶▶ **§6: THE BASELINE IS RETAKEN AND IT IS THE FIRST NON-DEGRADED FOUR-STREAM MEASUREMENT EVER
+TAKEN HERE** (`degraded: []`, `vector+209`). ⚠ S14's own artefact is named **`s14-arms-bm25.json`**
+and records `streams=NONE … DEGRADED(1)` — its recall figures describe a **keyword-only** system.
+**in-stream@20: S13 27/64 · S14 19/64 · S15 32/64. round-robin: 15 · 14 · 19/64. judged+reranker:
+— · 19 · 30/64. @5 judged+reranker: — · 15 · 26/64.** Both earlier baselines are VOID.
+**Dense retrieval is worth THIRTEEN points of in-stream recall; S14 predicted "roughly twelve".**
+My predictions (logged first): in-stream 24–32 → **32** ✅; arm A 18–24 → **19** ✅; dense arrived ✅;
+rejections 0 ✅.
+⚠⚠⚠ **READ THIS BEFORE THE GOOD NEWS: with today's production configuration 45 of 64 questions
+return nothing correct. With the merge+reranker on, 34 of 64. A PERFECT merge could only reach 32,
+because retrieval finds nothing at all for half the set. THE MERGE IS NO LONGER THE CONSTRAINT;
+RETRIEVAL IS.** `debates` **0/11** every arm · `committees` **2/10** · `impact-assessments` finds
+4/9 and displays **0/9**.
+▶ **§3's acceptance measure — rejection rate — is ZERO on every real workload** (40/64/96 legs at
+2/4/8 users, and **209 across the whole gold sweep**); non-zero only when the shed path is
+deliberately overloaded (6 of 54, by design).
+▶ **Proof the capacity work landed: the gold harness no longer needs its throttle.** `s14-run.sh`
+ran at `LEX_STREAM_CONCURRENCY=1`/90 s because that was "what makes the measurement possible at
+all"; `s15-run.sh` uses production's 3/25 s and finished clean.
+▶▶ **CHARLIE: eight decisions in `docs/SEARCH_S15_REPORT.md`.** D-5 turn the merge+reranker ON
+(+11 questions, ZERO lost, 0.214p/query). D-3 the next sprint is RETRIEVAL, not ranking. D-4 needs
+one dashboard action (connect the `vector-serve` repo trigger). **Spend: €0.008 + 13.68p.**
+Earlier: 2026-08-27 04:12 UTC — ▼ **SEARCH S15: `vector-serve` NOW REFUSES WORK NOBODY IS WAITING FOR — AND THE REASON IT WAS SLOW WAS NEVER ITS WIDTH.**
 ▶▶ **§1, FIRST, BECAUSE IT REWROTE THE BRIEF. 1,478,964 rows of `corpus_chunks` (6.5% of
 22,670,808) had fallen outside its `sectionId` index and were brute-force scanned on every single
 snippet lookup.** An equality lookup on the **indexed** column took **133,401 ms**; the same table's

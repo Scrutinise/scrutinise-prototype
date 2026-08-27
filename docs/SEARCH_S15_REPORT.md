@@ -20,28 +20,58 @@ Measured against the live dataset, an equality lookup on the *indexed* column ta
 while the same table's *unindexed* `chunkId` column answers in **21,470 ms** — the "indexed" column
 is six times slower than the unindexed one. The ANN search it exists to decorate takes **1,301 ms**.
 
-▶ **The width question in §5 cannot be answered yet, because the service time it must be sized from
-is about to fall by roughly an order of magnitude, and the fix costs €0.01 and 39 seconds.** Sizing
-capacity against a stale index would buy permanent monthly compute to carry a cost that a
-one-off maintenance job removes. That is precisely what §1's "report before provisioning" gate is
-for, so this is reported and not acted on unilaterally — **D-1**.
+**The fix cost €0.008 and 45 seconds.** Sizing capacity against a stale index would have bought
+permanent monthly compute to carry a cost that one maintenance job removes.
 
 ⚠ **The repository predicted this in writing and the check that should have caught it could not
 fail.** `build-chunks-scalar-index.ts` carries the warning in its own header — *"THIS INDEX WILL
 NEED REBUILDING IF THE MAX_CHUNKS TOP-UP HAPPENS … an append leaves new rows outside the index"* —
 and its `--verify-only` asked *"is there an index on this column?"*, which an index missing 6.5% of
-the table answers **yes**. It printed **"an index on sectionId EXISTS. Nothing to do."** Fixed in
-§2.4 below and watched failing against the real state first.
+the table answers **yes**. It printed **"an index on sectionId EXISTS. Nothing to do."** Fixed, and
+watched failing against the real state first.
+
+### And then the sprint's second answer, which is bigger
+
+⚠⚠ **THE SERVICE WAS ALSO SERVING A SEARCH THAT HAD NEVER ACTUALLY RUN.** With capacity fixed, the
+64-question baseline was retaken with the four dense streams **arriving** — `degraded: []`,
+`vector+209` engagement — for the first time in this project's history. S13 measured **one** dense
+stream; S14's surviving artefact is named `s14-arms-bm25.json` and records
+`streams=NONE … DEGRADED(1)`.
+
+| | S13 (1 dense stream) | S14 (dense OFF) | **S15 (4 streams, arriving)** |
+|---|---|---|---|
+| what retrieval finds (in-stream@20) | 27/64 | 19/64 | **32/64** |
+| what a user sees today (round-robin) | 15/64 | 14/64 | **19/64** |
+| what a user could see (judged + reranker) | — | 19/64 | **30/64** |
+
+▶ **Dense retrieval is worth THIRTEEN points of in-stream recall** — S14 predicted "roughly twelve".
+
+⚠⚠ **And the sentence that should be read before any of the good news: with today's production
+configuration, 45 of 64 questions return nothing correct. The merge is no longer the constraint;
+retrieval is.** §6.4.
 
 ---
 
-## §1 — THE AUDIT
+## §1 — THE DIAGNOSIS: FOUR HYPOTHESES, FOUR TESTS
 
-*Taken 2026-08-27 02:48–03:30 UTC against the running service and the live datasets. Nothing was
-changed on the service before any of it. Every figure below is measured; where a number is derived,
-the arithmetic is shown.*
+*Taken 2026-08-27 02:48–03:30 and 10:30–11:05 UTC against the running service and the live
+datasets. Nothing was changed on the service before any of it. Every figure below is measured;
+where a number is derived, the arithmetic is shown.*
 
-### 1.1 Why 4? — **a constant, copied from another service's evidence**
+**Predictions for H2, H3 and H4 were logged in `CHANGE_LOG.md` at 10:30 UTC before any of them was
+tested**, and are scored honestly below — **two of the three were wrong**, and the wrong ones were
+more useful than the right one.
+
+| | hypothesis | verdict | the number that settles it |
+|---|---|---|---|
+| **H1** | an arbitrary constant | ✅ **TRUE** | `VECTOR_MAX_CONCURRENT ?? '4'` — copied from another service |
+| **H2** | processor-bound | ⚠ **PARTLY, AND MORE THAN EXPECTED** | the container has **8 vCPU**, not the 48 `os.cpus()` reports; at width 16 it burns **4.1–4.6** of them |
+| **H3** | memory-bound | ❌ **FALSE** | 1.95 GB of an 8 GB limit; but the index is **147.58 GB**, not the 2–8 GB I predicted |
+| **H4** | storage / network-bound | ✅ **TRUE, AND DOMINANT** | 147.58 GB in object storage, **no local cache**, `cpu/wall 0.53` on a quiet query |
+
+▶ **The brief called H4 "most likely to be true and least likely to be looked for". It was right.**
+
+### 1.1 H1 — Why 4? — **a constant, copied from another service's evidence**
 
 `vector-query-service.ts:86`:
 
@@ -150,34 +180,117 @@ them forever. That is what made warm p50 26 seconds while everything still 'work
 embed (3%), not the ANN (which is correctly indexed and takes ~1.3 s), and not the queue — the
 queue wait is a *consequence* of a service time this large, not a cause.
 
-### 1.3 How big is the index in memory, and is it shared? — **it is not in memory at all**
+### 1.3 H2 — Is the box actually busy? — **⚠ THE CONTAINER HAS 8 vCPU, NOT 48**
+
+**I predicted the vCPU limit would be "8 or fewer". It is exactly 8** — and the more useful half is
+where the 48 came from.
+
+| read from | value | what it is |
+|---|---|---|
+| `os.cpus().length` inside the container | **48** | ⚠ **the HOST's cores, not our quota** |
+| `os.loadavg()` inside the container | **[20.0, 21.8, 23.1]** | ⚠ also the host's — other tenants' work |
+| Railway `CPU_LIMIT` | **8.000** | **the actual cgroup quota** |
+| Railway `MEMORY_LIMIT_GB` | 8.000 | matches `MEM_CAP_BYTES` |
+| in-process `cpu_over_wall`, quiet, one query at a time | **0.53** | half the wall time is not CPU at all |
+| in-process `cpu_over_wall`, at width 16 under load | **4.11 – 4.56** | **51–57% of the 8-vCPU quota** |
+
+⚠⚠ **`os.cpus()` on Railway reports the host and is worthless as a capacity number.** The previous
+draft of this report printed "a host reporting 48 cores" as evidence of headroom. That was an
+inference dressed as a measurement (`CLAUDE.md` §19) and it is corrected here: **the real quota is
+8, and at width 16 we are already using more than half of it.**
+
+▶ **This retro-explains the width-32 result that §5 could only call "confounded by drift".** At
+width 16 the service burns 4.1–4.6 of 8 vCPU; doubling the width would push past the quota and into
+CPU throttling. **There is now a mechanism, not just a noisy observation, and it says 16 is close to
+the right number rather than accidentally so.**
+
+⚠ My prediction that one isolated query would use "under 3 cores' worth" holds (0.53) — but I did
+not predict the load figure, and 4.1–4.6 of 8 is the number that matters for §5.
+
+### 1.4 H3 — Memory-bound? — **NO. But the index is 147.58 GB, and I predicted 2–8**
+
+**Verdict: FALSE.** `MEMORY_USAGE_GB` sits at **1.95 of an 8 GB limit** (24%), peak RSS 2,136 MB
+(28%). Nothing is paging; **adding RAM buys nothing.** That part of the prediction was right.
+
+⚠⚠ **The size prediction was wrong by more than twenty times, and the reason is the finding.** I
+predicted 2–8 GB on the reasoning that IVF_PQ compresses a 768-dim float32 vector from 3,072 bytes
+to ~96–192. Measured, by listing the dataset's own objects in R2:
+
+| | objects | size |
+|---|---|---|
+| **`_search/corpus_vec.lance` TOTAL** | 4,123 | **147.58 GB** |
+| ├ `data` — the table itself | 2,015 | **130.55 GB** |
+| ├ `_indices` — the ANN index | 16 | **16.92 GB** |
+| ├ `_versions` | 974 | 0.10 GB |
+| └ `_transactions` / `_deletions` | 1,118 | 0.01 GB |
+| **`_search/corpus_chunks.lance` TOTAL** | 55,052 | **45.69 GB** |
+| ├ `data` | 18,086 | 31.37 GB |
+| ├ **`_versions`** | 18,448 | ⚠ **13.39 GB** |
+| └ `_indices` | 4 | 0.90 GB |
+
+**Raw arithmetic:** 22,670,808 × 768 × 4 bytes = **64.86 GB** (the brief said "roughly 70 GB" —
+close). **Stored: 147.58 GB, or 6,990 bytes per vector against 3,072 raw — 2.3× LARGER, not
+smaller.**
+
+⚠ **Both halves of my reasoning were true and I combined them wrongly.** The PQ compression is real
+but it lives **only in `_indices`**: 16.92 GB / 22.67M = **746 bytes per vector, a genuine 4.1×
+compression**. The `data` directory keeps the **original f32 vectors** alongside `chunkId`,
+`sectionId`, `corpus` and `tier` as Utf8 strings — so the dataset is index *plus* full table, not
+index instead of table.
+
+⚠⚠ **AND THAT MATTERS FOR EVERY QUERY, BECAUSE `refineFactor: 2` READS THE RAW VECTORS.**
+`vector-core.ts` asks for `limit × CHUNK_OVERSCAN` = 300 candidates and then re-ranks `× REFINE`
+of them with **exact** cosine distance — which cannot be done from the quantised index and must
+fetch original vectors out of the 130.55 GB `data` directory. At 600 × 3,072 bytes that is ~1.8 MB
+of raw vectors per query **on top of** the `nprobes: 64` partition reads. **This is the mechanism
+behind H4, and it is a dial we control** — see 1.5.
+
+⚠ **Named in passing: `corpus_chunks/_versions` is 13.39 GB across 18,448 objects** — accumulated
+manifests, 29% of that dataset's size, serving no query. Not this sprint's job; worth an ingest
+ticket.
+
+### 1.5 H4 — Where does a query read from? — **R2, per query, with no cache. TRUE and dominant**
 
 `lance.ts` opens both tables straight off R2 over the S3 object-store backend, with **no local
-cache directory configured**:
+cache directory and no mounted volume**:
 
 ```ts
 lancedb.connect(`s3://${bucket()}/_search`, { storageOptions: r2StorageOptions() })
 ```
 
-So there is no resident index. Read off the running service:
-
-| | |
-|---|---|
-| current RSS | **200 MB** |
-| **peak RSS since boot** | **291 MB** |
-| Railway per-replica cap | 7,629 MiB (`MEM_CAP_BYTES` 8 GB) |
-| **peak as a share of the cap** | **3.8%** |
-
+So **there is no resident index and no local copy.** 193 GB of Lance dataset lives in Cloudflare R2
+and the service in Railway `europe-west4` reads what it needs over HTTPS, per query, every time.
 One process, one `openTable` per table at boot, every request against those same two handles.
 
-▶ **Width is bought with neither RAM nor cores.** A replica costs ~300 MB, which is 3.8% of the cap
-— so replicas are cheap in memory and the "48 GB per service" aggregate is nowhere near binding.
-But **every replica re-reads from R2 independently**, so with the index stale each additional
-replica adds ~2.2 GB of R2 traffic per request rather than sharing it. **Horizontal width
-multiplies the dominant cost instead of dividing it.** That is the strongest argument in this
-report for fixing 1.2 before spending anything on §5.
+**The evidence, four independent lines:**
 
-### 1.4 The width arithmetic — **stated, and then stated again as void**
+1. **The code.** No `cache_dir`, no volume in the service manifest (`volumeMounts: []`).
+2. **`cpu_over_wall` = 0.53** on a quiet, one-at-a-time query: **47% of the wall clock is not CPU
+   at all.** The process is waiting.
+3. **The warm-up curve.** Across ten sequential queries after a restart the snippet stage ran
+   3,866 → 1,172 → 368 ms and the first request took 6,003 ms against a later 2,227. Local storage
+   does not produce a ten-fold warm-up curve; a remote object store filling a page cache does.
+4. **Position dominates.** The *same code* against the *same dataset* took **130 s** from this
+   laptop for a scan the Railway container does in ~1–3 s. Nothing differs but the network path.
+
+⚠ **What I could NOT measure, stated rather than glossed:** bytes read per query, directly.
+The test used Railway's own `NETWORK_RX_GB` counter across a controlled window of 20 queries and
+**it did not move** (0.9480 → 0.9480 over the window, after a 180-second settle). Either the metric
+lags further than that, or it counts only public ingress to the container and not the service's own
+outbound fetches to R2. **Reported as UNMEASURED, not as "no traffic"** — and it means the one
+number the brief asked for in H4's test is the one number I do not have.
+
+⚠ A proxy-based byte count was considered and rejected: SigV4 signs the endpoint host, so
+interposing a counting proxy invalidates every request's signature, and re-signing means
+reimplementing SigV4 to measure something the four lines above already establish qualitatively.
+
+▶ **The consequence, and it is the expensive one.** If the block is the object store then **more
+CPU buys nothing, more RAM buys nothing, and replicas MULTIPLY the dominant cost** — each replica
+opens its own handles and re-reads R2 independently rather than sharing a cache. **That is the
+strongest argument in this report against horizontal scaling**, and it is why §5 bought vertical
+width only.
+
+### 1.6 The width arithmetic — **stated, and then stated again as void**
 
 The measured inputs, taken on a **quiet** service one request at a time, `noCache`, `limit=60`
 (production's shape: the router asks for 20, `runVectorSearch` requests `max(20×3, 30)` = 60):
@@ -216,7 +329,7 @@ seconds, and it is D-1.
 ▶ **What the arithmetic does say, independent of S:** the `4 ×` term is a choice, not a law — which
 is §4, and it divides the required width by four at any S.
 
-### 1.5 What does width cost? — Railway's published rates, read today
+### 1.7 What does width cost? — Railway's published rates, read today
 
 From `railway.com/pricing`, 2026-08-27:
 
@@ -259,7 +372,7 @@ the whole bill including R2 object storage, which is not visible from here. **Fl
 adopted** (`CLAUDE.md` §19: a fact that was measured and a fact that was inferred must not look
 identical on the page).
 
-### 1.6 Does a client disconnect leave the work running? — **yes. Proven, from outside, 12 of 12**
+### 1.8 Does a client disconnect leave the work running? — **yes. Proven, from outside, 12 of 12**
 
 `check-vector-cancel.ts`, against the build that was running before anything in this sprint
 shipped. Twelve distinct queries, `noCache`, fired together; every client aborted at t+2,027 ms —
@@ -360,6 +473,24 @@ outage). **It caught a real defect on the way:** one entry's hydration throwing 
 `Promise.all` and turned a single stream's fault into a total batch failure — precisely what the
 brief warned batching would do if written the obvious way.
 
+### ⚠⚠ 3.1 THE REJECTION RATE — THE BRIEF'S ACCEPTANCE MEASURE FOR THE WHOLE SPRINT
+
+The brief is explicit: *"'I could not search' is a last-resort safety net that should essentially
+never fire once §1's fix lands… If the rejection rate is not approximately zero after §1 and §5, the
+capacity fix has not worked and that is the finding."*
+
+| workload | dense requests | **rejections** | timeouts |
+|---|---|---|---|
+| 2 concurrent users × 4 streams, 5 rounds | 40 | **0** | 0 |
+| 4 concurrent users × 4 streams, 4 rounds | 64 | **0** | 0 |
+| 8 concurrent users × 4 streams, 3 rounds | 96 | **0** | 0 |
+| **the full 64-question gold sweep at production settings** | **209** | **0** | **0** |
+| `check-vector-shed` — deliberate overload, 54 fired at a 48-capacity service | 54 | **6, by design** | 0 |
+
+▶ **The rejection rate is zero on every real workload, and non-zero only when the queue is
+deliberately overfilled to prove the shed path still works.** That is the acceptance measure met in
+both directions: it never fires when it should not, and it does fire when it must.
+
 ## §4 — FOUR REQUESTS PER SEARCH: SCOPED, COSTED, AND **NOT RECOMMENDED**
 
 **Built and live** (`POST /vector-search-batch`), **measured**, and **the premise does not hold.**
@@ -388,12 +519,21 @@ one condition that would make it worth revisiting is the queue becoming the cons
 at width 16 it is not: `queueHighWaterMark` was **0** under a four-user load and **16 of 32** under
 eight users.
 
-⚠ **`LEX_STREAM_CONCURRENCY` (currently 3) should stay at 3 for now.** The brief asks whether
-batching makes it measure something that no longer exists; since batching is not being wired in, it
-still measures what it always did. **But its stated justification is now stale**: its comment says
-"Default 3, under the service's 4, so one query never fills the pool on its own", and the service
-is 16 wide. Raising it is a change to the *platform's* fan-out under load and belongs with a
-measurement of the gateway end to end, not with this sprint's service work. **Named, not done.**
+⚠⚠ **`LEX_STREAM_CONCURRENCY=3` IS NOW UNJUSTIFIED — BUT THAT IS NOT THE SAME AS WRONG.**
+
+The brief asks whether batching makes it obsolete. Batching is not being wired in, so the question
+resolves the other way: **the cap's stated reason has gone regardless.** Its comment reads *"Default
+3, under the service's 4, so one query never fills the pool on its own"* — and the service is now
+**16** wide. S8's finding that raising it to 4 made everything worse was explicitly *because 4 was
+exactly this service's width*; that arithmetic no longer describes anything.
+
+**What is measured:** `s15-run.sh` ran the full 64-question sweep at concurrency **3** with
+**0 rejections and 0 timeouts** (§3.1), where `s14-run.sh` had to throttle to **1**. So 3 is
+comfortable and 1 is unnecessary.
+
+**What is NOT measured:** whether 4, 5 or 6 is better. *"The old reason for 3 is void"* is not
+evidence for a new number, and this is the platform's fan-out for every user rather than a dial on
+one service. **D-7 — measure it, do not raise it blind.**
 
 ## §5 — WIDTH: **VERTICAL ONLY, AND IT COST NOTHING**
 
@@ -431,23 +571,80 @@ spent on a stale index rather than on concurrency.
 
 ▶ **Cost of the change: £0.00.** It is one environment variable on the existing single replica.
 No replicas were added, memory did not rise, and CPU is nowhere near a limit (`cpu_over_wall` 4–5
-against a host reporting 48 cores). **Horizontal width was not needed and is not recommended** —
-and §1.3's warning stands if it is ever revisited: each replica re-reads from R2 independently, so
-replicas multiply the dominant I/O rather than dividing it.
+— see §1.3 for the corrected CPU figure). **Horizontal width was not needed and is not
+recommended** — and §1.5's warning stands if it is ever revisited: each replica opens its own
+handles and re-reads R2 independently, so replicas multiply the dominant I/O rather than dividing
+it.
 
-⚠ **Width 32 was tried and is NOT recommended, but the evidence is weaker than I would like.**
-Within one run it showed a throughput *decline* from offered 16 to offered 24 (2.82 → 2.71/s) and a
-p50 of 8.6–9.1 s where width 16 gave 3.9 s. But the absolute levels between the two runs are
-confounded: at offered 4, where the cap binds in neither, width 16 measured 2.13/s and width 32
-measured 1.54/s — a difference the semaphore cannot explain, and which the service's known
-minute-to-minute drift (§1.2: the same request varied 3.4–13 s) can. **Two widths cannot be
-alternated inside one process, so this comparison cannot be made clean.** Stated as a
-recommendation with its evidence, not as a measurement it is not.
+⚠ **Width 32 was tried and is NOT recommended. The measurement alone was weak; H2 supplies the
+mechanism that makes it convincing.**
+
+Within one run, width 32 showed a throughput *decline* from offered 16 to offered 24
+(2.82 → 2.71/s) and a p50 of 8.6–9.1 s where width 16 gave 3.9 s. But the absolute levels between
+the two runs are confounded: at offered 4, where the cap binds in neither, width 16 measured 2.13/s
+and width 32 measured 1.54/s — a difference the semaphore cannot explain, and which the service's
+known minute-to-minute drift (§1.2: the same request varied 3.4–13 s) can. **Two widths cannot be
+alternated inside one process, so that comparison cannot be made clean.**
+
+▶ **What settles it is §1.3: the container has 8 vCPU, and at width 16 the process already burns
+4.11–4.56 of them — 51–57% of the quota.** Doubling the width would take the service past its CPU
+allowance and into throttling, which is exactly the shape the width-32 run showed. **16 is close to
+the right number for a mechanical reason, not by luck**, and the honest ceiling estimate is
+"somewhere under 32", not "as high as you like".
+
+⚠ **The earlier draft of this report said CPU was "nowhere near a limit… against a host reporting
+48 cores". That was wrong** — `os.cpus()` reports the Railway HOST, not the container's cgroup
+quota, and reading it as our capacity was an inference in the grammar of a measurement
+(`CLAUDE.md` §19). Corrected in §1.3, and it is the single most consequential correction in this
+report because it is the number any future width decision rests on.
 
 `vector-serve-run.ts width <n>` sets the variable, restarts, and **reads the concurrency back off
 the running process**, refusing to report success if the two disagree — the brief's requirement,
 and the guard fired for real on its first use before being made robust to the 502s a container swap
 produces.
+
+### 5.1 ⚠ H4's ACTUAL FIX — CO-LOCATION — COSTED, AND DELIBERATELY NOT DONE
+
+The brief says *"co-location first if H4"*, and *"if any hypothesis has a fix that is free or under
+about $50 a month, apply it in this sprint"*. H4 is true, so this has to be costed rather than
+waved at.
+
+**What co-location means here:** put the Lance datasets on a Railway volume attached to the service
+instead of reading them from R2 per query, so `lance.ts` opens a local path.
+
+| | |
+|---|---|
+| `corpus_vec.lance` | 147.58 GB |
+| `corpus_chunks.lance` | 45.69 GB |
+| **total to co-locate** | **193.27 GB** |
+| Railway volume rate (read from `railway.com/pricing`, 27 Aug) | $0.00000006 / GB / second ≈ **$0.16 / GB / month** |
+| **monthly cost** | **≈ $31** |
+
+**So it is inside the brief's threshold.** It is still **not done this sprint**, and the reasons are
+specific rather than cautious:
+
+1. ⚠ **The decisive measurement for H4 — bytes per query — is the one I could not get** (§1.5). Four
+   converging indirect lines make H4 the best-supported hypothesis; they do not make it measured.
+   Migrating 193 GB of storage on indirect evidence is the shape of mistake this brief opens by
+   criticising.
+2. **The service already meets every acceptance criterion in §6 without it** — eight concurrent
+   users, 0 rejections, 0 timeouts. Co-location is an optimisation now, not a fix.
+3. **It changes where the corpus lives for more than this service.** `fts-serve`, every heavy job
+   and every ingest script open the same datasets through the same `lance.ts`. That is a
+   cross-workstream change and §8 forbids editing what ingest owns without reporting first.
+4. ⚠ **The 13.39 GB of stale `_versions` manifests (§1.4) would be migrated too** unless the dataset
+   is compacted first — paying to co-locate 29% of `corpus_chunks` that serves no query.
+
+▶ **Recommended as D-8**, with the byte measurement as its precondition.
+
+⚠ **And a cheaper diagnostic exists that was built but not run**: `vector-serve-run.ts tune
+<nprobes|refine|overscan> <n>` sets a retrieval dial and reads it back off `/stats`. Both dials
+change ONLY how many bytes a query pulls from R2 — `nprobes` how many IVF partitions are read,
+`refineFactor` how many original f32 vectors are fetched from the 130 GB `data` directory for exact
+re-ranking. **If latency moves sharply with them while CPU does not, H4 is measured rather than
+inferred.** It is not run here because both dials also trade **recall**, and turning them without
+re-scoring the gold set would buy latency with answers — so the A/B belongs with D-3's retrieval
+sprint, where the gold set is being run anyway.
 
 ## §6 — RESTORE, THEN MEASURE
 
@@ -476,7 +673,20 @@ returned at the 25 s client ceiling within 36 ms of each other, and `warm_p95` r
 and was still climbing forty minutes after every client had been killed. **The service now carries
 eight concurrent users with nothing shed and nothing timed out.**
 
-### 6.2 ⚠ WHAT THIS SUPERSEDES — AND WHAT WAS NOT RE-TAKEN
+### 6.2 ⚠ WHAT THIS SUPERSEDES — AND THE HARNESS THAT NO LONGER NEEDS ITS THROTTLE
+
+⚠⚠ **The clearest single proof that the capacity work landed is that the gold harness can now run
+at production settings.** `s14-run.sh` had to set `LEX_STREAM_CONCURRENCY=1` and
+`VECTOR_TIMEOUT_MS=90000`, and its own comment says why in terms:
+
+> *"IT IS NOT A CONVENIENCE — IT IS WHAT MAKES THE MEASUREMENT POSSIBLE AT ALL. `vector-serve` runs
+> 4 requests wide behind a 64-deep queue, and a client abort does not cancel work already queued…
+> the default configuration FEEDS the queue faster than the service drains it."*
+
+So **every S14 figure was taken through a client deliberately crippled to protect the service.**
+`s15-run.sh` uses the platform's real defaults — `LEX_STREAM_CONCURRENCY=3`,
+`VECTOR_TIMEOUT_MS=25000` — and the 64-question sweep completed with **0 rejections and 0 timeouts**.
+The throttle is no longer needed, and that is a measurement rather than an opinion.
 
 **Superseded, and void for latency purposes:**
 
@@ -489,23 +699,108 @@ eight concurrent users with nothing shed and nothing timed out.**
 | snippets = **76%** of query latency | `build-chunks-scalar-index.ts` header (7 Aug) | **36%** at rest, ~10% under load, after the index refresh |
 | `corpus_vec` / `corpus_chunks` = 21,846,364 rows | several docs | **22,670,808** |
 
-⚠⚠ **NOT re-taken: the RECALL baseline.** The brief's §6.2 asks for the 64-question baseline to be
-retaken with `LEX_VECTOR_STREAMS=legislation,caselaw,guidance,committees`, and **it has not been**,
-deliberately and for a stated reason: this sprint changed *latency and availability*, not ranking,
-and the one ranking-adjacent change (the batch endpoint) is not wired in and was proven id-for-id
-identical anyway. Re-running the 64-question sweep is a three-hour retrieval against services this
-sprint has just reconfigured twice; doing it now would attribute the reconfiguration to the
-measurement. **It is the first thing the next sprint should do**, and it is now *possible* for the
-first time — S14's numbers were taken while the dense legs were timing out and silently falling
-back to BM25, which is exactly what `meta.denseDegraded` now makes visible.
+### 6.3 ⚠⚠ THE BASELINE, RETAKEN — AND IT IS THE FIRST NON-DEGRADED FOUR-STREAM MEASUREMENT THIS PROJECT HAS EVER HAD
 
-### 6.3 The judged merge (S14 D-2/D-4)
+`bash scripts/s15-run.sh measure --json ../docs/census/s15-arms.json`, 2026-08-27 10:40 UTC, n = 64.
 
-**Recommended ON, and the capacity precondition is now met.** The brief's order was capacity, then
-measure, then switch on. Capacity is done and measured (§5, §6.1). The measurement in 6.2 is not,
-and the reranker adds work to the service this sprint exists to protect — so the honest sequence is
-**turn the reranker on together with the recall re-take, in one sprint, so the two are attributable
-to each other.** That is D-5.
+⚠ **The run's own preflight is the thing to read first**, because the previous two baselines failed
+exactly here:
+
+```
+[config] fts=fts-serve-production-4cea vector=vector-serve-production
+         streams=legislation,caselaw,guidance,committees router=ON fully-configured
+degraded: []          ← S14's artefact says: ["LEX_VECTOR_STREAMS empty — dense retrieval is OFF
+                        on every stream, silently"]
+service engagement: fts+313  vector+209      ← the dense legs ARRIVED, counted on the service
+index stamps match either side of the run — the corpus did not move
+```
+
+**S14's surviving arms artefact is literally named `s14-arms-bm25.json`** and records
+`streams=NONE router=ON DEGRADED(1)`. Its published recall figures describe a **keyword-only**
+system. That is not a criticism of S14 — its §0 says so — but it means every "four-stream" number
+in circulation until today was nothing of the kind.
+
+#### The three baselines, and what happens to each
+
+| | **S13** | **S14** | **S15 (this run)** |
+|---|---|---|---|
+| dense configuration | `legislation` only | **OFF on every stream** | **all four, arriving** |
+| **in-stream@20** — what retrieval finds | 27/64 (42%) | 19/64 (30%) | **32/64 (50%)** |
+| **merged@20, round-robin** — production today | 15/64 (23%) | 14/64 (22%) | **19/64 (30%)** |
+| **merged@20, judged + reranker (flash)** | — | 19/64 (30%) | **30/64 (47%)** |
+| **@5, round-robin** | — | 6/64 (9%) | **8/64 (13%)** |
+| **@5, judged + reranker (flash)** | — | 15/64 (23%) | **26/64 (41%)** |
+
+▶ **S13 and S14 are both VOID as statements about production retrieval**, for opposite reasons:
+S13 measured one dense stream where production reads four; S14 measured none at all. **The S15
+column supersedes both.** *(S13's published figures are over n = 65; Q15 is removed here so the
+denominators match — the same adjustment S14 made.)*
+
+#### Predictions, scored
+
+Logged in `CHANGE_LOG.md` at 10:47 UTC with the run already in flight and its output unread:
+
+| predicted | actual | |
+|---|---|---|
+| in-stream@20 between **24 and 32** | **32** | ✅ at the top of the band |
+| merged@20 arm A between **18 and 24** | **19** | ✅ |
+| dense legs observed to arrive, not assumed | `degraded: []`, `vector+209` | ✅ |
+| rejection rate **0** | **0 new rejections** across all 64 questions | ✅ |
+
+⚠ **And S14's own prediction is scored too: it sized dense retrieval at "roughly twelve points" of
+in-stream recall. Measured: 19 → 32 of 64, THIRTEEN points.** Against S13's single dense stream
+(27/64), the three additional streams are worth a further **five**.
+
+#### Per collection, because the total hides where the platform actually stands
+
+| collection | n | in-stream@20 | round-robin (today) | judged + reranker |
+|---|---|---|---|---|
+| consultations | 9 | **9 (100%)** | 7 (78%) | **9 (100%)** |
+| caselaw | 6 | 5 (83%) | 5 (83%) | 5 (83%) |
+| legislation | 9 | 7 (78%) | 3 (33%) | 6 (67%) |
+| guidance | 10 | 5 (50%) | 2 (20%) | 5 (50%) |
+| impact-assessments | 9 | 4 (44%) | **0 (0%)** | 3 (33%) |
+| committees | 10 | 2 (20%) | 2 (20%) | 2 (20%) |
+| **debates** | 11 | **0 (0%)** | **0 (0%)** | **0 (0%)** |
+| **ALL** | **64** | **32 (50%)** | **19 (30%)** | **30 (47%)** |
+
+⚠ **`debates` is 0 of 11 on every arm — retrieval finds nothing at all**, so no merge, reranker or
+capacity change can reach it. The re-key (`GOLD_V2_DEBATES_REKEY.md`) is with Charlie and nine of
+the eleven were already NOT-RETRIEVED in S13. **`impact-assessments` is the opposite shape**:
+retrieval finds 4 of 9 and the round-robin displays **none** of them — a pure merge failure, and the
+reranker recovers 3.
+
+### 6.4 ⚠⚠ THE SENTENCE THE BRIEF ASKS FOR, AND IT IS THE ONE THAT MATTERS
+
+**With today's production configuration — round-robin merge, reranker off — 45 of 64 questions
+return nothing correct in the top 20.**
+
+Switching on the judged merge and the reranker takes that to **34 of 64 returning nothing correct**.
+And even a *perfect* merge could only reach **32 of 64**, because that is all retrieval finds:
+**for 32 of the 64 questions the answer is not in any stream's list at all.**
+
+▶ **The merge is no longer the constraint. Retrieval is.** This report should not be read as the
+platform being fixed. It is a report about a service that can now do its job at all — and about a
+corpus and a retriever that, on this evidence, answer half the questions put to them.
+
+### 6.5 The judged merge and reranker (S14 D-2/D-4) — **recommended ON, now with its own evidence**
+
+The brief's order was capacity, then measure, then switch on. **All three are now done in that
+order**, and the retake measured the merge under real dense retrieval for the first time:
+
+| | round-robin | judged + reranker | change |
+|---|---|---|---|
+| @20 | 19/64 | **30/64** | **+11 questions, and ZERO lost** |
+| @5 | 8/64 | **26/64** | **3.25×** |
+
+⚠ **Both reranker arms gained 11 and lost 0.** S14's flash arm lost one question; under real dense
+retrieval neither model loses any. `gemini-2.5-flash` matches `gemini-2.5-pro` exactly on both
+figures at **0.214p per query and 1.5 s mean latency**, total **13.68p for all 64** — which
+re-confirms S14's model reversal rather than resting on it.
+
+⚠ **The cost to the service is now affordable *because* of §1–§5.** The reranker adds a model call
+per query, not retrieval load, and the service carried the whole 64-question sweep at production
+stream-concurrency with **0 rejections**. **D-5.**
 
 ## §7 — THE DEPLOY TRAP
 
@@ -534,21 +829,33 @@ on push. **Recommendation D-4.**
 
 ## §8 — WHAT IS NOT DONE, NAMED
 
-1. **The 64-question recall baseline is not re-taken.** §6.2 above, with the reason. The largest
-   single omission in this report.
-2. **The batch endpoint is not wired into the router.** Built, live, measured, and refuted (§4).
+1. ⚠⚠ **BYTES PER QUERY WAS NOT MEASURED — the one number H4's test asked for.** Railway's
+   `NETWORK_RX_GB` did not move across a controlled 20-query window (§1.5). H4's verdict rests on
+   four converging indirect lines instead, and is stated as such. **The clean way to get it is a
+   local SigV4-capable counting proxy, which is a half-day of work, not an afternoon's.**
+2. **`fts-serve` is untouched, and it is the other half of every search.** Its queue is still
+   **unbounded** (`maxQueue: null`, `rejections: null` on its own `/stats`), it has the same
+   client-abandonment behaviour this sprint removed from `vector-serve`, and the same copied
+   constant width of 4. It runs on **every** query, not four streams. **D-6.**
+3. **The batch endpoint is not wired into the router.** Built, live, measured, and refuted (§4).
    Wiring it would need a request-scoped seam through `StreamConfig.search(query, limit)`, which is
    a two-argument signature shared by every stream.
-3. **The batch path has no result cache.** `QueryCache` sits on the solo path only. Irrelevant while
+4. **The batch path has no result cache.** `QueryCache` sits on the solo path only. Irrelevant while
    the endpoint is unwired; a prerequisite if it ever is.
-4. **`LEX_STREAM_CONCURRENCY` is unchanged at 3**, and its justification is now stale (§4).
-5. **Width 32 vs 16 could not be measured cleanly** (§5) — the confound is stated rather than
-   papered over.
-6. **The Railway usage units are inferred, not documented** (§1.5), and labelled as such.
-7. **Nothing was changed in `fts-serve`,** whose queue is still **unbounded** — `maxQueue: null`,
-   `rejections: null` on its `/stats`, by deliberate design recorded in its own comments. It has the
-   same client-abandonment behaviour this sprint removed from `vector-serve`, and the same
-   copied-constant width of 4. **Not this sprint's scope; recommended as the next one's.**
+5. **`LEX_STREAM_CONCURRENCY` is unchanged at 3.** Its justification is now void — the comment says
+   *"under the service's 4"* and the service is 16 — and `s15-run.sh` demonstrated 3 works without a
+   single rejection. **Raising it further is untested and is a change to the platform's fan-out
+   under load, not to this service. D-7.**
+6. **Co-location of the index (H4's actual fix) is costed but NOT done** — §5.1. Doing a 193 GB
+   storage migration in the last hour of a sprint, on a hypothesis whose decisive byte measurement I
+   do not have, is the mistake this brief opens by criticising.
+7. **Width 32 vs 16 could not be measured cleanly** (§5) — though §1.3's 8-vCPU quota now supplies
+   the mechanism the measurement lacked.
+8. **The Railway usage UNITS are inferred, not documented** (§1.7), and labelled as such.
+9. **`corpus_chunks/_versions` is 13.39 GB of accumulated manifests** across 18,448 objects — 29% of
+   that dataset — serving no query. Named for an ingest ticket, not touched.
+10. **The `debates` re-key is not resolved** and `debates` is 0/11 on every arm (§6.3). It is with
+    Charlie and predates this sprint.
 
 ---
 
@@ -571,10 +878,14 @@ nothing" about a search that did not run — and a caller that wants to mention 
 the data to. **This is the one place I have read the brief against its literal wording, and this is
 me saying so.**
 
-**D-3 — Re-take the 64-question recall baseline next, before anything else?** *(Recommended: yes.)*
-It is the largest number in circulation that nobody can currently trust, and for the first time it
-can be taken with the dense legs actually arriving. *Consequence of no:* every recall figure in this
-project stays attributable to a service that was timing out silently.
+**D-3 — Given the retake, is the next sprint about RETRIEVAL rather than ranking?**
+*(Recommended: yes, and it is the most important decision here.)*
+The baseline is retaken (§6.3) and it says retrieval finds nothing for **32 of 64** questions, so
+**even a perfect merge leaves half the set unanswered**. Every remaining lever on the ranking side
+is bounded by that number. The three concrete targets the data names: `debates` **0/11** (retrieval,
+not merge — the re-key is with you), `committees` **2/10**, and `impact-assessments` finding 4/9 but
+displaying 0/9. *Consequence of no:* further merge work competes for the 32 questions already
+findable and cannot touch the other 32.
 
 **D-4 — Connect the GitHub repo trigger for `vector-serve` in the Railway UI?** *(Recommended: yes.)*
 One action, once, in the dashboard — the project token cannot do it. *Consequence of no:* the
@@ -583,14 +894,35 @@ two weeks. **The one-request signal that confirms it worked:** push any change t
 `scripts/ingest/search/`, wait, then `curl .../health` and see the `build` string change without
 anyone having run `redeploy`.
 
-**D-5 — Turn the judged merge and reranker ON in the same sprint as D-3?** *(Recommended: yes.)*
-S14 measured them at 19/64 against round-robin's 14/64. *Consequence of separating them:* two
-sprints and two retrieval sweeps to attribute one change.
+**D-5 — Turn `LEX_SEARCH_JUDGED_MERGE` and the reranker ON now?** *(Recommended: yes.)*
+Measured this sprint under real dense retrieval, not inherited from S14: **@20 19/64 → 30/64, +11
+questions with ZERO lost; @5 8/64 → 26/64, three and a quarter times.** `gemini-2.5-flash` matches
+`gemini-2.5-pro` exactly at **0.214p per query, 1.5 s**, and the service carried the whole sweep at
+production settings with 0 rejections. The capacity precondition the brief set is met.
+*Consequence of no:* the platform keeps displaying 19 of the 32 answers it finds, and the 11
+questions the reranker recovers stay invisible to users while sitting in the retrieved set.
 
 **D-6 — Do the same three fixes to `fts-serve` next?** *(Recommended: yes.)*
 It has an unbounded queue, no cancellation, and the same copied width of 4. It is the other half of
-every search. *Consequence of no:* the sparse half keeps the exact failure mode the dense half just
-had removed, and it is the half that runs on **every** query rather than on four streams.
+every search and runs on **every** query rather than on four streams. *Consequence of no:* the
+sparse half keeps the exact failure mode the dense half just had removed.
+
+**D-7 — Raise `LEX_STREAM_CONCURRENCY` above 3?** *(Recommended: not yet — measure it first.)*
+Its justification is void (the comment says "under the service's 4"; the service is 16), and S8's
+finding that raising it made things worse was explicitly *because* 4 was the service's width. So the
+reason to keep it at 3 has gone — but "the old reason is void" is not evidence for a new value.
+*Consequence of raising it blind:* a change to every user's fan-out under load, justified by an
+argument rather than a number. **The measurement is cheap and belongs with D-3.**
+
+**D-8 — Co-locate the index onto a Railway volume (H4's actual fix)?** *(Recommended: not this
+sprint — decide it with the byte measurement in hand.)*
+§5.1 costs it at roughly **$31/month** for 193 GB, inside the brief's $50 threshold. But H4's
+decisive byte-per-query measurement is the one I could not get (§8.1), the service already meets
+every acceptance criterion in §6 without it, and a 193 GB storage migration changes where the
+corpus lives for both serve services and every heavy job. *Consequence of yes now:* a large
+irreversible-feeling change on four converging indirect measurements. *Consequence of no:* latency
+stays at ~3.4 s per dense leg when co-location might make it a fraction of that — a real
+opportunity, deferred deliberately rather than missed.
 
 ---
 
