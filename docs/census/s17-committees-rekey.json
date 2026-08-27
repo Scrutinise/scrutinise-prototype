@@ -1,0 +1,548 @@
+{
+  "generatedAt": "2026-08-27 23:03 UTC",
+  "proposals": [
+    {
+      "n": 1,
+      "code": "C1",
+      "verdict": "KEEP, KEYS NARROWED",
+      "asks": "committee report",
+      "oldKind": "committee report",
+      "oldQuestion": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "newQuestion": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "oldKeys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "answeringDocs": [
+        "publication:34458"
+      ],
+      "keys": [
+        {
+          "id": "committees-reports:publication:34458:189872-0002",
+          "status": "confirmed",
+          "words": 505,
+          "title": "Report: 1st Report - The affluent and the effluent: cleaning up failures in water and sewage regulation — Industry and Regulators Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:34458:189872-0003",
+          "status": "confirmed",
+          "words": 522,
+          "title": "Report: 1st Report - The affluent and the effluent: cleaning up failures in water and sewage regulation — Industry and Regulators Committee",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "code": "C2",
+      "verdict": "RE-KEY",
+      "asks": "committee report",
+      "oldKind": "correspondence",
+      "oldQuestion": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "newQuestion": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "oldKeys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "answeringDocs": [
+        "publication:52110",
+        "publication:47183"
+      ],
+      "keys": [
+        {
+          "id": "committees-reports:publication:52110:290159-0004",
+          "status": "confirmed",
+          "words": 686,
+          "title": "Report: 16th Report - Post Office Horizon scandal: Justice for sub-postmasters — Business and Trade Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:52110:290159-0005",
+          "status": "confirmed",
+          "words": 578,
+          "title": "Report: 16th Report - Post Office Horizon scandal: Justice for sub-postmasters — Business and Trade Committee",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "code": "C3",
+      "verdict": "KEEP, KEYS WIDENED",
+      "asks": "correspondence",
+      "oldKind": "correspondence",
+      "oldQuestion": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "newQuestion": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "oldKeys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "answeringDocs": [
+        "publication:53422",
+        "publication:51973",
+        "publication:50962",
+        "publication:50290",
+        "publication:49716",
+        "publication:49441",
+        "publication:47864",
+        "publication:46883"
+      ],
+      "keys": [
+        {
+          "id": "committees-reports:publication:53422:298600",
+          "status": "confirmed",
+          "words": 424,
+          "title": "Correspondence: Letter from the Parliamentary Under-Secretary of State for Building Safety, Fire and Democracy to the Chair dated 20 May 2026 concerning the implementation of the Grenfell Tower Inquiry recommendations",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:51973:288454",
+          "status": "confirmed",
+          "words": 453,
+          "title": "Correspondence: Letter from the Parliamentary Under Secretary of State for Building Safety, Fire and Democracy to the Chair dated 25 February 2026 concerning the publication of the first annual report to Parliament on the Implementation of the recommendations of the Grenfell Tower Inquiry",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:50962:282251",
+          "status": "confirmed",
+          "words": 882,
+          "title": "Correspondence: Letter from the Parliamentary Under-Secretary of State for Building Safety, Fire and Democracy to the Chair dated 17 December 2025 concerning progress on implementing the recommendations of the Grenfell Inquiry",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:50290:271753",
+          "status": "confirmed",
+          "words": 1480,
+          "title": "Correspondence: Letter from the Parliamentary Under-Secretary of State for Building Safety, Fire and Democracy to the Chair dated 11 November 2025 concerning the Grenfell and Building Safety Inquiry",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:49716:266488",
+          "status": "confirmed",
+          "words": 613,
+          "title": "Correspondence: Letter from the Parliamentary Under Secretary of State for Building Safety, Fire and Democracy to the Chair dated 30 September 2025 concerning progress on implementing the Grenfell Tower Inquiry recommendations",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:49441:263245",
+          "status": "confirmed",
+          "words": 6936,
+          "title": "Correspondence: Letter from the Secretary of State and the Parliamentary Under-Secretary of State for Building Safety, Fire and Local Growth dated 23 July 2025 concerning the Government's response to the Committee's inquiry on Grenfell and Building Safety",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:47864:250397",
+          "status": "confirmed",
+          "words": 6291,
+          "title": "Correspondence: Letter from the Chair to the Secretary of State and the Minister for Building Safety, Fire and Local Growth dated 14 May 2025 concerning the Committee's finding and recommendations on Grenfell and Building Safety",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:46883:241779",
+          "status": "confirmed",
+          "words": 773,
+          "title": "Correspondence: Letter from the Permanent Secretary of the Ministry of Housing, Communities and Local Government relating to the UK government response to the Grenfell Tower Inquiry Phase 2 Report, 26 February 2025",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "code": "C4",
+      "verdict": "RE-KEY",
+      "asks": "committee report",
+      "oldKind": "correspondence",
+      "oldQuestion": "What did the committee say about moving people onto Universal Credit?",
+      "newQuestion": "What did the committee say about moving people onto Universal Credit?",
+      "oldKeys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "answeringDocs": [
+        "publication:44438"
+      ],
+      "keys": [
+        {
+          "id": "committees-reports:publication:44438:220821-0002",
+          "status": "confirmed",
+          "words": 597,
+          "title": "Report: Twenty-Ninth Report - Progress in implementing Universal Credit — Public Accounts Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:44438:220821-0003",
+          "status": "confirmed",
+          "words": 613,
+          "title": "Report: Twenty-Ninth Report - Progress in implementing Universal Credit — Public Accounts Committee",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "code": "C5",
+      "verdict": "RE-WORD AND RE-KEY",
+      "asks": "committee report",
+      "oldKind": "correspondence",
+      "oldQuestion": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "newQuestion": "What have MPs said about the plan to bring leasehold to an end?",
+      "oldKeys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "answeringDocs": [
+        "publication:53249",
+        "publication:53273",
+        "publication:53529"
+      ],
+      "keys": [
+        {
+          "id": "committees-reports:publication:53249:297864-0002",
+          "status": "confirmed",
+          "words": 576,
+          "title": "Report: 1st Report - Pre-legislative scrutiny of the draft Commonhold and Leasehold Reform Bill — Housing, Communities and Local Government Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:53249:297864-0070",
+          "status": "confirmed",
+          "words": 517,
+          "title": "Report: 1st Report - Pre-legislative scrutiny of the draft Commonhold and Leasehold Reform Bill — 98 “Bringing the feudal leasehold system to an end” — Housing, Communities and Local Government Committee",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "code": "C6",
+      "verdict": "RE-WORD AND RE-KEY",
+      "asks": "written evidence",
+      "oldKind": "written evidence",
+      "oldQuestion": "What did people submitting evidence say about how AI should be governed?",
+      "newQuestion": "What did the Ada Lovelace Institute tell MPs about how AI should be governed?",
+      "oldKeys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "answeringDocs": [
+        "writtenevidence:113850"
+      ],
+      "keys": [
+        {
+          "id": "committees-evidence:writtenevidence:113850:179508",
+          "status": "confirmed",
+          "words": 9234,
+          "title": "Governance of artificial intelligence (AI) — GAI0086",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 7,
+      "code": "C7",
+      "verdict": "KEEP, KEYS WIDENED",
+      "asks": "written evidence",
+      "oldKind": "written evidence",
+      "oldQuestion": "What evidence was submitted about net zero and trade?",
+      "newQuestion": "What evidence was submitted about net zero and trade?",
+      "oldKeys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "answeringDocs": [
+        "(all 26 submissions to the Net zero and trade inquiry)"
+      ],
+      "keys": [
+        {
+          "id": "committees-evidence:writtenevidence:129004:219332",
+          "status": "confirmed",
+          "words": 1709,
+          "title": "Net zero and trade — NZT0001",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129526:219440",
+          "status": "confirmed",
+          "words": 1974,
+          "title": "Net zero and trade — NZT0002",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129643:219935",
+          "status": "confirmed",
+          "words": 2726,
+          "title": "Net zero and trade — NZT0003",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129721:220091",
+          "status": "confirmed",
+          "words": 809,
+          "title": "Net zero and trade — NZT0004",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129751:220212",
+          "status": "confirmed",
+          "words": 4833,
+          "title": "Net zero and trade — NZT0005",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129770:220211",
+          "status": "confirmed",
+          "words": 1729,
+          "title": "Net zero and trade — NZT0006",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129792:220328",
+          "status": "confirmed",
+          "words": 1327,
+          "title": "Net zero and trade — NZT0007",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129829:220658",
+          "status": "confirmed",
+          "words": 2235,
+          "title": "Net zero and trade — NZT0009",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129833:220659",
+          "status": "confirmed",
+          "words": 2423,
+          "title": "Net zero and trade — NZT0010",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129838:220660",
+          "status": "confirmed",
+          "words": 2427,
+          "title": "Net zero and trade — NZT0011",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129843:220661",
+          "status": "confirmed",
+          "words": 3077,
+          "title": "Net zero and trade — NZT0012",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129866:220663",
+          "status": "confirmed",
+          "words": 1554,
+          "title": "Net zero and trade — NZT0013",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129870:220664",
+          "status": "confirmed",
+          "words": 2984,
+          "title": "Net zero and trade — NZT0014",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129871:220666",
+          "status": "confirmed",
+          "words": 3075,
+          "title": "Net zero and trade — NZT0015",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129872:220668",
+          "status": "confirmed",
+          "words": 4261,
+          "title": "Net zero and trade — NZT0016",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129873:220671",
+          "status": "confirmed",
+          "words": 2018,
+          "title": "Net zero and trade — NZT0017",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129874:220672",
+          "status": "confirmed",
+          "words": 2930,
+          "title": "Net zero and trade — NZT0018",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129876:220673",
+          "status": "confirmed",
+          "words": 2931,
+          "title": "Net zero and trade — NZT0019",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129877:221044",
+          "status": "confirmed",
+          "words": 1721,
+          "title": "Net zero and trade — NZT0020",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129880:220677",
+          "status": "confirmed",
+          "words": 2888,
+          "title": "Net zero and trade — NZT0022",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129902:220528",
+          "status": "confirmed",
+          "words": 1654,
+          "title": "Net zero and trade — NZT0023",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129907:220547",
+          "status": "confirmed",
+          "words": 1876,
+          "title": "Net zero and trade — NZT0024",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129908:220550",
+          "status": "confirmed",
+          "words": 1325,
+          "title": "Net zero and trade — NZT0025",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129927:220733",
+          "status": "confirmed",
+          "words": 1987,
+          "title": "Net zero and trade — NZT0026",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:129963:220994",
+          "status": "confirmed",
+          "words": 1533,
+          "title": "Net zero and trade — NZT0027",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-evidence:writtenevidence:130008:221220",
+          "status": "confirmed",
+          "words": 2598,
+          "title": "Net zero and trade — NZT0028",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 8,
+      "code": "C8",
+      "verdict": "RE-WORD AND RE-KEY",
+      "asks": "written evidence",
+      "oldKind": "written evidence",
+      "oldQuestion": "What did witnesses tell the committee about special educational needs?",
+      "newQuestion": "What did the National Association of Head Teachers tell MPs about support for children with special educational needs?",
+      "oldKeys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "answeringDocs": [
+        "writtenevidence:91783"
+      ],
+      "keys": [
+        {
+          "id": "committees-evidence:writtenevidence:91783:142535",
+          "status": "confirmed",
+          "words": 9245,
+          "title": "Special educational needs and disabilities inquiry — SCN0301",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 9,
+      "code": "C9",
+      "verdict": "RE-WORD AND RE-KEY",
+      "asks": "written evidence",
+      "oldKind": "written evidence",
+      "oldQuestion": "What was the committee told about serious violence?",
+      "newQuestion": "What did the National Police Chiefs' Council tell the committee about serious violence?",
+      "oldKeys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "answeringDocs": [
+        "writtenevidence:93654"
+      ],
+      "keys": [
+        {
+          "id": "committees-evidence:writtenevidence:93654:141537",
+          "status": "confirmed",
+          "words": 6529,
+          "title": "Serious violence inquiry — SVC0042",
+          "frontMatter": false
+        }
+      ]
+    },
+    {
+      "n": 10,
+      "code": "C10",
+      "verdict": "RE-KEY",
+      "asks": "committee report",
+      "oldKind": "correspondence",
+      "oldQuestion": "Has Parliament examined NHS waiting times for planned operations?",
+      "newQuestion": "Has Parliament examined NHS waiting times for planned operations?",
+      "oldKeys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "answeringDocs": [
+        "publication:50242",
+        "publication:34131",
+        "publication:9266",
+        "publication:20216",
+        "publication:10612"
+      ],
+      "keys": [
+        {
+          "id": "committees-reports:publication:50242:271529-0002",
+          "status": "confirmed",
+          "words": 626,
+          "title": "Report: 55th Report - Reducing NHS waiting times for elective care — Public Accounts Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:34131:187908-0002",
+          "status": "confirmed",
+          "words": 572,
+          "title": "Report: Thirty-Eighth Report - Managing NHS backlogs and waiting times in England — Public Accounts Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:9266:160332-0002",
+          "status": "confirmed",
+          "words": 535,
+          "title": "Report: Forty-Fourth Report - NHS backlogs and waiting times in England — Public Accounts Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:20216:arc-0002",
+          "status": "confirmed",
+          "words": 615,
+          "title": "Report: 100th Report - NHS waiting times for elective and cancer treatment — Public Accounts Committee",
+          "frontMatter": false
+        },
+        {
+          "id": "committees-reports:publication:10612:arc-0002",
+          "status": "confirmed",
+          "words": 527,
+          "title": "Report: 55th Report - NHS waiting times for elective care in England — Public Accounts Committee",
+          "frontMatter": false
+        }
+      ]
+    }
+  ]
+}
