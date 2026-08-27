@@ -147,11 +147,13 @@ export default function QuestionLibrary({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div className="max-w-[520px]">
+        <div className="max-w-[640px]">
           <h2 className="text-xl font-semibold tracking-[-0.02em]">Question library</h2>
+          {/* Item 15 — the standing description for this tab, verbatim. */}
           <p className="mt-1 text-[13px] text-muted-foreground pretty">
-            The hard questions members actually get asked, and the answers this Community rates
-            highest.
+            This section is for sharing best practice answers to common questions. Add questions
+            you’ve faced or suggest answers. Vote for questions if you’ve been asked this too. Vote
+            for answers you have tested and delivered a positive response.
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5">

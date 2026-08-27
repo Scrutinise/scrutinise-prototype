@@ -9,6 +9,7 @@ import {
   getRankedAnswers,
   requireLibraryAccess,
 } from '@/lib/question-library'
+import { approvalStampFor, getCommunityBranding, resolveApproverCaps } from '@/lib/approval'
 import QuestionDetail from './QuestionDetail'
 import type { Metadata } from 'next'
 
@@ -42,14 +43,18 @@ export default async function QuestionPage({ params }: Props) {
   })
   if (!question) notFound()
 
-  const [answers, myVote, canManage] = await Promise.all([
+  const [answers, myVote, canManage, branding] = await Promise.all([
     getRankedAnswers(questionId, user.id),
     prisma.questionVote.findUnique({
       where: { questionId_userId: { questionId, userId: user.id } },
       select: { id: true },
     }),
     canManageCommunity(user.id, await getRootCommunityId(id)),
+    getCommunityBranding(id),
   ])
+  // ⚠ Resolved ONCE for the viewer: the approval mode is a Community setting,
+  // so every answer on the page is decided by the same four booleans.
+  const caps = await resolveApproverCaps(user.id, id, branding)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -69,7 +74,20 @@ export default async function QuestionPage({ params }: Props) {
             myVote: myVote !== null,
             branch: question.branch,
           }}
-          answers={answers.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }))}
+          answers={answers.map((a) => ({
+            ...a,
+            createdAt: a.createdAt.toISOString(),
+            approval: {
+              ...approvalStampFor(a, branding),
+              approvedAt: a.approvedAt ? a.approvedAt.toISOString() : null,
+            },
+          }))}
+          branding={{
+            approvalMode: branding.approvalMode,
+            approvalFeatureEnabled: branding.approvalFeatureEnabled,
+            organisationName: branding.organisationName,
+          }}
+          caps={caps}
           canPromote={question.scope === 'BRANCH' && (await canPromoteQuestion(user.id, questionId))}
           canManage={canManage}
         />

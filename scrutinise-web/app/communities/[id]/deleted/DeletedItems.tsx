@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
 type Item = {
-  kind: 'question' | 'answer' | 'post' | 'branch'
+  kind: 'question' | 'answer' | 'post' | 'resource' | 'branch'
   id: string
   preview: string
   deletedAt: string
@@ -21,6 +21,7 @@ const KIND_LABEL: Record<Item['kind'], string> = {
   question: 'Question',
   answer: 'Answer',
   post: 'Post',
+  resource: 'Resource',
   branch: 'Branch',
 }
 

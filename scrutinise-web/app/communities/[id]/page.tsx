@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: community?.name ?? 'Community' }
 }
 
-const TAB_KEYS: CentralTab[] = ['questions', 'board', 'training', 'leaderboard', 'teams']
+const TAB_KEYS: CentralTab[] = ['questions', 'board', 'training', 'resources', 'leaderboard', 'teams']
 
 export default async function CommunityDashboardPage({ params, searchParams }: Props) {
   const { id } = await params

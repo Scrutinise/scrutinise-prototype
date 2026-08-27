@@ -18,8 +18,9 @@ import Leaderboards from './Leaderboards'
 import TrainingExchange from './TrainingExchange'
 import DeleteBranch from './DeleteBranch'
 import QuestionLibrary, { type QuestionRow, type TagSet } from './questions/QuestionLibrary'
+import ResourcesLibrary from './resources/ResourcesLibrary'
 
-export type CentralTab = 'questions' | 'board' | 'training' | 'leaderboard' | 'teams'
+export type CentralTab = 'questions' | 'board' | 'training' | 'resources' | 'leaderboard' | 'teams'
 
 /**
  * Central's sub-tabs.
@@ -39,6 +40,7 @@ const TABS: { key: CentralTab; label: string; hidden?: boolean }[] = [
   { key: 'questions', label: 'Questions' },
   { key: 'board', label: 'Board', hidden: true },
   { key: 'training', label: 'Training' },
+  { key: 'resources', label: 'Resources' },
   { key: 'leaderboard', label: 'Leaderboard' },
   { key: 'teams', label: 'Teams' },
 ]
@@ -277,6 +279,8 @@ export default function CommunityDashboardClient({
         />
       ) : tab === 'training' ? (
         <TrainingExchange communityId={community.id} communityName={root.name} />
+      ) : tab === 'resources' ? (
+        <ResourcesLibrary communityId={community.id} communityName={root.name} />
       ) : tab === 'teams' ? (
         /* ── Teams: structure and the people who manage it, in one place ──── */
         <div className="space-y-4">
@@ -352,6 +356,12 @@ export default function CommunityDashboardClient({
                     </Button>
                     <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
                       <Link href={`/communities/${community.id}/topics`}>Topics</Link>
+                    </Button>
+                    {/* Item 12. Root-only — the page redirects a branch id up to
+                        its root rather than 404ing, so this link is safe from a
+                        branch too. */}
+                    <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                      <Link href={`/communities/${community.id}/settings`}>Community settings</Link>
                     </Button>
                   </>
                 )}

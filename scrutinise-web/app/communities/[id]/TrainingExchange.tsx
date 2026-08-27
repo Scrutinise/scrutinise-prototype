@@ -205,9 +205,13 @@ export default function TrainingExchange({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-[560px]">
           <h2 className="text-xl font-semibold tracking-[-0.02em]">Training exchange</h2>
+          {/* Item 15 — the standing description for this tab, verbatim. */}
           <p className="mt-1 text-[13px] text-muted-foreground pretty">
-            Someone in {communityName} can already do the thing you are stuck on. Offer what you
-            know, ask for what you don’t, and swap contact details only when you have both agreed.
+            This section is for connecting up with others in the group for one-to-one training
+            where we help each other improve our ability to answer tough questions on the street,
+            at hustings, in media interviews, at Council meetings or in debates.
+            ‘Question-masters’ can filter and print a list of questions from the question page, use
+            pre-built lists from the resources tab or ask AI.
           </p>
         </div>
         <div className="flex gap-2">

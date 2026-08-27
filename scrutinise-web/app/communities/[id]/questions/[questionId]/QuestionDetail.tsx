@@ -7,6 +7,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { AnswerByline } from '@/components/central/AnswerByline'
+import {
+  ApprovalCheckbox,
+  ApprovalLabel,
+  ContextField,
+  ContextNote,
+  type ApprovalStampView,
+} from '@/components/central/ApprovalFrame'
+import { canApproveWith, type ApprovalMode, type ApproverCaps } from '@/lib/approval-rule'
+import { answerDisplayText, linkThumbnail } from '@/lib/video'
 
 interface Answer {
   id: string
@@ -16,6 +25,12 @@ interface Answer {
   body: string
   sources: string[]
   localExample: string | null
+  /** Item 13. Permanent — never hidden by the approval setting. */
+  context: string | null
+  /** Item 14. Link only — no hosting, per the standing decision. */
+  videoUrl: string | null
+  videoTitle: string | null
+  approval: ApprovalStampView
   hidden: boolean
   createdAt: string
   author: { id: string; name: string | null; username: string }
@@ -43,6 +58,13 @@ interface Props {
   canPromote: boolean
   canManage: boolean
   viewerId: string
+  branding: {
+    approvalMode: ApprovalMode
+    approvalFeatureEnabled: boolean
+    organisationName: string | null
+  }
+  /** Resolved once on the server — see lib/approval-rule.ts. */
+  caps: ApproverCaps
 }
 
 function age(iso: string) {
@@ -143,6 +165,8 @@ export default function QuestionDetail({
   canPromote,
   canManage,
   viewerId,
+  branding,
+  caps,
 }: Props) {
   const router = useRouter()
   const [answers, setAnswers] = useState(initialAnswers)
@@ -156,6 +180,9 @@ export default function QuestionDetail({
   const [body, setBody] = useState('')
   const [sources, setSources] = useState<string[]>([])
   const [localExample, setLocalExample] = useState<string | null>(null)
+  const [context, setContext] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [videoTitle, setVideoTitle] = useState('')
   const [posting, setPosting] = useState(false)
 
   const [suggestFor, setSuggestFor] = useState<string | null>(null)
@@ -202,16 +229,21 @@ export default function QuestionDetail({
 
   async function postAnswer(e: React.FormEvent) {
     e.preventDefault()
-    if (!body.trim()) return
+    // ⚠ A VIDEO ANSWER HAS NO BODY. Guarding on `body` alone (which this did
+    // until item 14) silently swallows the submit for a link-only answer.
+    if (!body.trim() && !videoUrl.trim()) return
     setPosting(true)
     setError(null)
     const res = await fetch(`/api/communities/${communityId}/questions/${question.id}/answers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        body: body.trim(),
+        body: body.trim() || undefined,
         sources: sources.filter((s) => s.trim()),
         localExample: localExample?.trim() || undefined,
+        context: context.trim() || undefined,
+        videoUrl: videoUrl.trim() || undefined,
+        videoTitle: videoTitle.trim() || undefined,
       }),
     })
     const d = await res.json().catch(() => ({}))
@@ -224,7 +256,52 @@ export default function QuestionDetail({
     setBody('')
     setSources([])
     setLocalExample(null)
+    setContext('')
+    setVideoUrl('')
+    setVideoTitle('')
     router.refresh()
+  }
+
+  /**
+   * ⚠ THE SAME RULE THE ROUTE ENFORCES, not a second copy of it. Both sides
+   * call `canApproveWith`; if they disagreed the tick would either appear for
+   * people the route refuses or hide from people it allows, silently either way.
+   */
+  function mayApprove(a: Answer): boolean {
+    return canApproveWith({
+      mode: branding.approvalMode,
+      featureEnabled: branding.approvalFeatureEnabled,
+      caps,
+      authorId: a.author.id,
+    })
+  }
+
+  async function setApproved(answerId: string, approved: boolean) {
+    const res = await fetch(`/api/communities/${communityId}/answers/${answerId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'approve', approved }),
+    })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(typeof d.error === 'string' ? d.error : 'Could not change that.')
+      return
+    }
+    setAnswers((prev) =>
+      prev.map((a) =>
+        a.id === answerId
+          ? {
+              ...a,
+              approval: {
+                ...a.approval,
+                approved: Boolean(d.approvedAt),
+                markedByName: d.markedByName,
+                approvedAt: d.approvedAt,
+              },
+            }
+          : a,
+      ),
+    )
   }
 
   async function submitSuggestion(answerId: string) {
@@ -403,7 +480,49 @@ export default function QuestionDetail({
 
                     {isOpen || idx === 0 ? (
                       <>
-                        <p className="whitespace-pre-wrap text-base leading-[1.6] pretty">{a.body}</p>
+                        <p className="whitespace-pre-wrap text-base leading-[1.6] pretty">
+                          {answerDisplayText(a)}
+                        </p>
+
+                        {/* Item 14 — the still, with its title. Link only; nothing
+                            is hosted or embedded. */}
+                        {a.videoUrl && (
+                          <a
+                            href={a.videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 flex items-center gap-3 rounded-lg border border-border p-2 hover:border-[var(--central-border-hover)]"
+                          >
+                            {linkThumbnail(a.videoUrl) ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={linkThumbnail(a.videoUrl)!}
+                                alt=""
+                                className="h-16 w-28 shrink-0 rounded object-cover"
+                                onError={(e) => {
+                                  ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                                }}
+                              />
+                            ) : (
+                              <span className="flex h-16 w-28 shrink-0 items-center justify-center rounded bg-[oklch(0.97_0.004_250)] text-2xl">
+                                ▶
+                              </span>
+                            )}
+                            <span className="min-w-0">
+                              <span className="block text-[13px] font-medium pretty">
+                                {a.videoTitle ?? 'Video answer'}
+                              </span>
+                              <span className="block truncate text-[11px] text-muted-foreground">
+                                {a.videoUrl}
+                              </span>
+                            </span>
+                          </a>
+                        )}
+
+                        {/* Item 13 — permanent. Shown whatever the approval
+                            setting says, because it describes how to USE the
+                            answer, not who vouches for it. */}
+                        <ContextNote context={a.context} className="mt-3" />
 
                         {a.sources.length > 0 && (
                           <div className="mt-3 border-t border-border pt-3">
@@ -438,11 +557,25 @@ export default function QuestionDetail({
                       </>
                     ) : (
                       <p className="text-[13px] font-medium text-muted-foreground pretty">
-                        {a.body.slice(0, 140)}{a.body.length > 140 ? '…' : ''}
+                        {/* Item 14 — a video answer's body is empty, so the
+                            collapsed preview would be a blank line without this. */}
+                        {answerDisplayText(a).slice(0, 140)}
+                        {answerDisplayText(a).length > 140 ? '…' : ''}
                       </p>
                     )}
 
+                    {/* Item 13 — the stamp. A Do-not-use flag takes visual
+                        precedence inside ApprovalLabel; the two coexist in the
+                        data because one person's approval does not clear
+                        another's flag. */}
+                    <ApprovalLabel stamp={a.approval} flag={a.flag} className="mt-2" />
+
                     <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <ApprovalCheckbox
+                        stamp={a.approval}
+                        canApprove={mayApprove(a)}
+                        onChange={(v) => setApproved(a.id, v)}
+                      />
                       <FavouriteToggle on={a.myFavourite} onToggle={() => toggleFavourite(a.id)} />
                       <span className="text-[11px] text-muted-foreground">Private to you</span>
                       {!isOpen && idx !== 0 && (
@@ -579,6 +712,30 @@ export default function QuestionDetail({
           />
         )}
 
+        {/* Item 13 — permanent, and a PLACEHOLDER rather than pre-filled text:
+            pre-filled content is submitted verbatim by everyone who ignores it. */}
+        <div className="mt-3">
+          <ContextField id="answer-context" value={context} onChange={setContext} />
+        </div>
+
+        {/* Item 14 — link only. Instead of, or alongside, the text above. */}
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <Input
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder="Video link (optional)"
+            className="h-9 rounded-lg bg-white text-xs"
+            type="url"
+          />
+          <Input
+            value={videoTitle}
+            onChange={(e) => setVideoTitle(e.target.value)}
+            placeholder="What the video shows"
+            className="h-9 rounded-lg bg-white text-xs"
+            disabled={!videoUrl.trim()}
+          />
+        </div>
+
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -598,7 +755,12 @@ export default function QuestionDetail({
           >
             + Add a local example
           </Button>
-          <Button type="submit" size="sm" className="ml-auto rounded-lg" disabled={posting || !body.trim()}>
+          <Button
+            type="submit"
+            size="sm"
+            className="ml-auto rounded-lg"
+            disabled={posting || (!body.trim() && !videoUrl.trim())}
+          >
             {posting ? 'Posting…' : 'Post answer'}
           </Button>
         </div>

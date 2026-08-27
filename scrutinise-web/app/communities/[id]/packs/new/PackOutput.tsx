@@ -2,6 +2,11 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+// ⚠ ITEM 14 LIVES IN ONE FUNCTION. All four formats below call
+// `answerDisplayText`, so "a video answer prints as its title plus the URL,
+// never as an empty block" is one assertion rather than four — and a fifth
+// format added later inherits it instead of forgetting it.
+import { answerDisplayText, linkThumbnail } from '@/lib/video'
 
 export interface PackEntryView {
   questionId: string
@@ -17,6 +22,8 @@ export interface PackEntryView {
     isFavourite: boolean
     authorType: string
     aiModel: string | null
+    videoUrl: string | null
+    videoTitle: string | null
   } | null
   favouriteAnswer: {
     authorType: string
@@ -25,6 +32,8 @@ export interface PackEntryView {
     sources: string[]
     localExample: string | null
     flag: { level: string; reason: string } | null
+    videoUrl: string | null
+    videoTitle: string | null
   } | null
   pinned: boolean
 }
@@ -37,6 +46,29 @@ const FORMATS: { key: Format; label: string; rationale: string }[] = [
   { key: 'LIST', label: 'Continuous list', rationale: 'The whole pack on one thumb. Best for training.' },
   { key: 'PRINT', label: 'A4 print sheet', rationale: 'For the table at a training session.' },
 ]
+
+/**
+ * A video answer's still, on screen.
+ *
+ * ⚠ DELIBERATELY ABSENT FROM THE A4 SHEET. Paper cannot play a video and a
+ * printer will not reliably fetch a remote image; the sheet carries the title
+ * and the typed-out URL instead, which is what item 14 asks for.
+ */
+function VideoStill({ answer }: { answer: { videoUrl: string | null } | null | undefined }) {
+  const src = answer?.videoUrl ? linkThumbnail(answer.videoUrl) : null
+  if (!src) return null
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      className="mt-2 w-full rounded-lg border border-border object-cover"
+      onError={(e) => {
+        ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+      }}
+    />
+  )
+}
 
 /** The line every output carries, without exception. */
 function Disclaimer({ text, className = '' }: { text: string; className?: string }) {
@@ -152,7 +184,10 @@ export default function PackOutput({
                 <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
                   Best answer
                 </p>
-                <p className="mt-1 text-sm leading-relaxed pretty">{current.answer.body}</p>
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed pretty">
+                  {answerDisplayText(current.answer)}
+                </p>
+                <VideoStill answer={current.answer} />
                 <AiNote answer={current.answer} />
                 <FlagNote flag={current.answer.flag} />
                 {withSources && current.answer.sources.length > 0 && (
@@ -165,7 +200,9 @@ export default function PackOutput({
                     <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-primary">
                       ★ Your favourite
                     </p>
-                    <p className="mt-1 text-[13px] leading-relaxed pretty">{current.favouriteAnswer.body}</p>
+                    <p className="mt-1 whitespace-pre-line text-[13px] leading-relaxed pretty">
+                      {answerDisplayText(current.favouriteAnswer)}
+                    </p>
                   </div>
                 )}
               </>
@@ -208,9 +245,10 @@ export default function PackOutput({
             <p className="tabular mb-3 text-[11px] text-white/50">{index + 1} / {entries.length}</p>
             <p className="mb-3 text-xs text-white/50 pretty">{current.text}</p>
             <div className="rounded-xl bg-white p-4">
-              <p className="text-[19px] font-medium leading-[1.5] pretty">
-                {current.answer?.body ?? 'No answer yet.'}
+              <p className="whitespace-pre-line text-[19px] font-medium leading-[1.5] pretty">
+                {answerDisplayText(current.answer) || 'No answer yet.'}
               </p>
+              <VideoStill answer={current.answer} />
               <AiNote answer={current.answer} />
               <FlagNote flag={current.answer?.flag ?? null} />
             </div>
@@ -245,11 +283,17 @@ export default function PackOutput({
                   <span className="tabular mr-2 text-muted-foreground">{i + 1}</span>
                   {e.text}
                 </p>
-                {e.answer && <p className="mt-1 text-xs leading-relaxed text-muted-foreground pretty">{e.answer.body}</p>}
+                {e.answer && (
+                  <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-muted-foreground pretty">
+                    {answerDisplayText(e.answer)}
+                  </p>
+                )}
                 <AiNote answer={e.answer} />
                 <FlagNote flag={e.answer?.flag ?? null} />
                 {e.favouriteAnswer && (
-                  <p className="mt-1 text-xs text-primary pretty">★ Your favourite: {e.favouriteAnswer.body}</p>
+                  <p className="mt-1 whitespace-pre-line text-xs text-primary pretty">
+                    ★ Your favourite: {answerDisplayText(e.favouriteAnswer)}
+                  </p>
                 )}
               </li>
             ))}
@@ -291,15 +335,17 @@ export default function PackOutput({
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-semibold leading-snug pretty">{e.text}</p>
                     {e.answer ? (
-                      <p className="mt-1 text-sm leading-[1.6] pretty">{e.answer.body}</p>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-[1.6] pretty">
+                        {answerDisplayText(e.answer)}
+                      </p>
                     ) : (
                       <p className="mt-1 text-sm italic text-muted-foreground">No answer yet.</p>
                     )}
                     <AiNote answer={e.answer} plain />
                     <FlagNote flag={e.answer?.flag ?? null} />
                     {e.favouriteAnswer && (
-                      <p className="mt-1 text-sm leading-[1.6] pretty">
-                        <strong>Your favourite:</strong> {e.favouriteAnswer.body}
+                      <p className="mt-1 whitespace-pre-line text-sm leading-[1.6] pretty">
+                        <strong>Your favourite:</strong> {answerDisplayText(e.favouriteAnswer)}
                       </p>
                     )}
                     {withLocalExamples && e.answer?.localExample && (
