@@ -6,6 +6,9 @@ import {
   getRootCommunityId,
   getSubtreeIds,
 } from '@/lib/community'
+// Item 14 — the one function that decides what a video answer reads as. Shared
+// with the pack output, which is a client component and cannot import this file.
+import { answerDisplayText } from '@/lib/video'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CENTRAL Stage 2b — the question library.
@@ -164,6 +167,14 @@ export type ScoredAnswer = {
   body: string
   sources: string[]
   localExample: string | null
+  /** Item 13. Permanent — never hidden by the approval setting. */
+  context: string | null
+  /** Item 14. Link only — no hosting, per the standing decision. */
+  videoUrl: string | null
+  videoTitle: string | null
+  /** Item 13. Null until somebody marks it; null is the neutral default. */
+  approvedAt: Date | null
+  approvedBy: { id: string; name: string | null; username: string } | null
   hidden: boolean
   createdAt: Date
   author: { id: string; name: string | null; username: string }
@@ -196,6 +207,7 @@ export async function getRankedAnswers(
     where: { questionId, deletedAt: null, ...(opts.includeHidden ? {} : { hidden: false }) },
     include: {
       author: { select: { id: true, name: true, username: true } },
+      approvedBy: { select: { id: true, name: true, username: true } },
       votes: { select: { direction: true, voteWeight: true, userId: true } },
       favourites: { where: { userId: viewerId }, select: { id: true } },
       flags: { select: { level: true, reason: true } },
@@ -242,6 +254,11 @@ export async function getRankedAnswers(
         body: a.body,
         sources: a.sources,
         localExample: a.localExample,
+        context: a.context,
+        videoUrl: a.videoUrl,
+        videoTitle: a.videoTitle,
+        approvedAt: a.approvedAt,
+        approvedBy: a.approvedBy,
         hidden: a.hidden,
         createdAt: a.createdAt,
         author: a.author,
@@ -320,6 +337,8 @@ export async function listQuestions(
         where: { hidden: false, deletedAt: null },
         select: {
           body: true, sources: true, localExample: true, authorType: true,
+          // Item 14 — needed for the preview: a video answer's body is empty.
+          videoUrl: true, videoTitle: true,
           votes: { select: { direction: true, voteWeight: true } },
         },
       },
@@ -333,6 +352,9 @@ export async function listQuestions(
   // drop out of the monthly view, not linger at a discount.
   const monthAgo = new Date()
   monthAgo.setMonth(monthAgo.getMonth() - 1)
+
+  const previewOf = (text: string) =>
+    text ? text.slice(0, 160) + (text.length > 160 ? '…' : '') : null
 
   const rows = questions.map((q) => {
     const countedVotes = sort === 'top-month' ? q.votes.filter((v) => v.createdAt >= monthAgo) : q.votes
@@ -356,7 +378,10 @@ export async function listQuestions(
       branchName: q.branch?.name ?? null,
       // Missing previews are a real state, not an oversight — a question with
       // no answers yet renders without one.
-      answerPreview: best ? best.a.body.slice(0, 160) + (best.a.body.length > 160 ? '…' : '') : null,
+      // ⚠ ITEM 14: THROUGH `answerDisplayText`, not `body`. A video answer has
+      // an empty body, so slicing it gives '' — which renders as a question that
+      // looks unanswered in the one list most people read.
+      answerPreview: best ? previewOf(answerDisplayText(best.a)) : null,
       answerPreviewIsAI: best?.a.authorType === 'AI',
       hasSources: q.answers.some((a) => a.sources.length > 0),
       hasLocalExample: q.answers.some((a) => Boolean(a.localExample)),
@@ -583,6 +608,12 @@ export type PackEntry = {
      *  LAST place an AI-written answer may pass as a member's. */
     authorType: string
     aiModel: string | null
+    /** ⚠ ITEM 14. A video answer has an EMPTY body, so a pack that carries
+     *  only `body` prints a blank block where an answer should be. The URL and
+     *  the title travel with it and `answerDisplayText` turns them into the line
+     *  every format prints. */
+    videoUrl: string | null
+    videoTitle: string | null
   } | null
   /** Present when the member has favourited a DIFFERENT answer to the top one. */
   favouriteAnswer: {
@@ -592,6 +623,8 @@ export type PackEntry = {
     flag: { level: string; reason: string } | null
     authorType: string
     aiModel: string | null
+    videoUrl: string | null
+    videoTitle: string | null
   } | null
   pinned: boolean
 }
@@ -658,6 +691,8 @@ export async function buildPack(params: {
             isFavourite: top.myFavourite,
             authorType: top.authorType,
             aiModel: top.aiModel,
+            videoUrl: top.videoUrl,
+            videoTitle: top.videoTitle,
           }
         : null,
       // Only carried when it is a DIFFERENT answer — otherwise the pack would
@@ -671,6 +706,8 @@ export async function buildPack(params: {
               flag: favourite.flag,
               authorType: favourite.authorType,
               aiModel: favourite.aiModel,
+              videoUrl: favourite.videoUrl,
+              videoTitle: favourite.videoTitle,
             }
           : null,
       pinned: pinnedSet.has(q.id),

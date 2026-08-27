@@ -42,7 +42,7 @@ import { recordPointsEvent, type ResolvedTariff } from '@/lib/central-points'
 // worse than the asymmetry.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const CONTENT_KINDS = ['question', 'answer', 'post'] as const
+export const CONTENT_KINDS = ['question', 'answer', 'post', 'resource'] as const
 export type ContentKind = (typeof CONTENT_KINDS)[number]
 
 /** The `where` fragment every read of live content must carry. */
@@ -80,6 +80,7 @@ const SOURCE_TYPE: Record<ContentKind, string | null> = {
   question: null,
   answer: 'ANSWER_VOTE',
   post: 'BULLETIN_MARK',
+  resource: 'RESOURCE_VOTE',
 }
 
 /**
@@ -562,6 +563,89 @@ export async function restorePost(params: {
   }
 }
 
+/**
+ * Delete a resource. Stage 2g.
+ *
+ * ⚠ THE R2 OBJECT IS LEFT WHERE IT IS. A soft delete is reversible by
+ * definition, and deleting the file would make `restoreResource` a lie — the row
+ * would come back pointing at a key that no longer resolves. Purging objects
+ * belongs to whatever eventually hard-deletes the rows, not here.
+ */
+export async function deleteResource(params: {
+  resourceId: string
+  userId: string
+  reason?: string
+}): Promise<DeletionResult> {
+  const resource = await prisma.resource.findUnique({
+    where: { id: params.resourceId },
+    select: { id: true, authorId: true, communityId: true, deletedAt: true },
+  })
+  if (!resource) throw new CommunityRuleError('Resource not found', 404)
+  if (resource.deletedAt) throw new CommunityRuleError('That resource is already deleted', 409)
+
+  await assertMayDelete({
+    authorId: resource.authorId,
+    communityId: resource.communityId,
+    actorUserId: params.userId,
+    reason: params.reason,
+  })
+
+  const pointsReversed = await reverseContentPoints({
+    kind: 'resource',
+    contentId: resource.id,
+    authorId: resource.authorId,
+    communityId: resource.communityId,
+    actorUserId: params.userId,
+  })
+
+  await prisma.resource.update({
+    where: { id: resource.id },
+    data: {
+      deletedAt: new Date(),
+      deletedByUserId: params.userId,
+      deletionReason: params.reason?.trim() || null,
+      deletedWithParent: false,
+    },
+  })
+
+  await notifyAuthor({
+    authorId: resource.authorId,
+    actorUserId: params.userId,
+    communityId: resource.communityId,
+    title: 'A resource of yours was removed',
+    reason: params.reason,
+  })
+
+  return { kind: 'resource', id: resource.id, cascaded: { answers: 0, replies: 0 }, pointsReversed }
+}
+
+export async function restoreResource(params: {
+  resourceId: string
+  userId: string
+}): Promise<RestoreResult> {
+  const resource = await prisma.resource.findUnique({
+    where: { id: params.resourceId },
+    select: { id: true, authorId: true, communityId: true, deletedAt: true },
+  })
+  if (!resource) throw new CommunityRuleError('Resource not found', 404)
+  if (!resource.deletedAt) throw new CommunityRuleError('That resource is not deleted', 409)
+
+  await assertMayRestore(resource.authorId, resource.communityId, params.userId)
+
+  const pointsRestored = await restoreContentPoints({
+    kind: 'resource',
+    contentId: resource.id,
+    authorId: resource.authorId,
+    communityId: resource.communityId,
+    actorUserId: params.userId,
+  })
+  await prisma.resource.update({
+    where: { id: resource.id },
+    data: { deletedAt: null, deletedByUserId: null, deletionReason: null, deletedWithParent: false },
+  })
+  return { kind: 'resource', id: resource.id, restored: { answers: 0, replies: 0 }, pointsRestored }
+}
+
 /** Restoring is a manager's act, or the author's own. Same shape as deleting. */
 async function assertMayRestore(authorId: string, communityId: string, actorUserId: string) {
   if (authorId === actorUserId) return
@@ -604,7 +688,7 @@ export async function listDeletedContent(
 
   const who = { select: { id: true, name: true, username: true } }
 
-  const [questions, answers, posts] = await Promise.all([
+  const [questions, answers, posts, resources] = await Promise.all([
     prisma.question.findMany({
       where: { communityId: rootId, deletedAt: { not: null } },
       include: { author: who, deletedBy: who, community: { select: { name: true } } },
@@ -623,6 +707,14 @@ export async function listDeletedContent(
     }),
     prisma.bulletinPost.findMany({
       where: { communityId: { in: nodeIds }, deletedAt: { not: null } },
+      include: { author: who, deletedBy: who, community: { select: { name: true } } },
+      orderBy: { deletedAt: 'desc' },
+      take: limit,
+    }),
+    // Stage 2g. A resource is scoped to the ROOT like a question, with an
+    // optional branch, so the root filter is the right one here.
+    prisma.resource.findMany({
+      where: { communityId: rootId, deletedAt: { not: null } },
       include: { author: who, deletedBy: who, community: { select: { name: true } } },
       orderBy: { deletedAt: 'desc' },
       take: limit,
@@ -665,6 +757,18 @@ export async function listDeletedContent(
       deletedBy: p.deletedBy,
       communityName: p.community.name,
       parentId: p.parentId,
+    })),
+    ...resources.map((r) => ({
+      kind: 'resource' as const,
+      id: r.id,
+      preview: r.title,
+      deletedAt: r.deletedAt!,
+      deletionReason: r.deletionReason,
+      deletedWithParent: r.deletedWithParent,
+      author: r.author,
+      deletedBy: r.deletedBy,
+      communityName: r.community.name,
+      parentId: null,
     })),
   ]
 
