@@ -40,6 +40,60 @@ every line in it was read off production — attach or paraphrase it. (2) ⚠ **
 check is Google Search Console, which cannot be read from this machine (§19)** — one minute of your
 time, and the number belongs in §5 of the pack before submission. ⚠ Nothing here touches retrieval:
 Lex's corpus search is server-side and reads no robots directive.
+Earlier: 2026-08-27 03:09 UTC — ▼ **LEX 25-I: THE DOCUMENT PIPELINE HAD NEVER ONCE RUN, AND THE
+REUSE CARRY DESTROYED THE RESEARCH IT REUSED.** The brief's instruction to VERIFY ON THE LIVE SITE
+BEFORE CHANGING ANYTHING is what made the sprint worth running — three of six sections found
+something different from what the brief or 25-H believed. ⚠⚠ **`IdeaUserMaterial` held ZERO ROWS
+across the whole production database**; 25-H reported §4 shipped and the component IS real, but
+nothing had ever been through it. Driven with Charlie's own document (40,877 bytes) it **discarded
+73% of what it read** — 15 findings offered, **11 dropped** as *"the quote could not be found in the
+document"*, and **ten of the eleven WERE in the document**. The eleventh shows the mechanism: the
+model wrote `…over government. there` where the document has `…over government there` — ONE ADDED
+FULL STOP. ⚠ `quoteIsInText` is ALL-OR-NOTHING over a whole passage, so one tidied character at
+position 200 discarded a 300-character finding and told the user their document produced nothing.
+⚠ **THE FIX MAKES PROVENANCE STRONGER, NOT LOOSER** — a similarity score would admit a
+reconstruction, which is what the check exists to stop; `verbatimSpan` stores **the DOCUMENT'S own
+words** for the longest matching span, so a quote is verbatim BY CONSTRUCTION rather than by passing
+a test. **4 → 8 findings**, floor 20 → 60 chars, all four reconstruction controls still refused.
+**Charlie's document is now attached to his idea with 8 findings** — it had been lost twice.
+⚠⚠ **AND `carryEvidenceForward` MOVED THE EVIDENCE INSTEAD OF COPYING IT.** It runs inside
+`claimBuild`, BEFORE a single pass, so any re-run claimed and then failed/cancelled/crashed took the
+previous build's research away PERMANENTLY and the next one died with *"the research pass produced
+nothing to revise against"*. Measured live: **69 rows stranded on a CANCELLED v2 that ran ZERO
+passes**, v1 left with 9 of its 78. ⚠ `runVersion` must be a fact about that version — moving made
+it mean "the newest run interested in this row", and v1's screen would blank the moment anyone
+clicked Re-run. **Now copies; Charlie's 69 rows restored, each count re-read.** ▶ **§1: loading a
+page created an idea** — the boot POSTed `/api/ideas` not to record intent but because it had no way
+to draw the first question without a row. ⚠ **25-E's resume made this LESS VISIBLE without fixing
+it** (minting only hit users whose rows were all empty or all built): *resume is not creation
+control*. `blankElicitationState()` projects the first question from a blank row through **the same
+`projectState`**, writing nothing; `ensureIdea()` creates on the FIRST ANSWER. ⚠ id in a **ref**
+(state would not update in time and the first answer would drop) and the **URL still written**.
+⚠ The old door had the identical defect — a bare `/ideas/create` now redirects to the current door,
+testing the **resolved path** not the flag, or a flip back would loop. **Sweep 95 → 68 live ideas,
+27 soft-deleted and each re-read, 12 KEPT for having real proposal fields.** ▶ **The walk found the
+stale banner quoting the WRONG PRICE** — `staleUnderstanding` is `updatedAt > confirmedAt`,
+`reuseSourceFor` refuses on `updatedAt > lastBuild.startedAt`; 25-H coupled them as "one event" and
+they have DIFFERENT CONDITIONS. ▶ **§4a** cost joins duration, **measured**, unpriced builds
+EXCLUDED not counted as zero, and it says "uses one of your builds" even with no figure because
+silence reads as free. ▶ **§4b's premise is contradicted — it already exists** (25-G §1b, quoted
+verbatim off the running site); verified and now guarded, not rebuilt. ▶ **§4c** the note renders
+above the box and NOT hidden on a proposal. ▶▶ ⚠ **THE REUSE SAVING, MEASURED AT LAST: 107,380 →
+15,590 input tokens, 91,790 saved, 85%** against 65% predicted (compare PERCENTAGES — the prediction
+was against a 217,687-token build). ⚠ **It is a CEILING: the run died at pass 5**, so a completed
+reuse build spends more. ▶▶ **CHARLIE: §5's six-qualities measurement is THE ONE THING NOT DONE.**
+The build failed at pass 3 of 10 with zero evidence rows, so its 2-of-6 score measures the defect,
+not the qualities. The defect is fixed; a second run costs ~7p and answers it properly — **§5's
+ceiling is one build and spend is an explicit stop, so it waits on your word.** ✅ `check:lex-25i`
+**14/14, 13 with negative controls**, all watched rejecting; 25a 40, 25b 54, 25c 32, 25d 77,
+**25e 28**, 25f 62, 25g 27, 25h 20; `tsc`, `next build` clean. ⚠ **The 25-I check FAILED FIRST RUN
+AGAINST CORRECT CODE** — its §5 assertion looks for the `updateMany` that used to move evidence, and
+the fix DOCUMENTS that expression, so the guard matched its own explanation; it now strips comments.
+**A source-text guard that cannot tell code from prose guards the topic, not the behaviour.**
+⚠ **My harness produced a finding about itself again** — deleting a material without the route's
+transaction orphaned 4 findings and the reconciliation caught it; I was one step from reporting it
+as a product defect. **A cleanup path must be as faithful as the path under test.**
+`docs/LEX_25I_REPORT.md`, `docs/CITATION_PASS_PREP.md`.**
 Earlier: 2026-08-26 23:32 UTC — CENTRAL: **the content soft-delete pattern is built — the thing item 11 was blocked on.** Four columns on Question, Answer and BulletinPost; ⚠ `deletedWithParent` is the load-bearing one, because restoring a question must bring back the answers that went WITH it and must not resurrect one its own author had deleted separately — without the flag those rows are identical and the difference is unrecoverable. Points reverse at the value they were awarded and the ledger only appends: award, reversal, restore is three rows, nothing edited. ⚠ `Answer.hidden` is moderation, NOT deletion, and stays — asserted both ways. Deleted means invisible, enforced at the two chokepoints every read flows through and asserted surface by surface, because a soft delete one read forgets is worse than none. Deleted-items view at `/communities/[id]/deleted`, cascaded rows labelled. **436/436**, six planted breaks all watched failing. ▶ Item 11 is now unblocked and is next. Earlier: 2026-08-26 20:52 UTC — ▼ **INGEST C3-A (the addendum): ONE LINE OF SEEDER MADE A COLLECTION 84.7% NOT-OTS, AND A SECOND SEEDER PARAMETER HAS BEEN RETURNING HTTP 422 AND YIELDING NOTHING, SILENTLY.**
 `searchGovUk('office of tax simplification report', …, 500)` is a relevance search over **348,062**
 results; we kept the first 500. Re-classified all 497 rows against the gov.uk content API and the
