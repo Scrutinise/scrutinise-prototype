@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { AnswerByline } from '@/components/central/AnswerByline'
-import {
+import ApprovalFrame, {
   ApprovalCheckbox,
   ApprovalLabel,
   ContextField,
@@ -439,7 +439,21 @@ export default function QuestionDetail({
             const isOpen = expanded[a.id] ?? false
             const mine = a.author.id === viewerId
             return (
-              <div key={a.id} className="central-card p-4">
+              // ⚠ ITEM 13'S FRAME, ON THE ANSWER SURFACE. This card was rendering
+              // only the marked-by LINE: the 2px frame and the top-right
+              // superscript existed in the component and were wired to Resources
+              // alone, so an approved answer looked identical to an unapproved
+              // one. `chrome={false}` because `.central-card` already draws the
+              // card, and `label={false}` because the line sits lower down with
+              // the other per-answer controls.
+              <ApprovalFrame
+                key={a.id}
+                stamp={a.approval}
+                flag={a.flag}
+                chrome={false}
+                label={false}
+                className="central-card p-4"
+              >
                 <div className="flex items-start gap-3.5">
                   <AnswerVote
                     score={a.score}
@@ -672,7 +686,7 @@ export default function QuestionDetail({
                     )}
                   </div>
                 </div>
-              </div>
+              </ApprovalFrame>
             )
           })}
         </div>

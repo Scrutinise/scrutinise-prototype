@@ -3629,6 +3629,29 @@ async function partK() {
       resolvePath(process.cwd(), 'components/central/ApprovalFrame.tsx'), 'utf8')
     check('the approval frame is distinguished by border weight',
       frameSrc.includes('borderWidth: 2'))
+    check('an unapproved item reads "Awaiting {Organisation} approval" (2h item 8)',
+      frameSrc.includes('Awaiting {stamp.organisationName} approval'))
+    check('…in neutral grey, not as a warning',
+      /Awaiting[\s\S]{0,200}text-muted-foreground|text-muted-foreground[\s\S]{0,200}Awaiting/.test(frameSrc))
+
+    // ⚠⚠ THE GAP THIS BLOCK USED TO HAVE. Everything above greps the COMPONENT
+    // and proves it CAN draw a frame. It cannot notice a surface that imports the
+    // label and not the frame — which is exactly what shipped: Answers rendered
+    // the marked-by line only, so an approved answer looked identical to an
+    // unapproved one, and Charlie found it in the browser on 27 Aug. A component
+    // test is not a surface test.
+    for (const [label, file] of [
+      ['the answer detail', 'app/communities/[id]/questions/[questionId]/QuestionDetail.tsx'],
+      ['the resources grid', 'app/communities/[id]/resources/ResourcesLibrary.tsx'],
+    ] as const) {
+      const src = readFileSync(resolvePath(process.cwd(), file), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '')
+      check(`${label} renders the frame, not just the label`,
+        /<ApprovalFrame[\s>]/.test(src), file)
+      check(`…and offers the tick`, src.includes('<ApprovalCheckbox'), file)
+      check(`…and shows the Context note`, src.includes('<ContextNote'), file)
+    }
     check('…and by its label, not by colour alone',
       frameSrc.includes('{stamp.organisationName} approved'))
     check('a Do-not-use flag takes visual precedence over the stamp',

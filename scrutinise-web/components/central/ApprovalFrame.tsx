@@ -18,8 +18,9 @@ import type { CSSProperties, ReactNode } from 'react'
 // the reader must never see "Reform UK approved" as the loudest thing on an
 // item an admin has told them not to use.
 //
-// ⚠ UNAPPROVED IS NEUTRAL, NOT A WARNING. Most material is simply unmarked.
-// Grey text, no frame, no icon.
+// ⚠ UNAPPROVED IS NEUTRAL, NOT A WARNING. Most material is simply unmarked, so
+// it reads "Awaiting {Organisation} approval" — a position in a process, not a
+// verdict on the content. Grey text, no frame, no icon.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type ApprovalStampView = {
@@ -72,7 +73,16 @@ export function ApprovalLabel({
   }
 
   if (!stamp.approved) {
-    return <p className={`text-[11px] text-muted-foreground ${className}`}>Not approved material</p>
+    // ⚠ STAGE 2h ITEM 8. This read "Not approved material", which states a
+    // VERDICT about the content; "Awaiting" states where it is in a process.
+    // Most material is simply unmarked, and the neutral default must not read as
+    // a judgement that somebody looked and declined. Neutral grey, no icon, no
+    // frame — the absence of a stamp is the absence of a claim.
+    return (
+      <p className={`text-[11px] text-muted-foreground ${className}`}>
+        Awaiting {stamp.organisationName} approval
+      </p>
+    )
   }
 
   return (
@@ -99,11 +109,24 @@ export default function ApprovalFrame({
   flag,
   children,
   className = '',
+  chrome = true,
+  label = true,
 }: {
   stamp: ApprovalStampView
   flag?: FlagView
   children: ReactNode
   className?: string
+  /**
+   * ⚠ Set false when the CALLER already draws the card. `.central-card` and
+   * this component's `rounded-xl border border-border` are both single-class
+   * selectors, so which border wins is decided by their order in the compiled
+   * stylesheet — a coin toss, and one that changes when Tailwind re-emits.
+   * The inline 2px style below beats both either way; this switch is about not
+   * fighting over the 1px resting state.
+   */
+  chrome?: boolean
+  /** Set false where the surface places the marked-by line itself. */
+  label?: boolean
 }) {
   const blocked = flag?.level === 'DO_NOT_USE'
   const framed = stamp.visible && stamp.approved && !blocked
@@ -117,7 +140,10 @@ export default function ApprovalFrame({
       : {}
 
   return (
-    <div className={`relative rounded-xl border border-border ${className}`} style={style}>
+    <div
+      className={`relative ${chrome ? 'rounded-xl border border-border' : ''} ${className}`}
+      style={style}
+    >
       {blocked ? (
         <span className="absolute -top-2 right-3 rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
           Do not use
@@ -131,9 +157,11 @@ export default function ApprovalFrame({
         </span>
       ) : null}
       {children}
-      <div className="px-3 pb-2">
-        <ApprovalLabel stamp={stamp} flag={flag} />
-      </div>
+      {label && (
+        <div className="px-3 pb-2">
+          <ApprovalLabel stamp={stamp} flag={flag} />
+        </div>
+      )}
     </div>
   )
 }
