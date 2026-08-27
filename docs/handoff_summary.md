@@ -133,6 +133,67 @@ the fix DOCUMENTS that expression, so the guard matched its own explanation; it 
 transaction orphaned 4 findings and the reconciliation caught it; I was one step from reporting it
 as a product defect. **A cleanup path must be as faithful as the path under test.**
 `docs/LEX_25I_REPORT.md`, `docs/CITATION_PASS_PREP.md`.**
+2026-08-27 08:41 UTC — ▼ **CENTRAL STAGE 2h ITEMS 6–8 ARE BUILT — AND CHARLIE FOUND, IN THE
+BROWSER, THAT THE APPROVAL FRAME HAD BEEN WIRED TO ONE SURFACE OUT OF TWO.**
+
+⚠⚠ **The frame defect.** He reported the checkbox and the flag UI working and no bold or colour
+framing on “Approved by Reform UK”. Correct: the answer card rendered `ApprovalLabel` and
+`ApprovalCheckbox` and **never `ApprovalFrame`** — the 2px border and the superscript existed in the
+component and were used by the Resources grid alone, so an approved answer was indistinguishable
+from an unapproved one on the surface that matters most. **My check grepped the COMPONENT for
+`borderWidth: 2`, which proves the component CAN draw a frame and cannot notice a surface that
+imports the label and not the frame. A component test is not a surface test** — the third instance
+of that shape this sprint. The check now asserts per surface that frame, tick and Context note are
+each rendered. Fixed and deployed as `1c03af0`.
+
+**Item 8** — unapproved now reads **“Awaiting {Organisation} approval”**, not “Not approved
+material”: a position in a process rather than a verdict on the content.
+
+**Item 6 — colour independence.** Charlie is colour blind, so a voted state differing from an
+unvoted one only by teal-versus-grey means he cannot tell whether his own click registered.
+⚠ **`aria-pressed` was already on every one of these controls and does not help** — it speaks to a
+screen reader, not to a sighted person who cannot separate two hues. `lib/state-cues.ts` is one
+vocabulary: a **solid glyph on, hollow off** (▲/△, ▼/▽ — four different characters, not one
+recoloured) plus **`border-2`**. Five controls changed (question vote in the list, question vote on
+the detail header, answer vote, resource vote, resource type chips). Left alone because they
+already carry a second cue: flags and role badges (text), the AI label, the approval stamp,
+favourites (★/☆), context chips and leaderboard tabs (**a filled background vs a white one is a
+LIGHTNESS difference, which colour blindness preserves**), bulletin votes (`strokeWidth`), and the
+leaderboard delta (red/green, but it prints a leading + or − and the sign is the cue).
+
+⚠⚠ **Two findings came from the check, not from reading.** The platform’s OWN accent text
+`--central-teal-text: #0f8b7f` scores **4.18:1** on white — **below the WCAG AA floor of 4.5, and
+never measured**; now `#0d7a6f` at 5.21, same hue. And a **second question-vote control** on the
+detail header the first sweep missed — found because the guard asserts the **absence of a bare
+triangle** rather than the presence of a fix.
+
+**Item 7 — per-user accent.** Reason on record: the platform accent is a teal close to one party’s
+brand colour, poor for a neutral platform. Seven-entry **fixed palette**, each with three
+**hand-set** values — deriving text colours by a fixed lightness shift is exactly what makes the
+unreadable combinations free hex was rejected for. ⚠ **The check computes WCAG contrast per entry
+and fails below 4.5:1**, which is what “pre-vetted” has to mean; it is what caught the platform
+teal. Stores the palette **KEY, not a hex** (a hex column is free hex with extra steps); NULL =
+never chosen, kept distinct from “chose the default”. ⚠ **Applied CLIENT-side on purpose**: reading
+it in the root layout would opt the whole app, static signed-out pages included, into dynamic
+rendering for a cosmetic preference. The check asserts the override set equals the tokens
+`globals.css` declares, so a ninth token cannot leave a half-applied accent.
+
+⚠ **Two of my own guards were narrower than their property.** The bare-glyph grep looked for a
+triangle in quotes or between `>` and `<`, and a planted bare ▲ in JSX text walked past it — assert
+the absence totally, and route even the hint copy through the vocabulary. And the token comparison
+was **[] against []**, because `globals.css` has TWO `:root` blocks and the accent tokens are in
+the second.
+
+✅ **693/693** (was 620), `tsc` and `next build` clean, deployed `343a871` and verified via
+`/api/health`. **Items 1–5 of the 2h brief were audited and found ALREADY BUILT** — invite
+normalisation, the topic taxonomy, fractional referral accrual, all four training-UI items, the
+Choose File button and the vote hint — reported rather than rebuilt, per the brief.
+
+▶ **CHARLIE TO CHECK:** an approved answer now carries a 2px frame and a top-right superscript;
+Settings → Platform accent changes the colour immediately and persists; a vote you have cast shows
+a SOLID triangle and one you have not shows a HOLLOW one. Still unverified from here: the resource
+image and PDF previews, which need an authenticated browser session.
+
 2026-08-27 04:39 UTC — ▼ **CENTRAL STAGE 2g + ITEMS 12–15 ARE BUILT — AND TWO PARTIAL INDEXES HAD
 BEEN ADDED WITH NO REGISTER ROW BECAUSE THE CHECK THAT ENFORCES §21 NAMED TWO INDEXES LITERALLY.**
 
