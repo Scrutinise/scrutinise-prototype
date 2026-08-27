@@ -83,7 +83,18 @@ async function callFts(query: string, limit: number, scope: FtsScope = {}): Prom
       }),
       signal: ctrl.signal,
     })
-    if (!res.ok) throw new Error(`FTS ${res.status}: ${await res.text()}`)
+    if (!res.ok) {
+      const text = await res.text()
+      // ⚠ S16 §1 — A 503 IS NOT AN ERROR, IT IS THE BOUNDED QUEUE REFUSING HONESTLY.
+      // `fts-serve` sheds rather than admitting a request whose wait would outlive its caller, and
+      // that refusal is information the never-claim rule needs (SEARCH_CONTRACT §6): a saturated
+      // service is *we could not look*, which is a different sentence from *we looked and found
+      // nothing*. Marked distinctly so the gateway's `reason` says which, rather than folding a
+      // capacity event into a generic fault. This matters more here than on the dense side —
+      // fts-serve runs on EVERY query, so a shed here empties the whole result set, not one leg.
+      if (res.status === 503) throw new Error(`FTS overloaded: ${text.slice(0, 200)}`)
+      throw new Error(`FTS ${res.status}: ${text.slice(0, 200)}`)
+    }
     const json = (await res.json()) as { results?: FtsHit[]; corpora?: string[] | null; excludeCorpora?: string[] | null }
 
     // DEGRADE, DO NOT FAIL, on an unhonoured CORPUS scope — deliberately unlike the tier check
