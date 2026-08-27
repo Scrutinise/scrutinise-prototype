@@ -37,11 +37,38 @@ const VECTOR_TIMEOUT_MS = parseInt(process.env.VECTOR_TIMEOUT_MS ?? '25000', 10)
 /** Server-side stream scope — the dense twin of fts-search.ts's FtsScope. */
 export interface VectorScope { tier?: string; corpora?: string[]; excludeCorpora?: string[] }
 
+/**
+ * ⚠⚠ S15 §3 — WHY A DENSE FAILURE NOW HAS A NAME.
+ *
+ * S14 §0's sharpest finding was that this layer left no mark: `mergeLegs` returned the BM25 list
+ * and every hit kept `scorer: 'bm25'`, which is byte-for-byte what a stream with no dense leg
+ * produces. So *"dense retrieval is off"* and *"dense retrieval timed out on every call"* were
+ * indistinguishable from the result object — and a result object is where a measurement reads
+ * them. Four streams all returning at the 25 s client timeout looked exactly like four streams
+ * that were never configured for dense at all.
+ *
+ * `overloaded` is separated from `timeout` and from `error` deliberately, and it is the one that
+ * matters for `SEARCH_CONTRACT.md` §6's never-claim rule: a saturated service is a **stated gap**
+ * — we could not look — whereas a genuine empty result is a finding. `CLAUDE.md` §18's corollary
+ * says a degradation must announce itself with its cause attached; this is the cause.
+ */
+export type VectorFailureReason = 'overloaded' | 'timeout' | 'unreachable' | 'error' | 'unscoped'
+export interface VectorFailure { reason: VectorFailureReason; detail: string }
+
+/** Thrown by `callVector` so the reason survives the boundary instead of becoming `[]`. */
+class VectorCallError extends Error {
+  constructor(readonly reason: VectorFailureReason, message: string) { super(message) }
+}
+
 async function callVector(query: string, limit: number, scope: VectorScope = {}): Promise<VecHit[]> {
-  if (!VECTOR_URL) throw new Error('VECTOR_SEARCH_URL not set')
+  if (!VECTOR_URL) throw new VectorCallError('unreachable', 'VECTOR_SEARCH_URL not set')
   const { tier, corpora, excludeCorpora } = scope
   const ctrl = new AbortController()
-  const t = setTimeout(() => ctrl.abort(), VECTOR_TIMEOUT_MS)
+  // ⚠ S15 — the abort is recorded rather than inferred. `AbortError` on the fetch could come
+  // from our own deadline or from the caller's request being cancelled, and only the first is
+  // a `timeout` worth telling the user about.
+  let timedOut = false
+  const t = setTimeout(() => { timedOut = true; ctrl.abort() }, VECTOR_TIMEOUT_MS)
   try {
     const res = await fetch(`${VECTOR_URL.replace(/\/$/, '')}/vector-search`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
@@ -51,14 +78,25 @@ async function callVector(query: string, limit: number, scope: VectorScope = {})
         ...(corpora?.length ? { corpora } : {}),
         ...(excludeCorpora?.length ? { excludeCorpora } : {}),
       }), signal: ctrl.signal,
+    }).catch((e) => {
+      if (timedOut) throw new VectorCallError('timeout', `vector search timed out after ${VECTOR_TIMEOUT_MS} ms`)
+      throw new VectorCallError('unreachable', (e as Error).message)
     })
-    if (!res.ok) throw new Error(`vector ${res.status}: ${await res.text()}`)
+    if (!res.ok) {
+      const text = await res.text()
+      // ⚠ 503 IS NOT AN ERROR — IT IS THE SERVICE REFUSING HONESTLY (§3). The bounded queue
+      // sheds rather than admitting a request whose wait would outlive the caller, and that
+      // refusal is information. Treating it as a generic failure would throw the information
+      // away at the one boundary that can still act on it.
+      if (res.status === 503) throw new VectorCallError('overloaded', `vector service saturated: ${text.slice(0, 200)}`)
+      throw new VectorCallError('error', `vector ${res.status}: ${text.slice(0, 200)}`)
+    }
     const json = (await res.json()) as { results?: VecHit[]; tier?: string | null; corpora?: string[] | null; excludeCorpora?: string[] | null }
     // A service too old to know about `tier` would ignore it and return the whole corpus,
     // which would silently widen a stream-scoped search into an unscoped one. Fail closed:
     // a scoped call that cannot be proven scoped returns nothing and the BM25 path stands.
     if (tier && json.tier !== tier) {
-      throw new Error(`vector service did not honour tier="${tier}" (echoed ${JSON.stringify(json.tier)}) — refusing unscoped results`)
+      throw new VectorCallError('unscoped', `vector service did not honour tier="${tier}" (echoed ${JSON.stringify(json.tier)}) — refusing unscoped results`)
     }
     // The CORPUS scope degrades rather than failing, unlike the tier check above. Same reasoning
     // as fts-search.ts: query-router.ts still applies the `types` post-filter to the dense half,
@@ -95,17 +133,45 @@ export async function runVectorSearch(
   limit = 12,
   /** string = tier only (the original signature); object = full server-side stream scope. */
   scope?: string | VectorScope,
-): Promise<{ results: SearchResult[] }> {
+): Promise<{ results: SearchResult[]; failure?: VectorFailure }> {
   const query = keywords.map((k) => k.trim()).filter(Boolean).join(' ')
+  // ⚠ NOT CONFIGURED IS NOT FAILED. An unset `VECTOR_SEARCH_URL` means dense retrieval was
+  // never attempted, which is a configuration state and not a gap to tell a user about —
+  // exactly the distinction CLAUDE.md §18's corollary is about, one layer up from the router.
   if (!query || !VECTOR_URL) return { results: [] }
   const sc: VectorScope = typeof scope === 'string' ? { tier: scope } : (scope ?? {})
   try {
     const hits = await callVector(query, Math.max(limit * 3, 30), sc)
-    if (!hits.length) return { results: [] }
+    return { results: await hydrateVecHits(hits, limit) }
+  } catch (err) {
+    // ⚠ STILL FALLS BACK TO BM25 — the ranking is unchanged and no user loses a result they
+    // would otherwise have had. What changes is that the fallback now CARRIES ITS REASON, so
+    // the caller can distinguish a stream that had no dense leg from one whose dense leg was
+    // refused. S14 §0 is what the silent version cost.
+    const reason: VectorFailureReason = err instanceof VectorCallError ? err.reason : 'error'
+    const detail = err instanceof Error ? err.message : String(err)
+    console.warn(`[vector-search] dense leg DEGRADED (${reason}) — falling back to BM25:`, detail)
+    return { results: [], failure: { reason, detail } }
+  }
+}
+
+/**
+ * Wire hits → the canonical `SearchResult[]`: typing, title/citation derivation, URL, date and
+ * attribution.
+ *
+ * ⚠ S15 §4 — EXTRACTED SO THE BATCH PATH CANNOT DRIFT FROM THE SOLO PATH. There is exactly one
+ * construction site for a dense `SearchResult`, which is the same reasoning that keeps
+ * `political-title.ts` one file: a document found through the batch endpoint must not be titled,
+ * dated or attributed differently from the same document found through a single call, or the
+ * batch would be a ranking change wearing a transport change's clothes.
+ */
+async function hydrateVecHits(hits: VecHit[], limit: number): Promise<SearchResult[]> {
+  {
+    if (!hits.length) return []
     const typed = hits
       .map((h) => ({ h, type: corpusToType(h.corpus, h.tier, h.id) }))
       .filter((x): x is { h: VecHit; type: NonNullable<ReturnType<typeof corpusToType>> } => x.type !== null)
-    if (!typed.length) return { results: [] }
+    if (!typed.length) return []
 
     const ids = typed.map((x) => x.h.id)
     // Same two-source union as fts-search.ts, and for the same reason: the dense path is LIVE on
@@ -191,9 +257,102 @@ export async function runVectorSearch(
         snippetMatched: h.snippetMatched, snippetLocation: h.snippetLocation,
       }
     })
-    return { results: results.slice(0, limit * 3) }
-  } catch (err) {
-    console.warn('[vector-search] returning empty (fallback to BM25):', err instanceof Error ? err.message : err)
-    return { results: [] }
+    return results.slice(0, limit * 3)
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// S15 §4 — ONE REQUEST CARRYING EVERY STREAM'S QUERY
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// `fusedStream` issues one dense request per routed stream, so a search over four dense-enabled
+// streams puts four requests into a service that is four wide IN TOTAL, FOR EVERYBODY. This is
+// the client half of `POST /vector-search-batch`.
+//
+// ⚠ WHAT IT SAVES, MEASURED, AND WHAT IT DOES NOT. The saving is NOT the round trips — it is
+// that the service performs ONE scan of `corpus_chunks` for the whole batch instead of one per
+// stream. Measured against the live dataset (S15 §1.2), four sequential ANN+snippet pairs took
+// 565,670 ms and the batched form took 135,267 ms, a 76% saving, which is the 4→1 scan reduction
+// almost exactly. ⚠ That figure was taken with `corpus_chunks.sectionId_idx` STALE (1,478,964
+// rows outside it); once the index covers every row the scan stops dominating and this saving
+// shrinks. The queue-pressure saving — four queue entries becoming one — does not shrink, and
+// that is the `4 ×` term in §1.4's width arithmetic.
+//
+// ⚠⚠ PER-STREAM FAILURE, NEVER `Promise.all`. One stream erroring must not fail the other three.
+// Each entry carries its own outcome and a failed entry becomes that stream's `failure`, so it
+// degrades exactly as a solo call would.
+export interface VectorBatchRequest { stream: string; query: string; limit: number; scope: VectorScope }
+export interface VectorBatchOutcome { stream: string; results: SearchResult[]; failure?: VectorFailure }
+
+export async function runVectorSearchBatch(reqs: VectorBatchRequest[]): Promise<VectorBatchOutcome[]> {
+  if (!reqs.length) return []
+  if (!VECTOR_URL) return reqs.map((r) => ({ stream: r.stream, results: [] }))
+
+  let timedOut = false
+  const ctrl = new AbortController()
+  const t = setTimeout(() => { timedOut = true; ctrl.abort() }, VECTOR_TIMEOUT_MS)
+  // A whole-batch failure hits every stream the same way, so it is expressed per stream rather
+  // than thrown — the caller's contract is one outcome per request, always.
+  const allFail = (reason: VectorFailureReason, detail: string): VectorBatchOutcome[] =>
+    reqs.map((r) => ({ stream: r.stream, results: [], failure: { reason, detail } }))
+  try {
+    const res = await fetch(`${VECTOR_URL.replace(/\/$/, '')}/vector-search-batch`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        queries: reqs.map((r) => ({
+          query: r.query,
+          limit: Math.max(r.limit * 3, 30),
+          ...(r.scope.tier ? { tier: r.scope.tier } : {}),
+          ...(r.scope.corpora?.length ? { corpora: r.scope.corpora } : {}),
+          ...(r.scope.excludeCorpora?.length ? { excludeCorpora: r.scope.excludeCorpora } : {}),
+        })),
+      }),
+      signal: ctrl.signal,
+    }).catch((e) => {
+      if (timedOut) throw new VectorCallError('timeout', `vector batch timed out after ${VECTOR_TIMEOUT_MS} ms`)
+      throw new VectorCallError('unreachable', (e as Error).message)
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      // ⚠ 404 means the service predates this endpoint. That is NOT a gap to report to a user —
+      // it is a version skew, and the caller must fall back to four single calls rather than
+      // tell somebody the corpus could not be searched.
+      if (res.status === 404) throw new VectorCallError('unreachable', 'vector service has no /vector-search-batch — redeploy it (S15 §7)')
+      if (res.status === 503) throw new VectorCallError('overloaded', `vector service saturated: ${text.slice(0, 200)}`)
+      throw new VectorCallError('error', `vector batch ${res.status}: ${text.slice(0, 200)}`)
+    }
+    const json = await res.json() as { queries?: Array<{ ok: boolean; tier: string | null; error?: string | null; results?: VecHit[] }> }
+    const rows = json.queries ?? []
+    if (rows.length !== reqs.length) {
+      throw new VectorCallError('error', `vector batch returned ${rows.length} outcomes for ${reqs.length} queries`)
+    }
+    // ⚠⚠ NOT `Promise.all` OVER THROWING WORK — AND THIS IS THE BRIEF'S EXPLICIT WARNING, CAUGHT
+    // BY ITS OWN CHECK. Hydration touches Prisma, so it CAN throw; with a bare `Promise.all`
+    // one stream's database hiccup rejects the whole array and converts a single stream's fault
+    // into a total search failure, which is the opposite of what §3 exists for. Watched failing:
+    // `check-dense-degraded.ts` reported `legislation:error caselaw:error` from ONE Prisma fault
+    // before this catch existed. Every entry resolves, always.
+    return await Promise.all(reqs.map(async (r, i) => {
+      try {
+        const row = rows[i]
+        if (!row?.ok) return { stream: r.stream, results: [], failure: { reason: 'error' as const, detail: row?.error ?? 'no outcome' } }
+        // The tier echo is checked per entry, for the same reason it is checked on the solo path:
+        // a service that silently ignored the scope would put another stream's content in front
+        // of a user with no backstop at all.
+        if (r.scope.tier && row.tier !== r.scope.tier) {
+          return { stream: r.stream, results: [], failure: { reason: 'unscoped' as const, detail: `batch entry ${i} echoed tier ${JSON.stringify(row.tier)}, expected ${r.scope.tier}` } }
+        }
+        // Hydration is shared with the solo path rather than reimplemented — a document found
+        // through the batch must not be TITLED differently from the same document found solo.
+        return { stream: r.stream, results: await hydrateVecHits(row.results ?? [], r.limit) }
+      } catch (e) {
+        return { stream: r.stream, results: [], failure: { reason: 'error' as const, detail: `hydrate failed: ${(e as Error).message}` } }
+      }
+    }))
+  } catch (err) {
+    const reason: VectorFailureReason = err instanceof VectorCallError ? err.reason : 'error'
+    const detail = err instanceof Error ? err.message : String(err)
+    console.warn(`[vector-search] BATCH degraded (${reason}) — every stream falls back to BM25:`, detail)
+    return allFail(reason, detail)
+  } finally { clearTimeout(t) }
 }

@@ -16,9 +16,10 @@
 // SearchResultType 'GUIDANCE'), so — like legislation/caselaw — it needs no
 // `types` filter of its own.
 
+import { AsyncLocalStorage } from 'async_hooks'
 import type { SearchResult, SearchResultType } from './page1-config'
 import { runFtsSearch } from './fts-search'
-import { runVectorSearch } from './vector-search'
+import { runVectorSearch, type VectorFailureReason } from './vector-search'
 import { fuseWeightedRrf, streamVectorWeight } from './fusion'
 import { interleaveStreams } from './interleave'
 import { mergeJudged, judgedMergeEnabled, minPerStream, relevanceFloorFromEnv } from './merge-judged'
@@ -29,6 +30,39 @@ import { activeStreamScopes, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
 import { mapWithLimit, streamConcurrency } from './stream-batch'
 import { flagEnabled } from '@/lib/env-flags'
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// S15 §3 — DEGRADATION IS COLLECTED PER SEARCH, NOT PER MODULE
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// A stream's dense leg can fail for reasons a user should be told about (the service was
+// saturated and refused; the call timed out) and reasons they should not (the stream is simply
+// not in `LEX_VECTOR_STREAMS`). `fusedStream` is where that is still known, and `runRoutedSearch`
+// is where it must be reported — but `StreamConfig.search(query, limit)` is a fixed two-argument
+// signature shared by every stream, so there is nowhere to thread a sink through.
+//
+// ⚠ A MODULE-LEVEL ARRAY WOULD BE A BUG, NOT A SHORTCUT. This process serves concurrent requests;
+// one user's saturated caselaw leg would be reported inside another user's search, and the first
+// symptom would be Lex telling somebody about a gap in a search they never ran. `AsyncLocalStorage`
+// scopes the sink to the one call, which is what makes it correct under concurrency.
+//
+// ⚠ Node runtime only — which this already is, because everything downstream of the gateway
+// touches Prisma and Prisma cannot run on the edge.
+export interface DenseDegradation {
+  stream: string
+  tier: string
+  reason: VectorFailureReason
+  detail: string
+}
+const degradedStore = new AsyncLocalStorage<DenseDegradation[]>()
+
+function reportDenseDegraded(d: DenseDegradation): void {
+  // Logged unconditionally: a degradation outside a `runRoutedSearch` scope (the legacy
+  // whole-query path, a direct caller, a harness) must still be visible even though there is
+  // no result object to hang it on.
+  console.warn('[query-router] dense leg DEGRADED', d)
+  degradedStore.getStore()?.push(d)
+}
 
 /** A stream's SCOPE (which part of the corpus it may reach — see stream-scopes.ts, where the
  *  `types` backstop and the corpus prefilters are documented) plus its retrieval call. */
@@ -169,12 +203,22 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
 
     const [mainB, denseMain, extraB, extraV] = await Promise.all([
       bm25Only(query, limit),
-      runVectorSearch([query], limit, { tier, corpora, excludeCorpora }).catch(() => ({ results: [] as SearchResult[] })),
+      runVectorSearch([query], limit, { tier, corpora, excludeCorpora })
+        .catch((e) => ({ results: [] as SearchResult[], failure: { reason: 'error' as const, detail: (e as Error).message } })),
       extraFts,
       hasExtra
         ? extraLeg(async (scope) => (await runVectorSearch([query], limit, scope).catch(() => ({ results: [] as SearchResult[] }))).results, extraCorpora!, types)()
         : Promise.resolve([] as SearchResult[]),
     ])
+    // ⚠⚠ S15 §3 — THE DEGRADATION IS RECORDED HERE, WHERE IT IS STILL KNOWN.
+    //
+    // This is the exact line S14 §0 was about. `mergeLegs` returns the BM25 list and every hit
+    // keeps `scorer: 'bm25'`, which is byte-for-byte what a stream with no dense leg produces —
+    // so one line further down, "dense retrieval is off" and "dense retrieval was refused by a
+    // saturated service" become the same object and can never be told apart again. Recording it
+    // costs one array push and is the difference between a stated gap and a silent one
+    // (SEARCH_CONTRACT.md §6's never-claim rule; CLAUDE.md §18's corollary).
+    if (denseMain.failure) reportDenseDegraded({ stream: name, tier, ...denseMain.failure })
     const denseScoped = types ? denseMain.results.filter((r) => types.includes(r.type)) : denseMain.results
 
     const bm25 = mergeLegs(mainB, extraB, `${name} bm25 legs`, limit)
@@ -329,6 +373,22 @@ export interface RoutedSearchResult {
     /** The reranker's outcome when it ran — including when it ran and failed. */
     rerank?: Pick<RerankOutcome, 'applied' | 'reason' | 'read' | 'omitted' | 'invented' | 'duplicated' | 'model' | 'pence' | 'ms'>
   }
+  /**
+   * ⚠⚠ S15 §3 — STREAMS WHOSE DENSE HALF DID NOT RUN, AND WHY. Absent when every routed
+   * stream retrieved as configured.
+   *
+   * This is the channel S14 §0 found missing. A stream whose dense leg was refused by a
+   * saturated service returns a BM25-only ranking that is byte-for-byte identical to a stream
+   * which never had a dense leg — so without this field the two are indistinguishable to every
+   * caller, including a measurement harness. `SEARCH_CONTRACT.md` §6 requires Lex to say which
+   * of "I could not look" and "I looked and found nothing" applies; this is what makes that
+   * possible for the dense half.
+   *
+   * ⚠ IT IS A PARTIAL GAP, NOT A FAILED SEARCH. The BM25 half of the same stream did run, so
+   * the results are real and `failed` is not set on their account — see search-gateway.ts,
+   * where `failed` is reserved for a search that returned NOTHING while a leg was refused.
+   */
+  degraded?: DenseDegradation[]
 }
 
 /**
@@ -366,6 +426,18 @@ export interface RoutedSearchOptions {
  * now safe, because any prefix of an interleaved list is stream-balanced.
  */
 export async function runRoutedSearch(
+  route: RouteResult,
+  limit: number,
+  opts: RoutedSearchOptions = {},
+): Promise<RoutedSearchResult> {
+  // S15 §3 — one sink per search, so a concurrent request's degradation cannot leak into this
+  // one. See the note on `degradedStore`.
+  const degraded: DenseDegradation[] = []
+  const out = await degradedStore.run(degraded, () => runRoutedSearchInner(route, limit, opts))
+  return degraded.length ? { ...out, degraded } : out
+}
+
+async function runRoutedSearchInner(
   route: RouteResult,
   limit: number,
   opts: RoutedSearchOptions = {},

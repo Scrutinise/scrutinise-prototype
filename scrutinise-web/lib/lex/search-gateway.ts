@@ -250,6 +250,22 @@ export interface GatewayResult {
       /** `returned / limit`, rounded to one decimal — the fan-out, stated rather than derivable. */
       fanout: number
     }
+    /**
+     * ⚠⚠ S15 §3 — STREAMS WHOSE DENSE HALF DID NOT RUN, AND WHY. Absent when all of them did.
+     *
+     * The channel S14 §0 found missing. A stream whose dense leg was refused by a saturated
+     * `vector-serve` returns a BM25-only ranking BYTE-FOR-BYTE identical to a stream that never
+     * had a dense leg — so before this, *"dense retrieval is off"* and *"dense retrieval was
+     * refused on every call"* were the same object, and a whole sprint's numbers were taken
+     * without anyone being able to tell which had happened.
+     *
+     * ⚠ PRESENCE HERE IS A PARTIAL GAP, NOT A FAILED SEARCH. `failed` is set only when the
+     * search returned NOTHING while a leg was refused — the case where "I found nothing" would
+     * be a claim about the corpus based on a search that did not run. When results did come
+     * back, they are real: the BM25 half ran, and a caller should report the gap in the dense
+     * half rather than disown the results. See SEARCH_CONTRACT.md §6 and S15 D-2.
+     */
+    denseDegraded?: import('./query-router').DenseDegradation[]
   }
 }
 
@@ -286,6 +302,8 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   let routedStreams: string[] | undefined
   let perStream: Array<{ stream: string; ids: string[] }> | undefined
   let merge: import('./query-router').RoutedSearchResult['merge'] | undefined
+  /** S15 §3 — streams whose dense half did not run, and why. Undefined = every stream ran. */
+  let denseDegraded: import('./query-router').DenseDegradation[] | undefined
   let statistics: CatalogueSearchOutcome | undefined
   // Used only by the vector-fusion step below (4b), which routing doesn't touch
   // (out of this brief's scope) — defaults to the bare keywords when routed.
@@ -397,6 +415,32 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       perStream = routed.perStream
       merge = routed.merge
       statistics = stats
+      // ⚠⚠ S15 §3 — THE NEVER-CLAIM RULE, REACHING THE ONE PLACE IT HAS NEVER BEEN TESTED.
+      //
+      // `routed.degraded` names any stream whose dense half was refused (a saturated service),
+      // timed out, or errored. Two different facts have to come out of it, and collapsing them
+      // would be wrong in opposite directions:
+      //
+      //   • RESULTS CAME BACK. The BM25 half of every stream ran, so the search DID happen and
+      //     what it found is real. Telling the user "I could not search the corpus" here would
+      //     be a false negative about twenty documents we are about to show them. It is a
+      //     PARTIAL gap: recorded in `meta.degraded`, never silent, and `failed` stays false.
+      //
+      //   • NOTHING CAME BACK, AND A LEG WAS REFUSED. This is the case the rule exists for.
+      //     "I found nothing" would be a claim about the corpus made on the strength of a
+      //     search that did not run. `failed` is set, so SEARCH_CONTRACT.md §6 makes Lex say
+      //     it could not look.
+      //
+      // ⚠ The second branch is deliberately narrow, and D-2 in SEARCH_S15_REPORT.md puts the
+      // stricter reading — ANY shed sets `failed` — to Charlie, with what each costs.
+      denseDegraded = routed.degraded
+      if (routed.degraded?.length) {
+        console.warn('[search-gateway] dense retrieval degraded on %d stream(s)', routed.degraded.length, routed.degraded)
+        if (!routed.results.length) {
+          failed = true
+          failureReason = `dense retrieval unavailable (${routed.degraded.map((d) => `${d.stream}: ${d.reason}`).join('; ')}) and no results were retrieved`
+        }
+      }
       console.log('[search-gateway] router dispatched', {
         intent: q.intent,
         streams: streamNames,
@@ -572,7 +616,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   })
   return {
     intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics,
-    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested },
+    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested, denseDegraded },
   }
 }
 
