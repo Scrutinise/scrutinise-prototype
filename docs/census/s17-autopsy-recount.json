@@ -1,0 +1,666 @@
+{
+  "takenAt": "2026-08-27T23:14:53.021Z",
+  "source": "s15-arms.json",
+  "sourceConfig": "[config] fts=fts-serve-production-4cea.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance,committees router=ON fully-configured",
+  "sourceDegraded": [],
+  "n": 64,
+  "failing": 32,
+  "rows": [
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "inStream": -1,
+      "routed": [
+        "guidance"
+      ],
+      "key": "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1",
+      "corpus": "hmrc-manuals",
+      "words": 10,
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [],
+      "cls": "ABSENT",
+      "unitModifier": false,
+      "note": "row present, no usable text — 10w/compiled"
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "inStream": -1,
+      "routed": [
+        "caselaw"
+      ],
+      "key": "cps-guidance:prosecution-guidance/appeals-administrative-court:1",
+      "corpus": "cps-guidance",
+      "words": 3192,
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-ROUTED",
+      "unitModifier": false,
+      "note": "admitted by [guidance] but routed [caselaw]"
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "impact-assessments:2023-14:1",
+      "corpus": "impact-assessments",
+      "words": 57,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "impact-assessments"
+      ],
+      "cls": "NOT-ROUTED",
+      "unitModifier": false,
+      "note": "admitted by [legislation] but routed [debates, committees, guidance] — V2 'impact-assessments' covers it"
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "impact-assessments:2017-78:2",
+      "corpus": "impact-assessments",
+      "words": 19,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "impact-assessments"
+      ],
+      "cls": "NOT-ROUTED",
+      "unitModifier": false,
+      "note": "admitted by [legislation] but routed [debates, committees, guidance] — V2 'impact-assessments' covers it"
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "impact-assessments:2017-78:3",
+      "corpus": "impact-assessments",
+      "words": 29,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "impact-assessments"
+      ],
+      "cls": "NOT-ROUTED",
+      "unitModifier": false,
+      "note": "admitted by [legislation] but routed [debates, committees, guidance] — V2 'impact-assessments' covers it"
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "impact-assessments:2017-92:6",
+      "corpus": "impact-assessments",
+      "words": 64,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "impact-assessments"
+      ],
+      "cls": "NOT-ROUTED",
+      "unitModifier": false,
+      "note": "admitted by [legislation] but routed [debates, committees, guidance] — V2 'impact-assessments' covers it"
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "inStream": 30,
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "key": "committees-reports:publication:46883:241779",
+      "corpus": "committees-reports",
+      "words": 773,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "RANKING",
+      "unitModifier": false,
+      "note": "retrieved by 'committees' at in-stream rank 30 — outside the 20-window"
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "inStream": 20,
+      "routed": [
+        "committees"
+      ],
+      "key": "committees-reports:publication:22289:164915",
+      "corpus": "committees-reports",
+      "words": 2118,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "RANKING",
+      "unitModifier": true,
+      "note": "retrieved by 'committees' at in-stream rank 20 — outside the 20-window"
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "question": "Did peers back the assisted dying bill when it reached the Lords?",
+      "inStream": 39,
+      "routed": [
+        "debates"
+      ],
+      "key": "pwdata-lords:daylord2025-09-12c:4",
+      "corpus": "pwdata-lords",
+      "words": 2634,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "RANKING",
+      "unitModifier": true,
+      "note": "retrieved by 'debates' at in-stream rank 39 — outside the 20-window"
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "question": "Why were energy companies forcing people onto prepayment meters?",
+      "inStream": 33,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "pwdata-debates:debates2022-12-15b:298",
+      "corpus": "pwdata-debates",
+      "words": 1551,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "RANKING",
+      "unitModifier": true,
+      "note": "retrieved by 'debates' at in-stream rank 33 — outside the 20-window"
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "inStream": 27,
+      "routed": [
+        "guidance"
+      ],
+      "key": "cps-guidance:prosecution-guidance/abuse-process:1",
+      "corpus": "cps-guidance",
+      "words": 4680,
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [],
+      "cls": "RANKING",
+      "unitModifier": true,
+      "note": "retrieved by 'guidance' at in-stream rank 27 — outside the 20-window"
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "inStream": 22,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "key": "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1",
+      "corpus": "cps-guidance",
+      "words": 3878,
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [],
+      "cls": "RANKING",
+      "unitModifier": true,
+      "note": "retrieved by 'guidance' at in-stream rank 22 — outside the 20-window"
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "inStream": -1,
+      "routed": [
+        "caselaw"
+      ],
+      "key": "tna-caselaw:[2011] UKSC 20:1",
+      "corpus": "tna-caselaw",
+      "words": 25163,
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'caselaw' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "committees-reports:publication:50376:272506",
+      "corpus": "committees-reports",
+      "words": 156,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'committees' WAS searched and returned 180 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "inStream": -1,
+      "routed": [
+        "committees"
+      ],
+      "key": "committees-reports:publication:48294:252814",
+      "corpus": "committees-reports",
+      "words": 216,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'committees' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "key": "committees-reports:publication:34123:187763",
+      "corpus": "committees-reports",
+      "words": 641,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'committees' WAS searched and returned 120 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "inStream": -1,
+      "routed": [
+        "committees"
+      ],
+      "key": "committees-evidence:writtenevidence:112256:179384",
+      "corpus": "committees-evidence",
+      "words": 763,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'committees' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "inStream": -1,
+      "routed": [
+        "committees"
+      ],
+      "key": "committees-evidence:writtenevidence:100004:146799",
+      "corpus": "committees-evidence",
+      "words": 3648,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'committees' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "inStream": -1,
+      "routed": [
+        "committees"
+      ],
+      "key": "committees-evidence:writtenevidence:100005:145526",
+      "corpus": "committees-evidence",
+      "words": 1738,
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'committees' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "question": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "inStream": -1,
+      "routed": [
+        "debates"
+      ],
+      "key": "pwdata-debates:debates2024-11-29d:3",
+      "corpus": "pwdata-debates",
+      "words": 1086,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'debates' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "question": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "pwdata-debates:debates2024-12-02c:452",
+      "corpus": "pwdata-debates",
+      "words": 2910,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 180 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "question": "What did the Chancellor announce in the Spring Statement?",
+      "inStream": -1,
+      "routed": [
+        "debates"
+      ],
+      "key": "pwdata-debates:debates2025-03-26b:130",
+      "corpus": "pwdata-debates",
+      "words": 4422,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "question": "What did ministers at Stormont say about the botched green energy scheme?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "key": "niassembly-hansard:286438:151",
+      "corpus": "niassembly-hansard",
+      "words": 4780,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 120 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "question": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "inStream": -1,
+      "routed": [
+        "debates"
+      ],
+      "key": "pwdata-westminster:westminster2022-04-21a:27",
+      "corpus": "pwdata-westminster",
+      "words": 1360,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'debates' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "question": "What did peers say about overturning the subpostmasters' convictions?",
+      "inStream": -1,
+      "routed": [
+        "debates"
+      ],
+      "key": "pwdata-lords:daylord2024-05-13a:113",
+      "corpus": "pwdata-lords",
+      "words": 2080,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "question": "When did Parliament last seriously debate bringing back the death penalty?",
+      "inStream": -1,
+      "routed": [
+        "debates"
+      ],
+      "key": "historic-hansard:S5LV0198P0:1798",
+      "corpus": "historic-hansard",
+      "words": 5102,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "question": "What happened to the plan to make the House of Lords elected?",
+      "inStream": -1,
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "pwdata-lords:daylord2012-04-30a:76",
+      "corpus": "pwdata-lords",
+      "words": 2978,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 180 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "inStream": -1,
+      "routed": [
+        "debates"
+      ],
+      "key": "scottish-parliament-or:14066:193",
+      "corpus": "scottish-parliament-or",
+      "words": 2084,
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": true,
+      "note": "stream 'debates' WAS searched and returned 60 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "inStream": -1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "key": "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+      "corpus": "hmrc-manuals",
+      "words": 44,
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'guidance' WAS searched and returned 300 results; the key was not among them"
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "inStream": -1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "impact-assessments:2023-77:1",
+      "corpus": "impact-assessments",
+      "words": 60,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "impact-assessments"
+      ],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'legislation' WAS searched and returned 240 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "question": "Has the law on no-fault evictions actually changed?",
+      "inStream": -1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "key": "primary-acts-2000plus:ukpga/2025/26:section-146",
+      "corpus": "primary-acts-2000plus",
+      "words": 187,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'legislation' WAS searched and returned 240 results; the key was not among them"
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "question": "My employer won't make changes for my disability — what does the law require?",
+      "inStream": -1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "key": "primary-acts-2000plus:ukpga/2010/15:section-20",
+      "corpus": "primary-acts-2000plus",
+      "words": 580,
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [],
+      "cls": "NOT-MATCHED",
+      "unitModifier": false,
+      "note": "stream 'legislation' WAS searched and returned 300 results; the key was not among them"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "takenAt": "2026-08-27T23:19:02.672Z",
+  "config": "[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=off WEB_ORIENTATION=off SEARCH_VECTOR=off SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=off BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=off FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=off ROUTER_CONFIDENCE=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation,caselaw,guidance,committees GEMINI_API_KEY=set | FTS_SEARCH_URL=set",
+  "degraded": [],
+  "ftsUrl": "https://fts-serve-production-4cea.up.railway.app",
+  "artefact": "2026-08-20 23:59 UTC",
+  "rows": [
+    {
+      "corpus": "scottish-parliament-or",
+      "sections": 1044188,
+      "artefactTiers": {
+        "other": 1043264
+      },
+      "servedTiers": {
+        "other": 40
+      },
+      "servedTier": "other",
+      "hitsReturned": 40,
+      "type": "DEBATE",
+      "admitting": [
+        "debates"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "early-day-motions",
+      "sections": 60737,
+      "artefactTiers": {
+        "other": 60737
+      },
+      "servedTiers": {
+        "other": 20
+      },
+      "servedTier": "other",
+      "hitsReturned": 20,
+      "type": "DEBATE",
+      "admitting": [],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "petitions",
+      "sections": 49529,
+      "artefactTiers": {
+        "other": 49529
+      },
+      "servedTiers": {
+        "other": 40
+      },
+      "servedTier": "other",
+      "hitsReturned": 40,
+      "type": "DEBATE",
+      "admitting": [],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "cma-cases",
+      "sections": 22898,
+      "artefactTiers": {
+        "other": 21525
+      },
+      "servedTiers": {
+        "guidance": 40
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "ofgem",
+      "sections": 17161,
+      "artefactTiers": {
+        "other": 17143
+      },
+      "servedTiers": {
+        "guidance": 40
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "ofcom",
+      "sections": 4169,
+      "artefactTiers": {
+        "other": 4169
+      },
+      "servedTiers": {
+        "guidance": 40
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "members-interests",
+      "sections": 3448,
+      "artefactTiers": {
+        "other": 3448
+      },
+      "servedTiers": {
+        "other": 40
+      },
+      "servedTier": "other",
+      "hitsReturned": 40,
+      "type": null,
+      "admitting": [],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "erskine-may",
+      "sections": 2038,
+      "artefactTiers": {
+        "other": 1873
+      },
+      "servedTiers": {
+        "other": 40
+      },
+      "servedTier": "other",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "independent-reviews",
+      "sections": 667,
+      "artefactTiers": {
+        "other": 657
+      },
+      "servedTiers": {
+        "guidance": 40
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "cps-guidance",
+      "sections": 270,
+      "artefactTiers": {
+        "other": 270
+      },
+      "servedTiers": {
+        "guidance": 40
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "inquiry-evidence",
+      "sections": 90,
+      "artefactTiers": {
+        "other": 89
+      },
+      "servedTiers": {
+        "guidance": 40
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 40,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    },
+    {
+      "corpus": "lgsco",
+      "sections": 40,
+      "artefactTiers": {
+        "other": 40
+      },
+      "servedTiers": {
+        "guidance": 2
+      },
+      "servedTier": "guidance",
+      "hitsReturned": 2,
+      "type": "GUIDANCE",
+      "admitting": [
+        "guidance"
+      ],
+      "admittingV2": [],
+      "probeError": null
+    }
+  ],
+  "probes": [
+    {
+      "id": "S10-Q25",
+      "stream": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "key": "cps-guidance:prosecution-guidance/abuse-process:1",
+      "rank": 70,
+      "total": 100,
+      "error": null
+    },
+    {
+      "id": "S10-Q26",
+      "stream": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "key": "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1",
+      "rank": 34,
+      "total": 100,
+      "error": null
+    },
+    {
+      "id": "S10-Q27",
+      "stream": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "key": "cps-guidance:prosecution-guidance/appeals-administrative-court:1",
+      "rank": 33,
+      "total": 100,
+      "error": null
+    },
+    {
+      "id": "V2-Q8",
+      "stream": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "key": "scottish-parliament-or:14066:193",
+      "rank": null,
+      "total": 100,
+      "error": null
+    }
+  ]
+}

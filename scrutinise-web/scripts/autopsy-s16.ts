@@ -40,7 +40,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
-import { STREAM_SCOPES, STREAM_SCOPES_V2, type StreamScope } from '../lib/lex/stream-scopes'
+import { STREAM_SCOPES, STREAM_SCOPES_V2, streamCanSelect, type StreamScope } from '../lib/lex/stream-scopes'
 import { corpusToType } from '../lib/lex/corpus-type-map'
 
 const ARMS = path.join(__dirname, '../../docs/census/s15-arms.json')
@@ -82,17 +82,24 @@ interface KeyFact {
   admittedByV2: string[]
 }
 
-/** Does this stream's scope admit a row with this corpus and tier? Computed from the live scope
- *  objects so a scope change re-runs this correctly rather than dating the report. */
+/**
+ * Does this stream's scope admit a row with this corpus and tier?
+ *
+ * ⚠⚠ CORRECTED 2026-08-28 (S17 §2). THIS WAS A RE-IMPLEMENTATION AND IT DISAGREED WITH THE
+ * FUNCTION THE ROUTER ACTUALLY DISPATCHES ON. The old body compared `s.tier !== tier` FIRST and
+ * never looked at `extraCorpora` — but an extra leg is a SECOND, CORPUS-ONLY retrieval call that
+ * skips the tier prefilter entirely, which is exactly why `streamCanSelect` tests it before the
+ * tier. The consequence was not academic: `scottish-parliament-or` (tier `other`, in the debates
+ * stream's `extraCorpora`) came out as "admitted by NO stream", and V2-Q8 was published as
+ * UNREACHABLE on the strength of it.
+ *
+ * `stream-scopes.ts`'s own header warns about precisely this — *"a copy is how the matrix would
+ * keep saying reachable for a month after someone narrowed a filter"* — and this is that failure
+ * arriving from the other direction: the copy said UNREACHABLE where the original says reachable.
+ * The scope test is now IMPORTED, not restated.
+ */
 function admits(s: StreamScope, corpus: string, tier: string, id: string): boolean {
-  if (s.tier !== tier) return false
-  if (s.corpora?.length && !s.corpora.includes(corpus)) return false
-  if (s.excludeCorpora?.length && s.excludeCorpora.includes(corpus)) return false
-  if (s.types?.length) {
-    const t = corpusToType(corpus, tier, id)
-    if (!t || !s.types.includes(t)) return false
-  }
-  return true
+  return streamCanSelect(s, corpus, tier, corpusToType(corpus, tier, id))
 }
 
 async function main() {
@@ -114,7 +121,35 @@ async function main() {
   const reach = JSON.parse(fs.readFileSync(REACH, 'utf8'))
   const tierOfCorpus = new Map<string, string>(reach.rows.map((r: any) => [r.collection, r.tier]))
   const ftsRowsOf = new Map<string, number>(reach.rows.map((r: any) => [r.collection, r.fts_rows ?? 0]))
-  console.log(`  tiers    ${path.basename(REACH)} generated ${reach.generatedAt} — tier read from the INDEX, reachability recomputed live\n`)
+  console.log(`  tiers    ${path.basename(REACH)} generated ${reach.generatedAt} — tier read from the INDEX, reachability recomputed live`)
+
+  /**
+   * ⚠⚠ AND THE ARTEFACT WAS ONE DAY TOO OLD, WHICH IS HOW A WHOLE FAILURE CLASS GOT ITS NAME.
+   * `corpus_reachability.json` was generated 2026-08-20 23:59 UTC. S11 re-tiered `cps-guidance`
+   * and six sibling collections into `guidance` on 21 August. Every S16 sentence about the `other`
+   * tier therefore described an index that had already changed — three guidance questions were
+   * published as UNREACHABLE when the guidance stream returns their keys today at ranks 2, 18
+   * and 36 (S17 §2, measured through the stream, not argued from a table).
+   *
+   * `scripts/audit-s17-other-tier.ts` reads the tier back off `fts-serve` itself. Where that file
+   * exists its tiers WIN, and the provenance of every overridden collection is printed — a tier
+   * from a week-old file and a tier read off the serving index must not look alike on the page.
+   */
+  const servedTiers = new Map<string, string>()
+  const SERVED = path.join(__dirname, '../../docs/census/s17-other-tier.json')
+  if (fs.existsSync(SERVED)) {
+    const s = JSON.parse(fs.readFileSync(SERVED, 'utf8'))
+    for (const r of s.rows as any[]) if (r.servedTier) servedTiers.set(r.corpus, r.servedTier)
+    const changed = [...servedTiers.entries()].filter(([c, t]) => tierOfCorpus.get(c) !== t)
+    console.log(`  served   ${path.basename(SERVED)} taken ${s.takenAt} off ${s.ftsUrl}`)
+    console.log(`           ${servedTiers.size} collections re-read; ${changed.length} DISAGREE with the artefact and the served value wins:`)
+    for (const [c, t] of changed) console.log(`             ${c}: artefact '${tierOfCorpus.get(c) ?? '?'}' → served '${t}'`)
+    for (const [c, t] of servedTiers) tierOfCorpus.set(c, t)
+  } else {
+    console.log('  served   ⚠ no s17-other-tier.json — every tier below is the artefact\'s, and the')
+    console.log('           artefact predates the S11 re-tier. Treat `other` verdicts as unconfirmed.')
+  }
+  console.log('')
 
   const rows: any[] = arms.rows
   const failing = rows.filter((r) => !r.foundInStream || r.inStream < 0 || r.inStream >= 20)
