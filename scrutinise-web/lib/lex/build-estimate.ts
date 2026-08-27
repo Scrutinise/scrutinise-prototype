@@ -57,6 +57,14 @@ export interface BuildEstimate {
   line: string
   /** §C4 — is this long enough to be worth offering an email for? */
   offerEmail: boolean
+  /**
+   * 25-I §4a — the measured typical cost in pence, over the same sample. Null when unknown.
+   *
+   * ⚠ MEASURED, LIKE THE DURATION, AND FOR THE SAME REASON. A hardcoded "about 30p" would
+   * be a guess wearing a number's clothes, and would go stale the first time a pass changed
+   * model. This is the mean of what the last `SAMPLE` builds actually cost.
+   */
+  pence: number | null
 }
 
 /**
@@ -98,8 +106,21 @@ export async function buildEstimate(): Promise<BuildEstimate> {
     },
     orderBy: { completedAt: 'desc' },
     take: SAMPLE,
-    select: { startedAt: true, completedAt: true },
+    select: { startedAt: true, completedAt: true, estCostPence: true },
   })
+
+  // 25-I §4a — what a build costs, over the same sample as the duration.
+  // ⚠ A build with no recorded cost is EXCLUDED rather than counted as zero. Counting it
+  // would drag the mean towards free, which is the one direction a cost estimate must
+  // never err in: it is the number someone decides to spend on.
+  // ⚠ `estCostPence` is a Prisma `Decimal`, not a number — `.toNumber()` before any
+  // arithmetic. Adding a Decimal to a number with `+` concatenates rather than sums.
+  const costs = rows
+    .map((r) => (r.estCostPence == null ? null : Number(r.estCostPence)))
+    .filter((p): p is number => p != null && Number.isFinite(p) && p > 0)
+  const pence = costs.length >= MIN_SAMPLE
+    ? Math.round(costs.reduce((a, b) => a + b, 0) / costs.length)
+    : null
 
   const durations = rows
     .map((r) => (r.completedAt!.getTime() - r.startedAt!.getTime()) / 1000)
@@ -112,6 +133,7 @@ export async function buildEstimate(): Promise<BuildEstimate> {
       meanSeconds: null,
       sampleSize: durations.length,
       minutes: null,
+      pence,
       // ⚠ 25-E §4c — TWO THINGS IN ONE SENTENCE, AND THE SECOND ONE IS OURS, NOT THEIRS.
       //
       // It read "Usually a few minutes — we don't have enough builds yet to be precise."
@@ -124,7 +146,7 @@ export async function buildEstimate(): Promise<BuildEstimate> {
       // number, and the line below carries it then (`from the last N builds`). Nothing is
       // hidden: `meanSeconds: null` and `sampleSize` still travel in the object, and the
       // client shows the sample only when there is one.
-      line: 'This usually takes a few minutes.',
+      line: costLine('This usually takes a few minutes.', pence),
       // ⚠ OFFERED WHEN UNKNOWN. Not knowing is not evidence that it is quick, and the
       // cost of a needless offer is a checkbox nobody ticks; the cost of not offering is
       // someone waiting ten minutes at a screen.
@@ -137,9 +159,29 @@ export async function buildEstimate(): Promise<BuildEstimate> {
     meanSeconds: mean,
     sampleSize: durations.length,
     minutes: Math.round(mean / 60),
-    line: `This usually takes ${humaniseSeconds(mean)}.`,
+    line: costLine(`This usually takes ${humaniseSeconds(mean)}.`, pence),
     offerEmail: mean >= EMAIL_OFFER_SECONDS,
+    pence,
   }
+}
+
+/**
+ * ⚠⚠ 25-I §4a — WHAT IT COSTS, SAID BEFORE IT IS SPENT.
+ *
+ * §4a: *"Nothing currently says a build costs money or takes minutes until it is already
+ * running. For a pilot with a paid allowance this is the difference between a considered
+ * choice and a surprise."* The duration half was already here; the cost half was not, and
+ * the two belong in one sentence because they are one decision.
+ *
+ * ⚠ IT SAYS "USES ONE OF YOUR BUILDS" EVEN WITH NO FIGURE. The pence number may be absent
+ * — too small a sample, or a run of builds with no recorded cost — but "this spends
+ * something of yours" is true regardless, and it is the half that changes behaviour. A
+ * silent estimate would let someone believe a build is free because we could not price it.
+ */
+function costLine(duration: string, pence: number | null): string {
+  if (pence == null) return `${duration} It uses one of your builds.`
+  const money = pence >= 100 ? `£${(pence / 100).toFixed(2)}` : `${pence}p`
+  return `${duration} It uses one of your builds, and costs about ${money} to run.`
 }
 
 /**

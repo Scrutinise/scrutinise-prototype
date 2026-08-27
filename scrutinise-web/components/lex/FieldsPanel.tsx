@@ -245,6 +245,7 @@ function BoxField({
   useEffect(() => { setDraft(baseline) }, [field.value, proposed]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const hints = hintsFor(field.key)
+  const note = fieldDef(field.key)?.note
 
   return (
     <div className={`rounded-lg border p-3 ${proposed ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
@@ -252,6 +253,12 @@ function BoxField({
         field={field}
         right={proposed ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex</span> : undefined}
       />
+      {/* 25-I §4c — why this field behaves differently from the ones around it, said HERE
+          rather than in a FAQ. It renders even on a proposal, because the proposal is
+          exactly when a user is deciding whether they are allowed to change it. */}
+      {note && (
+        <p className="text-[11px] text-zinc-500 mb-2 leading-snug border-l-2 border-zinc-200 pl-2">{note}</p>
+      )}
       {hints.length > 0 && !proposed && (
         <p className="text-[11px] text-zinc-400 mb-2 leading-snug">{hints.join(' · ')}</p>
       )}

@@ -53,6 +53,16 @@ export interface FieldDef {
    * Editing happens where the value lives — for page one, the elicitation pill (§3).
    */
   derived?: boolean
+  /**
+   * 25-I §4c — one sentence, where the user meets the field, saying why this one behaves
+   * differently from the ones around it.
+   *
+   * ⚠ IT IS NOT A HINT AND NOT A FAQ ENTRY. §4c: *"one sentence where the user meets it,
+   * not in a FAQ."* A rule the user has to go and look up is a rule they will discover by
+   * being surprised — and the surprise here is a field that is theirs to edit sitting
+   * directly beneath four that are not.
+   */
+  note?: string
 }
 
 /** Where a field's accept surface lives. Box-authored fields (narrative/structured/
@@ -132,6 +142,10 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
     scope: 'idea',
     origin: 'box',
     required: true,
+    // 25-I §4c — the four fields above are the user's own words and cannot be edited here;
+    // this one is the shared statement and can. Said where they meet it.
+    note: 'The four answers above are your own words, kept as you wrote them. This one is the '
+      + 'version we work from — edit it freely, and it is what goes to an MP or a committee.',
     question: "What's the problem you want to fix?",
     hints: [
       'what you want to change',
