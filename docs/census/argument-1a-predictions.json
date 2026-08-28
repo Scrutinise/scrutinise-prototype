@@ -1,0 +1,42 @@
+{
+  "sprint": "ARGUMENT 1A",
+  "writtenAt": "2026-08-27 23:5x UTC (before any measurement in this sprint)",
+  "why": "BRIEF_ARGUMENT_1A.md §6: predictions recorded before §1.1's experiment and before propagation runs. A prediction written after the number is not a prediction.",
+
+  "peroration_§1.1": {
+    "charlies_hypothesis": "The substantive point usually lands in a speech's closing paragraphs, the rest being throat-clearing.",
+    "my_prediction": "REFUTED IN ITS STRONG FORM. Argument-marker density will NOT peak in the closing fifth of long speeches. I predict the OPENING fifth is densest, because a set-piece speech states its objection early ('I oppose this Bill for three reasons'), and the closing fifth is disproportionately procedural ('I commend the amendment to the House', 'I beg to move').",
+    "numbers": {
+      "opening_fifth_vs_middle": "1.0x to 1.6x",
+      "closing_fifth_vs_middle": "0.9x to 1.4x",
+      "opening_beats_closing": true,
+      "effect_size_large_enough_to_weight_seeds": false
+    },
+    "counter_hypothesis_i_expect_to_matter": "Speech LENGTH will matter more than position. Short interventions (<100 words) will have a HIGHER marker density than any fifth of a long speech, because an intervention is nothing but the point. If so, 'sample short interventions' is a better rule than 'sample perorations'.",
+    "confound_i_will_measure_separately": "Procedural closers ('I beg to move', 'I commend', 'question put') concentrate in the final fifth and would inflate a naive marker count if any pattern overlaps them."
+  },
+
+  "propagation_§2": {
+    "clearest_signal": ["ENFORCEMENT", "COST", "EVIDENCE_GAP"],
+    "weakest_signal": ["PRECEDENT", "SCOPE", "IMPLEMENTATION"],
+    "why": "The first three have distinctive vocabulary that co-occurs with the move itself; the last three are made in ordinary words and are recognisable only from the argument's structure, which an embedding of 100 words does not carry.",
+    "polarity_failure_rate": "20% to 40% of ENFORCEMENT candidates will be the opposite polarity or a neutral procedural mention. Reported, not chased — the brief is explicit that this is expected and acceptable.",
+    "tag_overlap": "high — I predict more than a third of candidates will be returned for two or more tags"
+  },
+
+  "untagged_control_§1": {
+    "brief_floor": "if fewer than a third of a random control sample come back untagged, the labelling is over-eager",
+    "my_prediction": "75% to 90% of a random parliamentary sample will be untagged. Most parliamentary text is procedural, ceremonial or narrative. If I come back with less than 60% untagged I should suspect myself, not the corpus."
+  },
+
+  "hand_read_§4": {
+    "is_the_tag_right": "60% to 75%",
+    "should_it_have_been_tagged_at_all": "55% to 70%",
+    "which_is_lower": "the second, per the position work's finding that over-claiming is the failure mode rather than getting the direction wrong"
+  },
+
+  "cost": {
+    "expectation": "near zero — no per-paragraph model call is authorised. Embedding is one call per seed query inside vector-serve; hundreds of calls, not millions.",
+    "predicted_spend_gbp": "under 0.20"
+  }
+}
