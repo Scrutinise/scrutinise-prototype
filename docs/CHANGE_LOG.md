@@ -132,6 +132,107 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-28 12:01 UTC — LEX 25-M: THE OUTPUTS, AND THE FIRST CAUSAL CHAIN A BUILD HAS EVER PRODUCED
+
+**Brief:** `docs/BRIEF_25M.md`. **Report:** `docs/LEX_25M_REPORT.md`. §1–§5 built.
+
+⚠⚠ **§5b PASSES — THE CAUSES NEST, FOR THE FIRST TIME EVER.** One live build (resumed, not
+re-claimed, so the one-build ceiling held): 10 passes, **22.98p, 249s**. Baseline measured
+BEFORE spending: **0 nested causes from any build in the whole database** — the single nested
+row in production was made by a user by hand on 14 Aug. After: **2 of 3 build-written causes
+sit beneath another.** The assertion is on `DiagnosisCause.parentCauseId` — the VALUE, not
+the schema, which is the whole point.
+
+⚠⚠ **§4's PREMISE IS WRONG ABOUT THE DATA AND THE CORRECT IMPLEMENTATION IS THE OPPOSITE.**
+§4 says the counter is `LlmSpend`, "which already carries the user and the cost". Measured:
+**2,702 rows, 2 with a userId, 5 with an ideaId; 0 of 306 build-stream rows sampled carried
+one.** `SpendAttribution` is OPTIONAL and the build passes have never passed it — so an
+allowance counted there **reads zero for everybody and hands out unlimited free builds**,
+which is the exact failure it exists to prevent, shipped as a feature. The counter is
+`IdeaBuild`: also not a new source of truth, and the unit §4 states its own spend rule in.
+`check:lex-25m` asserts it is NOT `LlmSpend`, so "restoring" the brief's wording fails.
+
+⚠⚠ **§3's GAP WAS NOT A MISSING FIELD — THE SNAPSHOT'S EVIDENCE ARRAY CAME BACK EMPTY.** It
+took `status: 'ACCEPTED'` only, for a good reason (§20.2: publishing a PROPOSED finding puts
+a judgement nobody made into an artefact that leaves the building) — **and nothing has ever
+been accepted.** §2b's write-up would have contained none of the panel's material, and an
+empty array renders as a document with no findings section rather than as an error. Resolved
+as this stack already resolves it for sources: **carry the material, LABEL it.** Each finding
+says whose it is; a note says how many the proposer has actually been through.
+
+⚠⚠ **AND THE FINDING THAT WAS NOT IN THE BRIEF: `scripts/**` IS EXCLUDED FROM THE WEB
+TYPESCRIPT PROGRAM, SO NO CHECK OR VERIFY SCRIPT HAS EVER BEEN TYPECHECKED — 172 FILES.**
+The exclusion is correct (§20 check 0 forbids cross-package files in the web program), but its
+side effect is that every guard this codebase relies on was unchecked. It surfaced when my
+§5b harness called `runBuildToCompletion(ideaId, userId)` — a THREE-argument function —
+reached a LIVE RUN, claimed a build row and died in its first pass; and **the harness reported
+exit 0 over the crash**, because `main().finally()` leaves a throw as an unhandled rejection.
+Fixed with `scripts/tsconfig.json` + `npm run check:scripts` (separate program, boundary
+untouched). Its first run found **four real defects nobody could have seen**: a
+`source.reason` that `reuseSourceFor` has never returned; two fixtures missing `userCritique`
+since 25-L; a `StageContext` imported from the module 25-L moved it out of; and a
+`{...base, ...over}` spread that widened its own return type enough to hide **three fields
+missing since 25-F**.
+
+⚠⚠ **APPLYING §23.2 IMMEDIATELY FOUND A SECOND HARNESS THAT HAD NEVER RUN.**
+`verify:build-25a-ui` died on `ReferenceError: React is not defined` — the identical one-line
+fault as `verify-lex-25e-ui` in 25-L. Now **43/43**, and running it exposed a STALE
+ASSERTION: it required the build summary in the progress panel, which 25-G §4a deliberately
+removed after finding the same 537 characters rendered twice, byte-identical, inches apart.
+
+▶ **§1 — OUTPUTS IS IN THE RESOURCES PANEL**, at the top and set apart (a different KIND of
+item from the twelve questions; filed thirteenth it would be as hard to find as the dashboard,
+which is the complaint). Both documents, what each contains, when each was last generated and
+whether it still matches. ⚠ **One generator, two doors** — it calls the same endpoint the
+Documents tab calls, and the check fails if it ever renders a document itself. ⚠ Staleness is
+a SENTENCE, not a colour. ⚠ Found on the way: the contents list was gated on `!openHeading`,
+so it rendered UNDERNEATH the two special items.
+
+▶ **§2b — the full write-up carries every panel section**, in `HEADING_ORDER`, imported and
+never restated. ⚠ An empty heading is SKIPPED in the document and that is deliberately not the
+panel's rule: thirteen "we looked and found nothing" headings would drown the five that found
+something, and the absences are collected in "What this proposal does not establish"
+immediately after. PDF 33,654 → 36,194 bytes on the fixture.
+
+▶ **§3 audit reported**: every heading has a carrier **except `POSITIONS`**, which has no
+producer — 25-L put a live beta review surface there, not a snapshot field. Stated, not
+papered over.
+
+▶ **§4 built**: one free build plus one re-run (4 thirds; full = 3, reuse = 1, an INTEGER).
+⚠⚠ The spend test is an **ALLOW-LIST** — only DONE spends — so FAILED, CANCELLED, QUEUED,
+RUNNING and any status added next year fall to "not spent" by construction. Charlie's
+tie-break enforced structurally, with a deny-list as the negative control. ⚠ The hard stop is
+at the WRITE PATH (`claimBuild`), not only where the UI reads it, and answers **402**, not
+500. Admin grant SETS rather than increments, requires a note, writes an ActivityLog row.
+⚠ `IdeaBuild.mode` is now recorded — 25-G never stored it — and stores WHAT RAN, not what was
+asked for, because `claimBuild` downgrades an unfulfillable REUSE to FULL.
+
+▶ **§5a the backfill RAN**: 5 rows → `HOW_HARD`, 1 → `KEY_SOURCES`, **0 left under
+`AGAINST`**, re-read from the database rather than reported from intent. ⚠ Four SMART rows
+keep a null heading deliberately — they are CONTRADICTS rows, not prognosis, and a blanket
+`SMART → HOW_HARD` would have misfiled them.
+
+▶ **§5c — two rules added: CLAUDE.md §23.3** (where a populated value matters, the check tests
+the VALUE) and **§24.1** (when two passes write the same records and the second replaces the
+first, the second must be told everything the first was told).
+
+✅ `check:lex-25m` **11/11, 0 without a negative control** — ⚠ two failed first, both check
+artefacts (one fired on `allowance.ts`'s own comment explaining why it does NOT count
+LlmSpend; the other listed an assembler as a renderer). Whole suite reported (§23.2): 25-c 32,
+25-d 77, 25-e 28, 25-f 62, 25-g 27, 25-h 20, 25-i 14, 25-j 12, 25-k 18, 25-l 19, **25-m 11**,
+**scripts clean**, 20bd 47, statutory 17, build-25a 40, build-25b 54, deepening/panel-claims/
+documents/never-claim pass. Every harness EXECUTED: stages-ui 23, 25e-ui 16, 25g-ui 14,
+my-ideas-ui 15, **build-25a-ui 43 (first run ever)**, **outputs-ui 7 (new)**. `tsc`,
+`check:scripts`, `next build`, clean-build `--fast`, `prisma validate` clean.
+`prisma/lex_25m.sql` applied to Neon (host checked first) — additive. Spend: one build, 22.98p.
+
+⚠ **NOT verified on the running site at the time of writing**, and §1/§2/§4's user-facing half
+is behind sign-in — a route probe Clerk answers 307 for subject and control alike proves
+nothing. Render harness and source assertion only; Charlie's browser is the gate.
+
+⚠ **CHARLIE: your own allowance is now 4 thirds and today's build spent 3.** You will see
+"enough left for a redraft, but not for a full search". `PATCH /api/admin/allowance` clears it.
+
 ## 2026-08-28 10:25 UTC — LEX 25-L: THE RE-RUN DIALOGUE, THE RESOURCE LIBRARY, AND MOBILE
 
 **Brief:** `docs/BRIEF_25L.md` + two mid-sprint amendments. **Report:**

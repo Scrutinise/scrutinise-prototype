@@ -2,7 +2,56 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-28 10:25 UTC — ▼ **LEX 25-L: THE RE-RUN ASKS BEFORE IT SPENDS, THE
+*Last updated: 2026-08-28 12:01 UTC — ▼ **LEX 25-M: THE FIRST CAUSAL CHAIN A BUILD HAS EVER
+PRODUCED — AND NO CHECK OR VERIFY SCRIPT IN THIS REPO HAD EVER BEEN TYPECHECKED.** §1–§5 built.
+⚠⚠ **§5b PASSES: THE CAUSES NEST.** One live build (RESUMED, not re-claimed, so the one-build
+ceiling held): 10 passes, **22.98p, 249s**. Baseline measured BEFORE spending: **0 nested
+causes from any build in the whole database** — the single nested row was made by a user by
+hand on 14 Aug. After: **2 of 3 build-written causes sit beneath another.** Asserted on
+`parentCauseId` — the VALUE, not the schema.
+⚠⚠ **§4's PREMISE IS WRONG ABOUT THE DATA.** §4 says count `LlmSpend`; it holds **2,702 rows,
+2 with a userId**, and 0 of 306 build-stream rows sampled carried one — `SpendAttribution` is
+optional and the build passes never pass it. An allowance counted there **reads zero for
+everybody and hands out unlimited free builds.** The counter is `IdeaBuild`, which is the unit
+§4 states its own rule in. `check:lex-25m` asserts it is NOT LlmSpend.
+⚠⚠ **§3's GAP WAS THE SNAPSHOT RETURNING AN EMPTY EVIDENCE ARRAY** — it took ACCEPTED only,
+rightly, and **nothing has ever been accepted**, so §2b's write-up would have had none of the
+panel's material and an empty array renders as a document with no findings section, not an
+error. Now: carry it, **LABEL it** (each finding says whose it is), never promote it silently.
+⚠⚠ **`scripts/**` IS EXCLUDED FROM THE WEB TS PROGRAM — 172 CHECK AND VERIFY FILES, NEVER
+TYPECHECKED.** Surfaced when my §5b harness called a 3-arg function with 2 args, reached a
+LIVE RUN, claimed a build row and died in its first pass — **and reported exit 0 over the
+crash**. New `scripts/tsconfig.json` + `npm run check:scripts`; its first run found **four real
+defects**: a `source.reason` `reuseSourceFor` never returned; two fixtures missing
+`userCritique` since 25-L; a `StageContext` import 25-L invalidated; and a spread that hid
+**three fields missing since 25-F**.
+⚠⚠ **AND §23.2 IMMEDIATELY FOUND A SECOND DEAD HARNESS**: `verify:build-25a-ui`, same missing
+React import as 25-L's. Now 43/43 — and running it exposed a STALE ASSERTION requiring the
+build summary in a panel 25-G deliberately removed it from.
+▶ **§1 Outputs is in the resources panel**, top and set apart; both documents, when each was
+generated, whether it still matches. ⚠ **One generator, two doors.** ⚠ Found: the contents list
+rendered UNDERNEATH the special items (gated on `!openHeading`, not `!openKey`).
+▶ **§2b the write-up carries every panel section** in the panel's order, imported not restated.
+▶ **§3 audit**: every heading has a carrier **except `POSITIONS`** (no producer — 25-L put a
+live beta surface there, not a snapshot field).
+▶ **§4 built**: one free build + one re-run (4 thirds). ⚠⚠ The spend test is an **ALLOW-LIST**
+— only DONE spends — so FAILED/CANCELLED/QUEUED/RUNNING and any future status are "not spent"
+by construction. Hard stop at the WRITE PATH, 402 not 500. Admin grant SETS, requires a note,
+logs. `IdeaBuild.mode` now recorded (what RAN, not what was asked).
+▶ **§5a backfill RAN**: 5 → HOW_HARD, 1 → KEY_SOURCES, **0 left under AGAINST** (re-read, not
+reported from intent). ▶ **§5c: CLAUDE.md §23.3 and §24.1 added.**
+✅ `check:lex-25m` **11/11, 0 uncontrolled**. Whole suite reported (§23.2): 25-c 32, 25-d 77,
+25-e 28, 25-f 62, 25-g 27, 25-h 20, 25-i 14, 25-j 12, 25-k 18, 25-l 19, 25-m 11, scripts clean,
+20bd 47, statutory 17, build-25a 40, build-25b 54, +4 pass. Harnesses ALL EXECUTED: stages-ui
+23, 25e-ui 16, 25g-ui 14, my-ideas-ui 15, **build-25a-ui 43 (first ever)**, **outputs-ui 7**.
+`tsc`, `check:scripts`, `next build`, clean-build `--fast`, `prisma validate` clean.
+`prisma/lex_25m.sql` applied to Neon. Spend: one build, 22.98p.
+⚠ **NOT verified on the running site**; §1/§2/§4's user half is behind sign-in and a route probe
+Clerk 307s proves nothing — render harness and source assertion only.
+⚠⚠ **CHARLIE: your allowance is 4 thirds and today's build spent 3** — you will see "enough
+for a redraft, not a full search". `PATCH /api/admin/allowance` clears it.
+`docs/LEX_25M_REPORT.md`.**
+Earlier: 2026-08-28 10:25 UTC — ▼ **LEX 25-L: THE RE-RUN ASKS BEFORE IT SPENDS, THE
 RIGHT PANEL IS A LIBRARY, AND QUALITY 1's CAUSE WAS A PROMPT THAT NEVER MENTIONED THE FIELD.**
 §1–§6 built with three stated exceptions; all three amendments done.
 ⚠⚠ **QUALITY 1: THE CHAIN WAS BUILT AND THEN DESTROYED BY A PASS THAT DID NOT KNOW IT
