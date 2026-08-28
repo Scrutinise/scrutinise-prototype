@@ -430,6 +430,25 @@ enum OperationalIngestStatus {
 model User {
   id                        String              @id @default(uuid())
   clerkId                   String              @unique
+  /// ══ 25-M §4 — THE PILOT ALLOWANCE, IN THIRDS OF A BUILD ══════════════════
+  ///
+  /// A full build costs 3, a reuse re-run costs 1 (25-K §6: "re-runs counted in thirds,
+  /// because they reuse the research"). ⚠ An INTEGER, not a float: this number decides
+  /// whether somebody may press a button, and "0.30000000000000004 of a build left" is not
+  /// a state anybody should have to reason about.
+  ///
+  /// Default 4 = one free build plus one re-run. §4 says one free build; a user whose single
+  /// build comes back wrong and who cannot redraft it has not really had one.
+  ///
+  /// ⚠⚠ THE COUNTER IS `IdeaBuild`, NOT `LlmSpend`. §4 assumed LlmSpend carried the user —
+  /// measured on 28 Aug it holds 2,702 rows of which **2** have a userId, and every
+  /// build-stream row sampled had none. An allowance counted there would read zero for
+  /// everybody. See `lib/lex/allowance.ts`.
+  buildAllowanceThirds      Int                 @default(4)
+  /// Who granted or changed the allowance, and why. An allowance that moves with no record
+  /// of who moved it is an unaccountable grant.
+  buildAllowanceNote        String?
+
   /// 25-L §4 — which Lex panels are open and how wide, per user.
   ///
   /// ⚠ A COLUMN, NOT `localStorage`. §4 says the choice persists PER USER; a browser store
@@ -3651,6 +3670,17 @@ model IdeaBuild {
   /// is the information that makes it a quality signal rather than a comment.
   userCritique    String?      @db.Text
   userCritiqueAt  DateTime?
+
+  /// 25-M §4 — WHICH MODE THIS BUILD ACTUALLY RAN IN. `FULL` or `REUSE`.
+  ///
+  /// ⚠ WHAT RAN, NOT WHAT WAS ASKED FOR. `claimBuild` downgrades a REUSE request to FULL
+  /// when there is nothing to reuse, and the allowance charges the two differently — so
+  /// storing the request would charge a third for a build that did the whole job.
+  ///
+  /// ⚠ 25-G had this as a request parameter and never recorded it. Nothing depended on it
+  /// until the allowance did, and a charge inferred from the shape of a JSON pass log is a
+  /// charge nobody can audit.
+  mode            String       @default("FULL")
 
   tokensIn        Int          @default(0)
   tokensOut       Int          @default(0)
