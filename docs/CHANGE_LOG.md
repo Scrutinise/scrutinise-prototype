@@ -132,6 +132,90 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-28 09:03 UTC — LEX 25-K: THREE STAGES, NAMED FOR WHAT THE USER DOES
+
+**Brief:** `docs/BRIEF_25K.md`. **Report:** `docs/LEX_25K_REPORT.md`. **§1–§5 built; §6
+designed and deliberately unbuilt; §7 answered from a measurement already in hand.**
+
+▶▶ **The vocabulary is replaced.** "The build" and "the proposal" named the screens for how
+they were MADE. They are now **1 · The Idea**, **2 · The Strategy**, **3 · The Deepening**,
+named for what the user does there, in `lib/lex/stages.ts`, with a persistent indicator on
+every screen saying which stage, what it is for in one line, and how to move.
+`SurfaceSwitch.tsx` and `lib/lex/surfaces.ts` are deleted; 25-G's three §2 assertions were
+**repointed, not relaxed**.
+
+⚠⚠ **25-J's nav rename NEVER REACHED A USER.** 25-J §1 reports *"nav Create → My ideas"*.
+It went into `components/ui/Navbar.tsx`, **which nothing renders** — `grep -rn "Navbar"`
+returns the file's own export, two checks asserting on it, and one comment. The live nav is
+`PublicNav.tsx` and it still said "Create". `check:lex-25j` passed throughout, because it
+asserts on the file rather than the screen. **A new member of the "check that cannot fail"
+family: a check pointed at a file nobody renders.** 25-K §5 names it "Create" — what
+Charlie saw when he walked the site — and the discrepancy is Charlie's to settle.
+
+⚠⚠ **`tsc` WAS CLEAN ON CODE THAT COULD NOT BE BUILT.** Keeping the stage vocabulary and
+its prisma-backed counts in one module pulled `lib/prisma` → `@prisma/adapter-pg` → `pg` →
+`require('tls')` into the **browser** bundle, because `CreateIdeaClient` is a client
+component and imports the stage names. `tsc --noEmit` exited 0; `next build` failed
+outright. CLAUDE.md §20 check 0's fault class one level down. Split into `stages.ts` (pure,
+client-safe) and `stage-context.ts` (reads, server-only).
+
+▶ **§2 — the upload and the re-run, both of which existed and neither of which could be
+found.** The "+" is now the first control in the composer, on EVERY question, taking a file
+or a link; 25-H had put it on the `reading` step only, plus a bare file input further down
+— absent at question one, gone again after question four. ⚠ And the `reading` step still
+printed *"I can't read documents yet"*, which became false the day 25-H wired the pipeline
+in: **never-claim cuts both ways.** ⚠⚠ The **re-run was invisible four ways** — gated on
+`(finished || stopped)`, gated again on `canStart`, and at the bottom of the page under the
+findings, so a running build, a blocked one, or an unscrolled page all showed NOTHING. It
+is now present in every state and SAYS which state, with both prices.
+
+▶ **Lex gives directions instead of a dead end.** `lib/lex/platform-controls.ts` maps the
+controls that exist, built from `LEX_STAGES` so a renamed stage cannot leave Lex pointing
+at a door with a different name. The rule is not "say yes" — Lex genuinely cannot re-run a
+build — it is that a refusal carries the stage, the control's on-screen label, and what it
+does. ⚠ **Asserted in the prompt, NOT observed in a live turn**; §7 is the standing proof
+that reaching the prompt is not sufficient.
+
+▶▶ **§3 — the left column is a worklist with the chat under it.** `WorkList.tsx` reads the
+agenda 25-C already assembles and compresses it to one imperative line per task, with a
+count and a jump; **no new source of truth, no model call**. Contradictions lead (25-C §3b).
+⚠ Only `only-you` gaps reach the user's list — a `research` gap is our job and a
+`limitation` is nobody's. ⚠ Every anchor the worklist emits is asserted to exist in the
+panel markup. ▶ **§4 — the Deepening is a stage**, at `?stage=deepening`, with its own
+worklist that lists unrun and FAILED passes **separately**.
+
+▶ **§5 nav:** Create · Browse · Central · About · Support · [Admin], desktop and drawer;
+Legislation removed from both (the page itself untouched).
+
+▶▶ **§6 — REPORTED, NOTHING BUILT.** Confirmed by reading: **no allowance, quota or gate
+exists anywhere**; a build is a button with no ceiling behind it. ⚠ The instrumentation is
+already there — `LlmSpend` carries `userId`, `estCostPence` and even a `communityId` — so
+an allowance is a counter and a gate over data we already write. Design in the report:
+one free build, re-runs counted in thirds, balance beside the existing estimate line, the
+existing `blockedReason` path as the hard stop. **The decision that is Charlie's and is not
+a detail: whether a FAILED build spends the allowance.**
+
+▶▶ **§7 — the three missing qualities are 1, 5 and 6.** Reported before any fix, from
+25-I's measurement of a build that FINISHED. ⚠ **Quality 1 is a live regression, not a
+measurement artefact**: `nestByDrivenBy` is in the code and asserted, and the output still
+nests 0 of 4 causes — the model is not populating `drivenBy`. ⚠ Qualities 5 and 6 have
+never been observed in ANY output; the instructions reach every drafting pass and nothing
+comes back.
+
+⚠ **A render harness that had NEVER RUN.** `verify:lex-25e-ui` — covering exactly the cards
+this sprint changed — died on `ReferenceError: React is not defined` before its first
+assertion and appears in no sprint's reported results. One missing import. Now **16/16**.
+
+✅ `check:lex-25k` **18 passed, 0 failed, 0 without a negative control** — ⚠ one control was
+written BACKWARDS and `--self-test` caught it. `verify:stages-ui` **23** (the desktop
+three-column layout cannot be walked from a CC session — 0×0 viewport, `lg:` never matches
+— so the indicator is verified by rendering it). Neighbours green: 25-c 32, 25-d 77, 25-e
+28, 25-f 62, 25-g 27, 25-h 20, 25-i 14, 25-j 12, deepening, statutory 17. `tsc` clean,
+`next build` clean, `check-clean-build.sh --fast` clean.
+
+⚠ **NOT verified on the running site at the time of writing** (CLAUDE.md §20). A local
+build proves the files on this machine are consistent with each other.
+
 ## GRAPH 4B — THE IDENTITY BRIDGE, AND THE INSTRUMENTS LAYER (2026-08-28 00:47 UTC)
 
 Full report: `docs/GRAPH_4B_REPORT.md`. Executes `docs/BRIEF_GRAPH_4B.md` §1–§6.

@@ -2,7 +2,57 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-28 00:47 UTC — ▼ **GRAPH 4B: THE BRIDGE IS BUILT, AND IT FOUND A DEFECT IN
+*Last updated: 2026-08-28 09:03 UTC — ▼ **LEX 25-K: THE PRODUCT HAS THREE NAMED STAGES,
+AND 25-J's NAV RENAME NEVER REACHED A USER.** §1–§5 built; §6 designed and deliberately
+unbuilt; §7 answered from a measurement already in hand.
+▶▶ **"The build" and "the proposal" are gone as navigation** — they named the screens for how
+they were MADE. Now **1 · The Idea**, **2 · The Strategy**, **3 · The Deepening**, from one
+table in `lib/lex/stages.ts`, with a persistent indicator on every screen saying which
+stage, what it is for in one line, and how to move. Movement is free both ways.
+`SurfaceSwitch.tsx` and `lib/lex/surfaces.ts` deleted; 25-G's three §2 assertions
+**repointed, not relaxed**.
+⚠⚠ **25-J's nav rename went into a file NOTHING RENDERS.** 25-J §1 reports "nav Create → My
+ideas"; it landed in `components/ui/Navbar.tsx`, which no page imports. The live nav is
+`PublicNav.tsx` and it still said "Create". **`check:lex-25j` passed the whole time — a new
+member of the "check that cannot fail" family: a check pointed at a file nobody renders.**
+▶ CHARLIE: 25-K §5 names it "Create" (what you saw); say if you want "My ideas" live.
+⚠⚠ **`tsc` WAS CLEAN ON CODE THAT COULD NOT BE BUILT** — the stage vocabulary beside its
+prisma counts pulled `pg` → `require('tls')` into the BROWSER bundle via a client component;
+`next build` failed outright. Split into `stages.ts` (pure) / `stage-context.ts` (reads).
+▶▶ **§2 — two controls that existed and could not be found.** File/link upload is now a "+"
+in the composer on EVERY question (25-H had it on the `reading` step only, plus a bare file
+input further down — absent at question one, gone after question four). ⚠ That step also
+still printed *"I can't read documents yet"*, false since 25-H wired the pipeline in —
+**never-claim cuts both ways**. ⚠⚠ **The re-run was invisible FOUR WAYS** (gated on
+`finished||stopped`, gated again on `canStart`, at the page bottom under the findings) — now
+present in every state and SAYS which, with both prices. **And Lex now answers "re-run it"
+with directions to the control, not a dead end** (`lib/lex/platform-controls.ts`, built from
+`LEX_STAGES`) — ⚠ asserted in the prompt, NOT yet observed in a live turn.
+▶▶ **§3 — the left column is a WORKLIST with the chat under it**, reading the agenda 25-C
+already assembles: one imperative line per task, a count, and a jump. No new source of
+truth, no model call. Contradictions lead. ⚠ Only `only-you` gaps reach the user's list.
+▶ **§4 — the Deepening is a stage** (`?stage=deepening`), with its own worklist listing unrun
+and FAILED passes SEPARATELY. ▶ **§5 nav:** Create · Browse · Central · About · Support ·
+[Admin]; Legislation removed from both navs (page untouched).
+▶▶ **CHARLIE — §6, REPORTED AND NOTHING BUILT: there is NO allowance, quota or gate
+anywhere.** A build is a button with no ceiling behind it. ⚠ `LlmSpend` already carries
+`userId` and `estCostPence`, so an allowance is a counter and a gate over data we already
+write. Design in `docs/LEX_25K_REPORT.md` §6 — **the decision that is yours: does a FAILED
+build spend the allowance?**
+▶▶ **§7 — the three missing qualities are 1, 5 and 6.** ⚠ **Quality 1 is a live regression**:
+`nestByDrivenBy` is in the code and asserted, and the output still nests 0 of 4 causes — the
+model is not populating `drivenBy`. ⚠ 5 and 6 have never been observed in ANY output.
+⚠ **A render harness that had NEVER RUN**: `verify:lex-25e-ui`, covering exactly the cards
+this sprint changed, died on `ReferenceError: React is not defined` before its first
+assertion and appears in no sprint's results. One missing import; now 16/16.
+✅ `check:lex-25k` **18/18, 0 without a negative control** — ⚠ one control was written
+BACKWARDS and `--self-test` caught it. `verify:stages-ui` **23** (§0 is right: the
+three-column desktop layout cannot be walked from a CC session — 0×0 viewport, `lg:` never
+matches — so the indicator is verified by rendering it). 25-c 32, 25-d 77, 25-e 28, 25-f 62,
+25-g 27, 25-h 20, 25-i 14, 25-j 12, deepening, statutory 17. `tsc`, `next build`,
+clean-build `--fast` clean. ⚠ **NOT verified on the running site at the time of writing.**
+`docs/LEX_25K_REPORT.md`.**
+Earlier: 2026-08-28 00:47 UTC — ▼ **GRAPH 4B: THE BRIDGE IS BUILT, AND IT FOUND A DEFECT IN
 BOTH THE COPIES IT REPLACED — 419 CALENDAR IDS NAME TWO ACTS EACH AND THE LAST ONE SEEN WAS WINNING.**
 ⚠⚠ 41 Geo 3 and 42 Geo 3 are both **1801**, and each session numbers its chapters from one, so
 `ukpga/1801/16` **is two different Acts**. Both old alias maps wrote `calendar → regnal` in a single
