@@ -23,6 +23,8 @@ import {
   MAX_MATERIALS_PER_IDEA, MAX_UPLOAD_BYTES,
 } from '@/lib/lex/user-material'
 import { USER_MATERIAL_PASS_PREFIX } from '@/lib/lex/heading-map'
+// 25-L §2 — every refusal is counted, with its type. See `material-rejection.ts`.
+import { logRejection, readRejections } from '@/lib/lex/material-rejection'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -46,6 +48,11 @@ async function listMaterial(ideaId: string) {
     limit: MAX_MATERIALS_PER_IDEA,
     maxBytes: MAX_UPLOAD_BYTES,
     remaining: Math.max(0, MAX_MATERIALS_PER_IDEA - rows.length),
+    // ⚠ 25-L §2 — WHAT WE COULD NOT READ TRAVELS WITH WHAT WE COULD. §2: "never silently
+    // drop it, always say why at the time, always record it." A refusal that only ever
+    // existed as a toast is a gap the user cannot see five minutes later, and a document
+    // list that shows nine of the ten things they gave us is a list that lies by omission.
+    rejected: await readRejections(ideaId),
   }
 }
 
@@ -73,13 +80,21 @@ export async function POST(req: Request, { params }: Params) {
   // we would reject.
   const count = await prisma.ideaUserMaterial.count({ where: { ideaId: id } })
   if (count >= MAX_MATERIALS_PER_IDEA) {
-    return NextResponse.json({
-      error: `This idea already has ${count} documents attached, which is the limit. `
-        + 'Remove one you no longer need and add this instead.',
-    }, { status: 422 })
+    const detail = `This idea already has ${count} documents attached, which is the limit. `
+      + 'Remove one you no longer need and add this instead.'
+    // ⚠ THE CAP IS A REJECTION TOO. It is the one kind we already knew the rate of and
+    // still never recorded, and a run of these is the evidence for raising the cap.
+    await logRejection({ ideaId: id, userId: authz.user.id, kind: 'too-many', target: '(cap)', detail })
+    return NextResponse.json({ error: detail }, { status: 422 })
   }
 
   const contentType = req.headers.get('content-type') ?? ''
+  // ⚠ WHAT WAS BEING ADDED, RECORDED AS WE GO. The rejection is thrown from inside the
+  // extractor, which does not know whether it is looking at a file or a link — so the
+  // handler remembers, and the log records the URL or the filename rather than "(unknown)".
+  // A rejection log whose targets are all "(unknown)" cannot be broken down by host, which
+  // is the one breakdown that decides whether transcript-fetching is worth building.
+  let pendingTarget = '(unknown)'
 
   try {
     if (contentType.startsWith('multipart/form-data')) {
@@ -88,6 +103,7 @@ export async function POST(req: Request, { params }: Params) {
       if (!(file instanceof File)) {
         return NextResponse.json({ error: 'No file was attached.' }, { status: 422 })
       }
+      pendingTarget = file.name || file.type || '(unnamed file)'
       const bytes = Buffer.from(await file.arrayBuffer())
       const extracted = await extractFile(bytes, file.type, file.name)
       const label = String(form.get('label') ?? '').trim() || extracted.title || file.name
@@ -116,6 +132,7 @@ export async function POST(req: Request, { params }: Params) {
     if (!parsed.success) {
       return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 422 })
     }
+    pendingTarget = parsed.data.url
     const extracted = await extractUrl(parsed.data.url)
     const created = await prisma.ideaUserMaterial.create({
       data: {
@@ -138,12 +155,33 @@ export async function POST(req: Request, { params }: Params) {
     return finish(id, created.id, extracted.truncated)
   } catch (err) {
     if (err instanceof MaterialRejected) {
+      // ⚠ LOGGED BEFORE IT IS ANSWERED, and `logRejection` cannot throw — a logging failure
+      // must never turn a clean refusal into a 500, which would tell the user something is
+      // broken when in fact we simply cannot read videos.
+      await logRejection({
+        ideaId: id, userId: authz.user.id, kind: err.kind,
+        target: rejectionTarget(contentType, pendingTarget),
+        detail: err.message,
+      })
       // A refusal the user can act on, in their own terms — never a 500 with a stack.
-      return NextResponse.json({ error: err.message }, { status: 422 })
+      // ⚠ THE KIND TRAVELS TO THE CLIENT so the panel can style a "you can fix this" refusal
+      // apart from a dead end, rather than inferring it from the wording.
+      return NextResponse.json({ error: err.message, kind: err.kind }, { status: 422 })
     }
     console.error('[material] add FAILED', { ideaId: id, error: err instanceof Error ? err.message : err })
     return NextResponse.json({ error: 'That could not be added. Nothing was stored.' }, { status: 500 })
   }
+}
+
+/**
+ * What to record as the thing we refused.
+ *
+ * ⚠ A LINK IS RECORDED IN FULL, A FILE BY NAME ONLY. The host is the whole point of the
+ * log for links — "eleven YouTube links" is the finding — and a filename is all we have for
+ * an upload, whose bytes were never stored and never will be.
+ */
+function rejectionTarget(contentType: string, pending: string): string {
+  return contentType.startsWith('multipart/form-data') ? `file: ${pending}` : pending
 }
 
 /** Read the document into findings, then return the refreshed list with what happened. */

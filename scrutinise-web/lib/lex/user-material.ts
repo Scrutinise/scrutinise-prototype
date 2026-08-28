@@ -33,6 +33,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import {
+  MaterialRejected, isVideoUrl, isKnownPaywall, VIDEO_MESSAGE, PAYWALL_MESSAGE,
+} from './material-rejection'
 import { callJson, llmOk } from './build-llm'
 import { modelFor } from './model-registry'
 import { HEADING_ORDER, QUESTION_HEADINGS, isHeadingKey, type HeadingKey } from './question-headings'
@@ -69,9 +72,13 @@ export const ACCEPTED_MIME = new Set([
   'text/html',
 ])
 
-export class MaterialRejected extends Error {
-  constructor(message: string) { super(message); this.name = 'MaterialRejected' }
-}
+// ⚠ 25-L §2 — `MaterialRejected` MOVED, AND IT NOW CARRIES A KIND. It lived here with a
+// message and nothing else, so a refusal was a sentence on a screen and then nothing at
+// all: no count of how often it happens, no gap on the idea, and therefore no evidence for
+// the transcript-fetching decision §2 defers on exactly those grounds. Re-exported so every
+// existing importer keeps working.
+export { MaterialRejected } from './material-rejection'
+export type { RejectionKind } from './material-rejection'
 
 // ── extraction ───────────────────────────────────────────────────────────────
 
@@ -90,11 +97,17 @@ export interface Extracted {
 export async function extractFile(bytes: Buffer, mimeType: string, filename: string): Promise<Extracted> {
   if (bytes.byteLength > MAX_UPLOAD_BYTES) {
     throw new MaterialRejected(
+      'too-large',
       `That file is ${(bytes.byteLength / 1048576).toFixed(1)}MB and the limit is ${(MAX_UPLOAD_BYTES / 1048576).toFixed(0)}MB.`,
     )
   }
   if (!ACCEPTED_MIME.has(mimeType)) {
+    // ⚠ A VIDEO FILE IS NOT AN UNREADABLE FORMAT, IT IS A VIDEO, and the two want
+    // different things from the user. Naming it as "an unsupported type" would leave them
+    // looking for a converter instead of a transcript.
+    if (mimeType.startsWith('video/')) throw new MaterialRejected('video', VIDEO_MESSAGE)
     throw new MaterialRejected(
+      'unreadable-format',
       `We can read PDFs, Word documents, plain text and HTML. ${mimeType || 'That file type'} isn’t one of them — `
       + 'and we don’t do images or video, so nothing would be extracted.',
     )
@@ -126,6 +139,7 @@ export async function extractFile(bytes: Buffer, mimeType: string, filename: str
     // nothing; storing it would put a document in the user's list that Lex has never read
     // and cannot read, looking exactly like one it has.
     throw new MaterialRejected(
+      'no-text',
       `Nothing readable came out of ${filename}. If it is a scan, it is an image — we have no OCR, so there is no text to work from.`,
     )
   }
@@ -142,10 +156,22 @@ export async function extractFile(bytes: Buffer, mimeType: string, filename: str
  */
 export async function extractUrl(url: string): Promise<Extracted & { finalUrl: string }> {
   let parsed: URL
-  try { parsed = new URL(url) } catch { throw new MaterialRejected('That doesn’t look like a web address.') }
+  try { parsed = new URL(url) } catch { throw new MaterialRejected('not-a-url', 'That doesn’t look like a web address.') }
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-    throw new MaterialRejected('Only http and https links can be fetched.')
+    throw new MaterialRejected('not-a-url', 'Only http and https links can be fetched.')
   }
+
+  // ⚠⚠ 25-L §2 — REFUSED BEFORE THE FETCH, AND THE ROUTE OUT IS NAMED.
+  //
+  // Fetching a YouTube URL returns an app shell: a few hundred characters of script tags
+  // that `stripHtml` reduces to nothing, so the old path refused it with "that page had no
+  // readable text — it may be built entirely in JavaScript". True, useless, and it sent the
+  // user looking for a fault in their link. Refusing up front lets the sentence say the one
+  // thing that helps: the transcript is under the video, and we will read that.
+  //
+  // ⚠ NOTHING HERE FETCHES A TRANSCRIPT. §2 defers that deliberately.
+  if (isVideoUrl(parsed.toString())) throw new MaterialRejected('video', VIDEO_MESSAGE)
+  if (isKnownPaywall(parsed.toString())) throw new MaterialRejected('paywalled', PAYWALL_MESSAGE)
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 20_000)
@@ -159,6 +185,7 @@ export async function extractUrl(url: string): Promise<Extracted & { finalUrl: s
   } catch (err) {
     const aborted = err instanceof Error && err.name === 'AbortError'
     throw new MaterialRejected(
+      'unfetchable',
       aborted ? 'That page did not answer within 20 seconds.' : `That page could not be fetched: ${err instanceof Error ? err.message : String(err)}`,
     )
   } finally { clearTimeout(timer) }
@@ -167,15 +194,28 @@ export async function extractUrl(url: string): Promise<Extracted & { finalUrl: s
     // ⚠ THE STATUS IS REPORTED, NOT SWALLOWED. A 403 from a Cloudflare bot challenge and a
     // 404 from a dead link need different things from the user, and "couldn't fetch that"
     // tells them neither (CLAUDE.md §18: a failure names itself).
-    throw new MaterialRejected(`That page returned HTTP ${res.status}. Nothing was stored.`)
+    // ⚠ 401/402/403 ON A NEWS SITE IS A WALL, NOT A DEAD LINK, and the two need different
+    // things from the user. The host list above catches the ones we know; this catches the
+    // ones we do not, from the server's own answer.
+    const walled = res.status === 401 || res.status === 402 || res.status === 403
+    throw new MaterialRejected(
+      walled ? 'paywalled' : 'unfetchable',
+      walled
+        ? `That page answered HTTP ${res.status} — it is refusing us rather than missing. `
+          + 'If you can see it, paste the text or upload the PDF and I’ll read that.'
+        : `That page returned HTTP ${res.status}. Nothing was stored.`,
+    )
   }
 
   const contentType = (res.headers.get('content-type') ?? '').split(';')[0].trim()
   const buf = Buffer.from(await res.arrayBuffer())
   if (buf.byteLength > MAX_UPLOAD_BYTES) {
-    throw new MaterialRejected(`That page is larger than the ${(MAX_UPLOAD_BYTES / 1048576).toFixed(0)}MB limit.`)
+    throw new MaterialRejected('too-large', `That page is larger than the ${(MAX_UPLOAD_BYTES / 1048576).toFixed(0)}MB limit.`)
   }
 
+  // ⚠ A CONTENT TYPE IS THE SERVER'S OWN ANSWER and beats any host list. A video served
+  // from a domain nobody has heard of is still a video.
+  if (contentType.startsWith('video/')) throw new MaterialRejected('video', VIDEO_MESSAGE)
   if (contentType === 'application/pdf') {
     const out = await extractFile(buf, contentType, parsed.pathname)
     return { ...out, finalUrl: res.url || parsed.toString() }
@@ -183,7 +223,7 @@ export async function extractUrl(url: string): Promise<Extracted & { finalUrl: s
   const html = buf.toString('utf8')
   const text = normalise(stripHtml(html))
   if (!text.trim()) {
-    throw new MaterialRejected('That page had no readable text — it may be built entirely in JavaScript.')
+    throw new MaterialRejected('no-text', 'That page had no readable text — it may be built entirely in JavaScript.')
   }
   return { ...cap(text, htmlTitle(html)), finalUrl: res.url || parsed.toString() }
 }

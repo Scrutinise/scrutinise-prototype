@@ -15,6 +15,23 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+/** 25-L §2 — something we were given and could not read. */
+interface RejectedRow {
+  id: string
+  kind: string
+  target: string
+  detail: string
+  createdAt: string
+}
+
+/**
+ * ⚠ THE ONES THE USER CAN DO SOMETHING ABOUT ARE SEPARATED FROM THE ONES THEY CANNOT.
+ * A video needs a transcript and a paywalled page needs the text pasted — both are an
+ * invitation. A mistyped address is a failed attempt and does not belong on a list of gaps
+ * in the evidence, which would make the list look worse than the idea is.
+ */
+const ACTIONABLE = new Set(['video', 'paywalled', 'no-text'])
+
 interface MaterialRow {
   id: string
   kind: 'FILE' | 'LINK'
@@ -43,6 +60,7 @@ export default function YourMaterial({
   onCount?: (n: number) => void
 }) {
   const [rows, setRows] = useState<MaterialRow[]>([])
+  const [rejected, setRejected] = useState<RejectedRow[]>([])
   const [remaining, setRemaining] = useState<number>(0)
   const [maxBytes, setMaxBytes] = useState<number>(0)
   const [busy, setBusy] = useState(false)
@@ -71,6 +89,7 @@ export default function YourMaterial({
     setRows(body.material ?? [])
     setRemaining(body.remaining ?? 0)
     setMaxBytes(body.maxBytes ?? 0)
+    setRejected(body.rejected ?? [])
     countRef.current?.((body.material ?? []).length)
   }, [ideaId])
 
@@ -80,10 +99,15 @@ export default function YourMaterial({
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
       setError(typeof body?.error === 'string' ? body.error : 'That could not be added.')
+      // ⚠ 25-L §2 — RELOAD ON A REFUSAL. The refusal has just been recorded against the
+      // idea, and the list below is where it becomes a visible gap rather than a toast the
+      // user scrolls past. Without this the record exists and the screen does not show it.
+      void load()
       return
     }
     setRows(body.material ?? [])
     setRemaining(body.remaining ?? 0)
+    setRejected(body.rejected ?? [])
     countRef.current?.((body.material ?? []).length)
     // Truncation and "nothing useful" are both reported, because both are things the user
     // would otherwise assume did not happen.
@@ -165,6 +189,39 @@ export default function YourMaterial({
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ══ 25-L §2 — WHAT WE COULD NOT READ ═══════════════════════════════════
+          §2: "never silently drop it, always say why at the time, always record it."
+          The sentence at the time is the error banner below; this is the record, and it
+          is what makes the gap survive the moment.
+
+          ⚠ IT IS NOT AN ERROR LIST. A video we cannot watch is a fact about us, not a
+          mistake the user made, so it is styled as a note with an invitation rather than
+          as a warning. */}
+      {rejected.length > 0 && (
+        <div className="rounded border border-zinc-200 bg-zinc-50/70 p-2 space-y-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+            Given to me, and not read ({rejected.length})
+          </p>
+          {rejected.slice(0, 6).map((r) => (
+            <div key={r.id} className="text-[11px]">
+              <span className="text-zinc-800 break-all">{r.target}</span>
+              <span className="ml-1.5 rounded border border-zinc-300 bg-white px-1 py-0.5 text-[10px] uppercase tracking-wide text-zinc-600">
+                {r.kind}
+              </span>
+              <span className="block text-zinc-500">{r.detail}</span>
+            </div>
+          ))}
+          {rejected.length > 6 && (
+            <p className="text-[11px] text-zinc-400">…and {rejected.length - 6} more.</p>
+          )}
+          {rejected.some((r) => ACTIONABLE.has(r.kind)) && (
+            <p className="text-[11px] text-zinc-600">
+              These are on the record as gaps. Paste the text or upload a transcript and I’ll read it.
+            </p>
+          )}
         </div>
       )}
 

@@ -27,6 +27,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { collapseKnownUnknowns, type KnownUnknown } from './known-unknowns'
+// 25-L §2 — material we were given and could not read is a gap on the idea, and it is one
+// only the user can close. See `rejectionsAsGaps`.
+import { readRejections, rejectionsAsGaps } from './material-rejection'
 import { readKnownUnknowns } from './deepening'
 import { isAssembled } from './evidence-labels'
 
@@ -265,6 +268,21 @@ export async function buildAgenda(ideaId: string): Promise<Agenda> {
   const gaps: AgendaGap[] = collapseKnownUnknowns(rawGaps).map((g) => ({
     question: g.question, why: g.why, task: classifyGap(g),
   }))
+
+  // ⚠ 25-L §2 — MATERIAL WE COULD NOT READ IS A GAP, AND IT IS THEIRS TO CLOSE.
+  //
+  // §2: "Record it as a known unknown on the idea, so the gap is visible rather than
+  // silent." It is filed `only-you` deliberately: a video's transcript and a paywalled
+  // article's text are things only the person holding them can fetch. Filing them as
+  // `research` would put them on OUR list, where nothing would ever happen to them, and
+  // the user would never learn that the way in was two clicks away.
+  //
+  // ⚠ APPENDED, NOT MERGED INTO THE COLLAPSE. `collapseKnownUnknowns` groups on tags the
+  // producers write; these have no producer and no pass, and forcing them through it would
+  // mean inventing a tag so a group-by could ignore it.
+  for (const r of rejectionsAsGaps(await readRejections(ideaId))) {
+    gaps.push({ question: r.question, why: r.why, task: 'only-you' })
+  }
 
   // ── §3f — YOUR CONTRIBUTION ───────────────────────────────────────────────
   //
