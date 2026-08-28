@@ -1,0 +1,75 @@
+{
+ "measuredAt": "2026-08-27T23:44:56.643Z",
+ "bridge": {
+  "sourceEntries": 324622,
+  "enumeratedPairs": 14294,
+  "bridgedForms": 13454,
+  "ambiguousForms": 419,
+  "unbridgedRegnalForms": 0,
+  "degraded": false,
+  "sourcePath": "C:\\Code\\scrutinise-prototype\\scripts\\ingest\\v36\\source-entries.json"
+ },
+ "worked": [
+  {
+   "regnal": "ukpga/Eliz2/9-10/33",
+   "calendar": "ukpga/1961/33",
+   "name": "Factories Act 1961",
+   "underRegnal": 1591,
+   "underCalendar": 109,
+   "viaBridge": 1700,
+   "citesUnderRegnal": 0,
+   "citesUnderCalendar": 59,
+   "citesViaBridge": 59,
+   "dropped": 59,
+   "correct": true
+  },
+  {
+   "regnal": "ukpga/Geo6/12-13-14/54",
+   "calendar": "ukpga/1949/54",
+   "name": "Coast Protection Act 1949",
+   "underRegnal": 147,
+   "underCalendar": 227,
+   "viaBridge": 374,
+   "citesUnderRegnal": 0,
+   "citesUnderCalendar": 50,
+   "citesViaBridge": 50,
+   "dropped": 50,
+   "correct": true
+  },
+  {
+   "regnal": "ukpga/Geo5and1Edw8/26/49",
+   "calendar": "ukpga/1936/49",
+   "name": "Public Health Act 1936",
+   "underRegnal": 266,
+   "underCalendar": 50,
+   "viaBridge": 316,
+   "citesUnderRegnal": 0,
+   "citesUnderCalendar": 50,
+   "citesViaBridge": 50,
+   "dropped": 50,
+   "correct": true
+  }
+ ],
+ "forms": {
+  "citationRegnalRows": 3531,
+  "citationRegnalTargets": 717,
+  "edgesRegnalCitesRows": 0,
+  "edgesRegnalAnyTypeRows": 63520,
+  "citationTargetsBridgeable": 3570,
+  "citationTargetsUnbridged": 13,
+  "citationTargetsAmbiguous": 76
+ },
+ "droppedJoinsResolved": {
+  "citationRowsWhoseTargetOnlyMatchesUnderTheBridge": 95,
+  "distinctTargetsRecovered": 47
+ },
+ "overlap": {
+  "citesPairs": 111193,
+  "citationPairs": 335615,
+  "inBothRaw": 109099,
+  "onlyEdgesRaw": 2094,
+  "inBothBridged": 109699,
+  "onlyEdgesBridged": 1494,
+  "recoveredByBridge": 600
+ }
+}

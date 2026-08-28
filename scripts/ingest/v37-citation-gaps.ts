@@ -37,6 +37,7 @@ import fs from 'fs'
 import path from 'path'
 require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') })
 import { Pool } from 'pg'
+import { identitiesFor, loadIdentityBridge } from './graph/identity'
 
 const LEG_CORPORA = [
   'primary-acts-2000plus', 'primary-acts-pre-2000',
@@ -45,7 +46,6 @@ const LEG_CORPORA = [
 /** Edge types whose target is asserted by a document WE hold. */
 const OURS = new Set(['cites', 'made-under'])
 
-const ALIAS_PATH = path.join(__dirname, 'v36', 'source-entries.json')
 const OUT_MD = path.join(__dirname, '../../docs/CORPUS_CITATION_GAPS.md')
 const OUT_JSON = path.join(__dirname, '../../docs/corpus_citation_gaps.json')
 
@@ -103,45 +103,16 @@ const NO_INGEST_ROUTE: Record<string, { why: string; decision: boolean }> = {
  * the regnal/calendar split — an identity mismatch, not an absence. Checked against
  * the source rather than assumed.
  */
-const PREFIX_ALIASES: Record<string, string[]> = { eud: ['eudn', 'eudr'] }
-
-/** Candidate identities for one cited gid: itself, its regnal/calendar twin, its
- *  prefix aliases, and the zero-stripped form of each (the source zero-pads some EU
- *  numbers — `eud/2000/0532` for `eudn/2000/532`). */
-function identitiesFor(gid: string, alias: Map<string, string>): string[] {
-  const out = new Set<string>([gid])
-  const twin = alias.get(gid)
-  if (twin) out.add(twin)
-  const parts = gid.split('/')
-  const type = parts[0]
-  for (const alt of PREFIX_ALIASES[type] ?? []) out.add([alt, ...parts.slice(1)].join('/'))
-  for (const id of [...out]) {
-    const p = id.split('/')
-    const last = p[p.length - 1]
-    if (/^0\d+$/.test(last)) out.add([...p.slice(0, -1), String(Number(last))].join('/'))
-  }
-  return [...out]
-}
-
-function buildAliasMap(): Map<string, string> {
-  // calendar id → regnal id, and regnal → calendar. Both directions, because a
-  // citation may use either and the corpus may hold either.
-  const map = new Map<string, string>()
-  if (!fs.existsSync(ALIAS_PATH)) {
-    console.warn(`[v37] ⚠ no alias map at ${ALIAS_PATH} — regnal/calendar false gaps will NOT be resolved`)
-    return map
-  }
-  const store: Record<string, { docId: string; calendarId: string | null }[]> = JSON.parse(fs.readFileSync(ALIAS_PATH, 'utf8'))
-  for (const entries of Object.values(store)) {
-    for (const e of entries) {
-      if (e.calendarId && e.calendarId !== e.docId) {
-        map.set(e.calendarId, e.docId)
-        map.set(e.docId, e.calendarId)
-      }
-    }
-  }
-  return map
-}
+// ⚠⚠ GRAPH 4B §1. The private PREFIX_ALIASES / identitiesFor() / buildAliasMap()
+// that used to sit here are GONE. GRAPH 4A §6 named this file and
+// extract-citation-edges.ts as the TWO copies of the same alias map that had to
+// agree with no check that they agreed — the shape that let the regnal-year
+// trap reach four separate code paths. The one resolver is graph/identity.ts.
+//
+// ⚠ One behaviour change, deliberate: the old map's single pass let the LAST
+// calendar-to-regnal entry win, so 419 calendar ids that name TWO different
+// regnal Acts each (41 Geo 3 and 42 Geo 3 are both 1801) silently resolved to
+// one of them. The shared bridge REFUSES those and counts them.
 
 async function main() {
   const pool = new Pool({
@@ -150,8 +121,8 @@ async function main() {
     statement_timeout: 1_800_000, query_timeout: 1_800_000,
   })
 
-  const alias = buildAliasMap()
-  console.log(`[v37] alias map: ${(alias.size / 2).toLocaleString()} regnal/calendar pairs`)
+  const bridge = loadIdentityBridge()
+  console.log(`[v37] identity bridge: ${bridge.stats.bridgedForms.toLocaleString()} bridged forms · ${bridge.stats.ambiguousForms.toLocaleString()} refused as ambiguous`)
 
   console.log('[v37] loading held gids…')
   const t0 = Date.now()
@@ -188,7 +159,7 @@ async function main() {
     const gid = t.gid as string
     if (!gid || !gid.includes('/')) continue           // CELEX / malformed — not a leg.gov.uk gid
     if (held.has(gid)) { heldDirect++; continue }
-    const ids = identitiesFor(gid, alias)
+    const ids = identitiesFor(gid)
     if (ids.some(id => id !== gid && held.has(id))) { resolvedByAlias++; continue }
 
     const type = gid.split('/')[0]

@@ -30,11 +30,11 @@ import fs from 'fs'
 import path from 'path'
 import { ZipReader, ZipEntryMeta } from './zip-reader'
 import { getNeonPool, endNeonPool } from '../shared/neon-pool'
+import { identitiesFor, loadIdentityBridge } from './identity'
 import { r2Get } from '../shared/r2-client'
 import { parseLegUri } from './graph-common'
 
 const ZIP_PATH = 'C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip'
-const ALIAS_PATH = path.join(__dirname, '..', 'v36', 'source-entries.json')
 const OUT_JSON = path.join(__dirname, '../../../docs/citation_audit_25h.json')
 const LEG_CORPORA = [
   'primary-acts-2000plus', 'primary-acts-pre-2000',
@@ -186,34 +186,11 @@ export function gidFromEntry(m: RegExpMatchArray): string {
   return `${m[1]}/${m[2].replace(/-/g, '/')}/${m[3]}`
 }
 
-const PREFIX_ALIASES: Record<string, string[]> = { eud: ['eudn', 'eudr'] }
-function identitiesFor(gid: string, alias: Map<string, string>): string[] {
-  const out = new Set<string>([gid])
-  const twin = alias.get(gid)
-  if (twin) out.add(twin)
-  const parts = gid.split('/')
-  for (const alt of PREFIX_ALIASES[parts[0]] ?? []) out.add([alt, ...parts.slice(1)].join('/'))
-  for (const id of [...out]) {
-    const p = id.split('/')
-    const last = p[p.length - 1]
-    if (/^0\d+$/.test(last)) out.add([...p.slice(0, -1), String(Number(last))].join('/'))
-  }
-  return [...out]
-}
-function buildAliasMap(): Map<string, string> {
-  const map = new Map<string, string>()
-  if (!fs.existsSync(ALIAS_PATH)) {
-    console.warn(`[25h-B] no alias map at ${ALIAS_PATH} — regnal/calendar false misses will NOT be resolved`)
-    return map
-  }
-  const store: Record<string, { docId: string; calendarId: string | null }[]> = JSON.parse(fs.readFileSync(ALIAS_PATH, 'utf8'))
-  for (const entries of Object.values(store)) {
-    for (const e of entries) {
-      if (e.calendarId && e.calendarId !== e.docId) { map.set(e.calendarId, e.docId); map.set(e.docId, e.calendarId) }
-    }
-  }
-  return map
-}
+// ⚠⚠ GRAPH 4B §1. The private alias map and its identitiesFor() copy that
+// used to live here are GONE. They were one of two copies that had to agree
+// with no check that they agreed, which is how the regnal-year trap reached
+// four separate code paths. The one resolver is graph/identity.ts, and
+// check-4b-identity.ts fails the build if a second copy appears here again.
 
 type TypeStats = {
   docs: number; docsWithBodyCitation: number; docErrors: number
@@ -243,8 +220,8 @@ async function partB(types: string[], limit: number) {
      FROM corpus_sections WHERE corpus = ANY($1::text[]) AND status = 'compiled'`, [LEG_CORPORA])
   const held = new Set<string>(heldRows.map((r: { gid: string }) => r.gid))
   console.log(`[25h-B] corpus holds text for ${held.size.toLocaleString()} instruments`)
-  const alias = buildAliasMap()
-  console.log(`[25h-B] alias map: ${(alias.size / 2).toLocaleString()} regnal/calendar pairs`)
+  const bridge = loadIdentityBridge()
+  console.log(`[25h-B] identity bridge: ${bridge.stats.bridgedForms.toLocaleString()} bridged forms · ${bridge.stats.ambiguousForms.toLocaleString()} refused as ambiguous`)
 
   console.log(`[25h-B] opening ${ZIP_PATH}…`)
   const zip = new ZipReader(ZIP_PATH)
@@ -316,7 +293,7 @@ async function partB(types: string[], limit: number) {
     const missing: string[] = []
     for (const gid of gidsBody) {
       if (held.has(gid)) { heldDirect++; continue }
-      const ids = identitiesFor(gid, alias)
+      const ids = identitiesFor(gid)
       if (ids.some(id => id !== gid && held.has(id))) { heldByAlias++; continue }
       missing.push(gid)
     }

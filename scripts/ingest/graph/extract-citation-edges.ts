@@ -46,10 +46,10 @@ import { getNeonPool, endNeonPool } from '../shared/neon-pool'
 import { parseLegUri } from './graph-common'
 import { ENTRY_RX, gidFromEntry } from './audit-25h-citations'
 import { CITATION_TABLE } from './setup-citation-edge-table'
+import { identitiesFor, loadIdentityBridge } from './identity'
 
 const ZIP_PATH = 'C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip'
 const CHECKPOINT = path.join(__dirname, 'citation-edge-checkpoint.json')
-const ALIAS_PATH = path.join(__dirname, '..', 'v36', 'source-entries.json')
 const LEG_CORPORA = [
   'primary-acts-2000plus', 'primary-acts-pre-2000',
   'si-2010plus', 'si-pre-2010', 'regional', 'retained-eu', 'eur-lex',
@@ -218,33 +218,21 @@ function norm(ref: string): string {
   return ref.toLowerCase().replace(/[()]/g, '-').replace(/-+/g, '-').replace(/-$/, '')
 }
 
-// ── held-instrument resolution (identical identity rules to v37) ─────────────
-
-const PREFIX_ALIASES: Record<string, string[]> = { eud: ['eudn', 'eudr'] }
-function identitiesFor(gid: string, alias: Map<string, string>): string[] {
-  const out = new Set<string>([gid])
-  const twin = alias.get(gid)
-  if (twin) out.add(twin)
-  const parts = gid.split('/')
-  for (const alt of PREFIX_ALIASES[parts[0]] ?? []) out.add([alt, ...parts.slice(1)].join('/'))
-  for (const id of [...out]) {
-    const p = id.split('/')
-    const last = p[p.length - 1]
-    if (/^0\d+$/.test(last)) out.add([...p.slice(0, -1), String(Number(last))].join('/'))
-  }
-  return [...out]
-}
-function buildAliasMap(): Map<string, string> {
-  const map = new Map<string, string>()
-  if (!fs.existsSync(ALIAS_PATH)) { console.warn('[cite-edge] no alias map — regnal/calendar targets will read as unheld'); return map }
-  const store: Record<string, { docId: string; calendarId: string | null }[]> = JSON.parse(fs.readFileSync(ALIAS_PATH, 'utf8'))
-  for (const entries of Object.values(store)) {
-    for (const e of entries) {
-      if (e.calendarId && e.calendarId !== e.docId) { map.set(e.calendarId, e.docId); map.set(e.docId, e.calendarId) }
-    }
-  }
-  return map
-}
+// ── held-instrument resolution ───────────────────────────────────────────────
+//
+// ⚠⚠ GRAPH 4B §1. This file used to carry its OWN copy of the regnal/calendar
+// alias map — one of two copies that had to agree, with no check that they did.
+// That is how the regnal-year trap reached four separate code paths. Both
+// copies are gone; the one resolver is `graph/identity.ts` and
+// `check-4b-identity.ts` fails the build if a second one appears here again.
+//
+// ⚠ ONE BEHAVIOUR CHANGE, DELIBERATE. The old map wrote
+// the calendar form onto the regnal one in a single pass, so where two Acts share
+// a calendar form — 41 Geo 3 and 42 Geo 3 are both 1801, and each session
+// numbers its chapters from 1 — the LAST entry seen silently won, for 419
+// calendar ids. The shared bridge REFUSES those and counts them instead, so a
+// target under an ambiguous calendar form now reads as unheld rather than as a
+// coin-flip between two different Acts.
 
 // ── extraction ───────────────────────────────────────────────────────────────
 
@@ -345,7 +333,7 @@ export async function loadActTitles(): Promise<Map<string, string>> {
   return titles
 }
 
-function extractDoc(gid: string, xml: string, held: Set<string>, alias: Map<string, string>): CitationRow[] {
+function extractDoc(gid: string, xml: string, held: Set<string>): CitationRow[] {
   stats.docs++
   const zones = exclusionZones(xml)
   const inZone = zoneCursor(zones)
@@ -397,7 +385,7 @@ function extractDoc(gid: string, xml: string, held: Set<string>, alias: Map<stri
       targetActId = target.gid
       if (held.has(target.gid)) resolved = true
       else {
-        const heldAlias = identitiesFor(target.gid, alias).find(id => held.has(id))
+        const heldAlias = identitiesFor(target.gid).find(id => held.has(id))
         if (heldAlias) { targetActId = heldAlias; resolved = true }
       }
     }
@@ -549,8 +537,9 @@ async function main() {
     `SELECT DISTINCT split_part(id, ':', 2) AS gid
      FROM corpus_sections WHERE corpus = ANY($1::text[]) AND status = 'compiled'`, [LEG_CORPORA])
   const held = new Set<string>(heldRows.map((r: { gid: string }) => r.gid))
-  const alias = buildAliasMap()
-  console.log(`[cite-edge] ${held.size.toLocaleString()} held instruments · ${(alias.size / 2).toLocaleString()} regnal/calendar alias pairs`)
+  const bridge = loadIdentityBridge()
+  if (bridge.stats.degraded) console.warn(`[cite-edge] ⚠ identity bridge DEGRADED (no ${bridge.stats.sourcePath}) — regnal/calendar targets will read as unheld`)
+  console.log(`[cite-edge] ${held.size.toLocaleString()} held instruments · ${bridge.stats.bridgedForms.toLocaleString()} bridged id forms · ${bridge.stats.ambiguousForms.toLocaleString()} refused as ambiguous`)
 
   const titles = wantText ? await loadActTitles() : new Map<string, string>()
   console.log(`[cite-edge] detectors: ${[wantMarkup && 'markup', wantText && 'text'].filter(Boolean).join(' + ')}`)
@@ -578,7 +567,7 @@ async function main() {
     try {
       const xml = zip.readText(e)
       const rows: CitationRow[] = []
-      if (wantMarkup) rows.push(...extractDoc(gid, xml, held, alias))
+      if (wantMarkup) rows.push(...extractDoc(gid, xml, held))
       else stats.docs++
       if (wantText) rows.push(...extractDocText(gid, xml, titles, held))
       if (pilot) { for (const r of rows) if (sample.length < 25 && r.targetProvisionRef) sample.push(r) }
