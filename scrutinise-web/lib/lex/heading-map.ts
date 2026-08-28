@@ -24,8 +24,8 @@
 // what the producer meant at the time and this lookup would silently rewrite history.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { questionById } from './interrogation-library'
-import { passDef } from './deepening-config'
+import { questionById, INTERROGATION_LIBRARY } from './interrogation-library'
+import { passDef, PASSES } from './deepening-config'
 import { isHeadingKey, type HeadingKey } from './question-headings'
 
 /**
@@ -56,6 +56,41 @@ export function isUserMaterialPass(passKey: string): boolean {
 export function resolveHeading(row: { headingKey?: string | null; passKey: string }): HeadingKey | null {
   if (isHeadingKey(row.headingKey)) return row.headingKey
   return headingForPassKey(row.passKey)
+}
+
+/**
+ * ══ 25-L §3b — WHICH HEADINGS SOMETHING CAN ACTUALLY WRITE UNDER, COMPUTED ══════
+ *
+ * §3b: the contents list is "driven from the passes, not a hardcoded list, so a new pass
+ * appears without a code change."
+ *
+ * ⚠ THE PRODUCERS ALREADY DECLARE THEIR HEADING — every interrogation question and every
+ * deepening pass carries `heading` in its config, and 25-D put it there so a stored row
+ * could be resolved without guessing. Nothing had ever read them the other way round, so
+ * `HEADINGS_WITH_NO_PRODUCER` was maintained by hand and could only be right by accident.
+ *
+ * ⚠ A HEADING NOT IN THIS SET IS `no-producer`, WHICH IS OUR GAP AND SAYS SO. That is the
+ * one empty-state that must never be reported as "we looked and found nothing" — blaming
+ * the record for a hole in our tooling is the failure the whole heading system exists to
+ * prevent.
+ *
+ * ⚠ IT IS A CAPABILITY, NOT A RESULT. This says a producer EXISTS for the heading, not
+ * that it ran on this draft or found anything. `question-panel.ts` decides between
+ * `not-asked` and `asked-found-nothing` from the run record; this only rules out the third.
+ */
+export function headingsWithProducers(): Set<HeadingKey> {
+  const out = new Set<HeadingKey>()
+  for (const q of INTERROGATION_LIBRARY) out.add(q.heading)
+  for (const p of PASSES) out.add(p.heading)
+  for (const h of Object.values(BUILD_PASS_HEADINGS)) out.add(h)
+  // §25.6 — the user's own material is its own producer, and the user is the one who runs it.
+  out.add('YOUR_MATERIAL')
+  // 25-L §3c — the smart pass writes both of these directly (`recordPrognosis`), which is
+  // why they are named here rather than read from a config array: `SMART` is not an entry
+  // in either library, exactly like `ADVERSARIAL` above it.
+  out.add('HOW_HARD')
+  out.add('KEY_SOURCES')
+  return out
 }
 
 /**

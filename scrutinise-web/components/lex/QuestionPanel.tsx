@@ -13,11 +13,44 @@
 // excluded, not deleted. A source that vanished when the user set it aside would leave them
 // unable to see — or reverse — what they had done, and would make the panel disagree with
 // the Evidence Pack about what was considered.
+//
+// ══ 25-L §3 — IT IS A LIBRARY NOW, NOT A SCROLL ══════════════════════════
+//
+// ⚠⚠ §3a: "Without this the panel is a scroll, and a scroll is where things go to be
+// missed." Thirteen headings stacked vertically, each independently collapsible, is a
+// filing cabinet with every drawer half open. The panel now opens on a CONTENTS list —
+// every item with its count, or the KIND of empty it is — and choosing one shows that one,
+// with a home button back.
+//
+// ⚠ THE CONTENTS ARE DRIVEN FROM THE PASSES (§3b). `question-panel.ts` computes which
+// headings have a producer from the question and pass configs, so a new pass appears here
+// without anyone editing this file. What is hardcoded is the VOCABULARY of headings, which
+// is a shared language the document stack reads too — not the list of what exists.
+//
+// ⚠ AND AN EMPTY ITEM STAYS ON THE CONTENTS LIST, SAYING WHICH KIND OF EMPTY IT IS. An
+// item that disappeared when it had nothing in it would teach the user it does not exist,
+// and "not asked of your draft" and "asked and found nothing" are different facts.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useState } from 'react'
 import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-panel'
 import YourMaterial from './YourMaterial'
+import ClaimReview from './ClaimReview'
+
+/**
+ * §3b — what an EMPTY item says on the contents list, in three or four words.
+ *
+ * ⚠ FOUR DIFFERENT ANSWERS, NEVER "0". A zero beside "How the courts have read it" tells
+ * the user the courts have said nothing, which may be a false statement about the world made
+ * to cover a gap in our tooling. The contents list is the first thing they read, so it is
+ * the first place the distinction has to survive.
+ */
+const EMPTY_LABEL: Record<string, string> = {
+  'no-producer': 'we can\u2019t answer this yet',
+  'not-asked': 'not asked of your draft',
+  'asked-found-nothing': 'looked, found nothing',
+  'nothing-added': 'nothing added yet',
+}
 
 /**
  * ⚠ The four reasons a heading can be empty carry four different tones, and the mapping is
@@ -33,11 +66,13 @@ const GAP_STYLE: Record<string, string> = {
 }
 
 function EntryCard({
-  e, onExclude, onInclude, busy,
+  e, onExclude, onInclude, onPrioritise, busy,
 }: {
   e: PanelEntry
   onExclude: (entry: PanelEntry, reason: string) => void
   onInclude: (entry: PanelEntry) => void
+  /** 25-L §3d — promote to the proposal document, or demote back to the annex. */
+  onPrioritise: (entry: PanelEntry, on: boolean) => void
   busy: boolean
 }) {
   const [asking, setAsking] = useState(false)
@@ -67,14 +102,46 @@ function EntryCard({
             {e.bearsOnFocus && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">On this section</span>
             )}
+            {/* ⚠ THE TAG IS READABLE ON THE CARD, not only on the button that sets it — a
+                state you can only see by looking at a control's appearance is a state you
+                cannot scan a list for. */}
+            {e.priority && !e.excluded && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-800 text-white">
+                ★ In the document
+              </span>
+            )}
             {e.citation && <span className="text-[11px] text-zinc-500 truncate">{e.citation}</span>}
           </div>
         </div>
         {!e.excluded ? (
-          <button onClick={() => setAsking((v) => !v)} disabled={busy}
-            className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40 shrink-0">
-            Set aside
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* ══ 25-L §3d — PRIORITY, AND IT IS NOT A COLOUR ════════════════
+                Charlie is colour blind (docs/CLAUDE.md §21), so the state carries a FILLED
+                versus HOLLOW star — two different characters, not one recoloured — plus the
+                word, plus a 2px border. Any one of the three survives greyscale.
+                ⚠ The tag is not decorative: a priority source is printed in the proposal
+                document itself, and everything else goes to the evidence annex. */}
+            <button
+              onClick={() => onPrioritise(e, !e.priority)}
+              disabled={busy}
+              aria-pressed={e.priority}
+              title={e.priority
+                ? 'In the proposal document. Press to move it back to the evidence annex.'
+                : 'Put this in the proposal document itself, not only the annex.'}
+              className={`text-[11px] rounded border-2 px-1.5 py-0.5 disabled:opacity-40 ${
+                e.priority
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
+                  : 'border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50'
+              }`}
+            >
+              <span aria-hidden>{e.priority ? '★' : '☆'}</span>{' '}
+              {e.priority ? 'Priority' : 'Make priority'}
+            </button>
+            <button onClick={() => setAsking((v) => !v)} disabled={busy}
+              className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">
+              Set aside
+            </button>
+          </div>
         ) : (
           <button onClick={() => onInclude(e)} disabled={busy}
             className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40 shrink-0">
@@ -144,7 +211,15 @@ export default function QuestionPanel({
   const [data, setData] = useState<PanelData | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState<Record<string, boolean>>({})
+  /**
+   * ⚠⚠ 25-L §3a — WHICH ITEM IS OPEN, OR NULL FOR THE CONTENTS.
+   *
+   * `null` is the home state and it is the DEFAULT, which is the whole change. Thirteen
+   * headings all rendered at once, each with its own collapse, is a scroll — and §3a is
+   * right that a scroll is where things go to be missed. One item at a time, chosen from a
+   * list that shows what is in each.
+   */
+  const [openKey, setOpenKey] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -157,7 +232,7 @@ export default function QuestionPanel({
 
   useEffect(() => { void load() }, [load, refreshKey])
 
-  const decide = useCallback(async (entry: PanelEntry, status: 'INCLUDED' | 'EXCLUDED', reason?: string) => {
+  const decide = useCallback(async (entry: PanelEntry, status: 'INCLUDED' | 'EXCLUDED' | 'PRIORITY', reason?: string) => {
     setBusy(true); setError(null)
     try {
       const res = await fetch(`/api/ideas/${ideaId}/sources`, {
@@ -183,12 +258,40 @@ export default function QuestionPanel({
 
   if (!data) return null
 
+  const openHeading = openKey ? data.headings.find((h) => h.key === openKey) ?? null : null
+  const prioritised = data.headings.flatMap((h) => h.entries).filter((e) => e.priority).length
+
+  const cardProps = {
+    busy,
+    onExclude: (entry: PanelEntry, reason: string) => void decide(entry, 'EXCLUDED', reason),
+    onInclude: (entry: PanelEntry) => void decide(entry, 'INCLUDED'),
+    // 25-L §3d — demoting goes back to INCLUDED, never to "no decision". The user HAS
+    // decided; forgetting that would make the annex treat it as a source nobody looked at.
+    onPrioritise: (entry: PanelEntry, on: boolean) => void decide(entry, on ? 'PRIORITY' : 'INCLUDED'),
+  }
+
   return (
     <div className="space-y-3">
+      {/* ══ 25-L §3a — THE HEADER, AND THE WAY HOME ══════════════════════
+          ⚠ THE HOME CONTROL IS A BUTTON WITH A WORD ON IT, not a bare ‹ chevron. A user who
+          has gone two items deep into a library needs to know what pressing it returns them
+          TO; "Contents" says so and an arrow does not. */}
       <div className="flex items-baseline gap-2">
-        <div className="text-xs font-semibold uppercase tracking-wide text-zinc-700 flex-1">
-          What we found, by question
-        </div>
+        {openHeading ? (
+          <button
+            onClick={() => setOpenKey(null)}
+            className="text-xs font-semibold text-blue-700 hover:text-blue-900 border-2 border-blue-200 rounded-full px-2 py-0.5"
+          >
+            <span aria-hidden>←</span> Contents
+          </button>
+        ) : (
+          <div className="text-xs font-semibold uppercase tracking-wide text-zinc-700 flex-1">
+            Resources
+          </div>
+        )}
+        {openHeading && (
+          <div className="text-xs font-semibold text-zinc-800 flex-1 truncate">{openHeading.heading}</div>
+        )}
         <span className="text-[11px] text-zinc-400">{data.totalEntries} in all</span>
       </div>
 
@@ -196,77 +299,120 @@ export default function QuestionPanel({
         <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">{error}</p>
       )}
 
-      {data.headings.map((h) => {
-        const isOpen = open[h.key] ?? (h.entries.length > 0 && h.entries.length <= 6)
-        return (
-          <div key={h.key} className="rounded-xl border border-zinc-200 overflow-hidden">
-            <button
-              onClick={() => setOpen((o) => ({ ...o, [h.key]: !isOpen }))}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-zinc-50 hover:bg-zinc-100 text-left">
-              <span className="text-xs font-semibold text-zinc-800 flex-1">{h.heading}</span>
-              <span className="text-[11px] text-zinc-400">
-                {h.entries.length ? h.entries.length : '—'}
-              </span>
-              <span className="text-[11px] text-zinc-400 w-3 text-center">{isOpen ? '−' : '+'}</span>
-            </button>
+      {/* ══ THE CONTENTS ═══════════════════════════════════════
+          ⚠ EVERY ITEM IS LISTED, INCLUDING THE EMPTY ONES, and an empty one says WHICH KIND
+          of empty it is rather than showing a zero. A "0" beside "How the courts have read
+          it" is a false statement about the world whenever the real answer is "we did not
+          ask" or "we cannot answer this yet".
 
-            {/* ⚠ A STATED GAP IS ALWAYS SHOWN, open or closed. Folding it away would make an
-                established absence indistinguishable from a heading nobody looked at, which
-                is the exact failure this section exists to fix. */}
-            {h.gap && (
-              <div className={`px-3 py-2 text-xs border-t ${GAP_STYLE[h.gap.reason] ?? 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}>
-                {h.gap.text}
-                {h.gap.reason === 'asked-found-nothing' && h.questionsRun.length > 0 && (
-                  <span className="block mt-1 text-[11px] opacity-80">
-                    Asked: {h.questionsRun.join(' · ')}
-                  </span>
-                )}
-              </div>
+          ⚠ THE ORDER IS `HEADING_ORDER`, computed on the server — settled law first, the
+          strongest case against last. It is the design, not the order this file happens to
+          render in. */}
+      {!openHeading && (
+        <>
+          <p className="text-[11px] text-zinc-500">
+            Everything Lex found or worked out about the world, filed under the question it answers.
+            Choose one.
+          </p>
+          <ul className="space-y-1">
+            {data.headings.map((h) => {
+              const n = h.entries.length
+              return (
+                <li key={h.key}>
+                  <button
+                    onClick={() => setOpenKey(h.key)}
+                    className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+                  >
+                    <span className={`text-sm flex-1 ${n ? 'font-medium text-zinc-800' : 'text-zinc-500'}`}>
+                      {h.heading}
+                    </span>
+                    {n > 0 ? (
+                      <span className="text-xs font-semibold text-zinc-700">{n}</span>
+                    ) : (
+                      <span className="text-[11px] text-zinc-400">
+                        {h.gap ? EMPTY_LABEL[h.gap.reason] ?? 'nothing here' : 'nothing here'}
+                      </span>
+                    )}
+                    <span aria-hidden className="text-zinc-300 text-xs">›</span>
+                  </button>
+                </li>
+              )
+            })}
+            {data.unfiled.length > 0 && (
+              <li>
+                <button
+                  onClick={() => setOpenKey('__unfiled')}
+                  className="w-full flex items-baseline gap-2 rounded-lg border border-dashed border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+                >
+                  <span className="text-sm flex-1 text-zinc-500">Not filed under a question</span>
+                  <span className="text-xs font-semibold text-zinc-700">{data.unfiled.length}</span>
+                  <span aria-hidden className="text-zinc-300 text-xs">›</span>
+                </button>
+              </li>
             )}
+          </ul>
+          {/* §3d — the tagging is the input to the document, so the count belongs where the
+              user can see whether they have done any of it. */}
+          <p className="text-[11px] text-zinc-500">
+            {prioritised
+              ? `${prioritised} source${prioritised === 1 ? '' : 's'} marked as a priority — those go in the proposal document itself; everything else goes in the evidence annex.`
+              : 'Nothing is marked as a priority yet. Open an item and star the sources that belong in the proposal document itself.'}
+          </p>
+        </>
+      )}
 
-            {isOpen && h.entries.length > 0 && (
-              <div className="px-3 py-2.5 border-t border-zinc-100 space-y-2">
-                {h.entries.map((e) => (
-                  <EntryCard key={e.id} e={e} busy={busy}
-                    onExclude={(entry, reason) => void decide(entry, 'EXCLUDED', reason)}
-                    onInclude={(entry) => void decide(entry, 'INCLUDED')} />
-                ))}
-              </div>
-            )}
-
-            {/* §25.6 — adding a document or a link lives inside its own heading. */}
-            {h.key === 'YOUR_MATERIAL' && (
-              <div className="px-3 py-2.5 border-t border-zinc-100">
-                <YourMaterial ideaId={ideaId} onChanged={() => void load()} />
-              </div>
-            )}
-          </div>
-        )
-      })}
-
-      {/* ⚠ NAMED, NOT DROPPED. §3: "a source with no heading is a gap in the library, not a
-          source to drop." These are rows whose producer declared no heading — almost all of
-          them written before 25-D. */}
-      {data.unfiled.length > 0 && (
-        <div className="rounded-xl border border-zinc-200 overflow-hidden">
-          <div className="px-3 py-2 bg-zinc-50 text-xs font-semibold text-zinc-700">
-            Not filed under a question ({data.unfiled.length})
-          </div>
-          <div className="px-3 py-2 border-t border-zinc-100">
-            <p className="text-[11px] text-zinc-500 mb-2">
-              These were found before we started filing findings by question, so we don’t know which
-              one they answer. They are here rather than hidden.
-            </p>
-            <div className="space-y-2">
-              {data.unfiled.map((e) => (
-                <EntryCard key={e.id} e={e} busy={busy}
-                  onExclude={(entry, reason) => void decide(entry, 'EXCLUDED', reason)}
-                  onInclude={(entry) => void decide(entry, 'INCLUDED')} />
-              ))}
+      {/* ══ ONE ITEM ══════════════════════════════════════════ */}
+      {openHeading && (
+        <div className="space-y-2">
+          {/* ⚠ A STATED GAP IS SHOWN IN FULL HERE, not summarised as it is on the contents
+              list. The list answers "is there anything in this"; the item answers "what did
+              you look for, and what happened" — which is the sentence the user can tell us
+              is the wrong thing to have looked for. */}
+          {openHeading.gap && (
+            <div className={`rounded-lg border px-3 py-2 text-xs ${GAP_STYLE[openHeading.gap.reason] ?? 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}>
+              {openHeading.gap.text}
+              {openHeading.gap.reason === 'asked-found-nothing' && openHeading.questionsRun.length > 0 && (
+                <span className="block mt-1 text-[11px] opacity-80">
+                  Asked: {openHeading.questionsRun.join(' · ')}
+                </span>
+              )}
             </div>
-          </div>
+          )}
+
+          {openHeading.entries.map((e) => (
+            <EntryCard key={e.id} e={e} {...cardProps} />
+          ))}
+
+          {/* ══ 25-L §5 — THE PEOPLE GRAPH, IN BETA, JUDGED BLIND FIRST ═══════
+              ⚠ IT SITS UNDER `POSITIONS`, which until now was the one heading with no
+              producer at all — "we hold the voting record and Lex cannot read it". It can
+              now, and the first thing it does with it is ask the user whether it is right
+              before telling them what it thinks. */}
+          {openHeading.key === 'POSITIONS' && (
+            <ClaimReview ideaId={ideaId} />
+          )}
+
+          {/* §25.6 — adding a document or a link lives inside its own item. */}
+          {openHeading.key === 'YOUR_MATERIAL' && (
+            <div className="rounded-lg border border-zinc-200 p-2.5">
+              <YourMaterial ideaId={ideaId} onChanged={() => void load()} />
+            </div>
+          )}
         </div>
       )}
+
+      {openKey === '__unfiled' && (
+        <div className="space-y-2">
+          <p className="text-[11px] text-zinc-500">
+            These were found before we started filing findings by question, so we don’t know which
+            one they answer. They are here rather than hidden.
+          </p>
+          {data.unfiled.map((e) => (
+            <EntryCard key={e.id} e={e} {...cardProps} />
+          ))}
+        </div>
+      )}
+
     </div>
   )
 }

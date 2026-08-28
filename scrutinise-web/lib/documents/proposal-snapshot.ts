@@ -200,7 +200,7 @@ export interface SnapshotSourceRef {
    * for a cost figure nobody has reviewed, and for the same reason. An un-reviewed source
    * silently blessed is a claim the user never made.
    */
-  decision?: 'INCLUDED' | 'EXCLUDED' | null
+  decision?: 'INCLUDED' | 'EXCLUDED' | 'PRIORITY' | null
   exclusionReason?: string | null
   annotation?: string | null
 }
@@ -297,6 +297,35 @@ export interface ProposalSnapshot {
   knownUnknowns: SnapshotUnknown[]
   forks: { open: SnapshotFork[]; resolved: SnapshotFork[] }
   sources: SnapshotSource[]
+  /**
+   * ══ 25-L §3d — THE SOURCES THE USER MARKED AS PRIORITY ══════════════════
+   *
+   * §3d: "Priority source — goes in the proposal document. Full source list — goes in the
+   * evidence annex." So this is a SEPARATE list, not a flag the renderer has to remember to
+   * filter on: the proposal document reads `prioritySources`, the annex reads `sources`,
+   * and neither can accidentally print the other's set.
+   *
+   * ⚠ IT IS A FLAT LIST, NOT GROUPED BY CORPUS TYPE. Grouping is a filing convenience for
+   * a long annex; a handful of sources the proposer chose is a short list they ordered by
+   * importance in their head, and re-sorting it by whether something is an Act or a
+   * committee report would throw that away.
+   *
+   * ⚠ EMPTY IS A REAL ANSWER AND THE DOCUMENT SAYS SO. "Nobody has marked a priority
+   * source" is different from "there are no sources", and §20.2.2's rule about unreviewed
+   * values applies exactly here: silently promoting everything would put sources into the
+   * document as though the user had chosen them.
+   */
+  /**
+   * ⚠⚠ OPTIONAL, AND THAT IS NOT LAZINESS. `ProposalVersion.snapshot` is FROZEN JSON: every
+   * version minted before 25-L has no such key, and those documents are re-rendered on
+   * demand. A required field would have made `snapshot.prioritySources.length` throw on
+   * every historic version — caught here only because `check:20bd` renders a fixture, and
+   * it would otherwise have been found by a user opening last week's PDF.
+   *
+   * The renderer therefore has THREE cases, not two: absent (this version predates the
+   * feature — say nothing), empty (nobody has chosen — say so), and populated.
+   */
+  prioritySources?: SnapshotSourceRef[]
   /** §2a — considered and set aside, with reasons. Never filtered out of the record. */
   excludedSources: SnapshotExcludedSource[]
   /** §2b — what was still open at the moment this version was made. */
@@ -661,13 +690,28 @@ export async function buildProposalSnapshot(
             // ⚠ NULL WHERE THE USER HAS NOT LOOKED. Defaulting to INCLUDED would put every
             // source Lex retrieved into the document as though the user had endorsed it,
             // which is the opposite of §20.2's "Lex proposed them; the user owns them".
-            decision: (d?.status as 'INCLUDED' | 'EXCLUDED' | undefined) ?? null,
+            decision: (d?.status as 'INCLUDED' | 'EXCLUDED' | 'PRIORITY' | undefined) ?? null,
             exclusionReason: d?.status === 'EXCLUDED' ? d.reason : null,
             annotation: d?.annotation ?? null,
           }
         }),
     }))
     .filter((g) => g.refs.length > 0)
+
+  // ⚠⚠ 25-L §3d — BUILT FROM THE DECISION ROWS TOO, AND FOR THE SAME REASON AS THE
+  // EXCLUSIONS BELOW: a source the user promoted last week may not be in today's retrieval,
+  // and a filter over `refs` would silently drop exactly the source they cared most about.
+  // The decision row carries its own title, citation and url for this case.
+  const prioritySources: SnapshotSourceRef[] = decisionRows
+    .filter((d) => d.status === 'PRIORITY')
+    .map((d) => ({
+      id: d.sourceKey,
+      title: d.title?.trim() || 'Untitled source',
+      citation: d.citation?.trim() || '',
+      url: d.url?.trim() || '',
+      decision: 'PRIORITY' as const,
+      annotation: d.annotation ?? null,
+    }))
 
   // ⚠ BUILT FROM THE DECISION ROWS, NOT BY FILTERING `refs`. See `SnapshotExcludedSource`:
   // the exclusions that matter most to a reader are the ones whose source is no longer in
@@ -756,6 +800,7 @@ export async function buildProposalSnapshot(
       resolved: forksAll.filter((f) => f.resolved),
     },
     sources,
+    prioritySources,
     excludedSources,
     outstanding,
     passes: passRows.map((p) => ({

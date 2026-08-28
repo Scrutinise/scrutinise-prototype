@@ -26,7 +26,26 @@
 import { prisma } from '@/lib/prisma'
 import type { SearchResult } from './page1-config'
 
-export type SourceDecisionStatus = 'INCLUDED' | 'EXCLUDED'
+/**
+ * 25-L §3d — the three things a user can decide about a source.
+ *
+ * ⚠ `PRIORITY` IMPLIES INCLUDED. Everything not excluded is in the annex; priority says
+ * additionally that it belongs in the document itself. Anywhere that asks "is this in the
+ * evidence?" must therefore test `!== 'EXCLUDED'`, never `=== 'INCLUDED'` — the second
+ * would silently drop the sources the user rated highest, which is the worst available
+ * direction for that bug to break in.
+ */
+export type SourceDecisionStatus = 'INCLUDED' | 'EXCLUDED' | 'PRIORITY'
+
+/** In the evidence at all — see the note above about why this is a helper and not `===`. */
+export function isInEvidence(status: SourceDecisionStatus): boolean {
+  return status !== 'EXCLUDED'
+}
+
+/** In the proposal document itself, not only the annex. */
+export function isPrioritySource(status: SourceDecisionStatus): boolean {
+  return status === 'PRIORITY'
+}
 
 export interface SourceDecision {
   sourceKey: string

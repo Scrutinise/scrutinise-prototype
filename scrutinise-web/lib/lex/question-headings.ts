@@ -53,6 +53,8 @@ export type HeadingKey =
   | 'NUMBERS'
   | 'DEVOLVED'
   | 'AGAINST'
+  | 'HOW_HARD'
+  | 'KEY_SOURCES'
   | 'YOUR_MATERIAL'
 
 export interface QuestionHeading {
@@ -123,9 +125,17 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
     lookingFor: 'committees, inquiries and debates that have already examined this problem',
   },
   {
+    // ⚠ 25-L §3b GIVES THIS HEADING ITS WORDING, AND §5 CONSTRAINS WHAT MAY SIT UNDER IT.
+    // The brief calls it "key people and groups likely to support or oppose". What we hold
+    // is a RECORD — how members voted, what they declared — not a prediction, and §5 is
+    // explicit that "every individual claim must still be true and sourced". So the heading
+    // is the user's question and `lookingFor` is the honest answer to "from what?": a
+    // reader must not come away thinking we have forecast anybody's future vote.
     key: 'POSITIONS',
-    heading: 'Who has taken a position',
-    lookingFor: 'votes, declared interests and committee membership on this subject',
+    heading: 'Key people and groups likely to support or oppose',
+    lookingFor:
+      'how members have actually voted, what they have declared and which committees they sit '
+      + 'on — the record, not a forecast',
   },
   {
     key: 'NUMBERS',
@@ -141,6 +151,35 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
     key: 'AGAINST',
     heading: 'The strongest case against',
     lookingFor: 'the objection that stopped a comparable measure, in its strongest form',
+  },
+  {
+    // ══ 25-L §3c — THE SMART PASS'S OUTPUT GETS A HOME ══════════════════
+    //
+    // ⚠⚠ IT WAS FILED UNDER `AGAINST`, WHICH IS WHY CHARLIE COULD NOT FIND IT. "How hard
+    // will this be to pass", the barriers, the likelihood, what is most likely to go wrong
+    // and what the critique would cut — the best material the platform produces — were
+    // written by `recordPrognosis` with `headingKey: 'AGAINST'`, so they sat among the
+    // objections under "The strongest case against". They are not objections. They are a
+    // prognosis, which is a different question with a different use: an objection is
+    // something to answer, a prognosis is something to plan around.
+    //
+    // ⚠ AND IT IS REASONING, NOT RETRIEVAL. Every row under this heading carries no
+    // citation, deliberately — a judgement about how hard a Bill will be to pass is not a
+    // document, and attaching a citation to it would be the never-claim breach the rest of
+    // the build refuses. The panel says so on the rows themselves.
+    key: 'HOW_HARD',
+    heading: 'How hard will this be to achieve?',
+    lookingFor:
+      'what stands in the way of this actually happening — the barriers, how likely it is to '
+      + 'succeed, and what is most likely to go wrong',
+  },
+  {
+    // 25-L §3b — "Key sources". The critique is the only step that has read everything at
+    // once, so its ordering of what to read first is the one worth showing; the
+    // deterministic ranker in `build-highlights.ts` handles the rest.
+    key: 'KEY_SOURCES',
+    heading: 'Key sources',
+    lookingFor: 'the two or three things worth reading before anything else, and why each one',
   },
   {
     key: 'YOUR_MATERIAL',
@@ -201,9 +240,15 @@ export type EmptyReason =
 export const HEADINGS_WITH_NO_PRODUCER: HeadingKey[] = ['POSITIONS']
 
 export const NO_PRODUCER_NOTE: Record<string, string> = {
+  // ⚠ 25-L §5 — REWRITTEN, BECAUSE HALF OF IT STOPPED BEING TRUE. Lex still writes no
+  // findings under this heading — no pass reads the position graph into the evidence — but
+  // the record itself is now readable here, in beta, below this note. Leaving the old
+  // sentence would have told the user we cannot reach something they can see on the same
+  // screen, which is the never-claim rule breaking in the flattering direction.
   POSITIONS:
-    'We hold the voting and declared-interest record, and Lex cannot yet read it — this is a '
-    + 'limit in our tooling, not an absence of evidence. Nothing was searched for here.',
+    'No pass writes findings under this heading yet — the position graph is not part of the '
+    + 'build. What is here instead, in beta, is the record itself: how members have actually '
+    + 'voted, with the source for each. Nothing was searched for on your behalf.',
 }
 
 /**

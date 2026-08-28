@@ -1022,6 +1022,13 @@ export async function recordUnverifiedVocabulary(input: {
  * judgement about how hard a Bill will be to pass is not a document, and attaching a
  * citation to it would be the never-claim breach the rest of the build refuses.
  */
+/**
+ * ⚠ NAMED, so the row and the heading it is filed under cannot disagree. The title is the
+ * only thing distinguishing the reading list from the prognosis at write time, and a
+ * literal repeated in two places is a literal that will be edited in one.
+ */
+export const READ_FIRST_TITLE = 'What to read first'
+
 export async function recordPrognosis(input: {
   ideaId: string
   buildVersion: number
@@ -1051,7 +1058,7 @@ export async function recordPrognosis(input: {
   // showing; the deterministic ranker in build-highlights.ts handles the rest.
   if (critique.leadWith?.length) {
     rows.push({
-      title: 'What to read first',
+      title: READ_FIRST_TITLE,
       body: critique.leadWith
         .filter((l) => l?.title?.trim())
         .map((l) => `• ${l.title.trim()} — ${l.whyItLeads?.trim() || 'no reason given'}`)
@@ -1079,7 +1086,16 @@ export async function recordPrognosis(input: {
         ideaId: input.ideaId,
         passKey: SMART_PASS_KEY,
         runVersion: input.buildVersion,
-        headingKey: 'AGAINST',
+        // ⚠⚠ 25-L §3c — `HOW_HARD`, NOT `AGAINST`, AND THAT ONE WORD IS WHY CHARLIE COULD
+        // NOT FIND THIS. The best material the platform produces was filed under "The
+        // strongest case against", among the objections. A prognosis is not an objection:
+        // an objection is something to answer, a prognosis is something to plan around,
+        // and a user looking for "how hard will this be" had no reason to open a heading
+        // about the case against their own idea.
+        //
+        // ⚠ "What to read first" goes somewhere else again — it is a reading list, not a
+        // prognosis, and §3b names it as its own item.
+        headingKey: r.title === READ_FIRST_TITLE ? 'KEY_SOURCES' : 'HOW_HARD',
         fieldRef: null,
         kind: 'FINDING',
         title: r.title,

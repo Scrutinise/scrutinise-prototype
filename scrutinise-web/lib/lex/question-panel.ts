@@ -31,9 +31,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { evidenceLabel, isAssembled } from './evidence-labels'
-import { resolveHeading, isUserMaterialPass } from './heading-map'
+import { resolveHeading, isUserMaterialPass, headingsWithProducers } from './heading-map'
 import {
-  QUESTION_HEADINGS, HEADING_ORDER, HEADINGS_WITH_NO_PRODUCER, statedGap,
+  QUESTION_HEADINGS, HEADING_ORDER, statedGap,
   type EmptyReason, type HeadingKey,
 } from './question-headings'
 import { INTERROGATION_LIBRARY } from './interrogation-library'
@@ -61,6 +61,15 @@ export interface PanelEntry {
   /** The user excluded this source. It stays visible, marked, with its reason. */
   excluded: boolean
   exclusionReason: string | null
+  /**
+   * 25-L §3d — the user marked this as a priority source, so it goes in the proposal
+   * document itself rather than only the evidence annex.
+   *
+   * ⚠ PRIORITY IMPLIES INCLUDED, so this and `excluded` can never both be true. The panel
+   * renders the control only on a non-excluded card, and `decideSource` stores one status,
+   * not two flags.
+   */
+  priority: boolean
 }
 
 export interface PanelHeading {
@@ -134,8 +143,13 @@ export async function buildQuestionPanel(
   // in the panel, and the panel's rows are findings ABOUT sources — so the decision has to
   // find its row by whichever id the surface that made it was holding.
   const excluded = new Map<string, string | null>()
+  const priority = new Set<string>()
   for (const d of decisions) {
     if (d.status === 'EXCLUDED') excluded.set(d.sourceKey, d.reason)
+    // 25-L §3d — PRIORITY implies included, so it is its own set rather than a third
+    // branch of the exclusion map: anything asking "is this in the evidence" must test
+    // `!== EXCLUDED`, never `=== INCLUDED`.
+    if (d.status === 'PRIORITY') priority.add(d.sourceKey)
   }
 
   const toEntry = (e: (typeof evidence)[number]): PanelEntry => {
@@ -154,6 +168,7 @@ export async function buildQuestionPanel(
       bearsOnFocus: !!focus && e.fieldRef === focus,
       excluded: !!exclusionKey,
       exclusionReason: exclusionKey ? excluded.get(exclusionKey) ?? null : null,
+      priority: !!(e.sourceId && priority.has(e.sourceId)),
     }
   }
 
@@ -195,9 +210,17 @@ export async function buildQuestionPanel(
       bearsOnFocus: false,
       excluded: false,
       exclusionReason: null,
+      // A finding written by a pass is not a retrieved source and has no decision row of
+      // its own; it can be set aside like anything else, but it is never a "priority
+      // source" in the document sense, which is about a SOURCE the proposer chose.
+      priority: false,
     })
     byHeading.set('YOUR_MATERIAL', list)
   }
+
+  // Computed once for the whole panel — it is a walk over two config arrays, and doing it
+  // per heading would be thirteen identical walks.
+  const producers = headingsWithProducers()
 
   const headings: PanelHeading[] = HEADING_ORDER.map((key) => {
     const def = QUESTION_HEADINGS.find((h) => h.key === key)!
@@ -221,7 +244,13 @@ export async function buildQuestionPanel(
       // that would blame the record for a gap in our tooling. `nothing-added` next, because
       // "you haven't added anything" is not a failure of any kind. Only then does the
       // question of whether we looked, and what we found, arise.
-      const reason: EmptyReason = HEADINGS_WITH_NO_PRODUCER.includes(key)
+      // ⚠⚠ 25-L §3b — "NOTHING CAN ANSWER THIS" IS NOW COMPUTED FROM THE PRODUCERS, not
+      // read from a list maintained by hand. Every question and every pass declares its
+      // heading in config; nothing had ever read them the other way round, so the list
+      // could only be right by accident and would go stale the day a pass was added.
+      // `check:lex-25l` asserts the hand-written list still agrees with the computed one,
+      // which turns the list into documentation and makes drift a failure.
+      const reason: EmptyReason = !producers.has(key)
         ? 'no-producer'
         : key === 'YOUR_MATERIAL'
           ? 'nothing-added'
@@ -263,7 +292,7 @@ export function headingCoverage(): Array<{
     const questions = INTERROGATION_LIBRARY.filter((q) => q.heading === h.key).map((q) => q.panelHeading)
     const producer = questions.length
       ? 'interrogation question' as const
-      : HEADINGS_WITH_NO_PRODUCER.includes(h.key)
+      : !headingsWithProducers().has(h.key)
         ? 'NONE' as const
         : h.key === 'YOUR_MATERIAL'
           ? 'this sprint' as const

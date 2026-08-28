@@ -28,7 +28,15 @@ export async function GET(_req: Request, { params }: Params) {
 
 const PatchSchema = z.object({
   sourceKey: z.string().min(1).max(300),
-  status: z.enum(['INCLUDED', 'EXCLUDED']),
+  /**
+   * ⚠ 25-L §3d — THREE STATES, ONE FACT.
+   *   `PRIORITY` → goes in the proposal document
+   *   `INCLUDED` → goes in the evidence annex
+   *   `EXCLUDED` → goes in the considered-and-set-aside list, with its reason
+   * A separate "is priority" boolean would have allowed the meaningless fourth state
+   * (excluded AND priority) to exist in the data.
+   */
+  status: z.enum(['INCLUDED', 'EXCLUDED', 'PRIORITY']),
   reason: z.string().max(2000).nullish(),
   annotation: z.string().max(2000).nullish(),
   /**

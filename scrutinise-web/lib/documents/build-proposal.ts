@@ -379,6 +379,52 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   blocks.push({ kind: 'heading', level: 1, runs: text('What this proposal does not establish') })
   blocks.push(...gapBlocks(snapshot))
 
+  // ══ 25-L §3d — THE SOURCES THE PROPOSER CHOSE, IN THE DOCUMENT ITSELF ══════
+  //
+  // §3d: "Priority source — goes in the proposal document. Full source list — goes in the
+  // evidence annex." Before this, the tag was decorative: everything retrieved went into
+  // one undifferentiated list and the user's own judgement about what mattered reached no
+  // reader at all.
+  //
+  // ⚠ FIRST, AND ON ITS OWN HEADING. A priority source buried in a list of forty is a
+  // priority source nobody can see was chosen. This is the proposer saying "read these".
+  //
+  // ⚠ AND ITS ABSENCE IS STATED, NOT SKIPPED — the same rule as the empty question
+  // headings. A document that silently omits the section reads as one where nothing was
+  // worth choosing; one that says nobody has chosen yet reads as unfinished, which is what
+  // it is. The block only appears once there ARE sources to have chosen from, so a
+  // first draft is not scolded for a decision it has not reached.
+  //
+  // ⚠⚠ `undefined` IS A THIRD CASE, NOT A FALSY ONE. A version minted before this sprint
+  // has no `prioritySources` key at all, and telling its reader "no source has been marked
+  // as a priority yet" would be a claim about a decision that could not have been made.
+  // Absent → the section does not appear. Empty → it appears and says nobody has chosen.
+  const priority = snapshot.prioritySources
+  if (priority && snapshot.sources.length) {
+    blocks.push({ kind: 'rule' })
+    blocks.push({ kind: 'heading', level: 1, runs: text('The sources this rests on') })
+    if (priority.length) {
+      blocks.push({
+        kind: 'sources',
+        label: 'Chosen by the proposer as the ones that matter',
+        refs: priority.map((r): SourceRef => ({
+          title: r.title, citation: r.citation, url: r.url,
+          snippet: r.annotation ?? undefined,
+        })),
+      })
+    } else {
+      blocks.push({
+        kind: 'paragraph',
+        runs: text(
+          'No source has been marked as a priority yet. Everything the research found is in the '
+          + 'source list below and in the evidence annex; nothing here has been singled out by the '
+          + 'proposer, which is a statement about where this draft has got to rather than about the '
+          + 'sources.',
+        ),
+      })
+    }
+  }
+
   // ── Sources ────────────────────────────────────────────────────────────────
   if (snapshot.sources.length || snapshot.evidence.length) {
     blocks.push({ kind: 'rule' })
