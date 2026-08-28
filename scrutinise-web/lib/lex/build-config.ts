@@ -412,6 +412,42 @@ export function isFraming(v: unknown): v is Framing {
   return v === 'A_NAIVE' || v === 'B_CONTEXTUALISED'
 }
 
+/**
+ * ⚠⚠ 25-L §1 — WHAT THE USER SAID WAS WRONG WITH THE LAST RUN, AS AN INSTRUCTION.
+ *
+ * §1: the dialogue's text "goes into the drafting and smart passes as *what the user says
+ * was wrong with the last attempt*  — ⚠ with an explicit instruction to act on it, because
+ * 25-F found that material supplied to a pass without an instruction is material the pass
+ * ignores." Same finding as CLAUDE.md §24, from the other end: a prompt that merely CARRIES
+ * a fact is not a prompt that asks for anything to be done about it.
+ *
+ * ⚠ IT IS LABELLED AS THE USER'S WORDS AND IS NOT A SOURCE. Like `ownKnowledge`, this is
+ * testimony — it may steer the draft and may never be cited as evidence for a claim about
+ * the world.
+ *
+ * ⚠ AND IT IS AN INSTRUCTION, NOT AN ORDER TO AGREE. A user can be wrong about what was
+ * wrong; a pass told to obey would produce a draft that flatters them. The wording asks for
+ * the criticism to be ANSWERED — acted on, or addressed and explained.
+ */
+export function critiqueBlock(critique: string | null | undefined): string {
+  const text = (critique ?? '').trim()
+  if (!text) return ''
+  return [
+    '\n═══ WHAT THE USER SAYS WAS WRONG WITH YOUR LAST ATTEMPT ═══',
+    'They have read your previous draft and asked for this run. These are their words, not a',
+    'retrieved source — never cite them as evidence for a claim about the world.',
+    '',
+    text.slice(0, 6000),
+    '',
+    '⚠ ACT ON THIS. It is the single most specific instruction you have been given about this',
+    'proposal, and it is the reason this run exists. For each point they make: change what they',
+    'say is wrong, add what they say is missing, or — if the record does not support them — say',
+    'plainly in your output that you looked and why you did not change it. Do NOT simply repeat',
+    'the last draft with different words, and do NOT agree with a criticism the evidence does not',
+    'bear out; a draft that flatters the user is worth less to them than one that argues back.',
+  ].join('\n')
+}
+
 export interface FramedQuery {
   /** Terms handed to the gateway. */
   keywords: string[]
@@ -447,6 +483,10 @@ export function termsFrom(text: string, cap = 18): string[] {
 
 export function frameQuery(framing: Framing, ctx: ElicitationContext): FramedQuery {
   const keywords = termsFrom(ctx.problem || ctx.goalDetail)
+  // ⚠ 25-L §1 — ON BOTH ARMS. The framing experiment is about how much CONTEXT each arm
+  // carries; the critique is an instruction about this run, and withholding it from arm A
+  // would make A worse at the thing the user just asked for rather than differently framed.
+  const critique = critiqueBlock(ctx.userCritique)
 
   if (framing === 'A_NAIVE') {
     // A — the user's problem, phrased as they would put it into a chat window. Nothing
@@ -455,7 +495,7 @@ export function frameQuery(framing: Framing, ctx: ElicitationContext): FramedQue
     return {
       keywords,
       ideaContext: '',
-      promptBlock: plain,
+      promptBlock: [plain, critique].filter(Boolean).join('\n'),
       queryUsed: `A_NAIVE :: ${keywords.join(' ')} :: (no context supplied)`,
     }
   }
@@ -472,6 +512,7 @@ export function frameQuery(framing: Framing, ctx: ElicitationContext): FramedQue
       ? `\nTHE USER'S OWN KNOWLEDGE (USER TESTIMONY — not a retrieved source, never cite it as one):\n${ctx.ownKnowledge.slice(0, 4000)}`
       : '',
     ctx.aboutYou ? `\nABOUT THE USER: ${ctx.aboutYou.slice(0, 1500)}` : '',
+    critique,
   ].filter(Boolean).join('\n')
 
   const context = [ctx.goalDetail, ctx.ruledOut, ctx.ownKnowledge].filter(Boolean).join(' ').slice(0, 1500)

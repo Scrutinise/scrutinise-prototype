@@ -694,6 +694,15 @@ export interface ElicitationContext {
   ownKnowledge: string
   aboutYou: string
   reading: { url: string | null; fileName: string | null; read: false }
+  /**
+   * 25-L §1 — what the user said was wrong with the LAST run, when this build is a re-run
+   * they asked for through the dialogue. Null on a first build.
+   *
+   * ⚠ NOT PART OF THE ELICITATION ROW. It is read from the build being run and attached
+   * here, because every pass already receives this object and adding a second context
+   * parameter to seven pass signatures is how one of them comes to be missed.
+   */
+  userCritique?: string | null
 }
 
 export async function elicitationContext(ideaId: string, userId: string): Promise<ElicitationContext | null> {

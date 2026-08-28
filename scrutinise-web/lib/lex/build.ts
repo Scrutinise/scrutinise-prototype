@@ -104,6 +104,16 @@ export interface BuildView {
   failureReason: string | null
   cancelRequested: boolean
   summaryMessage: string | null
+  /**
+   * 25-L §1 — what the user said was wrong with the run BEFORE this one, when this build
+   * came from the re-run dialogue.
+   *
+   * ⚠ SHOWN BACK TO THEM, which is half the point of storing it. A user who wrote three
+   * paragraphs of criticism and then watched a progress bar has no way to tell whether it
+   * was carried at all; printing it beside the run that received it is the only evidence
+   * they get, and it costs nothing.
+   */
+  userCritique: string | null
   uncertainties: Array<{ fieldKey: string; sentence: string }>
   queryUsed: string | null
   spend: { tokensIn: number; tokensOut: number; pence: number | null; line: string }
@@ -262,6 +272,7 @@ function toView(
     failureReason: row.failureReason,
     cancelRequested: row.cancelRequested,
     summaryMessage: row.summaryMessage,
+    userCritique: row.userCritique,
     uncertainties: Object.entries(unc).map(([fieldKey, sentence]) => ({ fieldKey, sentence: String(sentence) })),
     queryUsed: row.queryUsed,
     spend: { tokensIn: price.tokensIn, tokensOut: price.tokensOut, pence: price.pence, line: formatSpend(price) },
@@ -413,6 +424,14 @@ export async function claimBuild(
    * running them. Ignored when there is nothing to reuse; see `reuseSourceFor`.
    */
   mode: BuildMode = 'FULL',
+  /**
+   * 25-L §1 — what the user said was wrong with the last run, from the re-run dialogue.
+   *
+   * ⚠ STORED ON THIS ROW, which is what makes it answerable later: "what was wrong with
+   * run 3" is a question about run 4's instructions, and the pair is only legible if they
+   * sit on the same row.
+   */
+  userCritique?: string | null,
 ): Promise<string> {
   if (!(await isConfirmed(ideaId))) throw new ElicitationNotConfirmed()
 
@@ -469,6 +488,11 @@ export async function claimBuild(
         ideaId, version, framing, status: 'QUEUED',
         notifyEmail: wantsEmail,
         passes: passes as never,
+        // 25-L §1 — the critique and its timestamp, or neither. A stamp with no text
+        // would say a dialogue happened and record nothing of what was said.
+        ...(userCritique?.trim()
+          ? { userCritique: userCritique.trim().slice(0, 8000), userCritiqueAt: new Date() }
+          : {}),
       },
     })
   } catch (err) {
@@ -979,6 +1003,14 @@ export async function runNextPass(ideaId: string, userId: string, buildId: strin
 
   const ctx = await elicitationContext(ideaId, userId)
   if (!ctx) return settleBuild(buildId, 'FAILED', 'There is no elicitation to build from.', [])
+
+  // ⚠⚠ 25-L §1 — THE CRITIQUE IS READ FROM *THIS* BUILD, NOT FROM THE PREVIOUS ONE.
+  //
+  // The row carries what the user wrote in the re-run dialogue immediately before asking
+  // for this run, so version N holds what N was asked to fix about N-1. Reading the
+  // previous build's critique instead would re-apply an old complaint the user has already
+  // seen answered, on every subsequent run, for ever.
+  ctx.userCritique = row.userCritique
 
   const framed = frameQuery(row.framing as Framing, ctx)
   if (!row.queryUsed) {

@@ -61,6 +61,15 @@ const BodySchema = z.object({
    * does not guess.
    */
   mode: z.enum(['FULL', 'REUSE']).optional(),
+  /**
+   * 25-L §1 — what the user said was wrong with the last run, from the re-run dialogue.
+   *
+   * ⚠ CAPPED AT THE SCHEMA, not silently truncated at the database. 8,000 characters is
+   * several pages of criticism; a user who writes more than that has more to say than a
+   * dialogue box is the right place for, and being told so beats having the end of it
+   * disappear without a word.
+   */
+  critique: z.string().trim().max(8000).optional(),
 })
 
 export async function GET(_req: Request, { params }: Params) {
@@ -122,7 +131,7 @@ export async function POST(req: Request, { params }: Params) {
   // ── START a build ────────────────────────────────────────────────────────
   let buildId: string
   try {
-    buildId = await claimBuild(id, framing, parsed.data.notifyEmail, parsed.data.mode ?? 'FULL')
+    buildId = await claimBuild(id, framing, parsed.data.notifyEmail, parsed.data.mode ?? 'FULL', parsed.data.critique)
   } catch (err) {
     if (err instanceof BuildAlreadyRunning) {
       return NextResponse.json({ error: err.message, state: await buildState(id) }, { status: 409 })
