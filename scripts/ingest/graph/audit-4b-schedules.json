@@ -1,0 +1,42 @@
+{
+ "measuredAt": "2026-08-27T23:54:59.373Z",
+ "corpus": {
+  "byCorpus": [
+   {
+    "corpus": "si-2010plus",
+    "sections": 287078,
+    "schedules": 103908,
+    "docsWithSchedule": 2605
+   },
+   {
+    "corpus": "si-pre-2010",
+    "sections": 489450,
+    "schedules": 167952,
+    "docsWithSchedule": 6813
+   }
+  ],
+  "totalSchedules": 271860
+ },
+ "clml": {
+  "sampled": 800,
+  "withScheduleElement": 285,
+  "scheduleElements": 643,
+  "medianScheduleChars": 5757,
+  "pct": 35.625
+ },
+ "matched": {
+  "sampledInCorpus": 574,
+  "clmlHasScheduleCorpusHas": 83,
+  "clmlHasScheduleCorpusLacks": 118,
+  "clmlLacksCorpusHas": 0,
+  "neither": 373,
+  "retentionPct": 41.29353233830846
+ },
+ "dta": {
+  "orders": 286,
+  "withScheduleSection": 39,
+  "withoutScheduleSection": 247,
+  "pctHeld": 13.636363636363637
+ },
+ "verdict": "INGESTED"
+}

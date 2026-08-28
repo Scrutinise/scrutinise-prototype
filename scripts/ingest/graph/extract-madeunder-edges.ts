@@ -47,25 +47,132 @@ const stats: Stats = { siDocs: 0, noPreamble: 0, elidedPreamble: 0, noTarget: 0,
 
 const stripTags = (s: string) => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-/** "sections 70(1), 105(7) and 108(1) of" → ['section-70','section-105','section-108'];
- *  keyword decides the ref prefix. Looks only at the tail of the text before the anchor. */
-function refListBefore(plainBefore: string): string[] {
-  const tail = plainBefore.slice(-220)
-  const m = tail.match(/\b(section|sections|article|articles|regulation|regulations|paragraph|paragraphs)\s+([0-9][0-9A-Za-z()]*(?:\s*(?:,|and|to)\s*[0-9][0-9A-Za-z()]*)*)\s+of[^.]{0,120}$/i)
-  if (!m) return []
-  const kw = m[1].toLowerCase().replace(/s$/, '')
-  if (kw === 'paragraph') return [] // schedule paragraphs need the schedule number too — act-level is honest
-  const nums = m[2].match(/\d+[A-Z]*/gi) ?? []
-  return [...new Set(nums.map(n => `${kw}-${n.toUpperCase()}`))]
+/**
+ * "sections 70(1), 105(7) and 108(1) of" → ['section-70','section-105','section-108'].
+ *
+ * ⚠⚠ TWO DEFECTS FIXED HERE ON 2026-08-28 (GRAPH 4B §2.1), BOTH FOUND BY READING
+ * THE PARSER'S OUTPUT RATHER THAN ITS CODE, AND BOTH ALREADY PRESENT IN THE
+ * 230,681 `made-under` rows this file wrote in July.
+ *
+ * 1. **A SUBSECTION WAS READ AS A SECTION.** `\d+[A-Z]*` over the raw list
+ *    matched the bracketed subsection too, so "sections 191(2) and 195(3) of"
+ *    produced `section-191`, `section-2`, `section-195` — and `section-2` is an
+ *    edge to a provision the instrument was never made under. Every enabling
+ *    power written with a subsection, which is most of them, carried one or more
+ *    of these. Parentheses are stripped before the numerals are read.
+ *
+ * 2. **A REF LIST WAS ATTACHED TO THE WRONG ACT.** A preamble naming several
+ *    enabling Acts — "section 2(2) of the European Communities Act 1972, section
+ *    379A of the Financial Services and Markets Act 2000 and sections 204(6) …
+ *    of the Banking Act 2009" — has one anchor per Act, and the old regex
+ *    matched the EARLIEST list in the window for every one of them. So FSMA's
+ *    anchor was given the European Communities Act's section 2. The window is
+ *    now cut at the last COMPLETED act citation ("… Act 1972"), because the
+ *    anchor's own year sits inside the <Citation> element and so cannot appear
+ *    in the text before it. What is left is the list that belongs to this Act.
+ *
+ * ⚠ Act-level rows were never affected — only the section-level ones, which are
+ * the rows a repeal analysis actually reads.
+ */
+const ITEM_RX = /\b(section|sections|article|articles|regulation|regulations|paragraph|paragraphs)\s+([0-9][0-9A-Za-z()]*(?:\s*(?:,|and|to)\s*[0-9][0-9A-Za-z()]*)*)\s+of\b/gi
+
+/**
+ * The ref list belonging to the anchor at the END of `text`.
+ *
+ * ⚠ The LAST list wins, not the first — a preamble naming several Acts has one
+ * anchor each and the first list belongs to the first Act. ⚠ But a `paragraph`
+ * list is skipped over rather than accepted, because "sections 126(1) and
+ * 128(1) OF, AND BY PARAGRAPH 2A OF SCHEDULE 12 TO, the Act" ends with a
+ * schedule paragraph whose schedule number we deliberately do not record — and
+ * taking it would throw away the two sections that are the real answer.
+ */
+function pickList(text: string): RegExpMatchArray | null {
+  const cands = [...text.matchAll(ITEM_RX)].filter(m => {
+    const after = text.slice(m.index! + m[0].length)
+    return after.length <= 120 && !after.includes('.')
+  })
+  for (let i = cands.length - 1; i >= 0; i--) {
+    if (cands[i][1].toLowerCase().replace(/s$/, '') !== 'paragraph') return cands[i]
+  }
+  return cands.length > 0 ? cands[cands.length - 1] : null
 }
 
-function extractDoc(gid: string, xml: string): EdgeRow[] {
-  stats.siDocs++
+export function refListBefore(plainBefore: string): string[] {
+  return refListDetail(plainBefore).refs
+}
+
+/** Same answer, plus the phrase it was read from — so an audit can tell a
+ *  DROPPED ref (same phrase, fewer numbers) from a RE-ATTRIBUTED one (a
+ *  different phrase entirely) without re-implementing the picker. */
+export function refListDetail(plainBefore: string): { refs: string[]; listText: string | null } {
+  const tail = plainBefore.slice(-260)
+  // ⚠ Prefer the window after the last COMPLETED citation of another instrument
+  // ("… Act 1972"), because the anchor's own year sits inside the <Citation>
+  // element and so can never appear in the text before it — anything with a
+  // year attached therefore belongs to a DIFFERENT Act.
+  // ⚠⚠ But only when a list survives the cut. The instrument's own title
+  // ("… Order 2009") also matches that pattern and sits inside the window, and
+  // cutting at it removed every real ref list on the first attempt.
+  let m: RegExpMatchArray | null = null
+  const completed = [...tail.matchAll(/\b(?:Act|Order|Regulations|Rules|Measure)\s+\d{4}\b/g)]
+  if (completed.length > 0) {
+    const last = completed[completed.length - 1]
+    m = pickList(tail.slice(last.index! + last[0].length))
+  }
+  if (!m) m = pickList(tail)
+  if (!m) return { refs: [], listText: null }
+  const kw = m[1].toLowerCase().replace(/s$/, '')
+  if (kw === 'paragraph') return { refs: [], listText: m[2] } // schedule paragraphs need the schedule number too — act-level is honest
+  // ⚠ strip bracketed subsections BEFORE reading numerals: 191(2) is one
+  // section, not sections 191 and 2.
+  const nums = m[2].replace(/\([0-9a-zA-Z]+\)/g, '').match(/\d+[A-Z]*/gi) ?? []
+  return { refs: [...new Set(nums.map(n => `${kw}-${n.toUpperCase()}`))], listText: m[2] }
+}
+
+/**
+ * ⚠⚠ GRAPH 4B §2.1. ONE PARSER, TWO WRITERS.
+ *
+ * The enabling relationship is now extracted TWICE — once into
+ * `legislation_edges` as a `made-under` edge (this file's `main()`), and once
+ * into `citation_edge` with the enacting words attached as evidence
+ * (`extract-enabling-edges.ts`). ⚠ **Two writers sharing one fact is exactly
+ * the shape that produced the regnal-year trap in four code paths**, so the
+ * PARSING lives here, in one exported function, and neither writer restates it.
+ *
+ * `anchor` is the citation element or footnote reference that names the
+ * enabling instrument. `refs` are the provisions the words before it name.
+ * `citationText` is those words — the source's own sentence, which is what
+ * `legislation_edges` structurally cannot hold and `citation_edge` requires.
+ */
+export type EnablingHit = {
+  targetGid: string
+  /** section-level refs named in the words before the anchor; [] = act-level only */
+  refs: string[]
+  /** ⚠ the source's own words granting the power — the evidence for this edge */
+  citationText: string
+  /** surrounding preamble XML, for hand-checking the parse */
+  rawFragment: string
+  /** true when the anchor was found in the recitals rather than the enacting
+   *  words: lower precision, and it must be visible on the row */
+  recitalFallback: boolean
+  /** ⚠ the exact input `refListBefore` was given, so an audit can re-run a
+   *  different parser over IDENTICAL bytes rather than over the truncated quote */
+  beforeWindow: string
+}
+
+export type EnablingOutcome =
+  | { kind: 'no-preamble' }
+  | { kind: 'elided' }          // TNA replaced a revised SI's preamble with ". . . ."
+  | { kind: 'no-target' }
+  | { kind: 'hits'; hits: EnablingHit[] }
+
+/** Parse one SI's enacting words. Pure: no counters, no writes. */
+export function parseEnabling(gid: string, xml: string): EnablingOutcome {
   const pre = xml.match(/<SecondaryPreamble>[\s\S]*?<\/SecondaryPreamble>/)
-  if (!pre) { stats.noPreamble++; return [] }
+  if (!pre) return { kind: 'no-preamble' }
   const enacting = pre[0].match(/<EnactingText>[\s\S]*?<\/EnactingText>/)?.[0] ?? pre[0]
   const plain = stripTags(enacting)
-  if (/(\.\s+){8,}/.test(plain) || plain.replace(/[.\s]/g, '').length < 20) { stats.elidedPreamble++; return [] }
+  if (/(\.\s+){8,}/.test(plain) || plain.replace(/[.\s]/g, '').length < 20) return { kind: 'elided' }
 
   // footnote id → first Citation gid in that footnote
   const footnoteGid = new Map<string, string>()
@@ -75,35 +182,59 @@ function extractDoc(gid: string, xml: string): EdgeRow[] {
     if (parsed) footnoteGid.set(f[1], parsed.gid)
   }
 
-  // anchors in document order: inline citations + footnote refs inside EnactingText
-  const fromId = edgeId(gid)
-  const edges: EdgeRow[] = []
   const anchorRx = /<Citation\b[^>]*\sURI="([^"]+)"[^>]*>|<FootnoteRef\b[^>]*\sRef="([^"]+)"[^>]*\/?>/g
-  const scan = (scope: string, detailTag: string) => {
+  const scan = (scope: string, recital: boolean): EnablingHit[] => {
+    const out: EnablingHit[] = []
     for (const a of scope.matchAll(anchorRx)) {
       const targetGid = a[1] ? parseLegUri(a[1])?.gid : footnoteGid.get(a[2] ?? '')
       if (!targetGid || targetGid === gid) continue
-      const detail = (detailTag + plain.slice(0, 160)).slice(0, 200)
-      const refs = refListBefore(stripTags(scope.slice(0, a.index)))
-      if (refs.length > 0) {
-        for (const ref of refs) {
-          edges.push({ fromId, toId: edgeId(targetGid, ref), edgeType: 'made-under', subType: '', source: SOURCE, granularity: granularityOf(false, true), detail })
-        }
-        stats.sectionEdges += refs.length
-      }
-      edges.push({ fromId, toId: edgeId(targetGid), edgeType: 'made-under', subType: '', source: SOURCE, granularity: granularityOf(false, false), detail })
-      stats.actEdges++
+      const before = stripTags(scope.slice(0, a.index))
+      out.push({
+        targetGid,
+        refs: refListBefore(before),
+        // ⚠ the words that GRANT the power, not the document's opening line.
+        // A fixed slice of the preamble would quote the same sentence for every
+        // anchor in a multi-power instrument and read as evidence for each.
+        // ⚠ start at a word boundary — a fixed slice cuts mid-word and the
+        // quote then reads as if the source said "he application of…"
+        citationText: before.slice(-240).replace(/^\S*\s+/, '').trim(),
+        rawFragment: scope.slice(Math.max(0, (a.index ?? 0) - 300), (a.index ?? 0) + 300),
+        recitalFallback: recital,
+        beforeWindow: before.slice(-300),
+      })
     }
+    return out
   }
-  scan(enacting, '')
-  if (edges.length === 0 && pre[0] !== enacting) {
+  let hits = scan(enacting, false)
+  if (hits.length === 0 && pre[0] !== enacting) {
     // enacting words cite indirectly ("the Order of 1978", "powers in Schedule 1")
-    // — the defining citation sits in the preamble recitals. Lower precision,
-    // flagged in detail.
-    scan(pre[0], '[preamble-recital] ')
-    if (edges.length > 0) stats.recitalFallback++
+    // — the defining citation sits in the preamble recitals. Lower precision.
+    hits = scan(pre[0], true)
   }
-  if (edges.length === 0) stats.noTarget++
+  return hits.length === 0 ? { kind: 'no-target' } : { kind: 'hits', hits }
+}
+
+function extractDoc(gid: string, xml: string): EdgeRow[] {
+  stats.siDocs++
+  const outcome = parseEnabling(gid, xml)
+  if (outcome.kind === 'no-preamble') { stats.noPreamble++; return [] }
+  if (outcome.kind === 'elided') { stats.elidedPreamble++; return [] }
+  if (outcome.kind === 'no-target') { stats.noTarget++; return [] }
+
+  const fromId = edgeId(gid)
+  const edges: EdgeRow[] = []
+  let sawRecital = false
+  for (const h of outcome.hits) {
+    if (h.recitalFallback) sawRecital = true
+    const detail = ((h.recitalFallback ? '[preamble-recital] ' : '') + h.citationText).slice(0, 200)
+    for (const ref of h.refs) {
+      edges.push({ fromId, toId: edgeId(h.targetGid, ref), edgeType: 'made-under', subType: '', source: SOURCE, granularity: granularityOf(false, true), detail })
+    }
+    stats.sectionEdges += h.refs.length
+    edges.push({ fromId, toId: edgeId(h.targetGid), edgeType: 'made-under', subType: '', source: SOURCE, granularity: granularityOf(false, false), detail })
+    stats.actEdges++
+  }
+  if (sawRecital) stats.recitalFallback++
   return edges
 }
 
@@ -158,4 +289,10 @@ async function main() {
   }
   await endNeonPool()
 }
-main().catch(e => { console.error('[made-under] FATAL', e); process.exit(1) })
+// ⚠ GUARDED. `parseEnabling` is imported by extract-enabling-edges.ts, and an
+// unguarded main() means importing the parser STARTS A FULL EXTRACTION over a
+// 1.4 GB zip that writes to the database. GRAPH 4A had to add this same guard to
+// extract-cites-edges.ts for exactly the same reason.
+if (require.main === module) {
+  main().catch(e => { console.error('[made-under] FATAL', e); process.exit(1) })
+}

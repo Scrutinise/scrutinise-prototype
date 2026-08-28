@@ -1,0 +1,109 @@
+{
+ "measuredAt": "2026-08-28T00:06:04.980Z",
+ "volume": {
+  "enablingRows": 191258,
+  "enablingInstruments": 70576,
+  "enablingTargets": 5088,
+  "actLevelRows": 103178,
+  "provisionRows": 88080,
+  "provisionPct": 46.05297556180656,
+  "resolvedRows": 186778,
+  "resolvedPct": 97.65761432201529,
+  "recitalRows": 34862,
+  "madeUnderRowsInEdges": 230681,
+  "instrumentsInEdges": 70255
+ },
+ "storage": {
+  "tableBytes": 1357561856,
+  "totalRows": 1225806,
+  "bytesPerRow": 1107.485080020819,
+  "enablingBytes": 211815381.43462178,
+  "enablingGb": 0.21181538143462178,
+  "monthlyUsd": 0.07413538350211762,
+  "fourAEstimateGb": 0.27,
+  "fourAEstimateUsd": 0.0945
+ },
+ "separation": {
+  "byDetection": [
+   {
+    "detection": "text",
+    "rows": 649202,
+    "sourceDocs": 61127
+   },
+   {
+    "detection": "markup",
+    "rows": 385346,
+    "sourceDocs": 35898
+   },
+   {
+    "detection": "enabling",
+    "rows": 191258,
+    "sourceDocs": 70576
+   }
+  ],
+  "worked": [
+   {
+    "target": "ukpga/1972/68",
+    "mentions": 126,
+    "enabling": 6017
+   },
+   {
+    "target": "ukpga/1977/49",
+    "mentions": 3913,
+    "enabling": 4910
+   },
+   {
+    "target": "ukpga/1980/66",
+    "mentions": 2923,
+    "enabling": 4004
+   },
+   {
+    "target": "uksi/1981/238",
+    "mentions": 0,
+    "enabling": 3459
+   },
+   {
+    "target": "ukpga/1990/19",
+    "mentions": 3133,
+    "enabling": 2478
+   },
+   {
+    "target": "ukpga/1978/29",
+    "mentions": 2782,
+    "enabling": 2002
+   },
+   {
+    "target": "ukpga/1981/22",
+    "mentions": 1126,
+    "enabling": 1772
+   },
+   {
+    "target": "uksi/1999/672",
+    "mentions": 47,
+    "enabling": 1746
+   }
+  ]
+ },
+ "parserDefect": {
+  "sampled": 2000,
+  "docsWithRefs": 1414,
+  "refsOld": 3094,
+  "refsNew": 2059,
+  "droppedSubsectionArtefacts": 975,
+  "reattributedToADifferentAct": 142,
+  "pctOfOldSectionRefsWrong": 36.10213316095669
+ },
+ "scaleControl": {
+  "narrow": {
+   "gid": "wsi/2020/92",
+   "title": "The Food for Specific Groups (Information and Compositional Requirements) (Wales) (Amendment) Regulations 2020",
+   "inbound": 0
+  },
+  "broad": {
+   "gid": "ukpga/1972/68",
+   "title": "European Communities Act 1972 (repealed)",
+   "inbound": 6143
+  },
+  "passes": true
+ }
+}

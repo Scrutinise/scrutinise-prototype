@@ -32,6 +32,16 @@
  *   `text`   — the Act's NAME in running text, resolved against corpus_acts
  *              titles. `target_uri` is DERIVED from the resolved gid, not read
  *              from the document, and must never be quoted as if it were.
+ *   `enabling` — GRAPH 4B §2.1. The instrument's own enacting words say it was
+ *              MADE UNDER the target: "in exercise of the powers conferred by
+ *              section 15 of …". ⚠⚠ **THIS IS A DIFFERENT AND STRONGER FACT
+ *              THAN A MENTION, AND MUST NEVER BE FLATTENED INTO ONE.** An
+ *              instrument that merely mentions an Act survives its repeal; an
+ *              instrument whose enabling power is repealed may fall with it.
+ *              Repeal analysis — the reason this graph exists — is unanswerable
+ *              if the two are summed, and a flattened count would produce a
+ *              confident, wrong consequence list. `inboundSummary`'s
+ *              `byDetection` is what keeps them apart.
  * Never mix them in a count without saying so. A measured fact and an inferred
  * one must not look identical on the page (docs/CLAUDE.md §19).
  *
@@ -69,18 +79,22 @@ CREATE TABLE IF NOT EXISTS ${CITATION_TABLE} (
   resolved              boolean NOT NULL, -- target_act_id names an instrument the corpus holds text for
   source_type           text NOT NULL,   -- primary | SI | other
   source_gid            text NOT NULL,   -- denormalised from source_doc_uri: the dominant join key
-  detection             text NOT NULL DEFAULT 'markup', -- markup | text — see below
+  detection             text NOT NULL DEFAULT 'markup', -- markup | text | enabling — see below
   extracted_from        text NOT NULL,   -- provenance of the bytes, e.g. best-collection-xml.zip@2026-08-24
   extracted_at          timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT citation_edge_source_type_ck CHECK (source_type IN ('primary', 'SI', 'other')),
-  CONSTRAINT citation_edge_detection_ck CHECK (detection IN ('markup', 'text'))
+  CONSTRAINT citation_edge_detection_ck CHECK (detection IN ('markup', 'text', 'enabling'))
 );
 -- idempotent for a table created before the detection column existed.
 -- NOTE: no backticks in this string, ever - it is inside a template literal.
 ALTER TABLE ${CITATION_TABLE} ADD COLUMN IF NOT EXISTS detection text NOT NULL DEFAULT 'markup';
-DO $$ BEGIN
-  ALTER TABLE ${CITATION_TABLE} ADD CONSTRAINT citation_edge_detection_ck CHECK (detection IN ('markup', 'text'));
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- GRAPH 4B §2.1: WIDENED to admit 'enabling'. Additive - it accepts strictly
+-- more than before, so no existing row can fail it. Drop-then-add because a
+-- CHECK cannot be altered in place; both statements are in one transaction by
+-- virtue of being one query, so the table is never briefly unguarded.
+ALTER TABLE ${CITATION_TABLE} DROP CONSTRAINT IF EXISTS citation_edge_detection_ck;
+ALTER TABLE ${CITATION_TABLE} ADD CONSTRAINT citation_edge_detection_ck
+  CHECK (detection IN ('markup', 'text', 'enabling'));
 -- The dominant query is INBOUND, not outbound: "what points at this Act?"
 CREATE INDEX IF NOT EXISTS citation_edge_target_act ON ${CITATION_TABLE} (target_act_id);
 CREATE INDEX IF NOT EXISTS citation_edge_target_uri ON ${CITATION_TABLE} (target_uri);
