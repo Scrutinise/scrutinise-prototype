@@ -163,7 +163,21 @@ export default function PublicNav() {
           Scrutinise
         </Link>
 
-        {/* Desktop nav */}
+        {/* ══ DESKTOP NAV — 25-K §5 ═════════════════════════════════
+            Order, left to right: Create · Browse · Central · About · Support · [Admin].
+            It is the brief's order and it is the order of use: make something, look at
+            what others made, work with your community, find out what this is, ask for
+            help. "Central" sat last, after the admin links, because it was added last.
+
+            ⚠ LEGISLATION IS GONE — not being tested, and clutter on the way to the pilot
+            (§5). The page itself (`/legislation-compare`) is untouched and still reachable
+            by URL and from the admin panel; what went is the nav item.
+
+            ⚠⚠ AND `Create` IS THE LIVE LABEL, WHICH CONTRADICTS 25-J's REPORT. 25-J §1
+            renamed the nav item to "My ideas" — in `components/ui/Navbar.tsx`, which NOTHING
+            RENDERS. This is the nav every signed-in page draws. 25-K §5 names the item
+            "Create", which is what Charlie saw when he walked the site, so that is what it
+            says here. See the sprint report. */}
         <div className="hidden items-center gap-6 md:flex">
           {/* 25-F §9 — creation entry. A CLIENT component, which is why the switch is a
               redirect route rather than a prop: it cannot read the database. */}
@@ -173,16 +187,18 @@ export default function PublicNav() {
           <Link href="/ideas" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Browse
           </Link>
-          <Link href="/support" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Support
-          </Link>
-          {isAdmin && (
-            <Link href="/legislation-compare" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Legislation
+          {/* "Central" is the module; "Community" stays the name of the things
+              you create inside it (renamed 6 Aug 2026 after the Stage 1 test). */}
+          {isLoaded && isSignedIn && (
+            <Link href="/communities" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              Central
             </Link>
           )}
           <Link href="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             About
+          </Link>
+          <Link href="/support" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Support
           </Link>
           {isAdmin && (
             <Link href="/admin" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -199,14 +215,6 @@ export default function PublicNav() {
                 <Link href="/sign-up">Sign up</Link>
               </Button>
             </>
-          )}
-
-          {/* "Central" is the module; "Community" stays the name of the things
-              you create inside it (renamed 6 Aug 2026 after the Stage 1 test). */}
-          {isLoaded && isSignedIn && (
-            <Link href="/communities" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Central
-            </Link>
           )}
 
           {isLoaded && isSignedIn && user && (
@@ -242,20 +250,16 @@ export default function PublicNav() {
             >
               Browse
             </Link>
-            <Link
-              href="/support"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Support
-            </Link>
-            {isAdmin && (
+            {/* ⚠ 25-K §5 — THE SAME ORDER AS THE DESKTOP NAV, and Legislation is gone from
+                both. A drawer that lists the items in a different order is a second thing
+                to learn, and the phone is where a pilot tester is most likely to be. */}
+            {isLoaded && isSignedIn && (
               <Link
-                href="/legislation-compare"
+                href="/communities"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Legislation
+                Central
               </Link>
             )}
             <Link
@@ -264,6 +268,13 @@ export default function PublicNav() {
               onClick={() => setMobileMenuOpen(false)}
             >
               About
+            </Link>
+            <Link
+              href="/support"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Support
             </Link>
             {isAdmin && (
               <Link
@@ -284,16 +295,6 @@ export default function PublicNav() {
                   <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
                 </Button>
               </div>
-            )}
-
-            {isLoaded && isSignedIn && (
-              <Link
-                href="/communities"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Central
-              </Link>
             )}
 
             {isLoaded && isSignedIn && user && (

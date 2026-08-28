@@ -41,9 +41,12 @@ const MD: Components = {
   code: ({ node, ...p }) => <code className="text-xs bg-zinc-100 rounded px-1 py-0.5" {...p} />,
 }
 
+// ⚠ 25-K §1 — THE TOUR TEACHES THE VOCABULARY, so it was the last place the retired
+// words could survive and still do damage: a user who is TOLD the middle column is called
+// "Your proposal" then goes looking for that label and does not find it.
 const PANELS: { name: string; side: string; blurb: string }[] = [
-  { name: 'Chat', side: 'left', blurb: "Talk to me, Lex — I'll help you shape each part of your proposal." },
-  { name: 'Your proposal', side: 'middle', blurb: 'The proposal as you build it; answer my questions in the chat, or type straight into the boxes — each saves as you go.' },
+  { name: 'What to do next', side: 'left', blurb: "The list of decisions waiting and what to read, with the chat under it — talk to me, Lex, and I'll help you shape each part." },
+  { name: 'The draft', side: 'middle', blurb: 'What I have written so far; answer my questions in the chat, or type straight into the boxes — each saves as you go.' },
   { name: 'Legislation', side: 'right', blurb: "Once we have enough to search on, I'll pull the most relevant law, debates and committee work and put it here." },
 ]
 
@@ -70,12 +73,12 @@ const BUILD_STEPS: { name: string; side: string; blurb: string }[] = [
     blurb: 'I show you what I understood before I do anything with it. If I have it wrong, say so and I will try again — nothing is built on a reading you have not seen.',
   },
   {
-    name: 'The build',
+    name: 'I go away and work',
     side: 'then',
     blurb: 'Ten passes over about ten minutes: I search the corpus, draft a diagnosis and an approach, research what the draft raises, revise it against what I find, and read the whole thing back as a hostile committee clerk.',
   },
   {
-    name: 'Your proposal',
+    name: 'The Strategy',
     side: 'last',
     blurb: 'Everything I drafted, as proposals you accept, edit or throw out — with the decisions I had to make laid out so you can take them yourself. Nothing is yours until you say it is.',
   },
