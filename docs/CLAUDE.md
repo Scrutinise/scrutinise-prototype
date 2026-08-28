@@ -964,8 +964,25 @@ had noticed it was missing from the list either.
 is a finding, not a formatting choice. If a check cannot run, say so with the reason; a
 suite of twelve reporting eleven passes is eleven passes and one unknown.
 
-*(Related: the "checks that cannot fail" register — this is the twenty-third and
-twenty-fourth shape in it.)*
+### 23.3 — Where a populated value matters, the check tests the VALUE, not the schema
+
+**The rule: `required` in a schema means the key is present. It says nothing about whether
+the value is meaningful, and the empty value always satisfies it. A check that asserts the
+schema is a check that will pass on `""` for ever.**
+
+This is §24's finding stated as a testing rule, because that is where it would have been
+caught. `check:lex-25h` asserted that `nestByDrivenBy` existed and that `drivenBy` was in the
+schema. Both were true for three sprints while **every build in the database produced zero
+nested causes** — 0 of 4 on the only idea that had ever been built, and, on a later sweep,
+**not one nested cause produced by any build, ever**: the single nested row in production was
+created by hand, by a user, on 14 August.
+
+**So the assertion has to reach the output.** Not "the field is declared", not "the function
+exists" — *these causes nest*. Where that needs a live run, the live run is the check, and it
+is worth one build's spend to have it.
+
+*(Related: the "checks that cannot fail" register — this is the twenty-third, twenty-fourth
+and twenty-fifth shape in it.)*
 
 ---
 
@@ -1009,3 +1026,26 @@ nothing errored, because `""` is a valid string.
    in which every entry is empty is a list you have not asked the question of".
 4. **Where a later pass REPLACES an earlier pass's output, say so in that pass's prompt.**
    It cannot inherit what it was not told to rebuild.
+
+### 24.1 — When two passes write the same records and the second replaces the first, the second must be told everything the first was told
+
+**The rule, as its own line because the failure is silent and its symptom points the wrong
+way: a replace between two passes with different instructions destroys work, and it looks
+like the field was never filled rather than like it was deleted.**
+
+That is why `drivenBy` cost five sprints. Nobody was looking for a deletion, because there
+was nothing in the output to suggest one had happened — the causes simply arrived flat, every
+time, and every diagnosis started from "the model is not populating the field". The model was
+populating it. A later pass, told nothing about it, overwrote the rows.
+
+**What to do when two passes write the same table:**
+
+1. **Diff the instructions, not the schemas.** The schemas matched perfectly; the prompts did
+   not. Ask of every field the first pass is told about: is the second told the same?
+2. **Say the replacement out loud in the second pass's prompt** — "the causes you return
+   replace the earlier ones entirely, so the chain has to be rebuilt here; it is not
+   inherited."
+3. **Share the instruction, do not copy it.** One exported constant given to both passes.
+   Two copies is one copy that will be updated.
+4. **Suspect this shape whenever a field is empty in the output and correct in the code.**
+   Ask which pass wrote last, and what it was told.

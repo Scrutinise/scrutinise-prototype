@@ -1,0 +1,58 @@
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // 25-M — A TYPE PROGRAM FOR THE CHECKS, BECAUSE THERE HAS NEVER BEEN ONE.
+  //
+  // ⚠⚠ `scripts/**` IS EXCLUDED FROM THE WEB tsconfig, AND THAT IS CORRECT: CLAUDE.md §20
+  // check 0 forbids any file outside `scrutinise-web` from entering the web TypeScript
+  // program, and several scripts import from `../../scripts/ingest`, which would drag
+  // `@lancedb/lancedb` into a serverless bundle. The exclusion is a load-bearing boundary,
+  // not an oversight.
+  //
+  // ⚠⚠ BUT ITS SIDE EFFECT WAS THAT NO CHECK OR VERIFY SCRIPT HAD EVER BEEN TYPECHECKED.
+  // 172 files, every guard this codebase relies on, and `tsc --noEmit --listFiles` matched
+  // ZERO of them. That is how `runBuildToCompletion(ideaId, userId)` — a call missing its
+  // third argument — reached a LIVE RUN, claimed a build row, and died in its first pass
+  // with a Prisma validation error. The typechecker would have caught it in a second.
+  //
+  // So: a SEPARATE program, run by `npm run check:scripts`. It is not part of the web build
+  // and cannot become one, so the boundary above is untouched.
+  //
+  // ⚠ THE BOUNDARY-CROSSING SCRIPTS ARE EXCLUDED BY NAME, with the reason, rather than the
+  // whole directory being given up on. They import from the ingest package, whose types are
+  // not resolvable from here; that is a real limitation and it is stated rather than hidden
+  // behind a `skipLibCheck`-shaped shrug. Every other script — including all 24 checks and
+  // all 11 verifies — is covered.
+  // ─────────────────────────────────────────────────────────────────────────
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // ⚠ The scripts run on Node 24 via `tsx`, not in a browser. Inheriting the web app's
+    // conservative target made the typechecker reject BigInt literals and the `s` regex flag
+    // in scripts that have run correctly for months — a config artefact, not a defect, and
+    // exactly the kind of noise that gets a new check switched off on its first run.
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    // The scripts are run by `tsx`, which is CommonJS-ish at the entry point; the web app's
+    // bundler-resolution settings do not apply to them.
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "types": ["node", "react"]
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../lib/**/*.ts", "../components/**/*.tsx", "../app/**/*.ts", "../app/**/*.tsx"],
+  "exclude": [
+    "../node_modules",
+    // ⚠ These import `../../scripts/ingest/**`, outside this package. Listed individually so
+    // a NEW boundary-crossing script fails this check rather than being silently swept up.
+    "check-annotation-titles.ts",
+    "check-corpus-types.ts",
+    "measure-bills-stream.ts",
+    "measure-debates-scotland.ts",
+    "measure-political-corpora.ts",
+    "measure-s12-baseline.ts",
+    "measure-s4-fusion-decision.ts",
+    "measure-s8-framing.ts",
+    "measure-s8-router-v2.ts",
+    "verify-goldv2-keys.ts"
+  ]
+}

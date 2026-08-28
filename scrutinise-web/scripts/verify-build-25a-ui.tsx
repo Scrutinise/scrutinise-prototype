@@ -19,6 +19,15 @@
 // Usage: npx tsx scripts/verify-build-25a-ui.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ⚠ 25-M — THE SECOND HARNESS FOUND NEVER TO HAVE RUN, and it is the same one line as
+// `verify-lex-25e-ui` (fixed in 25-L). `tsx` compiles these scripts with the CLASSIC JSX
+// runtime, so every `<Component />` becomes `React.createElement` and the file dies on
+// `ReferenceError: React is not defined` before its first assertion.
+//
+// ⚠ IT WAS FOUND BY APPLYING docs/CLAUDE.md §23.2 — report checks RUN, not only checks
+// PASSED. Listing the whole suite and looking for "DID NOT RUN" is the only thing that
+// surfaces a check whose silence has always read as success.
+import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import BuildProgress from '../components/lex/BuildProgress'
 import type { BuildView } from '../app/ideas/build/BuildIdeaClient'
@@ -33,8 +42,16 @@ function assert(ok: boolean, name: string, detail = '') {
 
 const CEILING = { budgetMs: 270000, binding: 'request', costPence: 50 }
 
+// ⚠ 25-M — `Object.assign`, NOT A SPREAD, AND THAT IS THE FIX RATHER THAN A CAST.
+// `{ ...base, ...over }` where `over` is `Partial<BuildView>` makes every property `over`
+// could carry OPTIONAL in the result, so the function stopped satisfying its own return
+// type the moment a new required field was added to `BuildView`. `Object.assign` intersects
+// instead of widening, so the base's completeness survives — and a genuinely missing field
+// still fails, which a `as BuildView` cast would have silenced.
 function view(over: Partial<BuildView> = {}): BuildView {
-  return {
+  const base: BuildView = {
+    // 25-L §1 — see verify-lex-25g-ui. Null unless a caller overrides it.
+    userCritique: null,
     id: 'b1', version: 1, status: 'RUNNING', framing: 'B_CONTEXTUALISED',
     passes: BUILD_PASSES.map((p, i) => ({
       key: p.key, label: p.label, detail: p.detail,
@@ -58,8 +75,15 @@ function view(over: Partial<BuildView> = {}): BuildView {
     })),
     nextPass: 'DIAGNOSIS', resumable: true, workerLate: false,
     forks: [],
-    ...over,
+    // ⚠ 25-M — THESE THREE WERE MISSING SINCE 25-F AND NOTHING COULD SEE IT. `BuildView`
+    // gained `highlights`, `modelsByPass` and `queries`; this fixture never got them, and
+    // the `...over` spread widened the return type enough to hide it. Null and empty are
+    // the honest values for a build that has not finished — this fixture is a RUNNING one.
+    highlights: null,
+    modelsByPass: [],
+    queries: [],
   }
+  return Object.assign(base, over)
 }
 
 function render(v: BuildView, onCancel?: () => void) {
@@ -103,7 +127,19 @@ function main() {
   }))
   assert(!done.includes('>Stop<'), '§2 CONTROL — Cancel is NOT offered on a finished build')
   assert(done.includes('Done'), '§2 a completed build says Done')
-  assert(done.includes('I drafted the whole thing'), '§5 the build summary is shown')
+  // ⚠⚠ 25-M — INVERTED, BECAUSE 25-G §4a DELIBERATELY REMOVED IT AND NOTHING NOTICED.
+  //
+  // This asserted that `summaryMessage` appears in the progress panel. 25-G found the same
+  // 537 characters rendered TWICE on one screen — byte-identical, a few inches apart — once
+  // in the transcript and once here, and removed the copy in this panel. The assertion has
+  // been wrong ever since and never failed, because this harness has never executed:
+  // `ReferenceError: React is not defined` before its first line (see the header).
+  //
+  // So it now asserts the property 25-G established: the summary is NOT duplicated here. The
+  // transcript copy is the one that stays, because it is followed by its two companion
+  // bubbles in the order §5 specifies.
+  assert(!done.includes('I drafted the whole thing'),
+    '§5 (as §25-G §4a) the build summary is NOT duplicated in the progress panel')
   assert(done.includes('What I’m least sure about'), '§4.2 the per-field uncertainties are shown')
   assert(done.includes('I assumed the charge applies at the till.'), '   …with the sentence itself')
   assert(done.includes('Where I had to choose'), '§4.1 the forks are shown')

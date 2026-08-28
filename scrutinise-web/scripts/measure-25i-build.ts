@@ -66,7 +66,10 @@ async function main() {
 
   // What reuse would actually do, BEFORE spending anything.
   const source = await reuseSourceFor(idea.id)
-  console.log(`\nreuse source: ${source ? `v${source.version} (${source.reason ?? 'available'})` : 'NONE — a REUSE request would run FULL'}`)
+  // ⚠ 25-M — `reuseSourceFor` HAS NEVER RETURNED A `reason`. This printed `undefined` through
+  // every run since 25-I and nothing caught it, because `scripts/**` was excluded from the
+  // only TypeScript program that existed. The shape is { id, version, passes }.
+  console.log(`\nreuse source: ${source ? `v${source.version}` : 'NONE — a REUSE request would run FULL'}`)
 
   if (dry) { console.log('\n⚠ DRY — nothing started.'); return }
 

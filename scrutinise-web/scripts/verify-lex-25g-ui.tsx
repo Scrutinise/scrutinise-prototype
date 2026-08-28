@@ -56,6 +56,9 @@ const QUERIES = [
 ]
 
 const BUILD: BuildView = {
+  // 25-L §1 added `userCritique` to BuildView. Null here: this fixture is a build nobody
+  // asked to re-run, which is the ordinary case and the one worth rendering.
+  userCritique: null,
   id: 'b1', version: 2, status: 'DONE', framing: 'B_CONTEXTUALISED',
   passes: [
     {

@@ -18,7 +18,11 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import StageBar from '../components/lex/StageBar'
-import { LEX_STAGES, stageHref, type StageContext, type LexStageKey } from '../lib/lex/stages'
+// ⚠ 25-L split the vocabulary from the counting so a client component could import the
+// names without dragging `pg` into the browser bundle. `StageContext` went with the counts.
+// This import survived because `tsx` erases a type-only import and the harness kept passing.
+import { LEX_STAGES, stageHref, type LexStageKey } from '../lib/lex/stages'
+import type { StageContext } from '../lib/lex/stage-context'
 
 let pass = 0, fail = 0
 function ok(name: string, cond: boolean, detail = '') {
