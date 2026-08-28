@@ -1,0 +1,408 @@
+{
+  "takenAt": "2026-08-28T00:34:52.802Z",
+  "k": 120,
+  "seedsPerTag": 12,
+  "thresholds": [
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8
+  ],
+  "written": true,
+  "perTag": {
+    "COST": {
+      "seeds": 10,
+      "denseCandidates": 955,
+      "lowestReturnedScore": 0.7147379517555237,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 955,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 955,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 955,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 751,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 78,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.03102654218673706,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 12,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:877 0.8:73 0.9:5"
+    },
+    "ENFORCEMENT": {
+      "seeds": 11,
+      "denseCandidates": 979,
+      "lowestReturnedScore": 0.7058990001678467,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 979,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 979,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 979,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 468,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 21,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.037867069244384766,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 37,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:958 0.8:19 0.9:2"
+    },
+    "UNINTENDED": {
+      "seeds": 9,
+      "denseCandidates": 882,
+      "lowestReturnedScore": 0.6985323429107666,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 882,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 882,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 867,
+          "censored": false
+        },
+        {
+          "t": 0.75,
+          "n": 135,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 9,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.032339274883270264,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 120,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:15 0.7:858 0.8:7 0.9:2"
+    },
+    "EVIDENCE_GAP": {
+      "seeds": 4,
+      "denseCandidates": 400,
+      "lowestReturnedScore": 0.7109532952308655,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 400,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 400,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 400,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 137,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 3,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.03497755527496338,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 42,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:397 0.8:3 0.9:0"
+    },
+    "WRONG_VEHICLE": {
+      "seeds": 7,
+      "denseCandidates": 634,
+      "lowestReturnedScore": 0.7372713685035706,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 634,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 634,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 634,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 542,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 25,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.031193256378173828,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 103,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:609 0.8:24 0.9:1"
+    },
+    "RIGHTS": {
+      "seeds": 8,
+      "denseCandidates": 640,
+      "lowestReturnedScore": 0.6776272058486938,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 640,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 640,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 591,
+          "censored": false
+        },
+        {
+          "t": 0.75,
+          "n": 212,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 5,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.025281429290771484,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 85,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:49 0.7:586 0.8:3 0.9:2"
+    },
+    "PRECEDENT": {
+      "seeds": 6,
+      "denseCandidates": 600,
+      "lowestReturnedScore": 0.7001212239265442,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 600,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 600,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 600,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 244,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 12,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.036182284355163574,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 11,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:588 0.8:10 0.9:2"
+    },
+    "SCOPE": {
+      "seeds": 6,
+      "denseCandidates": 591,
+      "lowestReturnedScore": 0.7209630012512207,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 591,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 591,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 591,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 478,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 12,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.025104224681854248,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 60,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:579 0.8:11 0.9:1"
+    },
+    "IMPLEMENTATION": {
+      "seeds": 4,
+      "denseCandidates": 398,
+      "lowestReturnedScore": 0.7135641574859619,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 398,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 398,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 398,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 205,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 3,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.018941640853881836,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 76,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:395 0.8:3 0.9:0"
+    },
+    "SUPPORT_EVIDENCE": {
+      "seeds": 6,
+      "denseCandidates": 575,
+      "lowestReturnedScore": 0.7133634686470032,
+      "thresholds": [
+        {
+          "t": 0.6,
+          "n": 575,
+          "censored": true
+        },
+        {
+          "t": 0.65,
+          "n": 575,
+          "censored": true
+        },
+        {
+          "t": 0.7,
+          "n": 575,
+          "censored": true
+        },
+        {
+          "t": 0.75,
+          "n": 240,
+          "censored": false
+        },
+        {
+          "t": 0.8,
+          "n": 7,
+          "censored": false
+        }
+      ],
+      "shoulder": {
+        "spread": 0.027780771255493164,
+        "measurable": false
+      },
+      "patternProposed": 180,
+      "patternConfirmed": 8,
+      "histogram": "0.0:0 0.1:0 0.2:0 0.3:0 0.4:0 0.5:0 0.6:0 0.7:568 0.8:5 0.9:2"
+    }
+  },
+  "distinctPassages": 7142,
+  "multiTagged": 21,
+  "rowsOffered": 7208
+}
