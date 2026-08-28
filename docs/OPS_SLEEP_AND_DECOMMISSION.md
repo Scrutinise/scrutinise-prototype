@@ -38,14 +38,23 @@ person re-runs the calibration rather than trusting me.
 | | |
 |---|---|
 | before | **$42.17/month** |
-| sleeping the two search services | they bill only while awake; at pilot traffic that is a small fraction of 730 hours |
-| removing `scrutinise-db` | **−$3.11** (your figure, not mine) |
-| **after** | **≈ $5–9/month**, plus whatever the search services are actually awake for |
+| removing `scrutinise-db` | **−$3.11** — certain, once you run the destroy command |
+| sleeping the two search services | **−$37.74 IF they sleep. As measured, they do not yet.** |
+| **after, if sleeping works** | **≈ $5–9/month** plus awake time |
+| **after, if it does not** | **≈ $39/month** — the legacy DB saving only |
 
-⚠ **I am not going to give you a single confident number for the saving**, because it depends
-on how much the services are awake, and that depends on pilot traffic that has not happened
-yet. What is certain: the standing charge for two always-on 2 GB containers is gone, and
-`cost-estimate.ts` re-run in a week will tell you the real figure from the meter.
+⚠⚠ **THE SLEEPING SAVING DOES NOT EXIST TODAY.** The flag is set, reads back `true`, survives
+a redeploy — and the services do not sleep. Four attempts; Railway's own logs show **one HTTP
+request in 100 minutes** and they still stayed warm. Details below.
+
+**The only saving I can promise you is the $3.11 from `scrutinise-db`**, and that one is
+certain the moment you run the destroy command.
+
+⚠ **Next step is yours and takes ten seconds:** check in the Railway dashboard whether app
+sleeping is included on this plan. A project-scoped token cannot read the team or plan
+(measured — `Not Authorized`), so I cannot see it from here. If it is not included, the flag
+being settable is simply misleading and the answer is the memory lever at the end of this
+document.
 
 ---
 
@@ -85,9 +94,74 @@ still fails** — nearly half the wait happens after the thing most people would
 A budget sized from the health probe would have been short by exactly the part that matters,
 and would have failed on the first user after every doze.
 
-### The real wake
+### The real wake — ⚠ THEY ARE NOT SLEEPING YET
 
-*(filled in below — the measurement is the one thing that cannot be hurried)*
+| attempt | silent window | result |
+|---|---|---|
+| 1 | 15 min | `0.6 s — STILL AWAKE` ⚠ **spoiled by me** — I ran `curl` health checks while it counted down |
+| 2 | **30 min, untouched** | `fts-serve 1.2 s`, `vector-serve 0.9 s` — **STILL AWAKE** |
+
+**The second attempt is clean and the finding is real: `sleepApplication` is `true` on both,
+read back, and neither service dozes.**
+
+⚠ **The guard is what caught this.** The script refuses to report anything under three
+seconds as a cold start. Without it, attempt 1 would have gone into this report as
+*"cold start: 0.6 s"* — a spectacular and completely false result, and the reassuring one.
+
+**Ruled out by measurement, not assumption:**
+
+- **A Railway healthcheck** — `healthcheckPath` is unset on both. A configured healthcheck is
+  the usual cause, because Railway pings it and the service is never idle.
+- **A cron** — `cronSchedule` null on both; no schedulers anywhere in the codebase.
+- **My own probing** — attempt 2 was genuinely untouched for 30 minutes.
+
+| 3 | ~23 min, **after redeploying both** | `fts-serve 0.88 s`, `vector-serve 1.78 s` — **STILL AWAKE** |
+
+**Redeploy hypothesis: disproven.** Both were running deployments created at 14:25, hours
+before the flag was flipped, so it was reasonable that the running containers did not know
+about it. They were redeployed, the flag still reads `true`, and they still do not sleep.
+
+**"Something is knocking" hypothesis: disproven.** Railway's own HTTP logs, over the last
+100 minutes:
+
+```
+fts-serve:    1 HTTP request   (ua: node — mine)
+vector-serve: 1 HTTP request   (ua: node — mine)
+```
+
+⚠ **One request in a hundred minutes, and they still never dozed.** No bot, no scanner, no
+uptime check on the public domain.
+
+### ▶ The conclusion
+
+**`sleepApplication` is accepted, stored, survives a redeploy — and has no effect on these
+services.** Four attempts, three of them clean, and the services stay warm through near-total
+idleness.
+
+**So the $37.74 saving does not exist today, and I am not going to write it down as though it
+does.**
+
+What I cannot check from here: **the plan**. A project-scoped Railway token cannot read `me`
+or the team (measured — both return `Not Authorized`), so I cannot see whether app sleeping is
+included. **That is a ten-second check in the Railway dashboard and it is the next thing to
+do.** If sleeping is not on this plan, the flag being settable is simply misleading.
+
+**The flag is left ON.** It costs nothing, it is the correct configuration, and if Railway
+starts honouring it the saving arrives with no further work.
+
+### If the goal is the standing cost, the real lever is memory
+
+The two services cost what they cost because they hold indexes resident: **1.79 GB and
+1.93 GB**, at $10 per GB-month. That is essentially the whole bill. Sleeping was the cheap
+way at it; if it is unavailable, the options that would actually move the number are:
+
+- **consolidate** — one service holding both indexes instead of two containers
+- **shrink the resident set** — page the Lance indexes from R2 rather than holding them in
+  memory, which is what the cold-start measurements suggest already happens partially
+- **a smaller instance** for whichever is over-provisioned
+
+⚠ All three are design changes rather than configuration, and none is in this task. I am
+naming them so the next decision is informed, not proposing to do them now.
 
 ---
 
