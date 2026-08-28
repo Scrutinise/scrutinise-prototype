@@ -56,8 +56,11 @@ const LEG_CORPORA = [
 ]
 
 /** Caps: see the size note in setup-citation-edge-table.ts. Long enough to
- *  quote and to hand-check; short enough that 400k rows stay in the hundreds
- *  of megabytes on a database already past its alert line. */
+ *  quote and to hand-check; short enough to keep the table near 1 GB.
+ *  ⚠ NOT because of a storage ceiling — there isn't one. This comment used to
+ *  end "on a database already past its alert line"; that line was a retired
+ *  fiction and the claim is retracted (see setup-edges-table.ts). Storage is a
+ *  bill, not a wall. */
 const CITATION_TEXT_MAX = 300
 const RAW_FRAGMENT_MAX = 600
 
