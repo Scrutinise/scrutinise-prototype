@@ -79,6 +79,7 @@
     "check:lex-25i": "tsx scripts/check-lex-25i.ts",
     "check:lex-25j": "tsx scripts/check-lex-25j.ts",
     "check:lex-25k": "tsx scripts/check-lex-25k.ts",
+    "check:lex-25l": "tsx scripts/check-lex-25l.ts",
     "check:statutory": "tsx scripts/check-statutory.ts",
     "verify:statutory-parity": "tsx --env-file=.env scripts/verify-statutory-graph-parity.ts",
     "verify:consequences": "tsx --env-file=.env scripts/verify-consequences-live.ts",

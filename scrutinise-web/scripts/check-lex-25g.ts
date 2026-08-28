@@ -46,6 +46,7 @@ const FILES = [
   'app/ideas/create/page.tsx',
   'app/ideas/create/CreateIdeaClient.tsx',
   'components/lex/StageBar.tsx',
+  'components/lex/RerunDialogue.tsx',
   'components/lex/BuildProgress.tsx',
   'components/lex/HowItWorksModal.tsx',
 ]
@@ -162,15 +163,33 @@ const CHECKS: Check[] = [
   {
     name: '§1a/§1b BOTH prices are on the screen, and the expensive one is the explicit choice',
     run: (src) => {
-      const s = src['app/ideas/build/BuildIdeaClient.tsx']
-      if (!/Re-running from the research already gathered/.test(s)) return 'the reuse sentence §1a specifies is missing'
+      // ⚠⚠ REPOINTED BY 25-L §1 — THE TWO PRICES MOVED, THE PROPERTY DID NOT.
+      // 25-G put both modes on the build screen as two buttons. 25-L opens a dialogue
+      // first, because choosing a price before being asked what was wrong with the last
+      // run is the wrong order — so the two controls now live one screen further in,
+      // beside a sentence saying what each will do. Both routes are still offered and the
+      // expensive one is still the explicit choice; the assertion follows them rather than
+      // forbidding the improvement.
+      // The §1a sentence stayed on the build screen's re-run block (which still explains
+      // what a re-run reuses); the two CONTROLS moved into the dialogue. Both are asserted,
+      // in the file that now carries each.
+      if (!/Re-running from the research already gathered/.test(src['app/ideas/build/BuildIdeaClient.tsx'])) {
+        return 'the reuse sentence §1a specifies is missing'
+      }
+      const s = src['components/lex/RerunDialogue.tsx']
       if (!/Search again from scratch/.test(s)) return '§1b\'s explicit re-search is not offered'
-      if (!/startBuild\('REUSE'\)/.test(s) || !/startBuild\('FULL'\)/.test(s)) return 'one of the two modes has no control'
-      return null
+      if (!/onGo\('REUSE', critique\)/.test(s) || !/onGo\('FULL', critique\)/.test(s)) {
+        return 'one of the two modes has no control'
+      }
+      // ⚠ AND THE BUILD SCREEN MUST STILL REACH IT. A dialogue nothing opens is the same
+      // as no dialogue, and this check is the only thing standing between the two.
+      return /setRerunOpen\(true\)/.test(src['app/ideas/build/BuildIdeaClient.tsx'])
+        ? null
+        : 'nothing on the build screen opens the re-run dialogue'
     },
     break: (src) => ({
       ...src,
-      'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
+      'components/lex/RerunDialogue.tsx': src['components/lex/RerunDialogue.tsx']
         .split('Search again from scratch').join('x'),
     }),
   },

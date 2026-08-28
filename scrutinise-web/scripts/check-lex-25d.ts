@@ -293,8 +293,13 @@ function main() {
   // than dropped: this file's claim is that the panel is organised by a FIXED library of
   // questions, and a check that stopped counting would stop noticing a heading appearing
   // by accident — which is how a panel grows a section nobody designed.
-  ok('§3 — the eleven §25.5 headings are the library',
-    QUESTION_HEADINGS.length === 11 && HEADING_ORDER.length === 11)
+  // ⚠ ELEVEN → THIRTEEN (25-L §3b added `HOW_HARD` and `KEY_SOURCES`). The number is
+  // updated rather than the assertion deleted: a check that stops counting stops noticing a
+  // heading nobody designed — the same reasoning that kept 25-D's "ten headings" alive when
+  // it became eleven. The two lists must also agree with each other, which is what catches a
+  // key added to the union and forgotten in the order.
+  ok('§3 — the thirteen §25.5 headings are the library, and the order covers all of them',
+    QUESTION_HEADINGS.length === 13 && HEADING_ORDER.length === 13)
   ok('§3 — every interrogation question declares a real heading',
     INTERROGATION_LIBRARY.every((q) => isHeadingKey(q.heading)))
   expectBreak('§3 — break: a question naming a heading that does not exist',
@@ -331,9 +336,21 @@ function main() {
     new Set(texts).size === 4)
   expectBreak('§3 — break: two reasons sharing one sentence',
     () => new Set([...texts.slice(0, 3), texts[0]]).size === 4)
+  // ⚠ 25-L §5 REWROTE THIS NOTE AND THE ASSERTION FOLLOWED THE PROPERTY, NOT THE WORDS.
+  // What must hold is that the sentence blames US and never the record: it may not say the
+  // search found nothing, and it must say whose gap it is. "A limit in our tooling" was one
+  // phrasing of that; "no pass writes findings under this heading yet" is another, and it is
+  // now the true one — the graph IS readable on this screen, in beta, so the old sentence
+  // had become a claim we could not stand behind.
   ok('§3 — an unbuildable heading blames our tooling, not the record',
-    /limit in our tooling/.test(statedGap('POSITIONS', 'no-producer'))
-    && !/found nothing/.test(statedGap('POSITIONS', 'no-producer')))
+    !/found nothing/.test(statedGap('POSITIONS', 'no-producer'))
+    && !/nothing (?:exists|there)/i.test(statedGap('POSITIONS', 'no-producer'))
+    && /\b(?:we|our|no pass|not part of the build)\b/i.test(statedGap('POSITIONS', 'no-producer')))
+  expectBreak('§3 — break: the note blames the record instead of us',
+    () => {
+      const bad = 'We looked for votes on this and found nothing.'
+      return !/found nothing/.test(bad)
+    })
   ok('§3 — a search that found nothing says WHAT it looked for',
     statedGap('COURTS', 'asked-found-nothing').includes('judgments construing'))
   expectBreak('§3 — break: a bare "nothing found" with no statement of what was sought',
@@ -362,8 +379,26 @@ function main() {
       && 'Everything we retrieved <QuestionPanel'.indexOf('<QuestionPanel') < 0)
 
   const qPanel = read('components/lex/QuestionPanel.tsx')
-  ok('§3 rule 1 — a stated gap renders whether the heading is open or closed',
-    /\{h\.gap && \(/.test(qPanel) && !/isOpen && h\.gap/.test(qPanel))
+  // ⚠⚠ REPOINTED BY 25-L §3a, AND THE PROPERTY GOT STRONGER RATHER THAN WEAKER.
+  //
+  // The old assertion was about a panel of thirteen independently collapsible headings: it
+  // required the gap to render whether its heading was open or closed, because folding an
+  // established absence away makes it indistinguishable from a question nobody asked. That
+  // layout is gone — the panel is a contents list plus one open item — so the assertion is
+  // now that BOTH surfaces carry it: the contents list prints WHICH KIND of empty each item
+  // is (never a "0", which would be a false claim about the world), and the open item prints
+  // the full stated gap. An empty item that vanished from the contents would be the same
+  // defect one level up.
+  ok('§3 rule 1 — an empty item states its KIND on the contents and its full gap when opened',
+    /EMPTY_LABEL\[h\.gap\.reason\]/.test(qPanel)
+    && /openHeading\.gap && \(/.test(qPanel)
+    // and the contents list is built over every heading, not the non-empty ones
+    && /data\.headings\.map\(\(h\) => \{/.test(qPanel))
+  expectBreak('§3 rule 1 — break: the contents list filters empty items out',
+    () => {
+      const broken = qPanel.replace('data.headings.map((h) => {', 'data.headings.filter((h) => h.entries.length).map((h) => {')
+      return /data\.headings\.map\(\(h\) => \{/.test(broken)
+    })
 
   // ══ §4 — documents and links ══════════════════════════════════════════════
   console.log('\n§4 — the user\'s own material')

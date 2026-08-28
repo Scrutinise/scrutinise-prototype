@@ -133,7 +133,10 @@ export function navOrder(src: string, marker: string): string[] {
   return out
 }
 
-const NAV_ORDER = ['Create', 'Browse', 'Central', 'About', 'Support', 'Admin']
+// ⚠ 25-L — "My ideas", not "Create". 25-J's rename reached a file nothing renders; this
+// list is checked against `PublicNav`, which every page draws. The five that follow are
+// unchanged — only the first label moved.
+const NAV_ORDER = ['My ideas', 'Browse', 'Central', 'About', 'Support', 'Admin']
 
 /**
  * §1's table, as a property, so a deliberately broken table can be run through it.
@@ -299,10 +302,18 @@ const CHECKS: Check[] = [
       if (!/\{latest && ideaId && \(/.test(block)) return 'the re-run is conditional on the build having finished again'
       if (!/It is running now/.test(block)) return 'a running build shows no re-run state at all'
       if (!/blockedReason/.test(block)) return 'a blocked re-run does not say why'
-      if (!/Redraft from what I found/.test(block)) return 'the cheap route is not offered'
-      if (!/Search again from scratch/.test(block)) return 'the expensive route is not offered'
+      // ⚠⚠ REPOINTED BY 25-L §1. The two mode buttons MOVED INTO THE RE-RUN DIALOGUE,
+      // because choosing a price before being asked the only question that changes the
+      // result is the wrong order. The property 25-K was protecting — both routes offered,
+      // the expensive one explicit, and each saying what it costs — still holds; it now
+      // holds one screen further in, so the assertion follows it rather than forbidding the
+      // improvement. The button that remains here must still OPEN that dialogue.
+      if (!/Re-run this idea…/.test(block)) return 'the re-run control no longer opens the dialogue'
+      const dialogue = read('components/lex/RerunDialogue.tsx')
+      if (!/Redraft from what I found/.test(dialogue)) return 'the cheap route is not offered'
+      if (!/Search again from scratch/.test(dialogue)) return 'the expensive route is not offered'
       // §2: "The re-run states what it will do … and what each costs."
-      return /build\.estimate\?\.line/.test(block) ? null : 'neither route says what it costs'
+      return /estimateLine/.test(dialogue) ? null : 'neither route says what it costs'
     },
     break: (src) => ({
       ...src,
@@ -335,7 +346,10 @@ const CHECKS: Check[] = [
     name: '§3 the left column leads with the worklist and the chat is BENEATH it',
     run: (src) => {
       const c = src['app/ideas/create/CreateIdeaClient.tsx']
-      const list = c.indexOf('<WorkList ideaId={ideaId}')
+      // ⚠ 25-L §6 gave `<WorkList>` a fourth prop, so it wraps across lines. Matched on
+      // the tag rather than on one formatting of its attributes — an assertion that a
+      // component is RENDERED must not fail because Prettier moved a line.
+      const list = c.indexOf('<WorkList')
       const chat = c.indexOf('<ChatPanel')
       if (list < 0) return 'there is no worklist'
       if (chat < 0) return 'the chat is gone'
@@ -418,7 +432,7 @@ const CHECKS: Check[] = [
       if (!/lexStage === 'deepening' \? \(/.test(c)) return 'stage 3 renders the same middle column as stage 2'
       if (!/<DeepeningPanel/.test(c)) return 'the deepening panel is not rendered'
       // The worklist follows the stage, which is what makes it "the same shape as §3".
-      return /<WorkList ideaId=\{ideaId\} scope=\{lexStage\}/.test(c)
+      return /<WorkList[\s\S]{0,200}?scope=\{lexStage\}/.test(c)
         ? null
         : 'the worklist does not follow the stage'
     },

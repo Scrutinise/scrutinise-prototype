@@ -301,10 +301,21 @@ const CHECKS: Check[] = [
       const c = src['app/ideas/create/CreateIdeaClient.tsx']
       if (!/function PanelEdge/.test(c)) return 'a collapsed panel vanishes rather than becoming an edge'
       // ⚠ `null` MEANS "NOBODY HAS SAID". A boolean would freeze the first render's answer.
-      if (!/fields: boolean \| null; background: boolean \| null/.test(c)) {
-        return 'the panels cannot tell "not yet decided" from "closed"'
+      // ⚠ 25-L §4 ADDED A THIRD PANEL TO THE SAME RULE. The left column is hideable
+      // too now, so the shape is `{ chat, fields, background }` — the assertion is that
+      // EVERY panel can still tell "not yet decided" (null) from "closed" (false), which is
+      // the property, rather than that there are exactly two of them.
+      for (const k of ['chat', 'fields', 'background']) {
+        if (!new RegExp(`${k}: boolean \\| null`).test(c)) {
+          return `the ${k} panel cannot tell "not yet decided" from "closed"`
+        }
       }
-      return /panelOpen\.fields \?\? fieldsHaveContent/.test(c)
+      // ⚠ 25-L §4 PUT A STORED LAYOUT BETWEEN THE TOGGLE AND THE CONTENT RULE, and the
+      // precedence order is the design: this session's click, then their saved layout, then
+      // — for a user who has never said anything — the content. So the assertion is that
+      // `fieldsHaveContent` is still what decides when NOBODY has said, not that it is the
+      // only thing consulted.
+      return /panelOpen\.fields \?\?[\s\S]{0,120}?fieldsHaveContent/.test(c)
         ? null
         : 'a panel does not open by itself when it has something in it'
     },

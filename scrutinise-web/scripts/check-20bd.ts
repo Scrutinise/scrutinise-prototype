@@ -186,6 +186,20 @@ function fixture(overrides: Partial<ProposalSnapshot> = {}): ProposalSnapshot {
         refs: [{ id: 'ukpga/1988/53', title: 'Road Traffic Offenders Act 1988', citation: 'Road Traffic Offenders Act 1988, s.53', url: 'https://www.legislation.gov.uk/ukpga/1988/53/section/53', snippet: 'Fixed penalty levels…', date: '1988-05-15', decision: 'INCLUDED', exclusionReason: null, annotation: null }],
       },
     ],
+    // ── 25-L §3d — a source the proposer chose for the document itself ───────
+    //
+    // ⚠ THE FIXTURE CARRIES IT SO THE THREE-CASE RENDER IS EXERCISED. A version minted
+    // before 25-L has NO such key, and `build-proposal` must render those without throwing;
+    // a fixture that also omitted it would only ever test the historic path and would have
+    // let a `snapshot.prioritySources.length` ship. (That is exactly how this was found.)
+    prioritySources: [
+      {
+        id: 'ukpga/1988/53', title: 'Road Traffic Offenders Act 1988',
+        citation: 'Road Traffic Offenders Act 1988, s.53',
+        url: 'https://www.legislation.gov.uk/ukpga/1988/53/section/53',
+        decision: 'PRIORITY' as const, annotation: 'The power the whole proposal turns on.',
+      },
+    ],
     passes: [
       { passKey: 'EVIDENCE', status: 'RUN', completedAt: '2026-08-19T10:00:00.000Z', failureReason: null },
       { passKey: 'FINANCIAL', status: 'FAILED', completedAt: null, failureReason: 'The sift returned 500 candidates and the write threw' },
