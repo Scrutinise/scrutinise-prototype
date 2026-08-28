@@ -430,6 +430,13 @@ enum OperationalIngestStatus {
 model User {
   id                        String              @id @default(uuid())
   clerkId                   String              @unique
+  /// 25-L §4 — which Lex panels are open and how wide, per user.
+  ///
+  /// ⚠ A COLUMN, NOT `localStorage`. §4 says the choice persists PER USER; a browser store
+  /// persists per DEVICE, so a layout set on a laptop is gone on a desktop and reads as
+  /// having failed to save. Validated by Zod on write; loose here so a fourth panel needs
+  /// no migration.
+  lexPanelLayout            Json?
   // Identity
   firstName                 String
   lastName                  String
@@ -580,6 +587,8 @@ model User {
   legislationCorrections    LegislationCorrection[]
   feedbacks                 Feedback[]
   lexFeedbackItems          FeedbackItem[]
+  /// 25-L §5 — this user's blind-first judgements of graph claims.
+  graphJudgements           GraphClaimJudgement[]
   proposalVersions          ProposalVersion[]   @relation("ProposalVersionCreator")
 
   @@index([clerkId])
@@ -796,6 +805,10 @@ model Idea {
   // each corpus source (§2a), and the user's own documents and links (§25.6).
   sourceDecisions           IdeaSourceDecision[]
   userMaterial              IdeaUserMaterial[]
+  // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
+  // this idea (§5). Both additive; neither is written by any existing path.
+  materialRejections        IdeaMaterialRejection[]
+  graphJudgements           GraphClaimJudgement[]
 
   @@index([creatorId])
   @@index([stage])
@@ -3629,6 +3642,16 @@ model IdeaBuild {
   /// retroactive.
   notifyEmail     Boolean      @default(false)
 
+  /// 25-L §1 — WHAT THE USER SAID WAS WRONG WITH THE LAST RUN, and what they asked
+  /// this one to do about it. Written when the re-run dialogue is submitted, before the
+  /// build starts, so version N carries what N was asked to fix about N-1.
+  ///
+  /// ⚠ ON THE BUILD, NOT ON THE IDEA. It is a statement about ONE run; four critiques on
+  /// the idea would be a heap with nothing saying which attempt each was about — and that
+  /// is the information that makes it a quality signal rather than a comment.
+  userCritique    String?      @db.Text
+  userCritiqueAt  DateTime?
+
   tokensIn        Int          @default(0)
   tokensOut       Int          @default(0)
   /// ⚠ NULL MEANS UNPRICED, NOT FREE. A model we have no rate for must not silently
@@ -3804,9 +3827,95 @@ model IdeaSourceDecision {
   @@index([ideaId, status])
 }
 
+/// ⚠ 25-L §3d — THREE STATES, ONE FACT. `PRIORITY` goes in the proposal document,
+/// `INCLUDED` in the evidence annex, `EXCLUDED` in the considered-and-set-aside list.
+/// A separate boolean would have allowed "excluded AND priority" to exist in the data.
 enum SourceDecisionStatus {
   INCLUDED
   EXCLUDED
+  PRIORITY
+}
+
+/// 25-L §2 — EVERY ITEM WE REFUSED, WITH ITS TYPE.
+///
+/// ⚠⚠ THIS TABLE IS THE EVIDENCE FOR A DECISION WE HAVE DELIBERATELY NOT TAKEN. §2:
+/// "Do not build YouTube transcript fetching now — it is fragile, its terms are unclear,
+/// and we have no evidence of demand." A count of the video links people actually tried to
+/// give us IS that evidence, and it cannot be recovered later from anywhere else: a
+/// rejection that only ever became an error message on a screen leaves no trace at all.
+///
+/// ⚠ `detail` STORES THE SENTENCE THE USER WAS SHOWN, so the log and the screen cannot
+/// drift into disagreeing about what we told them.
+model IdeaMaterialRejection {
+  id        String   @id @default(uuid())
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  /// Null only where the refusal happened outside a signed-in request.
+  userId    String?
+  /// video | paywalled | unreadable-format | no-text | too-large | unfetchable | not-a-url | too-many
+  kind      String
+  /// The URL or the filename — what was refused, so a count can be broken down by host.
+  target    String   @db.Text
+  detail    String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([ideaId])
+  @@index([kind, createdAt])
+}
+
+/// 25-L §5 — A USER'S OWN JUDGEMENT OF A GRAPH CLAIM, MADE BEFORE OURS WAS SHOWN.
+///
+/// ⚠⚠ THE ORDER IS THE MEASUREMENT. Showing our assessment first buys agreement, not
+/// information — so the user's verdict is written on its own, `revealedAt` is stamped when
+/// ours is shown, and `agreed` cannot be written before that. Two CHECK constraints enforce
+/// it in the database rather than only in the route, because the second writer added in six
+/// months will not have read the route.
+///
+/// ⚠ OUR ASSESSMENT IS COPIED IN AT REVEAL TIME, not joined at read time. The graph decays
+/// on every read, so a judgement joined to a live query would be scored against a claim that
+/// has since moved; the row has to be able to say what the user was actually shown.
+///
+/// ⚠ THIS IS CORROBORATION, NOT VERIFICATION. Nothing here overwrites the sourced record.
+/// A disagreement raises a flag for review, and a run of agreements is not proof — a
+/// partisan sample agrees with itself.
+model GraphClaimJudgement {
+  id                   String    @id @default(uuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Null when judged on the standalone review surface rather than inside an idea.
+  ideaId               String?
+  idea                 Idea?     @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+
+  actorId              String
+  actorName            String
+  /// The targets the question was asked over, joined — e.g. `division:commons:2051`.
+  targetKey            String
+  questionText         String    @db.Text
+
+  /// supports | opposes | unclear | not-enough — vocabulary enforced by a CHECK.
+  userVerdict          String
+  userReason           String?   @db.Text
+  /// How many sourced grounds were on screen when they judged. A judgement made over two
+  /// votes and one made over forty are not the same evidence.
+  groundsShown         Int       @default(0)
+  judgedAt             DateTime  @default(now())
+
+  revealedAt           DateTime?
+  ourStance            String?
+  ourClaim             String?   @db.Text
+  ourConfidence        Float?
+  ourConfidenceWording String?
+  configVersion        String?
+
+  agreed               Boolean?
+  agreedReason         String?   @db.Text
+  answeredAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([actorId])
+  @@index([userId])
+  @@index([agreed])
 }
 
 /// §25.6 — a document or a link the user brought, held as EXTRACTED TEXT and nothing else.
