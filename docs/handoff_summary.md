@@ -2,7 +2,49 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-27 23:22 UTC — ▼ **SEARCH S17: THE COMMITTEES KEYS ARE RE-KEYED, AND S16's
+*Last updated: 2026-08-28 00:40 UTC — ▼ **ARGUMENT 1A: THE PERORATION HYPOTHESIS IS SUPPORTED,
+AND SEED-BASED PROPAGATION HAS ZERO MEASURED RECALL.**
+▶▶ **§1.1 — 8,959 SPEECHES, 10.2 MILLION WORDS: the OPENING fifth is the sparsest and the CLOSING
+fifth the densest. closing/opening 1.57×** on the ten tags' own patterns and **1.30×** on a second,
+independent stance instrument. **My prediction was the opposite and was logged first.**
+⚠⚠ **The confound I went looking for STRENGTHENED it.** A committee report's Conclusions chapter is
+at the end by construction, so reports and speeches were measured apart: **speeches 1.57×,
+committee documents 0.86×** — the documents were diluting the effect, not creating it. Procedural
+closers spike 8.8× in the final fifth and are counted on a separate axis so they cannot drive it.
+⚠ **My counter-hypothesis was refuted too**: short interventions are **0.81×** as argumentative as
+long speeches, not more.
+⚠⚠ **AND IT COULD NOT BE TESTED THROUGH THE VECTOR INDEX AT ALL: 12,705,570 of 13,724,557
+parliamentary sections — 92.6% — ARE A SINGLE CHUNK**, so nine in ten have no "position within the
+speech". A chunk-based experiment would have measured the chunker. Read from R2 instead.
+▶▶ **§4 IS THE RESULT THAT MATTERS: propagation from 71 hand-verified seeds retrieved 0 OF 20
+hand-tagged RANDOM passages — 0.0%, at top-200 per seed, out of 400–980 candidates per tag.**
+⚠⚠ **The control that decides what that means was built BEFORE it was reported.** Each held-out
+passage was asked for by its OWN WORDS: **19 of 19 came back, all at RANK 1.** They are in the
+index and retrievable; propagation never reaches them. **Similarity to a seed retrieves paraphrases
+of the seed, not instances of the move.**
+⚠⚠⚠ **THE SPLIT THAT SHOULD DECIDE WHAT HAPPENS NEXT: the deterministic pattern arm is tag-right
+18/20 (90%) against the dense arm's 17/40 (42.5%). The cheap half that works is the regex.**
+▶ **§4's two numbers, apart: tag right 35/60 (58.3%) · should have been tagged at all 41/60
+(68.3%) · and of those that should, right on 35/41 (85.4%).** ⚠⚠ **My prediction of which would be
+lower was wrong** — the system is NOT over-claiming (the position graph's failure mode); it is
+putting **the wrong one of the ten** on arguments that are really there.
+⚠ **Three failure shapes named: WORD SENSE** (*"is the zero option a dead letter?"* — arms control,
+tagged ENFORCEMENT), **phrase-mention without the move**, and **the fragment**.
+⚠⚠ **48.8% of dense candidates are under 30 words, 28.2% under fifteen** — median 32 against 83 for
+a random passage. *"Where is the money to come from?"* came back four times from four decades.
+▶ **§3 — `docs/ARGUMENT_QUESTIONS_V1.md`: ten questions of a new shape, 10/10 tags, 21 keys, 21
+bodies read from R2, 21 confirmed. SEVEN have their answer in a debate about a DIFFERENT SUBJECT**
+(short-term-lets enforcement answered from Sunday trading 1985). **Nothing is scored against them.**
+⚠⚠ **THREE OF MY OWN INSTRUMENTS WERE WRONG AND RUNNING THEM CAUGHT ALL THREE** — a shoulder test
+that cannot work over a top-K set, a `corpus` column filled with a TIER name, and **a
+`tier: 'parliamentary'` filter that silently excluded 1,044,188 Scottish Parliament sections**
+(caught by a control built for a different purpose; recall unchanged at 0 of 20 after the fix).
+⚠ Reported to ingest: `historic-hansard` holds **788 rows dated before 1800, earliest 23 June 1013**.
+⚠ **The database is 18.85 GiB, ABOVE the 17.5 GiB ops alert line.** No per-paragraph model call was
+made; spend is ~500 embeddings. `check:argument-1a` **17 passed, 0 failed**.
+▶▶ **CHARLIE: six decisions in `docs/ARGUMENT_1A_REPORT.md`** — D-1 fund the full scan, **D-3 run
+the pattern arm corpus-wide (the arm that works)**, D-4 the fragment problem.
+Earlier: 2026-08-27 23:22 UTC — ▼ **SEARCH S17: THE COMMITTEES KEYS ARE RE-KEYED, AND S16's
 UNREACHABLE CLASS IS ZERO — NOT FOUR.**
 ⚠⚠ **`cps-guidance` HAS BEEN REACHABLE SINCE 21 AUGUST AND NOBODY RE-READ THE INDEX.** It sits in
 the `guidance` tier of the SERVED index and the guidance stream returns all three of its keys today
