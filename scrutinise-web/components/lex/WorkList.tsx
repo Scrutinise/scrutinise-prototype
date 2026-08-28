@@ -28,7 +28,7 @@
 // as a number and its kind as a word; done rows carry "done" in text, not a green tick.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LexStageKey } from '@/lib/lex/stages'
 
 interface AgendaShape {
@@ -174,12 +174,20 @@ export function tasksFrom(agenda: AgendaShape | null, passes: PassShape[], scope
 }
 
 export default function WorkList({
-  ideaId, scope, refreshNonce = 0,
+  ideaId, scope, refreshNonce = 0, onOutstanding,
 }: {
   ideaId: string
   scope: LexStageKey
   /** Bumped by the parent when something on the page has changed the agenda. */
   refreshNonce?: number
+  /**
+   * 25-L §6 — how many tasks are still waiting, reported upward for the mobile badge.
+   *
+   * ⚠ FROM HERE, THE ONE PLACE THAT KNOWS. The badge and the list must never be able to
+   * disagree, and they would the first time somebody changed a rule about which gaps count
+   * as the user's in only one of two places.
+   */
+  onOutstanding?: (n: number) => void
 }) {
   const [agenda, setAgenda] = useState<AgendaShape | null>(null)
   const [passes, setPasses] = useState<PassShape[]>([])
@@ -210,8 +218,17 @@ export default function WorkList({
 
   useEffect(() => { void load() }, [load, refreshNonce])
 
+  // ⚠ REPORTED IN AN EFFECT, NOT DURING RENDER. Calling a parent's setState while rendering
+  // is a React warning and, on a parent that re-renders this child, a loop. The ref keeps
+  // the callback out of the dependency array so an inline arrow from the parent cannot
+  // re-fire it every render.
+  const outstandingRef = useRef(onOutstanding)
+  outstandingRef.current = onOutstanding
+
   const tasks = tasksFrom(agenda, passes, scope)
   const outstanding = tasks.filter((t) => !t.done).length
+
+  useEffect(() => { outstandingRef.current?.(outstanding) }, [outstanding])
 
   // ⚠ NOT RENDERED BEFORE A BUILD HAS PRODUCED ANYTHING. An empty "what to do next" on a
   // screen where there genuinely is nothing to do would be the same broken promise as an

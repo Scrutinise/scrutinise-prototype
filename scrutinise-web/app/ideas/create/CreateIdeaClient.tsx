@@ -16,6 +16,9 @@ import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import StageBar from '@/components/lex/StageBar'
+import PanelDivider from '@/components/lex/PanelDivider'
+import { usePanelLayout } from '@/components/lex/usePanelLayout'
+import { PANEL_ROLES } from '@/lib/lex/panel-layout'
 import WorkList from '@/components/lex/WorkList'
 // ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
 // TYPE import, erased at compile, so the server-only counting module never reaches the
@@ -142,12 +145,36 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
    * and one who arrived after would never see the uncluttered first stage. The moment the
    * user touches a toggle their answer wins and stops being recomputed.
    */
-  const [panelOpen, setPanelOpen] = useState<{ fields: boolean | null; background: boolean | null }>(
-    { fields: null, background: null },
-  )
+  const [panelOpen, setPanelOpen] = useState<{
+    // 25-L §4 — the LEFT panel is hideable too now. §4: "all three panels hideable,
+    // individually, with a persistent way to bring each back." It was the one column with no
+    // way to get it out of the way, which on a laptop is the one you most want gone while
+    // reading a long finding.
+    chat: boolean | null
+    fields: boolean | null
+    background: boolean | null
+  }>({ chat: null, fields: null, background: null })
   const bootedRef = useRef(false)
   /** 25-K §3 — bumped whenever a mutation may have changed what is waiting on the user. */
   const [worklistNonce, setWorklistNonce] = useState(0)
+  /**
+   * 25-L §4 — which panels are open and how wide, per USER.
+   *
+   * ⚠ `touched` IS THE RECONCILIATION WITH 25-H §5. That sprint made the panels follow
+   * CONTENT — they open by themselves once there is something in them — with `null` meaning
+   * "nobody has said". A stored layout IS somebody saying, so the content rule applies until
+   * the user has stored one and their choice wins from then on.
+   */
+  const panels = usePanelLayout()
+  /**
+   * 25-L §6 — how many things are waiting on the user, for the mobile badge.
+   *
+   * ⚠ REPORTED BY THE WORKLIST, NOT COUNTED AGAIN HERE. The left column already fetches
+   * the agenda and applies the rules about which gaps are the user's to close; a second
+   * count computed from the same endpoint by different code is two numbers on one screen
+   * that will eventually disagree, and the badge is the one the user will believe.
+   */
+  const [waitingCount, setWaitingCount] = useState(0)
 
   /**
    * ⚠ THE SECOND (AND LAST) WARM-ON-INTENT CALLER. See `/api/search/warm`.
@@ -485,8 +512,24 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const fieldsHaveContent = !!state?.pages.some((pg) => pg.fields.some((f) => f.status !== 'EMPTY'))
   const backgroundHasContent =
     !!state?.initialBackground || (state?.legislationRefs?.length ?? 0) > 0
-  const showFields = panelOpen.fields ?? fieldsHaveContent
-  const showBackground = panelOpen.background ?? backgroundHasContent
+  // ⚠ THREE SOURCES, IN PRECEDENCE ORDER, AND THE ORDER IS THE DESIGN:
+  //   1. this session's explicit toggle (`panelOpen`)  — what they just pressed
+  //   2. their stored layout (`panels.touched`)        — what they decided before
+  //   3. the content rule (25-H §5)                    — what nobody has said anything about
+  // Reading them the other way round would let a stored preference override a click the
+  // user made two seconds ago, which is the version that feels broken.
+  const showChat = panelOpen.chat ?? (panels.touched ? panels.layout.open.left : true)
+  const showFields = panelOpen.fields ?? (panels.touched ? panels.layout.open.middle : fieldsHaveContent)
+  const showBackground = panelOpen.background ?? (panels.touched ? panels.layout.open.right : backgroundHasContent)
+
+  // ⚠ THE TEMPLATE IS BUILT FROM WHAT IS ACTUALLY SHOWN, not from the stored layout alone —
+  // otherwise a panel closed by this session's toggle would still be given a column.
+  const shown = { left: showChat, middle: showFields, right: showBackground }
+  const openCols = (['left', 'middle', 'right'] as const).filter((k) => shown[k])
+  const totalW = openCols.reduce((n, k) => n + panels.layout.width[k], 0) || 1
+  const colTemplate = (['left', 'middle', 'right'] as const)
+    .map((k) => (shown[k] ? `${((panels.layout.width[k] / totalW) * 100).toFixed(3)}fr` : '2.5rem'))
+    .join(' 0.375rem ')
 
   const cf = state?.currentField
   const awaitingField: CanonicalField | null =
@@ -538,8 +581,78 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             <span aria-hidden className="w-4 h-4 rounded-full border border-white/80 flex items-center justify-center text-[10px] font-bold">?</span>
             How this works
           </button>
+          {/* ⚠⚠ 25-L §4 — THE RESET, AND IT HAS TO BE FINDABLE WITHOUT ALREADY KNOWING IT
+              EXISTS. A user reaches for this at exactly the moment the screen is wrong, and
+              a control hidden inside the panel they have just collapsed is a control they
+              cannot get to. So it lives in the persistent bar, beside Exit.
+
+              ⚠ IT IS SHOWN ONLY ONCE THERE IS SOMETHING TO RESET. An always-present "Reset
+              layout" on a screen nobody has touched is an invitation to wonder what is
+              broken. */}
+          {(panels.touched || panelOpen.chat !== null || panelOpen.fields !== null || panelOpen.background !== null) && (
+            <button
+              onClick={() => {
+                panels.reset()
+                setPanelOpen({ chat: null, fields: null, background: null })
+              }}
+              className="hidden lg:block text-xs font-medium text-zinc-500 hover:text-zinc-900 border border-zinc-300 rounded-full px-3 py-2 hover:bg-zinc-50 transition-colors"
+              title="Put the three panels back to their default widths, all open"
+            >
+              Reset panels
+            </button>
+          )}
         </div>
       </div>
+
+      {/* ══ 25-L §6 — THE MOBILE TAB BAR, AT THE BOTTOM ═══════════════════
+          ⚠⚠ THREE COLUMNS CANNOT BE THREE COLUMNS ON A PHONE; THEY BECOME THREE MODES.
+          The bar was at the TOP, which on a phone is the one part of the screen a thumb
+          cannot reach while holding it — so switching mode meant a two-handed reach on
+          every switch. §6: "thumb-reachable and universally understood. Not swipe-only: a
+          gesture with no visible control is a feature most users never find."
+
+          ⚠⚠ AND THE DRAFT TAB CARRIES A COUNT. §6: "On a phone the user cannot see the task
+          list while doing anything else, so the task list has to come to them." The number
+          is the outstanding items from the SAME worklist the left column renders — not a
+          second count computed a second way, which is how two numbers on one screen come to
+          disagree.
+
+          ⚠ THE COUNT IS A NUMBER AND A WORD, NEVER A COLOURED DOT. Charlie is colour blind
+          (docs/CLAUDE.md §21); a red dot meaning "something needs you" is the exact signal
+          he cannot read. */}
+      <nav
+        aria-label="Panels"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex border-t border-zinc-200 bg-white text-xs font-medium pb-[env(safe-area-inset-bottom)]"
+      >
+        {(['chat', 'fields', 'background'] as Tab[]).map((t) => {
+          const label = t === 'fields'
+            ? (lexStage === 'deepening' ? 'The passes' : PANEL_ROLES.middle.name)
+            : t === 'background' ? PANEL_ROLES.right.name : PANEL_ROLES.left.name
+          const badge = t === 'fields' ? waitingCount : 0
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              aria-current={tab === t ? 'page' : undefined}
+              className={`flex-1 py-3 flex items-center justify-center gap-1.5 ${
+                tab === t
+                  ? 'font-semibold text-blue-700 border-t-2 border-blue-600 -mt-px'
+                  : 'text-zinc-500'
+              }`}
+            >
+              {label}
+              {badge > 0 && (
+                <span
+                  className="rounded-full border border-zinc-900 bg-zinc-900 px-1.5 py-0.5 text-[10px] font-bold text-white"
+                  aria-label={`${badge} waiting on you`}
+                >
+                  {badge}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </nav>
 
       {/* §19-C Task 7 — one Exit. If a box holds unsaved edits, ask first. */}
       {exitPrompt && (
@@ -582,38 +695,27 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         />
       )}
 
-      {/* Mobile tab bar */}
-      <div className="lg:hidden flex border-b border-zinc-200 text-xs font-medium">
-        {(['chat', 'fields', 'background'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            // ⚠ NO `capitalize`. The labels are written out below, so title-casing them
-            // in CSS turned "What to do" into "What To Do" the moment they stopped being
-            // single lower-case words.
-            className={`flex-1 py-2 ${tab === t ? 'font-semibold text-blue-600 border-b-2 border-blue-600' : 'text-zinc-400'}`}
-          >
-            {/* ⚠ 25-K §1 — "Progress" told the user nothing and "the proposal" was an
-                implementation word. The tabs name what is behind them. */}
-            {t === 'fields'
-              ? (lexStage === 'deepening' ? 'The passes' : 'The draft')
-              : t === 'background' ? 'Legislation' : 'What to do'}
-          </button>
-        ))}
-      </div>
 
-      <div className="flex-1 min-h-0">
+      {/* ⚠ THE COLUMN AREA IS PADDED ON MOBILE so the fixed bar does not sit on top of the
+          last line of whatever the user is reading. `lg:pb-0` because there is no bar on a
+          desktop and the padding would be a strip of nothing at the bottom of the page. */}
+      <div className="flex-1 min-h-0 pb-14 lg:pb-0">
         {booting || !state ? (
           <div className="h-full flex items-center justify-center text-sm text-zinc-400">
             {error ?? 'Starting your session…'}
           </div>
         ) : (
-          <div className={`h-full grid grid-cols-1 ${
-            showFields && showBackground ? 'lg:grid-cols-[1.2fr_1fr_1fr]'
-              : showFields ? 'lg:grid-cols-[1.4fr_1fr_2.5rem]'
-                : showBackground ? 'lg:grid-cols-[1.4fr_2.5rem_1fr]'
-                  : 'lg:grid-cols-[1fr_2.5rem_2.5rem]'
-          }`}>
+          // ══ 25-L §4 — THE COLUMNS ARE THE USER'S, NOT FOUR HARDCODED ARRANGEMENTS ══
+          //
+          // ⚠ A CSS VARIABLE, NOT AN INLINE `gridTemplateColumns`. An inline style beats
+          // every class including the `lg:` breakpoint, so setting the template directly
+          // would apply the three-column layout on a phone as well — where the three panels
+          // are three TABS and only one is on screen. The variable is set inline and READ
+          // only inside `lg:`, so mobile keeps its single column.
+          <div
+            className="h-full grid grid-cols-1 lg:[grid-template-columns:var(--lex-cols)]"
+            style={{ ['--lex-cols' as string]: colTemplate }}
+          >
             {/* ══ 25-K §3 — PANEL 1 IS A WORKLIST WITH A CHAT UNDER IT ═══════════
                 §3, and it is the single most important change in the sprint: *"the left
                 column stops being a transcript and becomes a worklist."* The order is the
@@ -623,10 +725,38 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   3. the chat, BENEATH the list, for asking about any of it.
                 The chat was the whole column and it answered "what can I ask?" while
                 leaving "what should I do?" for the user to work out. */}
-            <div className={`h-full min-h-0 border-r border-zinc-200 flex flex-col ${tab === 'chat' ? 'flex' : 'hidden'} lg:flex`}>
+            {!showChat && (
+              <PanelEdge
+                label={PANEL_ROLES.left.name}
+                hint="what to do next, and the chat"
+                onOpen={() => setPanelOpen((p) => ({ ...p, chat: true }))}
+              />
+            )}
+            <div className={`h-full min-h-0 border-r border-zinc-200 flex-col ${tab === 'chat' ? 'flex' : 'hidden'} ${showChat ? 'lg:flex' : 'lg:hidden'}`}>
+              {/* ⚠ 25-L §4 — THE ROLE IS STATED, NOT INFERRED. §4's table exists because a
+                  user who cannot say what a column is FOR cannot decide whether to widen it,
+                  and until now all three were guessed at from their contents. */}
+              <div className="flex items-baseline gap-2 shrink-0 border-b border-zinc-100 px-3 py-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
+                  {PANEL_ROLES.left.name}
+                </span>
+                <span className="text-[11px] text-zinc-400 flex-1 truncate">{PANEL_ROLES.left.role}</span>
+                <button
+                  onClick={() => setPanelOpen((p) => ({ ...p, chat: false }))}
+                  className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
+                  title={`Collapse ${PANEL_ROLES.left.name}`}
+                >
+                  collapse ‹
+                </button>
+              </div>
               {ideaId && (
                 <div className="shrink-0 max-h-[42%] overflow-y-auto">
-                  <WorkList ideaId={ideaId} scope={lexStage} refreshNonce={worklistNonce} />
+                  <WorkList
+                    ideaId={ideaId}
+                    scope={lexStage}
+                    refreshNonce={worklistNonce}
+                    onOutstanding={setWaitingCount}
+                  />
                 </div>
               )}
 
@@ -658,6 +788,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               </div>
             </div>
 
+            {/* ⚠ A DIVIDER ONLY BETWEEN TWO OPEN PANELS. Between an open panel and a
+                collapsed EDGE there is nothing to resize, and a handle that does nothing is
+                worse than no handle. */}
+            {showChat && showFields && <PanelDivider a="left" b="middle" onDrag={panels.drag} />}
+
             {/* Panel 2 — the middle column. 25-H §5: a slim labelled EDGE when there is
                 nothing in it yet, so the user knows what is coming rather than meeting it
                 cold.
@@ -673,7 +808,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               />
             )}
             <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} ${showFields ? 'lg:block' : 'lg:hidden'}`}>
-              <div className="flex justify-end px-2 pt-1.5">
+              <div className="flex items-baseline gap-2 border-b border-zinc-100 px-3 py-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
+                  {lexStage === 'deepening' ? 'The passes' : PANEL_ROLES.middle.name}
+                </span>
+                <span className="text-[11px] text-zinc-400 flex-1 truncate">{PANEL_ROLES.middle.role}</span>
                 <button
                   onClick={() => setPanelOpen((p) => ({ ...p, fields: false }))}
                   className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
@@ -746,22 +885,28 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               )}
             </div>
 
+            {showFields && showBackground && <PanelDivider a="middle" b="right" onDrag={panels.drag} />}
+
             {/* Panel 3 — Legislation / Background. Collapsed until something is in it:
                 at stage one it is empty by definition, and an empty panel taking a third
                 of the screen is what made the first stage feel like a cockpit. */}
             {!showBackground && (
               <PanelEdge
-                label="Legislation"
+                label={PANEL_ROLES.right.name}
                 hint={backgroundHasContent ? 'open' : 'once we have enough to search on'}
                 onOpen={() => setPanelOpen((p) => ({ ...p, background: true }))}
               />
             )}
             <div className={`h-full min-h-0 ${tab === 'background' ? 'block' : 'hidden'} ${showBackground ? 'lg:block' : 'lg:hidden'}`}>
-              <div className="flex justify-end px-2 pt-1.5">
+              <div className="flex items-baseline gap-2 border-b border-zinc-100 px-3 py-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
+                  {PANEL_ROLES.right.name}
+                </span>
+                <span className="text-[11px] text-zinc-400 flex-1 truncate">{PANEL_ROLES.right.role}</span>
                 <button
                   onClick={() => setPanelOpen((p) => ({ ...p, background: false }))}
                   className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
-                  title="Collapse the legislation panel"
+                  title="Collapse the resources panel"
                 >
                   collapse ›
                 </button>

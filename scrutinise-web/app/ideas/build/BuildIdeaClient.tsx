@@ -28,6 +28,7 @@ import {
 // keeps importing its prop type from the component it renders.
 import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
 import StageBar from '@/components/lex/StageBar'
+import RerunDialogue from '@/components/lex/RerunDialogue'
 import YourMaterial from '@/components/lex/YourMaterial'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
@@ -108,6 +109,8 @@ export interface BuildView {
   startedAt: string | null; completedAt: string | null; elapsedSeconds: number | null
   failureReason: string | null; cancelRequested: boolean
   summaryMessage: string | null
+  /** 25-L §1 — what the user said was wrong with the run before this one. */
+  userCritique: string | null
   uncertainties: Array<{ fieldKey: string; sentence: string }>
   queryUsed: string | null
   spend: { tokensIn: number; tokensOut: number; pence: number | null; line: string }
@@ -305,6 +308,15 @@ export default function BuildIdeaClient(
    * It now opens from the composer, on every question, and stays available after the
    * elicitation is confirmed.
    */
+  /**
+   * 25-L §1 — the re-run dialogue is open.
+   *
+   * ⚠ THE BUTTON NO LONGER FIRES A BUILD. Pressing it opens the question; the build starts
+   * from inside the dialogue, with whatever the user wrote attached. A re-run that starts on
+   * the click spends four minutes reproducing the draft they were unhappy with, because
+   * nothing has changed between the two runs.
+   */
+  const [rerunOpen, setRerunOpen] = useState(false)
   const [attachOpen, setAttachOpen] = useState(false)
   const [attached, setAttached] = useState(materialCount)
 
@@ -733,9 +745,10 @@ export default function BuildIdeaClient(
    * which is the "user who cannot see what a five-minute job is doing assumes it has
    * hung" failure §2 names.
    */
-  const startBuild = useCallback((mode: 'FULL' | 'REUSE' = 'FULL') => {
+  const startBuild = useCallback((mode: 'FULL' | 'REUSE' = 'FULL', critique = '') => {
     if (!ideaId) return
     setError(null)
+    setRerunOpen(false)
 
     // AMENDMENT_25B §C — ask now, because now is when it means something. Only when the
     // browser has not already decided: re-requesting a denied permission does nothing,
@@ -754,6 +767,10 @@ export default function BuildIdeaClient(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode,
+        // ⚠ 25-L §1 — SENT ONLY WHEN THERE IS SOMETHING TO SEND. An empty string would
+        // write a critique row saying nothing, and every later reader would have to
+        // distinguish "they wrote nothing" from "they were never asked".
+        ...(critique.trim() ? { critique: critique.trim() } : {}),
         // §C4 — sent only when the offer was actually shown. Posting `false` on a build too
         // short to have offered would silently clear a preference the user set elsewhere.
         ...(build?.estimate?.offerEmail ? { notifyEmail: emailWhenDone } : {}),
@@ -865,6 +882,25 @@ export default function BuildIdeaClient(
           stage="BUILD"
           initialSurface="OTHER"
           onClose={() => setFeedbackOpen(false)}
+        />
+      )}
+
+      {/* ══ 25-L §1 — THE RE-RUN DIALOGUE ════════════════════════════
+          ⚠ ONLY ONCE A BUILD EXISTS. §1: "once an idea has been built at least once". There
+          is nothing to criticise about a run that has not happened, and asking would be a
+          form standing between the user and their first build. */}
+      {rerunOpen && ideaId && latest && (
+        <RerunDialogue
+          ideaId={ideaId}
+          reuse={build?.reuse ?? null}
+          reuseBlockedReason={build?.reuseBlockedReason ?? null}
+          estimateLine={build?.estimate?.line ?? null}
+          busy={busy}
+          onCancel={() => setRerunOpen(false)}
+          onGo={(mode, critique) => startBuild(mode, critique)}
+          // Adding a document can change whether the research may be reused, so the panel
+          // re-reads rather than printing an answer chosen when it opened.
+          onMaterialChanged={() => void refresh()}
         />
       )}
 
@@ -1261,6 +1297,22 @@ export default function BuildIdeaClient(
                 so the user judged the product on a progress list and a keyword soup.
                 Below the progress panel deliberately — the passes say what happened, this
                 says what came of it. */}
+            {/* ⚠ 25-L §1 — WHAT THIS RUN WAS ASKED TO FIX, SHOWN BACK.
+                A user who wrote three paragraphs of criticism and then watched a progress
+                bar has no way to tell whether any of it was carried. Printing it beside the
+                run that received it is the only evidence they get, and it costs nothing.
+                Above the findings deliberately: it is the frame for reading them. */}
+            {latest?.userCritique && (
+              <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50/70 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                  What you asked this run to fix
+                </p>
+                <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
+                  {latest.userCritique}
+                </p>
+              </div>
+            )}
+
             {latest?.highlights && <BuildFindings highlights={latest.highlights} />}
 
             {/* AMENDMENT_25B §B/§C — say whether they can walk away, because the two
@@ -1349,20 +1401,18 @@ export default function BuildIdeaClient(
                       {build.reuse.cited === 1 ? '' : 's'}. Add new information above if you want me to
                       search again.
                     </p>
+                    {/* ⚠⚠ 25-L §1 — ONE BUTTON, AND IT OPENS THE QUESTION. Two buttons here
+                        made the user choose a PRICE before they had been asked the only
+                        question that changes the result. The choice of mode has not gone
+                        away; it has moved inside the dialogue, where it sits beside what
+                        each one will do and after they have said what was wrong. */}
                     <div className="mt-2.5 flex flex-wrap items-center gap-2">
                       <button
-                        onClick={() => startBuild('REUSE')}
+                        onClick={() => setRerunOpen(true)}
                         disabled={busy}
                         className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
                       >
-                        Redraft from what I found
-                      </button>
-                      <button
-                        onClick={() => startBuild('FULL')}
-                        disabled={busy}
-                        className="text-sm font-medium px-4 py-2 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
-                      >
-                        Search again from scratch
+                        Re-run this idea…
                       </button>
                     </div>
                     <p className="text-[11px] text-zinc-500 mt-2">
@@ -1378,11 +1428,11 @@ export default function BuildIdeaClient(
                       {build.reuseBlockedReason ?? 'This will search the corpus again from scratch.'}
                     </p>
                     <button
-                      onClick={() => startBuild('FULL')}
+                      onClick={() => setRerunOpen(true)}
                       disabled={busy}
                       className="mt-2.5 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
                     >
-                      Run it again
+                      Re-run this idea…
                     </button>
                     {build.estimate?.line && (
                       <p className="text-[11px] text-zinc-500 mt-2">{build.estimate.line}</p>
