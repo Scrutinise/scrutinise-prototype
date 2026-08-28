@@ -77,11 +77,15 @@ function Chip({ children, className = '' }: { children: React.ReactNode; classNa
   )
 }
 
-function Section({ title, count, hint, children }: {
-  title: string; count: number; hint?: string; children: React.ReactNode
+function Section({ id, title, count, hint, children }: {
+  // ⚠ 25-K §3 — THE ID IS WHAT MAKES THE WORKLIST A JUMP RATHER THAN A LABEL.
+  // `WorkList` names these anchors; a row that says "read the two contradictions" and does
+  // not take you to them is a second thing to work out, which is the fault this sprint is
+  // fixing. Named here rather than in the worklist so the two cannot drift.
+  id?: string; title: string; count: number; hint?: string; children: React.ReactNode
 }) {
   return (
-    <section className="border-t border-zinc-100 px-4 py-3">
+    <section id={id} className="scroll-mt-4 border-t border-zinc-100 px-4 py-3">
       <div className="flex items-baseline gap-2">
         <h4 className="text-sm font-semibold text-zinc-900">{title}</h4>
         <span className="text-xs text-zinc-400">{count}</span>
@@ -143,6 +147,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       {/* ── §3b — CONTRADICTIONS LEAD ─────────────────────────────────────── */}
       {a.contradictions.length > 0 && (
         <Section
+          id="agenda-contradictions"
           title="Where the research changed my mind"
           count={a.contradictions.length}
           hint="I drafted this before I had looked anything up. These are the places the evidence moved me."
@@ -168,6 +173,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       {/* ── §3a — DECISIONS ───────────────────────────────────────────────── */}
       {a.decisions.length > 0 && (
         <Section
+          id="agenda-decisions"
           title="Decisions"
           count={a.decisions.length}
           hint="Each of these is a real choice I made for you. Take it or change it — both are recorded."
@@ -233,6 +239,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       {/* ── §3c — CHALLENGES ──────────────────────────────────────────────── */}
       {a.challenges.length > 0 && (
         <Section
+          id="agenda-challenges"
           title="Challenges"
           count={a.challenges.filter((c) => c.status === 'OPEN').length}
           hint="What a hostile committee clerk would ask that this cannot yet answer."
@@ -254,6 +261,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       {/* ── §3d — READING ─────────────────────────────────────────────────── */}
       {a.reading.length > 0 && (
         <Section
+          id="agenda-reading"
           title="Read these"
           count={a.reading.length}
           hint="Not everything — these. Reading the primary material is where your judgment enters and mine can’t substitute."
@@ -275,6 +283,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       {/* ── §3e — GAPS ────────────────────────────────────────────────────── */}
       {a.gaps.length > 0 && (
         <Section
+          id="agenda-gaps"
           title="What nobody has answered"
           count={a.gaps.length}
           hint="Named, so a gap is a strength rather than a silence."

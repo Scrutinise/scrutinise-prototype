@@ -15,8 +15,13 @@ import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
-import SurfaceSwitch from '@/components/lex/SurfaceSwitch'
-import type { SurfaceContext } from '@/lib/lex/surfaces'
+import StageBar from '@/components/lex/StageBar'
+import WorkList from '@/components/lex/WorkList'
+// ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
+// TYPE import, erased at compile, so the server-only counting module never reaches the
+// browser bundle. See `lib/lex/stages.ts`.
+import { stageByKey, type LexStageKey } from '@/lib/lex/stages'
+import type { StageContext } from '@/lib/lex/stage-context'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import AgendaPanel from '@/components/lex/AgendaPanel'
@@ -35,8 +40,17 @@ interface Props {
   initialIdeaId?: string
   initialMessages?: unknown[]
   isFirstIdea?: boolean
-  /** 25-G §2 — the route back to the build, when there is a build to go back to. */
-  surface?: SurfaceContext | null
+  /** 25-K §1 — the three stages, which one this is, and what is on the other two. */
+  stageCtx?: StageContext | null
+  /**
+   * 25-K §4 — WHICH STAGE THIS SCREEN IS SERVING.
+   *
+   * ⚠ ONE ROUTE, TWO STAGES, AND THAT IS DELIBERATE. Stage 2 and Stage 3 read the same
+   * canonical state, the same chat and the same legislation panel; only the middle column
+   * differs. A second route would have duplicated the boot, the transcript and the panel
+   * wiring so that one column could change, and the two copies would drift.
+   */
+  stage?: LexStageKey
 }
 
 // §20.5 — a conservative match for the user criticising something Lex produced,
@@ -96,7 +110,7 @@ function PanelEdge({ label, hint, onOpen }: { label: string; hint: string; onOpe
   )
 }
 
-export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea, surface = null }: Props) {
+export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea, stageCtx = null, stage: lexStage = 'strategy' }: Props) {
   const opening = openingBubbles?.length ? openingBubbles : DEFAULT_OPENING
 
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
@@ -132,6 +146,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     { fields: null, background: null },
   )
   const bootedRef = useRef(false)
+  /** 25-K §3 — bumped whenever a mutation may have changed what is waiting on the user. */
+  const [worklistNonce, setWorklistNonce] = useState(0)
 
   /**
    * ⚠ THE SECOND (AND LAST) WARM-ON-INTENT CALLER. See `/api/search/warm`.
@@ -177,7 +193,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     })()
   }, [ideaId])
 
-  const applyState = useCallback((s: CanonicalState) => setState(s), [])
+  /**
+   * 25-K §3 — the worklist re-reads when the page has changed something it counts.
+   *
+   * ⚠ A NONCE, NOT A POLL. The agenda is a pure read and cheap, but polling it every few
+   * seconds would spend a request per user per tick to notice a change only this page can
+   * make. Every mutation lands here, so this is the one place that knows.
+   */
+  const applyState = useCallback((s: CanonicalState) => {
+    setState(s)
+    setWorklistNonce((n) => n + 1)
+  }, [])
 
   const appendLex = useCallback((msgs: unknown, stage?: string) => {
     if (Array.isArray(msgs) && msgs.length) {
@@ -480,19 +506,22 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         </div>
       )}
 
-      {/* Persistent help affordance — a prominent pill, centred above the chat column
-          (the left column of the lg 3-col grid) so it's unmissable (Sprint 1.4).
-          §19-C Task 7: Exit sits to its left, so leaving is always in reach. */}
-      {/* 25-G §2 — the persistent route to the build. In the header bar because that bar
-          is on EVERY screen of this surface (all three panels, all four pages), which is
-          the "persistent, in both directions" §2 asks for. */}
-      {surface && (
-        <div className="border-b border-zinc-100 px-4 pt-2">
+      {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════════════
+          On every screen of this surface (all three panels, all four pages, both stages
+          it serves), because "which stage am I in and what is it for" is a question a
+          user asks continuously, not once. It replaces 25-G's build/proposal switch —
+          those were implementation words; see `lib/lex/stages.ts`. */}
+      {stageCtx && (
+        <div className="border-b border-zinc-100 px-4 pt-2 pb-1.5">
           <div className="max-w-3xl mx-auto">
-            <SurfaceSwitch context={surface} />
+            <StageBar context={stageCtx} />
           </div>
         </div>
       )}
+
+      {/* Persistent help affordance — a prominent pill, centred above the chat column
+          (the left column of the lg 3-col grid) so it's unmissable (Sprint 1.4).
+          §19-C Task 7: Exit sits to its left, so leaving is always in reach. */}
 
       <div className="border-b border-zinc-100 px-4 py-2 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr]">
         <div className="flex items-center justify-center gap-3">
@@ -559,9 +588,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-2 capitalize ${tab === t ? 'text-blue-600 border-b-2 border-blue-600' : 'text-zinc-400'}`}
+            // ⚠ NO `capitalize`. The labels are written out below, so title-casing them
+            // in CSS turned "What to do" into "What To Do" the moment they stopped being
+            // single lower-case words.
+            className={`flex-1 py-2 ${tab === t ? 'font-semibold text-blue-600 border-b-2 border-blue-600' : 'text-zinc-400'}`}
           >
-            {t === 'fields' ? 'Progress' : t === 'background' ? 'Background' : 'Chat'}
+            {/* ⚠ 25-K §1 — "Progress" told the user nothing and "the proposal" was an
+                implementation word. The tabs name what is behind them. */}
+            {t === 'fields'
+              ? (lexStage === 'deepening' ? 'The passes' : 'The draft')
+              : t === 'background' ? 'Legislation' : 'What to do'}
           </button>
         ))}
       </div>
@@ -578,8 +614,31 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 : showBackground ? 'lg:grid-cols-[1.4fr_2.5rem_1fr]'
                   : 'lg:grid-cols-[1fr_2.5rem_2.5rem]'
           }`}>
-            {/* Panel 1 — Chat */}
-            <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'chat' ? 'block' : 'hidden'} lg:block`}>
+            {/* ══ 25-K §3 — PANEL 1 IS A WORKLIST WITH A CHAT UNDER IT ═══════════
+                §3, and it is the single most important change in the sprint: *"the left
+                column stops being a transcript and becomes a worklist."* The order is the
+                brief's and it is not negotiable —
+                  1. what to do next, as a plain list, in order;
+                  2. what this stage is, in one line;
+                  3. the chat, BENEATH the list, for asking about any of it.
+                The chat was the whole column and it answered "what can I ask?" while
+                leaving "what should I do?" for the user to work out. */}
+            <div className={`h-full min-h-0 border-r border-zinc-200 flex flex-col ${tab === 'chat' ? 'flex' : 'hidden'} lg:flex`}>
+              {ideaId && (
+                <div className="shrink-0 max-h-[42%] overflow-y-auto">
+                  <WorkList ideaId={ideaId} scope={lexStage} refreshNonce={worklistNonce} />
+                </div>
+              )}
+
+              {/* §3.2 — WHAT THIS STAGE IS, ONE LINE, ALWAYS VISIBLE, and drawn from the
+                  same constant the indicator above uses so the two cannot say different
+                  things about the same stage. */}
+              <p className="shrink-0 border-b border-zinc-100 px-3 py-1.5 text-[11px] text-zinc-500">
+                <span className="font-semibold text-zinc-700">{stageByKey(lexStage).name}.</span>{' '}
+                {stageByKey(lexStage).purpose}
+              </p>
+
+              <div className="flex-1 min-h-0">
               <ChatPanel
                 messages={messages}
                 awaitingField={chatAwaitingField}
@@ -596,13 +655,19 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onGiveFeedback={() => openFeedback()}
                 onDismissFeedbackOffer={() => setFeedbackOffer(false)}
               />
+              </div>
             </div>
 
-            {/* Panel 2 — Fields. 25-H §5: a slim labelled EDGE when there is nothing in
-                it yet, so the user knows what is coming rather than meeting it cold. */}
+            {/* Panel 2 — the middle column. 25-H §5: a slim labelled EDGE when there is
+                nothing in it yet, so the user knows what is coming rather than meeting it
+                cold.
+
+                ⚠ 25-K §1 — THE LABEL IS NOT "YOUR PROPOSAL" ANY MORE. "The proposal" was
+                one of the two implementation words a user had to translate before they
+                could navigate; the panel holds the draft, so it says so. */}
             {!showFields && (
               <PanelEdge
-                label="Your proposal"
+                label={lexStage === 'deepening' ? 'The passes' : 'The draft'}
                 hint={fieldsHaveContent ? 'open' : 'fills in as we go'}
                 onOpen={() => setPanelOpen((p) => ({ ...p, fields: true }))}
               />
@@ -612,11 +677,27 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 <button
                   onClick={() => setPanelOpen((p) => ({ ...p, fields: false }))}
                   className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
-                  title="Collapse the proposal panel"
+                  title={lexStage === 'deepening' ? 'Collapse the passes' : 'Collapse the draft'}
                 >
                   collapse ›
                 </button>
               </div>
+
+              {/* ══ 25-K §4 — STAGE 3 IS A STAGE, NOT A SECTION AT THE BOTTOM ═══════
+                  §4: the Deepening was "currently reachable only by scrolling past
+                  everything else". At Stage 3 the middle column IS the deepening — its
+                  passes, their findings and the issues to work through — with the same
+                  worklist shape as Stage 2 in the column beside it. */}
+              {lexStage === 'deepening' ? (
+                <div className="h-full min-h-0 overflow-y-auto px-3 pb-6">
+                  <DeepeningPanel
+                    ideaId={state.ideaId}
+                    unlocked={kernelComplete}
+                    onOpenPass={setOpenDeepeningPass}
+                    onDiscussIssue={discussIssue}
+                  />
+                </div>
+              ) : (
               <FieldsPanel
                 pages={state.pages}
                 causes={state.diagnosisCauses}
@@ -638,21 +719,31 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 costLinesApi={costLinesApi}
                 deepening={
                   <>
-                    {/* 25-C §3 — THE AGENDA COMES FIRST, above the Deepening's own cards.
-                        The whole point is that the user is handed what to DO rather than a
-                        library to search; putting it under the four pass cards would make it
-                        the sixth thing on the page and undo the ordering §3 exists for.
-                        It renders nothing until a build has completed. */}
+                    {/* 25-C §3 — THE AGENDA COMES FIRST. The user is handed what to DO
+                        rather than a library to search. It renders nothing until a build
+                        has completed, and it is what the worklist's rows jump to.
+
+                        ⚠⚠ 25-K §4 — THE DEEPENING NO LONGER LIVES UNDER IT. It was
+                        reachable "only by scrolling past everything else", which is a
+                        stage of work filed as a footnote to another one. It is Stage 3
+                        now, with its own screen and its own worklist; what stays here is
+                        a route to it, so nobody has to discover that it exists. */}
                     <AgendaPanel ideaId={state.ideaId} />
-                    <DeepeningPanel
-                      ideaId={state.ideaId}
-                      unlocked={kernelComplete}
-                      onOpenPass={setOpenDeepeningPass}
-                      onDiscussIssue={discussIssue}
-                    />
+                    <a
+                      href={`/ideas/create?ideaId=${state.ideaId}&stage=deepening`}
+                      className="block rounded-lg border-2 border-zinc-200 bg-white px-3 py-2.5 hover:border-zinc-400 hover:bg-zinc-50"
+                    >
+                      <span className="text-sm font-semibold text-zinc-900">
+                        {stageByKey('deepening').n} · {stageByKey('deepening').name} →
+                      </span>
+                      <span className="block text-xs text-zinc-600 mt-0.5">
+                        {stageByKey('deepening').purpose}
+                      </span>
+                    </a>
                   </>
                 }
               />
+              )}
             </div>
 
             {/* Panel 3 — Legislation / Background. Collapsed until something is in it:

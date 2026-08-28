@@ -202,7 +202,10 @@ export default function DeepeningPanel({
   }
 
   return (
-    <div className="space-y-3">
+    // ⚠ 25-K §4 — `deepening-passes` and `deepening-issues` are the anchors `WorkList`
+    // jumps to. Named here so a worklist row is a route to the work rather than a label
+    // for it. `scroll-mt` keeps the heading clear of the sticky nav.
+    <div id="deepening-passes" className="scroll-mt-4 space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-zinc-700 flex-1">Deepening</span>
         {facts && (
@@ -319,7 +322,7 @@ export default function DeepeningPanel({
                   </div>
 
                   {/* ISSUES */}
-                  <div>
+                  <div id={`deepening-issues-${p.passKey}`} className="scroll-mt-4">
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">
                       Issues to work through {p.issues.length > 0 && <span className="text-zinc-400 font-normal">· {openIssues} open of {p.issues.length}</span>}
                     </div>

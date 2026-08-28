@@ -2,7 +2,10 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import CreateIdeaClient from './CreateIdeaClient'
-import { surfaceContext } from '@/lib/lex/surfaces'
+import type { LexStageKey } from '@/lib/lex/stages'
+// ⚠ THE COUNTS COME FROM A SEPARATE, SERVER-ONLY MODULE. See `stages.ts` — putting the
+// prisma read beside the vocabulary put `pg` in the browser bundle.
+import { stageContext } from '@/lib/lex/stage-context'
 import { newIdeaDoor, doorPath } from '@/lib/lex/new-idea-door'
 
 function getTimeOfDay(utcHour: number): string {
@@ -12,7 +15,14 @@ function getTimeOfDay(utcHour: number): string {
 }
 
 interface Props {
-  searchParams: Promise<{ ideaId?: string }>
+  /**
+   * `stage=deepening` — 25-K §4. Stage 2 and Stage 3 share this route because they share
+   * everything except the middle column; see `CreateIdeaClient`'s `stage` prop.
+   *
+   * ⚠ ANYTHING ELSE IS STAGE 2, silently. A typo in a pasted URL must land the user on a
+   * working screen, not on an error about a query parameter they did not type.
+   */
+  searchParams: Promise<{ ideaId?: string; stage?: string }>
 }
 
 export default async function CreateIdeaPage({ searchParams }: Props) {
@@ -78,13 +88,18 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
 
   // §13 Task 5 — first idea: the full intro, then the first question as a SEPARATE
   // bubble immediately after. Verbatim. Returning users keep a short greeting.
+  //
+  // ⚠ 25-K §1 — REWRITTEN, because it taught the user the vocabulary this sprint
+  // retires. It described "the proposal" as a panel, which is exactly the implementation
+  // word a person then has to translate before they can find anything. It names the
+  // columns by what is IN them, and the stage by what you DO there.
   const FIRST_IDEA_INTRO =
     "I'm here to help you develop and build support for a credible proposal for your idea, ready for " +
-    'Parliamentary colleagues. There are three panels here: this is the chat, where you can use me to help you ' +
-    'develop your proposal; next to it is the proposal itself as you build it; and last is the legislative panel, ' +
-    "where we'll place relevant legislation for review once we have enough information to source data that's " +
-    'helpful. You can answer the questions here in the chat, or type directly into the form in the second panel ' +
-    'if you don\'t need my help. For a quick introduction if you don\'t know what to do, click “How this works” above.'
+    'Parliamentary colleagues. This is Stage 2, the Strategy: working through what I drafted. On the left is '  +
+    'what to do next, with the chat underneath it; in the middle is the draft as it stands; and on the right '  +
+    'is the legislation and the findings, filed under the questions they answer. You can answer here in the '   +
+    "chat, or type straight into the draft if you don't need my help. For a quick introduction if you don't "  +
+    'know what to do, click “How this works” above.'
   const FIRST_QUESTION = "What's the problem you want to fix?"
 
   let openingBubbles: string[]
@@ -105,8 +120,9 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     ]
   }
 
-  // 25-G §2 — the route back to the build, when there is a build to go back to.
-  const surface = initialIdeaId ? await surfaceContext(initialIdeaId, 'proposal') : null
+  // 25-K §1 — the three stages, which one this is, and what is on the other two.
+  const lexStage: LexStageKey = params.stage === 'deepening' ? 'deepening' : 'strategy'
+  const stageCtx = await stageContext(initialIdeaId ?? null, lexStage)
 
   return (
     <CreateIdeaClient
@@ -114,7 +130,8 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
       initialIdeaId={initialIdeaId}
       initialMessages={initialMessages}
       isFirstIdea={isFirstIdea}
-      surface={surface}
+      stageCtx={stageCtx}
+      stage={lexStage}
     />
   )
 }
