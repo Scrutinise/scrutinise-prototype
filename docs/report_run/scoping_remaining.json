@@ -1,0 +1,354 @@
+{
+  "generated_at": "2026-08-28T22:26:32.703Z",
+  "what_this_is": "Reference count and detection breakdown only, for the measures not worked at full depth. One row per (workstream, instrument): several workstreams name more than one instrument, and collapsing them would mean choosing between them, which is the analysis track's call.",
+  "merge_warning": "markup, text and enabling are different strengths of evidence and are reported separately. Do not add them. A markup edge is the source document asserting the target by URI; a text edge is the Act NAME resolved against corpus_acts titles, so the target id is derived and must never be quoted as the source's own words; an enabling edge is the instrument's own enacting words saying it was MADE UNDER the target, which is a stronger and different fact — an instrument that merely mentions an Act survives its repeal, while one whose enabling power is repealed may fall with it.",
+  "caveats": [
+    "⚠ target_named_in_spec = no means the instrument is CC's identification, not the programme spec's. Strike any row you disagree with; the count is only as good as the target.",
+    "⚠ Every gid is resolved by EXACT title match against corpus_acts, the same table the text detector resolves against. The matched title and its title_source are carried here so the resolution can be checked.",
+    "⚠⚠ Where provision_scope is set, the Part IS expanded to its member provisions from the Act's own CLML, exactly as inbound() does it. A LITERAL match on the string returns 0 on every axis for CRA 2005 Part 2, because references name sections and not Parts — a bare 0 there would have read as \"nothing refers to the Lord Chancellor provisions\", which is false, and false in the direction that makes the measure look easy.",
+    "⚠ act_level_rows is reported SEPARATELY on Part-scoped rows and is never added in: those rows name the Act with no provision, any of them may bear on the Part, and the markup does not say which. It is a floor on unknown in-scope exposure, not noise.",
+    "⚠ WS-12 has no repeal target. The spec says \"Analysis only this phase\". Its rows are the instruments CCW_SPEC §6 names as the EXISTING toolkit and must not be read as things the programme proposes to repeal."
+  ],
+  "rows": [
+    {
+      "ws_id": "WS-02",
+      "measure": "Supreme Court abolition; appellate jurisdiction returned to the Lords (CRA 2005 Pt 3)",
+      "instrument_title": "Constitutional Reform Act 2005",
+      "provision_scope": "part-3",
+      "named_in_spec": true,
+      "basis": "named in the spec",
+      "resolved_gid": "ukpga/2005/4",
+      "resolved_title": "Constitutional Reform Act 2005",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 4,
+        "text": 85,
+        "enabling": 15
+      },
+      "act_level_rows": 427,
+      "distinct_source_instruments": 64,
+      "made_under_edges": 236,
+      "resolution": "resolved by exact title match; 'part-3' expanded to 46 provision refs from the Act's own CLML (45 provisions read from ukpga/2005/4 part-3). A literal match on the bare string 'part-3' returns 24 row(s) — references name sections, not Parts, which is why the Part is expanded. act_level_rows (427) name the Act with no provision and are reported SEPARATELY: any of them may bear on this Part and the markup does not say which."
+    },
+    {
+      "ws_id": "WS-03",
+      "measure": "Lord Chancellor's office and powers restored (CRA 2005 Pt 2; JAC)",
+      "instrument_title": "Constitutional Reform Act 2005",
+      "provision_scope": "part-2",
+      "named_in_spec": true,
+      "basis": "named in the spec",
+      "resolved_gid": "ukpga/2005/4",
+      "resolved_title": "Constitutional Reform Act 2005",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 1,
+        "text": 13,
+        "enabling": 5
+      },
+      "act_level_rows": 427,
+      "distinct_source_instruments": 12,
+      "made_under_edges": 236,
+      "resolution": "resolved by exact title match; 'part-2' expanded to 22 provision refs from the Act's own CLML (21 provisions read from ukpga/2005/4 part-2). A literal match on the bare string 'part-2' returns 0 row(s) — references name sections, not Parts, which is why the Part is expanded. act_level_rows (427) name the Act with no provision and are reported SEPARATELY: any of them may bear on this Part and the markup does not say which."
+    },
+    {
+      "ws_id": "WS-03",
+      "measure": "Lord Chancellor's office and powers restored (CRA 2005 Pt 2; JAC)",
+      "instrument_title": "Constitutional Reform Act 2005",
+      "provision_scope": "part-4",
+      "named_in_spec": false,
+      "basis": "the spec names \"JAC\" without a Part; the Judicial Appointments Commission is constituted by CRA 2005 Part 4 — MY identification, strike it if wrong",
+      "resolved_gid": "ukpga/2005/4",
+      "resolved_title": "Constitutional Reform Act 2005",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 8,
+        "text": 307,
+        "enabling": 34
+      },
+      "act_level_rows": 427,
+      "distinct_source_instruments": 106,
+      "made_under_edges": 236,
+      "resolution": "resolved by exact title match; 'part-4' expanded to 76 provision refs from the Act's own CLML (75 provisions read from ukpga/2005/4 part-4). A literal match on the bare string 'part-4' returns 18 row(s) — references name sections, not Parts, which is why the Part is expanded. act_level_rows (427) name the Act with no provision and are reported SEPARATELY: any of them may bear on this Part and the markup does not say which."
+    },
+    {
+      "ws_id": "WS-06",
+      "measure": "Climate Change Act 2008 + the 2019 target order",
+      "instrument_title": "Climate Change Act 2008",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "named in the spec",
+      "resolved_gid": "ukpga/2008/27",
+      "resolved_title": "Climate Change Act 2008",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 20,
+        "text": 336,
+        "enabling": 142
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 147,
+      "made_under_edges": 183,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-06",
+      "measure": "Climate Change Act 2008 + the 2019 target order",
+      "instrument_title": "The Climate Change Act 2008 (2050 Target Amendment) Order 2019",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "the spec names \"the 2019 target order\"; this is the instrument of that description, resolved by title against corpus_acts",
+      "resolved_gid": "uksi/2019/1056",
+      "resolved_title": "The Climate Change Act 2008 (2050 Target Amendment) Order 2019",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 0,
+        "text": 0,
+        "enabling": 4
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 2,
+      "made_under_edges": 4,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-07",
+      "measure": "Arm's-length body estate (~444 quangos)",
+      "instrument_title": "Public Bodies Act 2011",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "named in the spec, as the instrument \"for a subset\"",
+      "resolved_gid": "ukpga/2011/24",
+      "resolved_title": "Public Bodies Act 2011",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 16,
+        "text": 146,
+        "enabling": 51
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 64,
+      "made_under_edges": 60,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-08",
+      "measure": "Judicial review restriction",
+      "instrument_title": "Senior Courts Act 1981",
+      "provision_scope": "",
+      "named_in_spec": false,
+      "basis": "the spec names NO instrument. s.31 is the judicial review jurisdiction — MY identification",
+      "resolved_gid": "ukpga/1981/54",
+      "resolved_title": "Senior Courts Act 1981",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 39,
+        "text": 842,
+        "enabling": 447
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 451,
+      "made_under_edges": 521,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-08",
+      "measure": "Judicial review restriction",
+      "instrument_title": "Judicial Review and Courts Act 2022",
+      "provision_scope": "",
+      "named_in_spec": false,
+      "basis": "the spec names NO instrument. The most recent statute restricting judicial review — MY identification",
+      "resolved_gid": "ukpga/2022/35",
+      "resolved_title": "Judicial Review and Courts Act 2022",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 18,
+        "text": 99,
+        "enabling": 22
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 25,
+      "made_under_edges": 18,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-09",
+      "measure": "Patronage restoration — judicial, KC, Regius appointments",
+      "instrument_title": "Constitutional Reform Act 2005",
+      "provision_scope": "part-4",
+      "named_in_spec": false,
+      "basis": "the spec names NO instrument. Judicial appointments sit in CRA 2005 Part 4 — MY identification, and it overlaps WS-03",
+      "resolved_gid": "ukpga/2005/4",
+      "resolved_title": "Constitutional Reform Act 2005",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 8,
+        "text": 307,
+        "enabling": 34
+      },
+      "act_level_rows": 427,
+      "distinct_source_instruments": 106,
+      "made_under_edges": 236,
+      "resolution": "resolved by exact title match; 'part-4' expanded to 76 provision refs from the Act's own CLML (75 provisions read from ukpga/2005/4 part-4). A literal match on the bare string 'part-4' returns 18 row(s) — references name sections, not Parts, which is why the Part is expanded. act_level_rows (427) name the Act with no provision and are reported SEPARATELY: any of them may bear on this Part and the markup does not say which."
+    },
+    {
+      "ws_id": "WS-10",
+      "measure": "Removal from office and public-employment disqualification",
+      "instrument_title": "House of Commons Disqualification Act 1975",
+      "provision_scope": "",
+      "named_in_spec": false,
+      "basis": "the spec names NO instrument — MY identification",
+      "resolved_gid": "ukpga/1975/24",
+      "resolved_title": "House of Commons Disqualification Act 1975",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 58,
+        "text": 1063,
+        "enabling": 10
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 545,
+      "made_under_edges": 11,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-11",
+      "measure": "Non-crime hate incidents; College of Policing guidance; Sentencing Council powers",
+      "instrument_title": "Coroners and Justice Act 2009",
+      "provision_scope": "",
+      "named_in_spec": false,
+      "basis": "the spec names \"Sentencing Council powers\" without an Act; the Sentencing Council is constituted by CJA 2009 Part 4 — MY identification",
+      "resolved_gid": "ukpga/2009/25",
+      "resolved_title": "Coroners and Justice Act 2009",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 81,
+        "text": 832,
+        "enabling": 115
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 228,
+      "made_under_edges": 145,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-11",
+      "measure": "Non-crime hate incidents; College of Policing guidance; Sentencing Council powers",
+      "instrument_title": "Police, Crime, Sentencing and Courts Act 2022",
+      "provision_scope": "",
+      "named_in_spec": false,
+      "basis": "the spec names NO instrument for non-crime hate incidents — MY identification",
+      "resolved_gid": "ukpga/2022/32",
+      "resolved_title": "Police, Crime, Sentencing and Courts Act 2022",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 42,
+        "text": 280,
+        "enabling": 31
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 59,
+      "made_under_edges": 36,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-12",
+      "measure": "Regulation of religio-political movements (analysis only this phase)",
+      "instrument_title": "Terrorism Act 2000",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "named in CCW_SPEC §6 step 2 as part of the existing toolkit, NOT as a repeal target",
+      "resolved_gid": "ukpga/2000/11",
+      "resolved_title": "Terrorism Act 2000",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 181,
+        "text": 2382,
+        "enabling": 196
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 516,
+      "made_under_edges": 221,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-12",
+      "measure": "Regulation of religio-political movements (analysis only this phase)",
+      "instrument_title": "Public Order Act 1986",
+      "provision_scope": "part-III",
+      "named_in_spec": true,
+      "basis": "named in CCW_SPEC §6 step 2 (\"Public Order Act 1986 Pt 3\") as part of the existing toolkit, NOT as a repeal target. ⚠ The CLML id is part-III, in Roman numerals — asking for \"part-3\" returns an unexpanded 3 rows against 232 act-level, which is why the expansion is checked and not assumed",
+      "resolved_gid": "ukpga/1986/64",
+      "resolved_title": "Public Order Act 1986",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 0,
+        "text": 6,
+        "enabling": 0
+      },
+      "act_level_rows": 232,
+      "distinct_source_instruments": 6,
+      "made_under_edges": 9,
+      "resolution": "resolved by exact title match; 'part-III' expanded to 14 provision refs from the Act's own CLML (13 provisions read from ukpga/1986/64 part-III). A literal match on the bare string 'part-III' returns 0 row(s) — references name sections, not Parts, which is why the Part is expanded. act_level_rows (232) name the Act with no provision and are reported SEPARATELY: any of them may bear on this Part and the markup does not say which."
+    },
+    {
+      "ws_id": "WS-12",
+      "measure": "Regulation of religio-political movements (analysis only this phase)",
+      "instrument_title": "Political Parties, Elections and Referendums Act 2000",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "named in CCW_SPEC §6 step 2 as part of the existing toolkit, NOT as a repeal target",
+      "resolved_gid": "ukpga/2000/41",
+      "resolved_title": "Political Parties, Elections and Referendums Act 2000",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 74,
+        "text": 904,
+        "enabling": 301
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 409,
+      "made_under_edges": 378,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-12",
+      "measure": "Regulation of religio-political movements (analysis only this phase)",
+      "instrument_title": "National Security Act 2023",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "named in CCW_SPEC §6 step 2 as part of the existing toolkit, NOT as a repeal target",
+      "resolved_gid": "ukpga/2023/32",
+      "resolved_title": "National Security Act 2023",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 125,
+        "text": 633,
+        "enabling": 31
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 124,
+      "made_under_edges": 30,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    },
+    {
+      "ws_id": "WS-12",
+      "measure": "Regulation of religio-political movements (analysis only this phase)",
+      "instrument_title": "Charities Act 2011",
+      "provision_scope": "",
+      "named_in_spec": true,
+      "basis": "named in CCW_SPEC §6 step 2 (\"Charities Act political-purposes rules\") as part of the existing toolkit, NOT as a repeal target",
+      "resolved_gid": "ukpga/2011/25",
+      "resolved_title": "Charities Act 2011",
+      "title_source": "legislation-item",
+      "counts_by_detection": {
+        "markup": 33,
+        "text": 901,
+        "enabling": 77
+      },
+      "act_level_rows": "",
+      "distinct_source_instruments": 342,
+      "made_under_edges": 100,
+      "resolution": "resolved by exact title match; whole-Act counts"
+    }
+  ]
+}

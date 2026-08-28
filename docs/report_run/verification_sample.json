@@ -1,0 +1,575 @@
+{
+  "generated_at": "2026-08-28T22:38:10.793Z",
+  "seed": "report-run-2026-08-29",
+  "sample_size": 20,
+  "min_checked_floor": 15,
+  "correct": 20,
+  "wrong": 0,
+  "not_checked": 0,
+  "checked": 20,
+  "rate_established": true,
+  "rate": 1,
+  "detection_in_the_sample": {
+    "markup": 0,
+    "text": 19,
+    "enabling": 1
+  },
+  "controls": [
+    "  POSITIVE control — ssi/2024/174:rule-2 → ukpga/1998/42: PASSES",
+    "  NEGATIVE control (wrong Act) — must be REJECTED: rejected — live text contains neither the target URI nor the Act name",
+    "  NEGATIVE control (wrong provision) — must be REJECTED: rejected — names the Act in 6 place(s) but \"section-9999\" is in none of those phrases"
+  ],
+  "verifier_failures_in_pass_1": 0,
+  "unaddressable_provision_paths": 0,
+  "verdicts": [
+    {
+      "row": {
+        "id": "1175765",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": null,
+        "detection": "enabling",
+        "source_gid": "uksi/2010/1277",
+        "source_provision_ref": null,
+        "source_type": "SI",
+        "citation_text": "Secretary of State makes the following Order in exercise of the powers conferred by section 52(2) of the Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/1277/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "148852",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "ssi/2016/159",
+        "source_provision_ref": null,
+        "source_type": "SI",
+        "citation_text": "SchemaVersion=\"1.0\" RestrictExtent=\"S\" RestrictStartDate=\"2024-02-08\"> http://www.legislation.gov.uk/ssi/2016/159 The Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ssi/2016/159/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "168987",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-5-2",
+        "detection": "text",
+        "source_gid": "ssi/2024/174",
+        "source_provision_ref": "rule-2",
+        "source_type": "SI",
+        "citation_text": "“join” insert “[or take part]”; iii after “proceedings” insert “under section 5(2) of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/ssi/2024/174/rule/2/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "270129",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": "part-1",
+        "detection": "text",
+        "source_gid": "ukpga/1998/46",
+        "source_provision_ref": "section-51",
+        "source_type": "primary",
+        "citation_text": "of the State.3See Part 1 of the Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/1998/46/section/51/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "277410",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-6",
+        "detection": "text",
+        "source_gid": "ukpga/2000/38",
+        "source_provision_ref": "section-123E",
+        "source_type": "primary",
+        "citation_text": "persons with disabilities (within the meaning given by section 6 of the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2000/38/section/123E/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "280107",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-6",
+        "detection": "text",
+        "source_gid": "ukpga/2001/17",
+        "source_provision_ref": "section-67A",
+        "source_type": "primary",
+        "citation_text": "CommentaryRef=\"key-REDACTED-CLML-COMMENTARY-HANDLE\">human rights claim” means a claim that to remove the claimant from, or to require the claimant to leave, the United Kingdom would be unlawful under section 6 of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2001/17/section/67A/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "285365",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "ukpga/2003/1",
+        "source_provision_ref": "section-477",
+        "source_type": "primary",
+        "citation_text": "CommentaryRef=\"key-REDACTED-CLML-COMMENTARY-HANDLE\">A benefit received on account of any disability (within the meaning of the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2003/1/section/477/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "312851",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-6",
+        "detection": "text",
+        "source_gid": "ukpga/2008/23",
+        "source_provision_ref": "section-3",
+        "source_type": "primary",
+        "citation_text": "not affect the rights and liabilities of the parties to the arrangements as between one another;bdoes not make the local authority liable under section 6 of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2008/23/section/3/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "337539",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": "schedule-6-paragraph-16",
+        "detection": "text",
+        "source_gid": "ukpga/2015/8",
+        "source_provision_ref": "section-69",
+        "source_type": "primary",
+        "citation_text": "and Governance Act 2010 (or treated as so established), the Independent Parliamentary Standards Authority and the trustees of the Parliamentary Contributory Pension Fund;in relation to a scheme established by virtue of paragraph 16 of Schedule 6 to the Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2015/8/section/69/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "360200",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-40",
+        "detection": "text",
+        "source_gid": "ukpga/2023/51",
+        "source_provision_ref": "section-1",
+        "source_type": "primary",
+        "citation_text": "RestrictExtent=\"E+W+S\" RestrictStartDate=\"2024-10-26\"> Employer duty to prevent sexual harassment of employees 1 After section 40 of the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2023/51/section/1/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "36613",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "nia/2013/2",
+        "source_provision_ref": "section-21",
+        "source_type": "primary",
+        "citation_text": "chairperson so orders; oriiin any criminal or civil proceedings in Northern Ireland unless it is necessary to avoid a breach of Convention rights (within the meaning of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/nia/2013/2/section/21/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "567698",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-7-1",
+        "detection": "text",
+        "source_gid": "uksi/2001/443",
+        "source_provision_ref": "article-26",
+        "source_type": "SI",
+        "citation_text": "to appeal, on a question of law, to the Court of Appeal, the Court of Session or the Court of Appeal in Northern Ireland, as the case may be, from a determination of an appeal, brought under section 5 of the 2000 Act, or proceedings, brought under section 7(1) (a) of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2001/443/article/26/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "643910",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-6",
+        "detection": "text",
+        "source_gid": "uksi/2006/2189",
+        "source_provision_ref": "regulation-3",
+        "source_type": "SI",
+        "citation_text": "the duties of the appeal panel under the Disability Discrimination Act 1995; vi the duties the appeal panel may have under Part 4 of the Equality Act 2006; vii the effect of section 6 of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2006/2189/regulation/3/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "722358",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "uksi/2010/1277",
+        "source_provision_ref": null,
+        "source_type": "SI",
+        "citation_text": "Constitutional Reform and Governance Act 2010 (Commencement No. 1) Order 2010Members Of ParliamentenKing's Printer of Acts of Parliament2014-06-10PARLIAMENT This Order brings into force provisions of the Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/1277/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "728320",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "uksi/2010/2703",
+        "source_provision_ref": null,
+        "source_type": "SI",
+        "citation_text": "http://www.legislation.gov.uk/schema/legislation.xsd\" SchemaVersion=\"1.0\"> http://www.legislation.gov.uk/uksi/2010/2703/made The Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/2703/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "728326",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "uksi/2010/2703",
+        "source_provision_ref": "article-2",
+        "source_type": "SI",
+        "citation_text": "sectors is foreseen. NOTE AS TO EARLIER COMMENCEMENT ORDERS (This note is not part of the Order) The following provisions of the Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/2703/article/2/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "746064",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "uksi/2011/2485",
+        "source_provision_ref": "article-1",
+        "source_type": "SI",
+        "citation_text": "IdURI=\"http://www.legislation.gov.uk/id/uksi/2011/2485/article/1\" id=\"article-1\"> 1 1 This Order may be cited as the Constitutional Reform and Governance Act 2010",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2011/2485/article/1/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "777041",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "schedule-1",
+        "detection": "text",
+        "source_gid": "uksi/2013/235",
+        "source_provision_ref": "schedule-2-paragraph-166",
+        "source_type": "SI",
+        "citation_text": "Equality Act 2010 (Specific Duties) Regulations 2011166In Schedule 1 to the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2013/235/schedule/2/paragraph/166/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "841327",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "uksi/2017/1140",
+        "source_provision_ref": "regulation-2",
+        "source_type": "SI",
+        "citation_text": "these regulations come into force.2For the purposes of these Regulations, “protected chacteristic” is to be read in accordance with the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2017/1140/regulation/2/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "931812",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": null,
+        "detection": "text",
+        "source_gid": "uksi/2023/1417",
+        "source_provision_ref": "regulation-2",
+        "source_type": "SI",
+        "citation_text": "id=\"regulation-2-3\"> 3 In Article 4 (definitions), for point (28) substitute— 28 references to fundamental rights or fundamental freedoms (however expressed) are to the Convention rights within the meaning of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2023/1417/regulation/2/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    }
+  ],
+  "supplementary_detection_stratified": {
+    "note": "ADDITIONAL to the brief's 20 rows and never merged into the rate. Three rows per detector, because the brief's measure-stratified draw contained no markup rows at all and would otherwise have been read as covering all three detectors.",
+    "by_detection": {
+      "markup": {
+        "correct": 2,
+        "wrong": 1,
+        "notChecked": 0
+      },
+      "text": {
+        "correct": 3,
+        "wrong": 0,
+        "notChecked": 0
+      },
+      "enabling": {
+        "correct": 3,
+        "wrong": 0,
+        "notChecked": 0
+      }
+    },
+    "verdicts": [
+      {
+        "row": {
+          "id": "806652",
+          "target_act_id": "ukpga/2010/15",
+          "target_provision_ref": "section-67",
+          "detection": "markup",
+          "source_gid": "uksi/2014/560",
+          "source_provision_ref": "schedule-3-paragraph-17",
+          "source_type": "SI",
+          "citation_text": "Service Act 2007 (c. 18) to ensure that the Registrar General can pass on all relevant information about marriages and civil partnerships to the Office for National Statistics. Paragraph 35 amends section 67 of the Equality Act 2010 (c. 15)",
+          "ws_id": "WS-04",
+          "target_title": "Equality Act 2010"
+        },
+        "url": "https://www.legislation.gov.uk/uksi/2014/560/schedule/3/paragraph/17/data.xml",
+        "status": "wrong",
+        "reason": "live text contains neither the target URI nor the Act name",
+        "http": 200,
+        "reexamined": {
+          "localSaysPresent": false,
+          "wholeDocSaysPresent": true,
+          "conclusion": "MISATTRIBUTED PROVISION: the reference IS in the live document but is NOT in the provision this row names. The citation is real and the target is real; source_provision_ref points at a provision that does not contain it. ⚠ source_provision_ref is the column that answers \"which provision breaks if you repeal this\", so a wrong value here is worse than a missing one."
+        }
+      },
+      {
+        "row": {
+          "id": "215999",
+          "target_act_id": "ukpga/1998/42",
+          "target_provision_ref": "section-6",
+          "detection": "markup",
+          "source_gid": "ukpga/1983/20",
+          "source_provision_ref": "section-142C",
+          "source_type": "primary",
+          "citation_text": "id=\"section-142C-1\">1A registered care provider is to be regarded for the purposes of section 6",
+          "ws_id": "WS-01",
+          "target_title": "Human Rights Act 1998"
+        },
+        "url": "https://www.legislation.gov.uk/ukpga/1983/20/section/142C/data.xml",
+        "status": "correct",
+        "reason": "target URI present in the live provision",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "750413",
+          "target_act_id": "ukpga/2010/15",
+          "target_provision_ref": null,
+          "detection": "markup",
+          "source_gid": "uksi/2011/776",
+          "source_provision_ref": "article-3",
+          "source_type": "SI",
+          "citation_text": "2007/2602). The codes continued to have effect by virtue of section 42(3)(a) of the Equality Act 2006 (c.3). They were issued under provisions in previous discrimination legislation which were repealed by the Equality Act 2010 (c.15)",
+          "ws_id": "WS-04",
+          "target_title": "Equality Act 2010"
+        },
+        "url": "https://www.legislation.gov.uk/uksi/2011/776/article/3/data.xml",
+        "status": "correct",
+        "reason": "Act named in the live provision text",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "777041",
+          "target_act_id": "ukpga/2010/15",
+          "target_provision_ref": "schedule-1",
+          "detection": "text",
+          "source_gid": "uksi/2013/235",
+          "source_provision_ref": "schedule-2-paragraph-166",
+          "source_type": "SI",
+          "citation_text": "Equality Act 2010 (Specific Duties) Regulations 2011166In Schedule 1 to the Equality Act 2010",
+          "ws_id": "WS-04",
+          "target_title": "Equality Act 2010"
+        },
+        "url": "https://www.legislation.gov.uk/uksi/2013/235/schedule/2/paragraph/166/data.xml",
+        "status": "correct",
+        "reason": "Act named in the live provision text",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "312851",
+          "target_act_id": "ukpga/1998/42",
+          "target_provision_ref": "section-6",
+          "detection": "text",
+          "source_gid": "ukpga/2008/23",
+          "source_provision_ref": "section-3",
+          "source_type": "primary",
+          "citation_text": "not affect the rights and liabilities of the parties to the arrangements as between one another;bdoes not make the local authority liable under section 6 of the Human Rights Act 1998",
+          "ws_id": "WS-01",
+          "target_title": "Human Rights Act 1998"
+        },
+        "url": "https://www.legislation.gov.uk/ukpga/2008/23/section/3/data.xml",
+        "status": "correct",
+        "reason": "Act named in the live provision text",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "960667",
+          "target_act_id": "ukpga/2010/15",
+          "target_provision_ref": "section-149",
+          "detection": "text",
+          "source_gid": "uksi/2025/37",
+          "source_provision_ref": "schedule-3-paragraph-6",
+          "source_type": "SI",
+          "citation_text": "Public sector equality duty 6 A description of how the Defence Secretary has complied with section 149 of the Equality Act 2010",
+          "ws_id": "WS-04",
+          "target_title": "Equality Act 2010"
+        },
+        "url": "https://www.legislation.gov.uk/uksi/2025/37/schedule/3/paragraph/6/data.xml",
+        "status": "correct",
+        "reason": "target URI present in the live provision",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "1171584",
+          "target_act_id": "ukpga/1998/42",
+          "target_provision_ref": null,
+          "detection": "enabling",
+          "source_gid": "uksi/2008/539",
+          "source_provision_ref": null,
+          "source_type": "SI",
+          "citation_text": "that the nature of the information shared pursuant to either of those articles is such that there are likely to be circumstances in which it can be shared without breaching Convention rights (within the meaning of the Human Rights Act 1998",
+          "ws_id": "WS-01",
+          "target_title": "Human Rights Act 1998"
+        },
+        "url": "https://www.legislation.gov.uk/uksi/2008/539/data.xml",
+        "status": "correct",
+        "reason": "target URI present in the live provision",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "1175765",
+          "target_act_id": "ukpga/2010/25",
+          "target_provision_ref": null,
+          "detection": "enabling",
+          "source_gid": "uksi/2010/1277",
+          "source_provision_ref": null,
+          "source_type": "SI",
+          "citation_text": "Secretary of State makes the following Order in exercise of the powers conferred by section 52(2) of the Constitutional Reform and Governance Act 2010",
+          "ws_id": "WS-05",
+          "target_title": "Constitutional Reform and Governance Act 2010"
+        },
+        "url": "https://www.legislation.gov.uk/uksi/2010/1277/data.xml",
+        "status": "correct",
+        "reason": "target URI present in the live provision",
+        "http": 200
+      },
+      {
+        "row": {
+          "id": "1066772",
+          "target_act_id": "ukpga/2010/15",
+          "target_provision_ref": null,
+          "detection": "enabling",
+          "source_gid": "ssi/2011/233",
+          "source_provision_ref": null,
+          "source_type": "SI",
+          "citation_text": "[preamble-recital] Scottish Ministers make the following Order in exercise of the powers conferred by section 151(3) of the Equality Act 2010",
+          "ws_id": "WS-04",
+          "target_title": "Equality Act 2010"
+        },
+        "url": "https://www.legislation.gov.uk/ssi/2011/233/data.xml",
+        "status": "correct",
+        "reason": "target URI present in the live provision",
+        "http": 200
+      }
+    ]
+  }
+}
