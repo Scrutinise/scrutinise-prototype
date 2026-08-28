@@ -30,6 +30,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+// 25-M §4 — the pilot allowance. Counted over IdeaBuild, not LlmSpend; see that file.
+import { readAllowance, allowanceBlock } from './allowance'
 import type { SearchResult } from './page1-config'
 import { runSearch } from './search-gateway'
 import { storeStageSearch, type StageSearchRecord } from './stage-search'
@@ -220,6 +222,20 @@ export interface BuildState {
    * inapplicable.
    */
   reuseBlockedReason: string | null
+  /**
+   * 25-M §4 — the pilot allowance, as the screen needs it.
+   *
+   * ⚠ THE BALANCE SHOWS BEFORE A BUILD STARTS (§4), beside the cost and duration line — not
+   * after, and not only when it runs out. A user who discovers the ceiling by hitting it has
+   * already written the thing they cannot build.
+   */
+  allowance: {
+    remainingThirds: number
+    remainingBuilds: number
+    canStartFull: boolean
+    canStartReuse: boolean
+    line: string
+  }
 }
 
 function toView(
@@ -317,7 +333,10 @@ export async function buildState(ideaId: string): Promise<BuildState> {
   const estimate = await buildEstimate()
   const owner = await prisma.idea.findUnique({
     where: { id: ideaId },
-    select: { title: true, creator: { select: { emailOnBuildComplete: true } } },
+    select: {
+      title: true, creatorId: true,
+      creator: { select: { emailOnBuildComplete: true } },
+    },
   })
 
   const rows = await prisma.ideaBuild.findMany({ where: { ideaId }, orderBy: { version: 'desc' } })
@@ -370,14 +389,29 @@ export async function buildState(ideaId: string): Promise<BuildState> {
     }
   }
 
+  // ══ 25-M §4 — THE ALLOWANCE ═══════════════════════════════════════════════
+  //
+  // ⚠ IT USES THE EXISTING `blockedReason` PATH (§4's instruction) rather than a second
+  // mechanism. Every screen already knows how to render one sentence saying why the button
+  // is off; a parallel "out of allowance" state would be a second thing to render, and one
+  // of the two would eventually stop being rendered.
+  //
+  // ⚠ CHECKED AGAINST THE CHEAPEST MODE STILL AVAILABLE. Blocking `canStart` because a FULL
+  // run is unaffordable would take away a redraft the user can still pay for; the re-run
+  // dialogue then refuses the expensive route on its own.
+  const allowance = owner ? await readAllowance(owner.creatorId) : null
+  const allowanceBlocks = !!allowance && !allowance.canStartReuse
+
   return {
     ideaId,
-    canStart: confirmed && !active,
+    canStart: confirmed && !active && !allowanceBlocks,
     blockedReason: !confirmed
       ? 'Confirm what I’ve understood first — I won’t build on a reading you haven’t seen.'
       : active
         ? 'A build is already running for this idea.'
-        : null,
+        : allowanceBlocks
+          ? allowance!.blockedReason
+          : null,
     latest: latestRow ? toView(latestRow, forks, highlights) : null,
     history: rows.map((r) => ({
       id: r.id, version: r.version, status: r.status,
@@ -391,10 +425,31 @@ export async function buildState(ideaId: string): Promise<BuildState> {
     ideaTitle: owner?.title?.trim() && owner.title.trim() !== 'Untitled idea' ? owner.title.trim() : null,
     reuse,
     reuseBlockedReason,
+    allowance: {
+      remainingThirds: allowance?.remainingThirds ?? 0,
+      remainingBuilds: allowance?.remainingBuilds ?? 0,
+      // ⚠ AN IDEA WHOSE OWNER CANNOT BE READ IS NOT A FREE BUILD. Defaulting these to true
+      // would make an unreadable owner an unlimited one.
+      canStartFull: allowance?.canStartFull ?? false,
+      canStartReuse: allowance?.canStartReuse ?? false,
+      line: allowance?.line ?? 'Your build allowance could not be read just now.',
+    },
   }
 }
 
 // ── Claiming ─────────────────────────────────────────────────────────────────
+
+/**
+ * 25-M §4 — the allowance is spent, and the message is the one the user reads.
+ *
+ * ⚠ ITS OWN CLASS, so the route can answer 402-shaped rather than 500-shaped. A ceiling that
+ * surfaces as "something went wrong" teaches the user the product is broken when in fact it
+ * is working exactly as designed, and they would have no idea that asking for more is an
+ * option.
+ */
+export class BuildAllowanceSpent extends Error {
+  constructor(message: string) { super(message); this.name = 'BuildAllowanceSpent' }
+}
 
 export class BuildAlreadyRunning extends Error {
   constructor() { super('A build is already running for this idea.') }
@@ -436,6 +491,23 @@ export async function claimBuild(
   if (!(await isConfirmed(ideaId))) throw new ElicitationNotConfirmed()
 
   await settleAbandonedBuilds(ideaId)
+
+  // ══ 25-M §4 — THE HARD STOP, AT THE WRITE PATH ═══════════════════════════
+  //
+  // ⚠⚠ HERE, NOT ONLY IN `buildState`. The state read is what greys the button; this is what
+  // stops the build. A ceiling enforced only where the UI reads it is a ceiling that a
+  // second caller — the worker, a script, a stale tab, a POST anybody can repeat — walks
+  // straight through, and the whole point of an allowance is to bound spend by a thousand
+  // pilot users rather than to decorate one screen.
+  //
+  // ⚠ CHECKED AGAINST THE MODE BEING ASKED FOR, so a user with a third left may redraft.
+  const ideaOwner = await prisma.idea.findUnique({
+    where: { id: ideaId }, select: { creatorId: true },
+  })
+  if (ideaOwner) {
+    const blocked = await allowanceBlock(ideaOwner.creatorId, mode)
+    if (blocked) throw new BuildAllowanceSpent(blocked)
+  }
 
   const active = await prisma.ideaBuild.findFirst({
     where: { ideaId, status: { in: ['QUEUED', 'RUNNING'] } },
@@ -488,6 +560,11 @@ export async function claimBuild(
         ideaId, version, framing, status: 'QUEUED',
         notifyEmail: wantsEmail,
         passes: passes as never,
+        // ⚠⚠ 25-M §4 — WHAT ACTUALLY RAN, NOT WHAT WAS ASKED FOR. `reuseFrom` is null when
+        // a REUSE request had nothing to reuse and was downgraded to a full run (see the
+        // note above). The allowance charges the two differently, so writing the REQUEST
+        // here would charge a third for a build that did the whole job.
+        mode: reuseFrom ? 'REUSE' : 'FULL',
         // 25-L §1 — the critique and its timestamp, or neither. A stamp with no text
         // would say a dialogue happened and record nothing of what was said.
         ...(userCritique?.trim()

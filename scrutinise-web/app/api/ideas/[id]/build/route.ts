@@ -22,7 +22,10 @@ export const maxDuration = 300
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
-import { buildState, claimBuild, claimQueuedBuild, runNextPass, BuildAlreadyRunning, ElicitationNotConfirmed } from '@/lib/lex/build'
+import {
+  buildState, claimBuild, claimQueuedBuild, runNextPass,
+  BuildAlreadyRunning, ElicitationNotConfirmed, BuildAllowanceSpent,
+} from '@/lib/lex/build'
 import { DEFAULT_FRAMING, isFraming, isBuildPassKey, buildDriver } from '@/lib/lex/build-config'
 
 type Params = { params: Promise<{ id: string }> }
@@ -133,6 +136,12 @@ export async function POST(req: Request, { params }: Params) {
   try {
     buildId = await claimBuild(id, framing, parsed.data.notifyEmail, parsed.data.mode ?? 'FULL', parsed.data.critique)
   } catch (err) {
+    // ⚠ 25-M §4 — 402, NOT 500. The allowance being spent is the product working, not
+    // failing, and a generic error would teach the user it is broken while hiding the one
+    // thing they can do about it — which the message itself carries.
+    if (err instanceof BuildAllowanceSpent) {
+      return NextResponse.json({ error: err.message, state: await buildState(id) }, { status: 402 })
+    }
     if (err instanceof BuildAlreadyRunning) {
       return NextResponse.json({ error: err.message, state: await buildState(id) }, { status: 409 })
     }

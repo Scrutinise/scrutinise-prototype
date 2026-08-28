@@ -163,6 +163,14 @@ export interface BuildState {
   reuse: { findings: number; cited: number; sources: number; fromVersion: number } | null
   /** 25-G §1a — WHY reuse is unavailable, in words. Null when it is available. */
   reuseBlockedReason: string | null
+  /** 25-M §4 — the pilot allowance, shown BEFORE a build starts. */
+  allowance: {
+    remainingThirds: number
+    remainingBuilds: number
+    canStartFull: boolean
+    canStartReuse: boolean
+    line: string
+  }
 }
 
 /**
@@ -895,6 +903,8 @@ export default function BuildIdeaClient(
           reuse={build?.reuse ?? null}
           reuseBlockedReason={build?.reuseBlockedReason ?? null}
           estimateLine={build?.estimate?.line ?? null}
+          allowanceLine={build?.allowance?.line ?? null}
+          canStartFull={build?.allowance?.canStartFull ?? true}
           busy={busy}
           onCancel={() => setRerunOpen(false)}
           onGo={(mode, critique) => startBuild(mode, critique)}

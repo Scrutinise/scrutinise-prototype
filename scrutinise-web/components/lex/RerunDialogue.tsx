@@ -47,7 +47,8 @@ export const RERUN_PROMPT_BODY =
   + 'the better this run will be.'
 
 export default function RerunDialogue({
-  ideaId, reuse, reuseBlockedReason, estimateLine, busy, onCancel, onGo, onMaterialChanged,
+  ideaId, reuse, reuseBlockedReason, estimateLine, allowanceLine, canStartFull,
+  busy, onCancel, onGo, onMaterialChanged,
 }: {
   ideaId: string
   /** What a REUSE run would reuse, or null when there is nothing to reuse. */
@@ -56,6 +57,14 @@ export default function RerunDialogue({
   reuseBlockedReason: string | null
   /** The measured duration-and-cost sentence for a full run. */
   estimateLine: string | null
+  /**
+   * 25-M §4 — the balance, shown BESIDE the cost and duration line and BEFORE the button.
+   * A user who discovers the ceiling by hitting it has already written the thing they
+   * cannot build.
+   */
+  allowanceLine?: string | null
+  /** False when a full search is no longer affordable but a redraft still is. */
+  canStartFull?: boolean
   busy: boolean
   onCancel: () => void
   onGo: (mode: 'FULL' | 'REUSE', critique: string) => void
@@ -134,6 +143,12 @@ export default function RerunDialogue({
             </p>
           )}
           {estimateLine && <p className="text-[11px] text-zinc-500 mt-1.5">A full run: {estimateLine}</p>}
+          {/* ⚠ 25-M §4 — THE BALANCE, BEFORE THE BUTTON. Not a warning and not a colour:
+              a sentence, next to the price, where somebody deciding whether to spend it
+              is already looking. */}
+          {allowanceLine && (
+            <p className="text-[11px] font-medium text-zinc-700 mt-1.5">{allowanceLine}</p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 mt-4">
@@ -148,7 +163,9 @@ export default function RerunDialogue({
           )}
           <button
             onClick={() => onGo('FULL', critique)}
-            disabled={busy}
+            // ⚠ 25-M §4 — the expensive route goes first when the allowance cannot cover it.
+            // The cheap one stays available, because they can still pay for it.
+            disabled={busy || canStartFull === false}
             className={`text-sm px-4 py-2 rounded-full disabled:opacity-40 ${
               reuse
                 ? 'font-medium border border-zinc-300 text-zinc-700 hover:bg-zinc-50'
@@ -169,6 +186,12 @@ export default function RerunDialogue({
         {/* ⚠ IT IS NOT REQUIRED, AND SAYING SO MATTERS. A user who genuinely just wants the
             same thing run again must not be made to invent a criticism to get past a
             gate — an invented one would then be fed to the passes as an instruction. */}
+        {canStartFull === false && (
+          <p className="mt-2 text-[11px] text-zinc-700">
+            A full search is more than your remaining allowance. Redrafting from the research
+            already gathered still works, and costs a third as much.
+          </p>
+        )}
         <p className="mt-2.5 text-[11px] text-zinc-500">
           You can leave the box empty and run it as it stands. What you write here is kept with this
           run so we can see what you asked for; closing this without running discards it.
