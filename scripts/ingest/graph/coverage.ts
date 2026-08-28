@@ -32,6 +32,10 @@ import { getNeonPool } from '../shared/neon-pool'
 import { CITATION_TABLE } from './setup-citation-edge-table'
 import { COVERAGE_TABLE } from './setup-coverage-table'
 import { EDGE_TABLE } from './graph-common'
+import { IDENTITY_TABLE } from './identity'
+
+/** The two corpora that hold statutory instruments. */
+const SI_CORPORA = ['si-2010plus', 'si-pre-2010']
 
 /** How old a recorded extraction statistic may be before the block says so. */
 export const FRESHNESS_DAYS = 30
@@ -75,6 +79,28 @@ export type Coverage = {
   staleFacts: string[]
   /** case-law boundary, present only when case law is in scope for the caller */
   caseLawBoundary: { corpora: string[]; earliest: string | null; latest: string | null } | null
+  /** ⚠⚠ GRAPH 4B §1 + §4. The identity bridge's RESIDUAL. Every figure live.
+   *  A result that joined the two graph tables is only as complete as this. */
+  identityBridge: {
+    /** the bridge table is present and populated */
+    built: boolean
+    bridgedForms: number
+    /** ⚠ id forms that name MORE THAN ONE instrument and were refused a bridge:
+     *  two parliamentary sessions in one calendar year, each numbering its
+     *  chapters from one. A question asked under one of these is ambiguous. */
+    ambiguousTargets: number
+    /** ⚠ regnal-form targets with no calendar twin — they cannot be joined
+     *  against a table that keeps calendar forms, and never will be from here */
+    unbridgeableTargets: number
+    regnalTargets: number
+  }
+  /** ⚠ GRAPH 4B §2.2 + §4. Schedule coverage, because a scheduled treaty that
+   *  is absent presents as a SHORT DOCUMENT, not as an error. */
+  schedules: {
+    instruments: number
+    instrumentsWithASchedule: number
+    pct: number
+  }
 }
 
 /** Layers, DECLARED — but every status is decided by a live count, so a layer
@@ -97,8 +123,13 @@ const LAYER_PROBES: Array<{
   },
   {
     id: 'enabling-power',
-    what: 'made-under: "this instrument was made under section N of that Act"',
-    consequence: 'a stronger fact than a mention — an instrument whose enabling power is repealed may fall with it. It is NOT in this table and carries no quotable evidence where it is held',
+    what: 'made-under: "this instrument was made under section N of that Act", with the enacting words attached',
+    // ⚠ State-neutral wording. `consequence` is printed only when the layer is
+    // NOT searched, and GRAPH 4B built it — but a sentence that asserts "it is
+    // not in this table" would become a lie the moment it was, which is exactly
+    // how the retired storage figure survived. It describes what is LOST if the
+    // layer is missing, not what the table currently contains.
+    consequence: 'a stronger fact than a mention — an instrument that merely mentions an Act survives its repeal, while one whose ENABLING POWER is repealed may fall with it. Without this layer a consequence list cannot tell the two apart',
     // ⚠ The probe is `detection` outside the two textual detectors, NOT a phrase
     // match on citation_text. A first draft counted rows whose words happened to
     // contain "in exercise of the powers" and reported the layer as SEARCHED on
@@ -203,6 +234,46 @@ export async function getCoverage(opts: CoverageOptions = {}): Promise<Coverage>
     caseLawBoundary = { corpora: cl[0].corpora ?? [], earliest: cl[0].earliest, latest: cl[0].latest }
   }
 
+  // ── the identity bridge's residual, live ────────────────────────────────────
+  // ⚠ Everything here is a query. A bridge that stopped being rebuilt would
+  // show up as `built: false` and as a rising unbridgeable count, not as a
+  // quietly shorter answer.
+  const { rows: bridgeExists } = await pool.query(
+    `SELECT COUNT(*)::int n FROM information_schema.tables WHERE table_name = $1`, [IDENTITY_TABLE])
+  const built = Number(bridgeExists[0].n) > 0
+  let bridgedForms = 0, ambiguousTargets = 0, unbridgeableTargets = 0, regnalTargets = 0
+  if (built) {
+    bridgedForms = Number((await pool.query(
+      `SELECT COUNT(*)::bigint n FROM ${IDENTITY_TABLE} WHERE canonical IS NOT NULL`)).rows[0].n)
+    const { rows: r } = await pool.query(`
+      SELECT COUNT(DISTINCT c.target_act_id)::bigint regnal,
+             COUNT(DISTINCT c.target_act_id) FILTER (WHERE li.form IS NULL AND lc.canonical IS NULL)::bigint unbridgeable
+      FROM ${CITATION_TABLE} c
+      LEFT JOIN ${IDENTITY_TABLE} li ON li.form = c.target_act_id AND li.canonical IS NOT NULL
+      LEFT JOIN ${IDENTITY_TABLE} lc ON lc.canonical = c.target_act_id
+      WHERE c.target_act_id ~ '^[a-z]+/[A-Z]'`)
+    regnalTargets = Number(r[0].regnal)
+    unbridgeableTargets = Number(r[0].unbridgeable)
+    // ⚠ A refusal is a ROW, not an absence — `basis = 'ambiguous-refused'` with
+    // a NULL canonical. The first version of this query counted every target
+    // with no bridge row, which is every post-1963 Act, and reported twenty
+    // thousand ambiguous identities where there are a few dozen.
+    const { rows: a } = await pool.query(`
+      SELECT COUNT(DISTINCT c.target_act_id)::bigint n
+      FROM ${CITATION_TABLE} c
+      JOIN ${IDENTITY_TABLE} li ON li.form = c.target_act_id
+      WHERE li.basis = 'ambiguous-refused'`)
+    ambiguousTargets = Number(a[0].n)
+  }
+
+  // ── schedule coverage, live ─────────────────────────────────────────────────
+  const { rows: sched } = await pool.query(`
+    SELECT COUNT(DISTINCT split_part(id, ':', 2))::bigint instruments,
+           COUNT(DISTINCT split_part(id, ':', 2)) FILTER (WHERE id ~ ':schedule')::bigint with_schedule
+    FROM corpus_sections WHERE corpus = ANY($1::text[])`, [SI_CORPORA])
+  const instruments = Number(sched[0].instruments)
+  const withSchedule = Number(sched[0].with_schedule)
+
   const value: Coverage = {
     generatedAt: new Date().toISOString(),
     layers,
@@ -220,6 +291,11 @@ export async function getCoverage(opts: CoverageOptions = {}): Promise<Coverage>
     recorded,
     staleFacts: recorded.filter(f => f.stale).map(f => f.key),
     caseLawBoundary,
+    identityBridge: { built, bridgedForms, ambiguousTargets, unbridgeableTargets, regnalTargets },
+    schedules: {
+      instruments, instrumentsWithASchedule: withSchedule,
+      pct: instruments === 0 ? 0 : 100 * withSchedule / instruments,
+    },
   }
   cached = { at: Date.now(), key, value }
   return value
@@ -266,6 +342,22 @@ export function describeCoverage(c: Coverage): string[] {
     }
   }
   if (c.staleFacts.length > 0) lines.push(`  ⚠ STALE FACTS: ${c.staleFacts.join(', ')}`)
+
+  // ⚠⚠ GRAPH 4B §4. Without this block a consequence list that joined the two
+  // graph tables would present a silently short answer as a complete one.
+  lines.push(`  identity bridge (pre-1963 Acts are cited by regnal year, and the two graph tables disagree):`)
+  if (!c.identityBridge.built) {
+    lines.push(`    ⚠⚠ NOT BUILT — any join between the two graph tables silently DROPS every pre-1963`)
+    lines.push(`       Act, and the loss reads as a coverage result rather than as a bug.`)
+  } else {
+    lines.push(`    ${c.identityBridge.bridgedForms.toLocaleString()} id forms resolve to a canonical identity`)
+    lines.push(`    regnal-form targets in this table: ${c.identityBridge.regnalTargets.toLocaleString()}, of which ${c.identityBridge.unbridgeableTargets.toLocaleString()} have no calendar twin`)
+    lines.push(`        — those cannot be joined against a table that keeps calendar forms, and are counted, not guessed at.`)
+    lines.push(`    ⚠ calendar-form targets REFUSED a bridge because they name more than one Act: ${c.identityBridge.ambiguousTargets.toLocaleString()}`)
+    lines.push(`        — two parliamentary sessions inside one calendar year, each numbering its chapters from the start.`)
+  }
+  lines.push(`  schedule coverage: ${c.schedules.instrumentsWithASchedule.toLocaleString()} of ${c.schedules.instruments.toLocaleString()} instruments hold a schedule section (${c.schedules.pct.toFixed(1)}%)`)
+  lines.push(`    — ⚠ a scheduled agreement that was not ingested presents as a SHORT DOCUMENT, not as an error.`)
 
   if (c.caseLawBoundary) {
     const b = c.caseLawBoundary

@@ -66,12 +66,29 @@ async function main() {
     'case-law citations are reported as absent (they are)', caselaw?.status)
   // ⚠ The regression this pins: an early probe counted incidental phrase matches
   // and reported the enabling layer as SEARCHED on 858 rows it does not hold.
+  // ⚠⚠ UPDATED 2026-08-28. GRAPH 4B BUILT THIS LAYER, so the assertion had to
+  // change — and it changed only after the old one was watched FAILING, which is
+  // the whole reason it was written that way. The probe itself is untouched: 4A
+  // wrote it to flip on a `detection` value outside the two textual detectors,
+  // and building the layer flipped it with no edit to `coverage.ts`'s probe.
+  // The regression it still pins is the ORIGINAL one — the layer may only read
+  // 'searched' on rows that really carry that detection value.
   const enabling = cov.layers.find(l => l.id === 'enabling-power')
-  assert(enabling != null && enabling.status === 'held-elsewhere' && enabling.rows === 0,
-    'the enabling relationship is reported as held ELSEWHERE, with zero rows here',
-    `${enabling?.status}, ${enabling?.rows} rows, where=${enabling?.where ?? 'unset'}`)
-  assert(enabling?.where != null && /legislation_edges/.test(enabling.where),
-    'and it names where those rows actually are', enabling?.where)
+  assert(enabling != null && enabling.status === 'searched' && enabling.rows > 0,
+    'the enabling relationship is reported as SEARCHED, on rows this table really holds',
+    `${enabling?.status}, ${enabling?.rows} rows`)
+  const phraseMatches = await pool.query(
+    `SELECT COUNT(*)::bigint n FROM citation_edge
+     WHERE detection IN ('markup','text') AND citation_text ILIKE '%in exercise of the powers%'`)
+  assert(enabling != null && enabling.rows !== Number(phraseMatches.rows[0].n),
+    '⚠ and NOT on incidental phrase matches — the 858-row false positive cannot come back',
+    `layer ${enabling?.rows} rows vs ${Number(phraseMatches.rows[0].n)} incidental phrase matches`)
+  const evidenced = await pool.query(
+    `SELECT COUNT(*)::bigint n FROM citation_edge
+     WHERE detection = 'enabling' AND (citation_text = '' OR raw_fragment = '')`)
+  assert(Number(evidenced.rows[0].n) === 0,
+    'every enabling row carries its evidence — an edge with no quotable source is a claim, not a fact',
+    `${Number(evidenced.rows[0].n)} rows with empty evidence`)
   assert(cov.caseLawBoundary != null, 'the case-law date boundary is reported when asked for',
     cov.caseLawBoundary ? `${cov.caseLawBoundary.earliest} … ${cov.caseLawBoundary.latest}` : '')
 

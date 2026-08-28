@@ -1,0 +1,55 @@
+{
+ "measuredAt": "2026-08-28T00:07:42.948Z",
+ "q1": {
+  "orders": 286,
+  "corpusHoldsSchedule": 39,
+  "corpusLacksSchedule": 247,
+  "recoveredByTheEnablingLayer": 0,
+  "clmlSampled": 247,
+  "clmlHasSubstantialSchedule": 127,
+  "clmlHasNothing": 120,
+  "clmlNotInTheBulkFile": 0,
+  "recoverableFromBytesWeHold": 127
+ },
+ "q2": {
+  "outboundRows": 856,
+  "inboundRows": 98,
+  "indexes": [
+   "citation_edge_pkey",
+   "citation_edge_source_gid",
+   "citation_edge_target_act",
+   "citation_edge_target_prov",
+   "citation_edge_target_uri"
+  ],
+  "reverseAnswerable": true,
+  "worked": {
+   "question": "which instruments are made under ukpga/2010/8 (TIOPA 2010)?",
+   "rows": 110,
+   "sample": [
+    "uksi/2010/2685",
+    "uksi/2010/2686",
+    "uksi/2010/2687",
+    "uksi/2010/2688",
+    "uksi/2010/2689"
+   ]
+  }
+ },
+ "q3": {
+  "mliTitleMatches": 55,
+  "mliCandidates": [
+   {
+    "gid": "eudn/2002/914",
+    "title": "2002/914/EC: Commission Decision of 24 July 2002 relating to a proceeding under Article 81 of the EC Treaty and Article 53 of the EEA Agreement (Case No COMP/29.373 — Visa International — Multilateral Interchange Fee) (Text with EEA relevance) (notified under document number C(2002) 2698) (revoked)"
+   },
+   {
+    "gid": "uksi/2008/1814",
+    "title": "The Stamp Duty and Stamp Duty Reserve Tax (Investment Exchanges and Clearing Houses) (European Central Counterparty Limited and the Turquoise Multilateral Trading Facility) Regulations 2008"
+   },
+   {
+    "gid": "uksi/2011/668",
+    "title": "The Stamp Duty and Stamp Duty Reserve Tax (European Multilateral Clearing Facility N.V.) Regulations 2011"
+   }
+  ],
+  "held": false
+ }
+}

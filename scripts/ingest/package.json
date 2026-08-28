@@ -22,7 +22,13 @@
     "check:partial-guard": "tsx c2/check-partial-guard.ts",
     "check:b5-regnal": "tsx c2/check-b5-regnal.ts",
     "check:4a-coverage": "tsx graph/check-4a-coverage.ts",
-    "audit:4a": "tsx graph/audit-4a-blast-radius.ts --json graph/audit-4a-blast-radius.json && tsx graph/audit-4a-t2-hole.ts --json graph/audit-4a-t2-hole.json && tsx graph/audit-4a-t3-spans.ts --json graph/audit-4a-t3-spans.json && tsx graph/audit-4a-unresolved-cause.ts --json graph/audit-4a-unresolved-cause.json && tsx graph/audit-4a-tables.ts --json graph/audit-4a-tables.json && tsx graph/audit-4a-layer2.ts --json graph/audit-4a-layer2.json && tsx graph/record-4a-facts.ts"
+    "audit:4a": "tsx graph/audit-4a-blast-radius.ts --json graph/audit-4a-blast-radius.json && tsx graph/audit-4a-t2-hole.ts --json graph/audit-4a-t2-hole.json && tsx graph/audit-4a-t3-spans.ts --json graph/audit-4a-t3-spans.json && tsx graph/audit-4a-unresolved-cause.ts --json graph/audit-4a-unresolved-cause.json && tsx graph/audit-4a-tables.ts --json graph/audit-4a-tables.json && tsx graph/audit-4a-layer2.ts --json graph/audit-4a-layer2.json && tsx graph/record-4a-facts.ts",
+    "check:4b-identity": "tsx graph/check-4b-identity.ts",
+    "check:4b-layer2": "tsx graph/check-4b-layer2.ts",
+    "check:4b": "npm run check:4b-identity && npm run check:4b-layer2 && npm run check:4a-coverage",
+    "setup:identity": "tsx graph/setup-identity-table.ts",
+    "graph:coverage": "tsx graph/print-coverage.ts",
+    "audit:4b": "tsx graph/audit-4b-identity.ts --json graph/audit-4b-identity.json && tsx graph/audit-4b-schedules.ts --zip-sample 800 --json graph/audit-4b-schedules.json && tsx graph/audit-4b-layer2.ts --sample 2000 --json graph/audit-4b-layer2.json && tsx graph/audit-4b-tax.ts --json graph/audit-4b-tax.json && tsx graph/record-4b-facts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
