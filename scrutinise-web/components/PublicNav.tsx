@@ -164,7 +164,7 @@ export default function PublicNav() {
         </Link>
 
         {/* ══ DESKTOP NAV — 25-K §5 ═════════════════════════════════
-            Order, left to right: Create · Browse · Central · About · Support · [Admin].
+            Order, left to right: My ideas · Browse · Central · About · Support · [Admin].
             It is the brief's order and it is the order of use: make something, look at
             what others made, work with your community, find out what this is, ask for
             help. "Central" sat last, after the admin links, because it was added last.
@@ -173,16 +173,20 @@ export default function PublicNav() {
             (§5). The page itself (`/legislation-compare`) is untouched and still reachable
             by URL and from the admin panel; what went is the nav item.
 
-            ⚠⚠ AND `Create` IS THE LIVE LABEL, WHICH CONTRADICTS 25-J's REPORT. 25-J §1
-            renamed the nav item to "My ideas" — in `components/ui/Navbar.tsx`, which NOTHING
-            RENDERS. This is the nav every signed-in page draws. 25-K §5 names the item
-            "Create", which is what Charlie saw when he walked the site, so that is what it
-            says here. See the sprint report. */}
+            ⚠⚠ THE ITEM IS "MY IDEAS", AND THE FILE MATTERS AS MUCH AS THE WORD. 25-J §1
+            renamed it — in `components/ui/Navbar.tsx`, which NOTHING RENDERS — so the
+            rename never reached a user and `check:lex-25j` passed for a sprint anyway.
+            This is the nav every page actually draws. The page behind it is no longer a
+            form to fill once; it is where a user lives, and an item named for an ACTION
+            sends someone looking for yesterday's work to the wrong place.
+            ⚠ 25-K §5 listed the ORDER using the label that was live at the time; the order
+            is unchanged and only the first label moves. The STAGE is still called Create
+            (docs/CLAUDE.md §4, use exactly, never substitute) — this is a nav label. */}
         <div className="hidden items-center gap-6 md:flex">
           {/* 25-F §9 — creation entry. A CLIENT component, which is why the switch is a
               redirect route rather than a prop: it cannot read the database. */}
           <Link href="/ideas/new" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Create
+            My ideas
           </Link>
           <Link href="/ideas" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Browse
@@ -241,7 +245,7 @@ export default function PublicNav() {
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Create
+              My ideas
             </Link>
             <Link
               href="/ideas"

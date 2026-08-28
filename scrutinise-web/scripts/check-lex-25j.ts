@@ -14,6 +14,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { readFileSync, readdirSync, statSync } from 'node:fs'
+// docs/CLAUDE.md §23.1 — an assertion over a file nothing renders proves nothing.
+import { assertReachable } from './reachability'
 import { join, relative } from 'node:path'
 import { QUESTION_HEADINGS, HEADING_ORDER, isHeadingKey, headingFor } from '../lib/lex/question-headings'
 import { PASSES } from '../lib/lex/deepening-config'
@@ -69,7 +71,7 @@ interface Check {
 }
 
 const FILES = [
-  'components/ui/Navbar.tsx',
+  'components/PublicNav.tsx',
   'components/lex/MyIdeasList.tsx',
   'app/ideas/build/BuildIdeaClient.tsx',
   'app/ideas/build/page.tsx',
@@ -128,10 +130,25 @@ const CHECKS: Check[] = [
     },
   },
   {
-    name: '§2 the nav says "My ideas" — and the STAGE is still called Create',
+    // ⚠⚠ 25-L — THIS CHECK PASSED FOR A FULL SPRINT OVER A FILE NOTHING RENDERS, and the
+    // rename it reported never reached a user. `components/ui/Navbar.tsx` has no importer
+    // anywhere; the nav every page draws is `components/PublicNav.tsx`, and it still said
+    // "Create". The negative control fired on every run, because it corrupts the same dead
+    // file the assertion reads — which is exactly what a control cannot catch
+    // (docs/CLAUDE.md §23.1).
+    //
+    // So the assertion now (a) proves the file it reads is reachable from a route, and
+    // (b) reads the nav that is actually rendered.
+    name: '§2 (repaired by §25-L) the RENDERED nav says "My ideas" — and the STAGE is still called Create',
     run: (src) => {
-      const nav = src['components/ui/Navbar.tsx']
-      if (!/label: 'My ideas', href: '\/ideas\/new'/.test(nav)) return 'the nav item was not renamed'
+      const dead = assertReachable('components/ui/Navbar.tsx')
+      const live = assertReachable('components/PublicNav.tsx')
+      if (live) return `the nav this check reads is itself unreachable: ${live}`
+      const nav = src['components/PublicNav.tsx']
+      if (!/>\s*My ideas\s*</.test(nav)) return 'the rendered nav does not say "My ideas"'
+      // ⚠ THE DEAD FILE IS REPORTED, NOT ASSERTED ON. Deleting it is not this check's call,
+      // but a reader of this check must not be left believing it proves anything.
+      if (!dead) return 'components/ui/Navbar.tsx is reachable again — two navs now render; decide which'
       // ⚠⚠ THE FIVE-STAGE VOCABULARY IS NOT NAVIGATION. docs/CLAUDE.md §4: use exactly,
       // never substitute. A sweep that renamed STAGE_1 would have broken the vocabulary the
       // whole product shares, and it would have looked like a tidy-up.
@@ -140,8 +157,8 @@ const CHECKS: Check[] = [
     },
     break: (src) => ({
       ...src,
-      'components/ui/Navbar.tsx': src['components/ui/Navbar.tsx']
-        .replace("label: 'My ideas', href: '/ideas/new'", "label: 'Create', href: '/ideas/new'"),
+      'components/PublicNav.tsx': src['components/PublicNav.tsx']
+        .split('My ideas').join('Create'),
     }),
   },
 
@@ -218,8 +235,11 @@ const CHECKS: Check[] = [
     run: (src) => {
       const c = src['app/ideas/create/CreateIdeaClient.tsx']
       if (!/function PanelEdge/.test(c)) return 'a collapsed panel vanishes rather than becoming an edge'
-      if (!/fields: boolean \| null; background: boolean \| null/.test(c)) {
-        return 'the panels cannot tell "not yet decided" from "closed"'
+      // ⚠ 25-L §4 — three panels now, same rule. See check-lex-25h.
+      for (const k of ['chat', 'fields', 'background']) {
+        if (!new RegExp(`${k}: boolean \\| null`).test(c)) {
+          return `the ${k} panel cannot tell "not yet decided" from "closed"`
+        }
       }
       // The restore control has to exist in both directions.
       if (!/setPanelOpen\(\(p\) => \(\{ \.\.\.p, fields: true \}\)\)/.test(c)) return 'no control restores a collapsed panel'

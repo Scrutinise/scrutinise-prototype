@@ -280,6 +280,41 @@ export interface DiagnosisOutput {
   uncertainties: RawUncertainty[]
 }
 
+/**
+ * ⚠⚠ 25-L — THE `drivenBy` INSTRUCTION, IN ONE PLACE, BECAUSE TWO PASSES WRITE CAUSES AND
+ * ONLY ONE OF THEM HAD EVER BEEN TOLD WHAT THE FIELD IS.
+ *
+ * §25.7's first quality — "a causal chain, not an inventory" — measured 0 of 4 causes
+ * nested across every build in 25-H, 25-I and 25-K, and three reports called it "the model
+ * is not populating `drivenBy`". It is not a model failure. It is this:
+ *
+ *   · the DIAGNOSIS pass carries eight lines explaining `drivenBy`, and builds the chain;
+ *   · the REVISION pass declares `drivenBy` in its TypeScript type and REQUIRES it in its
+ *     JSON schema — and its prompt has never mentioned the field at all;
+ *   · `build.ts` then `deleteMany`s the diagnosis pass's causes and replaces them with the
+ *     revision's (line ~2007), because two sets of causes on one idea is a duplicate.
+ *
+ * So the chain was built and then destroyed by a pass that did not know it existed. The
+ * schema REQUIRED the field, which is why nothing ever errored: `""` is a valid string, the
+ * diagnosis prompt legitimately sanctions `""` for a root, and a model given a required
+ * field with no instruction returns the safe empty value every time.
+ *
+ * ⚠ THIS IS THE THIRD INSTANCE OF "SCHEMA PERMITS ≠ PROMPT REQUIRES" (docs/CLAUDE.md §23).
+ * A required field is a shape contract, never a content one. If the content matters, the
+ * PROMPT has to ask for it — in every pass that writes it.
+ */
+const DRIVEN_BY_INSTRUCTION = [
+  '⚠ `drivenBy` — THIS IS WHAT TURNS A LIST INTO A CAUSAL CHAIN, and it is the single most',
+  '  valuable thing a diagnosis can say. Where one cause SITS BENEATH another, copy the',
+  '  parent\'s `cause` text into `drivenBy` VERBATIM. A root cause gets an empty string.',
+  '  "No mechanism exists to attach responsibility" is not a sibling of "the culture rewards',
+  '  avoiding it" — one drives the other, and which way round is the finding.',
+  '  ⚠ Do not force a hierarchy that is not there: two genuinely independent causes are two',
+  '  roots. But a list in which EVERY cause is a root is almost always a list you have not',
+  '  yet asked the question of. Before returning one, go through the causes in pairs and ask',
+  '  of each pair: if the first stopped happening, would the second still happen?',
+].join('\n')
+
 const DIAGNOSIS_SCHEMA = {
   type: 'object',
   properties: {
@@ -360,13 +395,9 @@ export async function runDiagnosisPass(input: {
     '                 ⚠ It is a cause among causes, not a replacement for the structural ones. The',
     '                 constitutional reading is usually right about MECHANISM; this one is usually',
     '                 right about MOTIVE, and a diagnosis with only one of the two is incomplete.',
-    '                 ⚠ `drivenBy` — 25-H §7a AND §25.7\'s first instruction. Where one cause SITS',
-    '                 BENEATH another, copy the parent\'s `cause` text into `drivenBy` verbatim. A',
-    '                 root cause gets an empty string. This is what turns a list into a CAUSAL',
-    '                 CHAIN: "no mechanisms exist to attach responsibility" is not a sibling of',
-    '                 "the culture rewards avoiding it" — one drives the other, and which way round',
-    '                 is the most useful thing the diagnosis can say. Do not force a hierarchy that',
-    '                 is not there; two genuinely independent causes are two roots.',
+    // ⚠ 25-L — THE SAME WORDS THE REVISION PASS GETS. It was eight lines here and nothing
+    // at all there, and the revision pass is the one whose output survives.
+    DRIVEN_BY_INSTRUCTION,
     '  `rootCause`  — which cause is the main driver. Copy its text verbatim from `causes`.',
     '  `pivotalObstacle` — why a solution has NOT stuck. DISTINCT from the root cause: often',
     '                 enforcement failure, a coordination gap, a cost nobody will bear, or a party who',
@@ -849,6 +880,13 @@ export async function runRevisePass(input: {
     '⚠ REWRITE THE CAUSES FIRST AND HARDEST. They were written before anyone knew what the actions',
     'would imply, and they are the part of the draft most likely to be wrong. A cause that survives',
     'the research unchanged should survive because you checked it, not because you did not look.',
+    '',
+    // ⚠⚠ 25-L — ADDED HERE, AND ITS ABSENCE WAS THE WHOLE OF QUALITY 1's FAILURE. This pass
+    // REPLACES the diagnosis pass's causes (`build.ts` deletes them first), so whatever chain
+    // pass 2 built was thrown away by a pass that had never been told the field exists.
+    '⚠ THE CAUSES YOU RETURN REPLACE THE EARLIER ONES ENTIRELY, so the chain has to be rebuilt',
+    'here — it is not inherited.',
+    DRIVEN_BY_INSTRUCTION,
     '',
     '⚠ WHERE THE REVISION CONTRADICTS THE FIRST DRAFT, KEEP THE CONTRADICTION AND SAY SO.',
     '`contradictions` is the most valuable thing this pass produces. Each entry:',

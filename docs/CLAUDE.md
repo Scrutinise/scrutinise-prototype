@@ -908,3 +908,104 @@ the classifier at all. Reach for the shell only for things that genuinely run �
 the same turn**, so a throwaway never gets committed or mistaken for a check.
 
 *(Related: §12 on heredocs and backticks in commit messages; §14 on PowerShell stdout.)*
+
+---
+
+## 23. A CHECK MUST PROVE ITS SUBJECT IS REACHABLE — AND A SWEEP MUST REPORT CHECKS *RUN*, NOT ONLY CHECKS *PASSED* (28 Aug 2026)
+
+Two rules from one sprint, and they are the same failure seen from two sides: **a check
+that is disconnected from the product is indistinguishable, in every report we write, from
+a check that is working.**
+
+### 23.1 — Any assertion about what a USER sees must first prove the file is rendered
+
+**The rule: before asserting on a source file, assert that something imports it, all the
+way back to a route. A check whose subject has no importer must FAIL, not pass.**
+
+LEX 25-J §1 was a whole-app sweep to make the product speak in one voice, and it reported
+*"nav Create → My ideas"*. The rename went into `components/ui/Navbar.tsx`. That file has
+**no importer anywhere** — `grep -rn "Navbar" app components lib` returns its own
+`export default`, two check scripts asserting on it, and one comment. The nav every
+signed-in page actually draws is `components/PublicNav.tsx`, and it still said "Create".
+
+⚠ **`check:lex-25j` passed for a full sprint, with a negative control that fired**, because
+the control corrupts the same dead file the assertion reads. **A negative control cannot
+catch this.** Breaking the file and watching the check reject it proves the assertion reads
+the file; it says nothing about whether anything else does. The whole apparatus was
+self-consistent and disconnected from the product.
+
+**What to do, and it is one line:**
+
+```ts
+// A component nothing imports cannot be what a user sees.
+const importers = grepRepo(`from '@/components/${name}'|from '.*/${name}'`)
+if (!importers.length) return `${name} has no importer — this assertion is over dead code`
+```
+
+⚠ **The same rule applies to a route, a config constant and a prompt block.** "It is written
+down" and "it is reached" are different claims, and only the second is about the product.
+This is the same family as CLAUDE.md §19 (a fact measured and a fact inferred must not look
+identical on the page) and §20 (a local build proves the machine, not the deployment).
+
+### 23.2 — Report checks RUN, not only checks PASSED
+
+**The rule: a sprint report states how many checks EXECUTED. A check that did not run is
+reported as not run, never omitted.**
+
+`verify:lex-25e-ui` — the render harness for the elicitation cards, the one kind of check
+that could have caught the defect that stopped the product for eight sprints — died on
+`ReferenceError: React is not defined` before its first assertion, because it never
+imported React while the two harnesses beside it do. **It appears in no sprint's reported
+results.** Its silence read exactly like success: nobody had claimed it passed, and nobody
+had noticed it was missing from the list either.
+
+**So the closing line of a sprint names the suite, not a selection**: *"25-c 32, 25-d 77,
+25-e 28 … verify:lex-25e-ui 16"* — and any check in the suite that is absent from that list
+is a finding, not a formatting choice. If a check cannot run, say so with the reason; a
+suite of twelve reporting eleven passes is eleven passes and one unknown.
+
+*(Related: the "checks that cannot fail" register — this is the twenty-third and
+twenty-fourth shape in it.)*
+
+---
+
+## 24. A REQUIRED FIELD IS A SHAPE CONTRACT, NEVER A CONTENT ONE — SCHEMA PERMITS ≠ PROMPT REQUIRES (28 Aug 2026)
+
+**The rule: if the CONTENT of a model's field matters, every pass that writes it must be
+told so in its PROMPT. `required` in a JSON schema guarantees the key is present and
+nothing else — and the empty value is always valid.**
+
+Third instance, and this one cost five sprints of misdiagnosis:
+
+| when | field | what the schema said | what the prompt said | what came back |
+|---|---|---|---|---|
+| 29 Jul | `citedIds` | required | nothing about transcribing ids | mangled ids matching no source |
+| 8 Aug | `citedMarkers` | optional | cite as you go | field omitted entirely — "0 cited" under a fully-cited answer |
+| 28 Aug | `drivenBy` | **required in two passes** | explained in ONE of them | `""` on every cause; 0 of 4 nested, in every build ever measured |
+
+⚠ **The 28 Aug case is the instructive one, because the code was correct throughout.**
+`nestByDrivenBy` existed, `check:lex-25h` asserted it, and §25.7's quality 1 measured 0 of 4
+nested across 25-H, 25-I and 25-K. Three reports concluded *"the model is not populating
+`drivenBy`"*. It was not a model failure:
+
+- the **diagnosis** pass carried eight lines explaining `drivenBy`, and built the chain;
+- the **revision** pass declared `drivenBy` in its type and REQUIRED it in its schema, and
+  its prompt had **never mentioned the field**;
+- `build.ts` then **deletes** the diagnosis pass's causes and replaces them with the
+  revision's — correctly, because two sets of causes on one idea is a duplicate.
+
+So the chain was built and then destroyed by a pass that did not know it existed, and
+nothing errored, because `""` is a valid string.
+
+**What to do:**
+
+1. **Check the prompt before the code.** When a field arrives empty, read every prompt that
+   writes it before reading the function that consumes it. A schema field with no prose is
+   a field the model has no reason to fill.
+2. **One instruction, shared by every pass that writes the field.** Not copied — imported.
+   Two copies of a rule is one copy that will be updated.
+3. **A required field whose empty value is explicitly sanctioned needs a counter-instruction.**
+   "A root cause gets an empty string" makes `""` always safe; the prompt has to add "a list
+   in which every entry is empty is a list you have not asked the question of".
+4. **Where a later pass REPLACES an earlier pass's output, say so in that pass's prompt.**
+   It cannot inherit what it was not told to rebuild.
