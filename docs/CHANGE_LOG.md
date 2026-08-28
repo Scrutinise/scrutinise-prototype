@@ -132,6 +132,241 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-28 22:40 UTC — REPORT RUN, CORPUS TRACK: T1–T5 COMPLETE, AND ONE IN FIVE PROVISION REFERENCES POINTS AT A PROVISION THAT DOES NOT CONTAIN THE REFERENCE
+
+Executed `docs/CC_BRIEF_report_corpus.md` end to end. Every §8 deliverable exists in
+`docs/report_run/`, with `_README.md` in front of them. The conditional fourth measure was scoped
+and not worked, per §5 — that decision is Charlie's at 09:00 Tuesday.
+
+### ▶▶ THE FINDING: `source_provision_ref` IS WRONG ON 19.1% OF THE ROWS THAT HAVE ONE
+
+**496 of the 2,593 rows that name a source provision do not contain the referenced Act inside that
+provision.** The citation is real and the target is real; the words are somewhere else in the same
+document. Per measure: WS-05 **38 of 149 (25.5%)**, WS-01 **139 of 892 (15.6%)**, WS-04 **319 of
+1,552 (20.6%)**.
+
+Where they actually sit — read off the chain of open CLML elements at the match, not guessed from
+the words:
+
+| where | rows |
+|---|---|
+| **Explanatory Note** | **184** |
+| elsewhere in the document | 101 |
+| schedule heading | 76 |
+| cross-heading | 47 |
+| repeals / amendments table | 43 |
+| a heading | 42 |
+| enacting words, footnote | 3 |
+
+⚠ **The severity is split and the two halves are not equal.** *Certain:* those provisions cannot be
+quoted as containing the reference — the words are not in them, and a quotation built from one is a
+misquotation. *Not settled by this measurement:* whether the provision nonetheless **bears on** the
+target. A cross-heading reading "Consequential amendment to the Constitutional Reform and Governance
+Act 2010" immediately above a paragraph is strong evidence the paragraph does amend it. **These are
+not 496 false rows.** They are rows whose evidence sits outside the provision named.
+
+⚠ It is **not** `coverage.notInAProvision`, which counts rows whose `source_provision_ref` is NULL —
+those are honest about naming none. **Nothing before this run counted the non-null-and-elsewhere
+case**, and `source_provision_ref` is the column that answers "which provision breaks if you repeal
+this".
+
+⚠⚠ **Found twice, by two code paths, and the second was the one that made it credible.** T2 measured
+it against the local CLML. T5's supplementary draw hit one independently against **live
+legislation.gov.uk** — `uksi/2014/560:schedule-3-paragraph-17`, filed against Equality Act 2010
+s.67, where the words are in the Explanatory Note and the paragraph is about pension schemes.
+
+### ⚠⚠ AND MY OWN PASS-2 CHECK PRINTED A CONCLUSION ITS EVIDENCE REFUTED
+
+The T5 re-examination had branches for `local && whole`, `local && !whole` — and no branch for
+`!local && whole`, which fell through to a final `else` reading *"confirmed: neither our copy nor
+the live document supports this row"* **while its own `wholeDocSaysPresent` field said `true` three
+lines above.** The case it was flattening is precisely the misattribution above. Fixed with the
+missing branch, plus one for a null on either side, which is now `not-checked` rather than silently
+`wrong`.
+
+### ⚠⚠ ONE GID NAMES TWO DOCUMENTS, AND MY FIRST INDEX LET THE LAST ONE WIN
+
+The bulk CLML file holds **133,361 documents under 130,096 gids: 2,894 carry both an as-made copy
+and a revised copy.** My `Map` kept whichever the central directory listed second — the GRAPH 4B
+regnal-year defect ("the last entry silently won, for 419 ids") in a new place. Caught by a result
+that could not be true: `uksi/2005/384` has a stored citation quoting section 4 of the Human Rights
+Act, and the copy the index handed back does not contain the words "Human Rights Act" at all. It is
+the Criminal Procedure Rules 2005 and its revised copy is a shell reading "(revoked)".
+
+Now declared: `revised` preferred (a repeal analysis is about the law as it stands), every read
+reports which copy it used, and **41 rows** are labelled `as-made-text` — references that exist in
+the as-made text and not the current text, so the referring provision has been amended or revoked
+away. That is a disposition finding, not a retrieval failure.
+
+⚠ **A consequence for `citation_edge` itself, reported and NOT fixed:**
+`extract-citation-edges.ts` iterates ENTRIES, not gids, so for those 2,894 documents it extracted
+from **both copies** and wrote the rows under one `source_gid` with no column saying which. The
+table mixes as-made and current text for them. Quantified per measure under `version_ambiguity`
+(WS-05 5 rows / 1 doc, WS-01 71 / 26, WS-04 110 / 49). Repairing it is a re-extraction and a schema
+change; neither belongs in a report run.
+
+### ⚠ A SENTENCE EXTRACTOR THAT SPLIT ON THE CHAPTER NUMBER
+
+The first version used a bare `/\.\s/` and produced, as a whole and quotable sentence:
+
+> "Constitutional Reform and Governance Act 2010 (c."
+
+from a repeals schedule reading "… paragraph 3. Constitutional Reform and Governance Act 2010
+(c. 25) In Schedule 6, paragraphs 36 and 37." **A chapter number is the most common full stop in the
+statute book and it is never a sentence end.** Now a stop ends a sentence only when the word before
+it is not an abbreviation (`c.` `s.` `Sch.` `art.` `reg.` `No.` a bare initial) and what follows
+starts something. Fixing it moved the "whole sentence" rate **down**, from a false 98.0% to 96.9%.
+An em-dash was never a boundary — statutes hang definitions off one.
+
+### ▶ THE PREDICTIONS, SCORED
+
+| | predicted | actual | |
+|---|---|---|---|
+| **P1** sentence attachment | ≥85% whole | **96.9%** (3,137 of 3,237) | ✅ |
+| **P2** CRAG Part 1 expansion | 15–35 refs | **19 provisions** (20 refs) | ✅ |
+| **P3** gate retrieval | ≥6 of 8 | **6 of 6** brief-named refs, + **7** fair-employment provisions found by search | ✅ |
+| **P4** Supreme Court in Sch 6 / Sch 10 | both name it | **both do**, ×27 and ×31, Judicial Committee ×0 — **and Wales too** | ✅ |
+| **P5** CRA > CCA > PBA | holds; PBA < 200 | **holds on all three axes**; PBA max axis 146 | ✅ |
+| **P6** verification | ≥17 of 20; ≥1 failure the verifier's | **20 of 20**; **0** verifier failures | half wrong |
+
+⚠ **P6's second half was wrong and the reason matters.** I predicted a verifier failure because
+25-H had two. There were none — but only because there were no failures at all in the brief's 20,
+and there were no failures because **the sample contained zero `markup` rows**. See below.
+
+⚠ **The ordering control was MEASURED, not predicted.** A connectivity probe run before the
+predictions were logged returned the counts, and that was recorded at the time. It holds on all
+three detection axes separately: markup 79 > 37 > 11, text 1,789 > 901 > 171, enabling 148 > 75 > 26.
+
+### ⚠ THE 20-ROW SAMPLE TESTS ONE DETECTOR OF THREE
+
+The brief's sample is stratified by **measure**, and `markup` is 2–5% of the table, so a 20-row draw
+is very likely to contain none. This one contained **markup 0, text 19, enabling 1**. So a rate read
+as covering three detectors covers one — and it is the *markup* detector the report leans on hardest,
+because a markup edge is the source document asserting the target by URI.
+
+A supplementary three-per-detector draw was run, reported separately and **never merged into the
+rate**: markup **2/3**, text **3/3**, enabling **3/3**. Three rows per detector establish that a
+detector is not systematically broken; they do not establish a rate and none is quoted.
+
+The verifier was made to **pass once and fail twice** before any row was scored, through the same
+`judge()` the sample goes through. A row that could not be fetched is NOT CHECKED, never "wrong",
+with a floor: under 15 checked and the run declares no rate.
+
+### ▶ WHAT T1–T4 FOUND
+
+▶ **CRAG Part 1 has NO exercised enabling powers** — 26 enabling rows for the Act, **0** inside
+Part 1. The three powers actually exercised are ss.20 and 52 and one band naming no provision.
+Nothing falls with Part 1 as a made-under consequence.
+
+▶ **The act-level band is 3.6× the part-scoped band for CRAG** — 106 rows name the Act with no
+provision against 29 naming a Part 1 provision. A floor on unknown Part-1 exposure, not noise.
+Banded, never merged; which bands the report counts is the analysis track's call.
+
+▶ **P4 answered from the statute, with no conclusion drawn.** Scotland Act 1998 Sch 6, Northern
+Ireland Act 1998 Sch 10 **and Government of Wales Act 2006 Sch 9** each route devolution-issue
+references and appeals to the Supreme Court, and none names the Judicial Committee.
+*"References from superior courts to Supreme Court — 10 Any court consisting of three or more judges
+of the Court of Session may refer any devolution issue … to the Supreme Court."* ⚠ **Wales is not on
+the brief's list and is in the same position**; retrieved so the Welsh position is not inferred from
+a gap in a list.
+
+▶ **The devolution statutes point at CRAG Part 1 by name.** Scotland Act 1998 s.51 and Government of
+Wales Act 2006 s.52 each carry *"See Part 1 of the Constitutional Reform and Governance Act 2010 (in
+particular, sections 3 and 4) for provision affecting— …"*, and each also names CRAG **section 3**.
+
+▶ **"The fair employment provisions" were FOUND, not assumed.** The brief names them without a
+section number. NIA 1998 was searched for the phrase: ss.24, 74, 98, Sch 12 para 13, Sch 13, Sch 15.
+s.75 retrieved alongside s.76 and flagged as not named in the brief.
+
+▶ **A bare 0 that would have misled, caught by a guard.** CRA 2005 Part 2 returns **0 on every axis**
+on a literal match of the string `part-2` — because references name sections, not Parts. Expanded
+from the Act's own CLML it is markup 1, text 13, enabling 5. A 0 there would have read as "nothing
+refers to the Lord Chancellor provisions", which is false in the direction that makes the measure
+look easy. Same guard caught **Public Order Act 1986 Part 3, whose CLML id is `part-III`** in Roman
+numerals: asking for `part-3` gave an unexpanded 3, `part-III` gives 6.
+
+### ✅ CHECKS AND SCOPE
+
+`check:scripts` clean **on every file this run added**. ⚠ It is **not** clean on the repository:
+eight pre-existing errors in six files none of this run touched (`check-3a.ts`,
+`download-graph-sources.ts`, `cost-estimate.ts`, `with-legacy-env.ts`, `s3-drop-readiness.ts`,
+`lib/lex/repeal-status.ts`). 25-M reported the program clean this morning, so something has regressed
+since — reported, not fixed, since it may be a concurrent session's in-flight work.
+
+⚠ **Not fixed, named:** the `citation_edge` version mixing above; a **fourth** copy of the
+four-character CLML-handle regex now exists in `graph/` and the three older ones were not
+consolidated during a report run.
+
+**No statutory text was fetched for T1–T4** — all 1,235 source documents of the four measures, and
+all three gate Acts, are in the local bulk CLML file (measured 1,235 of 1,235, not assumed); the only
+network call is to Neon for the graph rows. T5 alone goes out to legislation.gov.uk, one request at a
+time, 1.8s apart, with backoff.
+
+---
+## 2026-08-28 22:15 UTC — REPORT RUN, CORPUS TRACK: PREDICTIONS, LOGGED BEFORE T2–T5 RAN
+
+Executing `docs/CC_BRIEF_report_corpus.md`. Outputs go to `docs/report_run/`. Recorded before the
+runs so they can be scored against, per brief §8 and CLAUDE.md.
+
+### What is NOT a prediction — the ordering control was MEASURED before I wrote this
+
+⚠ Be clear about the order of events. Before logging anything I ran a connectivity probe
+(`graph/probe-report-state.ts`, 21:50 UTC) to establish the database was reachable and that
+`citation_edge` still held what GRAPH 4B left in it. That probe returned the per-target counts,
+which means brief §2's ordering expectation was **read, not predicted**. It is a measurement and it
+is reported as one:
+
+| target | markup | text | enabling | total |
+|---|---|---|---|---|
+| Equality Act 2010 `ukpga/2010/15` (WS-04) | 79 | 1,789 | 148 | 2,016 |
+| Human Rights Act 1998 `ukpga/1998/42` (WS-01) | 37 | 901 | 75 | 1,013 |
+| Constitutional Reform Act 2005 `ukpga/2005/4` (WS-02/03) | 65 | 856 | 212 | 1,133 |
+| CRAG 2010 `ukpga/2010/25` (WS-05) | 11 | 171 | 26 | 208 |
+
+Brief §2's ordering — EqA > HRA > CRAG — **HOLDS** (2,016 > 1,013 > 208). Nothing upstream has
+changed. ⚠ The totals column is shown for the ordering control only; the three detection values are
+**different strengths of evidence and are never summed in a deliverable**.
+
+⚠ One thing the ordering control does not cover, noted now rather than after the fact: CRA 2005
+carries **212 enabling rows against the Equality Act's 148**, so on the enabling axis alone the
+order is CRA > EqA > HRA > CRAG, not the brief's order. That is not a break — the brief's ordering
+is about references, and enabling edges are a different fact — but a reader who merged the columns
+would see a different ranking, which is the second reason not to merge them.
+
+### The predictions
+
+**P1 — T2 sentence attachment.** For each inbound row I will try to attach the full sentence
+containing the reference. `raw_fragment` is capped at 600 characters, so some sentences are cut at
+the boundary and must be recovered from the source document. Predict **≥85%** of rows get a
+sentence with both boundaries found, and that the failures concentrate in `text`-detection rows.
+
+**P2 — T2 target provisions.** Predict `expandPart('ukpga/2010/25', 'part-1')` returns between
+**15 and 35** provision refs for CRAG Part 1.
+
+**P3 — T3 gate retrieval.** Eight named items (Scotland Act 1998 s.29 and Sch 6; GoWA 2006 s.108A;
+NIA 1998 s.6, Sch 10, s.76, and the fair employment provisions). Predict **≥6 of 8** retrieve full
+text from the corpus, and that any miss is a Schedule rather than a section — schedules are the
+part of the holding that has broken before (GRAPH 4B §2.2: 41.3% schedule retention on SIs).
+
+**P4 — the Supreme Court's devolution reference jurisdiction.** The Cowork brief asserts the
+Supreme Court holds it under Scotland Act 1998 Sch 6 and Northern Ireland Act 1998 Sch 10, and asks
+that it be verified against the corpus before it is asserted. Predict **both schedules, as the
+corpus holds them, name the Supreme Court** — the jurisdiction moved there from the Judicial
+Committee of the Privy Council in 2009, and our holding is the as-amended text. ⚠ If our text still
+names the Judicial Committee, that is a staleness finding about the corpus and not an answer about
+the law, and it will be reported as such.
+
+**P5 — T4 scoping ordering.** Among the unworked measures, predict inbound totals order
+**CRA 2005 > Climate Change Act 2008 > Public Bodies Act 2011**, and predict Public Bodies Act 2011
+returns **under 200** rows in total.
+
+**P6 — T5 hand verification.** Predict **≥17 of 20** correct on the first pass. And, from 25-H
+where the first pass reported 18/20 and *both* failures were the checker's, predict that **at least
+one** first-pass failure here is the verifier's rather than the data's. Brief §6 requires the
+verifier be verified before any failure is reported, so no failure will be published until its
+cause has been established.
+
+---
 ## 2026-08-28 12:01 UTC — LEX 25-M: THE OUTPUTS, AND THE FIRST CAUSAL CHAIN A BUILD HAS EVER PRODUCED
 
 **Brief:** `docs/BRIEF_25M.md`. **Report:** `docs/LEX_25M_REPORT.md`. §1–§5 built.

@@ -2,7 +2,53 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-28 12:01 UTC — ▼ **LEX 25-M: THE FIRST CAUSAL CHAIN A BUILD HAS EVER
+*Last updated: 2026-08-28 22:40 UTC — ▼ **REPORT RUN, CORPUS TRACK: EVERY §8 DELIVERABLE EXISTS —
+AND ONE IN FIVE PROVISION REFERENCES POINTS AT A PROVISION THAT DOES NOT CONTAIN THE REFERENCE.**
+T1–T5 of `docs/CC_BRIEF_report_corpus.md` complete, in `docs/report_run/`, `_README.md` in front.
+⚠⚠ **496 of the 2,593 rows that NAME a source provision do not contain the referenced Act inside
+it** — WS-05 38/149 (25.5%), WS-01 139/892 (15.6%), WS-04 319/1,552 (20.6%). The citation is real
+and the target is real; the words are elsewhere in the same document: **Explanatory Note 184**,
+elsewhere 101, schedule heading 76, cross-heading 47, repeals table 43, heading 42. **Certain:** you
+cannot QUOTE those provisions as containing the reference. **Not settled:** whether they still BEAR
+on the target — a cross-heading naming the Act above a paragraph is good evidence it amends it. Not
+496 false rows; 496 rows whose evidence sits one element away. ⚠ It is NOT
+`coverage.notInAProvision`, which counts the NULLs — **nothing before this run counted the
+non-null-and-elsewhere case**, and `source_provision_ref` is the column that answers "which
+provision breaks". Found by two code paths: T2 against local CLML, and T5's supplementary draw
+against LIVE legislation.gov.uk.
+⚠⚠ **MY OWN PASS-2 CHECK PRINTED A CONCLUSION ITS EVIDENCE REFUTED** — no branch for
+`!local && whole`, so it fell through to *"neither our copy nor the live document supports this
+row"* while its own field said `true` three lines above. That missing branch WAS the misattribution.
+⚠⚠ **ONE GID NAMES TWO DOCUMENTS AND MY FIRST INDEX LET THE LAST ONE WIN** — the bulk CLML file
+holds 133,361 documents under 130,096 gids, **2,894 with both an as-made and a revised copy**. The
+GRAPH 4B "last entry silently won" defect in a new place; caught by a result that could not be true
+(`uksi/2005/384` quotes HRA s.4 and the copy handed back never says "Human Rights Act" — it is the
+revoked Criminal Procedure Rules 2005, a shell). Now `revised` preferred and DECLARED, every read
+says which copy, **41 rows labelled `as-made-text`** = references amended or revoked away.
+⚠⚠ **AND A CONSEQUENCE FOR `citation_edge`, REPORTED NOT FIXED: `extract-citation-edges.ts`
+iterates ENTRIES, not gids**, so for those 2,894 documents it extracted from BOTH copies under one
+`source_gid` with no column saying which. Needs a re-extraction + schema column.
+⚠ **A sentence extractor that split on the chapter number** produced *"Constitutional Reform and
+Governance Act 2010 (c."* as a quotable sentence. Fixed; the honest whole-sentence rate went DOWN,
+98.0% → **96.9%**.
+▶ **PREDICTIONS: P1 96.9% (≥85% ✅), P2 19 refs (15–35 ✅), P3 6/6 + 7 found by search (≥6 ✅),
+P4 ✅, P5 holds on all three axes ✅, P6 half wrong** — 20/20 correct but 0 verifier failures.
+⚠ **The 20-row sample drew markup 0, text 19, enabling 1**, so the brief's rate tests ONE detector
+of three — and markup is the one the report leans on hardest. A supplementary 3-per-detector draw,
+never merged: markup **2/3**, text 3/3, enabling 3/3.
+▶ **CRAG Part 1 confers NO exercised enabling power** (26 for the Act, **0** in Part 1); its
+act-level band is **3.6×** the part-scoped band (106 vs 29). ▶ **Scotland Act 1998 Sch 6, NI Act
+1998 Sch 10 AND GoWA 2006 Sch 9** all route devolution issues to the **Supreme Court**, Judicial
+Committee ×0 — **Wales is not on the brief's list and is in the same position**. Reported, not
+concluded. ▶ SA 1998 s.51 and GoWA 2006 s.52 both name **CRAG Part 1 and section 3** expressly.
+▶ **A bare 0 caught by a guard**: CRA 2005 Part 2 literal-matches 0 on every axis; expanded it is
+markup 1 / text 13 / enabling 5. Public Order Act 1986's Part 3 is `part-III` in Roman numerals.
+⚠ **T4 (CRA 2005 at full depth) NOT worked — Charlie's 09:00 Tuesday decision.** Scoped; the full
+run is `--include-t4` on three scripts, ~15 minutes.
+✅ `check:scripts` clean on every file this run added. ⚠ **NOT clean on the repo** — 8 pre-existing
+errors in 6 untouched files; 25-M reported it clean this morning, so something regressed since.
+No statutory text fetched for T1–T4 (all 1,235 source documents are local, measured; Neon only). `docs/report_run/_README.md`.**
+Earlier: 2026-08-28 12:01 UTC — ▼ **LEX 25-M: THE FIRST CAUSAL CHAIN A BUILD HAS EVER
 PRODUCED — AND NO CHECK OR VERIFY SCRIPT IN THIS REPO HAD EVER BEEN TYPECHECKED.** §1–§5 built.
 ⚠⚠ **§5b PASSES: THE CAUSES NEST.** One live build (RESUMED, not re-claimed, so the one-build
 ceiling held): 10 passes, **22.98p, 249s**. Baseline measured BEFORE spending: **0 nested
