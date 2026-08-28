@@ -163,6 +163,9 @@ function fixture(overrides: Partial<ProposalSnapshot> = {}): ProposalSnapshot {
         citation: 'Road Traffic Offenders Act 1988, s.53',
         url: 'https://www.legislation.gov.uk/ukpga/1988/53/section/53',
         sourceType: 'PRIMARY_LEGISLATION', siftReason: 'States the uprating power and its last exercise.',
+        // 25-M §3 — the snapshot carries the review status so a renderer can say whose the
+        // finding is. ACCEPTED here: this fixture is one the proposer has been through.
+        status: 'ACCEPTED',
         // 25-D §3 — the §25.5 question this answers, as its producer tagged it.
         headingKey: 'LAW_NOW',
       },
