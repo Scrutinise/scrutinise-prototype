@@ -159,6 +159,29 @@ export interface SnapshotEvidence {
    * into whichever heading happens to be first.
    */
   headingKey: string | null
+  /**
+   * ══ 25-M §3 — WHETHER THE PROPOSER HAS ACTUALLY ACCEPTED THIS ════════════
+   *
+   * ⚠⚠ THE SNAPSHOT USED TO TAKE `status: 'ACCEPTED'` ONLY, and the reason was right: a
+   * PROPOSED finding is one the user has not agreed to, and publishing it would put a
+   * judgement nobody made into an artefact that leaves the building.
+   *
+   * ⚠⚠ BUT NOTHING IS EVER ACCEPTED. Every `EvidenceItem` is written PROPOSED, and on the
+   * only built idea in the database the snapshot's evidence array came back **empty** — so
+   * §2b's full write-up, which is supposed to contain everything the right-hand panel holds,
+   * would have contained none of it. The rule and the requirement were in direct conflict and
+   * the conflict was invisible, because an empty array renders as a document with no findings
+   * section rather than as an error.
+   *
+   * The resolution is the one this file already uses for SOURCES (`decision: null` — "the
+   * user has not looked" is a real state and is stated, never silently promoted): carry the
+   * material and LABEL it. `ACCEPTED` is the proposer's own; `PROPOSED` is Lex's, offered and
+   * not yet reviewed, and the renderers say so beside it. Nothing is published as though the
+   * user endorsed it, and nothing they have not got to yet silently disappears.
+   *
+   * ⚠ REJECTED IS STILL EXCLUDED. They said no to it; that is a decision, not an absence.
+   */
+  status: string
 }
 
 export interface SnapshotIssue {
@@ -492,8 +515,11 @@ export async function buildProposalSnapshot(
     // ⚠ ACCEPTED ONLY. A PROPOSED finding is one Lex offered and the user has not
     // agreed to; putting it in the artefact that leaves the building would publish
     // a judgement nobody made. A REJECTED one they said no to.
+    // ⚠ 25-M §3 — EVERYTHING EXCEPT WHAT THEY REJECTED. See `SnapshotEvidence.status` for
+    // why this is not the silent promotion it looks like: the status travels with the row and
+    // the renderers label an unreviewed finding as Lex's rather than the proposer's.
     prisma.evidenceItem.findMany({
-      where: { ideaId, status: 'ACCEPTED' },
+      where: { ideaId, status: { not: 'REJECTED' } },
       orderBy: [{ passKey: 'asc' }, { createdAt: 'asc' }],
     }),
     prisma.deepeningIssue.findMany({
@@ -626,6 +652,9 @@ export async function buildProposalSnapshot(
     sourceType: e.sourceType,
     siftReason: e.siftReason,
     headingKey: e.headingKey ?? null,
+    // 25-M §3 — the review status travels with the row, so a renderer can say whose the
+    // finding is. See `SnapshotEvidence.status`.
+    status: e.status,
   }))
 
   const issues: SnapshotIssue[] = issueRows.map((i) => ({

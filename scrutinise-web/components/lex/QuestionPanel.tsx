@@ -36,6 +36,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-panel'
 import YourMaterial from './YourMaterial'
 import ClaimReview from './ClaimReview'
+import OutputsPanel from './OutputsPanel'
 
 /**
  * §3b — what an EMPTY item says on the contents list, in three or four words.
@@ -277,7 +278,7 @@ export default function QuestionPanel({
           has gone two items deep into a library needs to know what pressing it returns them
           TO; "Contents" says so and an arrow does not. */}
       <div className="flex items-baseline gap-2">
-        {openHeading ? (
+        {openKey ? (
           <button
             onClick={() => setOpenKey(null)}
             className="text-xs font-semibold text-blue-700 hover:text-blue-900 border-2 border-blue-200 rounded-full px-2 py-0.5"
@@ -291,6 +292,14 @@ export default function QuestionPanel({
         )}
         {openHeading && (
           <div className="text-xs font-semibold text-zinc-800 flex-1 truncate">{openHeading.heading}</div>
+        )}
+        {/* ⚠ THE SPECIAL ITEMS NAME THEMSELVES TOO. Without this the header says "Resources"
+            over the outputs, and a user two clicks in cannot tell what they are looking at —
+            which is the orientation fault 25-K existed to fix, reappearing one level down. */}
+        {!openHeading && openKey && (
+          <div className="text-xs font-semibold text-zinc-800 flex-1 truncate">
+            {openKey === '__outputs' ? 'Outputs' : 'Not filed under a question'}
+          </div>
         )}
         <span className="text-[11px] text-zinc-400">{data.totalEntries} in all</span>
       </div>
@@ -308,12 +317,39 @@ export default function QuestionPanel({
           ⚠ THE ORDER IS `HEADING_ORDER`, computed on the server — settled law first, the
           strongest case against last. It is the design, not the order this file happens to
           render in. */}
-      {!openHeading && (
+      {/* ⚠ GATED ON `openKey`, NOT ON `openHeading`. The two special items (`__outputs`,
+          `__unfiled`) set a key that matches no heading, so a `!openHeading` gate left the
+          whole contents list rendering UNDERNEATH them — introduced with `__unfiled` in
+          25-L and found in 25-M when Outputs became the second one. */}
+      {!openKey && (
         <>
           <p className="text-[11px] text-zinc-500">
             Everything Lex found or worked out about the world, filed under the question it answers.
             Choose one.
           </p>
+
+          {/* ══ 25-M §1 — OUTPUTS, FIRST AND SET APART ═══════════════════════
+              §1: "a user finishes a build and there is nothing to take away without leaving
+              the page they are working on." Charlie: *"It's a bit disjointed having to go to
+              the dashboard to find it."*
+
+              ⚠ FIRST, AND VISUALLY APART, because it is a different KIND of item from the
+              twelve below it. Those are questions about the world; this is the thing you
+              take away. Filed thirteenth among the questions it would be exactly as hard to
+              find as it is on the dashboard, which is the whole complaint. */}
+          <ul className="space-y-1 mb-2">
+            <li>
+              <button
+                onClick={() => setOpenKey('__outputs')}
+                className="w-full flex items-baseline gap-2 rounded-lg border-2 border-zinc-300 bg-white px-3 py-2 text-left hover:border-zinc-500 hover:bg-zinc-50"
+              >
+                <span className="text-sm font-semibold text-zinc-900 flex-1">Outputs</span>
+                <span className="text-[11px] text-zinc-500">what you can take away</span>
+                <span aria-hidden className="text-zinc-300 text-xs">›</span>
+              </button>
+            </li>
+          </ul>
+
           <ul className="space-y-1">
             {data.headings.map((h) => {
               const n = h.entries.length
@@ -400,6 +436,8 @@ export default function QuestionPanel({
           )}
         </div>
       )}
+
+      {openKey === '__outputs' && <OutputsPanel ideaId={ideaId} />}
 
       {openKey === '__unfiled' && (
         <div className="space-y-2">

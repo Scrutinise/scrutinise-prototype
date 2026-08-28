@@ -26,6 +26,11 @@
 
 import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
+// 25-M §2b — the write-up carries every section the right-hand panel holds, in the panel's
+// own order. ⚠ The heading vocabulary is IMPORTED, never restated: `question-headings.ts`
+// imports nothing and is held to §20-B's import ban precisely so the document stack can read
+// it without reaching into mid-flight Lex modules (see that file's header).
+import { QUESTION_HEADINGS, HEADING_ORDER, type HeadingKey } from '../lex/question-headings'
 import {
   assertRenderableSnapshot,
   snapshotHash,
@@ -145,6 +150,96 @@ function pushClaim(
 // ─────────────────────────────────────────────────────────────────────────────
 // §3a — THE PROPOSAL
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * ══ 25-M §2b — EVERYTHING THE RIGHT-HAND PANEL HOLDS ═══════════════════════
+ *
+ * §2b: the full write-up is "the strategic kernel **and** everything the right-hand panel
+ * holds". Until now the document carried the kernel, the proposer's own words, the gaps and
+ * a source list — and **none** of the material filed under the panel's questions: the
+ * prognosis, the statutory consequences, what was tried before, how the courts have read it,
+ * the strongest case against. The best of what a build produces reached the screen and
+ * stopped there.
+ *
+ * ⚠ IT READS ONLY THE SNAPSHOT (20-B §1). No document generator reaches into the deepening
+ * modules; that seam is what has kept this stack stable through six sprints of change
+ * underneath it, and the temptation to "just import `deepeningState`" for one section is
+ * exactly how it would end.
+ *
+ * ⚠ THE ORDER IS THE PANEL'S (`HEADING_ORDER`), not this file's. It runs from what is settled
+ * toward what is contested and ends on the strongest case against; a document that reordered
+ * it would be making a different argument from the screen the proposer worked on.
+ *
+ * ⚠⚠ AN UNREVIEWED FINDING IS LABELLED, NOT PROMOTED. Until 25-M the snapshot took only
+ * ACCEPTED evidence — right in principle, and it meant this section was EMPTY for every idea
+ * in the database, because nothing has ever been accepted. Carrying it unlabelled would put
+ * Lex's judgement into the proposer's document as though they had endorsed it. So each
+ * finding says whose it is, which is the same answer this stack already gives for a source
+ * nobody has reviewed (`decision: null`).
+ *
+ * ⚠ AN EMPTY HEADING IS SKIPPED HERE, AND THAT IS NOT THE PANEL'S RULE. On screen an empty
+ * heading renders as a STATED GAP, because the reader is judging whether the search was any
+ * good. In a document going to a committee clerk, thirteen headings saying "we looked and
+ * found nothing" would drown the five that found something — and the absences are not lost:
+ * they are collected in "What this proposal does not establish", which follows immediately
+ * and is where a reader looks for them.
+ */
+function panelBlocks(snapshot: ProposalSnapshot): Block[] {
+  const blocks: Block[] = []
+
+  const byHeading = new Map<HeadingKey, ProposalSnapshot['evidence']>()
+  for (const e of snapshot.evidence) {
+    const k = e.headingKey as HeadingKey | null
+    if (!k || !HEADING_ORDER.includes(k)) continue
+    const list = byHeading.get(k) ?? []
+    list.push(e)
+    byHeading.set(k, list)
+  }
+  if (!byHeading.size) return blocks
+
+  blocks.push({ kind: 'rule' })
+  blocks.push({ kind: 'heading', level: 1, runs: text('What the research found') })
+
+  // ⚠ HOW MANY OF THESE THE PROPOSER HAS BEEN THROUGH, said once at the top rather than left
+  // for the reader to count. A document whose findings are mostly unreviewed is a different
+  // document from one whose findings the proposer has signed off, and the reader cannot tell
+  // the two apart without being told.
+  const all = [...byHeading.values()].flat()
+  const accepted = all.filter((e) => e.status === 'ACCEPTED').length
+  blocks.push({
+    kind: 'note',
+    text: accepted === all.length
+      ? `All ${all.length} findings below have been reviewed and accepted by the proposer.`
+      : `${accepted} of ${all.length} findings below have been reviewed and accepted by the proposer. `
+        + 'The rest are Lex’s — offered, not yet reviewed, and marked as such. Nothing here is a '
+        + 'claim the proposer has made.',
+  })
+
+  for (const key of HEADING_ORDER) {
+    const rows = byHeading.get(key)
+    if (!rows?.length) continue
+    const def = QUESTION_HEADINGS.find((h) => h.key === key)
+    blocks.push({ kind: 'heading', level: 2, runs: text(def?.heading ?? key) })
+
+    for (const e of rows) {
+      const unreviewed = e.status !== 'ACCEPTED'
+      blocks.push({
+        kind: 'heading',
+        level: 3,
+        runs: text(unreviewed ? `${e.title} — not yet reviewed` : e.title),
+      })
+      if (e.citation || e.url) {
+        blocks.push({ kind: 'paragraph', runs: text([e.citation, e.url].filter(Boolean).join(' · ')) })
+      }
+      // ⚠ THE SIFT'S REASON, VERBATIM OR ABSENT. Never invented — a row written before the
+      // sift existed has none, and saying so beats a plausible sentence.
+      if (e.siftReason) blocks.push({ kind: 'paragraph', runs: text(e.siftReason) })
+      blocks.push(...markdownToBlocks(e.body))
+    }
+  }
+
+  return blocks
+}
 
 export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
   assertRenderableSnapshot(snapshot)
@@ -376,6 +471,8 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
 
   // ── A gap is stated, not omitted ───────────────────────────────────────────
   blocks.push({ kind: 'rule' })
+  blocks.push(...panelBlocks(snapshot))
+
   blocks.push({ kind: 'heading', level: 1, runs: text('What this proposal does not establish') })
   blocks.push(...gapBlocks(snapshot))
 
