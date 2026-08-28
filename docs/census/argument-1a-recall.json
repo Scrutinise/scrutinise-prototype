@@ -1,0 +1,236 @@
+{
+  "takenAt": "2026-08-28T00:27:33.280Z",
+  "k": 200,
+  "controlArm": {
+    "rows": [
+      {
+        "tag": "COST",
+        "held": 4,
+        "found": 0,
+        "seeds": 10,
+        "candidates": 955
+      },
+      {
+        "tag": "UNINTENDED",
+        "held": 4,
+        "found": 0,
+        "seeds": 9,
+        "candidates": 882
+      },
+      {
+        "tag": "EVIDENCE_GAP",
+        "held": 3,
+        "found": 0,
+        "seeds": 4,
+        "candidates": 400
+      },
+      {
+        "tag": "RIGHTS",
+        "held": 1,
+        "found": 0,
+        "seeds": 8,
+        "candidates": 640
+      },
+      {
+        "tag": "PRECEDENT",
+        "held": 2,
+        "found": 0,
+        "seeds": 6,
+        "candidates": 600
+      },
+      {
+        "tag": "SCOPE",
+        "held": 4,
+        "found": 0,
+        "seeds": 6,
+        "candidates": 591
+      },
+      {
+        "tag": "IMPLEMENTATION",
+        "held": 1,
+        "found": 0,
+        "seeds": 4,
+        "candidates": 398
+      },
+      {
+        "tag": "SUPPORT_EVIDENCE",
+        "held": 1,
+        "found": 0,
+        "seeds": 6,
+        "candidates": 575
+      }
+    ],
+    "held": 20,
+    "found": 0
+  },
+  "crossArm": [
+    {
+      "tag": "COST",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 9,
+      "held": 1
+    },
+    {
+      "tag": "COST",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 1,
+      "held": 9
+    },
+    {
+      "tag": "ENFORCEMENT",
+      "from": "dense",
+      "to": "keyword",
+      "props": 7,
+      "held": 4,
+      "found": 0,
+      "candidates": 582
+    },
+    {
+      "tag": "ENFORCEMENT",
+      "from": "keyword",
+      "to": "dense",
+      "props": 4,
+      "held": 7,
+      "found": 1,
+      "candidates": 400
+    },
+    {
+      "tag": "UNINTENDED",
+      "from": "dense",
+      "to": "keyword",
+      "props": 6,
+      "held": 3,
+      "found": 0,
+      "candidates": 587
+    },
+    {
+      "tag": "UNINTENDED",
+      "from": "keyword",
+      "to": "dense",
+      "props": 3,
+      "held": 6,
+      "found": 1,
+      "candidates": 299
+    },
+    {
+      "tag": "EVIDENCE_GAP",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 3,
+      "held": 1
+    },
+    {
+      "tag": "EVIDENCE_GAP",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 1,
+      "held": 3
+    },
+    {
+      "tag": "WRONG_VEHICLE",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 7,
+      "held": 0
+    },
+    {
+      "tag": "WRONG_VEHICLE",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 0,
+      "held": 7
+    },
+    {
+      "tag": "RIGHTS",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 7,
+      "held": 1
+    },
+    {
+      "tag": "RIGHTS",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 1,
+      "held": 7
+    },
+    {
+      "tag": "PRECEDENT",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 5,
+      "held": 1
+    },
+    {
+      "tag": "PRECEDENT",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 1,
+      "held": 5
+    },
+    {
+      "tag": "SCOPE",
+      "from": "dense",
+      "to": "keyword",
+      "props": 3,
+      "held": 3,
+      "found": 0,
+      "candidates": 292
+    },
+    {
+      "tag": "SCOPE",
+      "from": "keyword",
+      "to": "dense",
+      "props": 3,
+      "held": 3,
+      "found": 0,
+      "candidates": 300
+    },
+    {
+      "tag": "IMPLEMENTATION",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 4,
+      "held": 0
+    },
+    {
+      "tag": "IMPLEMENTATION",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 0,
+      "held": 4
+    },
+    {
+      "tag": "SUPPORT_EVIDENCE",
+      "from": "dense",
+      "to": "keyword",
+      "skipped": true,
+      "props": 6,
+      "held": 0
+    },
+    {
+      "tag": "SUPPORT_EVIDENCE",
+      "from": "keyword",
+      "to": "dense",
+      "skipped": true,
+      "props": 0,
+      "held": 6
+    }
+  ],
+  "totalHeld": 26,
+  "totalFound": 2
+}

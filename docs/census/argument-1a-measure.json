@@ -1,0 +1,86 @@
+{
+  "takenAt": "2026-08-28T00:38:43.496Z",
+  "n": 60,
+  "tagRight": 35,
+  "shouldBeTagged": 41,
+  "tagRightGivenShouldBeTagged": {
+    "hit": 35,
+    "of": 41
+  },
+  "oppositePolarity": 6,
+  "neutral": 2,
+  "perTag": {
+    "COST": {
+      "n": 6,
+      "tagRight": 6,
+      "shouldBeTagged": 6,
+      "opposite": 0
+    },
+    "ENFORCEMENT": {
+      "n": 6,
+      "tagRight": 2,
+      "shouldBeTagged": 4,
+      "opposite": 2
+    },
+    "UNINTENDED": {
+      "n": 6,
+      "tagRight": 2,
+      "shouldBeTagged": 3,
+      "opposite": 1
+    },
+    "EVIDENCE_GAP": {
+      "n": 6,
+      "tagRight": 3,
+      "shouldBeTagged": 4,
+      "opposite": 1
+    },
+    "WRONG_VEHICLE": {
+      "n": 6,
+      "tagRight": 4,
+      "shouldBeTagged": 5,
+      "opposite": 1
+    },
+    "RIGHTS": {
+      "n": 6,
+      "tagRight": 5,
+      "shouldBeTagged": 5,
+      "opposite": 0
+    },
+    "PRECEDENT": {
+      "n": 6,
+      "tagRight": 2,
+      "shouldBeTagged": 3,
+      "opposite": 1
+    },
+    "SCOPE": {
+      "n": 6,
+      "tagRight": 5,
+      "shouldBeTagged": 5,
+      "opposite": 0
+    },
+    "IMPLEMENTATION": {
+      "n": 6,
+      "tagRight": 3,
+      "shouldBeTagged": 3,
+      "opposite": 0
+    },
+    "SUPPORT_EVIDENCE": {
+      "n": 6,
+      "tagRight": 3,
+      "shouldBeTagged": 3,
+      "opposite": 0
+    }
+  },
+  "perMethod": {
+    "prototype:v1": {
+      "n": 40,
+      "tagRight": 17,
+      "shouldBeTagged": 23
+    },
+    "pattern:v1": {
+      "n": 20,
+      "tagRight": 18,
+      "shouldBeTagged": 18
+    }
+  }
+}

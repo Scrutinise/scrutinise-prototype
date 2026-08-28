@@ -1,0 +1,181 @@
+{
+  "takenAt": "2026-08-28T00:23:49.544Z",
+  "k": 60,
+  "n": 19,
+  "found": 19,
+  "atOne": 19,
+  "rows": [
+    {
+      "chunkId": "committees-evidence:writtenevidence:2832:10036#0",
+      "tags": [
+        "SCOPE"
+      ],
+      "words": 228,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-lords:daylord2024-12-10b:54#0",
+      "tags": [
+        "SCOPE"
+      ],
+      "words": 84,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-debates:debates2004-12-21a:40#0",
+      "tags": [
+        "UNINTENDED"
+      ],
+      "words": 112,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S5LV0274P0:929#0",
+      "tags": [
+        "EVIDENCE_GAP"
+      ],
+      "words": 164,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S5LV0488P0:1855#0",
+      "tags": [
+        "COST"
+      ],
+      "words": 60,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-lords:daylord2012-03-06a:61#0",
+      "tags": [
+        "EVIDENCE_GAP"
+      ],
+      "words": 81,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-debates:debates2021-06-23b:311#0",
+      "tags": [
+        "SCOPE"
+      ],
+      "words": 73,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-debates:debates2023-12-05b:26#0",
+      "tags": [
+        "SUPPORT_EVIDENCE"
+      ],
+      "words": 68,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S3V0329P0:738#0",
+      "tags": [
+        "IMPLEMENTATION"
+      ],
+      "words": 143,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "scottish-parliament-or:15685:134#0",
+      "tags": [
+        "PRECEDENT"
+      ],
+      "words": 81,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S5LV0364P0:4203#0",
+      "tags": [
+        "SCOPE"
+      ],
+      "words": 105,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S3V0225P0:3135#0",
+      "tags": [
+        "PRECEDENT",
+        "COST"
+      ],
+      "words": 107,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-westminster:westminster2013-09-10a:20#0",
+      "tags": [
+        "EVIDENCE_GAP"
+      ],
+      "words": 77,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S3V0192P0:4302#0",
+      "tags": [
+        "UNINTENDED"
+      ],
+      "words": 190,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "historic-hansard:S5CV0053P0:5549#0",
+      "tags": [
+        "COST"
+      ],
+      "words": 106,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "scottish-parliament-or:16130:219#0",
+      "tags": [
+        "COST"
+      ],
+      "words": 90,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-debates:debates2007-07-09b:266#0",
+      "tags": [
+        "UNINTENDED"
+      ],
+      "words": 230,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "pwdata-debates:debates1979-03-20a:435#0",
+      "tags": [
+        "RIGHTS"
+      ],
+      "words": 380,
+      "rank": 1,
+      "returned": 60
+    },
+    {
+      "chunkId": "scottish-parliament-or:arch-513:50#0",
+      "tags": [
+        "UNINTENDED"
+      ],
+      "words": 48,
+      "rank": 1,
+      "returned": 60
+    }
+  ]
+}
