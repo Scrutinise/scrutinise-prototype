@@ -132,6 +132,107 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-28 10:25 UTC — LEX 25-L: THE RE-RUN DIALOGUE, THE RESOURCE LIBRARY, AND MOBILE
+
+**Brief:** `docs/BRIEF_25L.md` + two mid-sprint amendments. **Report:**
+`docs/LEX_25L_REPORT.md`. §1–§6 built with three stated exceptions; all three amendments done.
+
+⚠⚠ **QUALITY 1's CAUSE WAS IN THE PROMPT, AND IT IS WORSE THAN "THE MODEL ISN'T POPULATING
+`drivenBy`".** Two passes write causes. The DIAGNOSIS pass carries eight lines explaining
+`drivenBy` and builds the chain; the REVISION pass declares it in its type, **REQUIRES it in
+its JSON schema**, and its prompt has never mentioned the field — and `build.ts` then
+`deleteMany`s the diagnosis pass's causes and replaces them with the revision's. **The chain
+was built and then destroyed by a pass that did not know it existed.** Nothing errored,
+because `""` is a valid string. Three sprints called it a model failure. Fixed with one
+shared `DRIVEN_BY_INSTRUCTION` given to both passes, plus a line telling the revision pass
+its causes REPLACE the earlier ones. **Recorded as a class — CLAUDE.md §24, third instance.**
+
+⚠⚠ **THE NAV IS FIXED IN THE FILE THAT RENDERS**: `PublicNav.tsx` says **My ideas**, both
+navs. `check:lex-25j`'s assertion is repointed at it and now **proves its subject is
+reachable from a route first** — CLAUDE.md §23.1, with `scripts/reachability.ts` and the dead
+`Navbar.tsx` as its negative control. §23.2 added too: report checks RUN, not only passed.
+
+▶▶ **§1 — the re-run asks before it spends.** The button opens a dialogue; text, files and
+links all go in before go. ⚠ The critique reaches the drafting and smart passes **as an
+instruction** (`⚠ ACT ON THIS`), because 25-F found material supplied without one is
+material the pass ignores — and it explicitly does NOT demand agreement, because a user can
+be wrong and a pass told to obey would flatter them. Stored on the build that RECEIVED it
+(version N carries what N was asked to fix about N-1), shown back above the findings, and
+readable at `/api/admin/lex-signals`.
+
+▶▶ **§2 — a video link was being refused with "that page had no readable text".** True (it
+is an app shell), useless, and it sent the user hunting a fault in their own link. Now
+refused BEFORE the fetch, naming the transcript. ⚠ **Nothing fetches a transcript** and the
+check greps the sprint's source to keep it that way. Eight kinds, each a different thing to
+do next; detection by host list + the server's own content-type, never a keyword. Every
+refusal logged with kind and target — **that table is the evidence for the decision §2
+defers**, and `/api/admin/lex-signals` breaks it down by kind and host **with every kind
+present including the zeroes**.
+
+▶▶ **§3c — THE SMART PASS'S OUTPUT WAS FILED UNDER "THE STRONGEST CASE AGAINST", WHICH IS
+WHY CHARLIE COULD NOT FIND IT.** `recordPrognosis` wrote `headingKey: 'AGAINST'` for want of
+anywhere better, so "how hard will this be to pass", the barriers, the likelihood and what
+could go wrong sat among the objections. **A prognosis is not an objection.** Two new
+headings — **How hard will this be to achieve?** and **Key sources**. ⚠ Existing rows keep
+`AGAINST` (the stored tag wins, by design); a scoped, reversible backfill is **prepared and
+UNRUN**: `prisma/lex_25l_backfill_prognosis.sql`, one command, Charlie's.
+
+▶ **§3a/§3b/§3d — the right panel is a library**: opens on a contents list with a worded
+home control; the contents are computed from the pass configs so a new pass appears without a
+code change; every empty item says WHICH KIND of empty, never a `0`. Sources tag **priority ·
+listed · set aside**, and the tag is **not decorative** — `PRIORITY` is a third enum value,
+the snapshot carries `prioritySources` and the proposal document prints them. ⚠ A frozen
+pre-25-L snapshot has no such key and would have thrown on re-render; three cases, not two.
+
+▶ **§4 — all three panels hide, dividers drag, layout persists per USER** (a column, not
+`localStorage`, because §4 says per user and a browser store is per device), minimums, reset,
+and the three roles stated on screen. ⚠⚠ **`normaliseLayout` had a real bug the check found
+and reading did not**: clamp-then-renormalise pushed clamped columns back UNDER the floor —
+`{0.01, 0.01, 0.98}` returned 0.117 against a 0.15 minimum.
+
+▶▶ **§5 (as amended) — THE GRAPH IS JUDGED BLIND FIRST.** The user sees the member, the
+question and the sourced record; judges (supports · opposes · unclear · **not enough here** —
+kept apart, because the second says OUR coverage is the problem); and only then is ours
+revealed. ⚠⚠ **Our assessment is ABSENT FROM THE GET, not hidden in it** — a client-side
+reveal is one `view-source` away from being no experiment at all, and every agreement rate
+measured afterwards would be worthless. Asserted, with a control that plants the leak. Both
+sides stored, **order enforced by two database CHECK constraints**, our claim copied in at
+reveal time because the graph decays on every read. **Corroboration, not verification**: a
+disagreement flags for review and the UI says so; the rate is returned **with its caveat
+attached** — a partisan sample agrees with itself — over a denominator of ANSWERED
+judgements. `POSITIONS`, the one heading that never had a producer, now carries it.
+
+▶ **§6 — the mobile tab bar moved to the BOTTOM** (it was at the top, the one part of a
+phone a thumb cannot reach) with a **count on the draft tab**, reported by the worklist
+itself so the badge and the list cannot disagree — a number and a word, never a coloured dot.
+
+▶ **CHARLIE'S DECISION RECORDED: a failed build does not spend the allowance.** Spent =
+reached DONE and drafted the kernel; FAILED/CANCELLED/died-before-output: not spent;
+ambiguous: not spent. Nothing charges yet — §6 of 25-K is still designed-and-unbuilt.
+
+⚠ **NOT BUILT, AND WHY.** (1) **Citation sheets on mobile**: `ChatPanel.tsx` renders NO
+citations — the idea-chat's prompt says "never put JSON or field names in chatText" — so
+there is nothing to tap; building it means first making that chat cite. (2) **"Case studies"
+as its own item**: no producer distinct from `TRIED_BEFORE`/`ELSEWHERE`, and an empty heading
+is a promise we have no plan to keep. (3) **A real-device mobile test**: impossible from a CC
+session.
+
+⚠ **One contradiction between briefs, for Charlie**: §6 names the middle tab "Proposal";
+25-K §1 retired that word as navigation after he got lost in his own product. The older rule
+about navigation won — it is called **"The draft"**.
+
+✅ `check:lex-25l` **19 passed, 0 failed, 0 without a negative control**. ⚠ **Three of its
+assertions failed on first run and TWO WERE REAL DEFECTS in this sprint's own code.** Every
+check in the suite reported, not a selection (§23.2): 25-c 32, 25-d 77, 25-e 28, 25-f 62,
+25-g 27, 25-h 20, 25-i 14, 25-j 12, 25-k 18, 25-l 19, build-25a 40, build-25b 54, 20bd 47,
+statutory 17, deepening/panel-claims/documents/never-claim pass. All four render harnesses
+EXECUTED: stages-ui 23, lex-25e-ui 16, lex-25g-ui 14, my-ideas-ui 15. ⚠ **Seven guards from
+five earlier sprints fired and were repointed, not relaxed.** `tsc`, `next build`,
+clean-build `--fast`, `prisma validate` clean. `prisma/lex_25l.sql` applied to Neon
+(host checked with `whichdb.ts` first) — additive only.
+
+⚠ **NOT verified on the running site at the time of writing.**
+
 ## 2026-08-28 09:03 UTC — LEX 25-K: THREE STAGES, NAMED FOR WHAT THE USER DOES
 
 **Brief:** `docs/BRIEF_25K.md`. **Report:** `docs/LEX_25K_REPORT.md`. **§1–§5 built; §6
