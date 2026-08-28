@@ -25,6 +25,13 @@
 // Usage: npx tsx scripts/verify-lex-25e-ui.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ⚠ 25-K — THIS IMPORT WAS MISSING AND THE HARNESS HAD NOT RUN SINCE IT WAS WRITTEN.
+// `tsx` compiles these scripts with the CLASSIC JSX runtime, so every `<Card />` becomes
+// `React.createElement` and the file died on `ReferenceError: React is not defined` before
+// its first assertion. The two harnesses beside it (`verify-lex-25g-ui`,
+// `verify-my-ideas-ui`) both import React and both run; this one did not and does not
+// appear in any sprint's reported results. A check that cannot execute is not a check.
+import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,

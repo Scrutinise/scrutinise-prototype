@@ -38,14 +38,14 @@ const FILES = [
   'lib/lex/build-carry.ts',
   'lib/lex/build-config.ts',
   'lib/lex/build-client.ts',
-  'lib/lex/surfaces.ts',
+  'lib/lex/stage-context.ts',
   'lib/lex/new-idea-door.ts',
   'app/api/ideas/[id]/build/route.ts',
   'app/ideas/build/page.tsx',
   'app/ideas/build/BuildIdeaClient.tsx',
   'app/ideas/create/page.tsx',
   'app/ideas/create/CreateIdeaClient.tsx',
-  'components/lex/SurfaceSwitch.tsx',
+  'components/lex/StageBar.tsx',
   'components/lex/BuildProgress.tsx',
   'components/lex/HowItWorksModal.tsx',
 ]
@@ -231,51 +231,70 @@ const CHECKS: Check[] = [
     },
   },
 
-  // ═══ §2 — NAVIGATION ═════════════════════════════════════════════════════
+  // ═══ §2 — NAVIGATION ═════════════════════════════════════════
+  //
+  // ⚠⚠ 25-K §1 SUPERSEDES THE WORDS AND KEEPS EVERY PROPERTY. 25-G built a switch
+  // between two screens called "the build" and "the proposal"; those are how they were
+  // MADE, not what a user does on them, and Charlie — who designed it — got lost in his
+  // own product. `SurfaceSwitch` and `lib/lex/surfaces.ts` are gone; `StageBar` and
+  // `lib/lex/stages.ts` replace them.
+  //
+  // ⚠ THE ASSERTIONS ARE REPOINTED, NOT RELAXED. What 25-G's checks actually guard is
+  // three properties — both surfaces render the indicator, it names where you are, and
+  // the offer of the other place is COUNTED rather than labelled. All three still hold and
+  // are still asserted here, against the file that now carries them. Deleting the checks
+  // with the component would have retired the guard along with the vocabulary.
   {
-    name: '§2 BOTH surfaces render the switch, so the route exists in both directions',
+    name: '§2 (as §25-K §1) BOTH surfaces render the stage indicator, so the route exists in every direction',
     run: (src) => {
-      if (!/<SurfaceSwitch context=\{surface\} \/>/.test(src['app/ideas/build/BuildIdeaClient.tsx'])) {
-        return 'the build surface has no route to the proposal'
+      if (!/<StageBar context=\{stageCtx\} \/>/.test(src['app/ideas/build/BuildIdeaClient.tsx'])) {
+        return 'stage 1 has no stage indicator'
       }
-      if (!/<SurfaceSwitch context=\{surface\} \/>/.test(src['app/ideas/create/CreateIdeaClient.tsx'])) {
-        return 'the proposal surface has no route to the build'
+      if (!/<StageBar context=\{stageCtx\} \/>/.test(src['app/ideas/create/CreateIdeaClient.tsx'])) {
+        return 'stages 2 and 3 have no stage indicator'
       }
       return null
     },
     break: (src) => ({
       ...src,
       'app/ideas/create/CreateIdeaClient.tsx': src['app/ideas/create/CreateIdeaClient.tsx']
-        .split('<SurfaceSwitch context={surface} />').join(''),
+        .split('<StageBar context={stageCtx} />').join(''),
     }),
   },
   {
-    name: '§2 each screen NAMES ITSELF as well as offering the other',
+    name: '§2 (as §25-K §1) each screen NAMES ITSELF as well as offering the others',
     run: (src) => {
-      const s = src['components/lex/SurfaceSwitch.tsx']
-      if (!/You’re looking at/.test(s)) return 'the screen does not say which one it is'
-      if (!/context\.there\.detail/.test(s)) return 'the other surface is offered without saying what is on it'
+      const s = src['components/lex/StageBar.tsx']
+      // The words, not a highlight — docs/CLAUDE.md §21, Charlie is colour blind and a
+      // "which one am I on" signalled by hue answers the question for everyone except him.
+      if (!/You are here/.test(s)) return 'the current stage is not named in words'
+      if (!/Stage \{here\.n\} of 3/.test(s)) return 'the screen does not say which stage of how many'
+      if (!/\{here\.purpose\}/.test(s)) return 'the stage is named without saying what it is for'
+      if (!/s\.detail/.test(s)) return 'the other stages are offered without saying what is on them'
       return null
     },
     break: (src) => ({
       ...src,
-      'components/lex/SurfaceSwitch.tsx': src['components/lex/SurfaceSwitch.tsx']
-        .split('You’re looking at').join('x'),
+      'components/lex/StageBar.tsx': src['components/lex/StageBar.tsx']
+        .split('You are here').join('x'),
     }),
   },
   {
-    name: '§2 the detail is COUNTED, not a label',
+    name: '§2 (as §25-K §1) the detail is COUNTED, not a label',
     run: (src) => {
-      const s = src['lib/lex/surfaces.ts']
-      if (!/plural\(fields, 'field'\)/.test(s)) return 'the proposal link does not count its fields'
-      if (!/plural\(waiting, 'decision'\)/.test(s)) return 'it does not count the decisions waiting'
+      // ⚠ THE COUNTS MOVED to `stage-context.ts` when the vocabulary had to be made
+      // client-safe (a prisma import beside it put `pg` in the browser bundle). Same
+      // property, same expressions, new file.
+      const s = src['lib/lex/stage-context.ts']
+      if (!/plural\(strategy\.fields, 'field'\)/.test(s)) return 'the strategy stage does not count its fields'
+      if (!/plural\(strategy\.waiting, 'decision'\)/.test(s)) return 'it does not count the decisions waiting'
       // ⚠ Forks AND issues. Counting only forks told the second build's user there were 4
       // when there were 21.
       return /forks\.length \+ issues/.test(s) ? null : 'open issues are not counted as decisions waiting'
     },
     break: (src) => ({
       ...src,
-      'lib/lex/surfaces.ts': src['lib/lex/surfaces.ts'].replace('forks.length + issues', 'forks.length'),
+      'lib/lex/stage-context.ts': src['lib/lex/stage-context.ts'].replace('forks.length + issues', 'forks.length'),
     }),
   },
   {

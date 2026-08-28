@@ -247,18 +247,34 @@ const CHECKS: Check[] = [
 
   // ═══ §4 — THE DOCUMENT CHAIN ═════════════════════════════════════════════
   {
-    name: '§4 the build door reaches the material pipeline it never reached',
+    // ⚠⚠ 25-K §2 WIDENED THIS AND THE GUARD FIRED FIRST, WHICH IS WHAT IT IS FOR.
+    //
+    // 25-H asserted the upload was on the `reading` STEP. That placement is exactly what
+    // Charlie could not find: he looked for it in the composer at question one, the way
+    // every chat interface offers it, and there was nothing there — it appeared on one of
+    // four questions and vanished again once he was past it.
+    //
+    // So the assertion moves from a PLACEMENT to the stronger PROPERTY: the control is on
+    // the composer for EVERY question, and still available after the elicitation. A check
+    // that pinned the old placement would now be forbidding the fix.
+    name: '§4 (widened by §25-K §2) the material pipeline is on the composer at EVERY question, and after it',
     run: (src) => {
       const c = src['app/ideas/build/BuildIdeaClient.tsx']
-      if (!/<YourMaterial ideaId=\{ideaId\}/.test(c)) return 'the build door still has no way to attach a document'
-      // On the reading step AND afterwards — §4: "on page one and available later".
-      if (!/step\?\.key === 'reading' && ideaId/.test(c)) return 'it is not on the step that asks for documents'
+      if (!/<YourMaterial\s+ideaId=\{ideaId\}/.test(c)) return 'the build door still has no way to attach a document'
+      // The "+" is handed to the question card unconditionally — gated on there being an
+      // idea to attach to, never on WHICH question is showing.
+      if (!/onToggleAttach=\{ideaId \? \(\) => setAttachOpen/.test(c)) {
+        return 'the attach control is not offered from the composer'
+      }
+      if (/step\?\.key === 'reading' && ideaId/.test(c)) {
+        return 'the upload is gated on one step again — that is the placement nobody could find'
+      }
       return /elicit\.phase === 'CONFIRMED' && ideaId/.test(c) ? null : 'it is not available after the elicitation'
     },
     break: (src) => ({
       ...src,
       'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
-        .split("step?.key === 'reading' && ideaId").join('false'),
+        .split('onToggleAttach={ideaId ? () => setAttachOpen').join('onToggleAttach={undefined ?? (() => setAttachOpen'),
     }),
   },
   {
