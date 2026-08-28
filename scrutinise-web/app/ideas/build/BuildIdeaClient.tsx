@@ -27,11 +27,11 @@ import {
 // TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
 // keeps importing its prop type from the component it renders.
 import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
-import SurfaceSwitch from '@/components/lex/SurfaceSwitch'
+import StageBar from '@/components/lex/StageBar'
 import YourMaterial from '@/components/lex/YourMaterial'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
-import type { SurfaceContext } from '@/lib/lex/surfaces'
+import type { StageContext } from '@/lib/lex/stage-context'
 import { WAIT_MESSAGE } from '@/lib/lex/search-wait'
 
 // ══ 25-G §3 — WHAT THE NEW DOOR LOST, RESTORED ═══════════════════════════════
@@ -206,15 +206,15 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
 
 
 export default function BuildIdeaClient(
-  { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0, surface = null,
-    isFirstIdea = false, displayName = null, blankState = null }: {
+  { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0, stageCtx = null,
+    isFirstIdea = false, displayName = null, blankState = null, materialCount = 0 }: {
     initialIdeaId?: string
     resumed?: boolean
     /** 25-J §2 — the user's own ideas, listed on the hub. See `MyIdea`. */
     recent?: MyIdea[]
     hiddenEmpty?: number
-    /** 25-G §2 — what the proposal surface holds, so this screen can offer it. */
-    surface?: SurfaceContext | null
+    /** 25-K §1 — the three stages, which one this is, and what is on the other two. */
+    stageCtx?: StageContext | null
     /** A3 — this user's very first idea: the tour opens unprompted, as it does at the old door. */
     isFirstIdea?: boolean
     /** A3 — how they want to be addressed. Falls back to nothing rather than to "there". */
@@ -224,6 +224,15 @@ export default function BuildIdeaClient(
      * Present only when there is nothing to resume; see `blankElicitationState`.
      */
     blankState?: ElicitationState | null
+    /**
+     * 25-K §2 — how many documents and links are already on this idea, so the composer's
+     * "+" can carry a count from the first paint.
+     *
+     * ⚠ SEEDED FROM THE SERVER, THEN OWNED BY THE PANEL. `YourMaterial` only mounts when
+     * the "+" is open, so a count read only from it would be 0 until the user opened a
+     * panel to find out whether it was worth opening.
+     */
+    materialCount?: number
   },
 ) {
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
@@ -286,6 +295,18 @@ export default function BuildIdeaClient(
    * to the server with it.
    */
   const [editingStep, setEditingStep] = useState<string | null>(null)
+
+  /**
+   * ⚠⚠ 25-K §2 — THE COMPOSER'S "+", AND ITS COUNT.
+   *
+   * The upload existed and was unfindable: a panel that appeared on ONE of the four
+   * questions, plus a bare file input further down the page. Charlie looked for it in the
+   * obvious place — beside the box he was typing in — and concluded it was not built.
+   * It now opens from the composer, on every question, and stays available after the
+   * elicitation is confirmed.
+   */
+  const [attachOpen, setAttachOpen] = useState(false)
+  const [attached, setAttached] = useState(materialCount)
 
   /**
    * ⚠ WARM THE SEARCH SERVICES ON INTENT — the ideas hub is one of exactly two callers.
@@ -881,10 +902,13 @@ export default function BuildIdeaClient(
       )}
 
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
-        {/* 25-G §2 — the persistent route to the proposal, on every screen of this
-            surface: it sits above the phase switch so it is present during the
-            elicitation, during the build and after it. */}
-        <SurfaceSwitch context={surface} />
+        {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════
+            Above the phase switch, so it is present during the elicitation, during the
+            build and after it. It replaces 25-G's build/proposal switch — those were
+            implementation words; see `lib/lex/stages.ts`. */}
+        <div className="mb-4">
+          <StageBar context={stageCtx} />
+        </div>
 
         {/* ⚠⚠ A WAKE IS NOT A SLOW SEARCH AND NOT A FAILURE, AND THIS SAYS WHICH.
             The two search services sleep on inactivity to cut the standing cost; the first
@@ -1099,12 +1123,11 @@ export default function BuildIdeaClient(
                 `YourMaterial` is the 25-D §4 pipeline that stores, extracts, produces
                 findings and reports a failed read. It existed the whole time and was
                 rendered only by the OLD door's third panel. */}
-            {elicit.phase === 'QUESTION' && step?.key === 'reading' && ideaId && (
-              <div className="mb-4">
-                <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} />
-              </div>
-            )}
-
+            {/* ⚠⚠ 25-K §2 — IT IS NO LONGER A BLOCK ABOVE THE CARD ON ONE QUESTION.
+                25-H put `YourMaterial` here, on the `reading` step only, which is why
+                Charlie could not find it from question one and why it disappeared again
+                once he had moved past it. It is now the composer's "+", on every question
+                and after the elicitation — same component, same pipeline, findable place. */}
             {elicit.phase === 'QUESTION' && step && (
               <QuestionCard
                 step={step}
@@ -1117,6 +1140,20 @@ export default function BuildIdeaClient(
                 busy={busy}
                 onSend={() => void answer()}
                 onSkip={() => void answer({ skip: true })}
+                attachCount={attached}
+                attachOpen={attachOpen}
+                // ⚠ THE "+" IS OFFERED ONLY ONCE THERE IS AN IDEA TO ATTACH TO. Before the
+                // first answer there is no row (25-I §1: nothing is created by arriving), so
+                // a "+" here would have to mint one to accept a file — which is the defect
+                // 25-I removed, wearing a paperclip.
+                onToggleAttach={ideaId ? () => setAttachOpen((v) => !v) : undefined}
+                attachPanel={ideaId && (
+                  <YourMaterial
+                    ideaId={ideaId}
+                    onChanged={() => void refresh()}
+                    onCount={setAttached}
+                  />
+                )}
               />
             )}
 
@@ -1173,8 +1210,11 @@ export default function BuildIdeaClient(
                 document added here is read on the spot and its findings join the next
                 build. */}
             {elicit.phase === 'CONFIRMED' && ideaId && (
-              <div className="mb-4">
-                <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} />
+              <div className="mb-4 rounded-xl border border-zinc-200 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                  Add a file or link
+                </p>
+                <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} />
               </div>
             )}
 
@@ -1267,20 +1307,41 @@ export default function BuildIdeaClient(
               </div>
             )}
 
-            {/* ══ 25-G §1a/§1b — RUNNING IT AGAIN, AT TWO HONEST PRICES ═══════════
-                A re-run is the normal case after a correction, not an error path — and at
-                33.4p a time it was the case nobody could afford. Two thirds of a build's
-                input tokens are the orientation and the research, and neither depends on
-                the draft, so unless the elicitation has changed they should not run again.
+            {/* ══ 25-K §2 — THE RE-RUN, PRESENT, NOT CONDITIONAL ════════════════
+                ⚠⚠ THIS IS THE ITEM THE BRIEF SAYS MOST NEEDS FIXING, AND THE OLD VERSION WAS
+                INVISIBLE FOUR TIMES OVER. It rendered only when `(finished || stopped)` AND
+                `build.canStart`, at the very bottom of the page, under the findings — so a
+                user with a running build, a user who had scrolled, and a user whose
+                `canStart` was false for any reason all saw NOTHING. Charlie asked Lex to
+                re-run in conversation and was told *"I can't rerun the whole project from
+                here, as the platform manages those stages"*: true, unhelpful, a dead end.
 
-                ⚠ BOTH PRICES ARE ON SCREEN, and the expensive one is the one you have to
-                ask for. A cheap default that quietly reused a stale search would be worse
+                So the block is now on the page whenever a build exists, in every state,
+                and it SAYS which state it is in. A running build shows a disabled control
+                with the reason attached (25-E §4b's rule), never an absent one.
+
+                ⚠ AND IT SAYS WHAT IT WILL DO AND WHAT IT COSTS, both prices, with the
+                expensive one the one you have to ask for. Two thirds of a build's input
+                tokens are the orientation and the research and neither depends on the
+                draft — measured at 48% of the input tokens on the two passes reuse skips
+                (25-J). A cheap default that quietly reused a stale search would be worse
                 than the cost it saves. */}
-            {(finished || stopped) && ideaId && build?.canStart && (
-              <div className="mt-4 rounded-xl border border-zinc-200 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Run it again</p>
+            {latest && ideaId && (
+              <div className="mt-4 rounded-xl border-2 border-zinc-300 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Re-run</p>
 
-                {build.reuse ? (
+                {running ? (
+                  <p className="text-sm text-zinc-700 mt-1.5">
+                    It is running now — you can re-run it again once this one finishes. Anything you
+                    add above will be waiting for it.
+                  </p>
+                ) : !build?.canStart ? (
+                  // ⚠ THE REASON, NOT A MISSING BUTTON. A control that is simply absent
+                  // reads as broken; one that says why it does not apply does not.
+                  <p className="text-sm text-zinc-700 mt-1.5">
+                    {build?.blockedReason ?? 'A re-run is not available on this idea just now.'}
+                  </p>
+                ) : build.reuse ? (
                   <>
                     <p className="text-sm text-zinc-700 mt-1.5">
                       Re-running from the research already gathered — {build.reuse.findings} finding
@@ -1304,16 +1365,15 @@ export default function BuildIdeaClient(
                         Search again from scratch
                       </button>
                     </div>
-                    <p className="text-[11px] text-zinc-400 mt-2">
+                    <p className="text-[11px] text-zinc-500 mt-2">
                       Redrafting skips the two search passes and costs roughly a third of a full build.
                       Searching again reads the corpus from nothing — use it when what you have told me
                       has really changed.
+                      {build.estimate?.line ? ` A full run: ${build.estimate.line}` : ''}
                     </p>
                   </>
                 ) : (
                   <>
-                    {/* ⚠ THE REASON, NOT A MISSING BUTTON. A cheap option that is simply
-                        absent reads as broken; one that says why it does not apply does not. */}
                     <p className="text-sm text-zinc-700 mt-1.5">
                       {build.reuseBlockedReason ?? 'This will search the corpus again from scratch.'}
                     </p>
@@ -1324,6 +1384,9 @@ export default function BuildIdeaClient(
                     >
                       Run it again
                     </button>
+                    {build.estimate?.line && (
+                      <p className="text-[11px] text-zinc-500 mt-2">{build.estimate.line}</p>
+                    )}
                   </>
                 )}
               </div>

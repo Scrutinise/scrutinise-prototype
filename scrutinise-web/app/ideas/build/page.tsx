@@ -16,15 +16,17 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import BuildIdeaClient from './BuildIdeaClient'
 import type { MyIdea } from '@/components/lex/MyIdeasList'
-import { surfaceContext } from '@/lib/lex/surfaces'
+import { stageContext } from '@/lib/lex/stage-context'
 import { blankElicitationState } from '@/lib/lex/elicitation'
 
 interface Props {
   /**
-   * `fresh=1` — 25-E §2: the explicit opt-out from resuming. See below.
-   * `build=1`  — 25-G §2: "I meant to come to the BUILD screen." See `landOnProposal`.
+   * `fresh=1`      — 25-E §2: the explicit opt-out from resuming. See below.
+   * `stage=idea`   — 25-K §1: "I pressed 1 · The Idea and I meant it." See the redirect below.
+   * `build=1`      — the older spelling of `stage=idea`, kept so links already in the wild
+   *                  (and the client's own `replaceState`) keep working.
    */
-  searchParams: Promise<{ ideaId?: string; fresh?: string; build?: string }>
+  searchParams: Promise<{ ideaId?: string; fresh?: string; build?: string; stage?: string }>
 }
 
 export default async function BuildIdeaPage({ searchParams }: Props) {
@@ -58,7 +60,14 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   //
   // ⚠ ONLY A FINISHED BUILD REDIRECTS. A build still QUEUED or RUNNING has nothing on the
   // proposal yet and everything on this screen.
-  if (params.ideaId && dbUser && params.build !== '1') {
+  //
+  // ⚠⚠ 25-K §1 — AND THE ESCAPE IS NOW LOAD-BEARING FOR A SECOND REASON. §1 says movement
+  // between stages is free in both directions and nothing is locked. A stage indicator
+  // whose "1 · The Idea" tile bounced the user straight back to Stage 2 would be a control
+  // that visibly does nothing — the exact class of defect this sprint exists to remove. So
+  // `stage=idea` (what `stageHref` writes) is the same escape as `build=1`, spelled in the
+  // vocabulary the user now reads on the screen.
+  if (params.ideaId && dbUser && params.build !== '1' && params.stage !== 'idea') {
     const built = await prisma.ideaBuild.findFirst({
       where: {
         ideaId: params.ideaId,
@@ -210,8 +219,19 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
     }
   }
 
-  // 25-G §2 — what the OTHER surface holds, so this screen can offer it specifically.
-  const surface = initialIdeaId ? await surfaceContext(initialIdeaId, 'build') : null
+  // 25-K §1 — the three stages, which one this is, and what is on the other two.
+  //
+  // ⚠ COMPUTED EVEN WITH NO IDEA YET. The old switch returned null when there was nothing
+  // on the other surface, so a user at the very start saw no sign that Stage 2 and Stage 3
+  // existed at all — which is half of "I don't know where I am". An empty stage says it is
+  // empty; it does not disappear.
+  const stageCtx = await stageContext(initialIdeaId ?? null, 'idea')
+
+  // 25-K §2 — how many documents and links are already attached, so the composer's "+"
+  // carries a count on the first paint rather than only after the panel is opened.
+  const materialCount = initialIdeaId
+    ? await prisma.ideaUserMaterial.count({ where: { ideaId: initialIdeaId } })
+    : 0
 
   // ══ 25-I §1 — THE FIRST QUESTION, DRAWN WITHOUT CREATING ANYTHING ══════════
   //
@@ -244,7 +264,8 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
       resumed={resumed}
       recent={recent}
       hiddenEmpty={hiddenEmpty}
-      surface={surface}
+      stageCtx={stageCtx}
+      materialCount={materialCount}
       isFirstIdea={ideaCount === 0}
       displayName={displayName}
       blankState={blankState}

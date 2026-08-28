@@ -60,6 +60,23 @@ export interface QuestionCardProps {
   busy: boolean
   onSend: () => void
   onSkip: () => void
+  /**
+   * ⚠⚠ 25-K §2 — FILE AND LINK UPLOAD LIVES IN THE COMPOSER, AS A "+".
+   *
+   * Charlie went looking for it where every chat interface puts it — beside the box he was
+   * typing in — and it was not there. It was a separate panel that appeared on ONE of the
+   * four questions, and a "Choose File" control further down the page. A control the user
+   * cannot find is a control that does not exist.
+   *
+   * The node is passed in rather than imported so these cards stay pure and renderable:
+   * `YourMaterial` fetches, and a card that fetches cannot be rendered in isolation, which
+   * is the whole reason this file exists.
+   */
+  attachPanel?: React.ReactNode
+  /** How many documents and links are already attached. A count, so "+" is not a mystery. */
+  attachCount?: number
+  attachOpen?: boolean
+  onToggleAttach?: () => void
 }
 
 export function QuestionCard(p: QuestionCardProps) {
@@ -134,16 +151,48 @@ export function QuestionCard(p: QuestionCardProps) {
         />
       )}
 
-      {/* Exchange 4 says plainly that Lex cannot read it yet. Never-claim, at the point of
-          asking rather than in a footnote afterwards. */}
+      {/* ⚠⚠ 25-K §2 — THIS SAID THE OPPOSITE OF THE TRUTH, AND HAD DONE SINCE 25-H.
+          It read: *"I can't read documents yet — nothing I draft will come from it."* That
+          was honest when it was written and became a lie the day 25-H wired `YourMaterial`
+          into this screen and 25-I got the pipeline running: documents ARE read, extracted
+          and filed as findings under the questions they answer. A never-claim rule cuts both
+          ways — a stale disclaimer talks a user out of using a feature that works. */}
       {step.key === 'reading' && (
         <p className="mt-2 text-xs text-zinc-500">
-          I’ll keep it with the idea, but I can’t read documents yet — nothing I draft will come
-          from it. That’s a later sprint, and I’d rather say so than pretend.
+          Add it with the <span className="font-semibold">+</span> below and I’ll read it now —
+          what I find is filed under the questions it answers. We keep the text, never the file.
         </p>
       )}
 
       <div className="flex items-center gap-2 mt-3">
+        {/* ⚠ 25-K §2 — THE "+" IS FIRST IN THE ROW, the way every chat composer puts it,
+            because "where do I attach a file" is answered by muscle memory or not at all.
+            It is on EVERY question, not only the one that asks about reading: a user who
+            has the document in front of them at question one should not have to remember
+            it until question four.
+
+            ⚠ IT CARRIES A COUNT AND A WORD, not a bare glyph. Charlie is colour blind
+            (docs/CLAUDE.md §21): "open" versus "closed" cannot be a hue, so the label says
+            which, and the count says whether anything is in there. */}
+        {p.onToggleAttach && (
+          <button
+            type="button"
+            onClick={p.onToggleAttach}
+            aria-expanded={!!p.attachOpen}
+            title="Add a document or a link for me to read"
+            className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
+              p.attachOpen
+                ? 'bg-zinc-900 border-zinc-900 text-white'
+                : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+            }`}
+          >
+            <span aria-hidden className="text-base leading-none">{p.attachOpen ? '−' : '+'}</span>
+            <span>
+              {p.attachOpen ? 'Close' : 'Add a file or link'}
+              {p.attachCount ? ` (${p.attachCount})` : ''}
+            </span>
+          </button>
+        )}
         <button
           onClick={p.onSend}
           disabled={p.busy || !!p.blockedSend}
@@ -165,6 +214,12 @@ export function QuestionCard(p: QuestionCardProps) {
             the user tries to press it. */}
         {p.blockedSend && <span className="text-xs text-zinc-500">{p.blockedSend}</span>}
       </div>
+
+      {/* The panel opens IN the composer, under the row that opened it — not somewhere
+          else on the page, which is the arrangement that lost it in the first place. */}
+      {p.attachOpen && p.attachPanel && (
+        <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">{p.attachPanel}</div>
+      )}
     </div>
   )
 }

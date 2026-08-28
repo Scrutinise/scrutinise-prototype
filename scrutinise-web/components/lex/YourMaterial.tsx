@@ -28,10 +28,19 @@ interface MaterialRow {
 }
 
 export default function YourMaterial({
-  ideaId, onChanged,
+  ideaId, onChanged, onCount,
 }: {
   ideaId: string
   onChanged?: () => void
+  /**
+   * 25-K §2 — how many things are attached, reported upward so the composer's "+" can
+   * carry a count.
+   *
+   * ⚠ CALLED ON EVERY LOAD AND EVERY MUTATION, from the ONE place that knows. A parent
+   * counting for itself would need a second fetch of the same endpoint, and the two
+   * numbers would disagree the moment one of them was stale.
+   */
+  onCount?: (n: number) => void
 }) {
   const [rows, setRows] = useState<MaterialRow[]>([])
   const [remaining, setRemaining] = useState<number>(0)
@@ -42,6 +51,19 @@ export default function YourMaterial({
   const [link, setLink] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
 
+  /**
+   * ⚠⚠ THE CALLBACK LIVES IN A REF, AND THAT IS NOT TIDINESS.
+   *
+   * `load` is a `useCallback` whose result drives a `useEffect`. Put `onCount` in its
+   * dependency array and any caller passing an inline arrow — the normal way to write one —
+   * gives a new identity on every render, so `load` changes, the effect re-runs, the fetch
+   * sets state, and the component re-renders: an infinite request loop against
+   * `/api/ideas/[id]/material`, in production, triggered by a caller that looks correct.
+   * The ref keeps the latest callback without making it a dependency of anything.
+   */
+  const countRef = useRef(onCount)
+  countRef.current = onCount
+
   const load = useCallback(async () => {
     const res = await fetch(`/api/ideas/${ideaId}/material`)
     if (!res.ok) return
@@ -49,6 +71,7 @@ export default function YourMaterial({
     setRows(body.material ?? [])
     setRemaining(body.remaining ?? 0)
     setMaxBytes(body.maxBytes ?? 0)
+    countRef.current?.((body.material ?? []).length)
   }, [ideaId])
 
   useEffect(() => { void load() }, [load])
@@ -61,6 +84,7 @@ export default function YourMaterial({
     }
     setRows(body.material ?? [])
     setRemaining(body.remaining ?? 0)
+    countRef.current?.((body.material ?? []).length)
     // Truncation and "nothing useful" are both reported, because both are things the user
     // would otherwise assume did not happen.
     setNote([
@@ -105,6 +129,7 @@ export default function YourMaterial({
         const body = await res.json()
         setRows(body.material ?? [])
         setRemaining(body.remaining ?? 0)
+        countRef.current?.((body.material ?? []).length)
         onChanged?.()
       }
     } finally { setBusy(false) }
