@@ -100,6 +100,28 @@ const CHECKS: Check[] = [
     },
   },
   {
+    name: '§4 the allowance does not retroactively charge for builds made before it existed',
+    // ⚠⚠ MEASURED, NOT IMAGINED. The first version of `allowance.ts` counted every DONE build
+    // ever, and the moment it shipped the only account with any history read:
+    //     granted 4 · spent 9 · remaining 0 · "You have used your build allowance."
+    // Three builds made over the previous fortnight, when no allowance existed and nobody
+    // could have known one was coming, locked the account out of the product. A pilot
+    // allowance exists to bound what a thousand NEW users can spend, not to bill the one
+    // person who has been testing it.
+    run: (src) => {
+      const a = strip(src['lib/lex/allowance.ts'])
+      if (!/ALLOWANCE_EPOCH/.test(a)) return 'there is no cut-off — every historic build is charged'
+      return /createdAt: \{ gte: ALLOWANCE_EPOCH \}/.test(a)
+        ? null
+        : 'the epoch is declared but the query does not use it'
+    },
+    break: (src) => ({
+      ...src,
+      'lib/lex/allowance.ts': src['lib/lex/allowance.ts']
+        .replace('createdAt: { gte: ALLOWANCE_EPOCH },', ''),
+    }),
+  },
+  {
     name: '§4 the counter reads IdeaBuild, NOT LlmSpend',
     // ⚠⚠ §4 SAYS LlmSpend AND THE DATA SAYS IT CANNOT BE. Measured 28 Aug 2026: 2,702 rows,
     // 2 with a userId, and every build-stream row sampled had none — `SpendAttribution` is

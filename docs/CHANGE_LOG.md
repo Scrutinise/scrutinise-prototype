@@ -230,8 +230,13 @@ my-ideas-ui 15, **build-25a-ui 43 (first run ever)**, **outputs-ui 7 (new)**. `t
 is behind sign-in — a route probe Clerk answers 307 for subject and control alike proves
 nothing. Render harness and source assertion only; Charlie's browser is the gate.
 
-⚠ **CHARLIE: your own allowance is now 4 thirds and today's build spent 3.** You will see
-"enough left for a redraft, but not for a full search". `PATCH /api/admin/allowance` clears it.
+⚠⚠ **A CORRECTION, CAUGHT BY MEASURING A CLAIM I HAD DERIVED.** I first reported Charlie
+would see "4 thirds, 3 spent". Measured, the counter charged EVERY DONE build ever:
+**granted 4 · spent 9 · remaining 0 — fully blocked**, three builds from the previous
+fortnight locking the only account with any history out of the product on day one. Fixed with
+`ALLOWANCE_EPOCH` — only builds created since the allowance shipped are charged, applied on
+read with no data migration. Re-measured: **granted 4 · spent 0 · remaining 4.**
+`check:lex-25m` guards it (12 assertions now).
 
 ## 2026-08-28 10:25 UTC — LEX 25-L: THE RE-RUN DIALOGUE, THE RESOURCE LIBRARY, AND MOBILE
 

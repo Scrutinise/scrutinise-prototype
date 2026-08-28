@@ -248,10 +248,22 @@ assertion only:
   built from your own idea is the thing worth reading.
 - **The three-column desktop layout**, as every sprint since 25-K has said.
 
+⚠⚠ **A CORRECTION, MEASURED AFTER THE FIRST VERSION SHIPPED.** I wrote that Charlie's
+allowance would read "4 thirds, 3 spent, enough for a redraft". That was **derived from the
+default and today's build, not measured**, and measuring it found something worse: the counter
+charged **every DONE build ever**, so the real reading was **granted 4 · spent 9 · remaining 0
+— fully blocked.** Three builds made over the previous fortnight, when no allowance existed
+and nobody could have known one was coming, locked the only account with any history out of
+the product on the feature's first day. Fixed with `ALLOWANCE_EPOCH`: only builds created
+since the allowance shipped are charged. Re-measured: **granted 4 · spent 0 · remaining 4 —
+one full build available.** No data migration; the cut-off is applied on read.
+`check:lex-25m` now guards it, with a control that removes the cut-off.
+
 ## Two things for you
 
-1. **Your allowance is now 4 thirds and today's build spent 3.** Nothing else has any. If you
-   want to keep testing, `PATCH /api/admin/allowance` with `{ userId, thirds, note }`.
+1. **Your allowance reads 4 thirds with 0 spent — one full build available** (measured, not
+   derived; see the correction above). Every account gets the same default. For more,
+   `PATCH /api/admin/allowance` with `{ userId, thirds, note }`.
 2. **`LlmSpend` records almost no attribution.** The allowance does not need it, but the
    *cost* reporting does, and today `estCostPence` on a build row is the only per-build
    figure that works. Wiring `SpendAttribution` through the build passes is small and would

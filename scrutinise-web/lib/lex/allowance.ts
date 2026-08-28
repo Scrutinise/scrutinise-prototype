@@ -33,6 +33,29 @@
 
 import { prisma } from '@/lib/prisma'
 
+/**
+ * ══ WHEN THE ALLOWANCE CAME INTO EFFECT ═══════════════════════════════════════
+ *
+ * ⚠⚠ AN ALLOWANCE INTRODUCED TODAY MUST NOT RETROACTIVELY CHARGE FOR WORK DONE BEFORE IT
+ * EXISTED, and the first version of this file did exactly that. Measured immediately after
+ * shipping it, against the only account with any history:
+ *
+ *     granted 4 · spent 9 · remaining 0 · "You have used your build allowance."
+ *
+ * Three builds made over the previous fortnight, when there was no allowance and no way to
+ * know one was coming, instantly locked the account out of the product. That is the opposite
+ * of what a pilot allowance is for — it is meant to bound what a thousand new users can
+ * spend, not to bill the one person who has been testing it.
+ *
+ * ⚠ IT IS THE SAME PRINCIPLE AS "AMBIGUOUS IS NOT SPENT". A build made when no allowance
+ * existed was not made against one.
+ *
+ * ⚠ A NAMED CONSTANT, NOT A MAGIC DATE. This is the moment `buildAllowanceThirds` shipped
+ * (`prisma/lex_25m.sql`), and a reader has to be able to see why the number is what it is.
+ * ⚠ AND IT NEEDS NO DATA MIGRATION: nothing is rewritten, the cut-off is applied on read.
+ */
+export const ALLOWANCE_EPOCH = new Date('2026-08-28T11:45:00.000Z')
+
 /** A full build. §4: re-runs cost less because they reuse the research. */
 export const FULL_BUILD_THIRDS = 3
 /**
@@ -91,7 +114,15 @@ export async function readAllowance(userId: string): Promise<Allowance> {
     prisma.ideaBuild.findMany({
       // ⚠ AN ALLOW-LIST. Only DONE counts. Every other status — including one added next
       // year — falls to "not spent", which is Charlie's tie-break: ambiguous is not spent.
-      where: { status: 'DONE', idea: { creatorId: userId } },
+      //
+      // ⚠⚠ AND ONLY BUILDS MADE SINCE THE ALLOWANCE EXISTED. See `ALLOWANCE_EPOCH` — without
+      // this line the feature's first act is to lock out everyone who has already used the
+      // product, which is measured fact and not a hypothetical.
+      where: {
+        status: 'DONE',
+        createdAt: { gte: ALLOWANCE_EPOCH },
+        idea: { creatorId: userId },
+      },
       select: { mode: true },
     }),
   ])
