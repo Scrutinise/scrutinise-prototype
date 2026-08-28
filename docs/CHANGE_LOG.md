@@ -132,6 +132,110 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 4B — THE IDENTITY BRIDGE, AND THE INSTRUMENTS LAYER (2026-08-28 00:47 UTC)
+
+Full report: `docs/GRAPH_4B_REPORT.md`. Executes `docs/BRIEF_GRAPH_4B.md` §1–§6.
+Predictions logged 2026-08-27 23:56 UTC, before the extraction ran; scored in the report.
+
+### §1 — the bridge, and the join watched returning zero first
+
+`graph/identity.ts` is now the ONE resolver, with `legislation_identity` as its SQL surface so no
+join translates an id by hand. Three known pre-1963 Acts return **0 `cites` rows today** and
+**59 / 50 / 50 through the bridge** — exactly GRAPH 4A's figures under the other id form. The failing
+state is PINNED, not described: `check-4b-identity` asserts both.
+
+⚠ **One correction to 4A.** "The regnal form returns 0" is true of the `cites` edge type only.
+`legislation_edges` holds **63,520** rows under regnal forms from the TNA effects CSVs, so the same
+three Acts return 1,591/147/266 regnal and 109/227/50 calendar. **Both forms are in that table, from
+different code paths, and neither reaches the other.** Bridged: 1,700/374/316 — the exact sum,
+asserted, so a bridge that invented rows would fail rather than look like a bigger win.
+
+⚠⚠ **419 CALENDAR IDS NAME TWO DIFFERENT ACTS EACH, AND BOTH OLD COPIES PICKED ONE AT RANDOM.**
+41 Geo 3 and 42 Geo 3 are both 1801, and each session numbers its chapters from one, so
+`ukpga/1801/16` is two Acts. Both copies wrote the map in a single pass — **the last entry seen
+silently won.** A merge with no basis at all, reached by iteration order, inside the code that exists
+to prevent one. The bridge refuses them AND **stores the refusal as a row** (NULL canonical,
+`basis = 'ambiguous-refused'`), because a form merely absent from a table cannot be distinguished
+from one nobody has ever seen. A DB constraint enforces the shape both ways.
+
+⚠ **4A named two copies of the alias map; there were THREE** — `extract-citation-edges.ts`,
+`audit-25h-citations.ts` and `v37-citation-gaps.ts`. All removed. The guard greps every file the
+graph reads and was watched firing on all three before removal and on a planted fourth after.
+Residual: **783 regnal targets, 13 with no calendar twin, 77 refused as ambiguous**; 95 rows over 47
+targets join only through the bridge. **§6 re-answered: overlap 98.1% → 98.7%, 600 pairs move out of
+"missing".** Nothing retired.
+
+### §2 — Layer 2, and a second defect found by reading the output
+
+**The §2.2 gate PASSES on both sides** (271,860 schedule sections in the corpus; 35.6% of sampled
+bulk-CLML SIs carry a `<Schedule>`). ⚠⚠ **But matched on the SAME documents, retention is 41.3%** —
+118 of 201 schedule-bearing instruments reached the corpus without their schedule. A corpus ratio set
+against a zip ratio would have hidden this, and the first version of the audit did exactly that.
+
+**191,258 enabling rows over 70,576 instruments**, `detection = 'enabling'`, every row carrying the
+enacting words. 0.212 GB, **$0.07/month** at $0.35/GB-month (4A estimated 0.27 GB / $0.09), 63
+seconds. ⚠ The parser is IMPORTED by both writers, not restated; `extract-madeunder-edges.ts`'s
+`main()` is now guarded — importing it previously started a full extraction that writes to the DB.
+
+⚠⚠ **36.1% OF THE OLD PREAMBLE PARSER'S SECTION-LEVEL REFS WERE WRONG, AND `legislation_edges` STILL
+HOLDS THEM.** Two defects: a bracketed subsection read as a section (*"sections 191(2) and 195(3)"* →
+`section-191`, **`section-2`**, `section-195`), and a ref list attached to the wrong Act in a preamble
+naming several (FSMA's anchor given the European Communities Act's section 2). Measured over 2,000
+documents with both parsers fed IDENTICAL bytes: 3,094 → 2,059 refs, **975 subsection artefacts +
+142 re-attributions**. Act-level rows were never affected — only the section-level ones, which are
+the rows a repeal analysis reads. ⚠ My first attempt to measure this reported 0 artefacts and 1,117
+re-attributions, because it compared the two regexes' whole matched spans, which are structurally
+different and can never be equal.
+
+**Why separating the fact matters, in one row:** `ukpga/1972/68`, the **repealed** European
+Communities Act 1972 — **126 mentions, 6,017 instruments made under it.** `uksi/1981/238` — **0
+mentions, 3,459 made under it.** Flattening those produces a confident, wrong consequence list.
+
+**Hand-check against legislation.gov.uk, live: 18/18 on the enabling Act, 9/9 on the provision.**
+⚠ The first run scored 9/9 and FAILED because eleven of twenty timed out — the source rate limits,
+and the check's floor of ten caught it. ⚠ The same fragility was live in `check-25h-verify.ts`, which
+fired four requests back to back with no retry and died on an HTTP 500 that moved between documents;
+a check that dies on someone else's throughput reports a fault in OUR data. Fixed both.
+Scale control passes: 6,143 inbound vs 0.
+
+### §3 — the tax answers, report only
+
+⚠⚠ **127 OF THE 247 MISSING DOUBLE TAXATION AGREEMENTS ARE ALREADY ON THIS MACHINE.** 286 Orders,
+**39 hold a schedule (13.6%)** — 4A's 39-of-288 reproduces exactly. Layer 2 recovers **0** of them,
+and not by accident: an enabling row is a PREAMBLE fact and the missing thing is a SCHEDULE (counted
+anyway rather than argued from construction). But **127 carry a ≥4,000-character schedule in the bulk
+CLML the corpus dropped** — no fetch needed, an ingest pass. The other 120 need the source.
+▶ **The reverse direction IS answerable** — both columns indexed, read from `pg_indexes`; *"which
+instruments are made under TIOPA 2010"* returns 110. ▶ **MLI positions NOT held**, and Layer 2
+structurally cannot change that: the MLI modifies agreements without amending the Orders.
+
+### §4 and §5
+
+The coverage block carries the bridge residual and schedule coverage, **live**, and all three
+additions reach the RENDERED WORDS (asserted). ⚠ **4A's probe was NOT edited** — it was written to
+flip on a `detection` value outside the two textual detectors, and it flipped on its own.
+⚠⚠ **One of 4A's own assertions had to change and was watched FAILING first** — it pinned the
+enabling layer as unbuilt, this sprint built it. It now pins the original regression directly: the
+layer's count must differ from incidental *"in exercise of the powers"* phrase matches (191,258 vs
+2,356). Four facts recorded from the audits' JSON, never re-keyed.
+**§5 accepted:** `docs/CROSS_REFERENCE_GRAPH.md` names the cross-reference graph as its own listed
+capability, with its coverage block as a DATED READING regenerable by `npm run graph:coverage`.
+
+### Predictions: 7 confirmed, 3 refuted — and the three share one cause
+
+P1 (≥230,681 rows) and P2 (250k–400k) refuted at **191,258**; P4 (provision share within ±10pp of
+56.5%) refuted narrowly at **46.1%**. ⚠ **I sized Layer 2 from a parser producing 36.1% wrong section
+refs**, so every row-count prediction was anchored to a defect — and P4 fell by almost exactly the
+share that was wrong. P8's own flagged caveat came true: 0 on the narrow reading, **127** on the one
+anyone wants.
+
+✅ `check-4b-identity` **30/30** · `check-4b-layer2` **18/18** · `check-4a-coverage` **30/30** ·
+`check-25h-parser` 37/37 · `check-25h-inbound` 12/12 · `check-25h-verify` 8/8. `tsc` clean;
+`check-clean-build.sh --fast` PASS. ▶▶ **Nothing touches the live site** — no UI, no flags, no
+re-ingest; two additive tables and one widened CHECK. **Six numbered decisions in the report.**
+
+---
+
 ## GRAPH 4B — PREDICTIONS, RECORDED BEFORE THE LAYER-2 EXTRACTION RUNS (2026-08-27 23:56 UTC)
 
 Per `BRIEF_GRAPH_4B.md` §6. Written before `extract-enabling-edges.ts` had been run over a

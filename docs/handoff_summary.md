@@ -2,7 +2,67 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-28 00:40 UTC — ▼ **ARGUMENT 1A: THE PERORATION HYPOTHESIS IS SUPPORTED,
+*Last updated: 2026-08-28 00:47 UTC — ▼ **GRAPH 4B: THE BRIDGE IS BUILT, AND IT FOUND A DEFECT IN
+BOTH THE COPIES IT REPLACED — 419 CALENDAR IDS NAME TWO ACTS EACH AND THE LAST ONE SEEN WAS WINNING.**
+⚠⚠ 41 Geo 3 and 42 Geo 3 are both **1801**, and each session numbers its chapters from one, so
+`ukpga/1801/16` **is two different Acts**. Both old alias maps wrote `calendar → regnal` in a single
+pass, so **the last entry silently won, for 419 ids** — a merge with no basis at all, reached by
+iteration order, inside the code that exists to prevent one. The bridge **refuses** them and
+**STORES THE REFUSAL AS A ROW** (NULL canonical, `basis = 'ambiguous-refused'`), because a form
+merely absent from a table cannot be told from one nobody has ever seen.
+▶ **The join was watched returning ZERO first and the failing state is PINNED, not described:**
+three known pre-1963 Acts return **0** `cites` rows today and **59 / 50 / 50** through the bridge —
+GRAPH 4A's exact figures. ⚠ **One correction to 4A**: "the regnal form returns 0" holds for the
+`cites` edge type ONLY — `legislation_edges` carries **63,520** regnal-form rows from the TNA effects
+CSVs. **Both forms are in that table, from different code paths, and neither reaches the other.**
+⚠ **4A named two copies of the alias map; there were THREE** (`extract-citation-edges.ts`,
+`audit-25h-citations.ts`, `v37-citation-gaps.ts`). All gone; the guard greps every file the graph
+reads and was watched firing on all three, and on a planted fourth. §6 re-answered: overlap
+**98.1% → 98.7%**, 600 pairs out of "missing". **Nothing retired.**
+▶▶ **LAYER 2 IS BUILT: 191,258 enabling rows over 70,576 instruments, every one carrying the
+enacting words** — `detection = 'enabling'`, 0.212 GB, **$0.07/month**, 63 seconds. ⚠⚠ **AND READING
+ITS OUTPUT FOUND A SECOND DEFECT: 36.1% OF THE OLD PREAMBLE PARSER'S SECTION-LEVEL REFS WERE WRONG,
+AND `legislation_edges` STILL HOLDS THEM.** A bracketed subsection read as a section (*"sections
+191(2) and 195(3)"* → `section-191`, **`section-2`**, `section-195`) and a ref list attached to the
+wrong Act in a preamble naming several (FSMA's anchor given the European Communities Act's s.2).
+Over 2,000 documents with both parsers fed IDENTICAL bytes: 3,094 → 2,059 refs, **975 subsection
+artefacts + 142 re-attributions.** Act-level rows were never affected — only the section-level ones,
+which are the rows a repeal analysis reads. ⚠ My first attempt to measure it reported 0 artefacts
+because it compared two regexes' whole matched spans, which can never be equal.
+▶ **Why keeping the fact separate matters, in one row:** `ukpga/1972/68`, the **repealed** European
+Communities Act 1972 — **126 mentions, 6,017 instruments MADE UNDER it**; `uksi/1981/238` — **0
+mentions, 3,459 made under it.** Flattening those produces a confident, wrong consequence list.
+⚠⚠ **§2.2's GATE PASSES BUT NOT CLEANLY: schedule retention is 41.3%** — matched on the SAME
+documents, 118 of 201 schedule-bearing instruments reached the corpus without their schedule. A
+corpus ratio set against a zip ratio hides this, and my first version did exactly that.
+▶▶ **§3's REAL ANSWER: 127 OF THE 247 MISSING DOUBLE TAXATION AGREEMENTS ARE ALREADY ON THIS
+MACHINE.** 286 Orders, **39 hold a schedule (13.6%)** — 4A's 39-of-288 reproduces exactly. Layer 2
+recovers **0** and not by accident (an enabling row is a PREAMBLE fact; the missing thing is a
+SCHEDULE — counted anyway rather than argued from construction), but **127 carry a ≥4,000-character
+schedule in the bulk CLML the corpus dropped.** No fetch needed; an ingest pass. The other 120 need
+the source. ▶ **The reverse direction IS answerable** (both columns indexed, read from `pg_indexes`;
+"what is made under TIOPA 2010" → 110 instruments). ▶ **MLI positions NOT held**, and Layer 2 cannot
+change that — the MLI modifies agreements without amending the Orders.
+▶ **§4: the coverage block carries the bridge residual and schedule coverage, LIVE**, and all three
+reach the RENDERED WORDS. ⚠ **4A's probe was NOT edited — it flipped on its own**, which is what it
+was written to do. ⚠⚠ **One of 4A's assertions had to change and was watched FAILING first**; it now
+pins the original regression directly (layer count 191,258 vs 2,356 incidental phrase matches, so the
+858-row false positive cannot return). **§5 accepted: `docs/CROSS_REFERENCE_GRAPH.md`** names the
+cross-reference graph as its own listed capability, its coverage block a DATED READING.
+▶ **Predictions: 7 confirmed, 3 refuted — and the three share one cause.** I sized Layer 2 from a
+parser producing 36.1% wrong section refs, so every row-count prediction was anchored to a defect;
+P4 fell by almost exactly the share that was wrong. P8's own flagged caveat came true.
+✅ `check-4b-identity` **30/30** · `check-4b-layer2` **18/18** (hand-check **18/18** on the Act and
+**9/9** on the provision, fetched LIVE from legislation.gov.uk) · `check-4a-coverage` **30/30** ·
+25-H checks 37/37, 12/12, 8/8. ⚠ `check-25h-verify` was **fixed**: it fired four requests back to
+back with no retry and died on an HTTP 500 that moved between documents — **a check that dies on
+someone else's throughput reports a fault in OUR data.**
+▶▶ **CHARLIE: six numbered decisions in `docs/GRAPH_4B_REPORT.md`.** The two that matter most:
+**Q2 re-extract `legislation_edges`' `made-under` rows** (needs a scoped production DELETE, prepared
+not run) and **Q3/Q4 the 41.3% schedule retention**, an ingest sprint the 127 treaties are a symptom
+of. ▶▶ **Nothing touches the live site** — no UI, no flags, no re-ingest; two additive tables and one
+widened CHECK.
+Earlier: 2026-08-28 00:40 UTC — ▼ **ARGUMENT 1A: THE PERORATION HYPOTHESIS IS SUPPORTED,
 AND SEED-BASED PROPAGATION HAS ZERO MEASURED RECALL.**
 ▶▶ **§1.1 — 8,959 SPEECHES, 10.2 MILLION WORDS: the OPENING fifth is the sparsest and the CLOSING
 fifth the densest. closing/opening 1.57×** on the ten tags' own patterns and **1.30×** on a second,
