@@ -1,0 +1,282 @@
+{
+  "takenAt": "2026-08-28T00:03:24.338Z",
+  "perStratum": 200,
+  "longDrawn": 9959,
+  "longAnalysed": 9959,
+  "shortDrawn": 9800,
+  "shortAnalysed": 9800,
+  "strata": {
+    "committees-evidence 2010s": 200,
+    "committees-evidence 2020s": 200,
+    "committees-reports 2000s": 200,
+    "committees-reports 2010s": 200,
+    "committees-reports 2020s": 200,
+    "historic-hansard 1800s": 200,
+    "historic-hansard 1810s": 200,
+    "historic-hansard 1820s": 200,
+    "historic-hansard 1830s": 200,
+    "historic-hansard 1840s": 200,
+    "historic-hansard 1850s": 200,
+    "historic-hansard 1860s": 200,
+    "historic-hansard 1870s": 200,
+    "historic-hansard 1880s": 200,
+    "historic-hansard 1890s": 200,
+    "historic-hansard 1900s": 200,
+    "historic-hansard 1910s": 200,
+    "historic-hansard 1920s": 200,
+    "historic-hansard 1930s": 200,
+    "historic-hansard 1940s": 200,
+    "historic-hansard 1950s": 200,
+    "historic-hansard 1960s": 200,
+    "historic-hansard 1970s": 200,
+    "historic-hansard 1980s": 200,
+    "historic-hansard 1990s": 200,
+    "niassembly-hansard 2010s": 200,
+    "niassembly-hansard 2020s": 200,
+    "pwdata-debates 1910s": 200,
+    "pwdata-debates 1920s": 200,
+    "pwdata-debates 1930s": 200,
+    "pwdata-debates 1940s": 200,
+    "pwdata-debates 1950s": 200,
+    "pwdata-debates 1960s": 200,
+    "pwdata-debates 1970s": 200,
+    "pwdata-debates 1980s": 200,
+    "pwdata-debates 1990s": 200,
+    "pwdata-debates 2000s": 200,
+    "pwdata-debates 2010s": 200,
+    "pwdata-debates 2020s": 200,
+    "pwdata-lords 1990s": 200,
+    "pwdata-lords 2000s": 200,
+    "pwdata-lords 2010s": 200,
+    "pwdata-lords 2020s": 200,
+    "pwdata-westminster 2000s": 200,
+    "pwdata-westminster 2010s": 200,
+    "pwdata-westminster 2020s": 200,
+    "scottish-parliament-or 1990s": 159,
+    "scottish-parliament-or 2000s": 200,
+    "scottish-parliament-or 2010s": 200,
+    "scottish-parliament-or 2020s": 200
+  },
+  "fifths": {
+    "markerHits": [
+      115,
+      154,
+      145,
+      144,
+      161
+    ],
+    "stanceHits": [
+      1157,
+      1437,
+      1500,
+      1561,
+      1518
+    ],
+    "proceduralHits": [
+      247,
+      48,
+      59,
+      79,
+      528
+    ],
+    "wordsIn": [
+      2042661,
+      2042661,
+      2042661,
+      2042661,
+      2062648
+    ],
+    "density": [
+      0.05629911179583886,
+      0.07539185405703638,
+      0.07098583661214465,
+      0.0704962791182678,
+      0.07805500502266989
+    ],
+    "stanceDensity": [
+      0.5664180204155266,
+      0.7034941187010473,
+      0.7343362408152895,
+      0.764199247941778,
+      0.7359471902137447
+    ]
+  },
+  "speeches": {
+    "n": 8959,
+    "hits": [
+      85,
+      113,
+      104,
+      112,
+      135
+    ],
+    "stance": [
+      1055,
+      1282,
+      1353,
+      1416,
+      1387
+    ],
+    "words": [
+      1663338,
+      1663338,
+      1663338,
+      1663338,
+      1681318
+    ]
+  },
+  "documents": {
+    "n": 1000,
+    "hits": [
+      30,
+      41,
+      41,
+      32,
+      26
+    ],
+    "stance": [
+      102,
+      155,
+      147,
+      145,
+      131
+    ],
+    "words": [
+      379323,
+      379323,
+      379323,
+      379323,
+      381330
+    ]
+  },
+  "perTagByFifth": {
+    "COST": [
+      3,
+      13,
+      4,
+      6,
+      7
+    ],
+    "ENFORCEMENT": [
+      4,
+      8,
+      5,
+      13,
+      9
+    ],
+    "UNINTENDED": [
+      14,
+      37,
+      25,
+      29,
+      26
+    ],
+    "EVIDENCE_GAP": [
+      11,
+      7,
+      16,
+      12,
+      12
+    ],
+    "WRONG_VEHICLE": [
+      21,
+      26,
+      20,
+      18,
+      25
+    ],
+    "RIGHTS": [
+      13,
+      6,
+      15,
+      12,
+      11
+    ],
+    "PRECEDENT": [
+      14,
+      16,
+      20,
+      14,
+      24
+    ],
+    "SCOPE": [
+      10,
+      8,
+      6,
+      15,
+      13
+    ],
+    "IMPLEMENTATION": [
+      13,
+      19,
+      21,
+      14,
+      22
+    ],
+    "SUPPORT_EVIDENCE": [
+      12,
+      14,
+      13,
+      11,
+      12
+    ]
+  },
+  "patternTotals": {
+    "/research (?:shows|demonstrates)/i": 25,
+    "/unworkable/i": 47,
+    "/unintended consequence/i": 71,
+    "/counter-?productive/i": 32,
+    "/the evidence (?:shows|demonstrates|is clear)/i": 18,
+    "/henry viii/i": 59,
+    "/article \\d+ of the (?:european )?convention/i": 14,
+    "/cost to the taxpayer/i": 9,
+    "/perverse incentive/i": 9,
+    "/on the face of the bill/i": 44,
+    "/the experience of (?:the|other)/i": 70,
+    "/there is (?:simply )?no evidence/i": 53,
+    "/natural justice/i": 12,
+    "/due process/i": 18,
+    "/a cliff edge/i": 6,
+    "/cost(?:s)? (?:far )?more than/i": 8,
+    "/(?:does|will) not (?:catch|cover) the/i": 7,
+    "/disproportionately (?:affect|hit)/i": 16,
+    "/skeleton bill/i": 7,
+    "/practical difficult/i": 37,
+    "/the opposite effect/i": 15,
+    "/chilling effect/i": 9,
+    "/who (?:is going to|will) pay for/i": 6,
+    "/presumption of innocence/i": 4,
+    "/burden on (?:business|small business|taxpayers)/i": 9,
+    "/the last time (?:we|the government|parliament)/i": 4,
+    "/unenforceable/i": 12,
+    "/(?:worked|works) well in/i": 13,
+    "/(?:catch|catches|sweep|sweeps) (?:up )?(?:people|those|those who|things)/i": 6,
+    "/a loophole/i": 23,
+    "/has not been demonstrated/i": 1,
+    "/(?:will|would) (?:not|never) be enforced/i": 2,
+    "/(?:a|remain a|become a) dead letter/i": 25,
+    "/history (?:shows|teaches)/i": 8,
+    "/the same mistake/i": 4,
+    "/by regulation rather than/i": 1,
+    "/administratively (?:impossible|burdensome)/i": 2,
+    "/law of unintended/i": 1,
+    "/has been shown to (?:work|reduce|improve)/i": 3,
+    "/(?:learn|learned|learnt) nothing from/i": 2,
+    "/how (?:in practice|on earth) (?:will|would|is)/i": 1,
+    "/where (?:is|will) the money com/i": 2,
+    "/impossible to administer/i": 1,
+    "/evidence from (?:scotland|wales|other countries|abroad)/i": 3,
+    "/where is the evidence/i": 4,
+    "/(?:will|would) not work in practice/i": 1,
+    "/the evidence (?:does not|doesn't) (?:show|support|bear)/i": 2
+  },
+  "shortArm": {
+    "words": 493264,
+    "narrowHits": 28,
+    "stanceHits": 319,
+    "narrowPer1k": 0.05676473450322748,
+    "stancePer1k": 0.6467125109474845
+  },
+  "longOverallPer1k": 0.07026087010905191,
+  "longStanceOverallPer1k": 0.7009474565955902
+}
