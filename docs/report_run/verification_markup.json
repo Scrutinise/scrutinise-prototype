@@ -1,0 +1,537 @@
+{
+  "generated_at": "2026-08-29T15:27:46.712Z",
+  "brief": "B4 — a markup-only verification sample",
+  "detector": "markup",
+  "seed": "report-run-b4-markup-2026-08-30",
+  "sample_size": 25,
+  "min_checked_floor": 18,
+  "markup_population": {
+    "ukpga/1998/42": 37,
+    "ukpga/2010/15": 79,
+    "ukpga/2010/25": 11
+  },
+  "markup_population_total": 127,
+  "proportional_quota": {
+    "ukpga/1998/42": 7,
+    "ukpga/2010/15": 16,
+    "ukpga/2010/25": 2
+  },
+  "correct": 20,
+  "wrong": 5,
+  "not_checked": 0,
+  "checked": 25,
+  "rate_established": true,
+  "rate": 0.8,
+  "rate_denominator_note": "25 markup rows actually checked, drawn from a population of 127 markup rows across the three measures.",
+  "never_averaged_with": {
+    "t5_text_rate": "20 of 20",
+    "why": "Two detectors, two denominators. A blended figure would describe neither and would be read as describing both."
+  },
+  "verifier": {
+    "imported_from": "report-t5-verify.ts — judge, verifyRow, reexamine, runControls",
+    "why": "A check that re-implements the logic it is checking tests the copy. Importing means a disagreement between the markup and text rates can only be about the rows.",
+    "controls": [
+      "  POSITIVE control — ukpga/1983/20:section-142C → ukpga/1998/42: PASSES",
+      "  NEGATIVE control (wrong Act) — must be REJECTED: rejected — live text contains neither the target URI nor the Act name",
+      "  NEGATIVE control (wrong provision) — must be REJECTED: rejected — names the Act in 1 place(s) but \"section-9999\" is in none of those phrases"
+    ],
+    "controls_behaved": true
+  },
+  "first_pass_non_passes": 7,
+  "checker_failures": 2,
+  "misattributed_source_provision": 5,
+  "prediction": {
+    "pass_rate_expected": "22 of 25 (88%)",
+    "expected_checker_failures": 1,
+    "expected_below_the_t5_text_rate": true,
+    "reasoning": "T5's supplementary three-per-detector draw gave markup 2 of 3, and its single failure was a misattributed source_provision_ref rather than a wrong target. T2 then measured that class at 19.1% of rows naming a provision, so the markup rate should sit below T5's 20/20 text rate.",
+    "recorded_before_draw": true
+  },
+  "verdicts": [
+    {
+      "row": {
+        "id": "216002",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "contents",
+        "detection": "markup",
+        "source_gid": "ukpga/1983/20",
+        "source_provision_ref": "section-142C",
+        "source_type": "primary",
+        "citation_text": "id=\"c00294\" Class=\"UnitedKingdomPublicGeneralAct\" Year=\"1998\" Number=\"42\" SectionRef=\"section-6\">(b) of the Human Rights Act 1998",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/1983/20/section/142C/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "741139",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2011/1408",
+        "source_provision_ref": "schedule-paragraph-9",
+        "source_type": "SI",
+        "citation_text": "6 In subsection (7), for “Human Rights Act 1998 (c.42)",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2011/1408/schedule/paragraph/9/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "366286",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-6",
+        "detection": "markup",
+        "source_gid": "ukpga/2025/33",
+        "source_provision_ref": "section-51",
+        "source_type": "primary",
+        "citation_text": "the Mental Health Act 1983, after section 142B insert— Human Rights Act 1998: extension to certain private care providers 142C 1 A registered care provider is to be regarded for the purposes of section 6",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2025/33/section/51/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "687789",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": "section-6-1",
+        "detection": "markup",
+        "source_gid": "uksi/2008/3122",
+        "source_provision_ref": "schedule-paragraph-6",
+        "source_type": "SI",
+        "citation_text": "“or” preceding it. 6 In section 961(3) (extent of exemption from liability in damages) for “section 6(1) of the Human Rights Act 1998 (c 42)",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2008/3122/schedule/paragraph/6/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "629876",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2005/3429",
+        "source_provision_ref": "schedule-paragraph-2",
+        "source_type": "SI",
+        "citation_text": "IdURI=\"http://www.legislation.gov.uk/id/uksi/2005/3429/schedule/paragraph/2\" id=\"schedule-paragraph-2\"> 2 In sections 58 and 58A of the Courts and Legal Services Act 1990 (conditional fee agreements), for “Secretary of State” in each place substitute “Lord Chancellor”. Human Rights Act 1998 (c. 42)",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2005/3429/schedule/paragraph/2/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "562060",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2001/3500",
+        "source_provision_ref": "schedule-2-paragraph-6",
+        "source_type": "SI",
+        "citation_text": "The Human Rights Act 1998 (c. 42)",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2001/3500/schedule/2/paragraph/6/data.xml",
+      "status": "wrong",
+      "reason": "live text contains neither the target URI nor the Act name",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": false,
+        "wholeDocSaysPresent": true,
+        "conclusion": "MISATTRIBUTED PROVISION: the reference IS in the live document but is NOT in the provision this row names. The citation is real and the target is real; source_provision_ref points at a provision that does not contain it. ⚠ source_provision_ref is the column that answers \"which provision breaks if you repeal this\", so a wrong value here is worse than a missing one."
+      }
+    },
+    {
+      "row": {
+        "id": "944555",
+        "target_act_id": "ukpga/1998/42",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2024/172",
+        "source_provision_ref": "article-4",
+        "source_type": "SI",
+        "citation_text": "Act 2013 (c. 22)) (when read with section 141 of the 2003 Act) provides that, in Scotland, the Scottish Ministers are not to consider whether the extradition would be compatible with the Convention rights within the meaning of the Human Rights Act 1998 (c. 42)",
+        "ws_id": "WS-01",
+        "target_title": "Human Rights Act 1998"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2024/172/article/4/data.xml",
+      "status": "wrong",
+      "reason": "live text contains neither the target URI nor the Act name",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": false,
+        "wholeDocSaysPresent": true,
+        "conclusion": "MISATTRIBUTED PROVISION: the reference IS in the live document but is NOT in the provision this row names. The citation is real and the target is real; source_provision_ref points at a provision that does not contain it. ⚠ source_provision_ref is the column that answers \"which provision breaks if you repeal this\", so a wrong value here is worse than a missing one."
+      }
+    },
+    {
+      "row": {
+        "id": "4388",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-4",
+        "detection": "markup",
+        "source_gid": "asc/2024/5",
+        "source_provision_ref": "section-27",
+        "source_type": "primary",
+        "citation_text": "a resolution of Senedd Cymru. 11 In this section “protected characteristics” has the meaning given by section 4 of the Equality Act 2010 (c. 15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/asc/2024/5/section/27/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "725280",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-96-9-b",
+        "detection": "markup",
+        "source_gid": "uksi/2010/2191",
+        "source_provision_ref": "article-2",
+        "source_type": "SI",
+        "citation_text": "EXPLANATORY NOTE (This note is not part of the Order) This Order brings into force section 96(9)(b) of the Equality Act 2010 (c.15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/2191/article/2/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "374383",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "contents",
+        "detection": "markup",
+        "source_gid": "ukpga/2026/21",
+        "source_provision_ref": "p07422",
+        "source_type": "primary",
+        "citation_text": "or can reasonably obtain it, a register under section 436B must also contain such information about, or in connection with, the following matters in respect of a child registered in it as may be prescribed— a the child’s protected characteristics (within the meaning of the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2026/21/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "260569",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-26",
+        "detection": "markup",
+        "source_gid": "ukpga/1996/18",
+        "source_provision_ref": "section-202A",
+        "source_type": "primary",
+        "citation_text": "id=\"c00129\" Class=\"UnitedKingdomPublicGeneralAct\" Year=\"2010\" Number=\"15\" SectionRef=\"section-26\">(2) or (3)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/1996/18/section/202A/data.xml",
+      "status": "correct",
+      "reason": "names the Act in 1 place(s) but \"section-26\" is in none of those phrases",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": true,
+        "wholeDocSaysPresent": true,
+        "conclusion": "VERIFIER FAILURE, not a data failure: both our copy and the whole live document carry the reference; the provision-path check was looking in the wrong place."
+      }
+    },
+    {
+      "row": {
+        "id": "353900",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "ukpga/2022/31",
+        "source_provision_ref": "schedule-15-paragraph-9",
+        "source_type": "primary",
+        "citation_text": "regard to NHS Constitution) after paragraph (h) insert— i the Health Services Safety Investigations Body. Equality Act 2010 (c. 15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2022/31/schedule/15/paragraph/9/data.xml",
+      "status": "wrong",
+      "reason": "live text contains neither the target URI nor the Act name",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": false,
+        "wholeDocSaysPresent": true,
+        "conclusion": "MISATTRIBUTED PROVISION: the reference IS in the live document but is NOT in the provision this row names. The citation is real and the target is real; source_provision_ref points at a provision that does not contain it. ⚠ source_provision_ref is the column that answers \"which provision breaks if you repeal this\", so a wrong value here is worse than a missing one."
+      }
+    },
+    {
+      "row": {
+        "id": "932076",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2023/1425",
+        "source_provision_ref": "regulation-6",
+        "source_type": "SI",
+        "citation_text": "Explanatory Note (This note is not part of the Regulations) These Regulations reproduce the effects of retained EU law in relation to several aspects of the Equality Act 2010 (c. 15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2023/1425/regulation/6/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "725833",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2010/2279",
+        "source_provision_ref": "schedule-1-paragraph-6",
+        "source_type": "SI",
+        "citation_text": "EXPLANATORY NOTE (This note is not part of the Order) This Order amends the Equality Act 2010 (c.15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/2279/schedule/1/paragraph/6/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "789651",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-149",
+        "detection": "markup",
+        "source_gid": "uksi/2014/1287",
+        "source_provision_ref": "article-2",
+        "source_type": "SI",
+        "citation_text": "of State to ensure that contracts or other arrangements under section 3 of the Offender Management Act providing for the supervision or rehabilitation of offenders state that the Secretary of State has complied with the public sector equality duty in section 149 of the Equality Act 2010 (c.15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2014/1287/article/2/data.xml",
+      "status": "wrong",
+      "reason": "live text contains neither the target URI nor the Act name",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": false,
+        "wholeDocSaysPresent": true,
+        "conclusion": "MISATTRIBUTED PROVISION: the reference IS in the live document but is NOT in the provision this row names. The citation is real and the target is real; source_provision_ref points at a provision that does not contain it. ⚠ source_provision_ref is the column that answers \"which provision breaks if you repeal this\", so a wrong value here is worse than a missing one."
+      }
+    },
+    {
+      "row": {
+        "id": "726470",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2010/2317",
+        "source_provision_ref": "schedule-8-paragraph-8",
+        "source_type": "SI",
+        "citation_text": "EXPLANATORY NOTE (This note is not part of the Order) This is the fourth Commencement Order made under the Equality Act 2010 (c.15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2010/2317/schedule/8/paragraph/8/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "277325",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "ukpga/2000/38",
+        "source_provision_ref": "schedule-9A-paragraph-13",
+        "source_type": "primary",
+        "citation_text": "Act 2010 section 6\" URI=\"https://www.legislation.gov.uk/ukpga/2010/15/section/6\" id=\"i00589\">section 6 of the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2000/38/schedule/9A/paragraph/13/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "798799",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2014/2559",
+        "source_provision_ref": "schedule-paragraph-9",
+        "source_type": "SI",
+        "citation_text": "EXPLANATORY NOTE (This note is not part of the Regulations) These Regulations are made under section 139A and 207(1) and (4) of the Equality Act 2010 (c.15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2014/2559/schedule/paragraph/9/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "805228",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-138",
+        "detection": "markup",
+        "source_gid": "uksi/2014/416",
+        "source_provision_ref": "schedule-paragraph-16",
+        "source_type": "SI",
+        "citation_text": "(c. 9) to provide for heritage partnership agreements, listed and local listed building consent orders and certificates of lawfulness of proposed works in England. Article 3(c) commences, on 6th April 2014, section 66 of the Act which repeals section 138 of the Equality Act 2010 (c. 15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2014/416/schedule/paragraph/16/data.xml",
+      "status": "wrong",
+      "reason": "live text contains neither the target URI nor the Act name",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": false,
+        "wholeDocSaysPresent": true,
+        "conclusion": "MISATTRIBUTED PROVISION: the reference IS in the live document but is NOT in the provision this row names. The citation is real and the target is real; source_provision_ref points at a provision that does not contain it. ⚠ source_provision_ref is the column that answers \"which provision breaks if you repeal this\", so a wrong value here is worse than a missing one."
+      }
+    },
+    {
+      "row": {
+        "id": "746440",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2011/2646",
+        "source_provision_ref": "article-2",
+        "source_type": "SI",
+        "citation_text": "EXPLANATORY NOTE (This note is not part of the Order) This is the eighth Commencement Order made under the Equality Act 2010 (c. 15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2011/2646/article/2/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "367232",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "section-26",
+        "detection": "markup",
+        "source_gid": "ukpga/2025/36",
+        "source_provision_ref": "p04867",
+        "source_type": "primary",
+        "citation_text": "described in subsection (1), (2) or (3)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2025/36/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "174278",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": "contents",
+        "detection": "markup",
+        "source_gid": "ukcm/2026/1",
+        "source_provision_ref": "section-3",
+        "source_type": "primary",
+        "citation_text": "IdURI=\"http://www.legislation.gov.uk/id/ukcm/2026/1/section/3/3\" DocumentURI=\"http://www.legislation.gov.uk/ukcm/2026/1/section/3/3/enacted\">subsection (3) to “races” is to be read with section 9 of the Equality Act 2010",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukcm/2026/1/section/3/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "753684",
+        "target_act_id": "ukpga/2010/15",
+        "target_provision_ref": null,
+        "detection": "markup",
+        "source_gid": "uksi/2012/1569",
+        "source_provision_ref": "article-3",
+        "source_type": "SI",
+        "citation_text": "EXPLANATORY NOTE (This note is not part of the Order) This is the ninth Commencement Order made under the Equality Act 2010 (c.15)",
+        "ws_id": "WS-04",
+        "target_title": "Equality Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/uksi/2012/1569/article/3/data.xml",
+      "status": "correct",
+      "reason": "Act named in the live provision text",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "343",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": "part-1",
+        "detection": "markup",
+        "source_gid": "anaw/2013/4",
+        "source_provision_ref": "section-72",
+        "source_type": "primary",
+        "citation_text": "adviser‍” means a special adviser within the meaning of—Chapter 1 of Part 1 of the Constitutional Reform and Governance Act 2010 (c. 25)",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/anaw/2013/4/section/72/data.xml",
+      "status": "correct",
+      "reason": "target URI present in the live provision",
+      "http": 200
+    },
+    {
+      "row": {
+        "id": "369794",
+        "target_act_id": "ukpga/2010/25",
+        "target_provision_ref": "section-42",
+        "detection": "markup",
+        "source_gid": "ukpga/2026/12",
+        "source_provision_ref": "section-4",
+        "source_type": "primary",
+        "citation_text": "IdURI=\"http://www.legislation.gov.uk/id/ukpga/2026/12/section/4/3\" id=\"section-4-3\"> 3 In the Constitutional Reform and Governance Act 2010, in section 42",
+        "ws_id": "WS-05",
+        "target_title": "Constitutional Reform and Governance Act 2010"
+      },
+      "url": "https://www.legislation.gov.uk/ukpga/2026/12/section/4/data.xml",
+      "status": "correct",
+      "reason": "names the Act in 1 place(s) but \"section-42\" is in none of those phrases",
+      "http": 200,
+      "reexamined": {
+        "localSaysPresent": true,
+        "wholeDocSaysPresent": true,
+        "conclusion": "VERIFIER FAILURE, not a data failure: both our copy and the whole live document carry the reference; the provision-path check was looking in the wrong place."
+      }
+    }
+  ]
+}

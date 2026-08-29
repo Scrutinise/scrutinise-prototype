@@ -1,0 +1,1237 @@
+{
+  "generated_at": "2026-08-29T15:10:46.157Z",
+  "measure": "WS-04 — Equality Act 2010",
+  "measure_shape_searched": "a general statutory duty to have due regard to equality, owed by public authorities to an open class, consolidating several earlier regimes",
+  "invocation": "./node_modules/.bin/tsx --env-file=.env --tsconfig tsconfig.json scripts/report-b2-arguments.ts",
+  "instrument": {
+    "note": "argument-questions.ts is NOT a query interface — it is a hardcoded set of ten gold questions with hand-picked chunk ids that writes a markdown file from constants. It takes no query and no measure, which is why argument:questions is absent from package.json. This run uses the two-arm instrument from argument-seed-draw.ts with measure-specific queries, and the confirm step is patternHits() from argument/taxonomy.ts.",
+    "dense_service": "https://vector-serve-production.up.railway.app",
+    "keyword_service": "https://fts-serve-production.up.railway.app",
+    "keyword_service_note": "FTS_SEARCH_URL is not set in .env; this is the production host found in the repo.",
+    "corpora": [
+      "pwdata-debates",
+      "pwdata-lords",
+      "pwdata-westminster",
+      "historic-hansard",
+      "niassembly-hansard",
+      "scottish-parliament-or",
+      "committees-evidence",
+      "committees-reports"
+    ],
+    "per_query_limit": 40,
+    "dense_probes": [
+      "a duty to have regard imposes a burden without achieving anything",
+      "equality legislation places an unreasonable burden on small businesses",
+      "you cannot legislate to change people's attitudes",
+      "this creates a duty owed to an unbounded class of people",
+      "consolidating several Acts into one will lose distinctions that matter",
+      "this will be a charter for lawyers and for vexatious claims"
+    ],
+    "keyword_phrases": [
+      "burden on small businesses",
+      "you cannot legislate for",
+      "due regard to the need",
+      "a charter for lawyers",
+      "vexatious claims",
+      "political correctness"
+    ],
+    "confirm_step": "A retrieval hit is a passage about the subject. An OBJECTION is a passage that makes an argumentative move. patternHits() decides which, on BOTH arms, and every confirmed row records the pattern that confirmed it. ARGUMENT 1A measured this arm at 90% against the dense arm's 0% recall on independently found arguments."
+  },
+  "prediction": {
+    "objections_expected": 25,
+    "expected_over_floor": 20,
+    "recorded_before_run": true
+  },
+  "arms_never_merged": {
+    "note": "Proposed and confirmed are reported per arm. The two are never added into one count.",
+    "dense": {
+      "proposed": 240,
+      "hydrated": 240,
+      "bodyRead": 240,
+      "confirmed": 12
+    },
+    "keyword": {
+      "proposed": 240,
+      "hydrated": 240,
+      "bodyRead": 240,
+      "confirmed": 20
+    },
+    "distinct_objections_by_arm": {
+      "dense": 12,
+      "keyword": 20
+    },
+    "fragments_by_arm": {
+      "dense": 2,
+      "keyword": 2
+    }
+  },
+  "fields_the_corpus_does_not_hold": {
+    "party": "corpus_sections carries no party. Emitted as null on every row rather than inferred from the speaker name.",
+    "column": "no Hansard column number is stored. source_url carries the publisher anchor where one exists; for pwdata rows that anchor encodes the column reference."
+  },
+  "subject_term_screen": {
+    "terms": [
+      "/equality/i",
+      "/equal opportunit/i",
+      "/discriminat/i",
+      "/protected characteristic/i",
+      "/race relations/i",
+      "/sex discrimination/i",
+      "/disability discrimination/i",
+      "/due regard/i",
+      "/public sector equality duty/i",
+      "/\\bEHRC\\b/i"
+    ],
+    "passages_using_none_of_them": 28,
+    "of_total": 32,
+    "note": "⚠ MECHANICAL, AND IT IS THE FIELD TO SORT ON BEFORE DRAFTING. A row with an empty subject_terms_present is connected to this measure by the argumentative MOVE alone. That is both the cross-subject objection this instrument exists to find — the unbounded-duty argument made in 2005 about advertising marches transfers to a public sector equality duty unchanged — AND the pattern-noise case, a COST pattern firing on \"burden on small businesses\" in a question about fuel protesters. The two are indistinguishable to any mechanical test and telling them apart is a reading, which is the analysis track's call. This field sorts the pile; it does not rule on anything in it."
+  },
+  "metadata_completeness": {
+    "no_speaker": 5,
+    "no_date": 0,
+    "no_debate_title": 0,
+    "no_subject_term": 28,
+    "note": "Every gap is structural and named per row in missing_field_reasons. Committee reports and written evidence have no speaker because the document is authored by a committee or a witness organisation. party and column are held for NO row: the corpus does not carry them."
+  },
+  "objections": [
+    {
+      "quoted_paragraph": "these extreme cases will arise. I believe that a specific duty, where the matter is examined in detail, will be found to be absolutely unworkable.",
+      "word_count": 25,
+      "fragment": true,
+      "speaker": null,
+      "party": null,
+      "date": "1925-06-17",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — FINANCE BILL. — SECOND SCHEDULE.",
+      "column": null,
+      "source_key": "pwdata-debates/debates1925-06-17a/sections/660/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Orders of the Day — FINANCE BILL. — SECOND SCHEDULE.",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"this creates a duty owed to an unbounded class of people\"; the passage makes the IMPLEMENTATION move (it cannot be operated as drafted), confirmed by /unworkable/i",
+      "section_id": "pwdata-debates:debates1925-06-17a:660",
+      "corpus": "pwdata-debates",
+      "source_url": "https://api.parliament.uk/historic-hansard/commons/1925/jun/17/second-schedule#S5CV0185P0_19250617_HOC_701",
+      "query": "this creates a duty owed to an unbounded class of people",
+      "confirmed_by_pattern": "/unworkable/i",
+      "argument_moves": [
+        {
+          "tag": "IMPLEMENTATION",
+          "move": "it cannot be operated as drafted",
+          "pattern": "/unworkable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "no speaker recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7076113224029541
+    },
+    {
+      "quoted_paragraph": "An unenforceable obligation.",
+      "word_count": 3,
+      "fragment": true,
+      "speaker": "Mr. Mitchison",
+      "party": null,
+      "date": "1954-05-05",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — TELEVISION BILL — Clause 1.—(THE INDEPENDENT TELEV ISION AUTHORITY.)",
+      "column": null,
+      "source_key": "pwdata-debates/debates1954-05-05a/sections/302/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Orders of the Day — TELEVISION BILL — Clause 1.—(THE INDEPENDENT TELEV ISION AUTHORITY.)",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"this creates a duty owed to an unbounded class of people\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /unenforceable/i",
+      "section_id": "pwdata-debates:debates1954-05-05a:302",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1954-05-05a.xml",
+      "query": "this creates a duty owed to an unbounded class of people",
+      "confirmed_by_pattern": "/unenforceable/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/unenforceable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7029632329940796
+    },
+    {
+      "quoted_paragraph": "asked the Chancellor of the Exchequer whether he will take further steps to reduce the tax burden on small businesses.",
+      "word_count": 20,
+      "fragment": true,
+      "speaker": "Mr. Fallon",
+      "party": null,
+      "date": "1984-12-13",
+      "house": "House of Commons",
+      "debate_title": "Oral Answers to Questions — NATIONAL FINANCE — Small Businesses",
+      "column": null,
+      "source_key": "pwdata-debates/debates1984-12-13a/sections/111/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Oral Answers to Questions — NATIONAL FINANCE — Small Businesses",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates1984-12-13a:111",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1984-12-13a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 43.47095489501953
+    },
+    {
+      "quoted_paragraph": "There was no exaggeration. I was talking about small businesses with few employees, not about 200 employees, which I would regard as a larger business. Demands for access to files could create a serious financial burden on small businesses. There are two sorts of cost: first, the cost of compliance by the small business and, secondly, the cost of operation.",
+      "word_count": 60,
+      "fragment": false,
+      "speaker": "Mr. Browne",
+      "party": null,
+      "date": "1987-02-20",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Access to Personal Files Bill",
+      "column": null,
+      "source_key": "pwdata-debates/debates1987-02-20a/sections/49/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Orders of the Day — Access to Personal Files Bill",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"equality legislation places an unreasonable burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates1987-02-20a:49",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1987-02-20a.xml",
+      "query": "equality legislation places an unreasonable burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7349560856819153
+    },
+    {
+      "quoted_paragraph": "…  cuts in funds made available for education and training—indeed, by their failure even to admit that they should be addressing the problem. At the same time, the National Federation of Self Employed and Small Businesses was drawing our attention to the increasing burdens that were being placed on small businesses by the necessity of having to go to law on issues such as bad debts—surely an unfair burden on businesses and an indication of the real health, or otherwise, of at least part of the economy. Let me return to the major problem facing the small business community today—interest rates. All of us in the House would like to help our constituents who are running small businesses. Those whom I meet echo the comments of their local trade associations. Most Members of Parliament will have heard small business men say they are working not for themselves, but for the bank. The banks, of course, make a considerable effort through their television advertising to present themselves as partners in enterprise, but most small businesses find that venture capital can be obtained only in exchange for a first charge on the small business man's family home. In those circumstances, the banks co …",
+      "word_count": 523,
+      "fragment": false,
+      "speaker": "Mr. Brown",
+      "party": null,
+      "date": "1989-05-09",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Finance Bill — CORPORATION TAX: SMALL COMPANIES",
+      "column": null,
+      "source_key": "pwdata-debates/debates1989-05-09a/sections/357/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — Finance Bill — CORPORATION TAX: SMALL COMPANIES",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates1989-05-09a:357",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1989-05-09a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 44.50582504272461
+    },
+    {
+      "quoted_paragraph": "I know that my hon. Friend has expressed his opposition to the Bill consistently and frankly over the years and he deserves to be respected for that. It is quite wrong to pray in aid the research that he has quoted, because Victoria Scott proceeded to refute those very points. She cited some of the criticisms that had been made of the ADA, but she went on to explain that they are without adequate foundation. She argued that the concepts of reasonable accommodation and undue hardship are sufficiently robust, as they might be interpreted by the courts, to protect the interests of small business. My hon. Friend is entirely right to be concerned about any legislation that added undue or unreasonable costs to business, because that would be counter-productive. The Bill is securely designed to prevent that from happening.",
+      "word_count": 139,
+      "fragment": false,
+      "speaker": "Mr. Alan Howarth",
+      "party": null,
+      "date": "1994-05-06",
+      "house": "House of Commons",
+      "debate_title": "Civil Rights (Disabled Persons) Bill — LIABILITY OF EMPLOYERS AND PRINCIPALS",
+      "column": null,
+      "source_key": "pwdata-debates/debates1994-05-06a/sections/246/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Civil Rights (Disabled Persons) Bill — LIABILITY OF EMPLOYERS AND PRINCIPALS",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"equality legislation places an unreasonable burden on small businesses\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /counter-?productive/i",
+      "section_id": "pwdata-debates:debates1994-05-06a:246",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1994-05-06a.xml",
+      "query": "equality legislation places an unreasonable burden on small businesses",
+      "confirmed_by_pattern": "/counter-?productive/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/counter-?productive/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7460588812828064
+    },
+    {
+      "quoted_paragraph": "No, I do not agree with that, as I was trying to explain to the House. My hon. Friend is right up to a point: of course it is possible for legislation to have a declaratory effect. One should not exaggerate that, however. Up to a point, legislation can change public attitudes, but we should not suppose that it is some sort of panacea. I am arguing that it could be counterproductive to go too far. We need a sensible balance. The Government's Disability Discrimination Bill more nearly finds the right balance. It would not be sensible to go too far or too fast. We need an evolutionary and gradual approach.",
+      "word_count": 111,
+      "fragment": false,
+      "speaker": "Mr. Smith",
+      "party": null,
+      "date": "1995-02-10",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Civil Rights (Disabled Persons) Bill",
+      "column": null,
+      "source_key": "pwdata-debates/debates1995-02-10a/sections/180/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Orders of the Day — Civil Rights (Disabled Persons) Bill",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"you cannot legislate to change people's attitudes\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /counter-?productive/i",
+      "section_id": "pwdata-debates:debates1995-02-10a:180",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1995-02-10a.xml",
+      "query": "you cannot legislate to change people's attitudes",
+      "confirmed_by_pattern": "/counter-?productive/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/counter-?productive/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/discriminat/i",
+        "/disability discrimination/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7394478917121887
+    },
+    {
+      "quoted_paragraph": "I am anxious not to intervene upon the Minister too soon, but I know that he is trying to rush, so he may pass over this point. He referred to \"prejudice to an unreasonable degree\" and that is on the face of the Bill. Will he define that statement? Otherwise, he must agree with my hon. Friend the Member for Sherwood (Mr. Tipping) that the legislation could be a lawyers' charter.",
+      "word_count": 71,
+      "fragment": false,
+      "speaker": "Ms Ruddock",
+      "party": null,
+      "date": "1995-06-27",
+      "house": "House of Commons",
+      "debate_title": "New clause 16 — GUIDANCE ON OLD MINERAL PLANNING PERMISSIONS",
+      "column": null,
+      "source_key": "pwdata-debates/debates1995-06-27a/sections/425/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "New clause 16 — GUIDANCE ON OLD MINERAL PLANNING PERMISSIONS",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"this will be a charter for lawyers and for vexatious claims\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /on the face of the bill/i",
+      "section_id": "pwdata-debates:debates1995-06-27a:425",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1995-06-27a.xml",
+      "query": "this will be a charter for lawyers and for vexatious claims",
+      "confirmed_by_pattern": "/on the face of the bill/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/on the face of the bill/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7280719876289368
+    },
+    {
+      "quoted_paragraph": "… de that the ability of a regulator to have regard to statutory duties raises the possibility, however small, of inconsistency in the basis on which the prohibitions are to be applied by the director and each regulator. The position that we wish to achieve is that a regulator applying the prohibitions is to do so on precisely the same legal basis as the director general. We wish to make that clear on the face of the Bill. I accept the argument that the Government need to table amendments to the Bill in order to achieve that. I hope that with that assurance the noble Lord will be content to withdraw his amendment at this stage.",
+      "word_count": 826,
+      "fragment": false,
+      "speaker": "Lord Simon of Highbury",
+      "party": null,
+      "date": "1998-02-23",
+      "house": "House of Lords",
+      "debate_title": "Lords: Competition Bill [H.L.]",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0586P0/sections/1251/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: Competition Bill [H.L.]",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"a duty to have regard imposes a burden without achieving anything\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /on the face of the bill/i",
+      "section_id": "historic-hansard:S5LV0586P0:1251",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0586P0.zip",
+      "query": "a duty to have regard imposes a burden without achieving anything",
+      "confirmed_by_pattern": "/on the face of the bill/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/on the face of the bill/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7310472726821899
+    },
+    {
+      "quoted_paragraph": "… the smallest 25 per cent. of businesses. From what we understand of Labour's plans for the business rate, we expect local authorities to have discretion to increase business rates in certain areas. We expect that some small business will be put at the mercy of councils with a known track record of hostility to enterprise. The social chapter and the working time directive impose a disproportionate burden on small businesses. The parental leave directive is one of the first measures to be implemented since the United Kingdom signed up to the social chapter. It is not an enormous burden for a company that employs 100 or 500 people to be required to give unpaid leave to someone for six months, but that is a huge burden for a business that employs five or six people. Indeed, in many cases, that burden could make such a business go under. We have also had the Government's pay-off to the trade unions for their perhaps not unwavering support in the run-up to the general election and, to some extent, since then. The requirement that union recognition should be imposed on businesses that employ more than 20 people again places a disproportionate burden on businesses that operate at the lower …",
+      "word_count": 1836,
+      "fragment": false,
+      "speaker": "Mr. Philip Hammond",
+      "party": null,
+      "date": "1998-06-19",
+      "house": "House of Commons",
+      "debate_title": "Small Businesses",
+      "column": null,
+      "source_key": "pwdata-debates/debates1998-06-19a/sections/109/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Small Businesses",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates1998-06-19a:109",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1998-06-19a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 44.957923889160156
+    },
+    {
+      "quoted_paragraph": "Will the Minister help me on one point? She accepts that there will be a great administrative burden on businesses, particularly small businesses. Is there any way in which the Government could provide an exemption for very small businesses?",
+      "word_count": 39,
+      "fragment": false,
+      "speaker": "Miss McIntosh",
+      "party": null,
+      "date": "1999-03-17",
+      "house": "House of Commons",
+      "debate_title": "Schedule 6 — REPEALS.",
+      "column": null,
+      "source_key": "pwdata-debates/debates1999-03-17a/sections/409/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Schedule 6 — REPEALS.",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"equality legislation places an unreasonable burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates1999-03-17a:409",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1999-03-17a.xml",
+      "query": "equality legislation places an unreasonable burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7392873764038086
+    },
+    {
+      "quoted_paragraph": "… hon. Member for Dunfermline, East (Mr. Brown), declared in the foreword to Labour's business manifesto: We will not impose burdensome regulations on business, because we understand that successful businesses must keep costs down. Nineteen months later, his right hon. Friend the Member for Hartlepool (Mr. Mandelson) told the House we have no intention of introducing any legislation that presents a burden on business and reduces the competitiveness of British firms.\"—[ Official Report, 25 November 1998; Vol. 321, c. 214.] Sadly, only weeks after the first statement and fully 18 months before the second, the Government began the process of betraying that pledge, which has so far resulted in an extra 2,400 regulations since 1 May 1997. The working time directive will reduce the flexibility of small businesses to respond to the demands of customers in an increasingly competitive marketplace. The notice of implementation of that directive—a mere 45 days at the height of the summer season—was little short of a national disgrace. The national minimum wage will add £2.7 billion a year to this country's wages bill and will hit small and medium-sized enterprises especially hard. Once again, n …",
+      "word_count": 1180,
+      "fragment": false,
+      "speaker": "Mr. John Bercow",
+      "party": null,
+      "date": "1999-04-27",
+      "house": "House of Commons",
+      "debate_title": "Regulations on Small Businesses (Reduction)",
+      "column": null,
+      "source_key": "pwdata-debates/debates1999-04-27a/sections/126/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Regulations on Small Businesses (Reduction)",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates1999-04-27a:126",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1999-04-27a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 43.791542053222656
+    },
+    {
+      "quoted_paragraph": "… hich they have conducted consultation on important regulations, allowing little time for scrutiny and business preparation. The burdens on business introduced by the Government have a profound effect. Let us not forget that small business was the backbone of the 1980s and 1990s economic success that was led by the previous Government. This Government must ensure that there is a reduced regulatory burden on small businesses. A more entrepreneurial spirit is the order of the day. Cumulative regulation stifles business, and it has a disproportionate effect on small businesses at a time when they can least afford to apply them.",
+      "word_count": 844,
+      "fragment": false,
+      "speaker": "Mr. Christopher Fraser",
+      "party": null,
+      "date": "2000-03-08",
+      "house": "House of Commons",
+      "debate_title": "Small Business",
+      "column": null,
+      "source_key": "pwdata-debates/debates2000-03-08a/sections/335/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Small Business",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates2000-03-08a:335",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2000-03-08a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 46.67840003967285
+    },
+    {
+      "quoted_paragraph": "… lution, their own policy is destroying this country's position and chucking out of business, or out of the country altogether, those at the leading edge of the revolution that we wish to encourage? When will the Government appreciate that, whenever they take a decision to collect more money or impose a directive, they are, as my hon. Friend the Member for South Dorset said, increasing the payroll burden on small businesses, which they cannot afford? They are being asked to fulfil tasks for Government as unpaid tax collectors, and often to do so with little notice, which throws their business into chaos and causes them to set aside the main purpose of their commercial activity in order to do the Government's work for them. The Government must not only now make it their policy to put less of a burden on small businesses, but must ensure that, when they do increase that burden, because they have not listened, they at least give businesses sufficient notice so that they can organise their affairs and tackle their main priority before doing the Government's work for them. I have a very few minutes to say the many things that I would like to say in this rich area of policy and, at the mo …",
+      "word_count": 1419,
+      "fragment": false,
+      "speaker": "Mr. Alan Duncan",
+      "party": null,
+      "date": "2000-03-08",
+      "house": "House of Commons",
+      "debate_title": "Small Business",
+      "column": null,
+      "source_key": "pwdata-debates/debates2000-03-08a/sections/337/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Small Business",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates2000-03-08a:337",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2000-03-08a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 44.670701026916504
+    },
+    {
+      "quoted_paragraph": "Perish the thought. However, real, practical difficulties could flow from this apparently politically correct provision.",
+      "word_count": 15,
+      "fragment": true,
+      "speaker": "Mr. Forth",
+      "party": null,
+      "date": "2000-04-10",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Nuclear Safeguards Bill [Lords]",
+      "column": null,
+      "source_key": "pwdata-debates/debates2000-04-10a/sections/303/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — Nuclear Safeguards Bill [Lords]",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"political correctness\"; the passage makes the IMPLEMENTATION move (it cannot be operated as drafted), confirmed by /practical difficult/i",
+      "section_id": "pwdata-debates:debates2000-04-10a:303",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2000-04-10a.xml",
+      "query": "political correctness",
+      "confirmed_by_pattern": "/practical difficult/i",
+      "argument_moves": [
+        {
+          "tag": "IMPLEMENTATION",
+          "move": "it cannot be operated as drafted",
+          "pattern": "/practical difficult/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 11.409929275512695
+    },
+    {
+      "quoted_paragraph": "… arter of such highly generalised aspirations really increase the happiness of the citizens of this country? Will it really be of any practical use to the citizen? We may be told that it is for the courts and the lawyers to decide whether it is of practical significance, but we are entitled to ask: what will the wider consequences be? By \"consequences\" I mean both the intended consequences and the unintended consequences which can not be foreseen. Some of the proposed articles are so vague one does not know how the courts will interpret them or where they will lead to. Article 1, relating to the dignity of the human person, states: \"The dignity of the human person must be respected and protected\". Could that eventually be interpreted by the courts as powers and rights against abortion and the rights of the unborn child? No one can tell where these articles will lead or how they will be interpreted. It is the case that signing the European Convention on Human Rights is already a condition of membership of the EU. All member states have signed it, so what is the point and the need to have yet another charter? The noble and learned Lord, Lord Hope, made the point that it is not just a  …",
+      "word_count": 2406,
+      "fragment": false,
+      "speaker": "Lord Lamont of Lerwick",
+      "party": null,
+      "date": "2000-06-16",
+      "house": "House of Lords",
+      "debate_title": "EU Charter of Fundamental Rights",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2000-06-16a/sections/6/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "EU Charter of Fundamental Rights",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter for lawyers\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "pwdata-lords:daylord2000-06-16a:6",
+      "corpus": "pwdata-lords",
+      "source_url": "http://www.publications.parliament.uk/pa/ld199900/ldhansrd/vo000616/text/00616-01.htm#00616-01_spnew3",
+      "query": "a charter for lawyers",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 41.08752250671387
+    },
+    {
+      "quoted_paragraph": "Will my right hon. Friend give his assessment of the likely burden on business, especially small businesses, if the so-called fuel protesters attempt to repeat the reckless behaviour that they visited on the country in September?",
+      "word_count": 36,
+      "fragment": false,
+      "speaker": "Mr. Steve McCabe",
+      "party": null,
+      "date": "2000-11-02",
+      "house": "House of Commons",
+      "debate_title": "Oral Answers to Questions — TRADE AND INDUSTRY — Small Businesses",
+      "column": null,
+      "source_key": "pwdata-debates/debates2000-11-02a/sections/61/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Oral Answers to Questions — TRADE AND INDUSTRY — Small Businesses",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates2000-11-02a:61",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2000-11-02a.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 44.37074661254883
+    },
+    {
+      "quoted_paragraph": "… t subtle or calibrated. Modern legislation, I suggest, is honoured in the breach: 14,000 pages of new statute law a year, most of it remaining on the shelf. What is implemented is implemented unevenly and with undue discretion on the part of those enforcing it. How can we be sure that this most complex legislation would have the quality of enforcement and policing without which it could be wholly counterproductive? The evidence from Oregon and Holland has been presented to us by several speakers as justifying the proposed legislation. I cannot see that. The law was changed in Oregon only in 1998 and in Holland in 2001. The most important aspects of the evidence that I would want to see are the most difficult to find. For example, there is the whole question of undue influence or pressure on old people from relatives, beneficiaries and the like: how does one go about getting evidence for or against that? I suggest to your Lordships' House that we are not remotely in a position of having adequate evidence one way or the other. The draft Bill itself is full of ambiguities and flexibilities. I do not blame the noble Lord, Lord Joffe, and his helpers for that because we have a cruel cho …",
+      "word_count": 845,
+      "fragment": false,
+      "speaker": "Lord Phillips of Sudbury",
+      "party": null,
+      "date": "2005-10-10",
+      "house": "House of Lords",
+      "debate_title": "Assisted Dying for the Terminally Ill Bill: Select Committee Report",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2005-10-10c/sections/111/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Assisted Dying for the Terminally Ill Bill: Select Committee Report",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"you cannot legislate for\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /counter-?productive/i",
+      "section_id": "pwdata-lords:daylord2005-10-10c:111",
+      "corpus": "pwdata-lords",
+      "source_url": "http://www.publications.parliament.uk/pa/ld200506/ldhansrd/vo051010/text/51010-17.htm#51010-17_spnew0",
+      "query": "you cannot legislate for",
+      "confirmed_by_pattern": "/counter-?productive/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/counter-?productive/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 32.04756259918213
+    },
+    {
+      "quoted_paragraph": "… hat is the first thing they will do? Will they commit suicide? Do you really want to do that to someone? In a small business, you are living on a far more personal level with these people. The procedures laid down by civil servants sitting in large offices just do not work in small businesses. I entirely agree with what the noble Lord, Lord Sugar, and everyone else has said about procurement. The unintended consequences worry me. For example, the Equality Act says that the Government will drive the equalities agenda by government procurement throughout the supply chain. That is a clear intention. That could wipe out small businesses further down the supply chain. How many small businesses can, or know how to, tick the relevant boxes on equality, climate change, energy, sustainability and all the other bits and pieces and conditions that you are expected to fulfil on a government procurement contract? As the noble Lord, Lord Taylor, said, you cannot get on a government procurement list if you cannot tick the boxes. I think that the noble Lord, Lord Sugar, also mentioned that, and it has been referred to by several other noble Lords. The trouble is that the Civil Service perceive ris …",
+      "word_count": 1834,
+      "fragment": false,
+      "speaker": "The Earl of Erroll",
+      "party": null,
+      "date": "2010-06-17",
+      "house": "House of Lords",
+      "debate_title": "Small and Medium-sized Enterprises: Government Policy — Debate",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2010-06-17a/sections/72/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Small and Medium-sized Enterprises: Government Policy — Debate",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"equality legislation places an unreasonable burden on small businesses\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "pwdata-lords:daylord2010-06-17a:72",
+      "corpus": "pwdata-lords",
+      "source_url": "http://www.publications.parliament.uk/pa/ld201011/ldhansrd/text/100617-0004.htm#100617116000153",
+      "query": "equality legislation places an unreasonable burden on small businesses",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/equality/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7574298977851868
+    },
+    {
+      "quoted_paragraph": "Does my right hon. Friend agree that as we develop important policies in the area of equality we must avoid adding to the regulatory burden on small business? Will she listen carefully to the thousands of very small businesses in Britain that are concerned by some of these proposals?",
+      "word_count": 49,
+      "fragment": false,
+      "speaker": "Julian Smith",
+      "party": null,
+      "date": "2011-01-27",
+      "house": "House of Commons",
+      "debate_title": "WOMEN AND EQUALITIES — Flexible Working",
+      "column": null,
+      "source_key": "pwdata-debates/debates2011-01-27a/sections/123/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "WOMEN AND EQUALITIES — Flexible Working",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"equality legislation places an unreasonable burden on small businesses\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /burden on (?:business|small business|taxpayers)/i",
+      "section_id": "pwdata-debates:debates2011-01-27a:123",
+      "corpus": "pwdata-debates",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201011/cmhansrd/cm110127/debtext/110127-0001.htm#11012762000956",
+      "query": "equality legislation places an unreasonable burden on small businesses",
+      "confirmed_by_pattern": "/burden on (?:business|small business|taxpayers)/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/burden on (?:business|small business|taxpayers)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/equality/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7678235769271851
+    },
+    {
+      "quoted_paragraph": "… intain international peace and security. Measures taken by Members in the exercise of this right of self defence shall be immediately reported to the Security Council and shall not in any way affect the authority and responsibility of the Security Council under the present Charter to take at any time such action as it deems necessary to maintain or restore international peace and security. 15. As there is no evidence whatsoever that the Taliban Government of Afghanistan launched or supported the attacks on the World Trade Centre there is no lawful justification for the invasion or occupation of Afghanistan. As the Government and people of Afghanistan made no attempt whatsoever to attack Britain, there is not now and never has been a lawful justification for Britain's participation in this war. 16. Under the UN Charter the only people authorised to use armed force in the Afghan conflict are the people of Afghanistan [the Taliban]. Under Article 51 they have the right to defend themselves from the unlawful invasion and occupation of their country by British, American and ISAF forces. If they notify the UN Security Council of the unlawful attacks they can lawfully continue to use arme …",
+      "word_count": 540,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2011-03-02",
+      "house": "select committee (report)",
+      "debate_title": "Report: 4th Report - The UK's foreign policy approach to Afghanistan and Pakistan - additional written evidence — Foreign Affairs Committee — D e s t ab i l i s in g",
+      "column": null,
+      "source_key": "committees-reports/publication:24354/sections/arc-0062/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 4th Report - The UK's foreign policy approach to Afghanistan and Pakistan - additional written evidence — Foreign Affairs Committee — D e s t ab i l i s in g",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter for lawyers\"; the passage makes the EVIDENCE_GAP move (the problem is not established, or the data does not show it), confirmed by /there is (?:simply )?no evidence/i",
+      "section_id": "committees-reports:publication:24354:arc-0062",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201011/cmselect/cmfaff/514/514vw.pdf",
+      "query": "a charter for lawyers",
+      "confirmed_by_pattern": "/there is (?:simply )?no evidence/i",
+      "argument_moves": [
+        {
+          "tag": "EVIDENCE_GAP",
+          "move": "the problem is not established, or the data does not show it",
+          "pattern": "/there is (?:simply )?no evidence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.95588827133179
+    },
+    {
+      "quoted_paragraph": "…  place between the departments. 14. How could the power given to the Secretary of State to make regulations with regard to the practicalities of the assessment and planning process be best utilised to achieve the aim of integrated support? It is important that the Secretary of State has overall responsibility but it is important that there is due diligence on the regulations. There must always be due process regarding the legislation and policies put in place or change of a Secretary of State or Government could create new anomalies because of a change of focus or idealism. 15. What impact will the new powers provided for in the clauses have on young people's transition into adult services? Clause 13 states that the local authority develop plans that provide for the child or young person to be educated in a maintained nursery school through to mainstream school or mainstream post-16 institution as is necessary. This approach will help to smooth the transition from children's to adult services, although the success of this transition will depend on how each Local Authority is structured. Of course use of alternative providers to help with this progression would make sense because th …",
+      "word_count": 463,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2012-12-19",
+      "house": "select committee (report)",
+      "debate_title": "Report: 6th Report - Pre-legislative scrutiny: Special Educational Needs - Volume III (Volume III\r\nAdditional written evidence) — Education Committee — 7. Is there anything missing from the draft Bill?",
+      "column": null,
+      "source_key": "committees-reports/publication:24973/sections/arc-0119/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 6th Report - Pre-legislative scrutiny: Special Educational Needs - Volume III (Volume III\r\nAdditional written evidence) — Education Committee — 7. Is there anything missing from the draft Bill?",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"due regard to the need\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "committees-reports:publication:24973:arc-0119",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201213/cmselect/cmeduc/631/631vw.pdf",
+      "query": "due regard to the need",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.8099946975708
+    },
+    {
+      "quoted_paragraph": "The police will deploy to every death, and in cases involving unexplained or suspicious deaths, we also deploy family liaison officers. That initial engagement with the family happens, and we keep them updated during the initial stage of the police inquiry. They will know what we are doing, particularly with regard to how we are managing the initial investigative strategy, the scene and so on. I think that where we need to tighten things up a fair bit is what happens when we complete the initial investigation and report the circumstances to the COPFS. It is not that we back away from the matter, but that we have done the work that is expected of us and have made our report to the Crown. There is then an onus on the Crown to maintain that engagement with the family, because the matter is now subject to the judicial process. Things need to be tightened up during that longer period when the case is going through due process.",
+      "word_count": 167,
+      "fragment": false,
+      "speaker": "Detective Chief Superintendent Allan",
+      "party": null,
+      "date": "2015-05-12",
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: independent investigation by the procurator fiscal and possibly a discretionary FAI.”",
+      "column": null,
+      "source_key": "scottish-parliament-or/arch-9947/sections/304/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Scottish Parliament: independent investigation by the procurator fiscal and possibly a discretionary FAI.”",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"due regard to the need\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "scottish-parliament-or:arch-9947:304",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/parliamentarybusiness/report.aspx?r=9947",
+      "query": "due regard to the need",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 28.284733295440674
+    },
+    {
+      "quoted_paragraph": "… able and necessary. 5.6 Whatever test the Judicial Commissioner applies in authorising a warrant, it should primarily be to assess the merits and legality of the application. Recommendations to the committee 6.1 CILEx requests that the committee consider the following recommendations: 6.1.1 The Bill should grant statutory protection of legal professional privilege, through explicitly including it on the face of the Bill. Such protection would provide reassurance to the public of the importance and preservation of this fundamental right. 6.1.2 If this is not to occur, then as an absolute minimum, the relevant codes referred to in the Draft Bill should be enforceable by law, and be drawn up in consultation with the legal professions. 6.1.3 Any provisions made by the Draft Bill with regard to legal professional privilege should accurately reflect all the professionals on whom duties are imposed. 6.1.4 All warrants should be subject to judicial approval. 18 December 2015 [1] http://www.cilex.org.uk/media/media_releases/new_practice_rights_approved.aspx [2] R (on the application of Prudential Plc and another (Appellants)) v Special Commissioner of Income Tax and another (Respondents) [2 …",
+      "word_count": 1319,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2016-01-07",
+      "house": "select committee (evidence)",
+      "debate_title": "Draft Investigatory Powers Bill Joint Committee - publications — IPB0041",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:62475/sections/107794/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Draft Investigatory Powers Bill Joint Committee - publications — IPB0041",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter for lawyers\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /on the face of the bill/i",
+      "section_id": "committees-evidence:writtenevidence:62475:107794",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/62475/",
+      "query": "a charter for lawyers",
+      "confirmed_by_pattern": "/on the face of the bill/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/on the face of the bill/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 19.13291358947754
+    },
+    {
+      "quoted_paragraph": "I think that I answered Ms Wells’s question earlier when I said that the evidence shows that attitudes change more quickly in those countries where legislation has been introduced. By legislating, the Parliament will influence social norms on what is and what is not acceptable. The introduction of legislation will influence attitudes. In most countries in which such legislation has been introduced, that has happened without a majority of the public supporting it at the time when it was introduced. It is the right thing to do.",
+      "word_count": 87,
+      "fragment": false,
+      "speaker": "Dr Heilmann",
+      "party": null,
+      "date": "2019-02-28",
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: Children (Equal Protection from Assault) (Scotland) Bill: Stage 1",
+      "column": null,
+      "source_key": "scottish-parliament-or/11969/sections/148/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Scottish Parliament: Children (Equal Protection from Assault) (Scotland) Bill: Stage 1",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"you cannot legislate to change people's attitudes\"; the passage makes the SUPPORT_EVIDENCE move (affirmative: here is why it will work, with evidence), confirmed by /the evidence (?:shows|demonstrates|is clear)/i",
+      "section_id": "scottish-parliament-or:11969:148",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/chamber-and-committees/official-report/search-what-was-said-in-parliament/dplr-28-02-2019?meeting=11969",
+      "query": "you cannot legislate to change people's attitudes",
+      "confirmed_by_pattern": "/the evidence (?:shows|demonstrates|is clear)/i",
+      "argument_moves": [
+        {
+          "tag": "SUPPORT_EVIDENCE",
+          "move": "affirmative: here is why it will work, with evidence",
+          "pattern": "/the evidence (?:shows|demonstrates|is clear)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.770933985710144
+    },
+    {
+      "quoted_paragraph": "I, too, thank you for the invitation to appear before the committee this morning. Thompsons is broadly in favour of the principles of the bill, which is a logical extension of existing legislation for—[ Inaudible. ]—cost recovery. Industrial disease has been excluded from that until now because of the potential complexity and potential unintended consequences. However, as we are likely to discuss further, few such problems cannot be solved by taking a sensible and practical approach to them. Litigation in such cases is full of complexity, but most of it has been resolved by those who practise in that area of law, so there is no reason why legislation cannot also overcome the potential complexities. As has been indicated, the administrative costs of setting up a scheme are likely to be modest. In the current climate, any recovery to the national health service of costs incurred by treating people who are victims of industrial disease must be welcomed. I echo Professor Watterson’s view that anything that encourages better health and safety practices must be welcomed.",
+      "word_count": 175,
+      "fragment": false,
+      "speaker": "Laura Blane (Thompsons Solicitors Scotland)",
+      "party": null,
+      "date": "2020-11-03",
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: Liability for NHS Charges (Treatment of Industrial Disease) (Scotland) Bill: Stage 1",
+      "column": null,
+      "source_key": "scottish-parliament-or/12913/sections/8/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Scottish Parliament: Liability for NHS Charges (Treatment of Industrial Disease) (Scotland) Bill: Stage 1",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"you cannot legislate for\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "scottish-parliament-or:12913:8",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/chamber-and-committees/official-report/search-what-was-said-in-parliament/dplr-03-11-2020?meeting=12913",
+      "query": "you cannot legislate for",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 32.31416463851929
+    },
+    {
+      "quoted_paragraph": "Absolutely. The other risk, which I will come on to in a moment, is the chilling effect. We do not know, or are unable to quantify, the investments that could be coming to the UK but for the fear that the energy charter treaty will again place its dead hand on those investments. Withdrawal from the energy charter treaty provides the certainty, clarity, continuity and consistency—the four Cs—that the net zero review outlined as part of a mission-based approach to long-term certainty. We cannot have long-term certainty for investment in future renewable projects or take decisions potentially shutting our fossil fuel investments unless the energy charter treaty is removed. It is critical that we provide that future certainty if we want those additional investments and the opportunities offered by that inward wall of capital that is waiting to be spent. As the hon. Lady mentioned, an oil company winning £210 million from the Italian Government over their restriction on offshore oil drilling is a perfect example of the risk to which this outdated treaty now exposes the UK. She mentioned that the company won six times the amount it had ever spent on the project, and those winnings are no …",
+      "word_count": 373,
+      "fragment": false,
+      "speaker": "Chris Skidmore",
+      "party": null,
+      "date": "2023-03-21",
+      "house": "Westminster Hall",
+      "debate_title": "Energy Charter Treaty",
+      "column": null,
+      "source_key": "pwdata-westminster/westminster2023-03-21b/sections/23/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Energy Charter Treaty",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter for lawyers\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /chilling effect/i",
+      "section_id": "pwdata-westminster:westminster2023-03-21b:23",
+      "corpus": "pwdata-westminster",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/westminhall/westminster2023-03-21b.xml",
+      "query": "a charter for lawyers",
+      "confirmed_by_pattern": "/chilling effect/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/chilling effect/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 39.224853515625
+    },
+    {
+      "quoted_paragraph": "Good morning, Ian. My question is about restoring public confidence, which you mentioned in your remarks. We know that advice has been given to you that you cannot revisit complaints that were made in the past. Other members have raised that matter with you previously. Do you not think that there is an obligation, for reasons of natural justice and to restore public confidence, to re-investigate complaints that were clearly not handled appropriately? There could be a potential feeling of injustice because, as stated in paragraph 19 of the Auditor General’s report, complaints had not been investigated in compliance with the legislation. On balance, do you not feel that greater weight should be attached to that aspect of restoring public confidence than to advice that you might have received not to revisit those complaints?",
+      "word_count": 134,
+      "fragment": false,
+      "speaker": "Willie Coffey (Kilmarnock and Irvine Valley) (SNP)",
+      "party": null,
+      "date": "2023-03-30",
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: Section 22 Report: “The 2021/22 audit of the Commissioner for Ethical Standards in Public Life in Scotland”",
+      "column": null,
+      "source_key": "scottish-parliament-or/15242/sections/9/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Scottish Parliament: Section 22 Report: “The 2021/22 audit of the Commissioner for Ethical Standards in Public Life in Scotland”",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"you cannot legislate for\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /natural justice/i",
+      "section_id": "scottish-parliament-or:15242:9",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/chamber-and-committees/official-report/search-what-was-said-in-parliament/hscs-30-03-2023?meeting=15242",
+      "query": "you cannot legislate for",
+      "confirmed_by_pattern": "/natural justice/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/natural justice/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 33.187193870544434
+    },
+    {
+      "quoted_paragraph": "The hon. Member may have heard my earlier intervention. He is absolutely right, and I agree with him wholeheartedly, that we have to shift the burden away from small businesses on to big online retailers. However, that could be undermined if all we do is shift the burden on to the big chains. House of Commons Library research says that small independent businesses are going to end up subsidising the big chains. Does he share my concern that this could be an unintended consequence and that the Government must look at it?",
+      "word_count": 92,
+      "fragment": false,
+      "speaker": "Daisy Cooper",
+      "party": null,
+      "date": "2025-01-15",
+      "house": "House of Commons",
+      "debate_title": "Non-Domestic Rating (Multipliers and Private Schools) Bill — New Clause 1 - Review of impact on businesses, high streets and economic growth",
+      "column": null,
+      "source_key": "pwdata-debates/debates2025-01-15c/sections/414/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Non-Domestic Rating (Multipliers and Private Schools) Bill — New Clause 1 - Review of impact on businesses, high streets and economic growth",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"burden on small businesses\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "pwdata-debates:debates2025-01-15c:414",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2025-01-15c.xml",
+      "query": "burden on small businesses",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 46.346073150634766
+    },
+    {
+      "quoted_paragraph": "Yes. We are still waiting for outcomes. We have engaged but, as Claire Mack said, there are policies sitting there. We would want to bring up the building levy, which will have a huge negative impact. Is it dealing with a problem that needs to be solved? Will it have a huge and unintended consequence on an industry that is already in emergency and struggling for land and when we have SMEs struggling with the regulatory environment? I know that I must give short answers, but there is one more thing before I finish. We have done a little bit of work on the cost of the current regulatory environment. As regulations stand in this parliamentary year, they add circa £30,000 to the cost of a house, and that cannot be borne by customers. We have a shortage of housing and a shortage of land. All these indices are not working. We need intervention. We need to look at whether we can create new legislation that is good for our industry sectors. If you wanted to change things through all these processes, you could do something simple. You could have a presumption in favour of sustainable development in the current local development plans. We have put solutions on the table. We are not sure that …",
+      "word_count": 243,
+      "fragment": false,
+      "speaker": "Jane Wood",
+      "party": null,
+      "date": "2025-02-26",
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: New Deal for Business",
+      "column": null,
+      "source_key": "scottish-parliament-or/16287/sections/41/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Scottish Parliament: New Deal for Business",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"you cannot legislate for\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "scottish-parliament-or:16287:41",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/chamber-and-committees/official-report/search-what-was-said-in-parliament/lghp-26-02-2025?meeting=16287",
+      "query": "you cannot legislate for",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 31.572413444519043
+    },
+    {
+      "quoted_paragraph": "… e can be found on our website with our full terms of reference. 2. We welcome submissions from the public that include practical examples of how the legislation proposed in the SI might work, and what effect it may have. For example, if you think that the proposed legislation will not be understood by the community that you represent or that some element of it will be ineffective or may result in unintended consequences, then the Committee will be interested to hear from you. We are also interested to hear from you if you strongly support the proposal or believe that it represents good practice. 3. Examples that illustrate how the policy will work in practice are particularly valued by the House and we find these examples are often raised in debates on instruments, but please do not include personal details that would identify any individual you are describing. 4. We cannot consider future instruments that are still out for consultation: it is quite possible that the Government will amend the wording of the legislation in the light of any comments received. The SLSC can only look at SIs when the Government has laid them before Parliament for approval or rejection. Your comments sho …",
+      "word_count": 884,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2025-09-09",
+      "house": "select committee (report)",
+      "debate_title": "Engagement document: Public Guidance for Evidence Submissions",
+      "column": null,
+      "source_key": "committees-reports/publication:49426/sections/263205/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Engagement document: Public Guidance for Evidence Submissions",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"you cannot legislate for\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-reports:publication:49426:263205",
+      "corpus": "committees-reports",
+      "source_url": "https://committees.parliament.uk/publications/49426/",
+      "query": "you cannot legislate for",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 32.59647846221924
+    },
+    {
+      "quoted_paragraph": "I will make some more progress. That requirement is unworkable. There is not one of us here who does not know how stressed our local small businesses are. How could it ever be proportionate to require overstretched staff in these businesses to police gender norms for their own customers to access a facility as basic as a toilet? The business community has already loudly voiced its concerns. In September last year, hundreds of businesses signed a letter opposing the EHRC draft proposals, given the impact they would have on their employees and their costs, as well as the legal risk they would create.",
+      "word_count": 103,
+      "fragment": false,
+      "speaker": "Marie Goldman",
+      "party": null,
+      "date": "2026-04-14",
+      "house": "Westminster Hall",
+      "debate_title": "“For Women Scotland” Court Ruling: First Anniversary — [Graham Stringer in the Chair]",
+      "column": null,
+      "source_key": "pwdata-westminster/westminster2026-04-14b/sections/76/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "“For Women Scotland” Court Ruling: First Anniversary — [Graham Stringer in the Chair]",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"equality legislation places an unreasonable burden on small businesses\"; the passage makes the IMPLEMENTATION move (it cannot be operated as drafted), confirmed by /unworkable/i",
+      "section_id": "pwdata-westminster:westminster2026-04-14b:76",
+      "corpus": "pwdata-westminster",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/westminhall/westminster2026-04-14b.xml",
+      "query": "equality legislation places an unreasonable burden on small businesses",
+      "confirmed_by_pattern": "/unworkable/i",
+      "argument_moves": [
+        {
+          "tag": "IMPLEMENTATION",
+          "move": "it cannot be operated as drafted",
+          "pattern": "/unworkable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/\\bEHRC\\b/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7629411816596985
+    }
+  ],
+  "objections_over_floor": 28,
+  "fragments_kept": 4,
+  "fragment_rule": "fragment = true where the section's own word count is under 30. No row is dropped for it. A fragment is material to read; it is not material to quote.",
+  "returned_nothing_usable": false,
+  "coverage_note": "Searched 8 parliamentary collections through two live indexes. This is top-K retrieval, not a scan: it says what the queries reached, never what the record contains. A move made in words none of these twelve queries reach is not here, and its absence is not evidence."
+}

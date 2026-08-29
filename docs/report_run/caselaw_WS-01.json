@@ -1,0 +1,1642 @@
+{
+  "generated_at": "2026-08-29T15:23:53.079Z",
+  "measure": "WS-01 — Human Rights Act 1998",
+  "retrieval_note": "Retrieval only. There is no relevance field and no holding field, on purpose: whether the common law has absorbed the principle is the analysis track's question and nothing here answers it. Every passage is the court's own words, verbatim, with the R2 key it was read from.",
+  "instrument": {
+    "keyword_service": "https://fts-serve-production.up.railway.app",
+    "keyword_service_note": "FTS_SEARCH_URL is not set in .env; this is the production host found in the repo.",
+    "corpora_searched": [
+      "tna-caselaw",
+      "et-decisions",
+      "tax-tribunals",
+      "ni-judgments",
+      "cma-cases"
+    ],
+    "confirm_step": "FTS proposes; the judgment's own text disposes. A hit whose body does not contain the search term is dropped rather than kept to pad the set."
+  },
+  "coverage": {
+    "generatedAt": "2026-08-29T15:22:53.467Z",
+    "layers": [
+      {
+        "id": "markup-citations",
+        "what": "references the document asserted by <Citation URI>",
+        "rows": 385346,
+        "status": "searched",
+        "consequence": "the source names the target by identity, so the act-level match is not inferred"
+      },
+      {
+        "id": "text-citations",
+        "what": "act NAMES resolved in running text against corpus_acts titles",
+        "rows": 649202,
+        "status": "searched",
+        "consequence": "the target id is DERIVED, not read from the document — never quote target_uri as the source’s own words"
+      },
+      {
+        "id": "enabling-power",
+        "what": "made-under: \"this instrument was made under section N of that Act\", with the enacting words attached",
+        "rows": 191258,
+        "where": "legislation_edges (230,681 rows, no evidence column)",
+        "status": "searched",
+        "consequence": "a stronger fact than a mention — an instrument that merely mentions an Act survives its repeal, while one whose ENABLING POWER is repealed may fall with it. Without this layer a consequence list cannot tell the two apart"
+      },
+      {
+        "id": "amendment-effects",
+        "what": "amends / repeals / commences / modifies, from TNA’s own effects data",
+        "rows": 0,
+        "where": "legislation_edges (1,997,033 rows)",
+        "status": "held-elsewhere",
+        "consequence": "a repeal or amendment is not a citation and is not returned by this query"
+      },
+      {
+        "id": "case-law-citations",
+        "what": "a judgment citing a statutory provision",
+        "rows": 0,
+        "status": "not-built",
+        "consequence": "a provision may be read down, disapplied or construed by a court with nothing here to show it"
+      },
+      {
+        "id": "treaty-obligations",
+        "what": "a treaty article bearing on a domestic provision",
+        "rows": 0,
+        "status": "not-built",
+        "consequence": "a change may be prevented by an international obligation that this graph cannot see"
+      }
+    ],
+    "detection": [
+      {
+        "detection": "text",
+        "rows": 649202,
+        "sourceDocs": 61127
+      },
+      {
+        "detection": "markup",
+        "rows": 385346,
+        "sourceDocs": 35898
+      },
+      {
+        "detection": "enabling",
+        "rows": 191258,
+        "sourceDocs": 70576
+      }
+    ],
+    "notInAProvision": {
+      "rows": 267054,
+      "total": 1225806,
+      "pct": 21.78599223694451
+    },
+    "unresolvedTargets": {
+      "rows": 172316,
+      "total": 1225806,
+      "pct": 14.057363073765343
+    },
+    "recorded": [
+      {
+        "key": "dta_orders_recoverable_from_held_bytes",
+        "n": 127,
+        "note": "double taxation Orders whose scheduled agreement is ABSENT from the corpus but PRESENT in the bulk CLML already on disk. No fetch is needed to recover these; an ingest pass is. The remainder need the source.",
+        "measuredAt": "2026-08-28T00:32:39.782Z",
+        "measuredBy": "graph/audit-4b-tax.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "identity_ambiguous_calendar_forms",
+        "n": 419,
+        "note": "calendar-year id forms that name MORE THAN ONE Act, because two parliamentary sessions can fall inside one calendar year and each numbers its chapters from the start. REFUSED a bridge and recorded as refusals, never resolved by first-wins.",
+        "measuredAt": "2026-08-28T00:32:39.864Z",
+        "measuredBy": "graph/audit-4b-identity.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "madeunder_section_refs_wrong_pct",
+        "n": 36.1,
+        "note": "percentage of the pre-2026-08-28 preamble parser's SECTION-level refs that were wrong — a bracketed subsection read as a section, or a ref list attached to a different Act named in the same preamble. legislation_edges still holds them; citation_edge's enabling rows were written by the fixed parser.",
+        "measuredAt": "2026-08-28T00:32:39.810Z",
+        "measuredBy": "graph/audit-4b-layer2.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "oi15_documents_skipped",
+        "n": 2431,
+        "note": "documents in the bulk CLML file the shipped calendar-year entry filter skipped, of the total it should have read",
+        "measuredAt": "2026-08-26T13:04:21.237Z",
+        "measuredBy": "graph/audit-4a-blast-radius.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "oi15_residual_edges",
+        "n": 924,
+        "note": "citation edges recoverable from the pre-1963 documents the July cites extractor never opened; the residual against legislation_edges, which has NOT been re-extracted. citation_edge itself reads every document.",
+        "measuredAt": "2026-08-26T13:04:21.213Z",
+        "measuredBy": "graph/audit-4a-t2-hole.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "si_schedule_retention_pct",
+        "n": 41.3,
+        "note": "percentage of sampled instruments whose bulk-CLML schedule also reached the corpus as a schedule section. A schedule the ingest dropped presents as a SHORT DOCUMENT, not as an error, so this bounds every answer that depends on scheduled text — a treaty above all.",
+        "measuredAt": "2026-08-28T00:32:39.758Z",
+        "measuredBy": "graph/audit-4b-schedules.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "unresolved_act_name_spans",
+        "n": 97095,
+        "note": "act-name spans in running text that resolved to no instrument we hold a title for — short forms (\"the 1998 Act\"), pre-1963 Acts under the other id form, and Acts the corpus does not hold. Counted, never dropped silently; short-form resolution is not built.",
+        "measuredAt": "2026-08-26T13:04:21.257Z",
+        "measuredBy": "graph/audit-4a-t3-spans.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "unresolved_spans_in_target_docs_pct",
+        "n": 29.9,
+        "note": "percentage of those unresolved spans sitting in a document that also carries a resolved citation to one of twelve research-target Acts — the number that decides whether short-form resolution is urgent",
+        "measuredAt": "2026-08-26T13:04:21.277Z",
+        "measuredBy": "graph/audit-4a-t3-spans.ts",
+        "ageDays": 3.1,
+        "stale": false
+      }
+    ],
+    "staleFacts": [],
+    "caseLawBoundary": {
+      "corpora": [
+        "et-decisions",
+        "tax-tribunals"
+      ],
+      "earliest": "1989-11-09",
+      "latest": "2026-06-11"
+    },
+    "identityBridge": {
+      "built": true,
+      "bridgedForms": 13454,
+      "ambiguousTargets": 77,
+      "unbridgeableTargets": 13,
+      "regnalTargets": 783
+    },
+    "schedules": {
+      "instruments": 109202,
+      "instrumentsWithASchedule": 9418,
+      "pct": 8.624384168788117
+    }
+  },
+  "coverage_defect_found_by_this_run": {
+    "what": "coverage.ts CASE_LAW_CORPORA names four collections; two of them do not exist and the two largest that do are missing.",
+    "names_in_coverage_ts": [
+      "caselaw",
+      "caselaw-fcl",
+      "et-decisions",
+      "tax-tribunals"
+    ],
+    "of_those_that_exist": [
+      "et-decisions",
+      "tax-tribunals"
+    ],
+    "missing_from_it": [
+      "tna-caselaw (74,896 rows, from 1965)",
+      "ni-judgments (7,927 rows)"
+    ],
+    "consequence": "The case-law boundary the coverage block prints is drawn over et-decisions and tax-tribunals alone, so it begins in 1989 — twenty-four years after the real floor of 1965. The block is reproduced above EXACTLY as generated, defect included, because that is what the report prints; date_range_measured below is the corrected measurement."
+  },
+  "date_range_measured": {
+    "earliest": "1965-08-09",
+    "latest": "2026-06-12",
+    "rows": 280573,
+    "corpora_measured": [
+      "tna-caselaw",
+      "et-decisions",
+      "tax-tribunals",
+      "ni-judgments",
+      "cma-cases"
+    ],
+    "by_corpus": [
+      {
+        "corpus": "et-decisions",
+        "n": 161753,
+        "earliest": "2017-02-08",
+        "latest": "2026-06-11"
+      },
+      {
+        "corpus": "tna-caselaw",
+        "n": 74896,
+        "earliest": "1965-08-09",
+        "latest": "2026-06-11"
+      },
+      {
+        "corpus": "cma-cases",
+        "n": 22898,
+        "earliest": "2001-04-18",
+        "latest": "2026-06-12"
+      },
+      {
+        "corpus": "tax-tribunals",
+        "n": 13099,
+        "earliest": "1989-11-09",
+        "latest": "2024-06-11"
+      },
+      {
+        "corpus": "ni-judgments",
+        "n": 7927,
+        "earliest": "1984-09-07",
+        "latest": "2026-06-11"
+      }
+    ],
+    "by_decade": {
+      "1960s": 1,
+      "1970s": 1,
+      "1980s": 87,
+      "1990s": 273,
+      "2000s": 24500,
+      "2010s": 95029,
+      "2020s": 139177
+    },
+    "by_court": {
+      "EWHC": {
+        "n": 39132,
+        "earliest": "2003-01-03",
+        "latest": "2026-06-10"
+      },
+      "EWCA": {
+        "n": 22487,
+        "earliest": "2001-04-11",
+        "latest": "2026-06-10"
+      },
+      "UKFTT": {
+        "n": 4337,
+        "earliest": "2008-11-12",
+        "latest": "2026-06-11"
+      },
+      "UKUT": {
+        "n": 2688,
+        "earliest": "2009-05-06",
+        "latest": "2026-06-09"
+      },
+      "EWFC": {
+        "n": 1907,
+        "earliest": "2009-03-05",
+        "latest": "2026-06-09"
+      },
+      "UKSC": {
+        "n": 948,
+        "earliest": "2009-10-14",
+        "latest": "2026-05-07"
+      },
+      "(unparsed)": {
+        "n": 830,
+        "earliest": "1965-08-09",
+        "latest": "2026-05-21"
+      },
+      "EAT": {
+        "n": 788,
+        "earliest": "2021-03-31",
+        "latest": "2026-06-11"
+      },
+      "EWCOP": {
+        "n": 766,
+        "earliest": "2009-02-09",
+        "latest": "2026-06-08"
+      },
+      "UKPC": {
+        "n": 704,
+        "earliest": "2009-11-04",
+        "latest": "2026-06-11"
+      },
+      "UKAIT": {
+        "n": 150,
+        "earliest": "2007-06-29",
+        "latest": "2009-12-18"
+      },
+      "EWCC": {
+        "n": 132,
+        "earliest": "2019-05-16",
+        "latest": "2026-06-05"
+      },
+      "EWCR": {
+        "n": 19,
+        "earliest": "2020-12-21",
+        "latest": "2026-05-01"
+      },
+      "UKIPTrib": {
+        "n": 8,
+        "earliest": "2023-06-21",
+        "latest": "2024-08-02"
+      }
+    }
+  },
+  "front_matter_check": {
+    "claim_in_the_report": "case law from 2001 only",
+    "measured_earliest": "1965-08-09",
+    "verdict": "THE FRONT MATTER IS WRONG. The measured floor is earlier than 2001. See date_range_measured.by_corpus for which collection supplies it."
+  },
+  "set_a_cites_the_act": [
+    {
+      "neutral_citation": "2024-nikb-44",
+      "case_name": "The Northern Ireland Human Rights Commission and JR 295’s Applications and In the matter of the Illegal Migration Act 2023",
+      "court": null,
+      "date": "2024-05-30",
+      "passage": "… ent in these judicial review applications relating to the Illegal Migration Act 2023 (‘IMA’). On foot of that judgment, the parties have now agreed an order in the following terms: “1. The Applicants’ claims for judicial review are upheld on the grounds relying on the “Windsor Framework” and on the Human Rights Act 1998. 2 Windsor Framework 2. Sections 2(1), 5(1), 5(2), 6, 13(4), 22(2), 22(3), 25, 54 and 57 are declared to breach Article 2 of the Windsor Framework of the EU-UK Withdrawal Agreement. 3. The following sections of the Illegal Migration Act 2023 are disapplied in Northern Ireland: (a) Section 2(1); (b) Section 5(1); (c) Section 5(2); (d) Section 6; (e) Section 13(4); (f) Section 22(2); (g) Section 22(3); (h) Section 25; (i) Section 54; and (j) Section 57. Human Rights Act 1998 4. Pursuant to section 4 of the Human Rights Act 1998, the following provisions of the Illegal Migra …",
+      "passage_word_count": 155,
+      "source_key": "ni-judgments/2024-nikb-44/sections/1/compiled.txt",
+      "provision_cited": "section-4",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2024-nikb-44:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2017] EWHC 450 (Fam)",
+      "case_name": "SW & TW (Children : Human Rights Claim: Procedure) (Rev 1)",
+      "court": "EWHC (Fam)",
+      "date": "2017-03-08",
+      "passage": "…  HONOURABLE MR. JUSTICE COBB - - - - - - - - - - - - - - - - - - - - - Between : LUTON BOROUGH COUNCIL Applicant - and - PW MT SW & TW (Children by their Children’s Guardian in the Children Act 1989 proceedings) Respondents PW SW & TW (Children, by their yet-to-be appointed litigation friend in the Human Rights Act 1998 proceedings) Claimants -and- LUTON BOROUGH COUNCIL Respondent Re SW & TW (Human Rights Claim: Procedure)(No.1) - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Roger McCarthy QC and Mai-Ling Savage (instructed by Local Authority Solicitor ) for Luton Borough Council Andrew Bagchi QC and Sylvester McIlwain (instructed by Edward Hayes LLP ) for the Father (PW) Barbara Connolly QC and Samantha Reddington (instructed by Northants Family Law Group ) for the Maternal Grandmother (MT) Alison Grief QC and Michael Edwards (27/28 February) John Tu …",
+      "passage_word_count": 187,
+      "source_key": "caselaw/2017-ewhc-450-fam/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] EWHC 450 (Fam):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "summary-judgment-court-dismisses-challenge-respect-british-nationality-act-1981",
+      "case_name": "Summary of judgment - Court dismisses challenge in respect of the British Nationality Act 1981 - In re Caoimhe Ni Chuinneagain",
+      "court": null,
+      "date": "2022-10-06",
+      "passage": "… l review was dismissed by Mr Justice Scoffield at first instance. It is this decision which she challenged. Relief The sole relief sought by the appellant was a declaration that section 1(1) and section 12 of the 1981 Act are incompatible with her rights under Article 8 ECHR in contravention of the Human Rights Act 1998. The appellant’s case also however had a second element - that s1(1) of the 1981 Act is incompatible with the Belfast Agreement. Facts The appellant was born in Belfast and lives here. She is an Irish citizen and has an Irish passport, on which she has previously travelled abroad on a number of occasions. Her parents are also Irish citizens and she has a number of relatives who live in the Republic of Ireland, as well as in the border area. She attends an Irish-medium school. She has 1 The panel was comprised of Lord Justice McCloskey, Lord Justice Horner and Mr Justice C …",
+      "passage_word_count": 162,
+      "source_key": "ni-judgments/summary-judgment-court-dismisses-challenge-respect-british-nationality-act-1981/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:summary-judgment-court-dismisses-challenge-respect-british-nationality-act-1981:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2022-niqb-9-0",
+      "case_name": "Spuc (Society for the Protection of Unborn Children) Pro–Life LTD's Application and The Secretary of State for Northern Ireland and Northern Ireland Human Rights Commission, Equality Commission for Northern Ireland and Rosaleen McElhinney Intervening and Spuc Pro – Life LTD Application for Judicial Review and The Minister of Health for Northern Ireland",
+      "court": null,
+      "date": "2022-02-08",
+      "passage": "… y of Opportunity of the 1998 Agreement.” [89] Thus, quite properly, the applicant does not rely on domestic legislation such as the Disability Discrimination Act 1995, the Special Educational Needs and Disability (Northern Ireland) Order 2005 or Convention Rights protected in domestic law under the Human Rights Act 1998, and in particular, Article 14 taken together with Article 8. [90] The court does not say that the impugned regulations would fall foul of any of these provisions but simply points out that the focus of the applicant’s Article 2 Protocol argument is on EU law as domestic law. [91] For the purposes of the Withdrawal Agreements and the Protocol, EU law is defined in Article 2(a) of the Withdrawal Agreement as including: “(i) The Treaty on European Union (“TEU”) the Treaty on the Functioning of the European Union (“TFEU”) and the Treaty establishing the European Atomic Energ …",
+      "passage_word_count": 149,
+      "source_key": "ni-judgments/2022-niqb-9-0/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2022-niqb-9-0:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "451",
+      "case_name": "V 18459: A Practitioner v The commissioners of Customs & Excise",
+      "court": null,
+      "date": "2003-12-12",
+      "passage": "… mily and private life\". It was no answer to say, he argued, that the appeal concerned his business life since he is a sole practitioner and no distinction could be drawn between Practitioner the businessman and Practitioner the private person: they are one and the same. The coming into force of the Human Rights Act 1998 had changed the approach which the courts and tribunals should adopt when considering a request for a private hearing, and much greater weight should be placed now on the respect for private life than might have been the case in the past. Article 6, though also favouring public hearings, did not preclude a private hearing when \"the protection of the private life of the parties\" so required. There was no need in this case for a public hearing and correspondingly no reason why the tribunal should not accede to his application. Cases such as McNicholas Construction Company L …",
+      "passage_word_count": 156,
+      "source_key": "tax-tribunals/451/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:451:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2012-niqb-77",
+      "case_name": "Northern Ireland Human Rights Commission’s Application",
+      "court": null,
+      "date": "2012-10-17",
+      "passage": "… ssion (2A) Subsection (1) does not apply to the Commission. (2B) In relation to the Commission's instituting, or intervening in, human rights proceedings— (a) The Commission need not be a victim or potential victim of the unlawful act to which the proceedings relate, (b) Section 7(3) and (4) of the Human Rights Act 1998 (c. 42) (breach of Convention rights: sufficient interest, &c.) shall not apply, (c) The Commission may act only if there is or would be one or more victims of the unlawful act, and 9 (d) No award of damages may be made to the Commission (whether or not the exception in section 8(3) of that Act applies). (2C) For the purposes of subsection (2B)— (a) “Human rights proceedings” means proceedings which rely (wholly or partly) on— (i) section 7(1) (b) of the Human Rights Act 1998, or (ii) Section 69(5) (b) of this Act, and (b) An expression used in subsection (2B) and in sect …",
+      "passage_word_count": 161,
+      "source_key": "ni-judgments/2012-niqb-77/sections/1/compiled.txt",
+      "provision_cited": "section-7",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2012-niqb-77:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2015-niqb-96",
+      "case_name": "The Northern Ireland Human Rights Commission’s Application",
+      "court": null,
+      "date": "2015-11-30",
+      "passage": "… ative provisions in a Convention compliant way or to conclude that prosecution under those provisions in respect of the circumstances set out at (vi) above is an abuse, the court considers it appropriate and proper that a declaration of incompatibility should be made pursuant to Section 4(2) of the Human Rights Act 1998 (HRA) in respect of the impugned provisions under the 1861 Act. B. INTRODUCTION [2] The applicant is the Commission. It brings this application for a declaration that the rights of women in Northern Ireland who are or become pregnant with an SMF (of which FFA is a subset) or who are pregnant as a result of sexual crimes, under Articles 3, 8 and 14 of the Convention, are breached by Section 58 and Section 59 of the 1861 Act and Section 25 of the 1945 Act. Consequently, it seeks a declaration of incompatibility under Section 4(2) of the HRA in respect of the impugned provis …",
+      "passage_word_count": 160,
+      "source_key": "ni-judgments/2015-niqb-96/sections/1/compiled.txt",
+      "provision_cited": "section-4",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2015-niqb-96:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2014] EWFC 38",
+      "case_name": "In the Matter of H (A Child - Breach of Convention Rights - Damages)",
+      "court": "EWFC",
+      "date": "2014-10-29",
+      "passage": "… arents assert that the way the local authority dealt with this case before proceedings were issued gives rise to a breach of their rights under Article 6 and Article 8 of the Convention for the Protection of Human Rights and Fundamental Freedoms. Their claim is brought pursuant to s.7(1) (b) of the Human Rights Act 1998 . Pursuant to s.8 they seek relief in the form of declarations and damages. The local authority accepts that by its conduct it has breached the parents Article 6 and Article 8 rights. It agrees to most of the declarations sought by the parents. It does not agree that the parents are entitled to damages. The background history 3. The mother is aged 31. The father is aged 38. 4. Both parents spent much of their childhood in local authority foster care, the mother in the care of Leicestershire County Council and the father in the care of Leicester City Council. 5. During her …",
+      "passage_word_count": 162,
+      "source_key": "caselaw/2014-ewfc-38/compiled.txt",
+      "provision_cited": "section-7",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2014] EWFC 38:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2024] EWHC 3004 (Fam)",
+      "case_name": "‘EF’ v Human Fertilisation and Embryology Authority",
+      "court": "EWHC (Fam)",
+      "date": "2024-11-22",
+      "passage": "… roduction 1 The court is concerned with an application for a declaration by EF that it is lawful for him to use an embryo created using his sperm and his late wife’s eggs in treatment with a surrogate. The application is founded on the European Convention of Human Rights (EHCR), given effect by the Human Rights Act 1998 ( HRA 1998 ). Consequently it is outside the scheme set out by the Human Fertilisation and Embryology Act 1990 ( HFEA 1990 ). 2 The Human Fertilisation and Embryology Authority (HFEA) are an interested party and oppose the application. 3 The embryo was created in 2017 during the course of treatment being undertaken by EF and AB at a clinic licensed by the HFEA and remains stored by them. Tragically, EF’s wife, AB, died unexpectedly along with the couple’s youngest daughter. It is against that background that this application is made. 4 In summary, the application is based …",
+      "passage_word_count": 159,
+      "source_key": "caselaw/2024-ewhc-3004-fam/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2024] EWHC 3004 (Fam):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2020-nifam-17",
+      "case_name": "SB (A MOTHER) and A Health and Social Services Trust and in the matter of Florence (A baby) : Contact during Covid - 19 restrictions",
+      "court": null,
+      "date": "2020-09-15",
+      "passage": "1 Neutral Citation No: [2020] NIFam 17 Judgment: approved by the Court for handing down (subject to editorial corrections)* Ref: KEE11308 ICOS No: 20/44164 Delivered: 16/09/2020 IN THE HIGH COURT OF JUSTICE IN NORTHERN IRELAND ___________ FAMILY DIVISION ___________ IN THE MATTER OF THE HUMAN RIGHTS ACT 1998 BETWEEN: SB (A MOTHER) Applicant and A HEALTH AND SOCIAL SERVICES TRUST Respondent IN THE MATTER OF FLORENCE (A BABY) CONTACT DURING COVID-19 RESTRICTIONS ___________ Ms Laura Clarke BL (instructed by Sara Edge Solicitors) for the Applicant Ms Louise Murphy BL (instructed by DLS Solicitors) for the Respondent ___________ KEEGAN J Nothing must be published which would identify the child or her family. The name I have given to the child is not her real name. Introduction [1] This matter comes before the High Court on foot of an application brought under the Human Rights Act 1998 (“The  …",
+      "passage_word_count": 147,
+      "source_key": "ni-judgments/2020-nifam-17/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2020-nifam-17:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2012-niqb-1",
+      "case_name": "X (acting by his next friend Y) v The Mental Health Review Tribunal for NI and the Belfast Health and Social Care Trust",
+      "court": null,
+      "date": "2012-01-16",
+      "passage": "… s a power to defer mandatory discharges there were inadequate procedural safeguards and accordingly either the power was not compliant with Article 5 of the European Convention on Human Rights or alternatively Article 77(2) should be construed in a Convention compliant manner under Section 3 of the Human Rights Act 1998. In the event, in addition to the main reasons for my conclusion, I also determined that there were inadequate procedural safeguards and that I would also have construed Article 77(2) in a Convention compliant manner relying on Article 3 of the Human Rights Act 1998 to confine the power to defer discharge to a discretionary discharge. [12] The plaintiff now wishes to issue proceedings against the Tribunal for his detention in hospital for the six week period during which his discharge was deferred. I have been provided with a draft writ of summons seeking damages for inju …",
+      "passage_word_count": 150,
+      "source_key": "ni-judgments/2012-niqb-1/sections/1/compiled.txt",
+      "provision_cited": "section-3",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2012-niqb-1:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2018] UKSC 27",
+      "case_name": "In the matter of an application by the Northern Ireland Human Rights Commission for Judicial Review (Northern Ireland)",
+      "court": "UKSC",
+      "date": "2018-06-06",
+      "passage": "… s in order of seniority. It is for that reason only that my judgment comes first. Far more substantial judgments on all issues follow from Lord Mance and Lord Kerr. Introduction 5. The substantive questions in this case are legal issues - specifically related to the implementation in UK law, by the Human Rights Act 1998 (HRA), of the ECHR, which in turn has to be interpreted in the light of other international treaties to which the UK is a party, in this case the United Nations Convention on the Elimination of All Forms of Discrimination against Women 1979 (CEDAW) and the United Nations Convention on the Rights of Persons with Disabilities 2006 (CRPD). Moral and political issues, important though they undoubtedly are, are relevant only to the extent that they are relevant to the legal issues which have to be resolved. 6. The starting point for any discussion of the legal issues has to be …",
+      "passage_word_count": 158,
+      "source_key": "caselaw/2018-uksc-27/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2018] UKSC 27:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2020-nifam-20",
+      "case_name": "MR S and A Health and Social Care Trust and Ms T and In the matter of Josef (A minor: Breach of human rights: Declaration: Damages: Costs)",
+      "court": null,
+      "date": "2020-10-04",
+      "passage": "… l Citation No: [2020] NIFam 20 Judgment: approved by the Court for handing down (subject to editorial corrections)* Ref: KEE11319 ICOS No: 20/051811 Delivered: 05/10/2020 IN THE HIGH COURT OF JUSTICE IN NORTHERN IRELAND ___________ FAMILY DIVISION ___________ IN A MATTER OF AN APPLICATION UNDER THE HUMAN RIGHTS ACT 1998 ___________ BETWEEN: Mr S Applicant; -and- A HEALTH AND SOCIAL CARE TRUST and Ms T Respondents. IN THE MATTER OF JOSEF (A MINOR: BREACH OF HUMAN RIGHTS: DECLARATION: DAMAGES: COSTS) _________ Ms McCaffrey BL (instructed by Fisher and Fisher Solicitors) for the Applicant Ms Sholdis BL (instructed by DLS) for the Respondent Trust Ms Kelly BL (instructed by Tiernans Solicitors) for the Respondent Mother ___________ KEEGAN J Nothing must be published which would identify the child or his family. The name given to the child is not his real name. Introduction [1] This case rela …",
+      "passage_word_count": 147,
+      "source_key": "ni-judgments/2020-nifam-20/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2020-nifam-20:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2021-nifam-25",
+      "case_name": "A Mother and A Health and Social Care Trust and A Father and A Father and in the matter of an application for injunctive relief pursuant to the Human Rights Act and in the matter of the discharge of care orders in the matter of ST a Boy ages 10½ years and EA a girl aged 5 years",
+      "court": null,
+      "date": "2021-06-29",
+      "passage": "… 2021 IN THE HIGH COURT OF JUSTICE IN NORTHERN IRELAND ___________ FAMILY DIVISION OFFICE OF CARE AND PROTECTION ___________ BETWEEN: A MOTHER Applicant -v- A HEALTH AND SOCIAL CARE TRUST -and- A FATHER -and- A FATHER Respondents. IN THE MATTER OF AN APPLICATION FOR INJUNCTIVE RELIEF PURSUANT TO THE HUMAN RIGHTS ACT 1998 AND IN THE MATTER OF THE DISCHARGE OF CARE ORDERS IN THE MATTER OF ST A BOY AGED 10½ YEARS AND EA A GIRL AGED 5 YEARS ___________ Ms M Connolly QC with Ms B Cleland BL (instructed by Fisher & Fisher solicitors) for the mother Ms S Simpson QC with Ms J Lindsay BL (instructed by the Directorate of Legal Services) for the Trust Ms M Smyth QC with Ms N McCartney BL (instructed by Keown Nugent solicitors) for the father of ST Ms K McAleavey BL (instructed by Mark McNulty solicitor) for the father of EA Ms N McGrenera QC with Ms C Steele BL (instructed by Brian Scullion solicit …",
+      "passage_word_count": 167,
+      "source_key": "ni-judgments/2021-nifam-25/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2021-nifam-25:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2015-niqb-34",
+      "case_name": "SC’s Application",
+      "court": null,
+      "date": "2015-04-16",
+      "passage": "… ribed by law; ii. Taking into account irrelevant considerations, namely the disclosure procedure in the course of Mental Health Review Tribunal cases and the Data Protection Act 1998; iii. Failing to give any or adequate reasons for the decision; iv. Failing to act in a manner pursuant to s6 of the Human Rights Act 1998 specifically acting in a manner contrary to the Applicant’s rights under Article 5 of the European Convention on Human Rights. (b) The Trust’s decision, on the 6 th and 7 th March 2013, to refuse to provide the Applicant’s legal representative the Applicant’s detention forms constitute decisions that are procedurally unfair, in particular, by:- i. Failing to follow a procedure prescribed by law; ii. Taking into account irrelevant considerations, namely the disclosure procedure in the course of Mental Health Review Tribunal cases and the Data Protection Act 1998; iii. Fail …",
+      "passage_word_count": 147,
+      "source_key": "ni-judgments/2015-niqb-34/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2015-niqb-34:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2017] EWCA Civ 2638",
+      "case_name": "G (A Child)",
+      "court": "EWCA Civ",
+      "date": "2017-11-08",
+      "passage": "… dby. 3. The appeal could be described as unusual in that the father has been refused permission to appeal to challenge the merits of the decision to dismiss his application for leave. He was given permission to appeal on two grounds only which are connected with an application he had made under the Human Rights Act 1998 (“ the 1998 Act ”). The grounds are to the effect the judge was wrong not to transfer the \"case\" to the High Court because the father was claiming that section 47 of the 2002 Act is incompatible with the European Convention on Human Rights (“ECHR”). Ms Obi-Ezekpazu argues alternatively that the judge was wrong not to adjourn or stay the determination of the father's application under section 47(5) , and consequently the adoption application, pending the determination of his application for a declaration of incompatibility. 4. I make clear at the outset of this judgment th …",
+      "passage_word_count": 156,
+      "source_key": "caselaw/2017-ewca-civ-2638/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] EWCA Civ 2638:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "276",
+      "case_name": "SPC 00362: Jean Anne Prosser v The Commissioners of Inland Revenue",
+      "court": null,
+      "date": "2003-03-12",
+      "passage": "… d she had also exercised other rights to have the case considered by the Adjudicator and the Ombudsman; that article 8 had not been breached, although he understood the stress caused to the Appellant by the prolonged dispute; that I could not consider article 13 as it had not been legislated in the Human Rights Act 1998; and that in relation to Protocol 1 article 1 the case was covered by the second paragraph: \"The proceeding provisions shall not, however, in any way impair the right of a State to enforce such laws as it deems necessary to control the use of property in accordance with the general interest or to secure the payment of taxes or other contributions or penalties.\" The interest charge followed from securing the payment of taxes. My task is to determine the interest legally payable in accordance with section 233 of the Inheritance Tax Act 1984. I have considered the Human Righ …",
+      "passage_word_count": 159,
+      "source_key": "tax-tribunals/276/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:276:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2015] EWHC 250 (QB)",
+      "case_name": "Begraj & Anor v Secretary of State for Justice",
+      "court": "EWHC (QB)",
+      "date": "2015-02-12",
+      "passage": "…  - - - - JUDGMENT His Honour Judge McKenna Introduction 1. This is the hearing of an appeal against the order of District Judge Shorthose dated 13th October 2014 striking out the Appellants' claim for damages against the Defendant, the Secretary of State for Justice (\"Secretary of State\") under the Human Rights Act 1998 (\" HRA 1998 \") in respect of the Secretary of State's alleged failure to comply with his obligations under article 6 of the European Convention on Human Rights to provide the Appellants with an impartial tribunal, permission to appeal having been granted by the District Judge at the conclusion of the hearing. 2. The Appellants assert that this Appeal raises a point of public importance, namely the scope and applicability of the doctrine of judicial immunity under section 9 (3) HRA 1998 ; and whether, in this case, that statutory immunity bars the Appellants' cause of acti …",
+      "passage_word_count": 153,
+      "source_key": "caselaw/2015-ewhc-250-qb/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2015] EWHC 250 (QB):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2020] UKUT 377 (IAC)",
+      "case_name": "The Secretary of State for the Home Department v Samuel Oludare Oluyemi Yerokun",
+      "court": "UKUT (IAC)",
+      "date": "2020-12-02",
+      "passage": "…  rights claim made by P, or (c) the Secretary of State has decided to revoke P's protection status.” 7. The other subsections are not material to this case. By s 84(2), an appeal against the refusal of a human rights claim must be brought on the ground that the decision is unlawful under s 6 of the Human Rights Act 1998 . Section 113(1) defi n es, for the purposes of these provisions, a “human rights claim”. That phrase : “(a) means a claim made by a person that to remove him from or require him to leave the United Kingdom or to refuse him entry into the United Kingdom would be unlawful under section 6 of the Human Rights Act 1998 (c.42) (public authority not to act contrary to Convention) …. b ut (b) does not include a claim which, having regard to a former claim, falls to be disregarded for the purposes of this Part in accordance with immigration rules, ‘humanitarian protection’ has th …",
+      "passage_word_count": 168,
+      "source_key": "caselaw/2020-ukut-377-iac/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2020] UKUT 377 (IAC):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2019] UKUT 65 (IAC)",
+      "case_name": "OA & Ors v The Secretary of State for the Home Department",
+      "court": "UKUT (IAC)",
+      "date": "2019-01-04",
+      "passage": "… ion 85 of the 2002 Act. The completion of ten years’ residence will normally have a material bearing on the sole ground of appeal that can be advanced in a human rights appeal; namely, whether the decision of the Secretary of State to refuse P’s human rights claim is unlawful under section 6 of the Human Rights Act 1998. This is because paragraph 276B of the Immigration Rules provides that a person with such a period of residence is entitled to indefinite leave to remain in the United Kingdom, so long as the other requirements of that paragraph are met. (3) Where the judge concludes that the ten years’ requirement is satisfied and there is nothing to indicate an application for indefinite leave to remain by P would be likely to be rejected by the Secretary of State, the judge should allow P’s human rights appeal, unless the judge is satisfied there is a discrete public interest factor wh …",
+      "passage_word_count": 161,
+      "source_key": "caselaw/2019-ukut-65-iac/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2019] UKUT 65 (IAC):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-c-buhus-v-asda-stores-ltd-3327687-2017",
+      "case_name": "Mr C Buhus v Asda Stores Ltd: 3327687/2017 - Reconsideration",
+      "court": null,
+      "date": "2018-10-02",
+      "passage": "… hat the Tribunal’s findings of facts do not meet the claimant’s version, giving consideration to Article 19 of The Universal Declaration of Human Rights (In Europe, the Declaration forms the basis of the European Convention on Human Rights, which Convention in turn was incorporated in UK law by the Human Rights Act 1998), and the International Covenant on Civil and Political Rights. The Tribunal’s determinations were made on hearing evidence from both the claimant and the respondent, the conclusions on which are not affected by the submissions being made by the application for reconsideration. There is no new evidence advanced for which the decision of the Tribunal can be questioned. The interests of justice would not be served by a reconsideration of the Tribunal’s judgment. Case Number: 3327687/2017 3328097/2017 2 ___________________________ Employment Judge Henry Date: ......18.09.18. …",
+      "passage_word_count": 138,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-c-buhus-v-asda-stores-ltd-3327687-2017/sections/3/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-c-buhus-v-asda-stores-ltd-3327687-2017:3",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-e-kayan-v-emcor-group-uk-plc-2204818-2018",
+      "case_name": "Mr E Kayan v Emcor Group (UK) Plc: 2204818 /2018 - Preliminary ",
+      "court": null,
+      "date": "2018-11-09",
+      "passage": "… 18 EMPLOYMENT JUDGE: Ms S. Sharma Appearances For the Claimant: In Person For the Respondent: Mr P. Strelitz JUDGMENT The Tribunal determined as follows:- 1. In relation to the claimant’s complaint that there had been an invasion of his human rights and privacy in breach of Article 8 (Sch 1) of the Human Rights Act 1998, the tribunal has no jurisdiction to determine this claim. This claim is therefore dismissed. 2. In relation to the claimant’s complaint that there had been a breach of the health and safety legislation causing him personal injury, the tribunal has no jurisdiction to determine this claim. This claim is therefore dismissed. (The claimant’s complaints relating to unfair dismissal and discrimination are scheduled to be heard at a hearing to commence on Tuesday, 18 December 2018). Case Number:2204818 /2018 2 __________________________________ EMPLOYMENT JUDGE SHARMA JUDGMENT  …",
+      "passage_word_count": 142,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-e-kayan-v-emcor-group-uk-plc-2204818-2018/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-e-kayan-v-emcor-group-uk-plc-2204818-2018:2",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2004] EWHC 3084 (Admin)",
+      "case_name": "Wright, R (on the application of) v Secretary of State for the Home Department",
+      "court": "EWHC (Admin)",
+      "date": "2004-11-30",
+      "passage": "… sider our client's claim for compensation as stated in your letter of 6th December 2003 is action that is incompatible with our client's rights under Art 5(5). On our understanding of the Richards case it does not matter that the original breach of Art 5 occurred before the commencement date of the Human Rights Act 1998 . The important decision is the refusal to consider compensation made on 6th December 2003. \"Rather than commence proceedings immediately we feel it is proper to give an opportunity for this matter to be reconsidered in the light of the Richards case. \"However, unless we receive a positive response within 14 days of the date of this letter to the effect that the Secretary of State will consider a payment of compensation to comply with the requirements of Art 5(5) then judicial review proceedings will be commenced without further notice.\" 14. On 15th March 2004 the defenda …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2004-ewhc-3084-admin/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2004] EWHC 3084 (Admin):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2002-niqb-58",
+      "case_name": "In the Matter of an Application by McR for Judicial Review",
+      "court": null,
+      "date": "2002-01-15",
+      "passage": "… empted buggery contrary to section 62 of the Offences against the Person Act 1861. By this application he claims that this provision is incompatible with Article 8 of the European Convention on Human Rights and Fundamental Freedoms. He seeks a declaration of incompatibility under 2 section 4 of the Human Rights Act 1998 and an order of certiorari quashing the decision of a Resident Magistrate taken at Belfast Magistrates’ Court on 16 October 2000, remanding the applicant on the charges of attempted buggery. Notice of the application to have the section declared incompatible was duly given to the Secretary of State for Northern Ireland, the Secretary of State for the Home Department and the Attorney General for Northern Ireland pursuant to section 5 of the Human Rights Act 1998. The Crown was represented on the hearing of the case and did not oppose the application for judicial review. Se …",
+      "passage_word_count": 151,
+      "source_key": "ni-judgments/2002-niqb-58/sections/1/compiled.txt",
+      "provision_cited": "section-4",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2002-niqb-58:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2025] EWHC 1410 (Admin)",
+      "case_name": "Umer Yousaf, R (on the application of) v Upper Tribunal Immigration and Asylum Chamber & Anor",
+      "court": "EWHC (Admin)",
+      "date": "2025-06-05",
+      "passage": "… . 3. The Claimant filed this judicial review claim in Lonon. In answer to question 4.6 on the claim form, “Have you issued this claim in the region with which you have the closest connection?” the Claimant answered “yes” on the following basis: “This application for judicial review is applied under Human Rights Act 1998 and Common Law. UTIAC is a public authority (in England) under section 6 (3) of Human Rights Act 1998; and it has breached the applicant's right to a fair trial under Article 6 of ECHR; it acted unlawfully under section 6(1) of Human Rights Act 998. Hence, this application is brought forward under Section 7 of Human Rights Act 1998 to the respective authority in England, (by the victim himself who has sufficient legal interest under the Human Rights Act 1998). 4. On 6 March 2025 a minded to transfer order (“MTTO”) was made. This is a mechanism by which the court invites a …",
+      "passage_word_count": 161,
+      "source_key": "caselaw/2025-ewhc-1410-admin/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2025] EWHC 1410 (Admin):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2024] EWCA Civ 1421",
+      "case_name": "Emilio Branco-Bonfim, R (on the application of) v Secretary of State for the Home Department",
+      "court": "EWCA Civ",
+      "date": "2024-11-20",
+      "passage": "… igration (European Economic Area) Regulations 2016 (the EEA Regulations), on an earlier certification made pursuant to regulation 33(2) of the EEA Regulations in a letter dated 20 November 2018 to the effect that removal pending the outcome of the appeal would not be unlawful under section 6 of the Human Rights Act 1998 , to deny the appellant Mr Branco-Bonfim an in-country appeal after the refusal in a letter dated 14 July 2020 of a later human rights claim. 2. The second issue is whether, if the Secretary of State was not entitled to rely on that earlier certification, relief should nevertheless be refused to Mr Branco-Bonfim pursuant to section 31 (2A) of the Senior Courts Act 1981 because “it appears to the court to be highly likely that the outcome for the applicant would not have been substantially different if the conduct complained of had not occurred” and the Secretary of State  …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2024-ewca-civ-1421/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2024] EWCA Civ 1421:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2003-nich-9",
+      "case_name": "Re Anthony Quinn: A Bankrupt",
+      "court": null,
+      "date": "2003-10-15",
+      "passage": "… s Quinn and her family under the Convention had not been infringed. [5] As a consequence it became necessary for the court to proceed to consider the question of incompatibility. At this further hearing the Department of Enterprise Trade and Investment, having received notice under section 5 of the Human Rights Act 1998, was represented by Mr Declan Morgan QC and Mr David McMillen. [6] The Insolvency Order is subordinate legislation made under powers conferred by the Northern Ireland Act 1974. Article 309(5) of the Order provides; “Where such an application is made or such a suit is maintained after the expiration of one year from the first vesting under Chapter IV of the bankrupt’s estate in a trustee, the High Court shall assume, unless the circumstances of the case are exceptional, that the interests of the bankrupt’s creditors outweigh all other considerations.” [7] Miss Walsh conten …",
+      "passage_word_count": 149,
+      "source_key": "ni-judgments/2003-nich-9/sections/1/compiled.txt",
+      "provision_cited": "section-5",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2003-nich-9:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-m-kloczkowski-v-ikea-distribution-services-ltd-3322439-slash-2021",
+      "case_name": "Mr M Kloczkowski v IKEA Distribution Services Ltd: 3322439/2021 - Preliminary",
+      "court": null,
+      "date": "2024-10-23",
+      "passage": "… espondent: Mr A Pincott, Legal Advisor JUDGMENT 1. The following claims made by the claimant in his ET1 are all dismissed as the Tribunal has no jurisdiction to hear them: 1.1. Breach of section 1(a) of the Protection from Harassment Act 1997. 1.2. Breach of Article 8 of Part I of Schedule I of the Human Rights Act 1998. 1.3. Breach of the United Nations Declaration of Human Rights 1948, Article 12. 1.4. Breach of the International Covenant on Civil and Political Rights 1966, Article 1. 1.5. Breach of section 1(c) of the Malicious Communications Act 1988. 2. For the avoidance of doubt, the only claims made by the claimant that shall proceed to a final hearing are claims of unfair dismissal contrary to Part X of the Employment Rights Act 1996 and harassment related to the protected characteristic of religion or belief contrary to section 26 of the Equality Act 2010. Employment Judge Shore …",
+      "passage_word_count": 157,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-m-kloczkowski-v-ikea-distribution-services-ltd-3322439-slash-2021/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-m-kloczkowski-v-ikea-distribution-services-ltd-3322439-slash-2021:2",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2010-nica-13",
+      "case_name": "McCaughey and Quinn’s Application",
+      "court": null,
+      "date": "2010-03-26",
+      "passage": "… t a factual background which could not be more different from that which presented itself to the court in Silih. Other arguments apart, one might therefore consider the decision in Silih could be distinguished from the inquest which concerns the applicants here. [16] Pursuant to Section 2(1) of the Human Rights Act 1998 we take into account the judgment of the European Court in Silih and the cases cited therein. We are also conscious of our duty under Section 3 of the Act to read and give effect so far as possible to any relevant legislation in a manner compatible with Convention rights. We conclude that it is arguable, given the constructive dialogue engaged in by the highest court in the United Kingdom with the European Court of Human Rights, that the Supreme Court may choose to extend Silih to our domestic law. We therefore consider it proper to grant the applicants leave to apply for …",
+      "passage_word_count": 158,
+      "source_key": "ni-judgments/2010-nica-13/sections/1/compiled.txt",
+      "provision_cited": "section-2",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2010-nica-13:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/c-addis-v-lemaca-ltd-1300903-slash-2022",
+      "case_name": "C Addis v Lemaca Ltd: 1300903/2022 - Strike Out",
+      "court": null,
+      "date": "2023-06-06",
+      "passage": "Case No: 1300903/2022 6.3 Strike Out Judgment – claim – part - rule 37 EMPLOYMENT TRIBUNALS Claimant: Connor Addis Respondent: Lemaca Ltd JUDGMENT The claimant’s claim under the Human Rights Act 1998 and any other complaints of disability discrimination or otherwise, save in respect of the allegation that the respondent failed to make a reasonable adjustment by having a provision, criterion or practice that staff should telephone to report absence from work, are struck out. Signed by the Judge electronically _____________________________ Regional Employment Judge Findlay 21 September 2022 JUDGMENT SENT TO THE PARTIES ON .......21 st September 2022...... .......Eamonn Murphy...... FOR THE TRIBUNAL OFFICE Reasons for the judgment having been given at the hearing, written reasons will not be provided unless a written request is presented within 14 days of the sending of this record of the d …",
+      "passage_word_count": 139,
+      "source_key": "et-decisions/employment-tribunal-decisions/c-addis-v-lemaca-ltd-1300903-slash-2022/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/c-addis-v-lemaca-ltd-1300903-slash-2022:2",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2015-niqb-35",
+      "case_name": "NR’s Application",
+      "court": null,
+      "date": "2015-04-20",
+      "passage": "… es an inequality of arms between the trust and the Applicant. (g) By refusing to allow the Applicant’s representative to view the Applicant’s medical notes and records at the appointment arranged for the said viewing the Trust has acted in a manner contrary to its obligations under section 6 of the Human Rights Act 1998 and has acted incompatibly with the Applicant’s rights under Articles 5, 6 and 8 of the European Convention on Human Rights in a manner which is not proportionate. Background [4] The Applicant was an inpatient in Ward K of the Mater Hospital and he was being detained by under Article 12 of the Mental Health (NI) Order 1986 (“the 1986 Order”). [5] In or around 6 February 2013 the Applicant applied to the Mental Health Review Tribunal for Northern Ireland under Article 71 of the 1986 Order for a review of the lawfulness of his detention. [6] On 21 February 2013 the Applican …",
+      "passage_word_count": 160,
+      "source_key": "ni-judgments/2015-niqb-35/sections/1/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2015-niqb-35:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-j-greenwood-v-caldedale-and-huddersfield-nhs-foundation-trust-1801272-slash-2022",
+      "case_name": "Mrs J Greenwood v Caldedale and Huddersfield NHS Foundation Trust: 1801272/2022 - Reserved Judgment",
+      "court": null,
+      "date": "2023-08-29",
+      "passage": "… er a strike out application “at any time” under rule 37, both parties having been given the opportunity to make representations. 9. The respondent’s case is that the Tribunal has no jurisdiction to hear a free standing claim for a Breach of the European Convention on Human Rights, whether under the Human Rights Act 1998 (HRA) or otherwise. Case No: 1801272/2022 10.5 Reserved judgment with reasons – rule 62 March 2017 10. Section 2 of the Employment Tribunal Act 1996 provides that the Tribunal has the jurisdiction conferred by that Act or any other Act. 11. The claimant has not referred to any statutory provision conferring jurisdiction on the Employment Tribunal to determine claims under the ECHR or the Human Rights Act 1998. Section 7 of the Human Rights Act 1998 says (1) A person who claims that a public authority has acted (or proposes to act) in a way which is made unlawful by sectio …",
+      "passage_word_count": 158,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-j-greenwood-v-caldedale-and-huddersfield-nhs-foundation-trust-1801272-slash-2022/sections/2/compiled.txt",
+      "provision_cited": "section-7",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-j-greenwood-v-caldedale-and-huddersfield-nhs-foundation-trust-1801272-slash-2022:2",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2003] EWHC 665 (Fam)",
+      "case_name": "Local Authority v MS",
+      "court": "EWHC (Fam)",
+      "date": "2003-03-28",
+      "passage": "…  the local authority, as it was put in the mother’s application, to “change the Care Plan, so that long-term fostering is the first long-term option … so that from now on they look for long-term foster carers instead of adoptive parents”. The mother’s application contains no reference either to the Human Rights Act 1998 or to the European Convention for the Protection of Human Rights and Fundamental Freedoms. It indicates that the mother will “ask the High Court to exercise its inherent jurisdiction in this matter.” A letter from the mother’s solicitors to the court dated 17 February 2003 says, however, that “we are asking the High Court to provide a remedy under the Human Rights Act by way of injunctive relief under its own inherent jurisdiction”. 4. The mother’s application was received by the FPC on 24 December 2002 but for some reason was not issued by the FPC until 30 January 2003,  …",
+      "passage_word_count": 156,
+      "source_key": "caselaw/2003-ewhc-665-fam/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2003] EWHC 665 (Fam):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2009-nica-10",
+      "case_name": "Northern Ireland Commissioner for Children and Young Peoples' Application (NICCY)",
+      "court": null,
+      "date": "2009-02-20",
+      "passage": "… t sends out the wrong messages to parents; and that is imprecise and so lacks the clarity and transparency that Convention compatible law should have. Persuasive though her arguments were, the Commissioner’s application cannot succeed because she is not a victim for the purposes of section 7 of the Human Rights Act 1998 (“HRA”). Article 2 of the 2006 Order [3] Miss Higgins’s starting point was her attack on the provisions of article 2 of the Law Reform (Miscellaneous Provisions) (Northern Ireland) Order 2006 which provides: “(1) In relation to any offence specified in paragraph (2), battery of a child cannot be justified on the ground that it constituted reasonable punishment. (2) The offences referred to in paragraph (1) are – (a) an offence under section 18 of the Offences against the Person Act 1861 (c.100) (wounding, or causing grievous bodily harm, with intent) (b) an offence under  …",
+      "passage_word_count": 150,
+      "source_key": "ni-judgments/2009-nica-10/sections/1/compiled.txt",
+      "provision_cited": "section-7",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2009-nica-10:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2020] UKUT 85 (IAC)",
+      "case_name": "Muhammad Mujahid, R (on the application of) v The Secretary of State for the Home Department",
+      "court": "UKUT (IAC)",
+      "date": "2020-03-19",
+      "passage": "…  a kind that removing C from, or requiring C to leave, would be a violation of that right. (2) The refusal of a human rights claim under section 82(1)(b) of the Nationality, Immigration and Asylum Act 2002 involves the Secretary of State taking the stance that she is not obliged by section 6 of the Human Rights Act 1998 to respond to the claim by granting C leave. (3) Accordingly, the Secretary of State does not decide to refuse a human rights claim when, in response to it, she grants C limited leave by reference to C’s family life with a particular family member, even though C had sought indefinite leave by reference to long residence in the United Kingdom. JUDGMENT A. THE QUESTION 1. Where an individual who is in the United Kingdom makes an application for indefinite leave to remain, in circumstances where the application is treated as a human rights claim, does the Secretary of State  …",
+      "passage_word_count": 161,
+      "source_key": "caselaw/2020-ukut-85-iac/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2020] UKUT 85 (IAC):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-d-southall-v-temple-finance-limited-t-a-perfecthome-1302164-2017",
+      "case_name": "Mrs D Southall v Temple Finance Ltd ta Perfecthome: 13021642017 - Judgment",
+      "court": null,
+      "date": "2018-02-28",
+      "passage": "… egulation of Investigatory Powers Act 2000; the Telecommunications (Lawful Business Practice)(Interception of Communications) Regulations 2000; the Data Protection Act 1998; The Employment Practices, Data Protection Code; the Telecommunications (Data Protection and Privacy) Regulations 1999 and the Human Rights Act 1998 in relation to a recording made by the respondent of a conversation with the claimant on 14 th August 2017 is Case number : 1302164/17 refused on the basis that the Tribunal does not have jurisdiction to deal with such matters. (3) The claimant’s application to amend her claim to include the issue of the enforceability of the post termination restrictive covenants contained within her contract of employment is refused on the basis that the Tribunal does not have jurisdiction to deal with disputes relating to restrictive covenants. (4) The claimant is ordered to pay the re …",
+      "passage_word_count": 139,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-d-southall-v-temple-finance-limited-t-a-perfecthome-1302164-2017/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-d-southall-v-temple-finance-limited-t-a-perfecthome-1302164-2017:2",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-s-sibanda-v-handsale-ltd-1305237-slash-2023",
+      "case_name": "Mrs S Sibanda v Handsale Ltd: 1305237/2023 - Judgment",
+      "court": null,
+      "date": "2026-05-14",
+      "passage": "…  Data Protection Act 2018 is struck out because the Tribunal has no jurisdiction to hear that claim. 4. The Claim for a breach of “Article 6 of the Human Rights Act” is struck out because the tribunal has no jurisdiction to hear that claim either under the European Convention on Human Rights or the Human Rights Act 1998. 5. As an allegation of direct race discrimination, the claim listed at paragraph 2c of the Claimant’s draft list of issues is struck out because it has no reasonable prospect of success. The Claimant described a scenario where her black colleague comparator was treated more favourably than she was. That factual allegation Case Number: 1305237/2023 2 of 2 Sept 2023 cannot therefore amount to direct race discrimination. It can continue as direct religious belief discrimination and/or harassment. 6. The Respondent withdrew the remainder of its application for a strike out o …",
+      "passage_word_count": 151,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-s-sibanda-v-handsale-ltd-1305237-slash-2023/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-s-sibanda-v-handsale-ltd-1305237-slash-2023:2",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "3028",
+      "case_name": "Spc 00588: Auntie's Cafe Limited v Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2007-01-27",
+      "passage": "… ic law to challenge it, and not because of any view formed on the human rights points. 7. Following my decision I agreed and the Appellant accepted, that HMRC should submit further written submissions on the points mentioned in 4 above. This HMRC did on two occasions, contending in outline that the Human Rights Act 1998 had a major bearing on how the duties of officers of HMRC should be conducted, with the result that had the penalties imposed in the present case breached the taxpayer's human rights, this would have rendered them unlawful, and then it was open to me to conclude that I had jurisdiction to give a remedy. HMRC contended however that because I had anyway reached the conclusion that the penalty structure had not breached any of the taxpayer's human rights, it was unnecessary for me to reach a decision on the difficult point of inter-relation between tax law and the provisions …",
+      "passage_word_count": 158,
+      "source_key": "tax-tribunals/3028/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:3028:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2006] EWCA Civ 67",
+      "case_name": "Wright, R (on the application of) v Secretary of State for the Home Department",
+      "court": "EWCA Civ",
+      "date": "2006-02-15",
+      "passage": "… t sought judicial review of those refusals by the Secretary of State to consider his claim for compensation. On 30 November 2004 Bennett J dismissed his claim on the basis, as we shall see, that no claim could lie in respect of alleged wrongful detention which pre-dated the coming into force of the Human Rights Act 1998 . He gave permission for this appeal. The issues in this appeal 19. We have been asked to deal with two main issues. The first is whether there is a free-standing autonomous right to compensation conferred by Article 5(5) and, if so, whether the Secretary of State is in breach of it by failing after the HRA came into force to implement a scheme to compensate victims of detention in contravention of Articles 5(1) and 5(4). The second question is raised by the Secretary of State’s Respondent’s notice seeking our decision on whether or not Stafford operates retrospectively o …",
+      "passage_word_count": 158,
+      "source_key": "caselaw/2006-ewca-civ-67/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2006] EWCA Civ 67:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2025] EWCA Civ 1107",
+      "case_name": "Annmarie Smalling-Small v Home Office West Midlands",
+      "court": "EWCA Civ",
+      "date": "2025-08-13",
+      "passage": "… 9 July 2025, the applicant applied for a second time for permission to re-open the order of 14 May 2025 refusing permission to appeal against the order of Cranston J of 29 July 2016. The basis for that application was different from the earlier applications. The applicant relied on section 9 of the Human Rights Act 1998 . That section deals with claims under the Human Rights Act 1998 in respect of a judicial act. It was said that there was an ability to challenge a judge’s decision on human rights grounds. In her application she said that she was requesting “permission to reopen my case for compensation and damages resulting from unlawful judicial acts”. 12. The application continued by saying that under the Human Rights Act 1998 , individuals can challenge judicial decisions on human rights grounds without necessarily needing to appeal the original decision first. It said that this mean …",
+      "passage_word_count": 154,
+      "source_key": "caselaw/2025-ewca-civ-1107/compiled.txt",
+      "provision_cited": "section-9",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2025] EWCA Civ 1107:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2023] UKUT 293 (IAC)",
+      "case_name": "Taulant Dani v Secretary of State for the Home Department",
+      "court": "UKUT (IAC)",
+      "date": "2023-11-02",
+      "passage": "…  Tribunal cannot not consider it. The Tribunal does not enjoy a broad, unencumbered jurisdiction to consider non-removal human rights submissions at large. 5) In any event, Article 8 will not, without more, be engaged by a decision to refuse leave to remain under the EUSS. 6) Section 7(1)(b) of the Human Rights Act 1998 does not permit an appellant to advance a free-standing Article 8 claim in proceedings before the First-tier Tribunal. DECISION AND REASONS 1. There are two issues in these proceedings: a. First, do the Immigration (Citizens' Rights Appeals) (EU Exit) Regulations 2020 (“the 2020 Regulations”) entitle an appellant to submit that a refusal of leave to remain under the EU Settlement Scheme (“the EUSS”) breaches Article 8 of the European Convention on Human Rights (“the ECHR” or the “Convention”), other than as a “new matter” with the consent of the Secretary of State? b. Sec …",
+      "passage_word_count": 150,
+      "source_key": "caselaw/2023-ukut-293-iac/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2023] UKUT 293 (IAC):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-k-puthenveetil-v-mr-s-alexander-and-ms-r-george-2361118-2013",
+      "case_name": "Ms P Puthenveettil v Mr S Alexander and Mrs RJ George 2361118/2013 Reconsideration",
+      "court": null,
+      "date": "2026-01-14",
+      "passage": "… National Minimum Wage Regulations 1999 (the Regulation) and it is unlikely that the Regulation can be read in such a way as to resolve any compatibility issues with European law. 2. Regardless of any agreement or understanding the parties had regarding further submissions, by virtue of section 4(5) Human Rights Act 1998, the Employment Tribunal is not the appropriate forum to challenge the lawfulness of the Regulation as it has no jurisdiction to make a declaration of incompatibility. 3. For these reasons, there is no reasonable prospect of the original decision being varied or revoked. Employment Judge Balogun Date: 4 May 2017",
+      "passage_word_count": 103,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-k-puthenveetil-v-mr-s-alexander-and-ms-r-george-2361118-2013/sections/3/compiled.txt",
+      "provision_cited": "section-4",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-k-puthenveetil-v-mr-s-alexander-and-ms-r-george-2361118-2013:3",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2020-niqb-33",
+      "case_name": "Ewart's (Sarah Jane) Application (RELIEF)",
+      "court": null,
+      "date": "2020-04-06",
+      "passage": "… 9. That Act has led to legislative change which means that the landscape has altered so far as the court is concerned. I can therefore deal with the remaining issues in fairly short compass. [2] The applicant seeks two declarations, one a declaration of incompatibility, pursuant to Section 4 of the Human Rights Act 1998 that Sections 58 and 59 of the Offences against the Person Act 1861 are incompatible with Article 8 of the European Convention on Human Rights insofar as they prohibit termination of pregnancy in cases of fatal foetal abnormality. Secondly, the applicant seeks a declaration that Section 25 of the Criminal Justice Act (Northern Ireland) 1945 is incompatible with Article 8 of the European Convention on Human Rights insofar as it prohibits termination of pregnancies in cases of fatal foetal abnormality. In argument, the applicant submitted that the main relief sought was the …",
+      "passage_word_count": 149,
+      "source_key": "ni-judgments/2020-niqb-33/sections/1/compiled.txt",
+      "provision_cited": "section-4",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2020-niqb-33:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2007] EWHC 1768 (Admin)",
+      "case_name": "Nisbet v Secretary of State & Ors",
+      "court": "EWHC (Admin)",
+      "date": "2007-06-28",
+      "passage": "…  human rights or in relation to issues concerning his physical or mental condition. Nonetheless it was incumbent upon the district judge to have regard to Section 87 of the Act and to decide whether the appellant's extradition would be compatible with the Convention rights within the meaning of the Human Rights Act 1998 . The District Judge, in sending the matter, stated that he was satisfied that the appellant's extradition was not barred within the meaning of the Extradition Act 2003 and that his extradition would be compatible with Convention rights within the meaning of the Human Rights Act 1998 . 3. On 15 February 2007 the appellant wrote to the first respondent making representations as to why he should not be extradited. Those representations, very substantially, mirror matters which are raised before this court. In his letter of 30 March 2007 the first respondent notified the app …",
+      "passage_word_count": 150,
+      "source_key": "caselaw/2007-ewhc-1768-admin/compiled.txt",
+      "provision_cited": null,
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2007] EWHC 1768 (Admin):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2005-nica-1",
+      "case_name": "Police Service of Northern Ireland v Owen McCaughey and Pat Grew",
+      "court": null,
+      "date": "2005-01-14",
+      "passage": "… mounted to an attempt to discover the reasons that no prosecution had been directed. Since, per the decision of this court in Re Jordan’s Application [2003] NICA 54, the DPP did not have to give reasons for a decision not to prosecute where the decision was taken before the coming into force of the Human Rights Act 1998, and the decision not to prosecute in this case was made in 1993, this document did not require to be disclosed. In relation to the third document, Weatherup J held that, as with the police report, there was a duty to disclose the unredacted copies of intelligence reports under section 8 and Article 2. He was influenced to this conclusion by the consideration that the coroner believed that the unredacted reports were potentially relevant. [5] In the course of the hearing before Weatherup J, as before this court, one of the principal contentions of the Chief Constable was  …",
+      "passage_word_count": 158,
+      "source_key": "ni-judgments/2005-nica-1/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2005-nica-1:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2015-niqb-103",
+      "case_name": "YZ v Google Incorporated, Aut O’Mattic A8C Ireland Ltd T/As Wordpress.Com, persons operating under the pseudonym Uniform Resource, locator https://fathermurhpy.wordpress.com",
+      "court": null,
+      "date": "2015-12-18",
+      "passage": "… ate that in all the circumstances Northern Ireland is clearly or distinctly the appropriate forum in which to try the issues that arise between the parties: see VTB Plc v Nutritek International Corp [2012] 2 Lloyd’s Rep 313. Misuse of Private Information [12] Following the coming into effect of the Human Rights Act 1998 (“HRA”) on 2 October 2000, domestic law in Northern Ireland changed so as to become more consistent with the protection of privacy offered by Article 8 of the European 4 Convention on Human Rights (“The ECHR”). The old law of breach of confidence was reworked by the House of Lords in Campbell v MGN Ltd [2004] UKHL 22 to create effectively a new Convention compliant tort of the misuse of private information. The constituent elements of this tort are: (a) Publication. (b) Without consent. (c) Of information in respect of which a person had a “reasonable expectation of priva …",
+      "passage_word_count": 155,
+      "source_key": "ni-judgments/2015-niqb-103/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2015-niqb-103:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2025-nica-71",
+      "case_name": "AD and Lelia Joanne Armstrong and Department for Communities and Department for Work and Pensions",
+      "court": null,
+      "date": "2025-02-21",
+      "passage": "… trong Case 17-21 The Remedial Orders 22-29 The Relevant Provisions of HRA 1998 30-31 2 The Central Issue 32-33 Guidance from the Decided Cases 34-49 The Decision in Steinfeld 50-51 The Kelly Case 52-57 Our Conclusions 58-69 Disposal and Final Order 70 Postscript Schedule: Relevant Provisions of the Human Rights Act 1998 __________ GLOSSARY BSP: Bereavement Support Payment DfC: the Department for Communities DOI: Declaration of incompatibility DWP: the Department for Work and Pensions ECHR: The European Convention on Human Rights and Fundamental Freedoms HRA 1998: The Human Rights Act 1998 JCHR: the Joint Committee on Human Rights NICA: The Northern Ireland Court of Appeal The Remedial Order: the Bereavement Benefits (Remedial) Order 2023 The Tribunal: the Appeal Tribunal UKSC: the United Kingdom Supreme Court The “1992 Act”: the Social Security Contributions and Benefits Act (NI) 1992 Th …",
+      "passage_word_count": 140,
+      "source_key": "ni-judgments/2025-nica-71/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2025-nica-71:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2017] EWCA Civ 316",
+      "case_name": "Robinson, R (On the Application Of) v Secretary of State for the Home Department & Anr",
+      "court": "EWCA Civ",
+      "date": "2017-05-03",
+      "passage": "… ) of that Act , and (k) refusal to revoke a deportation order under section 5(2) of that Act . … 84 Grounds of appeal (1) An appeal under section 82(1) against an immigration decision must be brought on one or more of the following grounds— … (c) that the decision is unlawful under section 6 of the Human Rights Act 1998 (c. 42) (public authority not to act contrary to Human Rights Convention) as being incompatible with the appellant’s Convention rights; … 92 Appeal from within United Kingdom: general (1) A person may not appeal under section 82(1) while he is in the United Kingdom unless his appeal is of a kind to which this section applies. … (4) This section also applies to an appeal against an immigration decision if the appellant— (a) has made an asylum claim, or a human rights claim, while in the United Kingdom, or … 94 Appeal from within United Kingdom: unfounded human rights or as …",
+      "passage_word_count": 165,
+      "source_key": "caselaw/2017-ewca-civ-316/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] EWCA Civ 316:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "[2019] EWHC 2774 (Admin)",
+      "case_name": "SXC, R (on the application of) v Secretary of State for Work and Pensions & Anor",
+      "court": "EWHC (Admin)",
+      "date": "2019-10-22",
+      "passage": "… 8 per month. For sake of completeness I should add that transitional payments are backdated to the date of migration. For SXC that date is 15 August 2018. B. Decision (1) Compensation for financial loss 7. The parties are agreed that the starting point for the compensation claim is section 8 of the Human Rights Act 1998 . Section 8 of that Act provides as follows: 8.— Judicial remedies. (1) In relation to any act (or proposed act) of a public authority which the court finds is (or would be) unlawful, it may grant such relief or remedy, or make such order, within its powers as it considers just and appropriate. (2) But damages may be awarded only by a court which has power to award damages, or to order the payment of compensation, in civil proceedings. (3) No award of damages is to be made unless, taking account of all the circumstances of the case, including— (a) any other relief or reme …",
+      "passage_word_count": 165,
+      "source_key": "caselaw/2019-ewhc-2774-admin/compiled.txt",
+      "provision_cited": "section-8",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2019] EWHC 2774 (Admin):1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2002-nica-50",
+      "case_name": "S J Brockbank v William Anthony Shannon",
+      "court": null,
+      "date": "2002-12-20",
+      "passage": "… at he 5 might incriminate himself. The failure to comply in that case pre-dated the amendment to paragraph 6 of Schedule 2, and since that amendment the possibility of self-incrimination has further receded. Accordingly, such a person could not now claim that as a reasonable excuse, even though the Human Rights Act 1998 has come into operation and courts may not act in a way which is incompatible with a Convention right. It was submitted on behalf of the appellant that the judge’s conclusion in the present case was incorrect and that the respondent did not have a reasonable excuse for failing to comply with the financial investigators’ requirement. [7] Mr Larkin QC on behalf of the respondent advanced an ingenious counter-argument. He accepted that the respondent had been correctly convicted in the magistrates’ court, but submitted that by the time the case came on appeal to the county c …",
+      "passage_word_count": 152,
+      "source_key": "ni-judgments/2002-nica-50/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2002-nica-50:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2022-niqb-31",
+      "case_name": "O'Neill's (Christopher) Application",
+      "court": null,
+      "date": "2022-02-22",
+      "passage": "… easons outlined above.” The Legal Framework [20] The Applicant’s case centres upon section 54 of the Police (Northern Ireland) Act 1998, which is to be read in conjunction with Regulation 25(1) and the Schedule to the Royal Ulster Constabulary (Complaints etc.) Regulations 2000, sections 3–7 of the Human Rights Act 1998 and Article 8 ECHR. The Court is also referred, for the purposes of completeness, to the RUC (Complaints) (Informal Resolution) Regulations 2000, the RUC (Complaints etc.) Regulations 2001, and the Police (Conduct) Regulations (Northern Ireland) 2016. [21] Section 54 of the Police (Northern Ireland) Act 1998 is titled “Complaints – formal investigation” and reads as follows: “(1) If— (a) it appears to the Ombudsman that a complaint is not suitable for informal resolution; or (b) a complaint is referred to the Ombudsman under section 53(6), the complaint shall be formally  …",
+      "passage_word_count": 143,
+      "source_key": "ni-judgments/2022-niqb-31/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2022-niqb-31:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2003-niqb-1",
+      "case_name": "In the Matter of an Application by Hugh Jordan for Judicial Review",
+      "court": null,
+      "date": "2003-01-06",
+      "passage": "…  culminating in a letter dated 10 February 1995 from this Department affirming the direction of no prosecution dated 16 November 1993. As your most recent letter observes, the Director has obtained senior counsel’s advices. The Director has been advised in relation to the relevant provisions of the Human Rights Act 1998 – in particular, section 6 (1), section 7 (1), section 7 (5) and section 22 (4). All of these provisions must be considered in the context of the operative date of the Human Rights Act 1998 – 2 October 2000 (with certain very limited exceptions). The 3 Director has also been advised of the import and implications of the decisions of the House of Lords in Regina v Lambert and Regina v Kansal. As appears from the above, the only “decisions” known to the Director which could conceivably correspond to the “decisions not to prosecute” specified in the first paragraph of your l …",
+      "passage_word_count": 156,
+      "source_key": "ni-judgments/2003-niqb-1/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2003-niqb-1:1",
+      "query": "Human Rights Act 1998"
+    },
+    {
+      "neutral_citation": "2000-niqb-52",
+      "case_name": "Dinely's (Paul Robert) Application",
+      "court": null,
+      "date": "2000-11-08",
+      "passage": "… . As the date for commencement of the Act is imminent I propose to express an opinion on the submissions that have been made by Mr Mallon though I do so without the benefit of a full argument from the prosecution. Since the hearing I have read, and derived considerable assistance from, Bail and the Human Rights Act 1998, Law Commission Consultation Paper No. 157. Mr Mallon’s first submission concerns the mode of hearing a bail application. Article 5 of the Criminal Justice (NI) Order 1998 gives the court power, after hearing representations from the parties, to direct that an accused shall be treated as being present in the court for any particular hearing before the start of a trial if, during the hearing he is held in a prison or other institution and whether by means of a live television link or otherwise, he is able to see and hear the court and to be seen and heard by it. The applic …",
+      "passage_word_count": 165,
+      "source_key": "ni-judgments/2000-niqb-52/sections/1/compiled.txt",
+      "provision_cited": null,
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2000-niqb-52:1",
+      "query": "Human Rights Act 1998"
+    }
+  ],
+  "set_b_common_law_independent": [
+    {
+      "neutral_citation": "[2020] EWHC 336 (Admin)",
+      "case_name": "Leighton, R (On the Application Of) v The Lord Chancellor",
+      "court": "EWHC (Admin)",
+      "date": "2020-02-19",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "…  paragraph 15 of the Detailed Grounds, is that the answer to the Claimant’s case is, simply and straightforwardly, that the Defendant is still part-way through the decision-making process. However, in relation to Grounds (3), (4) and (5) (breach of Article 6, breach of Article 14, and breach of the common law right of access to the courts, respectively), though a key plank of the Defendant’s defence is that no decision has yet been taken, the Defendant’s skeleton argument goes further. The Defendant advances arguments as to why the current status quo is justified and proportionate. 70. In her skeleton argument and oral submissions on behalf of the Claimant, Ms Monaghan QC’s primary argument is that the Claimant’s grounds go unchallenged, and the Defendant is not entitled to rely on any grounds in response, save the bare assertion that no decision has yet been taken. So far as Grounds (3) …",
+      "passage_word_count": 151,
+      "source_key": "caselaw/2020-ewhc-336-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2020] EWHC 336 (Admin):1",
+      "term_matched": "common law right of access to the court"
+    },
+    {
+      "neutral_citation": "[2011] EWCA Civ 1710",
+      "case_name": "Medical Justice, R (on the application of) v Secretary of State for the Home Department",
+      "court": "EWCA Civ",
+      "date": "2011-11-22",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… our time frame and the effect of this quashing order is that those covered by the 2010 exceptions now fall within that time frame.” The grounds of appeal 7. There are now effectively three grounds of appeal. First, it is submitted that the judge impermissibly extended the substantive content of the common law right of access to the courts by concluding that the common law principle required the provision of legal advice to a person served with removal directions and that, absent the provision of such advice, removal from the United Kingdom would be unlawful. In the appellant's skeleton argument it was submitted that: \"The effect of the judge's conclusion is that in order to ensure the right of access to a court every individual who wishes to access that court must be able to receive legal advice, possibly even paid for by the state. It would have significant implications for the provisio …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2011-ewca-civ-1710/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2011] EWCA Civ 1710:1",
+      "term_matched": "common law right of access to the court"
+    },
+    {
+      "neutral_citation": "[2013] EWCA Civ 34",
+      "case_name": "The Children's Rights Alliance for England, R (on the application of) v The Secretary of State for Justice",
+      "court": "EWCA Civ",
+      "date": "2013-02-06",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… nt techniques were justified in using the force considered necessary at the time.” (4) The Secretary of State’s Responsibility for the Trainees’ Ignorance of their Rights 19. Mr Hermer’s first case is that the Secretary of State perpetrated an impediment – a hindrance or obstacle – to the trainees’ right of access to justice, and that on authority the court should make good the fault, so that their right may be vindicated. In his reply at the hearing he submitted that the trainees were led to believe, by actions of the Secretary of State, that the restraints used on them were lawful. Hence the proposition that the Secretary of State is “responsible” for their ignorance is critical. 20. A range of meanings may be attributed to the term “responsible”, of which it is useful to isolate two. A person may be said to be responsible for a result if he is a cause of it. Or he may be responsible f …",
+      "passage_word_count": 163,
+      "source_key": "caselaw/2013-ewca-civ-34/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2013] EWCA Civ 34:1",
+      "term_matched": "right of access to justice"
+    },
+    {
+      "neutral_citation": "[2019] EWHC 2391 (Admin)",
+      "case_name": "Medical Justice, R (On the Application Of) v Secretary of State for the Home Department",
+      "court": "EWHC (Admin)",
+      "date": "2019-09-12",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… und 4 ”); and (5) contends that the Policy is in breach of Articles 3 and 8 European Convention on Human Rights (“ECHR”) (“ Ground 5 ”). 7. It is the Claimant’s case that the RNW policy is ultra vires and unlawful because it gives rise to an unacceptable risk of interference with the constitutional right of access to justice, and it also fails to comply with the SSHD’s obligations under EU Procedures Directive 2005/85/EC, Article 27 of the EU Regulation EU/604/2013 (Dublin III), and Article 47 of the EU Charter, and Articles 3 and 8 of the ECHR. A submission which is made is that the effect of the RNW policy is to limit or abrogate the right of access to court to challenge decisions taken by the SSHD without statutory authority, express or implied, to do so. 8. The Claimant seeks at paragraph 84 of the claim form the following relief: (1) a declaration that the removal window policy is ( …",
+      "passage_word_count": 165,
+      "source_key": "caselaw/2019-ewhc-2391-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2019] EWHC 2391 (Admin):1",
+      "term_matched": "right of access to justice"
+    },
+    {
+      "neutral_citation": "[2010] EWHC 1925 (Admin)",
+      "case_name": "Medical Justice, R (on the application of) v Secretary of State for the Home Department (Rev 1)",
+      "court": "EWHC (Admin)",
+      "date": "2010-07-25",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… tates the provision of independent medical advice and representation to those detained in immigration removal centres as well as conducting research into issues affecting those in immigration detention. 3. The claimant contends that the policy in the 2010 document:- (a) abrogates the constitutional right of access to justice without statutory authority and is therefore ultra vires; (b) cannot rationally be justified; (c) fails to pay due regard to the Secretary of State’s duties under the Race Relations Act 1971 (“RRA”) and the Disability Discrimination Act 1995 (“DDA”); (d) violates article 5(4) and article 6 of the European Convention on Human Rights (“the ECHR”); and (e) discriminates unfairly against those to whom it is applied contrary to article 14 of the ECHR when read together with articles 5, 6 and 8 of the ECHR. 4. Each of these allegations is strenuously denied. Permission to  …",
+      "passage_word_count": 145,
+      "source_key": "caselaw/2010-ewhc-1925-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2010] EWHC 1925 (Admin):1",
+      "term_matched": "right of access to justice"
+    },
+    {
+      "neutral_citation": "[2012] EWHC 3062 (Admin)",
+      "case_name": "Senior -Milne v Secretary of State for Justice",
+      "court": "EWHC (Admin)",
+      "date": "2012-10-30",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… ue a valid application. 27. Accordingly, I conclude that the requirement for a vexatious litigant to pay a fee, in the circumstances set out in paragraph 10 of Schedule 2 to the Fees Order, is proportionate; it is in pursuit of a legitimate aim; and it does not impair the essence of an individual’s right of access to justice. On that basis alone, this claim for judicial review must fail. However, when an analysis is done of the claimant’s particular factual circumstances then the reasons for the rejection of his claim for judicial review become overwhelming. 8. Analysis / Fact 28. In my view, the suggestion that in this case the claimant’s rights under Article 6 have been impaired, whether significantly or at all, is fanciful. First, the CRO that was made was very limited. It only relates to the County Court proceedings. It was made at the outset, before the claimant incurred large costs …",
+      "passage_word_count": 157,
+      "source_key": "caselaw/2012-ewhc-3062-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2012] EWHC 3062 (Admin):1",
+      "term_matched": "right of access to justice"
+    },
+    {
+      "neutral_citation": "[2015] EWHC 2761 (Admin)",
+      "case_name": "Wood, R (on the application of) v Governor of HMP Wandsworth",
+      "court": "EWHC (Admin)",
+      "date": "2015-09-15",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… ilure to maintain the prison IT equipment. 7. The matter came before Andrews J on the papers on 17 August 2015, when she granted permission and directed that the hearing be expedited. 8. The claimant relies on his right under article 6 of the European Convention on Human Rights and he says that his right of access to justice, in particular under article 6(3)(b), which refers to provision of necessary facilities, is being impeded by the defendant and that that is unlawful. Article 6(3)(b) refers to provision of facilities for the purposes of access to justice in criminal proceedings. 9. In the grounds of his claim he said that his need for possession of IT facilities has been accepted and that he has been authorised to use them but since a particular laptop stopped working he has tried to get it repaired and replaced and has been met with excuses over an extended period of time. 10. The r …",
+      "passage_word_count": 161,
+      "source_key": "caselaw/2015-ewhc-2761-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2015] EWHC 2761 (Admin):1",
+      "term_matched": "right of access to justice"
+    },
+    {
+      "neutral_citation": "[2020] EWCA Civ 1338",
+      "case_name": "FB (Afghanistan) & Anor, R (On the Application Of) v The Secretary of State for the Home Department",
+      "court": "EWCA Civ",
+      "date": "2020-10-20",
+      "principle_searched": "the common law right of access to a court",
+      "passage": "… [26]: “Notice of a decision is required before it can have the character of a determination with legal effect because the individual concerned must be in a position to challenge the decision in the courts if he or she wishes to do so. This is not a technical rule, It is simply an application of the right of access to justice….”. Thus, in that case, it was held that a decision to refuse an asylum claim, which would disentitle the claimant to income support, had no effect in that regard unless and until it was notified to the claimant, because it was only then that it could be legally challenged. 82. However, that is far distant from this case. 83. Ms Naik characterised the notice received by irregular migrants (including FB) in Form RED.0001 as a mere “inchoate notification of liability to removal”. However, as I have described (paragraphs 50-51 above), the form is headed “Notice of Remov …",
+      "passage_word_count": 160,
+      "source_key": "caselaw/2020-ewca-civ-1338/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2020] EWCA Civ 1338:1",
+      "term_matched": "right of access to justice"
+    },
+    {
+      "neutral_citation": "[2013] EWCA Civ 555",
+      "case_name": "Hill, R (On the Application Of) v Institute of Chartered Accountants In England And Wales (Rev 1)",
+      "court": "EWCA Civ",
+      "date": "2013-05-21",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… including the decision of the tribunal that the charge was proved. Lang J held that there was power for the tribunal to allow Mr Mander to leave and later return after he had read a transcript of the part of the hearing which he did not attend. She held, however, that there had been a breach of the rules of natural justice; but she concluded that the breach had been waived by Mr Cope’s agreement to the procedure which was voluntary, informed and unequivocal. There is now an appeal to this court. Powers of the Tribunal 7. The Institute was constituted by Royal Charter granted on 11 th May 1880 and by Supplemental Charter granted on 21 st December 1948. Its stated objects include the maintenance of “high standards of practice and professional conduct by all its members” (Article 1(a)(iv)). The Institute is empowered under the Charter to make bye-laws and regulations, including in relation  …",
+      "passage_word_count": 157,
+      "source_key": "caselaw/2013-ewca-civ-555/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2013] EWCA Civ 555:1",
+      "term_matched": "rules of natural justice"
+    },
+    {
+      "neutral_citation": "[2022] EAT 154",
+      "case_name": "Tom Simpson v Unite the Union",
+      "court": "EAT",
+      "date": "2022-10-11",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… f a Rhadamanthus”. Rhadamanthus was credited in Greek mythology as being the justest of men, whose stern and inflexible judgement qualified him to become one of the judges of the dead. 61. However, it is well established that while trade unions may essentially be private bodies, they are subject to rules of natural justice, if not otherwise, by an implied term of the contract of association. While all the decisions taken in disciplinary proceedings may be taken by people who are acting on behalf of a trade union, the roles could be split between different committees or undertaken by different individuals who sit on the same committee to ensure a degree of separation and independence in decision making. 62. A union is subject to its rules. It has been held that the requirements of natural justice could be excluded by clear words: Roebuck v National Union Of Mineworkers [1977] ICR 573 : I  …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2022-eat-154/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2022] EAT 154:1",
+      "term_matched": "rules of natural justice"
+    },
+    {
+      "neutral_citation": "[2024] EWHC 2629 (TCC)",
+      "case_name": "Essential Living (Greenwich) Limited v Conneely Facades Limited",
+      "court": "EWHC (TCC)",
+      "date": "2024-09-16",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… s biased. 5. This test needs to be applied in the context of the rough and temporary justice which characterises adjudication. 6. In particular, the following relevant points emerge from the authorities. (1) Adjudication decisions should be enforced summarily unless there is a serious breach of the rules of natural justice (see the decision of the Court of Appeal in Carillion Construction Ltd v Devonport Royal Dockyard Ltd [2006] BLR 15 at [52] and [85][87]). (2) Such breach must take “a material difference to the outcome” (see the judgment of Constable J in Home Group Ltd v MPS Housing Ltd [2023] BLR 474 at [50]. (3) However, the courts should approach complaints about alleged breaches of the rules of natural justice in adjudication with a degree of scepticism (see Carillion at [52] and Home Group at [50]). (4) The adjudicator is not an arbitrator or a judge but has to carry out “onerou …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2024-ewhc-2629-tcc/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2024] EWHC 2629 (TCC):1",
+      "term_matched": "rules of natural justice"
+    },
+    {
+      "neutral_citation": "[2019] EWHC 3340 (QB)",
+      "case_name": "Agbara & Ors v The Shell Petroleum Development Company of Nigeria Ltd & Ors",
+      "court": "EWHC (QB)",
+      "date": "2019-12-05",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… hors of Briggs on Civil Jurisdiction and Judgments agree: they state (§7.88): “A defence resembling that of lack of natural justice is framed [in s. 9(2) AJA] in terms of lack of due service. To the extent that the judgment did not fall within this provision, but was still rendered in breach of the rules of natural justice, it may well not be just and convenient to register it; and in any event, the Human Rights Act 1998 will apply to proceedings taken under this section.” 32. Further, breach of natural justice is a well-established defence to a common law action to enforce a foreign judgment: see, for example, Israel Discount Bank of New York v Hadjipateras [1984] 1 WLR 137 , 141C-E; Adams v Cape Industries [1990] 1 Ch. 433 , 559F. If it were established that a judgment obtained in similar circumstances in a jurisdiction whose judgments are not within a statutory enforcement regime woul …",
+      "passage_word_count": 159,
+      "source_key": "caselaw/2019-ewhc-3340-qb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2019] EWHC 3340 (QB):1",
+      "term_matched": "rules of natural justice"
+    },
+    {
+      "neutral_citation": "[2017] EWHC 1422 (Admin)",
+      "case_name": "Khaled & Anor v The Secretary of State for Foreign and Commonwealth Affairs & Ors",
+      "court": "EWHC (Admin)",
+      "date": "2017-06-14",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… case in Khaled v The Security Services and others ( loc.cit. ) where he reiterated what he had said in Kamoka . 40. The same point may be made about K , both in the Divisional Court (Simon LJ and Ouseley J) and the Court of Appeal. At first instance Simon LJ held (at paragraph 20) that there was no common law duty of fairness akin to Article 6, and that disclosure was entirely governed by the provisions of the JSA 2013 within the context of the closed materials procedure. In the Court of Appeal Longmore LJ expressed the obiter opinion (at paragraph 22) that the notion that there could be a “free-standing right of disclosure” (i.e. at common law) was “most unlikely to be correct”. Again, the court was not considering Mr Squires’ new argument. 41. Although the general tenor of the authorities is supportive of Ms Grange’s case, I have found nothing in them which binds me directly. Disposal  …",
+      "passage_word_count": 163,
+      "source_key": "caselaw/2017-ewhc-1422-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] EWHC 1422 (Admin):1",
+      "term_matched": "common law duty of fairness"
+    },
+    {
+      "neutral_citation": "[2014] UKUT 366 (IAC)",
+      "case_name": "The Secretary of State for the Home Department v Tamar Marghia",
+      "court": "UKUT (IAC)",
+      "date": "2014-07-22",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… … Before THE HONOURABLE MR JUSTICE HADDON-CAVE UPPER TRIBUNAL JUDGE COKER Between THE SECRETARY OF STATE FOR THE HOME DEPARTMENT Appellant and Miss Tamar Marghia Respondent Representation : For the Appellant: Mr R Hopkin, Home Office Presenting Officer For the Respondent: Ms M Malhotra, Counsel The common law duty of fairness is essentially about procedural fairness. There is no absolute duty at common law to make decisions which are substantively “fair”. The Court will not interfere with decisions which are objected to as being substantively unfair, except the decision in question falls foul of the Wednesbury test i.e. that no reasonable decision-maker or public body could have arrived at such a decision. It is a matter for the Secretary of State whether she exercises her residual discretion. The exercise of such residual discretion, which does not appear in the Immigration Rules, is ab …",
+      "passage_word_count": 145,
+      "source_key": "caselaw/2014-ukut-366-iac/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2014] UKUT 366 (IAC):1",
+      "term_matched": "common law duty of fairness"
+    },
+    {
+      "neutral_citation": "5860",
+      "case_name": "TC 01489: Foresight Financial Services Limited v The Commissioners for Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2011-10-04",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… cordance with the relevant provisions “shall be liable to a penalty or penalties of the relevant monthly amount for each month (or part of a month) during which the failure continues ...........”. 25 5. So far as the State and its several organs are concerned (HMRC being one such organ), there is a common law duty of fairness or, to put it in another way, a duty not to act in a manner that is conspicuously unfair towards any citizen/person. In R v Secretary of State for the Home Department [2003] EWCA Civ 364 at paragraph 69, the Court of Appeal expounded the principle as related to the decision making process 30 under scrutiny in that appeal. In Secretary of State for the Home Department v Thakur [2011] UKUT 151 the Upper Tribunal, in paragraph 12 of its Decision, also recognised that principle, again in the context of a decision making process. 6. HMRC may well take the position that g …",
+      "passage_word_count": 163,
+      "source_key": "tax-tribunals/5860/sections/1/compiled.txt",
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:5860:1",
+      "term_matched": "common law duty of fairness"
+    },
+    {
+      "neutral_citation": "6099",
+      "case_name": "TC 01726: Peter Stump v The Commissioners for Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2012-01-05",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "…  accordance with the relevant provisions “shall be liable to a penalty or penalties of the relevant monthly amount for each month (or part of a month) during which the failure continues ...........”. 8. So far as the State and its several organs are concerned (HMRC being one such organ), there is a common law duty of fairness or, to put it in another way, a duty not 5 to act in a manner that is conspicuously unfair towards any citizen/person. In R v Secretary of State for the Home Department [2003] EWCA Civ 364 at paragraph 69, the Court of Appeal expounded the principle as related to the decision making process under scrutiny in that appeal. In Secretary of State for the Home Department v Thakur [2011] UKUT 151 the Upper Tribunal, in paragraph 12 of its Decision, also 10 recognised that principle, again in the context of a decision making process. 9. HMRC may well take the position that …",
+      "passage_word_count": 162,
+      "source_key": "tax-tribunals/6099/sections/1/compiled.txt",
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:6099:1",
+      "term_matched": "common law duty of fairness"
+    },
+    {
+      "neutral_citation": "[2011] EWCA Civ 457",
+      "case_name": "Buckinghamshire County Council v Royal Borough of Kingston Upon Thames",
+      "court": "EWCA Civ",
+      "date": "2011-04-18",
+      "principle_searched": "natural justice and the duty of fairness at common law",
+      "passage": "… y will be left to meet. 45. This point is made as an answer to the challenge to BCC’s status based on the limited duties set out in s.47(3) . Kingston rely on those provisions as supporting its case that no wider duties of consultation were intended by Parliament or ought to be implied as part of a common law duty of fairness. Mr Clayton submits that s.47(3) is not a duty to consult properly so-called and is not therefore inconsistent with the imposition of such a duty in favour of his own client. But he has therefore to accept that he must establish a duty owed to his client which is of a quite different and much more extensive nature than that owed to other service providers who are likely to be directly involved in meeting the user’s needs. 46. The justification for this disparity of treatment is not obvious and, in my view, is impossible to justify on the basis presented to the Court …",
+      "passage_word_count": 168,
+      "source_key": "caselaw/2011-ewca-civ-457/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2011] EWCA Civ 457:1",
+      "term_matched": "common law duty of fairness"
+    },
+    {
+      "neutral_citation": "[2017] EWHC 3154 (QB)",
+      "case_name": "Dring v Cape Distribution Ltd & Anor (Constitution - access to courts - open justice)",
+      "court": "EWHC (QB)",
+      "date": "2017-12-05",
+      "principle_searched": "open justice at common law",
+      "passage": "…  9. Served documents not on the records of the court do not fall within rule 5.4C but may be disclosed under the court’s common law power. Applicable test 10. Documents filed on the record of the court and which are read or treated as read in court are subject to a default position in favour of the principle of open justice if the applicant has a legitimate interest. 11. Where the applicant has a legitimate interest then the court must still carry out a balancing exercise in relation to any harm to other parties legitimate interests when deciding whether to allow access. 12. Documents on the records of the court which are not read or treated as read are subject to a more stringent test namely that there must be strong grounds for thinking that access is necessary in the interests of justice. 13. The principle of open justice is engaged notwithstanding that a case settles before judgment. …",
+      "passage_word_count": 160,
+      "source_key": "caselaw/2017-ewhc-3154-qb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] EWHC 3154 (QB):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2022] UKFTT 361 (TC)",
+      "case_name": "Bouncylagoon Limited and other Appellants in the VAT Umbrella Appeals v The Commissioners for HMRC",
+      "court": "UKFTT (TC)",
+      "date": "2022-10-03",
+      "principle_searched": "open justice at common law",
+      "passage": "…  the use of the Employment Allowance (EA Scheme).” 6. The Appellants dispute this and appeal against HMRC’s decisions. Case law 7. In Cape Intermediate Holdings Ltd v Dring (for and on behalf of Asbestos Victims Support Groups Forum UK [2019] UKSC 38 (‘ Cape’ ), the Supreme Court confirmed that the principle of open justice applies to all courts and tribunals and that all courts and tribunals (including the First-tier Tribunal) “have an inherent jurisdiction to determine what that principle requires in terms of access to documents or other information placed before the court or tribunal”. The Supreme Court also confirmed in Cape that the key question is “how that jurisdiction should be exercised in the particular case”. 8. In Cider of Sweden Limited v HMRC [2022] UKFTT 76 (TC) (‘ Cider of Sweden ’), the FTT considered an application by a third party for disclosure to them of various docu …",
+      "passage_word_count": 153,
+      "source_key": "caselaw/2022-ukftt-361-tc/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2022] UKFTT 361 (TC):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "12557",
+      "case_name": "TC 08613: BOUNCYLAGOON LIMITED AND OTHER APPELLANTS IN THE VAT UMBRELLA APPEALS v Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2022-10-03",
+      "principle_searched": "open justice at common law",
+      "passage": "… nd the use of the Employment Allowance (EA Scheme).” 6. The Appellants dispute this and appeal against HMRC’s decisions. CASE LAW 7. In Cape Intermediate Holdings Ltd v Dring (for and on behalf of Asbestos Victims Support Groups Forum UK [2019] UKSC 38 (‘Cape’), the Supreme Court confirmed that the principle of open justice applies to all courts and tribunals and that all courts and tribunals (including the First-tier Tribunal) “have an inherent jurisdiction to determine what that principle requires in terms of access to documents or other information placed before the court 2 or tribunal”. The Supreme Court also confirmed in Cape that the key question is “how that jurisdiction should be exercised in the particular case”. 8. In Cider of Sweden Limited v HMRC [2022] UKFTT 76 (TC) (‘Cider of Sweden’), the FTT considered an application by a third party for disclosure to them of various docu …",
+      "passage_word_count": 151,
+      "source_key": "tax-tribunals/12557/sections/1/compiled.txt",
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:12557:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "12282",
+      "case_name": "TC 08330: JTI ACQUISITION COMPANY (2011) LIMITED v Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2021-06-24",
+      "principle_searched": "open justice at common law",
+      "passage": "…  of the relevant documents, if ‘entitled’ is taken to mean by right. 9. What Hastings has established is that the First-tier Tribunal (similar to the Upper Tribunal in Aria Technology Limited & HMRC v Situation Publishing Ltd [2018] UKUT 111 (TCC)) has ‘an inherent jurisdiction to determine how the principle of open justice should be applied and to grant a non-party access to documents relating to proceedings in accordance with that principle’ (Hastings at [5]). 10. The operative word here is ‘inherent’, since the jurisdiction of the First-tier Tribunal is otherwise created only by statute. The inherent jurisdiction of this Tribunal means it has the power to consider a non-party application for disclosure; the authorities do not establish an ‘entitlement’ to disclosure by application. 3 Non-party applications underpinned by the principle of open justice 11. The Supreme Court in Cape drew …",
+      "passage_word_count": 143,
+      "source_key": "tax-tribunals/12282/sections/1/compiled.txt",
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:12282:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2013] EWCA Civ 674",
+      "case_name": "Willford, R (On the Application Of) v Financial Services Authority",
+      "court": "EWCA Civ",
+      "date": "2013-06-12",
+      "principle_searched": "open justice at common law",
+      "passage": "… hind these submissions lies the implicit assertion that disclosure of Mr. Willford’s identity would cause irreparable damage to his professional reputation. 4. Mr. Brindle Q.C. and Mr. Allen for the FSA have submitted that this application raises important questions of principle, in particular, the principle of open justice. They argue that the appeal raises important questions relating to the conduct of disciplinary tribunals and that publication of the judgments in full is necessary to enable anyone who reads them properly to understand the nature of, and the basis for, the court’s decision. They also suggest that the Supreme Court is unlikely to hear any appeal in this matter in private, so that Mr. Willford’s identity will be disclosed in any event. 5. In my view, the starting point is the principle of open justice, that is, the principle that proceedings are to be conducted and dete …",
+      "passage_word_count": 148,
+      "source_key": "caselaw/2013-ewca-civ-674/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2013] EWCA Civ 674:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2025] EWCA Civ 824",
+      "case_name": "In re HMP",
+      "court": "EWCA Civ",
+      "date": "2025-06-30",
+      "principle_searched": "open justice at common law",
+      "passage": "… ndent George Lafazanides (instructed by Machins Solicitors ) for the 3 rd Respondent Hearing date : 1 July 2025 - - - - - - - - - - - - - - - - - - - - - APPROVED JUDGMENT Lady Carr CJ, Lady Justice King and Lord Justice Warby: Introduction 1. This appeal is about access to the court file under the principle of open justice as identified in Dring (on behalf of the Asbestos Victims Support Groups Forum UK) v Cape Intermediate Holdings Ltd (Media Lawyers Association intervening) [2019] UKSC 38 ; [2020] AC 629 (“ Dring ”). The purpose of this short judgment is to address a matter of general importance, namely to emphasise the limits of the open justice principle, specifically in the context of care proceedings under the Children Act 1989 (“the CA”). 2. Open justice is a fundamental constitutional principle. The underlying rationale is the need to allow the media and the public access to inf …",
+      "passage_word_count": 166,
+      "source_key": "caselaw/2025-ewca-civ-824/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2025] EWCA Civ 824:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "12357",
+      "case_name": "TC 08407: CIDER OF SWEDEN LIMITED v Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2022-02-18",
+      "principle_searched": "open justice at common law",
+      "passage": "… of pleadings at early stage in the proceedings, before any judicial consideration of the substantive issues – inherent jurisdiction of the Tribunal – whether application should be decided by reference to CPR 5.4C(1), whether by applying it to the Tribunal or by relying on it as an expression of the principle of open justice – held no – whether access should be granted in pursuance of general “open justice” principle – held no – access at this early stage would not enable the Applicant to understand how the justice system works, how decisions are taken or scrutinise the way in which the Tribunal decides cases – even if it would, on the fact-specific balancing exercise, access at this stage would be denied 1 DECISION INTRODUCTION 1. This decision concerns an application by the Third Party Applicant (“EY”) for disclosure to them of various documents brought into existence in the context of  …",
+      "passage_word_count": 153,
+      "source_key": "tax-tribunals/12357/sections/1/compiled.txt",
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:12357:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2021] EWHC 3219 (Admin)",
+      "case_name": "SAIFULLAH GHARAB YAR v SECRETARY OF STATE FOR DEFENCE",
+      "court": "EWHC (Admin)",
+      "date": "2021-11-30",
+      "principle_searched": "open justice at common law",
+      "passage": "… tatement may be admissible as hearsay evidence and may then be admitted in written form; or the statement may not be put in evidence at all—in which case it never becomes part of the material on which the case is decided. 15. When a witness statement forms part of the evidence given at a trial, the principle of open justice requires that a member of the public or press who wishes to do so should be able to read the statement—in just the same way as they would have been entitled to hear the evidence if it had been given orally at a public hearing in court. That is the rationale for the right of a member of the public under CPR r 32.13 to inspect a witness statement once it stands as evidence-in-chief during the trial, unless the court otherwise directs. But there is no corresponding right or reason why a member of the public or press should be entitled to obtain copies of witness statemen …",
+      "passage_word_count": 169,
+      "source_key": "caselaw/2021-ewhc-3219-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2021] EWHC 3219 (Admin):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-i-m-holliland-v-chief-constable-of-derbyshire-constabulary-2602217-2017",
+      "case_name": "Mr I M Holliland v Chief Constable of Derbyshire Constabulary: 2602217/2017 - Judgment",
+      "court": null,
+      "date": "2018-12-31",
+      "principle_searched": "open justice at common law",
+      "passage": "…  his employer would respect any Order, the press and media stand for open justice, the Respondent being a large local employer and open justice was paramount. Conclusions 6. Rule 50 (2) provides that in considering whether to make an order under this rule, the Tribunal shall give full weight to the principle of open justice and to the Convention right to freedom of expression. When considering whether to make anonymity orders three Convention rights are engaged and must be reconciled; Article 6, Article 8 and Article 10 (BBC v Roden). 7. The Claimant’s identity had already been named in open criminal proceedings. There was no evidence that there was any risk to the Claimant and furthermore his identity was already in the public domain. Clear evidence is required to consider departing from the principles of open justice and in order to balance the Convention rights of the Claimant against …",
+      "passage_word_count": 151,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-i-m-holliland-v-chief-constable-of-derbyshire-constabulary-2602217-2017/sections/2/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-i-m-holliland-v-chief-constable-of-derbyshire-constabulary-2602217-2017:2",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2015] EWHC 2374 (QB)",
+      "case_name": "AMC & Anor v News Group Newspapers Ltd",
+      "court": "EWHC (QB)",
+      "date": "2015-08-05",
+      "principle_searched": "open justice at common law",
+      "passage": "… out in that judgment. 2. In the event the parties agreed orders containing undertakings and directions for trial, which meant that the hearing before me did not go ahead. This short judgment records that fact by way of open judgment, and this is because the orders provided for a derogation from the principle of open justice in that the order for anonymity of the Claimants made by Laing J was continued.",
+      "passage_word_count": 72,
+      "source_key": "caselaw/2015-ewhc-2374-qb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2015] EWHC 2374 (QB):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/broome-v-bournemouth-christchurch-and-poole-council-1401905-slash-2020",
+      "case_name": "Broome v Bournemouth, Christchurch and Poole Council: 1401905/2020 - Judgment with Reasons",
+      "court": null,
+      "date": "2021-10-21",
+      "principle_searched": "open justice at common law",
+      "passage": "… ecord. Thirdly, there is no public interest in specifically knowing who the Claimant is. The Claimant is not a public figure (he is a refuse worker) and his specific identity is an irrelevant feature of the claim. Fourthly, an anonymity order is a proportionate balance of rights, including with the principle of open justice. The Claimant does not propose any restricted reporting order. The case may be attended by members of the public and the facts may be reported on. There may be public interest in a local authority’s treatment of a vulnerable employee, but that will still be a matter of public record. THE LAW General 10. The principle of open justice has its foundations in the common law, reinforced by the rights under the European Convention of Human Rights. Article 6 guarantees the right to a fair and public hearing with a publicly pronounced judgment, except where, and to the extent …",
+      "passage_word_count": 155,
+      "source_key": "et-decisions/employment-tribunal-decisions/broome-v-bournemouth-christchurch-and-poole-council-1401905-slash-2020/sections/2/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/broome-v-bournemouth-christchurch-and-poole-council-1401905-slash-2020:2",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2015] EWCA Civ 96",
+      "case_name": "JX MX v Dartford & Gravesham NHS Trust & Ors",
+      "court": "EWCA Civ",
+      "date": "2015-02-17",
+      "principle_searched": "open justice at common law",
+      "passage": "… ervener Mr. David Barr Q.C. (instructed by the Treasury Solicitor ) as friend of the court Hearing date : 3 rd December 2014 - - - - - - - - - - - - - - - - - - - - - Judgment Lord Justice Moore-Bick : 1. This is the judgment of the court. 2. This appeal raises an important question relating to the principle of open justice and the exercise of the court’s power to withhold from the public the names of parties to litigation, a practice commonly referred to as “anonymisation”. It arises in the context of an application for approval of a compromise of a claim for damages for personal injury brought by a child. 3. All settlements or compromises of claims by or against children must be approved by the court if they are to be binding on the parties, whether they are reached before or after proceedings have been started: see CPR 21.10. Approval is likewise required for the settlement or comprom …",
+      "passage_word_count": 172,
+      "source_key": "caselaw/2015-ewca-civ-96/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2015] EWCA Civ 96:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2013] EWCA Civ 819",
+      "case_name": "Global Torch Ltd v Apex Global Management Ltd & Ors",
+      "court": "EWCA Civ",
+      "date": "2013-07-09",
+      "principle_searched": "open justice at common law",
+      "passage": "…  Practice Guidance [2012] 1 WLR 1003 . It set out “recommended practice regarding any application for interim injunctive relief in civil proceedings to restrain the publication of information: an interim non-disclosure order”. It also provided “guidance concerning the proper approach to the general principle of open justice in respect of such applications”. Under the heading “Open Justice”, it described open justice as “a fundamental principle” and referred to Article 6.1, CPR39.2 and Scott v Scott . The following subsequent passages are relevant: “10. Derogations from the general principle can only be justified in exceptional circumstances, when they are strictly necessary as measures to secure the proper administration of justice … Derogations should, where justified, be no more than strictly necessary to achieve their purpose. 11. The grant of derogations is not a question of discreti …",
+      "passage_word_count": 137,
+      "source_key": "caselaw/2013-ewca-civ-819/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2013] EWCA Civ 819:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/c-turner-v-p-hartmann-ltd-2411199-slash-2021-and-2403516-slash-2022",
+      "case_name": "C Turner v P Hartmann Ltd: 2411199/2021 and 2403516/2022 - Judgment with Reasons",
+      "court": null,
+      "date": "2026-04-14",
+      "principle_searched": "open justice at common law",
+      "passage": "… reventing or restricting the public disclosure of any aspect of proceedings so far as it considers necessary in the interests of justice or in order to protect the Convention rights of any person. (2) In considering whether to make an order under this rule, the Tribunal must give full weight to the principle of open justice and to the Convention right to freedom of expression. (3) Any order made under this rule may require— (a)...; (b)that the identities of specified parties, witnesses or other persons referred to in the proceedings should not be disclosed to the public, by the use of anonymisation or otherwise, whether in the course of any hearing or in its listing or in any documents entered on the Register or otherwise forming part of the public record;” 6. “Convention rights” has the meaning given to it in section 1 of the Human Rights Act 1998. Article 2 is the right to life. Articl …",
+      "passage_word_count": 159,
+      "source_key": "et-decisions/employment-tribunal-decisions/c-turner-v-p-hartmann-ltd-2411199-slash-2021-and-2403516-slash-2022/sections/3/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/c-turner-v-p-hartmann-ltd-2411199-slash-2021-and-2403516-slash-2022:3",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2021] EWHC 1193 (Comm)",
+      "case_name": "Goodley v The Hut Group Ltd",
+      "court": "EWHC (Comm)",
+      "date": "2021-05-05",
+      "principle_searched": "open justice at common law",
+      "passage": "… THG on 8 October, but he re-sent it to THG in any event on 18 November 2020. 11. THG responded on 19 November 2020 and it said as follows: “Having considered the application and the supporting materials, it is apparent that The Guardian’s request for the document has not been made in pursuit of the principle of open justice … but rather for other journalistic purposes. The Guardian is required to demonstrate why the provision now of the document, which is historic and relates to legal proceedings concluded many years ago, would advance the open justice principle. It has not done so. Accordingly, THG’s position is that it would not be appropriate for THG to consent to the application in such circumstances.” 12. On 12 January 2021 Moulder J directed that the application should be listed for an oral hearing, which came before this court on 29 April 2021, at which THG was represented by Mr.  …",
+      "passage_word_count": 158,
+      "source_key": "caselaw/2021-ewhc-1193-comm/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2021] EWHC 1193 (Comm):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2020] EWHC 1873 (QB)",
+      "case_name": "Dring v Cape Intermediate Holdings Ltd",
+      "court": "EWHC (QB)",
+      "date": "2020-07-15",
+      "principle_searched": "open justice at common law",
+      "passage": "…  it was clear or stated that the judge had read; (iii) skeleton arguments or written submissions read by the court, provided that there is an effective public hearing at which these were deployed; and (iv) any specific documents which it was necessary for a non-party to inspect in order to meet the principle of open justice. But there was no inherent jurisdiction to permit non-parties to obtain trial bundles or documents referred to in skeleton arguments or written submissions, or in witness statements or experts’ reports, or in open court, simply on the basis that they had been referred to in the hearing. 10. When exercising its discretion under CPR rule 5.4C(2) or the inherent jurisdiction, the court had to balance the non-party’s reasons for seeking disclosure against the party’s reasons for wanting to preserve confidentiality. The court would be likely to lean in favour of granting a …",
+      "passage_word_count": 150,
+      "source_key": "caselaw/2020-ewhc-1873-qb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2020] EWHC 1873 (QB):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2014] EWHC 3432 (Ch)",
+      "case_name": "V v T & Anor",
+      "court": "EWHC (Ch)",
+      "date": "2014-10-22",
+      "principle_searched": "open justice at common law",
+      "passage": "…  (f) of rule 39.2(3), the rule ends with sub-paragraph (g) which refers to a case where the court considers it is necessary in the interests of justice to conduct the hearing in private. 13. Rule 39.2 is to be applied against the background of long established common law rules as to the fundamental principle of open justice and against the background of Articles 6, 8 and 10 of the Convention, set out in schedule 1 to the Human Rights Act 1998 , coupled with section 12 of that Act dealing with freedom of expression. These rules have been the subject of a large number of highly relevant decisions over the decades. One can trace the authorities from the leading case of Scott v Scott [1913] AC 417 through R v Legal Aid Board ex parte Kaim Todner [1999] QB 966 (see, in particular, at 977) to a fairly recent discussion of the principles in Global Torch Ltd v Apex Global Management Ltd [2013] 1 …",
+      "passage_word_count": 166,
+      "source_key": "caselaw/2014-ewhc-3432-ch/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2014] EWHC 3432 (Ch):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2025] EWCA Civ 1126",
+      "case_name": "PMC v Cwm Taf Morgannwg University Health Board",
+      "court": "EWCA Civ",
+      "date": "2025-08-27",
+      "principle_searched": "open justice at common law",
+      "passage": "… ment was handed down remotely at 10:00am on 28 August 2025 by circulation to the parties or their representatives by e-mail and by release to the National Archives. SIR GEOFFREY VOS, MASTER OF THE ROLLS: Introduction 1. This appeal raises important issues as to the jurisdictional foundation for the principle of open justice and derogations from that principle. The context is the grant of anonymisation orders and reporting restriction orders in clinical negligence cases brought by children and protected parties and in proceedings brought to seek the court’s approval of settlements in such cases. 2. The terminology for the orders sought in these cases has not always been clear. I shall use the terms in the following fashion: An order sought within court proceedings to withhold or anonymise the names of a party or a witness, including withholding information that would identify that person, …",
+      "passage_word_count": 146,
+      "source_key": "caselaw/2025-ewca-civ-1126/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2025] EWCA Civ 1126:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2024] UKFTT 413 (TC)",
+      "case_name": "Hugh Edward Mark Osmond & Anor v The Commissioners for HMRC",
+      "court": "UKFTT (TC)",
+      "date": "2024-05-19",
+      "principle_searched": "open justice at common law",
+      "passage": "… In JTI the third party had a legitimate interest in seeking copies of skeleton arguments and supplemental submissions even though it was not engaged in related litigation but sought the documents for the purposes of advising clients generally. (2) There has been a hearing in the Appeal and thus the principle of open justice is engaged (even if the decision has yet to be published). (3) The parties’ skeleton arguments are in the public domain and can thus be the subject of a third party application for access. (4) Supplemental written submissions which may not have been read in open court are nonetheless to be considered as having passed into the public domain. (5) There is no harm to the judicial process or to the legitimate interests of others in disclosing the requested documents. (6) Even though our decision in the Appeal will set out the parties’ legal arguments in some detail, the p …",
+      "passage_word_count": 156,
+      "source_key": "caselaw/2024-ukftt-413-tc/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2024] UKFTT 413 (TC):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2019] UKSC 38",
+      "case_name": "Cape Intermediate Holdings Ltd v Dring",
+      "court": "UKSC",
+      "date": "2019-07-28",
+      "principle_searched": "open justice at common law",
+      "passage": "…  of or as well as in hard copy. 2. This case is about how much of the written material placed before the court in a civil action should be accessible to people who are not parties to the proceedings and how it should be made accessible to them. It is, in short, about the extent and operation of the principle of open justice. As Toulson LJ said, in R (Guardian News and Media Ltd) v City of Westminster Magistrates’ Court (Article 19 intervening) [2012] EWCA Civ 420 ; [2013] QB 618 (“ Guardian News and Media ”), at para 1: “Open justice. The words express a principle at the heart of our system of justice and vital to the rule of law. The rule of law is a fine concept but fine words butter no parsnips. How is the rule of law itself to be policed? It is an age old question. Quis custodiet ipsos custodes - who will guard the guards themselves? In a democracy, where power depends on the consent …",
+      "passage_word_count": 174,
+      "source_key": "caselaw/2019-uksc-38/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2019] UKSC 38:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2024] EWHC 500 (KB)",
+      "case_name": "Director of the Serious Fraud Office v Bluu Solutions Limited & Anor",
+      "court": "EWHC (KB)",
+      "date": "2024-03-07",
+      "principle_searched": "open justice at common law",
+      "passage": "… me of approving the DPAs no longer apply as there are no more legal proceedings which might be prejudiced. 14. The applicable legal principles have recently been re-stated by the Divisional Court in the case of Marandi at [43] and are, in summary, as follows: i) The starting point is the common law principle of open justice, as identified in the “foundational” decision of Scott v Scott [1913] AC 417 . ii) The common law principle encompasses mentioning names: R(C) v Secretary of State for Justice [2016] UKSC 2 , at [36]; In Re Guardian News and Media Ltd [2010] UKSC 1 at [63] and Khuja v Times Newspapers Ltd [2017] UKSC 49 , at [14]. iii) Any derogation from the principle of open justice is required to be justified by the party seeking the derogation on the ground of necessity “in the interests of justice”: Khuja. iv) This exception is of narrow scope. v) The “threshold question” is whet …",
+      "passage_word_count": 162,
+      "source_key": "caselaw/2024-ewhc-500-kb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2024] EWHC 500 (KB):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-j-fairrie-v-white-eagle-lodge-1401636-slash-2022",
+      "case_name": "Ms J Fairrie v White Eagle Lodge: 1401636/2022 - Judgment with Reasons",
+      "court": null,
+      "date": "2025-02-04",
+      "principle_searched": "open justice at common law",
+      "passage": "… tive impact on my employment prospects and my ability to maintain a normal private life. I understand that the tribunal must consider the European Convention on Human Rights (ECHR) when making these decisions. I respectfully submit that the right to freedom of expression can be balanced against the principle of open justice in this case. The publication of my personal information is not necessary to ensure the fairness of the proceedings or to protect the public interest. I would be grateful if the tribunal would grant my request for anonymity and restricted reporting orders. I believe that these measures are essential to protect my privacy and well- being. Case No: 1401636/2022 ---3--- DRAFT ORDER 1. Introduction 1.1 The Claimant seeks an anonymity order pursuant to Rule 50(3)(b) of the Employment Tribunal Rules of Procedure, or alternatively, a redaction order pursuant to Rule 29 of th …",
+      "passage_word_count": 147,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-j-fairrie-v-white-eagle-lodge-1401636-slash-2022/sections/3/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-j-fairrie-v-white-eagle-lodge-1401636-slash-2022:3",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2022] EAT 12",
+      "case_name": "Guardian News & Media Limited v Rozanov & Anor",
+      "court": "EAT",
+      "date": "2022-03-22",
+      "principle_searched": "open justice at common law",
+      "passage": "…  views off the particular individual, but in any event, we do not see that her position is any different from numerous individuals who are named during proceedings as part of the context for a case. We are unaware of any principle that whistleblowers in this context should get extra protection. The principle of open justice is a strong one and looking at the case law, it is insufficient solely to call to aid the right to privacy. No persuasive case was put to us as to why this person’s name should be anonymised. 4. The employment tribunal accepted that most of the disclosures made by the claimant were protected, but rejected the contention that the claimant had been subject to detriment because of making the protected disclosures or that they were the reason for his dismissal. Hence, the claim failed. 5. Journalists attended the hearing at the employment tribunal. As required by Rule 44  …",
+      "passage_word_count": 156,
+      "source_key": "caselaw/2022-eat-12/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2022] EAT 12:1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2018] EWHC 417 (QB)",
+      "case_name": "Clarkson Plc v Person Or Persons Unknown",
+      "court": "EWHC (QB)",
+      "date": "2018-03-06",
+      "principle_searched": "open justice at common law",
+      "passage": "… e principle. I decided that it was, provided I gave a public judgment explaining what had been done and why. 4. In that judgment, [2016] EWHC 2770 (QB) , I said at [1]-[2] that there was no need for a hearing, “But I am giving this public judgment, for three reasons. The first is to ensure that the principle of open justice is respected, and that the derogations from open justice that I am granting are publicly explained. As explained in the Master of the Rolls’ Practice Guidance: Interim Non-Disclosure Orders [2012] 1 WLR 1003 : “9. Open justice is a fundamental principle. The general rule is that hearings are carried out in, and judgments and orders, are public: see Article 6(1) of the Convention, CPR 39.2 and Scott v Scott [1913] AC 417 . One exception to that general rule is provided for by CPR 23.8. Dealing with a case “on the papers” is not incompatible with the open justice princi …",
+      "passage_word_count": 164,
+      "source_key": "caselaw/2018-ewhc-417-qb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2018] EWHC 417 (QB):1",
+      "term_matched": "principle of open justice"
+    },
+    {
+      "neutral_citation": "[2024] EWHC 791 (Comm)",
+      "case_name": "Airbus Canada Limited Partnership v Joint Stock Company Ilyushin Finance Co.",
+      "court": "EWHC (Comm)",
+      "date": "2024-03-27",
+      "principle_searched": "open justice at common law",
+      "passage": "… s that they shall be heard in private because the presumption is that arbitrations are a private process that take place as such by agreement between the parties. Nonetheless, this is not the invariable assumption to be made in relation to state court proceedings in England and Wales because of the open justice principle which applies by to all state court proceedings in England and Wales unless court orders otherwise. The touchstone test for whether or not to depart from the open justice principle is -- and that has been established for a number of years to be - one of necessity in the interests of justice. 2. It is submitted that had I should hear these proceedings in private for the following reasons: (1) the arbitration has barely commenced; (2) there is, within the evidence material which is commercially confidential and which the parties would legitimately expect to be protected by …",
+      "passage_word_count": 154,
+      "source_key": "caselaw/2024-ewhc-791-comm/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2024] EWHC 791 (Comm):1",
+      "term_matched": "open justice principle"
+    },
+    {
+      "neutral_citation": "[2012] EWHC 1172 (Admin)",
+      "case_name": "Calver, R (On the Application Of) v The Adjudication Panel for Wales (Rev 2)",
+      "court": "EWHC (Admin)",
+      "date": "2012-05-02",
+      "principle_searched": "freedom of expression at common law",
+      "passage": "…  of these questions to the circumstances of the present case, I make five observations about the underlying principles. The first concerns the common law. Understandably, the submissions in this case largely concerned Article 10 of the Convention. It is, however, important to remember the status of freedom of expression at common law and the relevance of the common law despite the enactment of the Human Rights Act 1998 . The continuing importance of common law analysis in this area has been recently illustrated by the decision of the Court of Appeal in R (Guardian News and Media) v City of Westminster Magistrates [2012] EWCA Civ. 420 at [68] per Toulson LJ. 41. The status of freedom of expression at common law was, for example, seen in the development of the law of defamation and in particular what may be described as the distaste for “prior restraints”: Bonnard v Perryman [1891] 2 Ch 26 …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2012-ewhc-1172-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2012] EWHC 1172 (Admin):1",
+      "term_matched": "freedom of expression at common law"
+    },
+    {
+      "neutral_citation": "[2020] EWHC 225 (Admin)",
+      "case_name": "Miller, R (On the Application Of) v The College of Policing & Anor",
+      "court": "EWHC (Admin)",
+      "date": "2020-02-14",
+      "principle_searched": "freedom of expression at common law",
+      "passage": "… reedom of expression under the common law and/or Article 10; (b) the actions taken by the police in recording the incident, and their subsequent dealings with the Claimant, amounted to an unlawful interference with his rights under Article 10. 116. Mr Wise began by emphasising the importance of the freedom of expression at common law: see eg Shayler , supra, [21]; R v Secretary of State for the Home Department, ex parte Simms [2000] 2 AC 115 , p125; Central Television Plc , supra, pp202-203 117. He submitted that the HCOG offends against the principle that the right to freedom of expression may not be curtailed except where the curtailment is authorised by statute, which is an aspect of the principle of legality, and that, secondly, even where a curtailment of the right is authorised in principle, the curtailment must go no further than is reasonably necessary to meet the ends which just …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2020-ewhc-225-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2020] EWHC 225 (Admin):1",
+      "term_matched": "freedom of expression at common law"
+    }
+  ],
+  "sets_never_merged": "Set A and Set B answer different questions and are never added. Set A is \"who cites this Act\"; Set B is \"is the principle protected without it\". A combined count would answer neither.",
+  "counts": {
+    "set_a": 53,
+    "set_b": 44,
+    "set_a_note": "53 judgments whose own text names \"Human Rights Act 1998\", out of the top 60 BM25 candidates over 5 collections. Not a count of all cases citing the Act.",
+    "set_b_note": "44 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point."
+  },
+  "gaps": [
+    {
+      "principle_searched": "the principle of legality",
+      "terms_tried": [
+        "principle of legality",
+        "fundamental rights cannot be overridden by general words"
+      ],
+      "returned": 0,
+      "broader_terms_tried": [
+        "fundamental rights",
+        "general words"
+      ],
+      "phrase_present_in_corpus_anyway": 2,
+      "witnesses": [
+        {
+          "case": "tna-caselaw:[2009] EWCA Civ 786:1",
+          "term": "principle of legality",
+          "found_via": "fundamental rights"
+        },
+        {
+          "case": "tna-caselaw:[2010] EWHC 3110 (Admin):1",
+          "term": "principle of legality",
+          "found_via": "fundamental rights"
+        }
+      ],
+      "verdict": "NOT A CORPUS GAP — A RETRIEVAL FAILURE. The principle's own words appear verbatim in judgments the corpus holds; a BM25 phrase query does not surface them, and a broader query does. Do NOT report the common law as silent on this."
+    }
+  ],
+  "gaps_note": "Every empty principle was re-asked with a BROADER query and the returned judgments were tested for the principle's own words. Where they are present, the entry says RETRIEVAL FAILURE and names the judgments — the corpus is not silent, our query was. That distinction decides whether the report can say the common law says nothing on a point.",
+  "prediction": {
+    "set_a": 40,
+    "set_b": 12,
+    "recorded_before_run": true
+  }
+}

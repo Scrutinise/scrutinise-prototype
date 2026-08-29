@@ -1,0 +1,1530 @@
+{
+  "generated_at": "2026-08-29T15:09:43.271Z",
+  "measure": "WS-01 — Human Rights Act 1998",
+  "measure_shape_searched": "incorporating a rights instrument into domestic law, with a duty on public authorities and a judicial power to declare legislation incompatible",
+  "invocation": "./node_modules/.bin/tsx --env-file=.env --tsconfig tsconfig.json scripts/report-b2-arguments.ts",
+  "instrument": {
+    "note": "argument-questions.ts is NOT a query interface — it is a hardcoded set of ten gold questions with hand-picked chunk ids that writes a markdown file from constants. It takes no query and no measure, which is why argument:questions is absent from package.json. This run uses the two-arm instrument from argument-seed-draw.ts with measure-specific queries, and the confirm step is patternHits() from argument/taxonomy.ts.",
+    "dense_service": "https://vector-serve-production.up.railway.app",
+    "keyword_service": "https://fts-serve-production.up.railway.app",
+    "keyword_service_note": "FTS_SEARCH_URL is not set in .env; this is the production host found in the repo.",
+    "corpora": [
+      "pwdata-debates",
+      "pwdata-lords",
+      "pwdata-westminster",
+      "historic-hansard",
+      "niassembly-hansard",
+      "scottish-parliament-or",
+      "committees-evidence",
+      "committees-reports"
+    ],
+    "per_query_limit": 40,
+    "dense_probes": [
+      "the courts will be drawn into deciding political questions that belong to Parliament",
+      "incorporating a charter of rights transfers power from Parliament to unelected judges",
+      "a general declaration of rights is too vague for a court to enforce",
+      "this will produce a flood of litigation against public authorities",
+      "rights are better protected by Parliament and the common law than by a written instrument",
+      "the judges will be politicised by having to decide these questions"
+    ],
+    "keyword_phrases": [
+      "transfer power from Parliament to the judges",
+      "unelected judges",
+      "flood of litigation",
+      "politicise the judiciary",
+      "a charter of rights",
+      "incorporation of the Convention"
+    ],
+    "confirm_step": "A retrieval hit is a passage about the subject. An OBJECTION is a passage that makes an argumentative move. patternHits() decides which, on BOTH arms, and every confirmed row records the pattern that confirmed it. ARGUMENT 1A measured this arm at 90% against the dense arm's 0% recall on independently found arguments."
+  },
+  "prediction": {
+    "objections_expected": 30,
+    "expected_over_floor": 24,
+    "recorded_before_run": true
+  },
+  "arms_never_merged": {
+    "note": "Proposed and confirmed are reported per arm. The two are never added into one count.",
+    "dense": {
+      "proposed": 240,
+      "hydrated": 240,
+      "bodyRead": 239,
+      "confirmed": 13
+    },
+    "keyword": {
+      "proposed": 240,
+      "hydrated": 240,
+      "bodyRead": 240,
+      "confirmed": 23
+    },
+    "distinct_objections_by_arm": {
+      "dense": 13,
+      "keyword": 23
+    },
+    "fragments_by_arm": {
+      "dense": 1,
+      "keyword": 0
+    }
+  },
+  "fields_the_corpus_does_not_hold": {
+    "party": "corpus_sections carries no party. Emitted as null on every row rather than inferred from the speaker name.",
+    "column": "no Hansard column number is stored. source_url carries the publisher anchor where one exists; for pwdata rows that anchor encodes the column reference."
+  },
+  "subject_term_screen": {
+    "terms": [
+      "/human rights/i",
+      "/convention/i",
+      "/\\bECHR\\b/i",
+      "/Strasbourg/i",
+      "/bill of rights/i",
+      "/charter of rights/i",
+      "/fundamental rights/i",
+      "/incorporat\\w+ the convention/i",
+      "/declaration of incompatibility/i",
+      "/public authorit/i"
+    ],
+    "passages_using_none_of_them": 13,
+    "of_total": 36,
+    "note": "⚠ MECHANICAL, AND IT IS THE FIELD TO SORT ON BEFORE DRAFTING. A row with an empty subject_terms_present is connected to this measure by the argumentative MOVE alone. That is both the cross-subject objection this instrument exists to find — the unbounded-duty argument made in 2005 about advertising marches transfers to a public sector equality duty unchanged — AND the pattern-noise case, a COST pattern firing on \"burden on small businesses\" in a question about fuel protesters. The two are indistinguishable to any mechanical test and telling them apart is a reading, which is the analysis track's call. This field sorts the pile; it does not rule on anything in it."
+  },
+  "metadata_completeness": {
+    "no_speaker": 16,
+    "no_date": 1,
+    "no_debate_title": 2,
+    "no_subject_term": 13,
+    "note": "Every gap is structural and named per row in missing_field_reasons. Committee reports and written evidence have no speaker because the document is authored by a committee or a witness organisation. party and column are held for NO row: the corpus does not carry them."
+  },
+  "objections": [
+    {
+      "quoted_paragraph": "I want to pursue a couple of issues that arise out of what Mark Ballard said. Presumably, the bill puts legal obligations on local authorities to comply with its requirements on notifying the public. Is it the case that a local authority could be legally challenged for not adequately advertising marches, and that that could lead to a situation in which, whatever your intention at this point, local authorities would be legally required to advertise on a much wider basis than you anticipate? Our difficulty is that you are putting an obligation on authorities, but you are not circumscribing it. Even if you tried to circumscribe it, could you effectively do so? The unintended consequences could be serious for local government.",
+      "word_count": 121,
+      "fragment": false,
+      "speaker": "The Convener",
+      "party": null,
+      "date": null,
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: Finance Committee, 15 Nov 2005 [The Convener opened the meeting at 10:02]",
+      "column": null,
+      "source_key": "scottish-parliament-or/arch-1564/sections/198/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Scottish Parliament: Finance Committee, 15 Nov 2005 [The Convener opened the meeting at 10:02]",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"this will produce a flood of litigation against public authorities\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "scottish-parliament-or:arch-1564:198",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/parliamentarybusiness/report.aspx?r=1564",
+      "query": "this will produce a flood of litigation against public authorities",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "date": "no itemDate recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7280592322349548
+    },
+    {
+      "quoted_paragraph": "… terpreting the word \"excessive\" in those circumstances? Would they have any greater difficulty in interpreting the word \"excessive\" in the Bill? I think not. We have reached a stage in the development of our sophisticated society where it is necessary for the citizen to know clearly what his rights are, even if it is necessary to state those rights in general terms. It does not mean that they are unenforceable. The Bill of Rights which is embodied in the constitution of the United States, and its subsequent amendments, have been a veritable anchor of freedom in that country. We have had a different constitutional development, but I am convinced that a Bill to safeguard individual liberty, to declare what an individual's rights are, is now essential. Indeed, I subscribe to the view that we are gradually moving, and that we should move, towards a written constitution. This may come under some of our constitutional changes, In the meantime, I am sure that the debate on the pros and cons of a Bill of Rights should continue. It is not enough that a debate should take place in the abstract. If one is to have a purposeful discussion, one must have specific proposals to consider. Therefore …",
+      "word_count": 1322,
+      "fragment": false,
+      "speaker": "Mr. Emlyn Hooson",
+      "party": null,
+      "date": "1969-07-22",
+      "house": "House of Commons",
+      "debate_title": "BILL PRESENTED — BILL OF RIGHTS (No. 2)",
+      "column": null,
+      "source_key": "pwdata-debates/debates1969-07-22a/sections/340/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "BILL PRESENTED — BILL OF RIGHTS (No. 2)",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"a general declaration of rights is too vague for a court to enforce\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /unenforceable/i",
+      "section_id": "pwdata-debates:debates1969-07-22a:340",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1969-07-22a.xml",
+      "query": "a general declaration of rights is too vague for a court to enforce",
+      "confirmed_by_pattern": "/unenforceable/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/unenforceable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/bill of rights/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7218480706214905
+    },
+    {
+      "quoted_paragraph": "… ord Blake, that that means an ordinary person could be worse off. It is not axiomatic that you must be better off with a Bill of Rights. You could be worse off, and I am arguing that that is what would happen. The law of libel, the law of contempt of court, the right of newspapermen to report—all these would be put in doubtuntil judges got around to defining the meaning of the right to privacy in Article 8 of the convention, or the right to freedom of expression in Article 10, and, in coming to those decisions in these great new fields, they would in fact be reforming the law and ignoring Parliament. In interpreting these broad generalisations, the unelected judges would, over a wide field, usurp the power of Parliament to reform the law. The noble Lord, Lord Redcliffe-Maud, seemed positively to want this to come about. He thought it was a fine thing that the judges should impinge upon and encroach upon a law, and he said that Parliament could always put it right. But it would be a very wrong thing for Parliament to have to put right the improper encroachments of the Judiciary upon the rights of Parliament. The great merit of Parliament is that it is elected— or the other half of i …",
+      "word_count": 1154,
+      "fragment": false,
+      "speaker": "Lord GORDON-WALKER",
+      "party": null,
+      "date": "1978-11-29",
+      "house": "House of Lords",
+      "debate_title": "Lords: BILL OF RIGHTS: SELECT COMMITTEE REPORT",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0396P0/sections/1869/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: BILL OF RIGHTS: SELECT COMMITTEE REPORT",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"incorporating a charter of rights transfers power from Parliament to unelected judges\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /article \\d+ of the (?:european )?convention/i",
+      "section_id": "historic-hansard:S5LV0396P0:1869",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0396P0.zip",
+      "query": "incorporating a charter of rights transfers power from Parliament to unelected judges",
+      "confirmed_by_pattern": "/article \\d+ of the (?:european )?convention/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/article \\d+ of the (?:european )?convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/Strasbourg/i",
+        "/bill of rights/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7472865581512451
+    },
+    {
+      "quoted_paragraph": "… referred. Two applications from the United Kingdom were recently considered by the Commission and have been adjudged admissible. This means that we can get an answer to the closed-shop issue before long; but under the convention the judges of the European Court are, as is normal in continental European systems, under an obligation to pay attention to the travaux preparatoires , and the wording of Article 11 of the European Convention was specifically chosen to avoid interfering with closed-shop arrangements in some countries. The United Kingdom representatives drafting the European Convention in 1950 were Mr. Hoare from the Home Office and Mr. le Quesne from the Foreign Office. They did a magnificent job in preparing Article 11, which of itself removes from the trade union movement, I think, some of the worries that they have in this direction. I believe the trade union fears in this regard would therefore be groundless, but if something odd was done and the travaux preparatoires were in this regard ignored, we should know soon enough. I know there is a trade union fear about judges. The working class do not trust them. The judicial record is not a good one as regards trade unions, …",
+      "word_count": 2917,
+      "fragment": false,
+      "speaker": "Lord PLANT",
+      "party": null,
+      "date": "1978-11-29",
+      "house": "House of Lords",
+      "debate_title": "Lords: BILL OF RIGHTS: SELECT COMMITTEE REPORT",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0396P0/sections/1866/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: BILL OF RIGHTS: SELECT COMMITTEE REPORT",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"rights are better protected by Parliament and the common law than by a written instrument\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /article \\d+ of the (?:european )?convention/i",
+      "section_id": "historic-hansard:S5LV0396P0:1866",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0396P0.zip",
+      "query": "rights are better protected by Parliament and the common law than by a written instrument",
+      "confirmed_by_pattern": "/article \\d+ of the (?:european )?convention/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/article \\d+ of the (?:european )?convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/bill of rights/i",
+        "/charter of rights/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7326650619506836
+    },
+    {
+      "quoted_paragraph": "… hat there is a serious gap in our law—and we are all aware that there are indeed many gaps—the proper course is to have the Law Commission or some equivalent body examine the issue, prepare a report, and then for Parliament to consider it and decide as a matter of policy whether the law should be developed or changed. Then again there is the very considerable danger of politicising the judiciary. The experience of the United States is all too significant in that respect. A very distinguished American lawyer recently wrote that almost to a man American judges are creatures of politics. That is surely the last thing to which we would wish to expose our independent judiciary—the danger of judges being engaged in decisions that would be regarded as political. Part of that political function is that to which this Bill points only too clearly, especially in view of the way in which Clause 4 is drafted—and I shall not spend any further time on that matter because it has been effectively dealt with by other noble Lords. I will quote the noble and learned Lord, Lord Denning, in a previous contribution to one of these debates in your Lordships' House. He expressed this sentiment: \"If judges  …",
+      "word_count": 2687,
+      "fragment": false,
+      "speaker": "Lord Lloyd of Hampstead",
+      "party": null,
+      "date": "1985-12-10",
+      "house": "House of Lords",
+      "debate_title": "Lords: Human Rights and Fundamental Freedoms Bill [H.L.]",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0469P0/sections/551/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: Human Rights and Fundamental Freedoms Bill [H.L.]",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the courts will be drawn into deciding political questions that belong to Parliament\"; the passage makes the PRECEDENT move (this was tried before, here is what happened), confirmed by /the experience of (?:the|other)/i",
+      "section_id": "historic-hansard:S5LV0469P0:551",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0469P0.zip",
+      "query": "the courts will be drawn into deciding political questions that belong to Parliament",
+      "confirmed_by_pattern": "/the experience of (?:the|other)/i",
+      "argument_moves": [
+        {
+          "tag": "PRECEDENT",
+          "move": "this was tried before, here is what happened",
+          "pattern": "/the experience of (?:the|other)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/Strasbourg/i",
+        "/bill of rights/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7439340353012085
+    },
+    {
+      "quoted_paragraph": "… ue of the convention lies in its present standing as an international statement of principle to which nation states, each with its own different legal codes and structures, can adhere. It is its international status that gives to the convention its perspective and authority. I fear that to try to incorporate such broad statements of principle directly into United Kingdom law is in practice almost unworkable and in any event unnecessary. It is for Parliament to legislate and for the courts to interpret that legislation.",
+      "word_count": 291,
+      "fragment": false,
+      "speaker": "Mr. Nicholas Brown",
+      "party": null,
+      "date": "1987-02-06",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Human Rights Bill",
+      "column": null,
+      "source_key": "pwdata-debates/debates1987-02-06a/sections/155/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — Human Rights Bill",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"incorporation of the Convention\"; the passage makes the IMPLEMENTATION move (it cannot be operated as drafted), confirmed by /unworkable/i",
+      "section_id": "pwdata-debates:debates1987-02-06a:155",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1987-02-06a.xml",
+      "query": "incorporation of the Convention",
+      "confirmed_by_pattern": "/unworkable/i",
+      "argument_moves": [
+        {
+          "tag": "IMPLEMENTATION",
+          "move": "it cannot be operated as drafted",
+          "pattern": "/unworkable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.859328746795654
+    },
+    {
+      "quoted_paragraph": "I am not perorating. I am dealing with a point that my hon. Friend the Member for Wolverhampton, South-West (Mr. Budgen) raises, rather like an elegant parrot. Anyone who goes to Strasbourg has to face the fact that it might cost more than £70,000. Where is the money coming from? It does not come from Europe, because the most that one can obtain from legal aid in Europe is £700. Apart from the difficulties, delays and costs, can we imagine the frustration that must pass through the minds of anyone who is subjected to this kind of diffficulty? It is not surprising—I think that this can be said with some confidence—that support for the Bill, and the incorporation into British law of the convention which it will bring about, is widely supported outside the House as well as inside the House on an all-party basis. Seventy-one per cent. of the people questioned in a recent Gallup poll said that it would increase their confidence in British democracy, and of those questioned, a ratio of 2:1 said that they wanted the convention incorporated into British law.",
+      "word_count": 185,
+      "fragment": false,
+      "speaker": "Sir Edward Gardner",
+      "party": null,
+      "date": "1987-02-06",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Human Rights Bill",
+      "column": null,
+      "source_key": "pwdata-debates/debates1987-02-06a/sections/17/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — Human Rights Bill",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"incorporation of the Convention\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /where (?:is|will) the money com/i",
+      "section_id": "pwdata-debates:debates1987-02-06a:17",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1987-02-06a.xml",
+      "query": "incorporation of the Convention",
+      "confirmed_by_pattern": "/where (?:is|will) the money com/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/where (?:is|will) the money com/i"
+        },
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/cost(?:s)? (?:far )?more than/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/convention/i",
+        "/Strasbourg/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 36.53964281082153
+    },
+    {
+      "quoted_paragraph": "And it is unenforceable.",
+      "word_count": 4,
+      "fragment": true,
+      "speaker": "Mr. Carlisle",
+      "party": null,
+      "date": "1992-03-02",
+      "house": "House of Commons",
+      "debate_title": "Asylum and Immigration",
+      "column": null,
+      "source_key": "pwdata-debates/debates1992-03-02a/sections/241/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Asylum and Immigration",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"a general declaration of rights is too vague for a court to enforce\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /unenforceable/i",
+      "section_id": "pwdata-debates:debates1992-03-02a:241",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1992-03-02a.xml",
+      "query": "a general declaration of rights is too vague for a court to enforce",
+      "confirmed_by_pattern": "/unenforceable/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/unenforceable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7281996607780457
+    },
+    {
+      "quoted_paragraph": "… anent buildings, offices for Members and staff, and accommodation for extra civil servants; ongoing annual costs, salaries and running costs are about £40 million. A referendum will not answer any of the fundamental questions which the Labour Party raises, as the honourable Member for Linlithgow in another place has said. I shall not repeat that argument. I turn to proposals for a Welsh Assembly. There is no evidence that the people of Wales want such a body. The most reliable statement by the Welsh people was in the referendum of 1979 when the Labour Government's proposals for an assembly were rejected overwhelmingly. Only 20.3 per cent. of the turnout—that is 11.9 per cent. of the electorate—voted in favour. I might add that 71.7 per cent. of businessmen surveyed in the Institute of Directors' Wales Division business survey of May 1996 did not believe that Wales should have its own assembly. In Wales, a separate assembly would create an unnecessary and costly tier of bureaucracy between Parliament and the 22 new unitary authorities and would inevitably take over the functions of local government, so increasing confusion and undermining accountability. I was moved and deeply impre …",
+      "word_count": 4032,
+      "fragment": false,
+      "speaker": "Baroness Blatch",
+      "party": null,
+      "date": "1996-07-03",
+      "house": "House of Lords",
+      "debate_title": "Lords: The Constitution",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0573P0/sections/5441/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: The Constitution",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"rights are better protected by Parliament and the common law than by a written instrument\"; the passage makes the EVIDENCE_GAP move (the problem is not established, or the data does not show it), confirmed by /there is (?:simply )?no evidence/i",
+      "section_id": "historic-hansard:S5LV0573P0:5441",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0573P0.zip",
+      "query": "rights are better protected by Parliament and the common law than by a written instrument",
+      "confirmed_by_pattern": "/there is (?:simply )?no evidence/i",
+      "argument_moves": [
+        {
+          "tag": "EVIDENCE_GAP",
+          "move": "the problem is not established, or the data does not show it",
+          "pattern": "/there is (?:simply )?no evidence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/\\bECHR\\b/i",
+        "/Strasbourg/i",
+        "/bill of rights/i",
+        "/fundamental rights/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7368593811988831
+    },
+    {
+      "quoted_paragraph": "… liament or an act by the Government is in line with the popular will or the provisions of the European convention. I do not have a religious or philosophical or other principled objection to incorporation of the convention. However, I ask the Government to think carefully about the constitutional and political effects of such a move. My family has provided Members of Parliament since the reign of Henry VIII and we should remember that, for centuries, this place has been the protector and guarantor of human rights. We should not transfer that work to others without the clearest possible reasons and the most detailed examination. The burden of proof is on the Government and the standard of proof must be the highest possible.",
+      "word_count": 1373,
+      "fragment": false,
+      "speaker": "Mr. Gamier",
+      "party": null,
+      "date": "1997-05-16",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — The Constitution",
+      "column": null,
+      "source_key": "pwdata-debates/debates1997-05-16a/sections/70/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — The Constitution",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"incorporation of the Convention\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /henry viii/i",
+      "section_id": "pwdata-debates:debates1997-05-16a:70",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1997-05-16a.xml",
+      "query": "incorporation of the Convention",
+      "confirmed_by_pattern": "/henry viii/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/henry viii/i"
+        },
+        {
+          "tag": "SUPPORT_EVIDENCE",
+          "move": "affirmative: here is why it will work, with evidence",
+          "pattern": "/evidence from (?:scotland|wales|other countries|abroad)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/\\bECHR\\b/i",
+        "/Strasbourg/i",
+        "/bill of rights/i",
+        "/incorporat\\w+ the convention/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 37.88503885269165
+    },
+    {
+      "quoted_paragraph": "There are many amendments in this group, but I wish to speak to amendments Nos. 111 and 112 in my name and the names of my hon. Friends the Members for Gainsborough (Mr. Leigh) and for Buckingham (Mr. Bercow). Putting the phrase \"tax-varying powers\" on the face of the Bill as well as on the ballot paper perpetuates a deception that was skilfully cultivated during the run-up to the election. That deception is that the only powers that the new Scottish Parliament will have are tax-varying powers, or that the only powers that matter that the new Scottish Parliament will have are tax-varying powers. That, of course, is not true. We cannot know precisely the total number of other powers that the new Scottish Parliament is likely to have, because we do not yet have the White Paper before us; but, from the very choice of the word \"parliament\" for the proposed new body and from the previous attempts to establish such a Parliament, we can deduce that the range of powers to be given to the new Parliament is quite considerable. First, as one would expect of any parliament, there is the power to make law. It is inevitable that when the Government come to consider the detail of their proposals, …",
+      "word_count": 351,
+      "fragment": false,
+      "speaker": "Mr. Fallon",
+      "party": null,
+      "date": "1997-06-04",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Referendums (Scotland and Wales) Bill — Part 1",
+      "column": null,
+      "source_key": "pwdata-debates/debates1997-06-04a/sections/254/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — Referendums (Scotland and Wales) Bill — Part 1",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"transfer power from Parliament to the judges\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /on the face of the bill/i",
+      "section_id": "pwdata-debates:debates1997-06-04a:254",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1997-06-04a.xml",
+      "query": "transfer power from Parliament to the judges",
+      "confirmed_by_pattern": "/on the face of the bill/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/on the face of the bill/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 46.02694034576416
+    },
+    {
+      "quoted_paragraph": "…  Government. The Government would at least be spared the embarrassment of having to introduce a privacy Bill themselves, with all the risks of conflict with the press which that would entail. Now of course the judges have always made law. Indeed when we talk about human rights, as we do today, we should remember that such human rights as our law recognises are largely judge-made; for example, the presumption of innocence, the right of peaceful assembly and the freedom of the press. As we applaud the judges for having used common law principles to uphold individual rights, we are entitled to wonder whether we cannot trust them to continue to develop the common law to meet new threats to our liberties when they arise. But make no mistake about it, when we ask the judges to get to work on some of the vague and imprecise concepts in the convention, such as the right of respect for family life, when we give the judges the opportunity to put whatever construction they like on these concepts, we will be giving an immense new impetus to the judges' law-making power, for good or ill. Furthermore, we will be doing so at a time when the judges have not exactly been backward in coming forward, …",
+      "word_count": 1253,
+      "fragment": false,
+      "speaker": "Lord Waddington",
+      "party": null,
+      "date": "1997-11-03",
+      "house": "House of Lords",
+      "debate_title": "Lords: Human Rights Bill [H.L.]",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0582P0/sections/2934/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: Human Rights Bill [H.L.]",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"incorporating a charter of rights transfers power from Parliament to unelected judges\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /presumption of innocence/i",
+      "section_id": "historic-hansard:S5LV0582P0:2934",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0582P0.zip",
+      "query": "incorporating a charter of rights transfers power from Parliament to unelected judges",
+      "confirmed_by_pattern": "/presumption of innocence/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/presumption of innocence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/Strasbourg/i",
+        "/fundamental rights/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7143668532371521
+    },
+    {
+      "quoted_paragraph": "… f different countries—as in the European situation, which encompasses different groups, different traditions, different religious and moral perspectives and also different nation states—come to be written in broad, imprecise and ill-defined language. I believe that I am merely echoing what has been said elsewhere, but such charters are inevitably full of vague expressions, like the American one, \"due process\", which has been productive of thousands—indeed, tens of thousands—of decisions which have enacted judicial legislation. We also have in the present case words like \"promptly\", \"a reasonable time\", \"in the interests of justice\" and the one that has been mentioned by several noble Lords which appears in Articles 8, 9, 10 and 11; namely, \"necessary in a democratic society, in the interests of national security and public safety\", or even, \"the economic well-being of the country\". So judges decide whether a derogation from the stated right is in the interests of the economic well-being of this country. In my judgment that is not a matter for judges. When one puts Delphic words into charters, one then needs to ask someone what those words mean. It is like going to the Oracle to ask …",
+      "word_count": 1924,
+      "fragment": false,
+      "speaker": "Lord McCluskey",
+      "party": null,
+      "date": "1997-11-03",
+      "house": "House of Lords",
+      "debate_title": "Lords: Human Rights Bill [H.L.]",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0582P0/sections/2944/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: Human Rights Bill [H.L.]",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"incorporating a charter of rights transfers power from Parliament to unelected judges\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "historic-hansard:S5LV0582P0:2944",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0582P0.zip",
+      "query": "incorporating a charter of rights transfers power from Parliament to unelected judges",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [
+        "dense: a general declaration of rights is too vague for a court to enforce"
+      ],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/Strasbourg/i",
+        "/bill of rights/i",
+        "/charter of rights/i",
+        "/fundamental rights/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7132284641265869
+    },
+    {
+      "quoted_paragraph": "Whether they intend to review the role and function of the Court of Appeal (Criminal Division) before implementing the incorporation of Article 6 of the European Convention on Human Rights in domestic law. [HL208]",
+      "word_count": 34,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "1998-01-29",
+      "house": "House of Lords",
+      "debate_title": "Lords: Court of Appeal (Criminal Division): European Convention Rights",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0585P0/sections/5022/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Lords: Court of Appeal (Criminal Division): European Convention Rights",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"incorporation of the Convention\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /article \\d+ of the (?:european )?convention/i",
+      "section_id": "historic-hansard:S5LV0585P0:5022",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0585P0.zip",
+      "query": "incorporation of the Convention",
+      "confirmed_by_pattern": "/article \\d+ of the (?:european )?convention/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/article \\d+ of the (?:european )?convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "no speaker recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 36.752498149871826
+    },
+    {
+      "quoted_paragraph": "… ing of convention law. Some time ago, I wrote that I believed that, whatever my other reservations, that was an advantage of incorporation. Secondly, the fashioning of convention law and its expression in our domestic law should be the combined efforts of the judiciary and Parliament. It is for the judiciary to state where and how our existing laws, procedures or remedies are inadequate in law or incompatible with the convention, but it is then for Parliament to decide, in cases where legislation is involved—either primary or secondary—how the matter should be properly corrected. That is why we broadly support the Government's approach to judicial remedies and the power to take remedial action that is contained in clauses 8 and 10. Thirdly, we do not want the judiciary creating a separate body of law for the United Kingdom which may go further than would the commission or court at Strasbourg. Although we sometimes grumble at the Strasbourg institutions, and there are judgments that we respectfully criticise and seek to alter, we should recognise that they are usually careful and cautious in their approach to interpreting the convention. In recent years in particular, they have give …",
+      "word_count": 629,
+      "fragment": false,
+      "speaker": "Sir Nicholas Lyell",
+      "party": null,
+      "date": "1998-05-20",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — Human Rights Bill [Lords] — EFFECTIVE REMEDIES",
+      "column": null,
+      "source_key": "pwdata-debates/debates1998-05-20a/sections/241/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Orders of the Day — Human Rights Bill [Lords] — EFFECTIVE REMEDIES",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"incorporation of the Convention\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /incompatible with the convention/i",
+      "section_id": "pwdata-debates:debates1998-05-20a:241",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1998-05-20a.xml",
+      "query": "incorporation of the Convention",
+      "confirmed_by_pattern": "/incompatible with the convention/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/incompatible with the convention/i"
+        },
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/article \\d+ of the (?:european )?convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/convention/i",
+        "/Strasbourg/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 37.65667200088501
+    },
+    {
+      "quoted_paragraph": "… tutions, there is not only statute law passed by the congress or Parliament but fundamental or—to use the continental term—basic law, which is the constitution itself. The constitution overrides, and is promulgated differently from, ordinary law. If we had stated in the Bill that courts could not only declare incompatible any statute of this Parliament but override those statutes and declare them unenforceable, thereby abrogating them, we would have been establishing—either by the front or back door—a substitute written constitution for the United Kingdom. We would have been altering what I regard as a fundamental position established in our constitution: the sovereignty of Parliament. I think that one of the profound strengths of our system is that, although we may bind ourselves to the European Union, to United Nations treaties or to the European convention, we do not bind ourselves for ever, and that it remains open to this Parliament, at any stage that it chooses, to decide to withdraw from those conventions. Although we would, of course, have to accept the consequences of withdrawing, the decision would be made by this elected Chamber and the other place and by no one else. Th …",
+      "word_count": 1058,
+      "fragment": false,
+      "speaker": "Mr. Straw",
+      "party": null,
+      "date": "1998-10-21",
+      "house": "House of Commons",
+      "debate_title": "Orders of the Day — NO REMEDIAL ORDER BEFORE DETERMINATION OF EUROPEAN COMMISSION OF HUMAN RIGHTS",
+      "column": null,
+      "source_key": "pwdata-debates/debates1998-10-21a/sections/267/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Orders of the Day — NO REMEDIAL ORDER BEFORE DETERMINATION OF EUROPEAN COMMISSION OF HUMAN RIGHTS",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"rights are better protected by Parliament and the common law than by a written instrument\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /unenforceable/i",
+      "section_id": "pwdata-debates:debates1998-10-21a:267",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1998-10-21a.xml",
+      "query": "rights are better protected by Parliament and the common law than by a written instrument",
+      "confirmed_by_pattern": "/unenforceable/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/unenforceable/i"
+        },
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/incompatible with the convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/bill of rights/i",
+        "/declaration of incompatibility/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7299768328666687
+    },
+    {
+      "quoted_paragraph": "… n’t have some value? Professor Tomkins:Let me answer the second question first, if I may. Why put it in? I think it’s extremely dangerous, as I say in the closing paragraphs of my written submissions. The rule that I would respectfully urge you to bear in mind in dealing with this or any other question of constitutional reform is the most powerful law of constitutional reform, which is the law of unintended consequences. The more I think about this, the smaller clause 18 seems. It seems to be dealing, as I said a few moments ago, with one aspect of a big problem that is not itself particularly problematic, because it was fairly clearly dealt with by the Thoburn judgment. Yes, we can’t be overly relaxed about the fact that the Thoburn judgment is definitive for all intents and purposes. None the less, it’s the state of the law for the time being, and nobody is really suggesting to you that it shouldn’t be the state of the law for the time being. Thoburn deals with that, and it’s an issue that doesn’t really need to be dealt with any further. Clause 18 doesn’t deal with any of the problems that do really need to be dealt with, in my respectful judgment, relating to questions of sover …",
+      "word_count": 1066,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2011-01-13",
+      "house": "select committee (report)",
+      "debate_title": "Report: 10th Report - The EU Bill and Parliamentary sovereignty - Oral and Written Evidence — European Scrutiny Committee",
+      "column": null,
+      "source_key": "committees-reports/publication:23549/sections/arc-0103/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Report: 10th Report - The EU Bill and Parliamentary sovereignty - Oral and Written Evidence — European Scrutiny Committee",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the courts will be drawn into deciding political questions that belong to Parliament\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-reports:publication:23549:arc-0103",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201011/cmselect/cmeuleg/633ii/633.pdf",
+      "query": "the courts will be drawn into deciding political questions that belong to Parliament",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        },
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/law of unintended/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/Strasbourg/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7435414791107178
+    },
+    {
+      "quoted_paragraph": "…  It is therefore completely unacceptable to UK insurers. cobber Pack: U PL: CWE1 [O]Processed: [03-07-2013 13:46] Job: 030025 Unit: PG06 Environment, Food and Rural Affairs Committee: EvidenceEv 75 Part 2:Response to Marsh Critique of Flood Re Model The Marsh submission raises a number of concerns about the Flood Re model, four of which are misplaced. 1. Marsh suggested that Flood Re would create perverse incentives on high risk homes not to manage their flood risk and developers to build in flood risk areas. —High risk homes would still have an incentive to reduce their flood risk, despite their premiums being capped, because if risk was reduced enough they could come out of the pool and get a cheaper deal. Flood Re may also include conditions for managing flood risk for the properties that flood most regularly. —Flood Re would not encourage development in flood risk areas because it would not be available to new build homes. The Government’s revised National Planning Policy Framework also contains significant safeguards against a return to flood plain development. 2. Marsh suggested that the Flood Re levy would raise prices, as “tariffs tend not to be contested”. —The risk could  …",
+      "word_count": 436,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2013-07-04",
+      "house": "select committee (report)",
+      "debate_title": "Report: 3rd Report - Managing Flood Risk - Volume I (Volume I: Report, together with formal\r\nminutes, oral and written evidence) — Environment, Food and Rural Affairs Committee — 40 Managing Flood Risk",
+      "column": null,
+      "source_key": "committees-reports/publication:9659/sections/arc-0112/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 3rd Report - Managing Flood Risk - Volume I (Volume I: Report, together with formal\r\nminutes, oral and written evidence) — Environment, Food and Rural Affairs Committee — 40 Managing Flood Risk",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /perverse incentive/i",
+      "section_id": "committees-reports:publication:9659:arc-0112",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201314/cmselect/cmenvfru/330/330.pdf",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/perverse incentive/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/perverse incentive/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.81717348098755
+    },
+    {
+      "quoted_paragraph": "… t , even according to the provisions of the Charter itself, the right must be grounded in national law and practices , so Art 1(2) adds little in this case . 3.3 General Principles of law operate in any case In any case, the possibility for Art 1(2) to function as an effective opt-out for the UK from socio-economic rights is further limited by the fact that, even were all of Title IV itself to be unenforceable in the UK , the UK would be still bound by EU fundamental rights law in these areas. This is because, according to Art 6(3) TEU, ‘ Fundamental rights, as guaranteed by the ECHR and as they result from the constitutional traditions common to the Member States, shall constitute general principles of the Union’s law ’ and the Protocol does not apply to general principles of law. Art 6(3) reflect s the earli er caselaw of the CJEU , in which it was held that respect for fundamental rights forms part of the general principles of law protected by the Court. 3.4 But do Charter rights extend beyond general principles of law? Art 1(2) Protocol would only be of significance if the rights in the Charter went beyond those recognised as general principles of law. But, although as Mostyn J …",
+      "word_count": 8057,
+      "fragment": false,
+      "speaker": "Professor Sionaidh Douglas-Scott",
+      "party": null,
+      "date": "2014-01-09",
+      "house": "select committee (evidence)",
+      "debate_title": "Application of EU Charter of Fundamental Rights in UK — CFR0002",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:47725/sections/93188/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Application of EU Charter of Fundamental Rights in UK — CFR0002",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter of rights\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /unenforceable/i",
+      "section_id": "committees-evidence:writtenevidence:47725:93188",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/47725/",
+      "query": "a charter of rights",
+      "confirmed_by_pattern": "/unenforceable/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/unenforceable/i"
+        },
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/article \\d+ of the (?:european )?convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/\\bECHR\\b/i",
+        "/bill of rights/i",
+        "/charter of rights/i",
+        "/fundamental rights/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.25445365905762
+    },
+    {
+      "quoted_paragraph": "…  security had indicated that there was a risk of expansion of EU competence. 180 120. The Minister thought that no “great change” was anticipated amongst Member States that would take the Charter into “wholly new areas of law” in terms of new EU legislation. However, some “loosely-worded elements of the Charter” were now being turned into legislative proposals as demonstrated by, for example, the presumption of innocence proposal. The much greater risk, according to the Minister, was that the ECJ, as in the",
+      "word_count": 460,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2014-04-02",
+      "house": "select committee (report)",
+      "debate_title": "Report: 43rd Report - The application of the EU Charter of Fundamental Rights in the UK: a state of confusion — European Scrutiny Committee — 154 Q50 155 Q51 [Craig] 156 Q52 [Craig] 157 Q54 [Anderson]",
+      "column": null,
+      "source_key": "committees-reports/publication:10547/sections/arc-0038/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 43rd Report - The application of the EU Charter of Fundamental Rights in the UK: a state of confusion — European Scrutiny Committee — 154 Q50 155 Q51 [Craig] 156 Q52 [Craig] 157 Q54 [Anderson]",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter of rights\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /presumption of innocence/i",
+      "section_id": "committees-reports:publication:10547:arc-0038",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201314/cmselect/cmeuleg/979/979.pdf",
+      "query": "a charter of rights",
+      "confirmed_by_pattern": "/presumption of innocence/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/presumption of innocence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/\\bECHR\\b/i",
+        "/Strasbourg/i",
+        "/fundamental rights/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.00410223007202
+    },
+    {
+      "quoted_paragraph": "… t with different formulations of an idea, which may never make it through to the Grand Chamber or become an accepted part of the common law of the EU. The second problem is probably the more interesting one. It is just not clear that in practice these abstract criteria are changing anything about the court. The few cases where they have been used have all been clearly outside the scope of EU law. There is no evidence that these cases have in any way expanded the field of national measures that fall within the scope of EU law. In addition, the criteria themselves are incredibly ambiguous. They are really quite banal, almost. What does it mean that there is a rule of EU law that is capable of affecting something? It is a very strange formulation. In my 2015 paper, I explore the possibility that these cases could lead somewhere. In particular, I suggest that they could lead to a modest extension of the scope of EU law to cover a few types of national rules, which, even though they are not strictly implementation or derogation, directly threaten the primacy of EU law within a national legal system. That is an exploration. There is no evidence for it in the case law. This is me having a …",
+      "word_count": 11731,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2016-03-14",
+      "house": "select committee (evidence)",
+      "debate_title": null,
+      "column": null,
+      "source_key": "committees-evidence/oralevidence:5159/sections/154443/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": null,
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"rights are better protected by Parliament and the common law than by a written instrument\"; the passage makes the EVIDENCE_GAP move (the problem is not established, or the data does not show it), confirmed by /there is (?:simply )?no evidence/i",
+      "section_id": "committees-evidence:oralevidence:5159:154443",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/oralevidence/5159/",
+      "query": "rights are better protected by Parliament and the common law than by a written instrument",
+      "confirmed_by_pattern": "/there is (?:simply )?no evidence/i",
+      "argument_moves": [
+        {
+          "tag": "EVIDENCE_GAP",
+          "move": "the problem is not established, or the data does not show it",
+          "pattern": "/there is (?:simply )?no evidence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/\\bECHR\\b/i",
+        "/Strasbourg/i",
+        "/bill of rights/i",
+        "/fundamental rights/i",
+        "/public authorit/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "debate_title": "no sectionTitle recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7379023432731628
+    },
+    {
+      "quoted_paragraph": "… ts haphazard drafting and eventual adoption makes clear, the Charter was not at first envisaged as forming a set of justiciable standards. The UK accepted its transformation into such, despite significant misgivings, with the ratification of the Lisbon Treaty including Protocol 30 which was ostensibly designed to secure the UK’s understanding of the Charter’s limited reach. That protocol has been a dead letter since inception, rendering hollow the Government’s assurances to Parliament about the Charter’s significance. Predictably, the Charter has not been confined to constraining action on the part of the organs of the EU, but has been invoked as a wider licence for the extension of judicial authority, especially that of the CJEU, over political authorities. Charter adjudication is, like much international human rights law, largely inimical both to the rule of law and to democratic self-government.49 65. The academics also questioned the necessity for supra-national rights more generally. They argued that the assumption that supra-national limits are required “fails to grasp 47 NS (European Union law) [2011] EUECJ C-411/10 (21 December 2011). For more on this issue, see: e.g. Piet  …",
+      "word_count": 535,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2016-12-19",
+      "house": "select committee (report)",
+      "debate_title": "Report: 5th Report - The human rights implications of Brexit — Human Rights (Joint Committee)",
+      "column": null,
+      "source_key": "committees-reports/publication:13921/sections/arc-0020/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 5th Report - The human rights implications of Brexit — Human Rights (Joint Committee)",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter of rights\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /(?:a|remain a|become a) dead letter/i",
+      "section_id": "committees-reports:publication:13921:arc-0020",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/jt201617/jtselect/jtrights/695/695.pdf",
+      "query": "a charter of rights",
+      "confirmed_by_pattern": "/(?:a|remain a|become a) dead letter/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/(?:a|remain a|become a) dead letter/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/\\bECHR\\b/i",
+        "/Strasbourg/i",
+        "/fundamental rights/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.5170955657959
+    },
+    {
+      "quoted_paragraph": "… which the charter does make a difference. Let us take article 24—it was mentioned earlier—which gives effect to the UN convention on the rights of the child. While we are a signatory to the convention, that does not provide the same legal protection—simply as a convention signatory—as would be provided by the incorporation of the charter. Let us take the right to a fair hearing, which goes beyond article 6 of the European convention on human rights on the right to a fair trial, because it applies to civil rights and obligations, as well as to criminal charges. In the ZZ case, with which the Minister will be familiar, the Court of Justice of the European Union held that the right to a fair trial in article 47 of the charter applied to immigration cases. Significant issues are therefore at stake. Let us look at article 13, which requires that academic freedom shall be respected. With the possible exception of some Government Whips—the Vice-Chamberlain of Her Majesty’s Household, the hon. Member for Daventry (Chris Heaton-Harris) , was keen to see the reading lists and curricula of university lecturers to make sure they were teaching Brexit correctly—I am sure that Members on both sid …",
+      "word_count": 461,
+      "fragment": false,
+      "speaker": "Paul Blomfield",
+      "party": null,
+      "date": "2017-11-21",
+      "house": "House of Commons",
+      "debate_title": "EUROPEAN UNION (WITHDRAWAL) BILL — Charter of Fundamental Rights – Government Report",
+      "column": null,
+      "source_key": "pwdata-debates/debates2017-11-21c/sections/288/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "EUROPEAN UNION (WITHDRAWAL) BILL — Charter of Fundamental Rights – Government Report",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter of rights\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /article \\d+ of the (?:european )?convention/i",
+      "section_id": "pwdata-debates:debates2017-11-21c:288",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2017-11-21c.xml",
+      "query": "a charter of rights",
+      "confirmed_by_pattern": "/article \\d+ of the (?:european )?convention/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/article \\d+ of the (?:european )?convention/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.546809673309326
+    },
+    {
+      "quoted_paragraph": "… t effect to rights in a way that is not matched elsewhere. As I understand it, charter rights have their origins in United Nations treaties, but the UK has not incorporated UN human rights treaties into domestic law, so those treaties do not have direct effect and do not provide equivalent protection to that currently provided by the charter. If the Bill is not amended, the charter rights will be unenforceable in UK courts. The loss of the charter means the Government risk failing to fulfil the general international responsibility to which they signed up to avoid any regression in human rights. I may be misquoting the right hon. and learned Member for Beaconsfield (Mr Grieve) here, but perhaps one day the penny will drop that we are living in a global world and we do have international responsibilities. The removal of the charter without a like-for-like replacement would amount to a reduction in legal rights, particularly domestic remedies, and the Government have not done enough—",
+      "word_count": 876,
+      "fragment": false,
+      "speaker": "Wera Hobhouse",
+      "party": null,
+      "date": "2017-11-21",
+      "house": "House of Commons",
+      "debate_title": "EUROPEAN UNION (WITHDRAWAL) BILL — Charter of Fundamental Rights – Government Report",
+      "column": null,
+      "source_key": "pwdata-debates/debates2017-11-21c/sections/410/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "EUROPEAN UNION (WITHDRAWAL) BILL — Charter of Fundamental Rights – Government Report",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter of rights\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /unenforceable/i",
+      "section_id": "pwdata-debates:debates2017-11-21c:410",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2017-11-21c.xml",
+      "query": "a charter of rights",
+      "confirmed_by_pattern": "/unenforceable/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/unenforceable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i",
+        "/fundamental rights/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.02452993392944
+    },
+    {
+      "quoted_paragraph": "… le 47 of the Charter. Under the HRA, the court was limited to making a declaration of incompatibility. However, the Charter violation allowed the Court to disapply the provisions of the State Immunity Act 1978 and hence provide an effective remedy for the claimants.82 In the absence of Article 47 of the Charter, such cases may result in a different outcome. Article 48 121) Article 48 sets out the presumption of innocence and the right of a defence. The Government notes that the sources of this right are Article 6(2) and (3) ECHR, as well as the “general principles of EU law”.83 122) As currently drafted, “general principles of EU law” will not confer an enforceable right upon individuals. 79 Charter of Fundamental Rights of the EU Right by Right Analysis, 5 December 2017, p 68 80 ZZ v Secretary of State for the Home Department [2013] EUECJ C-300/11 81 Benkharbouche v Embassy of the Republic of Sudan [2015] EWCA Civ 33 82 This was appealed by the Secretary of State to the Supreme Court. On 18 October the Supreme Court unanimously dismissed the appeal and upheld the judgment of the Court of Appeal: Benkharbouche (Respondent) v Secretary of State for Foreign and Commonwealth Affairs ( …",
+      "word_count": 973,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2018-01-26",
+      "house": "select committee (report)",
+      "debate_title": "Report: 1st Report - Legislative Scrutiny: The EU (Withdrawal) Bill: A Right by Right Analysis — Human Rights (Joint Committee)",
+      "column": null,
+      "source_key": "committees-reports/publication:15650/sections/arc-0019/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 1st Report - Legislative Scrutiny: The EU (Withdrawal) Bill: A Right by Right Analysis — Human Rights (Joint Committee)",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"a charter of rights\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /presumption of innocence/i",
+      "section_id": "committees-reports:publication:15650:arc-0019",
+      "corpus": "committees-reports",
+      "source_url": "https://publications.parliament.uk/pa/jt201719/jtselect/jtrights/774/774.pdf",
+      "query": "a charter of rights",
+      "confirmed_by_pattern": "/presumption of innocence/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/presumption of innocence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/\\bECHR\\b/i",
+        "/fundamental rights/i",
+        "/declaration of incompatibility/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 36.7037034034729
+    },
+    {
+      "quoted_paragraph": "… AXA consider the response of stakeholders involved in flood prevention to be generally positive, however, certain areas experienced more success than others. For example, from our experience on the ground, it was clear that in Iron Bridge, local authorities responded well to set-up early flood barriers which largely held. Other areas saw local issues where flood prevention measures caused futured unintended consequences, such as in Snaith where flood waters were pumped out by local authorities but returned later through drainage systems. Moreover, in South Wales, AXA is aware of examples where flooding had been made worse due to poor maintenance of culverts and watercourses. There were also areas where the ground response by local authorities were successful, such as in Doncaster, where there was a quick response on the ground with teams helping local residents and preparing the area for any secondary flooding. Moreover, AXA considered the response of those local authorities who provided skips and rubbish collections, often free of charge, early in the process to be very successful. Ultimately, AXA would urge collaboration between, government, local authorities and other relevant s …",
+      "word_count": 1585,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2020-07-08",
+      "house": "select committee (evidence)",
+      "debate_title": "Flooding — FLO0026",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:4999/sections/16974/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Flooding — FLO0026",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-evidence:writtenevidence:4999:16974",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/4999/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.6740460395813
+    },
+    {
+      "quoted_paragraph": "… he required two-thirds majority.” 26 26. Professor Gavin Phillipson, Professor of Law at the University of Bristol, agreed that “there has been a meaningful transfer of power, and it is a major and welcome one ... the Commons will, at times, choose to refuse a general election”, which has “prevented the Prime Minister from being able to call an election.” 27 27. Other witnesses argued the Act had the opposite effect and that in some situations the executive may have greater powers than previously. 28 Sir Malcolm Jack suggested that “The Fixed-term Parliaments Act 2011 was heralded as a transfer of power from the Executive to Parliament. In fact its provisions allow the Government as much control and, in the area of no confidence motions, more control than previously in settling the length of any parliamentary term.” 29 28. Some witnesses thought the Act had sought to solve a problem that did not exist. Robert Craig, from the Department of Law at the London School of Economics, said: 23 HC Deb, 13 September 2010, col 621 24 Written evidence from Dr Craig Prescott, University of Winchester (FPA0001) 25 Professor Howarth was the MP for Cambridge between 2005–10. During this time he in …",
+      "word_count": 814,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2020-09-04",
+      "house": "select committee (report)",
+      "debate_title": "Report: 12th Report - A Question of Confidence? The Fixed-term Parliaments Act 2011 — Constitution Committee",
+      "column": null,
+      "source_key": "committees-reports/publication:2335/sections/24130-0008/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 12th Report - A Question of Confidence? The Fixed-term Parliaments Act 2011 — Constitution Committee",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"transfer power from Parliament to the judges\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /the opposite effect/i",
+      "section_id": "committees-reports:publication:2335:24130-0008",
+      "corpus": "committees-reports",
+      "source_url": "https://committees.parliament.uk/publications/2335/",
+      "query": "transfer power from Parliament to the judges",
+      "confirmed_by_pattern": "/the opposite effect/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/the opposite effect/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/convention/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 47.292351722717285
+    },
+    {
+      "quoted_paragraph": "… XA considers the response of stakeholders involved in flood prevention to be generally positive, however, certain areas experienced more success than others. For example, from our experience on the ground, it was clear that in Iron Bridge, local authorities responded well to set-up early flood barriers which largely held. Other areas saw local issues where flood prevention measures caused futured unintended consequences, such as in Snaith where flood waters were pumped out by local authorities but returned later through drainage systems. Moreover, in South Wales, AXA is aware of examples where flooding had been made worse due to poor maintenance of culverts and watercourses. 7 29.There were also areas where the ground response by local authorities were successful, such as in Doncaster, where there was a quick response on the ground with teams helping local residents and preparing the area for any secondary flooding. Moreover, AXA considered the response of those local authorities who provided skips and rubbish collections, often free of charge, early in the process to be very successful 30.These experiences highlight the importance of knowledge sharing within and between local deci …",
+      "word_count": 3074,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2020-10-21",
+      "house": "select committee (evidence)",
+      "debate_title": "Flooding — FLO0103",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:10969/sections/22993/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Flooding — FLO0103",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-evidence:writtenevidence:10969:22993",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/10969/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.710845947265625
+    },
+    {
+      "quoted_paragraph": "… 4 , launched in 2016 , and will run until 2039 . Its purpose is to promote and enable the availability and affordability of flood insurance for eligible homes and manage over its lifetime the transition to an affordable market for household flood insurance where prices reflect the risks of flooding . More than 300,000 households have been backed by the scheme since it was lau nch ed . Independent research shows that 98 per cent of households with prior flood claims can now obtain quotes from five or more insurers , when none could get five quotes before t he creation of Flood Re. Furthermore, 4 out of 5 households with previous flood claims saw a price reduction of more than 50 per cent . In July 2018, Flood Re published its Transition Plan [1] which sets out a strategic plan to work with the insurance industry and policymakers to manage our exit from the market by 2039 . Our first Quinquennial Review (QQR) was published in 2019 [2] and included p roposals t o help incentivise the take-up of property level flood resilience measure s by householders, encourage the growth of the resilience products sector and reduce the costs and disruption of future flooding when it occurs. Flood Re …",
+      "word_count": 2989,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2021-01-14",
+      "house": "select committee (evidence)",
+      "debate_title": "Managing flood risks — MFR0003",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:19546/sections/41366/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Managing flood risks — MFR0003",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the SUPPORT_EVIDENCE move (affirmative: here is why it will work, with evidence), confirmed by /research (?:shows|demonstrates)/i",
+      "section_id": "committees-evidence:writtenevidence:19546:41366",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/19546/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/research (?:shows|demonstrates)/i",
+      "argument_moves": [
+        {
+          "tag": "SUPPORT_EVIDENCE",
+          "move": "affirmative: here is why it will work, with evidence",
+          "pattern": "/research (?:shows|demonstrates)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.88245964050293
+    },
+    {
+      "quoted_paragraph": "50. The evidence shows that resourcing and capacity are key for ensuring that local flood risk management is coherent. Specific issues that have been highlighted include inadequate resources to carry out “Section 19” investigations following a flood, as well as 99 National Flood Forum (FLO0045) 100 Hampshire County Council (FLO0024) 101 HM Government, ‘Flood and Coastal Erosion Risk Management Policy Statement’ (July 2020), p 16 102 HM Government, ‘Flood and Coastal Erosion Risk Management Policy Statement’ (July 2020), p 17 103 Department for Environment, Food & Rural Affairs, ‘Report of a review of the arrangements for determining responsibility for surface water and drainage assets’ (May 2020), p 10 104 Flood and Water Management Act 2010, section 9; Department for Environment, Food and Rural Affairs and Environment Agency, ‘Flood and coastal erosion: risk management authorities’, accessed 1 February 2021 105 Flood and Water Management Act 2010, section 9 106 Department for Environment, Food and Rural Affairs and Environment Agency, ‘Flood and coastal erosion: risk management authorities’, accessed 1 February 2021 19 Flooding insufficient powers to enforce responsibilities of ri …",
+      "word_count": 775,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2021-02-08",
+      "house": "select committee (report)",
+      "debate_title": "Report: Fourth Report - Flooding — Environment, Food and Rural Affairs Committee",
+      "column": null,
+      "source_key": "committees-reports/publication:4601/sections/46603-0017/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: Fourth Report - Flooding — Environment, Food and Rural Affairs Committee",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the SUPPORT_EVIDENCE move (affirmative: here is why it will work, with evidence), confirmed by /the evidence (?:shows|demonstrates|is clear)/i",
+      "section_id": "committees-reports:publication:4601:46603-0017",
+      "corpus": "committees-reports",
+      "source_url": "https://committees.parliament.uk/publications/4601/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/the evidence (?:shows|demonstrates|is clear)/i",
+      "argument_moves": [
+        {
+          "tag": "SUPPORT_EVIDENCE",
+          "move": "affirmative: here is why it will work, with evidence",
+          "pattern": "/the evidence (?:shows|demonstrates|is clear)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.79938507080078
+    },
+    {
+      "quoted_paragraph": "I completely agree with the noble Lord, particularly in relation to his tribute to the noble and learned Lord, Lord Judge. In his absence—as his junior as it were—I draw this Committee’s attention to the quite extraordinary report of your Lordships’ Delegated Powers and Regulatory and Reform Committee to which reference has been made before, particularly at Second Reading, but it bears repetition. Its seventh report of this Session says at paragraph 4 that this is “a skeleton bill that confers on Ministers a licence to legislate in the widest possible terms.” It continues: “The Bill represents as stark a transfer of power from Parliament to the Executive as we have seen throughout the Brexit process. The Bill is unprecedented in its cavalier treatment of Parliament”. That is quite an extraordinary criticism of this legislation. It is made not by novices but by highly experienced and respected Members of your Lordships’ House across party lines. I find it deeply regrettable that the Government should think it appropriate to continue with a Bill that has attracted such cross-party criticism.",
+      "word_count": 178,
+      "fragment": false,
+      "speaker": "Lord Pannick",
+      "party": null,
+      "date": "2022-10-31",
+      "house": "House of Lords",
+      "debate_title": "Northern Ireland Protocol Bill - Committee (2nd Day) — Amendment 7",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2022-10-31b/sections/164/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Northern Ireland Protocol Bill - Committee (2nd Day) — Amendment 7",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"transfer power from Parliament to the judges\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /skeleton bill/i",
+      "section_id": "pwdata-lords:daylord2022-10-31b:164",
+      "corpus": "pwdata-lords",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/lordspages/daylord2022-10-31b.xml",
+      "query": "transfer power from Parliament to the judges",
+      "confirmed_by_pattern": "/skeleton bill/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/skeleton bill/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 49.672837257385254
+    },
+    {
+      "quoted_paragraph": "… ld tends to follow a similar pattern . We examined seven cases of the politicisation of national and international media in very different countries . We then examined the extent to which this “mapped on” to the very rapid politicisation of the oldest and largest US-funded international media network, the Voice of America, which occurred in the last few months of the Trump administration. 3.2 Our research shows that g overnment funding is one of the main mechanisms by which international public service media – like the BBC World Service – can experience government capture. Governments and their allies can use state financing as a mechanism of control by establishing systems of financial incentives and disincentives . 3 . 3 S pecifically, we found that funding was one of four key mechanisms through which public media was politic i sed . This was because: 1/ g overnments and their allies used control of direct state financing to establish systems of financial incentives and disincentives, as happened in Central Europe and Turkey [5] and 2/ cost-cutting undermin ed journalists’ working conditions, leaving them overstretched and in precarious employment, which then left them less able  …",
+      "word_count": 2225,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2024-05-23",
+      "house": "select committee (evidence)",
+      "debate_title": "The future of the BBC World Service — BBC0010",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:130475/sections/222721/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "The future of the BBC World Service — BBC0010",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"politicise the judiciary\"; the passage makes the SUPPORT_EVIDENCE move (affirmative: here is why it will work, with evidence), confirmed by /research (?:shows|demonstrates)/i",
+      "section_id": "committees-evidence:writtenevidence:130475:222721",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/130475/",
+      "query": "politicise the judiciary",
+      "confirmed_by_pattern": "/research (?:shows|demonstrates)/i",
+      "argument_moves": [
+        {
+          "tag": "SUPPORT_EVIDENCE",
+          "move": "affirmative: here is why it will work, with evidence",
+          "pattern": "/research (?:shows|demonstrates)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 37.030320167541504
+    },
+    {
+      "quoted_paragraph": "… building regulations are overly restrictive and lack flexibility, discouraging innovative approaches to flood resilience and constraining development in flood risk areas. With 10% of England’s land at high risk of flooding [4] and the numbers of properties at high risk increasing [5] , alongside competing pressures on land for agriculture, energy, and housing, the current approach is increasingly unworkable. This rigidity has left large swathes of previously developed, low ecological value land—such as over 1,0 00 hectares [6] held by Homes England—effectively unusable. Flood-adaptive technologies, like the Flood Adaptive Platform, offer a solution by enabling safe, sustainable development on floodplains through real-time elevation of structures above floodwaters. These platforms also have significant potential for retrofitting to existing properties, providing an innovative way to safeguard homes and businesses already located in high flood risk areas. By embracing such innovations and reforming flood risk planning policy ( whic h is largely untouched by the governments proposed changes to the NPPF ) to facilitate deployment , the UK can unlock the economic and housing potential o …",
+      "word_count": 2665,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2025-02-13",
+      "house": "select committee (evidence)",
+      "debate_title": "Flood resilience in England — FRE0015",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:133528/sections/237035/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Flood resilience in England — FRE0015",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the IMPLEMENTATION move (it cannot be operated as drafted), confirmed by /unworkable/i",
+      "section_id": "committees-evidence:writtenevidence:133528:237035",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/133528/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/unworkable/i",
+      "argument_moves": [
+        {
+          "tag": "IMPLEMENTATION",
+          "move": "it cannot be operated as drafted",
+          "pattern": "/unworkable/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 30.002248287200928
+    },
+    {
+      "quoted_paragraph": "… d awareness of property flood resilience (PFR) and sustainable drainage (SuDS) measures, providing a stimulus for wider adoption through the private sector. Monitoring flood resilience Q4. To what extent are current metrics for monitoring the effectiveness of flood resilience fit for purpose, and what improvements could make them more effective? Social vulnerability and flood resilience: Flooding disproportionately affects people in vulnerable situations, such as lower-income households and individuals with reduced mobility , and the metrics for monitoring the effectiveness of assets and interventions should recognise this . These groups often have less ability to prepare for, respond to, and adapt to flooding due to financial barriers , physical limitations , and other capacity constraints . For example, our recent polling research found that people living in higher deprivation areas are not only more likely to experience flooding, but are also less likely to be insured, signed up for flood warnings or able to adapt their homes. [6] People may be vulnerable for various reasons, including clinical conditions, economic and social factors, discrimination, and situational factors such …",
+      "word_count": 2959,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2025-02-13",
+      "house": "select committee (evidence)",
+      "debate_title": "Flood resilience in England — FRE0109",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:134209/sections/237463/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Flood resilience in England — FRE0109",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the SCOPE move (it catches things it should not, or misses things it should), confirmed by /disproportionately (?:affect|hit)/i",
+      "section_id": "committees-evidence:writtenevidence:134209:237463",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/134209/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/disproportionately (?:affect|hit)/i",
+      "argument_moves": [
+        {
+          "tag": "SCOPE",
+          "move": "it catches things it should not, or misses things it should",
+          "pattern": "/disproportionately (?:affect|hit)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.72989320755005
+    },
+    {
+      "quoted_paragraph": "… aces. 1. Strengthening Flood Resilience: To what extent are current flood resilience assets and interventions fit-for-purpose and what are the strengths and weaknesses? Current UK flood resilience measures remain overly focused on mitigating large-scale flooding, such measures often fail to address the increasing prevalence of high-frequency, low-magnitude flooding events. These “everyday floods” disproportionately affect schools, recreation spaces, and children's daily lives – disrupting education, grassroots sports, play opportunities and engagement with nature. Sustainable urban drainage systems, whilst beneficial, often divert floodwaters into green spaces without addressing their long-term usability for community activities. Highlighting a need for tailored, context-specific solutions . International, community-led approaches such as the Netherlands' Room for the River project [5] , demonstrates the value of natural flood management strategies that simultaneously enhance ecological and community resilience. Recommendation: Flood resilience interventions must be inclusive and participatory . My Flood Stories and INSECURE projects clearly demonstrates that methods such as interg …",
+      "word_count": 1144,
+      "fragment": false,
+      "speaker": "Dr Katie Parsons",
+      "party": null,
+      "date": "2025-02-13",
+      "house": "select committee (evidence)",
+      "debate_title": "Flood resilience in England — FRE0001",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:132942/sections/237063/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Flood resilience in England — FRE0001",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"flood of litigation\"; the passage makes the SCOPE move (it catches things it should not, or misses things it should), confirmed by /disproportionately (?:affect|hit)/i",
+      "section_id": "committees-evidence:writtenevidence:132942:237063",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/132942/",
+      "query": "flood of litigation",
+      "confirmed_by_pattern": "/disproportionately (?:affect|hit)/i",
+      "argument_moves": [
+        {
+          "tag": "SCOPE",
+          "move": "it catches things it should not, or misses things it should",
+          "pattern": "/disproportionately (?:affect|hit)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 29.69810724258423
+    },
+    {
+      "quoted_paragraph": "… legislation. Stephen would know this better than I, but one obvious problem in respect of drafting is that, if the instructions to drafters are not sufficiently clear and detailed to be able to pin down exactly what you wish to achieve or what the remedy is, that makes the drafting process more difficult. You could point to Bills that have gone through Parliament that are effectively framework or skeleton Bills, of which this committee has great experience. You can see placeholder clauses in Bills, which have become a more regular feature of legislation than they used to be. At the endpoint of the process, you can then see something that a lot of MPs are often surprised about because it is not something they think of after Bills pass through the House and go for Royal Assent: the degree to which there is uncommenced legislation. Government departments and politicians wanted to do something and legislated for it, but for a long period sections or schedules remain uncommenced . You then have to question what the policy purpose was, what they wanted to achieve and why that has not happened. The Chair: You have excited so many on the committee that there are many supplementary question …",
+      "word_count": 15039,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2025-06-09",
+      "house": "select committee (evidence)",
+      "debate_title": null,
+      "column": null,
+      "source_key": "committees-evidence/oralevidence:16010/sections/252590/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": null,
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"a general declaration of rights is too vague for a court to enforce\"; the passage makes the WRONG_VEHICLE move (this belongs in guidance, or in secondary legislation, not here), confirmed by /skeleton bill/i",
+      "section_id": "committees-evidence:oralevidence:16010:252590",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/oralevidence/16010/",
+      "query": "a general declaration of rights is too vague for a court to enforce",
+      "confirmed_by_pattern": "/skeleton bill/i",
+      "argument_moves": [
+        {
+          "tag": "WRONG_VEHICLE",
+          "move": "this belongs in guidance, or in secondary legislation, not here",
+          "pattern": "/skeleton bill/i"
+        },
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/contrary to the rule of law/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/human rights/i",
+        "/convention/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "debate_title": "no sectionTitle recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7261159420013428
+    }
+  ],
+  "objections_over_floor": 35,
+  "fragments_kept": 1,
+  "fragment_rule": "fragment = true where the section's own word count is under 30. No row is dropped for it. A fragment is material to read; it is not material to quote.",
+  "returned_nothing_usable": false,
+  "coverage_note": "Searched 8 parliamentary collections through two live indexes. This is top-K retrieval, not a scan: it says what the queries reached, never what the record contains. A move made in words none of these twelve queries reach is not here, and its absence is not evidence."
+}

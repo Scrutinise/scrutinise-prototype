@@ -1,0 +1,936 @@
+{
+  "generated_at": "2026-08-29T15:11:48.276Z",
+  "measure": "WS-05 — Constitutional Reform and Governance Act 2010, Part 1",
+  "measure_shape_searched": "putting the civil service on a statutory footing — a statutory code, a Civil Service Commission, and statutory recognition of special advisers, replacing prerogative management",
+  "invocation": "./node_modules/.bin/tsx --env-file=.env --tsconfig tsconfig.json scripts/report-b2-arguments.ts",
+  "instrument": {
+    "note": "argument-questions.ts is NOT a query interface — it is a hardcoded set of ten gold questions with hand-picked chunk ids that writes a markdown file from constants. It takes no query and no measure, which is why argument:questions is absent from package.json. This run uses the two-arm instrument from argument-seed-draw.ts with measure-specific queries, and the confirm step is patternHits() from argument/taxonomy.ts.",
+    "dense_service": "https://vector-serve-production.up.railway.app",
+    "keyword_service": "https://fts-serve-production.up.railway.app",
+    "keyword_service_note": "FTS_SEARCH_URL is not set in .env; this is the production host found in the repo.",
+    "corpora": [
+      "pwdata-debates",
+      "pwdata-lords",
+      "pwdata-westminster",
+      "historic-hansard",
+      "niassembly-hansard",
+      "scottish-parliament-or",
+      "committees-evidence",
+      "committees-reports"
+    ],
+    "per_query_limit": 40,
+    "dense_probes": [
+      "putting the civil service on a statutory basis would damage its flexibility",
+      "a Civil Service Act would make officials accountable to a commission rather than to ministers",
+      "the prerogative works well and legislating would rigidify it",
+      "special advisers should not have executive power over permanent civil servants",
+      "codifying a convention turns it into something the courts can adjudicate",
+      "the political neutrality of the civil service cannot be secured by statute"
+    ],
+    "keyword_phrases": [
+      "Civil Service Act",
+      "statutory footing",
+      "political impartiality of the civil service",
+      "special advisers",
+      "Civil Service Commission",
+      "Civil Service Code"
+    ],
+    "confirm_step": "A retrieval hit is a passage about the subject. An OBJECTION is a passage that makes an argumentative move. patternHits() decides which, on BOTH arms, and every confirmed row records the pattern that confirmed it. ARGUMENT 1A measured this arm at 90% against the dense arm's 0% recall on independently found arguments."
+  },
+  "prediction": {
+    "objections_expected": 15,
+    "expected_over_floor": 12,
+    "recorded_before_run": true
+  },
+  "arms_never_merged": {
+    "note": "Proposed and confirmed are reported per arm. The two are never added into one count.",
+    "dense": {
+      "proposed": 240,
+      "hydrated": 240,
+      "bodyRead": 239,
+      "confirmed": 12
+    },
+    "keyword": {
+      "proposed": 240,
+      "hydrated": 240,
+      "bodyRead": 240,
+      "confirmed": 8
+    },
+    "distinct_objections_by_arm": {
+      "dense": 12,
+      "keyword": 8
+    },
+    "fragments_by_arm": {
+      "dense": 0,
+      "keyword": 0
+    }
+  },
+  "fields_the_corpus_does_not_hold": {
+    "party": "corpus_sections carries no party. Emitted as null on every row rather than inferred from the speaker name.",
+    "column": "no Hansard column number is stored. source_url carries the publisher anchor where one exists; for pwdata rows that anchor encodes the column reference."
+  },
+  "subject_term_screen": {
+    "terms": [
+      "/civil service/i",
+      "/civil servant/i",
+      "/special adviser/i",
+      "/permanent secretary/i",
+      "/civil service commission/i",
+      "/civil service code/i",
+      "/whitehall/i",
+      "/impartialit/i",
+      "/prerogative/i",
+      "/Northcote/i"
+    ],
+    "passages_using_none_of_them": 3,
+    "of_total": 20,
+    "note": "⚠ MECHANICAL, AND IT IS THE FIELD TO SORT ON BEFORE DRAFTING. A row with an empty subject_terms_present is connected to this measure by the argumentative MOVE alone. That is both the cross-subject objection this instrument exists to find — the unbounded-duty argument made in 2005 about advertising marches transfers to a public sector equality duty unchanged — AND the pattern-noise case, a COST pattern firing on \"burden on small businesses\" in a question about fuel protesters. The two are indistinguishable to any mechanical test and telling them apart is a reading, which is the analysis track's call. This field sorts the pile; it does not rule on anything in it."
+  },
+  "metadata_completeness": {
+    "no_speaker": 9,
+    "no_date": 0,
+    "no_debate_title": 4,
+    "no_subject_term": 3,
+    "note": "Every gap is structural and named per row in missing_field_reasons. Committee reports and written evidence have no speaker because the document is authored by a committee or a witness organisation. party and column are held for NO row: the corpus does not carry them."
+  },
+  "objections": [
+    {
+      "quoted_paragraph": "… is the view of Dr. William Plowden. I see the gulf between these two viewpoints as very wide indeed. But let me say as clearly as possible that if major changes are to be made then they must be made by Parliament after due deliberation. We must listen with respect both to civil servants and to distinguished commentators, but the final decision rests with Government and ultimately with Parliament. The experience of the last few years shows that some further changes are needed. The Government, in their treatment of GCHQ, mentioned by my noble friend and the noble Lord, Lord Rochester, and in the way that they have involved civil servants and information officers in particular in politically controversial issues, have contributed to this uncertainty and the lowering of morale, which I believe to be very unfortunate indeed. I hope that the serious words of the noble Lord, Lord Bancroft, will be heeded by the Government. Ideally, the problem should be resolved by all the political parties after a full parliamentary inquiry involving both Houses and after extensive debates. My noble friend Lord Diamond also made some valuable suggestions in his speech and I hope that account will be take …",
+      "word_count": 2192,
+      "fragment": false,
+      "speaker": "Lord Cledwyn of Penrhos",
+      "party": null,
+      "date": "1986-02-26",
+      "house": "House of Lords",
+      "debate_title": "Lords: Government, Parliament and the Civil Service",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0471P0/sections/3757/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: Government, Parliament and the Civil Service",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the political neutrality of the civil service cannot be secured by statute\"; the passage makes the PRECEDENT move (this was tried before, here is what happened), confirmed by /the experience of (?:the|other)/i",
+      "section_id": "historic-hansard:S5LV0471P0:3757",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0471P0.zip",
+      "query": "the political neutrality of the civil service cannot be secured by statute",
+      "confirmed_by_pattern": "/the experience of (?:the|other)/i",
+      "argument_moves": [
+        {
+          "tag": "PRECEDENT",
+          "move": "this was tried before, here is what happened",
+          "pattern": "/the experience of (?:the|other)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7417657971382141
+    },
+    {
+      "quoted_paragraph": "… egrity and honesty. That is fair enough. But I wonder whether \"fairness\" should not appear in the following paragraph which concerns how the public expect to be dealt with: sympathetically, efficiently, promptly and without bias or bad administration. This may sound a detail but no one is value-neutral or completely objective and, in handling the affairs of the public, civil servants must observe due process or neutrality of process in order to ensure that individual cases throughout the country are treated on a similar basis. That is the reason for much of the red tape associated with Civil Service procedures. I hope that the need for neutrality of process, which is not quite the same as an absence of bias, will be reflected in the final draft of the code. My more important point concerns the right of appeal to the Civil Service Commissioners for civil servants who feel that they are required to act in a way inconsistent with the code and have not had satisfaction through the normal departmental channels. I accept the need for an outside point of appeal and I cannot think of a better one than the Civil Service Commissioners. But how wide should this right of appeal be given? This  …",
+      "word_count": 1126,
+      "fragment": false,
+      "speaker": "Lord Hunt of Tanworth",
+      "party": null,
+      "date": "1995-02-01",
+      "house": "House of Lords",
+      "debate_title": "Lords: The Civil Service",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0560P0/sections/3467/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Lords: The Civil Service",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"Civil Service Code\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "historic-hansard:S5LV0560P0:3467",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0560P0.zip",
+      "query": "Civil Service Code",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/civil service commission/i",
+        "/civil service code/i",
+        "/whitehall/i",
+        "/impartialit/i",
+        "/prerogative/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 44.784698486328125
+    },
+    {
+      "quoted_paragraph": "… he FDA is able to give us. Sir Robin Butler, head of the home civil service, will meet representatives of the association at an early date in order to understand what the allegations are about. Secondly, I urge all civil servants to read the code. It states clearly that, when civil servants believe that they are being required to act in a way that is inconsistent with the code, they should follow due process, and report the matter within their own Department, up to permanent secretary level. If they are dissatisfied with the departmental response, they should report the matter to the independent civil service commissioners. It would be interesting to know how many of the 20 cases referred to in the press this morning have reached the commissioners. I understand from the annual report of the civil service commissioners that only one case is still to be examined—an allegation of undue political interference with civil servants by the commissioners. It is certainly not true that, if there are 20 cases—as is claimed by the press release and supporting documents—they have not yet reached the commissioners. They should, if there is anything to allege.",
+      "word_count": 490,
+      "fragment": false,
+      "speaker": "Mr. Freeman",
+      "party": null,
+      "date": "1996-07-11",
+      "house": "House of Commons",
+      "debate_title": "Civil Servants (Training)",
+      "column": null,
+      "source_key": "pwdata-debates/debates1996-07-11a/sections/185/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Civil Servants (Training)",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"political impartiality of the civil service\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "pwdata-debates:debates1996-07-11a:185",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1996-07-11a.xml",
+      "query": "political impartiality of the civil service",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/permanent secretary/i",
+        "/civil service commission/i",
+        "/civil service code/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 66.6608190536499
+    },
+    {
+      "quoted_paragraph": "… llhead, sending me home to write a White Paper on equality for women for want of co-operation in a minority Labour Government which the civil servants did not regard as having a proper mandate and probably thought would be booted out shortly at the second general election. It was of course vital to have our ideas tested by civil servants. It was vital not to steamroller policy through. But it was counterproductive to have separate politics of the bureaucracy being pursued in the way it happened in that brief period. It was not typical; it did not happen for very long, but it was quite deplorable. I believe that the use of outside special advisers, as the noble Lord, Lord Gillmore of Thamesfield, indicated, with appropriate qualifications and experience, in an adequately staffed ministerial policy unit—in his word \"integrated\" as part of the machine— should make it easier for governments to implement their policies without that kind of obstruction or other problems. I agree with the noble Lord, Lord Beloff, that everything depends on the personality, expertise, strength and integrity of the special adviser and developing a healthy, honest, professional relationship with permanent of …",
+      "word_count": 2081,
+      "fragment": false,
+      "speaker": "Lord Lester of Herne Hill",
+      "party": null,
+      "date": "1997-07-09",
+      "house": "House of Lords",
+      "debate_title": "Lords: Machinery of Government",
+      "column": null,
+      "source_key": "historic-hansard/S5LV0581P0/sections/1828/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Lords: Machinery of Government",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"putting the civil service on a statutory basis would damage its flexibility\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /counter-?productive/i",
+      "section_id": "historic-hansard:S5LV0581P0:1828",
+      "corpus": "historic-hansard",
+      "source_url": "https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0581P0.zip",
+      "query": "putting the civil service on a statutory basis would damage its flexibility",
+      "confirmed_by_pattern": "/counter-?productive/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/counter-?productive/i"
+        },
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/chilling effect/i"
+        }
+      ],
+      "also_found_by": [
+        "dense: the political neutrality of the civil service cannot be secured by statute"
+      ],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/special adviser/i",
+        "/civil service commission/i",
+        "/civil service code/i",
+        "/whitehall/i",
+        "/impartialit/i",
+        "/prerogative/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7362574338912964
+    },
+    {
+      "quoted_paragraph": "I should like to make some progress before giving way, although I recognise that the hon. Gentleman is also a member of the Public Administration Committee. Who will enforce those contracts? When I asked the Cabinet Secretary, Sir Richard Wilson, who was responsible for enforcing a contract that had clearly been breached, he could not offer me any comfort and nor could his predecessor, Sir Robin Butler, to whom I had put the same question. It seems that it is the job of the permanent secretary in a Department to spot a breach, but he has no power to enforce the contract. Although the special adviser's contract is with the departmental head, the permanent secretary cannot do anything about it. He cannot sack an adviser, because he did not appoint him or her; the adviser is appointed by his Secretary of State. We are in the crazy position—something has to be done about this—where special advisers can do no more than breach their contracts, but the permanent secretary can merely have a word about it with his Minister and, perhaps, the Cabinet Secretary and there the matter has to end.",
+      "word_count": 190,
+      "fragment": false,
+      "speaker": "Mr. Tyrie",
+      "party": null,
+      "date": "1999-01-13",
+      "house": "House of Commons",
+      "debate_title": "Opposition Day — Government Information",
+      "column": null,
+      "source_key": "pwdata-debates/debates1999-01-13a/sections/286/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Opposition Day — Government Information",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"special advisers should not have executive power over permanent civil servants\"; the passage makes the ENFORCEMENT move (nobody will enforce it / the enforcer lacks capacity), confirmed by /who (?:is going to|will) enforce/i",
+      "section_id": "pwdata-debates:debates1999-01-13a:286",
+      "corpus": "pwdata-debates",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates1999-01-13a.xml",
+      "query": "special advisers should not have executive power over permanent civil servants",
+      "confirmed_by_pattern": "/who (?:is going to|will) enforce/i",
+      "argument_moves": [
+        {
+          "tag": "ENFORCEMENT",
+          "move": "nobody will enforce it / the enforcer lacks capacity",
+          "pattern": "/who (?:is going to|will) enforce/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/special adviser/i",
+        "/permanent secretary/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7592623233795166
+    },
+    {
+      "quoted_paragraph": "… e Civil Service and became the Chancellor's chief economic adviser; he stayed there until 1995, when he became a parliamentary candidate for the seat that he now holds. Did anybody believe that Mr Balls was anything other than a political adviser to the Chancellor throughout that whole period? I think not. In addition, the Chancellor has a Council of Economic Advisers, which has been estimated to cost more than £1 million a year. Five of its members are appointed on special adviser terms. Why did the Chancellor find it necessary to gather advisers around him in this way when he was surrounded by the undoubted intellects who exist in large numbers among Treasury civil servants? Has the advice of his civil servants been replaced and, if so, why was that necessary? It is not surprising that some of the Treasury's Permanent Secretaries and other civil servants have found working with the Chancellor's regime very difficult. If they did not adapt to the Chancellor's way of doing things, they found it difficult to survive. His way of doing things was well documented in an excellent book by Mr Tom Bower, entitled Gordon Brown . This included bypassing the Civil Service way of documenting m …",
+      "word_count": 1120,
+      "fragment": false,
+      "speaker": "Baroness Noakes",
+      "party": null,
+      "date": "2007-05-24",
+      "house": "House of Lords",
+      "debate_title": "Government: Civil Service and Judiciary",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2007-05-24b/sections/70/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Government: Civil Service and Judiciary",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"special advisers should not have executive power over permanent civil servants\"; the passage makes the COST move (this will cost more than claimed, or the costing is wrong), confirmed by /cost(?:s)? (?:far )?more than/i",
+      "section_id": "pwdata-lords:daylord2007-05-24b:70",
+      "corpus": "pwdata-lords",
+      "source_url": "http://www.publications.parliament.uk/pa/ld200607/ldhansrd/text/70524-0005.htm#07052466000178",
+      "query": "special advisers should not have executive power over permanent civil servants",
+      "confirmed_by_pattern": "/cost(?:s)? (?:far )?more than/i",
+      "argument_moves": [
+        {
+          "tag": "COST",
+          "move": "this will cost more than claimed, or the costing is wrong",
+          "pattern": "/cost(?:s)? (?:far )?more than/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/special adviser/i",
+        "/permanent secretary/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7586615085601807
+    },
+    {
+      "quoted_paragraph": "… he development of the Civil Service. If the Government want to make a change- for example, and I would not recommend it, to allow Ministers to appoint their own senior officials-they can do so, but only by bringing that proposal to Parliament and seeking approval. It is often said that the Civil Service is being politicised. Could it mean that people are being appointed for their political views? There is no evidence of this; indeed, the Civil Service Commissioners are involved in more senior appointments than used to be the case. Does it mean that civil servants have become too pally, too partisan? They are occasionally, but usually such cases are addressed, as in the case of Damian McBride, who was basically thrown out of the Civil Service and told to become a \"spad\". The real issue is that some of the work of the Civil Service, particularly policy advice and communications, has been diverted down political channels; that is, Ministers and their special advisers. We have an opportunity to reaffirm the long-standing relationships and safeguards around the Civil Service. Should we take it, even it is not perfect? The principle of legislation has been on the agenda for 150 years. Sp …",
+      "word_count": 1009,
+      "fragment": false,
+      "speaker": "Lord Turnbull",
+      "party": null,
+      "date": "2010-03-24",
+      "house": "House of Lords",
+      "debate_title": "Constitutional Reform and Governance Bill — Second Reading",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2010-03-24a/sections/139/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Constitutional Reform and Governance Bill — Second Reading",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"putting the civil service on a statutory basis would damage its flexibility\"; the passage makes the EVIDENCE_GAP move (the problem is not established, or the data does not show it), confirmed by /there is (?:simply )?no evidence/i",
+      "section_id": "pwdata-lords:daylord2010-03-24a:139",
+      "corpus": "pwdata-lords",
+      "source_url": "http://www.publications.parliament.uk/pa/ld200910/ldhansrd/text/100324-0013.htm#10032462000018",
+      "query": "putting the civil service on a statutory basis would damage its flexibility",
+      "confirmed_by_pattern": "/there is (?:simply )?no evidence/i",
+      "argument_moves": [
+        {
+          "tag": "EVIDENCE_GAP",
+          "move": "the problem is not established, or the data does not show it",
+          "pattern": "/there is (?:simply )?no evidence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/special adviser/i",
+        "/civil service commission/i",
+        "/civil service code/i",
+        "/whitehall/i",
+        "/Northcote/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7442956566810608
+    },
+    {
+      "quoted_paragraph": "… w which in certain circumstances might t rump parliamentary sovereignty? The difficulty there is that the judges and Parliament, or the Government, might have different views about what the rule of law meant in certain particular circumstances. &#xa0; Going back to our recent e vents, the practical question here is if Parliament were to introduce primary legislation that the judges believed to be contrary to the rule of law , as they understood it, what would they do about it ? That is the particular difficulty we might be confronting at the moment with the current Government consultation exercise. &#xa0; Q96 &#xa0; Fabian Hamilton : We have discussed already this morning, and you, in reply to Mr Turner, mentioned judicial review and some of the processes in the UK . I wonder how judicial review here differs from countries where there is a codified constitution. &#xa0; Nat Le Roux : A s I understand it, the great majority, probably all countries which are essentially democratic, rule - of - law jurisdictions, have some form of judicial review whereby appellants can go to the court and say, “This official has acted beyond his appropriate powers or he has behaved unfairly”. How likel …",
+      "word_count": 10886,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2013-12-09",
+      "house": "select committee (evidence)",
+      "debate_title": null,
+      "column": null,
+      "source_key": "committees-evidence/oralevidence:3560/sections/152762/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": null,
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"codifying a convention turns it into something the courts can adjudicate\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /contrary to the rule of law/i",
+      "section_id": "committees-evidence:oralevidence:3560:152762",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/oralevidence/3560/",
+      "query": "codifying a convention turns it into something the courts can adjudicate",
+      "confirmed_by_pattern": "/contrary to the rule of law/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/contrary to the rule of law/i"
+        },
+        {
+          "tag": "IMPLEMENTATION",
+          "move": "it cannot be operated as drafted",
+          "pattern": "/practical difficult/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "debate_title": "no sectionTitle recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7297749519348145
+    },
+    {
+      "quoted_paragraph": "… ublic funds to promote the agenda of a political party, as was evident in this case. We further conclude that Sir Nicholas Macpherson’s advice should not have been published. Its publication compromised the perceived impartiality of one of the UK’s most senior civil servants. It remains the view of this Committee that Civil Service advice should remain protected. The decision to publish will have unintended consequences for advice given to ministers on future major issues—including referendums. We invite the Government to make it clear in its response to this report that the publication of advice to ministers will never recur. We recommend that the Civil Service Code be revised by including a simple new paragraph, so that the provisions which apply in respect of parties in elections in the Code also apply in respect of the “yes” and “no” campaigns in referendums, and so that any future referendum does not give rise to the same uncertainty and controversy. Finally, we reflect on the correspondence with the Government concerning the interpretation of the Code of Conduct for Special Advisers, and invite the Government to be clearer about the role of Special Advisers in respect of poli …",
+      "word_count": 605,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2015-03-23",
+      "house": "select committee (report)",
+      "debate_title": "Report: 5th Report - Lessons for Civil Service impartiality from the Scottish independence referendum — Public Administration Committee",
+      "column": null,
+      "source_key": "committees-reports/publication:11641/sections/arc-0002/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 5th Report - Lessons for Civil Service impartiality from the Scottish independence referendum — Public Administration Committee",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"political impartiality of the civil service\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-reports:publication:11641:arc-0002",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201415/cmselect/cmpubadm/111/111.pdf",
+      "query": "political impartiality of the civil service",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/special adviser/i",
+        "/permanent secretary/i",
+        "/civil service code/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 67.80232429504395
+    },
+    {
+      "quoted_paragraph": "… cause entering a currency union with an independent Scotland is a decision for government, not the Civil Service. The advice should not have been published. Its publication compromised the perceived impartiality of one of the UK’s most senior civil servants. (Paragraph 69) 7. It remains the view of this Committee that civil service advice should remain protected. The decision to publish will have unintended consequences for advice given to ministers on future major issues—including referendums. (Paragraph 70) 8. We recommend that guidance regarding the publication of Civil Service advice should be reiterated and if necessary revised to ensure that a civil servant’s advice to a minister cannot be published in future, in order to protect the impartiality of the Civil Service in accordance with the Northcote-Trevelyan settlement. (Paragraph 71) 9. The publication of this advice only occurred because it suited ministers’ political objectives in respect of the Scottish referendum. The Government in response to this Report must make it clear that this will never recur. (Paragraph 72) Revising the guidance 10. There is now an opportunity to strengthen and clarify the Civil Service Code ba …",
+      "word_count": 457,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2015-03-23",
+      "house": "select committee (report)",
+      "debate_title": "Report: 5th Report - Lessons for Civil Service impartiality from the Scottish independence referendum — Public Administration Committee — Constitutional Reform and Governance Act 2010, section 10 107 — ¶5",
+      "column": null,
+      "source_key": "committees-reports/publication:11641/sections/arc-0027/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Report: 5th Report - Lessons for Civil Service impartiality from the Scottish independence referendum — Public Administration Committee — Constitutional Reform and Governance Act 2010, section 10 107 — ¶5",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"political impartiality of the civil service\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-reports:publication:11641:arc-0027",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201415/cmselect/cmpubadm/111/111.pdf",
+      "query": "political impartiality of the civil service",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/permanent secretary/i",
+        "/civil service code/i",
+        "/impartialit/i",
+        "/Northcote/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 64.21671867370605
+    },
+    {
+      "quoted_paragraph": "…  because entering a currency union with an independent Scotland is a decision for government, not the Civil Service. The advice should not have been published. Its publication compromised the perceived impartiality of one of the UK's most senior civil servants. (Paragraph 69) It remains the view of this Committee that civil service advice should remain protected. The decision to publish will have unintended consequences for advice given to ministers on future major issues—including referendums. (Paragraph 70)",
+      "word_count": 459,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2016-01-12",
+      "house": "select committee (report)",
+      "debate_title": "Special Report: 2nd Special Report - Lessons for Civil Service impartiality for the Scottish independence referendum: Government Response to the Public Administration Select Committee's Fifth Report of Session 2014-15 — Public Administration and Constitutional Affairs Committee",
+      "column": null,
+      "source_key": "committees-reports/publication:12285/sections/arc-0003/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Special Report: 2nd Special Report - Lessons for Civil Service impartiality for the Scottish independence referendum: Government Response to the Public Administration Select Committee's Fifth Report of Session 2014-15 — Public Administration and Constitutional Affairs Committee",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"political impartiality of the civil service\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-reports:publication:12285:arc-0003",
+      "corpus": "committees-reports",
+      "source_url": "http://www.publications.parliament.uk/pa/cm201516/cmselect/cmpubadm/725/725.pdf",
+      "query": "political impartiality of the civil service",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/permanent secretary/i",
+        "/civil service code/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 66.40096664428711
+    },
+    {
+      "quoted_paragraph": "… amazing civil servants who were incredibly dedicated and, in some cases, damaged their career. This is what is shocking : c ivil servants damaged their careers by robustly insisting that what Minister s were deciding should happen. That is a terrible dilemma for any young civil servant to be placed in. Q231 &#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0; Mr David Jones: Personal loyalty to a Minister can be counterproductive in terms of career progress? Lord Maude: Yes , i f what the Minister is trying to do is something that is, as I say, countercultural and to which the system is resistant. Q232 &#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0; Mr David Jones: Do you think that your officials found difficulty challenging you on policy? Lord Maude: You would have to ask them. I always made it absolutely clear w hat I wanted . It is all very well for people to speak truth unto power but you do then need to do it. No sane Minister wants to embark on a policy without having had well informed advice , but i t does need to be well infor med and it does need to be well evidenced. I think Oliver Letwin has talked about how disappointed he became that quite often he would see work submitted by civil servants tha …",
+      "word_count": 21236,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2017-12-08",
+      "house": "select committee (evidence)",
+      "debate_title": null,
+      "column": null,
+      "source_key": "committees-evidence/oralevidence:7329/sections/156427/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": null,
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"special advisers should not have executive power over permanent civil servants\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /counter-?productive/i",
+      "section_id": "committees-evidence:oralevidence:7329:156427",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/oralevidence/7329/",
+      "query": "special advisers should not have executive power over permanent civil servants",
+      "confirmed_by_pattern": "/counter-?productive/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/counter-?productive/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/special adviser/i",
+        "/permanent secretary/i",
+        "/civil service code/i",
+        "/whitehall/i",
+        "/impartialit/i",
+        "/prerogative/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "debate_title": "no sectionTitle recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7546749114990234
+    },
+    {
+      "quoted_paragraph": "… ggested those things when we discussed this privately. You said that you will make sure it is this wide as possible thing, but how will you make sure that it does not require people to apply? In most other European countries they have voter ID as an automated system, not as something they have to apply for if they wish to vote. Chloe Smith: Yes, I see. I am sorry if you found me unenthusiastic on the last time we spoke about this in a corridor, Mr Russell-Moyle. We obviously need to get to know each other better so you can see my natural enthusiasm and passion bubbling through. I can ensure you that I think your idea has quite some merit. In fact, following that very last conversation we had, I went straight back to my officials and said, “Could this be something that we do?” What I can say to the Committee here this morning is that what the team at the Cabinet Office is doing now, following the pilots that we ran in 2018-19, is working with local authorities, among others, to see what forms of existing ID and existing processes could be sensibly used for this. It seems very obvious to me that there already are various kinds of ID that various types of councils issue, not all of th …",
+      "word_count": 17456,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2020-07-22",
+      "house": "select committee (evidence)",
+      "debate_title": null,
+      "column": null,
+      "source_key": "committees-evidence/oralevidence:734/sections/19537/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": null,
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the prerogative works well and legislating would rigidify it\"; the passage makes the PRECEDENT move (this was tried before, here is what happened), confirmed by /the last time (?:we|the government|parliament)/i",
+      "section_id": "committees-evidence:oralevidence:734:19537",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/oralevidence/734/",
+      "query": "the prerogative works well and legislating would rigidify it",
+      "confirmed_by_pattern": "/the last time (?:we|the government|parliament)/i",
+      "argument_moves": [
+        {
+          "tag": "PRECEDENT",
+          "move": "this was tried before, here is what happened",
+          "pattern": "/the last time (?:we|the government|parliament)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil servant/i",
+        "/whitehall/i",
+        "/prerogative/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "debate_title": "no sectionTitle recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7432197332382202
+    },
+    {
+      "quoted_paragraph": "… ecision on these issues. These are core political and constitutional questions that neither Parliament nor government should abrogate to the courts. Even if there is a desire to return to the old system for dissolution and calling elections, it would be better setting these arrangements in statute rather than engaging in an unnecessary attempt to revive a prerogative which could have considerable unintended consequences. It is true and important that que stions about dissolution and the calling of a new Parliament should not be left to the courts. However, with respect, it does not follow that Parliament should not legislate to revive the prerogative. Legislation that clearly expresses the intention to r evive the prerogative promises to minimise legal uncertainty, provided the legislation also makes clear that th is prerogative is non-justiciable, which was very much the settled legal understanding immediately before the FtPA came into force. In short, l egislation to restore the law as it stood before the FtPA came into force must address the new problem that the Supreme Court has licensed political litigation in relation to the exercise of prerogative powers that have always bee …",
+      "word_count": 6652,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2021-01-14",
+      "house": "select committee (evidence)",
+      "debate_title": "Fixed-Term Parliaments Act — FTP0007",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:20951/sections/42899/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Fixed-Term Parliaments Act — FTP0007",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the prerogative works well and legislating would rigidify it\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "committees-evidence:writtenevidence:20951:42899",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/20951/",
+      "query": "the prerogative works well and legislating would rigidify it",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/prerogative/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7257850766181946
+    },
+    {
+      "quoted_paragraph": "My Lords, the Minister referred to the Fixed-term Parliaments Act. That Act is a prime example of how, when legislation is made in haste, it creates more problems than it seeks to solve. Does the Minister accept that any further reform of, or changes to, the constitution would benefit from a period of pre-legislative scrutiny? That would at least have the benefit of fully examining both the intended and the unintended consequences.",
+      "word_count": 72,
+      "fragment": false,
+      "speaker": "Lord Collins of Highbury",
+      "party": null,
+      "date": "2022-03-21",
+      "house": "House of Lords",
+      "debate_title": "Constitutional Reform - Question",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2022-03-21a/sections/60/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "Constitutional Reform - Question",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the prerogative works well and legislating would rigidify it\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "pwdata-lords:daylord2022-03-21a:60",
+      "corpus": "pwdata-lords",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/lordspages/daylord2022-03-21a.xml",
+      "query": "the prerogative works well and legislating would rigidify it",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 0.7310198545455933
+    },
+    {
+      "quoted_paragraph": "… orations. It forms part of their terms of appointment. [5] Again, this code ma kes clear issues upon which the Civil Service may need to be engaged via the sponsor department. Appointing to HMG roles - Under the codes set out above and specific guidance on appointments, the Civil Service plays an important role in ensuring that appo intments made to a wide range of HMG roles are done so following due process and with high standards of propriety. Addressing potential conflicts - The requirement under the Seven Principles of Public Life to act with integrity means that public office ho lders must avoid placing themselves under any obligation to people or organisations that might try to inappropriately influence them in their work. New guidance was published in 2022 (and updated in 2023), for the declaration and management of outside inte rests in the Civil Service. [6] The Civil Service also plays a role across government in ensuring that others who occupy public office are also able to fulfil their obligations with regard to declaring and managing interests. Departing from a role - The rul es on conduct after leaving the Government or the Civil Service are set out within the Ministe …",
+      "word_count": 5837,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2023-08-29",
+      "house": "select committee (evidence)",
+      "debate_title": "Civil Service Leadership and Reform — CLR0011",
+      "column": null,
+      "source_key": "committees-evidence/writtenevidence:122754/sections/199750/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Civil Service Leadership and Reform — CLR0011",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"Civil Service Code\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "committees-evidence:writtenevidence:122754:199750",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/writtenevidence/122754/",
+      "query": "Civil Service Code",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/special adviser/i",
+        "/permanent secretary/i",
+        "/civil service commission/i",
+        "/civil service code/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 44.55047607421875
+    },
+    {
+      "quoted_paragraph": "… at fixed minimum terms would be a good thing. We were talking about truth to power — honest advice . If you knew—w e have seen a little bit of this in permanent secretaries since they moved to five-year fixed-term contracts — that a Secretary of State or a Minister is going to have a pretty fundamental influence over whether your four-year contract is extended or not, I think that would provide a chilling effect on the honesty of the advice that civil servants would provide. I also think it would make it harder to recruit people because very few companies I know would recruit most of their senior workforce on four-year fixed-term contracts. Q28 &#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0; John Stevenson: At the end of the day, though, a Prime Minister would have the absolute right to decide who is a permanent secretary or not. Alex Thomas: U ltimately , they do . A Prime Minister can do an awful lot if they have a majority in the House of Commons. They could change anything. In practice, however, I think it is inconceivable that a Cabinet Secretary in a recruitment process would appoint to a permanent secretary job someone with whom the Prime Minister was deep …",
+      "word_count": 14664,
+      "fragment": false,
+      "speaker": null,
+      "party": null,
+      "date": "2023-11-23",
+      "house": "select committee (evidence)",
+      "debate_title": null,
+      "column": null,
+      "source_key": "committees-evidence/oralevidence:13850/sections/210170/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": null,
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"putting the civil service on a statutory basis would damage its flexibility\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /chilling effect/i",
+      "section_id": "committees-evidence:oralevidence:13850:210170",
+      "corpus": "committees-evidence",
+      "source_url": "https://committees.parliament.uk/oralevidence/13850/",
+      "query": "putting the civil service on a statutory basis would damage its flexibility",
+      "confirmed_by_pattern": "/chilling effect/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/chilling effect/i"
+        },
+        {
+          "tag": "PRECEDENT",
+          "move": "this was tried before, here is what happened",
+          "pattern": "/the experience of (?:the|other)/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/permanent secretary/i",
+        "/civil service commission/i",
+        "/whitehall/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "speaker": "a committee report or written-evidence document is authored by the committee or the witness organisation, not by a speaker; corpus_sections carries no speaker for it",
+        "debate_title": "no sectionTitle recorded on this section in corpus_sections",
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7334164381027222
+    },
+    {
+      "quoted_paragraph": "… they mount up, as well as the effect on the morale of loyal civil servants, is more difficult to remedy. There is no doubt that several recent events have had the same effect. This House’s Constitution Committee has recently highlighted cases under the previous Government where there may have been political or ideological grounds for senior civil servant departures from the service and found that due process was not followed. Incidents such as that clearly undermine public confidence. The then Government did not accept the committee’s recommendation that the Civil Service Commission should be involved in ensuring due process. I hope the Minister will assure us that my Government will look again at this issue. In recent years, I have been appalled at the number of attacks on the integrity of civil servants by senior members of the Government, including a former Minister who is now leader of the Opposition. The many dealings that I have had with Ministers and civil servants have only reaffirmed my view that the core value of serving the Government of the day without fear or favour has served Governments, the Civil Service and the public very well. Ministers and civil servants have di …",
+      "word_count": 645,
+      "fragment": false,
+      "speaker": "Baroness Warwick of Undercliffe",
+      "party": null,
+      "date": "2024-11-28",
+      "house": "House of Lords",
+      "debate_title": "Civil Service: Politicisation - Motion to Take Note",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2024-11-28b/sections/129/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Civil Service: Politicisation - Motion to Take Note",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"Civil Service Code\"; the passage makes the RIGHTS move (it conflicts with a right, a convention, or the rule of law), confirmed by /due process/i",
+      "section_id": "pwdata-lords:daylord2024-11-28b:129",
+      "corpus": "pwdata-lords",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/lordspages/daylord2024-11-28b.xml",
+      "query": "Civil Service Code",
+      "confirmed_by_pattern": "/due process/i",
+      "argument_moves": [
+        {
+          "tag": "RIGHTS",
+          "move": "it conflicts with a right, a convention, or the rule of law",
+          "pattern": "/due process/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i",
+        "/civil service commission/i",
+        "/impartialit/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 41.443142890930176
+    },
+    {
+      "quoted_paragraph": "… evel for the Cabinet Manual. The noble Viscount is quite right that the first edition, the version we produced in October 2011, remains the only edition and has not yet been updated. That is partly because we did a reasonably good job in the first place, which is largely to the credit of the noble Lord, Lord O’Donnell, and his team, but it needs updating, and there would be some merit in that. It does not cover the whole constitution; it was deliberately supposed to be about central government’s responsibilities; but I think that having all that in one place and having some clarity about what the rules are would be very helpful in ensuring that they were followed. I was pleased that he raised it before I did. When you are the co-author of something, it is almost slightly embarrassing to be the first person to raise it in a debate in a complimentary way, so I am glad he beat me to it. I strongly agree with the committee’s first and second conclusions and its third and fourth recommendations about the central position of the Prime Minister on these matters, but also the importance of the civil servants, not just across the Civil Service as a whole but those specifically tasked with l …",
+      "word_count": 1155,
+      "fragment": false,
+      "speaker": "Lord Harper",
+      "party": null,
+      "date": "2025-07-04",
+      "house": "House of Lords",
+      "debate_title": "UK Constitution: Oversight and Responsibility (Report from the Constitution Committee) - Motion to Take Note",
+      "column": null,
+      "source_key": "pwdata-lords/daylord2025-07-04b/sections/15/compiled.txt",
+      "retrieval_arm": "dense",
+      "subject_of_debate": "UK Constitution: Oversight and Responsibility (Report from the Constitution Committee) - Motion to Take Note",
+      "why_it_bears_on_this_measure": "retrieved by the dense arm on \"the prerogative works well and legislating would rigidify it\"; the passage makes the SCOPE move (it catches things it should not, or misses things it should), confirmed by /(?:does|will) not (?:catch|cover) the/i",
+      "section_id": "pwdata-lords:daylord2025-07-04b:15",
+      "corpus": "pwdata-lords",
+      "source_url": "https://www.theyworkforyou.com/pwdata/scrapedxml/lordspages/daylord2025-07-04b.xml",
+      "query": "the prerogative works well and legislating would rigidify it",
+      "confirmed_by_pattern": "/(?:does|will) not (?:catch|cover) the/i",
+      "argument_moves": [
+        {
+          "tag": "SCOPE",
+          "move": "it catches things it should not, or misses things it should",
+          "pattern": "/(?:does|will) not (?:catch|cover) the/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [
+        "/civil service/i",
+        "/civil servant/i"
+      ],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": true,
+      "score": 0.7390101552009583
+    },
+    {
+      "quoted_paragraph": "I am broadly supportive of the guidance being placed on a statutory footing, because we need to talk together about the approach and to get better at it. However, we believe that there are likely to be some consequences of putting one aspect of keeping children safe in school—restraint and seclusion—on a statutory footing when the overarching policy on child protection is not on a statutory footing. Our overarching guidance is multi-agency guidance, so it is not specific to the context of education or even to schools. The physical intervention guidance that we are talking about is specific to schools, non-statutory and sits under non-specific, non-statutory guidance—let me know if you are not keeping up with this—so we would be putting one component part of keeping children safe at school on a statutory footing while broader aspects of child protection are not. We believe that that is likely to create some unintended consequences, even though we all intend to do good. It would probably also miss an opportunity to look holistically at the child protection landscape. That is not a popular answer, but there is an opportunity to explore that landscape.",
+      "word_count": 191,
+      "fragment": false,
+      "speaker": "Dr Stephen",
+      "party": null,
+      "date": "2025-10-01",
+      "house": "Scottish Parliament",
+      "debate_title": "Scottish Parliament: Restraint and Seclusion in Schools (Scotland) Bill",
+      "column": null,
+      "source_key": "scottish-parliament-or/16618/sections/604/compiled.txt",
+      "retrieval_arm": "keyword",
+      "subject_of_debate": "Scottish Parliament: Restraint and Seclusion in Schools (Scotland) Bill",
+      "why_it_bears_on_this_measure": "retrieved by the keyword arm on \"statutory footing\"; the passage makes the UNINTENDED move (it will produce this specific consequence nobody wants), confirmed by /unintended consequence/i",
+      "section_id": "scottish-parliament-or:16618:604",
+      "corpus": "scottish-parliament-or",
+      "source_url": "https://www.parliament.scot/chamber-and-committees/official-report/search-what-was-said-in-parliament/dplr-01-10-2025?meeting=16618",
+      "query": "statutory footing",
+      "confirmed_by_pattern": "/unintended consequence/i",
+      "argument_moves": [
+        {
+          "tag": "UNINTENDED",
+          "move": "it will produce this specific consequence nobody wants",
+          "pattern": "/unintended consequence/i"
+        }
+      ],
+      "also_found_by": [],
+      "subject_terms_present": [],
+      "missing_field_reasons": {
+        "party": "corpus_sections carries no party for any row",
+        "column": "no Hansard column number is stored; source_url carries the publisher anchor where one exists"
+      },
+      "quoted_paragraph_is_extract": false,
+      "score": 15.819154739379883
+    }
+  ],
+  "objections_over_floor": 20,
+  "fragments_kept": 0,
+  "fragment_rule": "fragment = true where the section's own word count is under 30. No row is dropped for it. A fragment is material to read; it is not material to quote.",
+  "returned_nothing_usable": false,
+  "coverage_note": "Searched 8 parliamentary collections through two live indexes. This is top-K retrieval, not a scan: it says what the queries reached, never what the record contains. A move made in words none of these twelve queries reach is not here, and its absence is not evidence."
+}

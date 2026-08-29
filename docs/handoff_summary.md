@@ -2,7 +2,52 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-28 22:40 UTC — ▼ **REPORT RUN, CORPUS TRACK: EVERY §8 DELIVERABLE EXISTS —
+*Last updated: 2026-08-29 15:32 UTC — ▼ **B2, B3, B4 DONE. THE MARKUP DETECTOR VERIFIES AT 80%,
+AND EVERY ONE OF ITS FAILURES IS THE MISATTRIBUTION T2 FOUND — TWO METHODS, TWO SAMPLES, ONE RATE.**
+B5 **NOT STARTED**: `docs/report_run/register_proposals.json` is not on disk, checked first and
+re-checked last. Not improvised.
+⚠⚠ **B4: 20 of 25 markup rows correct (80%). All five surviving failures are one class** — the
+reference real, the target real, and NOT in the provision `source_provision_ref` names. **5 of 25 =
+20% against T2's 496 of 2,593 = 19.1%**, measured by different means over different rows (T2 read
+local CLML; B4 fetched live from legislation.gov.uk). The misattribution is no longer one script's
+result. ⚠ **The markup 80% and the T5 text 100% are NEVER averaged** — two detectors, two
+denominators. ⚠ **Two first-pass failures were the CHECKER's** and were caught by pass 2; published
+raw, the rate would have read 18 of 25. The verifier is **IMPORTED** from `report-t5-verify.ts`, not
+restated, so a disagreement between the rates can only be about the rows.
+⚠⚠ **B2: `argument-questions.ts` IS NOT A QUERY INTERFACE** — a hardcoded ten-question gold set with
+hand-picked chunk ids that writes a markdown file from constants, taking no query and no measure.
+That is why `argument:questions` is absent from `package.json` while the 1A report cites it. Ran the
+two-arm draw from `argument-seed-draw.ts` instead, with the taxonomy's own regex as the confirm.
+Objections: **WS-01 36, WS-04 32, WS-05 20**; over the 30-word floor 35 / 28 / 20.
+⚠⚠ **AND THE COLUMN TO SORT ON IS `subject_terms_present`, ADDED AFTER READING THE FIRST RUN.** A
+confirmed row is either the cross-subject find (the unbounded-duty argument made in 2005 about
+*advertising marches*) or pattern noise (a COST pattern on "burden on small businesses" in a
+question about *fuel protesters*), and they look identical in JSON. **For WS-04, 28 of 32 rows use
+none of the measure's own subject words.** Mechanical field; rules on nothing.
+⚠ B2 confirm rate **6.1%** against ≥25% predicted — wrong, badly. ARGUMENT 1A's "48.8% of dense
+candidates under 30 words" did **not** reproduce (dense 8.1%): its denominator was the candidate
+pool, mine is the pool that survived a pattern confirm.
+⚠⚠ **B3: THE FRONT MATTER'S "case law from 2001 only" IS WRONG — the measured floor is 1965-08-09**
+over 280,573 rows in five collections. **AND `coverage.ts`'s OWN `CASE_LAW_CORPORA` IS WRONG**: two
+of its four names hold ZERO rows (`caselaw`, `caselaw-fcl`) and it misses the two largest that exist
+(`tna-caselaw`, the 1965 floor; `ni-judgments`), so the boundary it prints starts in 1989 — 24 years
+late. Block reproduced **verbatim, defect and all**, with the corrected measurement beside it. NOT
+fixed: it changes what the report prints while the analysis track drafts against it.
+▶▶ **CRAG 2010 IS ESSENTIALLY UNLITIGATED — ONE judgment** (`ni-judgments:2021-nica-49`, JR83 (No 2)
+and The Prime Minister). A finding, not a retrieval failure: the HRA through the identical path
+returns **53 of 60**.
+⚠⚠ **A GAP I ALMOST FILED THAT WOULD HAVE BEEN FALSE**: "the principle of legality" returned nothing
+on two phrase terms — and the phrase **is** in the corpus (found via "fundamental rights":
+`[2009] EWCA Civ 786`, `[2010] EWHC 3110 (Admin)`). A **retrieval failure, not a corpus gap**, and
+filed as a gap it would have told the report the common law is silent on a doctrine it is loud
+about. Every empty principle is now re-asked broader and the returned judgments tested for its own
+words. One real gap survives (WS-04, "common law duty to act fairly towards the disabled").
+▶ Set A / Set B: WS-01 **53 / 44**, WS-04 **60 / 8**, WS-05 **1 / 10**. ⚠ My "Set B will be thin"
+prediction was **wrong**, and WS-05's Set B exceeds its Set A.
+✅ `check:scripts` and the web `tsc` clean on **every file these briefs added**. ⚠ Still not clean on
+the repo — the same 8 pre-existing errors in 6 untouched files.
+`docs/report_run/_README.md` carries all four caveats for the analysis track.**
+Earlier: 2026-08-28 22:40 UTC — ▼ **REPORT RUN, CORPUS TRACK: EVERY §8 DELIVERABLE EXISTS —
 AND ONE IN FIVE PROVISION REFERENCES POINTS AT A PROVISION THAT DOES NOT CONTAIN THE REFERENCE.**
 T1–T5 of `docs/CC_BRIEF_report_corpus.md` complete, in `docs/report_run/`, `_README.md` in front.
 ⚠⚠ **496 of the 2,593 rows that NAME a source provision do not contain the referenced Act inside

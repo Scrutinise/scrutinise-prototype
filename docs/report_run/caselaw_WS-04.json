@@ -1,0 +1,1254 @@
+{
+  "generated_at": "2026-08-29T15:24:46.261Z",
+  "measure": "WS-04 — Equality Act 2010",
+  "retrieval_note": "Retrieval only. There is no relevance field and no holding field, on purpose: whether the common law has absorbed the principle is the analysis track's question and nothing here answers it. Every passage is the court's own words, verbatim, with the R2 key it was read from.",
+  "instrument": {
+    "keyword_service": "https://fts-serve-production.up.railway.app",
+    "keyword_service_note": "FTS_SEARCH_URL is not set in .env; this is the production host found in the repo.",
+    "corpora_searched": [
+      "tna-caselaw",
+      "et-decisions",
+      "tax-tribunals",
+      "ni-judgments",
+      "cma-cases"
+    ],
+    "confirm_step": "FTS proposes; the judgment's own text disposes. A hit whose body does not contain the search term is dropped rather than kept to pad the set."
+  },
+  "coverage": {
+    "generatedAt": "2026-08-29T15:22:53.467Z",
+    "layers": [
+      {
+        "id": "markup-citations",
+        "what": "references the document asserted by <Citation URI>",
+        "rows": 385346,
+        "status": "searched",
+        "consequence": "the source names the target by identity, so the act-level match is not inferred"
+      },
+      {
+        "id": "text-citations",
+        "what": "act NAMES resolved in running text against corpus_acts titles",
+        "rows": 649202,
+        "status": "searched",
+        "consequence": "the target id is DERIVED, not read from the document — never quote target_uri as the source’s own words"
+      },
+      {
+        "id": "enabling-power",
+        "what": "made-under: \"this instrument was made under section N of that Act\", with the enacting words attached",
+        "rows": 191258,
+        "where": "legislation_edges (230,681 rows, no evidence column)",
+        "status": "searched",
+        "consequence": "a stronger fact than a mention — an instrument that merely mentions an Act survives its repeal, while one whose ENABLING POWER is repealed may fall with it. Without this layer a consequence list cannot tell the two apart"
+      },
+      {
+        "id": "amendment-effects",
+        "what": "amends / repeals / commences / modifies, from TNA’s own effects data",
+        "rows": 0,
+        "where": "legislation_edges (1,997,033 rows)",
+        "status": "held-elsewhere",
+        "consequence": "a repeal or amendment is not a citation and is not returned by this query"
+      },
+      {
+        "id": "case-law-citations",
+        "what": "a judgment citing a statutory provision",
+        "rows": 0,
+        "status": "not-built",
+        "consequence": "a provision may be read down, disapplied or construed by a court with nothing here to show it"
+      },
+      {
+        "id": "treaty-obligations",
+        "what": "a treaty article bearing on a domestic provision",
+        "rows": 0,
+        "status": "not-built",
+        "consequence": "a change may be prevented by an international obligation that this graph cannot see"
+      }
+    ],
+    "detection": [
+      {
+        "detection": "text",
+        "rows": 649202,
+        "sourceDocs": 61127
+      },
+      {
+        "detection": "markup",
+        "rows": 385346,
+        "sourceDocs": 35898
+      },
+      {
+        "detection": "enabling",
+        "rows": 191258,
+        "sourceDocs": 70576
+      }
+    ],
+    "notInAProvision": {
+      "rows": 267054,
+      "total": 1225806,
+      "pct": 21.78599223694451
+    },
+    "unresolvedTargets": {
+      "rows": 172316,
+      "total": 1225806,
+      "pct": 14.057363073765343
+    },
+    "recorded": [
+      {
+        "key": "dta_orders_recoverable_from_held_bytes",
+        "n": 127,
+        "note": "double taxation Orders whose scheduled agreement is ABSENT from the corpus but PRESENT in the bulk CLML already on disk. No fetch is needed to recover these; an ingest pass is. The remainder need the source.",
+        "measuredAt": "2026-08-28T00:32:39.782Z",
+        "measuredBy": "graph/audit-4b-tax.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "identity_ambiguous_calendar_forms",
+        "n": 419,
+        "note": "calendar-year id forms that name MORE THAN ONE Act, because two parliamentary sessions can fall inside one calendar year and each numbers its chapters from the start. REFUSED a bridge and recorded as refusals, never resolved by first-wins.",
+        "measuredAt": "2026-08-28T00:32:39.864Z",
+        "measuredBy": "graph/audit-4b-identity.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "madeunder_section_refs_wrong_pct",
+        "n": 36.1,
+        "note": "percentage of the pre-2026-08-28 preamble parser's SECTION-level refs that were wrong — a bracketed subsection read as a section, or a ref list attached to a different Act named in the same preamble. legislation_edges still holds them; citation_edge's enabling rows were written by the fixed parser.",
+        "measuredAt": "2026-08-28T00:32:39.810Z",
+        "measuredBy": "graph/audit-4b-layer2.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "oi15_documents_skipped",
+        "n": 2431,
+        "note": "documents in the bulk CLML file the shipped calendar-year entry filter skipped, of the total it should have read",
+        "measuredAt": "2026-08-26T13:04:21.237Z",
+        "measuredBy": "graph/audit-4a-blast-radius.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "oi15_residual_edges",
+        "n": 924,
+        "note": "citation edges recoverable from the pre-1963 documents the July cites extractor never opened; the residual against legislation_edges, which has NOT been re-extracted. citation_edge itself reads every document.",
+        "measuredAt": "2026-08-26T13:04:21.213Z",
+        "measuredBy": "graph/audit-4a-t2-hole.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "si_schedule_retention_pct",
+        "n": 41.3,
+        "note": "percentage of sampled instruments whose bulk-CLML schedule also reached the corpus as a schedule section. A schedule the ingest dropped presents as a SHORT DOCUMENT, not as an error, so this bounds every answer that depends on scheduled text — a treaty above all.",
+        "measuredAt": "2026-08-28T00:32:39.758Z",
+        "measuredBy": "graph/audit-4b-schedules.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "unresolved_act_name_spans",
+        "n": 97095,
+        "note": "act-name spans in running text that resolved to no instrument we hold a title for — short forms (\"the 1998 Act\"), pre-1963 Acts under the other id form, and Acts the corpus does not hold. Counted, never dropped silently; short-form resolution is not built.",
+        "measuredAt": "2026-08-26T13:04:21.257Z",
+        "measuredBy": "graph/audit-4a-t3-spans.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "unresolved_spans_in_target_docs_pct",
+        "n": 29.9,
+        "note": "percentage of those unresolved spans sitting in a document that also carries a resolved citation to one of twelve research-target Acts — the number that decides whether short-form resolution is urgent",
+        "measuredAt": "2026-08-26T13:04:21.277Z",
+        "measuredBy": "graph/audit-4a-t3-spans.ts",
+        "ageDays": 3.1,
+        "stale": false
+      }
+    ],
+    "staleFacts": [],
+    "caseLawBoundary": {
+      "corpora": [
+        "et-decisions",
+        "tax-tribunals"
+      ],
+      "earliest": "1989-11-09",
+      "latest": "2026-06-11"
+    },
+    "identityBridge": {
+      "built": true,
+      "bridgedForms": 13454,
+      "ambiguousTargets": 77,
+      "unbridgeableTargets": 13,
+      "regnalTargets": 783
+    },
+    "schedules": {
+      "instruments": 109202,
+      "instrumentsWithASchedule": 9418,
+      "pct": 8.624384168788117
+    }
+  },
+  "coverage_defect_found_by_this_run": {
+    "what": "coverage.ts CASE_LAW_CORPORA names four collections; two of them do not exist and the two largest that do are missing.",
+    "names_in_coverage_ts": [
+      "caselaw",
+      "caselaw-fcl",
+      "et-decisions",
+      "tax-tribunals"
+    ],
+    "of_those_that_exist": [
+      "et-decisions",
+      "tax-tribunals"
+    ],
+    "missing_from_it": [
+      "tna-caselaw (74,896 rows, from 1965)",
+      "ni-judgments (7,927 rows)"
+    ],
+    "consequence": "The case-law boundary the coverage block prints is drawn over et-decisions and tax-tribunals alone, so it begins in 1989 — twenty-four years after the real floor of 1965. The block is reproduced above EXACTLY as generated, defect included, because that is what the report prints; date_range_measured below is the corrected measurement."
+  },
+  "date_range_measured": {
+    "earliest": "1965-08-09",
+    "latest": "2026-06-12",
+    "rows": 280573,
+    "corpora_measured": [
+      "tna-caselaw",
+      "et-decisions",
+      "tax-tribunals",
+      "ni-judgments",
+      "cma-cases"
+    ],
+    "by_corpus": [
+      {
+        "corpus": "et-decisions",
+        "n": 161753,
+        "earliest": "2017-02-08",
+        "latest": "2026-06-11"
+      },
+      {
+        "corpus": "tna-caselaw",
+        "n": 74896,
+        "earliest": "1965-08-09",
+        "latest": "2026-06-11"
+      },
+      {
+        "corpus": "cma-cases",
+        "n": 22898,
+        "earliest": "2001-04-18",
+        "latest": "2026-06-12"
+      },
+      {
+        "corpus": "tax-tribunals",
+        "n": 13099,
+        "earliest": "1989-11-09",
+        "latest": "2024-06-11"
+      },
+      {
+        "corpus": "ni-judgments",
+        "n": 7927,
+        "earliest": "1984-09-07",
+        "latest": "2026-06-11"
+      }
+    ],
+    "by_decade": {
+      "1960s": 1,
+      "1970s": 1,
+      "1980s": 87,
+      "1990s": 273,
+      "2000s": 24500,
+      "2010s": 95029,
+      "2020s": 139177
+    },
+    "by_court": {
+      "EWHC": {
+        "n": 39132,
+        "earliest": "2003-01-03",
+        "latest": "2026-06-10"
+      },
+      "EWCA": {
+        "n": 22487,
+        "earliest": "2001-04-11",
+        "latest": "2026-06-10"
+      },
+      "UKFTT": {
+        "n": 4337,
+        "earliest": "2008-11-12",
+        "latest": "2026-06-11"
+      },
+      "UKUT": {
+        "n": 2688,
+        "earliest": "2009-05-06",
+        "latest": "2026-06-09"
+      },
+      "EWFC": {
+        "n": 1907,
+        "earliest": "2009-03-05",
+        "latest": "2026-06-09"
+      },
+      "UKSC": {
+        "n": 948,
+        "earliest": "2009-10-14",
+        "latest": "2026-05-07"
+      },
+      "(unparsed)": {
+        "n": 830,
+        "earliest": "1965-08-09",
+        "latest": "2026-05-21"
+      },
+      "EAT": {
+        "n": 788,
+        "earliest": "2021-03-31",
+        "latest": "2026-06-11"
+      },
+      "EWCOP": {
+        "n": 766,
+        "earliest": "2009-02-09",
+        "latest": "2026-06-08"
+      },
+      "UKPC": {
+        "n": 704,
+        "earliest": "2009-11-04",
+        "latest": "2026-06-11"
+      },
+      "UKAIT": {
+        "n": 150,
+        "earliest": "2007-06-29",
+        "latest": "2009-12-18"
+      },
+      "EWCC": {
+        "n": 132,
+        "earliest": "2019-05-16",
+        "latest": "2026-06-05"
+      },
+      "EWCR": {
+        "n": 19,
+        "earliest": "2020-12-21",
+        "latest": "2026-05-01"
+      },
+      "UKIPTrib": {
+        "n": 8,
+        "earliest": "2023-06-21",
+        "latest": "2024-08-02"
+      }
+    }
+  },
+  "front_matter_check": {
+    "claim_in_the_report": "case law from 2001 only",
+    "measured_earliest": "1965-08-09",
+    "verdict": "THE FRONT MATTER IS WRONG. The measured floor is earlier than 2001. See date_range_measured.by_corpus for which collection supplies it."
+  },
+  "set_a_cites_the_act": [
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-c-saunders-v-peloton-interactive-uk-ltd-2212736-slash-2023",
+      "case_name": "Mr C Saunders v Peloton interactive UK Ltd: 2212736/2023 - Judgment",
+      "court": null,
+      "date": "2025-04-22",
+      "passage": "… nal in person On: 20 to 31 January 2025 Before: Employment Judge Nash Ms N Sandler Mr S Pearlman Representation Claimant: In person Respondent: Mr Platts Mills of counsel JUDGMENT 1. The respondent did not directly discrimination against the claimant because of his disability contrary to section 13 Equality Act 2010 2. The respondent did not indirectly discriminate against the claimant because of his disability contrary to section 19 Equality Act 2010 3. The respondent did not discriminate against the claimant contrary to section 15 Equality Act 2010 4. The respondent did discriminate against the claimant by failing to comply with a duty to make reasonable adjustments contrary to sections 20 and 21 Equality Act 2010 in respect of rest breaks and the requirement he work in public facing areas, but in no other respect. 5. The respondent did not subject the claimant to harassment related to …",
+      "passage_word_count": 149,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-c-saunders-v-peloton-interactive-uk-ltd-2212736-slash-2023/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-c-saunders-v-peloton-interactive-uk-ltd-2212736-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-b-m-bliss-v-floorspan-contracts-ltd-3311199-slash-2023",
+      "case_name": "Miss B-M Bliss v Floorspan Contracts Ltd: 3311199/2023 - Judgment",
+      "court": null,
+      "date": "2026-04-20",
+      "passage": "… Employment Tribunal (in public; by CVP) On: 3, 4, 5, 6 and 7 November 2025 Before: Employment Judge Gordon Walker Ms J Buck Mr B Lynch Appearances For the claimant: Mrs K Bliss, mother For the respondent: Mr McConbie, counsel JUDGMENT 1. The claim of harassment related to age (sections 26 and 39(2) Equality Act 2010) in relation to the allegations at paragraphs 9, 15 and 16 of the particulars of claim is well founded and succeeds. The claims were presented within the time limit at section 123(2)(b) Equality Act 2010. 2. All other claims of harassment related to age (sections 26 and 39(2) Equality Act 2010) are not well founded and are dismissed. 3. The claim of direct age discrimination (sections 13 and 39(2) Equality Act 2010) in relation to the allegations at paragraphs 7 and 19 of the particulars of claim is well founded and succeeds. The claims were presented within the time limit at …",
+      "passage_word_count": 159,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-b-m-bliss-v-floorspan-contracts-ltd-3311199-slash-2023/sections/2/compiled.txt",
+      "provision_cited": "section-123",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-b-m-bliss-v-floorspan-contracts-ltd-3311199-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-w-d-dawson-v-wasdell-manufacturing-ltd-2500582-slash-2022",
+      "case_name": "Mr W D Dawson v Wasdell Manufacturing Ltd: 2500582/2022 - Judgment   ",
+      "court": null,
+      "date": "2023-04-04",
+      "passage": "…  A Tarn REPRESENTATION: Claimant: Respondent Ms Millns, counsel Mr Downey, counsel JUDGMENT 1. The following of the claimant’s complaints are dismissed on withdrawal: 1.1. all of the complaints that the respondent subjected him to direct and indirect discrimination and victimisation contrary to the Equality Act 2010; 1.2. all of the complaints that the respondent subjected him to discrimination within section 15 of the Equality Act 2010, other than the complaint about his dismissal; 1.3. the complaint of harassment contrary to the Equality Act 2010 relating to the disciplinary procedure. 2. The unanimous judgment of the Tribunal is that the claimant’s remaining complaints of disability discrimination and disability related harassment contrary to the Equality Act 2010 are not well founded and are dismissed. Employment Judge Aspden Date____22 March 2023 Case No. 2500582/2022 2 Note Reasons …",
+      "passage_word_count": 136,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-w-d-dawson-v-wasdell-manufacturing-ltd-2500582-slash-2022/sections/2/compiled.txt",
+      "provision_cited": "section-15",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-w-d-dawson-v-wasdell-manufacturing-ltd-2500582-slash-2022:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-da-silva-v-na-accountants-ltd-and-smart-contractors-ltd-1301617-2017",
+      "case_name": "Ms Da Silva v NA Accountants Ltd and Smart Contractors Ltd: 1301617/2017 - Full",
+      "court": null,
+      "date": "2017-09-24",
+      "passage": "… F THE EMPLOYMENT TRIBUNAL HELD AT Birmingham ON 14 September 2017 EMPLOYMENT JUDGE Harding Representation For the Claimant: Mr Lovejoy, Legal Executive For the Respondents: No attendance JUDGMENT 1 The claimant’s claim of direct sex discrimination contrary to sections 13 and 39(2)(c) and (d) of the Equality Act 2010 succeeds against R1. 2 The claimant’s claim of harassment related to sex contrary to sections 26 and 40 of the Equality Act 2010 fails and is dismissed against R1. 3 The claimant’s claim of direct race discrimination contrary to sections 13 and 39(2)(c) and (d) of the Equality Act 2010 fails and is dismissed against R1. 4 The claimant’s claim of harassment related to race contrary to sections 26 and 40 of the Equality Act 2010 fails and is dismissed against R1. 5 The claimant’s claim of victimisation contrary to section 27 and 39(4)(c) and (d) of the Equality Act 2010 succeed …",
+      "passage_word_count": 153,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-da-silva-v-na-accountants-ltd-and-smart-contractors-ltd-1301617-2017/sections/2/compiled.txt",
+      "provision_cited": "section-27",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-da-silva-v-na-accountants-ltd-and-smart-contractors-ltd-1301617-2017:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-n-yamakasi-v-tayside-contracts-4111429-slash-2021",
+      "case_name": "Mr N Yamakasi v Tayside Contracts: 4111429/2021 - Dismissal",
+      "court": null,
+      "date": "2022-05-08",
+      "passage": "… 21 Mr N Yamakasi Claimant In person Tayside Contracts Respondent Represented by: Ms M Geddes, Solicitor NOTICE The claimant having failed to comply with the terms of an unless order made by the tribunal, notice is given to the parties that the claims of direct discrimination under section 13 of the Equality Act 2010, harassment under section 26 of the Equality Act 2010 and victimisation under section 27 of the Equality Act 2010 stand dismissed under rule 38 of the Rules contained in Schedule 1 of the Employment Tribunals (Constitution and Rules of Procedure) Regulations 2013. REASONS 1. On 30 March 2022 the tribunal issued an unless order in which the claimant was ordained to provide certain further particulars of his claim within 28 days failing which the claim would stand dismissed without further procedure. 2. The order was due to be complied with by 27 April 2022. 3. The claimant did …",
+      "passage_word_count": 154,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-n-yamakasi-v-tayside-contracts-4111429-slash-2021/sections/3/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-n-yamakasi-v-tayside-contracts-4111429-slash-2021:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-j-robinson-v-nourish-contract-catering-ltd-2300619-slash-2021",
+      "case_name": "Ms J Robinson v Nourish Contract Catering Ltd: 2300619/2021 - Judgment",
+      "court": null,
+      "date": "2023-04-23",
+      "passage": "… r section 13 of the Employment Rights Act 1996, unlawful detriment under section 12 of the Employment Rights Act 1996, harassment related to race under section 26 of the Equality Act 2020, and direct discrimination on grounds of race and/or disability in withholding sick pay under section 13 of the Equality Act 2010 are dismissed upon withdrawal. 2. The claim for wrongful dismissal succeeds on the Respondent’s admission of liability. The remedy to which the Claimant is entitled will be determined at the hearing on 16 May 2023. 3. The claims of direct discrimination on grounds of race and/or disability under section 13 of the Equality Act 2010 and the claim of the Respondent failing to make a reasonable adjustment in not placing the Claimant on the Furlough Scheme under section 20 and 21 of the Equality Act 2010 are struck out under rule 37(1) of Schedule 1 of the Employment Tribunals (Co …",
+      "passage_word_count": 155,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-j-robinson-v-nourish-contract-catering-ltd-2300619-slash-2021/sections/3/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-j-robinson-v-nourish-contract-catering-ltd-2300619-slash-2021:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-j-jituboh-v-london-borough-of-tower-hamlets-3200687-slash-2020",
+      "case_name": "Ms J Jituboh v London Borough of Tower Hamlets: 3200687/2020 - Judgment",
+      "court": null,
+      "date": "2024-03-07",
+      "passage": "… : Employment Judge E Gordon-Walker Members: Mr J Hutchings Dr J Ukemenam Representation For the claimant: Ms B Grossman, counsel For the respondent: Mr J Davies, counsel JUDGMENT 1. The claim of reasonable adjustments is well founded. The respondent failed to make reasonable adjustments (section 21 Equality Act 2010). The claimant brought this complaint within the time limit at section 123(1) Equality Act 2010. Insofar as the complaint was presented outside the time limit at section 123(1)(a) Equality 2010, it was brought within a period that the Tribunal thought just and equitable (section 123(1)(b) Equality Act 2010. 2. The Tribunal does not have jurisdiction in respect of allegation D of the claim of harassment related to disability (section 26(1) Equality Act 2010). The claimant did not bring her complaint within the time limit at section 123(1) Equality Act 2010. 3. The other claims …",
+      "passage_word_count": 145,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-j-jituboh-v-london-borough-of-tower-hamlets-3200687-slash-2020/sections/2/compiled.txt",
+      "provision_cited": "section-21",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-j-jituboh-v-london-borough-of-tower-hamlets-3200687-slash-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/dr-h-deo-v-cls-services-ltd-3204633-slash-2022",
+      "case_name": "Dr H Deo v CLS Services Ltd: 3204633/2022 - Partial Strike Out",
+      "court": null,
+      "date": "2024-02-21",
+      "passage": "…  the order dated 25 September 2023 as amended by the Employment Tribunal letter of the 29 December 2023. Consequently his following claims are struck out. 1. That the terms of his contract in relation to his salary were unlawful whether as direct discrimination contrary to Sections 13 and 39 of the Equality Act 2010 or contrary to Chapter 3 of the Equality Act 2010; 2. That the level of annual bonus paid to him was unlawful whether as direct discrimination contrary to Sections 13 and 39 of the Equality Act 2010 or contrary to Chapter 3 of the Equality Act 2010; 3. That the terms of his contract in relation to his occupational pension scheme were unlawful whether as direct discrimination contrary to Sections 13 and 39 of the Equality Act 2010 or contrary to Chapter 3 of the Equality Act 2010; The Claimant’s remaining claims proceed. Dated: 12 February 2024 Regional Employment Judge Burghe …",
+      "passage_word_count": 157,
+      "source_key": "et-decisions/employment-tribunal-decisions/dr-h-deo-v-cls-services-ltd-3204633-slash-2022/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/dr-h-deo-v-cls-services-ltd-3204633-slash-2022:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-t-taylor-blake-v-department-of-work-and-pensions-1402343-2018",
+      "case_name": "Mr T Taylor Blake v Department of Work and Pensions: 1402343/2018 - Preliminary ",
+      "court": null,
+      "date": "2019-06-26",
+      "passage": "… dent: Department of Work and Pensions Heard at: Southampton On: 18 January 2019 Before: Employment Judge Craft Representation Claimant: Mr M Williams, Counsel Respondent: Mr A Midgley, Counsel JUDGMENT ON PRELIMINARY ISSUE 1. The Claimant was disabled by reason of depression within the terms of the Equality Act 2010 at the material time. 2. The Respondent's claim under Section 15 Equality Act 2010 was submitted in time and will proceed. 3. The Tribunal found that it was just inequitable to extend time in respect of the Claimant's claim under Sections 20 and 21 Equality Act 2010 under the terms of Section 123(1)(a) Equality Act 2010 and this claim will proceed to a final hearing with the claim under Section 15 Equality Act 2010. ______________________________ Employment Judge Craft Date: 30 January 2019",
+      "passage_word_count": 132,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-t-taylor-blake-v-department-of-work-and-pensions-1402343-2018/sections/2/compiled.txt",
+      "provision_cited": "section-15",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-t-taylor-blake-v-department-of-work-and-pensions-1402343-2018:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/farzana-zabir-v-atos-it-services-uk-ltd-2500583-2020",
+      "case_name": "Farzana Zabir v ATOS IT Services UK Ltd: 2500583/2020 - Partial Withdrawal",
+      "court": null,
+      "date": "2020-10-07",
+      "passage": "Case Number: 2500583/2020 EMPLOYMENT TRIBUNALS Claimant: Farzana Zabir Respondent: ATOS IT Services UK Ltd JUDGMENT 1. The following complaints are dismissed following a withdrawal by the claimant. (1) Direct discrimination because of race (section 13 Equality Act 2010); (2) Direct discrimination because of religion/belief (section 13 Equality Act 2010); (3) Direct discrimination because of sex (section 13 Equality Act 2010); (4) All complaints of disability discrimination 2. This does not affect the complaint of harassment contrary to section 26 Equality Act 2010 which shall continue to a hearing; Employment Judge Sweeney 25 June 2020",
+      "passage_word_count": 94,
+      "source_key": "et-decisions/employment-tribunal-decisions/farzana-zabir-v-atos-it-services-uk-ltd-2500583-2020/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/farzana-zabir-v-atos-it-services-uk-ltd-2500583-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-i-m-phillips-v-futures-care-ltd-1401326-slash-2021",
+      "case_name": "Miss I M Phillips v Futures Care Ltd: 1401326/2021 - Judgment",
+      "court": null,
+      "date": "2023-08-07",
+      "passage": "…  Futures Care Limited Heard at: Bristol Employment Tribunal On: 3-6 July 2023 Before: Employment Judge Millard Mrs L Simmonds Mrs S Maidment Representation Claimant: In Person Respondent: Mr Clarke (Consultant) JUDGMENT 1. The Claimant’s claim for direct disability discrimination is dismissed (S.13 Equality Act 2010). 2. The Claimant’s claim for discrimination arising from disability is dismissed (S.15 Equality Act 2010). 3. The Claimant’s claim for Indirect Disability Discrimination is dismissed (S.19 Equality Act 2010). 4. The Claimant’s claim for a Failure to Make Reasonable Adjustments is dismissed (S.21 Equality Act 2010). 5. The Claimant’s claim for Harassment is dismissed (Ss.26 & 40 Equality Act 2010). Employment Judge Millard Date: 6 July 2023 JUDGMENT SENT TO THE PARTIES ON 21 st July 2023 by Miss J Hopes FOR THE TRIBUNAL OFFICE",
+      "passage_word_count": 131,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-i-m-phillips-v-futures-care-ltd-1401326-slash-2021/sections/3/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-i-m-phillips-v-futures-care-ltd-1401326-slash-2021:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/n-richardson-v-baydale-control-systems-ltd-2500287-2020",
+      "case_name": "N Richardson v Baydale Control Systems Ltd: 2500287/2020 - Partial Withdrawal",
+      "court": null,
+      "date": "2020-08-10",
+      "passage": "Case No: 2500287/2020 6.9 Judgment on Withdrawal – part - rule 52 EMPLOYMENT TRIBUNALS Claimant: N Richardson Respondent: Baydale Control Systems Limited JUDGMENT The following complaints are dismissed following a withdrawal by the claimant; 1 Direct disability discrimination under S 13 Equality Act 2010 2 Discrimination arising from disability under S 15 Equality Act 2010 3 Indirect discrimination because of disability or pregnancy under S 19 Equality Act 2010 4 Failure to make reasonable adjustments under S 21 Equality Act 2010 The claimant’s remaining claim(s) will proceed to a hearing, the date of which will be notified in due course. Employment Judge Johnson 9 June 2020",
+      "passage_word_count": 106,
+      "source_key": "et-decisions/employment-tribunal-decisions/n-richardson-v-baydale-control-systems-ltd-2500287-2020/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/n-richardson-v-baydale-control-systems-ltd-2500287-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-t-ellis-v-robert-jones-and-agnes-hunt-orthopaedic-hospital-nhs-foundation-trust-1302311-2019",
+      "case_name": "Mrs T Ellis v Robert Jones and Agnes Hunt Orthopaedic Hospital NHS Foundation Trust: 1302311/2019 - Judgment ",
+      "court": null,
+      "date": "2023-07-12",
+      "passage": "… y 2023 ( in Chambers) And 9 March 2023 Before: Employment Judge Woffenden Members: Mr K Hutchinson : Mrs M Stewart Representation Claimant: In Person Respondent: Ms S Bowen of Counsel JUDGMENT 1 The claimant’s claim of unfair dismissal fails and is dismissed. 2 The claimant’s claim under section 13 Equality Act 2010 fails and is dismissed. 3 The claimant’s claim under section 15 Equality Act 2010 fails and is dismissed. 4 The claimant’s claim under section 19 Equality Act 2010 fails and is dismissed Case No: 1302311/2019 10.2 Judgment - rule 61 February 2018 5 The claimant’s claim under section 20/21 Equality Act 2010 fails and is dismissed 6 The claimant’s claim under section 26 Equality Act 2010 fails and is dismissed. 7 The claimant’s claim under section 27 Equality Act 2010 fails and is dismissed. 8 The claimant’ s claim of unauthorised deductions from her wages is not well founded a …",
+      "passage_word_count": 155,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-t-ellis-v-robert-jones-and-agnes-hunt-orthopaedic-hospital-nhs-foundation-trust-1302311-2019/sections/4/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-t-ellis-v-robert-jones-and-agnes-hunt-orthopaedic-hospital-nhs-foundation-trust-1302311-2019:4",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-a-baird-v-e-h-booth-and-co-ltd-2406943-slash-2022-and-others",
+      "case_name": "Ms A Baird v E H Booth & Co Ltd: 2406943/2022 and others - Strike Out",
+      "court": null,
+      "date": "2024-09-23",
+      "passage": "Case Nos: 2406943/2022 2409582/2022 2402261/2023 EMPLOYMENT TRIBUNALS Claimant: Miss A Baird Respondent: E.H. Booth & Co Limited JUDGMENT The claims of: 1. unfair dismissal pursuant to s95 and 98 Employment Rights Act 1996, 2. direct discrimination because of religion pursuant to s13 Equality Act 2010, 3. harassment related to religion pursuant to s26 Equality Act 2010, 4. disability discrimination: failure to make reasonable adjustments s20-21 Equality Act 2010, and 5. detriment for making protected disclosure pursuant to s47B Employment Rights Act 1996, are struck out. REASONS 1. The claimant was ordered to pay a deposit of £240 following a preliminary hearing held on 7 and 8 February 2024. The Order was sent to the claimant on 27 February 2024. The claimant has failed to pay this deposit. 2. The complaints of unfair dismissal pursuant to s95 and s98 Employment Rights Act 1996, direct  …",
+      "passage_word_count": 144,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-a-baird-v-e-h-booth-and-co-ltd-2406943-slash-2022-and-others/sections/3/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-a-baird-v-e-h-booth-and-co-ltd-2406943-slash-2022-and-others:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-clarke-v-the-commissioners-for-hm-revenue-and-customs-1402498-slash-2022-and-1405098-slash-2023",
+      "case_name": "Mr Clarke v The Commissioners For HM Revenue And Customs: 1402498/2022 and 1405098/2023 - Judgment by Consent",
+      "court": null,
+      "date": "2025-11-06",
+      "passage": "… TH / 6 TH JUNE 2024 EMPLOYMENT JUDGE MR P CADNEY (SITTING ALONE) MEMBERS: APPEARANCES:- FOR THE CLAIMANT:- IN PERSON FOR THE RESPONDENT:- MR T HOLLOWAY (COUNSEL) JUDGMENT The judgment of the tribunal is that BY CONSENT:- The claimant’s claims of: i) Direct disability discrimination (contrary to s26 Equality Act 2010) ii) Discrimination arising from disability (contrary to s26 Equality Act 2010); iii) Failure to make Reasonable Adjustments (contrary to s20 Equality Act 2010); iv) Harassment (contrary to s26 Equality Act 2010); v) Victimisation (contrary to s27 Equality Act 2010); Are dismissed on withdrawal Case No: 1402498//2022 1405098/2023 ---2--- _______________________ EMPLOYMENT JUDGE Dated: 7 th June 2024 Judgment entered into Register And copies sent to the parties on 28 June 2024 By Mr J McCormick for Secretary of the Tribunals",
+      "passage_word_count": 131,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-clarke-v-the-commissioners-for-hm-revenue-and-customs-1402498-slash-2022-and-1405098-slash-2023/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-clarke-v-the-commissioners-for-hm-revenue-and-customs-1402498-slash-2022-and-1405098-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-s-dalton-v-barnsley-metropolitan-borough-council-6002382-slash-2024",
+      "case_name": "Ms S Dalton v Barnsley Metropolitan Borough Council: 6002382/2024 - Dismissal",
+      "court": null,
+      "date": "2026-03-06",
+      "passage": "… ant: Represented herself, assisted by her sister Ms A Smithson For the Respondent: Mr T Langley, counsel JUDGMENT (1) The claim for constructive unfair dismissal (s.94 Employment Rights Act 1996) does not succeed and is dismissed. (2) The claim for discriminatory constructive unfair dismissal (s.13 Equality Act 2010) does not succeed and is dismissed. (3) The direct discrimination claims (s.13 Equality Act 2010) do not succeed and are dismissed. (4) The s.15 Equality Act claim does not succeed and is dismissed. (5) The reasonable adjustments claims (ss.20 and 21 Equality Act 2010) do not succeed and are dismissed. (6) The harassment claims (s.26 Equality Act 2010) do not succeed and are dismissed. Employment Judge James North East Region Dated 6 February 2026",
+      "passage_word_count": 123,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-s-dalton-v-barnsley-metropolitan-borough-council-6002382-slash-2024/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-s-dalton-v-barnsley-metropolitan-borough-council-6002382-slash-2024:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-a-taylor-v-c-a-leith-opticians-ltd-3306777-slash-2021",
+      "case_name": "Mrs A Taylor v C A Leith (Opticians) Ltd: 3306777/2021 - Dismissal",
+      "court": null,
+      "date": "2024-01-02",
+      "passage": "… d at: Watford On: 16,17,18,19 October 2023 Before: Employment Judge McTigue Ms G Bhatt MBE Ms G Binks MBE REPRESENTATION: Claimant: Mr E Stenson, Counsel Respondent: Mr I Wheaton, Counsel JUDGMENT The unanimous judgment of the Tribunal is as follows: 1. The claims of: a. direct discrimination – s13 Equality Act 2010 b. discrimination arising from disability – s15 Equality Act 2010 c. indirect discrimination (disability) – s19 Equality Act 2010 d. failure to make reasonable adjustments – s21 Equality Act 2010 e. harassment – s26 Equality Act 2010 f. victimisation – s27 Equality Act 2010 were not presented within the applicable time limit. It is not just and equitable to extend the time limit. The claims are therefore dismissed. Employment Judge McTigue 19 October 2023 Judgment sent to the parties on: 13 December 2023 .......................................... For the Tribunal: ........... …",
+      "passage_word_count": 142,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-a-taylor-v-c-a-leith-opticians-ltd-3306777-slash-2021/sections/4/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-a-taylor-v-c-a-leith-opticians-ltd-3306777-slash-2021:4",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-s-pogmore-v-sparsholt-college-group-6005169-slash-2025",
+      "case_name": "Ms S Pogmore v Sparsholt College Group: 6005169/2025 - Preliminary",
+      "court": null,
+      "date": "2026-01-08",
+      "passage": "… l On: 31 st October 2025 Before: Employment Judge P Cadney Representation: Claimant: Ms L Millin (Counsel) Respondent: Mr M Williams (Counsel) PRELIMINARY HEARING JUDGMENT The judgment of the tribunal is that:- i) The claimant was not at the material times a disabled person within the meaning of s6 Equality Act 2010; ii) The claimant’s claims of: a) The failure to make reasonable adjustments pursuant to s20/21 Equality Act 2010; b) Discrimination arising from disability pursuant to s15 Equality Act 2010; c) Harassment contrary to s26 Equality Act 2010 are dismissed. iii) The claimant’s claim of victimisation contrary to s27 Equality Act 2010 is dismissed on withdrawal. (If either party seeks written reasons for the decision as given orally it must apply in witing within 14 days of the date this Judgment is promulgated) Case Number: 6005169/2025 2 of 2 _________________________________ Em …",
+      "passage_word_count": 144,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-s-pogmore-v-sparsholt-college-group-6005169-slash-2025/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-s-pogmore-v-sparsholt-college-group-6005169-slash-2025:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-s-lalli-v-derby-city-council-2601799-slash-2021",
+      "case_name": "Mrs S Lalli v Derby City Council: 2601799/2021 - Judgment",
+      "court": null,
+      "date": "2023-09-14",
+      "passage": "… epresentation Claimant: Litigant in person Respondent: Mr Zaman, Counsel JUDGMENT The unanimous judgment of the Tribunal is that: 1. In respect of the issues listed at 4.1 to 4.15.4 of the agreed list of issues, the claimant’s claim of maternity and pregnancy discrimination, under section 18 of the Equality Act 2010, was not made within the time limit in section 123 of the Equality Act 2010 and it is not just and equitable in all the circumstances to extend time. 2. In respect of the issues listed at 4.16.1 and 4.16.2 of the agreed list of issues, the claimant’s claim of direct pregnancy discrimination, under section 13 of the Equality Act 2010, was not made within the time limit in section 123 of the Equality Act 2010 and it is not just and equitable in all the circumstances to extend time. 3. In respect of the issues listed at 4.17.1 and 4.17.2 of the agreed list of issues, the claiman …",
+      "passage_word_count": 162,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-s-lalli-v-derby-city-council-2601799-slash-2021/sections/2/compiled.txt",
+      "provision_cited": "section-18",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-s-lalli-v-derby-city-council-2601799-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-a-haywood-v-day-liddell-ltd-t-a-the-pipe-of-port-3200538-2018",
+      "case_name": "Mr A Haywood v Day Liddell Ltd T/a The Pipe of Port: 3200538/2018 - Judgment",
+      "court": null,
+      "date": "2019-01-03",
+      "passage": "… drew his complaint in respect of a failure to supply a statement of the initial terms and conditions of his employment pursuant to Part 1 of the Employment Rights Act 1996. 2. The following claims are not accepted as proven and therefore failed: 2.1 Direct sex discrimination, pursuant to Section 13 Equality Act 2010. 2.2 Discrimination arising from disability pursuant to Section 15 Equality Act 2010. 2.3 Failure to make reasonable adjustments pursuant to Sections 20 and 21 Equality Act 2010. 2.4 Harassment related to the Claimant’s sexuality pursuant to Section 26(1) Equality Act 2010. Case Number: 3200538/2018 2 2.5 Harassment related to the claims of disability, pursuant to Section 26(1) Equality Act 2010. 2.6 Unlawful deduction of wages pursuant to Part 2 Employment Rights Act 1996. 3. The above claims are dismissed. Employment Judge Tobin Dated: 18 December 2018",
+      "passage_word_count": 141,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-a-haywood-v-day-liddell-ltd-t-a-the-pipe-of-port-3200538-2018/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-a-haywood-v-day-liddell-ltd-t-a-the-pipe-of-port-3200538-2018:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-j-roe-v-marblesea-ltd-t-a-newton-house-hotel-and-mr-david-taylor-1400673-2017",
+      "case_name": "Miss J Roe v Marblesea Ltd T/a Newton House Hotel and Mr David Taylor: 1400673/2017 - Unanimous Judgment",
+      "court": null,
+      "date": "2019-06-02",
+      "passage": "… ent Judge Craft Members: Mr J Evans and Mrs K Symonds Representation Claimant: Mr T Downey, Havant CAB Respondents: Mr J Gray, Solicitor UNANIMOUS JUDGMENT The Claimant's claims of unfair dismissal due to pregnancy (s.99 Employment Rights Act 1996); unfavourable treatment due to her pregnancy (s.18 Equality Act 2010); indirect discrimination because of her sex (s.19 Equality Act 2010); disability discrimination by failure to make reasonable adjustments (s.20 Equality Act 2010); discrimination for something arising from disability (s.15 Equality Act 2010); failure to provide written reasons for dismissal (s.94 (4) Employment Rights Act 1996); and failure to provide a written statement of terms and conditions of employment (s.1 Employment Rights Act 1996) fail and are dismissed. ______________________________ Employment Judge Craft 13 November 2018",
+      "passage_word_count": 124,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-j-roe-v-marblesea-ltd-t-a-newton-house-hotel-and-mr-david-taylor-1400673-2017/sections/2/compiled.txt",
+      "provision_cited": "section-18",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-j-roe-v-marblesea-ltd-t-a-newton-house-hotel-and-mr-david-taylor-1400673-2017:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-j-heerlyn-v-british-broadcasting-corporation-8000931-slash-2024",
+      "case_name": "Mr J Heerlyn v British Broadcasting Corporation: 8000931/2024 - Dismissal",
+      "court": null,
+      "date": "2025-11-14",
+      "passage": "… DGMENT OF THE EMPLOYMENT TRIBUNAL Forthe reasons given orally at the close of the hearingon the 29 August 2025the unanimous decision of the Employment Tribunal is that the following claims are dismissed: 1.Unfair (“constructive”) dismissal; 2.Discrimination arising from disability under s.15 of the Equality Act 2010; 3.Reasonable adjustments in terms of s.20 and 21 of the Equality Act 2010; 4.Harassment related to disability in terms of s.26 of the Equality Act 2010; 5.Victimisation in terms of s.27 of the Equality Act 2010. 12 September 2025 _________________________ Date sent to Parties",
+      "passage_word_count": 91,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-j-heerlyn-v-british-broadcasting-corporation-8000931-slash-2024/sections/2/compiled.txt",
+      "provision_cited": "section-15",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-j-heerlyn-v-british-broadcasting-corporation-8000931-slash-2024:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-m-karooma-brooker-v-royal-borough-of-greenwich-2301202-slash-2022",
+      "case_name": "Mrs M Karooma-Brooker v Royal Borough of Greenwich: 2301202/2022 - Judgment",
+      "court": null,
+      "date": "2025-01-14",
+      "passage": "… the claimant: In Person For the respondent: Mr O Mills (Counsel) JUDGMENT 1. The response is struck out under Rule 37(1)(b) and Rule 37(1)(e) Employment Tribunal Rules of Procedure 2013. 2. The claimant’s following claims are not well founded and are dismissed:- 2.1. Direct sex discrimination (s.13 Equality Act 2010); 2.2. Indirect sex discrimination (s.19 Equality Act 2010); 2.3. Direct sex discrimination in employment (s.39 Equality Act 2010); and 2.4. Indirect race discrimination (s.19 Equality Act 2010). 3. The claimant’s following claims are well founded and succeed:- 3.1. Direct race discrimination (s.13 Equality Act 2010); 3.2. Direct race discrimination in employment (s.39 Equality Act 2010); and 3.3. Victimisation (s.27 Equality Act 2010). 4. The Tribunal has jurisdiction to deal with the out of time elements of the claims set out by paragraph 3 because there formed a continuous …",
+      "passage_word_count": 140,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-m-karooma-brooker-v-royal-borough-of-greenwich-2301202-slash-2022/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-m-karooma-brooker-v-royal-borough-of-greenwich-2301202-slash-2022:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-a-grant-ryder-v-the-governing-body-of-the-maelor-school-and-wrexham-county-borough-council-1600885-slash-2020",
+      "case_name": "Mrs A Grant-Ryder v The Governing Body of the Maelor School and Wrexham County Borough Council: 1600885/2020 - Judgment on Liability",
+      "court": null,
+      "date": "2021-07-27",
+      "passage": "… UNSEL) FOR THE RESPONDENTS: MR ALI (COUNSEL) JUDGMENT ON LIABILITY The unanimous judgment of the Tribunal is: Unfair Dismissal 1. The claim for unfair dismissal against the First Respondent is upheld. Discrimination Arising From Disability 2. The First Respondent contravened section 39(2)(c) of the Equality Act 2010 by dismissing the Claimant for something arising out of her disability. 3. The First Respondent did not contravene section 39(2)(d) of the Equality Act 2010 by putting the Claimant through the absence management procedure. 4. The First Respondent did not treat the Claimant unfavourably because of things arising from her disability (per section 15 of the Equality Act Case No: 1600885/2020(V) RESERVED JUDGMENT - 2 - 2010) by failing to provide a safe working environment, by moving her around classrooms or by removing her subject from the curriculum. Indirect Discrimination 5. T …",
+      "passage_word_count": 141,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-a-grant-ryder-v-the-governing-body-of-the-maelor-school-and-wrexham-county-borough-council-1600885-slash-2020/sections/2/compiled.txt",
+      "provision_cited": "section-39",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-a-grant-ryder-v-the-governing-body-of-the-maelor-school-and-wrexham-county-borough-council-1600885-slash-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-i-szlek-v-apetito-ltd-1400866-slash-2023",
+      "case_name": "Ms I Szlek v Apetito Ltd: 1400866/2023 - Dismissal",
+      "court": null,
+      "date": "2024-06-19",
+      "passage": "… S S PANKOWSKI INTERPRETER (POLISH) MS A TEXEIRA -VAZ (8 / 9 TH / 10 TH / 11 TH / 12 TH APRIL) MS A SYTA (15 TH /16 TH APRIL ) FOR THE RESPONDENT:- MR G GRAHAM (COUNSEL) JUDGMENT The judgment of the tribunal is that the claimant’s claims of:- i) Unfair dismissal; ii) Discriminatory dismissal (s39(2) Equality Act 2010); iii) Direct age and/or disability discrimination (s13 Equality Act 2010) ; iv) Harassment related to age and/or disability (s26 Equality Act 2010); Case No: 1400866/2023 ---2--- v) Discrimination arising from disability (s15 Equality Act 2010); vi) Failure to make reasonable adjustments (s20 Equality Act 2010); vii) Unlawful deduction from wages (s11 Employment Rights Act 1996); Are dismissed. (Both parties applied orally for full written reasons for the judgment which will be supplied in due course, and it is not necessary for either party to make any further written appli …",
+      "passage_word_count": 152,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-i-szlek-v-apetito-ltd-1400866-slash-2023/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-i-szlek-v-apetito-ltd-1400866-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-m-rodrigues-de-carvalho-v-aspers-stratford-city-ltd-3200648-slash-2020",
+      "case_name": "Miss M Rodrigues De Carvalho v Aspers (Stratford City) Ltd: 3200648/2020 - Judgment",
+      "court": null,
+      "date": "2023-10-01",
+      "passage": "… and 11 January and 13 May 2022 Before: Employment Judge John Crosfill Members: Ms S Barlow Ms B K Saund Representation Claimant: In person (except for 13 May 2022) Respondent: Mr McFarlane a Consultant JUDGMENT 1. The Claimant was, at all material times disabled for the purposes of Section 6 of the Equality Act 2010 by reason of anxiety and depression. 2. The Claimant’s claim that the Respondent failed to make reasonable adjustments to the frequency and pattern of shifts that the Claimant was required to work contrary to Sections 20, 21 and 39 of the Equality Act 2010 succeeds. 3. The Claimant’s claim of harassment related to disability contrary to sections 26 and 40 of the Equality Act 2010 founded on the actions of two colleagues who suggested that the Claimant was exaggerating the effects of her mental health condition succeeds. 4. The Claimant’s claim that the Respondent victimised h …",
+      "passage_word_count": 153,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-m-rodrigues-de-carvalho-v-aspers-stratford-city-ltd-3200648-slash-2020/sections/2/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-m-rodrigues-de-carvalho-v-aspers-stratford-city-ltd-3200648-slash-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-s-heimann-v-the-ministry-of-defence-2214934-slash-2023-and-2303044-slash-2024",
+      "case_name": "Ms S Heimann v The Ministry of Defence: 2214934/2023 and 2303044/2024 - Judgment",
+      "court": null,
+      "date": "2025-09-01",
+      "passage": "…  London Central (by cloud video platform) On: 16 to 20 September 2024 Before: Employment Judge Nash Ms S Aslett Mr A Adolphus Representation Claimant: In person Respondent: Mr Edwards of counsel JUDGMENT 1. The respondent failed to comply with a duty to make reasonable adjustments under ss20 and 21 Equality Act 2010 by failing to comply with procedures on or around 13 October 2023. 2. The respondent did not fail to comply with a duty to make reasonable adjustments under ss20 and 21 Equality Act 2010 in any other claim. 3. The respondent discriminated against the claimant contrary to s15 Equality Act 2010 in that it required her to return to work at short notice in August 2023. 4. The respondent did not discriminate against the claimant contrary to s15 Equality Act 2010 in any other claim. 5. The respondent did not victimise the claimant contrary to s27 Equality Act 2010. ________________ …",
+      "passage_word_count": 154,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-s-heimann-v-the-ministry-of-defence-2214934-slash-2023-and-2303044-slash-2024/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-s-heimann-v-the-ministry-of-defence-2214934-slash-2023-and-2303044-slash-2024:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-a-sherridan-v-sheffield-teaching-hospital-nhs-foundation-trust-1800580-2019",
+      "case_name": "Mrs A Sherridan v Sheffield Teaching Hospital NHS Foundation Trust: 1800580/2019 - Withdrawal",
+      "court": null,
+      "date": "2020-01-15",
+      "passage": "… an Respondent: Sheffield Teaching Hospital NHS Foundation Trust HELD AT: Leeds ON: 11 June 2019 BEFORE: Employment Judge T R Smith REPRESENTATION: Claimant: Mr Searle of Counsel Respondent: Mr Menan of Counsel JUDGMENT The Claimant’s complaints of direct discrimination pursuant to section 13 of the Equality Act 2010, discrimination arising from disability pursuant to section 15 of the Equality Act 2010, indirect discrimination pursuant to section 19 of the Equality Act 2010, a failure to make reasonable adjustments pursuant to sections 20 and 21 of the Equality Act 2010 and victimisation pursuant to section 27 of the Equality Act 2010 are dismissed on withdrawal. Employment Judge T R Smith Date: 25 June 2019 Note - Reasons for the judgment having been given orally at the hearing, written reasons will not be provided unless a request was made by either party at the Case No: 1800580/2019 2 …",
+      "passage_word_count": 148,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-a-sherridan-v-sheffield-teaching-hospital-nhs-foundation-trust-1800580-2019/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-a-sherridan-v-sheffield-teaching-hospital-nhs-foundation-trust-1800580-2019:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-c-da-silva-v-ing-services-ltd-2206077-2019",
+      "case_name": "Ms C Da Silva v ING Services Ltd: 2206077/2019 - Partial Withdrawal",
+      "court": null,
+      "date": "2020-05-31",
+      "passage": "Case No: 2206077/2019 EMPLOYMENT TRIBUNALS Claimant: Ms C Da Silva Respondent: ING Services Limited JUDGMENT 1. The claims of direct sex discrimination, direct disability discrimination, under s 15 Equality Act 2010, under s 26 Equality Act 2010 and of failure to make reasonable adjustments under ss 20 and 21 Equality Act 2010 are dismissed following withdrawal by the claimant. The remaining claims will proceed to a hearing. _____________________________ Employment Judge JOFFE 18 May 2020 _____________________________ JUDGMENT SENT TO THE PARTIES ON 19 May 2020 FOR THE TRIBUNAL OFFICE",
+      "passage_word_count": 88,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-c-da-silva-v-ing-services-ltd-2206077-2019/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-c-da-silva-v-ing-services-ltd-2206077-2019:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-m-thompson-v-learner-engagement-training-services-ltd-1302799-slash-2021",
+      "case_name": "Miss M Thompson v Learner Engagement Training Services Ltd: 1302799/2021 - Judgment",
+      "court": null,
+      "date": "2023-03-26",
+      "passage": "… er Engagement Training Services Limited Heard at: Birmingham (by video) On: 13 & 14 March 2023 Before: Employment Judge Knowles Mr D Mcintosh Mr K Palmer Representation Claimant: In person Respondent: No appearance JUDGMENT 1. The Claimant’s claim of pregnancy discrimination under Section 18 of the Equality Act 2010 is well-founded and succeeds. 2. The Claimant’s claim of harassment under Section 26 of the Equality Act 2010 is well-founded and succeeds. 3. The Claimant’s claim of victimisation under Section 27 of the Equality Act 2010 is not well-founded and fails. 4. The Respondent is ordered to pay to the Claimant the sum of £23,489.17 (twenty three thousand four hundred and eighty nine pounds and seventeen pence) compensation under Section 124 of the Equality Act 2010. Employment Judge Knowles 14 March 2023",
+      "passage_word_count": 132,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-m-thompson-v-learner-engagement-training-services-ltd-1302799-slash-2021/sections/2/compiled.txt",
+      "provision_cited": "section-18",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-m-thompson-v-learner-engagement-training-services-ltd-1302799-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-a-kauser-v-good-and-co-solicitors-1806410-2019",
+      "case_name": "Mrs A Kauser v Good and Co Solicitors: 1806410/2019 - Dismissal",
+      "court": null,
+      "date": "2020-07-05",
+      "passage": "… g alone) Appearances For the claimant: In person For the respondent: Mr Rudd (Counsel) JUDGMENT (1) The complaint of automatic unfair dismissal under s 99 Employment Rights Act 1996 is STRUCK OUT. (2) The complaint that the dismissal on 22 August 2019 amounts to direct sex discrimination under s 13 Equality Act 2010 is STRUCK OUT. (3) The complaint that the dismissal on 22 August 2019 amounts to direct pregnancy and maternity discrimination under s 18 Equality Act 2010 is STRUCK OUT. (4) The complaints that the comment on 14 December 2018 amounts to harassment related to sex under s 26 Equality Act 2010 and direct pregnancy and maternity discrimination under s 18 Equality Act 2010 were not presented in time. It is not just and equitable to extend time. These complaints are DISMISSED. Employment Judge Buckley 22 January 2020",
+      "passage_word_count": 141,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-a-kauser-v-good-and-co-solicitors-1806410-2019/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-a-kauser-v-good-and-co-solicitors-1806410-2019:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-mq-ahmed-v-beswick-partnership-ltd-and-others-1402329-2018",
+      "case_name": "Mr MQ Ahmed v Beswick Partnership Ltd and Others: 1402329/2018 - Judgment",
+      "court": null,
+      "date": "2020-09-24",
+      "passage": "… 2 ND / 23 RD / 24 TH JULY 2020 EMPLOYMENT JUDGE MR P CADNEY (SITTING ALONE) MEMBERS: APPEARANCES:- FOR THE CLAIMANT:- MR N BERRAGAN (COUNSEL) (APPEARING PRO BONO) FOR THE RESPONDENTS:- MR J BROMIGE (COUNSEL) JUDGMENT The judgment of the tribunal is that:- 1. The claimant’s claims of harassment (s26 Equality Act 2010) and direct discrimination (s13 Equality Act 2010) on the grounds of race and/or religious belief are dismissed on withdrawal. 2. The claimant’s claims of harassment (s26 Equality Act 2010) and direct discrimination (s13 Equality Act 2010) and indirect discrimination (s19 Equality Act 2010) on the grounds of disability are dismissed. Case No: 1402329/2018 ---2--- 3. The claimant’s claim of breach of contract (arrears of pay) is adjourned for 28 days. The parties are directed to notify the tribunal no later than 4.00pm 21 st August 2020 whether the claim has been resolved and  …",
+      "passage_word_count": 149,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-mq-ahmed-v-beswick-partnership-ltd-and-others-1402329-2018/sections/4/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-mq-ahmed-v-beswick-partnership-ltd-and-others-1402329-2018:4",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-l-a-sheikh-v-cis-security-ltd-2305294-slash-2021",
+      "case_name": "Mr L A Sheikh v CIS Security Ltd: 2305294/2021 - Judgment",
+      "court": null,
+      "date": "2024-05-16",
+      "passage": "…  is dismissed upon withdrawal by the claimant. 2. The claimant’s complaint of failure to pay accrued annual leave in lieu on termination is dismissed upon withdrawal by the claimant. 3. The claimant’s complaint of direct discrimination on the grounds of disability (as described in section 13 of the Equality Act 2010) is not well- founded and is dismissed. This means that the respondent did not contravene section 13 of the Equality Act 2010. 4. The claimant’s complaint that contrary to section 21 of the Equality Act 2010, the respondent failed to comply with its duty under section 20 of the Equality Act 2010 is upheld. This means that the respondent failed to make reasonable adjustments. 5. The claimant’s complaint that the respondent unlawfully discriminated against him by treating him unfavourably because of something arising in consequence of his disability contrary to section 15 and s …",
+      "passage_word_count": 147,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-l-a-sheikh-v-cis-security-ltd-2305294-slash-2021/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-l-a-sheikh-v-cis-security-ltd-2305294-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-a-bano-v-newlyn-plc-3202869-slash-2022-and-3200341-slash-2023",
+      "case_name": "Miss A Bano v Newlyn plc: 3202869/2022 and 3200341/2023 - Judgment",
+      "court": null,
+      "date": "2024-04-14",
+      "passage": "…  2024; 1, 5 and 22 March 2024 6 March 2024 (in chambers) Before: Employment Judge Gordon Walker Members: Mr S Woodhouse Mr R Blanco Appearances For the claimant: Mr D Brown, counsel For the respondent: Ms K Hosking, counsel JUDGMENT 1. The claim of discrimination arising from disability (section 15 Equality Act 2010) in respect of treatment A, B, C(i) and F is well founded and succeeds. 2. The claim of harassment related to disability (section 26 Equality Act 2010) in respect of treatment D up to 1 July 2022 is well founded and succeeds. 3. The claim of victimisation (section 27 Equality Act 2010) in respect of treatment C, E and F is well founded and succeeds. This claim in respect of treatment E was presented to the Tribunal within a period that was just and equitable (section 123(1)(b) Equality Act 2010). 4. The claims of failure to make reasonable adjustments (sections 20-21 Equality …",
+      "passage_word_count": 157,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-a-bano-v-newlyn-plc-3202869-slash-2022-and-3200341-slash-2023/sections/3/compiled.txt",
+      "provision_cited": "section-15",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-a-bano-v-newlyn-plc-3202869-slash-2022-and-3200341-slash-2023:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-r-bethune-v-london-borough-of-newham-3205584-slash-2022",
+      "case_name": "Miss R Bethune v London Borough of Newham: 3205584/2022 - Judgment",
+      "court": null,
+      "date": "2024-06-30",
+      "passage": "… oyment Judge B Beyzade Members: Miss S Harwood Mrs B K Saund Representation Claimant: Ms Heather Platt, Counsel Respondent: Mr David Gray-Jones, Counsel JUDGMENT The unanimous Judgment of the Tribunal is that: 1. The claimant’s complaints of direct race discrimination (pursuant to section 13 of the Equality Act 2010) that are set out at paragraphs 1.2.14 and 1.2.30 of the List of Issues, harassment related to race (pursuant to section 26 of the Equality Act 2010) that are set out at paragraphs 2.1.14 and 2.1.30 of the List of Issues, and victimisation (pursuant to section 27 of the Equality Act 2010) that are set out at paragraphs 3.1.1 and 3.2.1 of the List of Issues having been withdrawn by the claimant, are dismissed under Rule 52 of the Rules contained in Schedule 1 of the Employment Tribunals (Constitution and Rules of Procedure) Regulations 2013. 2. The claimant’s complaints of dir …",
+      "passage_word_count": 152,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-r-bethune-v-london-borough-of-newham-3205584-slash-2022/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-r-bethune-v-london-borough-of-newham-3205584-slash-2022:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-m-sargent-v-thames-ambulance-services-trust-and-premier-care-direct-1807045-slash-2020",
+      "case_name": "Mrs M Sargent v Thames Ambulance Services Trust and Premier Care Direct: 1807045/2020 - Dismissal",
+      "court": null,
+      "date": "2021-07-28",
+      "passage": "…  13 14 15 July 2021 Before: Employment Judge Rogerson Mrs L Anderson-Coe Mr D Fields Appearances: For the Claimant: Mr A Effiong (lay representative) For the Respondent: Ms K Hindmarch (Solicitor) JUDGMENT 1. Allegations 4.1.3,4.1.4,4.1.5, making complaints of unfavourable or contrary to section 18 Equality Act 2010 (Pregnancy and Maternity Discrimination) and allegations 5.2.2,5.2.3,5.2.4 making complaints of detrimental treatment contrary to section 27 Equality Act 2010 (Victimisation) are withdrawn and are dismissed. 2. All other complaints of unfavourable or detrimental treatment contrary to section 18 Equality Act 2010 and section 27 Equality Act 2010, fail and are dismissed. 3. The complaint of unfair dismissal also fails and is dismissed. Employment Judge Rogerson 15 July 2021 21 July 2021",
+      "passage_word_count": 119,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-m-sargent-v-thames-ambulance-services-trust-and-premier-care-direct-1807045-slash-2020/sections/2/compiled.txt",
+      "provision_cited": "section-18",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-m-sargent-v-thames-ambulance-services-trust-and-premier-care-direct-1807045-slash-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-j-forsyth-v-wm-morrison-supermarkets-ltd-4106833-slash-2024",
+      "case_name": "Mr J Forsyth v Wm Morrison Supermarkets Ltd: 4106833/2024 - Partial Dismissal",
+      "court": null,
+      "date": "2025-04-29",
+      "passage": "… esented by: Mr M Salter15 (Counsel) JUDGMENT OF THE EMPLOYMENT TRIBUNAL The judgment of the Tribunal is that the claimant did not in the relevant period have the protected characteristic of disability in terms of section 6 of the Equality Act20 2010. The complaints brought by the claimant under the Equality Act 2010, other than that reliant on section 26 of the Equality Act 2010 are therefore not well founded and are dismissed. The complaints of unfair dismissal and of unlawful harassment under section 26 of25 the Equality Act 2010 proceed to determination at a Final Hearing REASONS Reasons were given orally at the Hearing. 30 Date sent to parties_09 April 2025__________",
+      "passage_word_count": 113,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-j-forsyth-v-wm-morrison-supermarkets-ltd-4106833-slash-2024/sections/2/compiled.txt",
+      "provision_cited": "section-26",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-j-forsyth-v-wm-morrison-supermarkets-ltd-4106833-slash-2024:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-p-hesketh-v-avon-fire-and-rescue-1402812-slash-2021",
+      "case_name": "Mr P Hesketh v Avon Fire and Rescue: 1402812/2021 - Dismissal",
+      "court": null,
+      "date": "2024-01-17",
+      "passage": "… Employment Judge A Frazer Tribunal Member S Maidment Tribunal Member H Launder Appearances For the Claimant: In person For the Respondent: Mr M Curtis (Counsel) JUDGMENT The unanimous decision of the Tribunal is that the Claimant’s claims for direct age, disability and sex discrimination under s.13 Equality Act 2010; discrimination arising from disability under s.15 Equality Act 2010; a failure to make reasonable adjustments under ss.20 and 21 Equality Act 2010 and harassment under s.26 Equality Act 2010 are not well founded and do stand dismissed. ___________________ Employment Judge A Frazer Dated: Friday 8 th December 2023 Judgment sent to the Parties on 04 January 2023 For the Tribunal Office",
+      "passage_word_count": 111,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-p-hesketh-v-avon-fire-and-rescue-1402812-slash-2021/sections/3/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-p-hesketh-v-avon-fire-and-rescue-1402812-slash-2021:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-p-johnson-v-speedy-asset-services-ltd-3202333-slash-2023",
+      "case_name": "Mr P Johnson v Speedy Asset Services Ltd: 3202333/2023 - Dismissal",
+      "court": null,
+      "date": "2025-11-03",
+      "passage": "… ounsel For the Respondent: Ms Amany Jabir, Counsel JUDGMENT OF THE EMPLOYMENT TRIBUNAL The unanimous Judgment of the tribunal is that: 1.1 The Tribunal lacks Jurisdiction, by reason of time bar, to consider the claimant’s complaints of direct race discrimination in terms of section 123(1)(a) of the Equality Act 2010. It not being just and equitable, in the circumstances presented, to extend time in terms of section 123(1)(b) of the Equality Act 2010, the complaints of direct race discrimination are dismissed. 1.2 At the material times for the purposes of his complaints of disability discrimination, being complaints of discrimination arising from disability pursuant to section 15 of the Equality Act 2010 and failure to make reasonable adjustments pursuant to sections 20 and 21 of the Equality Act, the claimant was not a person possessing the protected characteristic of disability in terms …",
+      "passage_word_count": 143,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-p-johnson-v-speedy-asset-services-ltd-3202333-slash-2023/sections/2/compiled.txt",
+      "provision_cited": "section-123",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-p-johnson-v-speedy-asset-services-ltd-3202333-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/m-liljeblad-v-bluefruit-software-ltd-and-others-1404287-slash-2023-and-1404288-slash-2023",
+      "case_name": "M Liljeblad v Bluefruit Software Ltd and Others: 1404287/2023 and 1404288/2023 - Judgment",
+      "court": null,
+      "date": "2025-11-10",
+      "passage": "… CVP On: 24 October 2023 Before: Employment Judge G. King Representation Claimant: Ms J. Twomey – counsel Respondent: Mr D. West – litigation consultant, acting in lay capacity JUDGMENT Claims against the First, Second and Third Respondents 1. The Claimant’s claims of Victimisation, pursuant to s.27 Equality Act 2010, are dismissed by way of withdrawal. Claims against the Second and Third Respondents 2. The Claimant’s claims in respect of Direct Discrimination in relation to disability, pursuant to s.13 Equality Act 2010, have no reasonable prospect of success and are struck out. 3. The Claimant’s claims in respect of Discrimination Arising from Disability, pursuant to s.15 Equality Act 2010, have no reasonable prospect of success and are struck out. 4. The Claimant’s claims in respect of Indirect Discrimination in relation to disability, pursuant to s.19 Equality Act 2010, have no reason …",
+      "passage_word_count": 142,
+      "source_key": "et-decisions/employment-tribunal-decisions/m-liljeblad-v-bluefruit-software-ltd-and-others-1404287-slash-2023-and-1404288-slash-2023/sections/2/compiled.txt",
+      "provision_cited": "section-27",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/m-liljeblad-v-bluefruit-software-ltd-and-others-1404287-slash-2023-and-1404288-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-s-mortimer-v-npl-management-ltd-2300984-2018",
+      "case_name": "Mr S Mortimer v NPL Management Ltd: 2300984/2018 - Judgment",
+      "court": null,
+      "date": "2021-09-29",
+      "passage": "… ortimer NPL Management Ltd (National Physical Laboratory) Heard at: London South Employment Tribunal (via CVP) On: 6-13 September 2021 Before: EJ Webster Ms G Mitchell Mr C Wilby Appearances For the Claimant: Ms A Johns For the Respondent: Mr J Mitchell JUDGMENT 1. The Claimant’s claim under s20-21 Equality Act 2010 (failure to make reasonable adjustments) is partially upheld. 2. The Claimant’s claim under s19 Equality Act 2010 (indirect discrimination related to disability) is partially upheld. 3. The Claimant’s claim under s15 Equality Act 2010 (discrimination arising out of disability) is not upheld. 4. The Claimant’s claim under s26 Equality Act 2010 (harassment) is not upheld. 5. The Claimant’s claim under s27 Equality Act 2010 is dismissed upon withdrawal. Case No: 2300984/2018 6. The Claimant’s claim for whistleblowing detriment under s47 Employment Rights Act 1996 is dismissed up …",
+      "passage_word_count": 140,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-s-mortimer-v-npl-management-ltd-2300984-2018/sections/3/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-s-mortimer-v-npl-management-ltd-2300984-2018:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-d-douglas-brown-v-rosedene-nursing-home-2303604-2018",
+      "case_name": "Ms Douglas Brown v Rosedene Nursing Home: 2303604/2018 - Judgment ",
+      "court": null,
+      "date": "2022-08-08",
+      "passage": "… Brown Respondent: Rosedene Nursing Home Heard at: London South On: 18, 19 and 20 October 2021 Before: Employment Judge Khalil Ms N O Hare Ms T Bryant Appearances For the claimant: in person For the respondent: Mr Hussein, Solicitor JUDGMENT The claim of direct discrimination (disability) under S.13 Equality Act 2010 is not well founded and fails. The claim of discrimination arising from disability under S.15 Equality Act 2010 is not well founded and fails. The claim of indirect discrimination (disability) under S.19 Equality Act 2010 is not well founded and fails. The claim of reasonable adjustments under S.20/21 Equality Act 2010 is not well founded and fails. The claim of victimisation (disability) under S.27 under S.13 Equality Act 2010 is not well founded and fails. Reasons were given at the time and written reasons will not be provided unless they are asked for by a written request  …",
+      "passage_word_count": 150,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-d-douglas-brown-v-rosedene-nursing-home-2303604-2018/sections/3/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-d-douglas-brown-v-rosedene-nursing-home-2303604-2018:3",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-k-badham-v-jaguar-land-rover-ltd-1309749-slash-2020",
+      "case_name": "Mr K Badham v Jaguar Land Rover Ltd: 1309749/2020 - Reconsideration",
+      "court": null,
+      "date": "2023-06-28",
+      "passage": "… 2022 to reconsider the judgment dated 12 December 2022 under rule 71 of the Employment Tribunals Rules of Procedure 2013, and without a hearing, JUDGMENT The judgment is varied as follows: Paragraph 1 is deleted and replaced with: 1 The claimant was a disabled person within the meaning of section 6 Equality Act 2010 because of the physical impairments of a shoulder problem (from 30 April 2020 only) and irritable bowel syndrome(‘IBS’). 2 The claim of direct disability discrimination under section 13 Equality Act 2010 is not upheld. 3 The claim of disability discrimination under section 15 Equality Act 2010 is not upheld. 4 The claim of a failure to make reasonable adjustments under sections 20/21 Equality Act 2010 is not upheld. 5 The claim of race discrimination is dismissed following a withdrawal by the claimant. Employment Judge Woffenden Date: 14 th June 2023",
+      "passage_word_count": 145,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-k-badham-v-jaguar-land-rover-ltd-1309749-slash-2020/sections/4/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-k-badham-v-jaguar-land-rover-ltd-1309749-slash-2020:4",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-n-karim-v-iswp-support-services-ltd-and-others-3313910-slash-2021",
+      "case_name": "Ms N Karim v ISWP Support Services Ltd and others: 3313910/2021 - Judgment",
+      "court": null,
+      "date": "2024-04-15",
+      "passage": "… ue 5.1.4 of the List of Issues); and c. The Claimant’s constructive dismissal (Issue 5.1.5 of the List of Issues). Case Number: 3313910/2021 2 2. The Claimant’s claim that the First Respondent discriminated against her by failing to comply with its duty in relation to her pursuant to s.20(3) of the Equality Act 2010 succeeds (Issue 11 of the List of Issues). 3. The Claimant’s claim that the First Respondent harassed her in contravention of s.26 of the Equality Act 2010 succeeds in respect of Mrs Bains comments to the Claimant in the course of their telephone discussion on 11 March 2021 (Issue 12.1.1 of the List of Issues, with reference to paragraph 23 of the Claimant’s ‘Harassment Claims’ document). 4. The Claimant’s claim that the First Respondent victimised her in contravention of s.27 of the Equality Act 2010 succeeds in respect of the Respondent’s actions as alleged in paragraph 13. …",
+      "passage_word_count": 153,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-n-karim-v-iswp-support-services-ltd-and-others-3313910-slash-2021/sections/2/compiled.txt",
+      "provision_cited": "section-20",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-n-karim-v-iswp-support-services-ltd-and-others-3313910-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-w-chan-v-birmingham-city-council-1302706-slash-2021",
+      "case_name": "Mr W Chan v Birmingham City Council: 1302706/2021 - Judgment",
+      "court": null,
+      "date": "2023-05-14",
+      "passage": "… ) On: 24, 25 and 26 April 2023 Before: Employment Judge C Knowles Mrs M Stewart Mrs K Ahmad Representation Claimant: In person Respondent: Mr. Beever (Counsel) JUDGMENT The unanimous judgment of the tribunal is as follows: 1. The claimant’s claim of direct age discrimination contrary to S.13 of the Equality Act 2010 is not well-founded and is dismissed. 2. The claimant’s claim of direct sex discrimination contrary to S.13 of the Equality Act 2010 is not well-founded and is dismissed. 3. The claimant’s claim of direct race discrimination contrary to S.13 of the Equality Act 2010 is not well-founded and is dismissed. 4. The claimant’s claim of direct discrimination because of religion or belief contrary to S.13 of the Equality Act 2010 is not well-founded and is dismissed. Employment Judge C Knowles Date: 26 April 2023",
+      "passage_word_count": 138,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-w-chan-v-birmingham-city-council-1302706-slash-2021/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-w-chan-v-birmingham-city-council-1302706-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-j-morley-v-the-renewal-trust-2600470-2019",
+      "case_name": "Mr J Morley v The Renewal Trust: 2600470/2019 - Partial Withdrawal",
+      "court": null,
+      "date": "2021-09-27",
+      "passage": "… UNALS Claimant: Mr J Morley Respondent: The Renewal Trust Heard at: Nottingham On: 24 July 2019 Before: Employment Judge Brewer Representation Claimant: In person Respondent: Mr K Ali, Counsel JUDGMENT The following claimant’s claims are dismissed on withdrawal: 1 indirect race discrimination (s.19 Equality Act 2010); 2 victimisation (s.27 Equality Act 2010; 3 direct disability discrimination (s.19 Equality Act 2010); 4 discrimination arising (s.15 Equality Act 2010); and 5 whistleblowing detriment (s.47B Employment Rights Act 1996. _____________________________ Employment Judge Brewer Date: 24 July 2019 JUDGMENT SENT TO THE PARTIES ON ..................................................................................... ...................................................................................... FOR THE TRIBUNAL OFFICE Case Number: 2600470/2019 2 of 2 Note Written reasons will  …",
+      "passage_word_count": 108,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-j-morley-v-the-renewal-trust-2600470-2019/sections/2/compiled.txt",
+      "provision_cited": "section-19",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-j-morley-v-the-renewal-trust-2600470-2019:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/miss-l-morris-v-dorset-healthcare-university-nhs-foundation-trust-1404273-slash-2023",
+      "case_name": "Miss L Morris v Dorset Healthcare University NHS Foundation Trust: 1404273/2023 - Judgment",
+      "court": null,
+      "date": "2024-10-22",
+      "passage": "… akeman Mr P Bompas Representation Claimant: Mr G Morris, Lay Representative (Claimant’s Father) Respondent: Ms L Robinson, Counsel JUDGMENT 1. The Respondent did not discriminate against the Claimant as it did not fail in its duty to make reasonable adjustments in accordance with sections 20 and 21 Equality Act 2010; 2. The Respondent did not harass the Claimant in relation to her disability in contravention of section 26 Equality Act 2010; 3. The Respondent did not victimise the Claimant in contravention of section 27 Equality Act 2010; 4. The Claimant’s claim for discriminatory constructive dismissal in contravention of section 39(7) Equality Act 2010 is dismissed as the Respondent has not discriminated against the Claimant. Employment Judge Bradford 27 September 2024 JUDGMENT SENT TO THE PARTIES ON 12 October 2024 By Mr J McCormick FOR THE TRIBUNAL OFFICE",
+      "passage_word_count": 138,
+      "source_key": "et-decisions/employment-tribunal-decisions/miss-l-morris-v-dorset-healthcare-university-nhs-foundation-trust-1404273-slash-2023/sections/2/compiled.txt",
+      "provision_cited": "section-26",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/miss-l-morris-v-dorset-healthcare-university-nhs-foundation-trust-1404273-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-harrington-v-scrivens-ltd-1402322-slash-2022",
+      "case_name": "Mrs Harrington v Scrivens Ltd: 1402322/2022 - Judgment",
+      "court": null,
+      "date": "2024-01-22",
+      "passage": "… Harrington Respondent: Scrivens Ltd Heard at: Southampton (by CVP) On: 4 October 2023 Before: Employment Judge Scott Tribunal Member Sinclair Tribunal Member Knight Representation Claimant: In person Respondent: Ms Whelan, Xpert Support JUDGMENT 1. The Claimant’s claim of direct discrimination (s13 Equality Act 2010) on the grounds of disability succeeds in part. 2. The Claimant’s claim of discrimination arising from disability (s15 Equality Act 2010) succeeds in part. 3. The Claimant’s claim of indirect discrimination (s19 Equality Act 2010) on the grounds of disability succeeds in part. 4. The Claimant’s claim of a failure to make reasonable adjustments (s20 & s21 Equality Act 2010) is well founded and succeeds. 5. The Claimant’s claim of disability related harassment (s26 Equality Act 2010) succeeds in part. 6. It is just and equitable for time to be extended for the filing of the cla …",
+      "passage_word_count": 143,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-harrington-v-scrivens-ltd-1402322-slash-2022/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-harrington-v-scrivens-ltd-1402322-slash-2022:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-c-guinee-v-huntswood-ctc-ltd-3328737-2017",
+      "case_name": "Ms C Guinee v Huntswood CTC Ltd: 3328737/2017 - Dismissal",
+      "court": null,
+      "date": "2019-10-09",
+      "passage": "… requesting written reasons at the conclusion of the hearing which will be sent to the parties in accordance with rule 62 of the Employment Tribunal Rules 2013 IT IS the unanimous decision of the Tribunal that: 1. The Claimant’s claim of direct disability discrimination contrary to section 13 of the Equality Act 2010 fails and is dismissed. 2. The Claimant’s claim of discrimination arising from disability contrary to section 15 of the Equality Act 2010 fails and is dismissed. 3. The Claimant’s claim of indirect disability discrimination contrary to section 19 of the Equality Act 2010 fails and is dismissed. 4. The Claimant’s claim of a failure to make reasonable adjustments contrary to sections 20 and 21 of the Equality Act 2010 fails and is dismissed. Case No: 3328737/2017 5. The Claimant’s claim of disability related harassment contrary to section 26 of the Equality Act 2010 fails and i …",
+      "passage_word_count": 151,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-c-guinee-v-huntswood-ctc-ltd-3328737-2017/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-c-guinee-v-huntswood-ctc-ltd-3328737-2017:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-m-g-bartlett-v-sparshatts-of-botley-ltd-1400479-2017",
+      "case_name": "Mr M G Bartlett v Sparshatts of Botley Ltd: 1400479/2017 - Final Hearing",
+      "court": null,
+      "date": "2018-10-21",
+      "passage": "… nt: Sparshatts of Botley Ltd Heard at: Southampton On: 10, 11, 12, 13 & 14 September 2018 Before: Employment Judge Maxwell Mr P Bompas Mr R Spry-Shute Representation Claimant: in person Respondent: Mrs Crosfill, Counsel JUDGMENT 1. The claimant’s claim of victimisation contrary to section 27 of the Equality Act 2010 is not well-founded and is dismissed. 2. The claimant’s claim of harassment related to disability contrary to section 26 of the Equality Act 2010 is not well-founded and is dismissed. 3. The claimant’s claim of a failure to make reasonable adjustments, pursuant to sections 20 and 21 of the Equality Act 2010 is not well-founded and is dismissed. 4. The claimant’s claim of discrimination arising from disability contrary to section 15 of the Equality Act 2010 is not well-founded and is dismissed. Case Number: 1400479/2017 2 _____________________________________ Employment Judge  …",
+      "passage_word_count": 142,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-m-g-bartlett-v-sparshatts-of-botley-ltd-1400479-2017/sections/2/compiled.txt",
+      "provision_cited": "section-27",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-m-g-bartlett-v-sparshatts-of-botley-ltd-1400479-2017:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-b-markson-v-maximus-uk-services-ltd-3311694-slash-2021",
+      "case_name": "Mrs B Markson v Maximus UK Services Ltd: 3311694/2021 - Dimissal",
+      "court": null,
+      "date": "2023-03-09",
+      "passage": "… LS Claimant Respondent Mrs B Markson v Maximus UK Services Ltd Heard at: Watford Employment Tribunal (via CVP) On: 3 rd February 2023 Before: Employment Judge King Appearances For the Claimant: Mr Okunowo (solicitor) For the Respondent: Mr Mold (counsel) JUDGMENT 1. The claimant’s claims for:  S15 Equality Act 2010  S19 Equality Act 2010 indirect discrimination (race) and (age)  S26 Equality Act 2010 harassment related to disability  S27 Equality Act 2010 victimisation are dismissed and stand as struck out following the unless order of Employment Judge Bedeau on 20 th October 2022 as not having been particularised. _____________________________ Employment Judge King Date: .....................03.02.23........... Sent to the parties on: 2.3.2023 GDJ For the Tribunal Office Case Number: 3311694/2021 2 Note Reasons for the judgment having been given orally at the hearing, written reason …",
+      "passage_word_count": 138,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-b-markson-v-maximus-uk-services-ltd-3311694-slash-2021/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-b-markson-v-maximus-uk-services-ltd-3311694-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-m-winehouse-v-barnardos-3200760-slash-2022",
+      "case_name": "Mr M Winehouse v Barnardo’s: 3200760/2022 - Judgment ",
+      "court": null,
+      "date": "2022-11-15",
+      "passage": "… t: Mr M Winehouse Respondent: Barnardo’s Heard at: East London Hearing Centre (by CVP remote link) On: Thursday 3 rd November 2022 Before: Employment Judge A Frazer Appearances For the Claimant: In person For the Respondent: Mr Zaman (Counsel) JUDGMENT The Claimant’s claim for harassment under s.26 Equality Act 2010 is dismissed as it was not presented within the three months’ time limit under s.123(1)(a) Equality Act 2010 and it was not just and equitable to extend time for presentation under s.123(1)(b) Equality Act 2010. Employment Judge A Fraser Dated: 3 November 2022",
+      "passage_word_count": 94,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-m-winehouse-v-barnardos-3200760-slash-2022/sections/2/compiled.txt",
+      "provision_cited": "section-26",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-m-winehouse-v-barnardos-3200760-slash-2022:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-m-hamza-v-enterprise-rent-a-car-uk-ltd-3313228-slash-2020",
+      "case_name": "Mr M Hamza v Enterprise Rent-A-Car UK Ltd: 3313228/2020 - Judgment",
+      "court": null,
+      "date": "2022-08-02",
+      "passage": "Case Number: 3313228/2020 EMPLOYMENT TRIBUNALS Claimant Respondent Mr M Hamza v Enterprise Rent-A-Car UK Limited JUDGMENT 1. The claimant’s claims (1) of discrimination within the meaning of section 13 and section 19 of the Equality Act 2010, contrary to section 39(2)(d) of the Equality Act 2010 and (2) of victimisation within the meaning of section 27 of that Act, contrary to section 39(2)(d) of that Act, are dismissed on their withdrawal by the claimant. 2. The claimant’s other claims (including for the avoidance of doubt that his dismissal was contrary to section 39(2)(c) of the Equality Act 2010) continue. ___________________________________ Employment Judge Hyams Date: 4 July 2022 Sent to the parties on: 9 July 2022 N Gotecha For Secretary of the Tribunals",
+      "passage_word_count": 122,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-m-hamza-v-enterprise-rent-a-car-uk-ltd-3313228-slash-2020/sections/2/compiled.txt",
+      "provision_cited": "section-13",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-m-hamza-v-enterprise-rent-a-car-uk-ltd-3313228-slash-2020:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-andrew-colquhoun-v-glasgow-city-council-s-4104871-2017",
+      "case_name": "Mr Andrew Colquhoun v Glasgow City Council: S/4104871/2017 - Judgment",
+      "court": null,
+      "date": "2018-11-19",
+      "passage": "… e to the letter from the Tribunal confirming rejection of his claim, the claimant represented his claim form by hand on 12 October 2017. He continued to refer to the basis of his claim as being victimisation. He said in an email submitted on 12 October 2017 that his understanding was that under the Equality Act 2010 if a complaint was made that discrimination had 10 occurred then it was unlawful for an employer to victimise an employee because the employee had carried out a protected act. He said that his claim was the prospective respondents, his employers, had treated him badly during 2015, 2016 and 2017 “as punishment for carrying out a protected act in 2014”. The claimant sought reconsideration of the decision to reject his 15 claim. 5. A Hearing was set down in order that reconsideration could be considered to determine whether the claim was permitted to proceed or not. If that occu …",
+      "passage_word_count": 158,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-andrew-colquhoun-v-glasgow-city-council-s-4104871-2017/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-andrew-colquhoun-v-glasgow-city-council-s-4104871-2017:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-a-grant-v-aa-developments-ltd-2500710-2017",
+      "case_name": "Mr A Grant v AA Developments Ltd: 2500710/2017 - Preliminary ",
+      "court": null,
+      "date": "2019-05-27",
+      "passage": "… dent: Mr Sangha of Counsel JUDGMENT ON PRELIMINARY ISSUE 1 The claimant was at all material times (from the beginning of 2015 until 7 April 2017) suffering from a physical impairment (bile acid malabsorption syndrome and obstructed bowel) which amounts to a disability as defined in Section 6 of the Equality Act 2010. 2 The claimant’s stress, anxiety and depression does not (and did not) amount to a disability as defined in Section 6 of the Equality Act 2010. 3 Insofar as it is necessary, permission is granted to the claimant to amend his claim form to include allegations of harassment contrary to Section 26 of the Equality Act 2010 and victimisation contrary to Section 27 of the Equality Act 2010. Case Number: 2500710/2017 2 ___________________________________ EMPLOYMENT JUDGE JOHNSON JUDGMENT SIGNED BY EMPLOYMENT JUDGE ON 20 November 2017",
+      "passage_word_count": 139,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-a-grant-v-aa-developments-ltd-2500710-2017/sections/2/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-a-grant-v-aa-developments-ltd-2500710-2017:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-c-orogbu-v-duncan-lewis-solicitors-ltd-3201906-slash-2021",
+      "case_name": "Mr C Orogbu v Duncan Lewis Solicitors Ltd: 3201906/2021 - Judgment",
+      "court": null,
+      "date": "2023-10-30",
+      "passage": "… s: Dr L Rylah Miss S Harwood Appearances: For the claimant: Mr M Maitland Jones (counsel) For the respondent: Mr C McDevitt (counsel) JUDGMENT 1. The claim of unfair dismissal (section 94 Employment Rights Act 1996) is well founded. 2. The claim of discrimination arising from disability (section 15 Equality Act 2010) as set out at paragraphs 5.1.1 and 5.1.2 of the list of issues dated 8 June 2022 is well founded. 3. The claim of discrimination arising from disability (section 15 Equality Act 2010) as set out at paragraph 5.1.3 of the list of issues dated 8 June 2022 is not well founded and is dismissed. 4. The claim of failure to make reasonable adjustments (sections 20-21 Equality Act 2010) as set out at paragraphs 6.2.2 and 6.2.3 of the list of issues dated 8 June 2022 is well founded. The Tribunal has jurisdiction to hear these claims as they were presented to the Tribunal in accordan …",
+      "passage_word_count": 160,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-c-orogbu-v-duncan-lewis-solicitors-ltd-3201906-slash-2021/sections/4/compiled.txt",
+      "provision_cited": "section-15",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-c-orogbu-v-duncan-lewis-solicitors-ltd-3201906-slash-2021:4",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-c-v-the-commissioner-of-police-of-the-metropolis-2202540-slash-2023",
+      "case_name": "Mr C v The Commissioner of Police of The Metropolis: 2202540/2023 - Judgment",
+      "court": null,
+      "date": "2025-01-03",
+      "passage": "… ) On: 19 - 22 November 2024 Before: Employment Judge Anthony Dr J Holgate Ms M Pilford REPRESENTATION: Claimant: Self-representing Respondent: Mr S Keen (Counsel) JUDGMENT The unanimous judgment of the Tribunal is as follows: 1. The complaint of direct discrimination because of disability under the Equality Act 2010 fails and is dismissed. 2. The complaint of discrimination arising from disability under the Equality Act 2010 fails and is dismissed. 3. The complaint of failure to make reasonable adjustments under the Equality Act 2010 fails and is dismissed. 4. The complaint of harassment related to disability under the Equality Act 2010 fails and is dismissed. 5. The complaint of victimisation under the Equality Act 2010 fails and is dismissed. Case Number: 2202540/2023 2 Anonymity and Reporting Restriction Order 6. There is an anonymity and reporting restriction order in place pursuant  …",
+      "passage_word_count": 142,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-c-v-the-commissioner-of-police-of-the-metropolis-2202540-slash-2023/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-c-v-the-commissioner-of-police-of-the-metropolis-2202540-slash-2023:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-l-ofosuah-v-nhs-north-central-london-icb-3314028-slash-2021",
+      "case_name": "Ms L Ofosuah v NHS North Central London ICB: 3314028/2021 - Judgment",
+      "court": null,
+      "date": "2023-10-12",
+      "passage": "… in Members: Mr Williams Ms Omer Representation Claimant: Litigant in person, Respondent: Ms O’Halloran (counsel) JUDGMENT 1. For the reasons given in oral judgment at Watford Tribunal on 17 th August 2023, the Tribunal find that the claimant was the subject of sexual harassment as defined under s26 Equality Act 2010 between 23 rd December 2020 and 17 th February 2020. 2. The claim of direct discrimination under s13 Equality Act 2010 based on the same allegations is dismissed. 3. The Tribunal find that the respondent had taken all reasonable steps to prevent the harassment and that the statutory defence under s109 Equality Act 2010 applied. The respondent was not therefore responsible for the unwanted conduct of its employee. 4. The claim of harassment under s13 Equality Act 2010 is therefore dismissed. _____________________________ Employment Judge K A Shrimplin Date: 4/9/2023 Sent to th …",
+      "passage_word_count": 145,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-l-ofosuah-v-nhs-north-central-london-icb-3314028-slash-2021/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-l-ofosuah-v-nhs-north-central-london-icb-3314028-slash-2021:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-n-woodhead-v-the-secretary-of-state-for-work-and-pensions-2400801-2016",
+      "case_name": "Mrs N Woodhead v The Secretary of State for Work and Pensions: 2400801/2016 Preliminary",
+      "court": null,
+      "date": "2017-09-27",
+      "passage": "…  Bradshaw, PCS trade union Mr S Redpath, counsel JUDGMENT 1. The claimant’s application to amend her claim so as to rely on the impairments of fibromyalgia and/or chronic back pain in support of her contention to have been at the material time for the claim a disabled person within section 6 of the Equality Act 2010 is refused. 2. The claimant was not at the material time for her claim a disabled person within section 6 of the Equality Act 2010 by reason of the impairments of osteopenia and/or osteoporosis. 3. The claimant's complaint of unlawful disability discrimination within the Equality Act 2010 is accordingly dismissed. Case No. 2400801/2016 2 4. The claimant's remaining complaints of unlawful age discrimination within the Equality Act 2010 and unfair dismissal under the Employment Rights Act 1996 will proceed to hearing. Regional Employment Judge Robertson Date 24 April 2017 JUDGM …",
+      "passage_word_count": 148,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-n-woodhead-v-the-secretary-of-state-for-work-and-pensions-2400801-2016/sections/2/compiled.txt",
+      "provision_cited": "section-6",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-n-woodhead-v-the-secretary-of-state-for-work-and-pensions-2400801-2016:2",
+      "query": "Equality Act 2010"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/ms-t-ashreena-v-cabinet-office-2209286-slash-2023",
+      "case_name": "Ms T Ashreena v Cabinet Office: 2209286/2023 - Judgment",
+      "court": null,
+      "date": "2024-09-24",
+      "passage": "… ismissed: a. Maternity Detriment (S 47c Employment Rights Act 1996 and reg 19 Maternity and Parental Leave etc Regulations 1999); b. Maternity Dismissal (s.99 Employment Rights Act 1996, reg 20 MPLR Maternity and Parental Leave etc Regulations 1999 (MPLR 1999)); c. Direct disability discrimination (Equality Act 2010 section 13); d. Indirect disability discrimination (Equality Act 2010 section 19); e. Direct sex discrimination (Equality Act 2010 section 13); f. Indirect sex discrimination (Equality Act 2010 section 19). Employment Judge Adkin 10 June 2024 Case Number: 2209286/23 PHCM Order 2 of 2 September 2023 Sent to the parties on: 14 June 2024 For the Tribunal Office: Reasons having been given orally at the hearing, the parties may apply for written reasons within 14 days of the date of this order being sent to them pursuant to rule 62 of the Employment Tribunal (Constitution & Rules  …",
+      "passage_word_count": 145,
+      "source_key": "et-decisions/employment-tribunal-decisions/ms-t-ashreena-v-cabinet-office-2209286-slash-2023/sections/2/compiled.txt",
+      "provision_cited": null,
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/ms-t-ashreena-v-cabinet-office-2209286-slash-2023:2",
+      "query": "Equality Act 2010"
+    }
+  ],
+  "set_b_common_law_independent": [
+    {
+      "neutral_citation": "[2015] UKPC 10",
+      "case_name": "Annissa Webster and others v The Attorney General of Trinidad and Tobago",
+      "court": "UKPC",
+      "date": "2015-03-09",
+      "principle_searched": "whether the common law knows a general principle of equality",
+      "passage": "… of the Constitution of Trinidad and Tobago it is recognised and declared that “there have existed and shall continue to exist, without discrimination by reason of race, origin, colour, religion or sex, the following fundamental human rights and freedoms, namely: … (b) the right of the individual to equality before the law and the protection of the law; … (d) the right of the individual to equality of treatment from any public authority in the exercise of its functions”. 11. This case was originally brought on the basis of both those rights. It was alleged that the failure to make regulations governing the terms and conditions of SRPs denied them the same protection of the law as was afforded to the RPOs. However, that claim has not been pursued before the Board. The appellants now found their claims exclusively on section 4(d) of the Constitution, the right to equality of treatment from  …",
+      "passage_word_count": 154,
+      "source_key": "caselaw/2015-ukpc-10/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2015] UKPC 10:1",
+      "term_matched": "equality before the law"
+    },
+    {
+      "neutral_citation": "[2022] EAT 163",
+      "case_name": "The Secretary of State for Work and Pensions v D Beattie & Ors",
+      "court": "EAT",
+      "date": "2022-10-26",
+      "principle_searched": "whether the common law knows a general principle of equality",
+      "passage": "… tates and it respects fundamental rights, as guaranteed by the European Convention for the Protection of Human Rights and Fundamental Freedoms and as they result from the constitutional traditions common to the Member States, as general principles of Community law. … (4) The right of all persons to equality before the law and protection against discrimination constitutes a universal right …. … (11) Discrimination based on religion or belief, disability, age or sexual orientation may undermine the achievement of the objectives of the EC Treaty, in particular the attainment of a high level of employment and social protection, raising the standard of living and the quality of life, economic and social cohesion and solidarity, and the free movement of persons. (12) To this end, any direct or indirect discrimination based on religion or belief, disability, age or sexual orientation as regards …",
+      "passage_word_count": 143,
+      "source_key": "caselaw/2022-eat-163/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2022] EAT 163:1",
+      "term_matched": "equality before the law"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/xa-v-the-royal-navy-ministry-of-defence-1400773-2018",
+      "case_name": "XA v The Royal Navy - Ministry of Defence: 1400773/2018 - Reserved Judgment",
+      "court": null,
+      "date": "2022-10-25",
+      "principle_searched": "whether the common law knows a general principle of equality",
+      "passage": "… e Employment Equality (Sexual Orientation) Regulations 2003), and subsequently in the primary legislation now incorporated into the Equality Act 2010. The relevant parts of the Framework Directive are set out above. 54. Recital (4) of the Framework Directive establishes “the right of all persons to equality before the law and protection against discrimination,” recognising that as a universal right included within the European Convention for the protection of Human Rights and Fundamental Freedoms. 55. Recital (11) identifies that discrimination based on religion or belief, disability, age or sexual orientation undermines the achievement of the objectives of the EC Treaty. Recital (12) provides that discrimination based on “sexual orientation” as regards the areas covered by the Framework Directive should be prohibited throughout the Community. 56. Recital (22) provides “This Directive is …",
+      "passage_word_count": 132,
+      "source_key": "et-decisions/employment-tribunal-decisions/xa-v-the-royal-navy-ministry-of-defence-1400773-2018/sections/2/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/xa-v-the-royal-navy-ministry-of-defence-1400773-2018:2",
+      "term_matched": "equality before the law"
+    },
+    {
+      "neutral_citation": "[2026] EWHC 825 (KB)",
+      "case_name": "Wayne Truter v The Secretary of State for Justice",
+      "court": "EWHC (KB)",
+      "date": "2026-02-12",
+      "principle_searched": "the common law position on discrimination before the statutory regime",
+      "passage": "…  later, but the key point on liability for False Imprisonment is that even Mr Rainsbury is right to say that Mr Truter would have had the same conditions imposed had there been a referral to the Parole Board, that goes not to liability but to damages, as I consider in a moment. Given it is conceded at Common Law there was no power to impose the additional licence conditions, the real issue is whether or not those conditions amounted to ‘imprisonment’ at Common Law. 38. As I have just discussed in relation to the procedural issue about False Imprisonment, the evidence relevant to whether there was Common Law ‘imprisonment’ was the same at the trial as the evidence in relation to ‘deprivation of liberty’ under Art.5 ECHR and it was not suggested any additional evidence would have been necessary for the Common Law claim. For example, Mr Rayfield’s description of the conditions in the Approv …",
+      "passage_word_count": 157,
+      "source_key": "caselaw/2026-ewhc-825-kb/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2026] EWHC 825 (KB):1",
+      "term_matched": "at common law there was no"
+    },
+    {
+      "neutral_citation": "[2019] EWHC 1409 (Admin)",
+      "case_name": "Davison, R (on the application of) v Elmbridge Borough Council",
+      "court": "EWHC (Admin)",
+      "date": "2019-05-01",
+      "principle_searched": "consistency and equal treatment as a public law principle",
+      "passage": "… graph 89 of the National Planning Policy Framework (NPPF) in finding that the sports facility was approved development despite it causing harm to the openness and purpose of the Green Belt. 3. There is one ground of challenge before this Court. The Claimant contends that the Council contravened the principle of consistency in decision-making in departing, without reasons, from its previous finding that the proposed development would have an adverse impact on the openness of the Green Belt to deciding that it would not have an adverse effect. The Council contends that it was not required to consider its previous planning judgment, because the decision in question had been quashed by the Court in R(Boot) v Elmbridge BC . 4. Accordingly, the issue for this Court is the application of the principle of consistency of decision making in planning law to a second round of decision making followi …",
+      "passage_word_count": 150,
+      "source_key": "caselaw/2019-ewhc-1409-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2019] EWHC 1409 (Admin):1",
+      "term_matched": "principle of consistency"
+    },
+    {
+      "neutral_citation": "[2018] EWHC 2878 (Admin)",
+      "case_name": "Berkeley Burke Sipp Administration Ltd v Financial Ombudsman Service Limited",
+      "court": "EWHC (Admin)",
+      "date": "2018-10-30",
+      "principle_searched": "consistency and equal treatment as a public law principle",
+      "passage": "… to ascertain whether it is viable and should or should not be accepted into the SIPP; and, where the SIPP provider ascertains that it should not be accepted, refuse to include it within the client’s SIPP, notwithstanding his instructions to the contrary? b. To what extent was Mr. Brown bound by the principle of consistency as regards previous decisions of the Pensions Ombudsman in cases in which the facts were the same or not materially dissimilar to the facts of the case before him? 43. The arguments advanced by BBSAL in relation to the first ground were ultimately somewhat expanded, in particular with a focus on the lack of consultation in relation to the duty which the Ombudsman had found to exist. However, there was no objection to the expansion of the arguments and it is therefore appropriate that I should deal with all points advanced on their merits. F: The parties’ submissions Th …",
+      "passage_word_count": 156,
+      "source_key": "caselaw/2018-ewhc-2878-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2018] EWHC 2878 (Admin):1",
+      "term_matched": "principle of consistency"
+    },
+    {
+      "neutral_citation": "[2012] EWHC 1952 (Admin)",
+      "case_name": "Hussain, R (on the application of) v Secretary of State for the Home Department",
+      "court": "EWHC (Admin)",
+      "date": "2012-07-12",
+      "principle_searched": "consistency and equal treatment as a public law principle",
+      "passage": "… case and the Claimant’s case. Both were involved in the hijacking. H had a more significant role in leading the hijacking than did the Claimant. It appears that the Claimant had better evidence to support his defence of duress than did H. 50. I readily accept the proposition that the principle that like cases should be treated alike does not mean that a decision maker needs to trawl through other cases looking for the possibility that there might be a relevant decision to consider. Lawful decision making should not become either formulaic or difficult to achieve. I also accept that conscientious decision makers, applying their minds to the same set of facts, may sometimes come to different conclusions (a graphic example of which occurred in the case of Otshudi v Secretary of State for the Home Department [2004] EWCA Civ 893 to which Ms Broadfoot referred me). However this is not that cas …",
+      "passage_word_count": 155,
+      "source_key": "caselaw/2012-ewhc-1952-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2012] EWHC 1952 (Admin):1",
+      "term_matched": "like cases should be treated alike"
+    },
+    {
+      "neutral_citation": "[2009] EWCA Civ 634",
+      "case_name": "AM (Somalia) v Entry Clearance Officer",
+      "court": "EWCA Civ",
+      "date": "2009-06-30",
+      "principle_searched": "consistency and equal treatment as a public law principle",
+      "passage": "… rgument as though they were interchangeable concepts, but I do not believe that they are. There does not, however, appear to be any decision of the European Court of Human Rights (“ECHR”) which discusses this issue. Accordingly, I wish to give a short judgment of my own. The scope of Article 14 34. Like cases should be treated alike, and different cases treated differently. This is perhaps the most fundamental principle of justice. If defendant A is sentenced to a harsher sentence than equally culpable defendant B that is universally perceived to be unfair. Conversely, if A is sentenced to the same sentence as more culpable defendant B, that is also unfair. The sentences themselves may be harsh or lenient, but that is not the source of this particular injustice or unfairness. It is the unjust differentiation in the first case, and the unjust failure to make a differentiation in the secon …",
+      "passage_word_count": 154,
+      "source_key": "caselaw/2009-ewca-civ-634/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2009] EWCA Civ 634:1",
+      "term_matched": "like cases should be treated alike"
+    }
+  ],
+  "sets_never_merged": "Set A and Set B answer different questions and are never added. Set A is \"who cites this Act\"; Set B is \"is the principle protected without it\". A combined count would answer neither.",
+  "counts": {
+    "set_a": 60,
+    "set_b": 8,
+    "set_a_note": "60 judgments whose own text names \"Equality Act 2010\", out of the top 60 BM25 candidates over 5 collections. Not a count of all cases citing the Act.",
+    "set_b_note": "8 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point."
+  },
+  "gaps": [
+    {
+      "principle_searched": "the common law duty to act fairly towards the disabled",
+      "terms_tried": [
+        "reasonable adjustments at common law",
+        "common law duty to make adjustments"
+      ],
+      "returned": 0,
+      "broader_terms_tried": [
+        "reasonable adjustments",
+        "duty to make adjustments"
+      ],
+      "phrase_present_in_corpus_anyway": 0,
+      "witnesses": [],
+      "verdict": "a real gap so far as these terms reach: neither the phrase queries nor the broader ones returned a judgment containing the principle's words. Still top-K retrieval, not a scan."
+    }
+  ],
+  "gaps_note": "Every empty principle was re-asked with a BROADER query and the returned judgments were tested for the principle's own words. Where they are present, the entry says RETRIEVAL FAILURE and names the judgments — the corpus is not silent, our query was. That distinction decides whether the report can say the common law says nothing on a point.",
+  "prediction": {
+    "set_a": 25,
+    "set_b": 6,
+    "recorded_before_run": true
+  }
+}

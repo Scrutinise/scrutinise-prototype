@@ -133,3 +133,48 @@ establish a rate, and none is quoted for them.
   09:00 Tuesday 1 September per brief §5. Its scoping row is in `scoping_remaining.csv` and the full
   T1–T3 run is one flag away: `--include-t4` on each of the three scripts, about fifteen minutes.
 - **Nothing else.** Every item on the brief's §8 checklist is present.
+
+---
+
+## Added 29 Aug by briefs B2, B3 and B4
+
+| file | brief | what it is |
+|---|---|---|
+| `argument_WS-0n.json` | B2 | historic objections for §9 — sourced, quoted, with speaker/date/debate/source key |
+| `caselaw_WS-0n.json` | B3 | Set A (cases citing the Act) and Set B (the principle at common law), never merged |
+| `verification_markup.md` / `.json` | B4 | the `markup` detector's own verification rate |
+
+### ⚠ Four things in those files that change what a number means
+
+**1. B2: sort on `subject_terms_present` before you draft.** A confirmed objection can be two
+things that look identical in JSON — the cross-subject find this instrument exists for (the
+unbounded-duty argument made in 2005 about *advertising marches*, which transfers to a public
+sector equality duty unchanged), or pattern noise (a COST pattern firing on "burden on small
+businesses" in a question about *fuel protesters*). An empty `subject_terms_present` means the
+passage is connected to the measure by the argumentative **move** alone. **For WS-04 that is 28 of
+32 rows.** Telling the two apart is a reading and it is yours; the field sorts the pile and rules on
+nothing.
+
+**2. B3: the front matter's "case law from 2001 only" is wrong.** The measured floor is
+**1965-08-09** across 280,573 rows in five collections. ⚠ And `coverage.ts`'s own
+`CASE_LAW_CORPORA` is wrong too — two of the four names it lists hold zero rows, and it misses
+`tna-caselaw` (which supplies the 1965 floor) and `ni-judgments`. The coverage block in each B3
+file is reproduced **exactly as generated, defect included**, because that is what the report
+prints; `date_range_measured` beside it is the corrected measurement. Not fixed here: correcting it
+changes a block you are drafting against today.
+
+**3. B3: CRAG 2010 is essentially unlitigated — one judgment.** `ni-judgments:2021-nica-49 — JR83
+(No 2) and The Prime Minister`. That is a finding, not a retrieval failure: the Human Rights Act
+through the identical path returns 53 of 60. §8 for WS-05 has to be written knowing it.
+
+**4. B4: the markup rate is 20 of 25 (80%) and it is NOT the T5 rate.** Two detectors, two
+denominators, never averaged. **All five surviving failures are one class** — the misattributed
+`source_provision_ref` described above — at 5 of 25 = 20%, against T2's 496 of 2,593 = 19.1%.
+Two methods (local CLML, and live legislation.gov.uk), two samples, one rate. ⚠ Two further
+first-pass failures were the *checker's* and were caught by re-examination before being recorded;
+had they been published the rate would have read 18 of 25.
+
+### Still not produced
+
+- **B5** — `register_proposals.json` is not on disk. Not started, not improvised.
+- **B6** — waits on B5.

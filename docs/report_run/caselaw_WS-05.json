@@ -1,0 +1,497 @@
+{
+  "generated_at": "2026-08-29T15:25:21.876Z",
+  "measure": "WS-05 — Constitutional Reform and Governance Act 2010, Part 1",
+  "retrieval_note": "Retrieval only. There is no relevance field and no holding field, on purpose: whether the common law has absorbed the principle is the analysis track's question and nothing here answers it. Every passage is the court's own words, verbatim, with the R2 key it was read from.",
+  "instrument": {
+    "keyword_service": "https://fts-serve-production.up.railway.app",
+    "keyword_service_note": "FTS_SEARCH_URL is not set in .env; this is the production host found in the repo.",
+    "corpora_searched": [
+      "tna-caselaw",
+      "et-decisions",
+      "tax-tribunals",
+      "ni-judgments",
+      "cma-cases"
+    ],
+    "confirm_step": "FTS proposes; the judgment's own text disposes. A hit whose body does not contain the search term is dropped rather than kept to pad the set."
+  },
+  "coverage": {
+    "generatedAt": "2026-08-29T15:22:53.467Z",
+    "layers": [
+      {
+        "id": "markup-citations",
+        "what": "references the document asserted by <Citation URI>",
+        "rows": 385346,
+        "status": "searched",
+        "consequence": "the source names the target by identity, so the act-level match is not inferred"
+      },
+      {
+        "id": "text-citations",
+        "what": "act NAMES resolved in running text against corpus_acts titles",
+        "rows": 649202,
+        "status": "searched",
+        "consequence": "the target id is DERIVED, not read from the document — never quote target_uri as the source’s own words"
+      },
+      {
+        "id": "enabling-power",
+        "what": "made-under: \"this instrument was made under section N of that Act\", with the enacting words attached",
+        "rows": 191258,
+        "where": "legislation_edges (230,681 rows, no evidence column)",
+        "status": "searched",
+        "consequence": "a stronger fact than a mention — an instrument that merely mentions an Act survives its repeal, while one whose ENABLING POWER is repealed may fall with it. Without this layer a consequence list cannot tell the two apart"
+      },
+      {
+        "id": "amendment-effects",
+        "what": "amends / repeals / commences / modifies, from TNA’s own effects data",
+        "rows": 0,
+        "where": "legislation_edges (1,997,033 rows)",
+        "status": "held-elsewhere",
+        "consequence": "a repeal or amendment is not a citation and is not returned by this query"
+      },
+      {
+        "id": "case-law-citations",
+        "what": "a judgment citing a statutory provision",
+        "rows": 0,
+        "status": "not-built",
+        "consequence": "a provision may be read down, disapplied or construed by a court with nothing here to show it"
+      },
+      {
+        "id": "treaty-obligations",
+        "what": "a treaty article bearing on a domestic provision",
+        "rows": 0,
+        "status": "not-built",
+        "consequence": "a change may be prevented by an international obligation that this graph cannot see"
+      }
+    ],
+    "detection": [
+      {
+        "detection": "text",
+        "rows": 649202,
+        "sourceDocs": 61127
+      },
+      {
+        "detection": "markup",
+        "rows": 385346,
+        "sourceDocs": 35898
+      },
+      {
+        "detection": "enabling",
+        "rows": 191258,
+        "sourceDocs": 70576
+      }
+    ],
+    "notInAProvision": {
+      "rows": 267054,
+      "total": 1225806,
+      "pct": 21.78599223694451
+    },
+    "unresolvedTargets": {
+      "rows": 172316,
+      "total": 1225806,
+      "pct": 14.057363073765343
+    },
+    "recorded": [
+      {
+        "key": "dta_orders_recoverable_from_held_bytes",
+        "n": 127,
+        "note": "double taxation Orders whose scheduled agreement is ABSENT from the corpus but PRESENT in the bulk CLML already on disk. No fetch is needed to recover these; an ingest pass is. The remainder need the source.",
+        "measuredAt": "2026-08-28T00:32:39.782Z",
+        "measuredBy": "graph/audit-4b-tax.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "identity_ambiguous_calendar_forms",
+        "n": 419,
+        "note": "calendar-year id forms that name MORE THAN ONE Act, because two parliamentary sessions can fall inside one calendar year and each numbers its chapters from the start. REFUSED a bridge and recorded as refusals, never resolved by first-wins.",
+        "measuredAt": "2026-08-28T00:32:39.864Z",
+        "measuredBy": "graph/audit-4b-identity.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "madeunder_section_refs_wrong_pct",
+        "n": 36.1,
+        "note": "percentage of the pre-2026-08-28 preamble parser's SECTION-level refs that were wrong — a bracketed subsection read as a section, or a ref list attached to a different Act named in the same preamble. legislation_edges still holds them; citation_edge's enabling rows were written by the fixed parser.",
+        "measuredAt": "2026-08-28T00:32:39.810Z",
+        "measuredBy": "graph/audit-4b-layer2.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "oi15_documents_skipped",
+        "n": 2431,
+        "note": "documents in the bulk CLML file the shipped calendar-year entry filter skipped, of the total it should have read",
+        "measuredAt": "2026-08-26T13:04:21.237Z",
+        "measuredBy": "graph/audit-4a-blast-radius.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "oi15_residual_edges",
+        "n": 924,
+        "note": "citation edges recoverable from the pre-1963 documents the July cites extractor never opened; the residual against legislation_edges, which has NOT been re-extracted. citation_edge itself reads every document.",
+        "measuredAt": "2026-08-26T13:04:21.213Z",
+        "measuredBy": "graph/audit-4a-t2-hole.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "si_schedule_retention_pct",
+        "n": 41.3,
+        "note": "percentage of sampled instruments whose bulk-CLML schedule also reached the corpus as a schedule section. A schedule the ingest dropped presents as a SHORT DOCUMENT, not as an error, so this bounds every answer that depends on scheduled text — a treaty above all.",
+        "measuredAt": "2026-08-28T00:32:39.758Z",
+        "measuredBy": "graph/audit-4b-schedules.ts",
+        "ageDays": 1.6,
+        "stale": false
+      },
+      {
+        "key": "unresolved_act_name_spans",
+        "n": 97095,
+        "note": "act-name spans in running text that resolved to no instrument we hold a title for — short forms (\"the 1998 Act\"), pre-1963 Acts under the other id form, and Acts the corpus does not hold. Counted, never dropped silently; short-form resolution is not built.",
+        "measuredAt": "2026-08-26T13:04:21.257Z",
+        "measuredBy": "graph/audit-4a-t3-spans.ts",
+        "ageDays": 3.1,
+        "stale": false
+      },
+      {
+        "key": "unresolved_spans_in_target_docs_pct",
+        "n": 29.9,
+        "note": "percentage of those unresolved spans sitting in a document that also carries a resolved citation to one of twelve research-target Acts — the number that decides whether short-form resolution is urgent",
+        "measuredAt": "2026-08-26T13:04:21.277Z",
+        "measuredBy": "graph/audit-4a-t3-spans.ts",
+        "ageDays": 3.1,
+        "stale": false
+      }
+    ],
+    "staleFacts": [],
+    "caseLawBoundary": {
+      "corpora": [
+        "et-decisions",
+        "tax-tribunals"
+      ],
+      "earliest": "1989-11-09",
+      "latest": "2026-06-11"
+    },
+    "identityBridge": {
+      "built": true,
+      "bridgedForms": 13454,
+      "ambiguousTargets": 77,
+      "unbridgeableTargets": 13,
+      "regnalTargets": 783
+    },
+    "schedules": {
+      "instruments": 109202,
+      "instrumentsWithASchedule": 9418,
+      "pct": 8.624384168788117
+    }
+  },
+  "coverage_defect_found_by_this_run": {
+    "what": "coverage.ts CASE_LAW_CORPORA names four collections; two of them do not exist and the two largest that do are missing.",
+    "names_in_coverage_ts": [
+      "caselaw",
+      "caselaw-fcl",
+      "et-decisions",
+      "tax-tribunals"
+    ],
+    "of_those_that_exist": [
+      "et-decisions",
+      "tax-tribunals"
+    ],
+    "missing_from_it": [
+      "tna-caselaw (74,896 rows, from 1965)",
+      "ni-judgments (7,927 rows)"
+    ],
+    "consequence": "The case-law boundary the coverage block prints is drawn over et-decisions and tax-tribunals alone, so it begins in 1989 — twenty-four years after the real floor of 1965. The block is reproduced above EXACTLY as generated, defect included, because that is what the report prints; date_range_measured below is the corrected measurement."
+  },
+  "date_range_measured": {
+    "earliest": "1965-08-09",
+    "latest": "2026-06-12",
+    "rows": 280573,
+    "corpora_measured": [
+      "tna-caselaw",
+      "et-decisions",
+      "tax-tribunals",
+      "ni-judgments",
+      "cma-cases"
+    ],
+    "by_corpus": [
+      {
+        "corpus": "et-decisions",
+        "n": 161753,
+        "earliest": "2017-02-08",
+        "latest": "2026-06-11"
+      },
+      {
+        "corpus": "tna-caselaw",
+        "n": 74896,
+        "earliest": "1965-08-09",
+        "latest": "2026-06-11"
+      },
+      {
+        "corpus": "cma-cases",
+        "n": 22898,
+        "earliest": "2001-04-18",
+        "latest": "2026-06-12"
+      },
+      {
+        "corpus": "tax-tribunals",
+        "n": 13099,
+        "earliest": "1989-11-09",
+        "latest": "2024-06-11"
+      },
+      {
+        "corpus": "ni-judgments",
+        "n": 7927,
+        "earliest": "1984-09-07",
+        "latest": "2026-06-11"
+      }
+    ],
+    "by_decade": {
+      "1960s": 1,
+      "1970s": 1,
+      "1980s": 87,
+      "1990s": 273,
+      "2000s": 24500,
+      "2010s": 95029,
+      "2020s": 139177
+    },
+    "by_court": {
+      "EWHC": {
+        "n": 39132,
+        "earliest": "2003-01-03",
+        "latest": "2026-06-10"
+      },
+      "EWCA": {
+        "n": 22487,
+        "earliest": "2001-04-11",
+        "latest": "2026-06-10"
+      },
+      "UKFTT": {
+        "n": 4337,
+        "earliest": "2008-11-12",
+        "latest": "2026-06-11"
+      },
+      "UKUT": {
+        "n": 2688,
+        "earliest": "2009-05-06",
+        "latest": "2026-06-09"
+      },
+      "EWFC": {
+        "n": 1907,
+        "earliest": "2009-03-05",
+        "latest": "2026-06-09"
+      },
+      "UKSC": {
+        "n": 948,
+        "earliest": "2009-10-14",
+        "latest": "2026-05-07"
+      },
+      "(unparsed)": {
+        "n": 830,
+        "earliest": "1965-08-09",
+        "latest": "2026-05-21"
+      },
+      "EAT": {
+        "n": 788,
+        "earliest": "2021-03-31",
+        "latest": "2026-06-11"
+      },
+      "EWCOP": {
+        "n": 766,
+        "earliest": "2009-02-09",
+        "latest": "2026-06-08"
+      },
+      "UKPC": {
+        "n": 704,
+        "earliest": "2009-11-04",
+        "latest": "2026-06-11"
+      },
+      "UKAIT": {
+        "n": 150,
+        "earliest": "2007-06-29",
+        "latest": "2009-12-18"
+      },
+      "EWCC": {
+        "n": 132,
+        "earliest": "2019-05-16",
+        "latest": "2026-06-05"
+      },
+      "EWCR": {
+        "n": 19,
+        "earliest": "2020-12-21",
+        "latest": "2026-05-01"
+      },
+      "UKIPTrib": {
+        "n": 8,
+        "earliest": "2023-06-21",
+        "latest": "2024-08-02"
+      }
+    }
+  },
+  "front_matter_check": {
+    "claim_in_the_report": "case law from 2001 only",
+    "measured_earliest": "1965-08-09",
+    "verdict": "THE FRONT MATTER IS WRONG. The measured floor is earlier than 2001. See date_range_measured.by_corpus for which collection supplies it."
+  },
+  "set_a_cites_the_act": [
+    {
+      "neutral_citation": "2021-nica-49",
+      "case_name": "JR83 (No 2) and The Prime Minister",
+      "court": null,
+      "date": "2021-08-30",
+      "passage": "… he EUWAA enhanced the protection of the arrangements for North-South cooperation as provided for by the Belfast Agreement by amending section 10 of the 2018 Act which itself provided for the continuation of North-South cooperation and the prevention of new border arrangements. [7] Section 20 of the Constitutional Reform and Governance Act 2010 provides for treaties to be laid before Parliament before ratification. Section 32 of the EUWAA provided that section 20 did not apply in relation to the withdrawal agreement. That enabled the Prime Minister to ratify the treaty by signing it on 24 January 2020. It is that act which is the subject of the challenge. The Appellant [8] The appellant is a 62 year old grandmother who lives in Northern Ireland near the border with the Republic of Ireland. She is concerned about the consequences of a hard border between Northern Ireland and the Republic o …",
+      "passage_word_count": 151,
+      "source_key": "ni-judgments/2021-nica-49/sections/1/compiled.txt",
+      "provision_cited": "section-20",
+      "corpus": "ni-judgments",
+      "section_id": "ni-judgments:2021-nica-49:1",
+      "query": "Constitutional Reform and Governance Act 2010"
+    }
+  ],
+  "set_b_common_law_independent": [
+    {
+      "neutral_citation": "[2017] UKSC 1",
+      "case_name": "Rahmatullah v Ministry of Defence and another",
+      "court": "UKSC",
+      "date": "2017-01-17",
+      "principle_searched": "the prerogative basis of civil service employment",
+      "passage": "… e is not the subject-matter of this judgment. Does the Crown act of state doctrine encompass two rules? 19. The clearest judicial statement that the doctrine does encompass two rules is that of Lord Wilberforce in Nissan’ s case, at 231: “The first rule is one which provides a defendant, normally a servant of the Crown, with a defence to an act otherwise tortious or criminal, committed abroad, provided that the act was authorised or subsequently ratified by the Crown. It is established that this defence may be pleaded against an alien, if done abroad, but not against a friendly alien if the act was done in Her Majesty’s Dominions. It is supported in its positive aspect by the well-known case of Buron v Denman (1848) 2 Exch 167 and in its negative aspect by Johnstone v Pedlar [1921] 2 AC 262 . The second rule is one of justiciability: it prevents British municipal courts from taking cogni …",
+      "passage_word_count": 160,
+      "source_key": "caselaw/2017-uksc-1/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] UKSC 1:1",
+      "term_matched": "servant of the Crown"
+    },
+    {
+      "neutral_citation": "8955",
+      "case_name": "TC 04933: Alan Edwards v The Commissioners for Her Majesty's Revenue & Customs",
+      "court": null,
+      "date": "2016-03-02",
+      "principle_searched": "the prerogative basis of civil service employment",
+      "passage": "…  England volume 36 (1) fourth addition paragraph 104 citing inter alia P v Rasook 1997 4 All ER 439) but his relationship with the Crown is not that of master or servant or principal and agent and, “if he is called a servant, it is in the sense in which any holder of a public office may be called a servant of the Crown or of the state” (Halsbury ibid paragraph 105 citing AG for New South Wales v Perpetual Trustee Co Limited [1955] AC 457 at 480- 481.) 26. In my judgement the \"government\" normally means the executive: those exercising the executive powers of the Monarch in whose name the activities of government are carried on; and those persons are ministers and the civil service. As a result it does not seem to me that a police officer is as such employed in government service. I am comforted in this decision by section 12 of the Official Secrets Act 1989 which provides that a Crown Ser …",
+      "passage_word_count": 169,
+      "source_key": "tax-tribunals/8955/sections/1/compiled.txt",
+      "corpus": "tax-tribunals",
+      "section_id": "tax-tribunals:8955:1",
+      "term_matched": "servant of the Crown"
+    },
+    {
+      "neutral_citation": "[2017] EWHC 1787 (Admin)",
+      "case_name": "Public And Commercial Services Union & Ors v Minister for the Cabinet Office",
+      "court": "EWHC (Admin)",
+      "date": "2017-07-17",
+      "principle_searched": "whether civil service management is justiciable",
+      "passage": "… not constitute legitimate expectations in domestic public law. I do not agree. It is established that consistent administrative practice in the exercise of discretionary powers can give rise to a protected legitimate expectation under domestic law: see e.g. O’Reilly v Mackman [1983] 2 AC 237 , 275; Council of Civil Service Unions v Minister for the Civil Service [1985] AC 374 , 408-409. In my view, that is the position here. The claim for legitimate expectations for individual civil servants based on the stated entitlements in the CSCS is a particularly strong one, given the longstanding nature of the administrative practice in question. The entitlements in the CSCS are set out in clear and specific terms; they are akin to contract rights (as they would be, if civil servants worked in the private sector and had their rights set out in contracts of employment); civil servants are encourag …",
+      "passage_word_count": 150,
+      "source_key": "caselaw/2017-ewhc-1787-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2017] EWHC 1787 (Admin):1",
+      "term_matched": "Council of Civil Service Unions"
+    },
+    {
+      "neutral_citation": "[2010] EWHC 1463 (Admin)",
+      "case_name": "Public & Commercial Services Union, R (on the application of) v Minister for the Civil Service",
+      "court": "EWHC (Admin)",
+      "date": "2010-06-17",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… y be saved. (1) The scope of protection under section 2(3) 4. The dispute in relation to this heading relates to three matters: i) Miss Laing QC for the Minister submits that the protection afforded by section 2(3) does not extend to benefits which may become payable under the CSCS in cases where a civil servant, by agreement with his employer, takes voluntary redundancy or voluntary early retirement. On her submission there is an important distinction to be drawn for the purposes of application of section 2(3) between cases of compulsory removal from service (compulsory redundancy, compulsory early retirement - as covered, in particular, by sections 2 and 2A of the CSCS - etc.: “compulsory severance”) and cases of voluntary withdrawal from service (voluntary redundancy, voluntary early retirement - as covered, for example, by sections 3 and 3A of the CSCS - etc.: “voluntary severance”). …",
+      "passage_word_count": 147,
+      "source_key": "caselaw/2010-ewhc-1463-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2010] EWHC 1463 (Admin):1",
+      "term_matched": "civil servant"
+    },
+    {
+      "neutral_citation": "[2010] EWHC 1027 (Admin)",
+      "case_name": "Public & Commercial Services Union, R (on the application of) v Minister for the Civil Service",
+      "court": "EWHC (Admin)",
+      "date": "2010-05-09",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… tset of the hearing for judicial review to proceed and heard full argument on the merits. 3. The purpose of the judicial review claim is to contest the lawfulness of amendments to the CSCS which have now been introduced. These have the effect of reducing in some cases the benefits to be received by civil servants who are made redundant, are compelled to take early retirement or are dismissed on grounds of structural reorganisation or in similar circumstances. The background to the introduction of the changes is the growing cost of pension provision as life expectation increases (since some of the benefits in question involve early payment of pensions), constraints upon the public finances in current circumstances and a desire on the part of the Government to reduce the costs of redundancy through restructuring of government departments and so forth. 4. The Claimant is a trade union repre …",
+      "passage_word_count": 150,
+      "source_key": "caselaw/2010-ewhc-1027-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2010] EWHC 1027 (Admin):1",
+      "term_matched": "civil servant"
+    },
+    {
+      "neutral_citation": "[2011] EWHC 2041 (Admin)",
+      "case_name": "Public & Commercial Services Union & Ors v The Minister for the Civil Service",
+      "court": "EWHC (Admin)",
+      "date": "2011-08-09",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… though (as I was told) the Fourth Claimant has left the service since that time. 3. The Claimants allege that the changes to the CSCS effected by the Defendant through the new scheme and by the 2010 Act constitute unlawful interferences by the Defendant and/or by the Act , contrary to the rights of civil servants under Article 1 of Protocol 1 (“ A1P1 ”) to the European Convention for the Protection of Human Rights and Fundamental Freedoms (“ECHR”). That Article provides: “Article 1. Protection of property. Every natural or legal person is entitled to the peaceful enjoyment of his possessions. No one shall be deprived of his possessions except in the public interest and subject to the conditions provided for by law and by the general principles of international law. The preceding provisions shall not, however, in any way impair the right of a State to enforce such laws as it deems necessa …",
+      "passage_word_count": 156,
+      "source_key": "caselaw/2011-ewhc-2041-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2011] EWHC 2041 (Admin):1",
+      "term_matched": "civil servant"
+    },
+    {
+      "neutral_citation": "[2021] EWHC 3279 (Admin)",
+      "case_name": "the FDA (R on the application of) v THE PRIME MINISTER AND MINISTER FOR THE CIVIL SERVICE",
+      "court": "EWHC (Admin)",
+      "date": "2021-12-06",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… ragraph 1.2 of the Ministerial Code. That paragraph provides that harassing, bullying or other inappropriate or discriminating behaviour is not consistent with the Ministerial Code and will not be tolerated. 2. In brief, following allegations of inappropriate behaviour by the Home Secretary towards civil servants, the Prime Minister asked the Cabinet Office to investigate, and he sought advice, to determine whether the Home Secretary’s behaviour was consistent with the Ministerial Code. The claimant, the FDA, which is a trade union which represents civil servants, contends that, in dealing with the matter, the Prime Minister misinterpreted paragraph 1.2 as he considered that conduct would only constitute bullying if the person concerned was aware that his or her conduct was upsetting or intimidating. It contends that whether conduct amounts to bullying depends upon the impact upon the in …",
+      "passage_word_count": 138,
+      "source_key": "caselaw/2021-ewhc-3279-admin/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2021] EWHC 3279 (Admin):1",
+      "term_matched": "civil servant"
+    },
+    {
+      "neutral_citation": "[2025] UKPC 40",
+      "case_name": "Public Services Association of Trinidad and Tobago v Trinidad and Tobago Civil Aviation Authority (Trinidad and Tobago)",
+      "court": "UKPC",
+      "date": "2025-09-10",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… al Jairam of Victoria Chambers (Trinidad)) Lady Simler: Introduction 1. The Public Services Association (“the Association”) is a trade union registered under the Trade Unions Act Chap 88:02. The Association is the recognised majority union under the Civil Service Act Chap 23:01 for all monthly paid civil servants employed in different departments by the Government of Trinidad and Tobago. Until 2001 this included the department responsible for civil aviation services (defined as an essential industry in para 12 of the First Schedule of the Industrial Relations Act Chap 88:01, “the Industrial Relations Act”). It is also important to record that the Association was at all material times prior to the enactment of the legislation referred to below, the recognised majority union under the Industrial Relations Act for workers employed by two other essential services, namely the Water and Sewera …",
+      "passage_word_count": 141,
+      "source_key": "caselaw/2025-ukpc-40/compiled.txt",
+      "corpus": "tna-caselaw",
+      "section_id": "tna-caselaw:[2025] UKPC 40:1",
+      "term_matched": "civil servant"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mrs-tj-betts-and-others-v-the-secretary-of-state-for-justice-1600860-2015-and-others",
+      "case_name": "Mrs T J Betts and others v Secretary of State for Justice: 1600860/2015 and others - Reserved Judgment",
+      "court": null,
+      "date": "2020-02-02",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… blic and private, which can exist for those working within the Civil Service. I agree with the claimants’ submission that Nangle does not directly assist me. It does not follow that because Civil Servants also have contracts of employment (as was found in Nangle), that those who are found to have a contract of employment with the Crown must also be Civil Servants. I need to apply the relevant statutory tests to determine (Crown) employment status. 78. In summary I conclude that there is a distinction between appointment to the Office of Civil Servant, which must be subject to the Recruitment Principles, and Crown employment, which is determined by reference to the tests set out above and section 230 ERA. OIC / CRAGA 79. Having concluded that a distinction exists, it appears to me that the Recruitment Principles apply to appointment to the Office of Civil Servant only; not to recruitment  …",
+      "passage_word_count": 153,
+      "source_key": "et-decisions/employment-tribunal-decisions/mrs-tj-betts-and-others-v-the-secretary-of-state-for-justice-1600860-2015-and-others/sections/5/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mrs-tj-betts-and-others-v-the-secretary-of-state-for-justice-1600860-2015-and-others:5",
+      "term_matched": "contract of employment with the Crown"
+    },
+    {
+      "neutral_citation": "employment-tribunal-decisions/mr-c-howarth-v-the-home-office-2203843-slash-2023",
+      "case_name": "Mr C Howarth v The Home Office: 2203843/2023 - Reasons",
+      "court": null,
+      "date": "2024-09-01",
+      "principle_searched": "the civil servant's contract of employment at common law",
+      "passage": "… cussed, the Model Contract for Special Advisers sets out the principal terms and conditions of your appointment . Together with the Code of Conduct for Special Advisers, the Civil Service Code and any contractual parts of the Cabinet Office intranet as amended from time to time, it constitutes your contract of employment with the Crown. Please do take the opportunity to familiarise yourself with them.’ 5. The claimant was asked to sign and return the letter. He signed the letter on 1 June 2022. 6. Further details (in two separate pages of A4) provided with that letter gave more information about special adviser employee benefits. 7. The further information said that the claimant would be automatically enrolled in the Civil Service Alpha pension scheme and referred to the employer contributions being ‘very generous’, It went on to say: ‘You are encouraged to visit the Civil Service Pensio …",
+      "passage_word_count": 149,
+      "source_key": "et-decisions/employment-tribunal-decisions/mr-c-howarth-v-the-home-office-2203843-slash-2023/sections/3/compiled.txt",
+      "corpus": "et-decisions",
+      "section_id": "et-decisions:employment-tribunal-decisions/mr-c-howarth-v-the-home-office-2203843-slash-2023:3",
+      "term_matched": "contract of employment with the Crown"
+    }
+  ],
+  "sets_never_merged": "Set A and Set B answer different questions and are never added. Set A is \"who cites this Act\"; Set B is \"is the principle protected without it\". A combined count would answer neither.",
+  "counts": {
+    "set_a": 1,
+    "set_b": 10,
+    "set_a_note": "1 judgments whose own text names \"Constitutional Reform and Governance Act 2010\", out of the top 60 BM25 candidates over 5 collections. Not a count of all cases citing the Act.",
+    "set_b_note": "10 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point."
+  },
+  "gaps": [],
+  "gaps_note": "Every empty principle was re-asked with a BROADER query and the returned judgments were tested for the principle's own words. Where they are present, the entry says RETRIEVAL FAILURE and names the judgments — the corpus is not silent, our query was. That distinction decides whether the report can say the common law says nothing on a point.",
+  "prediction": {
+    "set_a": 5,
+    "set_b": 3,
+    "recorded_before_run": true
+  }
+}

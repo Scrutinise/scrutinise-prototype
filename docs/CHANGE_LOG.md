@@ -132,6 +132,209 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-29 15:29 UTC — B2, B3, B4 COMPLETE: THE MARKUP RATE IS 80%, AND ITS FAILURES ARE ALL ONE CLASS — THE SAME ONE T2 FOUND, FROM A DIFFERENT DIRECTION
+
+B2, B3 and B4 executed. **B5 NOT STARTED**: `docs/report_run/register_proposals.json` does not
+exist on disk — checked before anything else ran, and re-checked at the end. Not improvised.
+
+### ▶▶ B4 AND T2 AGREE, BY TWO DIFFERENT METHODS, ON A NUMBER NEITHER WAS LOOKING FOR
+
+The markup-only sample returns **20 of 25 correct (80%)**, and **every one of the five surviving
+failures is the same class**: the reference is real, the target is real, and it is not in the
+provision `source_provision_ref` names.
+
+That is **5 of 25 = 20%**, against T2's **496 of 2,593 = 19.1%** — and the two were measured by
+different means over different rows. T2 re-read each referring provision's own CLML from the local
+bulk file; B4 fetched the provision live from legislation.gov.uk. **Two methods, two samples, one
+rate.** The misattribution finding is no longer a single script's result.
+
+⚠ **The markup rate is 80% and the T5 text rate is 100%, and they are NOT averaged anywhere.** Two
+detectors, two denominators. A blended figure would describe neither and would be read as
+describing both.
+
+⚠ **Two of the seven first-pass failures were the CHECKER's** — exactly what B4 warned about, and
+what pass 2 exists to catch. Predicted 1; there were 2. Had they been published, the markup rate
+would have read 18 of 25.
+
+▶ **The verifier is IMPORTED from `report-t5-verify.ts`, not restated** — `judge`, `verifyRow`,
+`reexamine`, `runControls`. So if the markup and text rates ever disagree it is about the rows and
+cannot be about the checker. It was made to pass once and fail twice on this draw before a single
+row was scored.
+
+### ▶▶ B2: `argument-questions.ts` IS NOT A QUERY INTERFACE, AND THE BRIEF WAS RIGHT TO ASK
+
+It is a hardcoded set of ten gold questions with hand-picked chunk ids that writes a markdown file
+from constants. **It takes no query and no measure** — which is why `argument:questions` is absent
+from `package.json` while `ARGUMENT_1A_REPORT.md` refers to it. There is nothing to parameterise.
+The Cowork brief's "queryable, with paragraph-level retrieval" describes the instrument around it.
+
+What is runnable is the two-arm draw in `argument-seed-draw.ts`: dense probes against
+`vector-serve`, literal phrases against `fts-serve`, R2 bodies, and the taxonomy's own regex as the
+confirm step. Both services answered `/stats` 200. ⚠ **`FTS_SEARCH_URL` is not in `.env`**; the
+production host is taken from the repo and named in every output file.
+
+| | objections | over the 30-word floor | keyword / dense | ⚠ using NONE of the measure's own subject words |
+|---|---|---|---|---|
+| WS-01 HRA | 36 | 35 | 23 / 13 | **13 of 36** |
+| WS-04 EqA | 32 | 28 | 20 / 12 | **28 of 32** |
+| WS-05 CRAG | 20 | 20 | 8 / 12 | **3 of 20** |
+
+⚠⚠ **THE LAST COLUMN IS THE ONE TO SORT ON BEFORE DRAFTING, AND IT WAS ADDED AFTER READING THE
+FIRST RUN'S OUTPUT.** A confirmed row can be two things that look identical in a JSON file. One is
+the cross-subject objection this instrument exists to find — the unbounded-duty argument made in
+2005 about *advertising marches*, which transfers to a public sector equality duty unchanged. The
+other is pattern noise — a COST pattern firing on "burden on small businesses" in a question about
+*fuel protesters*. Telling them apart is a reading, which is the analysis track's call. So the
+output records a FACT that sorts them — whether the passage uses any of the measure's own subject
+vocabulary — and rules on nothing. **For WS-04, 28 of 32 rows have none.** That chapter's §9 needs
+the most reading and the fewest assumptions.
+
+▶ Rates: **6.1%** of candidates whose body was read were confirmed by a pattern (predicted ≥25% —
+**wrong, and by a lot**). **94.3%** of confirmed rows clear the 30-word floor (predicted ≥70% ✅).
+⚠ **ARGUMENT 1A's "48.8% of dense candidates are under 30 words" did NOT reproduce here** — dense
+8.1%, keyword 3.9%. The measured quantity there was the candidate pool; here it is the pool that
+survived a pattern confirm, and the confirm removes the fragments. Same instrument, different
+denominator, and the prediction I built on it was wrong for that reason.
+
+### ▶▶ B3: THE FRONT MATTER IS WRONG, AND SO IS `coverage.ts`
+
+The report's front matter says *"case law from 2001 only"*. **Measured: the floor is 1965-08-09**,
+over 280,573 rows in five collections — `et-decisions` 161,753 (2017→), `tna-caselaw` 74,896
+(1965→), `cma-cases` 22,898 (2001→), `tax-tribunals` 13,099 (1989→), `ni-judgments` 7,927 (1984→).
+
+⚠⚠ **AND `coverage.ts`'s OWN `CASE_LAW_CORPORA` IS WRONG.** It names four collections. **Two hold
+zero rows** (`caselaw`, `caselaw-fcl`) and it **misses the two largest that exist** — `tna-caselaw`,
+which supplies the 1965 floor, and `ni-judgments`. So the case-law boundary the coverage block
+prints is drawn over `et-decisions` and `tax-tribunals` alone and **begins in 1989, twenty-four
+years late**. The block is reproduced in each B3 output **exactly as generated, defect and all**,
+because that is what the report prints, with the corrected measurement beside it.
+
+| | Set A (cites the Act) | Set B (the principle at common law) |
+|---|---|---|
+| WS-01 HRA | 53 (predicted 40) | **44** (predicted 12) |
+| WS-04 EqA | 60 (predicted 25) | 8 (predicted 6) |
+| WS-05 CRAG | **1** (predicted 5) | 10 (predicted 3) |
+
+▶▶ **CRAG 2010 IS ESSENTIALLY UNLITIGATED — one judgment, and it was verified before being
+reported.** `ni-judgments:2021-nica-49 — JR83 (No 2) and The Prime Minister`. The control that makes
+that a finding rather than a retrieval failure: the **Human Rights Act through the identical path
+returns 53 of 60**. The method finds a well-cited Act; CRAG returns one. The report's pilot measure
+has almost no case law, and §8 for WS-05 has to be written knowing that.
+
+⚠⚠ **AND A GAP I ALMOST FILED THAT WOULD HAVE BEEN FALSE.** The first run recorded *"the principle
+of legality"* as returning nothing on two terms. Verifying before publishing showed **the phrase is
+in the corpus** — asking for "fundamental rights" instead returned two judgments containing
+"principle of legality" verbatim (`[2009] EWCA Civ 786`, `[2010] EWHC 3110 (Admin)`). A BM25 phrase
+query does not surface it. **That is a retrieval failure, not a corpus gap**, and filed as a gap it
+would have told the report the common law is silent on a doctrine it is loud about. Every empty
+principle is now re-asked with a broader query and the returned judgments tested for the
+principle's own words; the entry says which it is and names the witnesses. One real gap survives:
+WS-04's *"common law duty to act fairly towards the disabled"*, which found nothing either way.
+
+⚠ **Set B was NOT thin, and my prediction that it would be was wrong in the direction that
+matters.** WS-01 returned 44 against a predicted 12, and WS-05's Set B (10) **exceeds its Set A
+(1)**. The prediction "Set B returns fewer than half of Set A on every measure" is **WRONG**.
+
+### ▶ PREDICTIONS SCORED
+
+| | predicted | actual | |
+|---|---|---|---|
+| B2 objections WS-01 / 04 / 05 | 30 / 25 / 15 | **36 / 32 / 20** | ✅ all three exceeded |
+| B2 confirm rate | ≥25% | **6.1%** | ✗ wrong, badly |
+| B2 over the 30-word floor | ≥70% | **94.3%** | ✅ |
+| B2 dense carries the fragments | yes | dense 8.1%, keyword 3.9% | ✗ neither does |
+| B3 Set A WS-01 / 04 / 05 | 40 / 25 / 5 | **53 / 60 / 1** | mixed; WS-05 far below |
+| B3 Set B WS-01 / 04 / 05 | 12 / 6 / 3 | **44 / 8 / 10** | ✗ Set B far richer than predicted |
+| B3 Set B < half of Set A everywhere | yes | no — WS-05 has B 10 > A 1 | ✗ |
+| B3 thinnest Set B is WS-05 | yes | thinnest is WS-04 (8) | ✗ |
+| B3 case-law floor earlier than 2001 | yes | **1965-08-09** | ✅ |
+| B4 markup pass rate | 22 of 25 | **20 of 25** | close |
+| B4 checker failures | 1 | **2** | under by one |
+| B4 markup rate below the T5 text rate | yes | 80% vs 100% | ✅ |
+
+### ✅ CHECKS
+
+`check:scripts` and the web `tsc` are **clean on every file these three briefs added**. ⚠ Neither is
+clean on the repository — the same eight pre-existing errors in six untouched files reported
+yesterday are still there.
+
+⚠ **Not fixed, reported:** `coverage.ts`'s `CASE_LAW_CORPORA`. Correcting it changes a block the
+report prints, and changing what the report prints on the day the analysis track is drafting
+against it is not a corpus-track decision. It is named in every B3 output and belongs to whoever
+owns the block.
+
+---
+## 2026-08-29 14:58 UTC — B2/B3/B4: PREDICTIONS, LOGGED BEFORE ANY OF THE THREE RAN
+
+Executing `docs/report_run/briefs/` B2, B3, B4. B5 is not started: its input
+`docs/report_run/register_proposals.json` **does not exist on disk** (checked first, before
+anything else), and the index says an improvised register is worse than none.
+
+### B2 — first, the interface question the brief asked me to settle
+
+⚠ **`scrutinise-web/scripts/argument-questions.ts` is not a query interface and cannot serve B2.**
+It is a hardcoded set of ten gold questions with hand-picked chunk ids and confirming terms, which
+writes `docs/ARGUMENT_QUESTIONS_V1.md` from constants. It takes no query and no measure. That is why
+`argument:questions` is missing from `package.json` while the doc refers to it — there is nothing to
+parameterise. The Cowork brief's description of it as "queryable, with paragraph-level retrieval
+from Hansard and committee reports" describes the *instrument around it*, not this file.
+
+What does exist and is runnable is the two-arm draw in `argument-seed-draw.ts`, driven by
+`argument/taxonomy.ts`: a dense arm (`vector-serve`, probe queries) and a keyword arm (`fts-serve`
+literal phrases, then the tag's own REGEX re-applied to the R2 body — FTS proposes, the regex
+disposes). Both services answered `/stats` 200 and are idle. ⚠ `FTS_SEARCH_URL` is **not in
+`.env`**; the production host is taken from the repo and named in the output.
+
+So B2 runs on that machinery with measure-specific queries, and the confirm step is
+`patternHits()` from the same taxonomy — the arm ARGUMENT 1A measured at 90% against the dense
+arm's 0% recall. No npm entry added, per the brief.
+
+### B2 predictions
+
+Draw 40 per query, 6 dense probes and 6 keyword phrases per measure, over the eight parliamentary
+corpora.
+
+| | confirmed objections expected | expected to clear the 30-word floor |
+|---|---|---|
+| WS-01 Human Rights Act 1998 | 30 | 24 |
+| WS-04 Equality Act 2010 | 25 | 20 |
+| WS-05 CRAG 2010 Part 1 | 15 | 12 |
+
+Two rates, which are the parts that generalise: **≥25% of proposed candidates will be confirmed by
+a pattern**, and **≥70% of confirmed rows will clear the 30-word floor.** ⚠ ARGUMENT 1A measured
+48.8% of *dense* candidates under 30 words, so I expect the keyword arm to carry the quotable rows
+and the dense arm to carry the fragments — that split is the prediction, not just the totals.
+
+### B3 predictions
+
+| | Set A (cites the Act) | Set B (common law independent of it) |
+|---|---|---|
+| WS-01 Human Rights Act 1998 | 40 | 12 |
+| WS-04 Equality Act 2010 | 25 | 6 |
+| WS-05 CRAG 2010 Part 1 | 5 | 3 |
+
+⚠ **Set B is the one to predict honestly and I expect it to be thin.** It needs cases retrieved on a
+*principle* with no statute name to anchor on, which is the retrieval this corpus is worst at.
+I predict **Set B returns fewer than half of Set A on every measure**, and that WS-05 Set B is the
+thinnest of the nine cells.
+
+**On the date range:** the report's front matter says "case law from 2001 only". I predict that is
+**wrong** — that the measured floor is earlier than 2001, because the holding includes historic
+material. Measured, not assumed, and reported either way.
+
+### B4 predictions
+
+25 markup rows drawn proportionally from a population of 127 (roughly 2 CRAG / 7 HRA / 16 EqA).
+
+- Pass rate: **22 of 25 (88%)**. The supplementary draw in T5 gave markup 2 of 3, and the single
+  failure there was a misattributed `source_provision_ref`, not a wrong target.
+- **I expect 1 of the failures to be the checker's rather than the data's**, and I expect the rest
+  to be the same misattribution class — the reference real, in the document, and not in the
+  provision the row names.
+- ⚠ I expect the markup rate to come out **below** T5's text rate of 20/20. The two are never
+  averaged.
+
+---
 ## 2026-08-28 22:40 UTC — REPORT RUN, CORPUS TRACK: T1–T5 COMPLETE, AND ONE IN FIVE PROVISION REFERENCES POINTS AT A PROVISION THAT DOES NOT CONTAIN THE REFERENCE
 
 Executed `docs/CC_BRIEF_report_corpus.md` end to end. Every §8 deliverable exists in
