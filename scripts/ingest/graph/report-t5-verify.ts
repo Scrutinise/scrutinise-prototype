@@ -54,7 +54,13 @@ const UA = 'scrutinise-report-run/2026-08 (statutory citation verification)'
 /** One request at a time, spaced. Sequential hammering returns 500s and 504s. */
 const GAP_MS = 1800
 
-type Row = {
+/**
+ * ⚠ EXPORTED so CC BRIEF B4's markup-only sample runs through THIS verifier and
+ * not a re-implementation of it. A control that restates the logic it checks
+ * tests the copy — the defect that made a 25-H "control" reject a claim the real
+ * code accepted, purely because a heredoc had eaten its regex escapes.
+ */
+export type Row = {
   id: string
   ws_id: string
   target_act_id: string
@@ -67,7 +73,7 @@ type Row = {
   citation_text: string
 }
 
-type Verdict = {
+export type Verdict = {
   row: Row
   url: string
   status: 'correct' | 'wrong' | 'not-checked'
@@ -79,14 +85,14 @@ type Verdict = {
 
 // ── fetching ────────────────────────────────────────────────────────────────
 
-function provisionPath(ref: string | null): string | null {
+export function provisionPath(ref: string | null): string | null {
   if (!ref) return null
   if (!/^(section|schedule|paragraph|article|regulation|rule|part|chapter)-/i.test(ref)) return null
   return ref.replace(/-/g, '/')
 }
 
 let lastFetch = 0
-async function politeFetch(url: string): Promise<{ ok: boolean; status: number | null; body: string | null; err: string | null }> {
+export async function politeFetch(url: string): Promise<{ ok: boolean; status: number | null; body: string | null; err: string | null }> {
   const wait = GAP_MS - (Date.now() - lastFetch)
   if (wait > 0) await new Promise(r => setTimeout(r, wait))
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -138,7 +144,7 @@ export function judge(xml: string, r: Row): { ok: boolean; reason: string } {
   return { ok: true, reason: hasUri ? 'target URI present in the live provision' : 'Act named in the live provision text' }
 }
 
-async function verifyRow(r: Row): Promise<Verdict> {
+export async function verifyRow(r: Row): Promise<Verdict> {
   const p = provisionPath(r.source_provision_ref)
   const url = `https://www.legislation.gov.uk/${r.source_gid}${p ? '/' + p : ''}/data.xml`
   const res = await politeFetch(url)
@@ -159,7 +165,7 @@ async function verifyRow(r: Row): Promise<Verdict> {
  * A verifier that cannot fail measures nothing. Both controls go through
  * `judge`, the same function the sample goes through.
  */
-function runControls(sample: Row[]): { ok: boolean; lines: string[] } {
+export function runControls(sample: Row[]): { ok: boolean; lines: string[] } {
   const lines: string[] = []
   const r = sample.find(x => x.target_provision_ref) ?? sample[0]
   const d = readDocWithVersion(r.source_gid)
@@ -183,7 +189,7 @@ function runControls(sample: Row[]): { ok: boolean; lines: string[] } {
 
 // ── pass 2: re-examine every failure before publishing it ───────────────────
 
-async function reexamine(v: Verdict): Promise<Verdict> {
+export async function reexamine(v: Verdict): Promise<Verdict> {
   const r = v.row
   const nameRx = actNameRegex(r.target_title)
 
