@@ -149,6 +149,22 @@ So three hits in 87 are noise, and all three are one known cause. ⚠ **The less
 check what a short stem swallows.** `equality` stems to `equal`, which covers "equally" — a term
 picked to measure a subject was counting a function word.
 
+⚠⚠ **One term is WHOLLY variant-only, and it is a fact the report should state precisely: the
+Equality Act is never named literally anywhere in the eight thesis videos.** It is named once, in
+Part 2 at 5:05, as **"the Equalities Act"**, alongside the Human Rights Act. Every other term with
+any hits has at least one literal one:
+
+| | phrase hits | of which literal |
+|---|---|---|
+| `equality act` | 2 | **0 — the statute is only ever named as "the Equalities Act"** |
+| `restoration` | 12 | 8 (the other 4 are "restore") |
+| `equality` | 6 | 1 (3 are "equally", 2 the Equalities Act passage) |
+| all nine others | — | all literal |
+
+A term whose every hit is a variant is a different animal from one that is merely mixed: quoting it
+by the term's own wording would put words in the speaker's mouth. Check `literal_match` per term,
+not per passage — a passage can be "literal" because a *different* term in it was.
+
 ⚠ **Two kinds of looseness, opposite reliability.** *Positional* looseness (AND instead of phrase)
 admits words that co-occur without relating, so a hit only the loose form finds deserves suspicion —
 that is how `civil service commission`, which is **never uttered**, showed 7 hits. *Morphological*
