@@ -52,8 +52,22 @@ export function parseTimestamp(t: string): number {
 
 const TIMING_LINE = /^\s*((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})\s*-->\s*((?:\d+:)?\d{1,2}:\d{2}[.,]\d{1,3})/
 
+/**
+ * Is this the YouTube rolling format? The inline word-timing tags are the tell,
+ * and they are present on every rolling file and absent from every SRT export
+ * and human caption track.
+ *
+ * This matters because the carry-over de-duplication below is only correct for
+ * rolling files. Applied to an SRT, two consecutive cues that genuinely say the
+ * same short thing ("Yes." / "Yes.") would have the second silently deleted.
+ */
+function isRolling(raw: string): boolean {
+  return /<\d{1,2}:\d{2}:\d{2}[.,]\d{1,3}>/.test(raw)
+}
+
 export function parseVtt(raw: string): Cue[] {
   const lines = raw.replace(/^﻿/, '').split(/\r?\n/)
+  const rolling = isRolling(raw)
   const cues: Cue[] = []
   // Last two emitted lines: two-line rolling repeats one, three-line repeats two.
   const recent: string[] = []
@@ -69,8 +83,15 @@ export function parseVtt(raw: string): Cue[] {
     // A cue body ends at a TRULY empty line. YouTube pads its rolling cues with
     // a line containing a single space — treating that as the terminator drops
     // the block, and with it the real start time of the line that follows.
+    //
+    // It also ends at an SRT sequence number, which is a bare integer on its own
+    // line directly before a timing line. Some exports omit the blank line
+    // between cues, and without this the next cue's index is swallowed onto the
+    // end of this cue's text ("...once again to 2").
+    const isSrtIndex = (k: number) =>
+      /^\s*\d{1,6}\s*$/.test(lines[k]) && k + 1 < lines.length && TIMING_LINE.test(lines[k + 1])
     const body: string[] = []
-    while (i < lines.length && !TIMING_LINE.test(lines[i]) && lines[i] !== '') {
+    while (i < lines.length && !TIMING_LINE.test(lines[i]) && lines[i] !== '' && !isSrtIndex(i)) {
       body.push(lines[i]); i++
     }
 
@@ -79,7 +100,8 @@ export function parseVtt(raw: string): Cue[] {
       .filter(l => l.length > 0)
 
     // Drop carry-over: leading lines identical to something just emitted.
-    while (text.length && recent.includes(text[0])) text = text.slice(1)
+    // Rolling files only — see isRolling().
+    if (rolling) while (text.length && recent.includes(text[0])) text = text.slice(1)
     if (!text.length) continue
 
     for (const l of text) { recent.push(l); if (recent.length > 2) recent.shift() }

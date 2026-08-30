@@ -13,7 +13,7 @@ import { Pool } from 'pg'
 
 const ENV_PATH = path.resolve(__dirname, '../../scrutinise-web/.env')
 
-function readEnvVar(name: string): string | undefined {
+export function readEnvVar(name: string): string | undefined {
   if (process.env[name]) return process.env[name]
   if (!fs.existsSync(ENV_PATH)) return undefined
   for (const line of fs.readFileSync(ENV_PATH, 'utf8').split(/\r?\n/)) {
