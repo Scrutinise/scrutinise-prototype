@@ -132,6 +132,58 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 13:08 UTC — B10: THREE MEASURES IN THE THESIS VIDEOS ARE NEVER NAMED LITERALLY, INCLUDING THE ONE WS-07 IS ABOUT
+
+Final exchange with the B8/B9 session. They ran the variant-only test against B9's export and found
+exactly one of their twelve terms wholly variant-only. Running it over B10's wider term list on the
+same eight videos confirms theirs and adds two they could not have seen.
+
+⚠⚠ **Across the eight thesis videos, three terms are NEVER said literally:**
+
+| term | Pass A candidates where literal | where variant-only |
+|---|---|---|
+| `equality act` | **0** | 2 — "the Equalities Act" |
+| `quango` | **0** | 11 — "quangos" |
+| `scrap` | **0** | 1 |
+
+▶ **`equality act` cuts both ways, and that is why it belongs in the report rather than a
+footnote.** A literal search says the measure is absent from the thesis series; quoting it as "the
+Equality Act" would put words in his mouth. My original 0 and their original 2 were each half of it.
+The cue carrying it starts at 5:17 (`asr` 317s, `turboscribe` 318s) — the candidate's `hit_start_s`
+of 3:43 is where its WINDOW opens on an earlier term, not where the measure is named.
+
+▶▶ **`quango` is the one B9 could not have seen** — it is not in B9's term list. Across all eight
+videos he says "quangos" and never the bare singular. Less consequential (plural of the same word,
+and arguably the natural naming) but it lands on **WS-07**, the arm's-length body workstream, and
+any pull-quote must use his wording.
+
+⚠ **`scrap` is the one to distrust: a STEM COLLISION, not morphological looseness.** 6 of 10
+non-literal corpus-wide, with variants "scrape" and "scrappy" — unrelated words, so the unreliable
+kind under today's positional/morphological split rather than the reliable kind. No conclusion in
+B10 rests on it. `reverse` similarly takes "reversion" (3). Third instance of that distinction
+today.
+
+**§8.3 of the report was rewritten because it had gone stale within the hour.** It said "every
+number that moved, moved down, and every zero was already zero" — true of the double-count fix and
+falsified by the Equalities Act an hour later, which moved one number UP. The two corrections push
+opposite ways: the first strengthened "the thesis series barely names the statutes", the second
+weakens it by exactly one row. The reading survives on the remaining zeros, but on one fewer than
+first published. **A summary section written before the last correction is a stale artefact like any
+other.**
+
+▶ **Worth Charlie knowing the mechanism.** Nine defects between the two sessions today — five in
+theirs, four in mine — and **every one surfaced from a disagreement, not from either of us checking
+our own work**, including two where the objector turned out to be the one in error. Neither session
+found a single one of its own defects unprompted.
+
+**Process note, third instance today:** I stamped this section 13:10 UTC when the clock read 13:08,
+having already done 13:20-for-12:48 and 12:43-for-12:35. All three caught before committing, all
+three the same error — writing the stamp from expectation rather than reading the clock first.
+
+**B5 STILL BLOCKED. `docs/report_run/register_proposals.json` is not on disk — seven independent
+checks between the two sessions today.** Both sessions agree it is the only thing here that could
+derail Thursday. B11 remains unassigned; neither session has started it.
+
 ## 2026-08-30 13:04 UTC — B10: "LOOSER" WAS TWO RULES WITH OPPOSITE RELIABILITY, AND A COUNT OF NON-LITERAL MATCHES CANNOT TELL A GAIN FROM A COLLISION
 
 Closing exchange with the B8/B9 session. No finding overturned; two refinements that change how the

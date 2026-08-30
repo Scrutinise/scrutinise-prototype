@@ -56,7 +56,7 @@ Pass A, and `pass_b` equals `pass_b_distinct` for every one of the 32 terms.
 ⚠⚠ **Multi-word terms match inflected forms, and `surface_forms` in the JSON records what was
 actually said.** He names measures the way a speaker does: **"the Equalities Act"**, 16 times. A
 literal search for `equality act` cannot reach it, which is how the first version of this report
-printed a wrong 0 for the thesis series (§8.4). **147 of 389 candidates contain at least one
+printed a wrong 0 for the thesis series (§8.2). **147 of 389 candidates contain at least one
 non-literal match**, and each carries `matched_surface` and `all_literal` — a match is not a
 licence to quote the term's own wording.
 
@@ -367,11 +367,22 @@ same lesson twice in one section — **print what a pattern matched; never infer
 
 ### 8.3 What this changes for CCW
 
-Nothing in the disposition. Every number that moved, moved **down**, and every zero was already
-zero — so "the thesis series barely names the statutes" is now better supported than when I wrote
-it. The candidate JSON is unchanged in structure; only `term_totals` gained columns.
+**No disposition changes.** But the two corrections move in opposite directions and it is worth
+being exact, because an earlier draft of this section said "every zero was already zero" and §8.2
+falsified that an hour later:
 
-### 8.5 Variant-only candidates, and the two kinds of "looser"
+- **§8.1 moved numbers down.** Occurrences → distinct moments; every affected figure fell. That
+  strengthened "the thesis series barely names the statutes".
+- **§8.2 moved one number up.** Equality Act 0 → 1 across the eight videos. That *weakens* the same
+  claim by exactly one row — the reading survives on the remaining zeros (Climate Change Act, hate
+  speech, Sentencing Council, House of Lords) and on HRA 1 and judicial review 1, but it now rests
+  on one fewer than I first published.
+
+The candidate JSON gained fields and lost none: `pass_a_distinct`/`pass_b_distinct` and
+`two_transcript_videos` (§8.1), `surface_forms`, `matched_surface`, `all_literal` (§8.2),
+`terms_variant_only` and `literalness` (§8.4).
+
+### 8.4 Variant-only candidates, and the two kinds of "looser"
 
 Added 2026-08-30 13:04 UTC, on the other session's suggestion.
 
@@ -412,3 +423,36 @@ The other session's correction of their own earlier advice, and it resolves the 
 Same word "looser", opposite reliability. "A hit only the loose method finds deserves scrutiny" is
 true of the first and false of the second, and I applied the undifferentiated version to defend a
 wrong zero.
+
+### 8.5 Three measures in the thesis videos are never named literally
+
+Added 2026-08-30 13:08 UTC. The other session ran the variant-only test against B9's export and
+found exactly one of its twelve terms wholly variant-only. Running it on B10's wider term list over
+the same eight videos confirms theirs and finds two more:
+
+| term | Pass A candidates where it is literal | where it is variant-only |
+|---|---|---|
+| `equality act` | **0** | 2 — *"the Equalities Act"* |
+| `quango` | **0** | 11 — *"quangos"* |
+| `scrap` | **0** | 1 |
+
+**`equality act`** — Part 2, in one breath with the HRA and the civil service. The cue carrying it
+starts at **5:17** (`asr` 317s, `turboscribe` 318s), measured off the cue text; the candidate's
+`hit_start_s` of 3:43 is where its *window* opens on an earlier term, not where the measure is
+named. The other session cites 5:05 for the same utterance — a difference of segmentation, not of
+fact, and the reason `hit_start_s` and `start_s` are documented separately in the JSON's `field_notes`. The single
+candidate carries `matched_surface` `["civil service", "equalities act", "human rights act",
+"quangos"]`, present identically in both transcripts. **This cuts both ways, which is why it belongs
+in the report rather than in a footnote:** a literal search says the measure is absent from the
+thesis series, and quoting it as "the Equality Act" would put words in his mouth. My original 0 and
+their original 2 were each half of it.
+
+**`quango` is the one B9 could not have seen**, because it is not in B9's term list. Across all
+eight videos he says *"quangos"* and never the bare singular. Less consequential — it is the plural
+of the same word, and arguably the natural naming — but it lands on **WS-07**, the arm's-length body
+workstream, and any pull-quote must use his wording.
+
+**`scrap`** is the one to distrust. Corpus-wide it is 6 of 10 non-literal and its variants include
+*"scrape"* and *"scrappy"* — a **stem collision**, not morphological looseness, and therefore the
+unreliable kind under §8.4's split. No conclusion in this report rests on it; if one ever does, it
+needs the treatment the other session gave their `equally` case.
