@@ -153,6 +153,13 @@ interface Candidate {
   // variant must not be ranked as though the measure was named. (The other CC
   // session's suggestion, 30 Aug.)
   terms_variant_only: string[]
+  // Where each matched term actually is, and a link that lands on it.
+  // `watch_url` points at hit_start_s, which is the FIRST match in a merged
+  // window — and 77% of candidates match more than one term, with the window
+  // running a median 56s and up to 292s past that point. Checking a quote is
+  // supposed to take seconds; without this it means hunting. (The other CC
+  // session found the same defect in B9's passage-level links, 30 Aug.)
+  term_positions: { term: string; surface: string; at_s: number; url: string }[]
 }
 
 interface Totals {
@@ -323,7 +330,8 @@ async function main() {
       const gm = ms.filter(m => m.group === g).sort((a, b) => a.start_s - b.start_s)
       // surf is per TERM, not a flat set: "did this term ever appear literally
       // in this window" cannot be answered from a union of everything matched.
-      let cur: { from: number; to: number; hit: number; surf: Map<string, Set<string>> } | null = null
+      type Seen = { surfaces: Set<string>; at: number; firstSurface: string }
+      let cur: { from: number; to: number; hit: number; surf: Map<string, Seen> } | null = null
       const flush = () => {
         if (!cur) return
         const from = Math.max(0, cur.from), to = cur.to
@@ -341,18 +349,26 @@ async function main() {
           matched_terms: [...cur.surf.keys()].sort(),
           term_group: g,
           hit_start_s: Math.round(cur.hit * 10) / 10,
-          matched_surface: [...new Set([...cur.surf.values()].flatMap(v => [...v]))].sort(),
-          all_literal: [...cur.surf].every(([t2, ss]) => [...ss].every(x => x === norm(t2))),
-          terms_variant_only: [...cur.surf].filter(([t2, ss]) => ![...ss].some(x => x === norm(t2)))
+          matched_surface: [...new Set([...cur.surf.values()].flatMap(v => [...v.surfaces]))].sort(),
+          all_literal: [...cur.surf].every(([t2, e]) => [...e.surfaces].every(x => x === norm(t2))),
+          terms_variant_only: [...cur.surf].filter(([t2, e]) => ![...e.surfaces].some(x => x === norm(t2)))
             .map(([t2]) => t2).sort(),
+          term_positions: [...cur.surf].map(([t2, e]) => ({
+            term: t2,
+            surface: e.firstSurface,
+            at_s: Math.round(e.at * 10) / 10,
+            url: `https://www.youtube.com/watch?v=${s.video_id}&t=${Math.max(0, Math.floor(e.at - 5))}s`,
+          })).sort((x, y) => x.at_s - y.at_s),
         })
         cur = null
       }
       for (const m of gm) {
         const from = m.start_s - CONTEXT_S, to = m.end_s + CONTEXT_S
+        // gm is sorted by start_s, so the first add for a term is its earliest.
         const add = (c: NonNullable<typeof cur>) => {
-          let ss = c.surf.get(m.term); if (!ss) { ss = new Set(); c.surf.set(m.term, ss) }
-          ss.add(m.surface)
+          let e = c.surf.get(m.term)
+          if (!e) { e = { surfaces: new Set(), at: m.start_s, firstSurface: m.surface }; c.surf.set(m.term, e) }
+          e.surfaces.add(m.surface)
         }
         if (cur && from <= cur.to) { cur.to = Math.max(cur.to, to); add(cur) }
         else { flush(); cur = { from, to, hit: m.start_s, surf: new Map() }; add(cur) }
@@ -442,7 +458,8 @@ async function main() {
       text: `The cues covering [hit_start - ${CONTEXT_S}s, hit_end + ${CONTEXT_S}s], verbatim, joined with single spaces. Overlapping windows within one (video, source, term_group) are merged into one candidate.`,
       start_s_end_s: 'The bounds of that context window, NOT of the match.',
       hit_start_s: 'Start of the first matching term in the window — where the claim actually is.',
-      watch_url: 'Deep link to hit_start_s minus 10s, so the sentence begins after the link lands.',
+      watch_url: 'Deep link to hit_start_s minus 10s — the FIRST matched term in the window. 77% of candidates match more than one term, and the window runs a median 56s (max 292s) past that point, so this is the wrong link for any term but the first.',
+      term_positions: 'USE THIS TO CHECK A QUOTE. One entry per matched term: where it actually is, the words actually said there, and a link landing 5s before it.',
       matching: 'Direct regex over the joined cue stream, not plainto_tsquery — see the header of scripts/starkey/b10-candidates.ts. Every imperative term is stopword-heavy and several lex to an empty tsquery.',
       inflection: 'Single-word terms match an inflectional tail (repeal->repealed, quango->quangos, restore->restoration). term_totals reports strict and inflected separately.',
       not_deduplicated: 'Per B10 step 3 there is no cross-video deduplication. Repetition is evidence.',

@@ -456,3 +456,53 @@ workstream, and any pull-quote must use his wording.
 *"scrape"* and *"scrappy"* — a **stem collision**, not morphological looseness, and therefore the
 unreliable kind under §8.4's split. No conclusion in this report rests on it; if one ever does, it
 needs the treatment the other session gave their `equally` case.
+
+### 8.6 The deep link pointed at the wrong term, on 77% of candidates
+
+Added 2026-08-30 13:14 UTC. My §8.5 timing correction — that 3:43 was a window's opening and 5:17
+was the measure — was not a note about one row. The other session took it back to B9 and found the
+same class of defect in every link that file emits (theirs was the passage start, and a passage runs
+60–90s). Checking B10 for it: **it is there, and worse.**
+
+`watch_url` points at `hit_start_s`, the **first** matched term in a merged window. Measured:
+
+| | all candidates | multi-term only |
+|---|---|---|
+| candidates | 389 | **301 (77.4%)** |
+| window seconds after the link, median | 56 | 69 |
+| p90 | 129 | 142 |
+| max | **292** | **292** |
+
+For a corpus whose stated purpose is checking a quote against the recording *in seconds*, a median
+56-second overshoot is the difference between landing on the words and hunting for them — and it was
+being paid on nearly every use of the file. The worst case, `uL-LvCjLI_k`, matches `equality act`,
+`house of lords`, `quango` and `supreme court`, and its link opens **292 seconds** before the end of
+the window.
+
+**Fixed.** Every candidate now carries `term_positions` — one entry per matched term, with where it
+actually is, **the words actually said there**, and a link landing 5s before it. Median gap from
+link to term is now **2s**. The Equalities Act candidate, term by term:
+
+```
+window 192.8–351s   watch_url -> …&t=212s
+  222.8s  civil service      said "civil service"     …&t=217s
+  264.8s  quango             said "quangos"           …&t=259s
+  317.8s  human rights act   said "human rights act"  …&t=312s
+  317.8s  equality act       said "equalities act"    …&t=312s
+```
+
+That also settles §8.5's timing independently: **HRA and the Equalities Act resolve to the same cue,
+317.8s** — which is what "in one breath" means, measured rather than asserted.
+
+**Their two implementation warnings, checked against B10:**
+
+- *"Test each cue concatenated with the next — the phrase straddles a boundary."* Already the case:
+  B10 scans one joined stream per `(video_id, source)` with an offset→cue map, which is why it could
+  confirm the passage when a per-cue test could not. The ASR really does split it `"…the
+  equalities"` / `"Act."`.
+- *"Locate through Postgres, not a hand-rolled regex, so the stemming matches the query."* Does not
+  apply here, and for a structural reason worth stating: B10 never re-locates. The position comes
+  from `m.index` of the **same regex execution** that produced the hit, so there is no second
+  implementation to drift from the first. This is the copied-function trap avoided by not having
+  a second copy — the failure mode their warning describes is real, and the fix is to have one code
+  path rather than two agreeing ones.

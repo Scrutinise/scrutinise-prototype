@@ -132,6 +132,54 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 13:14 UTC — B10: THE DEEP LINK POINTED AT THE WRONG TERM ON 77% OF CANDIDATES, AND A TIMING FOOTNOTE IS WHAT EXPOSED IT
+
+The B8/B9 session took my one-row timing correction (that 3:43 was a merged window's opening and
+5:17 was where the Equalities Act is said) back to B9 and found the same class of defect in every
+deep link that file emits — theirs was the PASSAGE start, and a passage runs 60-90s; measured, the
+words sit 0-72s after it, median 25. **Checked B10 for the same thing. It is there, and worse.**
+
+⚠⚠ **`watch_url` points at `hit_start_s`, the FIRST matched term in a merged window — and 301 of
+389 candidates (77.4%) match more than one term.** Window seconds AFTER the link: median 56, p90
+129, **max 292**. The worst case `uL-LvCjLI_k` matches `equality act`, `house of lords`, `quango`
+and `supreme court`, and its link opens nearly five minutes before the end of the window. For a
+corpus whose entire stated purpose is checking a quote against the recording IN SECONDS, that is the
+difference between landing on the words and hunting for them, and it was being paid on nearly every
+use of the file.
+
+▶ **Fixed: every candidate now carries `term_positions`** — one entry per matched term, with where
+it actually is, THE WORDS ACTUALLY SAID THERE, and a link landing 5s before it. **Median gap from
+link to term: 56s → 2s.** Verified: 0 positions fall outside their window, 0 candidates missing a
+position for a matched term.
+
+▶ **It settles the 5:17 timing independently.** `human rights act` and `equality act` both resolve
+to the cue at **317.8s** — the same cue, which is what "in one breath" means, now measured rather
+than asserted. My earlier 3:43 and their earlier 5:05 were a window opening and a passage start
+respectively; neither was where the words are.
+
+**Their two implementation warnings, checked rather than assumed:**
+- *"Test each cue CONCATENATED WITH THE NEXT."* Already true of B10 — it scans one joined stream per
+  `(video_id, source)` with an offset→cue map, which is exactly why it could confirm the passage
+  when their per-cue test could not. The ASR really does split it `"...the equalities"` / `"Act."`.
+- *"Locate through Postgres, not a hand-rolled regex, so the stemming matches the query."* Does not
+  apply, for a structural reason worth recording: **B10 never re-locates.** The position comes from
+  `m.index` of the SAME regex execution that produced the hit. Their failure mode — a second
+  locating implementation drifting from the first — is the copied-function trap, and the fix is one
+  code path rather than two that agree today.
+
+⚠ **A false pass caught in passing, third of its kind today.** `cd scrutinise-web && tsc … | grep -c`
+printed `0` and read as "clean" — but the `cd` failed (already in that directory), so tsc never ran
+and the 0 was grep counting nothing. Same shape as the heredoc `str.replace` that printed "patched"
+having changed nothing: **a chained command whose first element fails still prints a reassuring
+trailing result.** Re-ran with the path confirmed; genuinely clean.
+
+▶ Nine defects between the two sessions today, five theirs and four mine, **every one surfaced from
+a disagreement and none from self-review** — including two where the objector was the one in error.
+Both sessions' summaries of their own work were clean at the moment they were written.
+
+**B5 STILL BLOCKED — eight checks. It is the only thing outstanding that can cost Thursday.** B11
+unassigned; neither session has started it.
+
 ## 2026-08-30 13:08 UTC — B10: THREE MEASURES IN THE THESIS VIDEOS ARE NEVER NAMED LITERALLY, INCLUDING THE ONE WS-07 IS ABOUT
 
 Final exchange with the B8/B9 session. They ran the variant-only test against B9's export and found
