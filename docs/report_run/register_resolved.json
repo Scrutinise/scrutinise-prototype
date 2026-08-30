@@ -1,0 +1,698 @@
+{
+  "generated_at": "2026-08-30T20:02:41.678Z",
+  "what_this_is": "Column two of the report register: for each stated proposal, the legislation that would have to change, and why. Produced by CC. Nothing here is a disposition — whether a gate bites, and whether a measure is worth doing, are CCW's calls.",
+  "input": "docs/report_run/register_proposals.json",
+  "merge_warning": "markup, text and enabling are different strengths of evidence and are reported separately. Do not add them. A markup edge is the source document asserting the target by URI; a text edge is the Act NAME resolved against corpus_acts titles, so the target id is derived and must never be quoted as the source's own words; an enabling edge is the instrument's own enacting words saying it was MADE UNDER the target, which is a stronger and different fact — an instrument that merely mentions an Act survives its repeal, while one whose enabling power is repealed may fall with it.",
+  "method": "Instruments resolved by EXACT title match against corpus_acts — the same table the text detector resolves against — never typed from memory. Detection counts and Part expansion use the identical code path as report-t4-scoping.ts (inboundEvidence/expandPart), so the two tables in this report count the same way.",
+  "caveats": [
+    "⚠ basis = \"my identification\" means CC picked the instrument, not the proposer. The reasoning on those rows is what he is being asked to correct, and striking one costs nothing.",
+    "⚠ \"named by the proposer\" carries a `named_by` field, and on SP-02 it says the statutes were named by the INTERVIEWER with Starkey only assenting. Reading that row as his own naming would overstate his commitment.",
+    "⚠ Gates are FLAGS, not analysis. devolution and northern_ireland are computed from citation edges either direction; international is declared only where the instrument is on its face treaty-connected; absorption is read from B3 and is \"unknown\" wherever B3 did not measure it. unknown is used freely and never means no.",
+    "⚠ ABSENCE OF A CITATION EDGE IS WEAKER EVIDENCE THAN PRESENCE OF ONE. A \"no\" on the devolution gate means the detector found nothing, not that nothing is there.",
+    "⚠ markup, text and enabling are NEVER summed, here or anywhere. act_level_rows is reported separately on scoped rows and never added in.",
+    "⚠ Several proposals land on the same statute; overlaps are computed from shared gid and recorded both ways. CRA 2005 and the Human Rights Act each carry more than one.",
+    "⚠ SP-10 is included precisely BECAUSE its premise appears to be mistaken. Gender self-identification was never enacted in Great Britain; the row exists to say so rather than to point at a statute that does not do what he thinks it does."
+  ],
+  "checks": {
+    "every_proposal_present": {
+      "kind": "check",
+      "pass": true,
+      "missing": [],
+      "why_it_can_fail": "compares the emitted ids against the INPUT file's ids; a dropped proposal fails it."
+    },
+    "every_instrument_has_basis_reasoning_confidence": {
+      "kind": "check",
+      "pass": true,
+      "offenders": 0,
+      "why_it_can_fail": "a candidate added without reasoning fails it — the field is hand-written per instrument, not generated."
+    },
+    "overlaps_symmetric": {
+      "kind": "invariant (cannot fail by construction)",
+      "pass": true,
+      "asymmetric": [],
+      "caveat": "⚠ Overlaps are derived from a single gid->proposals map, so symmetry is guaranteed by how they are built, not established by this test. Passing means assembly did not corrupt them. It is NOT evidence the overlaps are correct."
+    },
+    "no_total_column": {
+      "kind": "invariant (reads a constant in this file)",
+      "pass": true,
+      "emitted_header": "proposal_id,verbatim,instrument_title,gid,provision_scope,basis,confidence,markup,text,enabling,act_level_rows,distinct_source_instruments,made_under_edges,gate_devolution,gate_international,gate_northern_ireland,gate_absorption,overlaps,unresolved,reasoning",
+      "caveat": "⚠ This inspects the column list declared above, not the numbers. It shows no total column is emitted; it cannot show that nothing downstream adds them."
+    }
+  },
+  "counts": {
+    "proposals_in": 14,
+    "proposals_resolved": 10,
+    "proposals_unresolved": 4,
+    "candidate_instruments": 15,
+    "by_basis": {
+      "named by the proposer": 2,
+      "my identification": 13
+    },
+    "by_confidence": {
+      "high": 2,
+      "medium": 7,
+      "low": 6
+    }
+  },
+  "register": [
+    {
+      "proposal_id": "SP-01",
+      "verbatim": "the campaign for the great repeal and restoration of the legislation passed under the Blair and Brown governments from 1997 to 2010",
+      "ccw_reading": "The programme as a whole, defined by a DATE RANGE rather than by a list of instruments.",
+      "video_url": "https://www.youtube.com/watch?v=EMbRv6aaQrs&t=294s",
+      "candidate_instruments": [],
+      "unresolved": true,
+      "why_unresolved": "The scope is stated as a DATE RANGE, not an instrument: \"the legislation passed under the Blair and Brown governments from 1997 to 2010\". There is no single instrument to name, and naming one would misrepresent the proposal as narrower than it is. It is countable rather than resolvable — see scope_measurement on this row, which is the answer to CCW's note_for_resolution.",
+      "search_terms_tried": [
+        "great repeal",
+        "restoration",
+        "1997",
+        "2010",
+        "Blair",
+        "Brown"
+      ],
+      "scope_measurement": {
+        "question": "CCW's note_for_resolution on SP-01: \"establish what primary legislation was passed 1997-2010 ... that is a countable question and it bounds every other row.\"",
+        "uk_public_general_acts_1997_2010": 561,
+        "all_instrument_kinds_1997_2010": {
+          "uksi": 23697,
+          "eur": 11929,
+          "nisr": 5211,
+          "eudn": 5155,
+          "ssi": 4523,
+          "wsi": 2175,
+          "eudr": 1057,
+          "ukpga": 561
+        },
+        "what_this_is_not": "⚠ These are counts of what THIS CORPUS HOLDS for that date range, not of what was enacted, and not of what is still in force. corpus_acts is not a complete statute book and no in-force filter has been applied. Treat as an order of magnitude.",
+        "why_it_matters": "The proposal's own scope is temporal. Even at the narrowest reading — UK public general Acts only — it is hundreds of instruments, and on any reading that includes secondary legislation it is tens of thousands. That is a different and far larger drafting problem than twelve named measures, and it is the single most important thing this resolution can tell the proposer."
+      }
+    },
+    {
+      "proposal_id": "SP-02",
+      "verbatim": "we need to repeal an awful lot of law that has empowered and indeed politicised the judiciary, like the Human Rights Act, the Equalities Act",
+      "ccw_reading": "Repeal of the Human Rights Act 1998 and the Equality Act 2010.",
+      "video_url": "https://www.youtube.com/watch?v=jnsiLNNL8s8&t=310s",
+      "candidate_instruments": [
+        {
+          "title": "Human Rights Act 1998",
+          "gid": "ukpga/1998/42",
+          "provision_scope": "",
+          "basis": "named by the proposer",
+          "named_by": "⚠ Named by LITTLEWOOD, the interviewer, not by Starkey. Starkey's own words in reply are \"I think it is a day one thing.\" He assents to a list he did not state.",
+          "reasoning": "The Act is named in the passage itself, so this is not my identification. It is the instrument that gives the Convention rights effect in domestic law, and repealing it is the domestic half of what SP-05 describes. ⚠ He should be asked whether the list is his and whether it is complete, because he did not compose it.",
+          "confidence": "high",
+          "markup": 37,
+          "text": 901,
+          "enabling": 75,
+          "act_level_rows": "",
+          "distinct_source_instruments": 382,
+          "made_under_edges": 85,
+          "gates": {
+            "devolution": "yes",
+            "international": "yes",
+            "northern_ireland": "yes",
+            "absorption": "yes"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (8 edges); Government of Wales Act 2006 (11 edges); Northern Ireland Act 1998 (12 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "The Act gives effect to a treaty the UK remains party to; repeal engages the ECHR whether or not the treaty is denounced. Declared from the instrument's own subject matter, not computed.",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (12 edges). Computed.",
+            "absorption": "caselaw_WS-01.json: Set B = 44 judgments containing the principle terms independently of the Act. 44 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point. Read from B3, not re-derived. Whether the principle survives repeal is CCW's call."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [
+            "SP-05"
+          ]
+        },
+        {
+          "title": "Equality Act 2010",
+          "gid": "ukpga/2010/15",
+          "provision_scope": "",
+          "basis": "named by the proposer",
+          "named_by": "⚠ Named by LITTLEWOOD, not by Starkey — and he says \"the EQUALITIES Act\", which is not the statute's title. See B10 §8.2: the literal short title is never uttered anywhere in the eight thesis videos.",
+          "reasoning": "Named in the passage. The Act consolidates the discrimination statutes and carries the s.149 public sector equality duty that SP-10 objects to separately. ⚠ The proposal is stated as repeal of law that \"politicised the judiciary\"; most of the Equality Act is not about the judiciary, so the stated rationale and the named instrument do not obviously match. That mismatch is his to resolve, not mine.",
+          "confidence": "medium",
+          "markup": 79,
+          "text": 1789,
+          "enabling": 148,
+          "act_level_rows": "",
+          "distinct_source_instruments": 535,
+          "made_under_edges": 206,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "yes"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (8 edges); Government of Wales Act 2006 (10 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "caselaw_WS-04.json: Set B = 8 judgments containing the principle terms independently of the Act. 8 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point. Read from B3, not re-derived. Whether the principle survives repeal is CCW's call."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [
+            "SP-10"
+          ]
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-03",
+      "verbatim": "we need to abandon, kill off, privatise or renationalise fully into the structures of government and Parliament, all of these quangos",
+      "ccw_reading": "Abolition or absorption of the arm's-length body estate (he says ~400 elsewhere).",
+      "video_url": "https://www.youtube.com/watch?v=jnsiLNNL8s8&t=223s",
+      "candidate_instruments": [
+        {
+          "title": "Public Bodies Act 2011",
+          "gid": "ukpga/2011/24",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "⚠⚠ He names NO instrument, and offers FOUR different dispositions in one sentence — abandon, kill off, privatise, renationalise into government. Those are four different instruments with four different consequences, not one proposal. The Public Bodies Act 2011 is the existing mechanism for abolishing or merging arm's-length bodies by order, and it reaches only a SUBSET: bodies listed in its Schedules. It is the nearest existing route for \"abandon\" and \"kill off\" and does nothing for \"privatise\" or \"renationalise\". Offered as the starting point, not as the answer. He should be asked which disposition applies to which bodies.",
+          "confidence": "low",
+          "markup": 16,
+          "text": 146,
+          "enabling": 51,
+          "act_level_rows": "",
+          "distinct_source_instruments": 64,
+          "made_under_edges": 60,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "yes",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Government of Wales Act 2006 (1 edges); Northern Ireland Act 1998 (2 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (2 edges). Computed.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [],
+          "also_claimed_by_workstreams": [
+            "WS-07"
+          ]
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-04",
+      "verbatim": "We formally express the supremacy of the judiciary in Britain by the extraordinary creation of a Supreme Court. How you can have a Supreme Court alongside a sovereign parliament is deranged.",
+      "ccw_reading": "Abolition of the Supreme Court and reversal of its creation.",
+      "video_url": "https://www.youtube.com/watch?v=EMbRv6aaQrs&t=2546s",
+      "candidate_instruments": [
+        {
+          "title": "Constitutional Reform Act 2005",
+          "gid": "ukpga/2005/4",
+          "provision_scope": "part-3",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "He names the institution (\"a Supreme Court\"), never the statute. CRA 2005 Part 3 creates the Court and transfers the appellate jurisdiction of the House of Lords to it; reversing the creation means Part 3. ⚠ He states the contradiction — a supreme court alongside a sovereign parliament — without stating the remedy, so whether he wants the court abolished or merely restrained is unresolved in his own words. This row assumes abolition because that is what \"reversal of its creation\" means; if he means restraint, the instrument is different.",
+          "confidence": "medium",
+          "markup": 4,
+          "text": 85,
+          "enabling": 15,
+          "act_level_rows": 427,
+          "distinct_source_instruments": 64,
+          "made_under_edges": 236,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "yes",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (6 edges); Government of Wales Act 2006 (3 edges); Northern Ireland Act 1998 (14 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (14 edges). Computed.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; 'part-3' expanded to 46 provision refs from the Act's own CLML (45 provisions read from ukpga/2005/4 part-3). A literal match on the bare string returns 24 row(s). act_level_rows (427) name the Act with no provision and are reported SEPARATELY.",
+          "overlaps": [],
+          "also_claimed_by_workstreams": [
+            "WS-02",
+            "WS-03",
+            "WS-09"
+          ]
+        },
+        {
+          "title": "Scotland Act 1998",
+          "gid": "ukpga/1998/46",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "Consequential, and easy to miss: the Supreme Court holds the devolution reference jurisdiction under Scotland Act 1998 Sch 6. Abolishing the Court does not abolish that jurisdiction — it has to be relocated, or the devolution settlement loses its adjudicator. MY identification; he has never mentioned it.",
+          "confidence": "medium",
+          "markup": 123,
+          "text": 3556,
+          "enabling": 1073,
+          "act_level_rows": "",
+          "distinct_source_instruments": 1475,
+          "made_under_edges": 1334,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "yes",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Government of Wales Act 2006 (2 edges); Northern Ireland Act 1998 (1 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (1 edges). Computed.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": []
+        },
+        {
+          "title": "Northern Ireland Act 1998",
+          "gid": "ukpga/1998/47",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "The same point as the Scotland Act row: the equivalent devolution jurisdiction sits in Northern Ireland Act 1998 Sch 10. MY identification.",
+          "confidence": "medium",
+          "markup": 44,
+          "text": 1430,
+          "enabling": 204,
+          "act_level_rows": "",
+          "distinct_source_instruments": 584,
+          "made_under_edges": 261,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (1 edges); Government of Wales Act 2006 (1 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": []
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-05",
+      "verbatim": "this much much clearer language about the need to repeal the European Convention and the realization of both the legal and the symbolic importance of the convention",
+      "ccw_reading": "Denunciation of the ECHR, which he calls repealing it.",
+      "video_url": "https://www.youtube.com/watch?v=q1Mto3BxMcA&t=312s",
+      "candidate_instruments": [
+        {
+          "title": "Human Rights Act 1998",
+          "gid": "ukpga/1998/42",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "⚠⚠ THE STATED ROUTE IS NOT AVAILABLE AS DESCRIBED. He says \"repeal the European Convention\". A treaty is not repealed by an Act; it is DENOUNCED, under ECHR Article 58, which takes effect six months after notice and is a prerogative act rather than a legislative one. Denunciation also does not by itself alter domestic law — the Convention rights would remain enforceable through the Human Rights Act until that Act is changed. So the proposal as spoken splits into two distinct actions: denunciation (prerogative, no Bill) and HRA repeal (primary legislation). This row is the domestic half and is MY identification, because he named the treaty, not the Act. ⚠ He should be asked which he intends: denunciation, HRA repeal, or both. They are separable and have different effects.",
+          "confidence": "high",
+          "markup": 37,
+          "text": 901,
+          "enabling": 75,
+          "act_level_rows": "",
+          "distinct_source_instruments": 382,
+          "made_under_edges": 85,
+          "gates": {
+            "devolution": "yes",
+            "international": "yes",
+            "northern_ireland": "yes",
+            "absorption": "yes"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (8 edges); Government of Wales Act 2006 (11 edges); Northern Ireland Act 1998 (12 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "The proposal is directed at a treaty. Declared from the proposal's own subject matter.",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (12 edges). Computed.",
+            "absorption": "caselaw_WS-01.json: Set B = 44 judgments containing the principle terms independently of the Act. 44 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point. Read from B3, not re-derived. Whether the principle survives repeal is CCW's call."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [
+            "SP-02"
+          ]
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-06",
+      "verbatim": "Same as saying we should leave the ECHR, I suspect people only hear abandoning human rights",
+      "ccw_reading": "Leaving the ECHR, referenced as an agreed position rather than argued.",
+      "video_url": "https://www.youtube.com/watch?v=8veLovq5NWQ&t=33s",
+      "candidate_instruments": [],
+      "unresolved": true,
+      "why_unresolved": "Carries no independent target. It restates the ECHR position of SP-05 as an agreed premise while discussing how it is HEARD — a communications question, not a statement of legislative intent. Resolving it separately would double-count one proposal. Cross-referenced to SP-05 rather than given its own instrument.",
+      "search_terms_tried": [
+        "ECHR",
+        "European Convention",
+        "leave the ECHR"
+      ],
+      "see_also": [
+        "SP-05"
+      ]
+    },
+    {
+      "proposal_id": "SP-07",
+      "verbatim": "we sort of fix parliamentary sovereignty, we get all the powers back there, and we entrust to the 650 men and women who represent us",
+      "ccw_reading": "Restoration of parliamentary sovereignty as the organising aim of the programme.",
+      "video_url": "https://www.youtube.com/watch?v=okJNAMPBRqg&t=456s",
+      "candidate_instruments": [],
+      "unresolved": true,
+      "why_unresolved": "The AIM, not a measure. \"Fix parliamentary sovereignty, get all the powers back\" is the objective every other row is instrumental to. It has no instrument of its own, and his own reply redirects to de-bureaucratisation as a social question rather than a legal one. ⚠ The open question for him — whether sovereignty is restored by repeal alone or needs positive assertion in statute — is a drafting decision nobody has taken, not a gap in this resolution.",
+      "search_terms_tried": [
+        "parliamentary sovereignty",
+        "sovereignty",
+        "get the powers back"
+      ]
+    },
+    {
+      "proposal_id": "SP-08",
+      "verbatim": "the system Blair created does not work because you know of judicial review of constant intervention by judges of the incompetence of quangos",
+      "ccw_reading": "Restriction of judicial review.",
+      "video_url": "https://www.youtube.com/watch?v=2Khgz5sMMBU&t=690s",
+      "candidate_instruments": [
+        {
+          "title": "Senior Courts Act 1981",
+          "gid": "ukpga/1981/54",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "He names judicial review as a DEFECT (\"constant intervention by judges\"), never as a measure, and no instrument appears anywhere in the corpus. s.31 is the judicial review jurisdiction of the High Court and is where any restriction of the remedy would sit. MY identification — the same one recorded for WS-08 in scoping_remaining.csv, carried here so the two tables agree.",
+          "confidence": "low",
+          "markup": 39,
+          "text": 842,
+          "enabling": 447,
+          "act_level_rows": "",
+          "distinct_source_instruments": 451,
+          "made_under_edges": 521,
+          "gates": {
+            "devolution": "no",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "no citation edges between this instrument and the Scotland Act 1998, Government of Wales Act 2006 or Northern Ireland Act 1998 in citation_edge. ⚠ Absence of an edge is weaker evidence than presence of one: the detector may simply not have found it.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [],
+          "also_claimed_by_workstreams": [
+            "WS-08"
+          ]
+        },
+        {
+          "title": "Judicial Review and Courts Act 2022",
+          "gid": "ukpga/2022/35",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "The most recent statute restricting judicial review, and the obvious model for a further restriction. MY identification. ⚠ Restricting standing, restricting remedies, and ousting review for named decisions are three different Bills; he has not said which, so this row should not be read as a settled target.",
+          "confidence": "low",
+          "markup": 18,
+          "text": 99,
+          "enabling": 22,
+          "act_level_rows": "",
+          "distinct_source_instruments": 25,
+          "made_under_edges": 18,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (1 edges); Government of Wales Act 2006 (1 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [],
+          "also_claimed_by_workstreams": [
+            "WS-08"
+          ]
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-09",
+      "verbatim": "the most eminent public figure who passionately opposes the creation of the modern civil service, the Northcote-Trevelyan reforms, is Disraeli",
+      "ccw_reading": "Reversal of the permanent, appointed civil service model.",
+      "video_url": "https://www.youtube.com/watch?v=Mwf_SwRa2F0&t=789s",
+      "candidate_instruments": [
+        {
+          "title": "Constitutional Reform and Governance Act 2010",
+          "gid": "ukpga/2010/25",
+          "provision_scope": "part-1",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "⚠⚠ THE WORKSTREAM MAY BE AIMED AT AN INSTRUMENT HE HAS NOT NAMED. WS-05 is built on CRAG 2010 Part 1, which puts the civil service on a statutory footing. What he actually argues against is the NORTHCOTE-TREVELYAN settlement of 1854 — a permanent, appointed, examined civil service — and he cites Disraeli's opposition to it. The phrase \"civil service commission\" is never uttered across all 287 transcripts (B10 §2). CRAG 2010 Part 1 is the modern statutory expression of that settlement and is the only repealable instrument in the vicinity, so it is offered as MY identification and flagged. ⚠ Repealing CRAG Part 1 would remove the statutory footing but would not restore patronage appointment, which is what he appears to want; the two are not the same measure.",
+          "confidence": "low",
+          "markup": 2,
+          "text": 27,
+          "enabling": 0,
+          "act_level_rows": 106,
+          "distinct_source_instruments": 24,
+          "made_under_edges": 29,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "yes"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (6 edges); Government of Wales Act 2006 (7 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "caselaw_WS-05.json: Set B = 10 judgments containing the principle terms independently of the Act. 10 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point. Read from B3, not re-derived. Whether the principle survives repeal is CCW's call."
+          },
+          "resolution": "resolved by exact title match; 'part-1' expanded to 20 provision refs from the Act's own CLML (19 provisions read from ukpga/2010/25 part-1). A literal match on the bare string returns 17 row(s). act_level_rows (106) name the Act with no provision and are reported SEPARATELY.",
+          "overlaps": []
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-10",
+      "verbatim": "then foisting the whole DEI agenda on the civil service, still worse under her, you get the beginning with people like Maria Miller and Penny Mordaunt of the beginning of gender self identification for transsexuals",
+      "ccw_reading": "Two further targets: DEI practice in the civil service, and gender self-identification.",
+      "video_url": "https://www.youtube.com/watch?v=jnsiLNNL8s8&t=223s",
+      "candidate_instruments": [
+        {
+          "title": "Equality Act 2010",
+          "gid": "ukpga/2010/15",
+          "provision_scope": "section-149",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "For the DEI half of the proposal. He objects to \"foisting the whole DEI agenda on the civil service\"; the legal hook is the public sector equality duty in s.149, which is the only part of the statute book that requires public authorities to have regard to equality objectives. Much of what he describes is departmental policy rather than statute, and repealing s.149 would not by itself end it. MY identification.",
+          "confidence": "medium",
+          "markup": 1,
+          "text": 39,
+          "enabling": 0,
+          "act_level_rows": 1256,
+          "distinct_source_instruments": 32,
+          "made_under_edges": 206,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "yes"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (8 edges); Government of Wales Act 2006 (10 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "caselaw_WS-04.json: Set B = 8 judgments containing the principle terms independently of the Act. 8 judgments containing one of the principle terms tried, out of the top 25 candidates per term. Not a count of the common law on the point. Read from B3, not re-derived. Whether the principle survives repeal is CCW's call."
+          },
+          "resolution": "resolved by exact title match; scope is a SECTION, so the counts are a direct match on target_provision_ref = 'section-149' — which is the form references actually use, and is the correct query for a section. No Part expansion applies or is needed. act_level_rows (1256) name the Act with no provision and are reported SEPARATELY: any of them may bear on this section and the markup does not say which.",
+          "overlaps": [
+            "SP-02"
+          ]
+        },
+        {
+          "title": "Gender Recognition Act 2004",
+          "gid": "ukpga/2004/7",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "⚠⚠ THE PREMISE APPEARS TO BE MISTAKEN AND THIS ROW EXISTS TO SAY SO. He refers to \"the beginning of gender self identification for transsexuals\" under Miller and Mordaunt. Gender self-identification was NEVER ENACTED in Great Britain — the 2018 consultation was not legislated, and the Scottish Bill that would have introduced it did not receive Royal Assent. The instrument actually in force is the Gender Recognition Act 2004, which requires a diagnosis of gender dysphoria and a determination by a Gender Recognition Panel: close to the opposite of self-identification. ⚠ So there is nothing here to repeal that matches what he described. This is included as a row, not omitted, because an honest \"the thing you object to is not in force\" is a finding he needs, and the alternative is a register row pointing at a statute that does not do what he thinks it does.",
+          "confidence": "low",
+          "markup": 19,
+          "text": 411,
+          "enabling": 57,
+          "act_level_rows": "",
+          "distinct_source_instruments": 130,
+          "made_under_edges": 80,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "yes",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Northern Ireland Act 1998 (2 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (2 edges). Computed.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": []
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-11",
+      "verbatim": "the gross mismanagement of the Bank of England since its complete political independence in 1998",
+      "ccw_reading": "Reversal of Bank of England operational independence.",
+      "video_url": "https://www.youtube.com/watch?v=EMbRv6aaQrs&t=1906s",
+      "candidate_instruments": [
+        {
+          "title": "Bank of England Act 1998",
+          "gid": "ukpga/1998/11",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "⚠⚠ NOT IN ANY OF THE TWELVE WORKSTREAMS, and squarely inside his own stated 1997-2010 scope. He names the thing precisely — \"complete political independence in 1998\" — which is the Bank of England Act 1998: it made the Monetary Policy Committee responsible for setting rates and removed that from the Treasury. He names the year and the effect but not the Act, so MY identification. ⚠ He does not say what should replace it, and \"reversal\" could mean Treasury direction, a reconstituted MPC, or absorption into the quango measure at SP-03. Those are different Bills.",
+          "confidence": "medium",
+          "markup": 21,
+          "text": 474,
+          "enabling": 26,
+          "act_level_rows": "",
+          "distinct_source_instruments": 219,
+          "made_under_edges": 32,
+          "gates": {
+            "devolution": "no",
+            "international": "unknown",
+            "northern_ireland": "no",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "no citation edges between this instrument and the Scotland Act 1998, Government of Wales Act 2006 or Northern Ireland Act 1998 in citation_edge. ⚠ Absence of an edge is weaker evidence than presence of one: the detector may simply not have found it.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "no citation edges with the Northern Ireland Act 1998. ⚠ Same caveat as devolution: absence is weak evidence.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": []
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-12",
+      "verbatim": "the charities may most of them are no longer properly independent. They're sock puppets",
+      "ccw_reading": "Restriction of publicly funded charities campaigning against government policy.",
+      "video_url": "https://www.youtube.com/watch?v=okJNAMPBRqg&t=705s",
+      "candidate_instruments": [
+        {
+          "title": "Charities Act 2011",
+          "gid": "ukpga/2011/25",
+          "provision_scope": "",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "He names no instrument — \"the charities... are no longer properly independent. They're sock puppets.\" The political-purposes rules for registered charities sit in the Charities Act 2011 and in Charity Commission guidance made under it. MY identification. ⚠ Note that CCW_SPEC §6 lists this Act as part of the EXISTING TOOLKIT for a different workstream (WS-12), not as a repeal target — so the same statute appears in the programme twice, pointing opposite ways. That is a contradiction for him to resolve, and it is why this row is recorded rather than dropped for being low-confidence.",
+          "confidence": "low",
+          "markup": 33,
+          "text": 901,
+          "enabling": 77,
+          "act_level_rows": "",
+          "distinct_source_instruments": 342,
+          "made_under_edges": 100,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "yes",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Scotland Act 1998 (3 edges); Northern Ireland Act 1998 (3 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (3 edges). Computed.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; whole-Act counts",
+          "overlaps": [],
+          "also_claimed_by_workstreams": [
+            "WS-12"
+          ]
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-13",
+      "verbatim": "these 400 or so quangos that are effectively running the country and everything else and sentencing guidance, you name it, advertising standards",
+      "ccw_reading": "Sentencing guidelines and the Sentencing Council named as instances of the quango problem.",
+      "video_url": "https://www.youtube.com/watch?v=jnsiLNNL8s8&t=223s",
+      "candidate_instruments": [
+        {
+          "title": "Coroners and Justice Act 2009",
+          "gid": "ukpga/2009/25",
+          "provision_scope": "part-4",
+          "basis": "my identification",
+          "named_by": "",
+          "reasoning": "He names \"sentencing guidance\" as an instance of the quango problem, not as a measure of its own. The Sentencing Council is constituted by Coroners and Justice Act 2009 Part 4, and the duty on courts to follow its guidelines is statutory — so it cannot be reached by the general quango route at SP-03 and needs separate treatment. MY identification. Kept as its own row for that reason, and overlapping SP-03 by design.",
+          "confidence": "medium",
+          "markup": 0,
+          "text": 37,
+          "enabling": 6,
+          "act_level_rows": 575,
+          "distinct_source_instruments": 20,
+          "made_under_edges": 145,
+          "gates": {
+            "devolution": "yes",
+            "international": "unknown",
+            "northern_ireland": "yes",
+            "absorption": "unknown"
+          },
+          "gates_why": {
+            "devolution": "citation edges between this instrument and: Government of Wales Act 2006 (2 edges); Northern Ireland Act 1998 (4 edges). Computed, not asserted. Whether the gate bites is CCW's call.",
+            "international": "not assessed — international engagement is not computable from the citation graph, and a guess is worse than unknown (B5 §4.2).",
+            "northern_ireland": "citation edges with the Northern Ireland Act 1998 (4 edges). Computed.",
+            "absorption": "not measured for this instrument — B3 covered only WS-01, WS-04 and WS-05. unknown, not no."
+          },
+          "resolution": "resolved by exact title match; 'part-4' expanded to 26 provision refs from the Act's own CLML (25 provisions read from ukpga/2009/25 part-4). A literal match on the bare string returns 0 row(s). act_level_rows (575) name the Act with no provision and are reported SEPARATELY.",
+          "overlaps": [],
+          "also_claimed_by_workstreams": [
+            "WS-11"
+          ]
+        }
+      ],
+      "unresolved": false,
+      "why_unresolved": ""
+    },
+    {
+      "proposal_id": "SP-14",
+      "verbatim": "there's got to be that idea of the great repeal sounds easy. It's not. it will be fought every inch of the way by the whole of that establishment. So it's got to be legally watertight",
+      "ccw_reading": "Not a measure — his own statement of the drafting standard the programme must meet.",
+      "video_url": "https://www.youtube.com/watch?v=Mwf_SwRa2F0&t=1518s",
+      "candidate_instruments": [],
+      "unresolved": true,
+      "why_unresolved": "Explicitly not a measure. It is the proposer stating the standard the programme must meet — \"it has got to be legally watertight\". Belongs in the register's front matter, as CCW's own note says, and is the strongest available justification for this document's method.",
+      "search_terms_tried": [
+        "(none — not a proposal)"
+      ]
+    }
+  ]
+}
