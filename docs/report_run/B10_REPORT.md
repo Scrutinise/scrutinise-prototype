@@ -370,3 +370,45 @@ same lesson twice in one section — **print what a pattern matched; never infer
 Nothing in the disposition. Every number that moved, moved **down**, and every zero was already
 zero — so "the thesis series barely names the statutes" is now better supported than when I wrote
 it. The candidate JSON is unchanged in structure; only `term_totals` gained columns.
+
+### 8.5 Variant-only candidates, and the two kinds of "looser"
+
+Added 2026-08-30 13:04 UTC, on the other session's suggestion.
+
+**A count of non-literal matches cannot tell a gain from a collision — only the strings can.**
+"147 of 389" is a number that says nothing on its own: `equality act` matching *"the Equalities
+Act"* is the only route to that reference, while `scrap` matching *"scrape"* is noise. They are
+indistinguishable in a count and obvious in a list. So the JSON now separates them:
+
+| | emitted in this file | all before the cap |
+|---|---|---|
+| candidates | 389 | 2,114 |
+| with any non-literal match | **147** | 354 |
+| **wholly variant-only** | **22** | 206 |
+
+Both denominators are named, because "147 of 389" and "354 of 2,114" are the same fact about
+different populations and only one of them is what this file contains.
+
+**"Wholly variant-only" is the flag that matters.** A *mixed* candidate is fine — `quango` at 112
+"quangos" to 39 "quango" is the same measure named naturally. A candidate where the term is **never
+said literally in its window** must not be ranked as though the measure was named. Emitted counts by
+term: `restore` 56, `quango` 44, `reverse` 20, `equality act` 10, `abolish` 8, `repeal` 3,
+`judicial review` 2, `scrap` 2, `human rights act` 1, `annul` 1, `the first thing` 1.
+
+Example, `soNnF0sjF5Y` action group: `matched_terms` `[restore, reverse]`, `matched_surface`
+`[restoration, reversed]` — neither verb is actually uttered.
+
+### The rule I was given this morning was two rules
+
+The other session's correction of their own earlier advice, and it resolves the contradiction in
+§5 and §8.2:
+
+- **Positional looseness** — `AND` instead of phrase, admitting words that co-occur without
+  relating. **Unreliable.** This is `civil service commission`: 7 hits for a phrase never uttered,
+  and B9's `constitutional reform`: 9 co-occurrences, 0 phrases.
+- **Morphological looseness** — stem instead of literal, admitting inflections of the *same* word.
+  **Reliable, and often the only way to find the reference at all.** This is "the Equalities Act".
+
+Same word "looser", opposite reliability. "A hit only the loose method finds deserves scrutiny" is
+true of the first and false of the second, and I applied the undifferentiated version to defend a
+wrong zero.

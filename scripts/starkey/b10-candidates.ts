@@ -147,6 +147,12 @@ interface Candidate {
   // misquotation in a document where every quote is checked before print.
   matched_surface: string[]
   all_literal: boolean
+  // Terms present in this window ONLY as a variant — the term itself is never
+  // said here. Different in kind from a mixed candidate: `quango` at 112
+  // "quangos" to 39 "quango" is fine, but a candidate resting entirely on a
+  // variant must not be ranked as though the measure was named. (The other CC
+  // session's suggestion, 30 Aug.)
+  terms_variant_only: string[]
 }
 
 interface Totals {
@@ -315,7 +321,9 @@ async function main() {
     const v = vidBy.get(s.video_id)
     for (const g of Object.keys(TERMS) as Group[]) {
       const gm = ms.filter(m => m.group === g).sort((a, b) => a.start_s - b.start_s)
-      let cur: { from: number; to: number; hit: number; terms: Set<string>; surf: Set<string> } | null = null
+      // surf is per TERM, not a flat set: "did this term ever appear literally
+      // in this window" cannot be answered from a union of everything matched.
+      let cur: { from: number; to: number; hit: number; surf: Map<string, Set<string>> } | null = null
       const flush = () => {
         if (!cur) return
         const from = Math.max(0, cur.from), to = cur.to
@@ -330,18 +338,24 @@ async function main() {
           end_s: Math.round(to * 10) / 10,
           watch_url: `https://www.youtube.com/watch?v=${s.video_id}&t=${Math.max(0, Math.floor(cur.hit - 10))}s`,
           text,
-          matched_terms: [...cur.terms].sort(),
+          matched_terms: [...cur.surf.keys()].sort(),
           term_group: g,
           hit_start_s: Math.round(cur.hit * 10) / 10,
-          matched_surface: [...cur.surf].sort(),
-          all_literal: [...cur.surf].every(s2 => [...cur!.terms].some(t2 => norm(t2) === s2)),
+          matched_surface: [...new Set([...cur.surf.values()].flatMap(v => [...v]))].sort(),
+          all_literal: [...cur.surf].every(([t2, ss]) => [...ss].every(x => x === norm(t2))),
+          terms_variant_only: [...cur.surf].filter(([t2, ss]) => ![...ss].some(x => x === norm(t2)))
+            .map(([t2]) => t2).sort(),
         })
         cur = null
       }
       for (const m of gm) {
         const from = m.start_s - CONTEXT_S, to = m.end_s + CONTEXT_S
-        if (cur && from <= cur.to) { cur.to = Math.max(cur.to, to); cur.terms.add(m.term); cur.surf.add(m.surface) }
-        else { flush(); cur = { from, to, hit: m.start_s, terms: new Set([m.term]), surf: new Set([m.surface]) } }
+        const add = (c: NonNullable<typeof cur>) => {
+          let ss = c.surf.get(m.term); if (!ss) { ss = new Set(); c.surf.set(m.term, ss) }
+          ss.add(m.surface)
+        }
+        if (cur && from <= cur.to) { cur.to = Math.max(cur.to, to); add(cur) }
+        else { flush(); cur = { from, to, hit: m.start_s, surf: new Map() }; add(cur) }
       }
       flush()
     }
@@ -466,6 +480,25 @@ async function main() {
     // Every distinct string each pattern actually matched, with counts. Read
     // this before quoting: a term can match words that are not the term.
     surface_forms: surfaces,
+    literalness: (() => {
+      // Two denominators, both named. `emitted` is what is in THIS file (Pass A
+      // plus the capped Pass B); `all_before_cap` includes the 1,725 dropped.
+      // Quoting one figure under an unqualified label is how a count becomes
+      // an argument about the wrong population.
+      const emitted = [...passA, ...passB]
+      const tally = (cs: Candidate[]) => ({
+        candidates: cs.length,
+        with_any_non_literal: cs.filter(c => !c.all_literal).length,
+        wholly_variant_only: cs.filter(c => c.terms_variant_only.length === c.matched_terms.length).length,
+      })
+      return {
+        note: 'A candidate is variant_only for a term when that term is never said literally in its window. Ranking such a candidate as though the measure was named would be wrong; a MIXED candidate (quango: 112 "quangos" to 39 "quango") is fine.',
+        emitted_in_this_file: tally(emitted),
+        all_before_cap: tally(candidates),
+        variant_only_by_term_emitted: emitted.flatMap(c => c.terms_variant_only)
+          .reduce((m, t) => (m[t] = (m[t] ?? 0) + 1, m), {} as Record<string, number>),
+      }
+    })(),
     term_totals: totals,
     candidates_pass_a: passA,
     candidates_pass_b: passB,

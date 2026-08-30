@@ -132,6 +132,52 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 13:04 UTC — B10: "LOOSER" WAS TWO RULES WITH OPPOSITE RELIABILITY, AND A COUNT OF NON-LITERAL MATCHES CANNOT TELL A GAIN FROM A COLLISION
+
+Closing exchange with the B8/B9 session. No finding overturned; two refinements that change how the
+candidate file should be read.
+
+▶▶ **THE RULE I WAS HANDED THIS MORNING WAS TWO RULES, AND THEY POINT OPPOSITE WAYS.** "A hit only
+the loose method finds deserves scrutiny" conflates:
+
+- **POSITIONAL looseness** — `AND` instead of phrase, admitting words that co-occur without
+  relating. **Unreliable.** `civil service commission`: 7 hits, phrase never uttered. B9's
+  `constitutional reform`: 9 co-occurrences, 0 phrases.
+- **MORPHOLOGICAL looseness** — stem instead of literal, admitting inflections of the SAME word.
+  **Reliable, and often the only route to the reference.** "the Equalities Act".
+
+Same word "looser", opposite reliability. I applied the undifferentiated version to defend a wrong
+zero (12:59 entry). Their split, and it resolves the contradiction between that entry and the 12:39
+one.
+
+▶▶ **A COUNT OF NON-LITERAL MATCHES SAYS NOTHING; ONLY THE STRINGS DO.** `equality act` matching
+"the Equalities Act" is the only route to that reference; `scrap` matching "scrape" is noise. They
+are indistinguishable in a count and obvious in a list. They had the number 11 for an hour and it
+told them nothing until they printed the surfaces.
+
+⚠ **New flag on every candidate: `terms_variant_only`** — terms never said literally in that
+window. A MIXED candidate is fine (`quango` 112 "quangos" to 39 "quango" is the measure named
+naturally); a candidate resting ENTIRELY on a variant must not be ranked as though the measure was
+named. **Emitted: 389 candidates, 147 with any non-literal match, 22 wholly variant-only.** By term:
+`restore` 56, `quango` 44, `reverse` 20, `equality act` 10, `abolish` 8. Example — `soNnF0sjF5Y`,
+terms `[restore, reverse]`, surfaces `[restoration, reversed]`: neither verb is uttered.
+
+⚠ **Both denominators are now named in the JSON.** `literalness.emitted_in_this_file` (389) and
+`literalness.all_before_cap` (2,114) — I had reported "147 of 389" while the field computed over
+2,114, which is the same defect in miniature as their note that their 94 phrase-matched PASSAGES and
+my 134 cue-stream OCCURRENCES are different denominators, not a disagreement. **Label the population
+or the number becomes an argument about the wrong one.**
+
+▶ Their audit of their own 11 non-literal matches, prompted by my "IS would" collision: 3 of 87
+spurious, all one cause (stem `equal` swallowing the adverb "equally"), no unnoticed collision.
+
+Re-verified after the change: 389/389 candidate texts contain their own matched term, 2Khgz5sMMBU
+still 0 after 20:20 with the control at 7, capped file still a strict subset of the uncapped, Pass B
+still free of the two-transcript inflation, tsc clean.
+
+**B5 still blocked — seven independent checks between the two sessions today, and it is the one
+thing that could derail Thursday.** B11 remains unassigned; neither session has started it.
+
 ## 2026-08-30 12:59 UTC — B10 SECOND CORRECTION: I DEFENDED A ZERO WITH THREE CHECKS THAT WERE ALL THE SAME CHECK — HE SAYS "THE EQUALITIES ACT"
 
 I was wrong, the other CC session was right, and the way I was wrong is worth more than the row.
