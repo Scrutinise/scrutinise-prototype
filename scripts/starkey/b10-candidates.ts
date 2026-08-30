@@ -94,28 +94,59 @@ const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
  * Words are separated by `[\s,]+` because TurboScribe punctuates and YouTube's
  * ASR does not — "we need, to" and "we need to" are the same utterance.
  */
+/**
+ * Controlled plural/variant forms of one word. Used for the words INSIDE a
+ * multi-word term, where an open-ended `[a-z]{0,6}` tail would be reckless —
+ * it would turn `of` into `office`. These forms are closed, so a word that has
+ * no real plural simply contributes an alternative that never occurs.
+ *
+ * This exists because Starkey names measures the way a speaker does, not the
+ * way the statute book does: he says "the Equalities Act", which no literal
+ * search for "equality act" can reach. (Found by the other CC session, 30 Aug;
+ * my own three checks were all blind to it because all three were literal.)
+ */
+function wordForms(w: string): string[] {
+  const out = new Set([w])
+  // Words under three letters are pronouns and prepositions here — `I`, `of`,
+  // `to`, `we`, `go`. Pluralising them invents words that collide with real
+  // ones: `I` + `s` matched "**is** would" three times before this guard.
+  if (w.length < 3) return [...out]
+  if (/y$/i.test(w)) out.add(w.slice(0, -1) + 'ies')
+  out.add(/(?:s|x|z|ch|sh)$/i.test(w) ? w + 'es' : w + 's')
+  return [...out]
+}
+
 function regexes(term: string): { strict: RegExp; inflected: RegExp } {
-  const words = term.split(/\s+/).map(esc)
-  const body = words.join('[\\s,]+')
+  const words = term.split(/\s+/)
+  const body = words.map(esc).join('[\\s,]+')
   const strict = new RegExp(`\\b${body}\\b`, 'gi')
-  // Only single-word terms get an inflectional tail; on a phrase the tail would
-  // land mid-phrase and change what is being matched.
-  const stem = words.length === 1 ? term.replace(/e$/i, '') : null
-  const inflected = stem
-    ? new RegExp(`\\b${esc(stem)}[a-z]{0,6}\\b`, 'gi')
-    : new RegExp(`\\b${body}\\b`, 'gi')
+  const inflected = words.length === 1
+    // A single word gets an open inflectional tail: repeal -> repealed,
+    // quango -> quangos, restore -> restoration. Wider, and reported
+    // separately from the strict count because it is wider.
+    ? new RegExp(`\\b${esc(term.replace(/e$/i, ''))}[a-z]{0,6}\\b`, 'gi')
+    : new RegExp(`\\b${words.map(w => `(?:${wordForms(w).map(esc).join('|')})`).join('[\\s,]+')}\\b`, 'gi')
   return { strict, inflected }
 }
 
+/** Did the text actually say the term, or a variant of it? */
+const norm = (s: string) => s.toLowerCase().replace(/[\s,]+/g, ' ').trim()
+
 interface CueRow { video_id: string; source: string; start_s: number; end_s: number; text: string }
 interface Vid { video_id: string; title: string | null; published_on: Date | null; duration_s: number | null }
-interface Match { term: string; group: Group; start_s: number; end_s: number }
+interface Match { term: string; group: Group; start_s: number; end_s: number; surface: string }
 
 interface Candidate {
   video_id: string; title: string; published: string | null
   source: string; start_s: number; end_s: number; watch_url: string
   text: string; matched_terms: string[]; term_group: Group
   hit_start_s: number
+  // The words actually said, and whether they are the term verbatim. A match
+  // is NOT a licence to quote the term's own wording: he says "the Equalities
+  // Act", and printing "the Equality Act" over that audio would be a
+  // misquotation in a document where every quote is checked before print.
+  matched_surface: string[]
+  all_literal: boolean
 }
 
 interface Totals {
@@ -206,6 +237,11 @@ async function main() {
   }
   // term -> video -> source -> occurrences, for the distinct-moment reduction.
   const perTVS = new Map<string, Map<string, Map<string, number>>>()
+  // term -> the actual words matched, and how often. This is the check that
+  // would have caught "Equalities Act", and the one that shows `scrap` also
+  // matching "scrape". Never infer what a pattern matched — print it.
+  const surfaces: Record<string, Record<string, number>> = {}
+  for (const { t } of allTerms) surfaces[t] = {}
 
   for (const s of streams.values()) {
     const inA = PASS_A.has(s.video_id)
@@ -233,8 +269,10 @@ async function main() {
         let byVid = perTVS.get(t); if (!byVid) { byVid = new Map(); perTVS.set(t, byVid) }
         let bySrc = byVid.get(s.video_id); if (!bySrc) { bySrc = new Map(); byVid.set(s.video_id, bySrc) }
         bySrc.set(s.source, (bySrc.get(s.source) ?? 0) + 1)
+        const surface = norm(m[0])
+        surfaces[t][surface] = (surfaces[t][surface] ?? 0) + 1
         const a = cueAt(s, m.index), b = cueAt(s, m.index + m[0].length - 1)
-        acc.push({ term: t, group: g, start_s: a.start_s, end_s: b.end_s })
+        acc.push({ term: t, group: g, start_s: a.start_s, end_s: b.end_s, surface })
       }
     }
     if (acc.length) hits.set(s.video_id + SEP + s.source, acc)
@@ -277,7 +315,7 @@ async function main() {
     const v = vidBy.get(s.video_id)
     for (const g of Object.keys(TERMS) as Group[]) {
       const gm = ms.filter(m => m.group === g).sort((a, b) => a.start_s - b.start_s)
-      let cur: { from: number; to: number; hit: number; terms: Set<string> } | null = null
+      let cur: { from: number; to: number; hit: number; terms: Set<string>; surf: Set<string> } | null = null
       const flush = () => {
         if (!cur) return
         const from = Math.max(0, cur.from), to = cur.to
@@ -295,13 +333,15 @@ async function main() {
           matched_terms: [...cur.terms].sort(),
           term_group: g,
           hit_start_s: Math.round(cur.hit * 10) / 10,
+          matched_surface: [...cur.surf].sort(),
+          all_literal: [...cur.surf].every(s2 => [...cur!.terms].some(t2 => norm(t2) === s2)),
         })
         cur = null
       }
       for (const m of gm) {
         const from = m.start_s - CONTEXT_S, to = m.end_s + CONTEXT_S
-        if (cur && from <= cur.to) { cur.to = Math.max(cur.to, to); cur.terms.add(m.term) }
-        else { flush(); cur = { from, to, hit: m.start_s, terms: new Set([m.term]) } }
+        if (cur && from <= cur.to) { cur.to = Math.max(cur.to, to); cur.terms.add(m.term); cur.surf.add(m.surface) }
+        else { flush(); cur = { from, to, hit: m.start_s, terms: new Set([m.term]), surf: new Set([m.surface]) } }
       }
       flush()
     }
@@ -423,6 +463,9 @@ async function main() {
     // them. If this list ever contains a Pass B video, the Pass B columns and
     // the action-verb video ranking inflate too — today it does not.
     two_transcript_videos: twoTranscript,
+    // Every distinct string each pattern actually matched, with counts. Read
+    // this before quoting: a term can match words that are not the term.
+    surface_forms: surfaces,
     term_totals: totals,
     candidates_pass_a: passA,
     candidates_pass_b: passB,

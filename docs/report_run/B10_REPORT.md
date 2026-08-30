@@ -8,7 +8,7 @@ brief — B10 reads, it does not load).
 | File | What |
 |---|---|
 | `docs/report_run/register_candidates.json` | the deliverable: Pass A (89) + Pass B (300, capped) |
-| `docs/report_run/register_candidates_full.json` | companion: Pass B uncapped (2,013) |
+| `docs/report_run/register_candidates_full.json` | companion: Pass B uncapped (2,025) |
 
 **Tool:** `scripts/starkey/b10-candidates.ts`, new. `--compare` reproduces §5 below.
 
@@ -53,6 +53,13 @@ reports. It is a **floor**: two genuinely distinct moments, one per engine, woul
 **Pass B needs no such correction** — `two_transcript_videos` in the JSON confirms all three are in
 Pass A, and `pass_b` equals `pass_b_distinct` for every one of the 32 terms.
 
+⚠⚠ **Multi-word terms match inflected forms, and `surface_forms` in the JSON records what was
+actually said.** He names measures the way a speaker does: **"the Equalities Act"**, 16 times. A
+literal search for `equality act` cannot reach it, which is how the first version of this report
+printed a wrong 0 for the thesis series (§8.4). **147 of 389 candidates contain at least one
+non-literal match**, and each carries `matched_surface` and `all_literal` — a match is not a
+licence to quote the term's own wording.
+
 ### Imperative
 
 | term | Pass A occ. | **Pass A moments** | Pass B | corpus (strict) | corpus (infl) | passages (direct) | plainto_tsquery |
@@ -63,10 +70,10 @@ Pass A, and `pass_b` equals `pass_b_distinct` for every one of the 32 terms.
 | `we have to` | 3 | **3** | 136 | 139 | 139 | 118 | **lexes to empty** |
 | `I would` | 13 ⚠ | **12** | 664 | 677 | 677 | 579 | 1695 |
 | `what I would do` | 0 | **0** | 6 | 6 | 6 | 6 | 1695 |
-| `the first thing` | 2 ⚠ | **1** | 58 | 60 | 60 | 57 | 542 |
+| `the first thing` | 2 ⚠ | **1** | 66 | 60 | 68 | 57 | 542 |
 | `has to go` | 0 | **0** | 8 | 8 | 8 | 8 | 2317 |
 | `must go` | 0 | **0** | 1 | 1 | 1 | 1 | 83 |
-| **group total** | **60** | **47** | **1583** | | | | |
+| **group total** | **60** | **47** | **1591** | | | | |
 
 ### Action verbs
 
@@ -76,13 +83,13 @@ Pass A, and `pass_b` equals `pass_b_distinct` for every one of the 32 terms.
 | `repeal` | 7 ⚠ | **6** | 167 | 140 | 174 | 109 | 127 |
 | `annul` | 0 | **0** | 2 | 0 | 2 | 0 | 1 |
 | `scrap` | 2 | **2** | 8 | 4 | 10 | 4 | 5 |
-| `get rid of` | 3 | **3** | 66 | 69 | 69 | 59 | 81 |
+| `get rid of` | 3 | **3** | 68 | 69 | 71 | 59 | 81 |
 | `restore` | 16 ⚠ | **12** | 268 | 110 | 284 | 82 | 212 |
 | `bring back` | 1 | **1** | 9 | 10 | 10 | 8 | 75 |
 | `take back` | 2 ⚠ | **1** | 8 | 10 | 10 | 9 | 213 |
 | `dismantle` | 0 | **0** | 6 | 3 | 6 | 3 | 6 |
 | `reverse` | 11 ⚠ | **7** | 137 | 75 | 148 | 67 | 127 |
-| **group total** | **42** | **32** | **757** | | | | |
+| **group total** | **42** | **32** | **759** | | | | |
 
 `annul` is **never said in that exact form** — but the 2 inflected hits are not the false positives
 I assumed before looking. Both are in `0N1WPuRW1Xw` *"Starmer is packing the House of Lords" |
@@ -94,12 +101,12 @@ want it. It is the clearest case in this run for keeping the inflected match rat
 
 | term | Pass A occ. | **Pass A moments** | Pass B | corpus (strict) | corpus (infl) | passages (direct) | plainto_tsquery |
 |---|---|---|---|---|---|---|---|
-| `human rights act` | 2 ⚠ | **1** | 54 | 56 | 56 | 48 | 104 |
-| `equality act` | 0 | **0** | 116 | 116 | 116 | 81 | 110 |
-| `supreme court` | 5 | **5** | 211 | 216 | 216 | 158 | 159 |
-| `lord chancellor` | 2 ⚠ | **1** | 86 | 88 | 88 | 55 | 60 |
+| `human rights act` | 2 ⚠ | **1** | 55 | 56 | 57 | 48 | 104 |
+| `equality act` | 2 ⚠ | **1** | 132 | 116 | 134 | 81 | 110 |
+| `supreme court` | 5 | **5** | 212 | 216 | 217 | 158 | 159 |
+| `lord chancellor` | 2 ⚠ | **1** | 87 | 88 | 89 | 55 | 60 |
 | `civil service` | 12 ⚠ | **9** | 169 | 181 | 181 | 136 | 137 |
-| `judicial review` | 1 | **1** | 21 | 22 | 22 | 18 | 23 |
+| `judicial review` | 1 | **1** | 23 | 22 | 24 | 18 | 23 |
 | `quango` | 13 ⚠ | **10** | 147 | 39 | 160 | 33 | 119 |
 | `climate change act` | 0 | **0** | 6 | 6 | 6 | 6 | 18 |
 | `european convention` | 4 ⚠ | **3** | 87 | 91 | 91 | 86 | 93 |
@@ -107,38 +114,38 @@ want it. It is the clearest case in this run for keeping the inflected match rat
 | `sentencing council` | 0 | **0** | 9 | 9 | 9 | 5 | 6 |
 | `house of lords` | 0 | **0** | 108 | 108 | 108 | 90 | 116 |
 | `civil service commission` | 0 | **0** | 0 | 0 | 0 | 0 | 7 |
-| **group total** | **39** | **30** | **1056** | | | | |
+| **group total** | **41** | **31** | **1077** | | | | |
 
 ⚠ **`civil service commission` is never uttered anywhere in 287 transcripts** — the phrase named in
 WS-05's own title. Its 7 `plainto_tsquery` hits are passages containing "civil", "service" and
-"commission" separately. The other session has since confirmed this independently three ways
+"commission" separately. The other session confirmed this independently three ways
 (phraseto_tsquery 0, ILIKE on cue text 0, ILIKE on passage text 0, against `civil service` at 136
 passages). This is the `constitutional reform` defect B9 found, in a second and worse place: that
 one was a phrase that might plausibly have been said, this is the title of the measure itself.
 
 ⚠ **The thesis series barely names the statutes.** Across the eight thesis videos, as **distinct
-moments**: Equality Act **0**, Climate Change Act **0**, hate speech **0**, Sentencing Council **0**,
-House of Lords **0**, judicial review **1**, Human Rights Act **1**. This is the same shape as B9's
-CRAG result and it points the same way: the programme in the thesis videos is stated in
-constitutional generalities, and the named measures live in the other 277 videos. The correction
-**strengthens** this reading — every figure that moved, moved down.
+moments**: Climate Change Act **0**, hate speech **0**, Sentencing Council **0**, House of Lords
+**0**, judicial review **1**, Human Rights Act **1**, **Equality Act 1** (as *"the Equalities Act"*,
+`jnsiLNNL8s8` at 5:17, in the same breath as the HRA). Same shape as B9's CRAG result, and it
+points the same way: the programme in the thesis videos is stated in constitutional generalities,
+and the named measures live in the other 277 videos.
 
 ## 3. Candidate counts and the cap
 
 | | Pass A | Pass B |
 |---|---|---|
 | videos | 8 | 277 |
-| candidates | **89** | **300** (of 2,013) |
-| `capped_at` | — | **1,713** |
+| candidates | **89** | **300** (of 2,025) |
+| `capped_at` | — | **1,725** |
 | by group | imperative 40, action 25, target 24 | target 150, action 100, imperative 50 |
 | by source | asr 69, turboscribe 20 | asr 300 |
-| dropped by group | — | imperative 1,008, target 362, action 343 |
+| dropped by group | — | imperative 1,015, target 365, action 345 |
 
 **A note on how the cap was taken, because the obvious way was wrong.** Ranking the whole of Pass B
-by group and keeping the top 300 filled every slot with `target` and silently discarded all 1,713
+by group and keeping the top 300 filled every slot with `target` and silently discarded all 1,725
 action and imperative candidates — the group that answers "has he proposed something outside the
 twelve" would have vanished behind a `capped_at` that looked perfectly honest. The cap is now a
-quota per group (150/100/50). The uncapped 2,013 are in `register_candidates_full.json` so the cap
+quota per group (150/100/50). The uncapped 2,025 are in `register_candidates_full.json` so the cap
 costs nothing; the capped file is still the deliverable B10 asked for.
 
 `top_action_videos_outside_thesis` is computed from **uncapped** hits, so the cap cannot move it.
@@ -261,7 +268,7 @@ from 110 to 284 and `quango` from 39 to 160. Both counts are in `term_totals` fo
 - **No candidate's `hit_start_s` falls outside its own window** — 0/389.
 - **Both engines are represented** for Parts 1–3: every one yields `asr` *and* `turboscribe`
   candidates (69 asr / 20 turboscribe in Pass A).
-- **The capped file is a strict subset of the uncapped one**, 300 ⊂ 2,013, verified by key.
+- **The capped file is a strict subset of the uncapped one**, 300 ⊂ 2,025, verified by key.
 
 ### The two engines disagree where it matters
 
@@ -319,20 +326,44 @@ differently, so their cue boundaries interleave and a merge *chains* — asr 229
 overcount. Max-over-sources cannot chain, equals what a single-transcript video reports, and is
 declared as a floor.
 
-### 8.2 I was right: `equality act` really is 0 across the eight
+### 8.2 I was wrong: he says "the **Equalities** Act", and all three of my checks were literal
 
-They reported one occurrence in Part 2 (`jnsiLNNL8s8`) and said my 0 was wrong. It is not. Three
-independent checks agree with the 0:
+I answered their first `equality act` correction by asserting 0 and calling it settled by three
+independent checks. **The 0 was wrong and all three checks were blind in the same way.** He says
+*"…the human rights act, the equalities act…"* — `jnsiLNNL8s8` at 5:17, in both transcripts,
+naming two statutes in one breath.
 
-- the cue-stream regex: no match in any of the eight
-- `ILIKE '%equality act%'` on `starkey.cue` for the eight: **NONE**
-- **every** cue in the eight containing the string "equality" — there is exactly **one**, in
-  `EMbRv6aaQrs` at 44:32: *"of diversity, equality, and inclusion."* Not the statute.
+| my check | result | why it could not see it |
+|---|---|---|
+| cue-stream regex `\bequality[\s,]+act\b` | no match | literal; multi-word terms had no inflection |
+| `ILIKE '%equality act%'` | NONE | literal |
+| every cue containing "equality" | 1, the DEI line | literal — "equalities" is a different string |
 
-What `jnsiLNNL8s8` does have is `human rights act`, at asr 1 + turboscribe 1 — which is the row
-immediately above `equality act` in both our tables, and is exactly the 2-that-should-be-1 case
-under discussion. It looks like a row conflation, and it does not affect their corrected Human
-Rights Act = 1, which matches mine.
+**Three checks that share an assumption are one check.** I presented them as independent because
+they used different mechanisms; they were not independent, because every one of them was literal.
+The check that settles it is on the **stem** — `~* '\yequal[a-z]*\y'` returns 6 cues in the eight
+videos, and the two Equalities Act ones are in there. That is the query that cannot come back empty
+for the wrong reason, and it is the one I should have run when challenged.
+
+Their `phraseto_tsquery` found it because Postgres matches adjacent **stems**, not words:
+`'equal' <-> 'act'` is satisfied by "Equalities Act". Here the looser tool was the correct one.
+
+**Corrected, and it goes further than the one row.** Multi-word terms now match controlled inflected
+forms. Corpus-wide `equality act` rises from 116 to **134** occurrences — 15 "equalities act", 2
+"equality acts", 1 "equalities acts". Pass B rises 116 → **132**. Pass A is **1 distinct moment**,
+which is the other session's number.
+
+⚠ **The general defect, which is the part worth keeping.** A term matching is not the term being
+said. `surface_forms` in the JSON now records every distinct string each pattern actually matched,
+and **147 of 389 candidates contain a non-literal match**: `quango` is 112 "quangos" against 39
+"quango"; `restore` is 148 "restoration" against 110 "restore"; `scrap` picks up "scrape" and
+"scrappy". Every candidate carries `matched_surface` and `all_literal` — **check `all_literal`
+before quoting a measure by name.**
+
+⚠ Adding phrase inflection also introduced a false positive I caught by printing the surfaces rather
+than trusting the pattern: `I would` matched **"is would"** three times, because pluralising the
+one-letter word `I` produces `is`. Words under three letters are no longer inflected. This is the
+same lesson twice in one section — **print what a pattern matched; never infer it.**
 
 ### 8.3 What this changes for CCW
 

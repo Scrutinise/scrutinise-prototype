@@ -132,6 +132,59 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 12:59 UTC — B10 SECOND CORRECTION: I DEFENDED A ZERO WITH THREE CHECKS THAT WERE ALL THE SAME CHECK — HE SAYS "THE EQUALITIES ACT"
+
+I was wrong, the other CC session was right, and the way I was wrong is worth more than the row.
+
+⚠⚠ **`equality act` is NOT 0 in the thesis videos. He says "the equalities act"** — `jnsiLNNL8s8`
+at 5:17, in both transcripts, naming it in the same breath as the Human Rights Act. Confirmed
+against the cue text directly, both engines.
+
+▶▶ **THE REAL DEFECT: I answered a challenge with "three independent checks" and all three were
+literal.** (1) cue-stream regex `\bequality[\s,]+act\b`, (2) `ILIKE '%equality act%'`, (3) an
+enumeration of every cue containing the word "equality". I presented (3) as decisive precisely
+because it was broader and "cannot come back empty for the wrong reason". **It can, and it did** —
+"equalities" is a different string from "equality". **Three checks that share an assumption are one
+check**, and using three different mechanisms does not make them independent if every mechanism
+tests the same thing. The query that settles it is on the STEM: `~* '\yequal[a-z]*\y'` returns 6
+cues in the eight videos and both Equalities Act cues are in there.
+
+▶ **The looser tool was the correct one here.** `phraseto_tsquery('english','equality act')` is
+`'equal' <-> 'act'` — adjacent STEMS, not words — so it matches "Equalities Act". That is a genuine
+advantage of the index over my literal regex, and it inverts the rule I had been applying all day:
+a term the loose method finds and the tight one misses is not automatically noise.
+
+**Cause in B10's code:** `regexes()` gave an inflectional tail to single-word terms only. Multi-word
+terms were matched verbatim, so no phrase could ever reach a variant of its own wording. Fixed with
+controlled per-word forms (`equality|equalities`, `act|acts`). Corpus-wide `equality act` 116 → 134
+occurrences (15 "equalities act", 2 "equality acts", 1 "equalities acts"); Pass B 116 → 132; Pass A
+**1 distinct moment**, matching theirs. Pass B totals 2,013 → 2,025 candidates.
+
+⚠⚠ **A MATCH IS NOT A LICENCE TO QUOTE THE TERM'S WORDING, and this is a print-risk.** Writing "the
+Equality Act" over audio saying "the Equalities Act" is a misquotation in a report where every quote
+is verified before print. `register_candidates.json` now carries `surface_forms` (every distinct
+string each pattern actually matched, with counts) and every candidate carries `matched_surface`
+and `all_literal`. **147 of 389 candidates contain at least one non-literal match.** The other
+session added the equivalent `literal_match` to `starkey_hits.json` — 11 of its 77 phrase matches
+are not literal.
+
+▶ **Printing the surfaces immediately paid for itself twice more.** It showed `quango` is 112
+"quangos" against 39 "quango", `restore` is 148 "restoration" against 110 "restore", and `scrap`
+picking up "scrape"/"scrappy". And it caught a false positive I had just introduced: **`I would`
+matched "IS would" 3 times**, because pluralising the one-letter word `I` yields `is`. Words under
+three letters are no longer inflected. Same lesson twice in one sprint — **print what a pattern
+matched; never infer it from the pattern.**
+
+**Corrected thesis-series row (distinct moments):** Climate Change Act 0, hate speech 0, Sentencing
+Council 0, House of Lords 0, judicial review 1, Human Rights Act 1, **Equality Act 1**. The reading
+is unchanged and still holds — the thesis videos state the programme in generalities and the named
+measures live in the other 277 — but it now rests on one fewer zero than I claimed.
+
+**Unaffected and re-verified after the re-run:** 0 candidates from `2Khgz5sMMBU` after 20:20 with
+the control still returning 7 late candidates in the untruncated lecture; 389/389 candidate texts
+contain one of their own matched terms; capped file a strict subset of the uncapped; Pass B still
+free of the two-transcript inflation. The action-verb video ranking is unchanged.
+
 ## 2026-08-30 12:48 UTC — B10 CORRECTION: MY PASS A COLUMN DOUBLE-COUNTED THE THREE TWO-TRANSCRIPT VIDEOS — AND THE BIAS FELL EXACTLY WHERE IT DOES MOST DAMAGE
 
 Cross-review with the CC session that ran B8/B9. Two claims contested, **one of theirs right and one
