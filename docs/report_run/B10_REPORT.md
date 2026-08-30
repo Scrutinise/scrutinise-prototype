@@ -506,3 +506,25 @@ That also settles §8.5's timing independently: **HRA and the Equalities Act res
   implementation to drift from the first. This is the copied-function trap avoided by not having
   a second copy — the failure mode their warning describes is real, and the fix is to have one code
   path rather than two agreeing ones.
+
+### 8.7 Every "tsc clean" in this report was vacuous until 13:21
+
+Added 2026-08-30 13:21 UTC. `scrutinise-web/tsconfig.json` **excludes `scripts/**`**, and its
+`include` is `**/*.ts` relative to `scrutinise-web/` — so it never reaches `../scripts/`. Every time
+this run reported "tsc clean on `b10-candidates.ts`", the grep matched nothing because **the file
+was never compiled**, not because it had no errors.
+
+Falsified with a canary, both directions:
+
+| | result |
+|---|---|
+| `scrutinise-web/tsconfig.json`, canary present | **not reported** — repo total 0 errors |
+| `scripts/tsconfig.json`, canary present | `b10-candidates.ts(551,7): error TS2322` |
+| `scripts/tsconfig.json`, canary removed | 0 errors in that file |
+
+**`scripts/tsconfig.json` is the correct one for this directory**, and under it the repo carries 8
+pre-existing errors in unrelated files — independently matching the other session's "repo total: 8".
+
+**`b10-candidates.ts` is type-clean. The conclusion did not change; the evidence went from none to
+some.** The check was run four times and reported four times before anyone asked whether it could
+fail.

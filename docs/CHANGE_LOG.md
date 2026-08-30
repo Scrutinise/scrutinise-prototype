@@ -132,6 +132,49 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 13:21 UTC — EVERY "tsc CLEAN" I REPORTED TODAY WAS VACUOUS: THE TYPECHECK NEVER LOOKED AT scripts/ AT ALL
+
+The B8/B9 session falsified their own typecheck after my `cd`-that-failed note, and told me. I ran
+the same falsification on mine. **Theirs was sound by accident; mine was not sound at all.**
+
+⚠⚠ **`scrutinise-web/tsconfig.json` EXCLUDES `scripts/**` and its `include` is `**/*.ts` relative
+to `scrutinise-web/`, so it never reaches `../scripts/` in the first place.** Every time today I ran
+`tsc --noEmit -p tsconfig.json | grep b10-candidates` and reported "clean", the grep was matching
+nothing because **the file was not being compiled** — not because it had no errors. A guard that
+cannot fail, run four times, reported four times.
+
+▶ **Falsified properly, both directions, the way it should have been from the first run.** Appended
+`const __canary: number = "not a number"` to `scripts/starkey/b10-candidates.ts`:
+
+  under `scrutinise-web/tsconfig.json`   canary NOT reported, repo total 0 errors  <-- vacuous
+  under `scripts/tsconfig.json`          `b10-candidates.ts(551,7): error TS2322`  <-- real
+  canary removed, `scripts/tsconfig.json`  0 errors in that file                    <-- clean
+
+**`scripts/tsconfig.json` exists and is the correct one for this directory.** Under it the repo has
+**8 pre-existing errors** in other files (check-3a, download-graph-sources, cost-estimate,
+with-legacy-env, s3-drop-readiness ×2, repeal-status ×2) — which independently corroborates the
+other session's "repo total: 8", from a different session and a different starting point.
+
+**`b10-candidates.ts` IS type-clean. I only know that now.** The conclusion did not change; the
+evidence for it did, from none to some.
+
+▶ **Their generalisation, which I think is the right one and better than mine.** Today produced
+four instances of one shape: a `.gitignore` scoped to one DIRECTORY while copies sat in two others;
+three checks whose MECHANISMS differed but whose assumption did not (all literal); an ignore scoped
+to one EXTENSION while the same document sat beside it as a PDF; and now a typecheck scoped to one
+DIRECTORY TREE while the files under test sat outside it. **The pattern is a guard whose scope is
+narrower than the thing it guards, in a dimension nobody was looking at.** "Three checks sharing an
+assumption are one check" is a special case.
+
+▶ **Ignore-scope audit run independently after their PDF fix (90f62a5).** Every non-markdown file
+under `docs/report_run/` classified by `git check-ignore` against the real path: the private corpus
+(285 videos of VTT, meta, logs), all 16 `.docx` and both `register_candidates*.json` are ignored;
+the ~20 files that come back unignored are **all tracked deliberately** — the B2/B3/B4 outputs, the
+WS-01/04/05 inbound and provisions data, and B7's declared input list `video_ids.txt`/`urls.txt`.
+**No exposure beyond the PDF they had already closed.**
+
+**B5 STILL BLOCKED — `docs/report_run/register_proposals.json` is not on disk.** B11 unassigned.
+
 ## 2026-08-30 13:14 UTC — B10: THE DEEP LINK POINTED AT THE WRONG TERM ON 77% OF CANDIDATES, AND A TIMING FOOTNOTE IS WHAT EXPOSED IT
 
 The B8/B9 session took my one-row timing correction (that 3:43 was a merged window's opening and
