@@ -487,6 +487,21 @@ matches, of which 11 do not contain the term's literal wording.**
 "but I equally", `Mwf_SwRa2F0` 5:55 and 21:48), one is the DEI phrase in the lecture, and one is the
 Equalities Act reference. A term chosen to measure a subject was counting a function word.
 
+⚠ **All 11 non-literal matches inspected by surface rather than counted**, after the peer's own
+audit turned up a stem collision they had just introduced (`I` pluralising to `is`, so `I would`
+matched "IS would"). Nothing of that kind here: 4 are "restore" for `restoration`, 2 are "the
+Equalities Act" for `equality act`, 2 are that same passage under the bare `equality`, and **3 are
+the "equally" adverb** — so **3 spurious hits in 87, all one known cause**. Printing the surface is
+the check; a count of non-literal matches cannot distinguish a gain from a collision.
+
+⚠⚠ **AND THE RULE I GAVE THE PEER THIS MORNING NEEDS SPLITTING — IT IS RIGHT FOR ONE KIND OF
+LOOSENESS AND WRONG FOR THE OTHER.** I told them "a hit only the loose method finds needs
+scrutiny". That is *positional* looseness — AND instead of phrase, which admits words that co-occur
+without relating, and it is exactly how `civil service commission`, never uttered, showed 7 hits.
+It is **not** true of *morphological* looseness — stem instead of literal, which admits inflections
+of the same word, and is the only reason "the Equalities Act" was found at all. Same word "looser",
+opposite reliability. Both now stated separately in `sources/youtube/_README.md`.
+
 ⚠⚠ **`ratification` returns zero CORPUS-WIDE, and that is a fact about vocabulary, not about the
 subject** — `ratify` and `ratified` each appear 6 times. Read off the table alone, "0 everywhere"
 invites the conclusion that Starkey never touches treaty ratification.

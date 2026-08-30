@@ -120,6 +120,42 @@ One transcript names the wrong man. A quote taken from the ASR alone would have 
 Per the brief, **no automated comparison of the two has been built.** Ten quotes are faster to check
 by eye than a diff tool is to write. If the count passes roughly twenty, Charlie says so.
 
+## Before you quote: a search match is not evidence of the wording
+
+Two things about Postgres FTS that this corpus was bitten by, both of which reach the printed page.
+
+**1. A multi-word `plainto_tsquery` is an AND, not a phrase.** `plainto_tsquery('english',
+'constitutional reform')` is `constitut & reform` — both lexemes anywhere in the same 60–90 second
+passage. Over a passage that long it is a weak constraint: `constitutional reform` had 9 hits across
+the eight thesis videos and the phrase occurs **zero** times. Use `phraseto_tsquery` for anything
+you will describe as a phrase.
+
+**2. A `phraseto_tsquery` match is adjacent STEMS, not the literal words.** `'equality act'` is
+`'equal' <-> 'act'`, which **"the Equalities Act" satisfies**. That is usually a *gain* — it finds a
+measure named the way a speaker actually names it, which no literal search does — but it means a
+match does not license quoting the term's own wording. `starkey_hits.json` carries `literal_match`
+beside `phrase_match` for exactly this.
+
+Of the 87 hits in the current export, 77 are phrase matches and **11 of those are not literal**:
+
+| What it really says | Count | Verdict |
+|---|---|---|
+| "restore" for `restoration` | 4 | legitimate — same concept |
+| "the Equalities Act" for `equality act` | 2 | legitimate — and the *only* way that reference is found |
+| the same passage under the bare term `equality` | 2 | legitimate |
+| **"equally" for `equality`** | **3** | **spurious — the stem `equal` swallows the adverb** |
+
+So three hits in 87 are noise, and all three are one known cause. ⚠ **The lesson for choosing terms:
+check what a short stem swallows.** `equality` stems to `equal`, which covers "equally" — a term
+picked to measure a subject was counting a function word.
+
+⚠ **Two kinds of looseness, opposite reliability.** *Positional* looseness (AND instead of phrase)
+admits words that co-occur without relating, so a hit only the loose form finds deserves suspicion —
+that is how `civil service commission`, which is **never uttered**, showed 7 hits. *Morphological*
+looseness (stem instead of literal) admits inflections of the same word, so a hit only the loose form
+finds is usually a real catch — that is how "the Equalities Act" was found. Do not apply one rule to
+both.
+
 ## The seven .docx — what each one is (CCW-B8)
 
 All seven are **git-ignored**, in two places: `sources/youtube/.gitignore` covers the copies here,
