@@ -27,3 +27,5 @@
 
 # Corpus search exports (CCW-B9) — derived from the same private corpus.
 starkey_hits.json
+register_candidates.json
+register_candidates_full.json
