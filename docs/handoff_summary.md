@@ -2,7 +2,40 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-29 15:32 UTC — ▼ **B2, B3, B4 DONE. THE MARKUP DETECTOR VERIFIES AT 80%,
+*Last updated: 2026-08-30 10:05 UTC — ▼ **B7 DONE — THE STARKEY CORPUS IS BUILT AND SEARCHABLE, AND
+THE SECOND TRANSCRIPT CAUGHT THE ASR NAMING THE WRONG MAN ON THE FIRST VIDEO LOADED.**
+285 videos, 128.4 hours, **1,172,546 words**, 179,561 cues, 6,138 passages in the Neon `starkey`
+schema (production app DB `ep-old-dust-aboxi69a`, own schema, deliberately NOT in `schema.prisma`).
+Raw files under `docs/report_run/sources/youtube/`, **git-ignored** (314 MB, and the brief says do
+not expose the corpus). Full account: `docs/report_run/sources/youtube/_README.md`.
+▶▶ **ZERO FETCH FAILURES — all 285 of CCW's hand-transcribed IDs resolved**, so nothing in the list
+was mistyped.
+▶▶ **THE SIX THESIS VIDEOS ARE IDENTIFIED**: `soNnF0sjF5Y` P1, `jnsiLNNL8s8` P2, `8veLovq5NWQ` P3,
+`okJNAMPBRqg` P4, `q1Mto3BxMcA` P5, `Mwf_SwRa2F0` P6 (Q&A), uploaded 2–6 Dec 2025.
+⚠ **TWO MORE VIDEOS CARRY "THESIS" AND ARE NOT IN THE SIX** — `EMbRv6aaQrs` (2025-09-21, **46m23s**,
+the full lecture, ten weeks EARLIER and longer than any part) and `2Khgz5sMMBU` (32m50s, the Q&A
+interview). Treating the six as the whole thesis misses the lecture.
+▶▶ **THE ERROR DETECTOR PAID FOR ITSELF IMMEDIATELY**: at 5:01 of Part 1 the ASR says
+*"But **Israeli** in the wake of that"*; TurboScribe says *"But **Disraeli**"*. A quote lifted from
+the ASR alone would have printed the wrong man. No comparison tool built (brief says not to).
+⚠⚠ **`2Khgz5sMMBU`'s ASR STOPS AT 20:20 OF A 32:50 VIDEO — 62.9% COVERAGE.** The last 12½ minutes
+are not in the corpus and cannot be searched. **The brief's own "<200 words" check PASSES this
+video** — 20 minutes of speech is not thin, and only `max(end_s)` vs `duration_s` can see it. That
+coverage check was added and is the only check in the sweep that found anything (median 100.0%).
+YouTube's gap, not ours: confirmed by the stored VTT and an independent json3 re-fetch.
+⚠ **`LsGrhLDcz9Q`** (21m34s) has **no caption track of any kind** — in `starkey.video` with no
+transcript row, so the corpus says "no words" rather than omitting it. 283 of 285 are ASR-only.
+▶ **Timestamp alignment: 100.0% on all nine windows**, checked against YouTube's own json3 timings
+(different container, different code — re-parsing our VTT would reproduce any parser bug and pass).
+⚠ The control was built before the result was reported: the same text against a window +120s away
+scores 36.7 / 43.6 / 43.3%. Sampled by `md5(video_id)`, never id order. Confirmed by eye too.
+⚠ A first parser version terminated cues at the format's whitespace padding line, silently losing
+the block that carries the true start time; caught by reading six cues against the raw file first.
+▶ Search: `human rights act` 103 passages, `common law` 127, `sovereignty` 101, nonsense control 0.
+✅ `tsc` clean on every file B7 added; the repo's 8 pre-existing errors in 6 untouched files remain.
+**B5 STILL NOT STARTED** — `docs/report_run/register_proposals.json` is still not on disk, re-checked
+at the start of this run. B7 was independent of B2–B6 and touched none of them.
+Earlier: 2026-08-29 15:32 UTC — ▼ **B2, B3, B4 DONE. THE MARKUP DETECTOR VERIFIES AT 80%,
 AND EVERY ONE OF ITS FAILURES IS THE MISATTRIBUTION T2 FOUND — TWO METHODS, TWO SAMPLES, ONE RATE.**
 B5 **NOT STARTED**: `docs/report_run/register_proposals.json` is not on disk, checked first and
 re-checked last. Not improvised.

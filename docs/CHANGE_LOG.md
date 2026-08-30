@@ -132,6 +132,133 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 10:05 UTC — B7 COMPLETE: THE STARKEY CORPUS IS BUILT, ALL SIX THESIS VIDEOS ARE IDENTIFIED, AND THE SECOND TRANSCRIPT HAS ALREADY CAUGHT THE ASR NAMING THE WRONG MAN
+
+`docs/report_run/briefs/CCW-B7_starkey_transcript_corpus.md` executed end to end. B7 is independent
+of B2–B6; nothing in this entry touches them. B5 remains NOT STARTED —
+`docs/report_run/register_proposals.json` is still not on disk, checked again at the start of this run.
+
+**285 videos, 128.4 hours, 1,172,546 words, 2016-07-05 → 2026-08-23.** 179,561 cues and 6,138
+searchable passages in the Neon `starkey` schema; 75 MB in Postgres, 314 MB of raw files on disk.
+Full account, including the flags below: `docs/report_run/sources/youtube/_README.md`.
+
+### ▶▶ ZERO FETCH FAILURES — CCW's ID LIST IS CLEAN
+
+The brief named its own weak point: 285 eleven-character IDs transcribed by hand, where a typo
+surfaces as a 404. **All 285 resolved.** No ID needs re-checking, and `manifest.ts` reports a missing
+`.info.json` as a named failure rather than a silent skip, so a future re-run cannot hide one.
+
+### ▶▶ THE SIX-PART THESIS SERIES, AND THE LECTURE THAT PREDATES IT
+
+Uploaded on consecutive days, 2–6 Dec 2025: `soNnF0sjF5Y` Part 1 (12m46s), `jnsiLNNL8s8` Part 2
+(13m35s), `8veLovq5NWQ` Part 3 (10m16s), `okJNAMPBRqg` Part 4 (15m41s), `q1Mto3BxMcA` Part 5
+(10m44s), `Mwf_SwRa2F0` Part 6 — Q&A (27m21s).
+
+⚠ **Two further videos carry "thesis" and are NOT in the numbered six**, and one of them is older
+and longer than any part: `EMbRv6aaQrs` (2025-09-21, **46m23s**, *David outlines THE STARKEY THESIS
+in ground-breaking lecture*) and `2Khgz5sMMBU` (2025-10-10, 32m50s, *David is quizzed on The Starkey
+Thesis*). The lecture predates Part 1 by ten weeks on the same material. Treating the six as the
+whole thesis would miss it. A second net for `part N` titles found only an unrelated 2021 two-parter
+on Parliament, so the series itself is complete at six.
+
+### ▶▶ THE TWO-TRANSCRIPT ERROR DETECTOR PAID FOR ITSELF ON THE FIRST VIDEO LOADED
+
+At 5:01 of Part 1, same audio, two engines. ASR: *"But **Israeli** in the wake of that gives you I
+think the best formula"*. TurboScribe: *"But **Disraeli**, in the wake of that, gives you, I think,
+the best formula"*. **The machine transcript names the wrong man**, and a quote lifted from the ASR
+alone would have printed it. This is exactly the divergence the brief kept both copies for, found
+without building the comparison tool the brief said not to build.
+
+Charlie's TurboScribe file was supplied named by title, not ID. Identified as `soNnF0sjF5Y` and
+verified rather than assumed: its last cue ends at 12:45.1 against a stated duration of 12m46s, so
+it is the whole recording and not a truncated free-tier export.
+
+### ⚠⚠ ONE VIDEO'S ASR STOPS TWO-THIRDS OF THE WAY THROUGH, AND NO WORD-COUNT CHECK WOULD HAVE SEEN IT
+
+**`2Khgz5sMMBU` — YouTube's captions end at 20:20 of a 32:50 video. 62.9% coverage; the last 12½
+minutes are not in the corpus and will never appear in a search.** It is one of the two
+thesis-adjacent videos, so this is on the report's path.
+
+The brief's own check for this class is "flag any caption file under ~200 words" — and **that check
+passes this video**, because 20 minutes of speech is not thin. A word count cannot distinguish a
+short video from a truncated transcript; only `max(end_s)` against `duration_s` can. The coverage
+check was added for that reason and is now part of `verify.ts`, and it is the only check in the
+sweep that found anything: min coverage 62.9%, median 100.0%.
+
+Confirmed as YouTube's gap, not ours, by two routes: the stored VTT ends at 20:38 with `[Music]`,
+and an independent json3 re-fetch ends at the same event.
+
+### ⚠ ONE VIDEO HAS NO CAPTIONS AT ALL
+
+`LsGrhLDcz9Q` (*David Starkey vs remoaners on BREXIT*, 21m34s) — neither human nor ASR, no track of
+any kind. It is in `starkey.video` **with no transcript row** rather than absent, so the corpus says
+"we have this video and it has no words". Anything quoted from it needs transcribing first.
+
+The other five flags are the four Shorts plus one 84-second clip, all under 200 words because they
+are short videos. 283 of 285 are ASR-only; `6nSrwSW-Kp0` is the sole human-captioned video (en-GB).
+
+### ▶ TIMESTAMP ALIGNMENT VERIFIED TWO WAYS, WITH A CONTROL THAT MAKES THE SCORE MEAN SOMETHING
+
+Timestamps are the verification mechanism, so the check does not lean on re-parsing our own VTT —
+that would reproduce any bug in `vtt.ts` and pass. `align-check.ts` re-fetches the same videos from
+YouTube in **json3**, a different container carrying YouTube's own per-event millisecond timings,
+parsed by different code, and asks whether the words YouTube places in `[start_s, end_s]` are the
+words we stored there.
+
+**Nine windows across three md5-sampled videos, spread over each video's length: 100.0% overlap on
+every one.** ⚠ And the control that decides what that means was built before it was reported — the
+same passage text compared against a window 120s away scores **36.7% / 43.6% / 43.3%**. A metric
+that scored high on a shifted window would have been measuring Starkey's vocabulary, not time.
+
+Confirmed by eye as well, per the brief's wording: opening `soNnF0sjF5Y&t=301s` in the browser lands
+at 5:01/12:46 with the on-screen captions reading *"words, the the prosperous middle class"* /
+*"and whatever. The 1867 gave it to my"* — the stored cues at 295.44–297.99 and 298.00–301.03,
+verbatim.
+
+⚠ **Sampled by `md5(video_id)`, never by id order.** YouTube ids are not random enough to sample by,
+and id-ordered sampling has already produced a biased pilot on this project once.
+
+### ⚠ THE ASR VTT IS A ROLLING DISPLAY, NOT A LIST OF CUES — STORING IT "VERBATIM" WOULD HAVE TRIPLED IT
+
+YouTube auto-caption VTT repeats the previous line above each new one, with a 10 ms filler cue
+between every pair. Stored literally, every line appears three times and carries the wrong start
+time. `vtt.ts` drops carry-over lines; **no token is substituted and a wrong ASR word stays wrong**,
+per the brief's "do not clean up by guessing".
+
+⚠ A first version of the parser terminated each cue at a whitespace-only line, which is how the
+format pads its blocks — that silently dropped the block carrying the true start time, and the first
+cue came back with a 10 ms window at 7.590 instead of its real 4.840. Caught by reading the first
+six cues against the raw file before loading anything.
+
+The one other transform is declared, not silent: the literal
+`(Transcribed by TurboScribe. Go Unlimited to remove this message.)` watermark stripped from one cue.
+
+### DECISIONS TAKEN, FLAGGED RATHER THAN BURIED
+
+- **Schema on the production Neon app DB** (`ep-old-dust-aboxi69a`), Charlie's call when asked. Its
+  own `starkey` schema, and deliberately **not** in `schema.prisma` — Prisma manages `public` only,
+  and adding these tables there would make every `migrate` run see drift. §16 banner printed by
+  every script that writes.
+- **The raw corpus is git-ignored.** The brief says keep the files under
+  `docs/report_run/sources/youtube/` and also says do not republish or expose the corpus; this
+  repository pushes to GitHub, and the files are 314 MB. They stay on disk as the source of truth.
+  R2 is the right home if they should be backed up.
+- **No automated transcript comparison built**, per the brief. Ten quotes are faster to check by eye
+  than a diff tool is to write.
+- **No embeddings**, per the brief. Postgres FTS only: `human rights act` 103 passages, `common law`
+  127, `sovereignty` 101, and a nonsense control term returns 0 so the index is not matching anything.
+
+### FILES
+
+`scripts/starkey/` — `db.ts`, `schema.sql`, `apply-schema.ts`, `vtt.ts`, `manifest.ts`, `load.ts`,
+`verify.ts`, `align-check.ts`, `search.ts`, `fetch-subs.sh`.
+`docs/report_run/sources/youtube/` — `_README.md`, `.gitignore`, `urls.txt` (raw files git-ignored).
+
+`tsc --noEmit` clean on every file this brief added; the repo's 8 pre-existing errors in 6 untouched
+files are unchanged.
+
+---
+
 ## 2026-08-29 15:29 UTC — B2, B3, B4 COMPLETE: THE MARKUP RATE IS 80%, AND ITS FAILURES ARE ALL ONE CLASS — THE SAME ONE T2 FOUND, FROM A DIFFERENT DIRECTION
 
 B2, B3 and B4 executed. **B5 NOT STARTED**: `docs/report_run/register_proposals.json` does not
