@@ -592,6 +592,29 @@ Equalities Act" for `equality act`, 2 are that same passage under the bare `equa
 the "equally" adverb** — so **3 spurious hits in 87, all one known cause**. Printing the surface is
 the check; a count of non-literal matches cannot distinguish a gain from a collision.
 
+### ⚠⚠ CORRECTION 4 — EVERY DEEP LINK IN THE EXPORT OPENED UP TO 72 SECONDS BEFORE THE WORDS
+
+The peer flagged that they had written 3:43 for the Equalities Act reference where I had written
+5:05, and corrected themselves to 5:17. **Both of our numbers were wrong in the same way and for
+different reasons**: theirs was a merged window's opening, mine was the PASSAGE start. The words are
+at 5:17.
+
+A passage runs 60–90 seconds, so `watch_url` — the `&t=NNNs` deep link the brief specified, anchored
+to `start_s` — can open a long way before the phrase. **Measured across all 77 phrase matches: the
+words sit 0–72 seconds after the passage start, median 25.** For a corpus whose stated purpose is
+checking a quote against the recording *in seconds*, that is the difference between landing on it
+and hunting for it, and it would have been paid every single time anyone used the file.
+
+Every hit now carries **`match_start_s` and `match_url`**, located by testing each cue
+**concatenated with the next one** — because a phrase can straddle the boundary, and this one
+literally does: the ASR splits it `"...the equalities"` / `"Act."` across two cues. Matched through
+Postgres rather than a hand-rolled regex so the stemming is identical to the query that produced the
+hit. Located for **77 of 87** — the 10 co-occurrence-only hits have no phrase position by
+definition, and keep `watch_url` alone. `watch_url` is retained as specified.
+
+⚠ Neither of us found this by checking our own output; it surfaced because we cited the same moment
+with two different numbers.
+
 ⚠⚠ **AND THE RULE I GAVE THE PEER THIS MORNING NEEDS SPLITTING — IT IS RIGHT FOR ONE KIND OF
 LOOSENESS AND WRONG FOR THE OTHER.** I told them "a hit only the loose method finds needs
 scrutiny". That is *positional* looseness — AND instead of phrase, which admits words that co-occur

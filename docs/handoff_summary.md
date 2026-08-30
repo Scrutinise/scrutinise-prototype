@@ -68,9 +68,19 @@ literal**.
 ⚠ **And the bare term `equality` is not measuring equality**: stem `equal` covers "equally". Of its
 5 moments, **three are the adverb**, one is DEI, one is the Equalities Act. A term chosen for a
 subject was counting a function word.
+⚠⚠ **(4) EVERY DEEP LINK IN THE EXPORT OPENED UP TO 72 SECONDS BEFORE THE WORDS.** `watch_url` is
+anchored to the PASSAGE start, and a passage runs 60–90s. Measured across all 77 phrase matches:
+**the words sit 0–72s after it, median 25s** — the difference between landing on a quote and hunting
+for it, paid every time the file is used. Every hit now carries **`match_start_s` / `match_url`**,
+located by testing each cue **concatenated with the next**, because a phrase can straddle the
+boundary and this one does (`"...the equalities"` / `"Act."`). Located for 77 of 87; the 10
+co-occurrence-only hits have no phrase position by definition. ⚠ Surfaced only because the peer and
+I cited the same moment with two different numbers (their 3:43, my 5:05 — the answer is **5:17**).
 ▶ B9 now prints corpus AND, corpus phrase and per-video distinct moments, flags any term where they
-disagree, and stamps each exported hit with `phrase_match` and `literal_match`: **77 phrase, 10
-co-occurrence only — do not quote the 10 as instances of the phrase.**
+disagree, and stamps each exported hit with `phrase_match`, `literal_match` and `match_url`: **77
+phrase, 10 co-occurrence only — do not quote the 10 as instances of the phrase.** ▶ **One term is
+WHOLLY variant-only: `equality act`, 0 literal of 2 — the statute is only ever named as "the
+Equalities Act".**
 ⚠⚠ **`ratification` is zero CORPUS-WIDE and that is vocabulary, not subject** — `ratify`/`ratified`
 appear 6 times each. **Every zero is now re-asked with ILIKE against raw text before it can be
 published as a gap**; an index miss and a real absence look identical in a table.

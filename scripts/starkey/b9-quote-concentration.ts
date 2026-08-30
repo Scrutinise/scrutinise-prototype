@@ -167,6 +167,38 @@ async function main() {
   }
 
   // ---------- Step 2 ----------
+  //
+  // Where the WORDS are, not where the passage starts.
+  //
+  // A passage runs 60-90 seconds, so a deep link to its start can open more
+  // than a minute before the phrase is spoken. On the one hit anyone has looked
+  // at by hand, the passage begins at 5:05 and the words are at 5:17. For a
+  // corpus whose entire purpose is checking a quote against the recording in
+  // seconds, that is the difference between landing on it and hunting for it.
+  //
+  // The phrase is tested against each cue CONCATENATED WITH THE NEXT one,
+  // because it can straddle the boundary -- the Equalities Act reference is
+  // literally split "...the equalities" / "Act." across two ASR cues -- and via
+  // Postgres rather than a hand-rolled regex, so the stemming is identical to
+  // the query that produced the hit.
+  const cueStarts = new Map<string, number[]>()   // key: term|video|source
+  for (const term of GROUPS.flatMap(g => g.terms)) {
+    const cs = await p.query(`
+      with c as (
+        select video_id, source, start_s,
+               text || ' ' || coalesce(lead(text) over (partition by video_id, source order by start_s), '') pair
+        from starkey.cue where video_id = any($2::text[])
+      )
+      select video_id, source, start_s::float s from c
+      where to_tsvector('english', pair) @@ phraseto_tsquery('english',$1)
+      order by video_id, source, start_s`, [term, VIDEOS])
+    for (const r of cs.rows) {
+      const k = `${term}|${r.video_id}|${r.source}`
+      if (!cueStarts.has(k)) cueStarts.set(k, [])
+      cueStarts.get(k)!.push(r.s)
+    }
+  }
+
   const hits: Array<Record<string, unknown>> = []
   for (const g of GROUPS) {
     for (const term of g.terms) {
@@ -194,10 +226,27 @@ async function main() {
           // not license quoting the term's own wording. literal_match does.
           literal_match: r.literal_match === true,
           watch_url: `https://www.youtube.com/watch?v=${r.video_id}&t=${Math.floor(r.start_s)}s`,
+          // The cue where the words actually are, and a link to it. Null when
+          // the phrase spans a passage boundary rather than a cue boundary, in
+          // which case watch_url is all there is.
+          match_start_s: null as number | null,
+          match_url: null as string | null,
         })
       }
     }
   }
+  // Attach the cue-level timestamp to each hit.
+  let located = 0
+  for (const h of hits) {
+    const starts = cueStarts.get(`${h.term}|${h.video_id}|${h.source}`) ?? []
+    const inWindow = starts.filter(s2 => s2 >= (h.start_s as number) - 0.01 && s2 <= (h.end_s as number) + 0.01)
+    if (inWindow.length) {
+      h.match_start_s = inWindow[0]
+      h.match_url = `https://www.youtube.com/watch?v=${h.video_id}&t=${Math.floor(inWindow[0])}s`
+      located++
+    }
+  }
+
   const before = hits.length
   hits.sort((a, b) => (b.rank as number) - (a.rank as number))
   const capped = before > CAP
@@ -223,6 +272,11 @@ async function main() {
     + ' — the second group must not be quoted as instances of the phrase')
   console.log(`of the phrase matches, ${nonLiteral} do not contain the term's literal wording`
     + ' — phraseto_tsquery matches adjacent STEMS (equalities act matches "equality act")')
+  const withCue = written.filter(h => h.match_start_s !== null)
+  const offsets = withCue.map(h => (h.match_start_s as number) - (h.start_s as number)).sort((a, b) => a - b)
+  console.log(`cue-level timestamp located for ${withCue.length} of ${written.length} hits`
+    + (offsets.length ? `; the words sit ${offsets[0].toFixed(0)}-${offsets[offsets.length - 1].toFixed(0)}s after the passage start (median ${offsets[Math.floor(offsets.length / 2)].toFixed(0)}s)` : ''))
+  console.log('  use match_url to verify a quote; watch_url opens the passage, which can be a minute early')
 
   // ---------- Step 3.2 ----------
   console.log('\n--- STEP 3.2: what the second engine buys, per video ---')

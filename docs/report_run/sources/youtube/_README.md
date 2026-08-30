@@ -151,8 +151,8 @@ picked to measure a subject was counting a function word.
 
 ⚠⚠ **One term is WHOLLY variant-only, and it is a fact the report should state precisely: the
 Equality Act is never named literally anywhere in the eight thesis videos.** It is named once, in
-Part 2 at 5:05, as **"the Equalities Act"**, alongside the Human Rights Act. Every other term with
-any hits has at least one literal one:
+Part 2 at **5:17**, as **"the Equalities Act"**, alongside the Human Rights Act. Every other term
+with any hits has at least one literal one:
 
 | | phrase hits | of which literal |
 |---|---|---|
@@ -164,6 +164,15 @@ any hits has at least one literal one:
 A term whose every hit is a variant is a different animal from one that is merely mixed: quoting it
 by the term's own wording would put words in the speaker's mouth. Check `literal_match` per term,
 not per passage — a passage can be "literal" because a *different* term in it was.
+
+⚠⚠ **Use `match_url`, not `watch_url`, to check a quote.** A passage runs 60–90 seconds, so a link
+to its start can open a long way before the words. Measured across the 77 phrase matches: **the
+words sit 0–72 seconds after the passage start, median 25 seconds.** The Equalities Act reference is
+the worked example — passage 5:05, words 5:17. `match_url` points at the cue that actually carries
+the phrase, located by testing each cue **concatenated with the next one**, because a phrase can
+straddle the boundary: that reference is literally split `"...the equalities"` / `"Act."` across two
+ASR cues. `watch_url` is kept as the passage anchor the brief specified, and is the only link
+available for the 10 co-occurrence-only hits, which have no phrase location by definition.
 
 ⚠ **Two kinds of looseness, opposite reliability.** *Positional* looseness (AND instead of phrase)
 admits words that co-occur without relating, so a hit only the loose form finds deserves suspicion —
