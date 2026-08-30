@@ -30,19 +30,33 @@ IDENTICAL. A third fix beside it: rolling carry-over de-duplication is WRONG for
 on the inline word-timing tags only rolling files carry. Full reload confirmed a no-op: 179,561 + 531.
 ▶ Corpus now **287 transcripts, 180,092 cues, 1,176,129 words**.
 ▶▶ **B9: NOT ONE CRAG HIT IN ANY OF THE EIGHT THESIS VIDEOS** — `treaty` 0, `ratification` 0,
-`royal prerogative` 0, `parliamentary scrutiny` 0. Dense elsewhere: `constitution` 26, `restoration`
-12, `sovereignty` 10 (six in Part 3 alone), `repeal` 7. 87 hits exported to
-`docs/report_run/starkey_hits.json`, complete and uncapped.
-⚠⚠ **CORRECTED after the second CC session queried the zeros: "constitutional reform 9" was
-CO-OCCURRENCE, and the phrase count is ZERO.** `plainto_tsquery` makes a multi-word term an AND of
-lexemes anywhere in the same 60–90s passage, not a phrase — corpus-wide 74 → 9, **88% looser**. On a
-phrase reading the CRA 2005 row is `supreme court` 3, `lord chancellor` 2, **`constitutional reform`
-0**, `judicial review` 1; `human rights act` 3 → 2. Every other term unchanged. ⚠ **The stopword
-worry itself did NOT apply** — all 22 B9 terms lex non-empty, with a `we should` control proving the
-check can see the empty case; and **a zero that survives the LOOSER query is the stronger result**,
-so every CRAG zero holds on both readings. B9 now prints both counts, flags disagreements, and
-stamps each exported hit with `phrase_match`: **77 phrase, 10 co-occurrence only — do not quote the
-10 as instances of the phrase.**
+`royal prerogative` 0, `parliamentary scrutiny` 0. Dense elsewhere — **distinct moments, phrase
+matched, de-duplicated across transcripts**: `constitution` 17, `restoration` 9, `sovereignty` 6
+(three in Part 3), `repeal` 6, `equality` 5. 87 hits in `docs/report_run/starkey_hits.json`.
+⚠⚠ **THE FIRST PUBLISHED VERSION OF THAT ROW WAS INFLATED BY TWO INDEPENDENT MECHANISMS, both found
+by the second CC session's questions rather than by my own checks.** It read `constitution` 26,
+`restoration` 12, `sovereignty` 10 (six in Part 3), `constitutional reform` 9.
+⚠⚠ **(1) `plainto_tsquery` on a multi-word term is an AND of lexemes anywhere in the same 60–90s
+passage, NOT a phrase.** `constitutional reform` = 9 co-occurrences, **0 uses of the phrase**;
+corpus-wide 74 → 9, 88% looser. The peer found a worse one in B10: **`civil service commission` has
+7 hits and is NEVER UTTERED** — verified here three ways (phrase 0, ILIKE cue 0, ILIKE passage 0).
+⚠⚠ **(2) THE TABLE DOUBLE-COUNTED THE THREE VIDEOS WITH TWO TRANSCRIPTS.** Parts 1–3 store every
+minute twice, so one thing said once matched twice — **and the inflation fell entirely on the three
+videos that already have a second transcript and need no credit**, which is the worst possible bias
+for a table whose only job is choosing where the next credit goes. The tell was in the published
+numbers: nearly every count for those three was EVEN. Found via a peer claim of "Equality Act 0"
+that was itself wrong (there is one, in Part 2) — both numbers wrong, the disagreement exposed it.
+⚠⚠ **AND MY FIRST FIX WAS WRONG THE OTHER WAY, caught before publishing by reading rows not totals.**
+Merging overlapping intervals CHAINS across interleaved source boundaries — `constitution` in
+`8veLovq5NWQ` is 5 per transcript and merged to **2**, a 2.5× undercount replacing a 2× overcount.
+Now **max-over-sources**: cannot chain, equals what a single-transcript video reports, declared as a
+FLOOR — and the floor direction is safe for this decision.
+⚠ **The stopword worry that started all this did NOT apply** — all 22 B9 terms lex non-empty, with a
+`we should` control proving the check can see the empty case. **Every CRAG zero holds on every
+reading**; a zero surviving the LOOSER query is the stronger result.
+▶ B9 now prints corpus AND, corpus phrase and per-video distinct moments, flags any term where they
+disagree, and stamps each exported hit with `phrase_match`: **77 phrase, 10 co-occurrence only — do
+not quote the 10 as instances of the phrase.**
 ⚠⚠ **`ratification` is zero CORPUS-WIDE and that is vocabulary, not subject** — `ratify`/`ratified`
 appear 6 times each. **Every zero is now re-asked with ILIKE against raw text before it can be
 published as a gap**; an index miss and a real absence look identical in a table.

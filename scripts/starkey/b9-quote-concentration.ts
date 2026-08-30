@@ -43,17 +43,64 @@ async function main() {
     titles.set(r.video_id, r.title); durations.set(r.video_id, r.duration_s)
   }
 
+  // How many transcripts each video has. This is not decoration: three of the
+  // eight have two and the other five have one, so a raw passage count is not
+  // comparable across them. See the comment on moments() below.
+  const nTranscripts = new Map<string, number>(
+    (await p.query(`select video_id, count(*)::int n from starkey.transcript where video_id = any($1::text[]) group by 1`, [VIDEOS]))
+      .rows.map(r => [r.video_id as string, r.n as number]))
+
+  /**
+   * DISTINCT MOMENTS, not passage rows: the largest number of matching passages
+   * any ONE transcript of this video contains.
+   *
+   * A video with an `asr` and a `turboscribe` transcript stores every minute of
+   * speech twice, so one thing Starkey said once matches twice and the video
+   * reads as twice as dense. Parts 1-3 have two transcripts; Parts 4-6, the
+   * lecture and the interview have one. Comparing raw counts across the eight —
+   * which is the entire purpose of this table — would systematically favour the
+   * three that already have a second transcript, i.e. exactly the ones that do
+   * NOT need the next TurboScribe credit.
+   *
+   * ⚠ The obvious fix, merging overlapping time ranges, is WRONG here and was
+   * measured to be wrong before this was written. The two engines segment
+   * differently, so their passage boundaries interleave and the merge CHAINS:
+   * asr 229-305, turboscribe 234-314, asr 305-381 all become one interval.
+   * `constitution` in 8veLovq5NWQ is 5 occurrences in each transcript and the
+   * merge returns 2. That replaces a 2x overcount with a 2.5x undercount.
+   *
+   * Max-over-sources cannot chain, and is exactly the number a single-transcript
+   * video would report, so the eight are comparable. It is a FLOOR: if the two
+   * engines word two different occurrences such that only one matches in each,
+   * the true count is higher. That direction is safe here — this table is used
+   * to decide where to spend a transcription credit, and undercounting a video
+   * that already has two transcripts cannot mislead that decision.
+   */
+  const moments = async (term: string, videoId: string): Promise<number> => {
+    const rows = (await p.query(`
+      select source, count(*)::int n from starkey.passage
+      where tsv @@ phraseto_tsquery('english',$1) and video_id = $2 group by 1`, [term, videoId])).rows
+    return rows.length ? Math.max(...rows.map(r => r.n as number)) : 0
+  }
+
   // ---------- Step 1 ----------
-  console.log('\n--- STEP 1: passage hits by video ---')
-  console.log('Counts are PASSAGES, any source. "corpus" is the whole 285-video corpus,')
-  console.log('so a term matching everywhere is visible as uninformative.')
+  console.log('\n--- STEP 1: distinct moments by video ---')
   console.log('')
-  console.log('TWO counts per term, and for a multi-word term they are NOT the same question.')
-  console.log('plainto_tsquery("constitutional reform") is constitut & reform: both lexemes')
-  console.log('ANYWHERE in the same 60-90 second passage, not the phrase. The [ph] columns are')
-  console.log('phraseto_tsquery, which requires them adjacent. Quote off [ph]. A term where the')
-  console.log('two disagree has an AND count measuring co-occurrence, not usage.\n')
-  const header = 'term                      corpus  corpus[ph]  ' + VIDEOS.map(v => SHORT(v).padStart(7)).join('') + '   total  total[ph]'
+  console.log('Per-video cells are DISTINCT MOMENTS on a PHRASE match — the number to compare.')
+  console.log('Two things are being corrected in that sentence, both of which inflate a naive count:')
+  console.log('')
+  console.log('  1. plainto_tsquery("constitutional reform") is constitut & reform: both lexemes')
+  console.log('     ANYWHERE in the same 60-90s passage, not the phrase. [ph] columns require them')
+  console.log('     adjacent. constitutional reform is 9 co-occurrences and 0 uses of the phrase.')
+  console.log('  2. A video with two transcripts stores every minute twice, so one thing said once')
+  console.log('     matches twice. Parts 1-3 have two, the other five have one — the three already')
+  console.log('     transcribed would read as twice as dense as the candidates for the next credit.')
+  console.log('     Overlapping hits are merged into one moment.')
+  console.log('')
+  console.log('"corpus" columns are the whole 285-video corpus, so a term matching everywhere is')
+  console.log('visible as uninformative rather than significant. (n) marks a two-transcript video.\n')
+  const header = 'term                      corpus  corpus[ph]  '
+    + VIDEOS.map(v => `${SHORT(v)}${(nTranscripts.get(v) ?? 1) > 1 ? '*' : ' '}`.padStart(8)).join('') + '   moments'
   const rowsOut: string[] = []
 
   for (const g of GROUPS) {
@@ -64,20 +111,17 @@ async function main() {
         where tsv @@ plainto_tsquery('english',$1) and video_id = any($2::text[])
         group by 1`, [term, VIDEOS])
       const byVid = new Map<string, number>(rows.map(r => [r.video_id as string, r.n as number]))
-      const ph = await p.query(`
-        select video_id, count(*)::int n from starkey.passage
-        where tsv @@ phraseto_tsquery('english',$1) and video_id = any($2::text[])
-        group by 1`, [term, VIDEOS])
-      const phVid = new Map<string, number>(ph.rows.map(r => [r.video_id as string, r.n as number]))
+      const mom = new Map<string, number>()
+      for (const v of VIDEOS) mom.set(v, await moments(term, v))
       const [{ n: corpus }] = (await p.query(
         `select count(*)::int n from starkey.passage where tsv @@ plainto_tsquery('english',$1)`, [term])).rows
       const [{ n: corpusPh }] = (await p.query(
         `select count(*)::int n from starkey.passage where tsv @@ phraseto_tsquery('english',$1)`, [term])).rows
-      const cells = VIDEOS.map(v => String(byVid.get(v) ?? 0).padStart(7)).join('')
-      const total = VIDEOS.reduce((s, v) => s + (byVid.get(v) ?? 0), 0)
-      const totalPh = VIDEOS.reduce((s, v) => s + (phVid.get(v) ?? 0), 0)
-      const gap = total !== totalPh ? '  <-- AND count is co-occurrence, not the phrase' : ''
-      rowsOut.push(`  ${term.padEnd(24)}${String(corpus).padStart(6)}${String(corpusPh).padStart(12)}  ${cells}${String(total).padStart(8)}${String(totalPh).padStart(11)}${gap}`)
+      const cells = VIDEOS.map(v => String(mom.get(v) ?? 0).padStart(8)).join('')
+      const rawTotal = VIDEOS.reduce((s, v) => s + (byVid.get(v) ?? 0), 0)
+      const momTotal = VIDEOS.reduce((s, v) => s + (mom.get(v) ?? 0), 0)
+      const gap = rawTotal !== momTotal ? `  <-- raw passage count was ${rawTotal}` : ''
+      rowsOut.push(`  ${term.padEnd(24)}${String(corpus).padStart(6)}${String(corpusPh).padStart(12)}  ${cells}${String(momTotal).padStart(10)}${gap}`)
     }
   }
   console.log(header)

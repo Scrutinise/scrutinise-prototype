@@ -285,10 +285,18 @@ later drop, and the README carries the four-step procedure.
 
 `treaty` 0, `ratification` 0, `royal prerogative` 0, `parliamentary scrutiny` 0 — **not one hit
 across the six parts, the September lecture and the Q&A interview**, against 33 / 0 / 5 / 1
-corpus-wide. Where the eight videos are dense is elsewhere: `constitution` 26, `restoration` 12,
-`sovereignty` 10 (six of them in Part 3 alone), `repeal` 7.
+corpus-wide. Where the eight videos are dense is elsewhere — **distinct moments, phrase-matched,
+de-duplicated across transcripts**: `constitution` 17, `restoration` 9, `sovereignty` 6 (three of
+them in Part 3), `repeal` 6, `equality` 5.
 
-### ⚠⚠ CORRECTION TO THE ROW ABOVE — "CONSTITUTIONAL REFORM 9" WAS CO-OCCURRENCE, AND THE PHRASE COUNT IS ZERO
+### ⚠⚠ TWO CORRECTIONS TO THAT ROW, AND THE SECOND FIX WAS WRONG BEFORE IT WAS RIGHT
+
+The first published version of this table said `constitution` 26, `restoration` 12, `sovereignty` 10
+(six in Part 3), `constitutional reform` 9. **Every one of those was inflated, by two independent
+mechanisms**, and both were found by questions from the second CC session rather than by my own
+checks.
+
+### ⚠⚠ CORRECTION 1 — "CONSTITUTIONAL REFORM 9" WAS CO-OCCURRENCE, AND THE PHRASE COUNT IS ZERO
 
 Raised by the second CC session, which was hitting the stopword case on `we should` / `we must` in
 B10 and asked whether B9's zeros were query failures. **They are not — every one of B9's 22 terms
@@ -310,6 +318,39 @@ stronger result, not the weaker one.
 B9 now prints both counts per term, flags any term where they disagree, and stamps every exported
 hit with `phrase_match`. **77 of the 87 exported hits are phrase matches; 10 are co-occurrence only
 and must not be quoted as instances of the phrase.**
+
+⚠ The second CC session found a **second instance in its own B10 terms, and a worse one**:
+`civil service commission` — the phrase in WS-05's own title — has 7 `plainto_tsquery` hits and is
+**never uttered in the corpus**. Verified here independently by three routes: phrase 0, `ILIKE` on
+cue text 0, `ILIKE` on passage text 0, against `civil service` at 136. All 7 are spurious.
+
+### ⚠⚠ CORRECTION 2 — THE TABLE DOUBLE-COUNTED EVERY VIDEO THAT HAS TWO TRANSCRIPTS
+
+Three of the eight videos have an `asr` AND a `turboscribe` transcript; the other five have one.
+**Every minute of Parts 1–3 is stored twice, so one thing Starkey said once matched twice**, and
+those three read as up to twice as dense as the five. The tell was there in the published table and
+I did not see it: almost every count for the three double-transcribed videos was EVEN.
+
+This is the worst possible bias for what the table is FOR. B9 exists so CCW can decide which of the
+four unverified videos gets the next TurboScribe credit — and the inflation fell entirely on the
+three videos that already have a second transcript and need no credit at all.
+
+Found by cross-checking the second session's claim that the eight videos contain no Equality Act
+hits. **Their claim was wrong — there is one, in Part 2 — but my 2 was the same single moment
+counted in two transcripts.** Both numbers were wrong and the disagreement is what exposed it.
+
+⚠⚠ **AND MY FIRST FIX FOR IT WAS WRONG IN THE OTHER DIRECTION, caught before publishing by looking
+at the rows instead of the total.** Merging overlapping time ranges CHAINS, because the two engines
+segment differently and their passage boundaries interleave: asr 229–305, turboscribe 234–314, asr
+305–381 collapse into one interval. `constitution` in `8veLovq5NWQ` is **5 occurrences in each
+transcript and the merge returned 2** — a 2.5× undercount replacing a 2× overcount. Now
+max-over-sources, which cannot chain and is exactly the number a single-transcript video reports.
+It is a declared FLOOR, and the floor direction is the safe one here: undercounting a video that
+already has two transcripts cannot mislead a decision about where to spend the next credit.
+
+Net effect on the eight-video row: `constitution` 26 → 17, `restoration` 12 → 9, `sovereignty`
+10 → 6, `constitutional reform` 9 → 0, `human rights act` 3 → 1, `equality act` 2 → 1. **The CRAG
+zeros are untouched on every reading.**
 
 ⚠⚠ **`ratification` returns zero CORPUS-WIDE, and that is a fact about vocabulary, not about the
 subject** — `ratify` and `ratified` each appear 6 times. Read off the table alone, "0 everywhere"
