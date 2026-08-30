@@ -2,7 +2,51 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-30 10:05 UTC — ▼ **B7 DONE — THE STARKEY CORPUS IS BUILT AND SEARCHABLE, AND
+*Last updated: 2026-08-30 12:06 UTC — ▼ **B8 + B9 DONE. THE FIRST IDENTIFICATION METRIC I WROTE PUT
+THE TWO CLASSES IN THE WRONG ORDER, AND THE CRAG VOCABULARY IS ABSENT FROM ALL EIGHT THESIS VIDEOS.**
+⚠⚠ **B8 step 1 was needed in THREE places, not one.** The seven .docx were untracked but not ignored;
+the next `git add` would have committed full lecture transcripts to a GitHub-backed repo. They exist
+in TWO directories — `sources/youtube/` and `report_run/` root — and a directory `.gitignore` does
+not reach the level above it. A second CC session had covered `report_run/`; I covered
+`sources/youtube/`. ⚠ **`_docx_extract/` was in the same position and nearly missed** — text
+extracted FROM those documents, covered by nothing. Now ignored. All confirmed with
+`git check-ignore -v` against real paths, never the pattern. `starkey_hits.json` ignored BEFORE it
+was written.
+⚠⚠ **MY FIRST METRIC SCORED THE SCRAPED DOCUMENTS 0.61–0.81 AND THE INDEPENDENT ONES 0.90–0.94 — the
+classes separated in the OPPOSITE direction**, which would have loaded four copies of the ASR as
+second sources and skipped the three real ones. Cause: the normaliser kept digits and the three tools
+stamp times in three notations (`(1:36)`, `[00:02]`, bare `00:00:02.240`); only TurboScribe's was
+stripped. **It was measuring which notation the tool used, not the words.** After stripping all
+three: **independent 0.899–0.943, scraped 0.993–0.996, gap 0.050, no overlap. B8's verdicts confirmed.**
+▶ Parts 1–3 are genuine TurboScribe and are LOADED (302 / 229 / 289 cues, all ≥99.9% coverage).
+Parts 4–6 and the Full lecture are scraped copies of the ASR and are deliberately NOT loaded —
+a single-sourced passage that looks double-sourced stops a human checking.
+⚠ **Both "mislabelled URL" cases are sharper than B8 reported: visible URL and embedded hyperlink
+disagree** (P4 shows Part 3's id, links Part 4's; the lecture shows Part 6's, links the lecture's).
+⚠⚠ **A SECOND PARSER DEFECT, found by a check that was meant to be a formality** — Part 1's docx vs
+the already-loaded copy came back DIFFERS on 288 of 289 cues. Not a different transcript:
+`parseVtt` was swallowing the next cue's SRT sequence number onto the end of each cue's text. Fixed →
+IDENTICAL. A third fix beside it: rolling carry-over de-duplication is WRONG for SRT and is now gated
+on the inline word-timing tags only rolling files carry. Full reload confirmed a no-op: 179,561 + 531.
+▶ Corpus now **287 transcripts, 180,092 cues, 1,176,129 words**.
+▶▶ **B9: NOT ONE CRAG HIT IN ANY OF THE EIGHT THESIS VIDEOS** — `treaty` 0, `ratification` 0,
+`royal prerogative` 0, `parliamentary scrutiny` 0. Dense elsewhere: `constitution` 26, `restoration`
+12, `sovereignty` 10 (six in Part 3 alone), `constitutional reform` 9. 87 hits exported to
+`docs/report_run/starkey_hits.json`, complete and uncapped.
+⚠⚠ **`ratification` is zero CORPUS-WIDE and that is vocabulary, not subject** — `ratify`/`ratified`
+appear 6 times each. **Every zero is now re-asked with ILIKE against raw text before it can be
+published as a gap**; an index miss and a real absence look identical in a table.
+▶ Second-engine divergence at the brief's 0.95 line: P1 9/10, P2 10/11, P3 5/8 — ⚠ but similarity
+never drops below 0.882 and medians are 0.916–0.935; most of the gap is ASR filler ("um", "uh") that
+TurboScribe drops. Read the distribution, not the count.
+▶ B7's `2Khgz5sMMBU` flag re-tested from the other direction and HOLDS — 0 of its 5 hits start after
+20:20, with a control confirming the time filter can see late passages (21 in the lecture).
+▶ **Raw corpus backed up: `r2://scrutinise-legislation/research/starkey/`, 857 objects**, every key
+verified by size read-back plus an absent-control key. The .docx are NOT in the R2 copy.
+✅ `tsc` clean on every file B8/B9 touched; repo's 8 pre-existing errors unchanged.
+**B5 STILL NOT STARTED** — `register_proposals.json` still absent. B10/B11 appeared mid-run and are
+NOT mine; a second CC session has them and was told so rather than raced.
+Earlier: 2026-08-30 10:05 UTC — ▼ **B7 DONE — THE STARKEY CORPUS IS BUILT AND SEARCHABLE, AND
 THE SECOND TRANSCRIPT CAUGHT THE ASR NAMING THE WRONG MAN ON THE FIRST VIDEO LOADED.**
 285 videos, 128.4 hours, **1,172,546 words**, 179,561 cues, 6,138 passages in the Neon `starkey`
 schema (production app DB `ep-old-dust-aboxi69a`, own schema, deliberately NOT in `schema.prisma`).

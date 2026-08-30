@@ -2,10 +2,17 @@
 
 Built 30 Aug 2026 for `docs/report_run/briefs/CCW-B7_starkey_transcript_corpus.md`.
 
-**285 videos, 128.4 hours, 1,172,546 words, 2016-07-05 → 2026-08-23.** 285 transcripts across 284
-videos (283 YouTube ASR, 1 human-authored, 1 TurboScribe re-transcription); one video has no
-captions at all. 179,561 cues, 6,138 searchable passages. 75 MB in Postgres, 314 MB of raw files.
+**285 videos, 128.4 hours, 1,176,129 words, 2016-07-05 → 2026-08-23.** 287 transcripts across 284
+videos (283 YouTube ASR, 1 human-authored, 3 TurboScribe re-transcriptions); one video has no
+captions at all. 180,092 cues, 6,157 searchable passages. 314 MB of raw files.
 **Zero fetch failures — every one of CCW's 285 IDs resolved**, so nothing in the list was mistyped.
+
+**Backed up to R2:** `r2://scrutinise-legislation/research/starkey/` — `meta/`, `raw/` and `logs/`
+under that prefix, 857 objects. Every key was verified by reading its size back from R2 after the
+upload (a PUT returning without throwing is not evidence the bytes are there), and a control key
+that should not exist was confirmed absent so "all present" is a real result. Re-runnable and
+idempotent: `tsx ../scripts/starkey/r2-backup.ts` (add `--verify-only` to check without uploading).
+⚠ The seven `.docx` are **not** in the R2 copy — the backup covers `meta/`, `raw/` and `logs/` only.
 
 ## Layout
 
@@ -112,3 +119,68 @@ One transcript names the wrong man. A quote taken from the ASR alone would have 
 
 Per the brief, **no automated comparison of the two has been built.** Ten quotes are faster to check
 by eye than a diff tool is to write. If the count passes roughly twenty, Charlie says so.
+
+## The seven .docx — what each one is (CCW-B8)
+
+All seven are **git-ignored**, in two places: `sources/youtube/.gitignore` covers the copies here,
+and `docs/report_run/.gitignore` covers the second set sitting in `report_run/` root — a directory
+`.gitignore` governs its own directory and below, so the first rule alone would not have reached
+them. Both were confirmed with `git check-ignore -v` against the real paths, not the pattern.
+
+Identification re-derived from the text, not taken on trust and not taken from the URLs in the
+documents — two of those point at the wrong video. Metric: longest-common-subsequence ratio over the
+first 2,000 words against the YouTube ASR already in the corpus, structure (timestamps, headers,
+speaker markers) stripped first.
+
+| Document | Video | Engine | LCS vs ASR | 2nd best | Verdict |
+|---|---|---|---|---|---|
+| PART 1 | `soNnF0sjF5Y` | TurboScribe | 0.938 | 0.161 | **independent — loaded** |
+| PART 2 | `jnsiLNNL8s8` | TurboScribe | 0.899 | 0.164 | **independent — loaded** |
+| PART 3 | `8veLovq5NWQ` | TurboScribe | 0.943 | 0.154 | **independent — loaded** |
+| PART 4 | `okJNAMPBRqg` | summarize.ing | 0.993 | 0.163 | scraped copy of the ASR — not loaded |
+| PART 5 | `q1Mto3BxMcA` | summarize.ing | 0.996 | 0.160 | scraped copy of the ASR — not loaded |
+| PART 6 | `Mwf_SwRa2F0` | tactiq.io | 0.995 | 0.169 | scraped copy of the ASR — not loaded |
+| Full lecture | `EMbRv6aaQrs` | tactiq.io | 0.996 | 0.155 | scraped copy of the ASR — not loaded |
+
+**The classes separate with no overlap:** independent engines land at 0.899–0.943 against YouTube's
+ASR, scrapers that re-format YouTube's own caption track at 0.993–0.996. Gap 0.050, nothing between
+them. The four scraped documents are **deliberately not loaded**: they are the ASR already in
+`starkey.cue`, and loading them would make a single-sourced passage look double-sourced. False
+confidence is worse than no second source, because it stops a human checking.
+
+Every mapping is unambiguous — best-vs-second is 0.899–0.996 against 0.154–0.169.
+
+⚠ **Two documents carry a link to the wrong video, and in both cases the visible URL and the
+embedded hyperlink disagree.** PART 4 shows `8veLovq5NWQ` (Part 3) in its text while its hyperlink
+points at `okJNAMPBRqg`; the Full lecture shows `Mwf_SwRa2F0` (Part 6) while its hyperlink points at
+`EMbRv6aaQrs`. The transcripts themselves are right in every case — which is why the mapping is done
+on the words, not the links.
+
+Extraction: `scripts/starkey/docx-extract.py` (stdlib only — a .docx is a zip) writes prose, SRT and
+metadata to `_docx_extract/`; `scripts/starkey/docx-disposition.ts` measures and dispositions.
+
+## Adding another TurboScribe transcript
+
+Charlie gets three free TurboScribe re-transcriptions a day. When a new one arrives:
+
+1. Save it as `raw/<video_id>.turboscribe.vtt` — **named by video ID, never by title**. Titles carry
+   punctuation that breaks on Windows paths, and the ID is the join key to everything else. If it
+   comes as a `.docx`, drop it in this directory and run `docx-extract.py` then `docx-disposition.ts`,
+   which will identify the video from the words and write the file for you.
+2. `tsx ../scripts/starkey/load.ts <video_id>` — it is picked up by filename and loaded with
+   `source = 'turboscribe'`, replacing any previous load for that pair rather than appending.
+3. `tsx ../scripts/starkey/turboscribe-report.ts` — cue count and last-cue end against `duration_s`
+   for every TurboScribe transcript. **A transcript covering under 90% of its video is flagged.**
+   That comparison, not a word count, is what caught `2Khgz5sMMBU`.
+4. `tsx ../scripts/starkey/r2-backup.ts` to put the new raw file in R2.
+
+Currently loaded, all essentially complete:
+
+| Video | Cues | ASR cues | Last cue | Duration | Coverage |
+|---|---|---|---|---|---|
+| `soNnF0sjF5Y` P1 | 289 | 298 | 765.1s | 766s | 99.9% |
+| `jnsiLNNL8s8` P2 | 302 | 321 | 815.1s | 815s | 100.0% |
+| `8veLovq5NWQ` P3 | 229 | 245 | 615.7s | 616s | 99.9% |
+
+Still single-sourced: `okJNAMPBRqg` P4, `q1Mto3BxMcA` P5, `Mwf_SwRa2F0` P6, `EMbRv6aaQrs` lecture,
+`2Khgz5sMMBU` interview.

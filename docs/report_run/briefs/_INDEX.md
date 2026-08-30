@@ -11,6 +11,8 @@ once a day rather than eight times. Hand them to CC in this order.
 | B5 | `CCW-B5_register_resolution.md` | Sun 30 eve / Mon 31 | my `register_proposals.json` | 1–2 h |
 | B6 | `CCW-B6_appendix_a_publication.md` | Wed 2 | the three inbound files, B5 | 30 min |
 | B7 | `CCW-B7_starkey_transcript_corpus.md` | Any time, start early | — | 30 min hands-on, ~20 min waiting |
+| B8 | `CCW-B8_starkey_docx_disposition.md` | Now — step 1 is time-critical | B7 (done) | 10 min |
+| B9 | `CCW-B9_quote_concentration.md` | After B8 | B8 | 20 min |
 
 **B7 is independent of B2–B6** — different inputs, different outputs, no ordering constraint. Its first
 phase is mostly waiting on the network, so it is worth kicking off before the others rather than after.

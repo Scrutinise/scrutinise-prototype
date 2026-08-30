@@ -132,6 +132,129 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 12:06 UTC — B8 + B9: THE FIRST METRIC I WROTE INVERTED THE TWO CLASSES, AND THE CRAG VOCABULARY IS ABSENT FROM ALL EIGHT THESIS VIDEOS
+
+B8 and B9 executed. **B5 still NOT STARTED** — `docs/report_run/register_proposals.json` is still
+not on disk, checked at the start of this run. B10 and B11 appeared in `briefs/` during the run and
+are **not** in scope; a second CC session is on those, and I told it so rather than racing it.
+
+### ▶▶ STEP 1 FIRST, AND IT NEEDED DOING TWICE
+
+The seven `.docx` were untracked but **not ignored** — the next `git add` would have swept seven full
+lecture transcripts into a GitHub-backed repo. `*.docx` appended to
+`sources/youtube/.gitignore`, confirmed with `git check-ignore -v` against two of the real files
+rather than the pattern.
+
+⚠ **And there are two copies, not one.** The same seven `.docx` also sit in `docs/report_run/` root,
+which the `sources/youtube/` rule does not reach — a directory `.gitignore` governs its own directory
+and below. A second CC session had already put a `*.docx` rule at `report_run/` level; both
+locations are now confirmed ignored. ⚠ **A third artefact was in the same position and nearly
+missed**: `_docx_extract/`, the prose and SRT this run extracted FROM those documents, is derived
+from the same private text and was not covered by anything. Now ignored. `starkey_hits.json` was
+ignored before it was written, not after.
+
+### ⚠⚠ MY FIRST IDENTIFICATION METRIC PUT THE TWO CLASSES IN THE WRONG ORDER
+
+B8's table was re-derived rather than trusted — the brief had itself been revised once for getting
+this wrong. **My first pass scored the scraped documents 0.61–0.81 against the ASR and the
+independent TurboScribe ones 0.90–0.94: the classes separated in the OPPOSITE direction**, which
+would have loaded four copies of the ASR as second sources and skipped the three real ones.
+
+**Cause: the normaliser kept digits and the three tools stamp a time on every line in a different
+notation** — TurboScribe `(1:36)`, summarize.ing `[00:02]`, tactiq.io a bare `00:00:02.240`. Only
+TurboScribe's form was being stripped, so an unstripped timestamp added three or four tokens roughly
+every two seconds of speech to the other two. **The metric was measuring which notation the tool
+used, not what the words were.** Stripped all three forms — justified because they are not speech,
+not because of what it did to the numbers — and the classes invert to their proper order.
+
+**After the fix, no overlap: independent 0.899–0.943, scraped 0.993–0.996, gap 0.050.** Every mapping
+unambiguous, best-vs-second 0.899–0.996 against 0.154–0.169. **B8's verdicts are confirmed** —
+Parts 1, 2, 3 independent; Parts 4, 5, 6 and the Full lecture scraped and NOT loaded.
+
+⚠ **Both of B8's "mislabelled URL" cases are sharper than reported: the visible URL and the embedded
+hyperlink disagree.** PART 4 shows `8veLovq5NWQ` in its text and hyperlinks `okJNAMPBRqg`; the Full
+lecture shows `Mwf_SwRa2F0` and hyperlinks `EMbRv6aaQrs`. Which is exactly why the mapping is done on
+the words.
+
+### ⚠ AND A SECOND PARSER DEFECT, FOUND BY A COMPARISON THAT WAS SUPPOSED TO BE A FORMALITY
+
+Part 1 was already loaded from Charlie's `Downloads` copy, so the check was "confirm the document and
+the loaded file are the same transcript". It came back **DIFFERS** on 288 of 289 cues.
+
+Not a different transcript: **`parseVtt` was swallowing the next cue's SRT sequence number onto the
+end of each cue's text** ("...once again to 2"). These exports omit the blank line between cues, and
+the body loop only stopped at a blank line or a timing line. A bare integer directly before a timing
+line is now a terminator too. After the fix: **IDENTICAL**. Had the check not been written, two
+loaded transcripts would each have carried a stray digit per cue.
+
+⚠ A third fix in the same file, made before it could bite: the carry-over de-duplication that YouTube's
+rolling format needs is **wrong for SRT**, where two consecutive cues that genuinely say the same
+short thing are not duplicates. Now gated on the inline word-timing tags that only rolling files
+carry. Confirmed a no-op on existing data — the full reload came back at exactly 179,561 + 531 cues.
+
+### ▶ LOADED, AND THE COVERAGE CHECK RUN ON EACH
+
+287 transcripts now, 180,092 cues, 1,176,129 words. `jnsiLNNL8s8` 302 cues ending 815.1s of 815s;
+`8veLovq5NWQ` 229 cues ending 615.7s of 616s; `soNnF0sjF5Y` 289 cues ending 765.1s of 766s. All three
+essentially complete — 0 of 3 under 90%. `turboscribe-report.ts` is the standing report for every
+later drop, and the README carries the four-step procedure.
+
+### ▶▶ B9: THE CRAG VOCABULARY IS ABSENT FROM ALL EIGHT THESIS VIDEOS
+
+`treaty` 0, `ratification` 0, `royal prerogative` 0, `parliamentary scrutiny` 0 — **not one hit
+across the six parts, the September lecture and the Q&A interview**, against 33 / 0 / 5 / 1
+corpus-wide. Where the eight videos are dense is elsewhere: `constitution` 26, `restoration` 12,
+`sovereignty` 10 (six of them in Part 3 alone), `constitutional reform` 9, `repeal` 7.
+
+⚠⚠ **`ratification` returns zero CORPUS-WIDE, and that is a fact about vocabulary, not about the
+subject** — `ratify` and `ratified` each appear 6 times. Read off the table alone, "0 everywhere"
+invites the conclusion that Starkey never touches treaty ratification.
+
+⚠ **Every zero is now re-asked a second way before it can be published as a gap.** `plainto_tsquery`
+returning nothing and the phrase being absent look identical in a table, and filing the first as the
+second would tell the report the opposite of the truth. Step 1b re-asks each empty term with `ILIKE`
+against raw cue text, bypassing the index; on this run it cleared all of them — `ratification` is
+genuinely absent by both routes, and every other term was found both ways.
+
+87 hits exported to `docs/report_run/starkey_hits.json` (git-ignored), complete and uncapped against
+a 400 cap — 62 `asr`, 25 `turboscribe`.
+
+### ▶ WHAT THE SECOND ENGINE ACTUALLY BUYS, AND WHY THE 0.95 LINE IS GENEROUS
+
+Passages where TurboScribe and the ASR differ by more than trivial punctuation, at the brief's ~0.95
+line: **P1 9 of 10, P2 10 of 11, P3 5 of 8.** ⚠ But the spread is the useful part and the count on
+its own overstates it: **similarity never falls below 0.882 and the medians are 0.916–0.935.** Most
+of the gap is the ASR keeping filler ("um", "uh", "you know") that TurboScribe drops, and the same
+threshold catches that alongside real substitutions like the Disraeli/Israeli case. CCW should read
+the distribution, not the count.
+
+### ▶ THE B7 COVERAGE FLAG RE-TESTED FROM THE OTHER DIRECTION
+
+`2Khgz5sMMBU` contributes 5 hits to the export and **0 of them start after 20:20**, as the flag
+predicts. ⚠ A filter with nothing to reject proves nothing, so a control was run first: the
+46-minute lecture has 21 passages after 20:20, so the time filter can see late passages. Last cue
+1238.5s of 1970s — **the flag holds**.
+
+### ▶ RAW CORPUS BACKED UP TO R2
+
+`r2://scrutinise-legislation/research/starkey/` — `meta/`, `raw/`, `logs/`, **857 objects**, uploaded
+and then verified by reading every key's size back from R2. A PUT that returns without throwing is
+not evidence the bytes are there. ⚠ A control key that should not exist was confirmed absent, so
+"857 of 857 present" is a real result rather than a HEAD that always succeeds. Idempotent; re-runs
+skip what matches. **The `.docx` are NOT in the R2 copy** — the backup covers the three directories
+asked for.
+
+### FILES
+
+Added: `scripts/starkey/docx-extract.py`, `docx-disposition.ts`, `text.ts`, `turboscribe-report.ts`,
+`b9-quote-concentration.ts`, `r2-backup.ts`. Changed: `vtt.ts` (SRT index terminator, rolling-only
+de-duplication), `db.ts` (export `readEnvVar`), `sources/youtube/_README.md`, `.gitignore`.
+
+`tsc --noEmit` clean on every file these two briefs touched; the repo's 8 pre-existing errors in 6
+untouched files are unchanged.
+
+---
+
 ## 2026-08-30 10:05 UTC — B7 COMPLETE: THE STARKEY CORPUS IS BUILT, ALL SIX THESIS VIDEOS ARE IDENTIFIED, AND THE SECOND TRANSCRIPT HAS ALREADY CAUGHT THE ASR NAMING THE WRONG MAN
 
 `docs/report_run/briefs/CCW-B7_starkey_transcript_corpus.md` executed end to end. B7 is independent
