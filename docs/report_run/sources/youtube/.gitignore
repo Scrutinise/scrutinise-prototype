@@ -12,3 +12,12 @@
 meta/
 raw/
 logs/
+
+# Charlie's transcript documents — same rule as meta/ raw/ logs/ above.
+# Untracked is not the same as ignored: without this line the next `git add`
+# commits seven full lecture transcripts to a GitHub-backed repo.
+*.docx
+
+# Text extracted from those .docx by docx-extract.py — derived from the same
+# private transcripts, so it carries the same rule.
+_docx_extract/

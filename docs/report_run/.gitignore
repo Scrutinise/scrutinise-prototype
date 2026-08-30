@@ -1,0 +1,16 @@
+# Transcript documents of another person's published lectures, held for private
+# research only (CCW-B7 "What NOT to do"). This repository pushes to GitHub, so
+# they stay on disk and out of the history.
+#
+# ⚠ This rule lives at report_run level, NOT in sources/youtube/, because the
+# seven THE STARKEY THESIS *.docx are actually sitting in report_run/ root.
+# CCW-B8 step 1 put the rule in sources/youtube/.gitignore, which governs that
+# directory and below and therefore would not have covered them where they are.
+# Checked 30 Aug with `git check-ignore -v` against the real paths, not the
+# pattern: both locations came back NOT IGNORED. Nothing had been committed yet.
+#
+# Charlie: if these should be backed up, R2 is the right home, not git.
+*.docx
+
+# Corpus search exports (CCW-B9) — derived from the same private corpus.
+starkey_hits.json
