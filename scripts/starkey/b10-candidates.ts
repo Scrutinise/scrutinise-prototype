@@ -121,6 +121,16 @@ interface Candidate {
 interface Totals {
   strict_corpus: number; inflected_corpus: number
   pass_a: number; pass_b: number
+  // pass_a counts OCCURRENCES, and Parts 1-3 have two transcripts each, so one
+  // moment there is counted twice. pass_a_distinct is the moment count: per
+  // video, the MAX over its sources, summed. Max rather than a merge of
+  // overlapping time ranges — the two engines segment differently, so their
+  // boundaries interleave and a merge CHAINS adjacent hits into one, which
+  // undercounts (the other CC session measured a 2.5x undercount doing that).
+  // Max cannot chain and equals what a single-transcript video reports. It is
+  // a floor: two genuinely distinct moments, one per engine, would read as one.
+  pass_a_distinct: number
+  pass_b_distinct: number
   direct_passages: number; fts_passages: number
 }
 
@@ -191,8 +201,11 @@ async function main() {
   const totals: Record<string, Totals> = {}
   for (const { t } of allTerms) totals[t] = {
     strict_corpus: 0, inflected_corpus: 0, pass_a: 0, pass_b: 0,
+    pass_a_distinct: 0, pass_b_distinct: 0,
     direct_passages: directPassages.get(t) ?? 0, fts_passages: fts.get(t) ?? 0,
   }
+  // term -> video -> source -> occurrences, for the distinct-moment reduction.
+  const perTVS = new Map<string, Map<string, Map<string, number>>>()
 
   for (const s of streams.values()) {
     const inA = PASS_A.has(s.video_id)
@@ -217,12 +230,31 @@ async function main() {
       for (let m; (m = inflected.exec(s.text));) {
         totals[t].inflected_corpus++
         if (inA) totals[t].pass_a++; else totals[t].pass_b++
+        let byVid = perTVS.get(t); if (!byVid) { byVid = new Map(); perTVS.set(t, byVid) }
+        let bySrc = byVid.get(s.video_id); if (!bySrc) { bySrc = new Map(); byVid.set(s.video_id, bySrc) }
+        bySrc.set(s.source, (bySrc.get(s.source) ?? 0) + 1)
         const a = cueAt(s, m.index), b = cueAt(s, m.index + m[0].length - 1)
         acc.push({ term: t, group: g, start_s: a.start_s, end_s: b.end_s })
       }
     }
     if (acc.length) hits.set(s.video_id + SEP + s.source, acc)
   }
+
+  // --- collapse the two transcripts of Parts 1-3 to distinct moments --------
+  for (const [t, byVid] of perTVS) {
+    for (const [vid, bySrc] of byVid) {
+      const distinct = Math.max(...bySrc.values())
+      if (PASS_A.has(vid)) totals[t].pass_a_distinct += distinct
+      else totals[t].pass_b_distinct += distinct
+    }
+  }
+  // Which videos actually carry more than one transcript? Asserted nowhere —
+  // if this ever grows beyond Parts 1-3, the Pass B columns start inflating too.
+  const multiSource = [...streams.values()].reduce((m, s) => {
+    (m[s.video_id] ??= []).push(s.source); return m
+  }, {} as Record<string, string[]>)
+  const twoTranscript = Object.entries(multiSource).filter(([, v]) => v.length > 1)
+    .map(([vid, srcs]) => ({ video_id: vid, sources: srcs.sort(), in_pass: PASS_A.has(vid) ? 'A' : 'B' }))
 
   if (compareOnly) {
     console.log('\n                            OCCURRENCES         PASSAGES (like-for-like)')
@@ -386,6 +418,11 @@ async function main() {
     // "repeal", including ones absent from the twelve workstreams.
     action_object_words_pass_b: [...objectWords.entries()]
       .sort((a, b) => b[1] - a[1]).slice(0, 60).map(([word, n]) => ({ word, n })),
+    // Videos carrying two transcripts. Every count above is OCCURRENCES, so a
+    // moment in one of these is counted once per engine; *_distinct collapses
+    // them. If this list ever contains a Pass B video, the Pass B columns and
+    // the action-verb video ranking inflate too — today it does not.
+    two_transcript_videos: twoTranscript,
     term_totals: totals,
     candidates_pass_a: passA,
     candidates_pass_b: passB,

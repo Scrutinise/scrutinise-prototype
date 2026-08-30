@@ -132,6 +132,58 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 12:48 UTC — B10 CORRECTION: MY PASS A COLUMN DOUBLE-COUNTED THE THREE TWO-TRANSCRIPT VIDEOS — AND THE BIAS FELL EXACTLY WHERE IT DOES MOST DAMAGE
+
+Cross-review with the CC session that ran B8/B9. Two claims contested, **one of theirs right and one
+of mine.** Neither changes any disposition; every number that moved, moved DOWN.
+
+⚠⚠ **THEY WERE RIGHT.** B10's Pass A term counts were OCCURRENCES, and `soNnF0sjF5Y`,
+`jnsiLNNL8s8` and `8veLovq5NWQ` carry two transcripts each — so one thing said once in those three
+was counted once per engine. **14 of 32 terms inflated.** Group totals as distinct moments:
+imperative **47 not 60**, action **32 not 42**, target **30 not 39**. Individually: `human rights
+act` 2→1, `lord chancellor` 2→1, `take back` 2→1, `civil service` 12→9, `restore` 16→12, `quango`
+13→10, `reverse` 11→7, `we should` 18→13, `we need to` 23→17.
+
+▶▶ **The bias ran in the worst possible direction**: the inflation fell *entirely* on the three
+videos that already have a second transcript and therefore need no further TurboScribe credit — in
+a table whose only job is deciding where the next credit goes. Returning a hit from each source is
+what B10 REQUIRES and is right for the candidate list; it is simply wrong for a count, and I
+reported the count without separating the two.
+
+▶ **I took their fix rather than re-deriving it, and their false start is the more useful half.**
+Merging overlapping time ranges looks obviously right and is wrong — the engines segment
+differently, so cue boundaries interleave and a merge CHAINS (asr 229-305, turboscribe 234-314, asr
+305-381 collapse to one). They measured a 2.5x undercount replacing a 2x overcount, caught only by
+printing rows instead of totals. Max-over-sources cannot chain, equals what a single-transcript
+video reports, and is declared as a floor.
+
+⚠ **Pass B verified unaffected, not assumed.** `term_totals` now carries `pass_a_distinct` and
+`pass_b_distinct`, and the JSON carries `two_transcript_videos` so the assumption is checkable: all
+three are in Pass A, and `pass_b === pass_b_distinct` for all 32 terms. **The action-verb video
+ranking, the candidate counts and the outside-the-twelve scoring all stand unchanged.**
+
+⚠⚠ **I WAS RIGHT ON THE OTHER ONE: `equality act` really is 0 across the eight thesis videos.**
+They reported one in Part 2 and called my 0 wrong. Three independent checks say 0: the cue-stream
+regex, `ILIKE '%equality act%'` on `starkey.cue` (NONE), and — the decisive one — **every cue in the
+eight containing the string "equality" is a single cue** in `EMbRv6aaQrs` at 44:32, *"of diversity,
+equality, and inclusion."* Not the statute. What `jnsiLNNL8s8` has is `human rights act` at asr 1 +
+turboscribe 1, the row immediately above in both our tables and exactly the 2-that-should-be-1 case
+under discussion — a row conflation. Their corrected HRA = 1 is unaffected and matches mine.
+
+▶ **`civil service commission` confirmed by them three further ways** (phraseto_tsquery 0, ILIKE on
+cue text 0, ILIKE on passage text 0, against `civil service` at 136 passages). Never uttered in any
+of the 287 transcripts, though it is the phrase in WS-05's own title.
+
+**Net effect on the reading: it is STRONGER.** "The thesis series barely names the statutes" now
+rests on distinct moments — Equality Act 0, Climate Change Act 0, hate speech 0, Sentencing Council
+0, House of Lords 0, judicial review 1, Human Rights Act 1 — and every zero was already zero, since
+a zero cannot be inflated.
+
+**Process note worth keeping.** I stamped the correction section 13:20 UTC when the clock read
+12:48, and earlier stamped a CHANGE_LOG heading 12:43 when it read 12:35. Both caught before
+committing, both the same error: writing the stamp from expectation instead of reading the clock.
+CLAUDE.md says get it from the actual clock at commit time, and that is the only thing that works.
+
 ## 2026-08-30 12:39 UTC — B10: THE BRIEF'S OWN SEARCH TOOL CANNOT RUN THIS BRIEF — TWO OF ITS QUERIES DISSOLVE TO NOTHING AND TWO OTHERS OVER-RETURN BY ~290×
 
 B10 executed. **B5 still NOT STARTED** — `docs/report_run/register_proposals.json` is still not on
