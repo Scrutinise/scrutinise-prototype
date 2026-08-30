@@ -1,0 +1,14 @@
+# The fetched Starkey corpus is a PRIVATE research corpus of another person's
+# published work (CCW-B7, "What NOT to do": do not republish or expose it).
+# This repository pushes to GitHub, so the captions and metadata stay on disk
+# and out of the history. They remain the source of truth locally — everything
+# in the `starkey` Postgres schema is rebuilt from them, and nothing here is
+# needed to run the app.
+#
+# Also a size question: ~285 info.json at ~1MB each plus two VTT tracks per
+# video is several hundred MB, which does not belong in a source repository.
+#
+# Charlie: if these should be backed up, R2 is the right home, not git.
+meta/
+raw/
+logs/
