@@ -132,6 +132,88 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 12:39 UTC — B10: THE BRIEF'S OWN SEARCH TOOL CANNOT RUN THIS BRIEF — TWO OF ITS QUERIES DISSOLVE TO NOTHING AND TWO OTHERS OVER-RETURN BY ~290×
+
+B10 executed. **B5 still NOT STARTED** — `docs/report_run/register_proposals.json` is still not on
+disk, checked again at the end of this run (the fourth independent check today). B11 not started; it
+appeared in `briefs/` mid-run and is not in my instruction.
+
+**Outputs (both git-ignored):** `docs/report_run/register_candidates.json` — Pass A 89 candidates,
+Pass B 300 of 2,013 — and `docs/report_run/register_candidates_full.json`, the uncapped Pass B.
+Tool: `scripts/starkey/b10-candidates.ts` (new). Full report: `docs/report_run/B10_REPORT.md`.
+Prediction logged before the script existed: `docs/report_run/B10_PREDICTION.md`.
+
+▶▶ **B10 says to use `scripts/starkey/search.ts`. It cannot serve this brief, and it fails in BOTH
+directions at once.** It is `plainto_tsquery('english', …)`. (1) `we`, `should`, `i`, `what`, `do`,
+`the`, `has`, `to`, `of` are Postgres English stopwords, so **`we should` and `we have to` lex to the
+EMPTY tsquery and match zero rows** — while direct matching finds them in **229** and **118**
+passages. A zero meaning "the query dissolved" is indistinguishable from "he never said it".
+(2) The larger error: plainto_tsquery ANDs the *surviving* lexemes over a whole 60–90s passage, so
+**`has to go` returns 2,317 passages against 8 real ones (290×) — it is searching for `go`** — and
+**`what I would do` returns 1,695, the IDENTICAL number as `I would`, because both reduce to
+`would`.** A four-word phrase and a two-word phrase are indistinguishable.
+
+⚠ **B9's numbers are NOT in question.** Two-word content phrases come back at ~1.0× (`supreme court`
+1.0×, `civil service` 1.0×, `lord chancellor` 1.1×, `european convention` 1.1×), which is the shape
+of every B9 term; the other CC session confirmed this independently by printing each term's lexed
+form. **The direction of the error is what decides how much to worry** (their point, from B9's
+`constitutional reform` defect): a term the LOOSE method scores zero on is a real absence, because
+tightening cannot resurrect it; a term only the loose method finds is the one needing scrutiny.
+
+⚠⚠ **`civil service commission` — the phrase in WS-05's own title — is NEVER UTTERED in any of the
+287 transcripts.** Its 7 `plainto_tsquery` hits are passages containing "civil", "service" and
+"commission" separately. Same defect as B9's `constitutional reform` (9 co-occurrences, 0 phrases),
+found independently in a second place.
+
+⚠⚠ **The thesis series barely names the statutes.** Across the eight thesis videos: Equality Act
+**0**, Climate Change Act **0**, hate speech **0**, Sentencing Council **0**, House of Lords **0**,
+Human Rights Act **2**. Same shape as B9's CRAG result and it points the same way — the thesis
+videos state the programme in constitutional generalities; the named measures are in the other 277.
+
+▶ **The obvious way to take the cap was wrong, and it looked honest.** Ranking all 2,013 Pass B
+candidates by group and keeping the top 300 filled every slot with `target` and silently discarded
+all 1,713 action and imperative candidates — the group that answers "has he proposed something
+outside the twelve" would have vanished behind a `capped_at` that read as perfectly truthful. The
+cap is now a per-group quota (target 150 / action 100 / imperative 50), and the uncapped 2,013 sit
+in a companion file so the cap costs nothing.
+
+▶ **Two rankings for "the five videos with the most action-verb hits", because they disagree.** The
+inflected count also counts *restoration* and *reversal* — nouns — which promotes videos ABOUT the
+Restoration over videos PROPOSING something. `zjcd6wBI2dA` *Britain Needs a New Restoration* is #3
+on 21 inflected and #7 on 11 strict; the Reform conference speech `5txQ4A-1p24` is #6 on 18 and #10
+on 8. Strict top five: `jl0S4mR2hAc` 21, `aJrmFUS4GNk` 17, `VaPKzYLcZ7Y` 13, `dgZ4gyMQ2o8` 13,
+`gmDhVw5H0jU` 13. ⚠ #1's "Restore" is probably an organisation's name, not the verb — the one row
+here needing a human eye.
+
+⚠ **The `target` term list cannot discover a thirteenth workstream — it contains only the twelve.**
+Anything new arrives through the action/imperative windows. Scoring the six outside-the-twelve
+targets I predicted, controls first: **universities/OfS 249 hits over 88 videos** and **BBC/licence
+fee 177 over 41** each out-score three of the four in-programme controls (HRA 54, Equality Act 116,
+civil service 169, Supreme Court 211). Also House of Lords as a chamber 121, devolution/Scotland Act
+103, Bank of England 78, Church of England 72. Presence of a phrase is not a proposal about it —
+that judgement is CCW's.
+
+**Prediction scored (logged first, in `B10_PREDICTION.md`):** Pass A **89 vs 110–140 predicted —
+WRONG, over by 26%**, because I estimated hits and quoted the number as candidates, and a candidate
+is a *merged* ±30s window (141 hits merge to 89). Pass B surfacing an outside-the-twelve target:
+**RIGHT, all six named.** The stopword prediction: **half right** — I predicted five terms would
+return 0 and only two did; the other three failed the opposite way, over-returning, which I had not
+anticipated at all.
+
+**Checks built so they could fail.** Nothing quoted from `2Khgz5sMMBU` after 20:20 — 11 candidates,
+latest hit 19:36, **0 violations** — and the check is not vacuous: the same filter on the
+untruncated 46-minute lecture returns **7** candidates after that timestamp. B7's coverage flag
+holds. Every candidate's text contains one of its own `matched_terms` (389/389) — an offset error in
+the cue→time mapping would break this and nothing else would show it. No `hit_start_s` outside its
+own window (0/389). Both engines represented for Parts 1–3. Capped file a verified subset of the
+uncapped.
+
+**The two engines still disagree where it matters.** Part 3 at 1:27, same sentence: ASR *"your
+position is on **Northcut Travelion** and the reform of the civil service"*, TurboScribe *"…on
+**Northcote Trevelyan**…"*; and in the same window ASR "the politicized you know people party"
+against TurboScribe "the politicised… people of the Labour Party". Quoting from the ASR alone would
+have printed both.
+
 ## 2026-08-30 12:06 UTC — B8 + B9: THE FIRST METRIC I WROTE INVERTED THE TWO CLASSES, AND THE CRAG VOCABULARY IS ABSENT FROM ALL EIGHT THESIS VIDEOS
 
 B8 and B9 executed. **B5 still NOT STARTED** — `docs/report_run/register_proposals.json` is still
