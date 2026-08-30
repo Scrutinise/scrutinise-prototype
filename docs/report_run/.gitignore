@@ -2,12 +2,25 @@
 # research only (CCW-B7 "What NOT to do"). This repository pushes to GitHub, so
 # they stay on disk and out of the history.
 #
-# ⚠ This rule lives at report_run level, NOT in sources/youtube/, because the
-# seven THE STARKEY THESIS *.docx are actually sitting in report_run/ root.
+# ⚠ This rule lives at report_run level as well as in sources/youtube/, because
+# the documents are in THREE directories, not one. Counted on disk 30 Aug:
+#
+#   docs/report_run/                       7  THE STARKEY THESIS *.docx
+#   docs/report_run/sources/               2  David Starkey.docx, Restoration and Repeal ...
+#   docs/report_run/sources/youtube/       7  the same seven again
+#
 # CCW-B8 step 1 put the rule in sources/youtube/.gitignore, which governs that
-# directory and below and therefore would not have covered them where they are.
-# Checked 30 Aug with `git check-ignore -v` against the real paths, not the
-# pattern: both locations came back NOT IGNORED. Nothing had been committed yet.
+# directory and below. THIS rule is the only cover for the nine in the first two
+# directories — it is not a backstop for the sources/youtube copies, which have
+# their own nearer rule.
+#
+# ⚠ Verify location with `find`, never with `git check-ignore`. check-ignore
+# resolves a PATHNAME against the rules whether or not a file is there, so it
+# will happily attribute a rule to a path that does not exist — and reading its
+# attribution as evidence of where the files are gets the layout wrong. Both
+# facts below were established separately: `find -maxdepth 1 -name '*.docx'` for
+# existence, `check-ignore -v` for the rule. All 16 come back ignored, and
+# nothing had been committed.
 #
 # Charlie: if these should be backed up, R2 is the right home, not git.
 *.docx
