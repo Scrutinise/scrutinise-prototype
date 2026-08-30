@@ -46,8 +46,14 @@ async function main() {
   // ---------- Step 1 ----------
   console.log('\n--- STEP 1: passage hits by video ---')
   console.log('Counts are PASSAGES, any source. "corpus" is the whole 285-video corpus,')
-  console.log('so a term matching everywhere is visible as uninformative.\n')
-  const header = 'term                      corpus  ' + VIDEOS.map(v => SHORT(v).padStart(7)).join('') + '   total'
+  console.log('so a term matching everywhere is visible as uninformative.')
+  console.log('')
+  console.log('TWO counts per term, and for a multi-word term they are NOT the same question.')
+  console.log('plainto_tsquery("constitutional reform") is constitut & reform: both lexemes')
+  console.log('ANYWHERE in the same 60-90 second passage, not the phrase. The [ph] columns are')
+  console.log('phraseto_tsquery, which requires them adjacent. Quote off [ph]. A term where the')
+  console.log('two disagree has an AND count measuring co-occurrence, not usage.\n')
+  const header = 'term                      corpus  corpus[ph]  ' + VIDEOS.map(v => SHORT(v).padStart(7)).join('') + '   total  total[ph]'
   const rowsOut: string[] = []
 
   for (const g of GROUPS) {
@@ -58,11 +64,20 @@ async function main() {
         where tsv @@ plainto_tsquery('english',$1) and video_id = any($2::text[])
         group by 1`, [term, VIDEOS])
       const byVid = new Map<string, number>(rows.map(r => [r.video_id as string, r.n as number]))
+      const ph = await p.query(`
+        select video_id, count(*)::int n from starkey.passage
+        where tsv @@ phraseto_tsquery('english',$1) and video_id = any($2::text[])
+        group by 1`, [term, VIDEOS])
+      const phVid = new Map<string, number>(ph.rows.map(r => [r.video_id as string, r.n as number]))
       const [{ n: corpus }] = (await p.query(
         `select count(*)::int n from starkey.passage where tsv @@ plainto_tsquery('english',$1)`, [term])).rows
+      const [{ n: corpusPh }] = (await p.query(
+        `select count(*)::int n from starkey.passage where tsv @@ phraseto_tsquery('english',$1)`, [term])).rows
       const cells = VIDEOS.map(v => String(byVid.get(v) ?? 0).padStart(7)).join('')
       const total = VIDEOS.reduce((s, v) => s + (byVid.get(v) ?? 0), 0)
-      rowsOut.push(`  ${term.padEnd(24)}${String(corpus).padStart(6)}  ${cells}${String(total).padStart(8)}`)
+      const totalPh = VIDEOS.reduce((s, v) => s + (phVid.get(v) ?? 0), 0)
+      const gap = total !== totalPh ? '  <-- AND count is co-occurrence, not the phrase' : ''
+      rowsOut.push(`  ${term.padEnd(24)}${String(corpus).padStart(6)}${String(corpusPh).padStart(12)}  ${cells}${String(total).padStart(8)}${String(totalPh).padStart(11)}${gap}`)
     }
   }
   console.log(header)
@@ -108,7 +123,8 @@ async function main() {
     for (const term of g.terms) {
       const { rows } = await p.query(`
         select p.video_id, p.source, p.start_s::float start_s, p.end_s::float end_s, p.text,
-               ts_rank(p.tsv, plainto_tsquery('english',$1)) rank
+               ts_rank(p.tsv, plainto_tsquery('english',$1)) rank,
+               (p.tsv @@ phraseto_tsquery('english',$1)) phrase_match
         from starkey.passage p
         where p.tsv @@ plainto_tsquery('english',$1) and p.video_id = any($2::text[])
         order by rank desc`, [term, VIDEOS])
@@ -117,6 +133,10 @@ async function main() {
           video_id: r.video_id, title: titles.get(r.video_id) ?? null, source: r.source,
           start_s: r.start_s, end_s: r.end_s, text: r.text, term, measure: g.measure,
           rank: Number(r.rank),
+          // false = the term's words are all in this passage but not adjacent.
+          // A multi-word term with phrase_match false is co-occurrence, and
+          // quoting it as an instance of the phrase would be wrong.
+          phrase_match: r.phrase_match === true,
           watch_url: `https://www.youtube.com/watch?v=${r.video_id}&t=${Math.floor(r.start_s)}s`,
         })
       }
@@ -141,6 +161,9 @@ async function main() {
   const bySource = new Map<string, number>()
   for (const h of written) bySource.set(h.source as string, (bySource.get(h.source as string) ?? 0) + 1)
   console.log('by source: ' + [...bySource].map(([k, v]) => `${k}=${v}`).join('  '))
+  const nonPhrase = written.filter(h => h.phrase_match === false).length
+  console.log(`phrase matches ${written.length - nonPhrase}, co-occurrence only ${nonPhrase}`
+    + ' — the second group must not be quoted as instances of the phrase')
 
   // ---------- Step 3.2 ----------
   console.log('\n--- STEP 3.2: what the second engine buys, per video ---')

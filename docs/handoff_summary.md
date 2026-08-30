@@ -31,8 +31,18 @@ on the inline word-timing tags only rolling files carry. Full reload confirmed a
 ▶ Corpus now **287 transcripts, 180,092 cues, 1,176,129 words**.
 ▶▶ **B9: NOT ONE CRAG HIT IN ANY OF THE EIGHT THESIS VIDEOS** — `treaty` 0, `ratification` 0,
 `royal prerogative` 0, `parliamentary scrutiny` 0. Dense elsewhere: `constitution` 26, `restoration`
-12, `sovereignty` 10 (six in Part 3 alone), `constitutional reform` 9. 87 hits exported to
+12, `sovereignty` 10 (six in Part 3 alone), `repeal` 7. 87 hits exported to
 `docs/report_run/starkey_hits.json`, complete and uncapped.
+⚠⚠ **CORRECTED after the second CC session queried the zeros: "constitutional reform 9" was
+CO-OCCURRENCE, and the phrase count is ZERO.** `plainto_tsquery` makes a multi-word term an AND of
+lexemes anywhere in the same 60–90s passage, not a phrase — corpus-wide 74 → 9, **88% looser**. On a
+phrase reading the CRA 2005 row is `supreme court` 3, `lord chancellor` 2, **`constitutional reform`
+0**, `judicial review` 1; `human rights act` 3 → 2. Every other term unchanged. ⚠ **The stopword
+worry itself did NOT apply** — all 22 B9 terms lex non-empty, with a `we should` control proving the
+check can see the empty case; and **a zero that survives the LOOSER query is the stronger result**,
+so every CRAG zero holds on both readings. B9 now prints both counts, flags disagreements, and
+stamps each exported hit with `phrase_match`: **77 phrase, 10 co-occurrence only — do not quote the
+10 as instances of the phrase.**
 ⚠⚠ **`ratification` is zero CORPUS-WIDE and that is vocabulary, not subject** — `ratify`/`ratified`
 appear 6 times each. **Every zero is now re-asked with ILIKE against raw text before it can be
 published as a gap**; an index miss and a real absence look identical in a table.

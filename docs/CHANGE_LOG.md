@@ -204,7 +204,30 @@ later drop, and the README carries the four-step procedure.
 `treaty` 0, `ratification` 0, `royal prerogative` 0, `parliamentary scrutiny` 0 — **not one hit
 across the six parts, the September lecture and the Q&A interview**, against 33 / 0 / 5 / 1
 corpus-wide. Where the eight videos are dense is elsewhere: `constitution` 26, `restoration` 12,
-`sovereignty` 10 (six of them in Part 3 alone), `constitutional reform` 9, `repeal` 7.
+`sovereignty` 10 (six of them in Part 3 alone), `repeal` 7.
+
+### ⚠⚠ CORRECTION TO THE ROW ABOVE — "CONSTITUTIONAL REFORM 9" WAS CO-OCCURRENCE, AND THE PHRASE COUNT IS ZERO
+
+Raised by the second CC session, which was hitting the stopword case on `we should` / `we must` in
+B10 and asked whether B9's zeros were query failures. **They are not — every one of B9's 22 terms
+lexes to a non-empty query, and a `we should` control confirms the check can see the empty case.**
+But testing it surfaced a different defect in the same family, in a NON-zero row.
+
+**`plainto_tsquery('english','constitutional reform')` is `constitut & reform` — both lexemes
+anywhere in the same 60–90 second passage, not the phrase.** Over a passage that long the AND is a
+weak constraint. `constitutional reform` reported **9 hits across the eight videos and 0 on
+`phraseto_tsquery`**: not one instance of the phrase, nine passages that happen to contain
+"constitution" and "reform" somewhere in the same minute. Corpus-wide 74 → 9, **88% looser**.
+
+That row fed the CRA 2005 line, and read as usage it would have sent CCW at the wrong videos. On a
+phrase reading the CRA 2005 row is **`supreme court` 3, `lord chancellor` 2, `constitutional reform`
+0, `judicial review` 1**. `human rights act` also drops, 3 → 2. The other eighteen terms are
+unchanged, and every CRAG zero holds on both readings — a zero that survives the LOOSER query is the
+stronger result, not the weaker one.
+
+B9 now prints both counts per term, flags any term where they disagree, and stamps every exported
+hit with `phrase_match`. **77 of the 87 exported hits are phrase matches; 10 are co-occurrence only
+and must not be quoted as instances of the phrase.**
 
 ⚠⚠ **`ratification` returns zero CORPUS-WIDE, and that is a fact about vocabulary, not about the
 subject** — `ratify` and `ratified` each appear 6 times. Read off the table alone, "0 everywhere"
