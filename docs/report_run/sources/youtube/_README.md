@@ -245,3 +245,48 @@ Currently loaded, all essentially complete:
 
 Still single-sourced: `okJNAMPBRqg` P4, `q1Mto3BxMcA` P5, `Mwf_SwRa2F0` P6, `EMbRv6aaQrs` lecture,
 `2Khgz5sMMBU` interview.
+
+
+## The five sessions in `sources/David Starkey.docx` (CCW-B11)
+
+That document is an auto-generated compilation of **five** separate sessions, stitched end to end
+with timestamps that reset at each join, and **none of them carries a URL**. All five are in the
+corpus. Located by measurement, not by hand — the table below is the answer to "which recording is
+this?", so nobody has to find the links again.
+
+| # | Session | Video | Published | Length | Score | What the score means |
+|---|---|---|---|---|---|---|
+| 1 | (unlabelled opening) | [`1xsdGfHlIeU`](https://www.youtube.com/watch?v=1xsdGfHlIeU) "British state has been WEAPONISED against Bri | 2026-08-22 | 50:28 | **0.900** | same audio, different engine (0.84-0.90 band) |
+| 2 | Disraeli conference | [`tl4DJ50RMuk`](https://www.youtube.com/watch?v=tl4DJ50RMuk) "How liberalism poisoned England" \| David Sta | 2026-07-25 | 46:24 | **0.999** | scraped copy of the same caption track (>=0.975) |
+| 3 | With Stephen Barratt | [`L820LrgK7Hg`](https://www.youtube.com/watch?v=L820LrgK7Hg) "THIS is why Keir Starmer is so hated" \| Davi | 2026-06-27 | 42:59 | **0.999** | scraped copy of the same caption track (>=0.975) |
+| 4 | With Danny Kruger | [`vDFvOWh6bvM`](https://www.youtube.com/watch?v=vDFvOWh6bvM) "This is how Reform will SMASH the Blob" \| Da | 2026-05-01 | 43:13 | **0.940** | same audio, different engine (0.84-0.90 band) |
+| 5 | Brexit Started a revolution | [`VaPKzYLcZ7Y`](https://www.youtube.com/watch?v=VaPKzYLcZ7Y) 13 Dr David Starkey CBE - The Historical Impor | 2026-05-20 | 35:04 | **0.990** | scraped copy of the same caption track (>=0.975) |
+
+**Method.** Each session's first 2,000 normalised words scored against every ASR transcript in the
+corpus with `lcsRatio` from `scripts/starkey/text.ts` — **the same function and the same window as
+B8**, so B8's calibration carries over: a different recording scores low, the same audio through a
+different engine lands 0.84–0.90, a scraped copy of the same caption track lands 0.975+. Runner-up
+scores were 0.16–0.18 in every case except session 5, so the margin is not close.
+Script: `scripts/starkey/b11-locate-sessions.ts`. Full output: `docs/report_run/b11_sessions_located.json`.
+
+**The split was established two ways and both agreed** on all four joins: the clock resetting, and
+the session label appearing as its own paragraph. Session run-times (50:00, 46:17, 42:36, 42:49)
+reproduce CCW's hand-read table exactly.
+
+⚠ **Session 5 — the one carrying the absorption claim — is on the channel TWICE.**
+`VaPKzYLcZ7Y` (2026-05-20, 35:04) and `dgZ4gyMQ2o8` (2026-05-22, 35:26) score **0.964 against each
+other**: two uploads of the same talk, two days apart. The session matches the first at 0.990 and
+the second at 0.959. **Both ids are valid for verifying a quote from that session**, and a check
+against one is a check against the other. Citing only one would make a quote look unverifiable to
+anyone who found the other.
+
+⚠ **Sessions 1 and 4 are independent re-transcriptions, not copies** (0.900 and 0.940). Their
+wording will differ from the ASR in the corpus, the same way the TurboScribe documents do — so a
+quote taken from the .docx should be checked against the recording before printing, not against the
+ASR.
+
+⚠ **Two metrics, and they corroborate each other.** Alongside the sequence score, a 5-gram
+containment was computed. Since containment ≈ (per-word agreement)⁵, the two should imply the same
+per-word rate — and they do on all five: 0.548→0.887 vs 0.900, 0.754→0.945 vs 0.940,
+0.941→0.988 vs 0.990, and 1.000→1.000 vs 0.999 twice. The low containment on session 1 is what a
+0.89 word-level match looks like after raising it to the fifth power, not a weak match.

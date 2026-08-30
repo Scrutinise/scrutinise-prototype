@@ -1,0 +1,4 @@
+
+# CCW-B11 split output: carries the full session text of a private transcript
+# document, so it stays on disk like the corpus itself.
+b11-sessions.json

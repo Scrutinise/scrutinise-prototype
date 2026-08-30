@@ -132,6 +132,108 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-30 20:09 UTC — B5 + B11 COMPLETE: 13 OF 15 INSTRUMENTS IN THE REGISTER ARE CC'S GUESS, AND THE PROGRAMME'S REAL SCOPE IS 561 ACTS AND 23,697 SIs
+
+**B5 UNBLOCKED AND DONE.** `register_proposals.json` arrived; 14 proposals in, 14 out, 10 resolved to
+at least one instrument, 4 unresolved, 15 candidate instruments. Outputs
+`docs/report_run/register_resolved.json` + `.csv`, report `B5_REPORT.md`, tool
+`scripts/ingest/graph/report-b5-register.ts`. **B11 also done** — all five sessions located.
+
+▶▶ **THE HEADLINE FOR THE PROPOSER: 13 OF 15 INSTRUMENTS ARE `my identification`.** The programme is
+stated almost entirely without naming legislation, so almost every row of column two is a guess he
+has to correct. Only SP-02 carries proposer-named statutes — **and they were named by LITTLEWOOD,
+the interviewer.** Starkey's own reply is "I think it is a day one thing." Every such row carries a
+`named_by` field, because "named by the proposer" alone would overstate his commitment, which is the
+one error this report cannot afford.
+
+⚠⚠ **SP-01's scope is countable, and the count is the most important thing this resolution
+produces.** "The legislation passed under Blair and Brown 1997-2010" is, in this corpus: **561 UK
+public general Acts and 23,697 UK statutory instruments** (plus 4,523 SSI, 2,175 WSI, 5,211 NISR).
+⚠ Corpus holdings for the date range, no in-force filter, order of magnitude only. **A temporal
+scope is a different and far larger drafting problem than twelve named measures**, and no amount of
+work on the twelve touches it.
+
+⚠⚠ **The ECHR route he names does not exist.** SP-05 says "repeal the European Convention". A treaty
+is DENOUNCED under Article 58 — six months' notice, a prerogative act, not a Bill — and denunciation
+does not by itself alter domestic law, because the Convention rights remain enforceable through the
+HRA until that Act changes. **The proposal as spoken is two separable actions with different
+effects** and he has not said which he means.
+
+⚠⚠ **Two targets may not be what he thinks they are.** SP-09: he argues against **Northcote-Trevelyan
+(1854)**, not CRAG 2010, and repealing CRAG Part 1 removes the statutory footing without restoring
+patronage appointment — not the same measure. SP-10: **gender self-identification was never enacted
+in Great Britain**; the instrument in force is the Gender Recognition Act 2004, which requires a
+diagnosis and a panel, close to the opposite. That row exists to say there is nothing matching his
+description to repeal.
+
+⚠⚠ **SP-11, Bank of England Act 1998, is in NO workstream** and is squarely inside his own stated
+date range. The register found something the programme spec missed.
+
+▶▶ **THE WITHIN-TABLE OVERLAP VIEW WAS MISLEADING AND I NEARLY PUBLISHED IT.** Computing overlaps
+only inside B5 made CRA 2005 look unclaimed by anything else. Cross-referencing
+`scoping_remaining.csv` by gid: **CRA 2005 is the target of FOUR measures** (SP-04 + WS-02 + WS-03 +
+WS-09), and five more instruments are double-claimed. ⚠ The **Charities Act 2011** case is a
+contradiction rather than an overlap: `CCW_SPEC` §6 lists it as part of the EXISTING TOOLKIT for
+WS-12 while SP-12 points at it as something to restrict — the same statute in the programme twice,
+pointing opposite ways.
+
+▶ **Two "checks" in B5's output are labelled INVARIANTS because they cannot fail.** `overlaps_symmetric`
+is built from one gid→proposals map so symmetry is guaranteed by construction; `no_total_column`
+reads a constant declared in the same file. Both would pass on a completely broken run. Kept because
+they catch corruption during assembly, demoted because that is all they catch — the shape this
+project was bitten by five times today.
+
+▶ **One defect found and fixed mid-run:** the resolver printed ⚠⚠ "the counts are a floor, probably a
+bad one" against SP-10's `section-149`. That warning is written for a **Part** that failed to expand
+and is WRONG for a section, where a literal match on `target_provision_ref` is exactly the form
+references use and exactly the right query. It would have told a reader to distrust a correct number.
+
+**Prediction scored** (`B5_PREDICTION.md`, logged before the resolver existed): unresolved 4 vs 4
+predicted, and the same four ✓. Named/identification split 1/9 vs 2/8 predicted ✗ — I expected SP-05
+to count as proposer-named because he says "the European Convention", and it resolves as mine
+because the Convention is a treaty and the HRA is my pick; wrong in the direction that protects him.
+SP-01 scope 561 vs 1,000-1,800 predicted ✗, over by ~2x — I over-estimated the thing that makes his
+programme look hardest.
+
+---
+
+**B11 — all five sessions of `David Starkey.docx` located**, table appended to
+`sources/youtube/_README.md`, output `b11_sessions_located.json` (ids and scores only, no speech, so
+it commits while the corpus stays ignored). Tool `scripts/starkey/b11-locate-sessions.ts`.
+
+1 `1xsdGfHlIeU` 0.900 · 2 `tl4DJ50RMuk` 0.999 · 3 `L820LrgK7Hg` 0.999 · 4 `vDFvOWh6bvM` 0.940 ·
+5 `VaPKzYLcZ7Y` 0.990. **Runners-up 0.157-0.179 except session 5.**
+
+▶▶ **SESSION 5 — THE ONE CARRYING THE ABSORPTION CLAIM — IS ON THE CHANNEL TWICE.** `VaPKzYLcZ7Y`
+(0.990) and `dgZ4gyMQ2o8` (0.959) score **0.964 against each other**: the same talk, uploaded two
+days apart. **Both ids are valid for verifying a quote**, and reporting only the winner would have
+made a citation look unverifiable to anyone who found the other.
+
+⚠ **Sessions 1 and 4 are INDEPENDENT RE-TRANSCRIPTIONS (0.900, 0.940), not copies.** Their wording
+differs from the corpus ASR, so a quote from those two must be checked against the RECORDING, not
+against the corpus text. Sessions 2 and 3 at 0.999 are reformatted copies of the same caption track
+and carry no independent information.
+
+▶ **The split was established two ways and both agreed** on all four joins — clock reset and label
+paragraph — and the resulting run-times (50:00, 46:17, 42:36, 42:49) reproduce CCW's hand-read table
+exactly. ⚠ A first pass found only ONE of the four: the document uses **two timestamp notations**
+(prose for 1,133 paragraphs, then `M:SS`) and a parser that knew one form was blind to three
+quarters of it. It also carries 1,042 paragraphs of literal escaped XML as visible text.
+
+▶ **The metric is IMPORTED, not restated** — `lcsRatio`/`norm` from `scripts/starkey/text.ts` at
+WINDOW 2000, identical to `docx-disposition.ts`, because B8's calibration bands belong to that
+function and window and to nothing else. A second metric (5-gram containment) cross-checks it:
+containment ≈ (per-word agreement)⁵, and the implied rates match the lcs scores on all five.
+**Session 1's containment of 0.548 looks alarming and is exactly what an 0.89 word match becomes at
+the fifth power** — without that check I would have treated a correct match as doubtful.
+
+▶ **The prefilter was built so it cannot hide the answer.** It shortlists 30 of 285 by containment;
+the script reports the best containment among the EXCLUDED — 0.002-0.005 against 0.548-1.000 for the
+winners. No near-miss at the cutoff, measured rather than assumed.
+
+**Typecheck run under `scripts/tsconfig.json`** — the correct one, per this morning's finding that
+`scrutinise-web/tsconfig.json` excludes `scripts/**` and never compiled these files at all.
+
 ## 2026-08-30 13:21 UTC — EVERY "tsc CLEAN" I REPORTED TODAY WAS VACUOUS: THE TYPECHECK NEVER LOOKED AT scripts/ AT ALL
 
 The B8/B9 session falsified their own typecheck after my `cd`-that-failed note, and told me. I ran

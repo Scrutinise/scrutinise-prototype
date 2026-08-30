@@ -1,0 +1,301 @@
+{
+  "generated_at": "2026-08-30T20:08:10.682Z",
+  "source_document": "docs/report_run/sources/David Starkey.docx",
+  "method": "Sessions split at clock resets AND label paragraphs (both signals agreed on all four joins). Each session's first 2000 normalised tokens scored against each ASR transcript's first 2000 by lcsRatio from scripts/starkey/text.ts — the same function and window as B8, so B8's calibration bands apply. A 5-gram containment prefilter shortlists 30 of 283; it never sets the reported score.",
+  "calibration": "B8: a different recording scores low; the same audio through a different engine lands 0.84-0.90; a scraped copy of the same caption track lands 0.975+.",
+  "caveats": [
+    "⚠ lcsRatio compares the FIRST 2,000 words of each. A session that is an excerpt starting part way into a recording will score low even though it IS that recording — the containment column is reported to make that case visible, and the verdict says so explicitly rather than claiming \"not found\".",
+    "⚠ The 285 videos are one channel. A conference recording hosted elsewhere cannot match anything here, and a low best score means \"ask Charlie for that one link\", not \"the session does not exist\".",
+    "⚠ A confident wrong id is worse than no id: it sends a human to check a quote against the wrong recording. Nothing below B8's 0.84 band is reported as found."
+  ],
+  "sessions": [
+    {
+      "session": 1,
+      "label": "(unlabelled opening)",
+      "docx_paragraphs": [
+        0,
+        1131
+      ],
+      "words": 6998,
+      "runs_to": "50:00",
+      "verdict": "found",
+      "band": "same audio, different engine (0.84-0.90 band)",
+      "best_lcs": 0.9,
+      "metric_consistency": {
+        "containment": 0.548,
+        "implied_per_word_agreement": 0.887,
+        "lcs": 0.9,
+        "consistent": true,
+        "note": "containment ≈ per-word agreement ^ 5. Where implied_per_word_agreement ≈ lcs, the two independent metrics corroborate each other."
+      },
+      "duplicate_uploads": [],
+      "candidates": [
+        {
+          "video_id": "1xsdGfHlIeU",
+          "title": "\"British state has been WEAPONISED against British people\" | David Starkey Talks",
+          "published": "2026-08-22",
+          "duration_s": 3028,
+          "lcs": 0.9,
+          "containment": 0.548,
+          "watch_url": "https://www.youtube.com/watch?v=1xsdGfHlIeU"
+        },
+        {
+          "video_id": "G59FLLpz_bU",
+          "title": "Labour killed the Constitution; time for a Restoration: David Starkey",
+          "published": "2023-11-19",
+          "duration_s": 1335,
+          "lcs": 0.176,
+          "containment": 0.006,
+          "watch_url": "https://www.youtube.com/watch?v=G59FLLpz_bU"
+        },
+        {
+          "video_id": "HgHD5p4kNCA",
+          "title": "David Starkey: The Liberal International Order",
+          "published": "2023-09-11",
+          "duration_s": 968,
+          "lcs": 0.169,
+          "containment": 0.005,
+          "watch_url": "https://www.youtube.com/watch?v=HgHD5p4kNCA"
+        }
+      ],
+      "prefilter": {
+        "shortlisted": 30,
+        "of": 283,
+        "best_excluded_containment": 0.005,
+        "note": "The shortlist is by 5-gram containment; the SCORE is lcsRatio, B8's calibrated metric. best_excluded_containment is the highest-scoring candidate the prefilter dropped — if it approaches the shortlisted ones, the cutoff is too tight."
+      }
+    },
+    {
+      "session": 2,
+      "label": "Disraeli conference",
+      "docx_paragraphs": [
+        1131,
+        1993
+      ],
+      "words": 6767,
+      "runs_to": "46:17",
+      "verdict": "found",
+      "band": "scraped copy of the same caption track (>=0.975)",
+      "best_lcs": 0.999,
+      "metric_consistency": {
+        "containment": 1,
+        "implied_per_word_agreement": 1,
+        "lcs": 0.999,
+        "consistent": true,
+        "note": "containment ≈ per-word agreement ^ 5. Where implied_per_word_agreement ≈ lcs, the two independent metrics corroborate each other."
+      },
+      "duplicate_uploads": [],
+      "candidates": [
+        {
+          "video_id": "tl4DJ50RMuk",
+          "title": "\"How liberalism poisoned England\" | David Starkey Talks at Disraeli conference",
+          "published": "2026-07-25",
+          "duration_s": 2784,
+          "lcs": 0.999,
+          "containment": 1,
+          "watch_url": "https://www.youtube.com/watch?v=tl4DJ50RMuk"
+        },
+        {
+          "video_id": "mAnaIi6tUSU",
+          "title": "The Rise of Western Art & Culture by David Starkey",
+          "published": "2025-01-19",
+          "duration_s": 4856,
+          "lcs": 0.179,
+          "containment": 0.004,
+          "watch_url": "https://www.youtube.com/watch?v=mAnaIi6tUSU"
+        },
+        {
+          "video_id": "G59FLLpz_bU",
+          "title": "Labour killed the Constitution; time for a Restoration: David Starkey",
+          "published": "2023-11-19",
+          "duration_s": 1335,
+          "lcs": 0.178,
+          "containment": 0.004,
+          "watch_url": "https://www.youtube.com/watch?v=G59FLLpz_bU"
+        }
+      ],
+      "prefilter": {
+        "shortlisted": 30,
+        "of": 283,
+        "best_excluded_containment": 0.003,
+        "note": "The shortlist is by 5-gram containment; the SCORE is lcsRatio, B8's calibrated metric. best_excluded_containment is the highest-scoring candidate the prefilter dropped — if it approaches the shortlisted ones, the cutoff is too tight."
+      }
+    },
+    {
+      "session": 3,
+      "label": "With Stephen Barratt",
+      "docx_paragraphs": [
+        1993,
+        3003
+      ],
+      "words": 7372,
+      "runs_to": "42:36",
+      "verdict": "found",
+      "band": "scraped copy of the same caption track (>=0.975)",
+      "best_lcs": 0.999,
+      "metric_consistency": {
+        "containment": 1,
+        "implied_per_word_agreement": 1,
+        "lcs": 0.999,
+        "consistent": true,
+        "note": "containment ≈ per-word agreement ^ 5. Where implied_per_word_agreement ≈ lcs, the two independent metrics corroborate each other."
+      },
+      "duplicate_uploads": [],
+      "candidates": [
+        {
+          "video_id": "L820LrgK7Hg",
+          "title": "\"THIS is why Keir Starmer is so hated\" | David Starkey Talks... to Steven Barrett",
+          "published": "2026-06-27",
+          "duration_s": 2579,
+          "lcs": 0.999,
+          "containment": 1,
+          "watch_url": "https://www.youtube.com/watch?v=L820LrgK7Hg"
+        },
+        {
+          "video_id": "uMrHztCNmeE",
+          "title": "\"What is an Englishman?\" | Identity, belonging and The New Right | Carl Benjamin and David Starkey",
+          "published": "2026-02-08",
+          "duration_s": 4257,
+          "lcs": 0.158,
+          "containment": 0.002,
+          "watch_url": "https://www.youtube.com/watch?v=uMrHztCNmeE"
+        },
+        {
+          "video_id": "T3Nn-18BC7I",
+          "title": "\"Is this the end for Keir Starmer?\" | David Starkey Talks... to Benedict Spence",
+          "published": "2026-04-18",
+          "duration_s": 3247,
+          "lcs": 0.157,
+          "containment": 0.003,
+          "watch_url": "https://www.youtube.com/watch?v=T3Nn-18BC7I"
+        }
+      ],
+      "prefilter": {
+        "shortlisted": 30,
+        "of": 283,
+        "best_excluded_containment": 0.002,
+        "note": "The shortlist is by 5-gram containment; the SCORE is lcsRatio, B8's calibrated metric. best_excluded_containment is the highest-scoring candidate the prefilter dropped — if it approaches the shortlisted ones, the cutoff is too tight."
+      }
+    },
+    {
+      "session": 4,
+      "label": "With Danny Kruger",
+      "docx_paragraphs": [
+        3003,
+        3993
+      ],
+      "words": 7184,
+      "runs_to": "42:49",
+      "verdict": "found",
+      "band": "same audio, different engine (0.84-0.90 band)",
+      "best_lcs": 0.94,
+      "metric_consistency": {
+        "containment": 0.754,
+        "implied_per_word_agreement": 0.945,
+        "lcs": 0.94,
+        "consistent": true,
+        "note": "containment ≈ per-word agreement ^ 5. Where implied_per_word_agreement ≈ lcs, the two independent metrics corroborate each other."
+      },
+      "duplicate_uploads": [],
+      "candidates": [
+        {
+          "video_id": "vDFvOWh6bvM",
+          "title": "\"This is how Reform will SMASH the Blob\" | David Starkey Talks... to Danny Kruger",
+          "published": "2026-05-01",
+          "duration_s": 2593,
+          "lcs": 0.94,
+          "containment": 0.754,
+          "watch_url": "https://www.youtube.com/watch?v=vDFvOWh6bvM"
+        },
+        {
+          "video_id": "HgHD5p4kNCA",
+          "title": "David Starkey: The Liberal International Order",
+          "published": "2023-09-11",
+          "duration_s": 968,
+          "lcs": 0.169,
+          "containment": 0.003,
+          "watch_url": "https://www.youtube.com/watch?v=HgHD5p4kNCA"
+        },
+        {
+          "video_id": "IYGRgh0xLHQ",
+          "title": "\"Is King Charles turning his back on Christianity?\" | David Starkey Talks... to Bijan Omrani",
+          "published": "2026-07-04",
+          "duration_s": 2977,
+          "lcs": 0.166,
+          "containment": 0.002,
+          "watch_url": "https://www.youtube.com/watch?v=IYGRgh0xLHQ"
+        }
+      ],
+      "prefilter": {
+        "shortlisted": 30,
+        "of": 283,
+        "best_excluded_containment": 0.002,
+        "note": "The shortlist is by 5-gram containment; the SCORE is lcsRatio, B8's calibrated metric. best_excluded_containment is the highest-scoring candidate the prefilter dropped — if it approaches the shortlisted ones, the cutoff is too tight."
+      }
+    },
+    {
+      "session": 5,
+      "label": "Brexit Started a revolution",
+      "docx_paragraphs": [
+        3993,
+        4647
+      ],
+      "words": 5504,
+      "runs_to": "34:56",
+      "verdict": "found",
+      "band": "scraped copy of the same caption track (>=0.975)",
+      "best_lcs": 0.99,
+      "metric_consistency": {
+        "containment": 0.941,
+        "implied_per_word_agreement": 0.988,
+        "lcs": 0.99,
+        "consistent": true,
+        "note": "containment ≈ per-word agreement ^ 5. Where implied_per_word_agreement ≈ lcs, the two independent metrics corroborate each other."
+      },
+      "duplicate_uploads": [
+        {
+          "video_id": "dgZ4gyMQ2o8",
+          "title": "\"Brexit started a revolution - that's why they want to reverse it\" | David Starkey Talks",
+          "published": "2026-05-22",
+          "lcs_against_winner": 0.964,
+          "watch_url": "https://www.youtube.com/watch?v=dgZ4gyMQ2o8"
+        }
+      ],
+      "candidates": [
+        {
+          "video_id": "VaPKzYLcZ7Y",
+          "title": "13 Dr David Starkey CBE - The Historical Importance of Brexit at 10 Years",
+          "published": "2026-05-20",
+          "duration_s": 2104,
+          "lcs": 0.99,
+          "containment": 0.941,
+          "watch_url": "https://www.youtube.com/watch?v=VaPKzYLcZ7Y"
+        },
+        {
+          "video_id": "dgZ4gyMQ2o8",
+          "title": "\"Brexit started a revolution - that's why they want to reverse it\" | David Starkey Talks",
+          "published": "2026-05-22",
+          "duration_s": 2126,
+          "lcs": 0.959,
+          "containment": 0.821,
+          "watch_url": "https://www.youtube.com/watch?v=dgZ4gyMQ2o8"
+        },
+        {
+          "video_id": "HgHD5p4kNCA",
+          "title": "David Starkey: The Liberal International Order",
+          "published": "2023-09-11",
+          "duration_s": 968,
+          "lcs": 0.166,
+          "containment": 0.003,
+          "watch_url": "https://www.youtube.com/watch?v=HgHD5p4kNCA"
+        }
+      ],
+      "prefilter": {
+        "shortlisted": 30,
+        "of": 283,
+        "best_excluded_containment": 0.002,
+        "note": "The shortlist is by 5-gram containment; the SCORE is lcsRatio, B8's calibrated metric. best_excluded_containment is the highest-scoring candidate the prefilter dropped — if it approaches the shortlisted ones, the cutoff is too tight."
+      }
+    }
+  ]
+}
