@@ -54,9 +54,23 @@ FLOOR — and the floor direction is safe for this decision.
 ⚠ **The stopword worry that started all this did NOT apply** — all 22 B9 terms lex non-empty, with a
 `we should` control proving the check can see the empty case. **Every CRAG zero holds on every
 reading**; a zero surviving the LOOSER query is the stronger result.
+⚠⚠ **(3) A PHRASE MATCH IS ADJACENT *STEMS*, NOT LITERAL WORDS — and here that SAVED a finding the
+peer tried to delete.** They challenged `equality act` = 1 with a decisive-looking test (every cue
+containing the bare word "equality": exactly one, the DEI phrase in the lecture). **The passage
+actually says *"the human rights act, the equalities act"*** — Starkey names the measure as the
+**Equalities** Act. My 1 stands; their 0 is wrong, and their test could not have found it because
+"equality" cannot see "equalities". `phraseto_tsquery('equality act')` is `'equal' <-> 'act'`, which
+those stems satisfy.
+⚠⚠ **CONSEQUENCE FOR QUOTE VERIFICATION: `phrase_match: true` does NOT license quoting the term's
+own wording.** Someone could write "the Equality Act" over audio saying "the Equalities Act". Every
+hit now carries **`literal_match`** beside `phrase_match` — 77 phrase matches, **11 of them not
+literal**.
+⚠ **And the bare term `equality` is not measuring equality**: stem `equal` covers "equally". Of its
+5 moments, **three are the adverb**, one is DEI, one is the Equalities Act. A term chosen for a
+subject was counting a function word.
 ▶ B9 now prints corpus AND, corpus phrase and per-video distinct moments, flags any term where they
-disagree, and stamps each exported hit with `phrase_match`: **77 phrase, 10 co-occurrence only — do
-not quote the 10 as instances of the phrase.**
+disagree, and stamps each exported hit with `phrase_match` and `literal_match`: **77 phrase, 10
+co-occurrence only — do not quote the 10 as instances of the phrase.**
 ⚠⚠ **`ratification` is zero CORPUS-WIDE and that is vocabulary, not subject** — `ratify`/`ratified`
 appear 6 times each. **Every zero is now re-asked with ILIKE against raw text before it can be
 published as a gap**; an index miss and a real absence look identical in a table.

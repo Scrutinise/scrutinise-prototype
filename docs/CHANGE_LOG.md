@@ -404,6 +404,36 @@ Net effect on the eight-video row: `constitution` 26 → 17, `restoration` 12 �
 10 → 6, `constitutional reform` 9 → 0, `human rights act` 3 → 1, `equality act` 2 → 1. **The CRAG
 zeros are untouched on every reading.**
 
+### ⚠⚠ CORRECTION 3 — A PHRASE MATCH IS ADJACENT *STEMS*, NOT THE LITERAL WORDS, AND HERE THAT SAVED A REAL FINDING
+
+The second CC session then challenged `equality act` = 1, with what looked like a decisive test:
+every cue in the eight videos containing the bare word "equality" — exactly one, and it is
+*"of diversity, equality, and inclusion"*, not the statute. Their conclusion was that my row was a
+conflation with `human rights act` directly above it.
+
+**It is not. The passage says: *"the human rights act, the equalities act"*.** Starkey names the
+measure colloquially, as the **Equalities** Act, in the same breath as the HRA. The hit is real, my
+1 stands, and their 0 is wrong.
+
+⚠ **Their check could not have found it.** `ILIKE '%equality act%'` returns 0 in the eight, and a
+search for the bare word "equality" cannot see "equalities". A test that only ever returns the
+answer you expect for the wrong reason is worse than no test — it is why the string was quoted here
+rather than described.
+
+⚠⚠ **The mechanism is a third layer of the same problem and it matters for the report directly:
+`phraseto_tsquery('english','equality act')` is `'equal' <-> 'act'`, ADJACENT STEMS, not the literal
+words.** "Equalities Act" stems to exactly that. Here it is a gain — it found the measure named the
+way a speaker actually names it, which a literal search misses. But **`phrase_match: true` does not
+license quoting the term's own wording**, and in a report where every quote is verified before
+print, someone could otherwise write "the Equality Act" over audio that says "the Equalities Act".
+Every hit in `starkey_hits.json` now carries `literal_match` beside `phrase_match`: **77 phrase
+matches, of which 11 do not contain the term's literal wording.**
+
+⚠ **And it means the bare term `equality` is not measuring equality.** Its stem `equal` covers
+"equally". Of its 5 moments across the eight videos, **three are the adverb** (`2Khgz5sMMBU` 17:51
+"but I equally", `Mwf_SwRa2F0` 5:55 and 21:48), one is the DEI phrase in the lecture, and one is the
+Equalities Act reference. A term chosen to measure a subject was counting a function word.
+
 ⚠⚠ **`ratification` returns zero CORPUS-WIDE, and that is a fact about vocabulary, not about the
 subject** — `ratify` and `ratified` each appear 6 times. Read off the table alone, "0 everywhere"
 invites the conclusion that Starkey never touches treaty ratification.

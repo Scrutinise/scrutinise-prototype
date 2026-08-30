@@ -95,7 +95,12 @@ async function main() {
   console.log('  2. A video with two transcripts stores every minute twice, so one thing said once')
   console.log('     matches twice. Parts 1-3 have two, the other five have one — the three already')
   console.log('     transcribed would read as twice as dense as the candidates for the next credit.')
-  console.log('     Overlapping hits are merged into one moment.')
+  console.log('     A cell is the count in whichever single transcript has the most (NOT a merge of')
+  console.log('     overlapping ranges, which chains across the two engines\' boundaries).')
+  console.log('')
+  console.log('⚠ A phrase match is adjacent STEMS, not literal words: "the equalities act" matches')
+  console.log('  the term "equality act". Usually a gain — it finds a measure named colloquially —')
+  console.log('  but check literal_match in starkey_hits.json before quoting a term\'s own wording.')
   console.log('')
   console.log('"corpus" columns are the whole 285-video corpus, so a term matching everywhere is')
   console.log('visible as uninformative rather than significant. (n) marks a two-transcript video.\n')
@@ -168,7 +173,8 @@ async function main() {
       const { rows } = await p.query(`
         select p.video_id, p.source, p.start_s::float start_s, p.end_s::float end_s, p.text,
                ts_rank(p.tsv, plainto_tsquery('english',$1)) rank,
-               (p.tsv @@ phraseto_tsquery('english',$1)) phrase_match
+               (p.tsv @@ phraseto_tsquery('english',$1)) phrase_match,
+               (p.text ilike '%' || $1 || '%') literal_match
         from starkey.passage p
         where p.tsv @@ plainto_tsquery('english',$1) and p.video_id = any($2::text[])
         order by rank desc`, [term, VIDEOS])
@@ -181,6 +187,12 @@ async function main() {
           // A multi-word term with phrase_match false is co-occurrence, and
           // quoting it as an instance of the phrase would be wrong.
           phrase_match: r.phrase_match === true,
+          // phraseto_tsquery matches adjacent STEMS, not the literal words.
+          // "the equalities act" matches the term "equality act" because both
+          // stem to equal <-> act. That is usually a GAIN -- it finds the
+          // measure named colloquially -- but it means phrase_match true does
+          // not license quoting the term's own wording. literal_match does.
+          literal_match: r.literal_match === true,
           watch_url: `https://www.youtube.com/watch?v=${r.video_id}&t=${Math.floor(r.start_s)}s`,
         })
       }
@@ -206,8 +218,11 @@ async function main() {
   for (const h of written) bySource.set(h.source as string, (bySource.get(h.source as string) ?? 0) + 1)
   console.log('by source: ' + [...bySource].map(([k, v]) => `${k}=${v}`).join('  '))
   const nonPhrase = written.filter(h => h.phrase_match === false).length
+  const nonLiteral = written.filter(h => h.phrase_match === true && h.literal_match === false).length
   console.log(`phrase matches ${written.length - nonPhrase}, co-occurrence only ${nonPhrase}`
     + ' — the second group must not be quoted as instances of the phrase')
+  console.log(`of the phrase matches, ${nonLiteral} do not contain the term's literal wording`
+    + ' — phraseto_tsquery matches adjacent STEMS (equalities act matches "equality act")')
 
   // ---------- Step 3.2 ----------
   console.log('\n--- STEP 3.2: what the second engine buys, per video ---')
