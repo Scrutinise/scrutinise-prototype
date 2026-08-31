@@ -31,6 +31,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-panel'
+import CollapsedSection from './CollapsedSection'
 
 export default function ReportAdditions({
   ideaId, refreshKey, onChanged,
@@ -89,18 +90,27 @@ export default function ReportAdditions({
   const total = sections.reduce((n, h) => n + h.entries.length, 0)
 
   return (
-    <div className="rounded-2xl border border-zinc-200 mt-4">
-      <div className="px-4 py-3 border-b border-zinc-100">
-        <h3 className="text-sm font-semibold text-zinc-900">What you have put in the report</h3>
-        {/* ⚠ THE EMPTY STATE IS AN INSTRUCTION, NOT AN APOLOGY. Nothing is here because
-            nothing arrives on its own, and that is the design — so the sentence says how to
-            put something here rather than that something is missing. */}
-        <p className="text-xs text-zinc-500 mt-0.5">
-          {total === 0
-            ? 'Nothing yet. Nothing crosses from THE RESEARCH on its own — open an item there and press “Add to report”, and it appears here under its own heading.'
-            : `${total} item${total === 1 ? '' : 's'}, from THE RESEARCH. These are printed in the report itself; everything you left there goes into the evidence annex.`}
+    // ══ ADDENDUM §A2 — CLOSED BY DEFAULT ═══════════════════════════════════════
+    //
+    // ⚠ THE COUNT AND THE HINT ARE ON THE CLOSED HEADER, which is what makes opening it a
+    // decision rather than a search. A user with nothing in their report can read that fact
+    // without opening anything; a user with six items can see there are six.
+    <CollapsedSection
+      title="What you have put in the report"
+      count={total}
+      hint={total === 0
+        ? 'Nothing yet — open an item in THE RESEARCH and press “Add to report”.'
+        : 'Printed in the report itself; everything you left in THE RESEARCH goes into the evidence annex.'}
+    >
+      {total === 0 && (
+        // ⚠ THE EMPTY STATE IS AN INSTRUCTION, NOT AN APOLOGY. Nothing is here because nothing
+        // arrives on its own, and that is the design — so the sentence says how to put something
+        // here rather than that something is missing.
+        <p className="px-4 py-3 text-xs text-zinc-500">
+          Nothing crosses from THE RESEARCH on its own — open an item there and press
+          “Add to report”, and it appears here under its own heading.
         </p>
-      </div>
+      )}
 
       {error && <p className="px-4 py-2 text-xs text-amber-800">{error}</p>}
 
@@ -136,6 +146,6 @@ export default function ReportAdditions({
           </ul>
         </section>
       ))}
-    </div>
+    </CollapsedSection>
   )
 }

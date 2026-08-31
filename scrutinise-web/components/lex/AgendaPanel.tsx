@@ -24,6 +24,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useState } from 'react'
+import CollapsedSection from './CollapsedSection'
 
 interface Contradiction {
   id: string; fieldKey: string | null
@@ -195,22 +196,30 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
   const hasJudgements = a.decisions.length > 0 || a.contradictions.length > 0
   if (judgements ? !hasJudgements : !hasWork) return null
 
-  return (
-    <div className="border border-zinc-200 rounded-2xl overflow-hidden mt-4">
-      <div className="px-4 py-3">
-        {/* ══ 25-N §3d — THE PANEL TEXT, VERBATIM ═════════════════════════════
-            §3d gives this its exact wording. It replaces "Deciding, reading and answering —
-            in the order that most changes the proposal", which described the ORDERING rather
-            than saying what the panel is for. */}
-        <h3 className="text-sm font-semibold text-zinc-900">
-          {judgements ? 'Decisions and changes of mind' : 'What to do next'}
-        </h3>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          {judgements
-            ? `From build ${a.buildVersion}. The choices I made for you, and the places the research moved me. Take each one or change it — both are recorded.`
-            : 'This panel lists the decisions and actions you need to take to build the draft strategy I’ve prepared for you into your formal proposal.'}
+  // ══ ADDENDUM §A2 — THE MIDDLE COLUMN'S COPY IS CLOSED BY DEFAULT ═══════════
+  //
+  // ⚠ ONLY THE `work` VIEW. The `judgements` view is rendered INSIDE the research panel's
+  // contents list, which is already one-item-at-a-time — wrapping it would put a collapse
+  // inside a collapse and give the user two controls for one act.
+  const body = (
+    <>
+      {!judgements && (
+        // ⚠ 25-N §3d's WORDING SURVIVES, MOVED INSIDE. It is the sentence that says what this
+        // panel is FOR, which a user needs on opening it rather than on the closed header.
+        <p className="px-4 pt-3 text-xs text-zinc-500">
+          This panel lists the decisions and actions you need to take to build the draft strategy
+          I’ve prepared for you into your formal proposal.
         </p>
-      </div>
+      )}
+      {judgements && (
+        <div className="px-4 py-3">
+          <h3 className="text-sm font-semibold text-zinc-900">Decisions and changes of mind</h3>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            From build {a.buildVersion}. The choices I made for you, and the places the research
+            moved me. Take each one or change it — both are recorded.
+          </p>
+        </div>
+      )}
 
       {error && <p className="px-4 pb-2 text-xs text-amber-700">{error}</p>}
 
@@ -398,6 +407,27 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
           {a.framing}
         </p>
       )}
-    </div>
+    </>
+  )
+
+  // ⚠ THE RESEARCH PANEL'S COPY IS NOT WRAPPED — see the note on `body`.
+  if (judgements) {
+    return <div className="border border-zinc-200 rounded-2xl overflow-hidden mt-4">{body}</div>
+  }
+
+  // §A2 — closed by default in DRAFT STRATEGY, with the count that says why to open it.
+  const waiting = a.decisions.filter((d) => !d.resolved).length
+    + a.challenges.filter((c) => c.status === 'OPEN').length
+    + a.gaps.filter((g) => g.task === 'only-you').length
+  return (
+    <CollapsedSection
+      title="What to do next"
+      count={waiting}
+      hint={waiting === 0
+        ? 'Nothing is waiting on you here.'
+        : 'The decisions and actions that turn this draft into a formal proposal.'}
+    >
+      {body}
+    </CollapsedSection>
   )
 }
