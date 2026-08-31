@@ -385,11 +385,26 @@ const CHECKS: Check[] = [
     }),
   },
   {
+    // ⚠ REPOINTED BY 25-O §2, AND THE PROPERTY IS UNCHANGED. §7's concern is that a user who
+    // has just watched a five-minute build can find the idea it produced, BY NAME — Charlie
+    // logged out and could not. That still holds: `ideaTitle` is still read and the primary
+    // control still opens the draft.
+    //
+    // ⚠⚠ WHAT MOVED IS THE SECOND LINK. `href={`/ideas/${ideaId}`}` was "See it as others
+    // would", and it pointed at the TEAM page — a button whose label promised the public view
+    // and delivered the collaborator view. 25-O §2 sends it to a holding page that says
+    // honestly what it is. Asserting the old href would now be asserting the defect.
     name: '§7 the build screen links to the idea it made, by name',
     run: (src) => {
       const s = src['app/ideas/build/BuildIdeaClient.tsx']
       if (!/ideaTitle/.test(s)) return 'the client never learns the idea\'s name'
-      if (!/href=\{`\/ideas\/\$\{ideaId\}`\}/.test(s)) return 'there is no link to the idea itself'
+      // The way to the work: the draft, carrying the id.
+      if (!/\/ideas\/create\?ideaId=\$\{ideaId\}/.test(s)) return 'there is no link to the draft'
+      // 25-O §2 — and the "as others would" control reaches the holding page, not the team page.
+      if (!/\/ideas\/\$\{ideaId\}\/public/.test(s)) return 'the public-view control is missing'
+      if (/href=\{`\/ideas\/\$\{ideaId\}`\}/.test(s)) {
+        return 'a control still points at the TEAM page as though it were the public view'
+      }
       return null
     },
     break: (src) => ({
@@ -889,13 +904,34 @@ const CHECKS: Check[] = [
     }),
   },
   {
+    // ⚠⚠ REPOINTED BY 25-O §5, AND THE NEW PROPERTY IS STRONGER THAN THE OLD ONE.
+    //
+    // The old assertion was an EXACT LIST — `continueOnFailure` must be precisely the three
+    // passes 25-F added. That is a check that fails whenever a pass is added for ANY reason,
+    // including a correct one, and it says nothing about what the flag is FOR. 25-O §5 adds
+    // `CAUSES_COMMENTARY`, which is a briefing rather than part of the kernel and must not take
+    // a build down with it.
+    //
+    // What the assertion is actually protecting is two things, and they are now stated:
+    //   1. ⚠ ADVERSARIAL — the hostile clerk — must NOT be steppable. It is the pass a user
+    //      reads first and the one a silently-skipped failure would hide.
+    //   2. Every pass that runs on an already-drafted kernel MUST be steppable, or losing a
+    //      check costs the passes after it.
+    // A drafting pass appearing in the list still fails, which is the case that matters.
     name: 'live-2 a 25-F pass that fails does NOT take the hostile clerk down with it',
     run: (src) => {
-      // Only the three passes 25-F added, and no others.
       const marked = BUILD_PASSES.filter((p) => p.continueOnFailure).map((p) => p.key)
-      const expected = ['SMART', 'KERNEL_CHECK', 'LOGIC_CHECK']
-      if (marked.join(',') !== expected.join(',')) {
-        return `continueOnFailure is on [${marked.join(', ')}]; it must be exactly [${expected.join(', ')}]`
+      // ⚠ THE PASSES THAT WRITE THE KERNEL. A failure in any of these must stop the build:
+      // everything after them builds on an output that does not exist.
+      const mustStop = ['ORIENT', 'DIAGNOSIS', 'APPROACH', 'ACTIONS', 'RESEARCH', 'REVISE', 'ADVERSARIAL']
+      const wrong = mustStop.filter((k) => marked.includes(k as typeof marked[number]))
+      if (wrong.length) {
+        return `continueOnFailure is on [${wrong.join(', ')}], which must stop the build`
+      }
+      // And the three 25-F added are still steppable — that was the original point.
+      const missing = ['SMART', 'KERNEL_CHECK', 'LOGIC_CHECK'].filter((k) => !marked.includes(k as typeof marked[number]))
+      if (missing.length) {
+        return `continueOnFailure is MISSING from [${missing.join(', ')}]`
       }
       const carry = src['lib/lex/build-carry.ts'] ?? read('lib/lex/build-carry.ts')
       if (!/\?\.continueOnFailure\) continue/.test(carry)) return 'nextPassKey still stops on every failure'

@@ -82,6 +82,7 @@
     "check:lex-25l": "tsx scripts/check-lex-25l.ts",
     "check:lex-25m": "tsx scripts/check-lex-25m.ts",
     "check:lex-25n": "tsx scripts/check-lex-25n.ts",
+    "check:lex-25o": "tsx scripts/check-lex-25o.ts",
     "check:scripts": "tsc --noEmit -p scripts/tsconfig.json",
     "check:statutory": "tsx scripts/check-statutory.ts",
     "verify:statutory-parity": "tsx --env-file=.env scripts/verify-statutory-graph-parity.ts",

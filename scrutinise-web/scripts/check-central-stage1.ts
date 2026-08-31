@@ -2502,6 +2502,10 @@ async function partH() {
       // seeded "My original idea" note cannot be written twice while a user may have many notes.
       // The obvious `@@unique` is wrong in the direction that breaks the feature — see §21.
       { name: 'IdeaNote_seeded_source_key', predicate: "'USER'" },
+      // ⚠ 25-O §4 — the tenth. Partial on `deletedAt IS NULL AND "archivedAt" IS NULL`: archiving
+      // is an ADMIN act on somebody else's work and is a separate column from the owner's own
+      // delete, so every list filters both.
+      { name: 'Idea_visible_idx', predicate: 'archivedAt' },
     ]
     const indexes = await prisma.$queryRaw<{ indexname: string; indexdef: string }[]>`
       SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'`
@@ -2523,7 +2527,7 @@ async function partH() {
     const centralTables = ['Community', 'Question', 'Answer', 'BulletinPost', 'Resource',
       'ActivityClaim', 'CommunityJoinRequest', 'CommunitySettings', 'ResourceVote', 'PointsEvent',
       // 25-N — the Lex tables are on the same register, for the same reason.
-      'IdeaNote']
+      'IdeaNote', 'Idea']
     const unregistered = indexes
       .filter((i) => i.indexdef.includes('WHERE'))
       .filter((i) => centralTables.some((t) => i.indexdef.includes(`"${t}"`)))

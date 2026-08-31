@@ -918,13 +918,20 @@ const CHECKS: Check[] = [
         if (!def) return `${key} is not configured`
         if (!def.label?.trim() || !def.detail?.trim()) return `${key} has no label or detail for the progress display`
       }
-      // ⚠ 25-F ADDED THREE (SMART, KERNEL_CHECK, LOGIC_CHECK), so this reads 10.
+      // ⚠ 25-F ADDED THREE (SMART, KERNEL_CHECK, LOGIC_CHECK) → 10. 25-O §5 ADDED ONE
+      // (CAUSES_COMMENTARY) → 11.
       //
-      // The literal is kept rather than removed. Its job is not to know the number: it is
-      // to make a pass appearing or disappearing a DELIBERATE act, because `readPassLog`
-      // reconciles a stored log against this array and a pass added by accident changes
-      // what every historic build reports about itself.
-      return BUILD_PASSES.length === 10 ? null : `${BUILD_PASSES.length} passes configured, expected 10`
+      // The literal is kept and BUMPED rather than removed, which is the whole point of it. Its
+      // job is not to know the number: it is to make a pass appearing or disappearing a
+      // DELIBERATE act, because `readPassLog` reconciles a stored log against this array and a
+      // pass added by accident changes what every historic build reports about itself.
+      //
+      // ⚠⚠ AND THE COST OF THE ELEVENTH IS REAL, WHICH IS WHY THE BUMP IS NOT SILENT. Build v7
+      // hit the 900s whole-build ceiling at 922s with TEN passes (25-N §1a). An eleventh makes
+      // that likelier. `CAUSES_COMMENTARY` does no retrieval and is `continueOnFailure`, and
+      // 25-N's resume is what makes a ceiling survivable — but somebody adding a twelfth should
+      // read this line first.
+      return BUILD_PASSES.length === 11 ? null : `${BUILD_PASSES.length} passes configured, expected 11`
     },
   },
   {
