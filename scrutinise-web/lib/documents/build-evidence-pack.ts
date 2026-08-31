@@ -35,7 +35,7 @@
 
 import { createHash } from 'crypto'
 import type { Block, DocumentModel, Run, SourceRef } from './model'
-import { QUESTION_HEADINGS, type HeadingKey } from '@/lib/lex/question-headings'
+import { QUESTION_HEADINGS, liveHeading, type HeadingKey } from '@/lib/lex/question-headings'
 import {
   assertRenderableSnapshot,
   snapshotHash,
@@ -100,7 +100,17 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
 
   const byHeading = new Map<string, SnapshotEvidence[]>()
   for (const e of snapshot.evidence ?? []) {
-    const key = e.headingKey && QUESTION_HEADINGS.some((h) => h.key === e.headingKey) ? e.headingKey : NOT_FILED
+    // ⚠⚠ 25-N §4 — `liveHeading` APPLIES THE RETIREMENT REDIRECT, AND THIS IS THE THIRD
+    // READER. `question-headings.ts` says every reader must go through it, because "a redirect
+    // applied in two of three places puts the same finding under two headings" — and this file
+    // was the third place, testing `QUESTION_HEADINGS.some(...)` directly. `AGAINST` is no
+    // longer in that array, so every row the adversarial pass has ever written would have
+    // dropped into "not filed under a question" IN THE EVIDENCE PACK: present, unlabelled, and
+    // described to the reader as material whose question was never recorded.
+    //
+    // ⚠ FOUND BY `check:lex-25d` §5a, not by reading. The panel was right and the document was
+    // wrong, which is exactly the split the redirect note warns about.
+    const key = liveHeading(e.headingKey) ?? NOT_FILED
     const list = byHeading.get(key) ?? []
     list.push(e)
     byHeading.set(key, list)

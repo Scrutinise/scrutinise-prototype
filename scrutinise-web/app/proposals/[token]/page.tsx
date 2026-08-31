@@ -32,7 +32,7 @@ import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import { resolveSharedProposal } from '@/lib/documents/proposal-version'
 import { headlineCost } from '@/lib/documents/build-proposal'
-import { QUESTION_HEADINGS } from '@/lib/lex/question-headings'
+import { QUESTION_HEADINGS, liveHeading } from '@/lib/lex/question-headings'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -116,12 +116,14 @@ export default async function SharedProposalPage({ params }: Props) {
   const outstanding = s.outstanding ?? null
 
   // Findings grouped by the question they answer (§25.5), with the corpus links live.
+  // ⚠⚠ 25-N §4 — THROUGH `liveHeading`, LIKE EVERY OTHER READER. Comparing the raw stored
+  // key put every `AGAINST` row — the whole adversarial output — into `unfiled`, where the
+  // PUBLIC proposal page describes them to a reader as findings whose question was never
+  // recorded. That is a false statement about our own work, on the outward-facing surface.
   const byHeading = QUESTION_HEADINGS
-    .map((h) => ({ ...h, items: (s.evidence ?? []).filter((e) => e.headingKey === h.key) }))
+    .map((h) => ({ ...h, items: (s.evidence ?? []).filter((e) => liveHeading(e.headingKey) === h.key) }))
     .filter((h) => h.items.length > 0)
-  const unfiled = (s.evidence ?? []).filter(
-    (e) => !e.headingKey || !QUESTION_HEADINGS.some((h) => h.key === e.headingKey),
-  )
+  const unfiled = (s.evidence ?? []).filter((e) => !liveHeading(e.headingKey))
 
   const causes = s.causes ?? []
   const actions = s.actions ?? []

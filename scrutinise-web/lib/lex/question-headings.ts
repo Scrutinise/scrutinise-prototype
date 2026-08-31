@@ -55,6 +55,7 @@ export type HeadingKey =
   | 'AGAINST'
   | 'HOW_HARD'
   | 'KEY_SOURCES'
+  | 'COST_DURATION'
   | 'YOUR_MATERIAL'
 
 export interface QuestionHeading {
@@ -148,11 +149,6 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
     lookingFor: 'whether this is reserved or devolved, and what follows for the vehicle',
   },
   {
-    key: 'AGAINST',
-    heading: 'The strongest case against',
-    lookingFor: 'the objection that stopped a comparable measure, in its strongest form',
-  },
-  {
     // ══ 25-L §3c — THE SMART PASS'S OUTPUT GETS A HOME ══════════════════
     //
     // ⚠⚠ IT WAS FILED UNDER `AGAINST`, WHICH IS WHY CHARLIE COULD NOT FIND IT. "How hard
@@ -174,6 +170,30 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
       + 'succeed, and what is most likely to go wrong',
   },
   {
+    // ══ 25-N §4 — COST AND DURATION, WHICH WAS MISSING ENTIRELY ════════════════
+    //
+    // ⚠⚠ THE PLATFORM HAS ALWAYS COSTED THINGS AND NEVER FILED THE ANSWER ANYWHERE THE USER
+    // LOOKS. `CostLine` rows hang off the actions in the middle column and the proposal
+    // document prints "Cost against the cost of the problem" — but the research panel, which
+    // is where a user goes to ask "what would this cost and how long would it take", had no
+    // heading for it at all. §4: *"Cost and duration is missing entirely. It belongs in this
+    // contents list."*
+    //
+    // ⚠ IT SITS DIRECTLY AFTER `HOW_HARD` BECAUSE THEY ARE THE SAME QUESTION SPLIT IN TWO —
+    // what stands in the way, and what it would take. §4's own order puts HOW_HARD third,
+    // above the divider, with the money beside it.
+    //
+    // ⚠ AND ITS CAVEAT IS PART OF THE HEADING, NOT A FOOTNOTE. §4 is explicit that this is a
+    // *"purely financial view excluding human costs and benefits"*, and a costing that does
+    // not say so is a costing that will be quoted as though it were the whole answer.
+    key: 'COST_DURATION',
+    heading: 'Cost and duration',
+    lookingFor:
+      'what implementing this would cost, over what period, what it would save or return, and '
+      + 'the assumptions each figure rests on — a purely financial view, which leaves out the '
+      + 'human costs and benefits entirely',
+  },
+  {
     // 25-L §3b — "Key sources". The critique is the only step that has read everything at
     // once, so its ordering of what to read first is the one worth showing; the
     // deterministic ranker in `build-highlights.ts` handles the rest.
@@ -188,12 +208,80 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
   },
 ]
 
-export const HEADING_ORDER: HeadingKey[] = QUESTION_HEADINGS.map((h) => h.key)
+/**
+ * ══ 25-N §4 — "THE STRONGEST CASE AGAINST" IS DELETED, AND ITS ROWS ARE NOT ═════
+ *
+ * §4: *"Delete 'The strongest case against'. Neither example under it was a case against; the
+ * good material belongs in Challenges or Who has argued about this."*
+ *
+ * ⚠⚠ THE HEADING GOES; THE KEY STAYS IN THE TYPE. `EvidenceItem.headingKey` holds the string
+ * `'AGAINST'` on every row the adversarial pass has ever written, and `heading-map.ts`'s
+ * first rule is that the stored tag always wins. Removing the key from the union would make
+ * `isHeadingKey('AGAINST')` false, `resolveHeading` return null, and every one of those rows
+ * would silently become "not filed under a question" — the material §4 is trying to keep,
+ * deleted by the change meant to relocate it.
+ *
+ * ⚠ SO IT IS A REDIRECT, NOT A DELETION. `AGAINST` resolves to `ARGUED` — §4's own second
+ * destination, and the one that is a panel heading (Challenges is a different mechanism
+ * entirely: `agenda.challenges`, rendered in the middle column, which §0 says must not be
+ * disturbed). Reading applies the redirect, so nothing needs migrating for the panel to be
+ * right; `prisma/lex_25n_backfill_against.sql` repoints the stored rows as well, so the two
+ * cannot drift once it is run.
+ *
+ * ⚠ AND `RETIRED_HEADINGS` IS EXPORTED so a check can assert the pair of properties that
+ * matter: a retired key never appears in `HEADING_ORDER`, and every retired key has a
+ * destination in `HEADING_REDIRECTS`. A key retired without a destination is a silent hole.
+ */
+export const HEADING_REDIRECTS: Partial<Record<string, HeadingKey>> = {
+  AGAINST: 'ARGUED',
+}
+
+export const RETIRED_HEADINGS: string[] = Object.keys(HEADING_REDIRECTS)
+
+/**
+ * ⚠ 25-N §4 — THE ORDER IS CHARLIE'S, AND IT IS NOT THE ORDER OF `QUESTION_HEADINGS`.
+ *
+ * §4 states it exactly: **Decisions · Outputs · How hard will this be to achieve? · divider ·
+ * Inputs · everything else · anything "not asked of this draft" at the bottom.** Decisions,
+ * Outputs and the two Inputs items are not question headings — they are special items the
+ * panel adds — so what this array holds is the heading half: `HOW_HARD` first, above the
+ * divider, then everything else in the settled-to-contested order 25-D established.
+ *
+ * ⚠ COST_DURATION RIDES WITH HOW_HARD rather than sinking into "everything else". They are
+ * the two halves of "can this actually be done", and §4 puts that question above the fold.
+ */
+const ABOVE_THE_DIVIDER: HeadingKey[] = ['HOW_HARD', 'COST_DURATION']
+
+export const HEADING_ORDER: HeadingKey[] = [
+  ...ABOVE_THE_DIVIDER,
+  ...QUESTION_HEADINGS.map((h) => h.key).filter((k) => !ABOVE_THE_DIVIDER.includes(k)),
+]
+
+/** Which headings sit above §4's divider — the panel draws the rule after these. */
+export const HEADINGS_ABOVE_DIVIDER: HeadingKey[] = ABOVE_THE_DIVIDER
 
 const BY_KEY = new Map(QUESTION_HEADINGS.map((h) => [h.key, h]))
 
 export function headingFor(key: string | null | undefined): QuestionHeading | undefined {
-  return key ? BY_KEY.get(key as HeadingKey) : undefined
+  if (!key) return undefined
+  // 25-N §4 — a retired key resolves to its destination, so a stored `AGAINST` row reads as
+  // "Who has argued about this" rather than as an unknown heading.
+  const live = HEADING_REDIRECTS[key] ?? key
+  return BY_KEY.get(live as HeadingKey)
+}
+
+/**
+ * 25-N §4 — the live heading a stored key means. Identity for a live key, the destination for
+ * a retired one, null for something we have never heard of.
+ *
+ * ⚠ EVERY READER GOES THROUGH THIS. `resolveHeading`, the panel builder and the document
+ * stack each used to compare against the raw string; a redirect applied in two of three places
+ * is a redirect that puts the same finding under two headings.
+ */
+export function liveHeading(key: string | null | undefined): HeadingKey | null {
+  if (!key) return null
+  const live = HEADING_REDIRECTS[key] ?? key
+  return BY_KEY.has(live as HeadingKey) ? (live as HeadingKey) : null
 }
 
 /**
@@ -203,7 +291,10 @@ export function headingFor(key: string | null | undefined): QuestionHeading | un
  * the only way past this function is to actually be a heading key.
  */
 export function isHeadingKey(key: unknown): key is HeadingKey {
-  return typeof key === 'string' && BY_KEY.has(key as HeadingKey)
+  if (typeof key !== 'string') return false
+  // ⚠ 25-N §4 — A RETIRED KEY IS STILL A VALID STORED KEY. Rejecting `AGAINST` here would
+  // make `resolveHeading` return null for every row the adversarial pass has ever written.
+  return BY_KEY.has(key as HeadingKey) || key in HEADING_REDIRECTS
 }
 
 /**
@@ -237,9 +328,23 @@ export type EmptyReason =
  * heading cannot both be declared unbuildable AND carry findings, because that combination
  * would tell the user their evidence does not exist while showing it to them.
  */
-export const HEADINGS_WITH_NO_PRODUCER: HeadingKey[] = ['POSITIONS']
+export const HEADINGS_WITH_NO_PRODUCER: HeadingKey[] = ['POSITIONS', 'COST_DURATION']
 
 export const NO_PRODUCER_NOTE: Record<string, string> = {
+  // ══ 25-N §4 — THE COSTING HEADING EXISTS BEFORE THE COSTING PASS DOES ═══════════
+  //
+  // ⚠ AND THAT IS THE POINT, NOT A SHORTCUT. §4 says cost and duration *"is missing entirely"*
+  // — the user had nowhere to look and no statement that we could not answer. A heading that
+  // says "we cannot do this yet, and here is what is on the row instead" is strictly better
+  // than silence: it tells them the question is a real one and that we know we owe them an
+  // answer. §4's caveat is in the sentence because a costing quoted without it is a costing
+  // that will be read as the whole picture.
+  COST_DURATION:
+    'No pass costs this yet — nothing in the build works out what implementing your proposal '
+    + 'would cost, over what period, or what it would return. What figures exist are the cost '
+    + 'lines you and Lex have put on individual actions, in DRAFT STRATEGY, and each carries its '
+    + 'own assumptions. Read them as a purely financial view: they leave out the human costs and '
+    + 'benefits entirely, and where the kernel is still unsettled the figures rest on a draft.',
   // ⚠ 25-L §5 — REWRITTEN, BECAUSE HALF OF IT STOPPED BEING TRUE. Lex still writes no
   // findings under this heading — no pass reads the position graph into the evidence — but
   // the record itself is now readable here, in beta, below this note. Leaving the old

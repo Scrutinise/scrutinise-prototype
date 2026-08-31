@@ -121,12 +121,13 @@ export default function BackgroundPanel({
   stageAccent,
   nextPage,
   busy,
-  onContinue,
   onAskLex,
   onRetrySearch,
   onGiveFeedback,
   deepeningPass,
   focusFieldRef,
+  refreshKey,
+  onReportChanged,
 }: {
   ideaId: string
   initialBackground: CanonicalState['initialBackground']
@@ -144,7 +145,6 @@ export default function BackgroundPanel({
   stageAccent: { text: string; border: string; bg: string }
   nextPage: CanonicalState['nextPage']
   busy: boolean
-  onContinue: () => void
   onAskLex: () => void
   onRetrySearch: () => void
   /** §20.5 — opens the feedback consent flow, pre-set to the briefing. */
@@ -155,6 +155,11 @@ export default function BackgroundPanel({
   /** 25-D §3 rule 3 — the field the user is currently reading. Orders and marks the
    *  by-question panel; it never filters it. */
   focusFieldRef?: string | null
+  /** Bumped by the parent when something upstream may have changed the evidence. */
+  refreshKey?: number
+  /** 25-N §3a — called when something crosses into or out of the report, so the middle
+   *  column can re-read its own copy of what is in it. */
+  onReportChanged?: () => void
 }) {
   const [open, setOpen] = useState(true)
   // 25-D §3 rule 4 — the type-grouped list is still here, and it FOLDS. The headings name
@@ -178,129 +183,21 @@ export default function BackgroundPanel({
   // silently hand back the Orientation briefing in its place.
   const stageSearchMissing = !briefingIsCurrent && !stageSearch
 
-  return (
-    <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
-      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-700">Background</div>
-
-      {!hasAnything && (
-        <p className="text-sm text-zinc-400">
-          Once you’ve confirmed keywords, Lex pulls an initial background briefing from the corpus and it appears here.
-          Each new section then runs its own focused search.
-        </p>
-      )}
-
-      {/* ══ 25-D §3 / §25.5 — THE PANEL, BY QUESTION, AND IT LEADS. ══════════════
-          "Primary legislation / debates / committee reports" is our filing system; the
-          user came with a question. This renders the SAME material against the ten
-          interrogation headings, with an empty heading stated as a gap rather than left
-          out — and the type-grouped list is still below, folded (rule 4). It fetches its
-          own data and renders nothing from canonical state, so nothing above this line
-          changed. */}
-      <QuestionPanel ideaId={ideaId} focusFieldRef={focusFieldRef ?? null} />
-
-      {/* §22 — the open Deepening pass's own retrieval, leading the panel. Same RefCard,
-          same type grouping and same ordering as every other block here, so a source found
-          by a pass and a source found by a stage search are read the same way. It sits
-          ABOVE the stage search because while a pass is open, the pass IS what the user is
-          working on. */}
-      {deepeningPass && (
-        <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-3 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide flex-1 text-violet-700">
-              {deepeningPass.label} — what this pass found
-            </span>
-            <span className="text-[11px] text-zinc-400">{deepeningPass.results.length} references</span>
-          </div>
-          {deepeningPass.results.length === 0 ? (
-            <p className="text-xs text-zinc-500">
-              This pass hasn’t retrieved anything yet. Run it and its sources appear here.
-            </p>
-          ) : (
-            TYPE_ORDER.map((t) => ({ type: t, items: deepeningPass.results.filter((r) => r.type === t) }))
-              .filter((g) => g.items.length > 0)
-              .map((g) => (
-                <div key={g.type}>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">{TYPE_LABELS[g.type]}</div>
-                  <div className="space-y-1.5">{g.items.map((r) => <RefCard key={r.id} r={r} />)}</div>
-                </div>
-              ))
-          )}
-        </div>
-      )}
-
-      {/* Page-transition CTA (design §14 / Sprint 2 Task 4). */}
-      {showCta && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3">
-          <p className="text-sm text-zinc-700 mb-2">
-            This part’s complete. When you’re ready, move on to <span className="font-medium">{nextPage!.label}</span>.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={onContinue} disabled={busy}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
-              Continue to {nextPage!.label}
-            </button>
-            <button onClick={onAskLex} disabled={busy}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
-              Ask Lex about this
-            </button>
-            {/* §20.5 — live from Sprint 2.5. Opens the consent flow; nothing is
-                stored or sent until the user has seen the wording and said yes. */}
-            <button onClick={onGiveFeedback} disabled={busy}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
-              Give feedback
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* §19-C Task 1a — an honest failure state. No substituted content, ever. */}
-      {searchFailed && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3">
-          <p className="text-sm text-zinc-700">
-            The corpus search didn’t complete, so there’s nothing here yet. Nothing has been guessed or
-            filled in — it just didn’t run.
-          </p>
-          <button onClick={onRetrySearch} disabled={busy}
-            className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">
-            Retry the search
-          </button>
-        </div>
-      )}
-
-      {/* §19-D Task 4 — this stage has no search on record. State it; do not fall back
-          to the previous stage's material and let it read as current. */}
-      {stageSearchMissing && (
-        <div className={`rounded-xl border ${stageAccent.border} ${stageAccent.bg} p-3`}>
-          <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${stageAccent.text}`}>
-            {stageLabel} — what’s out there
-          </div>
-          <p className="text-sm text-zinc-600">
-            This section’s own search hasn’t run yet, so there’s nothing here for it. The earlier
-            research is still below — it just isn’t this section’s.
-          </p>
-          <button onClick={onRetrySearch} disabled={busy}
-            className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">
-            Run this section’s search
-          </button>
-        </div>
-      )}
-
-      {/* ══ 25-D §3 rule 4 — THE FULL SOURCE LIST STAYS, COLLAPSED, UNDERNEATH. ══
-          Everything below this line is unchanged: the stage searches, the user's own
-          research, the Initial Background and the type-grouped Page-1 cards. The
-          question headings above name what matters; they do NOT hide the rest, and a
-          user who wants to browse the corpus the way it is shelved still can. */}
-      <div className="rounded-xl border border-zinc-200 overflow-hidden">
-        <button onClick={() => setShowFullList((v) => !v)}
-          className="w-full flex items-center gap-2 px-3 py-2 bg-zinc-50 hover:bg-zinc-100 text-left">
-          <span className="text-xs font-semibold uppercase tracking-wide flex-1 text-zinc-700">
-            Everything we retrieved, by document type
-          </span>
-          <span className="text-[11px] text-zinc-400 w-3 text-center">{showFullList ? '−' : '+'}</span>
-        </button>
-        {showFullList && (
-          <div className="px-3 py-3 border-t border-zinc-100 space-y-4">
-
+  // ══ 25-N §4 — THE TWO "INPUTS" ITEMS, BUILT HERE AND RENDERED BY THE LIBRARY ═══
+  //
+  // ⚠⚠ THIS IS THE FIX FOR *"clicking a contents item shows neighbouring sections too"*, and
+  // the cause was never in the contents list. `QuestionPanel` renders exactly one item — and
+  // then this component carried on rendering the retrieved-by-type fold, the stage search,
+  // the exports and the page-one source cards UNDERNEATH it, unconditionally. The library sat
+  // on top of a scroll, so "one item at a time" was true of one component and false of the
+  // screen.
+  //
+  // ⚠ THEY ARE BUILT HERE BECAUSE THE DATA IS HERE. All of this comes from canonical state,
+  // which `QuestionPanel` deliberately does not read (it fetches its own, and a second copy
+  // of the search results would be a second answer). So the nodes are built where the data
+  // lives and passed to the one component that decides what is on screen.
+  const retrievedNode = (
+    <div className="space-y-4">
       {/* §19-C Task 2 — the ACTIVE stage's landscape, in its five sections. */}
       {stageSearch && stageSearch.ok && (
         <div className={`rounded-xl border ${stageAccent.border} ${stageAccent.bg} p-3 space-y-3`}>
@@ -342,59 +239,8 @@ export default function BackgroundPanel({
         </Fold>
       )}
 
-      {/* The Basic Idea's briefing. Current while on Page 1; folded away afterwards so a
-          later stage never shows it as though it were this stage's research. */}
-      {initialBackground && initialBackground.status !== 'failed' && (
-        briefingIsCurrent ? (
-          <div className="rounded-xl border border-zinc-200 overflow-hidden">
-            <button onClick={() => setOpen((o) => !o)}
-              className="w-full flex items-center gap-2 px-3 py-2.5 bg-zinc-50 hover:bg-zinc-100 text-left">
-              <span className="text-sm font-semibold text-zinc-800 flex-1">Initial Background</span>
-              {initialBackground.status === 'pending'
-                ? <span className="text-[11px] text-amber-600">preparing…</span>
-                : <span className="text-[11px] text-zinc-400">{open ? '▲' : '▼'}</span>}
-            </button>
-            {initialBackground.summary && (
-              <p className="px-3 py-2 text-xs text-zinc-500 border-t border-zinc-100">{initialBackground.summary}</p>
-            )}
-            {open && initialBackground.body && (
-              <div className="px-3 py-3 border-t border-zinc-100">
-                <ReactMarkdown components={MD_COMPONENTS}>{initialBackground.body}</ReactMarkdown>
-              </div>
-            )}
-            {/* §19-D Task 9h — a quiet way to ask again, deliberately not a button.
-                The only retry control used to live inside the stage-search block, so
-                on Page 1 (where the briefing IS the research) there was no way to
-                re-run it unless it had already failed. */}
-            <div className="px-3 pb-2">
-              <button onClick={onRetrySearch} disabled={busy}
-                className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">
-                Run this search again
-              </button>
-            </div>
-          </div>
-        ) : (
-          <Fold title="The Basic Idea — initial background" subtitle="from earlier">
-            {initialBackground.summary && <p className="text-xs text-zinc-500">{initialBackground.summary}</p>}
-            {initialBackground.body && <ReactMarkdown components={MD_COMPONENTS}>{initialBackground.body}</ReactMarkdown>}
-            {grouped.map((g) => (
-              <div key={g.type}>
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 mb-1.5">{TYPE_LABELS[g.type]}</div>
-                <div className="space-y-1.5">{g.items.map((r) => <RefCard key={r.id} r={r} />)}</div>
-              </div>
-            ))}
-          </Fold>
-        )
-      )}
-
-      {/* §8.2 — the same briefing as a document. Self-contained and additive: it
-          fetches its own status and renders nothing from canonical state. */}
-      {initialBackground && initialBackground.status === 'ready' && (
-        <DocumentExports ideaId={ideaId} variant="panel" />
-      )}
-
-      {/* Page-1 source cards, while the briefing is the current research. */}
-      {briefingIsCurrent && grouped.map((g) => (
+      {/* The page-one source cards, grouped the way the corpus is shelved. */}
+      {grouped.map((g) => (
         <div key={g.type}>
           <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 mb-1.5">
             {TYPE_LABELS[g.type]}
@@ -403,9 +249,148 @@ export default function BackgroundPanel({
         </div>
       ))}
 
+      {(!stageSearch && research.length === 0 && grouped.length === 0) && (
+        <p className="text-xs text-zinc-500">
+          Nothing has been retrieved for this idea yet. This is where the raw returns go — every
+          document a search brought back, shelved the way the corpus is shelved.
+        </p>
+      )}
+    </div>
+  )
+
+  const backgroundNode = initialBackground && initialBackground.status !== 'failed' ? (
+    <div className="space-y-3">
+      {initialBackground.summary && <p className="text-xs text-zinc-500">{initialBackground.summary}</p>}
+      {initialBackground.body && <ReactMarkdown components={MD_COMPONENTS}>{initialBackground.body}</ReactMarkdown>}
+      {/* §19-D Task 9h — a quiet way to ask again, deliberately not a button. */}
+      <button onClick={onRetrySearch} disabled={busy}
+        className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">
+        Run this search again
+      </button>
+      {/* §8.2 — the same briefing as a document. Self-contained and additive. */}
+      {initialBackground.status === 'ready' && <DocumentExports ideaId={ideaId} variant="panel" />}
+    </div>
+  ) : null
+
+  // ⚠ THE NOTICES ARE STATUS, NOT SECTIONS, so they render on the contents home and nowhere
+  // else. A "this section's search hasn't run" card underneath an open committee report is
+  // the same category error as the retrieved list being there.
+  const noticesNode = (
+    <>
+      {!hasAnything && (
+        <p className="text-sm text-zinc-400">
+          Once you’ve confirmed keywords, Lex pulls an initial background briefing from the corpus and
+          it appears here. Each new section then runs its own focused search.
+        </p>
+      )}
+
+      {/* §22 — the open Deepening pass's own retrieval. While a pass is open, the pass IS
+          what the user is working on. */}
+      {deepeningPass && (
+        <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide flex-1 text-violet-700">
+              {deepeningPass.label} — what this pass found
+            </span>
+            <span className="text-[11px] text-zinc-400">{deepeningPass.results.length} references</span>
           </div>
-        )}
-      </div>
+          {deepeningPass.results.length === 0 ? (
+            <p className="text-xs text-zinc-500">
+              This pass hasn’t retrieved anything yet. Run it and its sources appear here.
+            </p>
+          ) : (
+            TYPE_ORDER.map((t) => ({ type: t, items: deepeningPass.results.filter((r) => r.type === t) }))
+              .filter((g) => g.items.length > 0)
+              .map((g) => (
+                <div key={g.type}>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">{TYPE_LABELS[g.type]}</div>
+                  <div className="space-y-1.5">{g.items.map((r) => <RefCard key={r.id} r={r} />)}</div>
+                </div>
+              ))
+          )}
+        </div>
+      )}
+
+      {/* §19-C Task 1a — an honest failure state. No substituted content, ever. */}
+      {searchFailed && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+          <p className="text-sm text-zinc-700">
+            The corpus search didn’t complete, so there’s nothing here yet. Nothing has been guessed or
+            filled in — it just didn’t run.
+          </p>
+          <button onClick={onRetrySearch} disabled={busy}
+            className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">
+            Retry the search
+          </button>
+        </div>
+      )}
+
+      {/* §19-D Task 4 — this stage has no search on record. State it; never fall back to the
+          previous stage's material and let it read as current. */}
+      {stageSearchMissing && (
+        <div className={`rounded-xl border ${stageAccent.border} ${stageAccent.bg} p-3`}>
+          <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${stageAccent.text}`}>
+            {stageLabel} — what’s out there
+          </div>
+          <p className="text-sm text-zinc-600">
+            This section’s own search hasn’t run yet, so there’s nothing here for it. The earlier
+            research is still in Inputs — it just isn’t this section’s.
+          </p>
+          <button onClick={onRetrySearch} disabled={busy}
+            className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">
+            Run this section’s search
+          </button>
+        </div>
+      )}
+
+      {/* ══ 25-N §2 — THE "YOU'VE FINISHED THIS SECTION" CARD IS GONE ═══════════════
+          §2: *"Remove 'You've finished this section' from the right-hand panel. ⚠ It is a
+          relic of forced staging. The user must be free to jump around."*
+
+          ⚠⚠ THE SENTENCE WAS NOT THE PROBLEM; THE PLACE WAS. A card in THE RESEARCH saying
+          "this part's complete, move on to Guiding Policy" is the research panel giving
+          navigation orders. Moving between sections still works, from the two places that are
+          about moving: the section headings in DRAFT STRATEGY, and the stage bar.
+
+          ⚠ WHAT STAYS IS THE PART THAT WAS NEVER ABOUT STAGING: asking Lex about what is in
+          front of you, and saying it is wrong. Both are about THIS panel's contents. */}
+      {showCta && (
+        <div className="rounded-xl border border-zinc-200 p-3">
+          <div className="flex flex-wrap gap-2">
+            <button onClick={onAskLex} disabled={busy}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
+              Ask Lex about this
+            </button>
+            {/* §20.5 — opens the consent flow; nothing is stored or sent until the user has
+                seen the wording and said yes. */}
+            <button onClick={onGiveFeedback} disabled={busy}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
+              Give feedback
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+
+  return (
+    <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
+      {/* ⚠ 25-N §2 — THE "BACKGROUND" HEADING IS GONE. It sat directly under the panel's own
+          title and named a THIRD thing the column was supposed to be, after "Resources" below
+          it. The panel is THE RESEARCH; nothing inside it needs to re-announce that.
+
+          ⚠ 25-N §4 — AND NOTHING IS RENDERED BESIDE `QuestionPanel` ANY MORE. Everything this
+          panel used to draw underneath the library is now handed IN, so exactly one component
+          decides what is on screen and "clicking an item shows that item only" is a property
+          of the code rather than an aspiration. */}
+      <QuestionPanel
+        ideaId={ideaId}
+        focusFieldRef={focusFieldRef ?? null}
+        refreshKey={refreshKey}
+        onChanged={onReportChanged}
+        notices={noticesNode}
+        inputs={{ retrieved: retrievedNode, background: backgroundNode }}
+      />
     </div>
   )
 }

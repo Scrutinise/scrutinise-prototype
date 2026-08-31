@@ -26,7 +26,7 @@
 
 import { questionById, INTERROGATION_LIBRARY } from './interrogation-library'
 import { passDef, PASSES } from './deepening-config'
-import { isHeadingKey, type HeadingKey } from './question-headings'
+import { isHeadingKey, liveHeading, type HeadingKey } from './question-headings'
 
 /**
  * The build's own pass keys, which are not entries in either configuration array.
@@ -39,7 +39,13 @@ import { isHeadingKey, type HeadingKey } from './question-headings'
  * mapping report says so, rather than being quietly dropped.
  */
 const BUILD_PASS_HEADINGS: Record<string, HeadingKey> = {
-  ADVERSARIAL: 'AGAINST',
+  // ⚠ 25-N §4 — WAS `AGAINST`, WHICH IS RETIRED. §4: *"Delete 'The strongest case against'.
+  // Neither example under it was a case against; the good material belongs in Challenges or
+  // Who has argued about this."* Challenges is a different mechanism (`agenda.challenges`,
+  // middle column, untouched by this sprint), so the panel destination is `ARGUED` — and the
+  // producer is repointed here as well as redirected on read, so a NEW row is written under
+  // the live heading rather than written wrong and corrected at every read for ever.
+  ADVERSARIAL: 'ARGUED',
 }
 
 /** §25.6 — the user's own documents and links. One prefix, one heading. */
@@ -54,7 +60,12 @@ export function isUserMaterialPass(passKey: string): boolean {
  * heading, then nothing.
  */
 export function resolveHeading(row: { headingKey?: string | null; passKey: string }): HeadingKey | null {
-  if (isHeadingKey(row.headingKey)) return row.headingKey
+  // ⚠ 25-N §4 — `liveHeading` APPLIES THE RETIREMENT REDIRECT. `isHeadingKey` still accepts
+  // the stored `'AGAINST'` (it must, or every adversarial row on every idea would resolve to
+  // null); this is where it becomes the heading the panel actually has. Returning the raw key
+  // would file rows under a heading that no longer appears in `HEADING_ORDER`, so they would
+  // be in the data, resolvable, and rendered nowhere.
+  if (isHeadingKey(row.headingKey)) return liveHeading(row.headingKey)
   return headingForPassKey(row.passKey)
 }
 
@@ -90,6 +101,13 @@ export function headingsWithProducers(): Set<HeadingKey> {
   // in either library, exactly like `ADVERSARIAL` above it.
   out.add('HOW_HARD')
   out.add('KEY_SOURCES')
+  // ⚠ 25-N §4 — `COST_DURATION` IS DELIBERATELY ABSENT FROM THIS SET, and that is the honest
+  // answer rather than an omission. §4 asks for the heading to EXIST — it did not, so a user
+  // asking what this would cost had nowhere to look and no statement that we could not say.
+  // Nothing writes evidence under it yet, so it renders as `no-producer`: our gap, in amber,
+  // saying we owe them something. Adding it here would make it read "we looked and found
+  // nothing", which is a false statement about the world made to cover a hole in our tooling
+  // — the exact failure `question-headings.ts` was written to prevent.
   return out
 }
 

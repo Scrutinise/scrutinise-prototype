@@ -34,9 +34,11 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-panel'
+import { HEADINGS_ABOVE_DIVIDER } from '@/lib/lex/question-headings'
 import YourMaterial from './YourMaterial'
 import ClaimReview from './ClaimReview'
 import OutputsPanel from './OutputsPanel'
+import AgendaPanel from './AgendaPanel'
 
 /**
  * §3b — what an EMPTY item says on the contents list, in three or four words.
@@ -66,18 +68,86 @@ const GAP_STYLE: Record<string, string> = {
   'nothing-added': 'border-zinc-200 bg-white text-zinc-500',
 }
 
+/**
+ * 25-N §4 — what the header says when a SPECIAL item is open.
+ *
+ * ⚠ EVERY SPECIAL KEY NEEDS AN ENTRY. A user two clicks into a library needs to know what
+ * they are looking at — that is the orientation fault 25-K existed to fix, and it reappears
+ * one level down every time a special item is added without a title. 25-M added `__outputs`
+ * to a two-branch ternary; this sprint adds five more, which is where a ternary stops being
+ * a reasonable place for the answer.
+ */
+const SPECIAL_TITLES: Record<string, string> = {
+  __outputs: 'Outputs',
+  __decisions: 'Decisions',
+  __changed_mind: 'Where the research changed my mind',
+  __inputs_retrieved: 'Everything we retrieved, by document type',
+  __inputs_background: 'The basic idea — initial background',
+  __unfiled: 'Not filed under a question',
+}
+
+/**
+ * One row of the contents list.
+ *
+ * ⚠ EXTRACTED IN 25-N BECAUSE THE LIST IS NOW FOUR LISTS. §4's order splits the headings
+ * across the divider and sinks the never-asked ones to the bottom, so the same row markup is
+ * rendered in three places; three copies is two that will drift.
+ */
+function HeadingRow({
+  h, onOpen,
+}: {
+  h: PanelData['headings'][number]
+  onOpen: (key: string) => void
+}) {
+  const n = h.entries.length
+  return (
+    <li>
+      <button
+        onClick={() => onOpen(h.key)}
+        className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+      >
+        <span className={`text-sm flex-1 ${n ? 'font-medium text-zinc-800' : 'text-zinc-500'}`}>
+          {h.heading}
+        </span>
+        {n > 0 ? (
+          <span className="text-xs font-semibold text-zinc-700">{n}</span>
+        ) : (
+          <span className="text-[11px] text-zinc-400">
+            {h.gap ? EMPTY_LABEL[h.gap.reason] ?? 'nothing here' : 'nothing here'}
+          </span>
+        )}
+        <span aria-hidden className="text-zinc-300 text-xs">›</span>
+      </button>
+    </li>
+  )
+}
+
 function EntryCard({
-  e, onExclude, onInclude, onPrioritise, busy,
+  e, onExclude, onInclude, onPrioritise, onMove, sections, currentHeading, busy,
 }: {
   e: PanelEntry
   onExclude: (entry: PanelEntry, reason: string) => void
   onInclude: (entry: PanelEntry) => void
   /** 25-L §3d — promote to the proposal document, or demote back to the annex. */
   onPrioritise: (entry: PanelEntry, on: boolean) => void
+  /**
+   * 25-N §4 — re-file this finding under a different heading.
+   *
+   * ⚠ ABSENT ON THE USER'S OWN DOCUMENTS, and that is not an oversight. The rows under "Your
+   * material" are `IdeaUserMaterial`, not `EvidenceItem` — they have no `headingKey` to write,
+   * and they belong under "Your material" by definition rather than by classification. A
+   * control that looked identical and silently 404'd would be worse than none.
+   */
+  onMove?: (entry: PanelEntry, headingKey: string) => void
+  /** Every live section, for the move menu. */
+  sections: Array<{ key: string; heading: string }>
+  /** The heading this card is currently filed under, so the menu can leave it out. */
+  currentHeading: string | null
   busy: boolean
 }) {
   const [asking, setAsking] = useState(false)
   const [reason, setReason] = useState('')
+  const [moving, setMoving] = useState(false)
 
   return (
     <div className={`rounded-lg border p-2.5 ${
@@ -108,7 +178,7 @@ function EntryCard({
                 cannot scan a list for. */}
             {e.priority && !e.excluded && (
               <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-800 text-white">
-                ★ In the document
+                ★ In the report
               </span>
             )}
             {e.citation && <span className="text-[11px] text-zinc-500 truncate">{e.citation}</span>}
@@ -122,22 +192,50 @@ function EntryCard({
                 word, plus a 2px border. Any one of the three survives greyscale.
                 ⚠ The tag is not decorative: a priority source is printed in the proposal
                 document itself, and everything else goes to the evidence annex. */}
+            {/* ══ 25-N §3a — "ADD TO REPORT", AND A BALANCING "REMOVE FROM REPORT" ═══
+                ⚠⚠ "MAKE PRIORITY" NAMED THE FLAG, NOT THE ACT. §3 gives the three columns one
+                logic — raw material on the right, the draft report in the middle — and under
+                that logic this button is the ONLY way anything crosses from one to the other.
+                "Priority" describes a property of a source; "Add to report" describes what
+                pressing it does, which is the thing a user needs to know before pressing it.
+
+                ⚠ AND THE ON-STATE NOW SAYS WHAT PRESSING IT AGAIN WOULD DO. The old control
+                read "★ Priority" when it was on — a label for the state, so the only way to
+                learn it was also the way OUT was to press it and see. §3a asks for the
+                balancing control explicitly, and this is it: same button, opposite verb.
+
+                ⚠ THE STATE IS STILL NOT A COLOUR (docs/CLAUDE.md §21 — Charlie is colour
+                blind). Filled star versus hollow, dark fill versus white, and two different
+                verbs. Any one of the three survives greyscale. */}
             <button
               onClick={() => onPrioritise(e, !e.priority)}
               disabled={busy}
               aria-pressed={e.priority}
               title={e.priority
-                ? 'In the proposal document. Press to move it back to the evidence annex.'
-                : 'Put this in the proposal document itself, not only the annex.'}
-              className={`text-[11px] rounded border-2 px-1.5 py-0.5 disabled:opacity-40 ${
+                ? 'This is in your report. Press to take it back out — it stays here in the research.'
+                : 'Put this into DRAFT STRATEGY, the report itself. Its section heading goes with it.'}
+              className={`text-[11px] rounded border-2 px-1.5 py-0.5 disabled:opacity-40 whitespace-nowrap ${
                 e.priority
                   ? 'border-zinc-900 bg-zinc-900 text-white'
                   : 'border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50'
               }`}
             >
               <span aria-hidden>{e.priority ? '★' : '☆'}</span>{' '}
-              {e.priority ? 'Priority' : 'Make priority'}
+              {e.priority ? 'Remove from report' : 'Add to report'}
             </button>
+            {/* ══ 25-N §4 — KEEP IT, MOVE IT ═══════════════════════════════════
+                Charlie's example: a Braverman incident filed under one heading that belongs
+                under "Who has argued about this" or "How hard will this be to achieve".
+                Until now the only thing a user could do with a misfiled finding was set it
+                aside, which removes the material rather than re-shelving it. */}
+            {onMove && (
+              <button onClick={() => setMoving((v) => !v)} disabled={busy}
+                aria-expanded={moving}
+                title="File this under a different section. Nothing else about it changes."
+                className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">
+                Move…
+              </button>
+            )}
             <button onClick={() => setAsking((v) => !v)} disabled={busy}
               className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">
               Set aside
@@ -166,6 +264,31 @@ function EntryCard({
           <span className="font-medium">Set aside:</span>{' '}
           {e.exclusionReason || 'no reason recorded'}
         </p>
+      )}
+
+      {moving && onMove && !e.excluded && (
+        <div className="mt-2 rounded-lg border border-zinc-200 bg-zinc-50/70 p-2 space-y-1.5">
+          <p className="text-[11px] text-zinc-600">
+            File this under a different section. It keeps everything else — whether it is in your
+            report, whether you set it aside, and the reason recorded for it.
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {sections
+              .filter((sec) => sec.key !== currentHeading)
+              .map((sec) => (
+                <button
+                  key={sec.key}
+                  disabled={busy}
+                  onClick={() => { onMove(e, sec.key); setMoving(false) }}
+                  className="text-[11px] rounded-full border border-zinc-300 bg-white px-2 py-0.5 text-zinc-700 hover:border-blue-400 hover:text-blue-700 disabled:opacity-40"
+                >
+                  {sec.heading}
+                </button>
+              ))}
+          </div>
+          <button onClick={() => setMoving(false)}
+            className="text-[11px] text-zinc-500 hover:text-zinc-800">Cancel</button>
+        </div>
       )}
 
       {asking && !e.excluded && (
@@ -201,13 +324,40 @@ function EntryCard({
 }
 
 export default function QuestionPanel({
-  ideaId, focusFieldRef, refreshKey,
+  ideaId, focusFieldRef, refreshKey, inputs, notices, onChanged,
 }: {
   ideaId: string
   /** What the user is reading — §3 rule 3. Orders and marks; never filters. */
   focusFieldRef?: string | null
   /** Bumped by the parent when something upstream may have changed the evidence. */
   refreshKey?: number
+  /**
+   * ══ 25-N §4 — THE "INPUTS" GROUP, HANDED IN RATHER THAN RE-RENDERED ═════════
+   *
+   * §4 makes Inputs a new group holding *"Everything we retrieved, by document type"* and
+   * *"The basic idea — initial background"*. Both of those already exist, in
+   * `BackgroundPanel`, built from canonical state this component does not have and must not
+   * fetch a second copy of.
+   *
+   * ⚠⚠ AND MOVING THEM IN HERE IS WHAT FIXES *"clicking a contents item shows neighbouring
+   * sections too"*. That was never a bug in the contents list: `QuestionPanel` renders one
+   * item correctly, and then `BackgroundPanel` carried on rendering the retrieved-by-type
+   * fold, the stage search, the exports and the page-one source cards UNDERNEATH it. The
+   * library sat on top of a scroll. Passing them in as nodes means one component decides
+   * what is on screen, so "one item only" can actually be true.
+   */
+  inputs?: { retrieved?: React.ReactNode; background?: React.ReactNode }
+  /**
+   * 25-N §4 — status notices, rendered on the contents home and NOWHERE ELSE.
+   *
+   * ⚠ THEY ARE STATUS, NOT SECTIONS. "This section's search hasn't run", "the corpus search
+   * didn't complete", the open Deepening pass's own retrieval — a user needs those while
+   * looking at the list of what exists, and NOT underneath an open committee report, which is
+   * the same category error as the retrieved list being there.
+   */
+  notices?: React.ReactNode
+  /** Called after anything that changes what is in the report, so the middle column re-reads. */
+  onChanged?: () => void
 }) {
   const [data, setData] = useState<PanelData | null>(null)
   const [busy, setBusy] = useState(false)
@@ -254,13 +404,52 @@ export default function QuestionPanel({
         return
       }
       await load()
+      onChanged?.()
     } finally { setBusy(false) }
-  }, [ideaId, load])
+  }, [ideaId, load, onChanged])
+
+  /** 25-N §4 — re-file a finding under a different heading. See the route's PATCH note. */
+  const move = useCallback(async (entry: PanelEntry, headingKey: string) => {
+    setBusy(true); setError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/panel`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: entry.id, headingKey }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setError(typeof body?.error === 'string' ? body.error : 'That could not be moved.')
+        return
+      }
+      // ⚠ THE RESPONSE IS THE WHOLE PANEL, so the card lands under its new heading without a
+      // second round trip — and without this component computing where it went, which would
+      // be a second implementation of the filing rule.
+      setData(await res.json())
+    } finally { setBusy(false) }
+  }, [ideaId])
 
   if (!data) return null
 
   const openHeading = openKey ? data.headings.find((h) => h.key === openKey) ?? null : null
   const prioritised = data.headings.flatMap((h) => h.entries).filter((e) => e.priority).length
+
+  // ══ 25-N §4 — THE THREE GROUPS THE HEADINGS FALL INTO ═══════════════════════
+  //
+  // ⚠ `notAsked` IS DECIDED BY THE EMPTY REASON, NOT BY THE COUNT. §4 sinks *anything "not
+  // asked of this draft"* to the bottom — and "we asked and found nothing" is a FINDING that
+  // belongs in the body of the list, while "this was never asked" is housekeeping. Sorting
+  // both to the bottom because both are empty would bury a real result with a non-result,
+  // which is the distinction `question-headings.ts` exists to keep.
+  const isNotAsked = (h: PanelData['headings'][number]) =>
+    h.entries.length === 0 && h.gap?.reason === 'not-asked'
+  const above = data.headings.filter(
+    (h) => (HEADINGS_ABOVE_DIVIDER as string[]).includes(h.key) && !isNotAsked(h),
+  )
+  const rest = data.headings.filter(
+    (h) => !(HEADINGS_ABOVE_DIVIDER as string[]).includes(h.key) && !isNotAsked(h),
+  )
+  const notAsked = data.headings.filter(isNotAsked)
 
   const cardProps = {
     busy,
@@ -269,6 +458,8 @@ export default function QuestionPanel({
     // 25-L §3d — demoting goes back to INCLUDED, never to "no decision". The user HAS
     // decided; forgetting that would make the annex treat it as a source nobody looked at.
     onPrioritise: (entry: PanelEntry, on: boolean) => void decide(entry, on ? 'PRIORITY' : 'INCLUDED'),
+    // §4 — every live section is a destination. `data.headings` is already in HEADING_ORDER.
+    sections: data.headings.map((h) => ({ key: h.key, heading: h.heading })),
   }
 
   return (
@@ -286,9 +477,10 @@ export default function QuestionPanel({
             <span aria-hidden>←</span> Contents
           </button>
         ) : (
-          <div className="text-xs font-semibold uppercase tracking-wide text-zinc-700 flex-1">
-            Resources
-          </div>
+          // ⚠ 25-N §2 — THE "RESOURCES" HEADING IS DELETED. The column is titled THE RESEARCH
+          // one line above this; a second heading naming the same panel something else was
+          // one of the three words a user had to reconcile before they could navigate.
+          <div className="flex-1" />
         )}
         {openHeading && (
           <div className="text-xs font-semibold text-zinc-800 flex-1 truncate">{openHeading.heading}</div>
@@ -298,7 +490,7 @@ export default function QuestionPanel({
             which is the orientation fault 25-K existed to fix, reappearing one level down. */}
         {!openHeading && openKey && (
           <div className="text-xs font-semibold text-zinc-800 flex-1 truncate">
-            {openKey === '__outputs' ? 'Outputs' : 'Not filed under a question'}
+            {SPECIAL_TITLES[openKey] ?? 'Not filed under a question'}
           </div>
         )}
         <span className="text-[11px] text-zinc-400">{data.totalEntries} in all</span>
@@ -308,36 +500,63 @@ export default function QuestionPanel({
         <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">{error}</p>
       )}
 
-      {/* ══ THE CONTENTS ═══════════════════════════════════════
-          ⚠ EVERY ITEM IS LISTED, INCLUDING THE EMPTY ONES, and an empty one says WHICH KIND
-          of empty it is rather than showing a zero. A "0" beside "How the courts have read
-          it" is a false statement about the world whenever the real answer is "we did not
-          ask" or "we cannot answer this yet".
+      {/* ══ 25-N §4 — THE CONTENTS, IN THE ORDER CHARLIE GAVE ═══════════════════
+          **Decisions · Outputs · How hard will this be to achieve? · divider · Inputs ·
+          everything else · anything "not asked of this draft" at the bottom.**
 
-          ⚠ THE ORDER IS `HEADING_ORDER`, computed on the server — settled law first, the
-          strongest case against last. It is the design, not the order this file happens to
-          render in. */}
-      {/* ⚠ GATED ON `openKey`, NOT ON `openHeading`. The two special items (`__outputs`,
-          `__unfiled`) set a key that matches no heading, so a `!openHeading` gate left the
-          whole contents list rendering UNDERNEATH them — introduced with `__unfiled` in
-          25-L and found in 25-M when Outputs became the second one. */}
+          ⚠ EVERY ITEM IS STILL LISTED, INCLUDING THE EMPTY ONES, and an empty one says WHICH
+          KIND of empty it is rather than showing a zero. A "0" beside "How the courts have
+          read it" is a false statement about the world whenever the real answer is "we did not
+          ask" or "we cannot answer this yet". That rule is 25-D's and it survives the reorder.
+
+          ⚠⚠ AND THE BOTTOM GROUP IS NOT A STYLING CHOICE. §4 puts *anything "not asked of this
+          draft"* last, which means the ordering now depends on a heading's EMPTY REASON as
+          well as its key — `not-asked` sinks. A user scanning this list should meet what we
+          have, then what we looked for and did not find, then what was never asked.
+
+          ⚠ THE HEADING HALF OF THE ORDER IS THE SERVER'S (`HEADING_ORDER`), not this file's.
+          What is decided here is only where the SPECIAL items — which are not headings — sit
+          among them, and where the divider falls. */}
       {!openKey && (
         <>
-          <p className="text-[11px] text-zinc-500">
-            Everything Lex found or worked out about the world, filed under the question it answers.
-            Choose one.
-          </p>
+          {/* §4 — status first: what did not run, what failed, what pass is open. */}
+          {notices}
 
-          {/* ══ 25-M §1 — OUTPUTS, FIRST AND SET APART ═══════════════════════
-              §1: "a user finishes a build and there is nothing to take away without leaving
-              the page they are working on." Charlie: *"It's a bit disjointed having to go to
-              the dashboard to find it."*
+          {/* §2 — Charlie's wording, verbatim, and it replaces both deleted headings. */}
+          <p className="text-[11px] text-zinc-500">Everything Lex found or worked out:</p>
 
-              ⚠ FIRST, AND VISUALLY APART, because it is a different KIND of item from the
-              twelve below it. Those are questions about the world; this is the thing you
-              take away. Filed thirteenth among the questions it would be exactly as hard to
-              find as it is on the dashboard, which is the whole complaint. */}
-          <ul className="space-y-1 mb-2">
+          {/* ── ABOVE THE DIVIDER: what you have to act on ──────────────────── */}
+          <ul className="space-y-1">
+            {/* ⚠⚠ 25-N §3b/§4 — DECISIONS COMES FIRST, AND IT MOVED HERE FROM THE MIDDLE
+                COLUMN. §3's logic: the middle holds the report, the right holds the raw
+                material and the judgements to be made about it. §4 puts it at the top of this
+                list because it is the only item that is waiting on the user. */}
+            <li>
+              <button
+                onClick={() => setOpenKey('__decisions')}
+                className="w-full flex items-baseline gap-2 rounded-lg border-2 border-zinc-800 bg-white px-3 py-2 text-left hover:bg-zinc-50"
+              >
+                <span className="text-sm font-semibold text-zinc-900 flex-1">Decisions</span>
+                <span className="text-[11px] text-zinc-500">choices waiting on you</span>
+                <span aria-hidden className="text-zinc-300 text-xs">›</span>
+              </button>
+            </li>
+            {/* §3b — the other half of what moved out of the middle column. It sits beside
+                Decisions because it is the same kind of thing: something Lex did, for the
+                user to judge. */}
+            <li>
+              <button
+                onClick={() => setOpenKey('__changed_mind')}
+                className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+              >
+                <span className="text-sm flex-1 text-zinc-800">Where the research changed my mind</span>
+                <span aria-hidden className="text-zinc-300 text-xs">›</span>
+              </button>
+            </li>
+            {/* ══ 25-M §1 — OUTPUTS, SET APART ═══════════════════════════════
+                §1: "a user finishes a build and there is nothing to take away without leaving
+                the page they are working on." It is a different KIND of item from the
+                questions below: those are about the world, this is the thing you take away. */}
             <li>
               <button
                 onClick={() => setOpenKey('__outputs')}
@@ -348,51 +567,78 @@ export default function QuestionPanel({
                 <span aria-hidden className="text-zinc-300 text-xs">›</span>
               </button>
             </li>
+            {above.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} />)}
           </ul>
 
-          <ul className="space-y-1">
-            {data.headings.map((h) => {
-              const n = h.entries.length
-              return (
-                <li key={h.key}>
+          {/* §4's divider — above it, what you act on; below it, what it was built from. */}
+          <hr className="border-zinc-200" />
+
+          {/* ══ 25-N §4 — INPUTS, A NEW GROUP ══════════════════════════════════
+              §4: a group holding "Everything we retrieved, by document type" and "The basic
+              idea — initial background". Both were loose at the bottom of the panel, below the
+              contents list rather than in it — which is how they ended up on screen underneath
+              whatever item the user had opened. */}
+          {(inputs?.retrieved || inputs?.background) && (
+            <ul className="space-y-1">
+              <li className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 pt-1">
+                Inputs
+              </li>
+              {inputs?.retrieved && (
+                <li>
                   <button
-                    onClick={() => setOpenKey(h.key)}
+                    onClick={() => setOpenKey('__inputs_retrieved')}
                     className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
                   >
-                    <span className={`text-sm flex-1 ${n ? 'font-medium text-zinc-800' : 'text-zinc-500'}`}>
-                      {h.heading}
-                    </span>
-                    {n > 0 ? (
-                      <span className="text-xs font-semibold text-zinc-700">{n}</span>
-                    ) : (
-                      <span className="text-[11px] text-zinc-400">
-                        {h.gap ? EMPTY_LABEL[h.gap.reason] ?? 'nothing here' : 'nothing here'}
-                      </span>
-                    )}
+                    <span className="text-sm flex-1 text-zinc-800">Everything we retrieved, by document type</span>
                     <span aria-hidden className="text-zinc-300 text-xs">›</span>
                   </button>
                 </li>
-              )
-            })}
-            {data.unfiled.length > 0 && (
-              <li>
-                <button
-                  onClick={() => setOpenKey('__unfiled')}
-                  className="w-full flex items-baseline gap-2 rounded-lg border border-dashed border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
-                >
-                  <span className="text-sm flex-1 text-zinc-500">Not filed under a question</span>
-                  <span className="text-xs font-semibold text-zinc-700">{data.unfiled.length}</span>
-                  <span aria-hidden className="text-zinc-300 text-xs">›</span>
-                </button>
-              </li>
-            )}
+              )}
+              {inputs?.background && (
+                <li>
+                  <button
+                    onClick={() => setOpenKey('__inputs_background')}
+                    className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+                  >
+                    <span className="text-sm flex-1 text-zinc-800">The basic idea — initial background</span>
+                    <span aria-hidden className="text-zinc-300 text-xs">›</span>
+                  </button>
+                </li>
+              )}
+            </ul>
+          )}
+
+          {/* ── EVERYTHING ELSE ────────────────────────────────────────────── */}
+          <ul className="space-y-1">
+            {rest.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} />)}
           </ul>
-          {/* §3d — the tagging is the input to the document, so the count belongs where the
-              user can see whether they have done any of it. */}
+
+          {/* ── AND ANYTHING NOT ASKED OF THIS DRAFT, AT THE BOTTOM ─────────── */}
+          {(notAsked.length > 0 || data.unfiled.length > 0) && (
+            <ul className="space-y-1">
+              <li className="text-[11px] text-zinc-400 pt-1">Not asked of this draft</li>
+              {notAsked.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} />)}
+              {data.unfiled.length > 0 && (
+                <li>
+                  <button
+                    onClick={() => setOpenKey('__unfiled')}
+                    className="w-full flex items-baseline gap-2 rounded-lg border border-dashed border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+                  >
+                    <span className="text-sm flex-1 text-zinc-500">Not filed under a question</span>
+                    <span className="text-xs font-semibold text-zinc-700">{data.unfiled.length}</span>
+                    <span aria-hidden className="text-zinc-300 text-xs">›</span>
+                  </button>
+                </li>
+              )}
+            </ul>
+          )}
+
+          {/* §3a — the count of what has crossed into the middle column, said in the
+              vocabulary of the act rather than of the flag. */}
           <p className="text-[11px] text-zinc-500">
             {prioritised
-              ? `${prioritised} source${prioritised === 1 ? '' : 's'} marked as a priority — those go in the proposal document itself; everything else goes in the evidence annex.`
-              : 'Nothing is marked as a priority yet. Open an item and star the sources that belong in the proposal document itself.'}
+              ? `${prioritised} ${prioritised === 1 ? 'item is' : 'items are'} in your report — they appear in DRAFT STRATEGY under their own headings. Everything else stays here, and goes into the evidence annex.`
+              : 'Nothing has been added to your report yet. Open an item and use \u201cAdd to report\u201d on anything that belongs in it \u2014 nothing crosses into the middle column on its own.'}
           </p>
         </>
       )}
@@ -416,7 +662,17 @@ export default function QuestionPanel({
           )}
 
           {openHeading.entries.map((e) => (
-            <EntryCard key={e.id} e={e} {...cardProps} />
+            <EntryCard
+              key={e.id}
+              e={e}
+              {...cardProps}
+              currentHeading={openHeading.key}
+              // ⚠ NO MOVE CONTROL ON THE USER'S OWN DOCUMENTS. Those rows are
+              // `IdeaUserMaterial`, not `EvidenceItem` — there is no `headingKey` to write,
+              // and they belong under "Your material" by definition. A control that looked
+              // the same and silently 404'd would be worse than none.
+              onMove={openHeading.key === 'YOUR_MATERIAL' ? undefined : move}
+            />
           ))}
 
           {/* ══ 25-L §5 — THE PEOPLE GRAPH, IN BETA, JUDGED BLIND FIRST ═══════
@@ -439,14 +695,28 @@ export default function QuestionPanel({
 
       {openKey === '__outputs' && <OutputsPanel ideaId={ideaId} />}
 
+      {/* ══ 25-N §3b — THE TWO THAT MOVED OUT OF THE MIDDLE COLUMN ═════════════
+          ⚠ ONE COMPONENT, ONE `view`. `AgendaPanel` renders its own sections; passing the
+          view rather than lifting the markup means the decision handler, the fork grouping
+          and the "I didn't record why I chose this" honesty note stay in one place. */}
+      {openKey === '__decisions' && <AgendaPanel ideaId={ideaId} view="judgements" />}
+      {openKey === '__changed_mind' && <AgendaPanel ideaId={ideaId} view="judgements" />}
+
+      {/* §4 — the Inputs group's two items, handed in by the panel that owns their data. */}
+      {openKey === '__inputs_retrieved' && inputs?.retrieved}
+      {openKey === '__inputs_background' && inputs?.background}
+
       {openKey === '__unfiled' && (
         <div className="space-y-2">
           <p className="text-[11px] text-zinc-500">
             These were found before we started filing findings by question, so we don’t know which
             one they answer. They are here rather than hidden.
           </p>
+          {/* ⚠ THE MOVE CONTROL MATTERS MOST HERE. These are the rows we could not file at
+              all; giving the user somewhere to put them is the difference between "not filed
+              under a question" being a permanent shelf and being a queue. */}
           {data.unfiled.map((e) => (
-            <EntryCard key={e.id} e={e} {...cardProps} />
+            <EntryCard key={e.id} e={e} {...cardProps} currentHeading={null} onMove={move} />
           ))}
         </div>
       )}

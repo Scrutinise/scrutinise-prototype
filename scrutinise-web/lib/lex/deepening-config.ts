@@ -304,7 +304,14 @@ export const PASSES: PassDef[] = [
     // strongest form and what killed a comparable measure — an argument, not a register of
     // who voted which way. Filing it under POSITIONS would let an empty positions heading
     // look answered while the thing it is actually for (the voting record) stays unread.
-    heading: 'AGAINST',
+    //
+    // ⚠⚠ 25-N §4 — WAS `AGAINST`, WHICH IS RETIRED, AND `check:lex-25l` FOUND THIS ONE.
+    // §4 deletes "The strongest case against"; `heading-map.ts` repointed the build's own
+    // ADVERSARIAL pass and this SECOND producer — a deepening pass, in a different config
+    // array — was still declaring it. It would have gone on writing rows under a heading the
+    // panel no longer draws, resolvable only through the read-time redirect, for ever. The
+    // check's property is exactly right: a producer may not declare a heading nobody renders.
+    heading: 'ARGUED',
     label: 'Political risk',
     strapline: 'Who resists, on what grounds, and what killed the last attempt.',
     training:
