@@ -18,6 +18,7 @@ import BuildIdeaClient from './BuildIdeaClient'
 import type { MyIdea } from '@/components/lex/MyIdeasList'
 import { stageContext } from '@/lib/lex/stage-context'
 import { blankElicitationState } from '@/lib/lex/elicitation'
+import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 
 interface Props {
   /**
@@ -255,7 +256,7 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   // ⚠ THE SAME TEST THE OLD DOOR USES — `ideaCount === 0` — and not "has no elicitation".
   // A user whose first idea was made at `/ideas/create` is not a first-time user here, and
   // opening an unprompted walkthrough at them would be the product forgetting they exist.
-  const ideaCount = dbUser ? await prisma.idea.count({ where: { creatorId: dbUser.id } }) : 0
+  const ideaCount = dbUser ? await prisma.idea.count({ where: { creatorId: dbUser.id , ...LIVE_IDEA } }) : 0
   const displayName = dbUser?.preferredName?.trim() || dbUser?.firstName?.trim() || null
 
   return (

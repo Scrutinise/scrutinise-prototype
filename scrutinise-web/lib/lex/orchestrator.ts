@@ -36,6 +36,7 @@ import { buildFactsBlock, type TurnFacts } from './facts'
 import { readStageSearches, displayStageFor, type StageSearchRecord } from './stage-search'
 import { PROBLEM_FIELD_KEY, looksLikeASolution } from './method'
 import { acceptedSummary, sourceValuesFor } from './accepted-context'
+import { LIVE_IDEA } from './idea-visibility'
 
 export { acceptedSummary } from './accepted-context'
 
@@ -112,7 +113,7 @@ async function buildPrompt(
     where: { id: userId },
     select: { preferredName: true, firstName: true, aiPreferredStyle: true },
   })
-  const ideaCount = await prisma.idea.count({ where: { creatorId: userId } })
+  const ideaCount = await prisma.idea.count({ where: { creatorId: userId , ...LIVE_IDEA } })
   return buildLexSystemPrompt({
     preferredName: user?.preferredName ?? user?.firstName ?? 'there',
     lexMode: user?.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE',

@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import PublicNav from '@/components/PublicNav'
 import IdeaCard, { type IdeaCardData } from '@/components/IdeaCard'
 import { prisma } from '@/lib/prisma'
+import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 
 export const metadata = {
   title: 'Browse Ideas — Scrutinise',
@@ -59,7 +60,8 @@ export default async function BrowseIdeasPage({ searchParams }: Props) {
     where: {
       stage: { in: ['STAGE_3', 'STAGE_4', 'STAGE_5'] },
       status: 'ACTIVE',
-      deletedAt: null,   // §19-E Task 6
+      // §19-E Task 6, and 25-O §4b — the PUBLIC list, which is the one that matters most.
+      ...LIVE_IDEA,
     },
     orderBy: { updatedAt: 'desc' },
     take: PAGE_SIZE + 1, // take one extra to detect next page
@@ -91,7 +93,8 @@ export default async function BrowseIdeasPage({ searchParams }: Props) {
     })
     if (dbUser) {
       const raw = await prisma.idea.findMany({
-        where: { creatorId: dbUser.id, status: 'ACTIVE', deletedAt: null },   // §19-E Task 6
+        // §19-E Task 6, and 25-O §4b.
+        where: { creatorId: dbUser.id, status: 'ACTIVE', ...LIVE_IDEA },
         orderBy: { updatedAt: 'desc' },
         take: 3,
         select: {

@@ -5,6 +5,7 @@ import PublicNav from '@/components/PublicNav'
 import DashboardClient from './DashboardClient'
 import { getUserCentralTotal } from '@/lib/central-points'
 import type { Metadata } from 'next'
+import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -31,7 +32,10 @@ export default async function DashboardPage() {
       // §19-E Task 6 — a deleted idea leaves the owner's list. This surface had no
       // status filter at all, which is why the delete had to be a column of its own
       // rather than an overloaded status value.
-      where: { creatorId: user.id, deletedAt: null },
+      // ⚠ 25-O §4b — THROUGH `LIVE_IDEA`, not a hand-written pair of nulls. §4d: a hide
+      // that one read path forgets is worse than no hide at all, and this is the owner's own
+      // dashboard — the first place an archived idea would reappear.
+      where: { creatorId: user.id, ...LIVE_IDEA },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,

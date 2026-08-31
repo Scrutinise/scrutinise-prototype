@@ -16,6 +16,7 @@ import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import { buildFactsBlock } from '@/lib/lex/facts'
+import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -125,7 +126,7 @@ export async function POST(req: Request, { params }: Params) {
     currentField: current?.key ?? null, sample: message.slice(0, 60),
   })
 
-  const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId } })
+  const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId , ...LIVE_IDEA } })
   const systemPrompt = buildLexSystemPrompt({
     preferredName: user.preferredName ?? user.firstName,
     lexMode: user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE',

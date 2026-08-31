@@ -7,6 +7,7 @@ import type { LexStageKey } from '@/lib/lex/stages'
 // prisma read beside the vocabulary put `pg` in the browser bundle.
 import { stageContext } from '@/lib/lex/stage-context'
 import { newIdeaDoor, doorPath } from '@/lib/lex/new-idea-door'
+import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 
 function getTimeOfDay(utcHour: number): string {
   if (utcHour >= 5 && utcHour < 12) return 'morning'
@@ -108,7 +109,7 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   // Address the user by what they go by: preferredName, falling back to firstName.
   // (The preferred name is now seeded correctly per user, so "Charles" → "Charlie".)
   const displayName = dbUser?.preferredName?.trim() || dbUser?.firstName?.trim() || ''
-  const ideaCount = dbUser ? await prisma.idea.count({ where: { creatorId: dbUser.id } }) : 0
+  const ideaCount = dbUser ? await prisma.idea.count({ where: { creatorId: dbUser.id , ...LIVE_IDEA } }) : 0
 
   if (!dbUser || ideaCount === 0) {
     isFirstIdea = true

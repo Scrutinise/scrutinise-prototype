@@ -16,6 +16,9 @@ export async function GET(req: Request) {
   const q = searchParams.get('q')?.trim() ?? ''
   if (!q) return NextResponse.json([])
 
+  // ⚠ 25-O §4b — THE ADMIN SEARCH DELIBERATELY DOES **NOT** APPLY `LIVE_IDEA`, and that is
+  // what makes archiving reversible. §4b keeps the rows; keeping them is worth nothing if the
+  // only surface that could put one back cannot find it. Every other reader is filtered.
   const ideas = await prisma.idea.findMany({
     where: {
       OR: [

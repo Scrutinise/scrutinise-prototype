@@ -644,6 +644,28 @@ model Idea {
   id                        String          @id @default(uuid())
   creatorId                 String
   creator                   User            @relation("IdeaCreator", fields: [creatorId], references: [id])
+  /// ══ 25-O §4b — ARCHIVED, WHICH IS NOT DELETED AND NOT SOFT-DELETED ═══════════════
+  ///
+  /// §4b: *"Archive, never hard-delete. Mark archived; hide from every list, every count and
+  /// every search; keep the rows."* Three testers made ideas under the previous structure;
+  /// they were going wrong at the time, Charlie is explaining to those three directly, and the
+  /// ideas should not appear anywhere in the product.
+  ///
+  /// ⚠⚠ IT IS A SEPARATE COLUMN FROM `deletedAt`, AND THAT IS THE WHOLE DESIGN. `deletedAt`
+  /// means the OWNER deleted it — it is their act, it is undoable by them, and 25-H already
+  /// learned what happens when a deletion is claimed and not made (three copies reported
+  /// deleted were still in the database five days later, two wearing real titles). This is an
+  /// ADMIN act on somebody else's work: reusing `deletedAt` would make the two indistinguishable
+  /// afterwards, so nobody could tell whether a user had deleted their own idea or we had hidden
+  /// it from them — and the second is the one you have to be able to answer for.
+  ///
+  /// ⚠ THE ROWS ARE KEPT. Every build, every finding, every note survives; only the visibility
+  /// changes, so a mistake is one UPDATE away from being undone and nothing has been lost while
+  /// it stood.
+  archivedAt                DateTime?
+  /// Who archived it and why. An archive with no record of who made it is the unaccountable
+  /// act `buildAllowanceNote` exists to prevent, one table over.
+  archivedReason            String?
   /// 25-N §3c — the working notes, private to whoever wrote them.
   notesPrivate              IdeaNote[]
   /// 25-N §3e — which worklist items each user has ticked off.
@@ -3678,6 +3700,22 @@ model IdeaBuild {
   /// is the information that makes it a quality signal rather than a comment.
   userCritique    String?      @db.Text
   userCritiqueAt  DateTime?
+
+  /// ══ 25-O §5 — THE OPENING COMMENTARY ON THE CAUSES ══════════════════════════════
+  ///
+  /// The `CausesCommentary` shape from `lib/lex/build-commentary.ts`: what the evidence says,
+  /// how complex the problem is, how the pieces relate, and where the sources CONFLICT.
+  ///
+  /// ⚠ ON THE BUILD, NOT ON THE IDEA, and for the same reason `userCritique` is. It describes
+  /// the terrain AS OF THIS RUN. Stored on the idea it would be one paragraph silently
+  /// outliving the evidence it was written about — and the causes are exactly what a re-run
+  /// changes. On the build, the screen can say which run it came from and whether that run is
+  /// still the latest.
+  ///
+  /// ⚠ NULL IS A REAL AND COMMON STATE: a build made before 25-O, a pass that did not run, a
+  /// model that returned something with nothing in it. The section renders an honest empty
+  /// state rather than a heading over a blank.
+  causesCommentary Json?
 
   /// 25-M §4 — WHICH MODE THIS BUILD ACTUALLY RAN IN. `FULL` or `REUSE`.
   ///

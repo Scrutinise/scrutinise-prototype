@@ -46,6 +46,11 @@ export async function POST() {
         lastActiveAt: true,
       },
     }),
+    // ⚠ 25-O §4b — THE ONE READER THAT DELIBERATELY DOES **NOT** GET `LIVE_IDEA`.
+    // This is the user's own GDPR data export. Archiving hides an idea from the PRODUCT; it
+    // does not un-give somebody their own writing, and a subject access request that quietly
+    // omitted rows because an admin had hidden them would be the one place this feature could
+    // do real harm. §4b keeps the rows precisely so this stays whole.
     prisma.idea.findMany({
       where: { creatorId: user.id },
       select: {
