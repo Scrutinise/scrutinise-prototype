@@ -67,6 +67,12 @@ export default function YourMaterial({
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState('')
+  /** 25-N §1f — the row the user has asked to open, with the text we kept from it. */
+  const [viewing, setViewing] = useState<
+    { id: string; label: string; kind: string; filename: string | null; url: string | null
+      text: string | null; charCount: number; findingCount: number; findingsAt: string | null } | null
+  >(null)
+  const [viewBusy, setViewBusy] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   /**
@@ -145,6 +151,24 @@ export default function YourMaterial({
     } finally { setBusy(false) }
   }, [ideaId, link, after])
 
+  /**
+   * ══ 25-N §1f — OPEN WHAT YOU GAVE ME ══════════════════════════
+   *
+   * ⚠ IT FETCHES ON DEMAND, one row at a time. The list endpoint deliberately never returns
+   * `text` (see the route header): a fifty-page report on the wire on every poll, for nobody,
+   * is what that rule exists to prevent. Pressing Open is the one moment somebody wants it.
+   */
+  const openMaterial = useCallback(async (id: string) => {
+    setViewBusy(true); setError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/material?materialId=${encodeURIComponent(id)}`)
+      if (!res.ok) { setError('That could not be opened.'); return }
+      setViewing(await res.json())
+    } catch {
+      setError('That could not be opened.')
+    } finally { setViewBusy(false) }
+  }, [ideaId])
+
   const remove = useCallback(async (id: string) => {
     setBusy(true); setError(null)
     try {
@@ -172,17 +196,30 @@ export default function YourMaterial({
                 ) : (
                   <span className="text-zinc-800 break-words">{r.label}</span>
                 )}
-                <div className="text-[11px] text-zinc-400">
+                {/* ══ 25-N §1f — WHAT WAS TAKEN FROM IT, IN WORDS ═════════════════
+                    ⚠⚠ *"9 findings · 87k characters kept"* MEANS NOTHING TO A USER. The character
+                    count answers a question nobody asked — it is our storage figure, printed
+                    where the user is looking for "did you read it, and what did you get?".
+                    Charlie's own wording for the answer is the sentence below. The count is not
+                    hidden; it moves into the viewer, where "how much of my document did you
+                    keep" is a question somebody might actually have. */}
+                <div className="text-[11px] text-zinc-500">
                   {r.status === 'FAILED'
                     ? (r.failureReason ?? 'Could not be read.')
                     : r.findingsAt === null
-                      ? 'Stored — not yet read.'
+                      ? 'Lex has this, and has not read it yet.'
                       : r.findingCount > 0
-                        ? `${r.findingCount} finding${r.findingCount === 1 ? '' : 's'}`
-                        : 'Read — nothing in it bore on this.'}
-                  {' · '}{Math.round(r.charCount / 1000)}k characters kept
+                        ? `Lex read this and took ${r.findingCount} finding${r.findingCount === 1 ? '' : 's'} from it.`
+                        : 'Lex read this and found nothing in it that bore on your idea.'}
                 </div>
               </div>
+              {/* §1f — "Let the user open what they uploaded." */}
+              {r.status !== 'FAILED' && (
+                <button onClick={() => void openMaterial(r.id)} disabled={busy || viewBusy}
+                  className="text-[11px] font-medium text-blue-700 hover:text-blue-900 disabled:opacity-40 shrink-0">
+                  Open
+                </button>
+              )}
               <button onClick={() => void remove(r.id)} disabled={busy}
                 className="text-[11px] text-zinc-400 hover:text-red-600 disabled:opacity-40 shrink-0">
                 Remove
@@ -267,6 +304,64 @@ export default function YourMaterial({
       )}
 
       {busy && <p className="text-[11px] text-zinc-500">Reading it…</p>}
+
+      {/* ══ 25-N §1f — THE VIEWER ════════════════════════════════
+          ⚠ IT SAYS WHAT IT IS SHOWING, FIRST. This is the TEXT Lex kept, not the file — the
+          file was never stored, which is stated on the upload control and has to be stated
+          again here or the viewer becomes a quiet contradiction of it. A user who opened this
+          and found their PDF's layout gone would otherwise conclude something had been lost. */}
+      {viewing && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`What Lex read from ${viewing.label}`}
+          onClick={() => setViewing(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-200">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-semibold text-zinc-900 break-words">{viewing.label}</h2>
+                <p className="text-[11px] text-zinc-500 mt-0.5">
+                  {viewing.kind === 'FILE'
+                    ? 'This is the text Lex read out of your file. The file itself is never stored — this is the only copy we hold.'
+                    : 'This is the text Lex read from that page.'}
+                  {' '}
+                  {viewing.findingsAt
+                    ? viewing.findingCount > 0
+                      ? `Lex took ${viewing.findingCount} finding${viewing.findingCount === 1 ? '' : 's'} from it.`
+                      : 'Lex found nothing in it that bore on your idea.'
+                    : 'Lex has not read it yet.'}
+                  {` (${viewing.charCount.toLocaleString()} characters kept.)`}
+                </p>
+              </div>
+              {viewing.url && (
+                <a href={viewing.url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-medium text-blue-700 hover:text-blue-900 whitespace-nowrap">
+                  Original ↗
+                </a>
+              )}
+              <button onClick={() => setViewing(null)} aria-label="Close"
+                className="text-zinc-400 hover:text-zinc-700 text-lg leading-none px-1">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {viewing.text ? (
+                <pre className="text-xs text-zinc-800 whitespace-pre-wrap break-words font-sans leading-relaxed">
+                  {viewing.text}
+                </pre>
+              ) : (
+                <p className="text-sm text-zinc-600">
+                  There is no text stored for this one. That is not an empty document — it means the
+                  extraction never produced anything, and nothing has been read from it.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

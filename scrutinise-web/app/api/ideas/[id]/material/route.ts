@@ -56,10 +56,43 @@ async function listMaterial(ideaId: string) {
   }
 }
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+
+  // ══ 25-N §1f — THE USER MAY OPEN WHAT THEY GAVE US ═══════════════════════════
+  //
+  // ⚠⚠ AND WHAT THEY GET BACK IS THE TEXT, NOT THE FILE, BECAUSE THE FILE DOES NOT EXIST.
+  // §25.6 stores extracted text and no binary, deliberately — "the file itself is never
+  // stored" is printed on the upload control. So "let the user open what they uploaded"
+  // cannot mean handing back a PDF, and pretending otherwise would be a promise the schema
+  // cannot keep. It means: show them exactly what we read, which is the thing that actually
+  // determines what Lex concluded. The viewer says which it is, in those words.
+  //
+  // ⚠ ONE ROW AT A TIME, ASKED FOR BY ID. The header's rule stands — `text` stays out of the
+  // list select, so a fifty-page report is not on the wire on every poll. It travels only
+  // when somebody has pressed "Open".
+  const materialId = new URL(req.url).searchParams.get('materialId')
+  if (materialId) {
+    const row = await prisma.ideaUserMaterial.findFirst({
+      // ⚠ SCOPED TO THE IDEA, not looked up by id alone. `authorizeIdea` proved access to
+      // THIS idea; a bare id lookup would serve any material row to anyone who owns any idea.
+      where: { id: materialId, ideaId: id },
+      select: {
+        id: true, kind: true, label: true, filename: true, mimeType: true, url: true,
+        text: true, charCount: true, status: true, failureReason: true,
+        findingsAt: true, findingCount: true, createdAt: true,
+      },
+    })
+    if (!row) return NextResponse.json({ error: 'That is not on this idea.' }, { status: 404 })
+    return NextResponse.json({
+      ...row,
+      findingsAt: row.findingsAt ? row.findingsAt.toISOString() : null,
+      createdAt: row.createdAt.toISOString(),
+    })
+  }
+
   return NextResponse.json(await listMaterial(id))
 }
 

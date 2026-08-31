@@ -26,6 +26,25 @@
 //
 // ⚠ NOTHING IS SIGNALLED BY COLOUR ALONE (docs/CLAUDE.md §21). Every row carries its count
 // as a number and its kind as a word; done rows carry "done" in text, not a green tick.
+//
+// ══ 25-N §3e — FOUR PARTS, EACH A CHECKBOX LIST, HIDDEN UNTIL CLICKED ═══════════════
+//
+// §3e: **Things to read · Decisions to make · Put it out for scrutiny · Promote it**, in that
+// order. What was here was five one-line SUMMARIES — "Read the sources that most bear on this
+// (7)" — which tell a user how much is waiting and nothing about what it is. §3e turns each
+// into the list itself, so the row you tick is the thing you did.
+//
+// ⚠⚠ AND THE LAST TWO PARTS ARE NOT DERIVED FROM ANYTHING. "Put it out for scrutiny" and
+// "Promote it" are things the user does elsewhere, and this list records that they have. They
+// were absent entirely: the worklist ended at the research, so a user who had finished the
+// research was told "nothing is waiting on you" while three quarters of the actual job — get
+// it read, get it argued with, get it supported — had not been named once.
+//
+// ⚠⚠ EVERY ITEM IS A REAL CONTROL, ON EVERY SCREEN SIZE. §3e: *"The items must be clickable.
+// On mobile they currently are not."* The old rows were `<a href="#anchor">` — an in-page jump
+// to an element that, on a phone, is inside a TAB THAT IS NOT ON SCREEN, so the link resolved
+// to nothing and the row did nothing. A tick box works on a phone because it acts on the row
+// itself, and where an item really is elsewhere it is a link to a route, not to a fragment.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -173,6 +192,14 @@ export function tasksFrom(agenda: AgendaShape | null, passes: PassShape[], scope
   return out
 }
 
+/** 25-N §3e — one part of the four, as the route assembles it. */
+interface Part {
+  key: 'read' | 'decide' | 'scrutiny' | 'promote'
+  title: string
+  blurb: string | null
+  items: Array<{ key: string; text: string; anchor: string | null; href: string | null; ticked: boolean }>
+}
+
 export default function WorkList({
   ideaId, scope, refreshNonce = 0, onOutstanding,
 }: {
@@ -191,7 +218,17 @@ export default function WorkList({
 }) {
   const [agenda, setAgenda] = useState<AgendaShape | null>(null)
   const [passes, setPasses] = useState<PassShape[]>([])
+  const [parts, setParts] = useState<Part[]>([])
   const [loading, setLoading] = useState(true)
+  /**
+   * 25-N §3e — which part is open. `null` is the home state.
+   *
+   * ⚠ ALL FOUR CLOSED BY DEFAULT, and that is §3e's *"hidden until clicked"*. Four expanded
+   * lists in a pane that also holds the chat is the scroll 25-L §3a removed from the research
+   * panel, rebuilt in the working area.
+   */
+  const [openPart, setOpenPart] = useState<Part['key'] | null>(null)
+  const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
     const reads: Promise<unknown>[] = [
@@ -212,9 +249,39 @@ export default function WorkList({
           .catch(() => setPasses([])),
       )
     }
+    // 25-N §3e — the four parts. Stage 2 only: the Deepening's worklist is its own passes
+    // and issues, and "put it out for scrutiny" is not a thing you do to a pass.
+    if (scope === 'strategy') {
+      reads.push(
+        fetch(`/api/ideas/${ideaId}/worklist`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j) => setParts(((j as { parts?: Part[] } | null)?.parts ?? []) as Part[]))
+          .catch(() => setParts([])),
+      )
+    }
     await Promise.all(reads)
     setLoading(false)
   }, [ideaId, scope])
+
+  /** §3e — tick or untick one item. Optimistic, then reconciled with the server's answer. */
+  const tick = useCallback(async (itemKey: string, ticked: boolean) => {
+    setParts((cur) => cur.map((p) => ({
+      ...p,
+      items: p.items.map((i) => (i.key === itemKey ? { ...i, ticked } : i)),
+    })))
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/worklist`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemKey, ticked }),
+      })
+      // ⚠ THE SERVER'S ANSWER WINS. A resolved fork is ticked whether or not anybody pressed
+      // the box (see the route), so the optimistic state is a guess and the reconciliation is
+      // where "I decided this an hour ago" shows up.
+      if (res.ok) setParts(((await res.json()).parts ?? []) as Part[])
+    } finally { setBusy(false) }
+  }, [ideaId])
 
   useEffect(() => { void load() }, [load, refreshNonce])
 
@@ -226,7 +293,13 @@ export default function WorkList({
   outstandingRef.current = onOutstanding
 
   const tasks = tasksFrom(agenda, passes, scope)
-  const outstanding = tasks.filter((t) => !t.done).length
+  // ⚠ 25-N §3e — THE BADGE COUNTS WHAT IS ON SCREEN. At Stage 2 the list IS the four parts,
+  // so counting `tasks` there would put a number on the mobile tab that no visible row
+  // explains — the "one place that knows" rule (25-L §6) is about the two agreeing, and after
+  // §3e the thing they have to agree about changed.
+  const outstanding = scope === 'strategy' && parts.length
+    ? parts.reduce((n, p) => n + p.items.filter((i) => !i.ticked).length, 0)
+    : tasks.filter((t) => !t.done).length
 
   useEffect(() => { outstandingRef.current?.(outstanding) }, [outstanding])
 
@@ -244,65 +317,166 @@ export default function WorkList({
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
           What to do next
         </h2>
+        {/* ══ 25-N §3d — THE PANEL TEXT, VERBATIM ═══════════════════════════════
+            §3d gives this its exact wording. It is the sentence that says what this column is
+            FOR, which is the question a user asks of a list of instructions before they follow
+            any of them. */}
+        <p className="mt-1 text-[11px] text-zinc-600 leading-snug">
+          This panel lists the decisions and actions you need to take to build the draft strategy
+          I’ve prepared for you into your formal proposal.
+        </p>
 
-        {tasks.length === 0 ? (
-          // ⚠ AN HONEST EMPTY STATE, in the house style: what it means, not just "none".
-          <p className="mt-1.5 text-sm text-zinc-600">
-            Nothing is waiting on you here. That is not the same as nothing left to do — going
-            deeper is Stage 3, and re-running with more information is Stage 1.
-          </p>
-        ) : (
-          <>
-            <ol className="mt-1.5 space-y-1">
-              {tasks.map((t, i) => {
-                const row = (
-                  <>
-                    <span
-                      aria-hidden
-                      className={`mt-0.5 shrink-0 text-[11px] leading-5 ${t.done ? 'text-zinc-400' : 'text-zinc-500'}`}
-                    >
-                      {/* Filled when there is work in it, hollow when it is done. Two
-                          different characters — never one character recoloured (§21). */}
-                      {t.done ? '○' : '●'}
+        {/* ══ 25-N §3e — THE FOUR PARTS, HIDDEN UNTIL CLICKED ═══════════════════
+            ⚠ SHOWN AT STAGE 2 ONLY. At Stage 3 the work IS the passes and the issues they
+            raise, and "put it out for scrutiny" is not something you do to a pass — so the
+            Deepening keeps the summary list below, which is written against exactly that. */}
+        {scope === 'strategy' && parts.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {parts.map((part) => {
+              const open = openPart === part.key
+              const done = part.items.filter((i) => i.ticked).length
+              return (
+                <li key={part.key} className="rounded-lg border border-zinc-200 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setOpenPart(open ? null : part.key)}
+                    aria-expanded={open}
+                    className="w-full flex items-baseline gap-2 px-2.5 py-2 text-left rounded-lg hover:bg-zinc-50"
+                  >
+                    <span className="text-sm font-medium text-zinc-800 flex-1">{part.title}</span>
+                    {/* ⚠ A COUNT AND A WORD, never a coloured dot (docs/CLAUDE.md §21). */}
+                    <span className="text-[11px] text-zinc-500 whitespace-nowrap">
+                      {part.items.length === 0
+                        ? 'nothing here yet'
+                        : `${done} of ${part.items.length} done`}
                     </span>
-                    <span className="flex-1 min-w-0">
-                      <span className={`text-sm ${t.done ? 'text-zinc-400' : 'text-zinc-800'}`}>
-                        {t.text}
-                      </span>{' '}
-                      <span className="text-xs text-zinc-500 whitespace-nowrap">
-                        ({t.count}{t.done ? ', done' : ''})
-                      </span>
+                    <span className="text-[11px] text-zinc-400 whitespace-nowrap">
+                      {open ? 'hide −' : 'show +'}
                     </span>
-                  </>
-                )
-                return (
-                  <li key={t.key}>
-                    {t.anchor ? (
-                      <a
-                        href={`#${t.anchor}`}
-                        className="flex gap-2 rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-white"
-                      >
-                        {row}
-                        <span aria-hidden className="text-zinc-300 text-xs leading-5">↓</span>
-                      </a>
-                    ) : (
-                      <div className="flex gap-2 px-1.5 py-1 -mx-1.5">{row}</div>
-                    )}
-                    {i === 0 && !t.done && (
-                      // §3: "the list tells them, in order." Saying which one is first is
-                      // what turns a list into an instruction.
-                      <p className="pl-6 text-[11px] text-zinc-500">Start here.</p>
-                    )}
-                  </li>
-                )
-              })}
-            </ol>
-            <p className="mt-1.5 text-[11px] text-zinc-500">
-              {outstanding === 0
-                ? 'Everything on this list has been dealt with.'
-                : `${outstanding} of ${tasks.length} still waiting on you.`}
+                  </button>
+
+                  {open && (
+                    <div className="px-2.5 pb-2.5 border-t border-zinc-100 pt-2">
+                      {part.blurb && (
+                        <p className="text-[11px] text-zinc-600 leading-snug mb-2">{part.blurb}</p>
+                      )}
+                      {part.items.length === 0 ? (
+                        <p className="text-[11px] text-zinc-500">
+                          Nothing is on this list yet. That is not the same as nothing to do here —
+                          it is what has not been produced yet.
+                        </p>
+                      ) : (
+                        <ul className="space-y-1.5">
+                          {part.items.map((item) => (
+                            <li key={item.key} className="flex items-start gap-2">
+                              {/* ⚠⚠ §3e — A REAL CHECKBOX, AND IT WORKS ON A PHONE. The old
+                                  rows were in-page `#anchor` links, and on mobile the anchor
+                                  is inside a TAB THAT IS NOT ON SCREEN — so the row did
+                                  nothing at all. A tick acts on the row itself. */}
+                              <input
+                                type="checkbox"
+                                checked={item.ticked}
+                                disabled={busy}
+                                onChange={(e) => void tick(item.key, e.target.checked)}
+                                aria-label={`Mark “${item.text}” as done`}
+                                className="mt-0.5 shrink-0 w-4 h-4 rounded border-zinc-400 accent-zinc-900"
+                              />
+                              <span className="flex-1 min-w-0">
+                                {/* ⚠ A LINK TO A ROUTE, NEVER TO A FRAGMENT. See the header:
+                                    a fragment link is the thing that silently does nothing on
+                                    a phone. Where an item genuinely lives elsewhere it is a
+                                    real navigation; where it lives on this page it is text. */}
+                                {item.href ? (
+                                  <a
+                                    href={item.href}
+                                    target={item.href.startsWith('http') ? '_blank' : undefined}
+                                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                                    className={`text-sm hover:underline ${item.ticked ? 'text-zinc-400' : 'text-blue-700'}`}
+                                  >
+                                    {item.text}
+                                  </a>
+                                ) : (
+                                  <span className={`text-sm ${item.ticked ? 'text-zinc-400' : 'text-zinc-800'}`}>
+                                    {item.text}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+
+        {/* ══ THE DEEPENING'S OWN WORKLIST ══════════════════════════════════════
+            25-K §3's summary rows, unchanged, and they are the right shape for Stage 3: the
+            work there is running passes and clearing the issues they raise, which is a set of
+            counts rather than a set of things to tick off one by one. */}
+        {scope !== 'strategy' && (
+          tasks.length === 0 ? (
+            // ⚠ AN HONEST EMPTY STATE, in the house style: what it means, not just "none".
+            <p className="mt-1.5 text-sm text-zinc-600">
+              Nothing is waiting on you here. That is not the same as nothing left to do — going
+              deeper is Stage 3, and re-running with more information is Stage 1.
             </p>
-          </>
+          ) : (
+            <>
+              <ol className="mt-1.5 space-y-1">
+                {tasks.map((t, i) => {
+                  const row = (
+                    <>
+                      <span
+                        aria-hidden
+                        className={`mt-0.5 shrink-0 text-[11px] leading-5 ${t.done ? 'text-zinc-400' : 'text-zinc-500'}`}
+                      >
+                        {/* Filled when there is work in it, hollow when it is done. Two
+                            different characters — never one character recoloured (§21). */}
+                        {t.done ? '○' : '●'}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className={`text-sm ${t.done ? 'text-zinc-400' : 'text-zinc-800'}`}>
+                          {t.text}
+                        </span>{' '}
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">
+                          ({t.count}{t.done ? ', done' : ''})
+                        </span>
+                      </span>
+                    </>
+                  )
+                  return (
+                    <li key={t.key}>
+                      {t.anchor ? (
+                        <a
+                          href={`#${t.anchor}`}
+                          className="flex gap-2 rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-white"
+                        >
+                          {row}
+                          <span aria-hidden className="text-zinc-300 text-xs leading-5">↓</span>
+                        </a>
+                      ) : (
+                        <div className="flex gap-2 px-1.5 py-1 -mx-1.5">{row}</div>
+                      )}
+                      {i === 0 && !t.done && (
+                        // §3: "the list tells them, in order." Saying which one is first is
+                        // what turns a list into an instruction.
+                        <p className="pl-6 text-[11px] text-zinc-500">Start here.</p>
+                      )}
+                    </li>
+                  )
+                })}
+              </ol>
+              <p className="mt-1.5 text-[11px] text-zinc-500">
+                {outstanding === 0
+                  ? 'Everything on this list has been dealt with.'
+                  : `${outstanding} of ${tasks.length} still waiting on you.`}
+              </p>
+            </>
+          )
         )}
       </div>
     </section>

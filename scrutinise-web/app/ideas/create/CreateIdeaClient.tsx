@@ -16,9 +16,11 @@ import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import StageBar from '@/components/lex/StageBar'
-import PanelDivider from '@/components/lex/PanelDivider'
+import PanelDivider, { RowDivider } from '@/components/lex/PanelDivider'
+import NotesPanel from '@/components/lex/NotesPanel'
+import RerunBanner from '@/components/lex/RerunBanner'
 import { usePanelLayout } from '@/components/lex/usePanelLayout'
-import { PANEL_ROLES } from '@/lib/lex/panel-layout'
+import { PANEL_ROLES, HIDE_PANEL_LABEL } from '@/lib/lex/panel-layout'
 import WorkList from '@/components/lex/WorkList'
 // ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
 // TYPE import, erased at compile, so the server-only counting module never reaches the
@@ -28,6 +30,7 @@ import type { StageContext } from '@/lib/lex/stage-context'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import AgendaPanel from '@/components/lex/AgendaPanel'
+import ReportAdditions from '@/components/lex/ReportAdditions'
 import type { FeedbackSurfaceKey } from '@/lib/lex/feedback-types'
 import type { CausesApi, PolicyApi, ActionsApi, CostLinesApi } from '@/components/lex/FieldsPanel'
 import { accentFor } from '@/lib/lex/stage-accents'
@@ -155,8 +158,63 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     background: boolean | null
   }>({ chat: null, fields: null, background: null })
   const bootedRef = useRef(false)
+  /**
+   * ══ 25-N §11 — THE PAGE OPENS AT THE TOP ═════════════════════════════════════
+   *
+   * §11: *"Default to the top of the page — the three stages currently scroll off."*
+   *
+   * ⚠⚠ NOTHING IN THIS FILE SCROLLED, AND THAT IS WHY IT WAS HAPPENING. The browser RESTORES
+   * the previous scroll position on a back navigation or a soft reload, and on a phone the
+   * stage bar is the first ~120px of the document — so a user coming back from an idea, or
+   * rotating the screen, landed below it with no indication that three stages existed. It reads
+   * as a missing feature rather than as a scroll position, which is why it survived a
+   * walkthrough.
+   *
+   * ⚠ ONCE, ON MOUNT, AND NOT ON EVERY RENDER. Scrolling to the top whenever state changed
+   * would yank the page out from under somebody halfway down a committee report.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    // ⚠ `scrollRestoration` IS THE ACTUAL MECHANISM, so it is turned off rather than fought.
+    // A `scrollTo(0,0)` alone races the browser's own restore and loses about half the time.
+    const history = window.history
+    const previous = history.scrollRestoration
+    try { history.scrollRestoration = 'manual' } catch { /* not supported; the scroll below still runs */ }
+    window.scrollTo(0, 0)
+    return () => { try { history.scrollRestoration = previous } catch { /* nothing to restore */ } }
+  }, [])
   /** 25-K §3 — bumped whenever a mutation may have changed what is waiting on the user. */
   const [worklistNonce, setWorklistNonce] = useState(0)
+  /**
+   * 25-N §3a — bumped when something crosses into or out of the report.
+   *
+   * ⚠ TWO COLUMNS READ THE SAME FACT AND NEITHER OWNS IT. "Add to report" is pressed in THE
+   * RESEARCH and its consequence is drawn in DRAFT STRATEGY; without a shared nonce the middle
+   * column would only catch up on a reload, and a button whose effect appears next time you
+   * visit is a button the user will press twice.
+   */
+  const [reportNonce, setReportNonce] = useState(0)
+  /**
+   * ══ 25-N §3c — THE WORKING AREA IS TWO HALVES, AND THE USER OWNS THE SPLIT ═══════
+   *
+   * §3c: *"The left panel is the working area: the worklist, then the chat, split by a
+   * draggable divider."* It was `max-h-[42%]` — one number, chosen once, for everybody. That
+   * is wrong for a user with two tasks and wrong again for one with nine, and there was no way
+   * to change it.
+   *
+   * ⚠ IT IS SESSION STATE, NOT STORED PER USER like the column widths are. The column layout
+   * is a standing preference about a screen; this one is about how much of a list you want to
+   * see WHILE you read it, and it changes several times in a sitting. Persisting it would mean
+   * yesterday's answer arriving on top of today's work.
+   */
+  const [worklistFraction, setWorklistFraction] = useState(0.42)
+  /**
+   * §3c — *"Two tabs on the chat: Lex … and Notes."*
+   *
+   * ⚠ THE DEFAULT IS LEX, and it stays Lex. Notes are the private half and opening on them
+   * would hide the conversation a user came back to continue.
+   */
+  const [leftTab, setLeftTab] = useState<'lex' | 'notes'>('lex')
   /**
    * 25-L §4 — which panels are open and how wide, per USER.
    *
@@ -527,8 +585,14 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const shown = { left: showChat, middle: showFields, right: showBackground }
   const openCols = (['left', 'middle', 'right'] as const).filter((k) => shown[k])
   const totalW = openCols.reduce((n, k) => n + panels.layout.width[k], 0) || 1
+  // ⚠⚠ 25-N §1b — `minmax(0, …)`. A bare `Nfr` is `minmax(auto, Nfr)`, so a track can never
+  // be narrower than its content's min-content width: clicking an item in the research panel
+  // put a long citation or URL in that column and the browser silently widened it, taking the
+  // width out of the other two. Nothing in our code moved and no control put it back. See the
+  // full note on `gridTemplate` in lib/lex/panel-layout.ts — this line and that one are the
+  // same fix in the two places a template is built, and `check:lex-25n` asserts both.
   const colTemplate = (['left', 'middle', 'right'] as const)
-    .map((k) => (shown[k] ? `${((panels.layout.width[k] / totalW) * 100).toFixed(3)}fr` : '2.5rem'))
+    .map((k) => (shown[k] ? `minmax(0, ${((panels.layout.width[k] / totalW) * 100).toFixed(3)}fr)` : '2.5rem'))
     .join(' 0.375rem ')
 
   const cf = state?.currentField
@@ -549,6 +613,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         </div>
       )}
 
+      {/* ══ 25-N §1e — A RUN IN PROGRESS SAYS SO, HERE, WHERE THE USER IS ══════════
+          A re-run is started on Stage 1 and takes ten minutes; the user comes back HERE to
+          keep reading, and until now nothing on this screen said a build was in flight — so
+          the draft changed under them with no account of why. */}
+      {ideaId && <RerunBanner ideaId={ideaId} />}
+
       {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════════════
           On every screen of this surface (all three panels, all four pages, both stages
           it serves), because "which stage am I in and what is it for" is a question a
@@ -558,6 +628,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         <div className="border-b border-zinc-100 px-4 pt-2 pb-1.5">
           <div className="max-w-3xl mx-auto">
             <StageBar context={stageCtx} />
+            {/* ⚠ 25-N §11 — MOBILE ONLY, and it is an instruction rather than a label. The
+                three stage tiles ARE the control, but on a phone they sit above the fold of
+                wherever the user happens to be, so the way to reach them is "scroll up" — and
+                nothing said so. */}
+            <p className="lg:hidden mt-1 text-[11px] text-zinc-500">Pull down to change stage.</p>
           </div>
         </div>
       )}
@@ -716,6 +791,27 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             className="h-full grid grid-cols-1 lg:[grid-template-columns:var(--lex-cols)]"
             style={{ ['--lex-cols' as string]: colTemplate }}
           >
+            {/* ══ 25-N §11 — WHERE THE OTHER TWO PANELS ARE ═══════════════════════
+                §11: *"Nothing says the panel switcher is at the foot of the page."*
+
+                ⚠⚠ ON A PHONE THE THREE COLUMNS ARE THREE MODES, and the only thing on screen
+                saying so is a bar at the very bottom — below the content, which on a long panel
+                means below several screens of scrolling. A user who never scrolled to the end
+                of the first panel had no reason to believe the other two existed.
+
+                ⚠ ONE LINE, AT THE TOP OF WHICHEVER PANEL IS SHOWING, and it names the other
+                two rather than saying "switch panels" — the point is that they exist. */}
+            <p className="lg:hidden col-span-full border-b border-zinc-100 px-3 py-1.5 text-[11px] text-zinc-500">
+              {tab === 'chat' ? PANEL_ROLES.left.name : tab === 'fields' ? PANEL_ROLES.middle.name : PANEL_ROLES.right.name}
+              {' — '}
+              <span className="text-zinc-400">
+                {tab === 'chat'
+                  ? `${PANEL_ROLES.middle.name} and ${PANEL_ROLES.right.name} are on the bar at the foot of this page.`
+                  : tab === 'fields'
+                    ? `${PANEL_ROLES.left.name} and ${PANEL_ROLES.right.name} are on the bar at the foot of this page.`
+                    : `${PANEL_ROLES.left.name} and ${PANEL_ROLES.middle.name} are on the bar at the foot of this page.`}
+              </span>
+            </p>
             {/* ══ 25-K §3 — PANEL 1 IS A WORKLIST WITH A CHAT UNDER IT ═══════════
                 §3, and it is the single most important change in the sprint: *"the left
                 column stops being a transcript and becomes a worklist."* The order is the
@@ -732,25 +828,28 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onOpen={() => setPanelOpen((p) => ({ ...p, chat: true }))}
               />
             )}
-            <div className={`h-full min-h-0 border-r border-zinc-200 flex-col ${tab === 'chat' ? 'flex' : 'hidden'} ${showChat ? 'lg:flex' : 'lg:hidden'}`}>
+            <div className={`h-full min-h-0 min-w-0 border-r border-zinc-200 flex-col ${tab === 'chat' ? 'flex' : 'hidden'} ${showChat ? 'lg:flex' : 'lg:hidden'}`}>
               {/* ⚠ 25-L §4 — THE ROLE IS STATED, NOT INFERRED. §4's table exists because a
                   user who cannot say what a column is FOR cannot decide whether to widen it,
                   and until now all three were guessed at from their contents. */}
               <div className="flex items-baseline gap-2 shrink-0 border-b border-zinc-100 px-3 py-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 flex-1">
                   {PANEL_ROLES.left.name}
                 </span>
-                <span className="text-[11px] text-zinc-400 flex-1 truncate">{PANEL_ROLES.left.role}</span>
                 <button
                   onClick={() => setPanelOpen((p) => ({ ...p, chat: false }))}
-                  className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
-                  title={`Collapse ${PANEL_ROLES.left.name}`}
+                  className="hidden lg:block text-[11px] text-zinc-500 hover:text-zinc-900 whitespace-nowrap"
+                  title={HIDE_PANEL_LABEL}
                 >
-                  collapse ‹
+                  {HIDE_PANEL_LABEL} ‹
                 </button>
               </div>
+              {/* ══ 25-N §3c — THE WORKLIST, AT A HEIGHT THE USER CHOSE ═══════════════ */}
               {ideaId && (
-                <div className="shrink-0 max-h-[42%] overflow-y-auto">
+                <div
+                  className="shrink-0 overflow-y-auto"
+                  style={{ height: `${(worklistFraction * 100).toFixed(1)}%` }}
+                >
                   <WorkList
                     ideaId={ideaId}
                     scope={lexStage}
@@ -758,6 +857,20 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                     onOutstanding={setWaitingCount}
                   />
                 </div>
+              )}
+
+              {/* §3c — the divider between the worklist and the chat. ⚠ NOT DESKTOP-ONLY,
+                  unlike the column dividers: these two DO share a screen on a phone. */}
+              {ideaId && (
+                <RowDivider
+                  label="Resize the worklist and the chat"
+                  onDrag={(d) =>
+                    // ⚠ CLAMPED, for the same reason the columns are: a divider that can take
+                    // either half to nothing produces a screen the user cannot recover, and
+                    // they do not know a reset exists at the moment they drag.
+                    setWorklistFraction((f) => Math.min(0.75, Math.max(0.15, f + d)))
+                  }
+                />
               )}
 
               {/* §3.2 — WHAT THIS STAGE IS, ONE LINE, ALWAYS VISIBLE, and drawn from the
@@ -768,7 +881,48 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 {stageByKey(lexStage).purpose}
               </p>
 
-              <div className="flex-1 min-h-0">
+              {/* ══ 25-N §3c — TWO TABS: LEX, AND NOTES ═══════════════════════════════
+                  ⚠ THE STATE IS NOT A COLOUR (docs/CLAUDE.md §21 — Charlie is colour blind).
+                  The selected tab carries a dark FILL against white, bold weight, and
+                  `aria-current`; the fill alone survives greyscale, which the aria does not. */}
+              <div className="shrink-0 flex items-stretch gap-1 border-b border-zinc-100 px-2 py-1">
+                {([['lex', 'Lex'], ['notes', 'Notes']] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setLeftTab(key)}
+                    {...(leftTab === key ? { 'aria-current': 'true' as const } : {})}
+                    className={`text-xs px-3 py-1 rounded-full border-2 ${
+                      leftTab === key
+                        ? 'font-bold border-zinc-900 bg-zinc-900 text-white'
+                        : 'font-medium border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <span className="flex-1" />
+                {/* §3c — the one thing about this pane a user cannot infer from looking at it:
+                    which conversations it holds. See the ⚠ below. */}
+                <span className="text-[10px] text-zinc-400 self-center pr-1">
+                  {leftTab === 'lex' ? 'this page only' : 'private to you'}
+                </span>
+              </div>
+
+              {/* §3c — the invitation, in Lex's own voice, verbatim from the brief. */}
+              {leftTab === 'lex' && (
+                <p className="shrink-0 px-3 pt-1.5 text-[11px] text-zinc-500">
+                  Talk to me, Lex, and I’ll help you shape each part.{' '}
+                  <span className="text-zinc-400">Only conversations started on this page appear here.</span>
+                </p>
+              )}
+
+              <div className={`flex-1 min-h-0 ${leftTab === 'notes' ? 'hidden' : ''}`}>
+              {/* ⚠⚠ 25-N §3c — "ONLY CONVERSATIONS STARTED ON THIS PAGE APPEAR HERE."
+                  That was already true and had never been said. `ChatPanel` renders the
+                  transcript this surface loaded, which is the idea's own; a user who had also
+                  talked to Lex elsewhere had no way to know why those exchanges were absent,
+                  and "the chat has lost my conversation" and "that conversation was somewhere
+                  else" look identical from the outside. The tab strip says it. */}
               <ChatPanel
                 messages={messages}
                 awaitingField={chatAwaitingField}
@@ -785,6 +939,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onGiveFeedback={() => openFeedback()}
                 onDismissFeedbackOffer={() => setFeedbackOffer(false)}
               />
+              </div>
+
+              {/* §3c — Notes. Private to the user, never shared; see `NotesPanel`. */}
+              <div className={`flex-1 min-h-0 ${leftTab === 'notes' ? '' : 'hidden'}`}>
+                {ideaId && <NotesPanel ideaId={ideaId} />}
               </div>
             </div>
 
@@ -807,18 +966,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onOpen={() => setPanelOpen((p) => ({ ...p, fields: true }))}
               />
             )}
-            <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} ${showFields ? 'lg:block' : 'lg:hidden'}`}>
+            <div className={`h-full min-h-0 min-w-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} ${showFields ? 'lg:block' : 'lg:hidden'}`}>
               <div className="flex items-baseline gap-2 border-b border-zinc-100 px-3 py-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
-                  {lexStage === 'deepening' ? 'The passes' : PANEL_ROLES.middle.name}
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 flex-1">
+                  {lexStage === 'deepening' ? 'THE PASSES' : PANEL_ROLES.middle.name}
                 </span>
-                <span className="text-[11px] text-zinc-400 flex-1 truncate">{PANEL_ROLES.middle.role}</span>
                 <button
                   onClick={() => setPanelOpen((p) => ({ ...p, fields: false }))}
-                  className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
-                  title={lexStage === 'deepening' ? 'Collapse the passes' : 'Collapse the draft'}
+                  className="hidden lg:block text-[11px] text-zinc-500 hover:text-zinc-900 whitespace-nowrap"
+                  title={HIDE_PANEL_LABEL}
                 >
-                  collapse ›
+                  {HIDE_PANEL_LABEL} ›
                 </button>
               </div>
 
@@ -858,16 +1016,32 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 costLinesApi={costLinesApi}
                 deepening={
                   <>
-                    {/* 25-C §3 — THE AGENDA COMES FIRST. The user is handed what to DO
-                        rather than a library to search. It renders nothing until a build
-                        has completed, and it is what the worklist's rows jump to.
+                    {/* ══ 25-N §3a — WHAT THE USER HAS PUT IN THE REPORT ═════════════
+                        §3: *"The middle column holds only what is going in the report.
+                        Nothing arrives there until the user puts it there."* Before this,
+                        "Add to report" set a flag whose only visible effect was inside a
+                        generated .docx — a control with no feedback on the screen that
+                        produced it. */}
+                    <ReportAdditions
+                      ideaId={state.ideaId}
+                      refreshKey={reportNonce}
+                      onChanged={() => setReportNonce((n) => n + 1)}
+                    />
+
+                    {/* 25-C §3 — THE AGENDA. The user is handed what to DO rather than a
+                        library to search. It renders nothing until a build has completed,
+                        and it is what the worklist's rows jump to.
 
                         ⚠⚠ 25-K §4 — THE DEEPENING NO LONGER LIVES UNDER IT. It was
                         reachable "only by scrolling past everything else", which is a
                         stage of work filed as a footnote to another one. It is Stage 3
                         now, with its own screen and its own worklist; what stays here is
-                        a route to it, so nobody has to discover that it exists. */}
-                    <AgendaPanel ideaId={state.ideaId} />
+                        a route to it, so nobody has to discover that it exists.
+
+                        ⚠ 25-N §3b — AND IT IS THE `work` HALF ONLY. Decisions and "Where
+                        the research changed my mind" moved to THE RESEARCH, where the raw
+                        material and the judgements to be made about it now live. */}
+                    <AgendaPanel ideaId={state.ideaId} view="work" />
                     <a
                       href={`/ideas/create?ideaId=${state.ideaId}&stage=deepening`}
                       className="block rounded-lg border-2 border-zinc-200 bg-white px-3 py-2.5 hover:border-zinc-400 hover:bg-zinc-50"
@@ -897,19 +1071,24 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onOpen={() => setPanelOpen((p) => ({ ...p, background: true }))}
               />
             )}
-            <div className={`h-full min-h-0 ${tab === 'background' ? 'block' : 'hidden'} ${showBackground ? 'lg:block' : 'lg:hidden'}`}>
-              <div className="flex items-baseline gap-2 border-b border-zinc-100 px-3 py-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
-                  {PANEL_ROLES.right.name}
-                </span>
-                <span className="text-[11px] text-zinc-400 flex-1 truncate">{PANEL_ROLES.right.role}</span>
-                <button
-                  onClick={() => setPanelOpen((p) => ({ ...p, background: false }))}
-                  className="hidden lg:block text-[11px] text-zinc-400 hover:text-zinc-700"
-                  title="Collapse the resources panel"
-                >
-                  collapse ›
-                </button>
+            <div className={`h-full min-h-0 min-w-0 ${tab === 'background' ? 'block' : 'hidden'} ${showBackground ? 'lg:block' : 'lg:hidden'}`}>
+              {/* ⚠ 25-N §2 — THE ONE SUBTITLE THAT SURVIVES, and its wording is Charlie's,
+                  verbatim. The other two columns are named for what they are; this one holds
+                  six different kinds of thing and its name cannot say so. */}
+              <div className="border-b border-zinc-100 px-3 py-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 flex-1">
+                    {PANEL_ROLES.right.name}
+                  </span>
+                  <button
+                    onClick={() => setPanelOpen((p) => ({ ...p, background: false }))}
+                    className="hidden lg:block text-[11px] text-zinc-500 hover:text-zinc-900 whitespace-nowrap"
+                    title={HIDE_PANEL_LABEL}
+                  >
+                    {HIDE_PANEL_LABEL} ›
+                  </button>
+                </div>
+                <p className="text-[11px] text-zinc-500 leading-snug pb-0.5">{PANEL_ROLES.right.role}</p>
               </div>
               <BackgroundPanel
                 ideaId={state.ideaId}
@@ -922,7 +1101,6 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 stageAccent={accentFor(state.stage)}
                 nextPage={state.nextPage}
                 busy={busy}
-                onContinue={advancePage}
                 onAskLex={askLex}
                 onRetrySearch={retrySearch}
                 onGiveFeedback={() => openFeedback('BRIEFING')}
@@ -932,6 +1110,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 // on; it never filters, so a contradiction found against the diagnosis stays
                 // visible once the user moves on.
                 focusFieldRef={state.currentField?.key ?? null}
+                // 25-N §3a — both columns read the same fact; neither owns it.
+                refreshKey={reportNonce}
+                onReportChanged={() => setReportNonce((n) => n + 1)}
               />
             </div>
           </div>
