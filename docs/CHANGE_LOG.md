@@ -132,6 +132,132 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-N — WHAT THE FIRST REAL WALK FOUND (2026-08-31 10:17 UTC)
+
+**Executed `docs/BRIEF_25N.md`.** Built §1, §2, §3, §4, §5, §11. Designed and reported, not
+built: §6, §7, §8. Reported, deliberately not built: §9, §10. Full account:
+`docs/LEX_25N_REPORT.md`.
+
+⚠⚠ **THE BUILD THAT "STOPPED BEFORE IT FINISHED THE PASSES, WITH NO RE-START" DID NOT
+MALFUNCTION.** Build v7 of idea `452c5ade`, 30 Aug 11:14–11:30 UTC: 8 of 10 passes DONE,
+LOGIC_CHECK and ADVERSARIAL NOT_REACHED, stopped at 922s against the 900s hard stop, between
+passes — the ceiling working. **Four separate things then made that invisible and irreversible,
+and every one is now fixed:** (1) `stopBuild` rewrites remaining passes to `NOT_REACHED` and
+`nextPassKey` only ever returns PENDING or RUNNING, so `isResumable` was **false by construction
+for every build that has ever hit a ceiling**; (2) ⚠⚠ **`resumable` was in the API payload and
+rendered by NOTHING** — `grep -rn resumable` returned the producer, the type, two checks and two
+fixtures, and no component; (3) the clock made a resume impossible even with a button, since
+`checkStop` measured from `startedAt` and a build 922s over a 900s ceiling stops again before its
+first resumed pass, for ever — it now measures from `resumedAt ?? startedAt`, and **the SPEND
+ceiling is deliberately not reset**; (4) `claimQueuedBuild` stamped `startedAt` unconditionally,
+so a resume would have rewritten the moment the build began. ▶ A partial build now says **what
+did not run, by name**, says **the summary is missing** (`composeSummary` runs only in
+`finishBuild`, so every stopped build has a NULL `summaryMessage`), and offers **"Carry on from
+'Logic check'"** — no new `IdeaBuild` row, so **no allowance is spent**, bounded at
+`MAX_RESUMES = 3`.
+
+⚠⚠ **"PANELS RESIZE THEMSELVES AND CANNOT BE RESTORED" IS ONE CSS TOKEN.** A grid track written
+`Nfr` is `minmax(auto, Nfr)`; the automatic minimum means a long citation or an unbreakable
+legislation.gov.uk URL — exactly what appears when you click an item in the research panel —
+**widens that column past the fraction the user set and takes the difference out of the other
+two.** Nothing in our code moved and the stored layout was never touched, **which is why no
+control put it back**. Now `minmax(0, …)` in both places a template is built, plus `min-w-0` on
+the three panel bodies (a grid ITEM has `min-width: auto` for the same reason a track does).
+
+⚠⚠ **"SECTIONS CANNOT BE CLOSED ONCE OPENED" WAS CAUSED BY "WORK ON THIS".**
+`collapsible = complete || visited`; pressing it makes a section **active**, which is neither —
+so the heading stopped being a toggle **at the exact moment the user chose to open it**. Now
+`!isLocked`, with two override sets because the default differs by status. And `AgendaPanel`'s
+**Decisions** and **"Where the research changed my mind"** had no toggle at all.
+
+⚠ **THE ALLOWANCE WAS BUILT AND WIRED INTO EXACTLY ONE PLACE** — the re-run dialogue. It was
+absent from "Build it", the FIRST moment a user commits to spending one.
+
+⚠⚠ **"CLICKING A CONTENTS ITEM SHOWS NEIGHBOURING SECTIONS TOO" — THE LIST WAS NEVER AT FAULT.**
+`QuestionPanel` renders one item correctly; `BackgroundPanel` then went on rendering the
+retrieved-by-type fold, the stage search, the exports and the page-one cards underneath it,
+unconditionally. **The library sat on top of a scroll.** Fixed by §4's own Inputs group: those
+blocks are handed INTO the panel, and nothing renders beside it.
+
+⚠⚠ **DELETING "THE STRONGEST CASE AGAINST" FOUND THREE REAL DEFECTS, TWO BY A CHECK RATHER THAN
+BY READING.** The heading goes; the KEY stays in the type, because `EvidenceItem.headingKey` holds
+`'AGAINST'` on every row the adversarial pass has ever written and removing it from the union
+would silently turn them all into "not filed under a question" — the material §4 is trying to
+KEEP, deleted by the change meant to relocate it. So it is a redirect, `AGAINST → ARGUED`, applied
+by `liveHeading()`. **(1)** `deepening-config.ts` still declared `heading: 'AGAINST'` on the
+POLITICAL_RISK pass — a SECOND producer in a different config array — caught by `check:lex-25l`
+§3b. **(2)** The evidence pack tested `QUESTION_HEADINGS.some(...)` directly, so those rows fell
+into "not filed", where **the pack TELLS THE READER their question was never recorded** — caught
+by `check:lex-25d` §5a. **(3)** The public proposal page did the same, on the outward-facing
+surface. `liveHeading`'s own note is the rule: *a redirect applied in two of three places puts the
+same finding under two headings.*
+
+⚠⚠ **§5d WAS A PAGE LOAD, AND THE COST IS ONE LINE.** `readProposalExportStatus` called
+`buildProposalSnapshot` on every GET — the whole twelve-table assembler — for ONE purpose: to hash
+it so a file could be reported stale. **The user waited five seconds for "is this current?" before
+being shown the file's NAME.** `?quick=1` now returns everything the document rows know and
+reports staleness as **`null` — a third state, rendered as "Checking…", never as current**.
+
+⚠ **§1f: THE FILE ITSELF HAS NEVER BEEN STORED** (§25.6 keeps extracted text and no binary), so
+"open what you uploaded" shows **the text Lex read**, saying which it is. And *"9 findings · 87k
+characters kept"* becomes **"Lex read this and took 9 findings from it."**
+
+⚠ **§3e's MOBILE CLICKABILITY HAS A CAUSE:** the rows were `<a href="#anchor">`, and on a phone
+the anchor is **inside a tab that is not on screen** — the link resolved to nothing. Every item is
+now a real checkbox or a link to a ROUTE, never a fragment. ⚠ And **the last two parts of the
+worklist were absent entirely**, so a user who had finished the research was told "nothing is
+waiting on you" while three quarters of the job had never been named.
+
+⚠ **NOTES: PRIVACY IS THE KEY, NOT A FLAG.** No `visibility` column and there must not be one —
+a boolean defaulting to private is one somebody will set the other way, and every read is then one
+missing clause from publishing a user's working notes. Every query is `(ideaId, userId)`.
+⚠ **`IdeaNote` carries a PARTIAL unique index `schema.prisma` cannot express** —
+`UNIQUE (ideaId, userId, source) WHERE source <> 'USER'`; the obvious `@@unique` is wrong in the
+direction that breaks the feature (a user could have exactly ONE note). CLAUDE.md §21 register;
+`prisma migrate diff` will propose dropping it.
+
+▶ **§2 naming applied verbatim** — WORKING AREA · DRAFT STRATEGY · THE RESEARCH, two subtitles
+deleted, "Hide this Panel" from one constant, "0 of 7 approved", the purpose sentence in the
+modal. ▶ **§3a "Add to report" now DOES something visible** — until now the flag's only effect
+was inside a generated .docx. ▶ **§5a both documents lose their internal counts**, replaced by one
+DRAFT sentence at the top. ▶ **§5b the summary is one page with four headings and a labelled
+leading candidate.** ▶ **§5c six sections whose names repeat on every page** — a new `section`
+block, `stampSection()` inside `newPage()` for PDF, real Word sections with `Header` for docx.
+▶ **§5e the meeting pack**, which is NOT a shorter proposal: it leads on what is open, has no
+"ask", and **its chosen sections are part of the fingerprint** or an unticked section would come
+back from the cache.
+
+✅ `check:lex-25n` **98 passed, 0 failed, 18 controls, all 18 fired.** ⚠⚠ **Four of my own
+assertions failed against correct code**: every "this string must NOT appear" test was reading the
+⚠ comment that EXPLAINS the deletion and quotes the deleted string. A `code()` reader now strips
+comments. ⚠ **And three controls did not fire, all the same inversion** — the lambda returned
+"does the broken text still match" rather than "does the property hold".
+
+✅ **Whole suite RUN and reported (§23.2), not a selection:** 25-c 32, 25-d 77, 25-e 28, 25-f 62,
+25-g 27, 25-h 20, 25-i 14, 25-j 12, 25-k 18, 25-l 19, 25-m 12, **25-n 98**, build-25a 40,
+build-25b 54, 20bd 47, statutory 17, documents pass, corpus-types 156. Harnesses ALL EXECUTED:
+25g-ui 14, 25e-ui 16, my-ideas-ui 15, stages-ui 23, outputs-ui 7, build-25a-ui 43.
+⚠ **Seven guards from three sprints fired and were REPOINTED, not relaxed** — three found real
+defects in this sprint's code. `tsc`, `check:scripts`, `next build`, `check-clean-build --fast`
+and `prisma validate` all clean.
+
+📦 **Applied to Neon (`ep-old-dust-aboxi69a`, host checked with `scripts/whichdb.ts` first):**
+`prisma/lex_25n.sql`, `prisma/lex_25n_notes.sql`, `prisma/lex_25n_worklist.sql`.
+⚠ **`prisma/lex_25n_backfill_against.sql` is NOT RUN — Charlie's.** The panel is already correct
+without it; it stops the stored tag and the rendered heading drifting.
+
+⚠ **NOT VERIFIED ON THE RUNNING SITE.** All of §1–§4 is behind sign-in and a route probe Clerk
+307s. Five things need Charlie's browser: that the panels stop re-proportioning; **that the resume
+actually resumes** (asserted over a real stopped pass log, but no live resume has been run — it
+costs two passes); the three new write paths (Notes, worklist ticks, the material viewer); the
+.docx running header in Word; and the mobile items on a phone.
+
+⚠ **CHARLIE — ONE QUESTION RECORDED AND NOT RESOLVED (§3c):** should notes be visible to the
+idea-team? Three options in the report, with a recommendation (two lists, not a per-note switch —
+the switch is exactly the flag the schema argues against). **Say which.**
+
+---
+
 ## 2026-08-30 20:09 UTC — B5 + B11 COMPLETE: 13 OF 15 INSTRUMENTS IN THE REGISTER ARE CC'S GUESS, AND THE PROGRAMME'S REAL SCOPE IS 561 ACTS AND 23,697 SIs
 
 **B5 UNBLOCKED AND DONE.** `register_proposals.json` arrived; 14 proposals in, 14 out, 10 resolved to

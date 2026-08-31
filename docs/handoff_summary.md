@@ -2,7 +2,79 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-30 12:06 UTC — ▼ **B8 + B9 DONE. THE FIRST IDENTIFICATION METRIC I WROTE PUT
+*Last updated: 2026-08-31 10:17 UTC — ▼ **LEX 25-N: THE BUILD THAT "STOPPED WITH NO
+RE-START" WAS WORKING CORRECTLY, AND `resumable` WAS IN THE PAYLOAD RENDERED BY NOTHING.**
+§1–§5 and §11 built; §6–§8 designed and reported; §9–§10 reported.
+⚠⚠ **BUILD v7 OF `452c5ade`, 30 Aug 11:14–11:30 UTC, DIAGNOSED FROM THE ROW:** 8 of 10 passes
+DONE, LOGIC_CHECK and ADVERSARIAL NOT_REACHED, stopped at **922s against the 900s hard stop,
+between passes** — the ceiling doing its job. **FOUR things then made it invisible and
+irreversible.** (1) `stopBuild` rewrites remaining passes to `NOT_REACHED` and `nextPassKey` only
+ever returns PENDING or RUNNING, so **`isResumable` was FALSE BY CONSTRUCTION for every build that
+has ever hit a ceiling**. (2) ⚠⚠ **`resumable` was in `BuildView` and RENDERED BY NOTHING** —
+`grep -rn resumable` returned the producer, the type, two checks and two fixtures, no component;
+there has never been a resume control on any screen. (3) The clock made a resume impossible even
+with a button — `checkStop` measured from `startedAt`, so a build 922s over a 900s ceiling stops
+again *before its first resumed pass*, for ever; now `resumedAt ?? startedAt`, and **the SPEND
+ceiling is deliberately NOT reset**. (4) `claimQueuedBuild` stamped `startedAt` unconditionally.
+▶ A partial build now names **which passes did not run**, says **the summary is missing**
+(`composeSummary` runs only in `finishBuild`, so every stopped build has a NULL `summaryMessage`),
+and offers **"Carry on from 'Logic check'"** — no new `IdeaBuild` row, so **no allowance spent**,
+bounded at `MAX_RESUMES = 3`.
+⚠⚠ **"PANELS RESIZE THEMSELVES AND CANNOT BE RESTORED" IS ONE CSS TOKEN.** `Nfr` is
+`minmax(auto, Nfr)`; the automatic minimum lets a long citation or an unbreakable
+legislation.gov.uk URL — exactly what appears when you click a research item — **widen that column
+past the fraction the user set**. Nothing in our code moved and the stored layout was untouched,
+**which is why nothing put it back**. Now `minmax(0, …)` in both templates plus `min-w-0` on the
+panel bodies.
+⚠⚠ **"SECTIONS CANNOT BE CLOSED" WAS CAUSED BY "WORK ON THIS":** `collapsible = complete ||
+visited`, and pressing it makes a section **active** — neither — so the heading stopped being a
+toggle at the exact moment the user chose to open it. Decisions and "Where the research changed my
+mind" had **no toggle at all**.
+⚠ **THE ALLOWANCE WAS BUILT AND WIRED INTO ONE PLACE** — the re-run dialogue, not "Build it".
+⚠⚠ **"CLICKING A CONTENTS ITEM SHOWS NEIGHBOURING SECTIONS TOO" — THE LIST WAS NEVER AT FAULT.**
+`QuestionPanel` renders one item correctly; `BackgroundPanel` went on rendering the type fold, the
+stage search, the exports and the page-one cards underneath it. **The library sat on top of a
+scroll.** Fixed by §4's own Inputs group.
+⚠⚠ **DELETING "THE STRONGEST CASE AGAINST" FOUND THREE REAL DEFECTS, TWO BY A CHECK.** The heading
+goes, the KEY stays (every adversarial row is tagged `AGAINST`; removing it from the union would
+turn them all into "not filed" — the material §4 is trying to KEEP). Redirect `AGAINST → ARGUED`
+via `liveHeading()`. **(1)** `deepening-config.ts` still declared `heading: 'AGAINST'` on
+POLITICAL_RISK — a SECOND producer — caught by `check:lex-25l`. **(2)** The evidence pack tested
+`QUESTION_HEADINGS.some(...)` directly, so those rows fell into "not filed", **where the pack tells
+the reader their question was never recorded** — caught by `check:lex-25d`. **(3)** The public
+proposal page did the same. *A redirect applied in two of three places puts the same finding under
+two headings.*
+⚠⚠ **§5d WAS A PAGE LOAD:** `readProposalExportStatus` called `buildProposalSnapshot` on every GET
+— the whole twelve-table assembler — to hash it for staleness. **Five seconds for "is this
+current?" before the file's NAME appeared.** `?quick=1`; staleness comes back `null`, **a third
+state rendered as "Checking…", never as current**.
+⚠ **§1f: the file itself has never been stored** (§25.6 = text, no binary), so "open what you
+uploaded" shows **the text Lex read**, saying which it is. *"9 findings · 87k characters kept"* →
+**"Lex read this and took 9 findings from it."**
+⚠ **§3e's mobile clickability had a cause:** the rows were `#anchor` links, and on a phone the
+anchor is **inside a tab that is not on screen**. Real checkboxes now, or links to ROUTES.
+⚠ **NOTES: privacy is the KEY, not a flag** — no `visibility` column, every query `(ideaId,
+userId)`. ⚠ **`IdeaNote` carries a PARTIAL unique index prisma cannot express**
+(`WHERE source <> 'USER'`); the obvious `@@unique` would let a user have exactly ONE note.
+CLAUDE.md §21 register.
+✅ `check:lex-25n` **98 passed, 0 failed, 18 controls, all 18 fired.** ⚠⚠ **Four of my own
+assertions failed against correct code** — every "must NOT appear" test was reading the ⚠ comment
+that EXPLAINS the deletion and quotes the deleted string; there is now a `code()` reader that
+strips comments. ⚠ **Three controls did not fire**, all the same inversion.
+✅ Whole suite RUN (§23.2): 25-c 32, 25-d 77, 25-e 28, 25-f 62, 25-g 27, 25-h 20, 25-i 14, 25-j 12,
+25-k 18, 25-l 19, 25-m 12, **25-n 98**, build-25a 40, build-25b 54, 20bd 47, statutory 17,
+documents pass, corpus-types 156; harnesses 25g-ui 14, 25e-ui 16, my-ideas-ui 15, stages-ui 23,
+outputs-ui 7, build-25a-ui 43. ⚠ **Seven guards from three sprints repointed, not relaxed.**
+`tsc`, `check:scripts`, `next build`, `check-clean-build --fast`, `prisma validate` clean.
+📦 **Applied to Neon** (`ep-old-dust-aboxi69a`, host checked first): `lex_25n.sql`,
+`lex_25n_notes.sql`, `lex_25n_worklist.sql`. ⚠ **`lex_25n_backfill_against.sql` NOT RUN —
+Charlie's**; the panel is already correct without it.
+⚠ **NOT VERIFIED ON THE RUNNING SITE** — all of §1–§4 is behind sign-in. Five things need
+Charlie's browser, incl. **a live resume, which has never been run** (it costs two passes).
+⚠⚠ **CHARLIE — ONE QUESTION RECORDED, NOT RESOLVED:** should notes be visible to the idea-team?
+Three options in `docs/LEX_25N_REPORT.md` §3c, with a recommendation. **Say which.**
+`docs/LEX_25N_REPORT.md`.**
+Earlier: 2026-08-30 12:06 UTC — ▼ **B8 + B9 DONE. THE FIRST IDENTIFICATION METRIC I WROTE PUT
 THE TWO CLASSES IN THE WRONG ORDER, AND THE CRAG VOCABULARY IS ABSENT FROM ALL EIGHT THESIS VIDEOS.**
 ⚠⚠ **B8 step 1 was needed in THREE places, not one.** The seven .docx were untracked but not ignored;
 the next `git add` would have committed full lecture transcripts to a GitHub-backed repo. They exist

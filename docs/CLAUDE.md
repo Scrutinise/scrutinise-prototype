@@ -808,8 +808,9 @@ duplicate rows in production weeks later.
 | `Idea_creatorId_live_idx` | `Idea` | The live-row index for a creator's dashboard list. Partial on `deletedAt IS NULL`. Predates Central and was missing from this register until 27 Aug. | `prisma/idea_soft_delete.sql` |
 | `Community_live_children_idx` | `Community` | The live-children index behind `getSubtreeIds` and the Teams tree. Partial on `deletedAt IS NULL`, so a deleted branch drops out of every tree walk. Added with item 11 and, like the row above it, missed this register on the day — which is why the check below now enumerates every one of these rather than two of them. | `prisma/central_branch_delete.sql` |
 | `Resource_live_idx` | `Resource` | The live-row index for the Resources card grid. Partial on `deletedAt IS NULL`. | `prisma/central_2g_resources.sql` |
+| `IdeaNote_seeded_source_key` | `IdeaNote` | One SEEDED note per (idea, user, source), so the "My original idea" note cannot be written twice by two tabs racing a read-then-write. Partial on `source <> 'USER'`. ⚠⚠ **The obvious `@@unique([ideaId, userId, source])` is WRONG IN THE DIRECTION THAT BREAKS THE FEATURE** — it would apply to `source = 'USER'` as well, so a user could have exactly ONE note. That is why it cannot be declared and has to live here. | `prisma/lex_25n_notes.sql` |
 
-Eight entries today. **Add a row here the moment a ninth exists** — the register is only useful if it
+Nine entries today. **Add a row here the moment a tenth exists** — the register is only useful if it
 is complete, and a partial index nobody wrote down is the whole failure mode.
 
 ⚠ Two of the eight were added without a register row and only found on a later sweep of
