@@ -31,6 +31,7 @@ import { prisma } from '@/lib/prisma'
 import { r2Put, r2SignedUrl, r2Exists } from '@/lib/r2'
 import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
+import { buildMeetingPackDocument, type MeetingPackSection } from './build-meeting-pack'
 import { buildProposalDocument, buildSummaryDocument, type ProposalBuildResult } from './build-proposal'
 import { buildEvidencePackDocument } from './build-evidence-pack'
 import {
@@ -50,18 +51,25 @@ export type ExportFormat = 'docx' | 'pdf'
  * rather than a file and so is not a kind here, and the standalone Legislative Annex stays
  * scaffolded because its substance waits on the AMENDABLE_SECTION search intent.
  */
-export const PROPOSAL_KINDS = ['PROPOSAL', 'PROPOSAL_SUMMARY', 'EVIDENCE_PACK'] as const
+// ⚠ 25-N §5e — `MEETING_PACK` IS A THIRD KIND, NOT A VARIANT OF THE PROPOSAL. It is written
+// for a different reader (somebody who will contribute but not join the team) and it inverts
+// the order every other document uses — what is open first, the settled kernel last. Making it
+// an option on `PROPOSAL` would have meant one builder with a mode flag, and the two readers
+// would have started sharing sentences that are right for one of them.
+export const PROPOSAL_KINDS = ['PROPOSAL', 'PROPOSAL_SUMMARY', 'MEETING_PACK', 'EVIDENCE_PACK'] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
 const KIND_LABEL: Record<ProposalKind, string> = {
   PROPOSAL: 'The Proposal',
   PROPOSAL_SUMMARY: 'The Summary',
+  MEETING_PACK: 'The Meeting Pack',
   EVIDENCE_PACK: 'The Evidence Pack',
 }
 
 const KIND_SLUG: Record<ProposalKind, string> = {
   PROPOSAL: 'proposal',
   PROPOSAL_SUMMARY: 'summary',
+  MEETING_PACK: 'meeting-pack',
   EVIDENCE_PACK: 'evidence-pack',
 }
 
@@ -77,7 +85,8 @@ export interface ProposalExportStatus {
   generated: boolean
   generatedAt: string | null
   sourceLabel: string | null
-  stale: boolean
+  /** 25-N §5d — `null` means "not checked on this read". Never rendered as "current". */
+  stale: boolean | null
   /** Which stored version this file came from; null when it is the working draft. */
   fromVersionNumber: number | null
   docxUrl: string | null
@@ -117,11 +126,19 @@ export function proposalFilename(
  * Snapshot → the two rendered buffers, for one kind. The ONLY place that decides
  * which builder a kind maps to.
  */
-export function buildFor(kind: ProposalKind, snapshot: ProposalSnapshot, onlineViewUrl?: string | null): ProposalBuildResult {
+export function buildFor(
+  kind: ProposalKind,
+  snapshot: ProposalSnapshot,
+  onlineViewUrl?: string | null,
+  opts: { sections?: MeetingPackSection[] } = {},
+): ProposalBuildResult {
   switch (kind) {
     case 'PROPOSAL': return buildProposalDocument(snapshot)
     case 'EVIDENCE_PACK': return buildEvidencePackDocument(snapshot)
     case 'PROPOSAL_SUMMARY': return buildSummaryDocument(snapshot, { onlineViewUrl })
+    // §5e — `sections` is what the user chose to show before printing. Absent means all of
+    // them: not choosing is not the same as choosing to omit.
+    case 'MEETING_PACK': return buildMeetingPackDocument(snapshot, { sections: opts.sections, onlineViewUrl })
   }
 }
 
@@ -132,15 +149,45 @@ async function renderPair(result: ProposalBuildResult): Promise<{ docx: Buffer; 
 
 // ── working-draft renders ────────────────────────────────────────────────────
 
-export async function readProposalExportStatus(ideaId: string): Promise<ProposalExportStatus[]> {
+/**
+ * ══ 25-N §5d — WHY THIS FUNCTION TAKES SECONDS, AND WHAT `quick` IS FOR ═════════
+ *
+ * §5d: *"Outputs takes ~5 seconds to show anything. If generation is happening, say 'Building
+ * reports'; if it is a page load, fix it. Report which it was."*
+ *
+ * ⚠⚠ IT IS A PAGE LOAD, AND THE COST IS ONE LINE: `buildProposalSnapshot(ideaId)`. That is the
+ * whole 900-line assembler — fields, causes, options, actions, cost lines, evidence, sources,
+ * known unknowns, issues, testimony, across a dozen tables — and it is called on every GET for
+ * ONE PURPOSE: to hash it, so a generated file can be reported as stale. Nothing else on the
+ * panel needs it. So the user waits five seconds for the answer to "is this file current?"
+ * before being shown the file's name.
+ *
+ * ⚠ THE FIX IS NOT TO DROP THE STALENESS CHECK. "Generated" and "generated from what the
+ * proposal says NOW" are different facts, and the second is the one that matters to somebody
+ * about to send a document to an MP (25-M §1). It is to stop the FAST facts waiting on the SLOW
+ * one: `quick: true` returns everything the `Document` rows already know — name, whether it
+ * exists, when, its download links, its last error — and marks staleness UNKNOWN. The panel
+ * paints on that and asks again without it.
+ *
+ * ⚠⚠ AND UNKNOWN IS NOT "FRESH". `stale: null` is a third state and the panel says so in words
+ * ("checking…"), because an unproven-current file rendered as current is the exact claim this
+ * fingerprint exists to prevent — CLAUDE.md §19, a fact measured and a fact assumed must not
+ * look identical on the page.
+ */
+export async function readProposalExportStatus(
+  ideaId: string,
+  opts: { quick?: boolean } = {},
+): Promise<ProposalExportStatus[]> {
   let liveHash: string | null = null
   let unavailableReason: string | null = null
-  try {
-    liveHash = snapshotHash(await buildProposalSnapshot(ideaId))
-  } catch (err) {
-    unavailableReason = err instanceof SnapshotUnavailableError
-      ? err.message
-      : 'The proposal state could not be read just now.'
+  if (!opts.quick) {
+    try {
+      liveHash = snapshotHash(await buildProposalSnapshot(ideaId))
+    } catch (err) {
+      unavailableReason = err instanceof SnapshotUnavailableError
+        ? err.message
+        : 'The proposal state could not be read just now.'
+    }
   }
 
   const docs = await prisma.document.findMany({
@@ -158,7 +205,11 @@ export async function readProposalExportStatus(ideaId: string): Promise<Proposal
     return {
       kind,
       label: KIND_LABEL[kind],
-      available: liveHash !== null,
+      // ⚠ ON A QUICK READ WE HAVE NOT ASKED, so "available" cannot be claimed either way; the
+      // optimistic answer is the safe one here because the POST re-checks properly before it
+      // renders anything, and a greyed-out Generate on a proposal that is fine is the defect
+      // 25-K §2 spent a sprint removing.
+      available: opts.quick ? true : liveHash !== null,
       unavailableReason,
       generated,
       generatedAt: doc?.generatedAt ? doc.generatedAt.toISOString() : null,
@@ -167,11 +218,16 @@ export async function readProposalExportStatus(ideaId: string): Promise<Proposal
       // not move. Only a working-draft render can drift from live state.
       // And an UNKNOWN fingerprint counts as stale: "we cannot prove it is
       // current" and "it is current" are not the same (§8.2's rule, inherited).
-      stale: generated
-        ? doc?.proposalVersion
-          ? false
-          : !doc?.sourceFingerprint || doc.sourceFingerprint !== liveHash
-        : false,
+      // ⚠ THREE STATES, NOT TWO: false (current), true (out of date), null (not checked yet).
+      // See the header — `null` is what the quick read returns, and the panel renders it as a
+      // question rather than as an answer.
+      stale: opts.quick && generated
+        ? null
+        : generated
+          ? doc?.proposalVersion
+            ? false
+            : !doc?.sourceFingerprint || doc.sourceFingerprint !== liveHash
+          : false,
       fromVersionNumber: doc?.proposalVersion?.versionNumber ?? null,
       docxUrl: generated ? downloadPath(ideaId, kind, 'docx') : null,
       pdfUrl: generated ? downloadPath(ideaId, kind, 'pdf') : null,
@@ -187,10 +243,17 @@ export async function readProposalExportStatus(ideaId: string): Promise<Proposal
 export async function generateProposalExport(
   ideaId: string,
   kind: ProposalKind,
-  opts: { force?: boolean; onlineViewUrl?: string | null } = {},
+  opts: { force?: boolean; onlineViewUrl?: string | null; sections?: MeetingPackSection[] } = {},
 ): Promise<ProposalExportStatus> {
   const snapshot = await buildProposalSnapshot(ideaId)
-  const hash = snapshotHash(snapshot)
+  // ⚠⚠ 25-N §5e — THE CHOSEN SECTIONS ARE PART OF THE FINGERPRINT, and they have to be.
+  // The store is idempotent by hash: without this, a user who unticked two sections and pressed
+  // Generate again would get the CACHED file back — the same document, reported as freshly
+  // generated, with the sections they thought they had removed still in it. The proposal has
+  // not changed, so the snapshot hash has not changed; what changed is what they asked for.
+  const hash = kind === 'MEETING_PACK' && opts.sections?.length
+    ? `${snapshotHash(snapshot)}:${[...opts.sections].sort().join(',')}`
+    : snapshotHash(snapshot)
 
   const existing = await prisma.document.findUnique({
     where: { ideaId_kind: { ideaId, kind } },
@@ -203,7 +266,7 @@ export async function generateProposalExport(
     return (await readProposalExportStatus(ideaId)).find((s) => s.kind === kind)!
   }
 
-  const result = buildFor(kind, snapshot, opts.onlineViewUrl)
+  const result = buildFor(kind, snapshot, opts.onlineViewUrl, { sections: opts.sections })
 
   try {
     const { docx, pdf } = await renderPair(result)

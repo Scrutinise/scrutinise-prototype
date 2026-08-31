@@ -4,7 +4,7 @@
 
 import {
   Document, Packer, Paragraph, TextRun, ExternalHyperlink, HeadingLevel,
-  AlignmentType, BorderStyle,
+  AlignmentType, BorderStyle, Header,
 } from 'docx'
 import type { Block, DocumentModel, Run } from './model'
 
@@ -27,6 +27,13 @@ function runsToDocx(runs: Run[]): (TextRun | ExternalHyperlink)[] {
 
 function blockToParagraphs(block: Block): Paragraph[] {
   switch (block.kind) {
+    // ⚠ 25-N §5c — HANDLED BY `renderDocx`, NOT HERE. A .docx repeating header is a property
+    // of a document SECTION, not a paragraph in the flow, so a `section` block splits the
+    // children into real docx sections. Returning a paragraph here would produce a heading
+    // printed once, which is exactly what §5c is replacing.
+    case 'section':
+      return []
+
     case 'heading':
       return [new Paragraph({ heading: HEADING_FOR[block.level], children: runsToDocx(block.runs), spacing: { before: 240, after: 120 } })]
 
@@ -121,13 +128,52 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
     alignment: AlignmentType.LEFT,
   }))
 
-  for (const block of model.blocks) children.push(...blockToParagraphs(block))
+  // ══ 25-N §5c — REAL DOCX SECTIONS, EACH WITH ITS NAME AS A REPEATING HEADER ═══
+  //
+  // §5c: *"the heading repeated in large bold type on every page of that section, so a reader
+  // leafing through a hundred pages always knows where they are."*
+  //
+  // ⚠⚠ A WORD HEADER IS A PROPERTY OF A SECTION, WHICH IS WHY THIS SPLITS THE DOCUMENT RATHER
+  // THAN INSERTING ANYTHING. Writing the title into the body at each break would print it once
+  // — on the page the section starts — and Word would carry the PREVIOUS section's header (or
+  // none) across the other ninety-nine.
+  //
+  // ⚠ AND THE FIRST SECTION HOLDS THE TITLE PAGE AND HAS NO HEADER. A running "DRAFT STRATEGY"
+  // over the document's own title block would be a header describing the wrong thing.
+  const docSections: Array<{ title: string | null; children: Paragraph[] }> = [
+    { title: null, children },
+  ]
+  for (const block of model.blocks) {
+    if (block.kind === 'section') {
+      docSections.push({ title: block.title, children: [] })
+      continue
+    }
+    docSections[docSections.length - 1].children.push(...blockToParagraphs(block))
+  }
 
   const doc = new Document({
     title: model.title,
     description: model.subtitle,
     creator: 'Scrutinise',
-    sections: [{ children }],
+    sections: docSections.map((sec) => ({
+      children: sec.children.length
+        ? sec.children
+        // ⚠ A DOCX SECTION WITH NO CHILDREN IS INVALID and Word offers to repair the file. An
+        // empty section is a real state — a builder emitting a heading for material that turned
+        // out not to exist — so it gets one paragraph saying so rather than a broken document.
+        : [new Paragraph({ children: [new TextRun({ text: 'Nothing was recorded under this heading.', italics: true, color: '71717A' })] })],
+      ...(sec.title
+        ? {
+            headers: {
+              default: new Header({
+                children: [new Paragraph({
+                  children: [new TextRun({ text: sec.title, bold: true, size: 24, color: '52525B' })],
+                })],
+              }),
+            },
+          }
+        : {}),
+    })),
   })
   return Buffer.from(await Packer.toBuffer(doc))
 }

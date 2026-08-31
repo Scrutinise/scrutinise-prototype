@@ -30,7 +30,7 @@ import { markdownToBlocks } from './markdown'
 // own order. ⚠ The heading vocabulary is IMPORTED, never restated: `question-headings.ts`
 // imports nothing and is held to §20-B's import ban precisely so the document stack can read
 // it without reaching into mid-flight Lex modules (see that file's header).
-import { QUESTION_HEADINGS, HEADING_ORDER, type HeadingKey } from '../lex/question-headings'
+import { QUESTION_HEADINGS, HEADING_ORDER, liveHeading, type HeadingKey } from '../lex/question-headings'
 import {
   assertRenderableSnapshot,
   snapshotHash,
@@ -184,16 +184,72 @@ function pushClaim(
  * they are collected in "What this proposal does not establish", which follows immediately
  * and is where a reader looks for them.
  */
+/**
+ * ══ 25-N §5c — THE SIX SECTIONS OF THE LONG REPORT ══════════════════════════════
+ *
+ * §5c names them: **DRAFT STRATEGY · HOW HARD WILL THIS BE TO ACHIEVE · WHAT THE LAW SAYS NOW ·
+ * QUESTIONS THE RESEARCH COULDN'T ANSWER · CHALLENGES · SOURCES** — *"so a reader leafing
+ * through a hundred pages always knows where they are."*
+ *
+ * ⚠ THEY ARE DATA, so a check can assert the order and the wording without rendering anything.
+ * The same reasoning as `HEADING_ORDER` and `AGENDA_SECTIONS`: an ordering that lives inside a
+ * function body can only be tested by scraping output, and the first thing to rot is the order.
+ *
+ * ⚠ AND THEY ARE UPPERCASE HERE, VERBATIM FROM §5c. That is the running header a reader sees,
+ * and it is deliberately louder than the `level: 1` headings inside it — the whole point is
+ * that it is legible when you are flicking rather than reading.
+ */
+export const REPORT_SECTIONS = {
+  strategy: 'DRAFT STRATEGY',
+  howHard: 'HOW HARD WILL THIS BE TO ACHIEVE',
+  lawNow: 'WHAT THE LAW SAYS NOW',
+  questions: 'QUESTIONS THE RESEARCH COULDN\u2019T ANSWER',
+  challenges: 'CHALLENGES',
+  sources: 'SOURCES',
+} as const
+
 function panelBlocks(snapshot: ProposalSnapshot): Block[] {
   const blocks: Block[] = []
 
   const byHeading = new Map<HeadingKey, ProposalSnapshot['evidence']>()
   for (const e of snapshot.evidence) {
-    const k = e.headingKey as HeadingKey | null
+    // ⚠⚠ 25-N §4 — THE REDIRECT, APPLIED HERE TOO. `question-headings.ts` requires every
+    // reader of a stored `headingKey` to go through `liveHeading`: "a redirect applied in two
+    // of three places is a redirect that puts the same finding under two headings". This was
+    // one of the places that tested the raw string, so `AGAINST` — the tag on every row the
+    // adversarial pass has ever written — fell out of `HEADING_ORDER` and the rows were
+    // DROPPED FROM THE DOCUMENT ENTIRELY, silently, with no error.
+    const k = liveHeading(e.headingKey)
     if (!k || !HEADING_ORDER.includes(k)) continue
     const list = byHeading.get(k) ?? []
     list.push(e)
     byHeading.set(k, list)
+  }
+  if (!byHeading.size) return blocks
+
+  // ══ §5c — SECTIONS 2 AND 3 ══
+  //
+  // ⚠⚠ THE TWO §5c NAMES ARE THE TWO HEADINGS A READER ARRIVES LOOKING FOR, and they are
+  // pulled OUT of the by-question list rather than left inside it. "How hard will this be to
+  // achieve" is the prognosis — 25-L §3c moved it out of "the strongest case against" because
+  // Charlie could not find it — and "What the law says now" is the first question anybody asks
+  // of a legislative proposal. Everything else stays under one research section, in
+  // `HEADING_ORDER`, because a section per question would be thirteen running headers for a
+  // reader who is looking for two.
+  const LEAD_SECTIONS: Array<{ key: HeadingKey; title: string }> = [
+    { key: 'HOW_HARD', title: REPORT_SECTIONS.howHard },
+    { key: 'LAW_NOW', title: REPORT_SECTIONS.lawNow },
+  ]
+  for (const lead of LEAD_SECTIONS) {
+    const rows = byHeading.get(lead.key)
+    if (!rows?.length) continue
+    blocks.push({ kind: 'section', title: lead.title })
+    const def = QUESTION_HEADINGS.find((h) => h.key === lead.key)
+    blocks.push({ kind: 'heading', level: 1, runs: text(def?.heading ?? lead.key) })
+    blocks.push(...evidenceRows(rows))
+    // ⚠ REMOVED FROM THE MAP so the loop below cannot print it a second time. A finding under
+    // two headings in one document is a document that looks padded and is.
+    byHeading.delete(lead.key)
   }
   if (!byHeading.size) return blocks
 
@@ -220,25 +276,71 @@ function panelBlocks(snapshot: ProposalSnapshot): Block[] {
     if (!rows?.length) continue
     const def = QUESTION_HEADINGS.find((h) => h.key === key)
     blocks.push({ kind: 'heading', level: 2, runs: text(def?.heading ?? key) })
-
-    for (const e of rows) {
-      const unreviewed = e.status !== 'ACCEPTED'
-      blocks.push({
-        kind: 'heading',
-        level: 3,
-        runs: text(unreviewed ? `${e.title} — not yet reviewed` : e.title),
-      })
-      if (e.citation || e.url) {
-        blocks.push({ kind: 'paragraph', runs: text([e.citation, e.url].filter(Boolean).join(' · ')) })
-      }
-      // ⚠ THE SIFT'S REASON, VERBATIM OR ABSENT. Never invented — a row written before the
-      // sift existed has none, and saying so beats a plausible sentence.
-      if (e.siftReason) blocks.push({ kind: 'paragraph', runs: text(e.siftReason) })
-      blocks.push(...markdownToBlocks(e.body))
-    }
+    blocks.push(...evidenceRows(rows))
   }
 
   return blocks
+}
+
+/**
+ * One finding, rendered.
+ *
+ * ⚠ 25-N §5c — EXTRACTED SO THE TWO LEAD SECTIONS AND THE BY-QUESTION LIST SHARE IT. §5c pulls
+ * HOW HARD and WHAT THE LAW SAYS NOW out into their own sections; rendering them with a copy of
+ * this loop would be two renderers of a finding, and the second one is the one that would stop
+ * carrying the "not yet reviewed" mark the first time somebody changed it.
+ */
+function evidenceRows(rows: ProposalSnapshot['evidence']): Block[] {
+  const out: Block[] = []
+  for (const e of rows) {
+    const unreviewed = e.status !== 'ACCEPTED'
+    out.push({
+      kind: 'heading',
+      level: 3,
+      runs: text(unreviewed ? `${e.title} — not yet reviewed` : e.title),
+    })
+    if (e.citation || e.url) {
+      out.push({ kind: 'paragraph', runs: text([e.citation, e.url].filter(Boolean).join(' · ')) })
+    }
+    // ⚠ THE SIFT'S REASON, VERBATIM OR ABSENT. Never invented — a row written before the sift
+    // existed has none, and saying so beats a plausible sentence.
+    if (e.siftReason) out.push({ kind: 'paragraph', runs: text(e.siftReason) })
+    out.push(...markdownToBlocks(e.body))
+  }
+  return out
+}
+
+/**
+ * ══ 25-N §5a — WHERE THE PROPOSAL IS UNFINISHED, SAY SO ONCE, AT THE TOP ════════
+ *
+ * §5a: *"Where the proposal is unfinished, say so once, at the top: 'This is a DRAFT report for
+ * a proposal in process.'"*
+ *
+ * ⚠⚠ AND IT REPLACES A COUNT, WHICH IS THE POINT. Both documents carried *"9 of 9 settled
+ * kernel fields carry no source"* and *"167 questions remain open"* — internal working numbers,
+ * in outward-facing documents. §5: *"That belongs in a separate progress report for the user —
+ * a 'what is left to do' view — not in a document for a reader."*
+ *
+ * ⚠ THE HONESTY IS NOT REMOVED, IT IS RELOCATED AND RE-AIMED. A reader needs to know they are
+ * reading a draft; they do not need our field-coverage arithmetic, which tells them nothing
+ * they can act on and reads as a confession scored out of ten. The full report still carries
+ * "What this proposal does not establish", which is the same honesty as PROSE — the questions
+ * themselves, which a reader can weigh.
+ *
+ * ⚠ AND IT IS CONDITIONAL. A finished proposal must not be stamped DRAFT: a permanent banner
+ * is a banner nobody reads, and it would be false on the one document it matters most on.
+ */
+function draftBanner(snapshot: ProposalSnapshot): Block[] {
+  const unevidenced = snapshot.coverage.fieldsTotal - snapshot.coverage.fieldsSupported
+  const open = snapshot.knownUnknowns.length + snapshot.issues.filter((i) => i.status === 'OPEN').length
+  // ⚠ THE TEST IS INTERNAL; ONLY THE VERDICT IS PRINTED. The counts decide whether the sentence
+  // appears and are never shown — which is exactly the split §5a asks for.
+  if (unevidenced === 0 && open === 0) return []
+  return [{
+    kind: 'note',
+    text: 'This is a DRAFT report for a proposal in process. Parts of it are still open, and where '
+      + 'something has not been settled the document says so where it comes up.',
+  }]
 }
 
 export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
@@ -251,6 +353,11 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   }
 
   // ── Diagnosis ──────────────────────────────────────────────────────────────
+  // §5a — said once, at the top, and only when it is true.
+  blocks.push(...draftBanner(snapshot))
+
+  // ══ §5c — SECTION 1 ══
+  blocks.push({ kind: 'section', title: REPORT_SECTIONS.strategy })
   blocks.push({ kind: 'heading', level: 1, runs: text('The problem') })
 
   const challenge = fieldByKey(snapshot, 'challenge')
@@ -332,7 +439,11 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
 
   // ── Guiding policy ─────────────────────────────────────────────────────────
   blocks.push({ kind: 'rule' })
-  blocks.push({ kind: 'heading', level: 1, runs: text('The approach') })
+  // ⚠ 25-N §5c — "Guiding Policy", NOT "The approach". The platform's own vocabulary
+  // (docs/CLAUDE.md §4, and the FAQ explains it) is "guiding policy"; the document called it
+  // something else, so a reader who had been taught one word met another in the one place the
+  // two had to agree.
+  blocks.push({ kind: 'heading', level: 1, runs: text('Guiding Policy') })
 
   const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
   if (approach) blocks.push(...markdownToBlocks(approach))
@@ -456,7 +567,12 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   // ── The user's own knowledge, attributed ───────────────────────────────────
   if (snapshot.userKnowledge) {
     blocks.push({ kind: 'rule' })
-    blocks.push({ kind: 'heading', level: 1, runs: text(`In ${snapshot.owner.name}’s own words`) })
+    // ⚠⚠ 25-N §5c — WAS `In ${owner}'s own words`. §5c: *"Delete 'In Charlie's own words' —
+    // this is an outward document."* The proposer's first-hand account is not deleted and must
+    // not be: it is often the only evidence for the part of the problem no corpus has recorded.
+    // What is deleted is the FRAMING — naming the author inside their own proposal reads as a
+    // personal aside in a document meant to be read by people who do not know them.
+    blocks.push({ kind: 'heading', level: 1, runs: text('First-hand account') })
     // ⚠ NOT blended into the prose above. `ownKnowledgeProvenance` exists exactly
     // so the user's testimony can be told apart from retrieved material, and this
     // is the section where that distinction is honoured rather than lost.
@@ -473,6 +589,8 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   blocks.push({ kind: 'rule' })
   blocks.push(...panelBlocks(snapshot))
 
+  // ══ §5c — SECTION 4 ══
+  blocks.push({ kind: 'section', title: REPORT_SECTIONS.questions })
   blocks.push({ kind: 'heading', level: 1, runs: text('What this proposal does not establish') })
   blocks.push(...gapBlocks(snapshot))
 
@@ -499,6 +617,9 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   const priority = snapshot.prioritySources
   if (priority && snapshot.sources.length) {
     blocks.push({ kind: 'rule' })
+    // ══ §5c — SECTION 6 ══ (5, CHALLENGES, is emitted by `gapBlocks` above where the open
+    // issues are — see the note there.)
+    blocks.push({ kind: 'section', title: REPORT_SECTIONS.sources })
     blocks.push({ kind: 'heading', level: 1, runs: text('The sources this rests on') })
     if (priority.length) {
       blocks.push({
@@ -600,7 +721,12 @@ function gapBlocks(snapshot: ProposalSnapshot): Block[] {
   const openIssues = snapshot.issues.filter((i) => i.status === 'OPEN' || i.status === 'DEFERRED')
   if (openIssues.length) {
     anything = true
-    out.push({ kind: 'heading', level: 2, runs: text('Open issues') })
+    // ══ §5c — SECTION 5. ⚠ IT IS A SECTION, NOT A LEVEL-2 HEADING INSIDE THE GAPS. §0 calls
+    // the challenges *"the most valuable part of the run so far"*, and they were a sub-heading
+    // of "what this does not establish" — filed as a shortcoming of the proposal rather than as
+    // the scrutiny it has already survived.
+    out.push({ kind: 'section', title: REPORT_SECTIONS.challenges })
+    out.push({ kind: 'heading', level: 1, runs: text('Challenges') })
     out.push({
       kind: 'bullets',
       items: openIssues.map((i): Run[] => [
@@ -694,95 +820,139 @@ export function buildSummaryDocument(
   assertRenderableSnapshot(snapshot)
   const blocks: Block[] = []
 
+  // ⚠ 25-N §5b — ONE PAGE, NOT TWO, AND THE CLIPS ARE WHERE THAT IS ENFORCED. Four sections
+  // at ~450 characters, four bullets of an ask, and a two-line cost comparison is a page. The
+  // previous version ran to seven sections at 500–700 characters each, which is two.
   const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
+
+  // §5a — said once, at the top, and only when something really is unsettled.
+  blocks.push(...draftBanner(snapshot))
+
+  // ══ 25-N §5b — FOUR HEADINGS: The problem · Cause · Guiding Policy · Proposed Actions ══
+  //
+  // ⚠ THEY ARE THE STRATEGIC KERNEL'S OWN WORDS. The summary used to open on "The problem",
+  // then "The pivotal obstacle", then "The approach" — a vocabulary the platform teaches
+  // nowhere and which drops the CAUSE entirely, so the one-page version of a proposal never
+  // said why the problem happens. §5b names the four, and they are the four the kernel is made
+  // of.
 
   const challenge = fieldText(fieldByKey(snapshot, 'challenge'))
   blocks.push({ kind: 'heading', level: 2, runs: text('The problem') })
   blocks.push({
     kind: 'paragraph',
-    runs: text(challenge ? clip(challenge, 700) : 'Not yet settled on this proposal.'),
+    runs: text(challenge ? clip(challenge, 450) : 'Not yet settled on this proposal.'),
   })
 
-  const pivotal = fieldText(fieldByKey(snapshot, 'pivotalObstacle'))
-  blocks.push({ kind: 'heading', level: 2, runs: text('The pivotal obstacle') })
-  blocks.push({
-    kind: 'paragraph',
-    runs: text(pivotal ? clip(pivotal, 500) : 'Not yet named on this proposal.'),
-  })
-
-  const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
-  blocks.push({ kind: 'heading', level: 2, runs: text('The approach') })
-  blocks.push({
-    kind: 'paragraph',
-    runs: text(approach ? clip(approach, 700) : 'No approach has been committed to.'),
-  })
-
-  const rulesOut = fieldText(fieldByKey(snapshot, 'whatItRulesOut'))
-  const ruledOut = snapshot.options.filter((o) => o.status === 'RULED_OUT')
-  if (rulesOut || ruledOut.length) {
-    blocks.push({ kind: 'heading', level: 2, runs: text('What it rules out') })
-    if (rulesOut) blocks.push({ kind: 'paragraph', runs: text(clip(rulesOut, 500)) })
-    if (ruledOut.length) {
-      blocks.push({
-        kind: 'bullets',
-        items: ruledOut.slice(0, 4).map((o): Run[] => [
-          { text: o.approach, bold: true },
-          { text: o.ruleOutReason ? ` — ${clip(o.ruleOutReason, 160)}` : ' — no reason recorded' },
-        ]),
-      })
-      if (ruledOut.length > 4) {
-        blocks.push({ kind: 'note', text: `${ruledOut.length - 4} further alternatives are listed in the full proposal.` })
-      }
+  // ══ 25-N §5b — A FIELD WITH SEVERAL CANDIDATES TAKES THE TOP ONE AND SAYS SO ══════
+  //
+  // §5b: *"Where a field has several candidates, take the top one and label it: 'Current
+  // leading cause, of 10 under consideration.'"*
+  //
+  // ⚠⚠ THE LABEL IS THE WHOLE INSTRUCTION, NOT THE PICKING. Printing one of ten causes with no
+  // note is a document asserting a settled diagnosis on a draft that has not made one — the
+  // single most misleading thing a part-way summary can do, and the reader has no way to know.
+  // Printing all ten is not a one-page summary. The label is what makes the first option
+  // honest.
+  //
+  // ⚠ AND "TOP" IS THE USER'S ORDER, NOT A SCORE. `causes` arrives in the order the panel
+  // shows and §5b's own next sentence is that kernel items must be draggable so the user
+  // chooses which is top. Ranking them here would overrule the control that sprint asks for.
+  const causes = snapshot.causes ?? []
+  const rootCause = fieldText(fieldByKey(snapshot, 'rootCause'))
+  blocks.push({ kind: 'heading', level: 2, runs: text('Cause') })
+  if (rootCause) {
+    // A settled root cause is settled: no label, because there is nothing under consideration.
+    blocks.push({ kind: 'paragraph', runs: text(clip(rootCause, 450)) })
+  } else if (causes.length) {
+    // ⚠ A CAUSE THE USER HAS MARKED AS ROOT WINS OVER POSITION. `isRootCause` is a decision;
+    // being first in the list is only an order, and printing the first one over the top of a
+    // marked root cause would overrule the user with a sort.
+    const lead = causes.find((c) => c.isRootCause) ?? causes[0]
+    blocks.push({ kind: 'paragraph', runs: text(clip(lead.cause, 450)) })
+    if (lead.whyPersisted) {
+      blocks.push({ kind: 'paragraph', runs: text(clip(lead.whyPersisted, 300)) })
     }
+    blocks.push({
+      kind: 'note',
+      text: lead.isRootCause
+        ? `Marked as the root cause, of ${causes.length} under consideration.`
+        : causes.length === 1
+          ? 'The only cause under consideration. No root cause has been settled on yet.'
+          : `Current leading cause, of ${causes.length} under consideration. No root cause has been settled on yet.`,
+    })
+  } else {
+    blocks.push({ kind: 'paragraph', runs: text('No cause has been recorded yet.') })
   }
 
-  // Headline cost against problem cost — the comparison, in one place.
-  blocks.push({ kind: 'heading', level: 2, runs: text('Cost') })
-  const headline = headlineCost(snapshot.actions)
+  // ⚠ 25-N §5c APPLIES HERE TOO: "Guiding Policy", not "The approach". And where nothing has
+  // been committed to, the candidates are LISTED rather than the absence merely stated — §5c:
+  // *"List all proposed approaches rather than 'no approach has been committed to' — keep that
+  // line, then list what is under consideration."*
+  const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
+  const liveOptions = (snapshot.options ?? []).filter((o) => o.status !== 'RULED_OUT')
+  blocks.push({ kind: 'heading', level: 2, runs: text('Guiding Policy') })
+  if (approach) {
+    blocks.push({ kind: 'paragraph', runs: text(clip(approach, 450)) })
+  } else if (liveOptions.length) {
+    blocks.push({ kind: 'paragraph', runs: text(clip(liveOptions[0].approach, 450)) })
+    blocks.push({
+      kind: 'note',
+      text: liveOptions.length === 1
+        ? 'The only approach under consideration. None has been committed to yet.'
+        : `Current leading approach, of ${liveOptions.length} under consideration. None has been committed to yet.`,
+    })
+    if (liveOptions.length > 1) {
+      blocks.push({
+        kind: 'bullets',
+        items: liveOptions.slice(1, 5).map((o): Run[] => [{ text: clip(o.approach, 140) }]),
+      })
+    }
+  } else {
+    blocks.push({ kind: 'paragraph', runs: text('No approach has been committed to.') })
+  }
+
+  // ── Proposed Actions ────────────────────────────────────────────────────────
+  blocks.push({ kind: 'heading', level: 2, runs: text('Proposed Actions') })
+  const legislativeActions = snapshot.actions.filter((a) => a.legislative)
+  const shownActions = legislativeActions.length ? legislativeActions : snapshot.actions
+  if (shownActions.length) {
+    blocks.push({
+      kind: 'bullets',
+      items: shownActions.slice(0, 4).map((a): Run[] => [
+        { text: a.practicalStep, bold: true },
+        { text: a.targetOrganisation ? ` — ${a.targetOrganisation}` : '' },
+      ]),
+    })
+    if (shownActions.length > 4) {
+      blocks.push({ kind: 'note', text: `${shownActions.length - 4} further actions are in the full report.` })
+    }
+  } else {
+    blocks.push({ kind: 'paragraph', runs: text('No actions have been recorded, so there is no ask to state.') })
+  }
+
+  // The cost comparison, in two lines. ⚠ It stays: it is the one number a reader wants from a
+  // one-pager, and both halves say plainly when they are not in the record.
   blocks.push({
     kind: 'paragraph',
     runs: [
       { text: 'Cost of the proposal: ', bold: true },
-      { text: headline ?? 'not costed in the record' },
-    ],
-  })
-  blocks.push({
-    kind: 'paragraph',
-    runs: [
+      { text: headlineCost(snapshot.actions) ?? 'not costed in the record' },
+      { text: '  ·  ' },
       { text: 'Cost of the problem: ', bold: true },
       { text: snapshot.costs.problemCost ?? 'not established in the record' },
     ],
   })
 
-  // The ask.
-  blocks.push({ kind: 'heading', level: 2, runs: text('The ask') })
-  const legislativeActions = snapshot.actions.filter((a) => a.legislative)
-  if (legislativeActions.length) {
-    blocks.push({
-      kind: 'bullets',
-      items: legislativeActions.slice(0, 5).map((a): Run[] => [
-        { text: a.practicalStep, bold: true },
-        { text: a.targetOrganisation ? ` — ${a.targetOrganisation}` : '' },
-      ]),
-    })
-  } else if (snapshot.actions.length) {
-    blocks.push({
-      kind: 'bullets',
-      items: snapshot.actions.slice(0, 5).map((a): Run[] => [{ text: a.practicalStep }]),
-    })
-  } else {
-    blocks.push({ kind: 'paragraph', runs: text('No actions have been recorded, so there is no ask to state.') })
-  }
-
-  // ⚠ The gaps line survives into the summary. One sentence, and it is the one a
-  // clerk will hold the rest of the document against.
+  // ⚠⚠ 25-N §5a — THE INTERNAL COUNTS ARE GONE FROM HERE.
+  //
+  // This is where *"9 of 9 settled kernel fields carry no source, and 167 questions remain
+  // open"* was printed, on the outward-facing one-pager. §5a: those are working numbers and
+  // *"belong in a separate progress report for the user — a 'what is left to do' view — not in
+  // a document for a reader."* What replaces them is `draftBanner` at the top: one sentence,
+  // once, saying it is a draft. The gaps themselves — the questions, in words — are still in
+  // the full report under "What this proposal does not establish", where a reader can weigh
+  // them instead of being handed our arithmetic.
   blocks.push({ kind: 'rule' })
-  const unevidenced = snapshot.coverage.fieldsTotal - snapshot.coverage.fieldsSupported
-  const gapCount = snapshot.knownUnknowns.length + snapshot.issues.filter((i) => i.status === 'OPEN').length
-  blocks.push({
-    kind: 'note',
-    text: `What this does not establish: ${unevidenced} of ${snapshot.coverage.fieldsTotal} settled kernel fields carry no source, and ${gapCount} question${gapCount === 1 ? '' : 's'} or issue${gapCount === 1 ? '' : 's'} remain open. All are listed in the full proposal.`,
-  })
 
   if (opts.onlineViewUrl) {
     blocks.push({

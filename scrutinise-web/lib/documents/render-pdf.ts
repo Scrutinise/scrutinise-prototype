@@ -113,7 +113,30 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
 
   const cur: Cursor = { page: pdf.addPage(A4), y: A4[1] - MARGIN, annots: [] }
 
-  const newPage = () => { cur.page = pdf.addPage(A4); cur.y = A4[1] - MARGIN }
+  /**
+   * ══ 25-N §5c — THE RUNNING SECTION HEADER ════════════════════════════════════
+   *
+   * ⚠ DRAWN BY `newPage`, WHICH IS THE ONLY PLACE A PAGE IS EVER CREATED. Stamping it at each
+   * `section` block instead would put it on the first page of a section and nowhere else,
+   * which is the opposite of what §5c is for — a reader leafing through a hundred pages needs
+   * it on page 87, not on page 1.
+   */
+  let section: string | null = null
+  const stampSection = () => {
+    if (!section) return
+    cur.page.drawText(section, {
+      x: MARGIN,
+      y: A4[1] - MARGIN + 6,
+      size: 12,
+      font: fonts.bold,
+      color: MUTED,
+    })
+    // ⚠ THE BODY STARTS BELOW IT. Without this the first line of the page is drawn under the
+    // header, which on a printed page is a page nobody can read rather than a missing header.
+    cur.y -= 14
+  }
+
+  const newPage = () => { cur.page = pdf.addPage(A4); cur.y = A4[1] - MARGIN; stampSection() }
   const need = (h: number) => { if (cur.y - h < MARGIN) newPage() }
 
   /** Draw wrapped, styled text at the cursor and advance it. */
@@ -193,6 +216,14 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
 
   for (const block of model.blocks) {
     switch (block.kind) {
+      // 25-N §5c — a new section starts a page and changes the running header.
+      case 'section': {
+        section = block.title
+        newPage()
+        // The section's own name, once, in full size, where the section begins.
+        drawRuns([{ text: block.title, bold: true }], { size: 17, leading: 24, after: 10 })
+        break
+      }
       case 'heading': {
         const size = block.level === 1 ? 15 : block.level === 2 ? 12.5 : 10.5
         need(size + 14)

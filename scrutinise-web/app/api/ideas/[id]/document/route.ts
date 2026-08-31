@@ -22,6 +22,7 @@ import {
   PROPOSAL_KINDS,
 } from '@/lib/documents/proposal-export'
 import { readPublicationState, listVersions } from '@/lib/documents/proposal-version'
+import { ALL_MEETING_PACK_SECTIONS, type MeetingPackSection } from '@/lib/documents/build-meeting-pack'
 import { SnapshotUnavailableError } from '@/lib/documents/proposal-snapshot'
 
 type Params = { params: Promise<{ id: string }> }
@@ -33,16 +34,33 @@ const BodySchema = z.object({
   action: z.literal('generate'),
   kind: z.enum(PROPOSAL_KINDS),
   force: z.boolean().default(false),
+  /**
+   * 25-N §5e — which sections of the MEETING PACK to print.
+   *
+   * ⚠ VALIDATED AGAINST THE BUILDER'S OWN LIST, not a restated one. A section name the builder
+   * does not know is silently dropped by `want.has`, so an unvalidated string here would let a
+   * typo remove a section from somebody's pack with nothing on screen saying so.
+   *
+   * ⚠ AND IT IS OPTIONAL. Absent means all of them — not choosing is not choosing to omit.
+   */
+  sections: z.array(z.enum(ALL_MEETING_PACK_SECTIONS as [string, ...string[]])).optional(),
 })
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
 
+  // ⚠ 25-N §5d — `?quick=1` SKIPS THE SNAPSHOT, which is the whole cost of this route. See the
+  // note on `readProposalExportStatus`: the panel painted nothing for ~5 seconds while a
+  // twelve-table assembler ran, so that ONE field — whether a generated file is still current
+  // — could be computed. Quick returns everything else at once and reports staleness as
+  // unknown; the panel then asks again, properly, without blocking the first paint.
+  const quick = new URL(req.url).searchParams.get('quick') === '1'
+
   try {
     const [documents, publication, versions] = await Promise.all([
-      readProposalExportStatus(id),
+      readProposalExportStatus(id, { quick }),
       readPublicationState(id),
       listVersions(id),
     ])
@@ -72,7 +90,10 @@ export async function POST(req: Request, { params }: Params) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
 
   try {
-    const status = await generateProposalExport(id, parsed.data.kind, { force: parsed.data.force })
+    const status = await generateProposalExport(id, parsed.data.kind, {
+      force: parsed.data.force,
+      sections: parsed.data.sections as MeetingPackSection[] | undefined,
+    })
     return NextResponse.json({ document: status })
   } catch (err) {
     // "There is nothing to render yet" is a 409 with the reason, not a 500 with a

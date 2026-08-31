@@ -27,6 +27,22 @@ export interface SourceRef {
 }
 
 export type Block =
+  /**
+   * ══ 25-N §5c — A SECTION, WHOSE NAME IS REPEATED ON EVERY PAGE OF IT ═════════
+   *
+   * §5c: *"Sections, with the heading repeated in large bold type on every page of that
+   * section, so a reader leafing through a hundred pages always knows where they are."*
+   *
+   * ⚠⚠ IT IS A BLOCK, NOT A PROPERTY OF A HEADING, and that is the whole design. A running
+   * header is state that persists across pages; a `level: 1` heading is a mark at one point in
+   * the flow. Making it a heading flag would mean every renderer had to remember which heading
+   * it had passed most recently and hope no builder ever emitted two in a row — the renderers
+   * would be inferring the document's structure from its typography. A `section` block SAYS it.
+   *
+   * ⚠ AND IT STARTS A NEW PAGE. A section whose name is stamped at the top of a page it starts
+   * two thirds of the way down is a header describing the wrong half of the paper.
+   */
+  | { kind: 'section'; title: string }
   | { kind: 'heading'; level: 1 | 2 | 3; runs: Run[] }
   | { kind: 'paragraph'; runs: Run[] }
   | { kind: 'bullets'; items: Run[][]; ordered?: boolean }
