@@ -152,8 +152,38 @@ export async function buildQuestionPanel(
     if (d.status === 'PRIORITY') priority.add(d.sourceKey)
   }
 
+  /**
+   * ══ ADDENDUM §A1 — WHICH KEY A DECISION ON THIS ROW WOULD BE STORED UNDER ══════════
+   *
+   * ⚠⚠ THE BUG THIS FIXES: "Add to report" wrote a row and the middle column never showed it,
+   * and it survived a refresh. **The write happened.** Measured on Charlie's own idea — three
+   * `IdeaSourceDecision` rows with `status: PRIORITY`, two of them stamped 13:51 on 31 August,
+   * every one of them matching an `EvidenceItem.id` and none matching any `sourceId`:
+   *
+   *     exclusion read:  [e.sourceId, e.id].find(...)   ← BOTH keys
+   *     priority read:   e.sourceId && priority.has(...)  ← sourceId ONLY
+   *
+   * The panel wrote under `entry.id` (both `QuestionPanel` and `ReportAdditions` send it) and
+   * read under `sourceId`. They can never match, so the star reverted the moment the panel
+   * refetched and nothing ever reached DRAFT STRATEGY.
+   *
+   * ⚠ THE ASYMMETRY IS THE WHOLE DEFECT, so the two now share ONE function rather than two
+   * expressions that happen to agree. Two lookups of the same map is one lookup that will drift,
+   * and this is what drifting looked like: the feature worked in the generated document — which
+   * reads the decision rows directly and never joins — and nowhere on screen. That is why it
+   * survived 25-L §3d, 25-N §3a and two sprints of checks: its only stated effect was inside a
+   * .docx nobody opened.
+   *
+   * ⚠ AND IT TRIES `e.id` FIRST. A decision stored under a `sourceId` applies to EVERY finding
+   * from that source — on this idea alone, three prioritised findings share one `sourceId` — so
+   * preferring the row's own id keeps a per-finding decision per-finding. The source-level key
+   * remains a fallback so any older row still resolves; nothing needs migrating.
+   */
+  const decisionKey = (e: { id: string; sourceId: string | null }, m: { has(k: string): boolean }) =>
+    [e.id, e.sourceId].find((k): k is string => !!k && m.has(k))
+
   const toEntry = (e: (typeof evidence)[number]): PanelEntry => {
-    const exclusionKey = [e.sourceId, e.id].find((k) => k && excluded.has(k))
+    const exclusionKey = decisionKey(e, excluded)
     return {
       id: e.id,
       title: e.title,
@@ -168,7 +198,8 @@ export async function buildQuestionPanel(
       bearsOnFocus: !!focus && e.fieldRef === focus,
       excluded: !!exclusionKey,
       exclusionReason: exclusionKey ? excluded.get(exclusionKey) ?? null : null,
-      priority: !!(e.sourceId && priority.has(e.sourceId)),
+      // §A1 — the SAME rule as the exclusion above, from the same function.
+      priority: !!decisionKey(e, priority),
     }
   }
 
