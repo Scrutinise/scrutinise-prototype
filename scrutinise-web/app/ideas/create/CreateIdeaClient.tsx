@@ -1014,6 +1014,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 policyApi={policyApi}
                 actionsApi={actionsApi}
                 costLinesApi={costLinesApi}
+                // 25-O §5 — the causes commentary fetches its own data.
+                ideaId={state.ideaId}
                 deepening={
                   <>
                     {/* ══ 25-N §3a — WHAT THE USER HAS PUT IN THE REPORT ═════════════

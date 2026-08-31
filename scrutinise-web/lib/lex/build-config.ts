@@ -26,6 +26,8 @@ export type BuildPassKey =
   | 'RESEARCH' | 'REVISE' | 'ADVERSARIAL'
   // ── 25-F: the pass that asks whether any of it is good, and the two that verify it ──
   | 'SMART' | 'KERNEL_CHECK' | 'LOGIC_CHECK'
+  // ── 25-O §5: the only pass that reads the causes as a SET ──
+  | 'CAUSES_COMMENTARY'
 
 export interface BuildPassDef {
   key: BuildPassKey
@@ -110,6 +112,29 @@ export const BUILD_PASSES: BuildPassDef[] = [
     key: 'REVISE',
     label: 'Revising in the light of it',
     detail: 'Rewriting the kernel — especially the causes — and keeping every place the evidence changed my mind.',
+  },
+  // ── 25-O §5 — THE OPENING COMMENTARY ON THE CAUSES ───────────────────────
+  {
+    key: 'CAUSES_COMMENTARY',
+    label: 'Describing the terrain',
+    detail:
+      'Reading the causes as a SET rather than one at a time: what the evidence says, where the '
+      + 'sources disagree, how complex this is, and how the pieces relate.',
+    // ⚠⚠ IT RUNS HERE, AFTER `REVISE`, AND THE POSITION IS THE DESIGN. `REVISE` is the pass that
+    // rewrites the causes against the research (25-L: two passes write causes and the second
+    // replaces the first), so anything earlier would describe a terrain that is about to change.
+    // And it runs BEFORE the four verification passes, which are all `continueOnFailure` — so if
+    // the whole-build ceiling fires late, the thing lost is a check and not the commentary.
+    //
+    // ⚠ THE CEILING COST IS REAL AND IS NOT HIDDEN. Build v7 hit the 900s hard stop at 922s with
+    // TEN passes (25-N §1a); this makes eleven. It does no retrieval and reads material already
+    // in hand, so it is the cheapest kind of pass — but it is not free, and the sprint report
+    // states what it adds. 25-N's resume is what makes an eleventh pass survivable.
+    continueOnFailure: true,
+    // ⚠ NOT THE CHEAPEST MODEL. This is a judgement about a body of evidence and about where it
+    // contradicts itself — the same reasoning that moved the adversarial read off flash in 25-F
+    // §2e after it produced 407 output tokens for six issues.
+    model: 'gemini-2.5-pro',
   },
   // ── 25-F §2 — THE SMART PASS. After revision, before the agenda. ──────────
   {

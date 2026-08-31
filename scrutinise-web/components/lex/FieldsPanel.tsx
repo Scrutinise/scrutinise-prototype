@@ -7,6 +7,7 @@ import {
   type CanonicalPolicyOption, type CanonicalAction, type CanonicalBenchmark, type CanonicalCostLine, type CostRange,
 } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
+import CausesCommentaryPanel from './CausesCommentary'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
@@ -646,7 +647,7 @@ function CauseTreeView({ nodes, busy, api }: { nodes: CauseTreeNode[]; busy: boo
 }
 
 // The causes loop (§7.2 + §16.2 tree). Interactive while active; read-only once accepted.
-function CausesField({ field, causes, busy, api }: { field: CanonicalField; causes: CanonicalCause[]; busy: boolean; api: CausesApi }) {
+function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalField; causes: CanonicalCause[]; busy: boolean; api: CausesApi; ideaId: string }) {
   const [c, setC] = useState('')
   const [why, setWhy] = useState('')
   const [view, setView] = useState<'list' | 'map'>('list')
@@ -655,6 +656,12 @@ function CausesField({ field, causes, busy, api }: { field: CanonicalField; caus
 
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
+      {/* ══ 25-O §5 — THE COMMENTARY OPENS THE SECTION ═════════════════════════
+          ⚠ ABOVE THE CAUSES AND ABOVE THE FIELD HEADER, BEFORE ANY CHOICE IS OFFERED. §5's
+          symptom is that the user is asked to choose at a granular level with no account of
+          the terrain; a briefing placed under the list is a footnote to a decision already
+          made. It renders nothing at all until a build has written one. */}
+      <CausesCommentaryPanel ideaId={ideaId} />
       <FieldHeader
         field={field}
         right={causes.length > 0 ? (
@@ -1340,7 +1347,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
 export default function FieldsPanel({
   pages, causes, policyOptions, actions, costLines, benchmarks, busy, currentFieldKey,
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
-  causesApi, policyApi, actionsApi, costLinesApi, deepening,
+  causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId,
 }: {
   pages: CanonicalState['pages']
   causes: CanonicalCause[]
@@ -1365,6 +1372,8 @@ export default function FieldsPanel({
   costLinesApi: CostLinesApi
   /** The Deepening stage section, rendered after the four kernel pages (§22). */
   deepening?: ReactNode
+  /** 25-O §5 — the causes commentary fetches its own data and needs the idea. */
+  ideaId: string
 }) {
   /** Sections the user has opened that would otherwise be closed (finished ones). */
   const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set())
@@ -1419,7 +1428,7 @@ export default function FieldsPanel({
     if (f.type === 'loop') {
       if (f.key === 'policyOptions') return <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} />
       if (f.key === 'actions') return <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
-      return <CausesField field={f} causes={causes} busy={busy} api={causesApi} />
+      return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} />
     }
     if (f.type === 'reference') {
       if (f.key === 'chosenApproach') return <ChosenApproachField field={f} options={policyOptions} busy={busy} api={policyApi} />
