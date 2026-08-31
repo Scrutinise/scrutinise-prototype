@@ -810,7 +810,9 @@ duplicate rows in production weeks later.
 | `Resource_live_idx` | `Resource` | The live-row index for the Resources card grid. Partial on `deletedAt IS NULL`. | `prisma/central_2g_resources.sql` |
 | `IdeaNote_seeded_source_key` | `IdeaNote` | One SEEDED note per (idea, user, source), so the "My original idea" note cannot be written twice by two tabs racing a read-then-write. Partial on `source <> 'USER'`. ⚠⚠ **The obvious `@@unique([ideaId, userId, source])` is WRONG IN THE DIRECTION THAT BREAKS THE FEATURE** — it would apply to `source = 'USER'` as well, so a user could have exactly ONE note. That is why it cannot be declared and has to live here. | `prisma/lex_25n_notes.sql` |
 
-Nine entries today. **Add a row here the moment a tenth exists** — the register is only useful if it
+| `Idea_visible_idx` | `Idea` | The live-idea index behind the owner's dashboard and the public list. Partial on `deletedAt IS NULL AND "archivedAt" IS NULL` — 25-O §4 added ARCHIVING as a separate act from the owner's own delete, and every list now filters both. | `prisma/lex_25o.sql` |
+
+Ten entries today. **Add a row here the moment an eleventh exists** — the register is only useful if it
 is complete, and a partial index nobody wrote down is the whole failure mode.
 
 ⚠ Two of the eight were added without a register row and only found on a later sweep of

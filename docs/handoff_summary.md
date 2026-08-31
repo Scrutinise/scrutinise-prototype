@@ -2,7 +2,53 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-31 10:17 UTC — ▼ **LEX 25-N: THE BUILD THAT "STOPPED WITH NO
+*Last updated: 2026-08-31 14:04 UTC — ▼ **LEX 25-O: `/ideas/build` IS NOT A TESTING SURFACE —
+IT IS STAGE 1 *AND* THE LIVE NEW-IDEA DOOR, MEASURED. §3 NOT DONE, AND IT IS CHARLIE'S CALL.**
+Built §1, §2, §4, §5; §7 measured and deliberately unchanged; §6 diagnosed, not built.
+⚠⚠ **`PlatformConfig.newIdeaDoor` READS `"build"` IN PRODUCTION.** Every new idea starts there
+today, AND it is `stageHref('idea')` — "1 · The Idea", verified live in 25-N. `/ideas/create` is
+stages 2–3 ONLY, and `/ideas/build` is the only page rendering `BuildProgress`, the re-run and
+**the resume control §1d of the same brief requires.** Redirecting the whole route sends new pilot
+users through the OLD chat elicitation and deletes Stage 1; redirecting the bare route breaks
+25-E §2's resume-rather-than-mint, built to recover **2,934 characters of Charlie's own writing**.
+▶ **§3's premise about the probes is INVERTED (good news):** eleven checks + two harnesses read the
+SOURCE FILE, not the URL — a redirect blinds NONE. Only `check:lex-25j`/`verify:my-ideas-ui` and
+⚠ **`verify:lex-25e-live` §2 (no home on `/ideas/create` at all)** depend on the route. **Three
+options in the report.**
+⚠⚠ **§1's STATED SYMPTOM DOES NOT EXIST.** Nothing in the pass path has ever read the allowance.
+The real defect: **the check was priced against the mode ASKED FOR and `reuseFrom` decides what
+RUNS** — a REUSE with nothing to reuse is downgraded to FULL, so **one third could buy a
+three-third build**. Now checked AFTER that decision, from the same expression the row is written
+with. ▶ And reserve-don't-check fixes a real race: spend counted only DONE builds, so **two builds
+in the same window both passed and one was unpaid.** ▶ **The release is STRUCTURAL — no write, so
+no path can miss it** — plus an expiry for a row stuck at RUNNING. ▶ 12 thirds from config; ⚠
+"explicitly granted" reads off the NOTE, because the column defaults to 4.
+⚠ **§1d IS A RENDER ASSERTION. A LIVE RESUME HAS STILL NEVER BEEN RUN.**
+⚠⚠ **§7 SAYS DO NOT OPTIMISE.** `/panel` 24–28ms, duplicate 28ms, `/agenda` ~100ms each, **`/build`
+324ms and NOT a duplicate.** Whole first paint = **579ms server**; duplicates 21.9%, in parallel
+with the slowest call → **saves requests, not seconds.** 579ms cannot produce 25-N's "several
+seconds": the rest is network, cold start, Clerk. **Nothing changed.**
+⚠⚠ **§6: `EvidenceItem` HAS NO DATE COLUMN AT ALL.** The 2014 claim came from a Lords debate of
+16 Jan 2014, written by RESEARCH under two interrogation questions as CONTRADICTS, fed to REVISE.
+The date is in the URL and the corpus row and **there is nowhere to put it** — so no prompt fix
+can work. Four ordered steps in the report.
+▶ **§5 — the commentary is the ONLY pass that reads the causes as a SET**, which is why the output
+was ever a list. Runs after REVISE, before the verifiers. ⚠ Contrary evidence is STRUCTURED;
+⚠⚠ **"no conflict" needs a REASON** — §5 read literally would require inventing one. ⚠ **COST
+~2–4p ESTIMATED on a ~23p baseline; NO BUILD HAS RUN IT.** Eleven passes now; v7 hit the 900s stop
+at 922s with ten.
+▶ **§4 — THE LIST IS PRINTED AND NOTHING OF THEIRS IS HIDDEN.** 6 ideas, 3 testers, all builds=0.
+⚠ `charlie@whatmusic.com` / `charlieleach1@gmail.com` NOT included and NOT guessed. ⚠⚠ Mechanism
+**PROVEN LIVE on one of Charlie's own empty rows and restored in the same session** — re-read,
+zero-lists, and **a control that must still be visible**. One command in the report when he says.
+✅ `check:lex-25o` 44/0, 11 controls all fired. ⚠ **Three guards repointed, not relaxed** — two were
+EXACT-LIST assertions right only by accident. Whole suite run: 25-c 32 … 25-n 98, **25-o 44**,
+build-25a 40, build-25b 54, 20bd 47, statutory 17, corpus-types 156; harnesses all executed.
+📦 `prisma/lex_25o.sql` applied to Neon (host checked). ⚠ Its partial index is on the §21 register.
+`lex_25n_backfill_against.sql` still unrun and must run AFTER §4.
+⚠ **BIGGEST UNKNOWN: THE COMMENTARY HAS NEVER BEEN GENERATED.** One full build settles it.
+`docs/LEX_25O_REPORT.md`.**
+Earlier: 2026-08-31 10:17 UTC — ▼ **LEX 25-N: THE BUILD THAT "STOPPED WITH NO
 RE-START" WAS WORKING CORRECTLY, AND `resumable` WAS IN THE PAYLOAD RENDERED BY NOTHING.**
 §1–§5 and §11 built; §6–§8 designed and reported; §9–§10 reported.
 ⚠⚠ **BUILD v7 OF `452c5ade`, 30 Aug 11:14–11:30 UTC, DIAGNOSED FROM THE ROW:** 8 of 10 passes

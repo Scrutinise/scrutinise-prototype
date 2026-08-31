@@ -132,6 +132,113 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-O — CLEARING THE ROAD TO PILOT A (2026-08-31 14:04 UTC)
+
+**Executed `docs/BRIEF_25O.md`.** Built §1, §2, §4, §5. Measured and deliberately NOT changed:
+§7. Diagnosed, not built: §6. ⚠⚠ **§3 NOT DONE — it would break §1d of the same brief, and the
+reason is measured.** Full account: `docs/LEX_25O_REPORT.md`.
+
+⚠⚠ **`/ideas/build` IS NOT A TESTING SURFACE. `PlatformConfig.newIdeaDoor` READS `"build"` IN
+PRODUCTION** — every new idea starts there today — **and it is also `stageHref('idea')`, "1 · The
+Idea"**, the tile 25-N verified live showing "7 runs, 4 documents". `/ideas/create` is stages 2
+and 3 ONLY. And `/ideas/build` is the only page rendering `BuildProgress`, the re-run dialogue,
+the findings and **the resume control §1d requires to be reachable**. Redirecting the whole route
+sends every new pilot user through the OLD chat elicitation (25-F §9d kept it behind that flag),
+deletes Stage 1, and removes the resume control; redirecting only the bare route breaks 25-E §2's
+resume-rather-than-mint, which was built to recover **2,934 characters of Charlie's own writing**.
+▶ **§3b/§3c DELIVERED AS THE ENUMERATION IT ASKS FOR, and §3's premise about the probes is
+INVERTED — which is good news:** eleven checks and two harnesses read the SOURCE FILE
+`app/ideas/build/BuildIdeaClient.tsx`, not the URL, so a redirect would blind NONE of them. Only
+`check:lex-25j` + `verify:my-ideas-ui` (the Stage-1 href) and ⚠ **`verify:lex-25e-live` §2 (which
+has no home on `/ideas/create` at all)** depend on the route's behaviour. Three options in the
+report; the choice is Charlie's.
+
+⚠⚠ **§1's STATED SYMPTOM DOES NOT EXIST, AND THE REAL DEFECT IS QUIETER.** Nothing in the pass
+path has ever read the allowance, so no build has ever been stopped mid-run by it. What COULD
+happen: **the door check was priced against the mode ASKED FOR, and twenty lines later `reuseFrom`
+decides what will RUN** — a REUSE request with nothing to reuse is downgraded to FULL and recorded
+as FULL, so **one third could buy a three-third ten-pass build**, clamped silently to zero. The
+check now runs AFTER that decision, against `effectiveMode`, from the same expression the row is
+written with. ▶ **And §1a's reserve-don't-check fixes the other half — a real race:** spend counted
+only DONE builds, so two builds started in the same window (two ideas, two tabs) **both passed the
+door check because neither was DONE yet, and only one was paid for.**
+▶ **§1b's RELEASE IS STRUCTURAL AND HAS NO WRITE** — a reservation IS the row being QUEUED or
+RUNNING, so there is no path on which a release can be missed. ⚠ The one case structure cannot
+cover — a row stuck at RUNNING on an idea nobody opens — is covered by an EXPIRY: past the hard
+stop plus a margin the hold stops counting. Both directions asserted: a stopped build says on
+screen what came back; a DONE one says nothing, because it spent it.
+▶ **§1c: 12 thirds (3 builds + 3 re-runs) from `LEX_PILOT_ALLOWANCE_THIRDS`.** ⚠ "Explicitly
+granted" is read off the NOTE, not the number — the column defaults to 4, so a user nobody has
+touched is indistinguishable BY VALUE from one an admin set to 4.
+⚠ **§1d IS A RENDER ASSERTION AND IS REPORTED AS ONE. A live resume has still never been run.**
+
+⚠⚠ **§7 MEASURED, AND IT SAYS DO NOT OPTIMISE.** `/panel` 24–28ms, the duplicate `/panel` 28ms,
+`/agenda` ~100ms each — **and `/build` at 324ms, the slowest by far and NOT a duplicate.** Total
+server time for the whole first paint **579ms**; the two duplicates are 127ms (21.9%) and run in
+parallel with a 324ms call, so **de-duplicating would save requests, not seconds.** ⚠ And 579ms
+cannot produce 25-N's "several seconds" — the rest is network, cold start and Clerk. **Nothing
+was changed**, per §7's own instruction.
+
+⚠⚠ **§6 DIAGNOSED, AND THE DIAGNOSIS CHANGES THE FIX. `EvidenceItem` HAS NO DATE COLUMN AT ALL.**
+The 2014 claim is *"Civil Service productivity has increased"*, from a Lords debate of **16 Jan
+2014** (`ld201314/…/140116-0001.htm`), written by the **RESEARCH** pass under two interrogation
+questions as `kind: CONTRADICTS`, and fed to REVISE. The date is in the URL and in the corpus row
+and **the evidence layer has nowhere to put it** — so no prompt instruction can work, because the
+date never reaches the model that would weigh it. Four ordered steps in the report; ⚠ steps 1 and
+4 are cheap and make it FINDABLE, steps 2 and 3 are what would have CAUGHT it.
+
+▶ **§5 — THE COMMENTARY, AND IT IS THE ONLY PASS THAT READS THE CAUSES AS A SET.** Every other
+pass reasons about one cause at a time, which is precisely why the output is a list.
+`CAUSES_COMMENTARY` runs after REVISE (the pass that rewrites the causes) and before the four
+verification passes, so a late ceiling loses a check and not the briefing. ⚠ **Contrary evidence
+is a STRUCTURED field** — claim / against / whyItMatters — which is what makes "assert the value,
+not the schema" possible. ⚠⚠ **"No conflict" is an answer WITH A REASON: `conflicts` may be empty
+only when `noConflictFound` says what was examined** — §5 read literally would require FINDING a
+conflict, which on an uncontested problem is a requirement to INVENT one, the §24 failure with the
+sign flipped. ⚠ **COST: ~2–4p estimated on a ~23p baseline, and it is an ESTIMATE — no build has
+been run with this pass.** The real cost is the ceiling: v7 hit the 900s stop at 922s with TEN
+passes; this makes eleven.
+
+▶ **§2 — the public view is a holding page at `/ideas/[id]/public`**, its own route rather than a
+mode on the team page, so the real view REPLACES the file rather than adding a branch to a page
+that must never leak. "See it as others would" pointed at the TEAM page; it no longer does.
+
+▶ **§4 — THE LIST IS PRINTED AND NOTHING OF THEIRS IS HIDDEN.** Six ideas, three testers
+(johnduggan6, michaeljocallagahan, rossengineering56), all builds=0, all Mar–May 2026. ⚠
+`charlie@whatmusic.com` and `charlieleach1@gmail.com` are NOT included and NOT guessed at.
+⚠⚠ **The mechanism is PROVEN LIVE on one of Charlie's own empty "Untitled idea" rows, restored in
+the same session** — updateMany's claim, then the re-read, then §4d's zero-lists assertion, then
+**a control that must still be visible** (a filter returning nothing because it is broken looks
+exactly like one returning nothing because it worked). ⚠ `archivedAt` is its OWN column, not an
+overloaded `deletedAt`: one means the OWNER deleted it, the other that an ADMIN hid somebody
+else's work, and the second is the one you have to be able to answer for. ⚠ Six read paths share
+ONE imported predicate `LIVE_IDEA`; **two deliberate exceptions, both named in the code** — the
+admin search, and **the user's GDPR export, because archiving hides an idea from the PRODUCT and
+does not un-give somebody their own writing.**
+
+✅ `check:lex-25o` **44 passed, 0 failed, 11 controls, all 11 fired.** ⚠ **Three guards fired and
+were REPOINTED, not relaxed** — two were EXACT-LIST assertions that could only be right by
+accident: `check:lex-25f` live-2 required `continueOnFailure` to be exactly three passes (now
+asserts the two properties it protected — **ADVERSARIAL must never be steppable** — and is
+STRONGER), and `check:build-25b` counted 10 passes (bumped to 11 deliberately, with the ceiling
+cost in the comment). `check:lex-25f` §7 asserted the very href §2 fixed.
+✅ Whole suite RUN (§23.2): 25-c 32, 25-d 77, 25-e 28, 25-f 62, 25-g 27, 25-h 20, 25-i 14, 25-j 12,
+25-k 18, 25-l 19, 25-m 12, 25-n 98, **25-o 44**, build-25a 40, build-25b 54, 20bd 47, statutory 17,
+documents pass, corpus-types 156; harnesses 25g-ui 14, 25e-ui 16, my-ideas-ui 15, stages-ui 23,
+outputs-ui 7, build-25a-ui 45. `tsc`, `check:scripts`, `next build`, `check-clean-build --fast` clean.
+
+📦 **Applied to Neon** (`ep-old-dust-aboxi69a`, host checked first): **`prisma/lex_25o.sql`** —
+`Idea.archivedAt`, `Idea.archivedReason`, `IdeaBuild.causesCommentary`, and a partial index
+`Idea_visible_idx` ⚠ **now on the CLAUDE.md §21 register; `prisma migrate diff` will propose
+dropping it.** `lex_25n_backfill_against.sql` remains unrun (§8), and must run AFTER §4.
+
+⚠ **NOT VERIFIED ON THE RUNNING SITE, and the biggest unknown is §5: THE COMMENTARY HAS NEVER
+BEEN GENERATED.** No build has run with the new pass, so its prose, its conflict-finding and its
+real cost are all unmeasured — one full build settles it. Also unwalked: the holding page, the
+archive and the commentary panel.
+
+---
+
 ## LEX 25-N — WHAT THE FIRST REAL WALK FOUND (2026-08-31 10:17 UTC)
 
 **Executed `docs/BRIEF_25N.md`.** Built §1, §2, §3, §4, §5, §11. Designed and reported, not
