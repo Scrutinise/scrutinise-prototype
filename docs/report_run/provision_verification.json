@@ -1,0 +1,571 @@
+{
+  "definitions_of_the_convention_rights": [
+    {
+      "act": "Scotland Act 1998",
+      "gid": "ukpga/1998/46",
+      "ref": "section-126",
+      "definition": "the Convention rights ” has the same meaning as in the Human Rights Act 1998, “ document ” means anything in w",
+      "takes_it_from_the_hra": true
+    },
+    {
+      "act": "Northern Ireland Act 1998",
+      "gid": "ukpga/1998/47",
+      "ref": "section-98",
+      "definition": "the Convention rights ” has the same meaning as in the Human Rights Act 1998; “ cross-community support ” has",
+      "takes_it_from_the_hra": true
+    },
+    {
+      "act": "Government of Wales Act 2006",
+      "gid": "ukpga/2006/32",
+      "ref": "section-158",
+      "definition": "the Convention rights ” has the same meaning as in the Human Rights Act 1998 (c. 42), “ cross-border body ” me",
+      "takes_it_from_the_hra": true
+    }
+  ],
+  "northern_ireland_second_definition": {
+    "where": "Northern Ireland Act 1998, Schedule 2 paragraph 3 (excepted matters)",
+    "excepts": "observing and implementing international obligations and obligations under the Human Rights Convention",
+    "its_own_definition": "In this paragraph \"the Human Rights Convention\" means the following as they have effect for the time being in relation to the United Kingdom— (a) the Convention for the Protection of Human Rights and Fundamental Freedoms, agreed by the Council of Europe at Rome on 4th November 1950; and (b) any Protocols to that Convention which have been ratified by the United Kingdom.",
+    "why_it_matters": "This definition is FREE-STANDING: it names the treaty directly and does not route through the Human Rights Act. It is therefore not exposed to the definitional gap that ss.6(2)(c) and 24(1)(a) are. Whether that changes the disposition is CCW's call.",
+    "schedule_2_contains_incompatible_with": false
+  },
+  "authorities": [
+    {
+      "citation": "[2024] NIKB 35",
+      "name": "Re NIHRC and JR295",
+      "why": "Windsor Framework Art 2 non-diminution",
+      "status": "held",
+      "unknown_not_applicable": "neutral citation: held-ness is decidable by lookup",
+      "corpus": "ni-judgments",
+      "id": "ni-judgments:2024-nikb-35:1",
+      "title_as_stored": "Northern Ireland Human Rights Commission's Application and JR295's Application and In the the matter of The Illegal Migration Act 2023",
+      "words": 24732,
+      "availability": "full",
+      "source_url": "https://www.judiciaryni.uk/judicial-decisions/2024-nikb-35",
+      "prefixes_tried": [
+        "tna-caselaw:[2024] NIKB 35:",
+        "ni-judgments:2024-nikb-35:"
+      ]
+    },
+    {
+      "citation": "[2024] NIKB 11",
+      "name": "Re Dillon",
+      "why": "same line",
+      "status": "held",
+      "unknown_not_applicable": "neutral citation: held-ness is decidable by lookup",
+      "corpus": "ni-judgments",
+      "id": "ni-judgments:2024-nikb-11:1",
+      "title_as_stored": "Dillon, McEvoy, McManus, Hughes, Jordan, Gilvary, and Fitzsimmons Application and In the matter of the Northern Ireland Troubles (Legacy and Reconciliation) Act 2023 and the Secretary of State for Northern Ireland",
+      "words": 80956,
+      "availability": "full",
+      "source_url": "https://www.judiciaryni.uk/judicial-decisions/2024-nikb-11",
+      "prefixes_tried": [
+        "tna-caselaw:[2024] NIKB 11:",
+        "ni-judgments:2024-nikb-11:"
+      ]
+    },
+    {
+      "citation": "[2024] NICA 59",
+      "name": "Re Dillon (CA)",
+      "why": "same line",
+      "status": "held",
+      "unknown_not_applicable": "neutral citation: held-ness is decidable by lookup",
+      "corpus": "ni-judgments",
+      "id": "ni-judgments:2024-nica-59:1",
+      "title_as_stored": "In the Matter of an Application by Martina Dillon and others - NI Troubles (Legacy and Reconciliation) Act 2023",
+      "words": 43840,
+      "availability": "full",
+      "source_url": "https://www.judiciaryni.uk/judicial-decisions/2024-nica-59",
+      "prefixes_tried": [
+        "tna-caselaw:[2024] NICA 59:",
+        "ni-judgments:2024-nica-59:"
+      ]
+    },
+    {
+      "citation": "[2023] EWCA Civ 1337",
+      "name": "R (LA (Albania)) v Upper Tribunal",
+      "why": "the Cart ouster upheld — §4.2.3's central authority",
+      "status": "held",
+      "unknown_not_applicable": "neutral citation: held-ness is decidable by lookup",
+      "corpus": "tna-caselaw",
+      "id": "tna-caselaw:[2023] EWCA Civ 1337:1",
+      "title_as_stored": "LA (Albania), R (on the application of) v The Upper Tribunal (Immigration & Asylum Chamber)",
+      "words": 7080,
+      "availability": "full",
+      "source_url": "https://caselaw.nationalarchives.gov.uk/ewca/civ/2023/1337/data.xml",
+      "prefixes_tried": [
+        "tna-caselaw:[2023] EWCA Civ 1337:"
+      ]
+    },
+    {
+      "citation": "[2023] EWHC 791 (Admin)",
+      "name": "R (Oceana) v Upper Tribunal",
+      "why": "same",
+      "status": "held",
+      "unknown_not_applicable": "neutral citation: held-ness is decidable by lookup",
+      "corpus": "tna-caselaw",
+      "id": "tna-caselaw:[2023] EWHC 791 (Admin):1",
+      "title_as_stored": "Mary Jane Baluden Oceana, R (on the application of) v Upper Tribunal (Immigration and Asylum Chamber)",
+      "words": 7323,
+      "availability": "full",
+      "source_url": "https://caselaw.nationalarchives.gov.uk/ewhc/admin/2023/791/data.xml",
+      "prefixes_tried": [
+        "tna-caselaw:[2023] EWHC 791 (Admin):",
+        "tna-caselaw:[2023] EWHC 791:"
+      ]
+    },
+    {
+      "citation": "[2017] UKSC 51",
+      "name": "R (UNISON) v Lord Chancellor",
+      "why": "the strongest absorption authority",
+      "status": "held",
+      "unknown_not_applicable": "neutral citation: held-ness is decidable by lookup",
+      "corpus": "tna-caselaw",
+      "id": "tna-caselaw:[2017] UKSC 51:1",
+      "title_as_stored": "R v Lord Chancellor",
+      "words": 18586,
+      "availability": "full",
+      "source_url": "https://caselaw.nationalarchives.gov.uk/uksc/2017/51/data.xml",
+      "prefixes_tried": [
+        "tna-caselaw:[2017] UKSC 51:"
+      ]
+    }
+  ],
+  "authorities_note": "6 of 6 held, none not-held, none unknown. ⚠ 3 of them are in `ni-judgments`, which B3 found MISSING from coverage.ts's CASE_LAW_CORPORA — a coverage block generated from that list would report these as outside the boundary while the corpus holds them in full.",
+  "generated_at": "2026-08-31T23:14:03.551Z",
+  "what_this_is": "CCW-B12. Retrieval only: the statute's own words from the local revised CLML, plus held/not-held for six authorities. Whether a provision bears on a measure is CCW's call.",
+  "source_of_statutory_text": "best-collection-xml.zip (local bulk CLML), revised copy where held — no network used for provisions",
+  "verdict_test": {
+    "correct": "the provision exists, is live, and contains the operative words the citation is offered for",
+    "superseded": "the provision exists but the revised text is an omission/repeal marker, or later provisions carry the operative words",
+    "wrong": "the provision exists and is live but does not contain the operative words it is cited for",
+    "unreachable": "not in the corpus at all — declared, not approximated"
+  },
+  "provisions": [
+    {
+      "item": 1,
+      "citation_as_given": "Northern Ireland Act 1998 ss.6, 24, Sch 2",
+      "source": "Prosperity Institute",
+      "what_to_establish": "Are these the right amendment targets for removing Convention constraints on the Assembly and Ministers?",
+      "gid": "ukpga/1998/47",
+      "act": "Northern Ireland Act 1998",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/incompatible with any of the Convention rights/i",
+      "operative_words_found_in": "section-6",
+      "provisions": [
+        {
+          "ref": "section-6",
+          "why": "legislative competence of the Assembly",
+          "found": true,
+          "omitted": false,
+          "text": "6 1 A provision of an Act is not law if it is outside the legislative competence of the Assembly. 2 A provision is outside that competence if any of the following paragraphs apply— a it would form part of the law of a country or territory other than Northern Ireland, or confer or remove functions exercisable otherwise than in or as regards Northern Ireland; b it deals with an excepted matter and is not ancillary to other provisions (whether in the Act or previously enacted) dealing with reserved or transferred matters; c it is incompatible with any of the Convention rights; ca it is incompatible with Article 2(1) of the Protocol on Ireland/ Northern Ireland in the EU withdrawal agreement (rights of individuals); d . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . e it discriminates against any person or class of person on the ground of religious belief or political opinion; f it modifies an enactment in breach of section 7. 3 For the purposes of this Act, a provision is ancillary to other provisions if it is a provision— a which provides for the enforcement of those other provisions or is otherwise necessary or expedient for making those other provisions effective; or b which is otherwise incidental to, or consequential on, those provisions; and references in this Act to provisions previously enacted are references to provisions contained in, or in any instrument made under, other Northern Ireland legislation or an Act of Parliament. 4 Her Majesty may by Order in Council specify functions which are to be treated, for such purposes of this Act as may be specified, as being, or as not being, functions which are exercisable in or as regards Northern Ireland. 5 No recommendation shall be made to Her Majesty to make an Order in Council under subsection (4) unless a draft of the Order has been laid before and approved by resolution of each House of Parliament.",
+          "restrict": {
+            "start": "2020-11-14"
+          }
+        },
+        {
+          "ref": "section-6-2-c",
+          "why": "the Convention-rights limb of s.6",
+          "found": true,
+          "omitted": false,
+          "text": "c it is incompatible with any of the Convention rights;",
+          "restrict": {}
+        },
+        {
+          "ref": "section-24",
+          "why": "powers of Ministers and departments",
+          "found": true,
+          "omitted": false,
+          "text": "24 1 A Minister or Northern Ireland department has no power to make, confirm or approve any subordinate legislation, or to do any act, so far as the legislation or act— a is incompatible with any of the Convention rights; aa is incompatible with Article 2(1) of the Protocol on Ireland/ Northern Ireland in the EU withdrawal agreement (rights of individuals); b . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . c discriminates against a person or class of person on the ground of religious belief or political opinion; d in the case of an act, aids or incites another person to discriminate against a person or class of person on that ground; or e in the case of legislation, modifies an enactment in breach of section 7. 2 Subsection (1)(c) and (d) does not apply in relation to any act which is unlawful by virtue of the Fair Employment and Treatment (Northern Ireland) Order 1998 , or would be unlawful but for some exception made by virtue of Part VIII of that Order . 3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+          "restrict": {
+            "start": "2021-05-06"
+          }
+        },
+        {
+          "ref": "section-24-1-a",
+          "why": "the Convention-rights limb of s.24",
+          "found": true,
+          "omitted": false,
+          "text": "a is incompatible with any of the Convention rights;",
+          "restrict": {}
+        },
+        {
+          "ref": "schedule-2",
+          "why": "cited alongside ss.6 and 24 — retrieved to see whether it carries a Convention constraint at all",
+          "found": true,
+          "omitted": false,
+          "text": "SCHEDULE 2 Excepted matters Section 4(1). 1 The Crown, including the succession to the Crown and a regency, but not— a functions of the First Minister and deputy First Minister, the Northern Ireland Ministers or the Northern Ireland departments, or functions in relation to Northern Ireland of any Minister of the Crown; b property belonging to Her Majesty in right of the Crown or belonging to a government department or held in trust for Her Majesty for the purposes of a government department (other than property used for the purposes of the armed forces of the Crown or the Ministry of Defence Police); c the foreshore or the sea bed or subsoil or their natural resources so far as vested in Her Majesty in right of the Crown. 2 The Parliament of the United Kingdom; parliamentary elections, including the franchise; disqualifications for membership of that Parliament. 3 International relations, including relations with territories outside the United Kingdom, the European Union (and their institutions) and other international organisations and extradition , and international development assistance and co-operation, but not— a . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . aa co-operation between the Police Service of Northern Ireland and the Garda Síochána with respect to any of the following matters— i transfers, secondments, exchanges or training of officers; ii communications (including liaison and information technology); iii joint investigations; iv disaster planning; b the exercise of legislative powers so far as required for giving effect to any agreement or arrangement entered into— i by a Minister or junior Minister participating, by reason of any provision of section 52A or 52B , in a meeting of the North-South Ministerial Council or the British-Irish Council; or ii by, or in relation to the activities of, any body established for implementing, on the basis mentioned in paragraph 11 of Strand Two of the Belfast Agreement, policies agreed in the North-South Ministerial Council; c observing and implementing international obligations and obligations under the Human Rights Convention . In this paragraph “ the Human Rights Convention ” means the following as they have effect for the time being in relation to the United Kingdom— a the Convention for the Protection of Human Rights and Fundamental Freedoms, agreed by the Council of Europe at Rome on 4th November 1950; and b any Protocols to that Convention which have been ratified by the United Kingdom. 4 The defence of the realm; trading with the enemy; the armed forces of the Crown but not any matter within paragraph 10 of Schedule 3; war pensions; the Ministry of Defence Police. 5 Control of nuclear, biological and chemical weapons and other weapons of mass destruction. 6 Dignities and titles of honour. 7 Treason but not powers of arrest or criminal procedure. 8 Nationality; immigration, including asylum and the status and capacity of persons in the United Kingdom who are not British citizens; free movement of persons within the European Economic Area; issue of travel documents. 9 The following matters— a taxes or duties under any law applying to the United Kingdom as a whole; b stamp duty levied in Northern Ireland before the appointed day; and c taxes or duties substantially of the same character as those mentioned in sub-paragraph (a) or (b). 9A Child Trust Funds. 9C The operation of the Small Charitable Donations Act 2012. 9D Bonuses under the Savings (Government Contributions) Act 2017. 10 The following matters— a national insurance contributions; b the control and management of the Northern Ireland National Insurance Fund and payments into and out of that Fund; c reductions in and deductions from national insurance contributions; d national insurance rebates; e payments out of public money to money purchase pension schemes; f contributions equivalent premiums; g rights to return to the state pension scheme. Sub-paragraph (a) includes the determination, payment, collection and return of national insurance contributions and matters incidental to those matters. Sub-paragraph (b) does not include payments out of the Northern Ireland National Insurance Fund which relate to— i the benefits mentioned in section 143(1) of the Social Security Administration (Northern Ireland) Act 1992, or benefits substantially of the same character as those benefits; or ii administrative expenses incurred in connection with matters not falling within sub-paragraphs (a) to (g). Sub-paragraphs (b) and (e) do not include payments out of or into the Northern Ireland National Insurance Fund under— i section 172(1)(b), (2)(a) or (7)(c) of the Pension Schemes (Northern Ireland) Act 1993; or ii Article 202, 227, 234 or 252 of the Employment Rights (Northern Ireland) Order 1996. In this paragraph “ contributions equivalent premium ” has the meaning given by section 51(2) of the Pension Schemes (Northern Ireland) Act 1993. 10A Tax credits under Part 1 of the Tax Credits Act 2002. 10B Health in pregnancy grant, Child benefit and guardian’s allowance. 10C The operation of the Childcare Payments Act 2014. 11 The determination of the remuneration, superannuation and other terms and conditions of service (other than those relating to removal from office) of judges of the Court of Judicature of Northern Ireland, holders of offices listed in column 1 of Schedule 3 to the Judicature (Northern Ireland) Act 1978, county court judges, recorders, resident magistrates, ... coroners, the Chief and other Social Security Commissioners for Northern Ireland and the Chief and other Child Support Commissioners for Northern Ireland . 11A The Supreme Court , but not rights of appeal to the Supreme Court or legal aid for appeals to the Supreme Court . 12 1 Elections, including the franchise, in respect of the Northern Ireland Assembly ... and district councils. 2 This paragraph does not apply to— a the division of local government districts into areas (“district electoral areas”) for the purposes of elections to the councils of those districts, b the determination of the names of district electoral areas, or c the determination of the number of councillors to be elected for a district electoral area or a local government district. 13 The subject-matter of the Political Parties, Elections and Referendums Act 2000 with the exception of Part IX (political donations etc. by companies). This paragraph does not include the funding of political parties for the purpose of assisting members of the Northern Ireland Assembly connected with such parties to perform their Assembly duties. 14 Coinage, legal tender and bank notes. 15 The National Savings Bank. 16 The subject-matter of the Protection of Trading Interests Act 1980. 16A Regulation of the provision of subsidies which are or may be distortive or harmful by a public authority to persons supplying goods or services in the course of a business. In this paragraph— “ Public authority ” means a person who exercises functions of a public nature. “ Subsidy ” includes assistance provided to a person directly or indirectly by way of income or price support, grant, loan, guarantee, indemnity, the provision of goods or services and any other kind of assistance, whether financial or otherwise and whether actual or contingent. A subsidy is provided “by a public authority” if it is provided by that authority directly or indirectly. A subsidy is “distortive or harmful” if it distorts competition between, or otherwise causes harm or injury to, persons supplying goods or services in the course of a business, whether or not those persons are established in the United Kingdom. 17 National security (including the Security Service, the Secret Intelligence Service and the Government Communications Headquarters); special powers and other provisions for dealing with terrorism or subversion; the Technical Advisory Board provided for by section 245 of the Investigatory Powers Act 2016; the subject-matter of— a the Official Secrets Acts 1911 and 1920; b the subject-matter of sections 3 to 10, Schedule 1, Part 2 and Chapter 1 of Part 6 of the Investigatory Powers Act 2016, except so far as relating to the prevention or detection of serious crime (within the meaning of that Act); c the Official Secrets Act 1989, except so far as relating to any information, document or other article protected against disclosure by section 4(2) (crime) and not by any other provision of sections 1 to 4. 18 Nuclear energy and nuclear installations, including nuclear safety, security and safeguards, and liability for nuclear occurrences, but not the subject-matter of— a section 3(5) to (7) of the Environmental Protection Act 1990 (emission limits); or b the Radioactive Substances Act 1993. 19 Regulation of sea fishing outside the Northern Ireland zone (except in relation to Northern Ireland fishing boats). In this paragraph “ Northern Ireland fishing boat ” means a fishing vessel which is registered in the register maintained under section 8 of the Merchant Shipping Act 1995 and whose entry in the register specifies a port in Northern Ireland as the port to which the vessel is to be treated as belonging. 20 Regulation of activities in outer space. 20A Regulation of activities in Antarctica (which for these purposes has the meaning given by section 1 of the Antarctic Act 1994). 21 Any matter with which a provision of the Northern Ireland Constitution Act 1973 , other than section 36(1)(c), solely or mainly deals. 21A The office and functions of the Advocate General for Northern Ireland. 22 Any matter with which a provision of this Act falling within the following sub-paragraphs solely or mainly deals— a Parts I and II ; b Part III except sections 19, 20, 22, 23(2) to (4) , 28, 28A, 28B, 28D and 28E ; c Part IV except sections 40, 43, 44(8) and 50 and Schedule 5; d in Part V, sections 52A to 52C and 54; e Part VI except sections 57(1) and 67; f in Part VII, sections 69B, 71(1) and (2) and (3) to (5), 74(5) and (6), 76 and 78; g in Part VIII, sections 79 to 83 and Schedule 10. This paragraph does not apply to— i any matter in respect of which it is stated by this Act that provision may be made by Act of the Assembly; ii any matter to which a description specified in this Schedule or Schedule 3 is stated not to apply; or iii any matter falling within a description specified in Schedule 3.",
+          "restrict": {
+            "start": "2020-12-31"
+          }
+        }
+      ]
+    },
+    {
+      "item": 2,
+      "citation_as_given": "Government of Wales Act 1998 s.94 / GoWA 2006 s.80  vs  GoWA 2006 s.108A(2)(e)",
+      "source": "Prosperity Institute vs CCW draft PART2_4_3_to_4_5.md §4.4",
+      "what_to_establish": "⚠⚠ LIVE CORRECTION TO CCW'S DRAFT. Which is right and in force as the Welsh equivalent of Scotland Act s.29(2)(d)?",
+      "gid": "ukpga/2006/32",
+      "act": "Government of Wales Act 2006",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/incompatible with the Convention rights/i",
+      "operative_words_found_in": "section-108A",
+      "provisions": [
+        {
+          "ref": "section-108A",
+          "why": "CCW's draft citation — legislative competence of the Senedd",
+          "found": true,
+          "omitted": false,
+          "text": "108A 1 An Act of the Senedd is not law so far as any provision of the Act is outside the Senedd's legislative competence. 2 A provision is outside that competence so far as any of the following paragraphs apply— a it extends otherwise than only to England and Wales; b it applies otherwise than in relation to Wales or confers, imposes, modifies or removes (or gives power to confer, impose, modify or remove) functions exercisable otherwise than in relation to Wales; c it relates to reserved matters (see Schedule 7A); d it breaches any of the restrictions in Part 1 of Schedule 7B, having regard to any exception in Part 2 of that Schedule from those restrictions; e it is incompatible with the Convention rights .... 3 But subsection (2)(b) does not apply to a provision that— a is ancillary to a provision of any Act of the Senedd or Assembly Measure or to a devolved provision of an Act of Parliament, and b has no greater effect otherwise than in relation to Wales, or in relation to functions exercisable otherwise than in relation to Wales, than is necessary to give effect to the purpose of that provision. 4 For this purpose, a provision of an Act of Parliament is ““devolved”” if it would be within the Senedd's legislative competence if it were contained in an Act of the Senedd (ignoring any requirement for consent or consultation imposed under paragraph 8, 10 or 11 of Schedule 7B or otherwise). 4A References in subsections (2)(b) and (3) to Wales include, in relation to a relevant provision of an Act of the Senedd, the area of the Welsh zone beyond the seaward limit of the territorial sea. A provision of an Act of the Senedd is “relevant” if it relates to fishing, fisheries or fish health. 5 In determining what is necessary for the purposes of subsection (3), any power to make laws other than that of the Senedd is disregarded. 6 The question whether a provision of an Act of the Senedd relates to a reserved matter is determined by reference to the purpose of the provision, having regard (among other things) to its effect in all the circumstances. 7 For the purposes of this Act a provision is ancillary to another provision if it— a provides for the enforcement of the other provision or is otherwise appropriate for making that provision effective, or b is otherwise incidental to, or consequential on, that provision.",
+          "restrict": {
+            "start": "2019-03-01"
+          }
+        },
+        {
+          "ref": "section-108A-2-e",
+          "why": "CCW's exact citation — the Convention-rights limb",
+          "found": true,
+          "omitted": false,
+          "text": "e it is incompatible with the Convention rights ....",
+          "restrict": {
+            "start": "2019-03-01"
+          }
+        },
+        {
+          "ref": "section-108",
+          "why": "the predecessor competence section, to see whether it is still live",
+          "found": true,
+          "omitted": true,
+          "text": "108 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+          "restrict": {}
+        },
+        {
+          "ref": "section-80",
+          "why": "the Prosperity Institute's citation",
+          "found": true,
+          "omitted": false,
+          "text": "80 1 An assimilated obligation of the United Kingdom is also an obligation of the Welsh Ministers if and to the extent that the obligation could be implemented (or enabled to be implemented) or complied with by the exercise by the Welsh Ministers of any of their functions. 2 Subsection (1) does not apply in the case of an assimilated obligation of the United Kingdom if— a it is an obligation to achieve a result defined by reference to a quantity (whether expressed as an amount, proportion or ratio or otherwise), and b the quantity relates to the United Kingdom (or to an area including the United Kingdom or to an area consisting of a part of the United Kingdom which includes the whole or part of Wales or of the Welsh zone ). 3 But if such an assimilated obligation could (to any extent) be implemented (or enabled to be implemented) or complied with by the exercise by the Welsh Ministers of any of their functions, a Minister of the Crown may by order provide for the achievement by the Welsh Ministers (in the exercise of their functions) of so much of the result to be achieved under the assimilated obligation as is specified in the order. 4 The order may specify the time by which any part of the result to be achieved by the Welsh Ministers is to be achieved. 5 No order is to be made by a Minister of the Crown under subsection (3) unless the Minister of the Crown has consulted the Welsh Ministers. 6 A statutory instrument containing an order under subsection (3) is subject to annulment in pursuance of a resolution of either House of Parliament. 7 Where an order under subsection (3) is in force in relation to an assimilated obligation , to the extent that the assimilated obligation involves achieving what is specified in the order it is also an obligation of the Welsh Ministers (enforceable as if it were an obligation of the Welsh Ministers under subsection (1)). 8 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8A . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8B . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8C . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8D . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8E . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8F . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8G . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8H . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8I . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8J . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8K . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8L . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9 Subsection (1) applies to the First Minister and the Counsel General as to the Welsh Ministers.",
+          "restrict": {
+            "start": "2022-03-31"
+          }
+        }
+      ]
+    },
+    {
+      "item": 2,
+      "citation_as_given": "Government of Wales Act 1998 s.94 (the other half of the PI citation)",
+      "source": "Prosperity Institute",
+      "what_to_establish": "Is the 1998 Act's competence section still in force?",
+      "gid": "ukpga/1998/38",
+      "act": "Government of Wales Act 1998",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/Convention rights/i",
+      "operative_words_found_in": null,
+      "provisions": [
+        {
+          "ref": "section-94",
+          "why": "the Prosperity Institute's citation — Assembly legislative competence under the 1998 Act",
+          "found": true,
+          "omitted": true,
+          "text": "94 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+          "restrict": {}
+        }
+      ]
+    },
+    {
+      "item": 7,
+      "citation_as_given": "the inserting provisions: EUWA(A) 2020 ss.5 and 21",
+      "source": "checked because the citation as given names an Act and year that do not carry these sections",
+      "what_to_establish": "Which Act actually inserted ss.7A and 8C, and into what",
+      "gid": "ukpga/2020/1",
+      "act": "European Union (Withdrawal Agreement) Act 2020",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/European Union \\(Withdrawal\\) Act 2018/i",
+      "operative_words_found_in": "section-5",
+      "provisions": [
+        {
+          "ref": "section-5",
+          "why": "said to insert s.7A into the 2018 Act",
+          "found": true,
+          "omitted": false,
+          "text": "5 After section 7 of the European Union (Withdrawal) Act 2018 (status of retained EU law) insert— Further aspects of withdrawal General implementation of remainder of withdrawal agreement 7A 1 Subsection (2) applies to— a all such rights, powers, liabilities, obligations and restrictions from time to time created or arising by or under the withdrawal agreement, and b all such remedies and procedures from time to time provided for by or under the withdrawal agreement, as in accordance with the withdrawal agreement are without further enactment to be given legal effect or used in the United Kingdom. 2 The rights, powers, liabilities, obligations, restrictions, remedies and procedures concerned are to be— a recognised and available in domestic law, and b enforced, allowed and followed accordingly. 3 Every enactment (including an enactment contained in this Act) is to be read and has effect subject to subsection (2). 4 This section does not apply in relation to Part 4 of the withdrawal agreement so far as section 2(1) of the European Communities Act 1972 applies in relation to that Part. 5 See also (among other things)— a Part 3 of the European Union (Withdrawal Agreement) Act 2020 (further provision about citizens' rights), b section 20 of that Act (financial provision), c section 7C of this Act (interpretation of law relating to withdrawal agreement etc.), d section 8B of this Act (power in connection with certain other separation issues), e section 8C of this Act (power in connection with the Protocol on Ireland/Northern Ireland in withdrawal agreement), and f Parts 1B and 1C of Schedule 2 to this Act (powers involving devolved authorities in connection with certain other separation issues and the Ireland/Northern Ireland Protocol).",
+          "restrict": {}
+        },
+        {
+          "ref": "section-21",
+          "why": "said to insert s.8C into the 2018 Act",
+          "found": true,
+          "omitted": false,
+          "text": "21 After section 8B of the European Union (Withdrawal) Act 2018 (power in connection with certain other separation issues) (for which see section 18 above) insert— Power in connection with Ireland/Northern Ireland Protocol in withdrawal agreement 8C 1 A Minister of the Crown may by regulations make such provision as the Minister considers appropriate— a to implement the Protocol on Ireland/Northern Ireland in the withdrawal agreement, b to supplement the effect of section 7A in relation to the Protocol, or c otherwise for the purposes of dealing with matters arising out of, or related to, the Protocol (including matters arising by virtue of section 7A and the Protocol). 2 Regulations under subsection (1) may make any provision that could be made by an Act of Parliament (including modifying this Act). 3 Regulations under subsection (1) may (among other things) make provision facilitating the access to the market within Great Britain of qualifying Northern Ireland goods. 4 Such provision may (among other things) include provision about the recognition within Great Britain of technical regulations, assessments, registrations, certificates, approvals and authorisations issued by— a the authorities of a member State, or b bodies established in a member State, in respect of qualifying Northern Ireland goods. 5 Regulations under subsection (1) may (among other things) restate, for the purposes of making the law clearer or more accessible, anything that forms part of domestic law by virtue of section 7A and the Protocol. 6 A Minister of the Crown may by regulations define “ qualifying Northern Ireland goods ” for the purposes of this Act. 7 In this section any reference to the Protocol on Ireland/Northern Ireland includes a reference to— a any other provision of the withdrawal agreement so far as applying to the Protocol, and b any provision of EU law which is applied by, or referred to in, the Protocol (to the extent of the application or reference), but does not include the second sentence of Article 11(1) of the Protocol (which provides that the United Kingdom and the Republic of Ireland may continue to make new arrangements that build on the provisions of the Belfast Agreement in other areas of North-South cooperation on the island of Ireland).",
+          "restrict": {}
+        }
+      ]
+    },
+    {
+      "item": 3,
+      "citation_as_given": "Scotland Act 1998 s.29(2)(d) and s.57(2)",
+      "source": "Prosperity Institute",
+      "what_to_establish": "CCW has only s.29(2)(d). What does s.57(2) add — does it bind Scottish Ministers as well as the Parliament?",
+      "gid": "ukpga/1998/46",
+      "act": "Scotland Act 1998",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/Convention rights/i",
+      "operative_words_found_in": "section-29-2-d",
+      "provisions": [
+        {
+          "ref": "section-29-2-d",
+          "why": "the Convention-rights limb binding the Parliament",
+          "found": true,
+          "omitted": false,
+          "text": "d it is incompatible with any of the Convention rights ...,",
+          "restrict": {
+            "start": "2020-11-14"
+          }
+        },
+        {
+          "ref": "section-57-2",
+          "why": "the limb said to bind the Scottish Government",
+          "found": true,
+          "omitted": false,
+          "text": "2 A member of the Scottish Government has no power to make any subordinate legislation, or to do any other act, so far as the legislation or act is incompatible with any of the Convention rights ....",
+          "restrict": {
+            "start": "2021-05-06"
+          }
+        },
+        {
+          "ref": "section-57",
+          "why": "the whole section, to show what else it does and what has been repealed",
+          "found": true,
+          "omitted": false,
+          "text": "57 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2 A member of the Scottish Government has no power to make any subordinate legislation, or to do any other act, so far as the legislation or act is incompatible with any of the Convention rights .... 3 Subsection (2) does not apply to an act of the Lord Advocate— a in prosecuting any offence, or b in his capacity as head of the systems of criminal prosecution and investigation of deaths in Scotland, ... 4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+          "restrict": {
+            "start": "2021-05-06"
+          }
+        }
+      ]
+    },
+    {
+      "item": 4,
+      "citation_as_given": "Scotland Act 1998 s.126(1)",
+      "source": "CCW draft",
+      "what_to_establish": "Confirm it takes the definition of \"the Convention rights\" FROM THE HUMAN RIGHTS ACT. The definitional-gap finding in §4.4 rests on this.",
+      "gid": "ukpga/1998/46",
+      "act": "Scotland Act 1998",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/Convention rights[\\s\\S]{0,120}Human Rights Act 1998/i",
+      "operative_words_found_in": "section-126-1",
+      "provisions": [
+        {
+          "ref": "section-126-1",
+          "why": "the interpretation subsection",
+          "found": true,
+          "omitted": false,
+          "text": "1 In this Act— “ body ” includes unincorporated association, “ constituencies ” and “ regions ”, in relation to the Parliament, mean the constituencies and regions provided for by Schedule 1, “ constituency member ” means a member of the Parliament for a constituency, “ the Convention rights ” has the same meaning as in the Human Rights Act 1998, “ document ” means anything in which information is recorded in any form (and references to producing a document are to be read accordingly), “ enactment ” includes an Act of the Scottish Parliament, Northern Ireland legislation (within the meaning of the Northern Ireland Act 1998) and an enactment comprised in subordinate legislation, and includes an enactment comprised in, or in subordinate legislation under, an Act of Parliament, whenever passed or made, “ financial year ” means a year ending with 31st March, “ functions ” includes powers and duties, and “ confer ”, in relation to functions, includes impose, “ government department ” means any department of the Government of the United Kingdom, “ the Human Rights Convention ” means— the Convention for the Protection of Human Rights and Fundamental Freedoms, agreed by the Council of Europe at Rome on 4th November 1950, and the Protocols to the Convention, as they have effect for the time being in relation to the United Kingdom, “ Minister of the Crown ” includes the Treasury, “ modify ” includes amend or repeal, “ occupational pension scheme ”, “ personal pension scheme ” and “ public service pension scheme ” have the meanings given by section 1 of the Pension Schemes Act 1993, . . . “ the Parliament ” means the Scottish Parliament, “ parliamentary ”, in relation to constituencies, elections and electors, is to be taken to refer to the Parliament of the United Kingdom, “ prerogative instrument ” means an Order in Council, warrant, charter or other instrument made under the prerogative, “ the principal appointed day ” means the day appointed by an order under section 130 which is designated by the order as the principal appointed day, “ proceedings ”, in relation to the Parliament, includes proceedings of any committee or sub-committee, “ property ” includes rights and interests of any description, “ regional member ” means a member of the Parliament for a region, “ Scotland ” includes so much of the internal waters and territorial sea of the United Kingdom as are adjacent to Scotland, “ Scottish public authority ” means any public body (except the Parliamentary corporation), public office or holder of such an office whose functions (in each case) are exercisable only in or as regards Scotland, “ the Scottish zone ” means the sea within British fishery limits (that is, the limits set by or under section 1 of the Fishery Limits Act 1976) which is adjacent to Scotland, “ standing orders ” means standing orders of the Parliament, “ subordinate legislation ” has the same meaning as in the Interpretation Act 1978 and also includes an instrument made under an Act of the Scottish Parliament, “ tribunal ” means any tribunal in which legal proceedings may be brought.",
+          "restrict": {}
+        }
+      ]
+    },
+    {
+      "item": 5,
+      "citation_as_given": "Northern Ireland Act 1998 s.76, and the fair employment provisions",
+      "source": "CCW spec",
+      "what_to_establish": "Still in force, and their wording",
+      "gid": "ukpga/1998/47",
+      "act": "Northern Ireland Act 1998",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/unlawful for a public authority/i",
+      "operative_words_found_in": "section-76",
+      "provisions": [
+        {
+          "ref": "section-76",
+          "why": "discrimination by public authorities",
+          "found": true,
+          "omitted": false,
+          "text": "76 1 It shall be unlawful for a public authority carrying out functions relating to Northern Ireland to discriminate, or to aid or incite another person to discriminate, against a person or class of person on the ground of religious belief or political opinion. 2 An act which contravenes this section is actionable in Northern Ireland at the instance of any person adversely affected by it; and the court may— a grant damages; b subject to subsection (3), grant an injunction restraining the defendant from committing, causing or permitting further contraventions of this section. 3 Without prejudice to any other power to grant an injunction, a court may grant an injunction under subsection (2) only if satisfied that the defendant— a contravened this section on the occasion complained of and on more than one previous occasion; and b is likely to contravene this section again unless restrained by an injunction. 4 This section does not apply in relation to any act or omission which is unlawful by virtue of the Fair Employment and Treatment (Northern Ireland) Order 1998 , or would be unlawful but for some exception made by virtue of Part VIII of that Order . 5 Subsection (1) applies to the making, confirmation or approval of subordinate legislation only if— a the legislation contains a provision which discriminates against a person or class of person on the ground of religious belief or political opinion; and b the provision extends only to the whole or any part of Northern Ireland. 6 Where it is alleged that subsection (1) applies to the making, confirmation or approval of subordinate legislation, subsection (2) shall not apply but the contravention may be relied upon in legal proceedings relating to the validity of the subordinate legislation. 7 The following are public authorities for the purposes of this section— a a Minister of the Crown; b any department, corporation or body listed in Schedule 2 to the Parliamentary Commissioner Act 1967 (departments, corporations and bodies subject to investigation); c any authority (other than a Northern Ireland department, the board of governors of a grant-aided school, the Comptroller and Auditor General, a general health care provider or an independent provider of health and social care) listed in Schedule 3 to the Public Services Ombudsman Act (Northern Ireland) 2016 (listed authorities); ca the Independent Commission for Reconciliation and Information Recovery; e the Police Service of Northern Ireland, the Police Service of Northern Ireland Reserve and the Police Ombudsman for Northern Ireland; ea the Director of Public Prosecutions for Northern Ireland; f . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . fa . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . fb . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . g a universal service provider (within the meaning of Part 3 of the Postal Services Act 2011 ) so far as carrying out functions in connection with the provision of a universal postal service (within the meaning of that Part ) . 8 This section does not apply to a decision of the Director of Public Prosecutions for Northern Ireland not to institute, or to discontinue, criminal proceedings or, where such a decision has been made, to any act done for the purpose of enabling the decision whether to institute or continue the proceedings to be made or for securing that the proceedings are discontinued. 9 No injunction may be granted in respect of a contravention of this section by the Director of Public Prosecutions for Northern Ireland unless the court is satisfied that it would not prejudice any decision to institute criminal proceedings or any criminal proceedings. 10 Where a party to proceedings for a contravention of this section applies for a stay of those proceedings on the ground of prejudice to a decision to institute criminal proceedings, or of prejudice to particular criminal proceedings, the court must grant the stay unless it is satisfied that continuance of the proceedings for the contravention would not result in the prejudice alleged. 11 The reference in subsection (1) to the functions of the Director of Public Prosecutions for Northern Ireland does not include any of the functions conferred on him by, or in relation to, Part 5 or 8 of the Proceeds of Crime Act 2002 (c. 29) (civil recovery of the proceeds etc. of unlawful conduct, civil recovery investigations and disclosure orders in relation to confiscation investigations).",
+          "restrict": {}
+        },
+        {
+          "ref": "section-75",
+          "why": "the statutory equality duty — retrieved with s.76 because the brief names \"the fair employment provisions\" without a section number",
+          "found": true,
+          "omitted": false,
+          "text": "75 1 A public authority shall in carrying out its functions relating to Northern Ireland have due regard to the need to promote equality of opportunity— a between persons of different religious belief, political opinion, racial group, age, marital status or sexual orientation; b between men and women generally; c between persons with a disability and persons without; and d between persons with dependants and persons without. 2 Without prejudice to its obligations under subsection (1), a public authority shall in carrying out its functions relating to Northern Ireland have regard to the desirability of promoting good relations between persons of different religious belief, political opinion or racial group. 3 In this section “ public authority ” means— a any department, corporation or body listed in Schedule 2 to the Parliamentary Commissioner Act 1967 (departments, corporations and bodies subject to investigation) and designated for the purposes of this section by order made by the Secretary of State; b any authority (other than the Equality Commission, the board of governors of a grant-aided school, the Comptroller and Auditor General, a general health care provider or an independent provider of health and social care) listed in Schedule 3 to the Public Services Ombudsman Act (Northern Ireland) 2016 (listed authorities); ba the Independent Commission for Reconciliation and Information Recovery; cc ... the Chief Constable of the Police Service of Northern Ireland and the Police Ombudsman for Northern Ireland; cd the Director of Public Prosecutions for Northern Ireland; ce . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . cf . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . d any other person designated for the purposes of this section by order made by the Secretary of State. 3A An order under subsection (3)(a) or (d) may provide that the designated department, corporation, body or other person— a is not subject to, or is only subject to, specified obligations under subsection (1) or (2), or b is not subject to, or is only subject to, specified obligations under subsection (1) or (2)— i when exercising a specified function, or ii when exercising a specified function in specified circumstances or for specified purposes. 3B In subsection (3A) “ specified ” means specified in the order. 4 Schedule 9 (which makes provision for the enforcement of the duties under this section) shall have effect. 4A The references in subsections (1) and (2) and Schedule 9 to the functions of the Director of Public Prosecutions for Northern Ireland do not include any of his functions relating to the prosecution of offences or any of the functions conferred on him by, or in relation to, Part 5 or 8 of the Proceeds of Crime Act 2002 (c. 29) (civil recovery of the proceeds etc. of unlawful conduct, civil recovery investigations and disclosure orders in relation to confiscation investigations) . 5 In this section— “ disability ” has the same meaning as in the Disability Discrimination Act 1995; and “ racial group ” has the same meaning as in the Race Relations (Northern Ireland) Order 1997.",
+          "restrict": {}
+        }
+      ]
+    },
+    {
+      "item": 7,
+      "citation_as_given": "EU (Withdrawal Agreement) Act 2018 ss.7A and 8C",
+      "source": "Prosperity Institute",
+      "what_to_establish": "The disapplication route relied on in the Northern Ireland cases",
+      "gid": "ukpga/2018/16",
+      "act": "European Union (Withdrawal) Act 2018",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/without further enactment|Protocol on Ireland/i",
+      "operative_words_found_in": "section-7A",
+      "provisions": [
+        {
+          "ref": "section-7A",
+          "why": "general implementation of the withdrawal agreement",
+          "found": true,
+          "omitted": false,
+          "text": "7A 1 Subsection (2) applies to— a all such rights, powers, liabilities, obligations and restrictions from time to time created or arising by or under the withdrawal agreement, and b all such remedies and procedures from time to time provided for by or under the withdrawal agreement, as in accordance with the withdrawal agreement are without further enactment to be given legal effect or used in the United Kingdom. 2 The rights, powers, liabilities, obligations, restrictions, remedies and procedures concerned are to be— a recognised and available in domestic law, and b enforced, allowed and followed accordingly. 3 Every enactment (including an enactment contained in this Act) is to be read and has effect subject to subsection (2). 3A The following provide for the application in Northern Ireland of EU law relating to the trade in goods necessary for the functioning of the Windsor Framework in the withdrawal agreement to be subject to democratic consent and scrutiny— a Articles 13 and 18 of that Framework, and b Part 5A of the Northern Ireland Act 1998. 4 This section does not apply in relation to Part 4 of the withdrawal agreement so far as section 2(1) of the European Communities Act 1972 applies in relation to that Part. 5 See also (among other things)— a Part 3 of the European Union (Withdrawal Agreement) Act 2020 (further provision about citizens' rights), b section 20 of that Act (financial provision), c section 7C of this Act (interpretation of law relating to withdrawal agreement etc.), d section 8B of this Act (power in connection with certain other separation issues), e section 8C of this Act (power in connection with the Protocol on Ireland/Northern Ireland in withdrawal agreement), and f Parts 1B and 1C of Schedule 2 to this Act (powers involving devolved authorities in connection with certain other separation issues and the Ireland/Northern Ireland Protocol).",
+          "restrict": {}
+        },
+        {
+          "ref": "section-8C",
+          "why": "the Northern Ireland Protocol power",
+          "found": true,
+          "omitted": false,
+          "text": "8C 1 A Minister of the Crown may by regulations make such provision as the Minister considers appropriate— a to implement the Protocol on Ireland/Northern Ireland in the withdrawal agreement, b to supplement the effect of section 7A in relation to the Protocol, or c otherwise for the purposes of dealing with matters arising out of, or related to, the Protocol (including matters arising by virtue of section 7A and the Protocol). 2 Regulations under subsection (1) may make any provision that could be made by an Act of Parliament (including modifying this Act). 3 Regulations under subsection (1) may (among other things) make provision facilitating the access to the market within Great Britain of qualifying Northern Ireland goods. 4 Such provision may (among other things) include provision about the recognition within Great Britain of technical regulations, assessments, registrations, certificates, approvals and authorisations issued by— a the authorities of a member State, or b bodies established in a member State, in respect of qualifying Northern Ireland goods. 5 Regulations under subsection (1) may (among other things) restate, for the purposes of making the law clearer or more accessible, anything that forms part of domestic law by virtue of section 7A and the Protocol. 5A Regulations under subsection (1) may not amend, repeal or otherwise modify the operation of section 47 of the United Kingdom Internal Market Act 2020 (“ the 2020 Act ”), except by making— a provision of the sort that is contemplated by section 47(2) of the 2020 Act (permitted checks); b provision under subsection (6); c provision of the sort described in paragraph 21(b) of Schedule 7 (supplementary and transitional provision etc) in connection with— i provision within either of the preceding paragraphs; ii Articles 5 to 10 of the Northern Ireland Protocol ceasing to apply (and the resulting operation of section 55(1) of the 2020 Act). 6 A Minister of the Crown may by regulations define “ qualifying Northern Ireland goods ” for the purposes of this Act. 7 In this section any reference to the Protocol on Ireland/Northern Ireland includes a reference to— a any other provision of the withdrawal agreement so far as applying to the Protocol, and b any provision of EU law which is applied by, or referred to in, the Protocol (to the extent of the application or reference), but does not include the second sentence of Article 11(1) of the Protocol (which provides that the United Kingdom and the Republic of Ireland may continue to make new arrangements that build on the provisions of the Belfast Agreement in other areas of North-South cooperation on the island of Ireland).",
+          "restrict": {}
+        }
+      ]
+    },
+    {
+      "item": 8,
+      "citation_as_given": "Tribunals, Courts and Enforcement Act 2007 s.11A, inserted by Judicial Review and Courts Act 2022 s.2",
+      "source": "CCW draft",
+      "what_to_establish": "Quote s.11A in full including s.11A(7) on purported decisions. §4.2.3 turns on this.",
+      "gid": "ukpga/2007/15",
+      "act": "Tribunals, Courts and Enforcement Act 2007",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/purported decision/i",
+      "operative_words_found_in": "section-11A",
+      "provisions": [
+        {
+          "ref": "section-11A",
+          "why": "the ouster itself",
+          "found": true,
+          "omitted": false,
+          "text": "11A 1 Subsections (2) and (3) apply in relation to a decision by the Upper Tribunal to refuse permission (or leave) to appeal further to an application under section 11(4)(b). 2 The decision is final, and not liable to be questioned or set aside in any other court. 3 In particular— a the Upper Tribunal is not to be regarded as having exceeded its powers by reason of any error made in reaching the decision; b the supervisory jurisdiction does not extend to, and no application or petition for judicial review may be made or brought in relation to, the decision. 4 Subsections (2) and (3) do not apply so far as the decision involves or gives rise to any question as to whether— a the Upper Tribunal has or had a valid application before it under section 11(4)(b), b the Upper Tribunal is or was properly constituted for the purpose of dealing with the application, or c the Upper Tribunal is acting or has acted— i in bad faith, or ii in such a procedurally defective way as amounts to a fundamental breach of the principles of natural justice. 5 Subsections (2) and (3) do not apply so far as provision giving the First-tier Tribunal jurisdiction to make the first-instance decision could (if the Tribunal did not already have that jurisdiction) be made by— a an Act of the Scottish Parliament, or b an Act of the Northern Ireland Assembly the Bill for which would not require the consent of the Secretary of State. 6 The court of supervisory jurisdiction is not to entertain any application or petition for judicial review in respect of a decision of the First-tier Tribunal that it would not entertain (whether as a matter of law or discretion) in the absence of this section. 7 In this section— “ decision ” includes any purported decision; “ first-instance decision ” means the decision in relation to which permission (or leave) to appeal is being sought under section 11(4)(b); “ the supervisory jurisdiction ” means the supervisory jurisdiction of— the High Court, in England and Wales or Northern Ireland, or the Court of Session, in Scotland, and “the court of supervisory jurisdiction” is to be read accordingly.",
+          "restrict": {}
+        },
+        {
+          "ref": "section-11A-7",
+          "why": "the purported-decisions definition the section turns on",
+          "found": true,
+          "omitted": false,
+          "text": "7 In this section— “ decision ” includes any purported decision; “ first-instance decision ” means the decision in relation to which permission (or leave) to appeal is being sought under section 11(4)(b); “ the supervisory jurisdiction ” means the supervisory jurisdiction of— the High Court, in England and Wales or Northern Ireland, or the Court of Session, in Scotland, and “the court of supervisory jurisdiction” is to be read accordingly.",
+          "restrict": {}
+        }
+      ]
+    },
+    {
+      "item": 9,
+      "citation_as_given": "Interpretation Act 1978 s.16",
+      "source": "CCW draft",
+      "what_to_establish": "Quote it. §4.2A relies on it for the effect of repeal on accrued rights.",
+      "gid": "ukpga/1978/30",
+      "act": "Interpretation Act 1978",
+      "document_version": "revised",
+      "versions_held": [
+        "revised"
+      ],
+      "operative_words_sought": "/repeal does not, unless the contrary intention appears/i",
+      "operative_words_found_in": "section-16",
+      "provisions": [
+        {
+          "ref": "section-16",
+          "why": "general savings on repeal",
+          "found": true,
+          "omitted": false,
+          "text": "16 1 Without prejudice to section 15, where an Act repeals an enactment, the repeal does not, unless the contrary intention appears,— a revive anything not in force or existing at the time at which the repeal takes effect; b affect the previous operation of the enactment repealed or anything duly done or suffered under that enactment; c affect any right, privilege, obligation or liability acquired, accrued or incurred under that enactment; d affect any penalty, forfeiture or punishment incurred in respect of any offence committed against that enactment; e affect any investigation, legal proceeding or remedy in respect of any such right, privilege, obligation, liability, penalty, forfeiture or punishment; and any such investigation, legal proceeding or remedy may be instituted, continued or enforced, and any such penalty, forfeiture or punishment may be imposed, as if the repealing Act had not been passed. 2 This section applies to the expiry of a temporary enactment as if it were repealed by an Act.",
+          "restrict": {
+            "start": "2020-03-25"
+          }
+        }
+      ]
+    }
+  ],
+  "tca": {
+    "item": 6,
+    "citation_as_given": "UK–EU TCA Arts 524 and 692",
+    "source": "Prosperity Institute",
+    "what_to_establish": "Confirm the article numbers and quote the operative words; 692 said to be the termination trigger extending to Protocols 1, 6 and 13",
+    "verdict": "correct",
+    "r2_read": "ok",
+    "held_in": {
+      "corpus": "uk-treaties",
+      "id": "uk-treaties:government/publications/ukeu-and-eaec-trade-and-cooperation-agreement-ts-no82021:2",
+      "words": 444778,
+      "availability": "full",
+      "source_url": "https://assets.publishing.service.gov.uk/media/608ae0c0d3bf7f0136332887/TS_8.2021_UK_EU_EAEC_Trade_and_Cooperation_Agreement.pdf"
+    },
+    "article_524": "ARTICLE 524 Protection of human rights and fundamental freedoms 1. The cooperation provided for in this Part is based on the Parties' and Member States' long- standing respect for democracy, the rule of law and the protection of fundamental rights and freedoms of individuals, including as set out in the Universal Declaration of Human Rights and in the European Convention on Human Rights, and on the importance of giving effect to the rights and freedoms in that Convention domestically. 2. Nothing in this Part modifies the obligation to respect fundamental rights and legal principles as reflected, in particular, in",
+    "article_692": "ARTICLE 692 Termination 1. Without prejudice to Article 779, each Party may at any moment terminate this Part by written notification through diplomatic channels. In that event, this Part shall cease to be in force on the first day of the ninth month following the date of notification. 2. However, if this Part is terminated on account of the United Kingdom or a Member State having denounced the European Convention on Human Rights or Protocols 1, 6 or 13 thereto, this Part shall cease to be in force as of the date that such denunciation becomes effective or, if the notification of its termination is made after that date, on the fifteenth day following such notification. 3. If either Party gives notice of termination under this Article, the Specialised Committee on Law Enforcement and Judicial Cooperation shall meet to decide what measures are needed to ensure that any cooperation initiate",
+    "finding": "Both article numbers are correct. Article 524 (\"Protection of human rights and fundamental freedoms\") is the ECHR basis of Part Three; Article 692 (\"Termination\") is the termination provision, and paragraph 2 does extend to the Protocols: \"if this Part is terminated on account of the United Kingdom or a Member State having denounced the European Convention on Human Rights or Protocols 1, 6 or 13 thereto...\". ⚠ Note the scope word: Article 692 terminates THIS PART — Part Three, law enforcement and judicial cooperation — not the whole Agreement.",
+    "how_it_was_found": "⚠ Recorded because the near-miss is the lesson: a first query scoped to corpus IN (eur-lex, retained-eu) returned 0 and would have justified \"unreachable\". Widening the scope found the full agreement text."
+  },
+  "reul_sunset": {
+    "question": "What actually happened to the REUL sunset? The Prosperity Institute models its Case Law Review Commission sunset clause on this Act.",
+    "act": {
+      "gid": "ukpga/2023/28",
+      "title": "Retained EU Law (Revocation and Reform) Act 2023",
+      "version": "revised"
+    },
+    "section_1_as_enacted": "1 1 Legislation listed in Schedule 1 is revoked at the end of 2023, to the extent specified there. 2 In that Schedule— a Part 1 lists subordinate legislation; b Part 2 lists retained direct EU legislation. 3 The revocation of an instrument, or a provision of an instrument, by subsection (1) does not affect an amendment made by the instrument or provision to any other enactment. 4 Subsection (1) does not apply to anything specified in regulations made by a relevant national authority. 5 No regulations may be made under subsection (4) after 31 October 2023.",
+    "schedule_1_heading": "Schedule 1 Sunset of subordinate legislation and retained direct EU legislation Section 1 Part 1 Title Extent of revocation European Communities (Privileges of ",
+    "schedule_1_size_chars": 136432,
+    "what_the_act_does": "Section 1 as enacted revokes the legislation LISTED IN SCHEDULE 1 at the end of 2023. It is a schedule of named instruments, not a general sunset of all retained EU law. The Bill as introduced carried a general sunset on retained EU law with specified exceptions; the Act as enacted reverses the default.",
+    "reported_reason": {
+      "note": "⚠ The brief asks for the reported reason. Taken from HANSARD held in the corpus — the minister's own words on the floor — rather than from commentary.",
+      "speaker": "Kemi Badenoch, Secretary of State for Business and Trade",
+      "date": "2023-05-10",
+      "source_rows": [
+        {
+          "id": "pwdata-debates:debates2023-05-11a:147",
+          "url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2023-05-11a.xml",
+          "words": 639
+        },
+        {
+          "id": "pwdata-debates:debates2023-05-11a:149",
+          "url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2023-05-11a.xml",
+          "words": 425
+        },
+        {
+          "id": "pwdata-debates:debates2023-05-11a:152",
+          "url": "https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2023-05-11a.xml",
+          "words": 232
+        }
+      ],
+      "quotes": [
+        "yesterday we tabled an amendment to the Retained EU Law (Revocation and Reform) Bill that amends the operation of the sunset in clause 1. It is a technical change that introduces to the Bill a schedule of retained EU law that will be revoked on 31 December 2023.",
+        "over the past year, as Whitehall Departments have been working hard to identify retained EU law to preserve, reform or revoke, it has become clear that time constraints have led to the programme becoming more about preserving EU laws than prioritising meaningful reform. That is why we are proposing a new approach.",
+        "We could have ended up with a programme of 450 statutory instruments to preserve EU law.",
+        "My hon. Friend claims that this is a change of policy, but it is a change of approach.",
+        "We tabled the amendment in response to concerns raised in this House."
+      ],
+      "what_this_is_not": "⚠ These are the minister's stated reasons, quoted. Whether they are the real reasons, and what they imply for the viability of a sunset-clause model, is CCW's call."
+    }
+  }
+}

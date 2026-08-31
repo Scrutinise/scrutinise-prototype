@@ -458,6 +458,88 @@ the switch is exactly the flag the schema argues against). **Say which.**
 
 ---
 
+## 2026-08-31 23:14 UTC — B12: CCW's §4.4 IS RIGHT AND BOTH PROSPERITY INSTITUTE WELSH CITATIONS FAIL — AND THE TCA I ALMOST DECLARED UNREACHABLE IS IN THE CORPUS IN FULL
+
+B12 executed. Outputs `docs/report_run/provision_verification.md` + `.json`, tool
+`scripts/ingest/graph/report-b12-provisions.ts`. Retrieval only — every quotation is the
+instrument's own words from the local revised CLML, or for the TCA from the agreement text held in
+`uk-treaties`. Nothing paraphrased, no conclusions drawn.
+
+▶▶ **ITEM 2, THE LIVE CORRECTION, SETTLED: DO NOT CHANGE §4.4.** `GoWA 2006 s.108A(2)(e)` is LIVE
+and reads *"it is incompatible with the Convention rights"* — the exact structural parallel to
+Scotland Act s.29(2)(d). **Both Prosperity Institute citations fail:** `GoWA 1998 s.94` is
+**REPEALED** (the CLML omission marker in full), and `GoWA 2006 s.80` is live but is about
+**assimilated (retained EU) obligations** — the phrase "Convention rights" does not appear in it.
+⚠ `GoWA 2006 s.108`, the predecessor competence section, is also repealed, so anyone working from an
+older text will reach for it.
+
+⚠⚠ **THE TCA WAS ALMOST REPORTED UNREACHABLE AND THAT WOULD HAVE BEEN WRONG.** The brief says the
+TCA "is not in the legislation corpus — if you cannot reach it, say so". True of the CLML. My first
+query scoped the search to `corpus IN ('eur-lex','retained-eu')`, returned **0**, and read as
+confirmation *of the brief's own expectation*. Widening it returned **644** matching titles and,
+among them, `uk-treaties` holding the **full agreement at 444,778 words**, availability `full`.
+**A search scoped narrower than the thing it is looking for will confirm any absence you please —
+and it is most dangerous when the absence is the answer you were told to expect.** Sixth instance of
+this shape in three days.
+
+▶ **Both TCA articles confirmed, and the PI is right on every element.** ARTICLE 524 "Protection of
+human rights and fundamental freedoms"; ARTICLE 692 "Termination" §2: *"if this Part is terminated
+on account of the United Kingdom or a Member State having denounced the European Convention on Human
+Rights **or Protocols 1, 6 or 13 thereto**…"*. ⚠ One scope point they do not state: Article 692
+terminates **"this Part"** — Part Three, law enforcement and judicial cooperation — not the
+Agreement.
+
+⚠⚠ **ITEM 7'S CITATION NAMES AN ACT THAT DOES NOT EXIST.** "EU (Withdrawal Agreement) Act 2018
+ss.7A and 8C" conflates two statutes. Both sections are live in the **European Union (WITHDRAWAL)
+Act 2018**, inserted by the **European Union (Withdrawal AGREEMENT) Act 2020** ss.5 and 21 —
+confirmed from the inserting words themselves. The substance is sound; the label is wrong, and in a
+report about statutes that is the kind of wrong that costs a reader.
+
+▶▶ **A FINDING WIDER THAN THE ITEM THAT PRODUCED IT.** Item 4 confirmed Scotland Act s.126(1) takes
+"the Convention rights" from the HRA. Checking the other two settlements rather than one:
+**NIA 1998 s.98(1) and GoWA 2006 s.158(1) do exactly the same.** All three route through the Human
+Rights Act, so repeal without consequential amendment leaves three competence tests pointing at a
+definition that is no longer there.
+
+⚠⚠ **BUT NORTHERN IRELAND HAS A SECOND ECHR HOOK THAT DOES NOT.** I had provisionally marked NIA
+Schedule 2 **wrong** — it is the "excepted matters" schedule and "incompatible with" does not appear
+in it (confirmed: it does not). Reading it before publishing that verdict found **four** occurrences
+of "Convention" and a self-contained definition: Sch 2 para 3 excepts *"obligations under the Human
+Rights Convention"* and defines that term **directly by naming the 1950 Convention and its ratified
+Protocols** — not via the HRA. So the NI settlement is NOT uniform with the other two, and a
+consequential-amendments schedule drafted from the Scottish model would miss it. **The verdict is
+correct, not wrong.**
+
+▶ **Item 3: s.57(2) does add something.** s.29(2)(d) limits the **Parliament's** competence;
+s.57(2) provides *"A member of the Scottish Government has no power to make any subordinate
+legislation, or to do any other act, so far as … incompatible with any of the Convention rights"*.
+Removing only s.29(2)(d) leaves Scottish Ministers bound. ⚠ s.57(1) is repealed, so "s.57" quoted
+whole has a hole in it.
+
+▶ **All six authorities HELD, none not-held, none unknown** — all `availability full`. ⚠ Three are
+in `ni-judgments`, one of the two collections B3 found MISSING from `coverage.ts`'s
+`CASE_LAW_CORPORA`: a coverage block generated from that list reports them outside the boundary
+while the corpus holds them in full.
+
+▶ **REUL sunset answered from the Act as enacted AND from Hansard, not commentary.** s.1 as enacted:
+*"Legislation listed in Schedule 1 is revoked at the end of 2023"* — a named list, 136,432 characters
+of it. The Bill as introduced carried a **general sunset with exceptions**; the Act as enacted
+**reverses the default** from revoke-unless-saved to revoke-if-listed. The corpus holds the
+minister's own explanation: Kemi Badenoch, 10 May 2023 — *"it has become clear that **time
+constraints** have led to the programme becoming more about preserving EU laws than prioritising
+meaningful reform"*, *"We could have ended up with a programme of 450 statutory instruments"*, *"a
+change of approach"* rather than of policy. ⚠ Those are her stated reasons, quoted; whether they are
+the operative ones, and what they imply for the Prosperity Institute's sunset-clause model, is CCW's
+call.
+
+▶ **Two defects in my own run, both caught before publishing.** `r2Get` returns `string | null`, not
+a Buffer — `.toString('utf8')` was a type error that RAN CORRECTLY ANYWAY (String.toString ignores
+the argument) and would have thrown on the null branch, crashing the run instead of reporting the
+TCA unreachable. And the TCA verdict now follows **the quotes**, not the fact that a document was
+found, so an unreadable R2 object cannot inherit the document's presence.
+
+**Typecheck run under `scripts/tsconfig.json`** — the correct one for this directory.
+
 ## 2026-08-30 20:09 UTC — B5 + B11 COMPLETE: 13 OF 15 INSTRUMENTS IN THE REGISTER ARE CC'S GUESS, AND THE PROGRAMME'S REAL SCOPE IS 561 ACTS AND 23,697 SIs
 
 **B5 UNBLOCKED AND DONE.** `register_proposals.json` arrived; 14 proposals in, 14 out, 10 resolved to
