@@ -27,7 +27,17 @@ not on screen at all. 25-O §2 was not built on a false premise. **Neither "put 
 /ideas/create" nor "show it after a stopped build" is built.**
 ✅ `check:lex-25o` **56/0, 14 controls all fired** (was 44/11); `verify:write-paths` 13/0 live;
 whole suite green; the three §0 must-not-disturb items untouched.
-⚠ **Still unproven: the click itself** — the round trip is proven at the assembler, not in a browser.
+✅✅ **WALKED LIVE (`181702e`) — CHARLIE'S OWN CLICK IS NOW ON SCREEN**, with no new write:
+DRAFT STRATEGY shows "What you have put in the report · 3", holding his three findings under the
+two headings that travelled with them, with three "Remove from report" buttons; THE RESEARCH reads
+"3 items are in your report". ⚠ Secondary confirmation: the worklist's **Things to read went
+0 of 3 → 0 of 6**. ▶ §A2 confirmed — both sections collapsed with counts and hints.
+⚠⚠ **I REPORTED THE TOGGLE AS UNRESPONSIVE THREE TIMES BEFORE TESTING IT PROPERLY AND I WAS
+WRONG** — a real `.click()` flips `aria-expanded`. The clicks were landing on the NAV because the
+screenshot came back SCALED (1512→1375) and coordinates read off it do not map to the viewport.
+**A coordinate from a scaled screenshot is not a viewport coordinate.**
+⚠ "What to do next · 136" is accurate (2 decisions + 135 challenges) but reads as a wall. Not changed.
+⚠ **Still unproven: pressing "Add to report" on a FRESH item in a browser.**
 `docs/LEX_25O_REPORT.md`.**
 Earlier: 2026-08-31 14:04 UTC — ▼ **LEX 25-O: `/ideas/build` IS NOT A TESTING SURFACE —
 IT IS STAGE 1 *AND* THE LIVE NEW-IDEA DOOR, MEASURED. §3 NOT DONE, AND IT IS CHARLIE'S CALL.**

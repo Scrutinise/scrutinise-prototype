@@ -558,3 +558,54 @@ divider fix, the toggling headings and the report running header are untouched a
 
 ⚠ **What is still unproven:** the collapse (§A2) and the fix (§A1) have not been walked in a
 browser. The round trip is proven at the assembler; **the click itself is not.**
+
+## ⚠ VERIFIED LIVE — production, signed in, after the addendum deployed (`181702e`)
+
+**§A1 — the click Charlie made is now on screen.** No new write was needed: the three rows his own
+pass left behind are what the middle column now renders.
+
+In **DRAFT STRATEGY**:
+
+> **What you have put in the report · 3 · show +**
+> *Printed in the report itself; everything you left in THE RESEARCH goes into the evidence annex.*
+
+Expanded, it holds exactly what he clicked, under the two headings that travelled with them:
+
+| | |
+|---|---|
+| **How hard will this be to achieve?** | "Accountability systems are not universally beneficial and their effect…" |
+| | "Accountability can make decisions worse if it's designed to satisfy a…" |
+| **Key sources** | "Lerner and Tetlock's 1999 Psychological Bulletin review, 'Accounting f…" |
+
+…with **three "Remove from report" buttons**. And in **THE RESEARCH**, the count line now reads
+**"3 items are in your report — they appear in DRAFT STRATEGY under their own headings"**, where
+before the fix it said *"Nothing has been added to your report yet."*
+
+⚠ **A secondary confirmation worth naming:** the worklist's **Things to read** went from *0 of 3*
+to **0 of 6**. The three report items joined the reading list — which only happens once the read is
+fixed, and which nothing in this sprint touched directly.
+
+**§A2 — both supporting sections render collapsed**, with counts and hints readable while shut:
+
+> **What you have put in the report · 3 · show +**
+> **What to do next · 136 · show +** — *The decisions and actions that turn this draft into a
+> formal proposal.*
+
+### ⚠ Two honest notes from the walk
+
+1. ⚠⚠ **I reported the toggle as unresponsive three times before testing it properly, and I was
+   wrong.** A real `.click()` on the header flips `aria-expanded` **false → true** and the label to
+   `hide −`. The control has always worked. My mouse clicks were landing on the **nav bar**: the
+   screenshot came back scaled (1512 → 1375), so the coordinates I read off the image did not map
+   to the viewport, and `getBoundingClientRect()` returned `{0,0,0,0}` with `elementFromPoint`
+   answering `NAV`. **A coordinate taken from a scaled screenshot is not a viewport coordinate**,
+   and three failed clicks looked exactly like a broken control.
+2. ⚠ **"What to do next · 136"** is accurate — two unresolved decisions plus 135 open challenges —
+   but 136 on a collapsed header reads as a wall rather than an invitation, and the challenges are
+   essentially all of it. **Not changed**: the count is honest and the brief did not ask for it to
+   be split. Worth a decision if the pilot finds it discouraging.
+
+**What remains unproven:** clicking **"Add to report"** on a *fresh* item in a browser. The write
+path is proven at the assembler with a real write, a control and a cleanup read-back
+(`verify:write-paths`), and the three rows from Charlie's own click now render — but nobody has
+pressed the button since the fix shipped.

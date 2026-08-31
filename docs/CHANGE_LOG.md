@@ -171,8 +171,24 @@ or visible after a stopped build, neither is built.**
 ✅ `check:lex-25o` **56 passed, 0 failed, 14 controls, all 14 fired** (was 44/11).
 `verify:write-paths` 13/0 live. Whole suite re-run green, including the three §0 named as
 must-not-disturb — divider, toggling headings, report running header — all untouched.
-⚠ **Still unproven: the click itself.** The round trip is proven at the assembler; §A1's fix and
-§A2's collapse have not been walked in a browser.
+✅✅ **WALKED LIVE ON PRODUCTION (`181702e`), AND CHARLIE'S OWN CLICK IS NOW ON SCREEN.** No new
+write was needed: DRAFT STRATEGY shows **"What you have put in the report · 3"**, and expanded it
+holds his three findings under the two headings that travelled with them — **How hard will this be
+to achieve?** and **Key sources** — with three "Remove from report" buttons. THE RESEARCH now reads
+**"3 items are in your report"** where it said "Nothing has been added yet". ⚠ Secondary
+confirmation nothing touched directly: the worklist's **Things to read went 0 of 3 → 0 of 6** as
+the report items joined the reading list. ▶ §A2 confirmed: both sections collapsed with counts and
+hints — "What you have put in the report · 3 · show +", "What to do next · 136 · show +".
+⚠⚠ **AND I REPORTED THE TOGGLE AS UNRESPONSIVE THREE TIMES BEFORE TESTING IT PROPERLY, AND I WAS
+WRONG.** A real `.click()` flips `aria-expanded` false → true. My clicks were landing on the NAV:
+the screenshot came back scaled 1512 → 1375, so coordinates read off the image did not map to the
+viewport (`getBoundingClientRect` = {0,0,0,0}, `elementFromPoint` = NAV). **A coordinate taken from
+a scaled screenshot is not a viewport coordinate**, and three failed clicks look exactly like a
+broken control.
+⚠ **"What to do next · 136"** is accurate (2 decisions + 135 open challenges) but reads as a wall
+on a collapsed header. **Not changed** — honest, and not asked for.
+⚠ **Still unproven: pressing "Add to report" on a FRESH item in a browser.** The write path is
+proven at the assembler with a control and a cleanup read-back, and Charlie's existing rows render.
 
 ---
 
