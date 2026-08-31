@@ -430,6 +430,10 @@ enum OperationalIngestStatus {
 model User {
   id                        String              @id @default(uuid())
   clerkId                   String              @unique
+  /// 25-N §3c — this user's private working notes, across every idea. Never read by anyone else.
+  ideaNotes                 IdeaNote[]
+  /// 25-N §3e — this user's worklist ticks.
+  worklistTicks             IdeaWorklistTick[]
   /// ══ 25-M §4 — THE PILOT ALLOWANCE, IN THIRDS OF A BUILD ══════════════════
   ///
   /// A full build costs 3, a reuse re-run costs 1 (25-K §6: "re-runs counted in thirds,
@@ -640,6 +644,10 @@ model Idea {
   id                        String          @id @default(uuid())
   creatorId                 String
   creator                   User            @relation("IdeaCreator", fields: [creatorId], references: [id])
+  /// 25-N §3c — the working notes, private to whoever wrote them.
+  notesPrivate              IdeaNote[]
+  /// 25-N §3e — which worklist items each user has ticked off.
+  worklistTicks             IdeaWorklistTick[]
   // Basic info
   title                     String
   summaryDescription        String
@@ -3688,6 +3696,30 @@ model IdeaBuild {
   /// cost zero — zero is a claim, and it is the claim most likely to be believed.
   estCostPence    Decimal?     @db.Decimal(12, 4)
 
+  /// ══ 25-N §1a — A BUILD THAT STOPPED BEFORE ITS PASSES CAN BE PICKED UP AGAIN ═══════
+  ///
+  /// ⚠ MEASURED, NOT SUPPOSED. Build v7 of idea `452c5ade` (30 Aug 2026, 11:14–11:30 UTC)
+  /// ran 8 of its 10 passes and stopped on the 900s hard stop between KERNEL_CHECK and
+  /// LOGIC_CHECK. `stopBuild` rewrote the two remaining passes to NOT_REACHED; `nextPassKey`
+  /// only ever returns a PENDING or RUNNING pass; so `isResumable` was false and there was
+  /// nothing on any screen offering to continue it. Charlie: *"Stopping before it's
+  /// finished the passes! With no re-start."*
+  ///
+  /// ⚠ THE CLOCK HAS TO MOVE OR THE RESUME CANNOT WORK. `checkStop` measures elapsed from
+  /// `startedAt`; resuming a build that has already used its 900s would stop again on its
+  /// first pass, for ever. So a resume stamps `resumedAt` and the ceiling runs from there.
+  /// The SPEND ceiling is deliberately NOT reset — it sums the stored usages across every
+  /// pass, so a resumed build still cannot exceed the cost the user was quoted.
+  resumedAt       DateTime?
+  /// How many times this build has been picked up again. Bounded (`MAX_RESUMES`) so a build
+  /// that stops on the same pass cannot be resumed round a loop.
+  resumeCount     Int          @default(0)
+  /// ⚠ WHY IT STOPPED LAST TIME, KEPT ACROSS THE RESUME. `failureReason` is cleared when
+  /// the build goes back to QUEUED, and a resumed build that said nothing about having
+  /// stopped would be exactly the "silently presents incomplete work as finished" this
+  /// change exists to prevent.
+  lastStopReason  String?      @db.Text
+
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -3946,6 +3978,100 @@ model GraphClaimJudgement {
   @@index([actorId])
   @@index([userId])
   @@index([agreed])
+}
+
+/// ══ 25-N §3e — A TICK ON THE WORKLIST ═════════════════════════════════════════════
+///
+/// §3e makes the worklist four parts, *"each a checkbox list"*, with **Things to read**
+/// *"each tickable as read"*. A tick is a fact about ONE PERSON's progress through the work,
+/// not about the idea — two collaborators reading the same evidence have read different
+/// halves of it — so it is keyed on the user, exactly as `IdeaNote` is.
+///
+/// ⚠ `itemKey` IS THE THING'S OWN ID, NOT A ROW NUMBER. The worklist is assembled from the
+/// agenda on every load and its ORDER changes as work is done; ticking "item 3" would move the
+/// tick onto whatever landed third next time. What is stored is `read:<evidenceId>` or
+/// `decision:<forkKey>` — the identity of the thing, so a tick survives a re-run.
+///
+/// ⚠ AND AN UNTICKED ITEM IS AN ABSENT ROW, not a `false`. There is nothing to migrate when a
+/// build adds forty findings, and "not yet read" needs no write.
+model IdeaWorklistTick {
+  id        String   @id @default(uuid())
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// `read:<id>` | `decision:<forkKey>` | `scrutiny:<action>` | `promote:<action>`.
+  itemKey   String
+  createdAt DateTime @default(now())
+
+  @@unique([ideaId, userId, itemKey])
+  @@index([ideaId, userId])
+}
+
+/// ══ 25-N §3c — THE USER'S OWN NOTES, PRIVATE TO THEM ══════════════════════════════
+///
+/// §3c: *"Notes — private to the user, saved with the idea, **never shared**. Notes can be
+/// titled, dragged under headings and sorted, each with show/hide."*
+///
+/// ⚠⚠ PRIVACY IS ENFORCED BY THE KEY, NOT BY A FLAG. There is no `visibility` column and
+/// there must not be one: a boolean that defaults to private is a boolean somebody will set
+/// the other way, and every read is then one missing `where` clause from leaking a user's
+/// working notes to their idea-team. `(ideaId, userId)` is the only way in, so a note is
+/// unreachable to anyone but its author by construction rather than by discipline.
+///
+/// ⚠ AND THAT IS WHY CHARLIE'S OPEN QUESTION — should notes be visible to the idea-team? —
+/// is RECORDED AND NOT RESOLVED here (§3c, and the report sets out the options). Building the
+/// sharing switch now would mean shipping the flag this comment argues against, before the
+/// decision that would justify it.
+///
+/// ⚠ `source` DISTINGUISHES THE ONE NOTE NOBODY WROTE. §3c moves the user's original idea
+/// here, under "My original idea" — it is theirs, it is a note, and it should not be the first
+/// thing on the working page. It is seeded rather than authored, so it is marked, and the
+/// seeding is idempotent on `(ideaId, userId, source)`.
+///
+/// Deleted with the idea (GDPR erasure): cascade, never a soft delete.
+model IdeaNote {
+  id        String   @id @default(uuid())
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  /// ⚠ THE AUTHOR, AND THE ONLY READER. See the header.
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// §3c — "Notes can be titled". Empty is allowed: a note the user has not named yet is a
+  /// note, and forcing a title before they may write is a form standing in front of a thought.
+  title     String   @default("")
+  body      String   @db.Text
+
+  /// §3c — "dragged under headings". A free-text group name, not an enum: the user's filing
+  /// system is theirs, and a closed set would be ours. Empty means ungrouped.
+  heading   String   @default("")
+  /// §3c — "and sorted". Explicit, so a reorder is a stored fact rather than a re-derivation.
+  position  Int      @default(0)
+  /// §3c — "each with show/hide". Collapsed in the panel; NOT deleted, and not private-er.
+  hidden    Boolean  @default(false)
+
+  /// `USER` for anything typed here; `ORIGINAL_IDEA` for the seeded one. See the header.
+  source    String   @default("USER")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// The only index that matters: every read is scoped to one user on one idea, in order.
+  @@index([ideaId, userId, position])
+  /// ⚠⚠ ONE SEEDED ORIGINAL-IDEA NOTE PER USER PER IDEA — AND IT IS A **PARTIAL** UNIQUE
+  /// INDEX, WHICH IS WHY IT IS NOT DECLARED HERE.
+  ///
+  /// The obvious `@@unique([ideaId, userId, source])` is WRONG, and wrong in the direction
+  /// that breaks the feature: it would also apply to `source = 'USER'`, so a user could have
+  /// exactly one note. The constraint that is actually wanted is
+  /// `UNIQUE (ideaId, userId, source) WHERE source <> 'USER'` — seeded notes are unique, typed
+  /// notes are not — and `schema.prisma` cannot express a partial index at all.
+  ///
+  /// It lives in `prisma/lex_25n_notes.sql` and is on the CLAUDE.md §21 hazard register.
+  /// ⚠ `prisma migrate diff` WILL PROPOSE DROPPING IT, because to Prisma it is drift. Accept
+  /// that diff and nothing breaks visibly — the guard is simply gone, and the first evidence
+  /// is a user with their original idea written out twice.
 }
 
 /// §25.6 — a document or a link the user brought, held as EXTRACTED TEXT and nothing else.

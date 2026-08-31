@@ -138,6 +138,8 @@ export default function BuildProgress({
   ceiling,
   estimate,
   onCancel,
+  onResume,
+  resumeError,
   busy,
 }: {
   build: BuildView
@@ -146,6 +148,10 @@ export default function BuildProgress({
   estimate?: { meanSeconds: number | null; sampleSize: number; line: string }
   /** Present only while the build is actually running (§2 — "Cancel is available"). */
   onCancel?: () => void | Promise<void>
+  /** 25-N §1a — pick this build up from its last completed pass. */
+  onResume?: () => void | Promise<void>
+  /** Why the last resume attempt was refused, in the server's own words. */
+  resumeError?: string | null
   busy: boolean
 }) {
   const running = build.status === 'RUNNING' || build.status === 'QUEUED'
@@ -249,6 +255,76 @@ export default function BuildProgress({
         <p className="px-4 py-3 text-sm text-amber-800 bg-amber-50 border-t border-amber-200">
           {build.failureReason}
         </p>
+      )}
+
+      {/* ══ 25-N §1a — A PARTIAL BUILD SAYS WHAT HAPPENED, AND OFFERS TO CARRY ON ══════
+          ⚠⚠ THE DEFECT THIS FIXES WAS NOT THE CEILING. The ceiling firing at 922 seconds
+          on build v7 is the ceiling working. What was wrong is that everything after it was
+          silent: `stopBuild` rewrote the two remaining passes to NOT_REACHED, `nextPassKey`
+          only ever returns PENDING or RUNNING, so `resumable` was false — and `resumable`
+          was in the payload and rendered by NOTHING anyway. Charlie read a stopped run with
+          eight passes of real work in it and had no way to ask for the other two.
+
+          ⚠ IT NAMES THE PASSES, not a count. "8 of 10" does not tell you that what is
+          missing is the hostile-clerk read, which is the pass you would most want back.
+
+          ⚠ AND IT SAYS THE SUMMARY IS MISSING. `composeSummary` runs only inside
+          `finishBuild`, so every stopped build has a NULL `summaryMessage` — the space where
+          Lex's account of the run should be simply reads as a run with nothing to say. */}
+      {build.incomplete && (
+        <div className="px-4 py-3 border-t border-amber-200 bg-amber-50/60 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+            This build did not finish
+          </p>
+          <p className="text-sm text-amber-900">
+            {build.incomplete.ranPasses} of {build.incomplete.totalPasses} passes ran. Everything
+            they produced is real and is in the panel — nothing was shortened to fit. What did not
+            run: {build.incomplete.unrun.join(', ')}.
+          </p>
+          {build.incomplete.noSummary && (
+            <p className="text-sm text-amber-900">
+              I never wrote my own account of this run, because that is the last thing a build does.
+              So there is no summary above — that is a missing step, not a run with nothing to say.
+            </p>
+          )}
+          {build.incomplete.previousStopReason && (
+            <p className="text-xs text-amber-800">
+              It stopped once before and was picked up
+              {build.incomplete.resumeCount > 1 ? ` ${build.incomplete.resumeCount} times` : ''}:
+              {' '}{build.incomplete.previousStopReason}
+            </p>
+          )}
+          {resumeError && (
+            <p className="text-sm text-amber-900 bg-white border border-amber-300 rounded-lg px-2.5 py-2">
+              {resumeError}
+            </p>
+          )}
+          {build.resumable && onResume && build.incomplete.resumeFrom && (
+            <>
+              <button
+                onClick={() => void onResume()}
+                disabled={busy}
+                className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+              >
+                Carry on from “{build.incomplete.resumeFrom}”
+              </button>
+              {/* ⚠ IT SAYS WHAT IT WILL AND WILL NOT COST. A user who has just watched a
+                  build stop needs to know that pressing this is not paying twice. */}
+              <p className="text-[11px] text-amber-800">
+                This picks the same build up where it stopped — the eight passes already done are
+                not re-run, and it does not use any more of your allowance. Only the time limit
+                starts again; the spend ceiling still counts everything this build has already
+                spent.
+              </p>
+            </>
+          )}
+          {!build.resumable && (
+            <p className="text-[11px] text-amber-800">
+              This one cannot be carried on — a pass failed rather than running out of time, so the
+              passes after it have nothing to build on. Re-running the idea is the way forward.
+            </p>
+          )}
+        </div>
       )}
 
       {/* ⚠⚠ 25-G §4a — `build.summaryMessage` WAS RENDERED HERE AND IT IS THE DUPLICATED

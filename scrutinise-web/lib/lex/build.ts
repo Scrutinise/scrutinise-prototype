@@ -59,7 +59,7 @@ import {
 } from './build-client'
 import {
   freshPassLog, reusedPassLog, readPassLog, carryInto, allUsages, nextPassKey, isResumable,
-  passesComplete, steppedOverFailures,
+  passesComplete, steppedOverFailures, resumablePassKey, unrunPasses, reopenForResume,
   type PassRecord, type PassStatus, type PassCarry,
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
@@ -134,6 +134,32 @@ export interface BuildView {
   /** TRUE when this build stopped part-way and can be picked up from its last completed
    *  pass rather than restarted from nothing. */
   resumable: boolean
+  /**
+   * ══ 25-N §1a — WHAT AN INCOMPLETE BUILD HAS TO SAY FOR ITSELF ═════════════════
+   *
+   * ⚠ NULL ON A BUILD THAT RAN EVERY PASS, so the screen cannot show an "incomplete"
+   * notice over a complete run. Present on every other terminal build, whether it stopped
+   * at a ceiling, was cancelled, or lost its driver.
+   *
+   * ⚠ IT CARRIES THE PASS LABELS, NOT ONLY A COUNT. "8 of 10" does not tell the user that
+   * the hostile-clerk read is the thing that is missing, and that is exactly the pass they
+   * would want back.
+   */
+  incomplete: {
+    ranPasses: number
+    totalPasses: number
+    /** The passes that never ran, by label, in order. */
+    unrun: string[]
+    /** The pass a resume would start from, by label. Null when nothing can be resumed. */
+    resumeFrom: string | null
+    /** TRUE when the settle never wrote a build summary — so nothing has told the user
+     *  in words what the run concluded, and the screen has to say that itself. */
+    noSummary: boolean
+    /** How many times this build has already been picked up again. */
+    resumeCount: number
+    /** Why it stopped the time before this one, kept across a resume. */
+    previousStopReason: string | null
+  } | null
   /**
    * AMENDMENT_25B §B — TRUE when the worker was meant to take this build and has not
    * within the grace period, so the page is driving it instead. Surfaced rather than
@@ -313,6 +339,30 @@ function toView(
       : null,
     workerLate,
     resumable: isResumable(passes),
+    // ══ 25-N §1a — A PARTIAL BUILD SAYS WHAT HAPPENED ══════════════════════════
+    //
+    // ⚠ COMPUTED FROM THE PASS LOG, WHICH IS WHAT ACTUALLY RAN — not from the status and
+    // not from `passesComplete`, which counts DONE and so cannot tell a build that ran
+    // everything from one that stopped. `SKIPPED` counts as run: a pass deliberately not
+    // needed (reuse skipping the two searches) is not a hole in the work.
+    incomplete: terminalStatus(row.status) && unrunPasses(passes).length > 0
+      ? {
+          ranPasses: passes.filter((p) => p.status === 'DONE' || p.status === 'SKIPPED').length,
+          totalPasses: passes.length,
+          unrun: unrunPasses(passes).map((p) => p.label),
+          resumeFrom: (() => {
+            const key = resumablePassKey(passes)
+            return key ? passes.find((p) => p.key === key)?.label ?? key : null
+          })(),
+          // ⚠ MEASURED: `composeSummary` runs only inside `finishBuild`, so every build
+          // that stopped early has a NULL `summaryMessage`. Build v7 of `452c5ade` is the
+          // worked case. Nothing on screen said so, and an empty space where the summary
+          // sits reads as a run with nothing worth reporting.
+          noSummary: !row.summaryMessage,
+          resumeCount: row.resumeCount,
+          previousStopReason: row.lastStopReason,
+        }
+      : null,
     forks,
     highlights,
     // 25-F §2e — what actually answered, per pass. `echoedModel` where the vendor told us
@@ -453,6 +503,104 @@ export class BuildAllowanceSpent extends Error {
 
 export class BuildAlreadyRunning extends Error {
   constructor() { super('A build is already running for this idea.') }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 25-N §1a — RESUMING A BUILD THAT STOPPED BEFORE IT FINISHED ITS PASSES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** The statuses a build can be resumed FROM. A running build is not resumed, it is waited for. */
+function terminalStatus(s: string): boolean {
+  return s === 'FAILED' || s === 'CANCELLED' || s === 'DONE'
+}
+
+/**
+ * ⚠ A BOUND, BECAUSE A RESUME THAT CAN ALWAYS BE OFFERED IS A LOOP. A build stopping on the
+ * same pass every time — a model that will not answer, a retrieval that always times out —
+ * would otherwise present "resume" for ever and spend on every press. Three attempts is
+ * enough for a transient cause and short enough that a persistent one is visible as one.
+ */
+export const MAX_RESUMES = 3
+
+export class BuildNotResumable extends Error {
+  constructor(message: string) { super(message); this.name = 'BuildNotResumable' }
+}
+
+/**
+ * Pick a stopped build up from its last completed pass.
+ *
+ * ⚠⚠ IT DOES NOT CLAIM THE ALLOWANCE AGAIN, and that is the point of resuming rather than
+ * re-running. The allowance counts `IdeaBuild` rows (25-M §4); a resume writes no new row,
+ * so the passes the user already paid for are the passes they get.
+ *
+ * ⚠ THE TIME CEILING RESTARTS AND THE SPEND CEILING DOES NOT. `checkStop` measures elapsed
+ * from `resumedAt ?? startedAt`, so the remaining passes get a fresh wall clock — without
+ * that, a build resumed after hitting the 900s stop would hit it again on its first pass and
+ * the control would do nothing but consume a press. Spend is summed from the stored usages
+ * across every pass including the stopped attempt's, so the cost ceiling still binds on the
+ * whole build.
+ *
+ * ⚠ AND THE REASON IT STOPPED IS KEPT. `failureReason` is cleared when the row goes back to
+ * QUEUED; `lastStopReason` carries it, so a resumed build can still say it stopped once.
+ */
+export async function resumeBuild(ideaId: string, buildId: string): Promise<void> {
+  const row = await prisma.ideaBuild.findFirst({
+    where: { id: buildId, ideaId },
+    select: { id: true, status: true, passes: true, resumeCount: true, failureReason: true },
+  })
+  if (!row) throw new BuildNotResumable('That build could not be found on this idea.')
+  if (!terminalStatus(row.status)) {
+    throw new BuildNotResumable('That build has not stopped — it is still running.')
+  }
+
+  const log = readPassLog(row.passes)
+  if (!isResumable(log)) {
+    // ⚠ THE REASON, NOT A REFUSAL. Two different things reach here and they are not the
+    // same news: a build that ran everything, and a build stopped by a pass that broke.
+    const blocked = log.find((p) => p.status === 'FAILED')
+    throw new BuildNotResumable(
+      blocked
+        ? `“${blocked.label}” failed rather than running out of time — ${blocked.failureReason ?? 'no reason was recorded'}. `
+          + 'Picking up from there would build on an answer that does not exist, so this one has to be re-run rather than resumed.'
+        : 'That build ran every pass — there is nothing left in it to resume.',
+    )
+  }
+  if (row.resumeCount >= MAX_RESUMES) {
+    throw new BuildNotResumable(
+      `This build has already been picked up ${row.resumeCount} times and stopped again each time. `
+      + 'Something in the remaining passes is not going to finish; re-run the idea instead.',
+    )
+  }
+
+  // ⚠ ANY OTHER LIVE BUILD ON THIS IDEA BLOCKS IT, exactly as `claimBuild` is blocked.
+  // Two builds writing the same kernel is the failure the single-build rule exists for.
+  const active = await prisma.ideaBuild.findFirst({
+    where: { ideaId, status: { in: ['QUEUED', 'RUNNING'] } },
+    select: { id: true },
+  })
+  if (active) throw new BuildAlreadyRunning()
+
+  const reopened = reopenForResume(log)
+  // Guarded on the terminal status we read, so two presses cannot both reopen it.
+  const claimed = await prisma.ideaBuild.updateMany({
+    where: { id: buildId, status: row.status as 'DONE' | 'FAILED' | 'CANCELLED' },
+    data: {
+      status: 'QUEUED',
+      completedAt: null,
+      failureReason: null,
+      cancelRequested: false,
+      resumedAt: new Date(),
+      resumeCount: { increment: 1 },
+      lastStopReason: row.failureReason,
+      currentPass: null,
+      passes: stripNullBytes(reopened) as never,
+    },
+  })
+  if (claimed.count === 0) throw new BuildAlreadyRunning()
+
+  console.warn('[lex-diag] 25n build RESUMED from its last completed pass', {
+    ideaId, buildId, from: resumablePassKey(reopened), attempt: row.resumeCount + 1,
+  })
 }
 export class ElicitationNotConfirmed extends Error {
   constructor() { super('The elicitation has not been confirmed, so there is nothing to build from.') }
@@ -806,11 +954,23 @@ type StopReason =
 async function checkStop(buildId: string, usages: LlmUsage[]): Promise<StopReason | null> {
   const row = await prisma.ideaBuild.findUnique({
     where: { id: buildId },
-    select: { cancelRequested: true, startedAt: true },
+    select: { cancelRequested: true, startedAt: true, resumedAt: true },
   })
   if (row?.cancelRequested) return { kind: 'cancel' }
 
-  const elapsed = row?.startedAt ? Date.now() - row.startedAt.getTime() : 0
+  // ⚠⚠ 25-N §1a — THE CLOCK RUNS FROM THE RESUME, NOT FROM THE ORIGINAL START.
+  //
+  // Without this line the resume control is a button that cannot work: a build stopped at
+  // 922s against a 900s ceiling would be over the ceiling the instant it was picked up, so
+  // `checkStop` would fire before its first pass and stop it again with the same message.
+  // A guard that fires on work it has not seen is the mirror image of the guard that cannot
+  // fire — both are guards measuring the wrong thing.
+  //
+  // ⚠ THE SPEND CEILING IS NOT RESET WITH IT, four lines below: `priceBuild(usages)` sums
+  // every pass's stored usages including the stopped attempt's, so a resumed build cannot
+  // spend more in total than a build that never stopped.
+  const clockFrom = row?.resumedAt ?? row?.startedAt ?? null
+  const elapsed = clockFrom ? Date.now() - clockFrom.getTime() : 0
   if (elapsed > HARD_STOP_MS) return { kind: 'time', elapsedMs: elapsed }
 
   const price = priceBuild(usages)
@@ -1263,11 +1423,30 @@ export async function nextQueuedBuild(): Promise<{ id: string; ideaId: string; u
 /**
  * Claim a QUEUED build for this worker. Conditional, and the count is read — two workers
  * polling the same row must not both start it.
+ *
+ * ⚠⚠ 25-N §1a — `startedAt` AND `currentPass` ARE SET ONLY ON A BUILD THAT HAS NEVER RUN.
+ *
+ * A resumed build is QUEUED, so it comes through this same claim. Stamping `startedAt` here
+ * would rewrite the moment the build began — the number the duration estimate is measured
+ * from and the one the user reads as "this took 15 minutes" — with the moment it was picked
+ * up, and would say the resumed build started at pass 1 when eight passes were already done.
+ * Both are claims about the run that the run itself contradicts.
  */
 export async function claimQueuedBuild(buildId: string): Promise<boolean> {
+  const row = await prisma.ideaBuild.findUnique({
+    where: { id: buildId },
+    select: { startedAt: true, passes: true },
+  })
+  const resuming = !!row?.startedAt
   const res = await prisma.ideaBuild.updateMany({
     where: { id: buildId, status: 'QUEUED' },
-    data: { status: 'RUNNING', startedAt: new Date(), currentPass: BUILD_PASSES[0].key },
+    data: {
+      status: 'RUNNING',
+      ...(resuming ? {} : { startedAt: new Date() }),
+      currentPass: resuming
+        ? resumablePassKey(readPassLog(row?.passes)) ?? BUILD_PASSES[0].key
+        : BUILD_PASSES[0].key,
+    },
   })
   return res.count > 0
 }

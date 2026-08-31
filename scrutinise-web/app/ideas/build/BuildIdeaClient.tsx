@@ -29,6 +29,7 @@ import {
 import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
 import StageBar from '@/components/lex/StageBar'
 import RerunDialogue from '@/components/lex/RerunDialogue'
+import RerunBanner from '@/components/lex/RerunBanner'
 import YourMaterial from '@/components/lex/YourMaterial'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
@@ -119,6 +120,16 @@ export interface BuildView {
   /** 25-B §1 — the pass the SERVER wants run next, or null when there is none. */
   nextPass: string | null
   resumable: boolean
+  /** 25-N §1a — present only on a terminal build that did not run every pass. */
+  incomplete: {
+    ranPasses: number
+    totalPasses: number
+    unrun: string[]
+    resumeFrom: string | null
+    noSummary: boolean
+    resumeCount: number
+    previousStopReason: string | null
+  } | null
   /** AMENDMENT_25B §B — no worker picked this up, so the page is driving it instead. */
   workerLate: boolean
   forks: Array<{
@@ -261,6 +272,9 @@ export default function BuildIdeaClient(
   const [booting, setBooting] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** 25-N §1a — why the last "carry on from where it stopped" was refused. Beside the
+   *  build it is about, never in the page banner. */
+  const [resumeError, setResumeError] = useState<string | null>(null)
   /** TRUE when the elicitation moved and the build half could not be re-read with it. */
   const [buildStale, setBuildStale] = useState(false)
   const bootedRef = useRef(false)
@@ -801,6 +815,36 @@ export default function BuildIdeaClient(
     await refresh()
   }, [post, refresh])
 
+  /**
+   * ══ 25-N §1a — PICK A STOPPED BUILD UP FROM ITS LAST COMPLETED PASS ═════════════
+   *
+   * ⚠ ITS OWN ERROR STATE, NOT THE PAGE'S. A refusal here is about ONE build and belongs
+   * beside it — the page banner is for things that stopped the user getting anywhere, and
+   * putting "that build ran every pass" up there would read as the page being broken.
+   */
+  const resumeBuildNow = useCallback(async () => {
+    const latestId = build?.latest?.id
+    if (!ideaId || !latestId) return
+    setBusy(true); setResumeError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/build`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resume', buildId: latestId }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setResumeError(typeof data?.error === 'string' ? data.error
+          : 'That build could not be picked up again.')
+      }
+    } catch {
+      setResumeError('That build could not be picked up again.')
+    } finally {
+      setBusy(false)
+      void refresh()
+    }
+  }, [ideaId, build?.latest?.id, refresh])
+
   // ── Render ─────────────────────────────────────────────────────────────────
   //
   // 25-E §1 — ONE SWITCH ON ONE SERVER-DECIDED VALUE. The previous version chose between
@@ -946,6 +990,13 @@ export default function BuildIdeaClient(
           {error}
         </div>
       )}
+
+      {/* ══ 25-N §1e — THE RUN'S STATE, ACROSS THE TOP ═══════════════════════════
+          ⚠ IT IS NOT A SECOND PROGRESS PANEL. `BuildProgress` below is the detail — which
+          pass, what it cost, what each produced — and it is a long way down a long page. This
+          is the one line you get without scrolling, and it is the only thing that announces
+          the FINISH: the panel changes a badge, which nobody sees unless they are watching. */}
+      {ideaId && <RerunBanner ideaId={ideaId} />}
 
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
         {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════
@@ -1240,6 +1291,8 @@ export default function BuildIdeaClient(
                 blockedReason={build?.blockedReason ?? null}
                 buildStale={buildStale}
                 estimateLine={build?.estimate?.line ?? null}
+                // 25-N §1d — the same sentence the re-run dialogue shows, from the same read.
+                allowanceLine={build?.allowance?.line ?? null}
                 sampleSize={build?.estimate?.sampleSize ?? 0}
                 hasMean={build?.estimate?.meanSeconds != null}
                 offerEmail={!!build?.estimate?.offerEmail}
@@ -1298,6 +1351,10 @@ export default function BuildIdeaClient(
                 ceiling={build!.ceiling}
                 estimate={build!.estimate}
                 onCancel={running ? cancelBuild : undefined}
+                // 25-N §1a — only on a build that has stopped. A running build is waited
+                // for, not resumed, and offering both would be two controls for one state.
+                onResume={!running ? resumeBuildNow : undefined}
+                resumeError={resumeError}
                 busy={busy}
               />
             )}
@@ -1431,6 +1488,12 @@ export default function BuildIdeaClient(
                       has really changed.
                       {build.estimate?.line ? ` A full run: ${build.estimate.line}` : ''}
                     </p>
+                    {/* 25-N §1d — the balance is on the PAGE, not only inside the dialogue.
+                        Deciding whether to open the re-run is already a decision about
+                        spending one, and the answer was a click away. */}
+                    {build.allowance?.line && (
+                      <p className="text-[11px] font-medium text-zinc-700 mt-1">{build.allowance.line}</p>
+                    )}
                   </>
                 ) : (
                   <>
@@ -1446,6 +1509,9 @@ export default function BuildIdeaClient(
                     </button>
                     {build.estimate?.line && (
                       <p className="text-[11px] text-zinc-500 mt-2">{build.estimate.line}</p>
+                    )}
+                    {build.allowance?.line && (
+                      <p className="text-[11px] font-medium text-zinc-700 mt-1">{build.allowance.line}</p>
                     )}
                   </>
                 )}

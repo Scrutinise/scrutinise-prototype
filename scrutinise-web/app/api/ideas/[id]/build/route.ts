@@ -23,8 +23,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
 import {
-  buildState, claimBuild, claimQueuedBuild, runNextPass,
-  BuildAlreadyRunning, ElicitationNotConfirmed, BuildAllowanceSpent,
+  buildState, claimBuild, claimQueuedBuild, runNextPass, resumeBuild,
+  BuildAlreadyRunning, ElicitationNotConfirmed, BuildAllowanceSpent, BuildNotResumable,
 } from '@/lib/lex/build'
 import { DEFAULT_FRAMING, isFraming, isBuildPassKey, buildDriver } from '@/lib/lex/build-config'
 
@@ -73,6 +73,17 @@ const BodySchema = z.object({
    * disappear without a word.
    */
   critique: z.string().trim().max(8000).optional(),
+  /**
+   * 25-N §1a — pick up a build that stopped before it finished its passes.
+   *
+   * ⚠ ITS OWN ACTION, NOT A MODE OF `start`. A resume writes no new `IdeaBuild` row and
+   * therefore spends no allowance; folding it into the start path would make the two
+   * indistinguishable at the one place the charge is decided.
+   */
+  action: z.literal('resume').optional(),
+  /** Which build to resume. Required with `action: 'resume'` — never inferred from "latest",
+   *  because the client that pressed the button was looking at a specific run. */
+  buildId: z.string().uuid().optional(),
 })
 
 export async function GET(_req: Request, { params }: Params) {
@@ -94,6 +105,33 @@ export async function POST(req: Request, { params }: Params) {
 
   const framing = isFraming(parsed.data.framing) ? parsed.data.framing : DEFAULT_FRAMING
   const continuing = !!parsed.data.pass
+
+  // ── 25-N §1a — RESUME a build that stopped part-way ──────────────────────
+  if (parsed.data.action === 'resume') {
+    if (!parsed.data.buildId) {
+      return NextResponse.json({ error: 'Which build should be resumed?' }, { status: 422 })
+    }
+    try {
+      await resumeBuild(id, parsed.data.buildId)
+    } catch (err) {
+      // ⚠ 409 WITH THE SENTENCE, not a 500. Every refusal here is the product working —
+      // the build ran everything, a pass broke rather than timing out, it has already been
+      // picked up too many times — and each carries a message written for the user.
+      if (err instanceof BuildNotResumable || err instanceof BuildAlreadyRunning) {
+        return NextResponse.json({ error: err.message, state: await buildState(id) }, { status: 409 })
+      }
+      throw err
+    }
+    // Under the worker driver the row is back at QUEUED and the worker takes it. Under the
+    // client fallback this request runs the first resumed pass, exactly as a start does.
+    if (buildDriver() === 'client') {
+      const after = await buildState(id)
+      if (after.latest && after.latest.status === 'QUEUED' && await claimQueuedBuild(after.latest.id)) {
+        await runNextPass(id, authz.idea.creatorId, after.latest.id)
+      }
+    }
+    return NextResponse.json(await buildState(id))
+  }
 
   // ── CONTINUE an existing build — THE FALLBACK PATH ONLY ──────────────────
   //

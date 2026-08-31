@@ -266,14 +266,72 @@ export function steppedOverFailures(log: PassRecord[]): PassRecord[] {
 }
 
 /**
+ * ══ 25-N §1a — THE PASS A STOPPED BUILD WOULD PICK UP FROM ══════════════════════
+ *
+ * ⚠⚠ THIS IS NOT `nextPassKey`, AND THE DIFFERENCE IS THE WHOLE DEFECT. `nextPassKey`
+ * answers "what should the engine run next on a build that is still going", so it only
+ * looks at PENDING and RUNNING. When a build stops at a ceiling, `stopBuild` REWRITES every
+ * remaining pass to NOT_REACHED — which is neither — so from the moment a build stops,
+ * `nextPassKey` is null and `isResumable` is false. Measured on build v7 of idea
+ * `452c5ade` (30 Aug 2026): 8 passes DONE, LOGIC_CHECK and ADVERSARIAL NOT_REACHED,
+ * `resumable: false`, and no control anywhere offering to continue it.
+ *
+ * ⚠ A HARD FAILURE STILL STOPS IT. The same `continueOnFailure` rule as `nextPassKey`: a
+ * pass that ran and broke, and is not declared steppable, is not work a resume can skip
+ * past — re-running everything after it would build on an output that does not exist.
+ */
+export function resumablePassKey(log: PassRecord[]): BuildPassKey | null {
+  for (const p of log) {
+    if (p.status === 'FAILED') {
+      if (BUILD_PASSES.find((d) => d.key === p.key)?.continueOnFailure) continue
+      return null
+    }
+    if (p.status === 'PENDING' || p.status === 'RUNNING' || p.status === 'NOT_REACHED') return p.key
+  }
+  return null
+}
+
+/** The passes a resume would still have to run, in order. Named so the screen can say so. */
+export function unrunPasses(log: PassRecord[]): PassRecord[] {
+  const from = resumablePassKey(log)
+  if (!from) return []
+  const i = log.findIndex((p) => p.key === from)
+  return log.slice(i).filter((p) => p.status !== 'DONE' && p.status !== 'SKIPPED')
+}
+
+/**
  * §1 — "an orphaned build must be resumable from its last completed pass."
  *
  * A build is resumable when it has work left and at least one pass already finished:
  * resuming a build that has done nothing is just starting it, and calling that a resume
  * would tell the user work was preserved when none was.
+ *
+ * ⚠ 25-N §1a — IT NOW READS `resumablePassKey`, so a build that stopped at a ceiling is
+ * resumable rather than merely finished-looking. See the note above it.
  */
 export function isResumable(log: PassRecord[]): boolean {
-  return nextPassKey(log) !== null && log.some((p) => p.status === 'DONE')
+  return resumablePassKey(log) !== null && log.some((p) => p.status === 'DONE')
+}
+
+/**
+ * The log a resume starts from: every NOT_REACHED pass at or after the resume point goes
+ * back to PENDING so the ordinary engine can run it.
+ *
+ * ⚠ IT WRITES, IT DOES NOT DISPLAY — `build-settle.ts`'s rule. A pass that is going to run
+ * again must SAY PENDING; rendering a NOT_REACHED pass as pending while the row says
+ * otherwise is the split this codebase keeps finding.
+ *
+ * ⚠ AND IT KEEPS EVERY RECORDED USAGE. What the stopped attempt spent was really spent, and
+ * the spend ceiling has to keep seeing it or a resume becomes a way round the ceiling.
+ */
+export function reopenForResume(log: PassRecord[]): PassRecord[] {
+  const from = resumablePassKey(log)
+  if (!from) return log
+  const i = log.findIndex((p) => p.key === from)
+  return log.map((p, n) =>
+    n >= i && (p.status === 'NOT_REACHED' || p.status === 'RUNNING')
+      ? { ...p, status: 'PENDING' as PassStatus, startedAt: null, completedAt: null, activity: null }
+      : p)
 }
 
 export function passesComplete(log: PassRecord[]): number {

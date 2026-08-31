@@ -329,6 +329,16 @@ export interface StartBuildCardProps {
   /** TRUE when the build half could not be re-read alongside the elicitation. */
   buildStale: boolean
   estimateLine: string | null
+  /**
+   * ══ 25-N §1d — THE BALANCE, AT THE MOMENT OF DECISION ═══════════════════════
+   *
+   * ⚠⚠ 25-M §4 BUILT THIS AND WIRED IT INTO EXACTLY ONE PLACE: the re-run dialogue. The card
+   * that says "Build it" — the other moment a user commits to spending a build, and the FIRST
+   * one they meet — never received it. §1d: *"It was built; it is not appearing at the moment
+   * of decision."* The line is the same sentence from the same `readAllowance`, so the two
+   * screens cannot quote different balances.
+   */
+  allowanceLine: string | null
   sampleSize: number
   hasMean: boolean
   offerEmail: boolean
@@ -364,6 +374,12 @@ export function StartBuildCard(p: StartBuildCardProps) {
           {p.estimateLine}
           {p.hasMean && <span className="text-zinc-400"> (from the last {p.sampleSize} builds)</span>}
         </p>
+      )}
+
+      {/* §1d — beside the price, before the press. Not a warning and not a colour: a
+          sentence, where somebody deciding whether to spend it is already looking. */}
+      {p.allowanceLine && (
+        <p className="mt-1.5 text-xs font-medium text-zinc-700">{p.allowanceLine}</p>
       )}
 
       {p.offerEmail && p.canStart && (
