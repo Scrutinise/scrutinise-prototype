@@ -1366,7 +1366,17 @@ export default function FieldsPanel({
   /** The Deepening stage section, rendered after the four kernel pages (§22). */
   deepening?: ReactNode
 }) {
+  /** Sections the user has opened that would otherwise be closed (finished ones). */
   const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set())
+  /**
+   * 25-N §1c — sections the user has CLOSED that would otherwise be open.
+   *
+   * ⚠ TWO SETS, NOT ONE FLIPPED BOOLEAN. The default differs by status — a finished section
+   * starts closed, the one you are working in starts open — so a single set cannot say both
+   * "expand this finished one" and "collapse this active one"; it would mean opposite things
+   * depending on a status that changes underneath it.
+   */
+  const [manualCollapsed, setManualCollapsed] = useState<Set<string>>(new Set())
   const activeRef = useRef<HTMLDivElement>(null)
   const stageHeaderRef = useRef<HTMLDivElement>(null)
 
@@ -1420,6 +1430,19 @@ export default function FieldsPanel({
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
+      {/* ══ 25-N §3d — THE DRAFT'S OWN INTRODUCTION, IN CHARLIE'S WORDS, VERBATIM ═════
+          §3d gives this its exact wording, and it is the first thing in the column for a
+          reason: DRAFT STRATEGY is a report the user is being asked to take over, and until
+          now nothing at the top of it said so. A user meeting a filled-in kernel with no
+          framing reads it as a form to complete rather than as a draft to argue with — and
+          the sentence that fixes that is also the sentence that tells them the two ways to
+          change it. */}
+      <p className="text-sm text-zinc-700 leading-relaxed border-l-2 border-zinc-300 pl-3">
+        Here is the draft strategy I have written for you to review and develop into your formal
+        proposal. As you go through this you can edit and improve it by typing directly in any box
+        or discussing with Lex and asking Lex to write it for you.
+      </p>
+
       {pages.map((page) => {
         const total = page.fields.length
         const done = page.fields.filter((f) => f.status === 'ACCEPTED' || f.status === 'SKIPPED').length
@@ -1431,10 +1454,37 @@ export default function FieldsPanel({
         // click keeps its old job (expand/collapse), because conflating "let me look at
         // that" with "take me back there" is how you lose your place by accident.
         const canReEnter = page.reachable && !isActive
-        // A2: a completed stage collapses under its title unless the user expands it.
-        const collapsible = page.status === 'complete' || page.status === 'visited'
-        const collapsed = collapsible && !manualExpanded.has(page.key)
-        const toggle = () => setManualExpanded((s) => { const n = new Set(s); n.has(page.key) ? n.delete(page.key) : n.add(page.key); return n })
+        // ══ 25-N §1c — EVERY HEADING TOGGLES BOTH WAYS, ALWAYS ═══════════════════════
+        //
+        // ⚠⚠ `collapsible` USED TO BE `complete || visited`, WHICH IS WHY "WORK ON THIS"
+        // LOCKED THE USER IN. Pressing it makes the section ACTIVE — neither complete nor
+        // visited — so the heading stopped being a toggle at the exact moment the user had
+        // just chosen to open it, and there was no way back out short of finishing it.
+        // Charlie: *"Sections cannot be closed once opened."*
+        //
+        // ⚠ A LOCKED SECTION IS STILL NOT A TOGGLE, and that is not the same rule. There is
+        // nothing under it to show or hide — it has not been reached — so a chevron there
+        // would be a control that does nothing.
+        const collapsible = !isLocked
+        // ⚠ AND THE DEFAULT STILL DEPENDS ON THE STATUS. A2's rule stands: a stage you have
+        // finished opens collapsed, a stage you are working in opens expanded. What changed
+        // is only that the user may now overrule EITHER — `manualCollapsed` is the second
+        // set, because one set cannot express "expand this finished one" and "collapse this
+        // active one" at the same time.
+        const collapsedByDefault = page.status === 'complete' || page.status === 'visited'
+        const collapsed = collapsedByDefault
+          ? !manualExpanded.has(page.key)
+          : manualCollapsed.has(page.key)
+        // 25-N §1c — the toggle writes to whichever set overrules THIS section's default.
+        const toggle = () => {
+          const flip = (s: Set<string>) => {
+            const n = new Set(s)
+            n.has(page.key) ? n.delete(page.key) : n.add(page.key)
+            return n
+          }
+          if (collapsedByDefault) setManualExpanded(flip)
+          else setManualCollapsed(flip)
+        }
         // §19-B Task 3: within the ACTIVE stage, everything past the current field is
         // queued — visible (so the shape of the stage is legible) but not workable.
         const currentIdx = isActive && currentFieldKey ? page.fields.findIndex((f) => f.key === currentFieldKey) : -1
@@ -1444,6 +1494,18 @@ export default function FieldsPanel({
               ref={isActive ? stageHeaderRef : undefined}
               className={`flex items-center gap-2 mb-2 rounded-lg px-2 py-1.5 ${isActive ? accent.bg : ''} ${collapsible ? 'cursor-pointer' : ''}`}
               onClick={collapsible ? toggle : undefined}
+              // 25-N §1c — a heading that toggles is a control, so it announces itself as
+              // one and works from the keyboard. It was a bare div with an onClick.
+              {...(collapsible
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    'aria-expanded': !collapsed,
+                    onKeyDown: (e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle() }
+                    },
+                  }
+                : {})}
             >
               <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
                 page.status === 'complete' ? 'bg-green-500' : isActive ? accent.dot : 'bg-zinc-200'
@@ -1453,7 +1515,14 @@ export default function FieldsPanel({
               }`}>
                 {page.label}
               </span>
-              {!isLocked && total > 0 && <span className="text-[11px] text-zinc-400">{done} of {total}</span>}
+              {/* ⚠ 25-N §2 — "0 of 7 approved", not "0 of 7". A bare fraction beside a section
+                  heading is a count of something the reader has to guess at, and the two
+                  plausible guesses — how much Lex has drafted, how much you have signed off —
+                  point in opposite directions. `done` counts ACCEPTED and SKIPPED, so the word
+                  that fits it is "approved". */}
+              {!isLocked && total > 0 && (
+                <span className="text-[11px] text-zinc-400 whitespace-nowrap">{done} of {total} approved</span>
+              )}
               {isLocked && <span className="text-[11px] text-zinc-300">soon</span>}
               {canReEnter && (
                 <button
@@ -1465,7 +1534,13 @@ export default function FieldsPanel({
                   Work on this
                 </button>
               )}
-              {collapsible && <span className="text-[11px] text-zinc-400 w-3 text-center">{collapsed ? '+' : '−'}</span>}
+              {/* ⚠ TWO DIFFERENT CHARACTERS, never one recoloured (docs/CLAUDE.md §21), and
+                  a word beside them so "this opens" is not left to be inferred from a glyph. */}
+              {collapsible && (
+                <span className="text-[11px] text-zinc-400 whitespace-nowrap">
+                  {collapsed ? 'show +' : 'hide −'}
+                </span>
+              )}
             </div>
 
             {/* §19-E Task 7 — THE DICTATION HINT, at the top of the stage.

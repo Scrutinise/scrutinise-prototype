@@ -17,8 +17,25 @@ import { FAQ_MARKDOWN } from '@/lib/faq-content'
 
 // Verbatim tour copy (Sprint 1.4 brief). The per-panel detail lives in the boxes
 // below, so the intro no longer repeats it.
+// ⚠ 25-N §2 — "You can:" IS DELETED. It introduced a list of things the user could do and
+// what followed it was three panels being described, so the sentence promised a grammar the
+// next paragraph did not keep.
 const TOUR_INTRO =
-  'When editing your idea you will see three panels which all work together. You can:'
+  'When editing your idea you will see three panels which all work together.'
+
+/**
+ * ══ 25-N §2 — THE PURPOSE OF THE TOOL, IN CHARLIE'S WORDS, VERBATIM ═════════════
+ *
+ * §2 places it exactly: immediately below "Welcome to Scrutinise", above "When editing your
+ * idea…". It is the first thing a new user reads about what this is FOR, and it is the one
+ * sentence that tells them the product is not going to hand them an answer.
+ *
+ * ⚠ IT IS SHOWN ON BOTH DOORS. The build door's tour describes four questions rather than
+ * three panels, but the purpose of the tool does not change with the door you came in by.
+ */
+export const PURPOSE_STATEMENT =
+  'The purpose of this tool is not to solve everything for you, but to give you the insight to '
+  + 'lead an informed debate. Through debate and scrutiny we build better legislation.'
 
 const TOUR_CLOSING =
   "To develop your idea we'll work through four stages — The Basic Idea, Diagnosis, Guiding policy, and " +
@@ -44,10 +61,16 @@ const MD: Components = {
 // ⚠ 25-K §1 — THE TOUR TEACHES THE VOCABULARY, so it was the last place the retired
 // words could survive and still do damage: a user who is TOLD the middle column is called
 // "Your proposal" then goes looking for that label and does not find it.
+//
+// ⚠ 25-N §2/§3 — THE NAMES AND THE LOGIC ARE THE ONES ON SCREEN. Three panels called one
+// thing in the tour and another on the page is the exact failure this list was written to
+// prevent, one sprint later. §3's logic is stated as the blurb, because it is the thing that
+// makes the three columns learnable in one reading: raw material on the right, the draft
+// report in the middle, your own working area on the left.
 const PANELS: { name: string; side: string; blurb: string }[] = [
-  { name: 'What to do next', side: 'left', blurb: "The list of decisions waiting and what to read, with the chat under it — talk to me, Lex, and I'll help you shape each part." },
-  { name: 'The draft', side: 'middle', blurb: 'What I have written so far; answer my questions in the chat, or type straight into the boxes — each saves as you go.' },
-  { name: 'Legislation', side: 'right', blurb: "Once we have enough to search on, I'll pull the most relevant law, debates and committee work and put it here." },
+  { name: 'WORKING AREA', side: 'left', blurb: "Your worklist — what to read and what to decide — with the chat under it. Two tabs: Lex, to talk to me about any of it, and Notes, which are private to you and never shared." },
+  { name: 'DRAFT STRATEGY', side: 'middle', blurb: 'The report itself. Nothing arrives here until you put it there — use “Add to report” on anything in THE RESEARCH. Type straight into any box, or ask me to write it.' },
+  { name: 'THE RESEARCH', side: 'right', blurb: "Everything I found or worked out: the background, the issues, the numbers and the debates. Raw material — pick from it, and what you pick goes into the middle." },
 ]
 
 // ⚠ 25-G §3.2 — THE SAME TOUR, ADAPTED FOR THE OTHER DOOR.
@@ -143,6 +166,10 @@ export default function HowItWorksModal({
           {view === 'tour' ? (
             <div>
               <p className="text-base font-semibold text-zinc-900 mb-1">Welcome to Scrutinise.</p>
+              {/* §2 — verbatim, and in this position: under the welcome, above the panels. */}
+              <p className="text-sm text-zinc-800 leading-relaxed mb-3 border-l-2 border-blue-500 pl-3">
+                {PURPOSE_STATEMENT}
+              </p>
               <p className="text-sm text-zinc-700 leading-relaxed mb-4">{intro}</p>
 
               <div className="space-y-2.5 mb-4">
@@ -160,6 +187,32 @@ export default function HowItWorksModal({
                   </div>
                 ))}
               </div>
+
+              {/* ══ 25-N §11 — THE MOBILE SECTION ═════════════════════════════
+                  §11 asks for "a section to 'How this works' for mobile". The tour above
+                  describes three panels side by side, which is a description of a screen a
+                  phone user has never seen — so on a phone the whole tour was, quietly, about
+                  somebody else's layout. */}
+              {variant === 'create' && (
+                <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-3 mb-4">
+                  <p className="text-sm font-medium text-zinc-900">On a phone</p>
+                  <ul className="mt-1.5 space-y-1 text-xs text-zinc-700 leading-relaxed">
+                    <li>
+                      The three panels become three <span className="font-medium">modes</span>, one at a
+                      time. The bar at the <span className="font-medium">foot of the page</span> switches
+                      between them — it is at the bottom so it is in reach of your thumb.
+                    </li>
+                    <li>
+                      The DRAFT STRATEGY tab carries a <span className="font-medium">number</span> when
+                      something is waiting on you.
+                    </li>
+                    <li>
+                      The three stages are at the <span className="font-medium">top</span> of the page.
+                      Pull down to reach them.
+                    </li>
+                  </ul>
+                </div>
+              )}
 
               <p className="text-sm text-zinc-700 leading-relaxed">{closing}</p>
             </div>

@@ -24,18 +24,42 @@ export type PanelKey = 'left' | 'middle' | 'right'
 
 export const PANEL_KEYS: PanelKey[] = ['left', 'middle', 'right']
 
-/** §4's table, in one place, so the three surfaces cannot describe the columns differently. */
+/**
+ * ══ 25-N §2 — THE THREE PANEL TITLES, IN CHARLIE'S OWN WORDS ════════════════════
+ *
+ * §2 gives the three names verbatim: **WORKING AREA · DRAFT STRATEGY · THE RESEARCH**, and
+ * §3 gives the logic they now express — *"raw material on the right · the draft report in
+ * the middle · notes and chat on the left."*
+ *
+ * ⚠⚠ THE SUBTITLES ARE DELETED, EXCEPT ONE. 25-L §4 put a `role` line beside every title
+ * because "a user who cannot say what a column is FOR cannot decide whether to widen it".
+ * The names now carry that themselves — "WORKING AREA" says what it is in a way that "Lex"
+ * did not — and three explanatory lines across the top of three columns is furniture. THE
+ * RESEARCH keeps one, because it is the panel whose contents are least guessable from its
+ * name, and its sentence is Charlie's, verbatim.
+ *
+ * ⚠ "THE DRAFT" IS GONE AND SO IS THE 25-L/25-K CONTRADICTION IT RECORDED. "DRAFT STRATEGY"
+ * is neither "the proposal" (the implementation word 25-K retired) nor the bare "draft" that
+ * left the middle column sounding like a scratchpad. Both earlier rules survive it.
+ */
 export const PANEL_ROLES: Record<PanelKey, { name: string; role: string }> = {
-  left: { name: 'Lex', role: 'Lex, in the context of what is in the middle' },
-  // ⚠⚠ "THE DRAFT", NOT "PROPOSAL", AND THIS CONTRADICTS 25-L §6's OWN WORDING.
-  // §6 names the middle tab "Proposal". 25-K §1 retired "proposal" as navigation — that
-  // was Charlie's own diagnosis of why he got lost in his own product, and `check:lex-25k`
-  // sweeps every screen for it. Two briefs cannot both be obeyed here, so the newer rule
-  // about the WORD loses to the older rule about NAVIGATION, which is the one that was
-  // written after somebody actually got lost. Recorded in the sprint report for Charlie.
-  middle: { name: 'The draft', role: 'what you are saying — the stage you are working on' },
-  right: { name: 'Resources', role: 'everything Lex found or worked out about the world' },
+  left: { name: 'WORKING AREA', role: '' },
+  middle: { name: 'DRAFT STRATEGY', role: '' },
+  right: {
+    name: 'THE RESEARCH',
+    role: 'This panel is where you’ll find the background, the research, the issues, the numbers '
+      + 'and the debates behind your draft strategy.',
+  },
 }
+
+/**
+ * §2 — "Collapse" → "Hide this Panel", on every column.
+ *
+ * ⚠ ONE CONSTANT, because there were three hand-written variants ("Collapse Lex",
+ * "Collapse the draft", "Collapse the resources panel") and a fourth would have been
+ * written the next time a column was added.
+ */
+export const HIDE_PANEL_LABEL = 'Hide this Panel'
 
 export interface PanelLayout {
   open: Record<PanelKey, boolean>
@@ -125,9 +149,31 @@ export function normaliseLayout(raw: unknown): PanelLayout {
   return { open, width }
 }
 
-/** The CSS `grid-template-columns` value for a layout. Closed panels become a slim edge. */
+/**
+ * The CSS `grid-template-columns` value for a layout. Closed panels become a slim edge.
+ *
+ * ══ 25-N §1b — `minmax(0, Nfr)`, NEVER A BARE `Nfr` ══════════════════════════════
+ *
+ * ⚠⚠ THIS ONE CHARACTER SEQUENCE IS THE WHOLE OF "PANELS RESIZE THEMSELVES AND CANNOT BE
+ * RESTORED". A bare `Nfr` track is `minmax(auto, Nfr)`: the `auto` minimum means the track
+ * may never be narrower than its content's MIN-CONTENT width. So the instant something wide
+ * and unbreakable lands in a column — a citation, a legislation.gov.uk URL, a long
+ * un-hyphenated title, which is exactly what appears when you click an item in the research
+ * panel — the browser widens that track past the fraction the user set and takes the
+ * difference out of the other two. Nothing in our code moved; the stored layout is
+ * untouched; and there is no control that puts it back, because from the layout's point of
+ * view nothing happened.
+ *
+ * `minmax(0, Nfr)` sets the minimum to zero, so the fractions are the fractions and the
+ * content scrolls inside its own column instead of pushing it. The panels then change size
+ * ONLY when a divider is dragged, which is §1b's rule.
+ *
+ * ⚠ THE PANEL BODIES ALSO NEED `min-w-0`. A grid ITEM has `min-width: auto` for the same
+ * reason a track does; zeroing the track's minimum without zeroing the item's just moves
+ * the overflow one level down.
+ */
 export function gridTemplate(layout: PanelLayout, edge = '2.5rem'): string {
   return PANEL_KEYS
-    .map((k) => (layout.open[k] ? `${(layout.width[k] * 100).toFixed(3)}fr` : edge))
+    .map((k) => (layout.open[k] ? `minmax(0, ${(layout.width[k] * 100).toFixed(3)}fr)` : edge))
     .join(' ')
 }

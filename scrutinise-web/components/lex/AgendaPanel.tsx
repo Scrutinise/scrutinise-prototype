@@ -77,6 +77,18 @@ function Chip({ children, className = '' }: { children: React.ReactNode; classNa
   )
 }
 
+/**
+ * ══ 25-N §1c — EVERY HEADING TOGGLES BOTH WAYS, ALWAYS ══════════════════════════
+ *
+ * ⚠ THESE WERE THE TWO THE BRIEF NAMES BY NAME. "Decisions" and "Where the research changed
+ * my mind" had no toggle at all — the heading was an `<h4>` and the body was always there —
+ * so a user who had read the six contradictions had to scroll past them for the rest of the
+ * session. §1c: *"Every heading toggles both ways, always."*
+ *
+ * ⚠ IT OPENS WHEN THE WORKLIST JUMPS TO IT. `WorkList` links to `#agenda-decisions`; a jump
+ * that lands on a collapsed section is a link that appears to do nothing, which is the same
+ * complaint one level down. `openOnHash` watches the fragment.
+ */
 function Section({ id, title, count, hint, children }: {
   // ⚠ 25-K §3 — THE ID IS WHAT MAKES THE WORKLIST A JUMP RATHER THAN A LABEL.
   // `WorkList` names these anchors; a row that says "read the two contradictions" and does
@@ -84,19 +96,63 @@ function Section({ id, title, count, hint, children }: {
   // fixing. Named here rather than in the worklist so the two cannot drift.
   id?: string; title: string; count: number; hint?: string; children: React.ReactNode
 }) {
+  const [open, setOpen] = useState(true)
+
+  useEffect(() => {
+    if (!id) return
+    const openIfMine = () => {
+      if (window.location.hash === `#${id}`) setOpen(true)
+    }
+    openIfMine()
+    window.addEventListener('hashchange', openIfMine)
+    return () => window.removeEventListener('hashchange', openIfMine)
+  }, [id])
+
   return (
     <section id={id} className="scroll-mt-4 border-t border-zinc-100 px-4 py-3">
-      <div className="flex items-baseline gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-baseline gap-2 text-left rounded-lg -mx-1 px-1 py-0.5 hover:bg-zinc-50"
+      >
         <h4 className="text-sm font-semibold text-zinc-900">{title}</h4>
-        <span className="text-xs text-zinc-400">{count}</span>
-      </div>
+        <span className="text-xs text-zinc-400 flex-1">{count}</span>
+        {/* Two different characters plus a word — never one glyph recoloured (§21). */}
+        <span className="text-[11px] text-zinc-400 whitespace-nowrap">{open ? 'hide −' : 'show +'}</span>
+      </button>
       {hint && <p className="text-xs text-zinc-500 mt-0.5">{hint}</p>}
-      <div className="mt-2 space-y-3">{children}</div>
+      {open && <div className="mt-2 space-y-3">{children}</div>}
     </section>
   )
 }
 
-export default function AgendaPanel({ ideaId }: { ideaId: string }) {
+/**
+ * ══ 25-N §3b — WHICH HALF OF THE AGENDA THIS INSTANCE IS ═══════════════════════
+ *
+ * §3b moves two of these sections to the right-hand panel: *"Where the research changed my
+ * mind"* and *"Decisions"*. Both are things Lex DID and wants judged — raw material for the
+ * user to work through — and §3's logic puts raw material on the right. What stays in the
+ * middle is the report and the work still owed on it.
+ *
+ * ⚠⚠ IT IS ONE COMPONENT RENDERED TWICE, NOT TWO COMPONENTS. The decision handler, the fetch,
+ * the fork grouping and the "I didn't record why I chose this" honesty note are the same code
+ * in both places. Splitting the file would have produced two `decide` functions writing the
+ * same table, and the second one would have been the one that stopped being updated.
+ *
+ * ⚠ AND EACH VIEW RENDERS NOTHING WHEN ITS OWN SECTIONS ARE EMPTY, rather than an empty
+ * shell. `judgements` on an idea with no decisions and no contradictions is not a heading
+ * with nothing under it — it is a panel that has nothing to say yet, which is different from
+ * the stated-gap rule the RESEARCH headings live under (those are claims about the world;
+ * this is a claim about our own output).
+ */
+export type AgendaView =
+  /** The middle column: challenges, reading, gaps, what you know that we don't. */
+  | 'work'
+  /** The right-hand panel: decisions, and where the research changed Lex's mind. */
+  | 'judgements'
+
+export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string; view?: AgendaView }) {
   const [agenda, setAgenda] = useState<Agenda | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -132,20 +188,34 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
 
   const a = agenda
 
+  const judgements = view === 'judgements'
+  // ⚠ AN INSTANCE WITH NOTHING OF ITS OWN RENDERS NOTHING. See the `AgendaView` note.
+  const hasWork = a.challenges.length > 0 || a.reading.length > 0 || a.gaps.length > 0
+    || !!a.contribution.ownKnowledge || a.contribution.wouldStrengthen.length > 0
+  const hasJudgements = a.decisions.length > 0 || a.contradictions.length > 0
+  if (judgements ? !hasJudgements : !hasWork) return null
+
   return (
     <div className="border border-zinc-200 rounded-2xl overflow-hidden mt-4">
       <div className="px-4 py-3">
-        <h3 className="text-sm font-semibold text-zinc-900">What to do next</h3>
+        {/* ══ 25-N §3d — THE PANEL TEXT, VERBATIM ═════════════════════════════
+            §3d gives this its exact wording. It replaces "Deciding, reading and answering —
+            in the order that most changes the proposal", which described the ORDERING rather
+            than saying what the panel is for. */}
+        <h3 className="text-sm font-semibold text-zinc-900">
+          {judgements ? 'Decisions and changes of mind' : 'What to do next'}
+        </h3>
         <p className="text-xs text-zinc-500 mt-0.5">
-          From build {a.buildVersion}. Deciding, reading and answering — in the order that most
-          changes the proposal.
+          {judgements
+            ? `From build ${a.buildVersion}. The choices I made for you, and the places the research moved me. Take each one or change it — both are recorded.`
+            : 'This panel lists the decisions and actions you need to take to build the draft strategy I’ve prepared for you into your formal proposal.'}
         </p>
       </div>
 
       {error && <p className="px-4 pb-2 text-xs text-amber-700">{error}</p>}
 
       {/* ── §3b — CONTRADICTIONS LEAD ─────────────────────────────────────── */}
-      {a.contradictions.length > 0 && (
+      {judgements && a.contradictions.length > 0 && (
         <Section
           id="agenda-contradictions"
           title="Where the research changed my mind"
@@ -171,7 +241,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       )}
 
       {/* ── §3a — DECISIONS ───────────────────────────────────────────────── */}
-      {a.decisions.length > 0 && (
+      {judgements && a.decisions.length > 0 && (
         <Section
           id="agenda-decisions"
           title="Decisions"
@@ -237,7 +307,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       )}
 
       {/* ── §3c — CHALLENGES ──────────────────────────────────────────────── */}
-      {a.challenges.length > 0 && (
+      {!judgements && a.challenges.length > 0 && (
         <Section
           id="agenda-challenges"
           title="Challenges"
@@ -259,7 +329,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       )}
 
       {/* ── §3d — READING ─────────────────────────────────────────────────── */}
-      {a.reading.length > 0 && (
+      {!judgements && a.reading.length > 0 && (
         <Section
           id="agenda-reading"
           title="Read these"
@@ -281,7 +351,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       )}
 
       {/* ── §3e — GAPS ────────────────────────────────────────────────────── */}
-      {a.gaps.length > 0 && (
+      {!judgements && a.gaps.length > 0 && (
         <Section
           id="agenda-gaps"
           title="What nobody has answered"
@@ -299,7 +369,7 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
       )}
 
       {/* ── §3f — YOUR CONTRIBUTION ───────────────────────────────────────── */}
-      {(a.contribution.ownKnowledge || a.contribution.wouldStrengthen.length > 0) && (
+      {!judgements && (a.contribution.ownKnowledge || a.contribution.wouldStrengthen.length > 0) && (
         <Section title="What you know that we don’t" count={a.contribution.wouldStrengthen.length}>
           {a.contribution.ownKnowledge && (
             <div className="rounded-lg border border-zinc-200 p-2.5">
@@ -320,10 +390,14 @@ export default function AgendaPanel({ ideaId }: { ideaId: string }) {
         </Section>
       )}
 
-      {/* ⚠ AFTER THE WORK, NEVER BEFORE IT. See the header. */}
-      <p className="px-4 py-3 border-t border-zinc-100 text-sm text-zinc-700 bg-zinc-50/60">
-        {a.framing}
-      </p>
+      {/* ⚠ AFTER THE WORK, NEVER BEFORE IT. See the header. Shown on the work view only:
+          it is Lex's framing of the DRAFT, and under the right-hand panel's decisions it
+          would read as a disclaimer about the decisions themselves. */}
+      {!judgements && (
+        <p className="px-4 py-3 border-t border-zinc-100 text-sm text-zinc-700 bg-zinc-50/60">
+          {a.framing}
+        </p>
+      )}
     </div>
   )
 }
