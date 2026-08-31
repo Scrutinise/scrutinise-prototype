@@ -254,6 +254,16 @@ export default function BuildProgress({
       {build.failureReason && (
         <p className="px-4 py-3 text-sm text-amber-800 bg-amber-50 border-t border-amber-200">
           {build.failureReason}
+          {/* ⚠ 25-O §1b — SAID WHERE THE BAD NEWS IS, not in a separate panel. A user reading
+              "this build stopped" is at that moment working out what it cost them, and the
+              answer — nothing — belongs in the same breath as the failure. */}
+          {build.releasedThirds != null && (
+            <span className="block mt-1.5 font-medium">
+              This did not use any of your allowance. The{' '}
+              {build.releasedThirds === 1 ? 'third it was holding has' : `${build.releasedThirds} thirds it was holding have`}
+              {' '}come back to you.
+            </span>
+          )}
         </p>
       )}
 

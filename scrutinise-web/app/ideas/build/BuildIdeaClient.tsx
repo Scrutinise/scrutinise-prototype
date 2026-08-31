@@ -120,6 +120,8 @@ export interface BuildView {
   /** 25-B §1 — the pass the SERVER wants run next, or null when there is none. */
   nextPass: string | null
   resumable: boolean
+  /** 25-O §1b — thirds the stopped build gave back. Null while running, and on a DONE build. */
+  releasedThirds: number | null
   /** 25-N §1a — present only on a terminal build that did not run every pass. */
   incomplete: {
     ranPasses: number
@@ -1416,8 +1418,13 @@ export default function BuildIdeaClient(
                     : 'Open what was drafted'}
                 </a>
                 {finished && (
+                  // ⚠⚠ 25-O §2 — IT POINTED AT `/ideas/[id]`, WHICH IS THE TEAM VIEW. A button
+                  // labelled "as others would" that shows what your own collaborators see is a
+                  // dead end in the middle of the core flow, and a pilot tester will find it.
+                  // It now reaches a holding page that says honestly what it is. §2: hold, do
+                  // not build — 25-N §6's design stands and lands in a later sprint.
                   <a
-                    href={`/ideas/${ideaId}`}
+                    href={`/ideas/${ideaId}/public`}
                     className="text-sm font-medium px-4 py-2.5 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
                   >
                     See it as others would

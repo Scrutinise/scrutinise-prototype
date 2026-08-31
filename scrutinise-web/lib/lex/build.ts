@@ -31,7 +31,7 @@
 
 import { prisma } from '@/lib/prisma'
 // 25-M §4 — the pilot allowance. Counted over IdeaBuild, not LlmSpend; see that file.
-import { readAllowance, allowanceBlock } from './allowance'
+import { readAllowance, allowanceBlock, FULL_BUILD_THIRDS, REUSE_BUILD_THIRDS } from './allowance'
 import type { SearchResult } from './page1-config'
 import { runSearch } from './search-gateway'
 import { storeStageSearch, type StageSearchRecord } from './stage-search'
@@ -66,6 +66,7 @@ import { runResearch, draftFactsFor } from './build-research'
 import { buildEstimate, formatDuration, type BuildEstimate } from './build-estimate'
 import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
+import { runCausesCommentary } from './build-commentary'
 import { readKnownUnknowns } from './deepening'
 import { supersedeOlderProposals } from './evidence-layer'
 import { QUESTION_IDS } from './interrogation-library'
@@ -134,6 +135,21 @@ export interface BuildView {
   /** TRUE when this build stopped part-way and can be picked up from its last completed
    *  pass rather than restarted from nothing. */
   resumable: boolean
+  /**
+   * ══ 25-O §1b — WHAT A STOPPED BUILD GAVE BACK ═══════════════════════════════
+   *
+   * §1b: *"Release the reservation on FAILED and CANCELLED, and report what was released."*
+   *
+   * ⚠⚠ THE RELEASE ITSELF IS STRUCTURAL AND HAS NO WRITE — a reservation IS the row being
+   * QUEUED or RUNNING, so it is gone the instant the status changes (see `readAllowance`).
+   * This field exists because a release nobody is told about is, from the user's side,
+   * indistinguishable from a deduction: they watched a build fail, and the number on screen is
+   * the number they will judge us by.
+   *
+   * ⚠ NULL ON A RUNNING BUILD (it is still held) AND ON A DONE ONE (it was spent, not
+   * released). Only a build that stopped without finishing has something to report.
+   */
+  releasedThirds: number | null
   /**
    * ══ 25-N §1a — WHAT AN INCOMPLETE BUILD HAS TO SAY FOR ITSELF ═════════════════
    *
@@ -339,6 +355,10 @@ function toView(
       : null,
     workerLate,
     resumable: isResumable(passes),
+    // §1b — priced from the row's own mode, which is what the hold was priced at.
+    releasedThirds: row.status === 'FAILED' || row.status === 'CANCELLED'
+      ? (row.mode === 'REUSE' ? REUSE_BUILD_THIRDS : FULL_BUILD_THIRDS)
+      : null,
     // ══ 25-N §1a — A PARTIAL BUILD SAYS WHAT HAPPENED ══════════════════════════
     //
     // ⚠ COMPUTED FROM THE PASS LOG, WHICH IS WHAT ACTUALLY RAN — not from the status and
@@ -640,23 +660,6 @@ export async function claimBuild(
 
   await settleAbandonedBuilds(ideaId)
 
-  // ══ 25-M §4 — THE HARD STOP, AT THE WRITE PATH ═══════════════════════════
-  //
-  // ⚠⚠ HERE, NOT ONLY IN `buildState`. The state read is what greys the button; this is what
-  // stops the build. A ceiling enforced only where the UI reads it is a ceiling that a
-  // second caller — the worker, a script, a stale tab, a POST anybody can repeat — walks
-  // straight through, and the whole point of an allowance is to bound spend by a thousand
-  // pilot users rather than to decorate one screen.
-  //
-  // ⚠ CHECKED AGAINST THE MODE BEING ASKED FOR, so a user with a third left may redraft.
-  const ideaOwner = await prisma.idea.findUnique({
-    where: { id: ideaId }, select: { creatorId: true },
-  })
-  if (ideaOwner) {
-    const blocked = await allowanceBlock(ideaOwner.creatorId, mode)
-    if (blocked) throw new BuildAllowanceSpent(blocked)
-  }
-
   const active = await prisma.ideaBuild.findFirst({
     where: { ideaId, status: { in: ['QUEUED', 'RUNNING'] } },
     select: { id: true },
@@ -694,6 +697,34 @@ export async function claimBuild(
   // and the build runs FULL — which is what they wanted anyway — and `reuseNote` says so
   // on screen rather than silently charging them 33p for the cheap option.
   const reuseFrom = mode === 'REUSE' ? await reuseSourceFor(ideaId) : null
+
+  // ══ 25-M §4 / 25-O §1a — THE HARD STOP, AT THE WRITE PATH, AGAINST WHAT WILL RUN ══
+  //
+  // ⚠⚠ HERE, NOT ONLY IN `buildState`. The state read is what greys the button; this is what
+  // stops the build. A ceiling enforced only where the UI reads it is a ceiling that a second
+  // caller — the worker, a script, a stale tab, a POST anybody can repeat — walks straight
+  // through, and the whole point of an allowance is to bound spend by a thousand pilot users
+  // rather than to decorate one screen.
+  //
+  // ⚠⚠⚠ 25-O §1a — IT MOVED, AND THE MOVE IS THE FIX. It ran ABOVE, against `mode` — the mode
+  // the caller ASKED for. Twenty lines further down, `reuseFrom` decides what will actually
+  // run, and a REUSE request with nothing to reuse is DOWNGRADED TO FULL and recorded as FULL
+  // (see `mode:` on the create below). So a user with exactly one third left could ask for a
+  // redraft, pass a check priced at one third, and have the engine run the whole ten-pass
+  // build and charge three. The check now runs after that decision and prices the run.
+  //
+  // ⚠ AND IT SITS AFTER THE `active` GUARD DELIBERATELY. A second build on the same idea is
+  // refused as already-running, which is the more useful message; being told you cannot afford
+  // a build you were not allowed to start anyway is a true sentence about the wrong problem.
+  const effectiveMode: 'FULL' | 'REUSE' = reuseFrom ? 'REUSE' : 'FULL'
+  const ideaOwner = await prisma.idea.findUnique({
+    where: { id: ideaId }, select: { creatorId: true },
+  })
+  if (ideaOwner) {
+    const blocked = await allowanceBlock(ideaOwner.creatorId, effectiveMode)
+    if (blocked) throw new BuildAllowanceSpent(blocked)
+  }
+
   const passes = reuseFrom
     ? reusedPassLog(readPassLog(reuseFrom.passes), REUSABLE_PASSES, (key, output) =>
         key === 'ORIENT'
@@ -712,7 +743,10 @@ export async function claimBuild(
         // a REUSE request had nothing to reuse and was downgraded to a full run (see the
         // note above). The allowance charges the two differently, so writing the REQUEST
         // here would charge a third for a build that did the whole job.
-        mode: reuseFrom ? 'REUSE' : 'FULL',
+        // ⚠ 25-O §1a — THE SAME VALUE THE CHECK WAS PRICED AGAINST, from one expression.
+        // Two places deciding "is this a reuse" is two places that can disagree, and the
+        // disagreement is exactly what let a full build through a redraft-sized check.
+        mode: effectiveMode,
         // 25-L §1 — the critique and its timestamp, or neither. A stamp with no text
         // would say a dialogue happened and record nothing of what was said.
         ...(userCritique?.trim()
@@ -1488,6 +1522,7 @@ async function runOnePass(key: BuildPassKey, c: PassContext): Promise<PassOutcom
     case 'KERNEL_CHECK': return kernelCheckPass(c)
     case 'LOGIC_CHECK': return logicCheckPass(c)
     case 'ADVERSARIAL': return adversarialPass(c)
+    case 'CAUSES_COMMENTARY': return causesCommentaryPass(c)
   }
 }
 
@@ -2872,6 +2907,96 @@ async function adversarialPass(c: PassContext): Promise<PassOutcome> {
 }
 
 /** The revised kernel as prose — what the clerk reads, and what a report quotes. */
+/**
+ * ══ 25-O §5 — THE OPENING COMMENTARY ON THE CAUSES ══════════════════════════════
+ *
+ * §5, and it is the highest-value item on the outstanding list because it changes the SHAPE of
+ * the user's decision rather than the ergonomics of making it. The user is asked to choose
+ * between causes at a granular level with no account of the terrain.
+ *
+ * ⚠⚠ IT DOES NO RETRIEVAL. Everything it needs — the causes, the problem, and the findings the
+ * research pass filed — is already in the database. That is what makes an eleventh pass
+ * affordable: one model call, no search, on material in hand.
+ *
+ * ⚠ AND IT IS `continueOnFailure`. A commentary that could not be written must leave the
+ * section with an honest empty state and let the build finish. It is the opening paragraph of a
+ * diagnosis, not a load-bearing part of the kernel.
+ */
+async function causesCommentaryPass(c: PassContext): Promise<PassOutcome> {
+  const model = modelForPass('CAUSES_COMMENTARY')
+  await c.activity('Reading the causes as a whole')
+
+  const idea = await prisma.idea.findUnique({
+    where: { id: c.ideaId },
+    select: {
+      title: true, challenge: true, summaryDiagnosis: true,
+      diagnosisCauses: {
+        select: { cause: true, whyPersisted: true, classification: true, parentCauseId: true, id: true },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  })
+  const causes = idea?.diagnosisCauses ?? []
+  // ⚠ NOTHING TO DESCRIBE IS NOT A FAILURE OF THE MODEL, so it is reported as its own reason.
+  // "The commentary did not complete" and "there were no causes to comment on" are different
+  // facts and only one of them is ours to fix.
+  if (causes.length === 0) {
+    return { ok: false, reason: 'no causes had been drafted, so there was no terrain to describe' }
+  }
+
+  // ⚠ THE FINDINGS GO IN, because "where the sources disagree" is unanswerable without them —
+  // and this is the ONLY thing the pass reads that the kernel does not already contain.
+  const findings = await prisma.evidenceItem.findMany({
+    where: { ideaId: c.ideaId, status: { not: 'REJECTED' } },
+    select: { title: true, body: true, citation: true, siftReason: true },
+    orderBy: { createdAt: 'asc' },
+    take: 60,
+  })
+
+  const material = [
+    `═══ THE PROBLEM ═══\n${idea?.challenge ?? '(not settled)'}`,
+    idea?.summaryDiagnosis ? `\n═══ THE DIAGNOSIS AS DRAFTED ═══\n${idea.summaryDiagnosis}` : '',
+    `\n═══ THE ${causes.length} CANDIDATE CAUSES ═══`,
+    ...causes.map((x, i) => {
+      const nested = x.parentCauseId ? ' [sits beneath another cause]' : ''
+      return `\n[${i + 1}] (${x.classification})${nested} ${x.cause}\n    Persists because: ${x.whyPersisted || '(not recorded)'}`
+    }),
+    findings.length
+      ? `\n\n═══ WHAT THE RESEARCH FOUND (${findings.length} findings) ═══\n`
+        + findings.map((f) => `- ${f.title}${f.citation ? ` [${f.citation}]` : ''}\n  ${(f.body ?? '').slice(0, 600)}`).join('\n')
+      // ⚠ THE ABSENCE IS STATED TO THE MODEL, not left as silence. A model given no findings and
+      // no note about it will write about conflict as though it had looked.
+      : '\n\n═══ WHAT THE RESEARCH FOUND ═══\n(Nothing has been retrieved for this idea. You have '
+        + 'the causes and nothing to weigh them against — say so rather than implying otherwise.)',
+  ].join('\n')
+
+  const commentary = await runCausesCommentary({
+    material, model, onUsage: (u) => c.usages.push(u),
+  })
+  if (!commentary) {
+    return { ok: false, reason: 'the commentary did not come back with anything substantive to say' }
+  }
+
+  await prisma.ideaBuild.update({
+    where: { id: c.buildId },
+    data: { causesCommentary: stripNullBytes(commentary) as never },
+  })
+
+  console.log('[lex-diag] 25o causes commentary written', {
+    buildId: c.buildId, model, causes: causes.length, findings: findings.length,
+    complexity: commentary.complexity, conflicts: commentary.conflicts.length,
+    defendedEmpty: !commentary.conflicts.length,
+  })
+
+  return {
+    ok: true,
+    output: `Described the terrain across ${causes.length} causes — `
+      + `${commentary.conflicts.length
+        ? `${commentary.conflicts.length} point${commentary.conflicts.length === 1 ? '' : 's'} where the sources disagree`
+        : 'no conflict found, and it says what it looked at'}`,
+  }
+}
+
 async function kernelText(ideaId: string): Promise<string> {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },

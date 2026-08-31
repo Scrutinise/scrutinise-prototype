@@ -56,6 +56,27 @@ import { prisma } from '@/lib/prisma'
  */
 export const ALLOWANCE_EPOCH = new Date('2026-08-28T11:45:00.000Z')
 
+/**
+ * ══ 25-O §1c — THE PILOT ALLOWANCE, AS CONFIGURATION ════════════════════════════
+ *
+ * §1c: *"The pilot allowance is three full builds and three re-runs per user. Set as
+ * configuration, not as a constant in code, because it drops back to one once the payment path
+ * exists."*
+ *
+ * 3 × FULL (3 thirds) + 3 × REUSE (1 third) = **12 thirds**.
+ *
+ * ⚠ IT IS THE DEFAULT GRANT, NOT A CEILING ON AN ADMIN'S GRANT. A user with an explicit grant
+ * keeps it — raising or lowering the pilot number must never silently overwrite a decision an
+ * admin recorded a reason for.
+ *
+ * ⚠⚠ AND "EXPLICITLY GRANTED" IS READ OFF `buildAllowanceNote`, NOT OFF THE NUMBER. The column
+ * `buildAllowanceThirds` has a database default of 4, so a user who has never been touched is
+ * INDISTINGUISHABLE BY VALUE from one an admin deliberately set to 4. The note is required on
+ * every admin write (`PATCH /api/admin/allowance` refuses without one) and is written by nothing
+ * else, so its presence is the only reliable record that somebody decided.
+ */
+export const PILOT_ALLOWANCE_THIRDS = Number(process.env.LEX_PILOT_ALLOWANCE_THIRDS ?? '12')
+
 /** A full build. §4: re-runs cost less because they reuse the research. */
 export const FULL_BUILD_THIRDS = 3
 /**
@@ -69,8 +90,20 @@ export const REUSE_BUILD_THIRDS = 1
 export interface Allowance {
   /** What they have been given, in thirds. */
   grantedThirds: number
+  /** TRUE when an admin set that figure; FALSE when it is the pilot default. */
+  grantedExplicitly: boolean
   /** What they have used, in thirds. */
   spentThirds: number
+  /**
+   * ══ 25-O §1a — WHAT IS HELD BY BUILDS THAT ARE STILL RUNNING ══════════════════
+   *
+   * ⚠ A HOLD IS NOT A SPEND, and the two are separate fields because they answer different
+   * questions and are released differently. `spentThirds` is final. This is returned the moment
+   * the build stops without completing.
+   */
+  reservedThirds: number
+  /** How many builds are holding a reservation right now. The evidence for `reservedThirds`. */
+  inFlightBuilds: number
   /** What is left. Never negative — see `readAllowance`. */
   remainingThirds: number
   /** Whole builds' worth remaining, for the sentence a user reads. */
@@ -105,11 +138,37 @@ function buildsFrom(thirds: number): number {
  * since; a row without one is treated as FULL, which is the conservative direction — it
  * charges us, not the user, for our own missing data.
  */
+/**
+ * ══ 25-O §1a — HOW LONG A RESERVATION MAY LIVE ══════════════════════════════════
+ *
+ * ⚠⚠ THE RELEASE IS STRUCTURAL, AND THIS IS THE BACKSTOP FOR THE ONE CASE IT CANNOT COVER.
+ *
+ * A reservation is not a stored row: it is the fact that a build is QUEUED or RUNNING. So
+ * §1b's "release on FAILED and CANCELLED" needs no write at all — the moment the status
+ * leaves that set, the hold is gone, and there is nothing to leak. That is deliberate: a
+ * reservation released by a separate write is a reservation that survives every path where
+ * that write is missed, and 25-M already recorded that the spend test is an allow-list, so a
+ * leaked hold would be a permanent deduction with no row saying why.
+ *
+ * ⚠ THE ONE CASE STRUCTURE CANNOT COVER is a row STUCK at RUNNING — a worker killed between
+ * the settle sweeps. `settleAbandonedBuilds` catches those within `ABANDONED_AFTER_MS`, but it
+ * only runs on a read of that idea or on the worker's sweep, and a user whose stuck build is on
+ * an idea nobody opens would be holding thirds indefinitely. So a hold also EXPIRES: past the
+ * whole-build hard stop plus a wide margin, the build cannot still be running, whatever the row
+ * says. It stops counting.
+ *
+ * ⚠ AND THE ROW IS NOT REWRITTEN HERE. This is a read; `settleAbandonedBuilds` is the writer,
+ * and "the status shown is the status stored" (25-A §2) stays true.
+ */
+const RESERVATION_MAX_AGE_MS = parseInt(
+  process.env.LEX_RESERVATION_MAX_AGE_MS ?? String(15 * 60 * 1000 + 10 * 60 * 1000), 10,
+)
+
 export async function readAllowance(userId: string): Promise<Allowance> {
-  const [user, done] = await Promise.all([
+  const [user, done, inFlight] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
-      select: { buildAllowanceThirds: true },
+      select: { buildAllowanceThirds: true, buildAllowanceNote: true },
     }),
     prisma.ideaBuild.findMany({
       // ⚠ AN ALLOW-LIST. Only DONE counts. Every other status — including one added next
@@ -125,37 +184,77 @@ export async function readAllowance(userId: string): Promise<Allowance> {
       },
       select: { mode: true },
     }),
+    // ══ 25-O §1a — THE RESERVATION ═══════════════════════════════════════════
+    //
+    // ⚠⚠ THIS IS THE HOLE §1a IS ABOUT, AND IT IS A RACE RATHER THAN A MID-RUN REFUSAL.
+    // Nothing in the pass path has ever read the allowance, so a build has never been stopped
+    // part-way by it. What COULD happen is worse and quieter: the spend counted only DONE
+    // builds, so two builds started inside the same ten minutes — two ideas, two tabs — both
+    // passed the door check because neither was DONE yet, and only one of them was paid for.
+    // Counting the in-flight ones is what closes it.
+    prisma.ideaBuild.findMany({
+      where: {
+        status: { in: ['QUEUED', 'RUNNING'] },
+        createdAt: { gte: new Date(Date.now() - RESERVATION_MAX_AGE_MS) },
+        idea: { creatorId: userId },
+      },
+      select: { id: true, mode: true },
+    }),
   ])
 
-  const grantedThirds = user?.buildAllowanceThirds ?? 0
-  const spentThirds = done.reduce(
-    (n, b) => n + (b.mode === 'REUSE' ? REUSE_BUILD_THIRDS : FULL_BUILD_THIRDS),
-    0,
-  )
+  // ⚠ 25-O §1c — THE PILOT DEFAULT APPLIES ONLY WHERE NOBODY HAS DECIDED. See
+  // `PILOT_ALLOWANCE_THIRDS`: the note, not the number, is what records a decision.
+  const grantedExplicitly = !!user?.buildAllowanceNote
+  const grantedThirds = !user
+    ? 0
+    : grantedExplicitly ? user.buildAllowanceThirds : PILOT_ALLOWANCE_THIRDS
+
+  const priceOf = (mode: string) => (mode === 'REUSE' ? REUSE_BUILD_THIRDS : FULL_BUILD_THIRDS)
+  const spentThirds = done.reduce((n, b) => n + priceOf(b.mode), 0)
+  // ⚠ AT THE ROW'S OWN MODE, which is what will RUN rather than what was asked for —
+  // `claimBuild` writes the effective mode (25-M §4). Reserving the FULL price for a run that
+  // is genuinely a redraft would refuse builds the user can afford.
+  const reservedThirds = inFlight.reduce((n, b) => n + priceOf(b.mode), 0)
+
   // ⚠ CLAMPED AT ZERO. An admin who lowers an allowance below what somebody has already
   // spent must not produce a negative balance on their screen; they are simply out.
-  const remainingThirds = Math.max(0, grantedThirds - spentThirds)
+  const remainingThirds = Math.max(0, grantedThirds - spentThirds - reservedThirds)
 
   const canStartFull = remainingThirds >= FULL_BUILD_THIRDS
   const canStartReuse = remainingThirds >= REUSE_BUILD_THIRDS
 
   const remainingBuilds = buildsFrom(remainingThirds)
-  const line = remainingThirds === 0
-    ? 'You have used your build allowance.'
+  // ⚠ 25-O §1a — A HOLD IS SAID OUT LOUD, because otherwise the balance appears to drop for
+  // no reason the user can see. "You have 1 build left" while a build is running is confusing;
+  // "1 left, and one running now" is a sentence they can act on.
+  const heldNote = reservedThirds > 0
+    ? ` ${inFlight.length === 1 ? 'One build is running now and is already paid for' : `${inFlight.length} builds are running now and are already paid for`}.`
+    : ''
+  const line = (remainingThirds === 0
+    ? reservedThirds > 0
+      ? 'The rest of your allowance is held by the build that is running.'
+      : 'You have used your build allowance.'
     : canStartFull
       ? `You have ${remainingBuilds === 1 ? '1 build' : `${remainingBuilds} builds`} left.`
       // ⚠ THE HONEST MIDDLE STATE. Enough for a redraft and not for a full search is a real
       // position, and "0 builds left" beside a working redraft button would be a lie.
-      : 'You have enough left for a redraft, but not for a full search.'
+      : 'You have enough left for a redraft, but not for a full search.') + heldNote
 
   const blockedReason = remainingThirds === 0
-    ? 'You have used your build allowance for the pilot. Nothing you have written is lost — '
-      + `everything is still here. If you would like more, email ${ASK_FOR_MORE} and say what `
-      + 'you are working on.'
+    // ⚠ 25-O §1a — A BALANCE HELD BY A RUNNING BUILD IS NOT A SPENT ALLOWANCE, and telling
+    // the user they have used it up when it comes back in ten minutes is simply wrong.
+    ? reservedThirds > 0
+      ? 'The rest of your allowance is held by the build that is running. If that build stops '
+        + 'without finishing, what it was holding comes straight back to you.'
+      : 'You have used your build allowance for the pilot. Nothing you have written is lost — '
+        + `everything is still here. If you would like more, email ${ASK_FOR_MORE} and say what `
+        + 'you are working on.'
     : null
 
   return {
-    grantedThirds, spentThirds, remainingThirds, remainingBuilds,
+    grantedThirds, grantedExplicitly, spentThirds, reservedThirds,
+    inFlightBuilds: inFlight.length,
+    remainingThirds, remainingBuilds,
     doneBuilds: done.length, canStartFull, canStartReuse, line, blockedReason,
   }
 }
@@ -170,7 +269,13 @@ export async function allowanceBlock(userId: string, mode: 'FULL' | 'REUSE'): Pr
   const a = await readAllowance(userId)
   if (mode === 'REUSE' ? a.canStartReuse : a.canStartFull) return null
   if (a.blockedReason) return a.blockedReason
-  // Not empty, but not enough for THIS mode.
+  // ⚠ 25-O §1a — NAME THE SHORTFALL. §1a asks for a refusal that says what is missing rather
+  // than that something is missing: *"You have enough for a re-run but not a full build."*
+  // A user who is told only "not enough" cannot tell whether to wait, to redraft, or to write.
+  const want = mode === 'REUSE' ? REUSE_BUILD_THIRDS : FULL_BUILD_THIRDS
+  const short = want - a.remainingThirds
   return 'You have enough of your allowance left for a redraft from the research already '
-    + 'gathered, but not for a full search of the corpus. Redrafting costs a third as much.'
+    + `gathered, but not for a full search of the corpus — a full build needs ${want} thirds and `
+    + `you have ${a.remainingThirds}${a.reservedThirds > 0 ? ` (${a.reservedThirds} more are held by a build running now)` : ''}, `
+    + `so you are ${short} short. Redrafting costs a third as much.`
 }
