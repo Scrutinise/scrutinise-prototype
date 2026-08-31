@@ -345,15 +345,33 @@ const CHECKS: Check[] = [
     },
   },
   {
-    name: '§4 each panel says what it is FOR, from one shared table',
+    // ⚠⚠ REPOINTED BY 25-N §2, AND THE PROPERTY IS NARROWER ON PURPOSE — SAY SO RATHER THAN
+    // QUIETLY WIDENING IT.
+    //
+    // 25-L §4 required all THREE columns to print a stated role, because at the time they were
+    // called "Lex", "The draft" and "Resources" and a user could not say what any of them was
+    // for. 25-N §2 renames them WORKING AREA · DRAFT STRATEGY · THE RESEARCH and deletes two of
+    // the three subtitles in Charlie's own words — the names now carry the meaning the roles
+    // were compensating for, and three explanatory lines across three column heads is
+    // furniture.
+    //
+    // ⚠ WHAT SURVIVES, AND IS STILL WORTH A CHECK: the vocabulary comes from ONE TABLE, so the
+    // three surfaces cannot describe the columns differently; and the one column whose
+    // contents are least guessable from its name still states what it holds, verbatim.
+    // ⚠ AND THE NAMES ARE ASSERTED NOW, which 25-L never did — the failure this sprint is
+    // guarding against has moved from "no stated role" to "renamed in one place only".
+    name: '§4/25-N §2 the panel vocabulary is one shared table, and THE RESEARCH states what it holds',
     run: (src) => {
-      for (const k of PANEL_KEYS) {
-        if (PANEL_ROLES[k].role.length < 20) return `${k} has no stated role`
-      }
       const c = src['app/ideas/create/CreateIdeaClient.tsx']
-      // Three headers, each printing its role from the table rather than a local string.
-      const uses = c.match(/PANEL_ROLES\.(left|middle|right)\.role/g)?.length ?? 0
-      return uses >= 3 ? null : `only ${uses} of the three panels states its role`
+      for (const k of PANEL_KEYS) {
+        if (PANEL_ROLES[k].name !== PANEL_ROLES[k].name.toUpperCase()) {
+          return `${k} is not named in 25-N §2's form`
+        }
+        if (!c.includes(`PANEL_ROLES.${k}.name`)) return `${k}'s name is not read from the table`
+      }
+      if (PANEL_ROLES.right.role.length < 20) return 'THE RESEARCH does not say what it holds'
+      if (!c.includes('PANEL_ROLES.right.role')) return 'THE RESEARCH\'s sentence is not read from the table'
+      return null
     },
     break: (src) => ({
       ...src,

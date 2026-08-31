@@ -370,13 +370,33 @@ function main() {
     /unfiled/.test(panelLib) && /unfiled: PanelEntry\[\]/.test(panelLib))
 
   const bg = read('components/lex/BackgroundPanel.tsx')
-  ok('§3 rule 4 — the full type-grouped list is still there, folded underneath',
-    /Everything we retrieved, by document type/.test(bg) && /showFullList/.test(bg))
-  ok('§3 — the by-question panel leads it',
-    bg.indexOf('<QuestionPanel') > 0 && bg.indexOf('<QuestionPanel') < bg.indexOf('Everything we retrieved'))
-  expectBreak('§3 — break: the question panel placed below the type list',
-    () => bg.indexOf('Everything we retrieved') > bg.indexOf('<QuestionPanel')
-      && 'Everything we retrieved <QuestionPanel'.indexOf('<QuestionPanel') < 0)
+  // ⚠⚠ BOTH REPOINTED BY 25-N §4, AND THE SECOND PROPERTY IS NOW STRUCTURALLY GUARANTEED
+  // RATHER THAN CHECKED BY POSITION.
+  //
+  // 25-D rule 4 kept the type-grouped list, folded, BELOW the by-question panel. §4 makes it an
+  // item in the new "Inputs" group INSIDE the contents list — which is also the fix for
+  // *"clicking a contents item shows neighbouring sections too"*: the list was never the
+  // problem; `BackgroundPanel` went on rendering the fold, the stage search, the exports and
+  // the page-one cards underneath whatever item was open. The library sat on top of a scroll.
+  //
+  // ⚠ SO "THE QUESTION PANEL LEADS IT" CANNOT BE MEASURED BY `indexOf` ANY MORE — the type list
+  // is no longer a sibling that could come first, it is a child. The stronger property replaces
+  // it: nothing renders beside `QuestionPanel` at all, so there is nothing left for it to lead.
+  ok('§3 rule 4 / 25-N §4 — the type-grouped list survives, as the Inputs group\'s first item',
+  // ⚠ READ HERE RATHER THAN REUSING `qPanel` BELOW: the label moved INTO the contents list,
+  // so this assertion about the research column's shape needs both files at this point.
+    /Everything we retrieved, by document type/.test(read('components/lex/QuestionPanel.tsx'))
+    && /retrievedNode/.test(bg) && /inputs=\{\{ retrieved: retrievedNode/.test(bg))
+  ok('§3 / 25-N §4 — the by-question panel is the ONLY thing the research column renders',
+    // One `<QuestionPanel`, and no sibling section left beside it to scroll past.
+    (bg.match(/<QuestionPanel/g)?.length ?? 0) === 1
+    && !/<\/QuestionPanel>/.test(bg)
+    && bg.indexOf('Everything we retrieved') < bg.indexOf('<QuestionPanel'))
+  expectBreak('§3 — break: a second section rendered beside the question panel',
+    () => {
+      const broken = bg.replace('<QuestionPanel', '<div>loose section</div>\n      <QuestionPanel')
+      return (broken.match(/<QuestionPanel/g)?.length ?? 0) === 1 && !/loose section/.test(broken)
+    })
 
   const qPanel = read('components/lex/QuestionPanel.tsx')
   // ⚠⚠ REPOINTED BY 25-L §3a, AND THE PROPERTY GOT STRONGER RATHER THAN WEAKER.
@@ -389,15 +409,30 @@ function main() {
   // is (never a "0", which would be a false claim about the world), and the open item prints
   // the full stated gap. An empty item that vanished from the contents would be the same
   // defect one level up.
-  ok('§3 rule 1 — an empty item states its KIND on the contents and its full gap when opened',
+  // ⚠ REPOINTED BY 25-N §4. The property is unchanged and it is the important one: EVERY
+  // heading reaches the contents list, including the empty ones, saying WHICH KIND of empty it
+  // is. What changed is that §4's order splits the headings into three groups — above the
+  // divider, everything else, and the never-asked at the bottom — so the old regex for a single
+  // `data.headings.map` cannot see it any more.
+  //
+  // ⚠⚠ AND THE NEW ASSERTION IS BETTER, because it tests a PARTITION rather than a call site: a
+  // heading dropped from all three groups fails it, and so does one counted twice. A future
+  // fourth group cannot silently lose a heading the way an added `.filter` could.
+  ok('§3 rule 1 / 25-N §4 — every heading reaches the contents, and an empty one states its KIND',
     /EMPTY_LABEL\[h\.gap\.reason\]/.test(qPanel)
     && /openHeading\.gap && \(/.test(qPanel)
-    // and the contents list is built over every heading, not the non-empty ones
-    && /data\.headings\.map\(\(h\) => \{/.test(qPanel))
-  expectBreak('§3 rule 1 — break: the contents list filters empty items out',
+    && /const above = data\.headings\.filter/.test(qPanel)
+    && /const rest = data\.headings\.filter/.test(qPanel)
+    && /const notAsked = data\.headings\.filter\(isNotAsked\)/.test(qPanel)
+    // The three predicates must partition: `rest` is the complement of `above` within
+    // `!isNotAsked`, so no heading can fall outside all three.
+    && /!\(HEADINGS_ABOVE_DIVIDER as string\[\]\)\.includes\(h\.key\) && !isNotAsked\(h\)/.test(qPanel))
+  expectBreak('§3 rule 1 — break: a group that filters empty items out',
     () => {
-      const broken = qPanel.replace('data.headings.map((h) => {', 'data.headings.filter((h) => h.entries.length).map((h) => {')
-      return /data\.headings\.map\(\(h\) => \{/.test(broken)
+      const broken = qPanel.replace(
+        'const notAsked = data.headings.filter(isNotAsked)',
+        'const notAsked = data.headings.filter((h) => isNotAsked(h) && h.entries.length)')
+      return /const notAsked = data\.headings\.filter\(isNotAsked\)/.test(broken)
     })
 
   // ══ §4 — documents and links ══════════════════════════════════════════════
@@ -411,10 +446,27 @@ function main() {
   const readsText = ['lib/lex', 'app/api/ideas', 'components/lex']
   ok('§4 — only the findings pass reads the stored text',
     /storedText/.test(material) && (material.match(/storedText/g) ?? []).length <= 4)
-  ok('§4 — the route never selects or returns the text',
-    !/text:\s*true/.test(materialRoute) && /`text` is deliberately absent/.test(materialRoute))
+  // ⚠⚠ REPOINTED BY 25-N §1f — AND THIS GUARD FIRING WAS CORRECT. It was written as a blanket
+  // ban on `text: true` anywhere in the route, and §1f adds a single-row viewer that returns the
+  // stored text so the user can open what they uploaded. The property the guard is FOR is not
+  // "the text is never returned" — it is *"the text is never on the wire for a caller that does
+  // not want it"*, which is why the file header says the LIST select must not carry it: a
+  // fifty-page report on every poll of a panel that renders a filename.
+  //
+  // ⚠ SO THE ASSERTION IS NOW SCOPED TO THE LIST SELECT, and it is still a real constraint: the
+  // viewer read is addressed by `materialId`, so nothing gets the text without asking for one
+  // row by id. The break case is the one that always mattered — the LIST select growing a text
+  // column — and it still fails.
+  const listSelect = materialRoute.slice(
+    materialRoute.indexOf('const LIST_SELECT'),
+    materialRoute.indexOf('async function listMaterial'))
+  ok('§4 / 25-N §1f — the LIST select never carries the text; only a by-id read may',
+    listSelect.length > 0
+    && !/text:\s*true/.test(listSelect)
+    && /`text` is deliberately absent/.test(materialRoute)
+    && /materialId/.test(materialRoute))
   expectBreak('§4 — break: pretend the list select grew a text column',
-    () => !/text:\s*true/.test(`${materialRoute}\n const S = { text: true }`))
+    () => !/text:\s*true/.test(`${listSelect}\n text: true,`))
   ok('§4 — the panel reads the documents without their text',
     /prisma\.ideaUserMaterial\.findMany/.test(panelLib) && !/text:\s*true/.test(panelLib))
   ok('§4 — nothing outside user-material.ts pulls the body into a prompt',
@@ -477,8 +529,15 @@ function main() {
   const packed = buildEvidencePackDocument(fixture())
   const ptext = modelText(packed.model)
 
-  ok('§5a — every source is grouped under the question it answers',
-    ptext.includes('What the law says now') && ptext.includes('The strongest case against'))
+  // ⚠ REPOINTED BY 25-N §4, WHICH DELETES "The strongest case against". The property — every
+  // source is grouped under the question it answers, and the pack prints those headings — is
+  // unchanged; the second heading it happened to name is retired, and its rows redirect to
+  // "Who has argued about this". Asserting the retired name is ABSENT as well as the live one
+  // present is what stops the deletion being half-done in the document stack.
+  ok('§5a / 25-N §4 — every source is grouped under the question it answers',
+    ptext.includes('What the law says now')
+    && ptext.includes('Who has argued about this')
+    && !ptext.includes('The strongest case against'))
   ok('§5a — a finding nobody tagged goes under "not filed", never swept into a heading',
     ptext.includes('Not filed under a question') && ptext.includes('An older finding'))
   expectBreak('§5a — break: an untagged finding filed under the first heading',

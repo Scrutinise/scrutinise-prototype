@@ -74,6 +74,7 @@ function view(over: Partial<BuildView> = {}): BuildView {
       pence: i === 0 ? 4.2 : null,
     })),
     nextPass: 'DIAGNOSIS', resumable: true, workerLate: false,
+  incomplete: null,
     forks: [],
     // ⚠ 25-M — THESE THREE WERE MISSING SINCE 25-F AND NOTHING COULD SEE IT. `BuildView`
     // gained `highlights`, `modelsByPass` and `queries`; this fixture never got them, and

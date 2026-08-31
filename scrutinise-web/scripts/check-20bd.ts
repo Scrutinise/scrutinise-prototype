@@ -451,8 +451,16 @@ async function main() {
   ok('the gaps section is NEVER empty — "nothing was recorded" is stated, not omitted',
     modelText(buildProposalDocument(clean).model).includes('Nothing was recorded as unestablished'))
 
+  // ⚠ REPOINTED BY 25-N §5c, WHICH DELETES THE PERSONAL FRAMING AND KEEPS THE ATTRIBUTION.
+  // §5c: *"Delete 'In Charlie's own words' — this is an outward document."* The property this
+  // guard is for is that the proposer's account is ATTRIBUTED and marked as testimony rather
+  // than blended into Lex's prose, and that is unchanged — only the heading is. Asserting the
+  // old wording is ABSENT as well as the new one present is what stops the deletion being
+  // half-done the next time somebody edits this file.
   ok('the user’s own knowledge is attributed to them, not blended in',
-    ptext.includes('In Charlie’s own words') && ptext.includes('recorded as testimony'))
+    ptext.includes('First-hand account')
+    && ptext.includes('recorded as testimony')
+    && !ptext.includes('own words'))
   ok('the legislative annex renders where the instrument is legislative',
     ptext.includes('Legislative annex') && ptext.includes('Insert an uprating duty after s.53'))
   ok('a non-legislative action gets no annex',
@@ -461,11 +469,37 @@ async function main() {
   console.log('\n§3b — the Summary')
   const summary = buildSummaryDocument(a, { onlineViewUrl: 'https://example.test/proposals/abc' })
   const stext = modelText(summary.model)
-  ok('the summary carries all six things §20.1 asks for',
-    ['The problem', 'The pivotal obstacle', 'The approach', 'What it rules out', 'Cost', 'The ask']
-      .every((h) => stext.includes(h)))
+  // ⚠⚠ REPOINTED BY 25-N §5b, AND THE HEADINGS ARE THE BRIEF'S, NOT §20.1's.
+  //
+  // §5b: *"The summary is one page, not two, and its headings should be The problem · Cause ·
+  // Guiding Policy · Proposed Actions."* §20.1's six included "The pivotal obstacle" and "The
+  // approach" — a vocabulary the platform teaches nowhere — and DROPPED THE CAUSE entirely, so
+  // the one-page version of a proposal never said why the problem happens.
+  //
+  // ⚠ THE PROPERTY IS THE SAME SHAPE: a fixed set of headings, every one present, asserted
+  // without rendering. What changed is which four, and that is Charlie's decision.
+  ok('§5b — the summary carries the four headings the brief names',
+    ['The problem', 'Cause', 'Guiding Policy', 'Proposed Actions'].every((h) => stext.includes(h))
+    // The cost comparison survives: it is the one number a reader wants from a one-pager.
+    && stext.includes('Cost of the proposal')
+    && stext.includes('Cost of the problem'))
   ok('the summary points at the online view for depth', stext.includes('https://example.test/proposals/abc'))
-  ok('the summary keeps the gaps line', stext.includes('What this does not establish'))
+  // ⚠⚠ REVERSED BY 25-N §5a, AND THE REVERSAL IS THE FINDING — so the assertion is inverted
+  // rather than deleted.
+  //
+  // The old line printed *"9 of 9 settled kernel fields carry no source, and 167 questions
+  // remain open"* on an OUTWARD-FACING one-pager. §5a: those are internal working numbers and
+  // *"belong in a separate progress report for the user — a 'what is left to do' view — not in
+  // a document for a reader."*
+  //
+  // ⚠ THE HONESTY IS NOT REMOVED, IT IS RE-AIMED, and this guard now holds BOTH halves: the
+  // draft is declared once at the top, and no arithmetic about our own coverage appears
+  // anywhere in it. Deleting the guard would have left nothing stopping the counts coming back.
+  ok('§5a — the summary declares itself a DRAFT and carries NO internal working counts',
+    stext.includes('This is a DRAFT report for a proposal in process')
+    && !/settled kernel fields carry no source/.test(stext)
+    && !/questions? or issues? remain open/.test(stext)
+    && !stext.includes('What this does not establish'))
   ok('the summary is materially shorter than the proposal',
     stext.length < ptext.length * 0.6, `${stext.length} vs ${ptext.length} chars`)
 
@@ -509,7 +543,9 @@ async function main() {
   ok('the summary PDF is short — 1–2 pages, as §20.1 requires',
     (await PDFDocument.load(spdf)).getPageCount() <= 2,
     `${(await PDFDocument.load(spdf)).getPageCount()} pages`)
-  ok('the summary docx renders', (await readDocxText(sdocx)).includes('The ask'))
+  // ⚠ REPOINTED BY 25-N §5b — "The ask" is now "Proposed Actions". The property (the summary
+  // survives a real .docx round trip, with its content intact) is unchanged.
+  ok('the summary docx renders', (await readDocxText(sdocx)).includes('Proposed Actions'))
   ok('both PDFs are non-trivial files', ppdf.length > 2000 && spdf.length > 1000,
     `${ppdf.length} / ${spdf.length} bytes`)
 

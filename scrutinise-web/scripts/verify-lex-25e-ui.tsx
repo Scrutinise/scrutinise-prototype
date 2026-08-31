@@ -187,7 +187,7 @@ function main() {
   const ready = renderToStaticMarkup(
     <StartBuildCard
       canStart blockedReason={null} buildStale={false}
-      estimateLine="This usually takes a few minutes." sampleSize={0} hasMean={false}
+      estimateLine="This usually takes a few minutes." allowanceLine={null} sampleSize={0} hasMean={false}
       offerEmail emailWhenDone={false} onEmailWhenDone={noop}
       busy={false} onStart={noop} onRetryState={noop}
     />,
@@ -200,7 +200,7 @@ function main() {
     () => !text(renderToStaticMarkup(
       <StartBuildCard
         canStart blockedReason={null} buildStale={false}
-        estimateLine="Usually a few minutes — we don’t have enough builds yet to be precise."
+        estimateLine="Usually a few minutes — we don’t have enough builds yet to be precise." allowanceLine={null}
         sampleSize={0} hasMean={false} offerEmail={false} emailWhenDone={false}
         onEmailWhenDone={noop} busy={false} onStart={noop} onRetryState={noop}
       />,
@@ -218,7 +218,7 @@ function main() {
       canStart={false}
       blockedReason="Confirm what I’ve understood first — I won’t build on a reading you haven’t seen."
       buildStale
-      estimateLine="This usually takes a few minutes." sampleSize={0} hasMean={false}
+      estimateLine="This usually takes a few minutes." allowanceLine={null} sampleSize={0} hasMean={false}
       offerEmail={false} emailWhenDone={false} onEmailWhenDone={noop}
       busy={false} onStart={noop} onRetryState={noop}
     />,
@@ -234,7 +234,7 @@ function main() {
         canStart={false}
         blockedReason="Confirm what I’ve understood first — I won’t build on a reading you haven’t seen."
         buildStale={false}
-        estimateLine={null} sampleSize={0} hasMean={false}
+        estimateLine={null} allowanceLine={null} sampleSize={0} hasMean={false}
         offerEmail={false} emailWhenDone={false} onEmailWhenDone={noop}
         busy={false} onStart={noop} onRetryState={noop}
       />,

@@ -79,6 +79,7 @@ const BUILD: BuildView = {
   uncertainties: [], queryUsed: 'B_CONTEXTUALISED :: … :: written',
   spend: { tokensIn: 100, tokensOut: 50, pence: 12.4, line: '100 in / 50 out — estimated cost 12.4p' },
   spendByPass: [], nextPass: null, resumable: false, workerLate: false,
+  incomplete: null,
   forks: [
     {
       id: 'f1', forkKey: 'diagnosis:pivotalObstacle', fieldKey: 'pivotalObstacle',

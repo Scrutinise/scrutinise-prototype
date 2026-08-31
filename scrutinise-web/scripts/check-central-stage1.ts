@@ -2498,6 +2498,10 @@ async function partH() {
       { name: 'Idea_creatorId_live_idx', predicate: 'deletedAt' },
       { name: 'Community_live_children_idx', predicate: 'deletedAt' },
       { name: 'Resource_live_idx', predicate: 'deletedAt' },
+      // ⚠ 25-N §3c — the ninth. `UNIQUE (ideaId, userId, source) WHERE source <> 'USER'`, so a
+      // seeded "My original idea" note cannot be written twice while a user may have many notes.
+      // The obvious `@@unique` is wrong in the direction that breaks the feature — see §21.
+      { name: 'IdeaNote_seeded_source_key', predicate: "'USER'" },
     ]
     const indexes = await prisma.$queryRaw<{ indexname: string; indexdef: string }[]>`
       SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'`
@@ -2517,7 +2521,9 @@ async function partH() {
     // ⚠ AND THE OTHER DIRECTION: a Central table that grows a partial index
     // without a register row. Checking only the known list would never notice.
     const centralTables = ['Community', 'Question', 'Answer', 'BulletinPost', 'Resource',
-      'ActivityClaim', 'CommunityJoinRequest', 'CommunitySettings', 'ResourceVote', 'PointsEvent']
+      'ActivityClaim', 'CommunityJoinRequest', 'CommunitySettings', 'ResourceVote', 'PointsEvent',
+      // 25-N — the Lex tables are on the same register, for the same reason.
+      'IdeaNote']
     const unregistered = indexes
       .filter((i) => i.indexdef.includes('WHERE'))
       .filter((i) => centralTables.some((t) => i.indexdef.includes(`"${t}"`)))

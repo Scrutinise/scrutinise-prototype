@@ -46,6 +46,10 @@ const CARRIER: Record<HeadingKey, { field: string | null; note: string }> = {
   AGAINST: { field: 'evidence', note: '' },
   HOW_HARD: { field: 'evidence', note: 'the smart pass prognosis, re-filed by 25-L' },
   KEY_SOURCES: { field: 'evidence', note: 'the critique’s reading list' },
+  // 25-N §4 — a new heading with no producer yet: nothing writes evidence under it, so the
+  // panel renders it as OUR gap rather than as an absence of evidence. Recorded here as
+  // `null` for the same reason POSITIONS is.
+  COST_DURATION: { field: null, note: 'new in 25-N; no pass writes evidence here yet' },
   YOUR_MATERIAL: { field: 'evidence', note: 'material findings carry passKey material:<id>' },
 }
 
