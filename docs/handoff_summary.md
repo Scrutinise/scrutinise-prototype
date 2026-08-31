@@ -46,7 +46,21 @@ EXACT-LIST assertions right only by accident. Whole suite run: 25-c 32 … 25-n 
 build-25a 40, build-25b 54, 20bd 47, statutory 17, corpus-types 156; harnesses all executed.
 📦 `prisma/lex_25o.sql` applied to Neon (host checked). ⚠ Its partial index is on the §21 register.
 `lex_25n_backfill_against.sql` still unrun and must run AFTER §4.
-⚠ **BIGGEST UNKNOWN: THE COMMENTARY HAS NEVER BEEN GENERATED.** One full build settles it.
+✅✅ **VERIFIED LIVE, production, signed in** — §20 checks 3+4. §2's line verbatim off
+`/ideas/452c5ade…/public` with its empty state firing on real data; and on build v7: **"This did
+not use any of your allowance. The 3 thirds it was holding have come back to you."**, **"This
+build did not finish"** + the 922s reason, **the resume control rendering**, **"You have 4 builds
+left."**
+⚠⚠ **THE WALK FOUND A CONSEQUENCE I SHOULD HAVE ANTICIPATED: v7 now reads "8 of 11 passes" and
+resumes from "Describing the terrain".** `readPassLog` reconciles a stored log against the CURRENT
+pass array, so inserting `CAUSES_COMMENTARY` changed what a historic build says about itself and
+made it the resume point for every build that stopped earlier. `check:build-25b`'s own comment
+warned of this and I bumped the literal without tracing it. **Not harmful** (the count is true; a
+resume runs the commentary, skips the DONE passes, and finishes LOGIC_CHECK + ADVERSARIAL) but a
+resumed historic build gets an **unbilled** pass. ⚠ And **"4 builds left" under-describes §1c** —
+12 thirds IS four builds, but the intent was 3 + 3 re-runs.
+⚠ **BIGGEST UNKNOWN: THE COMMENTARY HAS NEVER BEEN GENERATED.** One full build settles it —
+**and v7's resume is now the cheapest way to get one.**
 `docs/LEX_25O_REPORT.md`.**
 Earlier: 2026-08-31 10:17 UTC — ▼ **LEX 25-N: THE BUILD THAT "STOPPED WITH NO
 RE-START" WAS WORKING CORRECTLY, AND `resumable` WAS IN THE PAYLOAD RENDERED BY NOTHING.**

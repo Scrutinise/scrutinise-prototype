@@ -232,8 +232,24 @@ outputs-ui 7, build-25a-ui 45. `tsc`, `check:scripts`, `next build`, `check-clea
 `Idea_visible_idx` ⚠ **now on the CLAUDE.md §21 register; `prisma migrate diff` will propose
 dropping it.** `lex_25n_backfill_against.sql` remains unrun (§8), and must run AFTER §4.
 
-⚠ **NOT VERIFIED ON THE RUNNING SITE, and the biggest unknown is §5: THE COMMENTARY HAS NEVER
-BEEN GENERATED.** No build has run with the new pass, so its prose, its conflict-finding and its
+✅✅ **VERIFIED LIVE on production, signed in** — §20 checks 3+4, not by the SHA alone. §2's line
+came back **verbatim** off `/ideas/452c5ade…/public`, with its honest empty state firing on real
+data. And on build v7 — the build 25-N diagnosed — **"This did not use any of your allowance. The
+3 thirds it was holding have come back to you."** (§1b, priced from the row's own mode), **"This
+build did not finish"** with the 922s reason, **the resume control rendering**, and **"You have 4
+builds left."** (§1c: 12 thirds, nothing spent since the epoch).
+⚠⚠ **AND THE WALK FOUND A CONSEQUENCE I SHOULD HAVE ANTICIPATED: build v7 now reads "8 of 11
+passes" and its resume point is "Describing the terrain".** `readPassLog` reconciles a stored log
+against the CURRENT pass array, so inserting `CAUSES_COMMENTARY` changed what a historic build
+reports about itself and made the new pass the resume point for every build that stopped before
+it. ⚠ `check:build-25b`'s own comment warned about exactly this and I bumped the literal without
+tracing it to the historic rows. **Not harmful** — "8 of 11" is true, and a resume would run the
+commentary then skip the DONE passes and finish LOGIC_CHECK and ADVERSARIAL, which is a better
+outcome than before — but a resumed historic build now gets an unbilled pass, and that is recorded
+rather than discovered. ⚠ **And "You have 4 builds left" under-describes §1c**: 12 thirds IS four
+full builds, but the intent was three builds and three re-runs and the sentence does not say so.
+
+⚠ **STILL UNVERIFIED, and the biggest unknown is §5: THE COMMENTARY HAS NEVER BEEN GENERATED.** No build has run with the new pass, so its prose, its conflict-finding and its
 real cost are all unmeasured — one full build settles it. Also unwalked: the holding page, the
 archive and the commentary panel.
 

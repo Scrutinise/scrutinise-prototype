@@ -353,6 +353,76 @@ and a partial index `Idea_visible_idx`.
 ⚠ **That index is on the CLAUDE.md §21 hazard register** — `schema.prisma` cannot declare a partial
 index, and `prisma migrate diff` will propose **dropping** it as drift.
 
+## ⚠ VERIFIED LIVE — 2026-08-31, production, signed in
+
+**§20 checks 3 and 4 are SATISFIED, and not by the SHA alone.** `/api/health` reports
+`commit: 66458ac…`, `env: production`. Both new surfaces were walked signed-in.
+
+**§2 — the holding page, at `/ideas/452c5ade…/public`:**
+
+> The public view · Improving Civil Service Accountability and Productivity · **There is no
+> summary on this idea yet — the public view will open on one.** · **The public view is being
+> built. This is what your team sees today; the version the public will see is coming.** · See
+> what your team sees · Back to your draft
+
+§2's line came back **verbatim**, and ⚠ the honest empty state fired on real data — this idea has
+no `summaryDescription`, and the page says so rather than rendering a blank.
+
+**§1 — on build v7, the very build 25-N diagnosed:**
+
+| § | read back off production |
+|---|---|
+| §1b | ⚠⚠ **"This did not use any of your allowance. The 3 thirds it was holding have come back to you."** — the release, priced from the row's own mode, on a real FAILED build |
+| §1a | **"This build did not finish"**, with the 922-second reason |
+| §1d | ⚠ **the resume control renders: "Carry on from …"**, with *"This picks the same build up where it stopped"* |
+| §1c | **"You have 4 builds left."** — 12 thirds, nothing spent since the epoch, `floor(12/3)` = 4 |
+
+### ⚠⚠ AND THE WALK FOUND A CONSEQUENCE I SHOULD HAVE ANTICIPATED
+
+The resume control on build v7 reads:
+
+> **"Carry on from "Describing the terrain""** — 8 of **11** passes
+
+Build v7 ran under a **ten**-pass configuration and stopped after `KERNEL_CHECK` with 8 of 10.
+`readPassLog` reconciles a stored log against the CURRENT `BUILD_PASSES` array — so inserting
+`CAUSES_COMMENTARY` between `REVISE` and `SMART` has **changed what a historic build reports about
+itself**, and has made the new pass the resume point for every build that stopped before it.
+
+⚠ **`check:build-25b`'s own comment warned about exactly this** — *"a pass added by accident
+changes what every historic build reports about itself"* — and I bumped that literal deliberately
+without following the consequence through to the historic rows. The bump was right; not tracing it
+was not.
+
+**Is it harmful? No, and here is the reasoning rather than the reassurance:**
+
+- **"8 of 11" is TRUE.** v7 genuinely did not run the commentary; it did not exist. The count is a
+  statement about the current pass set, which is what the screen everywhere else describes.
+- **A resume would do the right thing.** `resumablePassKey` returns the first PENDING or
+  NOT_REACHED pass, so v7 would run the commentary, skip `SMART` and `KERNEL_CHECK` (both DONE in
+  its stored log), and then run `LOGIC_CHECK` and `ADVERSARIAL` — the two it never reached. That
+  is a better outcome than before, not a worse one.
+- ⚠ **What it is NOT is free.** A user resuming an old build now gets a pass they had not been
+  quoted for, and the allowance does not charge for a resume (§1a) — so the commentary on a
+  resumed historic build is unbilled. On a pilot of twelve thirds that is immaterial; it is
+  recorded here so it is a known consequence rather than a surprise.
+
+**Still unverified, and the biggest of these is unchanged:**
+
+1. ⚠⚠ **The commentary has never been generated.** No build has run the new pass — its prose, its
+   conflict-finding and its ~2–4p estimate are all unmeasured. One full build settles it, and
+   **build v7's resume is now the cheapest way to get one.**
+2. ⚠ **A live resume has still never been run.** The control renders and names the right pass;
+   pressing it is untested.
+3. **The archive on the testers' rows** — deliberately not run, pending the list above.
+4. **The reservation under a real race** — two builds started at once has not been provoked.
+
+⚠ **One wording point, not a defect: "You have 4 builds left" under-describes §1c.** Twelve thirds
+genuinely is four full builds, and `remainingBuilds` divides by three. But §1c's intent is *three
+builds and three re-runs*, and the sentence does not say so. The ALLOWANCE is right; the sentence
+describes its cheapest reading. Worth a line change if you want the 3+3 shape visible.
+
+---
+
 ## ⚠ What only Charlie's browser — or a real build — can confirm
 
 1. ⚠⚠ **The commentary has never been generated.** No build has run with the new pass. Its prose
