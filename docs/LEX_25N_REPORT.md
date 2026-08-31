@@ -571,10 +571,68 @@ which brief changed the property and why the new assertion is at least as strong
 
 ---
 
-## ⚠ NOT VERIFIED ON THE RUNNING SITE
+## ⚠ VERIFIED LIVE — 2026-08-31, production, signed in
 
-Everything here is source, check-harness and render-harness evidence. **The whole of §1–§4 is
-behind sign-in**, and a route probe Clerk-307s. What only Charlie's browser can confirm:
+**§20 checks 3 and 4 are SATISFIED, and not by the SHA alone.** `/api/health` reports
+`commit: 19bf8df…`, `env: production`; and the authed surface was walked at
+`/ideas/create?ideaId=452c5ade…`. **These strings came back off the running site:**
+
+| §  | read back off production |
+|---|---|
+| §2 | **WORKING AREA · DRAFT STRATEGY · THE RESEARCH**, and **"Hide this Panel ‹ / ›"** on all three |
+| §2 | *"This panel is where you'll find the background, the research, the issues, the numbers and the debates behind your draft strategy."* |
+| §2 | **"8 of 8 approved" · "3 of 7 approved" · "0 of 7 approved"** |
+| §1c | **`show +` / `hide −` on EVERY section — including the ACTIVE one (DIAGNOSIS, reading `hide −`)**, which is the exact case "Work on this" used to lock |
+| §1c | **"Challenges 135 · hide −"** — the AgendaPanel toggle that did not exist |
+| §3d | *"Here is the draft strategy I have written for you to review and develop into your formal proposal…"*, verbatim, at the top of the middle column |
+| §3d | *"This panel lists the decisions and actions you need to take to build the draft strategy I've prepared for you into your formal proposal."*, verbatim |
+| §3c | the **Lex / Notes** tabs, and *"Talk to me, Lex, and I'll help you shape each part. Only conversations started on this page appear here."* |
+| §3a | `ReportAdditions`' empty state, **in the middle column** — *"…open an item there and press 'Add to report', and it appears here under its own heading."* |
+| §3e | **all four parts, with real counts: Things to read 0 of 3 · Decisions to make 2 of 4 · Put it out for scrutiny 0 of 2 · Promote it 0 of 2** |
+| §4 | the contents list **in §4's order — Decisions → Outputs → Cost and duration → Inputs** |
+
+⚠ **AND THE CONTROL FIRED ON PRODUCTION TOO:** a search of the live accessibility tree for
+**"The strongest case against"** returns nothing, while it lists Challenges, Read these, What
+nobody has answered and the rest. The heading is gone from the running site and its neighbours
+are not.
+
+▶ **"Decisions to make — 2 of 4 done"** is worth pointing at: nobody has ticked anything. Those
+two are **resolved forks, ticked by the server**, which is the route's own rule working on real
+data — a decision made an hour ago is not bookkeeping the user should have to repeat.
+
+▶ **All six API reads returned 200**, including the two routes this sprint added
+(`/worklist`, `/notes`). ⚠ They are **slow — several seconds** — which is the same shape as §5d
+and is noted below.
+
+### ⚠ Two things the walk found that the harnesses could not
+
+1. ⚠⚠ **THE PANEL FETCH IS NOW MADE TWICE.** `ReportAdditions` calls `/panel` and `QuestionPanel`
+   calls `/panel?field=causes` — two reads of the same assembler on one page load, and I added the
+   first one. It is correct but wasteful, and on this idea (135 issues, seven builds) the whole
+   first paint takes **several seconds** with everything pending. **The fix is the one §5d already
+   demonstrates:** hoist the panel read to the page and pass it down, or give the middle column a
+   `priority`-only projection. Not done — it is a new finding, not a brief item, and it wants
+   measuring before it is optimised.
+2. ⚠ **`/agenda` is also fetched twice** (WorkList and AgendaPanel), which predates this sprint
+   but is now three heavy reads deep on one paint.
+
+### Still only Charlie can confirm
+
+- **That the panels stop re-proportioning** — the `minmax(0, …)` is on the page, but the symptom
+  needs a wide finding opened and an eye on the columns.
+- **That the resume actually resumes.** Asserted over a real stopped pass log; **no live resume has
+  been run**, and it costs two passes' spend.
+- **The three new WRITE paths** — a note typed, an item ticked, a document opened. The reads are
+  proven; ⚠ "built inert hides write-path bugs" is a standing finding here.
+- **The .docx running header, in Word.**
+- **The mobile items, on a phone, in a hand.**
+
+---
+
+## ⚠ WHAT REMAINS UNVERIFIED
+
+The live walk above covers the RENDER of §1c, §2, §3a, §3c, §3d, §3e and §4 on production.
+What it does not cover, and what only Charlie can confirm:
 
 1. **That the panels stop re-proportioning.** The `minmax(0, …)` fix is asserted in the template
    string; that it cures the symptom is a claim about a browser's grid algorithm on real content.

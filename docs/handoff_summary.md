@@ -69,8 +69,21 @@ outputs-ui 7, build-25a-ui 43. ⚠ **Seven guards from three sprints repointed, 
 📦 **Applied to Neon** (`ep-old-dust-aboxi69a`, host checked first): `lex_25n.sql`,
 `lex_25n_notes.sql`, `lex_25n_worklist.sql`. ⚠ **`lex_25n_backfill_against.sql` NOT RUN —
 Charlie's**; the panel is already correct without it.
-⚠ **NOT VERIFIED ON THE RUNNING SITE** — all of §1–§4 is behind sign-in. Five things need
-Charlie's browser, incl. **a live resume, which has never been run** (it costs two passes).
+✅✅ **VERIFIED LIVE, production, signed in** — §20 checks 3+4 satisfied and NOT by the SHA
+alone. Read back off the running site: WORKING AREA · DRAFT STRATEGY · THE RESEARCH, "Hide this
+Panel", THE RESEARCH's sentence verbatim, "8 of 8 approved", **`hide −` on the ACTIVE section**
+(the exact case "Work on this" locked), "Challenges 135 · hide −", both §3d texts verbatim, the
+Lex/Notes tabs, ReportAdditions in the middle column, **all four worklist parts with real counts
+("Decisions to make 2 of 4 done" with nothing ticked = the server ticking two resolved forks)**,
+and the contents in §4's order Decisions → Outputs → Cost and duration → Inputs. ⚠ **Control fired
+live too:** no "The strongest case against" in the accessibility tree, while every neighbour is
+there. All six API reads 200 incl. the two new routes.
+⚠⚠ **THE WALK FOUND WHAT NO HARNESS COULD: `/panel` IS FETCHED TWICE** (I added the second caller
+in `ReportAdditions`), and `/agenda` twice (pre-existing) — three heavy reads on one paint,
+several seconds pending on a real idea. **NOT FIXED**; new finding, wants measuring first. Fix is
+§5d's shape: hoist the read or project it.
+⚠ **Still needs Charlie's browser:** that the panels stop re-proportioning; **a live resume, never
+run** (two passes' spend); the three new WRITE paths; the .docx header in Word; mobile in a hand.
 ⚠⚠ **CHARLIE — ONE QUESTION RECORDED, NOT RESOLVED:** should notes be visible to the idea-team?
 Three options in `docs/LEX_25N_REPORT.md` §3c, with a recommendation. **Say which.**
 `docs/LEX_25N_REPORT.md`.**

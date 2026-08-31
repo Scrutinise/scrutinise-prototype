@@ -246,11 +246,28 @@ and `prisma validate` all clean.
 ⚠ **`prisma/lex_25n_backfill_against.sql` is NOT RUN — Charlie's.** The panel is already correct
 without it; it stops the stored tag and the rendered heading drifting.
 
-⚠ **NOT VERIFIED ON THE RUNNING SITE.** All of §1–§4 is behind sign-in and a route probe Clerk
-307s. Five things need Charlie's browser: that the panels stop re-proportioning; **that the resume
-actually resumes** (asserted over a real stopped pass log, but no live resume has been run — it
-costs two passes); the three new write paths (Notes, worklist ticks, the material viewer); the
-.docx running header in Word; and the mobile items on a phone.
+✅✅ **VERIFIED LIVE on production, signed in** — §20 checks 3 and 4 both satisfied, and not by
+the SHA alone. `/api/health` reports `commit: 19bf8df…, env: production`, and the authed
+`/ideas/create` surface was walked. Read back off the running site: **WORKING AREA · DRAFT
+STRATEGY · THE RESEARCH** with **"Hide this Panel"** on all three; THE RESEARCH's sentence
+verbatim; **"8 of 8 approved"**; **`hide −` on the ACTIVE section** (the exact case "Work on this"
+used to lock); **"Challenges 135 · hide −"**; both §3d panel texts verbatim; the **Lex/Notes**
+tabs; `ReportAdditions` in the middle column; **all four worklist parts with real counts — and
+"Decisions to make 2 of 4 done" with nobody having ticked anything, which is the server ticking
+two resolved forks**; and the contents list in §4's order, **Decisions → Outputs → Cost and
+duration → Inputs**. ⚠ **The control fired on production too:** the live accessibility tree has no
+"The strongest case against" while listing every neighbour. All six API reads 200, including the
+two new routes.
+
+⚠⚠ **AND THE WALK FOUND SOMETHING THE HARNESSES COULD NOT: `/panel` IS NOW FETCHED TWICE** —
+`ReportAdditions` and `QuestionPanel` — because I added the first one; `/agenda` is fetched twice
+too (pre-existing). Three heavy reads on one paint, several seconds pending on a real idea. **Not
+fixed** — a new finding, not a brief item, and it wants measuring before it is optimised. The fix
+is §5d's shape: hoist the read, or give the middle column a priority-only projection.
+
+⚠ **Still only Charlie's browser can confirm:** that the panels stop re-proportioning; **that the
+resume actually resumes** (no live resume has been run — it costs two passes); the three new WRITE
+paths; the .docx running header in Word; and the mobile items on a phone.
 
 ⚠ **CHARLIE — ONE QUESTION RECORDED AND NOT RESOLVED (§3c):** should notes be visible to the
 idea-team? Three options in the report, with a recommendation (two lists, not a per-note switch —
