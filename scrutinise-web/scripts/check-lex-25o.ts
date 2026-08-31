@@ -237,6 +237,66 @@ function main() {
         && f.indexOf('<CausesCommentaryPanel') === -1
     })
 
+  // ══ ADDENDUM §A1 — THE KEY THE PANEL WRITES IS THE KEY THE PANEL READS ═════
+  console.log('\nADDENDUM §A1 — "Add to report" wrote a row the middle column never read')
+
+  const qp = read('lib/lex/question-panel.ts')
+  // ⚠⚠ THE DEFECT WAS AN ASYMMETRY BETWEEN TWO LOOKUPS OF THE SAME MAP:
+  //     exclusion: [e.sourceId, e.id].find(...)      ← both keys
+  //     priority:  e.sourceId && priority.has(...)   ← sourceId only
+  // The write sends `entry.id`. So the assertion is that ONE function serves both — two
+  // expressions that happen to agree is one that will drift, and this is what drifting looked
+  // like: working in the generated document and nowhere on screen.
+  ok('§A1 — exclusion and priority resolve through ONE shared key function',
+    /const decisionKey = /.test(qp)
+    && /const exclusionKey = decisionKey\(e, excluded\)/.test(qp)
+    && /priority: !!decisionKey\(e, priority\)/.test(qp))
+  ok('§A1 — and it tries the row\'s own id FIRST, so a per-finding decision stays per-finding',
+    /\[e\.id, e\.sourceId\]/.test(qp))
+  control('the priority read going back to sourceId alone',
+    () => /priority: !!decisionKey\(e, priority\)/.test(
+      qp.replace('priority: !!decisionKey(e, priority)',
+        'priority: !!(e.sourceId && priority.has(e.sourceId))')))
+  control('the two lookups drifting apart again',
+    () => {
+      const broken = qp.replace('const exclusionKey = decisionKey(e, excluded)',
+        'const exclusionKey = [e.sourceId, e.id].find((k) => k && excluded.has(k))')
+      return /const exclusionKey = decisionKey\(e, excluded\)/.test(broken)
+    })
+
+  // ⚠ AND THE ROUND TRIP IS A LIVE CHECK, NOT A SOURCE ONE. A grep cannot see a join that
+  // misses — `check:lex-25n` asserted the filter and the button label, both true, for a
+  // feature that rendered nothing. `verify:write-paths` reads the value back through the real
+  // assembler, which is the only thing that could have caught this.
+  ok('§A1 — a live round-trip verifier exists for all three of 25-N\'s write paths',
+    /verify-write-paths/.test(read('package.json'))
+    && /it SURVIVES A RELOAD/.test(read('scripts/verify-write-paths.ts'))
+    && /the Notes write path/.test(read('scripts/verify-write-paths.ts'))
+    && /the worklist tick write path/.test(read('scripts/verify-write-paths.ts')))
+
+  // ══ ADDENDUM §A2 — THE SUPPORTING SECTIONS ARE CLOSED BY DEFAULT ═══════════
+  console.log('\nADDENDUM §A2 — the middle column shows the kernel, not everything at once')
+
+  const collapsed = read('components/lex/CollapsedSection.tsx')
+  ok('§A2 — the shell defaults CLOSED, which is the opposite of the kernel\'s rule',
+    /defaultOpen = false/.test(collapsed) && /useState\(defaultOpen\)/.test(collapsed))
+  ok('§A2 — and it is the same control as the kernel headings: a word, not a bare glyph',
+    /show \+/.test(collapsed) && /hide −/.test(collapsed) && /aria-expanded=\{open\}/.test(collapsed))
+  ok('§A2 — an empty section renders NOTHING rather than a heading promising content',
+    /if \(empty\) return null/.test(collapsed))
+  for (const [f, label] of [
+    ['components/lex/ReportAdditions.tsx', '"What you have put in the report"'],
+    ['components/lex/AgendaPanel.tsx', '"What to do next"'],
+  ] as const) {
+    ok(`§A2 — ${label} is wrapped in it`, /<CollapsedSection/.test(read(f)))
+  }
+  // ⚠ THE RESEARCH PANEL'S COPY OF THE AGENDA IS NOT WRAPPED — it already lives inside a
+  // one-item-at-a-time contents list, and a collapse inside a collapse is two controls for one act.
+  ok('§A2 — but the research panel\'s copy is NOT double-wrapped',
+    /if \(judgements\) \{/.test(read('components/lex/AgendaPanel.tsx')))
+  control('a supporting section left open by default',
+    () => /defaultOpen = false/.test(collapsed.replace('defaultOpen = false', 'defaultOpen = true')))
+
   // ── controls ──────────────────────────────────────────────────────────────
   console.log('\n── negative controls: each must FIRE ──')
   for (const c of controls) {

@@ -434,3 +434,127 @@ describes its cheapest reading. Worth a line change if you want the 3+3 shape vi
 4. **The holding page, the archive, and the commentary panel** are three new surfaces that have
    not been walked signed-in. 25-N's walk is the model; this sprint's was not run.
 5. **The six testers' ideas are still visible** — by design, pending your sight of the list above.
+
+---
+
+# ADDENDUM — Charlie's browser pass, 31 August
+
+## §A1 — "Add to report" wrote nothing. **The write happened; the panel read the wrong key.**
+
+⚠⚠ **The answer to §A1's question is: written, and not read.** Measured on Charlie's own idea —
+three `IdeaSourceDecision` rows with `status: PRIORITY`, **two of them stamped 13:51 on 31 August**,
+which is his browser pass. Every one of them matches an `EvidenceItem.id`. **None matches any
+`sourceId`.**
+
+The defect is an asymmetry between two lookups of the same map, eleven lines apart:
+
+```
+exclusion read:  [e.sourceId, e.id].find(...)          ← BOTH keys
+priority  read:  e.sourceId && priority.has(e.sourceId) ← sourceId ONLY
+```
+
+The panel **writes** under `entry.id` — both `QuestionPanel` and `ReportAdditions` send it — and
+**read** under `sourceId`. They can never match, so the star reverted the moment the panel
+refetched and nothing ever reached DRAFT STRATEGY. A refresh could not help: the row was always
+there and the join always missed it.
+
+⚠⚠ **AND THIS IS WHY IT SURVIVED TWO SPRINTS OF CHECKS: THE FEATURE WORKED IN THE DOCUMENT.**
+`proposal-snapshot.ts` builds `prioritySources` **directly off the decision rows** and never joins
+at all — so 25-L §3d's "priority reaches the proposal document" was true, and its only stated
+effect was inside a `.docx` nobody opened. 25-N's `ReportAdditions` did not break it; it made the
+breakage **visible for the first time**.
+
+⚠ **A third detail that decides the fix.** All three of Charlie's prioritised findings share one
+`sourceId` (`828deef8…`). So "fixing" the write to store `sourceId` would have made prioritising
+one finding silently prioritise every finding from that source. **The row's own id is the right
+key**, and the read now tries it first with the source-level key as a fallback, so no older row is
+orphaned and nothing needs migrating.
+
+**The fix is one shared function.** `exclusion` and `priority` now resolve through the same
+`decisionKey(e, map)` — two expressions that happen to agree is one that will drift, and this is
+what drifting looked like.
+
+### The round trip, asserted end to end — `verify:write-paths`
+
+```
+§A1 — the rows Charlie's own clicks left behind
+  3 PRIORITY decision row(s) on this idea
+  3 of them render as priority through the assembler
+  ✓ every stored PRIORITY row reaches the panel — 3/3
+
+§A1 — click, row exists, row renders, row survives a reload
+  ✓ before the click, it is NOT priority
+  ✓ the row EXISTS, and is stored under the EvidenceItem id
+  ✓ it RENDERS — the assembler the middle column reads returns priority=true
+  ✓ it SURVIVES A RELOAD — a second independent assembly still returns it
+  ✓ CONTROL — a finding nobody prioritised is still NOT priority
+  ✓ cleaned up — and the removal is READ BACK, not assumed
+```
+
+⚠⚠ **THIS IS THE CHECK THAT COULD HAVE CAUGHT IT AND DID NOT EXIST.** `check:lex-25n` asserted
+that `ReportAdditions` filters on `e.priority` and that the button says "Add to report" — **both
+true, both passing, for a feature that wrote a row and rendered nothing.** A source assertion
+cannot see a join that misses. Only reading the value back through the real assembler can.
+
+### And the other two write paths, as §A1 instructs — no longer assumed
+
+§A1 is right that one of the three failing makes the other two unproven rather than fine. Both are
+now demonstrated against the live database, with their own controls:
+
+```
+§A1 — the Notes write path (25-N §3c)
+  ✓ a note saves and reads back under (ideaId, userId)
+  ✓ CONTROL — the same note is invisible to another user on the same idea
+  ✓ the note is gone, read back
+
+§A1 — the worklist tick write path (25-N §3e)
+  ✓ a tick saves and comes back in the set the route builds from
+  ✓ a second press leaves ONE row, not two
+  ✓ the untick removes it, read back
+```
+
+**13 passed, 0 failed.** ⚠ The notes control is the one that mattered: a note that saves but is
+readable under the wrong key is a worse defect than one that does not save.
+
+## §A2 — the middle column shows the kernel, and the rest opens deliberately
+
+New `CollapsedSection`, used by **"What you have put in the report"** and **"What to do next"**.
+
+⚠ **Closed by default is the opposite of the kernel's rule, and that is the point.** A kernel
+section you are working in opens expanded (25-N §1c); these open shut. The middle column is a
+**report**, and everything under the kernel is apparatus *about* the report.
+
+⚠ **Same control as the kernel headings**, per §A2: a word beside the glyph (`show +` / `hide −`),
+never a bare chevron, with `aria-expanded`. **A count and a hint stay readable while it is shut**
+— a section you must open deliberately needs a reason to open, and "3" is the cheapest one.
+
+⚠ **An empty section renders nothing at all** rather than a collapsed heading promising content.
+And the research panel's copy of the agenda is **not** wrapped: it already lives inside a
+one-item-at-a-time contents list, and a collapse inside a collapse is two controls for one act.
+
+## §A3 — where "See this as others would" renders
+
+**It renders in exactly one place: `app/ideas/build/BuildIdeaClient.tsx` — Stage 1, `/ideas/build`.
+It does not render on `/ideas/create` at all.**
+
+⚠ **And it is gated twice.** The container needs `(finished || stopped)`; the control itself needs
+**`finished`**. So on an idea whose most recent build **stopped** — which is Charlie's idea right
+now, v7 having hit the ceiling — **the control is not on screen at all.**
+
+**So 25-O §2 was not built against a false premise:** the control exists, and it did point at
+`/ideas/[id]`, the team view. §2 stands and the repoint is correct. What §A3 usefully establishes
+is that it is **not where one would assume** — it is on Stage 1, not on the strategy surface where
+Charlie spends his time, and it disappears whenever the last build did not finish. **If you want it
+on `/ideas/create`, or visible after a stopped build, say so — neither is built.**
+
+---
+
+## Addendum checks
+
+`check:lex-25o` — **56 passed, 0 failed, 14 controls, all 14 fired** (up from 44/11).
+`verify:write-paths` — **13 passed, 0 failed** against the live database.
+Whole suite re-run: **every check green**, including the three §0 named as must-not-disturb — the
+divider fix, the toggling headings and the report running header are untouched and still pass.
+
+⚠ **What is still unproven:** the collapse (§A2) and the fix (§A1) have not been walked in a
+browser. The round trip is proven at the assembler; **the click itself is not.**

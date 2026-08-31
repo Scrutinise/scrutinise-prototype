@@ -132,6 +132,50 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-O ADDENDUM — THE BROWSER PASS (2026-08-31 14:44 UTC)
+
+⚠⚠ **"ADD TO REPORT" WROTE THE ROW. THE PANEL READ THE WRONG KEY.** Three `IdeaSourceDecision`
+rows with `status: PRIORITY` exist on Charlie's idea — **two stamped 13:51 on 31 Aug, his own
+clicks** — and every one matches an `EvidenceItem.id` while **none matches any `sourceId`**. The
+defect is an asymmetry between two lookups of the same map eleven lines apart: the exclusion read
+tried `[e.sourceId, e.id]`, the priority read tried `e.sourceId` alone, and the write sends
+`entry.id`. They could never match, so the star reverted on refetch and a refresh could not help.
+⚠⚠ **AND IT SURVIVED TWO SPRINTS BECAUSE IT WORKED IN THE DOCUMENT:** `proposal-snapshot.ts`
+builds `prioritySources` straight off the decision rows and never joins, so 25-L §3d's "priority
+reaches the proposal document" was TRUE and its only effect was inside a .docx nobody opened.
+25-N's `ReportAdditions` did not break it — it made the breakage visible for the first time.
+⚠ **A third detail decided the fix:** all three prioritised findings share ONE `sourceId`, so
+storing `sourceId` instead would have made prioritising one finding prioritise every finding from
+that source. The row's own id is the right key. One shared `decisionKey()` now serves both reads.
+▶ **`verify:write-paths` asserts the round trip end to end** — click, row exists, row RENDERS
+through the real assembler, survives a second independent assembly, a control that must stay
+false, and a cleanup that is read back. ⚠⚠ **THIS IS THE CHECK THAT COULD HAVE CAUGHT IT AND DID
+NOT EXIST:** `check:lex-25n` asserted the filter and the button label — both true, both passing,
+for a feature that rendered nothing. **A source assertion cannot see a join that misses.**
+▶ **And §A1 is right that the other two write paths were unproven rather than fine.** Notes and
+worklist ticks are now demonstrated live, with controls — including the one that matters for
+notes: **the same note is invisible to another user on the same idea.** 13 passed, 0 failed.
+
+▶ **§A2 — the supporting sections of DRAFT STRATEGY are CLOSED by default**, in the kernel's own
+`show +` / `hide −` vocabulary. ⚠ Closed-by-default is the OPPOSITE of the kernel's rule and that
+is the point: the middle column is a report, and what sits under the kernel is apparatus about it.
+The count and hint stay readable while shut; an empty section renders nothing rather than a heading
+promising content; and the research panel's copy of the agenda is NOT double-wrapped.
+
+▶ **§A3 — "See it as others would" renders in EXACTLY ONE PLACE: Stage 1 (`/ideas/build`). Not on
+`/ideas/create` at all.** ⚠ And it is gated on `finished`, so on an idea whose last build STOPPED
+— Charlie's, right now — **it is not on screen at all.** 25-O §2 was NOT built against a false
+premise: the control exists and did point at the team view. **If it should be on `/ideas/create`,
+or visible after a stopped build, neither is built.**
+
+✅ `check:lex-25o` **56 passed, 0 failed, 14 controls, all 14 fired** (was 44/11).
+`verify:write-paths` 13/0 live. Whole suite re-run green, including the three §0 named as
+must-not-disturb — divider, toggling headings, report running header — all untouched.
+⚠ **Still unproven: the click itself.** The round trip is proven at the assembler; §A1's fix and
+§A2's collapse have not been walked in a browser.
+
+---
+
 ## LEX 25-O — CLEARING THE ROAD TO PILOT A (2026-08-31 14:04 UTC)
 
 **Executed `docs/BRIEF_25O.md`.** Built §1, §2, §4, §5. Measured and deliberately NOT changed:

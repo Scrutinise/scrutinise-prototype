@@ -2,7 +2,34 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-31 14:04 UTC — ▼ **LEX 25-O: `/ideas/build` IS NOT A TESTING SURFACE —
+*Last updated: 2026-08-31 14:44 UTC — ▼ **25-O ADDENDUM: "ADD TO REPORT" WROTE THE ROW; THE
+PANEL READ THE WRONG KEY — AND IT SURVIVED TWO SPRINTS BECAUSE IT WORKED IN THE DOCUMENT.**
+⚠⚠ Three `IdeaSourceDecision` PRIORITY rows exist on Charlie's idea, **two stamped 13:51 on 31
+Aug — his own clicks** — every one matching an `EvidenceItem.id`, **none matching any `sourceId`**.
+The exclusion read tried `[e.sourceId, e.id]`; the priority read tried `e.sourceId` alone; the
+write sends `entry.id`. Eleven lines apart, and they could never match. ⚠⚠ **`proposal-snapshot.ts`
+builds `prioritySources` STRAIGHT off the decision rows and never joins — so the feature genuinely
+worked in the generated document and nowhere on screen.** 25-N's `ReportAdditions` did not break
+it; it made it visible. ⚠ All three prioritised findings share ONE `sourceId`, so storing
+`sourceId` instead would have made one click prioritise every finding from that source — the row's
+own id is right. One shared `decisionKey()` now serves both reads.
+▶ **`verify:write-paths` (new): the round trip end to end** — click, row exists, row RENDERS
+through the real assembler, survives a second assembly, a control that stays false, a cleanup read
+back. ⚠⚠ **THE CHECK THAT COULD HAVE CAUGHT IT DID NOT EXIST:** `check:lex-25n` asserted the
+filter and the button label, both true, for a feature that rendered nothing. **A source assertion
+cannot see a join that misses.** ▶ And Notes + worklist ticks are now DEMONSTRATED rather than
+assumed (13/0), with the control that matters: a note is invisible to another user on the idea.
+▶ **§A2 — DRAFT STRATEGY's supporting sections are CLOSED by default** in the kernel's own
+`show +` / `hide −` vocabulary; count and hint readable while shut; empty renders nothing.
+▶ **§A3 — "See it as others would" renders in ONE place: Stage 1 (`/ideas/build`), NOT on
+`/ideas/create`** — and it is gated on `finished`, so on an idea whose last build STOPPED it is
+not on screen at all. 25-O §2 was not built on a false premise. **Neither "put it on
+/ideas/create" nor "show it after a stopped build" is built.**
+✅ `check:lex-25o` **56/0, 14 controls all fired** (was 44/11); `verify:write-paths` 13/0 live;
+whole suite green; the three §0 must-not-disturb items untouched.
+⚠ **Still unproven: the click itself** — the round trip is proven at the assembler, not in a browser.
+`docs/LEX_25O_REPORT.md`.**
+Earlier: 2026-08-31 14:04 UTC — ▼ **LEX 25-O: `/ideas/build` IS NOT A TESTING SURFACE —
 IT IS STAGE 1 *AND* THE LIVE NEW-IDEA DOOR, MEASURED. §3 NOT DONE, AND IT IS CHARLIE'S CALL.**
 Built §1, §2, §4, §5; §7 measured and deliberately unchanged; §6 diagnosed, not built.
 ⚠⚠ **`PlatformConfig.newIdeaDoor` READS `"build"` IN PRODUCTION.** Every new idea starts there
