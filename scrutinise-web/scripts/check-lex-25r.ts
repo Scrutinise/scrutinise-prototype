@@ -296,8 +296,12 @@ async function main() {
   const createSrc = code('app/ideas/create/CreateIdeaClient.tsx')
   ok('the arrival line is the one Charlie wrote',
     /Welcome to the Strategic analysis, I’m Lex, ask me anything here\./.test(createSrc))
-  ok('and it shows only on arrival, not standing over a transcript',
-    /leftTab === 'lex' && messages\.length === 0/.test(createSrc))
+  // ⚠⚠ THIS ASSERTION PASSED WHILE THE LINE NEVER RENDERED — the same class this whole sprint is
+  // about, committed by me an hour after writing the rule. It asserted the GATE I had written
+  // (`messages.length === 0`) rather than the property, and a built idea always has messages
+  // because the build seeds its own bubble. Caught by looking at the live page, not by the check.
+  ok('the arrival line is not gated behind an empty transcript',
+    !/messages\.length === 0/.test(createSrc))
   ok('the longer preamble is gone',
     !/Talk to me, Lex, and I’ll help you shape each part/.test(createSrc))
   ok('and the chat box is a large one',

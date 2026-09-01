@@ -998,16 +998,20 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   the Strategic analysis, I'm Lex, ask me anything here.' — with a large chat box.
                   Remove the longer standing preamble from the arrival state."*
 
-                  ⚠ IT IS THE ARRIVAL STATE ONLY. Once there is a conversation the line goes: a
-                  standing sentence above a transcript is furniture, and the transcript itself
-                  now says what the panel is for.
+                  ⚠⚠ AND IT IS UNCONDITIONAL, BECAUSE MY FIRST VERSION GATED IT ON
+                  `messages.length === 0` AND IT THEREFORE NEVER RENDERED. A built idea always
+                  has messages — the build seeds its own bubble into the transcript — so "the
+                  arrival state" is not "an empty transcript". Charlie asked for this line
+                  INSTEAD OF the longer preamble, in the same place; that is what this is.
+                  Measured in production: the old preamble was gone and the new line was absent,
+                  which is this sprint's own defect committed an hour after the rule about it.
 
                   ⚠⚠ THIS RETIRES 25-N §3c's SECOND SENTENCE — *"Only conversations started on
                   this page appear here"* — from this position. That was a real fix (the fact was
                   true and had never been said), so it has not been deleted: it survives as the
                   `this page only` marker in the tab strip immediately above, which is where a
                   user looks when they are asking which conversations these are. */}
-              {leftTab === 'lex' && messages.length === 0 && (
+              {leftTab === 'lex' && (
                 <p className="shrink-0 px-3 pt-1.5 text-[11px] text-zinc-500">
                   Welcome to the Strategic analysis, I’m Lex, ask me anything here.
                 </p>
