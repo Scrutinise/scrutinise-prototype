@@ -4,10 +4,58 @@
 
 ---
 
-## CENTRAL THREAD — last updated 2026-09-01 16:38 UTC (25-A)
+## CENTRAL THREAD — last updated 2026-09-01 22:00 UTC (25-A, 25-B)
 
 *This section belongs to the CENTRAL stream and is kept separate from the LEX stream's entry below,
 because the two run in this repository at the same time.*
+
+▼ **25-B — THEY LAND ON AN EMPTY DASHBOARD THAT ASKS THEM TO WRITE A POLICY IDEA.**
+⚠⚠ **NONE OF 25-A IS DEPLOYED** (production = `f9d9eb5`; `invite-gate.ts` never committed), so the
+two-email problem is live and §1a step 1's premise was false. §1 is a walk of TODAY'S flow: steps
+1–3 fetched from production, 4–6 from source (an account would consume a real invitation).
+▶▶ **THEY LAND ON `/dashboard`** — and ⚠⚠ **SKIP ONBOARDING ENTIRELY** (`forceRedirectUrl` beats the
+provider's `afterSignUpUrl`), so age, terms and experience are never collected. ⚠ The dead
+`/sign-up?email_address=` link still returns **"Scrutinise is invite only" + a contact form** — an
+invited person is asked to apply. ⚠ The dashboard says *"You're not in any Communities or teams
+yet."* and points at `/communities`, whose strongest control is **"Create Community"**.
+▶ §1b: the two tiers' first screens are **identical**, and nothing built or briefed changes that.
+▶ §1d fixed one thing: `training.ts` claimed a payment was *pending* when Stage 2e had already paid it.
+⚠⚠ **§2: ONE PERSON MAY MINT 144 POINTS A DAY** (RAN_EVENT 60 / GAVE_TRAINING 40 / CANVASSING 24 /
+COMPLETED_TRAINING 20), `evidenceUrl` optional and **read by no code**, backdating unchecked. ⚠ Only
+2 of 5 options are real reviews; **recommended: a post-hoc digest to branch managers — sequence §8
+first.** ⚠⚠ **§3c: THERE IS NOTHING** — no way to report a person or a post to a branch manager, and
+no escalation to the owner. ⚠ **§4b THE FIXTURE USER IS STILL THERE** (re-read by id and address; the
+sweep has never run). **37 rows = 24 seeded + 3 fixtures + 13 real, of which 4 are Charlie's — nine
+other real people.** `docs/CENTRAL_25B_REPORT.md`. Earlier:
+
+▼ **25-A §8a REPORTED, NOTHING BUILT — THE INVARIANT SURVIVES, ONLY THE RIGHTS DETACH.**
+Branch-implies-root is a ROW (what `check:central` asserts) and WHAT THE ROW CONFERS (twelve gates).
+▶ **Recommended: a `tier` on the root membership — GROUP or BRANCH.** ⚠ **The check:central
+invariant stays GREEN**, ten of the twelve gates do not move, and only `canCreateBranchUnder` and
+`inviteRightFor` change. ⚠ **`TeamsTree.tsx:257` and `FindYourBranch.tsx:55` become DEAD CONTROLS**
+unless made tier-aware. ⚠ **DECISIONS WAITING ON CHARLIE:** the tier for six existing rows (default
+GROUP removes nobody's rights; deriving demotes `charlie@whatmusic.com`, who came via the Bermondsey
+link), and §8h's four options — ⚠⚠ **option C cannot be built** (nothing can re-own an OWNER-less
+branch). ⚠ §8c REVERSES my own §3d recommendation, deliberately, and the assertion must move.
+⚠ §8d: widening invitation would also widen REVOKE unless split. §8i: after 8a, §7j is safe and
+wants an explicit yes. Earlier: **25-A READ-ONLY AUDIT (20:33). THE UNLOCKED DOOR HAS BEEN OPEN 106 DAYS AND NOBODY CAME
+THROUGH IT.** 37 accounts = 24 seeded + 13 real; six hold a platform invite, **seven hold none —
+and all seven predate the gate** (JIT sync 22 Mar `662f131`; invite-only sign-up 18 May `bc04e63`).
+⚠ A bound, not a proof. ✅ Count reconciles: 33 + 3 + 1 fixture = 37.
+⚠⚠ **THE FIXTURE USER IS STILL ON PRODUCTION — re-read, not assumed. The hardened teardown and its
+sweep have NEVER RUN**, so my earlier "a sweep reclaims orphans" describes code that has not once
+executed. ⚠ **`mona@` and `jones.graham7@` were Charlie's own platform invites** — my 16:10 read
+looked at `User` and not at `Invite`, and I described a two-hour-old snapshot as current; the table
+now holds **14** rows, and **four invitees are still outstanding** (`chair.tatton@`,
+`chair.reigate@`, `g.davey76@`, `lindsey.sharratt@`) plus `clare@clarepr.com`, expiring 15 Sep.
+▶ **§7j dry run: two rows** (Jon Swales, ajaxhms), both to the ROOT so the branch-implies-root
+caveat does not apply; no ambiguity; no writes. ⚠ **Points: 60 of the 64 points that exist came from
+two self-claims, both Charlie's own accounts, no evidence, largest 40.** ▶ `check:scripts` was red on
+my file and is green — ⚠ `scripts/` is a SEPARATE tsc program from the web one.
+▶ **Decision 36** breaks two client surfaces silently + one check; **decision 37** needs a narrow
+`canEjectFrom` because `canManageCommunity` is called from **72 places in 29 files**.
+⚠⚠ **NOTHING COMMITTED: MAIN AUTO-DEPLOYS** (production moved 3cdede2 → f9d9eb5 mid-session), and
+the migration is not applied. `docs/CENTRAL_25A_REPORT.md` part three.
 
 ▼ **25-A §7 — ONE INVITATION, ONE ACCOUNT — AND THE ACCOUNT GATE WAS ENFORCED IN ONE OF THREE
 DOORS.**
@@ -119,7 +167,54 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-01 17:41 UTC — ▼ **LEX 25-S — THE SORT SHOWS ITS WORKING; CAUSES GET
+*Last updated: 2026-09-01 22:24 UTC — ▼ **LEX 25-T — THE BUILD IS OFF THE USER'S TAB, AND THE
+MERGE IS A QUESTION AGAIN.**
+▶▶ **§1 PASSES, MEASURED.** A full eleven-pass build ran to `DONE` on the Railway build worker —
+**480 s, 33.1p, 11/11** — enqueued by a script that had already exited. **No browser tab existed.**
+The worker named the job by its id (`running build 610923f6-… for idea 31055aef-…`), which is §1b.
+⚠ **THE FIRST TWO DEPLOYS FAILED AND I READ THE SILENCE WRONG.** `deploymentLogs` gave **0 lines**
+and I reported "not proven alive". A FAILED deployment never runs, so it has **no deploy logs at
+all** — the story was in `buildLogs`: Railway had seen a Next.js app and run **`npm run build`**,
+which died prerendering `/admin/invites` with no Clerk key. `buildCommand` is now `npx prisma
+generate`; the worker needs `node_modules` and the Prisma client, nothing more.
+⚠⚠ **§1c IS CHARLIE'S AND IT IS THE LAST STEP: set `LEX_BUILD_DRIVER` = `worker` in Vercel
+(Production, lower-case).** A capitalised or padded value resolves to `client` **silently** and
+builds keep running from the tab. So **`/api/health` now reports the driver in force** —
+`curl -s https://www.scrutinise.org/api/health` → `"build":{"driver":"worker"}` — read through
+`buildDriver()`, so a value the app rejects shows as `client`. ⚠ **Also check `LEX_VECTOR_STREAMS`
+while in there:** it is deliberately unset on the worker (production's value is unreadable from a
+session — SAML), and if Vercel has one the worker does not, **worker builds retrieve differently
+from client builds and nothing says so.**
+⚠⚠ **§1e — THE SMART FINDING IS NOT THE ONE THE BRIEF EXPECTED.** SMART was never running against a
+guard of ours with 15 s to spare: **it had no guard of ours at all.** `PASS_BUDGET_MS` is enforced
+in exactly one place — the research pass's question loop. Off functions, the 300 s kill is gone and
+**nothing replaces it**; SMART is bounded only by `HARD_STOP_MS` (900 s), which fires *between*
+passes, so a single runaway call is not caught. **Changed nothing** (as §1e requires) — a decision
+is waiting. Today: 477 s of pass time in 480 s of wall clock; RESEARCH 172 s, SMART 160 s.
+▶ **§1f** bounded at two, counted in its own column so the user keeps their three; the counter
+increments **before** the attempt. ⚠ I had built the bound and **not the telling** — a build that
+had retried twice looked identical to one never tried, so the user spends a press learning what we
+knew. Two sentences now say so. ⚠ **`CANCELLED` came out of the filter after measuring it**: a
+user's cancellation must never be auto-resumed, and the sweep's could never have matched (NULL
+`completedAt`). ▶ **§1g** sleeping is off and must stay off — the worker has no HTTP surface, so
+**nothing could wake it.** ▶ **§1h** the checkbox is driver-aware and reverts on its own.
+▶▶ **§2's PREMISE OVERTURNED — THE MERGE WRITE ALREADY EXISTED** (25-P's `writeMerge`), and it is
+already a *sibling* of the edit mechanism, enforced: `check:lex-25r` fails if a `MERGE` kind is
+added to `field-edit.ts`. What was actually wrong was three things.
+⚠⚠ **THE SCREEN SAID SUPERSEDED PARENTS WERE "shown below" AND THEY WERE IN NO LIST AT ALL** —
+excluded from the live list for being superseded, missed by the ruled-out list because the merge
+never set `status`. **Live on production until this deploy.** They now carry `RULED_OUT` +
+`"Merged into 9."`, which the existing ruled-out block already renders, reason and Restore included.
+⚠ **And "can be restored" could not** — `restore` cleared only the status, so the row stayed
+filtered out by `!p.superseded`: success reported, nothing visible changed.
+⚠⚠ **ASKING WHETHER 4 AND 8 COULD MERGE MERGED THEM.** The judging POST wrote in the same request.
+It now judges and **writes nothing**; the card shows the two parents beside the proposal, and a new
+`acceptMerge` op is the only thing that writes.
+▶ `check:lex-25t` **27/0/1 not checked, 5 controls (0 dead)**. ⚠ One of my own controls was a
+tautology (`!(true) === true`) and now **performs** the broken write and runs the same predicate.
+⚠ `check:lex-25s` existed but was **never registered in `package.json`** — registered.
+**NOT CHECKED:** §1f's two new sentences need a build with `autoResumeCount > 0`.
+Earlier: 2026-09-01 17:41 UTC — ▼ **LEX 25-S — THE SORT SHOWS ITS WORKING; CAUSES GET
 NUMBERS AND A DIAGRAM.**
 ⚠⚠ **THE SORT HAS STILL NEVER RUN IN A REAL BUILD** — all five completed builds predate it; **35
 policy options, 35 numbered, 0 sorted.** §1 is built against data that does not exist yet, and
