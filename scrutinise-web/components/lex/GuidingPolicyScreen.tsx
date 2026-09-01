@@ -22,6 +22,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { MergeAnswer, Rating, Relationship } from '@/lib/lex/guiding-policy'
+import { historyLine, clusterLine, GROUP_HEADINGS } from '@/lib/lex/policy-history'
 
 interface Policy {
   id: string
@@ -93,6 +94,58 @@ function RatingCell({ label, r }: { label: string; r: Rating | null }) {
       <div className={`text-[10px] mt-0.5 ${r.basis === 'NOT_FOUND' ? 'font-semibold text-amber-800' : 'text-zinc-500'}`}>
         {BASIS_LABEL[r.basis] ?? r.basis}
       </div>
+    </div>
+  )
+}
+
+/**
+ * ══ 25-S §1.2/§1.3 — THE CARD'S OWN HISTORY, AND THE WAY BACK ══════════════════════
+ *
+ * Charlie: he cannot tell whether the sort ran, because a sorted list looks exactly like an
+ * unsorted one. This is the line that tells him, and the control that lets him disagree.
+ *
+ * ⚠ THE LINE IS COMPUTED IN `lib/lex/policy-history.ts`, not here. The cold read runs the same
+ * function over real rows; a copy in the component would be a second vocabulary that agrees
+ * until one of them is edited.
+ *
+ * ⚠ NO LINE WHERE THERE IS NO HISTORY (§1.2). `historyLine` returns null and this renders
+ * nothing — which is what lets a reader tell the cards Lex touched from the ones it did not.
+ *
+ * ⚠ AND THE UNDO ONLY APPEARS WHERE THERE IS SOMETHING TO UNDO. A cluster is a computed
+ * relationship rather than a move, so it has no undo and does not pretend to.
+ */
+function CardHistory({
+  p, pairings, busy, onUndo,
+}: {
+  p: Policy
+  pairings: Array<{ a: number; b: number; relationship: string; why: string }>
+  busy: boolean
+  onUndo?: () => void
+}) {
+  const line = historyLine({
+    number: p.number, kind: p.kind, kindReason: p.kindReason, status: p.status,
+    ruleOutReason: p.ruleOutReason, sorted: p.sorted, moveStatus: p.moveStatus,
+    mergedFrom: p.mergedFrom, causeNumbers: p.causeNumbers,
+    phase: p.phase, phaseReason: p.phaseReason,
+    implementsNumber: null,
+  })
+  const cluster = p.number != null ? clusterLine(p.number, pairings, p.causeNumbers) : null
+  if (!line && !cluster && !onUndo) return null
+
+  return (
+    <div className="mt-2 pt-1.5 border-t border-zinc-100">
+      {line && <p className="text-[11px] text-zinc-600">{line}</p>}
+      {cluster && <p className="text-[11px] text-zinc-500">{cluster}</p>}
+      {onUndo && (
+        <button
+          type="button"
+          onClick={onUndo}
+          disabled={busy}
+          className="mt-1 text-[11px] font-medium text-zinc-600 underline hover:text-zinc-900 disabled:opacity-40"
+        >
+          Put this back as a guiding policy
+        </button>
+      )}
     </div>
   )
 }
@@ -208,6 +261,18 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
 
       {/* ══ THE POLICIES ═══════════════════════════════════════════════════════ */}
       <div className="px-4 py-3 space-y-3">
+        {/* ══ 25-S §1.1 — THE HEADING THIS GROUP NEVER HAD ═══════════════════════
+            The other two groups have carried a heading and a count since 25-P — "Really
+            coherent actions (3)", "Really the goal restated (2)". This one did not, so the
+            top of the screen read as *the list* and the rest as appendices to it.
+
+            ⚠ §1.1: **the headings are the sort.** Three named groups with counts tell a user
+            that something sorted them; the same items in the same order without them tell
+            nobody anything, however good the sorting was. The missing heading was the one
+            that mattered most, because it is the one at the top. */}
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          {GROUP_HEADINGS.GUIDING_POLICY(policies.length)}
+        </h4>
         {policies.map((p) => (
           <article key={p.id} className="rounded-lg border border-zinc-200 p-3">
             <div className="flex items-baseline gap-2">
@@ -216,11 +281,6 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
               <p className="text-sm text-zinc-900 flex-1">{p.approach}</p>
             </div>
 
-            {p.mergedFrom.length > 0 && (
-              <p className="text-[11px] text-zinc-600 mt-1">
-                Merged from {p.mergedFrom.join(' and ')}.
-              </p>
-            )}
 
             {/* ⚠⚠ §1.8 — THE CHAIN-LINK CONSEQUENCE, FLAGGED AS IMPORTANT. It is the first thing
                 cut for length unless it is marked, and a legislature takes the easy half. */}
@@ -245,6 +305,12 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                 <span className="text-zinc-400">Lex’s reading of which cause this answers.</span>
               </p>
             )}
+
+            {/* ⚠ 25-S §1.2 — THE CARD'S OWN HISTORY, AT THE FOOT. "Merged from 4 and 8" used
+                to be a bare line here; it is one case of the vocabulary now, so a kept policy,
+                a merged one and one held for a later phase all say what happened to them in the
+                same voice and the same place. */}
+            <CardHistory p={p} pairings={s.pairings} busy={busy} />
 
             {/* ══ §1.4 — THE CAUSE THIS POLICY IMPLIES ═══════════════════════════ */}
             {p.impliedCause?.cause && p.impliedCause.status === 'OFFERED' && (
@@ -410,7 +476,17 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                     <span className="text-sm font-bold text-zinc-900 tabular-nums">{a.number}</span>
                     <p className="text-sm text-zinc-800 flex-1">{a.approach}</p>
                   </div>
-                  {a.kindReason && <p className="text-[11px] text-zinc-600 mt-1">{a.kindReason}</p>}
+                  {/* ⚠ 25-S §1.2/§1.3 — `kindReason` alone said WHY without saying WHAT HAPPENED.
+                      The history line names the move ("Was a candidate guiding policy…") and the
+                      undo lets the user overrule it: §1.3 — a judgement the user cannot overturn
+                      is an imposition, and 25-P measured that the causal link this sort rests on
+                      was set on zero of eighteen rows. */}
+                  <CardHistory
+                    p={a}
+                    pairings={s.pairings}
+                    busy={busy}
+                    onUndo={() => void patch({ op: 'undoSort', policyId: a.id })}
+                  />
                   {/* ⚠⚠ §1.3's SECOND HALF: an action belongs to a POLICY. If that policy is not
                       the one settled, the action follows its fate rather than entering the kernel. */}
                   {parent && (
@@ -458,9 +534,19 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
           </p>
           <ul className="mt-2 space-y-1.5">
             {goals.map((g) => (
-              <li key={g.id} className="text-xs text-zinc-700">
-                <span className="font-semibold tabular-nums">{g.number}</span> {g.approach}
-                {g.kindReason && <span className="block text-[11px] text-zinc-500">{g.kindReason}</span>}
+              <li key={g.id} className="rounded-lg border border-zinc-200 p-2.5">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm font-bold text-zinc-900 tabular-nums">{g.number}</span>
+                  <p className="text-sm text-zinc-800 flex-1">{g.approach}</p>
+                </div>
+                {/* ⚠ 25-S §1.3 — SET ASIDE IS A MOVE, SO IT HAS AN UNDO TOO. These were the
+                    quietest of the three groups: a bare line of text with no way back. */}
+                <CardHistory
+                  p={g}
+                  pairings={s.pairings}
+                  busy={busy}
+                  onUndo={() => void patch({ op: 'undoSort', policyId: g.id })}
+                />
               </li>
             ))}
           </ul>

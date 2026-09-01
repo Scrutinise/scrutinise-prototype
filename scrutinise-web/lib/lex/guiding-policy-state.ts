@@ -24,10 +24,13 @@ export type PolicyOp =
   | 'acceptMove' | 'declineMove'
   | 'acceptCause' | 'declineCause'
   | 'settle' | 'phase' | 'reject' | 'restore' | 'proceedUnresolved' | 'countRound'
+  /** 25-S §1.3 — put back where the sort moved it from. See `applyPolicyOp`. */
+  | 'undoSort'
 
 export const POLICY_OPS: PolicyOp[] = [
   'acceptMove', 'declineMove', 'acceptCause', 'declineCause',
   'settle', 'phase', 'reject', 'restore', 'proceedUnresolved', 'countRound',
+  'undoSort',
 ]
 
 export type PolicyState = Awaited<ReturnType<typeof readPolicyState>>
@@ -368,6 +371,42 @@ export async function applyPolicyOp(input: {
       if (row) {
         await prisma.policyOption.update({
           where: { id: row.id }, data: { status: 'CANDIDATE' },
+        })
+      }
+      break
+
+    // ══════════ 25-S §1.3 — EVERY MOVE LEX MADE CAN BE UNDONE ══════════════════
+    //
+    // §1.3: *"25-P found the causal link was set on zero of eighteen rows, so the sort is Lex's
+    // judgement, not a fact read off the chain. A judgement the user cannot overturn is an
+    // imposition."*
+    //
+    // ⚠⚠ ONE OP FOR BOTH DIRECTIONS THE SORT CAN MOVE A CARD — demoted to a coherent action, or
+    // set aside as a restatement of the goal. Two ops would be two things to keep in step, and
+    // the user is doing one thing: putting it back.
+    //
+    // ⚠ THE NUMBER COMES BACK BECAUSE IT NEVER LEFT. 25-P §1.1's whole point: nothing renumbers,
+    // so an item returning to the group returns as itself. There is no number to restore.
+    //
+    // ⚠ AND THE PARKING GOES WITH IT. An item demoted to an action may have been parked with the
+    // policy it implements (§1.3 of 25-P); left behind, it would be a policy claiming to
+    // implement another policy, which is not a state the screen can render.
+    //
+    // ⚠ `kindReason` RECORDS THE OVERRULE rather than being cleared. "Lex read this as an action
+    // and you disagreed" is the history §1.2 wants on the card, and blanking it would leave a
+    // card that had visibly moved with nothing saying why it moved back.
+    case 'undoSort':
+      if (row) {
+        await prisma.policyOption.update({
+          where: { id: row.id },
+          data: {
+            kind: 'GUIDING_POLICY',
+            moveStatus: null,
+            parkedWithId: null,
+            kindReason: `You put this back as a guiding policy. Lex had read it as `
+              + `${row.kind === 'COHERENT_ACTION' ? 'a coherent action' : 'the goal restated'}: `
+              + `${row.kindReason ?? 'no reason recorded'}`,
+          },
         })
       }
       break
