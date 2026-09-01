@@ -25,6 +25,7 @@ import {
 import { USER_MATERIAL_PASS_PREFIX } from '@/lib/lex/heading-map'
 // 25-L §2 — every refusal is counted, with its type. See `material-rejection.ts`.
 import { logRejection, readRejections } from '@/lib/lex/material-rejection'
+import { MAX_TEXT_CHARS } from '@/lib/lex/user-material'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -83,6 +84,8 @@ export async function GET(req: Request, { params }: Params) {
         id: true, kind: true, label: true, filename: true, mimeType: true, url: true,
         text: true, charCount: true, status: true, failureReason: true,
         findingsAt: true, findingCount: true, createdAt: true,
+        // 25-Q §5 — the size of what was handed in, so "kept" can be stated against something.
+        sourceBytes: true,
       },
     })
     if (!row) return NextResponse.json({ error: 'That is not on this idea.' }, { status: 404 })
@@ -90,6 +93,20 @@ export async function GET(req: Request, { params }: Params) {
       ...row,
       findingsAt: row.findingsAt ? row.findingsAt.toISOString() : null,
       createdAt: row.createdAt.toISOString(),
+      // ══ 25-Q §5 — "CHARACTERS KEPT" MEANS NOTHING UNTIL SOMETHING SAYS WHAT WAS DROPPED ══
+      //
+      // §5: *"Do not guess the intended meaning: read what produces the numbers and report it,
+      // then write the label to match."* `charCount` is `extracted.text.length`, and
+      // `extracted` has been through `cap()`, which slices at `MAX_TEXT_CHARS` and nowhere
+      // else. So the number is the length of what we hold, and it is short of the document
+      // only when the cap fired.
+      //
+      // ⚠⚠ THE FLAG IS COMPUTED HERE, NOT IN THE COMPONENT, because the cap is a server
+      // constant read from the environment (`LEX_MATERIAL_MAX_CHARS`). A client that compared
+      // against its own copy of 200,000 would be right until somebody set that variable — the
+      // "import the predicate, never restate it" rule, in its cheapest form.
+      truncated: row.charCount >= MAX_TEXT_CHARS,
+      capChars: MAX_TEXT_CHARS,
     })
   }
 

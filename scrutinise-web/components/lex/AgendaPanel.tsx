@@ -38,6 +38,9 @@ interface Decision {
 }
 interface Challenge {
   id: string; text: string; status: string; dismissReason: string | null; passKey: string
+  /** 25-Q §7a/§7b — the challenge's own name, and the model that raised it. Null on rows
+   *  written before 25-Q; both render as absent rather than as a guess. */
+  title: string | null; sourceModel: string | null
 }
 interface Reading {
   id: string; title: string; citation: string | null; url: string | null
@@ -325,7 +328,28 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
         >
           {a.challenges.map((c) => (
             <div key={c.id} className={`rounded-lg border p-2.5 ${c.status === 'OPEN' ? 'border-zinc-200' : 'border-zinc-100 bg-zinc-50/60'}`}>
+              {/* ══ 25-Q §7a — A TITLE, WHERE THE PROVENANCE USED TO BE ══════════════════
+                  Charlie: the challenges are the most valuable part of the run, and the
+                  attribution is in the wrong place. Every coverage challenge opened with
+                  *"ANOTHER MODEL MADE THIS POINT AND OUR PROPOSAL DOES NOT ADDRESS IT — "*, so
+                  the same eleven capitalised words headed all of them and none had a name.
+
+                  ⚠ A ROW WITH NO TITLE RENDERS WITHOUT ONE. Titles arrive from the pass that
+                  wrote the challenge; deriving one here from the text would be this panel
+                  guessing what a point is about, which is the rule 25-D §3 exists to hold. */}
+              {c.title && (
+                <p className="text-sm font-semibold text-zinc-900 mb-0.5">{c.title}</p>
+              )}
               <p className="text-sm text-zinc-800">{c.text}</p>
+              {/* ══ §7b — THE SOURCE, AT THE FOOT ═══════════════════════════════════════
+                  ⚠ IT IS NOT DROPPED, IT IS MOVED. Which model raised a point is real
+                  provenance and a reader is entitled to it; it is simply not the headline.
+                  Marked with a character and a word, never by colour alone. */}
+              {c.sourceModel && (
+                <p className="text-[11px] text-zinc-500 mt-1.5">
+                  <span aria-hidden>· </span>Raised by {c.sourceModel}, reading your account on its own.
+                </p>
+              )}
               {c.status !== 'OPEN' && (
                 <p className="text-xs text-zinc-500 mt-1">
                   {c.status === 'DISMISSED' ? 'Dismissed' : c.status === 'ADDRESSED' ? 'Addressed' : 'Deferred'}

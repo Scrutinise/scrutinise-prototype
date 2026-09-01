@@ -70,7 +70,9 @@ export default function YourMaterial({
   /** 25-N §1f — the row the user has asked to open, with the text we kept from it. */
   const [viewing, setViewing] = useState<
     { id: string; label: string; kind: string; filename: string | null; url: string | null
-      text: string | null; charCount: number; findingCount: number; findingsAt: string | null } | null
+      text: string | null; charCount: number; findingCount: number; findingsAt: string | null
+      /** 25-Q §5 — computed by the route, which owns the cap. Absent on an older response. */
+      truncated?: boolean } | null
   >(null)
   const [viewBusy, setViewBusy] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -335,7 +337,24 @@ export default function YourMaterial({
                       ? `Lex took ${viewing.findingCount} finding${viewing.findingCount === 1 ? '' : 's'} from it.`
                       : 'Lex found nothing in it that bore on your idea.'
                     : 'Lex has not read it yet.'}
-                  {` (${viewing.charCount.toLocaleString()} characters kept.)`}
+                  {/* ══ 25-Q §5 — SAY WHAT THE NUMBER MEANS, OR DO NOT PRINT IT ═══════════
+                      Charlie, on "9 findings · 87k characters kept": *confusing.* 25-N moved the
+                      count off the list and into here, which was right, and left it as a bare
+                      figure, which was not — "87,000 characters kept" answers a question about
+                      our storage, asked of somebody wondering whether their document was read
+                      in full.
+
+                      ⚠⚠ THE TWO CASES ARE DIFFERENT NEWS AND MUST NOT SHARE A SENTENCE. Below
+                      the cap, nothing was dropped and the honest answer is "all of it". At the
+                      cap, the last part of their document was never read — which is the one
+                      thing a user genuinely needs to be told, and the bare number never said.
+
+                      ⚠ `truncated` COMES FROM THE SERVER, which owns the cap. See the route. */}
+                  {' '}
+                  {viewing.truncated
+                    ? `I kept the first ${viewing.charCount.toLocaleString()} characters — about `
+                      + `fifty pages — and the rest of it was not read.`
+                    : `That is all of it: ${viewing.charCount.toLocaleString()} characters of text, nothing dropped.`}
                 </p>
               </div>
               {viewing.url && (

@@ -482,7 +482,7 @@ export async function testVocabulary(input: {
 
 export interface CoverageResult {
   /** One issue per substantive point our kernel does not address. */
-  missed: Array<{ point: string; namedBy: string; whyItMatters: string }>
+  missed: Array<{ title?: string; point: string; namedBy: string; whyItMatters: string }>
   /** Points our kernel does address — counted, so "we covered it" is a measured claim. */
   coveredCount: number
 }
@@ -496,11 +496,16 @@ const COVERAGE_SCHEMA = {
       items: {
         type: 'object',
         properties: {
+          // ⚠ 25-Q §7a — A NAME FOR THE POINT, so the challenge is not headed by its own
+          // provenance. Required, because an optional title is a title that arrives on the
+          // good days (CLAUDE.md §24: a schema field with no prose is a field the model has
+          // no reason to fill — so it is in the prompt as well, below).
+          title: { type: 'string' },
           point: { type: 'string' },
           namedBy: { type: 'string' },
           whyItMatters: { type: 'string' },
         },
-        required: ['point', 'namedBy', 'whyItMatters'],
+        required: ['title', 'point', 'namedBy', 'whyItMatters'],
       },
     },
   },
@@ -536,9 +541,12 @@ export async function coverageCheck(input: {
     'ADDRESS THE POINT, so that a reader of our kernel would come away knowing it?',
     '',
     '  `covered` — the points our kernel addresses. Copy each verbatim.',
-    '  `missed`  — the points it does not. For each: the `point` verbatim, `namedBy` (the model, copied',
-    '              exactly as labelled), and `whyItMatters` — one sentence on what the proposal is',
-    '              missing by not having it, addressed to the proposer.',
+    '  `missed`  — the points it does not. For each: a `title` of three to six words naming the',
+    '              SUBJECT of the point as a person would file it ("Employment law exposure",',
+    '              "Cost of the new inspectorate") — never a sentence, never "another model", and',
+    '              never a restatement of the point itself; the `point` verbatim; `namedBy` (the',
+    '              model, copied exactly as labelled); and `whyItMatters` — one sentence on what',
+    '              the proposal is missing by not having it, addressed to the proposer.',
     '',
     '⚠ BE HARD ABOUT THIS AND ERR TOWARDS `missed`. A point our kernel gestures at in a subordinate',
     'clause is NOT covered. The cost of a false "covered" is that the user finds it themselves in a',

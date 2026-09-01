@@ -88,6 +88,13 @@ export interface AgendaChallenge {
   status: string
   dismissReason: string | null
   passKey: string
+  /** ⚠ 25-Q §7a — the challenge's own name. Null on a row written before 25-Q, and rendered
+   *  as absent rather than as a guess: a title inferred downstream from the text is exactly
+   *  what 25-D §3 forbids. */
+  title: string | null
+  /** ⚠ 25-Q §7b — the model that raised it, for the SOURCE LINE AT THE FOOT. It used to be
+   *  eleven shouty words at the head of the text; see the backfill. */
+  sourceModel: string | null
 }
 
 export interface AgendaReading {
@@ -235,6 +242,7 @@ export async function buildAgenda(ideaId: string): Promise<Agenda> {
     .map((i) => ({
       id: i.id, text: i.text, status: i.status,
       dismissReason: i.dismissReason, passKey: i.passKey,
+      title: i.title, sourceModel: i.sourceModel,
     }))
     // Open first; a dismissed issue STAYS VISIBLE with its reason (§3c, and §22's rule).
     .sort((a, b) => Number(a.status !== 'OPEN') - Number(b.status !== 'OPEN'))

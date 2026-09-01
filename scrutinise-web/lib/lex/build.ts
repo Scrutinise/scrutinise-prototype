@@ -2553,14 +2553,29 @@ async function smartPass(c: PassContext): Promise<PassOutcome> {
   let missedIssues = 0
   if (coverage) {
     for (const m of coverage.missed) {
+      // ══════════ 25-Q §7 — THE ATTRIBUTION MOVES TO THE FOOT ══════════════════════
+      //
+      // ⚠⚠ THIS LINE IS WHAT CHARLIE READ. Every coverage challenge began *"ANOTHER MODEL MADE
+      // THIS POINT AND OUR PROPOSAL DOES NOT ADDRESS IT — "*, in capitals, with the model's
+      // name in brackets in the middle of the sentence. So the most valuable output of the run
+      // was headed by its own provenance and titled by nothing, and the same eleven words led
+      // every single one of them.
+      //
+      // ⚠ THE PROVENANCE IS NOT DROPPED — §7b keeps it and moves it. It is a column now, so a
+      // renderer puts it at the foot as a source line and no reader has to parse it back out of
+      // a sentence.
+      //
+      // ⚠ AND THE TEXT IS THE POINT AND WHY IT MATTERS, in that order, with nothing in front.
       await prisma.deepeningIssue.create({
         data: {
           ideaId,
           passKey: SMART_PASS_KEY,
           runVersion: c.buildVersion,
-          text:
-            `ANOTHER MODEL MADE THIS POINT AND OUR PROPOSAL DOES NOT ADDRESS IT — ${m.point.trim()} `
-            + `(${m.namedBy}). ${m.whyItMatters.trim()}`,
+          // A title we did not get is left null and rendered as absent — never guessed from the
+          // text downstream, which is 25-D §3's rule about who may classify a row.
+          title: m.title?.trim() || null,
+          text: `${m.point.trim()} ${m.whyItMatters.trim()}`.trim(),
+          sourceModel: m.namedBy?.trim() || null,
           status: 'OPEN',
         },
       })
