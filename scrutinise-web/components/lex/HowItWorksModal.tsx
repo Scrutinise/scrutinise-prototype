@@ -14,6 +14,7 @@
 import { useState } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { FAQ_MARKDOWN } from '@/lib/faq-content'
+import { PRODUCT_FACTS } from '@/lib/lex/product-facts'
 
 // Verbatim tour copy (Sprint 1.4 brief). The per-panel detail lives in the boxes
 // below, so the intro no longer repeats it.
@@ -213,6 +214,33 @@ export default function HowItWorksModal({
                   </ul>
                 </div>
               )}
+
+              {/* ══ 25-Q §6 — THE OPERATING FACTS, RENDERED FROM THE SAME ARRAY LEX IS GIVEN ══
+                  §6: *"Sourced from one place that is also what 'How this works' renders, so the
+                  two cannot drift apart."*
+
+                  ⚠⚠ THIS IS THE HALF THAT MAKES THAT TRUE. Putting the facts in the prompt alone
+                  would have satisfied the feature and not the instruction: the drift §6 is worried
+                  about is between what Lex says and what the tour says, and it only cannot happen
+                  if both read the same array. `PRODUCT_FACTS` is that array; `productFactsBlock()`
+                  is the prompt's view of it. */}
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                  Getting around
+                </p>
+                <dl className="space-y-2.5">
+                  {PRODUCT_FACTS.map((f) => (
+                    <div key={f.question}>
+                      <dt className="text-xs font-semibold text-zinc-800">{f.question}</dt>
+                      <dd className="text-xs text-zinc-600 leading-relaxed mt-0.5">{f.answer}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-2.5 text-[11px] text-zinc-500">
+                  You can ask me any of these in the chat and get the same answer — it comes from
+                  this same list.
+                </p>
+              </div>
 
               <p className="text-sm text-zinc-700 leading-relaxed">{closing}</p>
             </div>

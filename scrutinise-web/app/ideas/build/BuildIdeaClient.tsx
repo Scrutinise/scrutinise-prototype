@@ -35,6 +35,7 @@ import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import type { StageContext } from '@/lib/lex/stage-context'
 import { WAIT_MESSAGE } from '@/lib/lex/search-wait'
+import AskLexPanel from '@/components/lex/AskLexPanel'
 
 // ══ 25-G §3 — WHAT THE NEW DOOR LOST, RESTORED ═══════════════════════════════
 //
@@ -343,6 +344,19 @@ export default function BuildIdeaClient(
    * nothing has changed between the two runs.
    */
   const [rerunOpen, setRerunOpen] = useState(false)
+  /**
+   * ⚠ 25-Q §3c — SOMETHING TO ADD, THAT IS NOT AN EDIT TO AN ANSWER.
+   *
+   * §3c: *"There is nowhere to add further text before re-running — only the existing answers
+   * can be edited."* Those are different acts: editing question 2 rewrites the record of what
+   * the user told me AND (by 25-G's reuse rule) costs a full search; adding a note leaves the
+   * record intact and rides along with the next run.
+   *
+   * ⚠ IT IS THE `userCritique` FIELD THE RE-RUN DIALOGUE ALREADY WRITES — one store, two doors.
+   * A second column for "further information" would be a second thing every reader downstream
+   * had to learn about, and the one that got read would be whichever the author remembered.
+   */
+  const [furtherInfo, setFurtherInfo] = useState('')
   const [attachOpen, setAttachOpen] = useState(false)
   const [attached, setAttached] = useState(materialCount)
 
@@ -771,7 +785,10 @@ export default function BuildIdeaClient(
    * which is the "user who cannot see what a five-minute job is doing assumes it has
    * hung" failure §2 names.
    */
+  // ⚠ 25-Q §3c — `critique` here already carries the top-of-page note (see `onGo`), so this
+  // clears the box: a note that stayed in the field after being sent would be sent twice.
   const startBuild = useCallback((mode: 'FULL' | 'REUSE' = 'FULL', critique = '') => {
+    setFurtherInfo('')
     if (!ideaId) return
     setError(null)
     setRerunOpen(false)
@@ -955,7 +972,10 @@ export default function BuildIdeaClient(
           canStartFull={build?.allowance?.canStartFull ?? true}
           busy={busy}
           onCancel={() => setRerunOpen(false)}
-          onGo={(mode, critique) => startBuild(mode, critique)}
+          // ⚠ 25-Q §3c — WHAT THEY TYPED AT THE TOP TRAVELS WITH THE RUN, whether they came
+          // through this dialogue or pressed the plain button. Typing a note and then losing it
+          // by taking the other route is the shape of bug a user reads as "it ignored me".
+          onGo={(mode, critique) => startBuild(mode, [furtherInfo.trim(), critique.trim()].filter(Boolean).join('\n\n'))}
           // Adding a document can change whether the research may be reused, so the panel
           // re-reads rather than printing an answer chosen when it opened.
           onMaterialChanged={() => void refresh()}
@@ -1000,7 +1020,7 @@ export default function BuildIdeaClient(
           pass, what it cost, what each produced — and it is a long way down a long page. This
           is the one line you get without scrolling, and it is the only thing that announces
           the FINISH: the panel changes a badge, which nobody sees unless they are watching. */}
-      {ideaId && <RerunBanner ideaId={ideaId} />}
+      {ideaId && <RerunBanner ideaId={ideaId} surface="build" />}
 
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
         {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════
@@ -1090,6 +1110,14 @@ export default function BuildIdeaClient(
                 Each pill reopens its own answer, populated. A pill the user has not
                 reached yet stays inert — offering to edit an answer that does not exist
                 would be a control that does nothing, which is the complaint restated. */}
+            {/* ⚠ 25-Q §3d — SAY THAT THEY ARE BUTTONS. The pills were already clickable and
+                already carried a per-pill 'Open "X" and edit what you wrote' title, and a title
+                is a thing you find by hovering something you already suspect is a control. A
+                user who does not suspect it never hovers. One line costs nothing and removes
+                the whole guess. */}
+            <p className="text-[11px] text-zinc-500 mb-1.5">
+              Click below to change any of the answers you’ve given for that section.
+            </p>
             <ol className="flex flex-wrap gap-2 mb-4 text-[11px] font-medium">
               {elicit.steps.map((s) => {
                 const openable = s.done || s.key === elicit.currentStep
@@ -1117,6 +1145,175 @@ export default function BuildIdeaClient(
                 )
               })}
             </ol>
+            {/* ══════════ 25-Q §3b/§3c — CHANGE SOMETHING AND RUN IT AGAIN, AT THE TOP ══════════
+                §3b: *"The re-run block sits at the foot of a long page. Move re-run, add-a-file and
+                add-further-information to the top, where a user arriving to change something will
+                look."*
+
+                ⚠⚠ THIS IS A MOVE, NOT A COPY. The same three controls, once, higher up — two of
+                them rendered in two places would be two places to press and one of them would
+                eventually stop working. Everything below this point is the RESULT of the last run;
+                everything in here is an input to the next one, which is the division a returning
+                user is actually making.
+
+                ⚠ AND IT IS THE WHOLE REASON A RETURNING USER OPENS THIS PAGE. A first-time user
+                reads down; somebody coming back has already read it and wants to change something.
+                The page was built for the first of those two and, after the first build, every
+                visit is the second. */}
+            {ideaId && elicit.phase === 'CONFIRMED' && (
+              <div className="mb-5 space-y-3">
+                {/* ══ 25-Q §3c — SOMEWHERE TO ADD SOMETHING NEW ═══════════════════════════
+                    §3c: *"There is nowhere to add further text before re-running — only the
+                    existing answers can be edited."*
+
+                    ⚠⚠ AND EDITING AN ANSWER IS NOT THE SAME ACT. Changing what you said in
+                    question 2 rewrites the record of what you told me; adding a note for the next
+                    run leaves that record intact and says something further. The first also costs
+                    a full search (25-G's reuse rule refuses to reuse research the elicitation has
+                    moved past), so a user with an afterthought was being charged for a rewrite of
+                    history they did not want.
+
+                    ⚠ IT IS THE SAME FIELD THE RE-RUN DIALOGUE ALREADY CARRIES, so what is typed
+                    here arrives as `userCritique` on the next run and is printed back above the
+                    findings as "What you asked this run to fix". One store, two doors. */}
+                <div className="rounded-xl border border-zinc-200 p-3">
+                  <label htmlFor="q-further" className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Anything else you want me to take into account this time?
+                  </label>
+                  <p className="mt-0.5 text-[11px] text-zinc-500">
+                    This is added to the next run. It does not change the answers you have already
+                    given — edit those with the buttons above if that is what you meant.
+                  </p>
+                  <textarea
+                    id="q-further"
+                    value={furtherInfo}
+                    onChange={(e) => setFurtherInfo(e.target.value)}
+                    rows={3}
+                    placeholder="Something you have thought of since, a document you have read, a line of argument you want tested…"
+                    className="mt-1.5 w-full text-sm p-2 rounded-lg border border-zinc-200 resize-y focus:outline-none focus:border-blue-400"
+                  />
+                  {furtherInfo.trim() && (
+                    <p className="mt-1 text-[11px] text-emerald-700">
+                      {/* ⚠ A CHARACTER AND A WORD, never colour alone. */}
+                      ✓ Saved for the next run — it will be shown back to you beside the findings.
+                    </p>
+                  )}
+                </div>
+              {elicit.phase === 'CONFIRMED' && ideaId && (
+                <div className="mb-4 rounded-xl border border-zinc-200 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                    Add a file or link
+                  </p>
+                  <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} />
+                </div>
+              )}
+              {/* ══ 25-K §2 — THE RE-RUN, PRESENT, NOT CONDITIONAL ════════════════
+                  ⚠⚠ THIS IS THE ITEM THE BRIEF SAYS MOST NEEDS FIXING, AND THE OLD VERSION WAS
+                  INVISIBLE FOUR TIMES OVER. It rendered only when `(finished || stopped)` AND
+                  `build.canStart`, at the very bottom of the page, under the findings — so a
+                  user with a running build, a user who had scrolled, and a user whose
+                  `canStart` was false for any reason all saw NOTHING. Charlie asked Lex to
+                  re-run in conversation and was told *"I can't rerun the whole project from
+                  here, as the platform manages those stages"*: true, unhelpful, a dead end.
+
+                  So the block is now on the page whenever a build exists, in every state,
+                  and it SAYS which state it is in. A running build shows a disabled control
+                  with the reason attached (25-E §4b's rule), never an absent one.
+
+                  ⚠ AND IT SAYS WHAT IT WILL DO AND WHAT IT COSTS, both prices, with the
+                  expensive one the one you have to ask for. Two thirds of a build's input
+                  tokens are the orientation and the research and neither depends on the
+                  draft — measured at 48% of the input tokens on the two passes reuse skips
+                  (25-J). A cheap default that quietly reused a stale search would be worse
+                  than the cost it saves. */}
+              {latest && ideaId && (
+                <div className="mt-4 rounded-xl border-2 border-zinc-300 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Re-run</p>
+
+                  {running ? (
+                    <p className="text-sm text-zinc-700 mt-1.5">
+                      It is running now — you can re-run it again once this one finishes. Anything you
+                      add above will be waiting for it.
+                    </p>
+                  ) : !build?.canStart ? (
+                    // ⚠ THE REASON, NOT A MISSING BUTTON. A control that is simply absent
+                    // reads as broken; one that says why it does not apply does not.
+                    <p className="text-sm text-zinc-700 mt-1.5">
+                      {build?.blockedReason ?? 'A re-run is not available on this idea just now.'}
+                    </p>
+                  ) : build.reuse ? (
+                    <>
+                      <p className="text-sm text-zinc-700 mt-1.5">
+                        Re-running from the research already gathered — {build.reuse.findings} finding
+                        {build.reuse.findings === 1 ? '' : 's'}, {build.reuse.cited} cited source
+                        {build.reuse.cited === 1 ? '' : 's'}. Add new information above if you want me to
+                        search again.
+                      </p>
+                      {/* ⚠⚠ 25-L §1 — ONE BUTTON, AND IT OPENS THE QUESTION. Two buttons here
+                          made the user choose a PRICE before they had been asked the only
+                          question that changes the result. The choice of mode has not gone
+                          away; it has moved inside the dialogue, where it sits beside what
+                          each one will do and after they have said what was wrong. */}
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => setRerunOpen(true)}
+                          disabled={busy}
+                          className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                        >
+                          Re-run this idea…
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 mt-2">
+                        Redrafting skips the two search passes and costs roughly a third of a full build.
+                        Searching again reads the corpus from nothing — use it when what you have told me
+                        has really changed.
+                        {build.estimate?.line ? ` A full run: ${build.estimate.line}` : ''}
+                      </p>
+                      {/* 25-N §1d — the balance is on the PAGE, not only inside the dialogue.
+                          Deciding whether to open the re-run is already a decision about
+                          spending one, and the answer was a click away. */}
+                      {build.allowance?.line && (
+                        <p className="text-[11px] font-medium text-zinc-700 mt-1">{build.allowance.line}</p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-zinc-700 mt-1.5">
+                        {build.reuseBlockedReason ?? 'This will search the corpus again from scratch.'}
+                      </p>
+                      <button
+                        onClick={() => setRerunOpen(true)}
+                        disabled={busy}
+                        className="mt-2.5 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                      >
+                        Re-run this idea…
+                      </button>
+                      {build.estimate?.line && (
+                        <p className="text-[11px] text-zinc-500 mt-2">{build.estimate.line}</p>
+                      )}
+                      {build.allowance?.line && (
+                        <p className="text-[11px] font-medium text-zinc-700 mt-1">{build.allowance.line}</p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+              </div>
+            )}
+
+            {/* ══ 25-Q §3a — SOMEWHERE TO ASK, ON THE STAGE THAT HAD NOWHERE ═══════════
+                §3a: *"There is no Lex chat box on Stage 1 · The Idea. Charlie could not ask Lex
+                to re-run because there was nothing to ask."*
+
+                ⚠ BELOW THE CONTROLS IT IS ABOUT. The questions a user asks here — how do I
+                re-run, how do I change an answer — are answered by controls a few centimetres
+                above, so the chat sits under them rather than over them: somebody who finds the
+                control does not need the chat, and somebody who does not will scroll one line.
+
+                ⚠ IT ANSWERS AND CHANGES NOTHING. See `AskLexPanel` — the elicitation owns this
+                page's state machine and two conductors would disagree about which question is
+                live. */}
+            {ideaId && <div className="mb-5"><AskLexPanel ideaId={ideaId} /></div>}
 
             {/* ⚠ 25-H §3 — AND WHAT THE EDIT WILL COST, SAID WITH THE EDIT.
                 25-G's reuse rule refuses to reuse the research once the elicitation has
@@ -1303,7 +1500,10 @@ export default function BuildIdeaClient(
                 emailWhenDone={emailWhenDone}
                 onEmailWhenDone={setEmailWhenDone}
                 busy={busy}
-                onStart={() => startBuild('FULL')}
+                // ⚠ 25-Q §3c — THE FIRST-BUILD PATH CARRIES THE NOTE TOO. Two ways to start a
+                // run and only one of them reading the box is exactly how a user concludes it was
+                // ignored — and they would be right.
+                onStart={() => startBuild('FULL', furtherInfo.trim())}
                 onRetryState={() => void refresh()}
               />
             )}
@@ -1312,14 +1512,6 @@ export default function BuildIdeaClient(
                 so a document found halfway through is not a reason to start again. A
                 document added here is read on the spot and its findings join the next
                 build. */}
-            {elicit.phase === 'CONFIRMED' && ideaId && (
-              <div className="mb-4 rounded-xl border border-zinc-200 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
-                  Add a file or link
-                </p>
-                <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} />
-              </div>
-            )}
 
             {/* ⚠ A1 — THE OFFER, WHERE THE CRITICISM WAS MADE. Transient: it clears on the
                 next message either way, and the permanent route is below. */}
@@ -1435,97 +1627,6 @@ export default function BuildIdeaClient(
               </div>
             )}
 
-            {/* ══ 25-K §2 — THE RE-RUN, PRESENT, NOT CONDITIONAL ════════════════
-                ⚠⚠ THIS IS THE ITEM THE BRIEF SAYS MOST NEEDS FIXING, AND THE OLD VERSION WAS
-                INVISIBLE FOUR TIMES OVER. It rendered only when `(finished || stopped)` AND
-                `build.canStart`, at the very bottom of the page, under the findings — so a
-                user with a running build, a user who had scrolled, and a user whose
-                `canStart` was false for any reason all saw NOTHING. Charlie asked Lex to
-                re-run in conversation and was told *"I can't rerun the whole project from
-                here, as the platform manages those stages"*: true, unhelpful, a dead end.
-
-                So the block is now on the page whenever a build exists, in every state,
-                and it SAYS which state it is in. A running build shows a disabled control
-                with the reason attached (25-E §4b's rule), never an absent one.
-
-                ⚠ AND IT SAYS WHAT IT WILL DO AND WHAT IT COSTS, both prices, with the
-                expensive one the one you have to ask for. Two thirds of a build's input
-                tokens are the orientation and the research and neither depends on the
-                draft — measured at 48% of the input tokens on the two passes reuse skips
-                (25-J). A cheap default that quietly reused a stale search would be worse
-                than the cost it saves. */}
-            {latest && ideaId && (
-              <div className="mt-4 rounded-xl border-2 border-zinc-300 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Re-run</p>
-
-                {running ? (
-                  <p className="text-sm text-zinc-700 mt-1.5">
-                    It is running now — you can re-run it again once this one finishes. Anything you
-                    add above will be waiting for it.
-                  </p>
-                ) : !build?.canStart ? (
-                  // ⚠ THE REASON, NOT A MISSING BUTTON. A control that is simply absent
-                  // reads as broken; one that says why it does not apply does not.
-                  <p className="text-sm text-zinc-700 mt-1.5">
-                    {build?.blockedReason ?? 'A re-run is not available on this idea just now.'}
-                  </p>
-                ) : build.reuse ? (
-                  <>
-                    <p className="text-sm text-zinc-700 mt-1.5">
-                      Re-running from the research already gathered — {build.reuse.findings} finding
-                      {build.reuse.findings === 1 ? '' : 's'}, {build.reuse.cited} cited source
-                      {build.reuse.cited === 1 ? '' : 's'}. Add new information above if you want me to
-                      search again.
-                    </p>
-                    {/* ⚠⚠ 25-L §1 — ONE BUTTON, AND IT OPENS THE QUESTION. Two buttons here
-                        made the user choose a PRICE before they had been asked the only
-                        question that changes the result. The choice of mode has not gone
-                        away; it has moved inside the dialogue, where it sits beside what
-                        each one will do and after they have said what was wrong. */}
-                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => setRerunOpen(true)}
-                        disabled={busy}
-                        className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
-                      >
-                        Re-run this idea…
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-zinc-500 mt-2">
-                      Redrafting skips the two search passes and costs roughly a third of a full build.
-                      Searching again reads the corpus from nothing — use it when what you have told me
-                      has really changed.
-                      {build.estimate?.line ? ` A full run: ${build.estimate.line}` : ''}
-                    </p>
-                    {/* 25-N §1d — the balance is on the PAGE, not only inside the dialogue.
-                        Deciding whether to open the re-run is already a decision about
-                        spending one, and the answer was a click away. */}
-                    {build.allowance?.line && (
-                      <p className="text-[11px] font-medium text-zinc-700 mt-1">{build.allowance.line}</p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-zinc-700 mt-1.5">
-                      {build.reuseBlockedReason ?? 'This will search the corpus again from scratch.'}
-                    </p>
-                    <button
-                      onClick={() => setRerunOpen(true)}
-                      disabled={busy}
-                      className="mt-2.5 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
-                    >
-                      Re-run this idea…
-                    </button>
-                    {build.estimate?.line && (
-                      <p className="text-[11px] text-zinc-500 mt-2">{build.estimate.line}</p>
-                    )}
-                    {build.allowance?.line && (
-                      <p className="text-[11px] font-medium text-zinc-700 mt-1">{build.allowance.line}</p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
           </>
         )}
 
