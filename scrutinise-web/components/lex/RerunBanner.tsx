@@ -38,7 +38,27 @@ interface Shape {
   currentPassLabel: string | null
 }
 
-export default function RerunBanner({ ideaId }: { ideaId: string }) {
+/**
+ * ══ 25-Q §2b — WHERE THE USER SHOULD GO NEXT, FROM WHERE THEY ARE ═════════════════════
+ *
+ * §2b: *"When a pass finishes, the user is left where they were. Either move them to The
+ * Strategy, or say 'Pass finished — now go to the Strategy section' with a control that takes
+ * them there."*
+ *
+ * ⚠⚠ AND THE BANNER HAD THE DEFECT §2b DESCRIBES, IN ITS PUREST FORM: mounted on the build page,
+ * its finished control linked to `/ideas/build` — THE PAGE THE USER WAS ALREADY ON. A control
+ * that reloads where you are is exactly "left where they were", made worse by looking like a way
+ * out. It was invisible because the banner was written once and mounted twice, and on the OTHER
+ * surface the same link was right.
+ *
+ * ⚠ SO IT NOW KNOWS WHICH SURFACE IT IS ON. Not a URL comparison at render time: the surface is
+ * a fact the mounting page knows for certain and the component can only guess at.
+ */
+export default function RerunBanner({ ideaId, surface = 'strategy' }: {
+  ideaId: string
+  /** Where this banner is mounted. Decides what "somewhere else" means. */
+  surface?: 'build' | 'strategy'
+}) {
   const [live, setLive] = useState<Shape | null>(null)
   /**
    * ⚠ THE FINISH IS REMEMBERED, NOT DERIVED. A finished build is indistinguishable, on a
@@ -122,12 +142,16 @@ export default function RerunBanner({ ideaId }: { ideaId: string }) {
             {live.currentPassLabel ? ` — ${live.currentPassLabel}` : ''}. You can carry on working;
             nothing here changes until it finishes.
           </p>
-          <a
-            href={`/ideas/build?ideaId=${ideaId}`}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border-2 border-blue-300 text-blue-800 hover:bg-blue-100 whitespace-nowrap"
-          >
-            Watch it
-          </a>
+          {/* ⚠ NO "WATCH IT" WHEN THEY ARE ALREADY WATCHING IT. A button to the page you are
+              on teaches the user that the buttons here do nothing. */}
+          {surface !== 'build' && (
+            <a
+              href={`/ideas/build?ideaId=${ideaId}`}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full border-2 border-blue-300 text-blue-800 hover:bg-blue-100 whitespace-nowrap"
+            >
+              Watch it
+            </a>
+          )}
         </div>
       </div>
     )
@@ -146,19 +170,42 @@ export default function RerunBanner({ ideaId }: { ideaId: string }) {
               {clean ? 'Re-run finished.' : 'The re-run stopped before it finished.'}
             </span>{' '}
             {clean
-              ? `Version ${finished.version} is ready — all ${finished.passesTotal} passes ran.`
+              ? `Version ${finished.version} is ready — all ${finished.passesTotal} passes ran. `
+                + (surface === 'build'
+                  ? 'The Strategy is where it landed.'
+                  : 'The panel beside you was drawn before it finished.')
               : `${finished.passesComplete} of ${finished.passesTotal} passes ran. What they produced is real; the rest did not happen.`}
           </p>
-          <a
-            href={`/ideas/build?ideaId=${ideaId}`}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full border-2 whitespace-nowrap ${
-              clean
-                ? 'border-emerald-300 text-emerald-800 hover:bg-emerald-100'
-                : 'border-amber-300 text-amber-900 hover:bg-amber-100'
-            }`}
-          >
-            {clean ? 'See the result' : 'See what happened'}
-          </a>
+          {/* ══ §2b — THE CONTROL POINTS AT WHAT CHANGED ═══════════════════════════════
+              A finished run changes THE STRATEGY, not the build page — so from the build page
+              the way forward is the Strategy, and from the Strategy it is a reload, because the
+              panel beside them was drawn before the run finished and is quietly out of date.
+
+              ⚠ A STOPPED RUN STILL GOES TO THE BUILD PAGE. "What happened" is a question about
+              the run, and the run's own page is where the passes and their reasons are. */}
+          {!clean ? (
+            <a
+              href={`/ideas/build?ideaId=${ideaId}`}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full border-2 whitespace-nowrap border-amber-300 text-amber-900 hover:bg-amber-100"
+            >
+              See what happened
+            </a>
+          ) : surface === 'build' ? (
+            <a
+              href={`/ideas/create?ideaId=${ideaId}`}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full border-2 whitespace-nowrap border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+            >
+              Go to the Strategy
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full border-2 whitespace-nowrap border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+            >
+              Reload to see it
+            </button>
+          )}
           <button
             onClick={() => setDismissed(true)}
             aria-label="Dismiss"
