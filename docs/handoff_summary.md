@@ -40,7 +40,11 @@ the total one line lower, inside. §5 — the free pass on a resumed historic bu
 its reason and announced on screen**; ⚠ and the resume copy's hardcoded *"the eight passes already
 done"* was a literal copied from build v7, so **every other stopped build was told a number that
 was not its own.**
-✅ `check:lex-25p` **69/0, 23 controls, 0 dead** — every §1.12 assertion runs the route's own
+⚠⚠ **ONE ACCEPTANCE CRITERION WAS HALF BUILT (`753ee13`): accepting an implied cause added the
+row and did NOT mark the causes section changed**, leaving the field claiming the user had agreed
+to a diagnosis that had since grown by one. ⚠ And my first assertion of it would have passed
+without the fix — it counted `source: 'USER'` rows, and USER is that column's DEFAULT.
+✅ `check:lex-25p` **72/0, 24 controls, 0 dead** — every §1.12 assertion runs the route's own
 `writeSort` / `writeMerge` / `applyPolicyOp` against a scratch idea it creates and deletes, then
 reads back what the screen and the documents show. ⚠ **It failed 3 of its own assertions with 3
 dead controls on its first run**, which is the only evidence it can fail. `lex-25n` 98/0, `lex-25o`

@@ -203,7 +203,17 @@ we owed was the sentence, which is now printed. ⚠⚠ **And a bug found on the 
 said "the eight passes already done" — a literal written while looking at build v7, so every other
 stopped build in the product was told a number that was not its own.** It counts now.
 
-**Checks: `check:lex-25p` 69 passed, 0 failed, 23 controls, 0 dead.** Every §1.12 assertion runs
+⚠⚠ **ONE ACCEPTANCE CRITERION WAS HALF BUILT AND THE HALF THAT MATTERS WAS THE MISSING ONE**
+(`753ee13`, 02:55 UTC). §6 asks that accepting an implied cause *"adds it **and marks the causes
+section changed**"*; only the row was created. The `causes` field sits at ACCEPTED once the user
+has agreed to the diagnosis, so a cause added underneath left it **claiming agreement to a list
+that had grown by one** — four approved, five on screen, nothing saying so. `syncCausesField`
+re-derives the whole list from every row and returns the field to AWAITING_CONFIRMATION. ⚠ **And
+my first assertion of it would have passed without the fix:** it counted rows with
+`source: 'USER'`, which is that column's DEFAULT, so the fixture's own causes satisfied it. It
+names the cause by its text now.
+
+**Checks: `check:lex-25p` 72 passed, 0 failed, 24 controls, 0 dead.** Every §1.12 assertion runs
 the route's own `writeSort` / `writeMerge` / `applyPolicyOp` against a scratch idea it creates,
 marks and deletes in a `finally`, then reads back what the screen and the documents would show.
 ⚠ **On its first run it failed 3 of its own assertions with 3 dead controls** — the "before" list

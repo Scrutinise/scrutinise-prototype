@@ -32,7 +32,7 @@ to be five or more years old, and none of them said so.**
 | §1.9 two rounds | After two, Lex offers to proceed unresolved rather than asking again. |
 | §1.10 what you leave with | Settle, phase NOW/LATER with a reason, reject with a reason, restore **to the original number** with the old reason retained as history. |
 | §1.11 targeted edits | Written up below. |
-| §1.12 the checks | 69 assertions, 23 controls, all firing. |
+| §1.12 the checks | 72 assertions, 24 controls, all firing. |
 
 ### §1.5 rested on a link nothing had ever written
 
@@ -216,7 +216,7 @@ other stopped build in the product was told a number that was not its own.** It 
 ## The checks
 
 ```
-check:lex-25p    69 passed, 0 failed, 23 controls (0 dead)
+check:lex-25p    72 passed, 0 failed, 24 controls (0 dead)
 ```
 
 Every §1.12 assertion performs the operation through the code the route runs — `writeSort`,
@@ -234,6 +234,28 @@ Neighbouring suites re-run clean: `lex-25n` 98/0, `lex-25o` 56/0, `lex-25d` 77/0
 
 `check:s7-retrieval` fails on a missing file (`scripts/ingest/search/measure-s7-framing.ts`) — a
 pre-existing failure unrelated to this sprint; its typecheck passes.
+
+---
+
+## The one criterion that was half built, and how it was found
+
+§6 asks that where a favoured policy implies an undiagnosed cause, *"accepting adds it **and marks
+the causes section changed**"*. Only the first half existed: `acceptCause` created the
+`DiagnosisCause` row and stopped.
+
+**The half that was missing is the one that matters.** The `causes` field sits at `ACCEPTED` once
+the user has agreed to the diagnosis. A cause added underneath it afterwards leaves the field
+claiming agreement to a list that has grown by one — the user approved four causes and is looking
+at five, with nothing anywhere saying so. `syncCausesField` now re-derives the whole list from
+every row, in the shape the build writes, and puts the field back to `AWAITING_CONFIRMATION`, which
+is this product's own vocabulary for "Lex has changed this and nobody has agreed to it yet".
+
+⚠ **And my first assertion of it would have passed without the fix.** It counted `DiagnosisCause`
+rows with `source: 'USER'` — and `USER` is that column's **default**, so the fixture's own two
+causes were `USER` too and the count would have been satisfied by rows the operation never touched.
+It names the cause by its text now. `check:lex-25p` is 72 passed, 0 failed, 24 controls, 0 dead.
+
+Shipped as `753ee13`, after the sprint's five commits.
 
 ---
 
