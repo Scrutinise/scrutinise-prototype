@@ -344,6 +344,35 @@ check:lex-25r   29 passed, 0 failed, 2 NOT CHECKED, 7 controls (0 dead)
 
 The 2 remain the in-build sort; every existing build predates it.
 
+## What the browser confirmed, and what it did not
+
+**Confirmed live, on production, before the addendum's changes:** the collapse/re-open cycle —
+shut → the commentary and the section's fields are unmounted; re-opened → it fetches and draws
+again. That is the measurement the A4 argument rests on, and it was taken on the code path that
+still runs.
+
+**Confirmed live, after A1 deployed:** the sections arrive **collapsed**, the DIAGNOSIS heading and
+its toggle are present while shut (**shut, not absent**), and the worklist API returns Charlie's
+item **first of four** with the panel reading *"Things to read — 0 of 4 done"*.
+
+⚠ **Found live, and it was mine:** A3's arrival line **never rendered**. I had gated it on
+`messages.length === 0`, and a built idea always has messages because the build seeds its own
+bubble. **And `check:lex-25r` asserted my gate rather than the property, so it passed while the
+line was invisible** — this sprint's own class, committed an hour after I wrote CLAUDE.md §26
+about it, and caught by looking at the page rather than by the check. Fixed in `a529bf6`; the
+assertion now tests that the line is *not* gated behind an empty transcript.
+
+⚠⚠ **NOT VERIFIED, because the browser renderer froze after three attempts:**
+
+1. **A4's exact wording — the commentary drawing on a FIRST open, in a session where the section
+   has never been open.** What I measured was a re-open. The mechanism is the same (a collapsed
+   section unmounts, so every open is a mount), but I did not observe the first-open case and
+   will not report it as though I had.
+2. **The new geometry.** The commentary now renders above the section's fields rather than 1,080 px
+   down, and I have asserted that structurally — but I have not re-measured the pixel offset on
+   the deployed page.
+3. **A3's line actually on screen** after `a529bf6`.
+
 ## Two things worth knowing
 
 ⚠ **`check:scripts` is currently red, and it is not this work.** One error, in
