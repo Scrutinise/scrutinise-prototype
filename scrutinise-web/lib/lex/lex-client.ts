@@ -99,6 +99,32 @@ export interface LexTurnContext {
  * applied, no stage advance is attempted); the prompt says it as well, so Lex does not write a
  * reply promising something the platform will then refuse to do.
  */
+/**
+ * ══ 25-R §3c — LEX MUST NEVER SEND THE USER ON AN ERRAND ══════════════════════════════
+ *
+ * Charlie asked Lex to combine two candidate guiding policies. It produced a good merged policy
+ * and then told him to navigate back to The Strategy stage, find the Guiding Policy section, and
+ * add or amend it there himself.
+ *
+ * ⚠⚠ THAT IS WORSE THAN SAYING NOTHING. It is the product describing its own capability as the
+ * user's chore, and it is the same sentence 25-Q was written to remove — which 25-Q removed from
+ * the ONE branch it was editing while leaving the general instruction absent.
+ *
+ * ⚠ AND THE HONEST ALTERNATIVE IS NOT SILENCE. Where Lex genuinely cannot write — a merge of two
+ * candidates is one, see the report — it must say it cannot and why. "I can't do that from here"
+ * is information; "go to Strategy, find the section, and amend it" is an instruction to do the
+ * product's job by hand.
+ */
+const NO_ERRANDS_BLOCK = [
+  'NEVER TELL THE USER TO GO AND DO SOMETHING BY HAND THAT THIS PRODUCT CAN DO.',
+  'Do not say "go to the Strategy stage", "find the Guiding Policy section", "navigate to",',
+  '"add it there" or "amend it there". They asked you because they are already here.',
+  'If you can write it, offer to: return the proposal and the platform shows them a button.',
+  'If you cannot write it, SAY SO PLAINLY AND SAY WHY, in one sentence — "I can rewrite one of',
+  'the candidates for you, but I can\'t merge two into a new one from here" — and then stop.',
+  'Never dress an inability up as an instruction.',
+].join('\n')
+
 const ASK_ONLY_BLOCK = [
   'THIS TURN IS A QUESTION, NOT A STEP IN THE FLOW.',
   'The user is on the first stage, where the four questions are asked by the page itself.',
@@ -400,7 +426,7 @@ ${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsB
   (that list is an INVENTORY, abridged where a value is long — an entry marked ABRIDGED is
    not the whole of what the user wrote and must never be quoted or copied as a sentence.)
 
-${ctx.productFactsBlock ? `${ctx.productFactsBlock}\n\n` : ''}${ctx.numberedOptionsBlock ? `${ctx.numberedOptionsBlock}\n\n` : ''}${ctx.askOnly ? `${ASK_ONLY_BLOCK}\n\n` : ''}${ctx.sourceValuesBlock ? `${ctx.sourceValuesBlock}\n\n` : ''}${fieldBlock}
+${ctx.productFactsBlock ? `${ctx.productFactsBlock}\n\n` : ''}${NO_ERRANDS_BLOCK}\n\n${ctx.numberedOptionsBlock ? `${ctx.numberedOptionsBlock}\n\n` : ''}${ctx.askOnly ? `${ASK_ONLY_BLOCK}\n\n` : ''}${ctx.sourceValuesBlock ? `${ctx.sourceValuesBlock}\n\n` : ''}${fieldBlock}
 
 RULES
 - One thing at a time. Finish the CURRENT field before the next one. Never ask about, hint at, or propose the next field — the platform moves on only when the user Saves or Skips, and it tells you the new current field then.

@@ -148,13 +148,27 @@ export async function POST(req: Request, { params }: Params) {
   //
   // ⚠ LIVE ONLY, in the 25-P sense: a rejected or merged-away policy keeps its number and must
   // not be quietly edited back into the proposal by a chat turn.
-  const policyRows = current?.key === 'policyOptions' || pre.currentField?.key === 'policyOptions'
-    ? await prisma.policyOption.findMany({
-      where: { ideaId: id },
-      orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, number: true, approach: true, status: true, mergedIntoId: true, kind: true },
-    })
-    : []
+  //
+  // ══════════ 25-R §3a — THE GATE WAS THE REASON NO CARD EVER APPEARED ══════════
+  //
+  // ⚠⚠ THIS READ USED TO BE CONDITIONAL ON `currentField === 'policyOptions'`, and that single
+  // condition disabled the whole of 25-Q §1 in practice. Charlie asked Lex to combine two
+  // candidates; `currentField` was `actions`, because the build had carried the idea on to
+  // Coherent Actions. So `livePolicies` was empty, Lex was never shown the numbers it is
+  // instructed to cite, `resolvePolicyTarget` could only return null, and no offer could be
+  // built no matter what Lex produced.
+  //
+  // ⚠ 25-Q's OWN DIAGNOSIS IS WHAT MISLED IT. It measured `currentField = policyOptions` on 30
+  // August and built the gate around that reading — a measurement of one moment treated as a
+  // property of the idea. The field moves; the candidates do not stop existing when it does.
+  //
+  // ⚠ SO THE CONDITION IS NOW "does this idea have candidates", which is what the feature
+  // actually depends on. It costs one indexed read per turn on ideas that have any.
+  const policyRows = await prisma.policyOption.findMany({
+    where: { ideaId: id },
+    orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, number: true, approach: true, status: true, mergedIntoId: true, kind: true },
+  })
   const livePolicies = policyRows.filter(
     (r) => r.status !== 'RULED_OUT' && !r.mergedIntoId && r.kind === 'GUIDING_POLICY' && r.number != null,
   )
