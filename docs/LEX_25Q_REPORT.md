@@ -388,3 +388,112 @@ CAUSES_COMMENTARY (1 run), LOGIC_CHECK (3) and SMART (4) rest on very little, an
 from a single proposal whose corpus and length are not typical of anything. **Three more complete
 FULL builds, on different ideas, would settle whether 713s is v8 or is the build.** Until then the
 right reading of "85% of the ceiling" is *one observation*, not a rate.
+
+---
+
+# Addendum 2 — where the 900s comes from, and where the build actually runs
+
+**1 September 2026, 12:53 UTC.** Asked: is the ceiling ours or a platform limit; where is it
+defined; what enforces it; and does the build run on the Railway worker or as a Vercel function.
+**Report first, change nothing.** Nothing was changed.
+
+## 1. The 900s is ours. The platform limit is a different number, on a different thing.
+
+**`scrutinise-web/lib/lex/build-config.ts:230`**
+
+```ts
+export const HARD_STOP_MS = parseInt(process.env.LEX_BUILD_HARD_STOP_MS ?? '900000', 10)
+```
+
+A default we chose, overridable by `LEX_BUILD_HARD_STOP_MS`. Nothing about it comes from Vercel,
+Railway or Neon.
+
+**The platform limit is 300 seconds, and it binds on ONE PASS, not on the build** —
+`app/api/ideas/[id]/build/route.ts:20`, `export const maxDuration = 300`, described in that file as
+*"a `maxDuration` ceiling of 300 seconds that no configuration raises"*. `vercel.json` sets 60s for
+eight other routes and deliberately does not list this one, so the build route's 300 comes from its
+own export.
+
+`PASS_BUDGET_MS = 240000` is **our** margin underneath the platform's 300 — 60 seconds kept back so
+a pass that runs out of time can still write down why.
+
+⚠ **Whether `LEX_BUILD_HARD_STOP_MS` is overridden in production is unreadable from this machine**
+(the Vercel token authenticates and then 403s with `"saml": true` on every project-scoped endpoint —
+docs/CLAUDE.md §19). Locally it is unset, so the value is the 900,000 default. **That is an inference
+about production, not a reading of it**, and one `vercel env ls` from you settles it.
+
+## 2. What enforces it: a gate between passes, not a kill
+
+`checkStop()` — `lib/lex/build.ts:1001` — measures `Date.now() - (resumedAt ?? startedAt)` and
+returns a stop reason past `HARD_STOP_MS`.
+
+It is called from **exactly one place**: `runNextPass`, `build.ts:1280`, *after* deciding which pass
+is next and *before* claiming it.
+
+**So the ceiling never interrupts a pass. It only declines to start another one.** That is why v7 is
+recorded at 921.9s against a 900s ceiling: it passed the gate, ran a pass, and overshot. The
+overshoot is by design and the number is not a bug — but it does mean the effective worst case is
+900s **plus the longest a single pass can take**, which today is the platform's 300.
+
+## 3. The build runs as Vercel functions, driven by the browser tab. Not on the Railway worker.
+
+`buildDriver()` (`build-config.ts:298`) returns `'worker'` only when `LEX_BUILD_DRIVER === 'worker'`;
+the default is `'client'`. The file's own note names two preconditions that are *not code*, and I
+checked the first one directly rather than assuming it.
+
+**The Railway project `miraculous-nature` has seven services, and not one runs the build worker.**
+Every start command, read from the Railway API:
+
+| service | start command | |
+|---|---|---|
+| fts-build | `true` | |
+| scrutinise-db | (Dockerfile) | |
+| **Ingest** | **`npm run worker`** | → `scripts/ingest/package.json` → `exec tsx workers/ingest-pool.ts` — **the ingest pool, not the build worker** |
+| vector-serve | `npx tsx search/vector-query-service.ts` | |
+| fts-serve | `npx tsx search/fts-query-service.ts` | |
+| **Ops** | **`npm run scheduler`** | not the build worker either |
+| fts-pilot | `true` | no deployment |
+
+⚠ **The one that could have caught me out is `Ingest`, whose command is literally `npm run worker`.**
+It is a different package's `worker` script and a different worker entirely. The service name is not
+the evidence; the start command is.
+
+**So `scripts/build-worker.ts` exists, is tested, and is not deployed.** And it follows that the
+driver is `client` regardless of what `LEX_BUILD_DRIVER` says in Vercel: if it were set to `worker`,
+builds would enqueue with nothing to pick them up, and v8 completed all eleven passes this morning.
+
+**What that means in practice:**
+
+- Each pass is **one Vercel serverless invocation**, under `maxDuration = 300`.
+- The **browser tab drives it**: it polls the build row every 3,000 ms and POSTs `nextPass` back.
+  That is the ~5s between-pass waits in the timing addendum — a 3s poll plus the GET, not a worker.
+- **A ten-minute build depends on a tab staying open.** Removing that dependency is exactly what
+  AMENDMENT_25B was written for, and it has not been switched on.
+
+## 4. Two things this changes about the previous addendum
+
+**The tighter margin is not 764 against 900. It is SMART against 300.**
+
+SMART ran **285.5 s inside a 300 s platform ceiling** — and 285.5 s is the pass's own recorded
+duration, so the *invocation* around it (auth, `buildState`, the write) was longer still. It came
+within something under fifteen seconds of being killed by Vercel mid-pass, and being killed there is
+worse than hitting our own ceiling: our ceiling stops a build tidily between passes with a reason,
+where the platform stops it mid-flight. `PASS_BUDGET_MS` would have caught it at 240 s — but that
+constant is enforced only inside `build-research.ts`, so **SMART is not covered by it.**
+
+**And the two stalls have a candidate explanation now.** Under a client driver, the 595.4 s wait
+before v6's first pass and the 368.6 s wait before v7's SMART are consistent with a tab that was
+backgrounded — browsers throttle `setTimeout` hard in hidden tabs, and a throttled poll is a build
+that stops advancing while looking healthy. ⚠ **That is a hypothesis, not a measurement.** The pass
+log records when a pass started, not what the tab was doing, and nothing in the data I have can
+separate a throttled tab from a slow cold start. Confirming it would need either the worker (which
+makes it moot) or a client-side log of poll intervals.
+
+## What I would ask you before anything changes
+
+1. **`vercel env ls`** — is `LEX_BUILD_DRIVER` set, and is `LEX_BUILD_HARD_STOP_MS` overridden? Both
+   are unreadable from here and both change the reading above.
+2. **Is the build worker meant to be deployed?** It is built and tested and has been sitting behind
+   two non-code preconditions since AMENDMENT_25B. If the answer is yes, the timing addendum's
+   recommendation ("fix pickup, not the ceiling") becomes "deploy the worker", and the tab
+   dependency goes with it.

@@ -2,7 +2,28 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-09-01 11:45 UTC — ▼ **25-Q ADDENDUM — BUILD TIME MEASURED, NOTHING
+*Last updated: 2026-09-01 12:53 UTC — ▼ **25-Q ADDENDUM 2 — WHERE THE CEILING COMES FROM,
+AND WHERE THE BUILD RUNS. REPORT ONLY, NOTHING CHANGED.**
+▶ **THE 900s IS OURS** — `build-config.ts:230`, `HARD_STOP_MS`, env-overridable. ⚠ **The PLATFORM
+limit is a different number on a different thing: `maxDuration = 300` per PASS**; `PASS_BUDGET_MS`
+(240s) is our own margin under it. ⚠ Whether the hard stop is overridden in Vercel is UNREADABLE
+here (SAML, §19) — inference, not reading.
+▶ **IT IS A GATE, NOT A KILL.** `checkStop` runs in ONE place, `runNextPass` — between passes,
+before claiming the next. It never interrupts a pass, which is why v7 shows 921.9s against 900s.
+Worst case is 900s **plus one pass**.
+▶▶ **THE BUILD RUNS AS VERCEL FUNCTIONS DRIVEN BY THE BROWSER TAB — THE RAILWAY BUILD WORKER IS
+NOT DEPLOYED.** All seven Railway start commands read: none runs `build:worker`. ⚠⚠ **`Ingest`'s
+command is literally `npm run worker` and is the INGEST POOL** (`workers/ingest-pool.ts`) — the
+service name is not the evidence. **A ten-minute build depends on a tab staying open**;
+AMENDMENT_25B exists to remove that and has never been switched on.
+⚠⚠ **THE TIGHT MARGIN IS SMART'S 285.5s AGAINST THE 300s PLATFORM KILL, not 764/900** — and the
+invocation was longer than the pass. `PASS_BUDGET_MS` is enforced only in `build-research.ts`, so
+**SMART is not covered by it.**
+⚠ The two stalls (v6 595.4s, v7 368.6s) are CONSISTENT WITH A BACKGROUNDED TAB under a client
+driver — hypothesis, not measurement.
+▶ **NEEDED FROM CHARLIE:** `vercel env ls` (is `LEX_BUILD_DRIVER` set? is the hard stop
+overridden?), and whether the build worker should be deployed — if yes, addendum 1's
+recommendation becomes "deploy the worker". Earlier: 2026-09-01 11:45 UTC — ▼ **25-Q ADDENDUM — BUILD TIME MEASURED, NOTHING
 CHANGED.** ⚠⚠ **The commentary pass is 25.4s, 3.6% of v8 — it did NOT consume the headroom.** What
 changed is that **v8 is the first build ever to run all eleven passes** (previous completed runs did
 7, 8 and 10). **Three slowest: SMART 285.5s (40%), RESEARCH 244.5s (34%), ORIENT 34.6s (5%)** — the
