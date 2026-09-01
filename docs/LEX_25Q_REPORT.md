@@ -268,3 +268,123 @@ The render assertions above are assertions. These are not confirmed by them:
 6. **The challenges with titles.** Existing rows have none by design; only Charlie's next build will
    show whether the titles the coverage check produces are the *"Employment law issues"* kind or a
    restatement of the point.
+
+---
+
+# Addendum — where the 764 seconds go
+
+**1 September 2026.** Asked: *"the full build now runs 764s against a 900s ceiling — 15% margin. The
+commentary pass added in 25-O consumed most of the headroom. Measure where the time actually goes
+across the eleven passes, report the three slowest, and say whether the ceiling should rise or the
+passes should get faster. Do not change either until the measurement is in."*
+
+**Nothing was changed.** `npm run measure:pass-time` opens no write and only reads `HARD_STOP_MS`
+and `PASS_BUDGET_MS`.
+
+## The premise is wrong: the commentary pass costs 25.4 seconds
+
+**3.6% of v8's pass time, 3.3% of its wall clock.** Deleting it outright would take v8 from 761.5s
+to 736.1s — from 85% of the ceiling to 82%. It did not consume the headroom.
+
+**What actually changed is that v8 is the first build ever to run all eleven passes.** Of the seven
+FULL builds with usable timings, the completed ones ran 7, 8 and 10 passes. v8 ran 11. The 764
+seconds is not "the old build plus a commentary pass"; it is the first complete build there has been.
+
+## v8, pass by pass
+
+```
+  ORIENT                34.6s   cumulative    34.6s     5%
+  DIAGNOSIS             11.7s   cumulative    46.2s     2%
+  APPROACH              16.3s   cumulative    62.5s     2%
+  ACTIONS               10.9s   cumulative    73.4s     2%
+  RESEARCH             244.5s   cumulative   317.9s    34%
+  REVISE                17.3s   cumulative   335.2s     2%
+  CAUSES_COMMENTARY     25.4s   cumulative   360.7s     4%
+  SMART                285.5s   cumulative   646.2s    40%
+  KERNEL_CHECK          23.4s   cumulative   669.5s     3%
+  LOGIC_CHECK           22.5s   cumulative   692.1s     3%
+  ADVERSARIAL           21.3s   cumulative   713.4s     3%
+  passes               713.4s
+  wall clock           761.5s   85% of the ceiling, 138.5s to spare
+```
+
+**The three slowest, by median across the FULL builds:**
+
+1. **SMART — "Asking whether any of this is good"** — 196.7s median, **285.5s on v8, 40%** of its
+   pass time.
+2. **RESEARCH — "Researching what the draft revealed"** — 184.5s median, **244.5s on v8, 34%**.
+3. **ORIENT — "Understanding the terrain"** — 28.1s median, 34.6s on v8, 5%.
+
+**SMART and RESEARCH are 530.0s of v8's 713.4s — 74%.** The other nine passes together are 183.4s.
+Any work on speed that is not on those two is rounding.
+
+## But the ceiling has never been reached by pass time
+
+This is the finding that decides the question, and neither option in it covers the answer.
+
+```
+  ver  status     passes  pass time   wall clock   gap    of ceiling
+  v8   DONE       11/11     713.4s      761.5s    48.2s     85%
+  v7   FAILED      8/11     519.3s      921.9s   402.7s    102%   ← the only build the clock stopped
+  v6   DONE       10/11     245.4s      842.5s   597.2s     94%
+  v5   DONE        8/11     258.3s      259.9s     1.6s     29%
+```
+
+**The gap is not spread thinly. It is one stall each time:**
+
+```
+  v7 FAILED    wall 921.9s   longest single wait: 368.6s before SMART; all 7 others together: 29.2s
+  v6 DONE      wall 842.5s   longest single wait: 595.4s before ORIENT; all 9 others together:  1.8s
+  v8 DONE      wall 761.5s   longest single wait:   6.0s before APPROACH; all 10 others:       42.2s
+```
+
+**The one build the clock has ever stopped was stopped by a 368.6-second stall before SMART, not by
+the work.** Its passes did 519.3s of work; without that single wait it would have finished around
+553s. v6 reached 94% of the ceiling on 245.4s of work and 595.4s of waiting for its first pass to be
+picked up. v8, with more than twice v6's pass work, finished lower — because nothing stalled.
+
+⚠ **I corrected my own measurement mid-way and it is worth recording.** The first version measured
+the wall clock from `startedAt`; `checkStop` measures from `resumedAt ?? startedAt`, because 25-N
+gives a resumed build a fresh clock. Measuring from `startedAt` would have counted the hours a
+stopped build sat idle as "time against the ceiling" and argued for raising a ceiling that had never
+been reached. None of these seven builds was resumed, so the correction changed no number here — but
+it would have on the next one.
+
+## And a third thing, which neither option asked about
+
+**`PASS_BUDGET_MS` (240s) is enforced on one pass out of eleven.** It is checked in
+`build-research.ts`, between questions; `build.ts` only logs it. So **SMART — the slowest pass in the
+build — has no time budget at all**, and has run **285.5s, 45.5s past the number that looks like its
+ceiling**. The only backstop is `build-settle.ts`'s stuck threshold at 360s.
+
+That is not a defect today. It is the reason the 138.5s margin is thinner than it looks: a SMART that
+ran to the stuck threshold on an otherwise-v8 build gives 836s, or 93%, and nothing between 285s and
+360s would stop it.
+
+## The answer
+
+**Neither. Do not raise the ceiling and do not optimise the passes yet.**
+
+- **Do not raise the ceiling.** 900s has never bound on work. The single build it stopped lost 368.6s
+  to a stall; raising the ceiling would have let that build finish *and would have taught us nothing*
+  about why it waited six minutes for a pass to start. A ceiling raised to accommodate a stall is a
+  stall you stop noticing.
+- **Do not optimise the passes yet.** They are not what has failed. If it becomes necessary, the work
+  is SMART and RESEARCH and nothing else — 74% of the time between them, with a floor set by how many
+  questions RESEARCH asks and how many perspectives SMART runs, both of which are quality decisions
+  rather than performance ones.
+- **The exposure worth acting on is the stall, and it is not on the list.** Two of seven FULL builds
+  lost 6–10 minutes to a single wait before a pass started, and one of them died of it. That is
+  worker pickup, and it is measurable today — the per-pass wait is already in the log this script
+  reads.
+- **The second thing worth acting on is that SMART is unbudgeted.** Give it a budget, or state
+  deliberately that it does not have one; at present the 240s constant reads like a guarantee that
+  covers one pass in eleven.
+
+## What would make this measurement stronger
+
+Seven builds, **one of which has run all eleven passes**, all on one idea. The per-pass medians for
+CAUSES_COMMENTARY (1 run), LOGIC_CHECK (3) and SMART (4) rest on very little, and every figure comes
+from a single proposal whose corpus and length are not typical of anything. **Three more complete
+FULL builds, on different ideas, would settle whether 713s is v8 or is the build.** Until then the
+right reading of "85% of the ceiling" is *one observation*, not a rate.

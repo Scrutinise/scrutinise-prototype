@@ -88,6 +88,7 @@
     "backfill:evidence-dates": "tsx --env-file=.env scripts/backfill-evidence-dates.ts",
     "audit:join-blind": "tsx scripts/audit-join-blind-checks.ts",
     "measure:outputs-open": "tsx --env-file=.env scripts/measure-outputs-open.ts",
+    "measure:pass-time": "tsx --env-file=.env scripts/measure-pass-time.ts",
     "backfill:challenge-source": "tsx --env-file=.env scripts/backfill-challenge-source.ts",
     "verify:write-paths": "tsx --env-file=.env scripts/verify-write-paths.ts",
     "check:scripts": "tsc --noEmit -p scripts/tsconfig.json",

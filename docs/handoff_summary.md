@@ -2,7 +2,21 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-09-01 11:11 UTC — ▼ **LEX 25-Q: LEX CAN WRITE TO THE MIDDLE PANEL, AND
+*Last updated: 2026-09-01 11:45 UTC — ▼ **25-Q ADDENDUM — BUILD TIME MEASURED, NOTHING
+CHANGED.** ⚠⚠ **The commentary pass is 25.4s, 3.6% of v8 — it did NOT consume the headroom.** What
+changed is that **v8 is the first build ever to run all eleven passes** (previous completed runs did
+7, 8 and 10). **Three slowest: SMART 285.5s (40%), RESEARCH 244.5s (34%), ORIENT 34.6s (5%)** — the
+first two are 74% of the build; the other nine total 183.4s.
+▶▶ **THE CEILING HAS NEVER BEEN REACHED BY WORK.** The gap is ONE STALL per build, not spread
+overhead: v7 waited **368.6s before SMART** and is the only build the clock has stopped (its passes
+did 519.3s; without the stall it finishes ~553s); v6 waited **595.4s for its first pass** and hit 94%
+on 245.4s of work. v8 did twice v6's work and finished lower.
+▶ **RECOMMENDATION: raise neither.** A ceiling raised to accommodate a stall is a stall you stop
+noticing — the exposure is **worker pickup**, already measurable in the pass log. ⚠ **And
+`PASS_BUDGET_MS` (240s) binds on ONE pass in eleven** (research only, between questions; `build.ts`
+merely logs it) — **SMART is unbudgeted** and has run 285.5s; the only backstop is the 360s stuck
+threshold. ⚠ Sample is 7 builds, 1 complete, one idea: 85% is ONE OBSERVATION, not a rate.
+`npm run measure:pass-time`. Earlier: 2026-09-01 11:11 UTC — ▼ **LEX 25-Q: LEX CAN WRITE TO THE MIDDLE PANEL, AND
 FIVE OF THE BRIEF’S EIGHT SECTIONS WERE ALREADY BUILT.**
 ⚠⚠ **§1a — THE CHAT WAS NEVER READ-ONLY; IT COULD NOT REACH THE FIELDS THE PANEL RENDERS.**
 `validateProposal` has no schema for `policyOptions` / `chosenApproach` / `actions`, so a rewrite
