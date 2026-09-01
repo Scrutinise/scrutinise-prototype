@@ -86,6 +86,8 @@
     "check:lex-25p": "tsx --env-file=.env scripts/check-lex-25p.ts",
     "check:lex-25q": "tsx --env-file=.env scripts/check-lex-25q.ts",
     "check:lex-25r": "tsx --env-file=.env scripts/check-lex-25r.ts",
+    "check:lex-25s": "tsx --env-file=.env scripts/check-lex-25s.ts",
+    "check:lex-25t": "tsx --env-file=.env scripts/check-lex-25t.ts",
     "backfill:evidence-dates": "tsx --env-file=.env scripts/backfill-evidence-dates.ts",
     "audit:join-blind": "tsx scripts/audit-join-blind-checks.ts",
     "measure:outputs-open": "tsx --env-file=.env scripts/measure-outputs-open.ts",
