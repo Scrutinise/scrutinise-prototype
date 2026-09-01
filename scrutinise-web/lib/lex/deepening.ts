@@ -35,6 +35,7 @@ import { siftCandidates, siftSummaryLine, SIFT_CANDIDATE_TARGET, type SiftKeep }
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { runJob, jobQuestion, type JobOutcome } from './deepening-jobs'
 import { collapseKnownUnknowns, type KnownUnknown } from './known-unknowns'
+import { sourceDateFields } from './evidence-date'
 
 // 25-C §2.4 — the shape and the collapse live in known-unknowns.ts so the panel, the build's
 // agenda and this engine cannot disagree about what a gap is. Re-exported for existing importers.
@@ -593,6 +594,9 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
           sourceId: src.id,
           citation: src.citation,
           url: src.url,
+          // ⚠ 25-P §2b — THE DATE COMES OFF THE CORPUS ROW AT WRITE TIME, NEVER FROM THE
+          // MODEL. See lib/lex/evidence-date.ts.
+          ...sourceDateFields(src),
           status: 'PROPOSED',
           siftReason: judged?.reason ?? null,
           // Null, not false, when the sift did not run: "not assessed" and "assessed and

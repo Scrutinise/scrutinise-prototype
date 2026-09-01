@@ -215,6 +215,9 @@ export interface DevolutionResult {
   snippet: string
   url: string | null
   type: string
+  /// 25-P §2b — carried off the SearchResult so the evidence row it becomes can be dated.
+  /// Dropping it here was why the devolution finding had no date to write.
+  date: string | null
 }
 
 export interface DevolutionScope {
@@ -260,6 +263,7 @@ export async function retrieveDevolutionScope(query: string, limit = 24): Promis
     snippet: r.snippet,
     url: r.url || null,
     type: String(r.type),
+    date: r.date || null,
   }))
   const byJurisdiction: Record<string, number> = {}
   for (const r of results) byJurisdiction[r.jurisdiction] = (byJurisdiction[r.jurisdiction] ?? 0) + 1

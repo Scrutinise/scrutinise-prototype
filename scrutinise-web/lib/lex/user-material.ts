@@ -40,6 +40,7 @@ import { callJson, llmOk } from './build-llm'
 import { modelFor } from './model-registry'
 import { HEADING_ORDER, QUESTION_HEADINGS, isHeadingKey, type HeadingKey } from './question-headings'
 import { USER_MATERIAL_PASS_PREFIX } from './heading-map'
+import { sourceDateFields } from './evidence-date'
 
 // ── caps ─────────────────────────────────────────────────────────────────────
 //
@@ -456,6 +457,9 @@ export async function runMaterialFindings(materialId: string): Promise<{ written
         // ⚠ The badge the panel reads. `USER_DOCUMENT` is what marks this visibly as the
         // user's own source rather than something we found.
         sourceType: 'USER_DOCUMENT',
+        // ⚠ 25-P §2b — NO SOURCE ROW TO DATE. Recorded as such rather than left undated:
+        // a reasoning step with nothing behind it is not an undated document.
+        ...sourceDateFields(null),
         sourceId: material.id,
         citation: material.label,
         url: material.url,

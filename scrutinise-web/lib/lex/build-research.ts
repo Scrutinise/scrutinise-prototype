@@ -44,6 +44,7 @@ import {
   writeQueries, extractedQuery, noteQueryDefects, type IssuedQuery,
 } from './build-query'
 import { TESTIMONY_INSTRUCTION } from './testimony'
+import { sourceDateFields } from './evidence-date'
 
 /** Why a question produced nothing. Named apart — see rule 1 in the header. */
 export type QuestionFailure = 'search-broke' | 'gather-failed' | 'nothing-bore-on-it' | 'corpus-silent' | null
@@ -588,6 +589,10 @@ export async function runResearch(input: {
             status: 'PROPOSED',
             siftReason: judged?.reason ?? null,
             precedentTestPassed: judged ? judged.isPrecedent : null,
+            // ⚠ 25-P §2b — THE DATE COMES OFF THE CORPUS ROW, AT WRITE TIME, NEVER FROM THE
+            // MODEL. `src` is the retrieved row the finding cites; if it carries no date that
+            // fact is recorded too. See lib/lex/evidence-date.ts.
+            ...sourceDateFields(src),
           },
         })
         findingCount++

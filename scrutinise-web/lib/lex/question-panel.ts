@@ -37,6 +37,7 @@ import {
   type EmptyReason, type HeadingKey,
 } from './question-headings'
 import { INTERROGATION_LIBRARY } from './interrogation-library'
+import { evidenceStanding, type Standing, type Staleness } from './evidence-date'
 
 export interface PanelEntry {
   id: string
@@ -70,6 +71,25 @@ export interface PanelEntry {
    * not two flags.
    */
   priority: boolean
+
+  /**
+   * ══ 25-P §2d — WHEN IT IS FROM, AND WHAT THAT MAKES IT ══════════════════════════════
+   *
+   * ⚠⚠ ONE SENTENCE, COMPUTED ONCE, IN `lib/lex/evidence-date.ts`. §2d asks for three
+   * judgements — old enough to need checking, no figures behind it, what it was weighed
+   * against — and they have to read the same on the panel, in the report and in a check.
+   *
+   * ⚠ AND `staleness` IS NEVER 'CURRENT' ON AN UNDATED ROW. That substitution is the whole
+   * of the original defect: a 2014 debate read as describing today because nothing said
+   * otherwise. §2c: an undated row must be VISIBLY undated.
+   *
+   * ⚠ RENDERED AS WORDS, NOT AS A COLOUR. Charlie is colour blind and the repository's rule
+   * is that hue is never the signal; `standingLabel` is the signal and it is a sentence.
+   */
+  sourceDate: string | null
+  standing: Standing
+  staleness: Staleness
+  standingLabel: string
 }
 
 export interface PanelHeading {
@@ -200,6 +220,14 @@ export async function buildQuestionPanel(
       exclusionReason: exclusionKey ? excluded.get(exclusionKey) ?? null : null,
       // §A1 — the SAME rule as the exclusion above, from the same function.
       priority: !!decisionKey(e, priority),
+      // ⚠ 25-P §2d — computed by the one function, never restated here. See PanelEntry above.
+      sourceDate: e.sourceDate ? e.sourceDate.toISOString().slice(0, 10) : null,
+      ...(({ staleness, standing, label }) => ({ staleness, standing, standingLabel: label }))(
+        evidenceStanding({
+          sourceDate: e.sourceDate, sourceDateBasis: e.sourceDateBasis,
+          body: e.body, title: e.title,
+        }),
+      ),
     }
   }
 
@@ -245,6 +273,14 @@ export async function buildQuestionPanel(
       // its own; it can be set aside like anything else, but it is never a "priority
       // source" in the document sense, which is about a SOURCE the proposer chose.
       priority: false,
+      // ⚠ 25-P §2d — THE USER'S OWN DOCUMENT IS DATED THE SAME WAY OR NOT AT ALL. It has no
+      // corpus row, so it reads as undated with the reason given, exactly like every other row
+      // that cannot be dated. A "your material" card exempted from the standing line would be
+      // the one card on the panel that could quietly pass as current.
+      sourceDate: null,
+      ...(({ staleness, standing, label }) => ({ staleness, standing, standingLabel: label }))(
+        evidenceStanding({ sourceDate: null, sourceDateBasis: 'NO_SOURCE_ROW', body: null, title: m.label }),
+      ),
     })
     byHeading.set('YOUR_MATERIAL', list)
   }

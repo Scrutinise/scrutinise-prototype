@@ -44,6 +44,7 @@ import {
   type SnapshotEvidence,
 } from './proposal-snapshot'
 import type { ProposalBuildResult } from './build-proposal'
+import { evidenceStanding } from '../lex/evidence-date'
 
 function text(s: string): Run[] { return [{ text: s }] }
 
@@ -65,6 +66,27 @@ function moneyRange(low: number | null, high: number | null, unit: string | null
   if (low != null && high != null && low !== high) return `${fmt(low)}–${fmt(high)}${unit && unit !== 'GBP' ? ` ${unit}` : ''}`
   const one = low ?? high!
   return `${fmt(one)}${unit && unit !== 'GBP' ? ` ${unit}` : ''}`
+}
+
+/**
+ * ══ 25-P §2d — THE STANDING OF ONE SOURCE, AS A SENTENCE ═══════════════════════════
+ *
+ * ⚠ THE JUDGEMENT IS IMPORTED, NEVER RESTATED. `evidenceStanding` is the one place the
+ * threshold and the figures test live; this only decides whether the sentence is worth
+ * printing. A document that carried its own copy of "five years" would drift from the panel's
+ * the first time either was edited.
+ *
+ * ⚠ A CURRENT, FIGURED SOURCE GETS NO PREFIX. Marking everything marks nothing.
+ */
+function standingOf(e: SnapshotEvidence): { prefix: string } {
+  const st = evidenceStanding({
+    sourceDate: e.sourceDate ? new Date(e.sourceDate) : null,
+    sourceDateBasis: e.sourceDateBasis ?? null,
+    body: e.body,
+    title: e.title,
+  })
+  if (st.staleness === 'CURRENT' && st.standing === 'EVIDENCE') return { prefix: '' }
+  return { prefix: `[${st.label}]` }
 }
 
 export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
@@ -138,7 +160,21 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
       // every line in it can be answered; inventing a plausible relevance sentence here
       // would be the one place a fabrication would be least likely to be noticed and most
       // damaging when it was.
-      snippet: e.siftReason?.trim() || undefined,
+      // ══ 25-P §2d — HOW OLD IT IS, ON THE SOURCE LINE ITSELF ═══════════════════
+      //
+      // ⚠⚠ IN THE SNIPPET, NOT ONLY IN `date`. The renderers print `date` as a small stamp,
+      // and §2d's judgement is not a stamp — "check the figures against current ones" is an
+      // instruction to the reader. A 2014 debate that reads as current is the defect this
+      // sprint exists to remove, and a date the eye skips does not remove it.
+      //
+      // ⚠ IT LEADS, AND THE SIFT'S REASON FOLLOWS. The reason says why the source bears on the
+      // proposal; the standing says whether it can still be relied on. Reading them the other
+      // way round is how a stale source gets read as a relevant one.
+      snippet: [
+        standingOf(e).prefix,
+        e.siftReason?.trim() || '',
+      ].filter(Boolean).join(' ') || undefined,
+      date: e.sourceDate ?? undefined,
     }))
     blocks.push({ kind: 'sources', label: def?.heading ?? NOT_FILED, refs })
   }

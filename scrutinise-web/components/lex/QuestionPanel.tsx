@@ -259,6 +259,27 @@ function EntryCard({
         </p>
       )}
 
+      {/* ══ 25-P §2d — WHEN IT IS FROM, AND WHAT THAT MAKES IT ══════════════════════
+          §2c: an undated row must be VISIBLY undated, never silently assumed current.
+
+          ⚠⚠ THE SIGNAL IS THE WORD, NOT THE COLOUR. Charlie is colour blind and this
+          repository's rule is that hue is never the only cue: the marker is a character
+          (⚠ or ·) AND a sentence that says what to do about it. Removing the colour here
+          would lose nothing.
+
+          ⚠ A CURRENT SOURCE WITH FIGURES BEHIND IT SAYS SO PLAINLY AND QUIETLY. Marking
+          every card marks none of them. */}
+      <p className={`text-xs mt-1.5 ${
+        e.staleness === 'CURRENT' && e.standing === 'EVIDENCE'
+          ? 'text-zinc-400'
+          : 'text-zinc-700 font-medium'
+      }`}>
+        <span aria-hidden="true">
+          {e.staleness === 'CURRENT' && e.standing === 'EVIDENCE' ? '· ' : '⚠ '}
+        </span>
+        {e.standingLabel}
+      </p>
+
       {e.excluded && (
         <p className="text-xs mt-1.5 text-zinc-500">
           <span className="font-medium">Set aside:</span>{' '}

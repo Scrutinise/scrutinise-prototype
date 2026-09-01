@@ -50,6 +50,7 @@ import { gidFromId } from './legislation-url'
 import type { HeadingKey } from './question-headings'
 import { inboundFor, describeCoverage } from './statutory-graph'
 import { groupReferences, classifyGroups, describeScale, describeMembers } from './statutory-consequences'
+import { sourceDateFields } from './evidence-date'
 
 /** The structured retrieval jobs a pass can declare. Adding one is an entry here plus a case in
  *  `runJob` — never a branch in the engine, which must not know a pass key or a job key. */
@@ -248,6 +249,9 @@ async function runPrecedent(
         // compiler was happy to write that into every precedent body. check:lex-25c caught it.
         body: `${precedentBlock(p).forUser}\n\n(${PROVENANCE_WORDS[inst.provenance]})`,
         sourceType: 'PRECEDENT_GROUP',
+        // ⚠ 25-P §2b — THE DATE COMES OFF THE CORPUS ROW AT WRITE TIME, NEVER FROM THE
+        // MODEL. See lib/lex/evidence-date.ts.
+        ...sourceDateFields(p.legs[0]),
         sourceId: p.legs[0].id,
         citation: p.instrumentTitle ?? inst.gid,
         url: p.legs[0].url,
@@ -323,6 +327,9 @@ async function runDevolutionScope(
       title: `Who has legislated on this — ${shape}`,
       body: devolutionBlock(scope).forUser,
       sourceType: 'DEVOLUTION_SCOPE',
+      // ⚠ 25-P §2b — THE DATE COMES OFF THE CORPUS ROW AT WRITE TIME, NEVER FROM THE
+      // MODEL. See lib/lex/evidence-date.ts.
+      ...sourceDateFields(scope.results[0]),
       sourceId: scope.results[0].id,
       citation: null,
       url: scope.results[0].url,
@@ -438,6 +445,10 @@ async function runStatutoryConsequences(
           headingKey: 'REFERS_TO_THIS',
           fieldRef: null,
           kind: 'FINDING',
+          // ⚠ 25-P §2b — A GROUP OF REFERENCES IS NOT A DOCUMENT, so there is no source row to
+          // take a date from. Recorded as NO_SOURCE_ROW rather than left blank: §2c counts what
+          // could not be dated and has to be able to say why for every row.
+          ...sourceDateFields(null),
           title: `${g.members.length} ${g.members.length === 1 ? 'reference' : 'references'} that ${g.label} — ${g.disposition}`,
           // ⚠⚠ THE QUOTE TRAVELS WITH THE DISPOSITION, in the same row. §3: "a disposition
           // with no visible source words is Lex putting confident prose on top of a verified

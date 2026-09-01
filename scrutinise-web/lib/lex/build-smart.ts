@@ -62,6 +62,7 @@ import { supersedeOlderProposals } from './evidence-layer'
 import type { ElicitationContext } from './elicitation'
 import { testimonyBlock, TESTIMONY_INSTRUCTION } from './testimony'
 import { queryDefects } from './build-query'
+import { sourceDateFields } from './evidence-date'
 
 const TIMEOUT_MS = parseInt(process.env.LEX_BUILD_TIMEOUT_MS ?? '90000', 10)
 
@@ -912,6 +913,9 @@ export async function citeVocabulary(input: {
         sourceId: src.id,
         citation: src.citation,
         url: src.url,
+        // ⚠ 25-P §2b — THE DATE COMES OFF THE CORPUS ROW AT WRITE TIME, NEVER FROM THE
+        // MODEL. See lib/lex/evidence-date.ts.
+        ...sourceDateFields(src),
         status: 'PROPOSED',
       },
     })
@@ -945,6 +949,10 @@ export async function citeVocabulary(input: {
         + 'the word is real and the record uses it. What the record SAYS about each is in the findings '
         + 'below, where it carries a citation.',
       sourceType: null, sourceId: null, citation: null, url: null,
+      // ⚠ 25-P §2b — NO SOURCE ROW TO DATE. Recorded as such rather than left undated: a
+      // reasoning step Lex wrote over the proposal is not an undated document, and §2c has
+      // to tell the two apart when it counts what could not be dated.
+      ...sourceDateFields(null),
       status: 'PROPOSED',
     },
   })
@@ -1101,6 +1109,10 @@ export async function recordPrognosis(input: {
         title: r.title,
         body: `${r.body}\n\n(This is a judgement, reasoned by ${model} over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)`,
         sourceType: null, sourceId: null, citation: null, url: null,
+        // ⚠ 25-P §2b — NO SOURCE ROW TO DATE. Recorded as such rather than left undated: a
+        // reasoning step Lex wrote over the proposal is not an undated document, and §2c has
+        // to tell the two apart when it counts what could not be dated.
+        ...sourceDateFields(null),
         status: 'PROPOSED',
       },
     })
