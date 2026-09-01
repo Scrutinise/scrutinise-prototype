@@ -4,10 +4,61 @@
 
 ---
 
-## CENTRAL THREAD — last updated 2026-09-01 14:35 UTC (25-A)
+## CENTRAL THREAD — last updated 2026-09-01 16:38 UTC (25-A)
 
 *This section belongs to the CENTRAL stream and is kept separate from the LEX stream's entry below,
 because the two run in this repository at the same time.*
+
+▼ **25-A §7 — ONE INVITATION, ONE ACCOUNT — AND THE ACCOUNT GATE WAS ENFORCED IN ONE OF THREE
+DOORS.**
+
+✅ **THE CHECK RAN: 76 passed, 0 failed, 14 controls fired, 0 dead** (§1–§6). ⚠ **It found three
+things, two in my own work:** a fixture using a Prisma field that does not exist which **`tsc`
+accepted** (union input types swallow excess properties — a clean typecheck of a Prisma write proves
+less than it looks); **two assertions that went red because the code got better** (they asserted the
+pre-§7a defect); and ⚠⚠ **a fixture user left on PRODUCTION** because the teardown was one straight
+sequence and died on its first statement. Teardown is now statement-independent with a sweep.
+
+⚠ **CORRECTIONS TO THIS MORNING:** three accounts appeared 15:33–15:48 including
+`chair.harrogateknaresborough@` — **the §1e remedy works**; `mona@monima.co.uk` and
+`jones.graham7@sky.com` appear in **no invitation record I read**. **37 users, not 33**;
+`lastActiveAt` still null for every one.
+
+▶▶ **§7a/§7b — `lib/invite-gate.ts` IS NOW THE ONE PLACE THAT DECIDES WHO MAY HAVE AN ACCOUNT.**
+A platform `Invite` **or** a Community invitation addressed to them. `/sign-up` takes
+`?communityInvite=`; the invitation page hands over its own invitation. ⚠ **A departure from §7a's
+letter, stated:** the Community invitation IS the credential rather than minting a second, because
+`createInvite()`'s upsert would destroy any platform invitation the address already held.
+⚠⚠ **THERE WAS A THIRD DOOR: `getAuthenticatedUser()` created a User row with NO invite check at
+all.** All three now ask one function. ⚠ A shared link is deliberately not a credential.
+
+⚠⚠ **§7d ANSWERED, AND IT IS NOT "VISIBILITY ONLY" — ROOT MEMBERSHIP CARRIES SEVEN RIGHTS**,
+including **founding a top-level branch (becoming its OWNER)** and **logging an activity claim that
+pays points at once**. **That closes a loop back onto §7f:** a new member can found a branch, own it
+and invite whoever they like. **Recommendation, one line: founding a top-level branch should require
+the invitation right. NOT BUILT — it changes a deliberate decision of 6 August and is Charlie's.**
+
+▶ **§7e** `CommunityTitle` per Community (owner-defined, `grantsInvite`), given on the Members
+panel; `inviteRightFor` checks it first. ⚠⚠ **Nothing writes `User.role`**, asserted twice.
+▶ **§7c** the invitation is accepted at first sign-in on **both** paths (webhook and JIT sync).
+▶ **§7i** already true in the rights sense — the four negatives are now asserted with controls,
+including that **no Community code path can delete a platform account**. ⚠ **ONE REAL GAP: a title
+grants the invitation right and NOT ejection**, so a titled "Branch Chair" who is only a MEMBER can
+invite but not eject. Charlie's call.
+▶ **§7j BUILT, NOT RUN.** `scripts/accept-outstanding-invitations.ts` — lists by default, writes
+only with `--write`, table produced by a dry run of the same function that does the work, closing
+report is a **re-read**, ambiguity reported and never resolved, invitations consumed,
+`acceptedOnBehalfAt` recorded. ⚠ **A branch invitation also creates the Community membership**
+(Stage 1.2's branch-implies-root rule, which `check:central` asserts) — read that against §7d before
+authorising `--write`.
+
+⚠⚠ **NEXT ACTION, AND IT BLOCKS THE §7 CHECKS AND THE DEPLOY:**
+`npx tsx --env-file=.env scripts/apply-sql.ts prisma/central_25a_provenance.sql` from
+`scrutinise-web` — additive, nothing dropped — then re-run `scripts/check-central-25a.ts`. **The
+migration must land BEFORE the code deploys.** The §7 half of the check is reported as **not run**.
+`tsc` clean, lint clean apart from one pre-existing Lex finding, `check-clean-build.sh --fast` PASS.
+
+---
 
 ▼ **CENTRAL 25-A — A COMMUNITY INVITATION LEADS TO A DOOR THAT CANNOT LET A NEW PERSON IN, AND FIVE
 PEOPLE ARE STANDING AT IT.**
@@ -68,7 +119,34 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-01 16:23 UTC — ▼ **25-R ADDENDUM — CHARLIE'S CHALLENGE WAS RIGHT.**
+*Last updated: 2026-09-01 17:41 UTC — ▼ **LEX 25-S — THE SORT SHOWS ITS WORKING; CAUSES GET
+NUMBERS AND A DIAGRAM.**
+⚠⚠ **THE SORT HAS STILL NEVER RUN IN A REAL BUILD** — all five completed builds predate it; **35
+policy options, 35 numbered, 0 sorted.** §1 is built against data that does not exist yet, and
+`check:lex-25s` records it as **NOT CHECKED** rather than passing on an empty set. **One full build
+(3 credits) is the only way to see whether §1 worked.**
+▶ **§1.1** two of three group headings already existed since 25-P; **the guiding-policy group had
+none**, so the top read as *the list*. ▶ **§1.2** a one-line history per card from a pure module —
+⚠ the property is the **distinction**: a card with no history gets NO line, or the line means
+nothing. A **cluster is not history** (nothing was written) and is separate. ▶ **§1.3** one
+`undoSort` for both directions, asserted **both ways**: back in the policy group with its number,
+and **genuinely gone from the group it left**.
+▶▶ **§2d's PREMISE OVERTURNED: a loop cannot be attempted today because THERE IS NO MOVE
+OPERATION** — nothing re-parents an existing cause. So the guard ships with the move. A loop is a
+**hang** (children are walked recursively), so the route refuses by name, 409, and the guard is
+bounded by a `seen` set not a depth limit. ▶ **§2a** `DiagnosisCause.number` assigned WHERE THE ROW
+IS CREATED (25-R's lesson), 22 backfilled, 0 collisions; ⚠ **not `orderIndex`**, which is the thing
+that moves. Two drop targets for two gestures.
+▶ **§3 SVG, not Mermaid** — ½MB bundle, a layout engine that wants its own width, and **its styling
+is where colour creeps in**. ⚠ **§3d width is COMPUTED not measured** (renderer still frozen):
+**≈420px default, ≈180px at the floor** — a four-deep tree does not fit in 180px, so it scrolls in
+its own box; **an expand control or the research panel is Charlie's call**.
+✅ `check:lex-25s` **33/0, 1 NOT CHECKED, 6 controls** — every assertion a cold read. Suite + build
+green.
+⚠ **`package.json` NOT touched** (contended per §0) — run with `npx tsx --env-file=.env
+scripts/check-lex-25s.ts`; adding it to the suite is one line, Charlie's to make.
+⚠ Caught pre-ship: the undo buttons were wired to `post()` not `patch()` and would have 422'd.
+Earlier: 2026-09-01 16:23 UTC — ▼ **25-R ADDENDUM — CHARLIE'S CHALLENGE WAS RIGHT.**
 ⚠⚠ **THE COLLAPSE EXPLAINED HALF OF §1.** Measured live in production: **shut** → unmounted and
 absent; **re-opened** → fetches and draws; **open** → the commentary begins **1,080px, 1.4 viewport
 heights, below the section heading**, because it was mounted inside `CausesField` (the causes
