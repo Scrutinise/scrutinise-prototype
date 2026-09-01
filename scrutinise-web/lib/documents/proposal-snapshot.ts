@@ -92,6 +92,29 @@ export interface SnapshotOption {
   status: string
   ruleOutReason: string | null
   source: string
+
+  // ══════════════ 25-P §1 — CARRIED SO THE DOCUMENTS CAN SHOW THE DECISION ══════════════
+  // ⚠ ALL OPTIONAL, AND THAT IS DELIBERATE. A published version stores its snapshot as JSON and
+  // is re-read months later; a snapshot written before 25-P has none of these keys, so a
+  // required field would be a lie the type system tells about old rows.
+
+  /** §1.1 — the stable number the user knows this policy by. */
+  number?: number | null
+  /**
+   * ══ §1.8 — WHAT HAPPENS IF ONLY PART IS DELIVERED ═══════════════════════════════
+   *
+   * ⚠⚠ IT MUST SURVIVE INTO BOTH GENERATED DOCUMENTS, AND §1.8 SAYS WHY: *"A legislature will
+   * take the easy half of a proposal and leave the hard half; this sentence is the warning, and
+   * it will be the first thing cut for length unless it is marked."*
+   *
+   * So it is a field on the snapshot rather than prose appended to `approach`. A sentence inside
+   * a paragraph is a sentence a summariser drops silently; a field is one a renderer has to
+   * decide to omit, and the check in §1.12 can see whether it did.
+   */
+  chainLink?: string | null
+  /** §1.10 — NOW or LATER. A policy wanted but not yet is not a rejection. */
+  phase?: string | null
+  phaseReason?: string | null
 }
 
 export interface SnapshotCostFigure {
@@ -153,6 +176,14 @@ export interface SnapshotEvidence {
   sourceType: string | null
   /** The sift's one-line reason this source bears on the proposal. Null pre-sift. */
   siftReason: string | null
+  /**
+   * ══ 25-P §2 — WHEN THE SOURCE IS FROM, AND HOW THAT WAS GOT ═══════════════════
+   * ⚠ OPTIONAL, because a version published before 25-P stores a snapshot with neither key.
+   * ⚠ AND `sourceDate` IS AN ISO STRING, not a Date: a snapshot is stored as JSON and read back
+   * months later, where a Date would arrive as a string anyway and compare wrongly against one.
+   */
+  sourceDate?: string | null
+  sourceDateBasis?: string | null
   /**
    * 25-D §3 — which §25.5 question this answers, as the PRODUCER tagged it. Null on rows
    * written before 25-D, and rendered as "not filed under a question" rather than swept
@@ -581,16 +612,25 @@ export async function buildProposalSnapshot(
     }
   })
 
-  const options: SnapshotOption[] = optionRows.map((o) => ({
-    id: o.id,
-    approach: o.approach,
-    mechanismTypes: o.mechanismTypes,
-    caseFor: o.caseFor,
-    caseAgainst: o.caseAgainst,
-    status: o.status,
-    ruleOutReason: o.ruleOutReason,
-    source: o.source,
-  }))
+  const options: SnapshotOption[] = optionRows
+    // ⚠ 25-P §1.7 — A SUPERSEDED PARENT IS NOT AN OPTION ANY MORE. It keeps its row and its
+    // number so the screen can still show what a merged policy was made of, but printing it in
+    // the document would offer a reader two policies where the proposer settled one.
+    .filter((o) => !o.mergedIntoId)
+    .map((o) => ({
+      id: o.id,
+      approach: o.approach,
+      mechanismTypes: o.mechanismTypes,
+      caseFor: o.caseFor,
+      caseAgainst: o.caseAgainst,
+      status: o.status,
+      ruleOutReason: o.ruleOutReason,
+      source: o.source,
+      number: o.number,
+      chainLink: o.chainLink,
+      phase: o.phase,
+      phaseReason: o.phaseReason,
+    }))
 
   const linesByAction = new Map<string, SnapshotCostLine[]>()
   const costLines: SnapshotCostLine[] = costLineRows.map((l) => {
@@ -651,6 +691,9 @@ export async function buildProposalSnapshot(
     url: e.url,
     sourceType: e.sourceType,
     siftReason: e.siftReason,
+    // 25-P §2 — carried so the evidence pack can say how old a source is. See SnapshotEvidence.
+    sourceDate: e.sourceDate ? e.sourceDate.toISOString().slice(0, 10) : null,
+    sourceDateBasis: e.sourceDateBasis,
     headingKey: e.headingKey ?? null,
     // 25-M §3 — the review status travels with the row, so a renderer can say whose the
     // finding is. See `SnapshotEvidence.status`.

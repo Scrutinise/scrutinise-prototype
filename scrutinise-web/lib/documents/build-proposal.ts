@@ -38,6 +38,7 @@ import {
   type SnapshotAction,
   type SnapshotCostFigure,
   type SnapshotField,
+  type SnapshotOption,
 } from './proposal-snapshot'
 
 export interface ProposalBuildResult {
@@ -343,6 +344,49 @@ function draftBanner(snapshot: ProposalSnapshot): Block[] {
   }]
 }
 
+/**
+ * ══ 25-P §1.8 — THE CHAIN-LINK CONSEQUENCE, IN BOTH DOCUMENTS ═══════════════════════
+ *
+ * §1.8: *"Flagged as important, and it must survive into both generated documents. A legislature
+ * will take the easy half of a proposal and leave the hard half; this sentence is the warning,
+ * and it will be the first thing cut for length unless it is marked."*
+ *
+ * ⚠⚠ ONE FUNCTION, CALLED BY BOTH BUILDERS. Two copies is how a warning survives in the long
+ * report and quietly stops appearing in the one-pager — and the one-pager is the document more
+ * likely to be the only one anybody reads.
+ *
+ * ⚠ IT SITS IMMEDIATELY AFTER THE POLICY IT QUALIFIES, not at the foot of the section. A reader
+ * who has just read what is being asked for is the reader this sentence is addressed to; the
+ * bottom of a section is where a caveat goes, and this is not a caveat, it is a condition.
+ *
+ * ⚠ AND IT IS A `note` PLUS BOLD RUNS, WHICH BOTH RENDERERS SET APART — the "marked" in §1.8.
+ * A caller passes the options IT printed, so the warning list can never name a policy the reader
+ * cannot see above it.
+ */
+function chainLinkBlocks(options: SnapshotOption[]): Block[] {
+  const withLink = options.filter((o) => o.chainLink?.trim() && o.status !== 'RULED_OUT')
+  if (!withLink.length) return []
+  return [
+    {
+      kind: 'note',
+      text:
+        withLink.length === 1
+          ? 'If only part of this is delivered:'
+          : 'If only part of these is delivered:',
+    },
+    ...withLink.map((o): Block => {
+      const runs: Run[] = [{ text: '⚠ ', bold: true }]
+      // ⚠ NAMED BY NUMBER where it has one, because the reader is looking at a numbered list and
+      // a warning that does not say which policy it is about is a warning about all of them.
+      if (withLink.length > 1 && o.number != null) {
+        runs.push({ text: `Policy ${o.number}: `, bold: true })
+      }
+      runs.push({ text: o.chainLink!.trim(), bold: true })
+      return { kind: 'paragraph', runs }
+    }),
+  ]
+}
+
 export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
   assertRenderableSnapshot(snapshot)
   const blocks: Block[] = []
@@ -448,6 +492,9 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
   if (approach) blocks.push(...markdownToBlocks(approach))
   else blocks.push({ kind: 'note', text: 'No approach has been committed to on this proposal yet.' })
+
+  // ⚠⚠ 25-P §1.8 — THE HALF-DELIVERY WARNING, DIRECTLY UNDER THE POLICY IT QUALIFIES.
+  blocks.push(...chainLinkBlocks(snapshot.options ?? []))
 
   const leverage = fieldText(fieldByKey(snapshot, 'leverage'))
   if (leverage) {
@@ -910,6 +957,12 @@ export function buildSummaryDocument(
   } else {
     blocks.push({ kind: 'paragraph', runs: text('No approach has been committed to.') })
   }
+
+  // ⚠⚠ 25-P §1.8 — AND IT SURVIVES INTO THE ONE-PAGER. This is the document most likely to be
+  // the only one read, so dropping the warning here for length would be the exact failure §1.8
+  // describes, done deliberately. It is scoped to the five options this document actually
+  // printed above — a warning naming a policy the reader cannot see is worse than none.
+  blocks.push(...chainLinkBlocks(liveOptions.slice(0, 5)))
 
   // ── Proposed Actions ────────────────────────────────────────────────────────
   blocks.push({ kind: 'heading', level: 2, runs: text('Proposed Actions') })
