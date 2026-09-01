@@ -416,17 +416,48 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
   }
 
   // §A2 — closed by default in DRAFT STRATEGY, with the count that says why to open it.
-  const waiting = a.decisions.filter((d) => !d.resolved).length
-    + a.challenges.filter((c) => c.status === 'OPEN').length
-    + a.gaps.filter((g) => g.task === 'only-you').length
+  //
+  // ══ 25-P §4b — THE HEADER COUNTS WHAT THE USER CAN ACT ON ═══════════════════════════
+  //
+  // §4b: *"'What to do next · 136' is accurate — 2 decisions plus 135 open challenges — but
+  // reads as a wall on a collapsed header. Show the actionable count on the header and the
+  // total inside."*
+  //
+  // ⚠⚠ THE NUMBER WAS RIGHT AND THE HEADING WAS WRONG. "What to do next" promises a list of
+  // things to do; 135 open challenges are not 135 things to do, they are the body of work the
+  // proposal has to answer over its life. Putting them behind the same word turns a two-item
+  // to-do list into a wall, and a wall is a thing a user closes.
+  //
+  // ⚠ ACTIONABLE = A DECISION ONLY YOU CAN MAKE, OR A GAP ONLY YOU CAN FILL. Both are blocked
+  // on the user personally. An open challenge is work; it is counted, named and reachable —
+  // one line lower, inside, where its size is information rather than a barrier.
+  const decisions = a.decisions.filter((d) => !d.resolved).length
+  const onlyYou = a.gaps.filter((g) => g.task === 'only-you').length
+  const challenges = a.challenges.filter((c) => c.status === 'OPEN').length
+  const actionable = decisions + onlyYou
+  const total = actionable + challenges
+
+  const part = (n: number, one: string, many: string) =>
+    n ? `${n} ${n === 1 ? one : many}` : ''
+  const insideLine = [part(decisions, 'decision', 'decisions'),
+    part(onlyYou, 'gap only you can fill', 'gaps only you can fill'),
+    part(challenges, 'open challenge', 'open challenges')].filter(Boolean).join(', ')
+
   return (
     <CollapsedSection
       title="What to do next"
-      count={waiting}
-      hint={waiting === 0
-        ? 'Nothing is waiting on you here.'
-        : 'The decisions and actions that turn this draft into a formal proposal.'}
+      count={actionable}
+      hint={actionable === 0
+        ? challenges
+          // ⚠ NOT "nothing is waiting on you". 135 open challenges with no decision outstanding
+          // is a real and useful state, and saying "nothing" about it would be false.
+          ? `Nothing is blocked on you. ${challenges} open challenge${challenges === 1 ? '' : 's'} inside.`
+          : 'Nothing is waiting on you here.'
+        : `${actionable} waiting on you. ${total} in all — ${insideLine}.`}
     >
+      {/* ⚠ THE TOTAL, INSIDE, WHERE §4b PUT IT. The header says what to do; this says how much
+          there is. A reader who opens the section is asking the second question. */}
+      <p className="px-4 pt-3 -mb-1 text-[11px] text-zinc-500">{total} in all — {insideLine}.</p>
       {body}
     </CollapsedSection>
   )

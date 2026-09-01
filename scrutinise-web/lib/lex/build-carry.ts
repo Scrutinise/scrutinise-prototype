@@ -191,6 +191,42 @@ export function readPassLog(raw: unknown): PassRecord[] {
  * Later passes win on a key they both set — REVISE's `diagnosis` supersedes DIAGNOSIS's,
  * which is exactly what pass 5 should be reading.
  */
+/**
+ * ══ 25-P §5 — THE PASSES THIS BUILD NEVER KNEW ABOUT ═══════════════════════════════
+ *
+ * §5: *"Inserting the commentary pass changed what a historic build says about itself: v7 now
+ * reads '8 of 11' and resumes at the commentary. Not harmful, and '8 of 11' is true — but a
+ * resumed historic build runs one pass it is not billed for. Fix or record with a stated
+ * reason."*
+ *
+ * ⚠⚠ THE ANSWER IS "RECORD", AND HERE IS THE REASON, IN THE PLACE THAT PRODUCES THE FACT.
+ *
+ * A resume is not a purchase. The user already paid for this build at its own mode's price and
+ * it stopped without finishing; billing again for finishing what they bought is the wrong
+ * direction, and `resumeBuild` deliberately charges nothing. What §5 spotted is narrower: a
+ * build that stopped BEFORE we added a pass gains that pass on resume, so it runs work that did
+ * not exist when it was priced.
+ *
+ * We are not charging for it, for three reasons that are worth stating rather than assuming:
+ *   1. **The pass exists because we added it, not because the user asked for it.** Charging for
+ *      our own change of mind is not a thing to do quietly.
+ *   2. **The money is already bounded.** `resumeBuild` caps resumes at MAX_RESUMES, and the
+ *      per-build spend ceiling counts every pass including the stopped attempt's — so a free
+ *      pass cannot become an unbounded one.
+ *   3. **The alternative is worse.** Billing on resume would mean a stopped build costs more
+ *      than a finished one, which is the opposite of what a user would expect and would make
+ *      "carry on" a control people learn not to press.
+ *
+ * ⚠ WHAT WE DO OWE IS THE SENTENCE. The user should be told a pass has been added since their
+ * build ran, and that it is included — which is what this function exists to let the UI say.
+ * An unannounced free extra is still an unannounced change to something they paid for.
+ */
+export function passesAddedSince(raw: unknown): string[] {
+  if (!Array.isArray(raw) || !raw.length) return []
+  const stored = raw as PassRecord[]
+  return BUILD_PASSES.filter((p) => !stored.some((s) => s?.key === p.key)).map((p) => p.label)
+}
+
 export function carryInto(log: PassRecord[], key: BuildPassKey): PassCarry {
   const upto = log.findIndex((p) => p.key === key)
   const out: PassCarry = {}

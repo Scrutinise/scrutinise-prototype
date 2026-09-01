@@ -131,6 +131,8 @@ export interface BuildView {
     noSummary: boolean
     resumeCount: number
     previousStopReason: string | null
+    /** 25-P §5 — passes added after this build ran; run free on resume, and said so. */
+    passesAddedSince: string[]
   } | null
   /** AMENDMENT_25B §B — no worker picked this up, so the page is driving it instead. */
   workerLate: boolean

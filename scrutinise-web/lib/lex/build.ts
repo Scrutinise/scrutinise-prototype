@@ -60,6 +60,7 @@ import {
 import {
   freshPassLog, reusedPassLog, readPassLog, carryInto, allUsages, nextPassKey, isResumable,
   passesComplete, steppedOverFailures, resumablePassKey, unrunPasses, reopenForResume,
+  passesAddedSince,
   type PassRecord, type PassStatus, type PassCarry,
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
@@ -85,6 +86,7 @@ import {
   runKernelCompliance, runLogicCheck, recordVerificationIssues,
   complianceIssueText, logicIssueText, verifyModel, KERNEL_TESTS,
 } from './build-verify'
+import { sourceDateFields, weighedAgainstLine } from './evidence-date'
 
 export const BUILD_STAGE = 'BUILD'
 export type { PassRecord, PassStatus }
@@ -175,6 +177,13 @@ export interface BuildView {
     resumeCount: number
     /** Why it stopped the time before this one, kept across a resume. */
     previousStopReason: string | null
+    /**
+     * ⚠⚠ 25-P §5 — PASSES ADDED AFTER THIS BUILD RAN, by label. A build that stopped before a
+     * pass existed gains it on resume and runs it FREE — see `passesAddedSince` in
+     * build-carry.ts for why we do not charge for it. What we owe the user is the sentence:
+     * an unannounced free extra is still an unannounced change to something they paid for.
+     */
+    passesAddedSince: string[]
   } | null
   /**
    * AMENDMENT_25B §B — TRUE when the worker was meant to take this build and has not
@@ -381,6 +390,10 @@ function toView(
           noSummary: !row.summaryMessage,
           resumeCount: row.resumeCount,
           previousStopReason: row.lastStopReason,
+          // ⚠ 25-P §5 — read off the STORED log, not the reconciled one. `readPassLog` has
+          // already filled the gaps with PENDING rows, so by the time `passes` exists the
+          // difference this reports has been smoothed away.
+          passesAddedSince: passesAddedSince(row.passes),
         }
       : null,
     forks,
@@ -2368,6 +2381,10 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
         // which is named in the body; attaching a document citation to a reasoning step
         // would be exactly the never-claim breach the rest of the build refuses.
         sourceType: null, sourceId: null, citation: null, url: null,
+        // ⚠ 25-P §2b — NO SOURCE ROW TO DATE. Recorded as such rather than left undated: a
+        // reasoning step Lex wrote over the proposal is not an undated document, and §2c has
+        // to tell the two apart when it counts what could not be dated.
+        ...sourceDateFields(null),
         status: 'PROPOSED',
       },
     })
@@ -2598,6 +2615,40 @@ async function smartPass(c: PassContext): Promise<PassOutcome> {
 
     // ── What it changed, in the revision pass's own shape (§2d). ─────────────
     await supersedeOlderProposals(ideaId, SMART_PASS_KEY, c.buildVersion)
+
+    // ══ 25-P §2d — WHAT EACH CHANGE WAS WEIGHED AGAINST ═══════════════════════════════
+    //
+    // §2d: *"a claim that changed Lex's position names what it was weighed against, or says
+    // nothing was."*
+    //
+    // ⚠⚠ THE SECOND HALF IS THE HALF THAT MATTERS. A rewrite that turned the proposal round on
+    // its own, with nothing retrieved on the same question, is a far weaker thing than one that
+    // beat three contrary findings — and on the page the two look identical unless the sentence
+    // saying so is printed. `weighedAgainstLine` returns a sentence in BOTH cases, never ''.
+    //
+    // ⚠ ONE QUERY FOR ALL THE CHANGES, and it reads THIS run's evidence: what was in front of
+    // the critique when it decided, not what the idea has accumulated since.
+    const changedRefs = (critique.changed ?? [])
+      .map((ch) => ch?.fieldKey?.trim()).filter((k): k is string => !!k)
+    const weighedRows = changedRefs.length
+      ? await prisma.evidenceItem.findMany({
+        where: {
+          ideaId, runVersion: c.buildVersion,
+          fieldRef: { in: changedRefs },
+          passKey: { not: SMART_PASS_KEY },
+          status: { not: 'REJECTED' },
+        },
+        select: { fieldRef: true, kind: true, title: true },
+      })
+      : []
+    const weighedByRef = new Map<string, Array<{ kind: string; title: string }>>()
+    for (const w of weighedRows) {
+      if (!w.fieldRef) continue
+      const list = weighedByRef.get(w.fieldRef) ?? []
+      list.push({ kind: String(w.kind), title: w.title })
+      weighedByRef.set(w.fieldRef, list)
+    }
+
     for (const ch of critique.changed ?? []) {
       if (!ch?.fieldKey?.trim() || !ch?.nowSays?.trim()) continue
       await prisma.evidenceItem.create({
@@ -2616,8 +2667,18 @@ async function smartPass(c: PassContext): Promise<PassOutcome> {
             `It was saying: ${ch.wasSaying?.trim() || '(not stated)'}`,
             `It now says: ${ch.nowSays.trim()}`,
             `Why that changed: ${ch.whyChanged?.trim() || '(not stated)'}`,
-          ].join('\n\n'),
+            // ⚠ 25-P §2d — ALWAYS PRESENT, because "nothing was weighed against it" is itself
+            // the finding a reader needs. See the note above the query.
+            weighedAgainstLine({
+              changedPosition: true,
+              others: weighedByRef.get(ch.fieldKey.trim()) ?? [],
+            }) ?? '',
+          ].filter(Boolean).join('\n\n'),
           sourceType: null, sourceId: null, citation: null, url: null,
+          // ⚠ 25-P §2b — NO SOURCE ROW TO DATE. Recorded as such rather than left undated: a
+          // reasoning step Lex wrote over the proposal is not an undated document, and §2c has
+          // to tell the two apart when it counts what could not be dated.
+          ...sourceDateFields(null),
           status: 'PROPOSED',
         },
       })

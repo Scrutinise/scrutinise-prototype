@@ -126,6 +126,49 @@ export interface Allowance {
 /** The address a blocked user writes to. An email link is enough for a pilot (§4). */
 const ASK_FOR_MORE = 'cl@scrutinise.org'
 
+/**
+ * ══ 25-P §4a — WHAT THE USER ACTUALLY HAS, IN BOTH CURRENCIES ══════════════════════
+ *
+ * §4a: *"The message reads 'You have 4 builds left'. Twelve thirds genuinely is four full
+ * builds, but Charlie's intent was three builds and three re-runs, and the sentence does not
+ * say so. Make it say what he actually has, in both currencies."*
+ *
+ * ⚠⚠ THE OLD SENTENCE WAS TRUE AND STILL MISLED, which is why it is worth the words. Twelve
+ * credits IS four full builds — and a user who reads that and plans four full builds discovers
+ * only afterwards that every re-run he did came out of the same twelve. The balance is in ONE
+ * currency and is spent in TWO, so the sentence has to name both.
+ *
+ * ⚠ AND IT NAMES THE PRICES. "3 full builds and 3 re-runs" is a fact about today's balance;
+ * "a full build costs three, a re-run one" is the rule that lets the user work out any other
+ * split for themselves, which is the thing a single worked example cannot do.
+ *
+ * ⚠ PURE, AND EXPORTED, so `check:lex-25p` asserts the sentence rather than the arithmetic
+ * behind it. The defect here was never in the arithmetic.
+ */
+export function balanceSentence(remainingThirds: number): string {
+  if (remainingThirds <= 0) return 'You have used your build allowance.'
+
+  const full = Math.floor(remainingThirds / FULL_BUILD_THIRDS)
+  const price = `A full build costs ${FULL_BUILD_THIRDS} and a re-run costs ${REUSE_BUILD_THIRDS}`
+
+  // ⚠ THE HONEST MIDDLE STATE, KEPT. Enough for a redraft and not for a full search is a real
+  // position, and "0 builds left" beside a working redraft button would be a lie.
+  if (full === 0) {
+    return `You have ${remainingThirds} left — ${price.toLowerCase()}, so that is enough for `
+      + `${remainingThirds === 1 ? 'one re-run' : `${remainingThirds} re-runs`}, `
+      + 'but not for a full build.'
+  }
+
+  const asMix = full >= 2
+    // ⚠ ONE FULL BUILD TRADED FOR THREE RE-RUNS — the split Charlie actually meant by "twelve".
+    ? `, or ${full - 1} full build${full - 1 === 1 ? '' : 's'} and `
+      + `${remainingThirds - (full - 1) * FULL_BUILD_THIRDS} re-runs`
+    : ''
+  return `You have ${remainingThirds} left. ${price} — so that is `
+    + `${full} full build${full === 1 ? '' : 's'}${asMix}, `
+    + `or ${remainingThirds} re-runs.`
+}
+
 function buildsFrom(thirds: number): number {
   return Math.floor(thirds / FULL_BUILD_THIRDS)
 }
@@ -230,15 +273,7 @@ export async function readAllowance(userId: string): Promise<Allowance> {
   const heldNote = reservedThirds > 0
     ? ` ${inFlight.length === 1 ? 'One build is running now and is already paid for' : `${inFlight.length} builds are running now and are already paid for`}.`
     : ''
-  const line = (remainingThirds === 0
-    ? reservedThirds > 0
-      ? 'The rest of your allowance is held by the build that is running.'
-      : 'You have used your build allowance.'
-    : canStartFull
-      ? `You have ${remainingBuilds === 1 ? '1 build' : `${remainingBuilds} builds`} left.`
-      // ⚠ THE HONEST MIDDLE STATE. Enough for a redraft and not for a full search is a real
-      // position, and "0 builds left" beside a working redraft button would be a lie.
-      : 'You have enough left for a redraft, but not for a full search.') + heldNote
+  const line = balanceSentence(remainingThirds) + heldNote
 
   const blockedReason = remainingThirds === 0
     // ⚠ 25-O §1a — A BALANCE HELD BY A RUNNING BUILD IS NOT A SPENT ALLOWANCE, and telling

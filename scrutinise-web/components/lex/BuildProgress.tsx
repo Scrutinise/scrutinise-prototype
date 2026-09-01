@@ -319,13 +319,33 @@ export default function BuildProgress({
                 Carry on from “{build.incomplete.resumeFrom}”
               </button>
               {/* ⚠ IT SAYS WHAT IT WILL AND WILL NOT COST. A user who has just watched a
-                  build stop needs to know that pressing this is not paying twice. */}
+                  build stop needs to know that pressing this is not paying twice.
+
+                  ⚠⚠ AND IT COUNTS, RATHER THAN SAYING "EIGHT". This sentence was written while
+                  looking at build v7, which had done eight — so every other stopped build in
+                  the product was told a number that was not its own. A literal copied out of
+                  the one case in front of you is a bug with a very long fuse. */}
               <p className="text-[11px] text-amber-800">
-                This picks the same build up where it stopped — the eight passes already done are
-                not re-run, and it does not use any more of your allowance. Only the time limit
-                starts again; the spend ceiling still counts everything this build has already
-                spent.
+                This picks the same build up where it stopped — the{' '}
+                {build.incomplete.ranPasses} pass{build.incomplete.ranPasses === 1 ? '' : 'es'}{' '}
+                already done are not re-run, and it does not use any more of your allowance. Only
+                the time limit starts again; the spend ceiling still counts everything this build
+                has already spent.
               </p>
+              {/* ══ 25-P §5 — A PASS ADDED SINCE THIS BUILD RAN, SAID OUT LOUD ═══════════
+                  §5: a resumed historic build runs one pass it is not billed for. We do not
+                  charge for it — the reason is stated in full at `passesAddedSince` — but a
+                  free extra the user was never told about is still an unannounced change to
+                  something they paid for. So it is announced. */}
+              {build.incomplete.passesAddedSince.length > 0 && (
+                <p className="text-[11px] text-amber-800">
+                  Since this build ran we added{' '}
+                  {build.incomplete.passesAddedSince.length === 1 ? 'a pass' : 'passes'}:{' '}
+                  {build.incomplete.passesAddedSince.join(', ')}. Carrying on will run{' '}
+                  {build.incomplete.passesAddedSince.length === 1 ? 'it' : 'them'} too, at no
+                  cost to your allowance — it was our addition, not your request.
+                </p>
+              )}
             </>
           )}
           {!build.resumable && (
