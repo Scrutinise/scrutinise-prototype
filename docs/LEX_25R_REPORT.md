@@ -246,3 +246,107 @@ once already, and the cold read proves the *data and the state*, not the pixels.
 6. **That the in-build sort does not push the build over its ceiling.** The addendum measured
    v8 at 761.5s of 900s with the approach pass at 16.3s; this adds one flash-model turn to that
    pass. It should be ~25s. It has not been measured because it has not run.
+
+---
+
+# Addendum — Charlie's decision on the collapse, and A5's challenge
+
+**1 September 2026, 16:23 UTC.**
+
+## A5 — the challenge was right. The collapse explains half of it.
+
+⚠ **Measured, not argued** — in Charlie's own production session, on the idea built this morning:
+
+| | |
+|---|---|
+| section shut | the commentary is **absent**, and so are the section's other fields — unmounted |
+| re-opened | it **fetches and draws again** |
+| section open | it begins **1,080 px below the section heading — 1.4 viewport heights** |
+
+**So the collapse explains its absence when shut, and the geometry explains its absence when
+open.** A5's screenshot shows an expanded DIAGNOSIS, and an expanded DIAGNOSIS does render the
+commentary — but only after *The problem* and *Who's affected*, each a full card with its own
+Save and Skip. A user who opens the section and reads what appears never reaches it.
+
+**Why**: it was mounted inside `CausesField` — the causes **field**, third of the seven on that
+page. 25-O §5 and 25-R §1c both say the commentary *"opens the causes section"*. It opened the
+third field. It now renders above the section's fields.
+
+⚠ **What I could not settle.** I could not reproduce a state where the section is open and the
+commentary is wholly absent from the DOM, so I cannot claim the geometry is a complete account of
+that screenshot — only that it is a measured second defect sufficient to explain a view of the
+section's top. Charlie's original root-cause challenge stands as correct: **the collapse was not
+the whole explanation, and I reported it as though it were.**
+
+### And the fix made an old assertion prove §4a's point
+
+Moving the commentary out of `CausesField` turned `check:lex-25o` §5 **red on a correct fix**.
+That assertion compared **character offsets in the source file** — the tag's index against the
+index of the string `Add cause` — as a proxy for what is higher on the screen:
+
+```
+idx '<CausesCommentaryPanel' : 35,719  →  91,406      (later in the file)
+rendered position            : third card  →  top of the section   (higher on the page)
+```
+
+**Source order and render order are unrelated.** The assertion §4a named as the specimen would
+have argued for reverting the fix. It is structural now: rendered by the page loop before the
+fields are mapped, and not inside `CausesField`.
+
+## A1 — collapsed and tidy, with the worklist as the entry point
+
+Sections collapse again — `complete || visited` — this time deliberately rather than inherited
+from a rule whose own comment said *"finished"*. The rule stays in `lib/lex/panel-collapse.ts`
+so the panel and the check share it.
+
+## A2 — the first thing to read
+
+> *Read the diagnosis I've prepared — are you happy with both the description of the problem and
+> the accuracy of the causes?*
+
+First in "Things to read", **only once a build has produced a diagnosis**. An item asking somebody
+to read something that does not exist is the control-that-does-nothing this repository keeps
+finding.
+
+## A3 — the Lex panel on arrival
+
+One line — *"Welcome to the Strategic analysis, I'm Lex, ask me anything here."* — and **only on
+arrival**; a standing sentence above a transcript is furniture. The chat box is three rows rather
+than one.
+
+⚠ **This retires 25-N §3c's second sentence** (*"Only conversations started on this page appear
+here"*) from that position. That was a real fix, so it is not deleted: it survives as the
+`this page only` marker in the tab strip immediately above, and `check:lex-25n` asserts it there.
+Flagging it because it was one of yours.
+
+## A4 — why re-collapsing is safe
+
+Three properties are asserted, and the fourth was measured because a cold read cannot see a paint:
+
+1. **shut, not absent** — the heading, its counts and its toggle sit *above* the guard that hides
+   the fields, so there is something to open;
+2. **opening mounts** — the contents are inside that guard, created on open rather than revealed;
+3. **mounting fetches** — the effect depends only on the id, with no "fetched once ever" guard,
+   which would make the first open of a session draw nothing: the defect returning by another
+   route;
+4. **it draws** — measured live, above.
+
+⚠ Two assertions in `check:lex-25r` encoded the fix A1 reversed, and were inverted with it. An
+assertion that demands yesterday's implementation fails correct code tomorrow — the same fault as
+§3's gate, applied to my own work one day later.
+
+```
+check:lex-25r   29 passed, 0 failed, 2 NOT CHECKED, 7 controls (0 dead)
+```
+
+The 2 remain the in-build sort; every existing build predates it.
+
+## Two things worth knowing
+
+⚠ **`check:scripts` is currently red, and it is not this work.** One error, in
+`scripts/check-central-25a.ts` — an **untracked** file, with `lib/admin-users-labels.ts` and
+`lib/admin-users.ts`, from another session's in-flight Central work. 28 files in the tree are
+modified by that thread. Nothing of theirs is in these commits.
+
+⚠ **Still unverified after this addendum**: the in-build sort (needs one real build), and every
+paint. §6 of the main report stands.

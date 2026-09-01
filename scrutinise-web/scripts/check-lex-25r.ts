@@ -115,13 +115,16 @@ async function main() {
     /pageCollapsedByDefault\(page\.status\)/.test(src))
   ok('and a collapsed page still unmounts its fields rather than hiding them',
     /\{!isLocked && !collapsed && \(/.test(src))
-  // ⚠ THE RULE ITSELF, ASSERTED ON THE FUNCTION — `visited` is what a build produces, and a
-  // build must not be able to hide its own output again.
-  ok('a page a build has merely written to does not collapse',
-    !collapsedByDefault('visited') && !collapsedByDefault('active'))
-  ok('and a finished page still does', collapsedByDefault('complete'))
-  control('a rule that collapsed anything not finished would fail that',
-    () => !((s: string) => s === 'complete' || s === 'visited')('visited'))
+  // ⚠⚠ THE RULE ITSELF — AND ADDENDUM A1 REVERSED IT, so this assertion is reversed with it.
+  // 25-R opened `visited` sections because a build marks every page visited and was hiding its
+  // own output. Charlie's answer was neither of §6's options: keep them collapsed and tidy, and
+  // announce the build through the WORKLIST instead. So `visited` collapses again — deliberately
+  // this time — and what makes that safe is asserted in the A4 block below, not here.
+  ok('a page a build has written to collapses, per A1',
+    collapsedByDefault('visited') && collapsedByDefault('complete'))
+  ok('and the page the user is working in stays open', !collapsedByDefault('active'))
+  control('a rule that collapsed the active page would fail that',
+    () => !((s: string) => s !== 'locked')('active'))
 
   const subj = await subjects()
   if (!subj.length) { console.log('  No completed builds to read.'); process.exit(1) }
@@ -147,13 +150,20 @@ async function main() {
       console.log(`  §1 ${tag}: no substantive commentary on v${build?.version ?? '—'} — nothing to render, skipped`)
     } else {
       const causesPage = st.pages.find((p) => p.fields.some((f) => f.key === 'causes'))
-      // ⚠⚠ THE ASSERTION THAT MATTERS: the commentary EXISTS, so the section that renders it must
-      // be one the user can actually see. A commentary behind a collapsed heading is a paid model
-      // call the user never reads.
-      ok(`§1 ${tag}: the commentary exists AND its section is open`,
-        !!causesPage && !collapsedByDefault(causesPage.status),
-        `commentary yes · causes page "${causesPage?.key}" is ${causesPage?.status}`
-        + `${causesPage && collapsedByDefault(causesPage.status) ? ' → COLLAPSED, fields not mounted' : ''}`)
+      // ══ ADDENDUM A4 — THE SECTION IS SHUT AGAIN, SO WHAT MUST BE TRUE HAS CHANGED ══════
+      //
+      // A1 restored the collapse: after a build the kernel sections are tidy and the WORKLIST is
+      // the entry point. So "its section is open" is no longer the property — it would now fail
+      // on correct code, which is the same mistake as asserting the broken gate in §3.
+      //
+      // ⚠⚠ WHAT MUST BE TRUE INSTEAD (A4): **a section that is shut must be shut, not absent**,
+      // and opening it must mount and fetch. The three halves of that are asserted here and
+      // below; the fourth — that it visibly draws — was measured live in production and is
+      // recorded in the report, because a cold read cannot see a paint.
+      ok(`§1 ${tag}: there is a commentary for the section to hold`, !!causesPage)
+      ok(`§1 ${tag}: and the route would hand it over`,
+        commentaryIsSubstantive(commentary),
+        `build v${build?.version}`)
     }
 
     // ── §2 — THE GUIDING POLICY, WITHOUT TOUCHING IT ─────────────────────────
@@ -199,8 +209,8 @@ async function main() {
           `${pols.filter((p) => p.kindReason).length}/${pols.length} carry a reason`)
       }
       const policyPage = st.pages.find((p) => p.fields.some((f) => f.key === 'policyOptions'))
-      ok(`§2 ${tag}: and its section is open`,
-        !!policyPage && !collapsedByDefault(policyPage.status),
+      // A1 — shut is correct now. What matters is that the page exists to be opened.
+      ok(`§2 ${tag}: the candidates have a section to be opened into`, !!policyPage,
         `page "${policyPage?.key}" is ${policyPage?.status}`)
     }
 
@@ -237,6 +247,64 @@ async function main() {
     () => /const policyRows = await prisma\.policyOption\.findMany/
       .test("const policyRows = current?.key === 'policyOptions' ? await prisma.policyOption.findMany({}) : []"))
 
+  // ══════════ ADDENDUM A4 — A SHUT SECTION MUST BE SHUT, NOT ABSENT ══════════
+  //
+  // Charlie's A1 re-collapses the sections 25-R opened, so the original defect must not return.
+  // These are the properties that make collapsing safe.
+  console.log('\n──A4 — the collapse is safe because opening mounts and fetches ──')
+
+  const panel = code('components/lex/FieldsPanel.tsx')
+  // 1. SHUT, NOT ABSENT. The heading, its counts and its toggle are OUTSIDE the `!collapsed`
+  //    guard, so a collapsed section is a thing on the page that can be opened.
+  ok('a collapsed section still renders its heading and toggle',
+    panel.indexOf('aria-expanded={!collapsed}') < panel.indexOf('{!isLocked && !collapsed && ('),
+    'the toggle is above the guard that hides the fields')
+  // 2. OPENING MOUNTS. The fields — and the commentary with them — are inside that guard, so
+  //    they are created on open rather than revealed.
+  ok('and the contents are inside the guard, so opening MOUNTS them',
+    /\{!isLocked && !collapsed && \(/.test(panel))
+  // 3. MOUNTING FETCHES. ⚠ The panel's effect must depend only on the id — a "fetch once ever"
+  //    guard would make the first open of a session draw nothing, which is the defect returning
+  //    by another route.
+  const cc = code('components/lex/CausesCommentary.tsx')
+  ok('the commentary fetches on mount, with nothing that could skip a first open',
+    /useEffect\(\(\) => \{ void load\(\) \}, \[load\]\)/.test(cc)
+      && !/hasLoaded|didFetch|fetchedOnce/.test(cc))
+  // 4. AND IT IS AT THE TOP OF THE SECTION, not the third card down. Measured in production on
+  //    1 Sep: mounted inside `CausesField` it began 1,080px — 1.4 viewport heights — below the
+  //    section heading, behind two full field cards. That is A5's remainder.
+  ok('the commentary renders above the section\'s fields, not inside the third one',
+    panel.indexOf('<CausesCommentaryPanel') < panel.indexOf('page.fields.map(')
+      && !/function CausesField[\s\S]{0,400}<CausesCommentaryPanel/.test(panel))
+  control('the old placement — inside CausesField — would fail that',
+    () => !/function CausesField[\s\S]{0,400}<CausesCommentaryPanel/.test(
+      'function CausesField({ ideaId }) { return (<div><CausesCommentaryPanel ideaId={ideaId} /></div>) }'))
+
+  // ── A2 — THE WORKLIST IS THE ENTRY POINT ───────────────────────────────────
+  console.log('\n── A2 — the build announces itself through the worklist ──')
+  const wl = code('app/api/ideas/[id]/worklist/route.ts')
+  ok('the first thing to read after a build is the diagnosis, in Charlie\'s words',
+    /Read the diagnosis I’ve prepared/.test(wl)
+      && /are you happy with both the description of the/.test(wl))
+  ok('and it appears only once a build has produced one',
+    /if \(agenda\.buildVersion != null\) \{[\s\S]{0,400}read:diagnosis/.test(wl))
+  control('an item present before any build would fail that',
+    () => /if \(agenda\.buildVersion != null\)/.test("readItems.set('__diagnosis', {})"))
+
+  // ── A3 — MINIMAL TEXT ON ARRIVAL ───────────────────────────────────────────
+  console.log('\n── A3 — the Lex panel on arrival ──')
+  const createSrc = code('app/ideas/create/CreateIdeaClient.tsx')
+  ok('the arrival line is the one Charlie wrote',
+    /Welcome to the Strategic analysis, I’m Lex, ask me anything here\./.test(createSrc))
+  ok('and it shows only on arrival, not standing over a transcript',
+    /leftTab === 'lex' && messages\.length === 0/.test(createSrc))
+  ok('the longer preamble is gone',
+    !/Talk to me, Lex, and I’ll help you shape each part/.test(createSrc))
+  ok('and the chat box is a large one',
+    /rows=\{3\}/.test(code('components/lex/ChatPanel.tsx')))
+  control('the old one-row box would fail that',
+    () => /rows=\{3\}/.test('rows={1}'))
+
   // ── §3b — A MERGE IS NOT A CASE THE OFFER HANDLES ──────────────────────────
   console.log('\n§3b — what the offer can and cannot express')
   const fe = code('lib/lex/field-edit.ts')
@@ -251,9 +319,9 @@ async function main() {
 
   // ── §3c — LEX MUST NOT SEND THE USER ON AN ERRAND ──────────────────────────
   console.log('\n§3c — Lex never tells the user to go and do it by hand')
-  const client = code('lib/lex/lex-client.ts')
+  const lexClientSrc = code('lib/lex/lex-client.ts')
   ok('the prompt forbids sending the user to another stage to do it themselves',
-    /never tell the user to go and do|cannot write it yourself|do NOT send them to another stage/i.test(client))
+    /never tell the user to go and do|cannot write it yourself|do NOT send them to another stage/i.test(lexClientSrc))
   control('an unchanged prompt must fail that',
     () => /never tell the user to go and do/i.test('Discuss it conversationally.'))
 

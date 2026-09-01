@@ -2,7 +2,95 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-09-01 13:58 UTC — ▼ **LEX 25-R — THREE INVISIBLE FEATURES, ONE ROOT
+---
+
+## CENTRAL THREAD — last updated 2026-09-01 14:35 UTC (25-A)
+
+*This section belongs to the CENTRAL stream and is kept separate from the LEX stream's entry below,
+because the two run in this repository at the same time.*
+
+▼ **CENTRAL 25-A — A COMMUNITY INVITATION LEADS TO A DOOR THAT CANNOT LET A NEW PERSON IN, AND FIVE
+PEOPLE ARE STANDING AT IT.**
+
+⚠⚠ **§1 THE FAILURE IS AT CLERK, BEFORE OUR CODE — because our sign-up door refused them first.**
+`/sign-up` renders *"Scrutinise is invite only"* without a platform `Invite` token, and
+`/community-invite/[code]` has never put one in the URL it offers. **Measured live on `3cdede2`:**
+the real invitation sent at 09:43 today offers `/sign-up?email_address=…` and that URL returns the
+invite-only landing. So *"couldn't find your account"* is literally true. ⚠ **A second gate says the
+same words:** the Clerk webhook **deletes** any new account whose email has no platform invitation.
+⚠⚠ **FIVE PEOPLE, NOT ONE:** `chair.harrogateknaresborough@`, `g.davey76@`, `chair.tatton@`,
+`lindsey.sharratt@`, `chair.reigate@` — every one holding a live, unexpired, **unused** Community
+invitation, **no platform invite, no `User` row, no membership**.
+▶▶ **THE DIFF WITH THE ONE THAT WORKED IS THE ANSWER:** Richard Ross had a platform invitation on
+**18 May**; his August Community invitation only needed him to sign *in*. **The flow has never been
+shown to work for anybody without an account.** ⚠ `ajaxhms@` is the other state — an account, and
+**no membership**: "signed up, not joined".
+▶ **CHARLIE'S ACTION TODAY:** `/admin/invites` → issue a platform invitation to each of those five
+exact addresses; the sentence to send them is in the report's §1e.
+⚠ `createInvite()` **erases its own history** (upsert rewrites `createdAt`, clears `usedAt`), and
+the invite gate is enforced in the webhook **only** — `getAuthenticatedUser()` JIT-creates a `User`
+row with no invite check. Both flagged, neither changed.
+⚠ **Production Clerk is UNREADABLE from this machine** (`pk_live_` instance; repo key is
+`sk_test_`, a different instance; production key is SAML-blocked Vercel). Said as unread.
+
+▶ **§2 BUILT — the Teams tab now has an Invitations panel**: six statuses that are six different
+*sentences* (Joined / **Signed up — not yet joined** / Invited — no account yet / Link opened /
+Expired / Revoked), link arrivals listed separately and attributed, resend, revoke and restore.
+⚠ **§2e first: "opened" and "revoked" did not exist as records** — three additive columns added.
+⚠ **The revoke is enforced at REDEMPTION**, through the one function the join route itself calls.
+
+▶ **§3 BUILT to Charlie's decisions of today.** ⚠⚠ **"Community admin" and "branch manager" are NOT
+roles** (only OWNER/ADMIN/MEMBER per node), and **"branch manager" collides with
+`Community.managerId`**, which grants nothing. `CommunitySettings.inviteRights`, owner-set,
+defaulting to both. **§3b nobody joins on click** — a shared link raises a PENDING request naming
+the link; approval needs the invitation right and is when the link counts as used. **§3c removal
+ARCHIVES** (`CommunityMembershipArchive`, a table not a column) and the contributions stay,
+re-read to prove it. **§3c/§3d measured: membership does NOT cascade from the inviter**, and a
+branch manager's right is branch-only already — ⚠ but a branch invitation still adds them to the
+root.
+
+▶ **§6 BUILT — the admin user list.** ⚠⚠ **We record no sign-in of our own: `User.lastActiveAt` is
+null for 33 of 33 users**, and there is no login or session table, so **"all logins since launch"
+cannot be built** and was not. Clerk holds ONE overwritten timestamp. ⚠ **§6d — six states, six
+sentences, never blank**, and "Clerk did not answer" is said once at the top rather than 33 times.
+
+⚠⚠ **NEXT ACTION, AND IT BLOCKS EVERYTHING ELSE:**
+`npx tsx --env-file=.env scripts/apply-sql.ts prisma/central_25a_invites.sql` from
+`scrutinise-web` — additive, nothing dropped — **then** `npx tsx --env-file=.env
+scripts/check-central-25a.ts`. **The migration must land BEFORE the code deploys**: the generated
+Prisma client already expects the new columns. The check has **not been run**; that is reported as
+not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
+⚠ No script was added to `scrutinise-web/package.json` — the Lex stream is editing it.
+`docs/CENTRAL_25A_REPORT.md`.
+
+---
+
+## LEX THREAD
+
+
+*Last updated: 2026-09-01 16:23 UTC — ▼ **25-R ADDENDUM — CHARLIE'S CHALLENGE WAS RIGHT.**
+⚠⚠ **THE COLLAPSE EXPLAINED HALF OF §1.** Measured live in production: **shut** → unmounted and
+absent; **re-opened** → fetches and draws; **open** → the commentary begins **1,080px, 1.4 viewport
+heights, below the section heading**, because it was mounted inside `CausesField` (the causes
+FIELD, third of seven) rather than at the top of the section, which is what 25-O §5 and 25-R §1c
+both say. **I reported the collapse as the whole explanation and it was half.** ⚠ I could not
+reproduce "open and wholly absent", so the geometry is a sufficient second defect, not a complete
+account of that screenshot.
+⚠⚠ **AND THE FIX MADE §4a's SPECIMEN PROVE ITSELF:** moving the commentary turned `check:lex-25o`
+§5 **RED ON A CORRECT FIX** — it compared CHARACTER OFFSETS in the source as a proxy for screen
+position, and the component went 35,719 → 91,406 (later in the file) while moving to the TOP of the
+section. Source order and render order are unrelated. Structural now.
+▶ **A1 — sections collapse again (`complete || visited`), deliberately this time; the WORKLIST is
+the entry point.** ▶ **A2 — first thing to read is Charlie's sentence**, only once a build exists.
+▶ **A3 — one arrival line + a 3-row box.** ⚠ This retires 25-N §3c's second sentence from that
+position; it survives as the `this page only` tab marker, asserted there.
+▶▶ **A4 — shut must be shut, not absent.** Heading+toggle above the guard; contents inside it so
+opening MOUNTS; the fetch has no "once ever" guard. The fourth property — that it DRAWS — was
+measured live, because a cold read cannot see a paint.
+✅ `check:lex-25r` **29/0, 2 NOT CHECKED, 7 controls**; suite + build green.
+⚠ **`check:scripts` is RED and it is NOT this work** — `scripts/check-central-25a.ts`, an
+UNTRACKED file from another session's Central work (28 files in the tree are theirs).
+⚠ Still unverified: the in-build sort (needs one real build) and every paint. Earlier: 2026-09-01 13:58 UTC — ▼ **LEX 25-R — THREE INVISIBLE FEATURES, ONE ROOT
 CAUSE.**
 ⚠⚠ **A BUILD WRITES A PROPOSAL INTO EVERY FIELD OF EVERY PAGE, WHICH MARKS EVERY PAGE
 `visited`** (`state.ts` derives it as "any field has left EMPTY") — **and `FieldsPanel` collapsed
