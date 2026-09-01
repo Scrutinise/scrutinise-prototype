@@ -14,6 +14,7 @@ import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
 import PriorVersions from './PriorVersions'
 import { collapsedByDefault as pageCollapsedByDefault } from '@/lib/lex/panel-collapse'
+import CauseMap from './CauseMap'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
 // signature stays readable.
@@ -22,6 +23,15 @@ export interface CausesApi {
   update: (causeId: string, patch: { cause?: string; whyPersisted?: string; evidence?: string }) => void
   remove: (causeId: string) => void
   classify: (causeId: string, classification: CauseClassification) => void
+  /**
+   * ⚠ 25-S §2b/§2c — TWO VERBS, ONE PER GESTURE, and the interface says so. An earlier draft
+   * exposed `reorder(causeIds[])` and left the card to compute the new order — but the card
+   * holds one cause and not the list, so it could not. The client owns the list; these are what
+   * the gestures mean.
+   */
+  reorderBefore: (draggedId: string, beforeId: string) => void
+  /** Nest under a parent, or pass null to detach — which is §2e's undo, same path. */
+  nest: (causeId: string, parentCauseId: string | null) => void
   confirm: () => void
   skip: () => void
   setRoot: (causeId: string) => void
@@ -605,10 +615,54 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
 
   const canGoDeeper = depth + 1 < MAX_CAUSE_DEPTH
   return (
-    <div className={`rounded-lg border p-2 ${CLASS_STYLE[cause.classification]}`}>
+    /* ══════════ 25-S §2b/§2c — DRAG TO REORDER, DRAG ONTO TO NEST ══════════════════
+       ⚠⚠ TWO DROP TARGETS ON ONE CARD, AND THEY MEAN DIFFERENT THINGS. Dropping on the card's
+       BODY nests the dragged cause beneath this one; dropping on the thin strip along its TOP
+       edge puts it before this one in the order. One target doing both would make every reorder
+       a coin-toss between moving and re-parenting, and the undo for one is not the undo for the
+       other (§2e).
+
+       ⚠ HTML5 DRAG EVENTS, NO LIBRARY. The panel is narrow and this is a list of a dozen items;
+       a drag-and-drop dependency would be more code than the feature.
+
+       ⚠ AND THE NUMBERS DO NOT MOVE (§2a). Neither handler touches `number` — the route rewrites
+       `orderIndex` for a reorder and `parentCauseId` for a nest, and nothing else. */
+    <div
+      draggable={!busy}
+      onDragStart={(e) => { e.dataTransfer.setData('text/cause-id', cause.id); e.dataTransfer.effectAllowed = 'move' }}
+      onDragOver={(e) => { if (e.dataTransfer.types.includes('text/cause-id')) e.preventDefault() }}
+      onDrop={(e) => {
+        const dragged = e.dataTransfer.getData('text/cause-id')
+        if (!dragged || dragged === cause.id) return
+        e.preventDefault(); e.stopPropagation()
+        api.nest(dragged, cause.id)
+      }}
+      className={`rounded-lg border p-2 ${CLASS_STYLE[cause.classification]}`}
+    >
+      {/* §2b — the reorder strip. Its own drop target, along the top edge. */}
+      <div
+        onDragOver={(e) => { if (e.dataTransfer.types.includes('text/cause-id')) e.preventDefault() }}
+        onDrop={(e) => {
+          const dragged = e.dataTransfer.getData('text/cause-id')
+          if (!dragged || dragged === cause.id) return
+          e.preventDefault(); e.stopPropagation()
+          api.reorderBefore(dragged, cause.id)
+        }}
+        aria-hidden
+        className="h-1.5 -mt-1 -mx-1 mb-0.5 rounded"
+      />
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-sm text-zinc-800">
+            {/* ══ 25-S §2a — THE STABLE NUMBER, ON THE CARD ═══════════════════════════
+                Charlie instructs Lex by number — "cause 3 is wrong". It is `number`, not the
+                display position: it never changes when a cause is moved, nested or removed, so
+                a removed 3 leaves a gap and the instruction keeps meaning the same cause.
+                ⚠ A row written before 25-S and not yet backfilled shows none rather than a
+                guess; the backfill numbered all 22 on production. */}
+            {cause.number != null && (
+              <span className="font-bold tabular-nums text-zinc-900 mr-1.5">{cause.number}</span>
+            )}
             {cause.cause}
             {cause.isRootCause && <span className="ml-1.5 text-[9px] font-semibold uppercase text-green-700">root</span>}
           </p>
@@ -619,6 +673,20 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
           <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from past debates</span>
         )}
       </div>
+      {/* ⚠ 25-S §2e — THE UNDO FOR A NEST, on the card that was nested. Detaching is the same
+          operation with a null parent, so there is one code path and one meaning. It shows only
+          where there is something to undo. */}
+      {cause.parentCauseId && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => api.nest(cause.id, null)}
+          className="mt-1 text-[11px] font-medium text-zinc-600 underline hover:text-zinc-900 disabled:opacity-40"
+        >
+          Move back out to the top level
+        </button>
+      )}
+
       {/* §19-D Task 9e — the classification is a decision, so it gets its own line
           above the incidental actions rather than sitting in a row of grey links. */}
       <div className="mt-2">
@@ -705,7 +773,12 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
           impersonating the list. */}
       {view === 'map' ? (
         tree.some((n) => n.kids.length > 0) ? (
-          <CauseTreeView nodes={tree} busy={busy} api={api} />
+          /* ══ 25-S §3 — THE MAP IS A DIAGRAM NOW ══════════════════════════════════
+             Charlie: *"'map' just indents some a bit."* `CauseTreeView` was a second
+             indented list; `CauseMap` draws the chain. ⚠ §3e — the LIST view keeps the
+             indentation, which is where it belongs: it is the view whose job is to show
+             nesting inside a linear read. */
+          <CauseMap nodes={tree} />
         ) : (
           <div className="space-y-1.5">
             <p className="text-[11px] text-amber-700 bg-amber-50/60 border border-amber-200 rounded-lg px-2 py-1.5">

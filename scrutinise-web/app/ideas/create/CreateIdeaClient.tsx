@@ -485,6 +485,21 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     update: (causeId, patch) => post('/causes', { action: 'update', causeId, ...patch }),
     remove: (causeId) => post('/causes', { action: 'remove', causeId }),
     classify: (causeId, classification) => post('/causes', { action: 'classify', causeId, classification }),
+    // ══ 25-S §2b — THE CLIENT OWNS THE LIST, SO IT COMPUTES THE ORDER ═══════════════
+    //
+    // ⚠ The card knows only itself. The order is a property of the list, so the list's owner
+    // works out what "put this one before that one" means and sends the result. The route
+    // rewrites `orderIndex` from it and never touches `number` (§2a).
+    reorderBefore: (draggedId, beforeId) => {
+      const ids = state.diagnosisCauses.map((c) => c.id)
+      const without = ids.filter((id) => id !== draggedId)
+      const at = without.indexOf(beforeId)
+      if (at < 0) return
+      const next = [...without.slice(0, at), draggedId, ...without.slice(at)]
+      return post('/causes', { action: 'reorder', causeIds: next })
+    },
+    // §2c/§2e — nest, or detach with null. One path, so the undo cannot drift from the do.
+    nest: (causeId, parentCauseId) => post('/causes', { action: 'nest', causeId, parentCauseId }),
     confirm: () => post('/causes', { action: 'confirm' }),
     skip: () => post('/causes', { action: 'skip' }),
     setRoot: (causeId) => post('/causes', { action: 'setRoot', causeId }),
