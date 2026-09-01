@@ -2,7 +2,41 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-09-01 02:49 UTC — ▼ **LEX 25-P: THE GUIDING POLICY BECAME A DECISION — AND
+*Last updated: 2026-09-01 11:11 UTC — ▼ **LEX 25-Q: LEX CAN WRITE TO THE MIDDLE PANEL, AND
+FIVE OF THE BRIEF’S EIGHT SECTIONS WERE ALREADY BUILT.**
+⚠⚠ **§1a — THE CHAT WAS NEVER READ-ONLY; IT COULD NOT REACH THE FIELDS THE PANEL RENDERS.**
+`validateProposal` has no schema for `policyOptions` / `chosenApproach` / `actions`, so a rewrite
+of a candidate guiding policy returned `null` and was **dropped with no sign at all** — and even a
+successful `setProposal` writes `IdeaFieldState.proposal`, which a loop field does not render.
+Measured on Charlie’s own idea: `currentField` IS `policyOptions`.
+▶▶ **LEX NOW OFFERS AND ONLY A CLICK WRITES.** `/lex` computes the offer and writes nothing;
+`/field-edit` writes and computes nothing — **a model cannot reach it, because a model does not
+have a mouse.** Addressed by 25-P’s stable numbers; ambiguity refused, never guessed. ⚠ The
+superseded wording is kept in `FieldRevision` (a TABLE, not a column — a column loses the version
+before last) with WHO wrote it, and rendered.
+⚠⚠ **§7 — EVERY COVERAGE CHALLENGE WAS HEADED BY ELEVEN CAPITALISED WORDS OF ITS OWN
+PROVENANCE** (*“ANOTHER MODEL MADE THIS POINT AND OUR PROPOSAL DOES NOT ADDRESS IT — ”*), with the
+model named mid-sentence. Now a `title` and a `sourceModel` at the foot; **36 rows backfilled**,
+a third of which carried the attribution twice. Titles are NOT backfilled — the producer tags.
+▶▶ **FIVE PREMISES OVERTURNED, FOUR BECAUSE 25-N ALREADY FIXED IT:** §2a (banner verified live
+against v8 mid-run), §4a (openable since §1f — and **downloadable cannot be built without storing
+the binary**, which §25.6 deliberately does not), §8a, §8c. §2c **measured: first paint 46 ms**, so
+“Building reports” would be false.
+⚠ **§2b FOUND A REAL DEFECT IN 25-N’S OWN BANNER:** on the build page its finished control linked
+to the page the user was already on. Now surface-aware.
+▶ §3 Stage 1 gets an Ask-Lex/Notes pair that **answers and does not conduct** (`mode: 'ASK'`,
+enforced by the route); re-run + add-a-file + a new “anything else” box **moved to the top**.
+§6 gives Lex eight operating facts from **the same array the tour renders**. §5 says which of two
+things “characters kept” means.
+✅ `check:lex-25q` **50/0, 10 controls, 0 dead**; `check:lex-25p` 72/0/24; whole suite green.
+⚠⚠ **THE CHECKS CAUGHT THREE THINGS IN MY OWN WORK:** a round trip that re-implemented the route’s
+transaction (CLAUDE.md §25.3, added last sprint by this same thread); two prompt blocks inserted
+between `sourceValuesBlock` and `fieldBlock`, which are adjacent on purpose; and `check:lex-25p`’s
+own `findFirst` picking a REJECTED row once the live build wrote new ones.
+⚠ **UNPROVEN WITHOUT A BROWSER (§10):** the rewrite round trip on a real model call; the banner
+during a real run; a file opened on a real upload; the Stage-1 Ask box; the re-ordered Stage 1 page;
+and whether the coverage check’s new titles are titles. `docs/LEX_25Q_REPORT.md`.**
+Earlier: 2026-09-01 02:49 UTC — ▼ **LEX 25-P: THE GUIDING POLICY BECAME A DECISION — AND
 315 OF 501 EVIDENCE ROWS TURN OUT TO BE FIVE OR MORE YEARS OLD WITH NONE OF THEM SAYING SO.**
 ⚠⚠ **§2 — `EvidenceItem` HAD NO DATE COLUMN AT ALL**, which is why 25-O §6's framing as a content
 problem was wrong: no prompt instruction can work against a missing column. Added `sourceDate` +

@@ -550,8 +550,15 @@ async function main() {
 
     // ⚠ AND IT REACHES THE PANEL. The library being right is not the feature working: §A1's
     // defect was a correct filter reading the wrong key. This asserts the assembled panel.
+    // ⚠⚠ SCOPED TO A ROW THE PANEL WILL ACTUALLY CONTAIN, and the first version was not. A bare
+    // `findFirst` on `sourceDate != null` returned an arbitrary row, and once a new build wrote
+    // rows of its own it returned a REJECTED one — which `buildQuestionPanel` filters out, so
+    // the assertion failed against correct code. A check that picks its own subject must pick it
+    // by the same predicate the thing under test uses.
     const walked = await prisma.evidenceItem.findFirst({
-      where: { sourceDate: { not: null } }, select: { ideaId: true, id: true },
+      where: { sourceDate: { not: null }, status: { not: 'REJECTED' } },
+      orderBy: { createdAt: 'asc' },
+      select: { ideaId: true, id: true },
     })
     if (walked) {
       const panel = await buildQuestionPanel(walked.ideaId)
