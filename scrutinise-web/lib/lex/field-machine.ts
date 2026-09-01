@@ -23,6 +23,7 @@ import { buildInitialBackground } from './search-stub'
 import { runOrientation } from './orientation'
 import { runSearch } from './search-gateway'
 import { stripNullBytes } from './json-safe'
+import { nextNumber } from './guiding-policy'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -630,10 +631,39 @@ export async function listPolicyOptions(ideaId: string) {
   return prisma.policyOption.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
 }
 
+/**
+ * ══ 25-R §2 — THE NUMBER IS ASSIGNED WHERE THE ROW IS CREATED ══════════════════════════
+ *
+ * 25-P gave every candidate a stable number and put the assignment inside `ensureNumbered`,
+ * which is called by `readPolicyState` — which runs when the guiding-policy SCREEN is opened.
+ *
+ * ⚠⚠ SO THE NUMBERING WAS A SIDE EFFECT OF RENDERING, and an idea whose guiding-policy section
+ * was never opened had none. Measured on production: an idea built this morning had **0 of 3
+ * numbered**, while the walkthrough idea had 21 of 21 — and the only difference between them is
+ * that `check:lex-25p` had called `readPolicyState` on the second one. The check numbered the
+ * rows and then asserted they were numbered.
+ *
+ * ⚠ A ROW'S IDENTITY IS NOT A PROPERTY OF ANYBODY LOOKING AT IT. The number is what the user
+ * types to instruct Lex ("merge 4 and 8"); it has to exist because the row exists.
+ *
+ * `ensureNumbered` stays, because it still has a job: rows written before 25-P have no number and
+ * are numbered on first read. It is a backfill now rather than the only assignment.
+ */
+async function nextNumberFor(ideaId: string): Promise<number> {
+  const rows = await prisma.policyOption.findMany({
+    where: { ideaId }, select: { number: true },
+  })
+  return nextNumber(rows)
+}
+
 export async function createPolicyOptions(ideaId: string, options: PolicyOptionInput[], source: 'USER' | 'LEX') {
   const clean = options.filter((o) => o.approach?.trim())
   if (!clean.length) return
   const base = await prisma.policyOption.count({ where: { ideaId } })
+  // ⚠ 25-R §2 — NUMBERED HERE. `nextNumber` is max+1 and never reuses a gap, so appending a
+  // second build's candidates to a first build's continues the sequence rather than colliding
+  // with it — which matters because 25-P found the 18 candidates were six builds appended.
+  const first = await nextNumberFor(ideaId)
   await prisma.policyOption.createMany({
     data: clean.map((o, i) => ({
       ideaId,
@@ -644,15 +674,20 @@ export async function createPolicyOptions(ideaId: string, options: PolicyOptionI
       targetCauseIds: o.targetCauseIds ?? [],
       source: (o.source ?? source) as never,
       orderIndex: base + i,
+      number: first + i,
     })),
   })
 }
 
 export async function addPolicyOption(ideaId: string, input: PolicyOptionInput) {
   const base = await prisma.policyOption.count({ where: { ideaId } })
+  // ⚠ 25-R §2 — AND ON THE SINGLE-ADD PATH TOO. Numbering one writer and not the other is how a
+  // user's own candidate ends up as the only unnumbered row in a numbered list.
+  const number = await nextNumberFor(ideaId)
   return prisma.policyOption.create({
     data: {
       ideaId,
+      number,
       approach: input.approach.trim(),
       caseFor: input.caseFor?.trim() || null,
       caseAgainst: input.caseAgainst?.trim() || null,

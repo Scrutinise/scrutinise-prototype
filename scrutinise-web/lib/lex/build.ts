@@ -68,6 +68,8 @@ import { buildEstimate, formatDuration, type BuildEstimate } from './build-estim
 import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { runCausesCommentary } from './build-commentary'
+import { sortPolicies } from './guiding-policy'
+import { readPolicyState, writeSort } from './guiding-policy-state'
 import { readKnownUnknowns } from './deepening'
 import { supersedeOlderProposals } from './evidence-layer'
 import { QUESTION_IDS } from './interrogation-library'
@@ -1929,6 +1931,33 @@ async function approachPass(c: PassContext): Promise<PassOutcome> {
       source: 'LEX' as const,
     })), 'LEX')
     await setLoopProposal(ideaId, 'policyOptions', options.map((o) => o.approach.trim()))
+
+    // ══════════ 25-R §2 — THE SORT RUNS IN THE BUILD, NOT ONLY ON A BUTTON ══════════
+    //
+    // ⚠⚠ 25-P BUILT THE SORT AND WIRED IT TO A CONTROL THE USER PRESSES. Measured on production:
+    // `sortedAt` is null on **every policy option of every real build** — 0 of 3 on an idea built
+    // this morning, 0 of 21 on the walkthrough idea. The sort has never run outside a check. So
+    // the kind, the reasoning, the ratings and the cause links that 25-P reported as built are
+    // all absent from every real proposal, and the screen renders "a plain list of paragraphs
+    // labelled CANDIDATE" — which is exactly what Charlie saw.
+    //
+    // ⚠ HERE RATHER THAN AS A NEW PASS. The approach pass has just written the options and
+    // already holds the causes; a separate pass would re-read both, take another claim, and add
+    // its own share of the whole-build wall clock. Measured cost of this call in isolation is one
+    // gemini-2.5-flash turn over a short prompt — the APPROACH pass runs 16.3s today against a
+    // 240s budget, so there is room.
+    //
+    // ⚠ AND IT NEVER FAILS THE BUILD. A sort that does not complete leaves the candidates
+    // unsorted and readable, which is where they were a minute ago. Losing the whole approach
+    // pass because a classification did not parse would be trading the product for a label.
+    try {
+      const sorted = await sortPolicyOptionsForBuild(ideaId, c)
+      console.log('[lex-diag] 25r sorted the candidates in the build', { ideaId, sorted })
+    } catch (err) {
+      console.warn('[lex-diag] 25r the in-build sort did not complete', {
+        ideaId, reason: err instanceof Error ? err.message : String(err),
+      })
+    }
   }
   if (a.chosenApproach?.trim()) await setProposal(ideaId, 'chosenApproach', { value: a.chosenApproach.trim() })
   if (a.leverage?.trim()) await setProposal(ideaId, 'leverage', { value: a.leverage.trim() })
@@ -2998,6 +3027,40 @@ async function adversarialPass(c: PassContext): Promise<PassOutcome> {
  * section with an honest empty state and let the build finish. It is the opening paragraph of a
  * diagnosis, not a load-bearing part of the kernel.
  */
+/**
+ * ══ 25-R §2 — CLASSIFY THE CANDIDATES THE BUILD HAS JUST WRITTEN ══════════════════════
+ *
+ * The same `sortPolicies` the guiding-policy screen calls, given the same material, writing the
+ * same columns through the same helper. ⚠ ONE IMPLEMENTATION: `writeSort` is what `POST
+ * /guiding-policy {action:'sort'}` runs, and this calls it rather than repeating it — a second
+ * copy would drift the moment either was fixed.
+ *
+ * Returns how many rows it classified.
+ */
+async function sortPolicyOptionsForBuild(ideaId: string, c: PassContext): Promise<number> {
+  const state = await readPolicyState(ideaId)
+  const live = state.policies.filter((p) => p.status !== 'RULED_OUT' && !p.superseded)
+  if (!live.length) return 0
+
+  const material = [
+    '═══ THE DIAGNOSED CAUSES, NUMBERED ═══',
+    ...state.causes.map((x) => `[${x.number}] ${x.isRoot ? '(marked root) ' : ''}${x.cause}`),
+    '',
+    '═══ THE CANDIDATE POLICIES, NUMBERED ═══',
+    ...live.map((p) => `[${p.number}] ${p.approach}${p.caseFor ? `\n      For: ${p.caseFor}` : ''}`),
+  ].join('\n')
+
+  const sorted = await sortPolicies({
+    material,
+    model: modelForPass('APPROACH'),
+    onUsage: (u) => c.usages.push(u),
+  })
+  // ⚠ A NULL SORT IS NOT AN ERROR HERE. `sortPolicies` returns null when the call did not
+  // complete; the candidates stay as they are and the build carries on.
+  if (!sorted) return 0
+  return writeSort({ ideaId, state, sorted })
+}
+
 async function causesCommentaryPass(c: PassContext): Promise<PassOutcome> {
   const model = modelForPass('CAUSES_COMMENTARY')
   await c.activity('Reading the causes as a whole')
