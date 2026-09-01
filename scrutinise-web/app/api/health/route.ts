@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { capabilitySnapshot } from '@/lib/env-flags';
+import { buildDriver } from '@/lib/lex/build-config';
 
 /**
  * ⚠ THIS ENDPOINT ANSWERS "WHAT IS PRODUCTION ACTUALLY RUNNING?" — see docs/CLAUDE.md §20.
@@ -86,6 +87,26 @@ export async function GET() {
         ftsSearchUrl: Boolean(process.env.FTS_SEARCH_URL?.trim()),
         geminiKey: Boolean(process.env.GEMINI_API_KEY?.trim()),
       },
+      // ══════════════════════════════════════════════════════════════════════════════════════
+      // ⚠⚠ 25-T §1c — WHICH DRIVER IS IN FORCE. Added because the flip is Charlie's to make and
+      // NOBODY COULD OTHERWISE CONFIRM IT LANDED.
+      // ══════════════════════════════════════════════════════════════════════════════════════
+      // §1c has Charlie set `LEX_BUILD_DRIVER=worker` in Vercel, which no session can do or read
+      // back — the token authenticates and is refused by the account's SAML scope. Without this
+      // line the only evidence the flip worked would be "a build completed", which is the exact
+      // shape this file was built to abolish: an inference wearing a measurement's grammar.
+      //
+      // ⚠ AND THE TWO FAILURE MODES ARE SILENT IN OPPOSITE DIRECTIONS. Set wrongly — `Worker`,
+      // `WORKER`, a trailing space — the app reads `client` and keeps driving builds from the
+      // tab, with nothing to show for the change. Set correctly but with the Railway worker
+      // down, every build sits at QUEUED and nothing runs it. One request now separates those.
+      //
+      // ⚠ READ THROUGH `buildDriver()`, not `process.env`, for the same reason `capabilities`
+      // is: this reports what is IN FORCE, so a capitalisation that the app rejects appears here
+      // as `client` — which is the bug being caught, not hidden.
+      //
+      // A mode name is the same class of public fact as the commit SHA beside it.
+      build: { driver: buildDriver() },
     },
     { status: 200 },
   );
