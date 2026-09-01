@@ -226,10 +226,24 @@ function main() {
   ok('§5/§0 — it does not pre-empt the guiding-policy choice',
     /YOU ARE DESCRIBING, NOT DECIDING/.test(commentary)
     && !/recommend|ranked|"?bestCause"?/.test(JSON.stringify(Object.keys(full))))
-  ok('§5 — the commentary opens the causes section, above the choice',
-    /<CausesCommentaryPanel ideaId=\{ideaId\} \/>/.test(read('components/lex/FieldsPanel.tsx'))
-    && read('components/lex/FieldsPanel.tsx').indexOf('<CausesCommentaryPanel')
-       < read('components/lex/FieldsPanel.tsx').indexOf('Add cause'))
+  // ══ 25-R §4a NAMED THIS ASSERTION, AND 25-R's ADDENDUM MADE IT PROVE THE POINT ══════
+  //
+  // It used to compare CHARACTER OFFSETS IN THE SOURCE FILE — the tag's index against the index
+  // of the string "Add cause" — as a proxy for what is higher on the SCREEN. It passed for a
+  // sprint while the component never mounted, which is what §4a reported.
+  //
+  // ⚠⚠ AND THEN IT WENT RED ON A CORRECT FIX. Moving the commentary OUT of `CausesField` and up
+  // to the top of the section put it LATER in the file (offset 35,719 → 91,406) and HIGHER on
+  // the page. Source order and render order are unrelated, and this assertion would have argued
+  // for reverting the fix.
+  //
+  // ⚠ THE PROPERTY IS STRUCTURAL, so it is asserted structurally: the commentary is rendered by
+  // the page loop BEFORE the fields are mapped, and it is NOT inside `CausesField`. That is what
+  // "above the choice" means in a component tree.
+  const panelSrc = read('components/lex/FieldsPanel.tsx')
+  ok('§5 — the commentary is rendered above the section\'s fields, not inside one of them',
+    panelSrc.indexOf('<CausesCommentaryPanel') < panelSrc.indexOf('page.fields.map(')
+    && !/function CausesField[\s\S]{0,600}<CausesCommentaryPanel/.test(panelSrc))
   control('the commentary rendered below the causes',
     () => {
       const f = read('components/lex/FieldsPanel.tsx')

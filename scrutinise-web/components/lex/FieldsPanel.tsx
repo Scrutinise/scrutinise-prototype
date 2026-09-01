@@ -673,12 +673,6 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
 
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
-      {/* ══ 25-O §5 — THE COMMENTARY OPENS THE SECTION ═════════════════════════
-          ⚠ ABOVE THE CAUSES AND ABOVE THE FIELD HEADER, BEFORE ANY CHOICE IS OFFERED. §5's
-          symptom is that the user is asked to choose at a granular level with no account of
-          the terrain; a briefing placed under the list is a footnote to a decision already
-          made. It renders nothing at all until a build has written one. */}
-      <CausesCommentaryPanel ideaId={ideaId} />
       <FieldHeader
         field={field}
         right={causes.length > 0 ? (
@@ -1636,6 +1630,25 @@ export default function FieldsPanel({
 
             {!isLocked && !collapsed && (
               <div className={`space-y-2 ${isActive ? `border-l-2 ${accent.border} pl-3` : ''}`}>
+                {/* ══ 25-R ADDENDUM A5 — AT THE TOP OF THE SECTION, WHICH IS WHERE IT WAS
+                    ALWAYS MEANT TO BE ══════════════════════════════════════════════════
+                    25-O §5 and 25-R §1c both say the commentary "opens the causes section".
+                    It was mounted inside `CausesField` — the causes FIELD, which is the third
+                    of the seven on this page.
+
+                    ⚠⚠ MEASURED IN PRODUCTION, 1 September: with DIAGNOSIS expanded, the
+                    commentary began **1,080 px below the section heading — 1.4 viewport
+                    heights**, behind "The problem" and "Who's affected", each a full card with
+                    its own Save/Skip. So a user who opened the section and read what appeared
+                    never reached it. **That is the remainder A5 asked for**: the collapse
+                    explains its absence when shut, and this explains its absence when open.
+
+                    ⚠ ON THE PAGE THAT HOLDS THE CAUSES, not on every page — it is a briefing
+                    about the causes, and above the diagnosis's own fields is the top of the
+                    section in the sense both briefs meant. */}
+                {ideaId && page.fields.some((f) => f.key === 'causes') && (
+                  <CausesCommentaryPanel ideaId={ideaId} />
+                )}
                 {page.fields.map((f, i) => {
                   const queued = currentIdx >= 0 && i > currentIdx && !isTerminal(f)
                   // 25-H §7d — the field actually holding this one up: the first

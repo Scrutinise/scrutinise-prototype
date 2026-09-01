@@ -34,16 +34,30 @@
 export type PageStatus = 'active' | 'complete' | 'visited' | 'locked'
 
 /**
- * ⚠ FINISHED COLLAPSES. Everything else opens.
+ * ══ CHARLIE'S DECISION, 25-R ADDENDUM A1 — AND IT IS NEITHER OPTION §6 OFFERED ══════════
  *
- * `complete` means every field on the page is terminal — accepted or skipped — so there is
- * nothing on it waiting for anybody. A page holding a proposal the user has not answered is not
- * finished, whatever wrote the proposal.
+ * 25-R opened these sections, because a build marking every page `visited` was hiding
+ * everything the build had made. §6 put the consequence to Charlie: after a build, DIAGNOSIS,
+ * GUIDING_POLICY and COHERENT_ACTIONS would all open, and the middle panel would be very long.
  *
- * ⚠ THE USER OVERRULES THIS EITHER WAY. 25-N §1c's two override sets are untouched: a finished
- * stage can be expanded and an open one collapsed, and the choice sticks for the session. This
- * decides only where a page starts.
+ * **A1: "After a build, all kernel sections are collapsed and tidy. Do not leave them open.
+ * Instead, the build's completion is announced through the worklist."**
+ *
+ * ⚠⚠ SO THE COLLAPSE IS RESTORED AND THE ENTRY POINT MOVES. The panel is not the way in; the
+ * worklist is — its first item after a build says the diagnosis is ready and asks the question
+ * that starts the reading (see `WORKLIST_PARTS` / `read:diagnosis`). A tidy panel with a
+ * worklist pointing into it is a better answer than a long panel that announces itself by being
+ * long, and it is Charlie's call to make.
+ *
+ * ⚠⚠ AND THE ORIGINAL DEFECT MUST NOT RETURN (A4). Collapsing is only safe because opening a
+ * section MOUNTS its contents and fetches them — measured live in production on 1 September:
+ * shut → the fields are unmounted and the commentary is absent; re-opened → it fetches and
+ * draws again. **A section that is shut must be shut, not absent**: the heading, its count and
+ * its toggle all render while collapsed, so there is something to open.
+ *
+ * ⚠ `visited` IS BACK IN THE RULE, AND THIS TIME IT IS DELIBERATE RATHER THAN INHERITED. It
+ * means "a build has written here", which is exactly the set of sections A1 wants tidy.
  */
 export function collapsedByDefault(status: PageStatus | string): boolean {
-  return status === 'complete'
+  return status === 'complete' || status === 'visited'
 }
