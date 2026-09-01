@@ -31,7 +31,7 @@ import { modelForPass } from '@/lib/lex/build-config'
 import { sortPolicies, judgeMerge, nextNumber } from '@/lib/lex/guiding-policy'
 import {
   readPolicyState, applyPolicyOp, syncPolicyField, ensureNumbered,
-  writeMerge, writeSort, POLICY_OPS, type PolicyOp,
+  writeSort, POLICY_OPS, type PolicyOp,
 } from '@/lib/lex/guiding-policy-state'
 
 export const maxDuration = 300
@@ -152,17 +152,29 @@ export async function POST(req: Request, { params }: Params) {
     )
   }
 
-  // ⚠ ONLY A `MERGE` VERDICT WRITES. The other three are ADVICE — they tell the user what the
-  // relationship is and leave the act to them. A verdict that silently rearranged the list would
-  // be the product deciding, which is exactly what §1 exists to stop.
-  // ⚠ ONLY THE WRITE IS EXTRACTED, NOT THE JUDGEMENT. §1.12 asks that a merge be asserted on
-  // its RENDERED result; the check supplies a verdict of its own and runs this same write.
-  const createdNumber = await writeMerge({ ideaId: id, na, nb, answer })
+  // ══════════ ⚠⚠ 25-T §2b — THIS JUDGES. IT NO LONGER WRITES. ══════════════════════════════
+  //
+  // §2b: *"The merge writes only on the user's acceptance."* Until 25-T this line was
+  //     const createdNumber = await writeMerge({ ideaId: id, na, nb, answer })
+  // right here — so asking whether 4 and 8 could merge MERGED THEM. The user's own words for
+  // this interaction were "merge 4 and 8", and it is easy to read that as an instruction; but
+  // the screen presents the four verdicts as a judgement, and a judgement that has already
+  // acted is not one. The write now lives behind `acceptMerge` on PATCH.
+  //
+  // ⚠ ONLY A `MERGE` VERDICT CAN BE ACCEPTED. The other three are ADVICE — they tell the user
+  // what the relationship is and leave the act to them; `writeMerge` refuses them, so §2e holds
+  // on the write side and not merely on this screen.
+  //
+  // ⚠ AND THE NUMBER SHOWN ON THE CARD IS A PREDICTION, NAMED AS ONE. `nextNumber` is pure and
+  // is read here without writing, so the card can say which number the merged policy WOULD take
+  // — the same function the write will call, rather than a second guess at it.
+  const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
+  const wouldBeNumber = answer.verdict === 'MERGE' && answer.merged ? nextNumber(all) : null
 
   console.log('[25p:policy] merge judged', {
-    ideaId: id, model, a: na, b: nb, verdict: answer.verdict, createdNumber,
+    ideaId: id, model, a: na, b: nb, verdict: answer.verdict, wouldBeNumber, wrote: false,
   })
-  return NextResponse.json({ answer, createdNumber, ...(await readState(id)), usages })
+  return NextResponse.json({ answer, wouldBeNumber, ...(await readState(id)), usages })
 }
 
 // ══ EVERY OPERATION THAT DOES NOT CALL A MODEL ═════════════════════════════════
@@ -175,6 +187,23 @@ const PatchSchema = z.object({
   policyId: z.string().uuid().optional(),
   reason: z.string().trim().max(2000).optional(),
   phase: z.enum(['NOW', 'LATER']).optional(),
+  /**
+   * ⚠ 25-T §2b — `acceptMerge` only: the merge the user is accepting, as it was shown to them
+   * on the card. The two NUMBERS are re-read server-side by `writeMerge`, so what travels here
+   * is the proposed TEXT — the same class of thing the chat rewrite route already accepts from
+   * the client, and for the same reason: it is the user's own idea they are editing.
+   */
+  merge: z.object({
+    na: z.number().int().positive(),
+    nb: z.number().int().positive(),
+    merged: z.object({
+      approach: z.string().trim().min(1).max(8000),
+      caseFor: z.string().trim().max(8000).nullable().optional(),
+      caseAgainst: z.string().trim().max(8000).nullable().optional(),
+    }),
+    reasoning: z.string().trim().max(8000).optional(),
+    chainLink: z.string().trim().max(4000).nullable().optional(),
+  }).optional(),
 })
 
 export async function PATCH(req: Request, { params }: Params) {

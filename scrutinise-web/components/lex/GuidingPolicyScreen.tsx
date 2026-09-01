@@ -155,7 +155,16 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [instruction, setInstruction] = useState('')
-  const [answer, setAnswer] = useState<{ answer: MergeAnswer; createdNumber: number | null } | null>(null)
+  /**
+   * ⚠ 25-T §2b — THE PROPOSAL, HELD UNACCEPTED. `na`/`nb` are kept because the card has to show
+   * the two PARENTS beside the proposed text, and `wouldBeNumber` is what the merged policy will
+   * take if it is accepted — a prediction from the same `nextNumber` the write calls, not a
+   * second guess at it. Before 25-T this state described a merge that had ALREADY happened.
+   */
+  const [answer, setAnswer] = useState<
+    { answer: MergeAnswer; wouldBeNumber: number | null; na: number; nb: number } | null
+  >(null)
+  const [merged, setMerged] = useState<number | null>(null)
   const [reasons, setReasons] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
@@ -185,8 +194,12 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       })
       const j = await res.json().catch(() => ({}))
-      if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'That did not save.'); return }
-      setS(j)
+      // ⚠ 25-T §2b — RETURNS THE NEW STATE, as `post` already did. `acceptMerge` has to name the
+      // number that was created, and `s` does not carry it yet at the point the caller resumes:
+      // `setS` is a queued React update, so reading `s` here would read the list from BEFORE the
+      // merge and confidently report the wrong number. Existing callers ignore the return.
+      if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'That did not save.'); return null }
+      setS(j); return j
     } finally { setBusy(false) }
   }, [ideaId])
 
@@ -198,8 +211,36 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       return
     }
     const j = await post({ action: 'merge', numbers: [nums[0], nums[1]] })
-    if (j?.answer) { setAnswer({ answer: j.answer, createdNumber: j.createdNumber ?? null }); setInstruction('') }
+    if (j?.answer) {
+      setMerged(null)
+      setAnswer({ answer: j.answer, wouldBeNumber: j.wouldBeNumber ?? null, na: nums[0], nb: nums[1] })
+      setInstruction('')
+    }
   }, [instruction, post])
+
+  /**
+   * ⚠⚠ 25-T §2b — THE ACCEPTANCE. This, and nothing before it, is what merges two policies.
+   * The number is read back off the STATE THE WRITE RETURNED rather than from `wouldBeNumber`,
+   * so what the confirmation names is what was actually created. A prediction repeated back as
+   * a result is how a card comes to report a number no row has.
+   */
+  const acceptMerge = useCallback(async (a: {
+    answer: MergeAnswer; na: number; nb: number
+  }) => {
+    if (!a.answer.merged) return
+    const before = new Set((s?.policies ?? []).map((p) => p.number))
+    const j = await patch({
+      op: 'acceptMerge',
+      merge: {
+        na: a.na, nb: a.nb, merged: a.answer.merged,
+        reasoning: a.answer.reasoning, chainLink: a.answer.chainLink ?? null,
+      },
+    })
+    const created = ((j?.policies ?? []) as Array<{ number: number | null }>)
+      .map((p) => p.number).filter((n): n is number => n != null && !before.has(n))
+    setMerged(created[0] ?? null)
+    setAnswer(null)
+  }, [patch, s])
 
   if (!s) return null
 
@@ -430,29 +471,88 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
           contradict — and why.
         </p>
 
+        {/* ⚠ 25-T §2b — the confirmation, AFTER the write, naming the row that now exists. */}
+        {merged != null && (
+          <p className="mt-2.5 text-xs text-zinc-900 font-medium rounded-lg border-2 border-zinc-300 bg-zinc-50/70 px-3 py-2">
+            Merged into policy {merged}. Both originals keep their numbers and are in “Ruled out”
+            below, marked “Merged into {merged}.” — restore either one to undo this.
+          </p>
+        )}
+
         {answer && (
           <div className="mt-2.5 rounded-lg border-2 border-zinc-300 bg-zinc-50/70 p-3">
+            {/* ══════════ 25-T §2b — A PROPOSAL, NOT A REPORT ════════════════════════════════
+                §2b: *"The merge writes only on the user's acceptance, as a card showing the two
+                parents and the proposed merged policy side by side."*
+
+                ⚠⚠ THE HEADING USED TO SAY "Merged." — IN THE PAST TENSE, BECAUSE IT WAS TRUE.
+                The POST that asked the question performed the write, so by the time this card
+                appeared the list had already changed underneath it. The user was reading a
+                report of something they had not agreed to. Now it says what it is: a proposal
+                with two buttons, and nothing has been written when it renders. */}
             <p className="text-xs font-semibold text-zinc-900">
-              {answer.answer.verdict === 'MERGE' ? 'Merged.'
+              {answer.answer.verdict === 'MERGE' ? `These two can merge — nothing has changed yet.`
                 : answer.answer.verdict === 'ONE_CONTAINS_THE_OTHER' ? 'Not a merge — one contains the other.'
                 : answer.answer.verdict === 'SEQUENCE' ? 'Not a merge — sequence them.'
                 : 'Refused — they contradict.'}
             </p>
             <p className="text-xs text-zinc-700 mt-1">{answer.answer.reasoning}</p>
-            {answer.createdNumber && (
-              <p className="text-xs text-zinc-900 mt-1.5 font-medium">
-                The merged policy is number {answer.createdNumber}. Both originals keep their
-                numbers and are shown below as superseded.
-              </p>
+
+            {/* ⚠ SIDE BY SIDE, and it wraps to one column on a narrow screen rather than
+                shrinking three columns of prose to unreadable width. */}
+            {answer.answer.verdict === 'MERGE' && answer.answer.merged && (
+              <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
+                {[answer.na, answer.nb].map((n) => {
+                  const parent = s.policies.find((p) => p.number === n)
+                  return (
+                    <div key={n} className="rounded-lg border border-zinc-300 bg-white p-2.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                        Policy {n} — would be superseded
+                      </p>
+                      <p className="text-xs text-zinc-800 mt-1">{parent?.approach ?? '(not found)'}</p>
+                    </div>
+                  )
+                })}
+                <div className="rounded-lg border-2 border-zinc-900 bg-white p-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-900">
+                    Proposed{answer.wouldBeNumber ? ` — would become policy ${answer.wouldBeNumber}` : ''}
+                  </p>
+                  <p className="text-xs text-zinc-900 mt-1">{answer.answer.merged.approach}</p>
+                </div>
+              </div>
             )}
+
             {answer.answer.chainLink && (
               <p className="mt-1.5 text-xs text-zinc-900 border-l-2 border-zinc-900 pl-2.5 font-medium">
                 ⚠ If only part of this is delivered: {answer.answer.chainLink}
               </p>
             )}
-            <button onClick={() => setAnswer(null)} className="text-[11px] text-zinc-500 mt-2 underline">
-              Dismiss
-            </button>
+
+            {/* ⚠ 25-T §2e — ONLY A MERGE VERDICT OFFERS A BUTTON. The other three say what the
+                relationship is and leave the act to the user; there is nothing here to accept,
+                and offering an inert button would imply otherwise. */}
+            {answer.answer.verdict === 'MERGE' && answer.answer.merged ? (
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <button
+                  onClick={() => void acceptMerge(answer)}
+                  disabled={busy}
+                  className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                >
+                  Merge them into one policy
+                </button>
+                <button
+                  onClick={() => setAnswer(null)}
+                  disabled={busy}
+                  className="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-zinc-400 text-zinc-800 bg-white hover:bg-zinc-50 disabled:opacity-40"
+                >
+                  Leave them as they are
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setAnswer(null)} className="text-[11px] text-zinc-500 mt-2 underline">
+                Dismiss
+              </button>
+            )}
           </div>
         )}
       </div>

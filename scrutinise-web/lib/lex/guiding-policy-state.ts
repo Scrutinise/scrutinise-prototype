@@ -26,11 +26,18 @@ export type PolicyOp =
   | 'settle' | 'phase' | 'reject' | 'restore' | 'proceedUnresolved' | 'countRound'
   /** 25-S §1.3 — put back where the sort moved it from. See `applyPolicyOp`. */
   | 'undoSort'
+  /**
+   * 25-T §2b — the merge, accepted. ⚠ The JUDGEMENT is the POST's and calls a model; this is the
+   * WRITE, and calls nothing. They were one operation until 25-T: asking "can 4 and 8 merge?"
+   * silently performed the merge, so the user found out what the answer was by discovering their
+   * list had already changed.
+   */
+  | 'acceptMerge'
 
 export const POLICY_OPS: PolicyOp[] = [
   'acceptMove', 'declineMove', 'acceptCause', 'declineCause',
   'settle', 'phase', 'reject', 'restore', 'proceedUnresolved', 'countRound',
-  'undoSort',
+  'undoSort', 'acceptMerge',
 ]
 
 export type PolicyState = Awaited<ReturnType<typeof readPolicyState>>
@@ -211,8 +218,16 @@ export async function applyPolicyOp(input: {
   policyId?: string
   reason?: string
   phase?: 'NOW' | 'LATER'
+  /** 25-T §2b — `acceptMerge` only: the two numbers, and the merge the user is accepting. */
+  merge?: {
+    na: number
+    nb: number
+    merged: { approach: string; caseFor?: string | null; caseAgainst?: string | null }
+    reasoning?: string
+    chainLink?: string | null
+  }
 }): Promise<{ state: PolicyState } | { notOnThisIdea: true }> {
-  const { ideaId: id, op, policyId, reason, phase } = input
+  const { ideaId: id, op, policyId, reason, phase, merge } = input
 
   const row = policyId
     ? await prisma.policyOption.findFirst({ where: { id: policyId, ideaId: id } })
@@ -220,6 +235,36 @@ export async function applyPolicyOp(input: {
   if (policyId && !row) return { notOnThisIdea: true }
 
   switch (op) {
+    // ══════════ 25-T §2b — THE MERGE WRITES HERE, ON ACCEPTANCE, AND NOWHERE ELSE ══════════
+    //
+    // §2b: *"The merge writes only on the user's acceptance, as a card showing the two parents
+    // and the proposed merged policy side by side."*
+    //
+    // ⚠⚠ WHAT THIS REPLACES. The POST that ASKED the question also performed the merge, in the
+    // same request: `judgeMerge` then `writeMerge`, unconditionally. So "merge 4 and 8" was not
+    // a question with an answer — it was an instruction, and the user learned the verdict by
+    // noticing that two policies had gone and a ninth had appeared. Every other consequential
+    // move on this screen (a cause, a move, a rejection) asks first; this one did not.
+    //
+    // ⚠ THE VERDICT STILL DECIDES WHETHER THERE IS ANYTHING TO ACCEPT. `writeMerge` returns null
+    // for the other three verdicts, so §2e survives untouched: a SEQUENCE or a CONTRADICTORY
+    // cannot be accepted into existence by posting it here.
+    case 'acceptMerge': {
+      if (!merge) break
+      await writeMerge({
+        ideaId: id,
+        na: merge.na,
+        nb: merge.nb,
+        answer: {
+          verdict: 'MERGE',
+          reasoning: merge.reasoning,
+          chainLink: merge.chainLink ?? null,
+          merged: merge.merged,
+        },
+      })
+      break
+    }
+
     // ══ §1.3 — AN ACTION MOVES ONLY ON CONSENT, AND ONLY IF ITS POLICY IS SETTLED ══
     case 'acceptMove': {
       if (!row) break
@@ -369,8 +414,26 @@ export async function applyPolicyOp(input: {
       // renumbers and the row keeps `number` throughout. `ruleOutReason` is RETAINED as
       // history, so "we rejected this once, for this reason, and changed our minds" survives.
       if (row) {
+        // ══════ ⚠⚠ 25-T §2c — A MERGE SUPERSESSION HAS TO BE UNDONE ON BOTH COLUMNS ══════
+        //
+        // §2c: parents *"can be restored"*. Setting `status: 'CANDIDATE'` alone did not restore
+        // one: `live` filters on `!p.superseded` as well, so the row came back to CANDIDATE and
+        // still appeared nowhere — a restore that reported success and changed nothing visible.
+        // Clearing `mergedIntoId` is what actually returns it to the list.
+        //
+        // ⚠ AND THE REASON IS CLEARED HERE AND ONLY HERE. §1.10's retention rule is right for a
+        // rejection — the history of a judgement the user reversed is worth keeping. It is wrong
+        // for this: "Merged into 9" is not history once the row is no longer merged into 9, it
+        // is a false statement, and `historyLine()` would print it on a live policy. So the
+        // clear is conditional on the row actually having been superseded, and a genuine
+        // rejection still keeps its reason exactly as 25-P intended.
+        const wasMerged = !!row.mergedIntoId
         await prisma.policyOption.update({
-          where: { id: row.id }, data: { status: 'CANDIDATE' },
+          where: { id: row.id },
+          data: {
+            status: 'CANDIDATE',
+            ...(wasMerged ? { mergedIntoId: null, ruleOutReason: null } : {}),
+          },
         })
       }
       break
@@ -481,11 +544,29 @@ export async function writeMerge(input: {
       source: 'LEX',
     },
   })
-  // ⚠ THE PARENTS ARE SUPERSEDED, NOT DELETED. The user must be able to see what a merged
-  // policy was made of, and their numbers must stay taken.
+  // ══════════ ⚠ THE PARENTS ARE SUPERSEDED, NOT DELETED ══════════════════════════════════
+  // The user must be able to see what a merged policy was made of, and their numbers must stay
+  // taken.
+  //
+  // ⚠⚠ AND UNTIL 25-T §2c THEY WERE SUPERSEDED INTO NOTHING — INVISIBLE ON EVERY LIST.
+  // `mergedIntoId` alone put them in no list at all: `live` excludes them for being superseded
+  // (`!p.superseded`), and the ruled-out block filters on `status === 'RULED_OUT'`, which this
+  // write never set — so they stayed CANDIDATE and rendered nowhere. Meanwhile the screen told
+  // the user, in so many words, *"Both originals keep their numbers and are shown below as
+  // superseded."* Nothing below showed them. A sentence on the page asserting a thing the page
+  // does not do is the exact defect class §3 was written for, and it shipped in 25-P.
+  //
+  // ⚠ SO THE STATUS IS SET TOO, and the reason names the number it went into — §2c's *"appear
+  // in the rejected list with the reason 'merged into 9'"*, literally. This needs no new list
+  // and no new filter: the ruled-out block, its reason line and its Restore button all already
+  // exist and now simply find these rows.
   await prisma.policyOption.updateMany({
     where: { id: { in: [A.id, B.id] } },
-    data: { mergedIntoId: created.id },
+    data: {
+      mergedIntoId: created.id,
+      status: 'RULED_OUT',
+      ruleOutReason: `Merged into ${createdNumber}.`,
+    },
   })
   await syncPolicyField(id)
   return createdNumber
