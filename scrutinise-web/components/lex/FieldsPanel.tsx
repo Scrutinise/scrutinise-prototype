@@ -8,6 +8,7 @@ import {
 } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
+import GuidingPolicyScreen from './GuidingPolicyScreen'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
@@ -1426,7 +1427,19 @@ export default function FieldsPanel({
       return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} />
     }
     if (f.type === 'loop') {
-      if (f.key === 'policyOptions') return <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} />
+      if (f.key === 'policyOptions') {
+        return (
+          <>
+            <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} />
+            {/* ══ 25-P §1 — THE GUIDING POLICY BECOMES A DECISION ═══════════════════
+                ⚠ BELOW THE LIST, NOT INSTEAD OF IT. The list is where the user reads and edits
+                the candidates; this is where they act on them. Replacing the list would take
+                away the editing the loop field already does well, and 25-P §0 is explicit that
+                what works must not be disturbed. */}
+            <GuidingPolicyScreen ideaId={ideaId} />
+          </>
+        )
+      }
       if (f.key === 'actions') return <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
       return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} />
     }

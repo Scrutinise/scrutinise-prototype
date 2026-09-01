@@ -644,6 +644,17 @@ model Idea {
   id                        String          @id @default(uuid())
   creatorId                 String
   creator                   User            @relation("IdeaCreator", fields: [creatorId], references: [id])
+  /// ⚠ 25-P §1.9 — HOW MANY ROUNDS OF "COMMENT AND RE-RUN" THE USER HAS BEEN THROUGH ON THE
+  /// GUIDING POLICY. After two, Lex offers to proceed with the choice recorded as unresolved
+  /// rather than asking a third time: three rounds of the same question reads as nagging, and
+  /// "unresolved, and here is what it turns on" is a respectable thing for a proposal to say.
+  guidingPolicyRounds       Int             @default(0)
+  /// §1.9/§1.10 — the user chose to proceed without settling. Not a failure state.
+  guidingPolicyUnresolved   Boolean         @default(false)
+  /// ⚠ WHAT IT TURNS ON. An unresolved choice with no reason tells a reader there is a gap and
+  /// nothing whatever about it.
+  guidingPolicyUnresolvedWhy String?
+
   /// ══ 25-O §4b — ARCHIVED, WHICH IS NOT DELETED AND NOT SOFT-DELETED ═══════════════
   ///
   /// §4b: *"Archive, never hard-delete. Mark archived; hide from every list, every count and
@@ -2423,13 +2434,68 @@ model PolicyOption {
   caseFor        String?            // genuine argument for
   caseAgainst    String?            // genuine argument against
   status         PolicyOptionStatus @default(CANDIDATE)
-  ruleOutReason  String?            // why it was ruled out (set when status = RULED_OUT)
+  /// Why it was ruled out. ⚠ 25-P §1.10 — RETAINED ON RESTORE, so "we rejected this once, for
+  /// this reason, and changed our minds" survives as history.
+  ruleOutReason  String?
   source         LexEntitySource    @default(USER)
   orderIndex     Int                @default(0)
+
+  // ══════════════ 25-P §1 — THE GUIDING POLICY BECOMES A DECISION ══════════════
+
+  /// ⚠⚠ §1.1 — THE STABLE NUMBER THE USER TYPES. 1..n, assigned once, and it NEVER MOVES.
+  /// A rejected 7 leaves a gap; nothing renumbers; a restore returns the original number.
+  /// Not tidiness: Charlie instructs Lex BY NUMBER ("merge 4 and 8"), and a renumbering between
+  /// his reading the screen and his typing would silently merge two different policies.
+  /// ⚠ Nullable because every row predating 25-P has none; they are numbered on first read, in
+  /// `createdAt` order, and stable from that moment.
+  number         Int?
+  /// §1.2 — GUIDING_POLICY | COHERENT_ACTION | GOAL_RESTATEMENT.
+  kind           String             @default("GUIDING_POLICY")
+  /// ⚠ §1.2 — WHY, IN LEX'S WORDS. A reclassification with no reason is a disappearance.
+  kindReason     String?
+  sortedAt       DateTime?
+
+  /// ⚠⚠ §1.3 — AN ITEM THAT IS REALLY AN ACTION MOVES ONLY ON CONSENT. OFFERED|ACCEPTED|DECLINED.
+  moveStatus     String?
+  /// ⚠ §1.3 — THE POLICY THIS ACTION IMPLEMENTS. An action belongs to a POLICY, not to the
+  /// kernel in general: if that policy is rejected the action goes with it, rather than sitting
+  /// in the kernel implementing something the user threw away an hour ago.
+  parkedWithId   String?
+  movedToActionId String?
+
+  /// §1.7 — the numbers this was merged from. Empty on an original.
+  mergedFrom     Int[]              @default([])
+  /// Set on a policy superseded by a merge. ⚠ NOT deleted — the user must be able to see what a
+  /// merged policy was made of, and its number must stay taken.
+  mergedIntoId   String?
+
+  /// ⚠⚠ §1.6 — TWO JUDGEMENTS, NEVER COMBINED INTO A SCORE. Each carries the one thing that
+  /// decides whether a reviewer can trust it: `basis` is REASONED | RETRIEVED | NOT_FOUND.
+  /// Shape: { verdict, why, basis }.
+  importance     Json?
+  addressability Json?
+
+  /// ⚠ §1.8 — WHAT HAPPENS IF ONLY PART IS DELIVERED. A legislature takes the easy half of a
+  /// proposal; this is the warning, and it must survive into both generated documents.
+  chainLink      String?
+
+  /// §1.10 — NOW or LATER. A policy wanted but not yet is not a rejection.
+  phase          String?
+  phaseReason    String?
+
+  /// ⚠⚠ §1.4 — WHERE A POLICY ANSWERS A CAUSE THE DIAGNOSIS HAS NOT GOT, either the policy does
+  /// not belong or THE DIAGNOSIS IS INCOMPLETE — and the second is far more often true.
+  /// Shape: { cause, why, status: OFFERED|ACCEPTED|DECLINED, addedCauseId, declinedReason }.
+  /// ⚠ A DECLINE IS RECORDED rather than forgotten: it is a real weakness and the adversarial
+  /// read must be able to see it.
+  impliedCause   Json?
+
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
   @@index([ideaId])
+  /// §1.1 — looked up on every instruction the user types.
+  @@index([ideaId, number])
 }
 
 // Page 4 (Coherent Actions) action record (design §18.1). Kept as a NEW table,
@@ -3526,6 +3592,25 @@ model EvidenceItem {
   /// does not answer. Null on rows written before 25-D, and rendered as unclassified
   /// rather than filed under a heading nobody chose.
   headingKey String?
+
+  // ════════════ 25-P §2 — WHEN THE SOURCE IS FROM ════════════════════════════
+  //
+  // ⚠⚠ THE COLUMN 25-O §6 WENT LOOKING FOR AND DID NOT FIND. The 2014 Lords claim came from a
+  // debate of 16 January 2014; the date was in the URL and in the corpus row, and there was
+  // nowhere for it to land. §2: *"No prompt instruction can work against a missing column"* —
+  // which is why the earlier framing of this as a content problem was wrong.
+
+  /// The date of the SOURCE, not of the row. Null means undated, and §2c is explicit that an
+  /// undated row must be VISIBLY undated rather than silently assumed current.
+  sourceDate      DateTime?
+  /// ⚠⚠ HOW THE DATE WAS GOT, OR WHY THERE IS NONE — and it is never null once §2b is running,
+  /// because "no date" and "nobody looked" are different states and a reader has to be able to
+  /// tell them apart. One of `EvidenceDateBasis` in lib/lex/evidence-date.ts:
+  /// CORPUS_ROW | URL | CORPUS_ROW_UNDATED | NO_SOURCE_ROW | UNPARSEABLE | NOT_ASSESSED.
+  /// ⚠ NEVER `MODEL`. §2b: populated at write time from the corpus row, not from the model —
+  /// a date a model produced is a claim about a document, not a property of it.
+  sourceDateBasis String?
+
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
@@ -3535,6 +3620,8 @@ model EvidenceItem {
   @@index([ideaId, fieldRef])
   @@index([ideaId, status])
   @@index([ideaId, headingKey])
+  /// §2c — "how many rows could not be dated, and why" is a query, not a scan.
+  @@index([ideaId, sourceDateBasis])
 }
 
 /// A specific, addressable gap. The user works through these: address, defer, or
