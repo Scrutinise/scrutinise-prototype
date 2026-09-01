@@ -3966,6 +3966,11 @@ model IdeaBuild {
   /// How many times this build has been picked up again. Bounded (`MAX_RESUMES`) so a build
   /// that stops on the same pass cannot be resumed round a loop.
   resumeCount     Int          @default(0)
+  /// ⚠ 25-T §1f — HOW MANY TIMES THE WORKER RESUMED THIS BUILD ON ITS OWN, and it is
+  /// deliberately NOT `resumeCount`. §1f bounds the automatic attempts at two; 25-N bounds the
+  /// USER's at three. One counter for both would mean a build the worker retried twice left the
+  /// user a single press — spending their patience on our retries.
+  autoResumeCount Int          @default(0)
   /// ⚠ WHY IT STOPPED LAST TIME, KEPT ACROSS THE RESUME. `failureReason` is cleared when
   /// the build goes back to QUEUED, and a resumed build that said nothing about having
   /// stopped would be exactly the "silently presents incomplete work as finished" this

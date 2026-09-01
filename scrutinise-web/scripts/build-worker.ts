@@ -37,6 +37,7 @@
 import { prisma } from '../lib/prisma'
 import {
   nextQueuedBuild, claimQueuedBuild, runBuildToCompletion, sweepStalledBuilds,
+  autoResumeStoppedBuilds,
 } from '../lib/lex/build'
 import { WORKER_CONCURRENCY, WORKER_IDLE_MS, buildDriver } from '../lib/lex/build-config'
 
@@ -119,6 +120,11 @@ async function main() {
     try {
       const swept = await sweepStalledBuilds()
       if (swept) console.warn(`[build-worker ${WORKER_ID}] settled ${swept} abandoned build(s)`)
+      // ⚠ 25-T §1f — a build stopped by a constraint picks itself up, twice at most. The bound
+      // is in `AUTO_RESUME_LIMIT` and is counted in its own column, so the user keeps their own
+      // three presses. See `autoResumeStoppedBuilds`.
+      const resumed = await autoResumeStoppedBuilds()
+      if (resumed) console.warn(`[build-worker ${WORKER_ID}] auto-resumed ${resumed} stopped build(s)`)
     } catch (err) {
       console.error(`[build-worker ${WORKER_ID}] sweep failed:`, err instanceof Error ? err.message : err)
     }

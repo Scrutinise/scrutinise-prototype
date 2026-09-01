@@ -304,6 +304,38 @@ export default function BuildProgress({
               {' '}{build.incomplete.previousStopReason}
             </p>
           )}
+
+          {/* ═══════ 25-T §1f — SAY THAT IT ALREADY TRIED, AND SAY WHEN IT HAS STOPPED TRYING ═══
+              §1f: *"Two automatic attempts, then it stops and tells the user."*
+
+              ⚠⚠ THE BOUND WITHOUT THE SENTENCE IS WORSE THAN NEITHER. A build that restarted
+              itself twice and failed twice looks, on screen, exactly like a build that has not
+              been tried at all — so the user presses "Carry on", which is precisely the thing
+              that has just been demonstrated not to work, and spends one of their own three
+              presses learning what we already knew.
+
+              ⚠ AND THE TWO COUNTS ARE KEPT APART DELIBERATELY. `autoResumeCount` is ours;
+              `resumeCount` is theirs. Merging them would let our retries eat their allowance
+              silently, which is the bug the separate column was added to prevent. */}
+          {build.incomplete.autoResumeCount > 0 && (
+            <p className="text-xs text-amber-800">
+              {build.incomplete.autoResumeCount >= build.incomplete.autoResumeLimit ? (
+                <>
+                  I restarted this build{' '}
+                  {build.incomplete.autoResumeLimit === 2 ? 'twice' : `${build.incomplete.autoResumeLimit} times`}
+                  {' '}on my own and it stopped again each time, so I have stopped trying. Something
+                  here is not going to clear by itself. Carrying on may still work, but it is worth
+                  reading what stopped it first.
+                </>
+              ) : (
+                <>
+                  I restarted this build{' '}
+                  {build.incomplete.autoResumeCount === 1 ? 'once' : `${build.incomplete.autoResumeCount} times`}
+                  {' '}on my own, without being asked. That does not count against your three.
+                </>
+              )}
+            </p>
+          )}
           {resumeError && (
             <p className="text-sm text-amber-900 bg-white border border-amber-300 rounded-lg px-2.5 py-2">
               {resumeError}

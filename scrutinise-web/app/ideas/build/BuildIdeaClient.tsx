@@ -132,6 +132,8 @@ export interface BuildView {
     noSummary: boolean
     resumeCount: number
     previousStopReason: string | null
+    autoResumeCount: number
+    autoResumeLimit: number
     /** 25-P §5 — passes added after this build ran; run free on resume, and said so. */
     passesAddedSince: string[]
   } | null
@@ -1497,6 +1499,8 @@ export default function BuildIdeaClient(
                 sampleSize={build?.estimate?.sampleSize ?? 0}
                 hasMean={build?.estimate?.meanSeconds != null}
                 offerEmail={!!build?.estimate?.offerEmail}
+                // ⚠ 25-T §1h — the checkbox is only offered where the promise is true.
+                driver={build?.driver}
                 emailWhenDone={emailWhenDone}
                 onEmailWhenDone={setEmailWhenDone}
                 busy={busy}

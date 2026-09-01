@@ -179,6 +179,9 @@ export interface BuildView {
     resumeCount: number
     /** Why it stopped the time before this one, kept across a resume. */
     previousStopReason: string | null
+    /** 25-T §1f — automatic restarts already spent, and the ceiling. Not the user's presses. */
+    autoResumeCount: number
+    autoResumeLimit: number
     /**
      * ⚠⚠ 25-P §5 — PASSES ADDED AFTER THIS BUILD RAN, by label. A build that stopped before a
      * pass existed gains it on resume and runs it FREE — see `passesAddedSince` in
@@ -392,6 +395,14 @@ function toView(
           noSummary: !row.summaryMessage,
           resumeCount: row.resumeCount,
           previousStopReason: row.lastStopReason,
+          // ⚠⚠ 25-T §1f — THE AUTOMATIC ATTEMPTS, COUNTED SEPARATELY FROM THE USER'S PRESSES.
+          // §1f: *"Two automatic attempts, then it stops and tells the user."* The bound was
+          // built first and the TELLING was missing: a user met a stopped build with no hint
+          // that it had already tried twice, so the only sensible thing left to do — press
+          // resume — was the one thing that had just been shown not to work. A retry budget the
+          // user cannot see is a retry budget that wastes their time as well as ours.
+          autoResumeCount: row.autoResumeCount,
+          autoResumeLimit: AUTO_RESUME_LIMIT,
           // ⚠ 25-P §5 — read off the STORED log, not the reconciled one. `readPassLog` has
           // already filled the gaps with PENDING rows, so by the time `passes` exists the
           // difference this reports has been smoothed away.
@@ -556,6 +567,16 @@ function terminalStatus(s: string): boolean {
  * enough for a transient cause and short enough that a persistent one is visible as one.
  */
 export const MAX_RESUMES = 3
+
+/**
+ * ⚠ 25-T §1f — TWO AUTOMATIC ATTEMPTS, THEN IT STOPS AND TELLS THE USER. Not three, not
+ * "until it works": an unbounded retry is how a stuck build spends money overnight, and the
+ * third attempt at something that has failed twice for the same reason is the one that is
+ * simply burning tokens.
+ */
+export const AUTO_RESUME_LIMIT = 2
+/** Only builds that stopped recently. See `autoResumeStoppedBuilds`. */
+export const AUTO_RESUME_WINDOW_MS = 30 * 60 * 1000
 
 export class BuildNotResumable extends Error {
   constructor(message: string) { super(message); this.name = 'BuildNotResumable' }
@@ -1517,6 +1538,89 @@ export async function sweepStalledBuilds(): Promise<number> {
   let swept = 0
   for (const r of rows) swept += await settleAbandonedBuilds(r.ideaId)
   return swept
+}
+
+/**
+ * ══════════ 25-T §1f — A BUILD STOPPED BY A CONSTRAINT RESUMES ITSELF ══════════════
+ *
+ * §1f: *"A build stopped by an external constraint resumes itself rather than waiting for a
+ * person. ⚠ Two automatic attempts, then it stops and tells the user. An unbounded retry is how
+ * a stuck build spends money overnight."*
+ *
+ * ⚠⚠ THE BOUND IS THE FEATURE, and it is counted in its own column. `autoResumeCount` caps the
+ * worker at two; the user still has their three (`MAX_RESUMES`, 25-N). Sharing one counter would
+ * spend the user's patience on our retries.
+ *
+ * ⚠⚠ AND IT ONLY RESUMES WHAT `isResumable` ALREADY SAYS IS RESUMABLE. 25-N drew that line
+ * exactly where §1f needs it: a build that ran out of TIME has passes left to run and can be
+ * picked up; a build whose pass FAILED cannot, because the passes after it would be building on
+ * an answer that does not exist. So a genuine failure is never retried — only a stop.
+ *
+ * ⚠ AND NEVER A COST STOP. `resumeBuild` re-enters a build whose spend ceiling has already
+ * fired, and it would fire again immediately: two attempts of nothing, on a build the user has
+ * already paid the ceiling for. The reason is checked by name.
+ *
+ * Returns how many it restarted.
+ */
+export async function autoResumeStoppedBuilds(): Promise<number> {
+  const rows = await prisma.ideaBuild.findMany({
+    where: {
+      // ══ ⚠⚠ FAILED ONLY, AND `CANCELLED` WAS REMOVED FROM THIS LIST AFTER MEASURING IT ══════
+      //
+      // I wrote `['FAILED', 'CANCELLED']` first. Reading the live rows showed the term was
+      // wrong in BOTH of the ways a status can be cancelled, which is why it is gone rather
+      // than fixed:
+      //
+      //   · A USER CANCELLATION MUST NEVER BE AUTO-RESUMED. `stopBuild` writes CANCELLED for
+      //     `stop.kind === 'cancel'` — someone pressed stop. Restarting that, and charging them
+      //     for it, is a worse failure than never resuming anything.
+      //   · A SWEEP CANCELLATION COULD NEVER HAVE MATCHED ANYWAY. The one CANCELLED row on
+      //     Neon ("Claimed but never started (harness crash)") has `completedAt` NULL, so the
+      //     window filter below excluded it. The term was inert as well as unwanted — a
+      //     condition that cannot fire, in the very sprint that keeps finding them.
+      //
+      // The crashed-build case is `sweepStalledBuilds`, which runs immediately above this in the
+      // worker loop and is what makes such a build visible to the queue again.
+      status: 'FAILED',
+      autoResumeCount: { lt: AUTO_RESUME_LIMIT },
+      // ⚠ RECENT ONLY. Resuming a build the user abandoned last Tuesday would charge them for
+      // work they have stopped waiting for. (Measured: FAILED rows do carry `completedAt` — 3 of
+      // 3 on Neon — so unlike the CANCELLED case above, this window can actually match.)
+      completedAt: { gte: new Date(Date.now() - AUTO_RESUME_WINDOW_MS) },
+    },
+    select: { id: true, ideaId: true, passes: true, failureReason: true, autoResumeCount: true },
+    take: 5,
+  })
+
+  let restarted = 0
+  for (const row of rows) {
+    // ⚠ A COST STOP IS NOT AN EXTERNAL CONSTRAINT WE CAN OUTLAST. See the note above.
+    if (/spend|cost|ceiling of \d+p/i.test(row.failureReason ?? '')) continue
+    if (!isResumable(readPassLog(row.passes))) continue
+
+    try {
+      // ⚠ THE COUNTER GOES UP BEFORE THE ATTEMPT, NOT AFTER. If `resumeBuild` throws, or the
+      // process dies mid-resume, an after-the-fact increment would leave the bound unspent and
+      // the loop free to try for ever — which is the overnight-spend failure §1f names.
+      await prisma.ideaBuild.update({
+        where: { id: row.id },
+        data: { autoResumeCount: { increment: 1 } },
+      })
+      await resumeBuild(row.ideaId, row.id)
+      restarted++
+      console.warn('[lex-diag] 25t auto-resumed a stopped build', {
+        buildId: row.id, attempt: row.autoResumeCount + 1, of: AUTO_RESUME_LIMIT,
+        stoppedBecause: (row.failureReason ?? '').slice(0, 80),
+      })
+    } catch (err) {
+      // ⚠ A REFUSAL IS NOT AN ERROR. `resumeBuild` throws `BuildNotResumable` for good reasons —
+      // another build is running, the log has nothing left. The attempt is spent either way.
+      console.warn('[lex-diag] 25t auto-resume declined', {
+        buildId: row.id, reason: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+  return restarted
 }
 
 // ── One pass ─────────────────────────────────────────────────────────────────

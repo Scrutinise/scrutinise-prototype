@@ -343,6 +343,12 @@ export interface StartBuildCardProps {
   hasMean: boolean
   offerEmail: boolean
   emailWhenDone: boolean
+  /**
+   * ⚠ 25-T §1h — WHICH DRIVER IS IN FORCE, because it decides whether "Email me when it's done"
+   * is a promise the architecture can keep. Under `client` the build is driven by this tab
+   * polling every three seconds, so walking away stops it.
+   */
+  driver?: 'worker' | 'client'
   onEmailWhenDone: (v: boolean) => void
   busy: boolean
   onStart: () => void
@@ -382,16 +388,37 @@ export function StartBuildCard(p: StartBuildCardProps) {
         <p className="mt-1.5 text-xs font-medium text-zinc-700">{p.allowanceLine}</p>
       )}
 
+      {/* ══════════ 25-T §1h — A PROMISE THE ARCHITECTURE CAN ONLY SOMETIMES KEEP ══════════
+          §1h: *"This checkbox is currently a promise the architecture cannot keep — it tells the
+          user they may walk away, and walking away stops the build."*
+
+          ⚠⚠ AND THAT IS WORSE THAN A MISSING FEATURE. "Email me when it's done" is read as
+          permission to close the laptop. Under the client driver the build is this tab polling
+          every three seconds, so acting on the permission is what breaks the build — and the
+          user would have no way to connect the two.
+
+          ⚠ SO THE CHECKBOX IS ONLY OFFERED WHERE IT IS TRUE. Under `client` the page says what
+          is actually required instead. Both revert on their own the moment the driver flips:
+          nothing here needs changing again, because it reads the driver rather than a flag
+          somebody has to remember to turn over. */}
       {p.offerEmail && p.canStart && (
-        <label className="mt-2 flex items-center gap-2 text-xs text-zinc-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={p.emailWhenDone}
-            onChange={(e) => p.onEmailWhenDone(e.target.checked)}
-            className="rounded border-zinc-300"
-          />
-          Email me when it’s done
-        </label>
+        p.driver === 'worker' ? (
+          <label className="mt-2 flex items-center gap-2 text-xs text-zinc-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={p.emailWhenDone}
+              onChange={(e) => p.onEmailWhenDone(e.target.checked)}
+              className="rounded border-zinc-300"
+            />
+            Email me when it’s done — you can close this tab
+          </label>
+        ) : (
+          <p className="mt-2 text-xs text-amber-800 bg-amber-50/70 border border-amber-200 rounded-lg px-2.5 py-1.5">
+            ⚠ Keep this tab open until it finishes. This build runs from the page, so closing the
+            tab or switching away for a long time will stop it part-way. It picks up where it left
+            off when you come back.
+          </p>
+        )
       )}
 
       {showReason && <p className="mt-2 text-xs text-amber-700">{p.blockedReason}</p>}
