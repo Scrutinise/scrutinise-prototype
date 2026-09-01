@@ -91,6 +91,32 @@ async function assemble(ideaId: string, userId: string): Promise<{ parts: Workli
   // in their report (what THEY said matters). The two are de-duplicated by id — the same
   // source appearing twice under one heading is a list nobody finishes.
   const readItems = new Map<string, WorklistItem>()
+
+  // ══════════ 25-R ADDENDUM A2 — THE FIRST THING A BUILD SAYS FOR ITSELF ══════════
+  //
+  // A1 keeps the kernel sections collapsed and tidy after a build, so **the worklist is the
+  // entry point, not an open panel**. This is that entry point, and it is first on purpose:
+  // it is what tells a user that a ten-minute build produced something, and where to start.
+  //
+  // ⚠ CHARLIE'S OWN WORDING, VERBATIM (A2). It is a question rather than an instruction because
+  // the answer is the user's: "are you happy with" is the thing they are being asked to decide,
+  // and "Approve Lex's drafts" — which is what the decisions list says — is what they do after
+  // they have read it.
+  //
+  // ⚠⚠ ONLY ONCE A BUILD HAS FINISHED. Before that there is no diagnosis to read, and an item
+  // asking somebody to read something that does not exist is the "control that does nothing"
+  // this repository keeps finding. `agenda.buildVersion` is null until a build has produced one.
+  if (agenda.buildVersion != null) {
+    readItems.set('__diagnosis', {
+      key: 'read:diagnosis',
+      text: 'Read the diagnosis I’ve prepared — are you happy with both the description of the '
+        + 'problem and the accuracy of the causes?',
+      anchor: 'agenda-reading',
+      href: null,
+      ticked: on('read:diagnosis'),
+    })
+  }
+
   for (const r of agenda.reading) {
     readItems.set(r.id, {
       key: `read:${r.id}`,

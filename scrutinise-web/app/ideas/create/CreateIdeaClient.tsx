@@ -993,11 +993,23 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 </span>
               </div>
 
-              {/* §3c — the invitation, in Lex's own voice, verbatim from the brief. */}
-              {leftTab === 'lex' && (
+              {/* ══ 25-R ADDENDUM A3 — MINIMAL TEXT ON ARRIVAL, AND A BIG BOX ═══════════
+                  A3, verbatim: *"The Lex panel on arrival carries minimal text only: 'Welcome to
+                  the Strategic analysis, I'm Lex, ask me anything here.' — with a large chat box.
+                  Remove the longer standing preamble from the arrival state."*
+
+                  ⚠ IT IS THE ARRIVAL STATE ONLY. Once there is a conversation the line goes: a
+                  standing sentence above a transcript is furniture, and the transcript itself
+                  now says what the panel is for.
+
+                  ⚠⚠ THIS RETIRES 25-N §3c's SECOND SENTENCE — *"Only conversations started on
+                  this page appear here"* — from this position. That was a real fix (the fact was
+                  true and had never been said), so it has not been deleted: it survives as the
+                  `this page only` marker in the tab strip immediately above, which is where a
+                  user looks when they are asking which conversations these are. */}
+              {leftTab === 'lex' && messages.length === 0 && (
                 <p className="shrink-0 px-3 pt-1.5 text-[11px] text-zinc-500">
-                  Talk to me, Lex, and I’ll help you shape each part.{' '}
-                  <span className="text-zinc-400">Only conversations started on this page appear here.</span>
+                  Welcome to the Strategic analysis, I’m Lex, ask me anything here.
                 </p>
               )}
 

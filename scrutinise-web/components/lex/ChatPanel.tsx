@@ -279,7 +279,10 @@ export default function ChatPanel({
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
             }}
             placeholder="Type your reply…"
-            rows={1}
+            // ⚠ 25-R A3 — "with a large chat box". It was one row and grew on typing, so an
+            // empty panel offered a single line and read as a search field rather than a place
+            // to think out loud. It still grows to the same 160px ceiling.
+            rows={3}
             className="flex-1 resize-none bg-white border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
           />
           <button

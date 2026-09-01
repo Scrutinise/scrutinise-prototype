@@ -249,8 +249,13 @@ function main() {
   const create = read('app/ideas/create/CreateIdeaClient.tsx')
   ok('§3c — the left panel has Lex and Notes tabs, defaulting to Lex',
     /useState<'lex' \| 'notes'>\('lex'\)/.test(create) && /<NotesPanel/.test(create))
+  // ⚠ 25-R ADDENDUM A3 MOVED THIS SENTENCE, AND THE FACT SURVIVED THE MOVE. The arrival
+  // preamble is now one line in Charlie's words; "only conversations started on this page" is
+  // no longer in it. The thing §3c was protecting — that the user is TOLD which conversations
+  // this pane holds — is now the `this page only` marker in the tab strip, which is where
+  // somebody asking that question actually looks. Asserted there.
   ok('§3c — and it says the chat holds only this page’s conversations',
-    /Only conversations started on this page appear here/.test(create))
+    /this page only/.test(code('app/ideas/create/CreateIdeaClient.tsx')))
   const notes = read('components/lex/NotesPanel.tsx')
   ok('§3c — notes are titled, grouped, sortable and hideable',
     /placeholder="Untitled note"/.test(notes)
