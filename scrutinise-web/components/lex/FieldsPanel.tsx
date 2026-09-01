@@ -13,6 +13,7 @@ import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
 import PriorVersions from './PriorVersions'
+import { collapsedByDefault as pageCollapsedByDefault } from '@/lib/lex/panel-collapse'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
 // signature stays readable.
@@ -1520,7 +1521,33 @@ export default function FieldsPanel({
         // is only that the user may now overrule EITHER — `manualCollapsed` is the second
         // set, because one set cannot express "expand this finished one" and "collapse this
         // active one" at the same time.
-        const collapsedByDefault = page.status === 'complete' || page.status === 'visited'
+        //
+        // ══════════ 25-R — `visited` WAS COLLAPSING EVERYTHING THE BUILD MADE ══════════
+        //
+        // ⚠⚠ THE RULE ABOVE SAYS "a stage you have FINISHED opens collapsed". The code said
+        // `complete || visited`, and `visited` is not finished — `state.ts` derives it as
+        // *"any of its fields has left EMPTY"*, with a comment explaining that entering a page
+        // is what takes a field out of EMPTY.
+        //
+        // That was true when only the conductor wrote fields. **THE BUILD WRITES A PROPOSAL INTO
+        // EVERY FIELD OF EVERY PAGE**, so a build alone marks all four pages `visited` — and this
+        // line then hid everything the build had just produced, behind headings the user had
+        // never opened. A collapsed page renders NONE of its fields (see `!collapsed` below):
+        // unmounted, not hidden.
+        //
+        // Measured on production, on two ideas built today: DIAGNOSIS `visited`, GUIDING_POLICY
+        // `visited`, both collapsed. That is why 25-O's causes commentary — generated, 2.3p of
+        // gemini-2.5-pro, sitting in the database in full — appeared nowhere, and why 25-P's
+        // guiding-policy screen never mounted (and so never numbered its own rows).
+        //
+        // ⚠ SO THIS RESTORES THE RULE AS WRITTEN rather than inventing one: FINISHED collapses.
+        // A stage still holding something waiting for you does not hide itself. The toggle is
+        // untouched — 25-N §1c's "every heading toggles both ways" still holds, and a user who
+        // shuts one keeps it shut via `manualCollapsed`.
+        // ⚠ 25-R — THE RULE IS IMPORTED, NOT WRITTEN HERE. `check:lex-25r` kept a copy of it
+        // plus a guard asserting the copy still matched, and that guard went red the first
+        // time the rule changed. A shared function is better than a guard against drift.
+        const collapsedByDefault = pageCollapsedByDefault(page.status)
         const collapsed = collapsedByDefault
           ? !manualExpanded.has(page.key)
           : manualCollapsed.has(page.key)
