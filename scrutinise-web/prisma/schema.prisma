@@ -432,6 +432,7 @@ model User {
   clerkId                   String              @unique
   /// 25-N §3c — this user's private working notes, across every idea. Never read by anyone else.
   ideaNotes                 IdeaNote[]
+  fieldRevisions            FieldRevision[] @relation("FieldRevisionAcceptor")
   /// 25-N §3e — this user's worklist ticks.
   worklistTicks             IdeaWorklistTick[]
   /// ══ 25-M §4 — THE PILOT ALLOWANCE, IN THIRDS OF A BUILD ══════════════════
@@ -679,6 +680,7 @@ model Idea {
   archivedReason            String?
   /// 25-N §3c — the working notes, private to whoever wrote them.
   notesPrivate              IdeaNote[]
+  fieldRevisions            FieldRevision[]
   /// 25-N §3e — which worklist items each user has ticked off.
   worklistTicks             IdeaWorklistTick[]
   // Basic info
@@ -3634,6 +3636,22 @@ model DeepeningIssue {
   passKey              String
   runVersion           Int                  @default(1)
   text                 String
+
+  // ════════ 25-Q §7 — A CHALLENGE HAS A NAME, AND ITS SOURCE IS AT THE FOOT ════════
+  //
+  // Charlie, on the most valuable output of the whole run: the attribution is in the wrong
+  // place. The coverage check was writing *"ANOTHER MODEL MADE THIS POINT AND OUR PROPOSAL
+  // DOES NOT ADDRESS IT — …"* as the first words of `text`, in capitals, with the model's name
+  // in brackets in the middle of the sentence. So every one of those challenges was headed by
+  // its own provenance and titled by nothing.
+
+  /// ⚠ A SHORT NAME FOR THE POINT — "Employment law issues". Null on a row written before
+  /// 25-Q; it renders as no title rather than as an invented one, because a title guessed
+  /// downstream from the text is the thing 25-D §3 spent a sprint removing.
+  title                String?
+  /// ⚠ THE MODEL THAT RAISED IT, WHERE ONE DID. Rendered at the FOOT as the source, never as
+  /// the heading. Null where the challenge is our own reading rather than another model's.
+  sourceModel          String?
   status               DeepeningIssueStatus @default(OPEN)
   /// Required by the application when status = DISMISSED. A dismissal without a stated
   /// reason is an unaccountable veto.
@@ -4155,6 +4173,47 @@ model IdeaWorklistTick {
 /// seeding is idempotent on `(ideaId, userId, source)`.
 ///
 /// Deleted with the idea (GDPR erasure): cascade, never a soft delete.
+/// ══ 25-Q §1d — WHAT WAS THERE BEFORE A CHAT REWRITE REPLACED IT ══════════════════════
+///
+/// §1d is a standing principle, not a feature of this sprint: *"the user's own words are
+/// testimony, kept verbatim and attributed, never overwritten by an edited version. An accepted
+/// rewrite supersedes; it does not delete."*
+///
+/// ⚠⚠ A TABLE RATHER THAN A `priorText` COLUMN, and the reason is the second rewrite. A column
+/// holds one previous version and silently loses the one before it — so the principle would hold
+/// for exactly one edit and then quietly stop, which is worse than not claiming it.
+///
+/// ⚠ IT RECORDS WHO WROTE THE TEXT THAT WAS SUPERSEDED, not only who accepted the replacement.
+/// "Lex's earlier draft was replaced" and "the user's own words were replaced" are different
+/// facts, and only the second is testimony. Without `previousSource` they are the same row.
+model FieldRevision {
+  id             String   @id @default(uuid())
+  ideaId         String
+  idea           Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  /// The field the user knows it by — `policyOptions`, `challenge`, `leverage`…
+  fieldKey       String
+  /// The child row, where the field's content lives in one. Null for a whole-field edit.
+  targetId       String?
+  /// The stable number the user read off the screen when they accepted. 25-Q §1.
+  targetNumber   Int?
+
+  previousText   String   @db.Text
+  /// USER or LEX — who wrote the text that has just been superseded.
+  previousSource String
+  newText        String   @db.Text
+
+  acceptedById   String
+  acceptedBy     User     @relation("FieldRevisionAcceptor", fields: [acceptedById], references: [id])
+  /// How the replacement arrived. CHAT_REWRITE today; a later surface adds its own name.
+  origin         String   @default("CHAT_REWRITE")
+
+  createdAt      DateTime @default(now())
+
+  @@index([ideaId, fieldKey])
+  @@index([ideaId, targetId])
+}
+
 model IdeaNote {
   id        String   @id @default(uuid())
   ideaId    String

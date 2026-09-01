@@ -21,6 +21,7 @@ import NotesPanel from '@/components/lex/NotesPanel'
 import RerunBanner from '@/components/lex/RerunBanner'
 import { usePanelLayout } from '@/components/lex/usePanelLayout'
 import { PANEL_ROLES, HIDE_PANEL_LABEL } from '@/lib/lex/panel-layout'
+import type { EditOffer } from '@/lib/lex/field-edit'
 import WorkList from '@/components/lex/WorkList'
 // ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
 // TYPE import, erased at compile, so the server-only counting module never reaches the
@@ -132,6 +133,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const [busy, setBusy] = useState(false)
   const [booting, setBooting] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  /**
+   * ══ 25-Q §1b — A REWRITE LEX HAS OFFERED, WHICH NOTHING HAS WRITTEN ═══════════════
+   *
+   * Charlie: *"I tried to get Lex to edit this and the result was helpful but no interaction
+   * with the Middle Panel."* This is the offer between the two.
+   *
+   * ⚠ ONE AT A TIME, AND THE LATEST TURN REPLACES IT. A stack of offers lets a user press
+   * "put it in" on a rewrite two turns old, against a policy the conversation has moved past.
+   */
+  const [editOffer, setEditOffer] = useState<EditOffer | null>(null)
   const [tab, setTab] = useState<Tab>('chat')
   // Sprint 1.4: on a user's very first idea, open the walkthrough unprompted.
   const [showHelp, setShowHelp] = useState(Boolean(isFirstIdea))
@@ -345,6 +356,10 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         // A chat turn returns EITHER Lex's own reply, or — when the message advanced
         // the stage (§19-B Task 1) — the conductor's bubbles for the new page.
         const replyStage = data.state?.stage ?? stage
+        // ⚠ 25-Q §1b — the offer arrives with the turn and REPLACES any earlier one. A stack of
+        // stale offers would let a user press "put it in" on a rewrite two turns old, against a
+        // policy the conversation has moved past.
+        setEditOffer(data.editOffer ?? null)
         if (data.chatText) {
           setMessages((prev) => [...prev, { role: 'lex', content: data.chatText, stage: replyStage }])
         }
@@ -361,6 +376,76 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       }
     },
     [ideaId, applyState, appendLex, state?.stage],
+  )
+
+  /**
+   * ══ 25-Q §1b/§1c — THE CLICK THAT PUTS THE REWRITE IN ═════════════════════════════
+   *
+   * ⚠⚠ THE ONLY PATH TO `/field-edit`. `POST /lex` computes the offer and writes nothing; this
+   * writes and computes nothing. A model cannot reach this endpoint because a model does not
+   * have a mouse — which is what makes "never a silent write" structural rather than a promise
+   * about a prompt.
+   *
+   * ⚠ §1c — NO RELOAD. The response carries the new canonical state and `applyState` redraws the
+   * middle panel where the user is already looking. A rewrite that needed a refresh to appear
+   * would leave them exactly where Charlie was: unsure whether anything had happened.
+   *
+   * ⚠ AND A REFUSAL IS SAID IN THE CHAT, in Lex's voice, because that is where the conversation
+   * is. The server's refusals name the policy ("policy 4 was rejected since that was written"),
+   * so surfacing them verbatim tells the user what to do; a generic banner would not.
+   */
+  const acceptEdit = useCallback(
+    async (text: string) => {
+      if (!ideaId || !editOffer) return
+      setBusy(true)
+      setError(null)
+      try {
+        const res = await fetch(`/api/ideas/${ideaId}/field-edit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            kind: editOffer.target.kind,
+            fieldKey: editOffer.target.fieldKey,
+            number: editOffer.target.number,
+            text,
+          }),
+        })
+        // ⚠ TYPED AT THE BOUNDARY. `res.json()` is `any`, and an `any` walked into a template
+        // literal is how "undefined undefined" reaches a user as a finished sentence.
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string
+          state?: Parameters<typeof applyState>[0]
+          wrote?: { fieldKey: string; number: number | null; label: string }
+        }
+        if (!res.ok) {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'lex', content: data?.error ?? 'I could not put that in, and I am not sure why.' },
+          ])
+          return
+        }
+        if (data.state) applyState(data.state)
+        setEditOffer(null)
+        // ⚠ SAY WHERE IT WENT. The panel has changed a few centimetres away; a user reading the
+        // chat has no reason to look unless told, and 25-Q §2b is the same lesson elsewhere.
+        const where = data?.wrote?.number != null
+          ? `${data.wrote.label} ${data.wrote.number}`
+          : data?.wrote?.label ?? 'the field'
+        setMessages((prev) => [
+          ...prev,
+          { role: 'lex', content: `Done — that is in as ${where} now, in the panel. Edit it there if you want to change it again.` },
+        ])
+      } catch (err) {
+        console.error('[25q] field edit failed:', err)
+        setMessages((prev) => [
+          ...prev,
+          { role: 'lex', content: 'I lost the connection putting that in — nothing has changed. Try again?' },
+        ])
+      } finally {
+        setBusy(false)
+      }
+    },
+    [ideaId, editOffer, applyState],
   )
 
   // POST to a server endpoint that returns { state, messages } and apply both.
@@ -932,12 +1017,15 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 stageLabels={Object.fromEntries(state.pages.map((p) => [p.key, p.label]))}
                 nextPage={state.nextPage}
                 feedbackOffer={feedbackOffer}
+                editOffer={editOffer}
                 onSend={sendMessage}
                 onAccept={(value) => chatAwaitingField && transition(chatAwaitingField.key, 'accept', value)}
                 onDecline={() => chatAwaitingField && transition(chatAwaitingField.key, 'skip')}
                 onContinue={advancePage}
                 onGiveFeedback={() => openFeedback()}
                 onDismissFeedbackOffer={() => setFeedbackOffer(false)}
+                onAcceptEdit={acceptEdit}
+                onDismissEdit={() => setEditOffer(null)}
               />
               </div>
 

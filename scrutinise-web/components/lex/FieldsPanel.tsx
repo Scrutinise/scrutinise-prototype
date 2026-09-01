@@ -12,6 +12,7 @@ import GuidingPolicyScreen from './GuidingPolicyScreen'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
+import PriorVersions from './PriorVersions'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
 // signature stays readable.
@@ -571,12 +572,26 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
   if (editing) {
     return (
       <div className="rounded-lg border border-blue-200 bg-white p-2 space-y-1.5">
-        <input value={c} onChange={(e) => setC(e.target.value)} placeholder="Cause"
-          className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} placeholder="Why has it persisted?"
+        {/* ══ 25-Q §8b — THE TITLE BOX EXPANDS LIKE THE ONES UNDER IT ═══════════════════
+            §8b: *"The cause title box is not expandable while the boxes below it are. Make it
+            match, and start all of them at roughly twice their current height."*
+
+            ⚠ IT WAS AN `<input>`, WHICH CANNOT GROW AT ALL. The two boxes beneath it are
+            `<textarea resize-y>`, so a user who wrote a long cause could drag those and not
+            this one — and a cause is frequently the longest sentence on the card, because it
+            has to state something that is HAPPENING rather than name a topic. One control
+            behaving unlike its neighbours reads as broken rather than as different.
+
+            ⚠ AND ENTER STILL DOES NOT INSERT A NEWLINE. A cause is one statement; the
+            textarea is for seeing it, not for writing a paragraph in. */}
+        <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Cause"
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
+          className="w-full text-sm p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+        <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted?"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-        <input value={ev} onChange={(e) => setEv(e.target.value)} placeholder="Evidence (optional)"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+        <textarea value={ev} onChange={(e) => setEv(e.target.value)} rows={2} placeholder="Evidence (optional)"
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
+          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <div className="flex gap-2">
           <button disabled={busy || !c.trim()} onClick={() => { api.update(cause.id, { cause: c.trim(), whyPersisted: why.trim(), evidence: ev.trim() }); setEditing(false) }}
             className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
@@ -718,9 +733,13 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
 
       {!terminal && (
         <div className="mt-2 rounded-lg border border-dashed border-zinc-300 p-2 space-y-1.5">
-          <input value={c} onChange={(e) => setC(e.target.value)} placeholder="Add a cause…"
-            className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-          <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} placeholder="Why has it persisted? (optional)"
+          {/* ⚠ 25-Q §8b — THE SAME CHANGE ON THE ADD FORM. Fixing the edit form alone would
+              leave the two doors into one record behaving differently, which is the same
+              complaint one step earlier. */}
+          <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Add a cause…"
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
+            className="w-full text-sm p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+          <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted? (optional)"
             className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
           <button disabled={busy || !c.trim()} onClick={() => { api.add({ cause: c.trim(), whyPersisted: why.trim() || undefined }); setC(''); setWhy('') }}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add cause</button>
@@ -915,7 +934,7 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
 }
 
 // The policy-options loop (§17 field 1).
-function PolicyOptionsField({ field, options, busy, api }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi }) {
+function PolicyOptionsField({ field, options, busy, api, ideaId }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi; ideaId?: string | null }) {
   const [approach, setApproach] = useState('')
   const [caseFor, setCaseFor] = useState('')
   const [caseAgainst, setCaseAgainst] = useState('')
@@ -933,8 +952,16 @@ function PolicyOptionsField({ field, options, busy, api }: { field: CanonicalFie
         {options.map((o) => terminal ? (
           <div key={o.id} className={`rounded-lg border p-2 ${o.status === 'CHOSEN' ? 'border-green-300 bg-green-50/40' : 'border-zinc-200 bg-white'}`}>
             <p className="text-sm text-zinc-800">{o.approach}<span className={`ml-1.5 text-[9px] font-semibold uppercase ${OPTION_STATUS_BADGE[o.status].cls}`}>{OPTION_STATUS_BADGE[o.status].label}</span></p>
+            {/* ⚠ 25-Q §1d — kept on a TERMINAL card too. A finished proposal is exactly where
+                somebody asks what the wording used to be. */}
+            {ideaId && <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={o.id} />}
           </div>
-        ) : <OptionCard key={o.id} option={o} busy={busy} api={api} />)}
+        ) : (
+          <div key={o.id}>
+            <OptionCard option={o} busy={busy} api={api} />
+            {ideaId && <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={o.id} />}
+          </div>
+        ))}
       </div>
       {!terminal && (
         <div className="mt-2 rounded-lg border border-dashed border-zinc-300 p-2 space-y-1.5">
@@ -1430,7 +1457,7 @@ export default function FieldsPanel({
       if (f.key === 'policyOptions') {
         return (
           <>
-            <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} />
+            <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} ideaId={ideaId} />
             {/* ══ 25-P §1 — THE GUIDING POLICY BECOMES A DECISION ═══════════════════
                 ⚠ BELOW THE LIST, NOT INSTEAD OF IT. The list is where the user reads and edits
                 the candidates; this is where they act on them. Replacing the list would take

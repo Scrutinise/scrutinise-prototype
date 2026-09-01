@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import AcceptCard from './AcceptCard'
+import EditOfferCard from './EditOfferCard'
+import type { EditOffer } from '@/lib/lex/field-edit'
 import type { CanonicalField, CanonicalState } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
 
@@ -108,12 +110,15 @@ export default function ChatPanel({
   stageLabels,
   nextPage,
   feedbackOffer,
+  editOffer,
   onSend,
   onAccept,
   onDecline,
   onContinue,
   onGiveFeedback,
   onDismissFeedbackOffer,
+  onAcceptEdit,
+  onDismissEdit,
 }: {
   messages: ChatMessage[]
   awaitingField: CanonicalField | null
@@ -129,6 +134,8 @@ export default function ChatPanel({
   nextPage?: CanonicalState['nextPage']
   /** §20.5 — true when the user has just criticised Lex's output, so the offer shows. */
   feedbackOffer?: boolean
+  /** ⚠ 25-Q §1b — a rewrite Lex has offered to write into a field. Nothing has been written. */
+  editOffer?: EditOffer | null
   onSend: (text: string) => void
   onAccept: (value: string | string[]) => void
   onDecline: () => void
@@ -136,6 +143,9 @@ export default function ChatPanel({
   /** §20.5 — opens the feedback consent flow. */
   onGiveFeedback?: () => void
   onDismissFeedbackOffer?: () => void
+  /** 25-Q §1b — the click that performs the write. Only this reaches `/field-edit`. */
+  onAcceptEdit?: (text: string) => void
+  onDismissEdit?: () => void
 }) {
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
@@ -207,6 +217,20 @@ export default function ChatPanel({
               </div>
             </div>
           </div>
+        )}
+
+        {/* ══ 25-Q §1b — LEX'S REWRITE, WITH THE BUTTON THAT PUTS IT IN ═══════════════
+            ⚠ ABOVE the accept card, not below it. When both are present the rewrite is what
+            the user just asked for and the accept card is the state they were already in;
+            burying the answer to the live question under standing furniture is how a card
+            gets missed. */}
+        {editOffer && onAcceptEdit && (
+          <EditOfferCard
+            offer={editOffer}
+            busy={busy}
+            onAccept={onAcceptEdit}
+            onDismiss={onDismissEdit ?? (() => {})}
+          />
         )}
 
         {/* The accept card renders IFF a field is awaiting confirmation. */}

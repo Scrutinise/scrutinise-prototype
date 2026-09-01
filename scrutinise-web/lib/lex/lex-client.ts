@@ -64,7 +64,50 @@ export interface LexTurnContext {
   /** §19-E Task 2c — a search has returned sources, so Lex is told to say which ONE OR
    *  TWO matter and press the user to read them, rather than listing what came back. */
   sourcesInHand?: boolean
+  /**
+   * ⚠⚠ 25-Q §1 — THE NUMBERED CANDIDATES, SO A REWRITE CAN BE ADDRESSED TO ONE.
+   *
+   * Without this Lex is told to give `targetNumber` and has no way to know what the numbers
+   * are — an instruction to cite something the model cannot see, which is the shape that
+   * produces confident wrong ids. It is present only while the guiding policy is the current
+   * field, so it costs nothing on every other turn.
+   */
+  numberedOptionsBlock?: string | null
+  /**
+   * ⚠⚠ 25-Q §6 — HOW TO OPERATE THE PRODUCT, from `lib/lex/product-facts.ts`.
+   *
+   * Charlie asked on mobile how to see the middle panel and got a description of what the panel
+   * CONTAINS. Lex knew the vocabulary and nothing about navigation, because nothing had ever
+   * told it. ⚠ It is the SAME array "How this works" renders, so the two cannot drift.
+   */
+  productFactsBlock?: string | null
+  /**
+   * ⚠ 25-Q §3a — ASK MODE. The user is on THE IDEA stage, where the elicitation owns the
+   * state machine; this turn answers a question and proposes nothing. See the route.
+   */
+  askOnly?: boolean
 }
+
+/**
+ * ══ 25-Q §3a — ANSWERING, NOT CONDUCTING ═══════════════════════════════════════════
+ *
+ * §3a puts a Lex chat on THE IDEA stage, where the ELICITATION owns the state machine — it asks
+ * the questions, it decides what is answered, and it decides when the reading is confirmed.
+ *
+ * ⚠⚠ A CHAT THAT COULD PROPOSE OR ADVANCE THERE WOULD BE A SECOND CONDUCTOR ON ONE PAGE, and
+ * the two would disagree about which question was live. The route enforces this (no proposal is
+ * applied, no stage advance is attempted); the prompt says it as well, so Lex does not write a
+ * reply promising something the platform will then refuse to do.
+ */
+const ASK_ONLY_BLOCK = [
+  'THIS TURN IS A QUESTION, NOT A STEP IN THE FLOW.',
+  'The user is on the first stage, where the four questions are asked by the page itself.',
+  'Answer what they asked, in one to four sentences. Do NOT ask the next question, do NOT',
+  'propose a field, and do NOT say you have changed anything — you have not and cannot here.',
+  'If they want to change an answer, tell them to press the section button at the top of the',
+  'page. If they want to re-run, tell them the re-run control is at the top of the page, with',
+  'a box for anything else they want taken into account.',
+].join('\n')
 
 export interface LexRawOutput {
   chatText: string
@@ -74,6 +117,13 @@ export interface LexRawOutput {
     valueList?: string[]
     /** A1: structured multi-slot proposal — Lex synthesises chat into the slot schema. */
     valueObject?: Record<string, string>
+    /**
+     * ⚠⚠ 25-Q §1 — WHICH ROW, BY THE NUMBER THE USER CAN SEE. A rewrite of "the guiding policy"
+     * on an idea with seven of them is not addressed to anything. 25-P §1.1's numbers are stable
+     * — never renumbered, surviving a merge and a restore — so the number Lex names in a turn
+     * still means the same row when the user presses Accept a minute later.
+     */
+    targetNumber?: number
     rationale?: string
   } | null
   extracted: Record<string, string>
@@ -107,10 +157,20 @@ const RESPONSE_SCHEMA = {
             'anticipatedResponses',
             // Page 4 (Coherent Actions)
             'coherenceCheck', 'costSummary', 'summaryCoherentActions',
+            // ⚠⚠ 25-Q §1 — THE GUIDING-POLICY LOOP, FOR A REWRITE OF ONE ROW ONLY.
+            //
+            // The note further down says the policyOptions loop stays PANEL-AUTHORED because
+            // each row carries several structured fields the user is actively composing. That
+            // still holds and is not being overturned here: this is not authoring the loop, it
+            // is REWRITING THE `approach` SENTENCE OF ONE EXISTING, NUMBERED ROW at the user's
+            // explicit request — which is what Charlie asked for and had to do by hand.
+            'policyOptions',
           ],
         },
         valueText: { type: 'string' },
         valueList: { type: 'array', items: { type: 'string' } },
+        // 25-Q §1 — the numbered row a rewrite is addressed to. See `targetNumber` above.
+        targetNumber: { type: 'integer' },
         // A1: structured multi-slot proposal. Union of every structured field's slots
         // across Pages 2–4; unknown keys are stripped server-side per the field schema.
         valueObject: {
@@ -221,6 +281,24 @@ They can answer HERE, in chat, or select it in the panel — both work, and sayi
 When the user NAMES one or more causes in chat, do not ask them to type it into the panel — RETURN A PROPOSAL: proposal.fieldKey "causes", proposal.valueList = one tidied sentence per cause, in their voice, each a statement of something that is happening which produces the problem (never a topic or a document). The platform adds them to the loop for the user to classify, nest, edit or remove, so your chatText should say you have added them and ask which are material. Only propose causes the user has actually put forward in this conversation — do not invent extras. If they are still thinking aloud, discuss it and emit no proposal.
 Discuss it conversationally in chatText (1–4 sentences). Quietly capture anything useful in "extracted".`
     }
+    // ══ 25-Q §1b — A REWRITE OF ONE NUMBERED POLICY IS OFFERED, NOT COPIED BY HAND ══
+    //
+    // Charlie: *"I tried to get Lex to edit this and the result was helpful but no interaction
+    // with the Middle Panel."* The rewrite was good and he retyped it.
+    //
+    // ⚠ THIS DOES NOT MAKE THE LOOP CHAT-AUTHORED — see the note above, which still stands.
+    // Adding, costing and stress-testing options remains panel work. The one thing that crosses
+    // is a rewrite of an EXISTING row's approach sentence, asked for by number.
+    //
+    // ⚠⚠ AND THE PROPOSAL IS AN OFFER, NOT A WRITE. The platform turns it into a card the user
+    // presses; nothing changes until they do. Lex must say so, or the card contradicts the chat.
+    if (field.key === 'policyOptions') {
+      return `${specifics}
+When the user asks you to REWRITE or REWORD one of the numbered candidates, do the rewrite and RETURN A PROPOSAL: proposal.fieldKey "policyOptions", proposal.targetNumber = the number of the candidate you are rewriting, proposal.valueText = the rewritten approach as a single sentence or short paragraph, in their voice, no preamble and no quotes. ALWAYS give targetNumber — a rewrite that does not say which candidate cannot be offered and will be discarded. If it is not clear which one they mean, ASK rather than guessing.
+The user is then shown your rewrite with a button to put it in; nothing changes until they press it. So in chatText say what you changed and why, in a sentence or two — do NOT tell them to copy it across, and do NOT claim you have already changed it.
+Only propose a rewrite when they have asked for one. Discussing an option, arguing against it, or suggesting a direction is chatText and no proposal.
+Quietly capture anything useful in "extracted".`
+    }
     return `${specifics}\nDiscuss it conversationally in chatText (1–4 sentences). Do NOT return a proposal for this field — the user fills and Saves it in the panel. Quietly capture anything useful in "extracted".`
   }
 
@@ -322,7 +400,7 @@ ${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsB
   (that list is an INVENTORY, abridged where a value is long — an entry marked ABRIDGED is
    not the whole of what the user wrote and must never be quoted or copied as a sentence.)
 
-${ctx.sourceValuesBlock ? `${ctx.sourceValuesBlock}\n\n` : ''}${fieldBlock}
+${ctx.productFactsBlock ? `${ctx.productFactsBlock}\n\n` : ''}${ctx.numberedOptionsBlock ? `${ctx.numberedOptionsBlock}\n\n` : ''}${ctx.askOnly ? `${ASK_ONLY_BLOCK}\n\n` : ''}${ctx.sourceValuesBlock ? `${ctx.sourceValuesBlock}\n\n` : ''}${fieldBlock}
 
 RULES
 - One thing at a time. Finish the CURRENT field before the next one. Never ask about, hint at, or propose the next field — the platform moves on only when the user Saves or Skips, and it tells you the new current field then.

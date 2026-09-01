@@ -17,10 +17,23 @@ import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import { buildFactsBlock } from '@/lib/lex/facts'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
+import { productFactsBlock } from '@/lib/lex/product-facts'
+import {
+  resolvePolicyTarget, looksLikeAReplacement, offerQuestion, AMBIGUOUS_TARGET,
+  EDITABLE_TEXT_FIELDS, type EditOffer,
+} from '@/lib/lex/field-edit'
 
 type Params = { params: Promise<{ id: string }> }
 
-const BodySchema = z.object({ message: z.string().trim().min(1).max(4000) })
+const BodySchema = z.object({
+  message: z.string().trim().min(1).max(4000),
+  /**
+   * ⚠ 25-Q §3a — 'ASK' is the first stage's chat: it answers and changes nothing. The
+   * elicitation owns the state machine there, and two conductors on one page would disagree
+   * about which question is live.
+   */
+  mode: z.enum(['FLOW', 'ASK']).optional(),
+})
 
 type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string; field?: string }
 
@@ -41,6 +54,7 @@ export async function POST(req: Request, { params }: Params) {
   const parsed = BodySchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   const { message } = parsed.data
+  const askOnly = parsed.data.mode === 'ASK'
 
   // Current field is whatever the platform says — never the model's choice.
   let pre = await computeCanonicalState(id)
@@ -51,7 +65,7 @@ export async function POST(req: Request, { params }: Params) {
   // speaks for the new page. Lex is never left conducting a page the state machine
   // has not entered. // Invariant: chat page == state page, always. If they can
   // diverge, the bug will recur somewhere else.
-  if (!pre.currentField && pre.nextPage && isContinueIntent(message)) {
+  if (!askOnly && !pre.currentField && pre.nextPage && isContinueIntent(message)) {
     const now = new Date().toISOString()
     const historyWithUser: ChatMsg[] = [
       ...(Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),
@@ -126,6 +140,31 @@ export async function POST(req: Request, { params }: Params) {
     currentField: current?.key ?? null, sample: message.slice(0, 60),
   })
 
+  // ══ 25-Q §1 — THE NUMBERED CANDIDATES, READ ONCE, USED TWICE ═════════════════════
+  //
+  // Once to tell Lex what the numbers ARE (it is instructed to cite one, and an instruction to
+  // cite something the model cannot see is how confident wrong ids happen), and once to resolve
+  // whatever it cites back to a row that still exists.
+  //
+  // ⚠ LIVE ONLY, in the 25-P sense: a rejected or merged-away policy keeps its number and must
+  // not be quietly edited back into the proposal by a chat turn.
+  const policyRows = current?.key === 'policyOptions' || pre.currentField?.key === 'policyOptions'
+    ? await prisma.policyOption.findMany({
+      where: { ideaId: id },
+      orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, number: true, approach: true, status: true, mergedIntoId: true, kind: true },
+    })
+    : []
+  const livePolicies = policyRows.filter(
+    (r) => r.status !== 'RULED_OUT' && !r.mergedIntoId && r.kind === 'GUIDING_POLICY' && r.number != null,
+  )
+  const numberedOptionsBlock = livePolicies.length
+    ? ['THE CANDIDATE APPROACHES ON SCREEN, WITH THE NUMBERS THE USER CAN SEE',
+      ...livePolicies.map((r) => `[${r.number}] ${r.approach}`),
+      'Use these numbers when the user refers to one, and when you return a rewrite.',
+    ].join('\n')
+    : null
+
   const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId , ...LIVE_IDEA } })
   const systemPrompt = buildLexSystemPrompt({
     preferredName: user.preferredName ?? user.firstName,
@@ -145,6 +184,10 @@ export async function POST(req: Request, { params }: Params) {
     problemPresses,
     questionTurn,
     sourcesInHand,
+    numberedOptionsBlock,
+    // 25-Q §6 — the same array "How this works" renders. See lib/lex/product-facts.ts.
+    productFactsBlock: productFactsBlock(),
+    askOnly,
   })
 
   let lex
@@ -164,6 +207,11 @@ export async function POST(req: Request, { params }: Params) {
   // chatText is still shown, state never half-advances. On a valid box proposal
   // the field goes AWAITING_CONFIRMATION and the box renders the tidied text.
   let proposalApplied = false
+
+  // ⚠⚠ 25-Q §3a — IN ASK MODE NOTHING IS APPLIED AND NOTHING IS OFFERED. The prompt says so and
+  // this makes it true regardless: a model that proposed anyway must not be able to move the
+  // elicitation, because the elicitation is what owns the page the user is looking at.
+  if (askOnly) lex.proposal = null
 
   // §19-D Task 9g — a chat-named cause joins the loop instead of the user being asked
   // to re-type it into the panel. It is the ONE loop that takes a chat proposal, and it
@@ -226,11 +274,76 @@ export async function POST(req: Request, { params }: Params) {
       proposalApplied = true
     }
   }
+  // ══════════════ 25-Q §1b — LEX PROPOSES, THE USER ACCEPTS, THEN THE PANEL CHANGES ══════════
+  //
+  // Charlie: *"I tried to get Lex to edit this and the result was helpful but no interaction with
+  // the Middle Panel."* §1a found why, and it was not one thing: `validateProposal` has no schema
+  // for `policyOptions`, so a rewrite of a candidate guiding policy returned null and was dropped
+  // silently; and even a successful `setProposal` writes `IdeaFieldState.proposal`, which a loop
+  // field does not render — it renders its child rows. Two independent reasons, either enough.
+  //
+  // ⚠⚠ THE OFFER IS COMPUTED HERE AND WRITTEN NOWHERE. It goes back in the response as a card;
+  // `POST /field-edit` does the write, and only a click reaches it. That split is what makes
+  // "never a silent write" a property of the system rather than a promise about a prompt.
+  //
+  // ⚠ AND IT IS BUILT FROM THE PROPOSAL THAT WAS ALREADY BEING DISCARDED. Nothing that used to
+  // be written stops being written; this is the branch where the answer previously went in the
+  // bin with a console warning.
+  let editOffer: EditOffer | null = null
+
+  if (!proposalApplied && lex.proposal?.valueText?.trim()) {
+    const text = lex.proposal.valueText.trim()
+    const key = lex.proposal.fieldKey
+
+    if (key === 'policyOptions' && looksLikeAReplacement(text)) {
+      const resolved = resolvePolicyTarget(
+        lex.proposal.targetNumber,
+        livePolicies.map((r) => ({ number: r.number, live: true })),
+      )
+      // ⚠ AMBIGUITY IS REFUSED, NOT GUESSED — the same discipline as `matchCause`. Writing the
+      // rewrite into whichever policy is nearest would be the product choosing which of the
+      // user's candidates to overwrite, which is the most consequential thing on that screen.
+      if (resolved && resolved !== AMBIGUOUS_TARGET) {
+        const row = livePolicies.find((r) => r.number === resolved.number)
+        if (row && row.approach.trim() !== text) {
+          editOffer = {
+            target: { kind: 'POLICY_OPTION', fieldKey: 'policyOptions', number: resolved.number },
+            text,
+            question: offerQuestion('policyOptions', resolved.number),
+            currentText: row.approach,
+          }
+        }
+      }
+      console.log('[lex-diag] 25q policy rewrite offer', {
+        named: lex.proposal.targetNumber ?? null,
+        resolved: resolved === AMBIGUOUS_TARGET ? 'AMBIGUOUS' : resolved?.number ?? null,
+        offered: !!editOffer,
+      })
+    } else if (
+      // A rewrite of a text field the user is NOT currently on. This is the same complaint one
+      // step out: Lex writes a better version of the diagnosis summary while the user is on the
+      // guiding policy, and the only way to use it is to retype it.
+      key !== current?.key && EDITABLE_TEXT_FIELDS.has(key) && looksLikeAReplacement(text)
+    ) {
+      const existing = allAcceptedFields.find((f) => f.key === key)
+      const currentText = typeof existing?.value === 'string' ? existing.value : null
+      if (currentText?.trim() !== text) {
+        editOffer = {
+          target: { kind: 'TEXT_FIELD', fieldKey: key, number: null },
+          text,
+          question: offerQuestion(key, null),
+          currentText,
+        }
+      }
+    }
+  }
+
   // Diagnostic (Sprint 1.3 Task 1 — log/inspect, bytes before hypotheses). The
   // platform NEVER advances currentField on a /lex turn and only ever sets a
   // proposal for the current field; this records any turn where Lex tried to
   // propose for a different field (so the symptom is visible if it recurs).
-  if (lex.proposal && lex.proposal.fieldKey !== current?.key) {
+  // ⚠ 25-Q — "discarded" now means "discarded AND not offered"; an offered rewrite is not lost.
+  if (lex.proposal && lex.proposal.fieldKey !== current?.key && !editOffer) {
     console.warn('[lex-diag] off-field proposal discarded', {
       currentField: current?.key ?? null,
       currentStatus: pre.currentField?.status ?? null,
@@ -264,5 +377,5 @@ export async function POST(req: Request, { params }: Params) {
   await prisma.idea.update({ where: { id }, data: { aiChatHistory: updatedHistory } })
 
   const state = await computeCanonicalState(id)
-  return NextResponse.json({ chatText: lex.chatText, messages: [], state })
+  return NextResponse.json({ chatText: lex.chatText, messages: [], state, editOffer })
 }
