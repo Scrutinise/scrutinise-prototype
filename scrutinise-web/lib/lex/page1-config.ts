@@ -342,6 +342,12 @@ export interface CanonicalCause {
   /** Causal-tree parent (§16.2); null = a root-level cause. */
   parentCauseId: string | null
   source: 'USER' | 'LEX_CORPUS'
+  /**
+   * ⚠ 25-S §2a — THE STABLE NUMBER THE USER TYPES. It never moves: a removed 3 leaves a gap,
+   * reordering does not renumber, nesting does not renumber. Not `orderIndex`, which is the
+   * display position and is exactly the thing that moves.
+   */
+  number: number | null
 }
 
 /** A Page 3 guiding-policy option (§17), as the panel renders it. */

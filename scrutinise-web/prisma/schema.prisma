@@ -547,6 +547,12 @@ model User {
   groupMemberships          GroupMember[]
   ownedGroups               Group[]
   communityMemberships      CommunityMember[]
+  /// CENTRAL 25-A §7h — the people this user brought into a Community.
+  membershipsInvited        CommunityMember[]   @relation("MembershipInviter")
+  membershipsInvitedArchived CommunityMembershipArchive[] @relation("ArchivedMembershipInviter")
+  /// CENTRAL 25-A 3c - memberships of this user that were ended, kept.
+  archivedMemberships       CommunityMembershipArchive[] @relation("ArchivedMembership")
+  membershipsRemoved        CommunityMembershipArchive[] @relation("MembershipRemover")
   communityJoinRequests     CommunityJoinRequest[] @relation("JoinRequester")
   communityJoinDecisions    CommunityJoinRequest[] @relation("JoinDecider")
   managedCommunities        Community[]         @relation("CommunityManager")
@@ -1422,6 +1428,8 @@ model Community {
   updatedAt         DateTime  @updatedAt
 
   members           CommunityMember[]
+  titles            CommunityTitle[]
+  archivedMembers   CommunityMembershipArchive[]
   invites           CommunityInvite[]
   joinRequests      CommunityJoinRequest[]
   bulletinPosts     BulletinPost[]
@@ -1454,6 +1462,38 @@ model CommunityMember {
   user        User                @relation(fields: [userId], references: [id])
   role        CommunityMemberRole @default(MEMBER)
   joinedAt    DateTime            @default(now())
+  /// ══ CENTRAL 25-A §7h — WHO BROUGHT THEM IN, ON THE MEMBERSHIP ITSELF ══════
+  ///
+  /// Charlie is relying on branch chairs being accountable for the people they
+  /// brought in, so the record of who brought in whom must not be destroyable.
+  /// It was derivable before this only from `CommunityReferral`, which is
+  /// unique per (ROOT community, invitee) — so a branch had no record of its
+  /// own, and a person in three branches had one row for all of them.
+  ///
+  /// ⚠ It survives the inviter's removal: removal archives the membership, and
+  /// `CommunityMembershipArchive` carries these two columns across with it.
+  /// Nothing anywhere nulls them.
+  invitedByUserId   String?
+  invitedBy         User?             @relation("MembershipInviter", fields: [invitedByUserId], references: [id])
+  /// The invitation they came through, where there was one. Null for somebody
+  /// who asked to join of their own accord, and that is a real difference.
+  invitedViaInviteId String?
+  invitedVia        CommunityInvite?  @relation("MembershipInvite", fields: [invitedViaInviteId], references: [id])
+  /// CENTRAL 25-A §7c/§7j — set when the invitation was accepted ON THEIR BEHALF
+  /// rather than clicked by them: at first sign-in, or by the sweep over people
+  /// who already had an account and an unredeemed invitation.
+  /// ⚠ A COLUMN, not an inference from timestamps. "They accepted" and "we
+  /// accepted for them" are different facts about consent, and a member who
+  /// never clicked anything should be visible as one.
+  acceptedOnBehalfAt DateTime?
+  /// ══ CENTRAL 25-A §7e — A COMMUNITY TITLE, NOT A PLATFORM ROLE ════════════
+  ///
+  /// "Branch Chair" is a title inside a Community, defined by that Community,
+  /// granting rights only within it. ⚠ `User.role` is the PLATFORM role and is
+  /// untouched by any of this: everyone is an ordinary platform member unless
+  /// separately granted otherwise, and the two must never share a namespace.
+  titleId           String?
+  title             CommunityTitle?   @relation(fields: [titleId], references: [id])
   // Bulletin-board "unread" count is derived at read time as posts/replies
   // newer than this per member — bumped whenever the member views the board.
   lastReadAt  DateTime            @default(now())
@@ -1463,6 +1503,30 @@ model CommunityMember {
   // governed entirely by IdeaCollaborator/Group; do not join across these tables
   // to derive permissions.
   @@unique([communityId, userId])
+}
+
+/// CENTRAL 25-A §7e — a title a Community defines for itself.
+///
+/// ⚠ NOT A PLATFORM ROLE, and deliberately not near one. `User.role`
+/// (CITIZEN / MODERATOR / ADMIN / SUPER_ADMIN) governs the platform; a title
+/// governs nothing outside the Community that defined it. A Community may call
+/// somebody "Branch Chair", "Regional Organiser" or anything else without that
+/// meaning anything at all on the rest of Scrutinise.
+///
+/// `grantsInvite` is the only right a title carries today. Adding a second is a
+/// column here and a branch in `inviteRightFor` — never a platform role.
+model CommunityTitle {
+  id           String    @id @default(uuid())
+  communityId  String
+  community    Community @relation(fields: [communityId], references: [id])
+  name         String
+  description  String?
+  grantsInvite Boolean   @default(false)
+  members      CommunityMember[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([communityId, name])
 }
 
 model CommunityInvite {
@@ -1476,6 +1540,21 @@ model CommunityInvite {
   expiresAt       DateTime?
   createdByUserId String
   createdAt       DateTime  @default(now())
+  /// CENTRAL 25-A §2a — when the invitation link was first opened, set once by
+  /// the invite screen. ⚠ AN HONEST LIMIT, RENDERED ON THE PAGE: a corporate
+  /// mail scanner that follows links sets this without a human seeing anything.
+  /// "Opened" is evidence the link works, not that the person read it.
+  openedAt        DateTime?
+  /// CENTRAL 25-A §2d — a revoked invitation is REFUSED at redemption
+  /// (app/api/communities/join/route.ts), not merely hidden from a list.
+  /// ⚠ Kept separate from `expiresAt`, which was the only way to stop an invite
+  /// before this: an invitation called off and one that simply ran out are
+  /// different facts and an owner has to be able to tell them apart.
+  revokedAt       DateTime?
+  revokedByUserId String?
+  referrals       CommunityReferral[] @relation("ReferralInvite")
+  joinRequests    CommunityJoinRequest[] @relation("JoinRequestInvite")
+  memberships     CommunityMember[]      @relation("MembershipInvite")
 }
 
 // Branches are invite-only; a Community member who does not belong to a branch
@@ -1497,6 +1576,12 @@ model CommunityJoinRequest {
   id              String    @id @default(uuid())
   communityId     String
   community       Community @relation(fields: [communityId], references: [id])
+  /// CENTRAL 25-A 3b - set when this request was raised by ARRIVING THROUGH AN
+  /// INVITE LINK rather than by asking from inside the Community. Nobody joins
+  /// on click any more: the link puts them here, and somebody with invitation
+  /// rights decides. Null on a request somebody made of their own accord.
+  inviteId        String?
+  invite          CommunityInvite? @relation("JoinRequestInvite", fields: [inviteId], references: [id])
   userId          String
   user            User      @relation("JoinRequester", fields: [userId], references: [id])
   status          String    @default("PENDING")
@@ -1606,6 +1691,13 @@ model CommunityReferral {
   inviter        User      @relation("CentralReferralInviter", fields: [inviterUserId], references: [id])
   inviteeUserId  String
   invitee        User      @relation("CentralReferralInvitee", fields: [inviteeUserId], references: [id])
+  /// CENTRAL 25-A §2b — WHICH invitation this arrival came through, so a link
+  /// arrival is a recorded fact and not an inference from "this member matches
+  /// no direct invitation".
+  /// ⚠ NULL on every row written before 1 Sep 2026. Those are rendered as
+  /// "arrived before we recorded which link", never as "arrived through a link".
+  inviteId       String?
+  invite         CommunityInvite? @relation("ReferralInvite", fields: [inviteId], references: [id])
   /// The decay clock. Starts at the join date and is reset to now by a reboost.
   decayFrom      DateTime  @default(now())
   /// Set once, when this invitee first crosses the reboost threshold.
@@ -1620,6 +1712,7 @@ model CommunityReferral {
 
   @@unique([communityId, inviteeUserId])
   @@index([communityId, inviterUserId])
+  @@index([inviteId])
 }
 
 /// Offline activity: the member logs it, the tariff pays out AT ONCE, and the
@@ -2415,12 +2508,28 @@ model DiagnosisCause {
   parent         DiagnosisCause?      @relation("CauseTree", fields: [parentCauseId], references: [id], onDelete: Cascade)
   children       DiagnosisCause[]     @relation("CauseTree")
   source         DiagnosisCauseSource @default(USER)
-  orderIndex     Int                  @default(0) // stable display order
+
+  /// ══ 25-S §2a — THE STABLE NUMBER, EXACTLY AS `PolicyOption` HAS ONE ══════════════
+  ///
+  /// ⚠⚠ IT IS NOT `orderIndex`, AND THAT IS THE WHOLE POINT. `orderIndex` is the display
+  /// position and MOVES when the list is reordered (§2b). The number never moves: a removed 3
+  /// leaves a gap, nesting does not renumber, and reordering does not renumber.
+  ///
+  /// ⚠ WHY IT MATTERS, in Charlie's words: he refers to causes by number when instructing Lex,
+  /// and "a number that moves when the list moves turns 'cause 3 is wrong' into an instruction
+  /// about a different cause." The same argument 25-P made for policies, and the same failure
+  /// mode — a silent mis-instruction that looks like it worked.
+  ///
+  /// ⚠ NULLABLE for rows written before 25-S; they are numbered by the backfill, oldest first.
+  number         Int?
+  orderIndex     Int                  @default(0) // display position — MOVES; see `number`
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 
   @@index([ideaId])
   @@index([parentCauseId])
+  /// §2a — looked up on every instruction the user types by number.
+  @@index([ideaId, number])
 }
 
 // Page 3 (Guiding Policy) candidate approach (design §17). Lex seeds candidates per
@@ -4332,8 +4441,60 @@ model CommunitySettings {
   approvalFeatureEnabled Boolean   @default(true)
   /// SELF | BRANCH_ADMIN | COMMUNITY_ADMIN | NAMED
   approvalMode           String    @default("SELF")
+  /// CENTRAL 25-A 3a - which roles BESIDES THE OWNER may invite people to this
+  /// Community and approve the people who arrive through a link. Root only, set
+  /// by the owner. Values: COMMUNITY_ADMIN, BRANCH_MANAGER (lib/invite-rights.ts).
+  ///
+  /// The OWNER always holds the right and is deliberately not listable here: a
+  /// setting that can remove the owner's own right is a setting that can lock a
+  /// Community out of inviting anybody.
+  ///
+  /// Default is BOTH, which is exactly what every Community could do before this
+  /// setting existed - so adding it changes nothing until an owner narrows it.
+  inviteRights           String[]  @default(["COMMUNITY_ADMIN", "BRANCH_MANAGER"])
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+}
+
+/// CENTRAL 25-A 3c - a membership that has been ended, kept.
+///
+/// Removing somebody from a team deletes their CommunityMember row, and before
+/// this that was the whole of the record: no trace that they had ever been a
+/// member, who removed them, or when. Their CONTRIBUTIONS were never touched and
+/// still are not - bulletin posts, questions, answers and ideas stay exactly
+/// where they are, attributed to them, because a removed member's own writing is
+/// still theirs.
+///
+/// A SEPARATE TABLE, not a `removedAt` column on CommunityMember, for two
+/// reasons that both bite in production:
+///   1. `CommunityMember` carries @@unique([communityId, userId]), so an archived
+///      row left in place would make re-joining impossible.
+///   2. Dozens of queries read CommunityMember as "the members". A soft-delete
+///      column means every one of them needs a filter, and the one that gets
+///      missed silently treats a removed person as a member.
+model CommunityMembershipArchive {
+  id              String              @id @default(uuid())
+  communityId     String
+  community       Community           @relation(fields: [communityId], references: [id])
+  userId          String
+  user            User                @relation("ArchivedMembership", fields: [userId], references: [id])
+  /// The role they held when they were removed.
+  role            CommunityMemberRole
+  joinedAt        DateTime
+  removedAt       DateTime            @default(now())
+  removedByUserId String?
+  removedBy       User?               @relation("MembershipRemover", fields: [removedByUserId], references: [id])
+  reason          String?
+  /// CENTRAL 25-A §7h — carried across from the membership, so removing
+  /// somebody never destroys the record of who brought them in.
+  invitedByUserId String?
+  invitedByArchived User?             @relation("ArchivedMembershipInviter", fields: [invitedByUserId], references: [id])
+  invitedViaInviteId String?
+  /// Carried across from the membership — see CommunityMember.acceptedOnBehalfAt.
+  acceptedOnBehalfAt DateTime?
+
+  @@index([communityId])
+  @@index([userId])
 }
 
 /// The NAMED approval mode's picker.

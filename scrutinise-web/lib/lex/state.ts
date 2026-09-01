@@ -152,7 +152,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
     select: {
       id: true, cause: true, whyPersisted: true, evidence: true, isRootCause: true,
-      classification: true, parentCauseId: true, source: true,
+      classification: true, parentCauseId: true, source: true, number: true,
     },
   })
   const diagnosisCauses: CanonicalCause[] = causeRows.map((c) => ({
@@ -164,6 +164,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     classification: c.classification as CanonicalCause['classification'],
     parentCauseId: c.parentCauseId,
     source: c.source as 'USER' | 'LEX_CORPUS',
+    number: c.number,
   }))
 
   // Page 3 policy options.
