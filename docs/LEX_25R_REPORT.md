@@ -44,8 +44,11 @@ never read", and not "read and never rendered". The component is mounted in exac
 mounted, never fetched, and never drawn.** The user cannot look there, because there is no "there"
 until the heading is opened, and nothing said anything was inside.
 
-**§1c — fixed by opening the section, not by moving the commentary.** It still renders at the top
-of the causes section, above any choice, exactly as specified. What changed is the collapse rule.
+**§1c — ⚠ SUPERSEDED BY THE ADDENDUM BELOW, AND THIS PARAGRAPH WAS WRONG.** It read: *"fixed by
+opening the section, not by moving the commentary — it still renders at the top of the causes
+section."* It did not. Charlie challenged it with a screenshot of an expanded DIAGNOSIS and no
+commentary, and the measurement proved him right: mounted inside `CausesField`, it began **1,080 px
+below the section heading**. The collapse was half the explanation. See the addendum.
 
 ---
 
