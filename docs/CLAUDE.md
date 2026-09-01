@@ -1099,3 +1099,67 @@ says is how much of the suite would stay green through another §A1.
 `writeSort` / `writeMerge` / `applyPolicyOp`, and asserts on `readPolicyState` and on the text of
 both generated documents. It failed 3 of its own assertions with 3 dead controls on its first run,
 which is the only evidence that it can fail at all.
+
+---
+
+## 26. THE COLD READ — A CHECK MUST NOT CREATE THE CONDITIONS IT THEN ASSERTS (1 Sep 2026)
+
+**§25 was added on 1 September and two features shipped invisible in the days on either side of
+it. This is why, and it is not a failure to follow §25 — it is a fault §25 does not describe.**
+
+**The rule.** Where a feature depends on something having happened, at least one check must take a
+subject **it did not create and did not touch**, and call **only what the browser calls**. No
+fixture, no setup, no calling the feature's own functions first. A check that arranges the world
+and then asserts the world is arranged is measuring itself.
+
+### The three that got through, and the exact assertion each time
+
+| feature | the assertion that passed | what it was actually looking at |
+|---|---|---|
+| 25-O's causes commentary | *"the commentary opens the causes section, above the choice"* — the JSX tag is in the file, and its **character offset** is lower than the string `Add cause` | source offsets, standing in for render order. Would have passed with the section wrapped in `{false && …}` |
+| 25-P's policy numbering | *"every candidate is numbered **on first read**"* | the effect of the check's own call. `readPolicyState` → `ensureNumbered` → **writes the numbers** |
+| 25-Q's rewrite offer | `applyFieldEdit()` returns what it wrote | a function downstream of the gate that decides whether an offer is ever computed |
+
+**The evidence that settles it**: on 1 September, two ideas built the same morning had **0 of 3**
+and **21 of 21** candidates numbered. The only difference between them was that a check had called
+`readPolicyState` on the second one.
+
+⚠⚠ **AND TWO OF THOSE THREE CHECKS ARE OUTSIDE THE 83%.** 25-P's audit counted assertions that
+"cannot see a lookup that misses"; 25-P's and 25-Q's own checks read the database and were counted
+as the good kind. **§25 says assert the data present in the rendered output, and both of them did.**
+A rule about *what* you assert cannot catch a fault in *what you did first*.
+
+### How to write one
+
+1. **Pick the subject by what a user did, not by what the check needs.** "The most recently
+   completed build, whatever state that leaves it in." Choosing a subject in the right state is
+   selecting the sample that makes the feature look well.
+2. **Read with the plainest tool available.** `prisma.x.findMany`, not the app's own reader — app
+   readers have side effects (`readPolicyState` numbers rows; `ensureNumbered` writes). Calling one
+   destroys the measurement.
+3. **Call only what the browser calls.** `computeCanonicalState` is what a page loads and has no
+   side effect; that is fair game. A writer is not.
+4. **Count what you could not check and print it** (§23.2). A subject that predates the change is
+   NOT CHECKED, never skipped silently, or the assertion passes on an empty set.
+5. **Import shared predicates; do not copy them into the check.** The first draft of
+   `check:lex-25r` kept its own copy of the panel's collapse rule plus a guard that the copy still
+   matched — and the guard went red the first time the rule changed. The rule was lifted to
+   `lib/lex/panel-collapse.ts`; **a shared function beats a guard against drift.**
+
+### The standing instrument
+
+`scripts/check-lex-25r.ts` is the cold read, and it is not a 25-R artefact — **every sprint that
+ships a user-visible feature adds a case to it.** A sprint whose feature cannot be expressed as a
+cold read has usually built something whose working state is indistinguishable from its broken one,
+which is worth knowing before the sprint closes rather than after the walkthrough.
+
+### The failure this catches, stated as a shape
+
+**A build writes into every field; `visited` means "a field left EMPTY"; the panel collapsed
+`visited`; a collapsed page unmounts its fields.** Four true statements, each correct in isolation,
+composing into "the build hides everything it makes". No single-file assertion could see it, because
+no single file was wrong. A cold read sees it immediately, because it asks the only question that
+spans them: *on a real idea, is the thing there?*
+
+*(Companions: §23.1 — prove the file is reached; §25 — assert the rendered data. This is the third:
+do not manufacture the state you are testing for.)*

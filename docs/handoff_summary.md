@@ -2,7 +2,33 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-09-01 12:53 UTC — ▼ **25-Q ADDENDUM 2 — WHERE THE CEILING COMES FROM,
+*Last updated: 2026-09-01 13:58 UTC — ▼ **LEX 25-R — THREE INVISIBLE FEATURES, ONE ROOT
+CAUSE.**
+⚠⚠ **A BUILD WRITES A PROPOSAL INTO EVERY FIELD OF EVERY PAGE, WHICH MARKS EVERY PAGE
+`visited`** (`state.ts` derives it as "any field has left EMPTY") — **and `FieldsPanel` collapsed
+on `complete || visited` while its own comment said "a stage you have FINISHED opens collapsed".**
+A collapsed page **UNMOUNTS** its fields. So the build hid everything it had just made. Fixed by
+restoring the rule as written, lifted into `lib/lex/panel-collapse.ts` so it cannot drift.
+▶ **§1** the commentary was written, readable and correctly mounted — inside a collapsed
+section. **§2** ⚠⚠ **the sort has NEVER run outside a check on any idea; `sortedAt` is null
+everywhere.** 0/3 numbered on a fresh idea vs 21/21 on the one `check:lex-25p` had called
+`readPolicyState()` on — **that function calls `ensureNumbered`, which WRITES.** Now: numbered
+where the row is CREATED, sorted BY THE BUILD, 14 rows backfilled. **§3** `currentField` was
+`actions`; 25-Q gated the policy read on `policyOptions`, so no offer could ever be built. 25-Q's
+own one-moment measurement is what misled it.
+▶ **§3b — A MERGE IS A DESIGN GAP, NOT A BUG, AND IT IS CHARLIE'S CALL.** No `EditTarget` can
+express "create a numbered row, supersede two, inherit both their causes". Not invented.
+▶▶ **§4c — THE MECHANISM IS THE COLD READ** (`check:lex-25r`): a subject the check did not
+create and did not touch, calling only what the browser calls; `prisma` never `readPolicyState`;
+what cannot be checked is **NOT CHECKED and printed**. ⚠ **It caught me mid-sprint** — its own
+copy of the collapse rule went red, so the rule was lifted and shared.
+⚠⚠ **§4b — THE 83% UNDERSTATES THE PROBLEM.** 25-P's and 25-Q's checks are OUTSIDE it: they
+read the DB and were the good kind. **CLAUDE.md §25 cannot catch this** — the fault is not what
+they asserted, it is what they DID FIRST.
+✅ **Shown RED first: 5/12 failed. After: 17 passed, 0 failed, 2 NOT CHECKED, 4 controls.**
+⚠ **The 2 are the in-build sort — every build predates it. §2 IS NOT VERIFIED UNTIL A REAL BUILD
+RUNS (3 credits).** ⚠ The collapse change is the biggest visual change: after a build, DIAGNOSIS,
+GUIDING_POLICY and COHERENT_ACTIONS all open. `docs/LEX_25R_REPORT.md`. Earlier: 2026-09-01 12:53 UTC — ▼ **25-Q ADDENDUM 2 — WHERE THE CEILING COMES FROM,
 AND WHERE THE BUILD RUNS. REPORT ONLY, NOTHING CHANGED.**
 ▶ **THE 900s IS OURS** — `build-config.ts:230`, `HARD_STOP_MS`, env-overridable. ⚠ **The PLATFORM
 limit is a different number on a different thing: `maxDuration = 300` per PASS**; `PASS_BUDGET_MS`
