@@ -60,6 +60,38 @@ export async function syncPolicyField(ideaId: string): Promise<void> {
   )
 }
 
+/**
+ * ══ §1.4 — ACCEPTING A CAUSE MARKS THE CAUSES SECTION CHANGED ══════════════════════
+ *
+ * §6's acceptance criterion is two things, not one: *"accepting adds it and marks the causes
+ * section changed"*. Creating the `DiagnosisCause` row is the first half. This is the second.
+ *
+ * ⚠⚠ AND THE SECOND HALF IS NOT DECORATION. The causes field sits at ACCEPTED once the user has
+ * agreed to the diagnosis. A cause added underneath it afterwards leaves the field claiming
+ * agreement to a list that no longer exists — the user approved four causes and is now looking at
+ * five, with nothing anywhere saying so. `setLoopProposal` puts the field back to
+ * AWAITING_CONFIRMATION with the new list in it, which is this product's own vocabulary for
+ * "Lex has changed this and nobody has agreed to it yet".
+ *
+ * ⚠ RE-DERIVED FROM EVERY ROW, exactly like `syncPolicyField`, and in the same shape the build
+ * writes (`(material) …` / `(contributory) …`). A proposal assembled from anything but the rows
+ * is a proposal that can be thinner than them.
+ */
+async function syncCausesField(ideaId: string): Promise<void> {
+  const rows = await prisma.diagnosisCause.findMany({
+    where: { ideaId },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+    select: { cause: true, classification: true },
+  })
+  if (!rows.length) return
+  await setLoopProposal(
+    ideaId, 'causes',
+    rows.map((c) => `(${c.classification === 'MATERIAL' ? 'material' : 'contributory'}) ${c.cause.trim()}`),
+    'A cause was added because a guiding policy answered something the diagnosis did not claim. '
+      + 'The list is here in full for you to agree to again.',
+  )
+}
+
 /** Assign stable numbers to any row that has none, oldest first. §1.1. */
 export async function ensureNumbered(ideaId: string): Promise<void> {
   const rows = await prisma.policyOption.findMany({
@@ -246,6 +278,10 @@ export async function applyPolicyOp(input: {
         where: { id: row.id },
         data: { impliedCause: { ...implied, status: 'ACCEPTED', addedCauseId: created.id } as never },
       })
+      // ⚠ THE SECOND HALF OF THE ACCEPTANCE CRITERION. See `syncCausesField`: a cause added under
+      // an already-agreed diagnosis leaves the field claiming agreement to a list that has
+      // changed underneath it.
+      await syncCausesField(id)
       break
     }
     case 'declineCause':

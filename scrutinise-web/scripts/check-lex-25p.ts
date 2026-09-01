@@ -303,6 +303,53 @@ async function main() {
     ok('no cause was added to the diagnosis by a decline',
       (await prisma.diagnosisCause.count({ where: { ideaId } })) === 2)
 
+    // ══ §1.4 — AND ACCEPTING ONE MARKS THE CAUSES SECTION CHANGED ═══════════
+    //
+    // ⚠⚠ TWO THINGS, NOT ONE. §6's criterion is "accepting adds it AND marks the causes section
+    // changed". Creating the row is the easy half; the half that would go unbuilt is the field
+    // that still claims the user agreed to a diagnosis which has since grown a cause.
+    const causesBefore = await prisma.ideaFieldState.findUnique({
+      where: { ideaId_fieldKey: { ideaId, fieldKey: 'causes' } },
+      select: { status: true },
+    })
+    await prisma.ideaFieldState.upsert({
+      where: { ideaId_fieldKey: { ideaId, fieldKey: 'causes' } },
+      create: { ideaId, fieldKey: 'causes', status: 'ACCEPTED' },
+      update: { status: 'ACCEPTED' },
+    })
+    // A second policy with an implied cause, offered the way the sort offers one.
+    const fifth = byNumber(r.state, 5)!.id
+    await prisma.policyOption.update({
+      where: { id: fifth },
+      data: { impliedCause: { cause: 'Appeals are heard by the body that refused.', why: 'x', status: 'OFFERED' } as never },
+    })
+    r = await applyPolicyOp({ ideaId, op: 'acceptCause', policyId: fifth })
+    if ('notOnThisIdea' in r) throw new Error('acceptCause could not find the row')
+
+    ok('accepting adds the cause to the diagnosis, marked as the user\'s',
+      // ⚠ BY THE CAUSE'S OWN TEXT, not by a count of USER rows — `source` DEFAULTS to USER on
+      // DiagnosisCause, so the fixture's own two causes are USER too and a count would have
+      // passed on rows this operation never touched.
+      (await prisma.diagnosisCause.count({
+        where: { ideaId, source: 'USER', cause: 'Appeals are heard by the body that refused.' },
+      })) === 1)
+    const causesAfter = await prisma.ideaFieldState.findUnique({
+      where: { ideaId_fieldKey: { ideaId, fieldKey: 'causes' } },
+      select: { status: true, proposal: true },
+    })
+    ok('and the causes section is marked changed rather than left claiming agreement',
+      causesAfter?.status === 'AWAITING_CONFIRMATION', `${causesBefore?.status ?? 'none'} → ${causesAfter?.status}`)
+    const proposed = String((causesAfter?.proposal as { value?: unknown } | null)?.value ?? '')
+    ok('the re-proposed list carries the new cause AND the ones already there',
+      proposed.includes('Appeals are heard by the body that refused.')
+        && proposed.includes('Nobody is obliged to disclose the terms.'),
+      `${proposed.split('\n').length} lines`)
+    // ⚠ A LIST THINNER THAN THE ROWS IS THE FAILURE THIS GUARDS. Re-proposing only the addition
+    // would silently drop the diagnosis the user already agreed to.
+    control('a re-proposal that dropped the existing causes must fail',
+      () => '1. (contributory) Appeals are heard by the body that refused.'
+        .includes('Nobody is obliged to disclose the terms.'))
+
     // ══ §1.12d — A RESTORED POLICY RENDERS WITH ITS ORIGINAL NUMBER ══════════
     console.log('\n§1.12d — reject, then restore')
     const sixId = byNumber(r.state, 6)!.id
