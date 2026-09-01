@@ -1052,3 +1052,50 @@ populating it. A later pass, told nothing about it, overwrote the rows.
    Two copies is one copy that will be updated.
 4. **Suspect this shape whenever a field is empty in the output and correct in the code.**
    Ask which pass wrote last, and what it was told.
+
+---
+
+## 25. A CHECK MUST ASSERT THE DATA PRESENT IN THE RENDERED OUTPUT, NOT THAT THE CODE WHICH WOULD RENDER IT EXISTS (1 Sep 2026)
+
+**The rule.** Where the property under test is about a **value** — a row appearing on a screen, a
+sentence appearing in a document, a count being right — the assertion must read that value out of
+the running system. Asserting that the code which would produce it exists, is spelled correctly,
+or filters on the right field, is not a check of that property. Grep-shaped assertions are correct
+only where the property genuinely **is** about source: "this string does not appear in this file",
+"this component is imported by this route", "this list is derived from that constant rather than
+restated".
+
+**What produced it.** 25-O's addendum §A1: "Add to report" wrote a row and rendered nothing.
+`check:lex-25n` asserted that `ReportAdditions` filters on `e.priority`, and that the button says
+"Add to report". Both true. Both green. Through two sprints. The defect was in a lookup — the
+decision was stored under one id and read back under another — and **no assertion in the suite
+could see a join.** A source assertion cannot: it never runs the join.
+
+**The size of the class, measured (25-P §3a, `npm run audit:join-blind`).** Of 61 check scripts,
+32 assert in a countable style with 1,060 assertions between them. **483 of those assertions sit
+in a check that reads no system output at all**, and **393 more are source-shaped inside a check
+that reads some** — 876 of 1,060, 83%, cannot see a lookup that misses. That is a shape count and
+not a defect count: many of those assertions are about source and are right to be. What the number
+says is how much of the suite would stay green through another §A1.
+
+**How to comply.**
+
+1. **Name the property first, then choose the instrument.** "The merged policy renders carrying
+   both parents' causes" is a value property; "the route validates against the same list it
+   dispatches on" is a source property. Only the second is a grep.
+2. **Perform the operation, then read what the screen reads.** Not the row — the row is the easy
+   half and was never in doubt. Read it back through the same assembler, renderer or state
+   function the product calls.
+3. **Import the function under test; never re-implement it in the check.** A re-implementation
+   asserts that two pieces of code agree, which they do until one is fixed. (See `admits()` and
+   `extraCorpora`: a check re-implemented it and published UNREACHABLE=4 when the truth was 0.)
+4. **Where a check needs data, it owns the data.** Create a marked fixture, delete it in a
+   `finally`, and assert it was fresh. `check:central` once reused a live `ActivityClaim` and
+   passed on a zero-point award.
+5. **Every value assertion gets a control that stays false** (§23), and the control lambda returns
+   whether the **property** holds — not whether the broken text still matches.
+
+**The worked example is `scripts/check-lex-25p.ts`:** it creates a scratch idea, runs the real
+`writeSort` / `writeMerge` / `applyPolicyOp`, and asserts on `readPolicyState` and on the text of
+both generated documents. It failed 3 of its own assertions with 3 dead controls on its first run,
+which is the only evidence that it can fail at all.

@@ -14,6 +14,7 @@
 import fs from 'fs'
 import path from 'path'
 import { matchCause, AMBIGUOUS, type CauseRow } from '../lib/lex/match-cause'
+import { LIVE_IDEA } from '../lib/lex/idea-visibility'
 
 const ROOT = path.join(__dirname, '..')
 let fail = 0
@@ -76,9 +77,23 @@ ok('the schema carries deletedAt', /deletedAt\s+DateTime\?/.test(read('prisma/sc
 ok('the SQL delta is idempotent', /ADD COLUMN IF NOT EXISTS "deletedAt"/.test(read('prisma/idea_soft_delete.sql')))
 ok('authorizeIdea — the chokepoint every Lex route passes — refuses a deleted idea',
   /if \(idea\.deletedAt\)/.test(code('lib/lex/authz.ts')) && /404/.test(code('lib/lex/authz.ts')))
-ok("it leaves the owner's dashboard list", /deletedAt: null/.test(code('app/dashboard/page.tsx')))
+// ══ 25-P §3 — THESE TWO WERE RED BECAUSE THE CODE GOT BETTER ═══════════════════════
+//
+// Both asserted the literal `deletedAt: null` in the page source. 25-O §4b replaced those
+// literals with `LIVE_IDEA`, a shared predicate that contains exactly that clause and also
+// hides archived ideas — so the pages became MORE correct and the checks went red.
+//
+// ⚠⚠ THAT IS THE JOIN-BLIND CLASS FROM THE OTHER SIDE. A source assertion cannot tell "the
+// filter is gone" from "the filter moved", because it was never reading the filter — only the
+// characters that used to spell it. CLAUDE.md §25: assert the value, and where the property
+// really is about source, assert against the IMPORTED predicate rather than a transcription
+// of it.
+ok('LIVE_IDEA is the predicate, and it excludes deleted ideas',
+  (LIVE_IDEA as { deletedAt: null }).deletedAt === null)
+ok("it leaves the owner's dashboard list",
+  /\.\.\.LIVE_IDEA/.test(code('app/dashboard/page.tsx')))
 ok('it leaves both lists on /ideas',
-  (code('app/ideas/page.tsx').match(/deletedAt: null/g) ?? []).length >= 2)
+  (code('app/ideas/page.tsx').match(/\.\.\.LIVE_IDEA/g) ?? []).length >= 2)
 ok('the detail page 404s for everyone, owner included',
   /if \(!idea \|\| idea\.deletedAt\) notFound\(\)/.test(code('app/ideas/[id]/page.tsx')))
 ok('...and its title does not leak through page metadata',

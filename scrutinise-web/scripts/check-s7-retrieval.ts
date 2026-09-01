@@ -67,7 +67,7 @@ function main() {
   '   …and names all three schedules that actually decide it')
   const block = devolutionBlock({
     query: 'x',
-    results: [{ id: 'secondary:ssi/2019/1:regulation-3', jurisdiction: 'Scotland', title: 'T', snippet: 's', url: null, type: 'STATUTORY_INSTRUMENT' }],
+    results: [{ id: 'secondary:ssi/2019/1:regulation-3', jurisdiction: 'Scotland', title: 'T', snippet: 's', url: null, type: 'STATUTORY_INSTRUMENT', date: null }],
     byJurisdiction: { Scotland: 1 },
     note: DEVOLUTION_NOTE,
   }).forUser

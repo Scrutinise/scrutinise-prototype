@@ -2,7 +2,55 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-31 14:44 UTC — ▼ **25-O ADDENDUM: "ADD TO REPORT" WROTE THE ROW; THE
+*Last updated: 2026-09-01 02:49 UTC — ▼ **LEX 25-P: THE GUIDING POLICY BECAME A DECISION — AND
+315 OF 501 EVIDENCE ROWS TURN OUT TO BE FIVE OR MORE YEARS OLD WITH NONE OF THEM SAYING SO.**
+⚠⚠ **§2 — `EvidenceItem` HAD NO DATE COLUMN AT ALL**, which is why 25-O §6's framing as a content
+problem was wrong: no prompt instruction can work against a missing column. Added `sourceDate` +
+`sourceDateBasis` (Neon `ep-old-dust-aboxi69a`), wired into **all twelve** `evidenceItem.create`
+sites at write time **from the corpus row and never from a model**, and backfilled:
+**404 of 501 dated (368 corpus record, 36 recovered from the URL), 97 undated — of which 77 have
+no source row at all.** A reasoning step Lex wrote is not an undated document and the two are kept
+apart. Rows now read *"From 2011-09-22, 14 years old. Check the figures against current ones before
+relying on them."* ⚠ **An undated row is NEVER `CURRENT`** — that substitution is the original
+defect in one line. Also: no figures → labelled an assertion, not evidence; a claim that changed
+Lex's position names what it was weighed against **or says nothing was**.
+▶ **§1 — the guiding-policy screen.** Stable numbers that never move (a rejected 7 leaves a gap;
+restore returns the original number with the old reason kept as history); a sort into policies /
+actions / restated goals with reasons shown; an action **offered**, never moved, and **parked with
+the policy it implements** so it follows that policy's fate; merge-by-number → four verdicts, only
+`MERGE` writes, parents superseded not deleted; two ratings never combined, each `REASONED /
+RETRIEVED / NOT_FOUND`; two rounds then an offer to proceed unresolved with a reason required.
+⚠⚠ **§1.5 RESTED ON A LINK NOTHING HAD EVER WRITTEN — `targetCauseIds` was set on ZERO of 18
+rows.** The sort assigns it now, labelled as Lex's judgement rather than as a structural fact.
+⚠ **§1.11 — a targeted edit is safe here STRUCTURALLY:** state lives in individually-addressable
+rows, and the one single-value overwrite (`policyOptions`) is **re-derived from every live row**
+after each mutation by `syncPolicyField`, its only writer.
+▶▶ **§3 — THE JOIN-BLIND CHECK CLASS, ENUMERATED BEFORE ANYTHING WAS CHANGED. `npm run
+audit:join-blind`: 876 of 1,060 assertions (83%) cannot see a lookup that misses** — 483 in checks
+that read no system output at all, 393 source-shaped inside checks that read some. A shape count,
+not a defect count. ⚠ The audit **declares its own blind spot**: nine checks assert in a style it
+cannot count and are excluded from every total rather than reported as zero. **Now CLAUDE.md §25.**
+⚠⚠ **The class bit twice mid-sprint: two `check-sprint3e-ui` assertions were RED BECAUSE THE CODE
+GOT BETTER** — they asserted the literal `deletedAt: null` that 25-O §4b replaced with the
+`LIVE_IDEA` predicate. A source assertion cannot tell "the filter is gone" from "the filter moved".
+▶ §1.8 — the chain-link renders in **both** documents, from one shared function, under the policy
+it qualifies. §4a — the allowance now reads *"4 full builds, or 3 full builds and 3 re-runs, or 12
+re-runs"* and names the prices. §4b — "What to do next" counts what is **blocked on you** (2), with
+the total one line lower, inside. §5 — the free pass on a resumed historic build is **recorded with
+its reason and announced on screen**; ⚠ and the resume copy's hardcoded *"the eight passes already
+done"* was a literal copied from build v7, so **every other stopped build was told a number that
+was not its own.**
+✅ `check:lex-25p` **69/0, 23 controls, 0 dead** — every §1.12 assertion runs the route's own
+`writeSort` / `writeMerge` / `applyPolicyOp` against a scratch idea it creates and deletes, then
+reads back what the screen and the documents show. ⚠ **It failed 3 of its own assertions with 3
+dead controls on its first run**, which is the only evidence it can fail. `lex-25n` 98/0, `lex-25o`
+56/0, `lex-25d` 77/0, `sprint3e-ui`, `scripts` and `npm run build` all clean.
+⚠ **UNPROVEN WITHOUT A BROWSER (§7):** the guiding-policy screen end to end on a real idea with a
+real model call; "Add to report" on a fresh item since the fix; the resumed v7 build and its
+commentary prose; whether 315 rows saying "check the figures" reads as useful or as noise; the new
+allowance sentence and the split "what to do next" count in place. `docs/LEX_25P_REPORT.md`.**
+Earlier: 
+2026-08-31 14:44 UTC — ▼ **25-O ADDENDUM: "ADD TO REPORT" WROTE THE ROW; THE
 PANEL READ THE WRONG KEY — AND IT SURVIVED TWO SPRINTS BECAUSE IT WORKED IN THE DOCUMENT.**
 ⚠⚠ Three `IdeaSourceDecision` PRIORITY rows exist on Charlie's idea, **two stamped 13:51 on 31
 Aug — his own clicks** — every one matching an `EvidenceItem.id`, **none matching any `sourceId`**.
