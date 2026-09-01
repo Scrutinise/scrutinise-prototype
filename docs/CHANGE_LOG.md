@@ -272,6 +272,35 @@ which `writeMerge` enforces on the write side and not merely on the screen.
 
 ---
 
+### §3 — the read-back list, off the running production page
+
+Production is `fbde7fb`, read from `/api/health` before any of this. Every string this sprint adds
+or changes, one at a time, marked **found**, **not found**, or **NOT CHECKED with the state it
+needs** — never omitted and never assumed.
+
+| # | string | where | result |
+|---|---|---|---|
+| 1 | `"build":{"driver":"client"}` | `/api/health` | **FOUND** — and it correctly reads `client`, because the Vercel flip has not happened |
+| 2 | *"These two can merge — nothing has changed yet."* | guiding policy, after "merge 1 and 2" | **FOUND** |
+| 3 | *"Policy 1 — would be superseded"* | the proposal card | **FOUND** |
+| 4 | *"Proposed — would become policy 22"* | the proposal card | **FOUND** |
+| 5 | *"Merge them into one policy"* | the proposal card | **FOUND** |
+| 6 | *"Leave them as they are"* | the proposal card | **FOUND** |
+| 7 | *"⚠ Keep this tab open until it finishes…"* | the build estimate card | **NOT CHECKED** — needs an idea with elicitation complete and **no build yet**, where `estimate.offerEmail` is true. Every idea reachable tonight has already been built. |
+| 8 | *"Email me when it's done — you can close this tab"* | same card | **NOT CHECKED** — needs #7's state **and** `LEX_BUILD_DRIVER=worker`, which is Charlie's flip |
+| 9 | *"I restarted this build twice on my own and it stopped again each time…"* | a stopped build | **NOT CHECKED** — needs `autoResumeCount` at the limit |
+| 10 | *"I restarted this build once on my own, without being asked…"* | a stopped build | **NOT CHECKED** — needs `autoResumeCount` = 1 |
+| 11 | *"Merged into 3."* in the Ruled out list, and *"Merged into policy 3. Both originals keep their numbers and are in “Ruled out” below…"* | after accepting a merge | **NOT CHECKED** — accepting one on a real idea would alter Charlie's data. The write and the rendered list are asserted in `check:lex-25t` against a scratch idea, with a control that performs the old broken write. |
+
+⚠⚠ **AND THE READ-BACK PROVED THE ONE THING A CHECK COULD NOT.** With the proposal card on screen
+naming **policy 22**, I read the database: **policy 22 does not exist**, and policies 1 and 2 are
+both still `CANDIDATE` with a null `mergedIntoId`. Before tonight that same question would have
+written all three rows before the card ever rendered. Then "Leave them as they are" dismissed it,
+and nothing was left pending on Charlie's page.
+
+⚠ The renderer froze once mid-walk — the same failure as the 25-R addendum — and recovered on a
+single retry, zoomed. Clicking by element reference rather than coordinate is what got past it.
+
 ### The checks
 
 `check:lex-25t` — **27 passed, 0 failed, 1 not checked, 5 controls (0 dead)**, on a scratch idea it
