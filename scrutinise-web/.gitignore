@@ -29,3 +29,10 @@ Thumbs.db
 .vercel/
 
 tsconfig.tsbuildinfo
+
+# ⚠ Any .env variant, not just the bare name. A backup taken before an edit
+# (.env.backup-b15, 2 Sep 2026) carried every secret in the file and was NOT
+# covered by the `.env` line above — an ignore scoped to one exact filename
+# while an identical-content copy sat beside it untracked.
+.env.*
+!.env.example

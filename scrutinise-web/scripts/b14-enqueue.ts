@@ -109,10 +109,18 @@ async function main() {
     // ⚠ AN IDEA WITH NO BUILD IS A HALF-DONE ENQUEUE, NOT A COMPLETED ONE. The first run
     // created the Idea and then failed on claimBuild, and reporting "already exists" for
     // that state would have left the measure permanently unbuilt while looking handled.
-    if (!b.length) {
+    // ⚠ --rebuild IS ITS OWN FLAG, not implied by --go. A measure that already has a DONE
+    // build is the normal state after step 1, and making --go silently start a second one
+    // would make a re-run indistinguishable from a first run — and spend three more thirds
+    // each time somebody re-checked their work.
+    const REBUILD = process.argv.includes('--rebuild')
+    if (!b.length || REBUILD) {
       if (!GO) {
-        console.log('\n    → it has NO build. Re-run with --go to enqueue one against this idea.')
+        console.log(`\n    → ${b.length ? 'a --rebuild was asked for' : 'it has NO build'}. Re-run with --go to enqueue.`)
         await prisma.$disconnect(); return
+      }
+      if (b.length && REBUILD) {
+        console.log(`\n    → --rebuild: enqueueing v${(b[0].version ?? 0) + 1} against this idea. ⚠ This spends 3 more thirds.`)
       }
       const resumedId = await claimBuild(existing.id, DEFAULT_FRAMING, false, 'FULL')
       const st = await prisma.ideaBuild.findUnique({

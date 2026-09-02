@@ -198,8 +198,10 @@ titled**. A row with no title still renders exactly as before — nothing is inv
 eighteen model calls and then died writing its report to a path that did not exist. **DUPLICATE 119
 · APPLICABLE 43 · SUPERSEDED 16 · UNDECIDED 0**, and **7 merge groups covering 18 of the current
 47**. ⚠ Reported to Charlie before any write, with two cautions stated: several DUPLICATE reasons
-are topic-level rather than point-level, and 2 of the 16 SUPERSEDED are mislabelled — they are
-contradicted by the current set, not aimed at deleted text.
+are topic-level rather than point-level, and **2 of the 6 SUPERSEDED rows sampled are not
+criticisms at all** — they are older POSITIVE assessments ("the sequencing is logical") that the
+current set now contradicts, which is a different thing from a criticism aimed at deleted text.
+⚠ Sampled, not counted: how many of the 16 wear that shape is not measured.
 
 ### §E — a per-pass ceiling of 600 s (decision 55)
 
@@ -217,14 +219,54 @@ value unreadable, which is why the worker has been retrieving with dense OFF on 
 the driver flipped. **NOT CHECKED until the deploy lands:** production is serving `6495ead`, which
 predates the field. Then `npm run sync:worker-retrieval --write`.
 
+⚠⚠ **CORRECTION, 12:45 UTC: `6495ead` WAS NOT AN OLD DEPLOY, IT WAS A STUCK ONE.** Every Vercel
+build since had failed and **seven commits were queued behind it** — a `'use client'` component
+value-imported a module that reaches `lib/prisma`, so the Postgres driver went into the browser
+bundle and each build died on dns/fs/net/tls. It typechecked and built clean on every machine.
+**CLAUDE.md §20 in its purest form**, and it means that when this sprint's check printed
+"production predates the field", the honest reading was not "wait for the next deploy" but "there
+have been no deploys". Cleared by the Central session; **production is GREEN on `44f0fcb`**, read
+back off `/api/health`. `44f0fcb` still predates the field, so §F's NOT CHECKED is unchanged.
+
+▶ **`npm run check:client-boundary` (theirs) walks every client component's value imports
+transitively and prints the offending chain.** Run here: **561 source files, 133 client, 0
+crossings, control fired.** It is now a **pre-push gate in `commit-all.sh`** — two seconds, no
+database, and `set -e` stops the push if it fails. This is the check that would have turned a
+seven-commit outage into a red line before the first push.
+
 ### §G — the scratch-idea test (decision 57)
 
-One throwaway idea carrying all four decision kinds, one full build. Results in the handoff.
+One throwaway idea (`9910c16e`) carrying all four decision kinds, one full build: **DONE, 11/11,
+30.18p, 462 s** on the worker. ⚠⚠ **THREE OF THE FOUR DID NOT SURVIVE**, and every one of 25-V's
+code readings is now an observation:
 
-**`check:lex-25w` 23 passed / 0 failed / 2 NOT CHECKED / 4 controls / 0 dead.** ⚠ It failed three of
-its own assertions first run: one real (the migration had not been applied) and **two that were the
-check's own fault** — an absence assertion that matched the correctly-guarded line because it is
-indented, and a driver assertion that read `process.env` on this laptop and called it production.
+| decision | outcome |
+|---|---|
+| ACCEPTED `rootCause` | ✗ **AWAITING_CONFIRMATION.** The value survived; the acceptance did not. |
+| ACCEPTED `chosenApproach` | ✗ **AWAITING_CONFIRMATION.** Same. |
+| root-cause mark on a Lex cause | ✗ **THE ROW WAS DELETED** by REVISE at 11:59:35 and replaced with two new `LEX_CORPUS` causes, neither marked. The user-authored cause survived. |
+| RULED_OUT policy option | ✓ **survived**, with its reason. |
+
+⚠ **This generalises where 25-V could not.** `452c5ade`'s seven accepted fields survived a rebuild
+only because none of them is a field the build writes; on the four ideas carrying 15–20 accepted
+build-written fields, a rebuild reverts every one of those acceptances. **What would settle it: an
+ACCEPTED guard on `setStatus`, and a REVISE that re-marks rather than deletes. Neither is built —
+this was a measurement, and the fix is Charlie's decision.**
+
+⚠ **The §A defect reproduced on this build too**, 90 minutes after the first, at 12:03:55 UTC: the
+same two contradictory lines about build `147ef614`. It is deterministic, not a one-off.
+
+**`check:lex-25w` 24 passed / 0 failed / 3 FINDINGS / 1 NOT CHECKED / 4 controls / 0 dead.**
+⚠ It failed three of its own assertions first run: one real (the migration had not been applied) and
+**two that were the check's own fault** — an absence assertion that matched the correctly-guarded
+line because it is indented, and a driver assertion that read `process.env` on this laptop and
+called it production. ⚠ The three §G reverts are recorded as **FINDINGS, not failures**: decision 57
+asked what survives, not that everything must, and a check left permanently red over an undecided
+question is a check that gets switched off.
+
+⚠⚠ **THIS ENTRY WAS SWEPT INTO ANOTHER THREAD'S COMMIT (`d1e8e96`) AND PUSHED BEFORE 25-W's own
+commit existed** — the shared-tree hazard again, from the other side. The §G result above is
+therefore a follow-up edit rather than part of the original entry.
 
 ---
 
@@ -1672,6 +1714,75 @@ idea-team? Three options in the report, with a recommendation (two lists, not a 
 the switch is exactly the flag the schema argues against). **Say which.**
 
 ---
+
+## 2026-09-02 13:30 UTC — B15a: THE EXPORT WAS MISSING 89 CHALLENGES, AND THE SCREEN SHOWS ZERO OF THEM TOO
+
+B15a executed. Both of CCW's gap candidates confirmed and closed, plus a third gap running the
+opposite way, plus a defect of my own caught by the cross-check. Report:
+`docs/report_run/B15a_EXPORT_GAPS.md`. The eleven remain unstarted.
+
+▶▶ **GAP 1 CONFIRMED AND LARGER THAN ESTIMATED.** The Deepening layer was missing from the export
+entirely. M-01 v2 holds **8 DeepeningPass rows (all RUN), 89 DeepeningIssue rows (all OPEN), 20
+known unknowns, 901 candidates reviewed / 302 kept** — against the "2 passes, 30 issues" CCW read off
+the screen. Twelve measures is of the order of **a thousand challenges**, not 360, and challenges are
+the nearest thing the instrument produces to the report's objections.
+
+⚠ **And they split by run version: `{"1": 30, "2": 59}`.** CCW's 30 are v1's — generated by the build
+with ZERO retrieval. Not fabricated (they come from the elicitation) but **not evidence-grounded**,
+and they sit in the same table as v2's 59. The export carries the split; the screen does not.
+
+⚠ One pass **ran and reviewed nothing** — `question:DOMAIN_TRANSFER`, 0 reviewed, 0 kept — surfaced
+as `ran_but_reviewed_nothing`, because "ran and found nothing" and "did not run" must not look alike.
+
+▶▶ **THE THIRD GAP RUNS THE OPPOSITE WAY, AND IT IS A PRODUCT DEFECT.** CCW asked me to report
+anything on the screen missing from the JSON. On M-01 the reverse holds: the facts strip reads
+**"Issues: 0 raised · 0 resolved · 0 open · Known unknowns: 0 declared · Last deepening run: never"**
+while the database holds 89 issues and 8 RUN passes for that same idea. Verified after a hard reload.
+
+**Cause traced to the line.** `buildFacts()` (`lib/lex/deepening.ts:191`) counts issues THROUGH the
+pass list — `passes.flatMap(p => p.issues)` — and the Deepening layer's canonical `PASS_KEYS`
+(`deepening-config.ts:436`) are five: EVIDENCE_PRECEDENT, LEGAL, FINANCIAL, POLITICAL_RISK,
+STATUTORY_CONSEQUENCES. The rows THE BUILD writes carry a different vocabulary entirely —
+`pass:SMART_VOCABULARY`, `question:LINEAGE`, `question:CAUSE_SEEDING`, `question:LEGAL_LANDSCAPE`,
+and four more. **Two producers write one table in two key vocabularies and the reader knows only its
+own.** The build's 89 challenges are stored, real, and invisible to the user.
+
+⚠ That also settles CCW's screen: **"3 · The Deepening — 2 passes run, 30 issues open" cannot have
+been M-01**, which reports `never`. Another idea, deepened through its own flow under canonical keys.
+Not fixed today — a product change, not a run change, and §12 applies.
+
+▶ **GAP 2 CLOSED.** "Where the research changed my mind" is carried by evidence KIND, not only the
+REVISE pass: `{FINDING: 58, CONTRADICTS: 15}`, and the 15 CONTRADICTS rows now export as
+`contradicting_evidence`. The cost/duration null exports AS a null (`costSummary` = EMPTY). ⚠ The
+"four decisions" could not be found: `IdeaSourceDecision` has 0 rows and no `difficulty` column or
+field key exists anywhere in the schema — consistent with that panel belonging to a different idea.
+
+⚠⚠ **A DEFECT OF MY OWN, CAUGHT BY THE CROSS-CHECK.** The exporter read ALL `EvidenceItem` rows for
+an idea with no `runVersion` filter, so it merged v1's 9 evidence-free rows with v2's 73 and reported
+**82 rows / 59 citations for a build that produced 73**. The file was RICHER THAN THE BUILD, which is
+the direction that would have gone unquestioned. Now scoped, with `excluded_from_earlier_runs: 9`
+stated on the face of the file.
+
+▶ **The source-type breakdown was unsummarised, not missing.** The screen's "committee 30 · debate 22
+· unattributed 14 · primary legislation 3 · statutory instrument 2 · case law 1 · bill 1" sums to 73
+and matches the export's raw rows exactly; added as `evidence_by_source_type`. ⚠ The one BILL row is
+a live `bills-api.parliament.uk` URL, corroborating from the other direction that bills-api retrieval
+reaches the build.
+
+▶ **CCW's two corrections accepted and adopted.** (a) "The engine did not fabricate" was too broad —
+it drafted a diagnosis, guiding policy and four actions on no retrieved evidence. The narrow claim
+prints instead: *no citations, no URLs, no findings it could not source, `searchFailed` recorded,
+fifteen gaps stated rather than filled; what it drafted, it drafted from what the proposer told it.*
+(b) The degraded build IS surfaced to the user — *"Nothing has been guessed or filled in — it just
+didn't run"* with a Retry button — while the worker exits DONE. Restated: **the product is honest to
+a human and silent to a script, and the gap only bites automation, which is the mode we are using.**
+
+⚠⚠ **AND A SECRETS EXPOSURE, FOUND WHILE STAGING.** `.env.backup-b15` — the backup I took before
+editing `.env` — carried every secret in the file and was **NOT git-ignored**: `scrutinise-web/.gitignore`
+covered the exact name `.env` and nothing else, so an identical-content copy sat beside it untracked
+and one `git add` from the history. Now `.env.*` with `!.env.example`, verified with `find` against
+all three real files. **Same shape as the .docx/.pdf ignore three days ago: a rule scoped to one
+filename while the same content sat next to it under another.**
 
 ## 2026-09-02 12:04 UTC — B14a STEP 1: THE BUILD RAN WITH NO CORPUS ACCESS AT ALL, COMPLETED "DONE", AND PRODUCED ZERO CITATIONS
 

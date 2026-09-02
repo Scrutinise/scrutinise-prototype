@@ -50,8 +50,39 @@ async function exportOne(ref: string, inputs: any) {
   const elicitation = await prisma.ideaElicitation.findUnique({ where: { ideaId: idea.id } })
   const causes = await prisma.diagnosisCause.findMany({ where: { ideaId: idea.id }, orderBy: { number: 'asc' } })
   const actions = await prisma.lexCoherentAction.findMany({ where: { ideaId: idea.id }, orderBy: { orderIndex: 'asc' } })
-  const evidence = await prisma.evidenceItem.findMany({ where: { ideaId: idea.id }, orderBy: { createdAt: 'asc' } })
+  // ⚠⚠ SCOPED TO THIS BUILD'S VERSION. `EvidenceItem` carries `runVersion`, and rows from
+  // every previous build stay on the idea. Without this filter M-01's export merged v1's
+  // NINE evidence-free rows (0 citations, retrieval was dead) with v2's SEVENTY-THREE —
+  // reporting 82 rows and 59 citations for a build that produced 73 and 59. The file would
+  // have looked richer than the build and CCW's interlock layer would have been written
+  // against a total that belongs to no single run.
+  const evidence = await prisma.evidenceItem.findMany({
+    where: { ideaId: idea.id, ...(build ? { runVersion: build.version } : {}) },
+    orderBy: { createdAt: 'asc' },
+  })
+  // Kept so a reader can see what was excluded rather than wondering.
+  const evidenceAllVersions = await prisma.evidenceItem.groupBy({
+    by: ['runVersion'], where: { ideaId: idea.id }, _count: { _all: true },
+  })
   const fields = await prisma.ideaFieldState.findMany({ where: { ideaId: idea.id } })
+
+  // ⚠⚠ THE DEEPENING — ADDED AFTER CCW-B15a, AND IT WAS THE GAP THEY PREDICTED.
+  //
+  // The stage bar and right-hand panel show Deepening passes and open challenges, and
+  // NEITHER was in this export. It is the exact failure mode B14b §1 was written to catch:
+  // a file that looks complete because everything it does contain is correct.
+  //
+  // ⚠ And it is bigger than CCW estimated from the screen. They saw "2 passes run, 30
+  // issues open"; M-01 v2 holds EIGHT passes and EIGHTY-NINE open issues. Challenges are
+  // the closest thing the instrument produces to the report's "objections", so on twelve
+  // measures this is of the order of a thousand items, not 360.
+  const deepeningPasses = await prisma.deepeningPass.findMany({
+    where: { ideaId: idea.id }, orderBy: { passKey: 'asc' },
+  })
+  const deepeningIssues = await prisma.deepeningIssue.findMany({
+    where: { ideaId: idea.id }, orderBy: { createdAt: 'asc' },
+  })
+  const sourceDecisions = await prisma.ideaSourceDecision.findMany({ where: { ideaId: idea.id } })
   const forks = await prisma.buildFork.findMany({ where: { buildId: build?.id ?? '' } }).catch(() => [])
 
   const passes: any[] = Array.isArray(build?.passes) ? (build!.passes as any[]) : []
@@ -144,14 +175,63 @@ async function exportOne(ref: string, inputs: any) {
     // ── citations with their evidence ─────────────────────────────────────
     evidence,
     evidence_summary: {
+      scoped_to_run_version: build?.version ?? null,
+      rows_per_run_version_on_this_idea: Object.fromEntries(
+        evidenceAllVersions.map(r => [String(r.runVersion), r._count._all])),
+      excluded_from_earlier_runs: evidenceAllVersions
+        .filter(r => r.runVersion !== build?.version)
+        .reduce((n, r) => n + r._count._all, 0),
       total: evidence.length,
       with_citation: evidence.filter(e => e.citation).length,
       with_url: evidence.filter(e => e.url).length,
       by_pass: evidence.reduce((m: any, e) => (m[e.passKey] = (m[e.passKey] ?? 0) + 1, m), {}),
       by_status: evidence.reduce((m: any, e) => (m[e.status] = (m[e.status] ?? 0) + 1, m), {}),
+      // ⚠ ADDED AFTER THE BROWSER CROSS-CHECK (B14b §1). The Research tab shows a
+      // source-type breakdown — "committee 30 · debate 22 · unattributed 14 · primary
+      // legislation 3 · statutory instrument 2 · case law 1 · bill 1" — that this summary
+      // did not carry. The DATA was never missing (every raw row has `sourceType`, and the
+      // derived counts match the interface exactly), but a reader comparing the two would
+      // have had to derive it. `unattributed` is the interface's label for sourceType null.
+      by_source_type: evidence.reduce((m: any, e) => {
+        const k = e.sourceType ?? 'unattributed'; m[k] = (m[k] ?? 0) + 1; return m
+      }, {}),
     },
 
     // ── where the evidence changed its mind ───────────────────────────────
+    // ── the Deepening (CCW-B15a gap candidate 1) ──────────────────────────
+    deepening: {
+      note: 'Deepening passes and issues are a SEPARATE layer from the build passes and were missing from this export until B15a. Issues are the instrument\'s nearest equivalent to the report\'s "objections".',
+      passes: deepeningPasses,
+      passes_summary: {
+        total: deepeningPasses.length,
+        by_status: deepeningPasses.reduce((m: any, p) => (m[p.status] = (m[p.status] ?? 0) + 1, m), {}),
+        candidates_reviewed: deepeningPasses.reduce((n, p) => n + p.candidatesReviewed, 0),
+        candidates_kept: deepeningPasses.reduce((n, p) => n + p.candidatesKept, 0),
+        // ⚠ A pass that RAN and reviewed nothing is not the same as one that did not run.
+        ran_but_reviewed_nothing: deepeningPasses
+          .filter(p => p.status === 'RUN' && p.candidatesReviewed === 0).map(p => p.passKey),
+      },
+      issues: deepeningIssues,
+      issues_summary: {
+        total: deepeningIssues.length,
+        by_status: deepeningIssues.reduce((m: any, i) => (m[i.status] = (m[i.status] ?? 0) + 1, m), {}),
+        by_pass: deepeningIssues.reduce((m: any, i) => (m[i.passKey] = (m[i.passKey] ?? 0) + 1, m), {}),
+        by_run_version: deepeningIssues.reduce((m: any, i) => (m[String(i.runVersion)] = (m[String(i.runVersion)] ?? 0) + 1, m), {}),
+      },
+      known_unknowns: deepeningPasses.flatMap(p =>
+        (Array.isArray(p.knownUnknowns) ? p.knownUnknowns as unknown[] : []).map(u => ({ passKey: p.passKey, unknown: u }))),
+    },
+
+    // ── B15a gap candidate 2 ──────────────────────────────────────────────
+    source_decisions: sourceDecisions,
+    // "Where the research changed my mind" is carried by evidence KIND, not only by the
+    // REVISE pass — CONTRADICTS rows are the ones that moved the draft.
+    evidence_by_kind: evidence.reduce((m: any, e) => (m[e.kind] = (m[e.kind] ?? 0) + 1, m), {}),
+    contradicting_evidence: evidence.filter(e => e.kind === 'CONTRADICTS'),
+    // ⚠ An honest null is carried AS a null. The screen says "Cost and duration — we can't
+    // answer this yet"; `costSummary` is EMPTY, and recording that is the point.
+    cost_summary_field: fields.find(f => f.fieldKey === 'costSummary') ?? null,
+
     revise: byKey.REVISE ?? null,
     causes_commentary: (build as any)?.causesCommentary ?? null,
     forks,
