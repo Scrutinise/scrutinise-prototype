@@ -23468,3 +23468,77 @@ and helpers duplicated in one program; the fourth is a Prisma `Decimal` read int
 editing, and all four are theirs. ⚠ **But this is exactly the failure §4a names, now pointing the
 other way:** my own file was red this afternoon and I fixed it; theirs is red now, and a shared check
 left red because it is known to be someone else's hides the next real failure — including mine.
+
+---
+
+## 2026-09-02 10:30 UTC — CENTRAL: 25-A/25-B shipped, gated on production, and branch ownership can move
+
+**Deployed and verified: `c6ac78e` then `1cb0034`.** Five commits for 25-A/25-B, two more for §5 and
+decision 52, all by explicit file path.
+
+⚠⚠ **THE SCHEMA HAD ALREADY SHIPPED WITHOUT ME.** `7e0b2d5` — the LEX stream's 25-S commit at 18:43
+on 1 Sep — swept **all seven** of my uncommitted 25-A schema additions (`CommunityTitle`,
+`CommunityMembershipArchive`, `titleId`, `invitedByUserId`, `acceptedOnBehalfAt`, `inviteRights`,
+the invite columns) into the repository and therefore into production, roughly **twelve hours before
+the migration was applied**. Any query returning full `CommunityMember` rows selects those columns,
+so the condition for a broken dashboard existed for that whole window. ⚠ **I cannot show it was hit**
+— Vercel logs are SAML-blocked — but the exposure is exactly the outage I declined to cause by not
+committing, and it arrived anyway through another session's `git add`. **A shared tree means your
+uncommitted work is somebody else's `git add` away from production.**
+
+### The gate, read off the running site
+
+- ✅ **the dashboard renders** for a signed-in member, including "My communities and teams" — which
+  IS the `communityMember.findMany` that would have 500'd. No error page.
+- ✅ **all five outstanding platform invitations still pass the gate**, and ⚠ **none was consumed by
+  the read** — re-checked against the row afterwards.
+- ✅ **the community invitation no longer lands on the wall**: every one now offers
+  `/sign-up?communityInvite=…` and that URL returns the real sign-up form. **25-A §1 is fixed on the
+  site, not just in the tree.**
+
+### §7j ran
+
+**Jon Swales and Fraser Robertson are members of the Reform Branch Community**, re-read row by row:
+role MEMBER, `invitedByUserId` recorded, `acceptedOnBehalfAt` set — **accepted on their behalf, and
+the row says so.** Both invitations are now spent. ▶ **Fraser can found a branch**
+(`canCreateBranchUnder` = yes), which is his Merton branch. ⚠ **He cannot invite at top level**
+(`NO_STANDING`) — he is a plain member until he owns a branch; §8c is what changes that.
+
+### Decision 46 applied to live data
+
+**Five links, not four** — all set to `maxUses: 1`. ⚠ **One (Bermondsey, `903c1c81…`) had already
+been used once, so capping it makes it SPENT rather than single-use.** Reversible by bumping it to 2
+if that link is still wanted.
+
+### 25-B §5 / decision 44 — built
+
+`vacateBranchOwnership` and `appointBranchOwner`, the `leaveCommunity` dead end, and the Members
+panel controls. ⚠ **The guards stay**: `setMemberRole` and `removeMember` still refuse an OWNER and
+`check:central` still asserts it — these are separately named acts, because relaxing the role ladder
+is what would make a node takeable by a co-admin. Decision 50: an admin may stand a manager down
+without their agreement. Decision 51: a reason is required and recorded (in `ActivityLog`, whose only
+reader filters on `ideaId` + `accessType`, so these rows are invisible to it — no migration).
+
+✅ **`check:central-25a` 134 passed, 0 failed, 26 controls, 0 dead.** ⚠ **It caught two more things in
+my own work**: a fixture that gave one branch TWO owners because §3a had already made one — which is
+precisely why appointing demotes in the same transaction — and the ownership audit's **new foreign
+key onto User**, which left **22 fixture accounts on production** because the teardown did not know
+about a table the same commit introduced. Both fixed; the sweep then reclaimed all 22, so the sweep
+is no longer unproven — it has now run and done its job twice.
+
+✅ **Verified live**: the Bermondsey Members panel renders **"Stand down as branch manager"** on the
+owner row and **"Make branch manager instead"** on the other.
+
+### Decision 52 — the LEX stream's red check
+
+`check:scripts` is **green** for the first time this sprint. Nine of the twelve errors were one
+cause: three build-worker scripts had no import or export, so TypeScript treated each as a global
+script and they shared one scope. `export {}` on each. The twelfth was a Prisma `Decimal` typed as a
+number in `watch-build-to-done.ts`. **Committed separately, and flagged here so the LEX session is
+not surprised by a change it did not make.**
+
+⚠ **One blemish in that commit's message**, and it is my own recorded trap walked into again:
+backticks in a double-quoted commit message are EXECUTED by the shell, so the phrase naming the fix
+vanished — the sentence reads "…collided with its twin.  at the top of each makes them modules". The
+missing words are `export {}`. **Not amended: force-pushing a shared branch to correct a message is
+a worse trade than a gap in one sentence.**

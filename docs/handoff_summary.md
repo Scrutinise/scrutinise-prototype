@@ -4,10 +4,32 @@
 
 ---
 
-## CENTRAL THREAD — last updated 2026-09-02 06:50 UTC (25-A, 25-B)
+## CENTRAL THREAD — last updated 2026-09-02 10:30 UTC (25-A, 25-B)
 
 *This section belongs to the CENTRAL stream and is kept separate from the LEX stream's entry below,
 because the two run in this repository at the same time.*
+
+▼ **SHIPPED AND GATED ON PRODUCTION (`c6ac78e`, `1cb0034`).** ✅ Dashboard renders for a signed-in
+member; ✅ all five outstanding invitations still pass the gate and **none consumed by the read**;
+✅ **the community invitation no longer lands on the invite-only wall** — 25-A §1 is fixed on the
+SITE, not just the tree. ⚠⚠ **THE SCHEMA HAD ALREADY SHIPPED WITHOUT ME**: the Lex stream's
+`7e0b2d5` (18:43, 1 Sep) swept all seven of my uncommitted schema additions into production ~12h
+before the migration — the exact outage I declined to cause, arriving through someone else's
+`git add`. **In a shared tree your uncommitted work is one `git add` from production.**
+▶ **§7j RAN**: Jon Swales and Fraser Robertson are members, re-read row by row, `invitedByUserId`
+recorded and `acceptedOnBehalfAt` set. **Fraser can found his Merton branch**; ⚠ he cannot invite at
+top level until he owns one (§8c changes that). ▶ **46 applied: FIVE links, not four** — ⚠ one had
+been used once, so capping makes it spent.
+▶ **§5/44 BUILT AND VERIFIED LIVE** — vacate, appoint, the leaveCommunity dead end, and the Members
+panel controls ("Stand down as branch manager" / "Make branch manager instead", read off Bermondsey).
+⚠ The guards STAY; these are separate acts. Reason required, recorded in `ActivityLog` (no migration).
+✅ **check:central-25a 134/0, 26 controls, 0 dead** — ⚠ it caught two more of my own: a fixture giving
+one branch TWO owners, and the audit's new FK onto User that left **22 fixture accounts on
+production**. Both fixed; **the sweep has now run twice and is no longer unproven**.
+▶ **Decision 52: `check:scripts` is GREEN** — nine of twelve errors were three scripts sharing a
+global scope for want of `export {}`. ⚠ Backticks in that commit's message were EXECUTED and the
+phrase vanished; not amended, because force-pushing a shared branch is the worse trade.
+Earlier:
 
 ▼ **25-B §5 — A BRANCH CHAIR CAN NEVER BE REPLACED, AND THE REASON IS NOT THE GUARDS.**
 ⚠⚠ **A Community has NO owner column** (the `ownerId`s belong to Group and Pack) — ownership is one
