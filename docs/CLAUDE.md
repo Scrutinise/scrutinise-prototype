@@ -1163,3 +1163,54 @@ spans them: *on a real idea, is the thing there?*
 
 *(Companions: §23.1 — prove the file is reached; §25 — assert the rendered data. This is the third:
 do not manufacture the state you are testing for.)*
+
+---
+
+## 27. WHAT A PROMPT *SHOWS* REACHES THE OUTPUT AS READILY AS WHAT IT *ASKS FOR* (2 Sep 2026)
+
+**The rule: an illustrative example inside a prompt is a template the model may fill — or lift.
+Where the content of a field matters, illustrate the SHAPE of a good answer, never supply a
+specimen sentence that would read as content if it came back verbatim.**
+
+### What produced it
+
+The printed report on **civil service accountability** told a reader, under *"Questions the
+research could not answer"*:
+
+> *"No source quantifies how many bags enter waterways each year."*
+
+That sentence is `lib/lex/deepening-client.ts`'s own illustration of its rule 5 — *"'no source
+quantifies how many bags enter waterways each year' is an issue"* — copied verbatim by the model
+onto a proposal with nothing to do with bags. ⚠ **It was not a stale row:** the build of 2
+September 07:50 rewrote that row and put it back, so it was live at the moment it was found.
+
+⚠⚠ **AND NOTHING COULD HAVE CAUGHT IT DOWNSTREAM.** It is well-formed, on-format, plausible prose
+in the right field. No schema check, no `finishReason` guard and no JSON validation has any
+purchase on a sentence that is valid in every respect except that it is about the wrong subject.
+
+### What to do
+
+1. **Illustrate the shape, not the sentence.** "A good one names the exact measurement,
+   definition or comparison that is missing FROM THIS PROPOSAL" teaches the same rule and cannot
+   be lifted.
+2. **Where a specimen is genuinely the clearest teaching, make it unusable as content** — a
+   placeholder subject, or an example about the instructions themselves.
+3. **Say it in the prompt too.** *"Never carry over an example, a subject or a figure from these
+   instructions or from any other proposal."*
+4. **`npm run check:prompt-examples` sweeps the class** — it finds quoted illustrations in every
+   prompt and then asks the database whether each has ever come back as stored output. ⚠ The
+   second half is what separates a risk from a defect, and it is the half that is easy to leave
+   out.
+
+⚠ **The sweep has two known exclusions and both are deliberate.** `interrogation-library.ts` holds
+the QUESTIONS the system asks, so finding one in stored output is the library working; and a
+rule's own `text:` field in `deepening-config.ts` is written to be emitted. A first version
+reported 30 "leaks" of which 24 were those, and a check that cries wolf on correct behaviour gets
+switched off before the real one arrives.
+
+### The family this belongs to
+
+**§24 is the same fault from the other side.** That rule says a schema that PERMITS a value is not
+a prompt that REQUIRES it — the model omits what it was not asked for. This one says the model
+also *returns what it was merely shown*. Between them: the prompt is the specification, and every
+word in it — including the examples — is part of what is being specified.
