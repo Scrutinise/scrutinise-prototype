@@ -183,7 +183,63 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-02 08:05 UTC — ▼ **LEX 25-U — IS THE REPORT FIT TO PUT IN FRONT OF SOMEONE?
+*Last updated: 2026-09-02 09:52 UTC — ▼ **LEX 25-V — THE DOCUMENT MADE PRINTABLE.**
+▶▶ ⚠⚠ **25-U's HEADLINE IS CORRECTED: THE CITATION ERROR RATE IS 0%.** Measured across **all 183
+distinct sources** (25-U sampled ten): **141 decidable, 0 misnamed, 0 dead**, 42 unverifiable
+behind a Cloudflare challenge and reported as unchecked. What is wrong is the **link**, on 14 of
+141 — 25-U conflated a broken hyperlink with a wrong citation.
+▶ **§1b the cause is ONE of the four and not blended: the URL is constructed and uses the wrong id
+space.** Parliament's own API settles it — `api/Publications/6912` returns our stored citation
+**word for word**, and its `documentId` matches our corpus id's second component. The corpus is
+right. ⚠⚠ `committees.parliament.uk/publications/{n}/html/` is a **WRITTEN-EVIDENCE** address
+space: 6912 serves ARPA evidence on poly-pills, 72615 serves *"GRO0117 — Evidence on Grouse
+Shooting"*, the bare form is "This page does not exist". **A working link to somebody else's
+document, which is worse than a dead one and invisible to every status check.**
+▶ **§1c a verification that tells blocked from wrong.** ⚠ A full browser header set still 403s and
+the Internet Archive has **no snapshot** — the way through is not to fetch the page. `npm run
+verify:citations` asks the metadata API instead: ~60 calls for a 183-source document, ~40 s, no
+browser. ⚠ Its own first version dropped 39 sources into the 403 bucket on a bad id regex
+(`arc-0002` is not numeric); coverage went 102 → 141 when fixed.
+▶ **§1d** a link measured WRONG is removed and the citation kept — not a policy question, since
+keeping it publishes a falsehood. The 42 **unverifiable** ARE the policy question and are
+**Charlie's**: ⚠ only *keep-and-mark-unverified* is compatible with the corpus-is-ground-truth
+principle; withdrawing a finding because WE cannot reach the page discards sound research over our
+own access problem.
+▶ **§1e blast radius: 60 rows, 3 ideas** (Civil Service 46, Quango Forecasts 11, Decision Paralysis
+3). ⚠ **Starkey is NOT affected** — it does not cite the committee corpus.
+▶▶ **§2 THE SORT NOW REACHES THE DOCUMENT.** The report printed one sentence over 24 sorted,
+reasoned, numbered policies. Two causes, both "correct data that does not reach the output": the
+snapshot never carried `kind`/`kindReason`, and 25-N's *"list what is under consideration"* was
+applied to the one-pager and **never to the full report, 450 lines away in the same file**.
+▶ **§3** `KERNEL TEST FAILED` ×32, `THE ROAD TAKEN AT "guidingPolicy:instrument"`, *"Drafted by Lex
+from the toolkit"* ×36 and raw pass keys — renamed at the point of writing **and 51 stored rows
+rewritten**, because the allowance was spent and today's document is built from those rows.
+▶ **§5** ⚠ there were **TWO** copies of the "129 accepted findings" label, in two files; fixing the
+first left the second, which is why the check asserts the absence across every rendered document.
+▶ **§6** a date on 1 January prints as its year (100 rows shared `2010-01-01`; 152 of 473 fall on 1
+Jan). ▶ **§8** every open decision now says what would settle it, honestly: the research did not
+decide it and further search will not.
+▶ **§7 HALF-FIXED, and the halves differ.** Cause: `title` was asked for in **one of the seven**
+places a challenge is created. Research pass now has an object contract + a prompt that asks →
+**future builds fixed permanently**; 51 backfilled; ⚠ **275 remain untitled — model prose with no
+title in it, and inventing one is writing content. Needs a build.**
+▶ **§11 shipped:** Beta marker (bordered pill, not hue — Charlie is colour blind) on every page and
+all five documents; Charlie's disclosure verbatim on the research panel and as the **first block**
+of every document; pilot line in the welcome email, html **and** plain text. ⚠⚠ **§11c respected —
+the disclosure is NOT extended to citations, and the harsher fallback Charlie offered is NOT used**,
+because printing it would disclose a defect that no longer exists.
+▶ `check:lex-25v` **30/0, 5 controls, 0 dead** — ⚠ it failed **five** of its own assertions first
+run: three real (the second label), two the check reading its own comment and asserting a wrapped
+prompt sentence against source. **CLAUDE.md §27 added.** `check:lex-25r` is now **33/0 with nothing
+not-checked**, because the sort has finally run.
+▶ **ALLOWANCE (read back, not set):** `cl@scrutinise.org` `buildAllowanceThirds` **60**,
+`grantedExplicitly` **true**, spent 12, **remaining 48 = 16 full builds** (not 20 — 12 were already
+spent). Pilot default unchanged: **12 thirds**. ⚠ The configuration **cannot express "3 builds and
+3 re-runs"** — it is a fungible budget, and the same 12 also buys 4 full builds.
+⚠⚠ **STILL OUTSTANDING FOR CHARLIE: `LEX_BUILD_DRIVER` is still `client` in Vercel** (read from
+`/api/health`). With 16 builds now available that matters — a build started from the UI runs in the
+tab, not on the worker.
+Earlier: 2026-09-02 08:05 UTC — ▼ **LEX 25-U — IS THE REPORT FIT TO PUT IN FRONT OF SOMEONE?
 ANSWER: NOT TODAY.**
 ▶ **§1 the build ran on the worker: 11/11, 36.95p, 525 s, no tab.** ⚠ **It spent the last of the
 allowance — 3 thirds → 0.** A fifth build needs a grant. §1b did not apply: 25-T already proved the
