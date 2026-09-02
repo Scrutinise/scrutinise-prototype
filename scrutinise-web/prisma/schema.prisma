@@ -135,6 +135,31 @@ enum CommunityMemberRole {
   MEMBER
 }
 
+/// CENTRAL 25-C §1a — the two-tier membership model.
+///
+/// ⚠⚠ THIS IS NOT A ROLE AND DOES NOT LIVE ON THE SAME AXIS AS ONE. A tier says
+/// how somebody got into the Community; a role says what they may do on one
+/// node. A branch member can be the OWNER of their branch (BRANCH + OWNER) and
+/// a group member can be an ordinary MEMBER of the root (GROUP + MEMBER).
+///
+///   GROUP  — invited at top level. May found a branch and become its manager;
+///            may invite at top level; may invite into branches.
+///   BRANCH — invited into one branch, and holds a root membership only because
+///            Stage 1.2's branch-implies-root rule creates one. May invite
+///            others into that branch. May NOT found a branch or invite at top
+///            level.
+enum CommunityMembershipTier {
+  GROUP
+  BRANCH
+}
+
+/// CENTRAL 25-C §2i — resign and nominate.
+enum BranchNominationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
 enum CollaboratorRole {
   EDITOR
   VIEWER
@@ -555,6 +580,10 @@ model User {
   membershipsRemoved        CommunityMembershipArchive[] @relation("MembershipRemover")
   communityJoinRequests     CommunityJoinRequest[] @relation("JoinRequester")
   communityJoinDecisions    CommunityJoinRequest[] @relation("JoinDecider")
+  /// CENTRAL 25-C §2i — resign-and-nominate, from all three sides.
+  branchNominationsMade     BranchOwnerNomination[] @relation("BranchNominator")
+  branchNominationsReceived BranchOwnerNomination[] @relation("BranchNominee")
+  branchNominationsDecided  BranchOwnerNomination[] @relation("BranchNominationDecider")
   managedCommunities        Community[]         @relation("CommunityManager")
   centralPointsEvents       PointsEvent[]       @relation("CentralPointsEarner")
   centralPointsCaused       PointsEvent[]       @relation("CentralPointsActor")
@@ -1430,6 +1459,7 @@ model Community {
   members           CommunityMember[]
   titles            CommunityTitle[]
   archivedMembers   CommunityMembershipArchive[]
+  branchNominations BranchOwnerNomination[]
   invites           CommunityInvite[]
   joinRequests      CommunityJoinRequest[]
   bulletinPosts     BulletinPost[]
@@ -1462,6 +1492,24 @@ model CommunityMember {
   user        User                @relation(fields: [userId], references: [id])
   role        CommunityMemberRole @default(MEMBER)
   joinedAt    DateTime            @default(now())
+  /// ══ CENTRAL 25-C §1a — GROUP OR BRANCH ════════════════════════════════════
+  ///
+  /// ⚠⚠ READ FROM THE ROOT ROW, ALWAYS. The tier that decides anything is the
+  /// one on the person's membership of the ROOT Community; `rootTierFor()` in
+  /// lib/membership-tier.ts is the only thing that should read this column, and
+  /// every gate goes through it. It is stored on branch rows too, mirroring the
+  /// root row so that a human reading the table is never shown two answers, and
+  /// `setMembershipTier` updates every row in one transaction to keep it so.
+  ///
+  /// ⚠ THE ROOT ROW IS STILL CREATED FOR A BRANCH JOIN and is not deletable —
+  /// twelve gates and `check:central`'s branch-implies-root invariant depend on
+  /// it. Only two rights detach: `canCreateBranchUnder` and `inviteRightFor`.
+  ///
+  /// ⚠ The DEFAULT is GROUP because it is the compatible value for a write that
+  /// forgets to set it, not because it is the right answer for an existing row.
+  /// The six live rows were tiered by DERIVATION (§1f,
+  /// scripts/backfill-membership-tier.ts), which demoted exactly one.
+  tier        CommunityMembershipTier @default(GROUP)
   /// ══ CENTRAL 25-A §7h — WHO BROUGHT THEM IN, ON THE MEMBERSHIP ITSELF ══════
   ///
   /// Charlie is relying on branch chairs being accountable for the people they
@@ -4497,9 +4545,49 @@ model CommunityMembershipArchive {
   invitedViaInviteId String?
   /// Carried across from the membership — see CommunityMember.acceptedOnBehalfAt.
   acceptedOnBehalfAt DateTime?
+  /// CENTRAL 25-C §1a — what they were when they were removed. Re-deriving a
+  /// tier after the live row has gone is not possible, so it is carried.
+  tier            CommunityMembershipTier @default(GROUP)
 
   @@index([communityId])
   @@index([userId])
+}
+
+/// CENTRAL 25-C §2i — a branch manager resigns and nominates a replacement,
+/// subject to admin approval.
+///
+/// ⚠⚠ A PENDING ROW CONFERS NOTHING. It is a record of an ask and nothing else:
+/// no `CommunityMember.role` moves until a community admin approves, and the
+/// transfer is then done by `appointBranchOwner` — still the only function
+/// outside creation that writes an OWNER row, still guarded, still logging.
+/// `check:central-25c` asserts BOTH directions, because "the nomination did
+/// nothing" and "the approval did everything" are two different bugs.
+///
+/// ⚠ A DECLINED row is kept. "The branch asked for X and the Community said no"
+/// is exactly the kind of fact that later reads as a bug if it is not recorded
+/// — the same reasoning as decision 51's required vacate reason.
+model BranchOwnerNomination {
+  id                String    @id @default(uuid())
+  communityId       String
+  community         Community @relation(fields: [communityId], references: [id])
+  /// The outgoing manager who made the nomination. They may already have stood
+  /// down by the time it is decided (§2f) — the nomination outlives the role.
+  nominatedByUserId String
+  nominatedBy       User      @relation("BranchNominator", fields: [nominatedByUserId], references: [id])
+  nomineeUserId     String
+  nominee           User      @relation("BranchNominee", fields: [nomineeUserId], references: [id])
+  /// Required, for decision 51's reason: an unexplained change of chair later
+  /// reads as a fault rather than a decision.
+  reason            String
+  status            BranchNominationStatus @default(PENDING)
+  createdAt         DateTime  @default(now())
+  decidedAt         DateTime?
+  decidedByUserId   String?
+  decidedBy         User?     @relation("BranchNominationDecider", fields: [decidedByUserId], references: [id])
+  decisionNote      String?
+
+  @@index([communityId, status])
+  @@index([nomineeUserId])
 }
 
 /// The NAMED approval mode's picker.
