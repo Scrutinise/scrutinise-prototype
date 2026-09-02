@@ -26,6 +26,9 @@
 
 import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
+import { historyLine, GROUP_HEADINGS } from '../lex/policy-history'
+import { DRAFTED_ATTRIBUTION, readableForkKey } from '../lex/reader-language'
+import { EVIDENCE_DISCLOSURE, BETA_MARKER } from '../lex/beta-disclosure'
 // 25-M §2b — the write-up carries every section the right-hand panel holds, in the panel's
 // own order. ⚠ The heading vocabulary is IMPORTED, never restated: `question-headings.ts`
 // imports nothing and is held to §20-B's import ban precisely so the document stack can read
@@ -345,6 +348,105 @@ function draftBanner(snapshot: ProposalSnapshot): Block[] {
 }
 
 /**
+ * ══════════ 25-V §2b — WHEN NOTHING IS COMMITTED, PRINT WHAT IS UNDER CONSIDERATION ══════════
+ *
+ * §2b: *"'Not yet decided, and here are the twenty-four approaches under consideration with why
+ * each is there' is a First Scrutiny document. 'No approach has been committed' is a blank page."*
+ *
+ * ⚠⚠ THIS IS THE SAME INSTRUCTION 25-N ALREADY GAVE, APPLIED TO THE WRONG DOCUMENT. §5b told the
+ * ONE-PAGER to *"list all proposed approaches rather than 'no approach has been committed to'"*,
+ * and `buildSummaryDocument` does exactly that, 450 lines below in this same file. The full report
+ * was never changed. So the 411-word summary carried five candidates and a leading approach while
+ * the 45,101-word report carried a single sentence — on the most important field in it. That is an
+ * omission, not a decision, and it is the fourth defect in a row of the shape "correct data that
+ * does not reach the output".
+ *
+ * ⚠ THE GROUPING AND THE HISTORY LINE ARE IMPORTED, NOT RESTATED. `GROUP_HEADINGS` and
+ * `historyLine` are the screen's own (25-S), so a reader who has seen the guiding-policy screen
+ * meets the same words in the document. CLAUDE.md §25.3: a re-implementation asserts that two
+ * pieces of code agree, which they do until one is fixed.
+ *
+ * ⚠ A CANDIDATE WITH NO HISTORY GETS NO LINE. `historyLine` returns null for an untouched card and
+ * that is deliberate (25-S §1.2) — a line saying nothing trains the reader to skip the ones that
+ * say something.
+ */
+function candidatePolicyBlocks(snapshot: ProposalSnapshot): Block[] {
+  const live = (snapshot.options ?? []).filter((o) => o.status !== 'RULED_OUT')
+  if (!live.length) {
+    return [{ kind: 'note', text: 'No approach has been committed to, and no candidates have been recorded.' }]
+  }
+
+  const out: Block[] = [{
+    kind: 'note',
+    text: `No approach has been committed to yet. ${live.length} ${live.length === 1 ? 'is' : 'are'} `
+      + 'under consideration, and all of them are set out below with the reason each is there. '
+      + 'This is a decision the proposer has still to make, not a gap in the work.',
+  }]
+
+  // ⚠ THE SORT'S OWN GROUPS, IN THE SORT'S OWN ORDER. A flat list of twenty-four is the thing
+  // §1 of this brief calls the marker of bad strategy; the groups are what make it a decision.
+  const ORDER: Array<keyof typeof GROUP_HEADINGS> = ['GUIDING_POLICY', 'COHERENT_ACTION', 'GOAL_RESTATEMENT']
+  const unsorted = live.filter((o) => !o.kind)
+  for (const key of ORDER) {
+    const group = live.filter((o) => o.kind === key)
+    if (!group.length) continue
+    out.push({ kind: 'heading', level: 2, runs: text(GROUP_HEADINGS[key](group.length)) })
+    for (const o of group) {
+      out.push({
+        kind: 'paragraph',
+        runs: [
+          ...(o.number != null ? [{ text: `${o.number}. `, bold: true }] : []),
+          { text: o.approach },
+        ],
+      })
+      // ══ ⚠⚠ THE REASON ITSELF, WHERE THERE IS ONE — §2b ASKS FOR "WHY EACH IS THERE" ══════
+      //
+      // `historyLine`'s kept-policy branch returns "Guiding policy." and drops `kindReason`. On the
+      // SCREEN that is right: the card shows the reasoning in its own right and a line repeating it
+      // would be clutter. In a printed document there is no card, so the same call produced
+      // "Guiding policy." twenty-four times — our own vocabulary, said two dozen times, carrying
+      // nothing. That is the very complaint §3 makes about `KERNEL TEST FAILED`.
+      //
+      // ⚠ SO THE DOCUMENT PREFERS THE REASON AND FALLS BACK TO THE SHARED LINE — it does not change
+      // `historyLine`, because 25-S shipped it and this brief's §0 puts it out of scope. A document
+      // that needs a different sentence from a screen is not a reason to change the screen's.
+      const reason = o.kindReason?.trim()
+      const line = reason || historyLine({
+        number: o.number ?? null,
+        kind: o.kind ?? 'GUIDING_POLICY',
+        kindReason: o.kindReason ?? null,
+        status: o.status,
+        ruleOutReason: o.ruleOutReason,
+        sorted: !!o.sorted,
+        moveStatus: o.moveStatus ?? null,
+        mergedFrom: o.mergedFrom ?? [],
+        causeNumbers: [],
+        phase: o.phase ?? null,
+        phaseReason: o.phaseReason ?? null,
+      })
+      if (line) out.push({ kind: 'note', text: line })
+    }
+  }
+
+  // ⚠ AND THE ONES THE SORT HAS NOT REACHED ARE SAID TO BE THAT, not silently appended to the
+  // policies. A candidate nobody has classified is a different thing from one classified as a
+  // policy, and merging them would overstate what has been decided.
+  if (unsorted.length) {
+    out.push({ kind: 'heading', level: 2, runs: text(`Not yet classified (${unsorted.length})`) })
+    for (const o of unsorted) {
+      out.push({
+        kind: 'paragraph',
+        runs: [
+          ...(o.number != null ? [{ text: `${o.number}. `, bold: true }] : []),
+          { text: o.approach },
+        ],
+      })
+    }
+  }
+  return out
+}
+
+/**
  * ══ 25-P §1.8 — THE CHAIN-LINK CONSEQUENCE, IN BOTH DOCUMENTS ═══════════════════════
  *
  * §1.8: *"Flagged as important, and it must survive into both generated documents. A legislature
@@ -387,6 +489,28 @@ function chainLinkBlocks(options: SnapshotOption[]): Block[] {
   ]
 }
 
+/**
+ * ══════════ 25-V §11a/§11b — THE BETA MARKER AND THE DISCLOSURE, ON EVERY DOCUMENT ══════════
+ *
+ * §11a: a Beta marker on **every** generated document. §11b: Charlie's disclosure, verbatim.
+ *
+ * ⚠⚠ IT IS THE FIRST BLOCK, NOT A FOOTER. A printed document is read from the top and often only
+ * from the top; a disclosure at the end qualifies material the reader has already taken at face
+ * value. This is also the one surface with nobody to ask, which is why it says it here rather
+ * than relying on the screen having said it.
+ *
+ * ⚠ ONE FUNCTION, FIVE BUILDERS. The proposal, the summary, the evidence pack, the meeting pack
+ * and the initial background each open with these blocks; five copies of the wording is four that
+ * will be updated late, and §11b is verbatim wording that must not drift.
+ *
+ * ⚠ AND IT DOES NOT REPLACE THE DRAFT BANNER. `draftBanner` says this proposal is unfinished;
+ * this says the PRODUCT is in pilot and how its evidence was assembled. Different claims, and
+ * collapsing them would lose the one that is true even of a finished proposal.
+ */
+export function betaBlocks(): Block[] {
+  return [{ kind: 'note', text: EVIDENCE_DISCLOSURE }]
+}
+
 export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
   assertRenderableSnapshot(snapshot)
   const blocks: Block[] = []
@@ -399,6 +523,8 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   // ── Diagnosis ──────────────────────────────────────────────────────────────
   // §5a — said once, at the top, and only when it is true.
   blocks.push(...draftBanner(snapshot))
+  // ⚠ 25-V §11a/§11b — first block on every generated document. See `betaBlocks`.
+  blocks.push(...betaBlocks())
 
   // ══ §5c — SECTION 1 ══
   blocks.push({ kind: 'section', title: REPORT_SECTIONS.strategy })
@@ -491,7 +617,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
 
   const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
   if (approach) blocks.push(...markdownToBlocks(approach))
-  else blocks.push({ kind: 'note', text: 'No approach has been committed to on this proposal yet.' })
+  else blocks.push(...candidatePolicyBlocks(snapshot))
 
   // ⚠⚠ 25-P §1.8 — THE HALF-DELIVERY WARNING, DIRECTLY UNDER THE POLICY IT QUALIFIES.
   blocks.push(...chainLinkBlocks(snapshot.options ?? []))
@@ -549,7 +675,10 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
     if (a.whoImplements) meta.push({ text: `Implemented by ${a.whoImplements}. ` })
     if (a.mechanismType) meta.push({ text: `Mechanism: ${a.mechanismType}. ` })
     meta.push({
-      text: a.source === 'USER' ? `Proposed by ${snapshot.owner.name}.` : 'Drafted by Lex from the toolkit.',
+      // ⚠ 25-V §3b — WAS "Drafted by Lex from the toolkit.", 36 times. It named our assistant and
+      // our internal mechanism list to a reader who knows neither. The provenance is what matters
+      // and it is kept; see `reader-language.ts`.
+      text: a.source === 'USER' ? `Proposed by ${snapshot.owner.name}.` : DRAFTED_ATTRIBUTION,
       italic: true,
     })
     blocks.push({ kind: 'paragraph', runs: meta })
@@ -719,7 +848,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   return {
     model: {
       title: snapshot.title || 'Policy proposal',
-      subtitle: 'Policy proposal',
+      subtitle: `Policy proposal · ${BETA_MARKER}`,
       sourceLabel,
       generatedAt: new Date(),
       blocks,
@@ -806,6 +935,18 @@ function gapBlocks(snapshot: ProposalSnapshot): Block[] {
       items: snapshot.forks.open.map((f): Run[] => [
         { text: f.chosen, bold: true },
         { text: ` — the alternative not taken: ${f.alternative}. ${f.caseForAlternative}` },
+        // ══ ⚠⚠ 25-V §8 — WHAT WOULD RESOLVE IT. "A question with no route to an answer is a
+        // complaint." Every other list in this document earns its place by telling the reader
+        // what to do next; this one listed twenty-two unmade decisions and stopped.
+        //
+        // ⚠ AND THE ROUTE IS THE HONEST ONE, NOT A HOPEFUL ONE. A fork is a choice between two
+        // approaches the research has already been run against — it is open because the corpus
+        // did NOT decide it, so promising that more searching would resolve it is a promise this
+        // product cannot keep. What resolves it is the proposer choosing, and the useful thing to
+        // say is what a choice would have to turn on.
+        { text: ' ⚠ What would settle it: the proposer choosing between these two. The research '
+          + 'did not decide it, so what is needed is a judgement about which risk is worth '
+          + 'taking — not a further search.' },
       ]),
     })
   }
@@ -817,7 +958,10 @@ function gapBlocks(snapshot: ProposalSnapshot): Block[] {
     out.push({
       kind: 'bullets',
       items: failedPasses.map((p): Run[] => [
-        { text: p.passKey, bold: true },
+        // ⚠ 25-V §3c — WAS THE RAW `passKey` — "question:LEGAL_LANDSCAPE", "pass:SMART_VOCABULARY".
+        // Our own identifiers, in bold, at the head of each line, in a document for a stranger.
+        // `readableForkKey` renders the same value without inventing a translation for it.
+        { text: readableForkKey(p.passKey), bold: true },
         { text: p.failureReason ? ` — ${p.failureReason}` : ' — no reason recorded' },
       ]),
     })
@@ -838,7 +982,22 @@ function describeSource(snapshot: ProposalSnapshot): string {
     'the stored proposal state',
     `${snapshot.coverage.fieldsTotal} settled kernel field${snapshot.coverage.fieldsTotal === 1 ? '' : 's'}`,
     `${snapshot.actions.length} action${snapshot.actions.length === 1 ? '' : 's'}`,
-    `${snapshot.evidence.length} accepted finding${snapshot.evidence.length === 1 ? '' : 's'}`,
+    // ══════════ ⚠⚠ 25-V §5 — THIS SAID "129 accepted findings" AND NONE WERE ACCEPTED ══════════
+    //
+    // `snapshot.evidence` is EVERY finding, whatever its status. Calling its length "accepted"
+    // put "129 accepted findings" at the top of the same document whose body said, correctly,
+    // "0 of 56 findings below have been reviewed and accepted by the proposer."
+    //
+    // ⚠ THE BODY WAS RIGHT AND THE LABEL WAS WRONG — the word "accepted" was doing work no
+    // filter was doing. §5: *"A reader who spots one internal contradiction stops trusting the
+    // arithmetic everywhere else."* The two totals differ legitimately (the body counts the
+    // findings printed under headings in that section, the label counts all of them), so the
+    // label now states BOTH numbers rather than one number under a wrong name.
+    (() => {
+      const accepted = snapshot.evidence.filter((e) => e.status === 'ACCEPTED').length
+      const n = snapshot.evidence.length
+      return `${n} finding${n === 1 ? '' : 's'} (${accepted} accepted by the proposer)`
+    })(),
     `${sourceCount} corpus source${sourceCount === 1 ? '' : 's'}`,
   ].join(', ')
 }
@@ -874,6 +1033,8 @@ export function buildSummaryDocument(
 
   // §5a — said once, at the top, and only when something really is unsettled.
   blocks.push(...draftBanner(snapshot))
+  // ⚠ 25-V §11a/§11b — first block on every generated document. See `betaBlocks`.
+  blocks.push(...betaBlocks())
 
   // ══ 25-N §5b — FOUR HEADINGS: The problem · Cause · Guiding Policy · Proposed Actions ══
   //
@@ -1021,7 +1182,7 @@ export function buildSummaryDocument(
   return {
     model: {
       title: snapshot.title || 'Policy proposal',
-      subtitle: 'Summary — the proposal in two pages',
+      subtitle: `Summary — the proposal in two pages · ${BETA_MARKER}`,
       sourceLabel,
       generatedAt: new Date(),
       blocks,

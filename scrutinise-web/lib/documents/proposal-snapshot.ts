@@ -100,6 +100,28 @@ export interface SnapshotOption {
 
   /** §1.1 — the stable number the user knows this policy by. */
   number?: number | null
+
+  // ══════════ ⚠⚠ 25-V §2 — WHAT THE SORT WROTE, CARRIED SO A DOCUMENT CAN SHOW IT ══════════
+  //
+  // 25-P designed the sort, 25-R made it run inside the build, 25-S dressed it on the screen —
+  // and on 2 September the report still printed one sentence, "No approach has been committed to
+  // on this proposal yet.", over 24 sorted and reasoned candidates. Two things were in the way,
+  // and this is the first: `kind` and `kindReason` were never mapped into the snapshot, so the
+  // document could not have printed them even where the builder wanted to.
+  //
+  // ⚠ OPTIONAL, like the fields above it, and for the same stated reason: a snapshot written
+  // before this sprint has none of these keys, and a required field would be a lie the type
+  // system tells about old rows.
+  /** GUIDING_POLICY | COHERENT_ACTION | GOAL_RESTATEMENT — what the sort decided this is. */
+  kind?: string | null
+  /** The sort's one-line reason for that decision, in its own words. */
+  kindReason?: string | null
+  /** The numbers this was merged from. Empty on an original. */
+  mergedFrom?: number[]
+  /** Whether the sort has actually run on this row — `sortedAt` is a timestamp, this is the fact. */
+  sorted?: boolean
+  /** OFFERED | ACCEPTED | DECLINED, where the sort offered to move this to the actions list. */
+  moveStatus?: string | null
   /**
    * ══ §1.8 — WHAT HAPPENS IF ONLY PART IS DELIVERED ═══════════════════════════════
    *
@@ -630,6 +652,13 @@ export async function buildProposalSnapshot(
       chainLink: o.chainLink,
       phase: o.phase,
       phaseReason: o.phaseReason,
+      // ⚠ 25-V §2 — the sort's output. See `SnapshotOption`. Without these five the report cannot
+      // group or justify a candidate, which is why it printed none.
+      kind: o.kind,
+      kindReason: o.kindReason,
+      mergedFrom: o.mergedFrom ?? [],
+      sorted: !!o.sortedAt,
+      moveStatus: o.moveStatus,
     }))
 
   const linesByAction = new Map<string, SnapshotCostLine[]>()
