@@ -1214,3 +1214,59 @@ switched off before the real one arrives.
 a prompt that REQUIRES it — the model omits what it was not asked for. This one says the model
 also *returns what it was merely shown*. Between them: the prompt is the specification, and every
 word in it — including the examples — is part of what is being specified.
+
+---
+
+## 28. A CLIENT COMPONENT'S IMPORTS ARE A BUNDLE, NOT A REFERENCE (2 September 2026)
+
+**The rule: a `'use client'` file's VALUE imports are followed transitively into the
+browser bundle. Anything reachable from one — however many files away, and whether or not
+the symbol is used at runtime — is compiled for the browser. Before importing into a client
+component, ask what that module imports, and what THAT imports.**
+
+### What produced it
+
+`GroupLevel.tsx` imported one sort function from `lib/group-view.ts`. That file also holds
+the page's database query, so it imports `lib/prisma.ts`, so the Postgres driver was pulled
+into the client bundle and the Vercel build failed on `dns`, `fs`, `net` and `tls` —
+**six errors, one edge, three files deep**. The offending file mentions none of them.
+
+⚠⚠ **Everything that is usually the fix was already true.** The query ran on the server, in
+`page.tsx`. The props were plain data. The component never called anything server-side. None
+of it mattered: **the edge was an import line, not a call.**
+
+⚠⚠ **AND IT BUILT CLEAN LOCALLY.** `tsc --noEmit` passes — the types are fine. `npm run
+build` in a working tree with a warm `.next` and a long-lived `node_modules` passed too.
+The failure appeared only on the platform, and it **blocked every deploy for seven commits,
+including another session's**, which could not ship anything until it was found.
+
+### How to comply
+
+1. **Split the pure half out.** Types, constants and pure functions a client component needs
+   go in a module that **imports nothing**. The server module keeps the query and re-exports
+   them for server callers, so there is still one definition (§26.5) and no edge.
+2. **`import type` is not an edge** — the compiler erases it. `import { sortRows }` is.
+3. ⚠⚠ **NEVER FIX IT BY ALIASING THE NODE BUILT-INS AWAY OR MARKING THE MODULE EXTERNAL.**
+   That makes the build pass and ships a bundle that fails **in the browser, at runtime, in
+   front of a user** — a worse failure, later, and one no build will ever catch again.
+   Cut the edge.
+4. **`npm run check:client-boundary` sweeps the class.** It walks every `'use client'`
+   component's value imports transitively and fails if one reaches `lib/prisma.ts`,
+   `lib/pg-pool.ts`, `@prisma/client`, `pg`, `@clerk/nextjs/server`, `resend` or a Node
+   built-in — printing the whole chain, since the file names none of it. It carries a
+   control proving the walker can still see a real prisma edge.
+
+### And the standing rule this is the proof of: A GREEN LOCAL BUILD PROVES NOTHING
+
+Verify the way the platform builds — **clean checkout, one `npm ci`, then `next build`** —
+before pushing anything that touches an import graph. The working tree is not the platform:
+it has a warm cache, an accreted `node_modules`, and (in a shared tree) another session's
+uncommitted files.
+
+⚠ Two traps in doing that on Windows, both of which look like code failures and are not:
+**MAX_PATH** — build at a short path (`C:/cb`), because a long scratchpad path makes
+Turbopack panic inside `.next`; and **`set -o pipefail`** — piping the build through `tail`
+reports the pipeline as exit 0 while the build has panicked, so the verification step
+silently passes. A verification that cannot report failure is not one.
+
+---
