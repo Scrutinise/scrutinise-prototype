@@ -34,6 +34,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createHash } from 'crypto'
+import { betaBlocks } from './build-proposal'
+import { BETA_MARKER } from '../lex/beta-disclosure'
 import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { QUESTION_HEADINGS, liveHeading, type HeadingKey } from '@/lib/lex/question-headings'
 import {
@@ -92,6 +94,8 @@ function standingOf(e: SnapshotEvidence): { prefix: string } {
 export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
   assertRenderableSnapshot(snapshot)
   const blocks: Block[] = []
+  // ⚠ 25-V §11a/§11b — first block on every generated document. See `betaBlocks`.
+  blocks.push(...betaBlocks())
   // Shape 1 predates every member this document was built around. Saying so once, at the
   // top, is more useful than four empty sections that each imply nothing was recorded.
   const preShapeTwo = (snapshot.snapshotVersion ?? 1) < 2
@@ -354,7 +358,17 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
   const sourceCount = (snapshot.sources ?? []).reduce((n, g) => n + g.refs.length, 0)
   const sourceLabel = [
     'the stored proposal state',
-    `${(snapshot.evidence ?? []).length} accepted finding${(snapshot.evidence ?? []).length === 1 ? '' : 's'}`,
+    // ⚠⚠ 25-V §5 — THE SECOND COPY OF THE SAME LIE, AND IT SURVIVED FIXING THE FIRST.
+    // `describeSource` in build-proposal.ts said "129 accepted findings" over a body that said
+    // "0 of 56 … reviewed and accepted". This label says the same thing, in its own words, in a
+    // different file — which is why `check:lex-25v` asserts the ABSENCE across every rendered
+    // document rather than the presence of the fix in one of them. Two copies of a sentence is
+    // one copy that will be corrected.
+    (() => {
+      const ev = snapshot.evidence ?? []
+      const accepted = ev.filter((e) => e.status === 'ACCEPTED').length
+      return `${ev.length} finding${ev.length === 1 ? '' : 's'} (${accepted} accepted by the proposer)`
+    })(),
     `${sourceCount} corpus source${sourceCount === 1 ? '' : 's'}`,
     `${excluded.length} set aside`,
     `${lines.length} costed line${lines.length === 1 ? '' : 's'}`,
@@ -362,7 +376,7 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
 
   const model: DocumentModel = {
     title: `Evidence Pack — ${snapshot.title}`,
-    subtitle: 'Every source, every basis, everything set aside, and everything still open',
+    subtitle: `Every source, every basis, everything set aside, and everything still open · ${BETA_MARKER}`,
     sourceLabel,
     generatedAt: new Date(),
     blocks,

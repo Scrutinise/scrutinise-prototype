@@ -209,6 +209,32 @@ export function wholeYearsBetween(from: Date, to: Date): number {
  * ⚠ AN UNDATED ROW IS NEVER "CURRENT". That substitution is the original defect in one line: a
  * 2014 debate read as though it described today because nothing said otherwise.
  */
+/**
+ * ══════════ ⚠⚠ 25-V §6 — A DATE WE ONLY KNOW TO THE YEAR PRINTS AS THE YEAR ══════════
+ *
+ * §6: *"58 date flags print **2010-01-01** for 100 rows that only ever carried a year. That is
+ * invented precision, and it is the opposite of the standing principle."*
+ *
+ * MEASURED on the Civil Service proposal: of 473 dated evidence rows, **152 fall on 1 January** —
+ * 100 of them on exactly `2010-01-01`, and 36 of the 152 have `sourceDateBasis = 'URL'`, where a
+ * year lifted out of a path is the only thing there was to lift. That is not a publication date;
+ * it is a year with a day appended by whatever parsed it.
+ *
+ * ⚠ WE CANNOT TELL A COERCED 1 JANUARY FROM A GENUINE ONE, and that decides the rule. A stored
+ * date carries no precision flag, so the choice is between asserting a day we may not have and
+ * asserting a year we certainly do. A handful of documents genuinely published on 1 January will
+ * print as "2010" instead of "2010-01-01": a small loss of precision, and never a false claim.
+ * The reverse error — telling a reader we know the day when we know the year — is the one the
+ * standing principle forbids.
+ *
+ * ⚠ THE AGE IS UNAFFECTED. "16 years old" was always computed from the year and stays exactly as
+ * it was; only the stamp beside it stops overstating what is known.
+ */
+function datestamp(d: Date): string {
+  const iso = d.toISOString().slice(0, 10)
+  return iso.endsWith('-01-01') ? iso.slice(0, 4) : iso
+}
+
 export function evidenceStanding(input: {
   sourceDate: Date | null
   sourceDateBasis: string | null
@@ -231,7 +257,7 @@ export function evidenceStanding(input: {
   }
 
   const ageYears = wholeYearsBetween(input.sourceDate, now)
-  const stamp = input.sourceDate.toISOString().slice(0, 10)
+  const stamp = datestamp(input.sourceDate)
   if (ageYears >= EVIDENCE_STALE_YEARS) {
     return {
       staleness: 'NEEDS_CHECKING', ageYears, standing, figures,

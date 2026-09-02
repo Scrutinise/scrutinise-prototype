@@ -31,6 +31,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { callJson, llmFailed, type LlmUsage } from './build-llm'
+import { strategyTestHeading } from './reader-language'
 import { M_GENERAL, M_DIAGNOSIS, M_GUIDING_POLICY, M_COHERENT_ACTIONS } from './method'
 
 const TIMEOUT_MS = parseInt(process.env.LEX_BUILD_TIMEOUT_MS ?? '90000', 10)
@@ -399,7 +400,10 @@ export async function recordVerificationIssues(input: {
 /** The issue text for a failed kernel test. Quotes the kernel, because §3 requires it. */
 export function complianceIssueText(t: KernelTest, r: KernelTestResult): string {
   return [
-    `KERNEL TEST FAILED — ${t.test}.`,
+    // ⚠ 25-V §3a — WAS `KERNEL TEST FAILED — …`, in capitals, 32 times in the printed report.
+    // See `reader-language.ts`: the verdict is unchanged, the reader can now tell it is a
+    // judgement about the strategy rather than an error in our software.
+    strategyTestHeading(t.test),
     r.whatFails.trim(),
     r.theTextThatFails.trim() ? `The text that fails it: "${r.theTextThatFails.trim()}"` : '',
   ].filter(Boolean).join(' ')

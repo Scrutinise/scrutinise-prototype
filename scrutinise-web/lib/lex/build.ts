@@ -30,6 +30,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { forkDoubtHeading } from './reader-language'
 // 25-M §4 — the pilot allowance. Counted over IdeaBuild, not LlmSpend; see that file.
 import { readAllowance, allowanceBlock, FULL_BUILD_THIRDS, REUSE_BUILD_THIRDS } from './allowance'
 import type { SearchResult } from './page1-config'
@@ -2850,7 +2851,11 @@ async function smartPass(c: PassContext): Promise<PassOutcome> {
       await prisma.deepeningIssue.create({
         data: {
           ideaId, passKey: SMART_PASS_KEY, runVersion: c.buildVersion,
-          text: `THE ROAD TAKEN AT "${d.forkKey.trim()}" MAY BE THE WRONG ONE — ${d.doubt.trim()}`,
+          // ⚠ 25-V §3b — WAS `THE ROAD TAKEN AT "guidingPolicy:instrument" MAY BE THE WRONG ONE`,
+          // which shouted at the reader and then handed them a raw field key. See
+          // `reader-language.ts` — the key is rendered rather than translated, because there is no
+          // label map and 15 distinct keys already exist.
+          text: `${forkDoubtHeading(d.forkKey.trim())} — ${d.doubt.trim()}`,
           status: 'OPEN',
         },
       })
