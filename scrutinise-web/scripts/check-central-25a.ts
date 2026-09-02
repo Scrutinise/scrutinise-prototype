@@ -378,11 +378,30 @@ async function main() {
   )
 
   // §3d — SCOPE, MEASURED RATHER THAN ASSERTED FROM THE BRIEF.
+  //
+  // ⚠⚠ CENTRAL 25-C §1c — THIS ASSERTION HAS BEEN MOVED, AND HERE IS THE REASON,
+  // RECORDED RATHER THAN THE OLD LINE QUIETLY DELETED.
+  //
+  // It used to read: "a branch manager's right does NOT reach the Community as a
+  // whole", and it passed. **Charlie has reversed the rule it asserted.** A
+  // branch manager must be able to bring in ANOTHER BRANCH MANAGER — somebody
+  // who will run a different branch — and that cannot be done from inside one
+  // branch, because the person being brought in does not belong in the branch
+  // doing the inviting. In a party that grows by chairs recruiting chairs, the
+  // old rule stopped the growth mechanic dead. It reverses my own §3d
+  // recommendation, deliberately, and Charlie took the decision.
+  //
+  // What the assertion now says is the new rule, in the same place, so that the
+  // reversal is visible in the diff of the check and not only in the code.
   const managerAtRoot = await inviteRightFor(branchManager.id, community.id)
   assert(
-    "a branch manager's right does NOT reach the Community as a whole",
-    managerAtRoot.allowed === false,
-    `reason ${managerAtRoot.reason}`,
+    "25-C §1c — a branch manager's right DOES now reach the Community, so a chair can recruit another chair",
+    managerAtRoot.allowed === true && managerAtRoot.reason === 'BRANCH_MANAGER',
+    `allowed=${managerAtRoot.allowed} reason=${managerAtRoot.reason}`,
+  )
+  control(
+    'the same test over a plain member, whose membership must NOT reach the Community',
+    (await inviteRightFor(plainMember.id, community.id)).allowed,
   )
   const sibling = await prisma.community.create({
     data: { name: `Check 25A sibling ${MARK}`, parentCommunityId: community.id },

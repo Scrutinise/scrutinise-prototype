@@ -867,13 +867,29 @@ async function partC() {
     eq('…and leaves the Community membership alone',
       (await getCommunityMembership(joiner.id, root.id))?.role, 'MEMBER')
 
-    const cannotLeave = await refuses(() => leaveCommunity(founder.id, root.id), 409)
-    check('someone who owns a branch cannot leave the Community out from under it',
-      cannotLeave !== null, cannotLeave ?? 'not refused')
-
-    await prisma.communityMember.deleteMany({ where: { communityId: founded.id, userId: founder.id } })
-    await leaveCommunity(founder.id, root.id)
-    check('leaving the Community root clears every branch membership in it',
+    // ⚠⚠ THIS ASSERTION HAS BEEN MOVED, AND THE REASON IS RECORDED RATHER THAN
+    // THE LINE QUIETLY DELETED (CENTRAL 25-C §2j).
+    //
+    // It read: "someone who owns a branch cannot leave the Community out from
+    // under it", and it asserted a REFUSAL — `leaveCommunity` used to throw 409
+    // and tell the person to "hand that branch over first". **That instruction
+    // was to perform an act that did not exist**: ownership was only ever
+    // written at creation, so nothing in the product could hand a branch over.
+    // 25-B §5 built vacate and appoint, and this became a dead end pointing at a
+    // door that now opens. Leaving stands them down from every branch they
+    // manage, leaving each VACANT rather than deleted or reassigned.
+    //
+    // ⚠ The check has been RED since 25-B shipped, and its teardown then failed
+    // on the leaked rows, which is why this run also reported fixtures left
+    // behind and Communities missing their seeded categories. One stale
+    // assertion, four red lines.
+    const leftWithBranch = await leaveCommunity(founder.id, root.id)
+    check('25-C §2j — someone who manages a branch CAN now leave; the branch is stood down, not blocked',
+      leftWithBranch.leftIds.length > 0)
+    check('…and the branch they managed is VACANT, not deleted and not reassigned',
+      (await prisma.communityMember.count({ where: { communityId: founded.id, role: 'OWNER' } })) === 0 &&
+      (await prisma.community.findUnique({ where: { id: founded.id } })) !== null)
+    check('…and leaving the Community root cleared every branch membership in it',
       (await prisma.communityMember.count({ where: { userId: founder.id, communityId: { in: communityIds } } })) === 0)
 
     // — the invite email reports what actually happened ---------------------------
@@ -902,6 +918,12 @@ async function partC() {
     })
     await prisma.communityJoinRequest.deleteMany({ where: { communityId: { in: communityIds } } })
     await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    // ⚠ 25-C — THIS LINE WAS MISSING AND IT IS WHY THE TEARDOWN DIED. Part C
+    // calls `removeMember`, which has ARCHIVED the membership since 25-A §3c, so
+    // every run left a CommunityMembershipArchive row pointing at a fixture
+    // Community — and `community.deleteMany` then hit the foreign key, aborted
+    // the rest of the teardown, and leaked the fixtures onto production.
+    await prisma.communityMembershipArchive.deleteMany({ where: { communityId: { in: communityIds } } })
     for (const id of [...communityIds].reverse()) {
       await prisma.community.deleteMany({ where: { id } })
     }
