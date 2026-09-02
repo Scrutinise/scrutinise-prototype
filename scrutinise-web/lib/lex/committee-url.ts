@@ -37,8 +37,41 @@
 
 const HOST = 'committees.parliament.uk'
 
-/** The three committee document families. Everything else is left untouched. */
-const FAMILIES = ['writtenevidence', 'oralevidence', 'publications']
+/**
+ * ══════════ ⚠⚠ 25-V — `publications` WAS REMOVED FROM THIS LIST, AND IT IS THE WHOLE FIX ══════
+ *
+ * `writtenevidence` and `oralevidence` ids ARE addressed at `/{family}/{id}/html/`, which is what
+ * §19-E Task 8 measured and fixed. `publications` is not, and adding it to this list quietly
+ * assumed the three families shared one id space. They do not.
+ *
+ * MEASURED 2 September 2026, in a browser, because every one of these answers a fetch with 403:
+ *
+ *   · Publication 6912 is, per Parliament's own API, "Third Report - Propriety of Governance in
+ *     Light of Greensill: An Interim Report" — exactly what our corpus row says it is.
+ *   · `committees.parliament.uk/publications/6912/html/` serves **"Written Evidence Submitted by
+ *     Professor Sir Michael Ferguson (RFA0008)"**, on ARPA research funding, poly-pills and
+ *     artificial hearts.
+ *   · `committees.parliament.uk/publications/72615/html/` — 72615 being that publication's own
+ *     `documentId` — serves **"GRO0117 - Evidence on Grouse Shooting"**.
+ *   · `committees.parliament.uk/publications/6912/` (bare) is "This page does not exist".
+ *   · The address that serves the cited report is the API's `additionalContentUrl`:
+ *     `publications.parliament.uk/pa/cm5802/cmselect/cmpubadm/59/5902.htm` — confirmed by title.
+ *
+ * ⚠⚠ SO THE `/publications/N/html/` FORM IS NOT A BROKEN LINK. IT IS A WORKING LINK TO SOMEBODY
+ * ELSE'S DOCUMENT, which is worse: a 404 tells the reader something is wrong, and a page about
+ * grouse shooting under a citation about the civil service tells them we are careless. It is also
+ * invisible to every automated check, because the host answers 403 to all of them — the good
+ * citations and the wrong ones alike.
+ *
+ * ⚠ THIS FILE'S OWN RULE ALREADY SAID SO: *"NEVER GUESSES. If the URL does not match the exact
+ * shape, it is passed through: inventing a path for a form we have not measured is how the bare
+ * form got here."* The publications family was in the list without that measurement.
+ *
+ * The correct address comes from `committees-api.parliament.uk/api/Publications/{id}` and is
+ * written onto the evidence row by `scripts/backfill-committee-urls.ts`; it is not derivable
+ * here, and this file must not pretend otherwise.
+ */
+const FAMILIES = ['writtenevidence', 'oralevidence']
 
 /**
  * `…/writtenevidence/121125/` → `…/writtenevidence/121125/html/`.
@@ -54,6 +87,26 @@ const FAMILIES = ['writtenevidence', 'oralevidence', 'publications']
 export function committeeUrl(raw: string | null | undefined): string {
   const url = (raw ?? '').trim()
   if (!url) return ''
+
+  // ══════════ ⚠⚠ 25-V §11 — A KNOWN-BAD ADDRESS IS SUPPRESSED, NOT PASSED THROUGH ══════════
+  //
+  // Removing `publications` from FAMILIES stopped us MANUFACTURING the wrong `/html/` form. It did
+  // not make the next build safe: `corpus_sections.sourceUrl` still holds the bare
+  // `committees.parliament.uk/publications/{n}/` for these rows, so passing it through would put a
+  // "This page does not exist" link under a correct citation on every future build. Better than
+  // landing on grouse shooting, and still a defect we would be shipping knowingly.
+  //
+  // ⚠ SO IT RETURNS EMPTY, AND THE CITATION STANDS ALONE. A reader can find "Third Report —
+  // Propriety of Governance in Light of Greensill, PACAC" by its name. They cannot recover from a
+  // link we knew was wrong when we wrote it. The real address is only obtainable from
+  // `committees-api.parliament.uk` at ingest time; `scripts/backfill-committee-urls.ts` writes it
+  // onto the rows we hold, and this is the floor beneath that.
+  //
+  // ⚠ THIS IS THE "FIXED PERMANENTLY" HALF of §11's two categories, and it is why the disclosure
+  // in §11b deliberately does NOT cover mislabelled citations: nothing here can now produce one.
+  if (/^https?:\/\/(?:www\.)?committees\.parliament\.uk\/publications\/\d+\/?(?:html\/?)?$/i.test(url)) {
+    return ''
+  }
   // Host must match exactly — a substring test would rewrite any URL that merely
   // mentions the host, including one on somebody else's domain.
   const m = url.match(
