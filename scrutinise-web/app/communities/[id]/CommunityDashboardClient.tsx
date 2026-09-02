@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import type { CommunityTreeNode } from '@/lib/community'
+import { TIER_DESCRIPTION, TIER_LABEL, type MembershipTier } from '@/lib/membership-tier'
 import TeamsTree from './TeamsTree'
 import BulletinBoard from './BulletinBoard'
 import InvitePanel from './InvitePanel'
@@ -64,6 +65,15 @@ interface Props {
   showSwitchChooser: boolean
   openPanel: 'requests' | 'members' | 'claims' | 'invitations' | null
   isCommunityMember: boolean
+  /**
+   * CENTRAL 25-C §1a — this viewer's tier on the ROOT membership, or null if
+   * they hold none. ⚠ §1g: the controls that offer to found a branch are gated
+   * on this, because before the tier existed they were shown to a branch member
+   * and the API then refused — a control that appears and cannot work.
+   */
+  myTier: MembershipTier | null
+  /** CENTRAL 25-C §2i — whose row is whose: resigning is the manager's own act. */
+  myUserId: string
   hasPendingRequest: boolean
   myPoints: number
   tab: CentralTab
@@ -94,6 +104,8 @@ export default function CommunityDashboardClient({
   showSwitchChooser,
   openPanel,
   isCommunityMember,
+  myTier,
+  myUserId,
   hasPendingRequest,
   myPoints,
   tab,
@@ -141,9 +153,12 @@ export default function CommunityDashboardClient({
     const res = await fetch(`/api/communities/${community.id}/invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // ⚠ 25-B decision 46 — was 50. A shared link is an introduction, not a
-      // door: each use raises a request somebody has to approve (§3b).
-      body: JSON.stringify({ maxUses: 10, expiresInDays: 30 }),
+      // ⚠ 25-C §3a — ONE. It was 50, then 10 (25-B decision 46), and it is now
+      // 1. A shared link is an introduction, not a door: since 25-A §3b every
+      // use raises a REQUEST somebody has to approve rather than joining
+      // anybody, so a number above 1 buys nothing at all and misleads whoever
+      // reads "used 0 of 10" into thinking ten people may walk through.
+      body: JSON.stringify({ maxUses: 1, expiresInDays: 30 }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -187,6 +202,21 @@ export default function CommunityDashboardClient({
             )}
             {isBranch && (
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Branch</span>
+            )}
+            {/* ⚠ CENTRAL 25-C §1b — THE TIER IS NAMED, IN CHARLIE'S WORDS.
+                Before this the two tiers' first screens were identical and
+                nothing told a person which one they were; the difference is
+                whether they can found a branch, and finding out by pressing a
+                button and being refused is not being told. The title carries
+                the rest of the sentence.
+                ⚠ Never hue alone — the WORD is the cue. */}
+            {myTier && (
+              <span
+                className="rounded-full border border-border bg-transparent px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                title={TIER_DESCRIPTION[myTier]}
+              >
+                {TIER_LABEL[myTier]}
+              </span>
             )}
           </div>
           {community.description && (
@@ -287,7 +317,9 @@ export default function CommunityDashboardClient({
       ) : tab === 'teams' ? (
         /* ── Teams: structure and the people who manage it, in one place ──── */
         <div className="space-y-4">
-          {showFindYourBranch && <FindYourBranch root={root} branches={topLevelBranches} />}
+          {showFindYourBranch && (
+            <FindYourBranch root={root} branches={topLevelBranches} myTier={myTier} />
+          )}
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">
               <h2 className="text-sm font-semibold">Teams &amp; branches</h2>
@@ -297,6 +329,7 @@ export default function CommunityDashboardClient({
                   tree={tree}
                   rootIsBranch={isBranch}
                   isCommunityMember={isCommunityMember}
+                  myTier={myTier}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -334,6 +367,8 @@ export default function CommunityDashboardClient({
                   defaultOpen={openPanel === 'members'}
                   isBranch={isBranch}
                   nodeName={community.name}
+                  myUserId={myUserId}
+                  isCommunityAdmin={isCommunityAdmin}
                 />
                 {/* CENTRAL 25-A §2 — who was invited and what became of them.
                     It sits beside Members deliberately: "who is here" and "who
@@ -387,6 +422,14 @@ export default function CommunityDashboardClient({
                 </Button>
                 {isCommunityAdmin && (
                   <>
+                    {/* CENTRAL 25-C §1h — THE CORRECTION SURFACE. Charlie has
+                        chosen monitoring over gates, so the monitoring has to be
+                        good enough to actually get used: a group member managing
+                        no branch is not a rule violation and no gate can catch
+                        it. Only this list can. */}
+                    <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                      <Link href={`/communities/${community.id}/group-level`}>Group level</Link>
+                    </Button>
                     <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
                       <Link href={`/communities/${community.id}/across-branches`}>Across branches</Link>
                     </Button>

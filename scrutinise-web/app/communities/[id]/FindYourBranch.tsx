@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { CommunityTreeNode } from '@/lib/community'
+import { tierMayFoundBranch, type MembershipTier } from '@/lib/membership-tier'
 
 /**
  * "Find your branch" — what a Community-level invitee sees after the rules
@@ -14,14 +15,24 @@ import type { CommunityTreeNode } from '@/lib/community'
  * NOT a one-shot wizard. It stays on the Community page for anyone who is not
  * yet in a branch, and the tree offers the same actions, so someone who skips
  * past it can come back without hunting for a link.
+ *
+ * ⚠⚠ CENTRAL 25-C §1g — "START THE ONE YOUR AREA IS MISSING" IS FOR GROUP
+ * MEMBERS ONLY. It was the second dead control: a branch member reaching this
+ * screen was offered a branch of their own and `canCreateBranchUnder` then
+ * refused the POST. The offer is now gated on the same predicate the API uses,
+ * and the sentence above it changes with it — a member who cannot found one is
+ * told what they CAN do rather than shown a button that fails.
  */
 export default function FindYourBranch({
   root,
   branches,
+  myTier,
 }: {
   root: { id: string; name: string }
   branches: CommunityTreeNode[]
+  myTier: MembershipTier | null
 }) {
+  const mayFound = tierMayFoundBranch(myTier)
   const router = useRouter()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -80,8 +91,8 @@ export default function FindYourBranch({
     <div className="mb-6 central-card bg-muted/30 p-4">
       <h2 className="text-sm font-semibold">Find your branch</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        You’re a member of {root.name}. Branches are where the local work happens — ask to join one,
-        or start the one your area is missing.
+        You’re a member of {root.name}. Branches are where the local work happens — ask to join one
+        {mayFound ? ', or start the one your area is missing.' : '.'}
       </p>
 
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
@@ -127,6 +138,7 @@ export default function FindYourBranch({
         )}
       </div>
 
+      {mayFound && (
       <div className="mt-3 border-t border-border pt-3">
         {creating ? (
           <form onSubmit={createBranch} className="flex flex-wrap items-center gap-2">
@@ -154,6 +166,7 @@ export default function FindYourBranch({
           You’ll be its owner, and can invite people to it straight away.
         </p>
       </div>
+      )}
     </div>
   )
 }

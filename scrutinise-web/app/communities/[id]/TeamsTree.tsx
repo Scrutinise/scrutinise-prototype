@@ -7,6 +7,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { CommunityTreeNode } from '@/lib/community'
+import { tierMayFoundBranch, type MembershipTier } from '@/lib/membership-tier'
 
 interface Props {
   communityId: string
@@ -15,6 +16,14 @@ interface Props {
   rootIsBranch: boolean
   /** True when the viewer is a member of the Community root — i.e. may request branches. */
   isCommunityMember: boolean
+  /**
+   * CENTRAL 25-C §1g — the viewer's tier on the ROOT membership.
+   * ⚠ The predicate is `tierMayFoundBranch`, imported, not `myTier === 'GROUP'`
+   * restated here: the API decides with the same function, and a control that
+   * decides with a copy of the rule is a control that stops matching the API the
+   * first time the rule changes.
+   */
+  myTier: MembershipTier | null
 }
 
 /**
@@ -31,6 +40,7 @@ function TreeNode({
   rootIsBranch,
   currentCommunityId,
   isCommunityMember,
+  myTier,
   onChanged,
 }: {
   node: CommunityTreeNode
@@ -38,6 +48,7 @@ function TreeNode({
   rootIsBranch: boolean
   currentCommunityId: string
   isCommunityMember: boolean
+  myTier: MembershipTier | null
   onChanged: () => void
 }) {
   const [expanded, setExpanded] = useState(true)
@@ -253,8 +264,14 @@ function TreeNode({
           </div>
         )}
 
-        {/* A plain member may found a TOP-LEVEL branch — the growth mechanic. */}
-        {isRoot && !rootIsBranch && !canManage && isCommunityMember && !addingBranch && (
+        {/* A plain member may found a TOP-LEVEL branch — the growth mechanic.
+            ⚠⚠ CENTRAL 25-C §1g — AND ONLY A *GROUP* MEMBER MAY. This was a DEAD
+            CONTROL the moment the tier landed: a branch member holds a root
+            membership row (Stage 1.2 creates one), so `isCommunityMember` was
+            true for them, the button appeared, and `canCreateBranchUnder` then
+            refused the POST. An offer the API declines is worse than no offer —
+            it reads as the product being broken rather than as a rule. */}
+        {isRoot && !rootIsBranch && !canManage && isCommunityMember && tierMayFoundBranch(myTier) && !addingBranch && (
           <div className="ml-6 mt-1.5">
             <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setAddingBranch(true)}>
               Create your own branch
@@ -318,6 +335,7 @@ function TreeNode({
               rootIsBranch={rootIsBranch}
               currentCommunityId={currentCommunityId}
               isCommunityMember={isCommunityMember}
+              myTier={myTier}
               onChanged={onChanged}
             />
           ))}
@@ -327,7 +345,7 @@ function TreeNode({
   )
 }
 
-export default function TeamsTree({ communityId, tree, rootIsBranch, isCommunityMember }: Props) {
+export default function TeamsTree({ communityId, tree, rootIsBranch, isCommunityMember, myTier }: Props) {
   const router = useRouter()
   return (
     <ul className="space-y-1">
@@ -337,6 +355,7 @@ export default function TeamsTree({ communityId, tree, rootIsBranch, isCommunity
         rootIsBranch={rootIsBranch}
         currentCommunityId={communityId}
         isCommunityMember={isCommunityMember}
+        myTier={myTier}
         onChanged={() => router.refresh()}
       />
     </ul>

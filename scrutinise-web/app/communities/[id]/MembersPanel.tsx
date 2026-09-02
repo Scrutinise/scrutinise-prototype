@@ -22,6 +22,17 @@ interface Member {
 
 type Title = { id: string; name: string; grantsInvite: boolean }
 
+/** CENTRAL 25-C §2i — a nomination waiting on a community admin's decision. */
+type Nomination = {
+  id: string
+  communityId: string
+  communityName: string
+  nominatedByName: string
+  nomineeUserId: string
+  nomineeName: string
+  reason: string
+}
+
 const ROLE_BADGE: Record<string, string> = {
   OWNER: 'bg-purple-100 text-purple-700',
   ADMIN: 'bg-blue-100 text-blue-700',
@@ -41,12 +52,19 @@ export default function MembersPanel({
   defaultOpen = false,
   isBranch = false,
   nodeName = 'this branch',
+  myUserId,
+  isCommunityAdmin = false,
 }: {
   communityId: string
   defaultOpen?: boolean
   /** CENTRAL 25-B §5 — ownership moves on BRANCHES only; the root is not vacatable. */
   isBranch?: boolean
   nodeName?: string
+  /** CENTRAL 25-C §2i — resigning is the manager's OWN act, so the panel has to
+   *  know whose row is whose. */
+  myUserId: string
+  /** CENTRAL 25-C §2i — only a community admin may decide a nomination. */
+  isCommunityAdmin?: boolean
 }) {
   const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
@@ -59,6 +77,11 @@ export default function MembersPanel({
   // reason is required before either call is allowed to fire (decision 51).
   const [ownerAction, setOwnerAction] = useState<{ kind: 'vacate' | 'appoint'; userId: string } | null>(null)
   const [reason, setReason] = useState('')
+  // §2i — resign and nominate, and the decision on it.
+  const [nominations, setNominations] = useState<Nomination[]>([])
+  const [resigning, setResigning] = useState(false)
+  const [nomineeId, setNomineeId] = useState('')
+  const [decisionNote, setDecisionNote] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -67,6 +90,17 @@ export default function MembersPanel({
       const data = await res.json()
       setMembers(data.members)
       setTitles(data.titles ?? [])
+    }
+    // §2i — a 404 here is the ordinary answer for somebody who cannot decide
+    // one, not a failure; the list simply stays empty for them.
+    const nres = await fetch(`/api/communities/${communityId}/nominations`)
+    if (nres.ok) {
+      const ndata = await nres.json()
+      setNominations(
+        (ndata.nominations ?? []).filter((n: Nomination) => n.communityId === communityId),
+      )
+    } else {
+      setNominations([])
     }
     setLoading(false)
   }, [communityId])
@@ -140,6 +174,40 @@ export default function MembersPanel({
     })
   }
 
+  /**
+   * §2i — RESIGN AND NOMINATE. Two acts in one call, and they are deliberately
+   * not the same act: ⚠ the RESIGNATION is immediate (standing down is the
+   * manager's own and needs nobody's permission) while the SUCCESSION is a
+   * PENDING row that confers nothing until a community admin approves it. The
+   * branch is vacant in between, which §2f says is a state, not an error.
+   */
+  const resignAndNominate = () =>
+    act(myUserId, () =>
+      fetch(`/api/communities/${communityId}/nominations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'nominate', nomineeUserId: nomineeId, reason }),
+      }),
+    ).then(() => {
+      setResigning(false)
+      setReason('')
+      setNomineeId('')
+    })
+
+  const decideNomination = (nominationId: string, approve: boolean) =>
+    act(nominationId, () =>
+      fetch(`/api/communities/${communityId}/nominations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'decide',
+          nominationId,
+          approve,
+          note: decisionNote.trim() || undefined,
+        }),
+      }),
+    ).then(() => setDecisionNote(''))
+
   return (
     <details open={defaultOpen} className="central-card p-4">
       <summary className="cursor-pointer text-sm font-medium">
@@ -149,6 +217,60 @@ export default function MembersPanel({
 
       <div className="mt-3 space-y-1.5">
         {error && <p className="text-xs text-red-600">{error}</p>}
+
+        {/* ⚠⚠ CENTRAL 25-C §2i — A PENDING NOMINATION CONFERS NOTHING, and this
+            card is where it stops being pending. Until somebody presses one of
+            these two buttons the branch has no manager and the nominee has no
+            more standing than any other member — which is the whole point of
+            "subject to admin approval". */}
+        {nominations.map((n) => (
+          <div
+            key={n.id}
+            className="rounded border border-amber-300 bg-amber-50 px-2 py-2 text-xs text-amber-900"
+          >
+            <p>
+              <strong>{n.nominatedByName}</strong> resigned as manager of {n.communityName} and
+              nominated <strong>{n.nomineeName}</strong> to follow them.
+            </p>
+            <p className="mt-0.5">“{n.reason}”</p>
+            <p className="mt-0.5">
+              Nothing has changed yet — {n.nomineeName} is an ordinary member until you approve.
+            </p>
+            {isCommunityAdmin ? (
+              <div className="mt-1.5 space-y-1.5">
+                <input
+                  value={decisionNote}
+                  onChange={(e) => setDecisionNote(e.target.value)}
+                  maxLength={500}
+                  placeholder="A note on your decision (optional)"
+                  className="w-full rounded border bg-background px-2 py-1 text-xs text-foreground"
+                />
+                <div className="flex gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 text-xs"
+                    disabled={busyId === n.id}
+                    onClick={() => decideNomination(n.id, true)}
+                  >
+                    Approve — make {n.nomineeName} branch manager
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs"
+                    disabled={busyId === n.id}
+                    onClick={() => decideNomination(n.id, false)}
+                  >
+                    Decline
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-0.5">A Community admin has to decide it.</p>
+            )}
+          </div>
+        ))}
         {loading ? (
           <p className="text-xs text-muted-foreground">Loading…</p>
         ) : members.length === 0 ? (
@@ -249,18 +371,94 @@ export default function MembersPanel({
                         </Button>
                       </div>
                     </div>
+                  ) : resigning && m.userId === myUserId ? (
+                    /* ⚠ §2i — THE MANAGER'S OWN ROW ONLY. Resigning and naming
+                       a successor is their act; an admin standing somebody
+                       ELSE down is the vacate above, which is a different act
+                       with a different consent story (decision 50). */
+                    <div className="space-y-1.5">
+                      <label className="block text-xs text-muted-foreground" htmlFor={`nominee-${m.userId}`}>
+                        Who should follow you? A Community admin has to approve it.
+                      </label>
+                      <select
+                        id={`nominee-${m.userId}`}
+                        className="h-6 w-full rounded border bg-background px-1 text-xs"
+                        value={nomineeId}
+                        onChange={(e) => setNomineeId(e.target.value)}
+                      >
+                        <option value="">Choose a member of {nodeName}</option>
+                        {members
+                          .filter((o) => o.userId !== m.userId)
+                          .map((o) => (
+                            <option key={o.userId} value={o.userId}>
+                              {o.name ?? o.username}
+                            </option>
+                          ))}
+                      </select>
+                      <input
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        maxLength={500}
+                        placeholder="Why are you standing down? Required."
+                        className="w-full rounded border bg-background px-2 py-1 text-xs"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        You stand down straight away. {nodeName} has no manager until the Community
+                        approves your nomination — that is a real state, not a fault.
+                      </p>
+                      <div className="flex gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 text-xs"
+                          disabled={busyId === m.userId || !reason.trim() || !nomineeId}
+                          onClick={resignAndNominate}
+                        >
+                          Resign and nominate
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => {
+                            setResigning(false)
+                            setReason('')
+                            setNomineeId('')
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 px-2 text-xs text-muted-foreground"
-                      onClick={() => {
-                        setOwnerAction({ kind: 'vacate', userId: m.userId })
-                        setReason('')
-                      }}
-                    >
-                      Stand down as branch manager
-                    </Button>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs text-muted-foreground"
+                        onClick={() => {
+                          setOwnerAction({ kind: 'vacate', userId: m.userId })
+                          setReason('')
+                        }}
+                      >
+                        Stand down as branch manager
+                      </Button>
+                      {m.userId === myUserId && members.length > 1 && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs text-muted-foreground"
+                          onClick={() => {
+                            setResigning(true)
+                            setOwnerAction(null)
+                            setReason('')
+                            setNomineeId('')
+                          }}
+                        >
+                          Resign and nominate a replacement
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

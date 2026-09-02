@@ -142,6 +142,12 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
                   : null
         }
         isCommunityMember={rootMembership !== null}
+        /* ⚠ CENTRAL 25-C §1g — THE TIER THE DEAD CONTROLS NEED. It is read off
+           the ROOT membership, never off `membership`, which is the row for
+           whichever node is on screen. A branch member's root row is the one
+           that says they may not found a branch. */
+        myTier={rootMembership?.tier ?? null}
+        myUserId={user.id}
         hasPendingRequest={tree.viewerHasPendingRequest}
         myPoints={await getUserPoints(user.id, rootId)}
         tab={tab}
