@@ -4,6 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import ApprovalFrame, { ContextField } from '@/components/central/ApprovalFrame'
+import TitlesSection from './TitlesSection'
+import {
+  INVITE_RIGHT_DESCRIPTION,
+  INVITE_RIGHT_LABEL,
+  INVITE_RIGHT_ROLES,
+  type InviteRightRole,
+} from '@/lib/invite-rights'
 
 type Mode = 'SELF' | 'BRANCH_ADMIN' | 'COMMUNITY_ADMIN' | 'NAMED'
 
@@ -20,6 +27,8 @@ type Settings = {
   approvalFeatureEnabled: boolean
   approvalMode: Mode
   namedApproverIds: string[]
+  /** CENTRAL 25-A §3a — which roles besides the owner may invite. */
+  inviteRights: InviteRightRole[]
 }
 
 type Member = { id: string; name: string | null; username: string }
@@ -41,6 +50,7 @@ export default function CommunitySettingsClient({
   const [enabled, setEnabled] = useState(initial.approvalFeatureEnabled)
   const [mode, setMode] = useState<Mode>(initial.approvalMode)
   const [named, setNamed] = useState<string[]>(initial.namedApproverIds)
+  const [inviteRights, setInviteRights] = useState<InviteRightRole[]>(initial.inviteRights)
   const [state, setState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [contextPreview, setContextPreview] = useState('')
@@ -59,6 +69,7 @@ export default function CommunitySettingsClient({
         approvalFeatureEnabled: enabled,
         approvalMode: mode,
         namedApproverIds: named,
+        inviteRights,
       }),
     })
     if (!res.ok) {
@@ -73,8 +84,67 @@ export default function CommunitySettingsClient({
     router.refresh()
   }
 
+  function toggleRight(role: InviteRightRole) {
+    setInviteRights((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    )
+  }
+
   return (
     <div className="mt-6 space-y-6">
+      {/* ── CENTRAL 25-A §3a — who may invite ────────────────────── */}
+      <section className="central-card space-y-4 p-4">
+        <div>
+          <h2 className="text-sm font-semibold">Who may invite people</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground pretty">
+            You always can, as the owner of {communityName}. Tick the roles you want to give the
+            same right to. They can also let in anyone who arrives through a shared link.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {INVITE_RIGHT_ROLES.map((role) => {
+            const on = inviteRights.includes(role)
+            return (
+              <label
+                key={role}
+                /* ⚠ Colour is never the only cue (docs/CLAUDE.md §21): the granted
+                   state is a filled ground and a 2px border, not a tint alone,
+                   and the checkbox itself is the primary cue. */
+                className={
+                  on
+                    ? 'flex cursor-pointer gap-2.5 rounded-lg border-2 border-foreground bg-muted/60 p-2.5'
+                    : 'flex cursor-pointer gap-2.5 rounded-lg border border-border p-2.5'
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => toggleRight(role)}
+                  className="mt-0.5 size-4"
+                />
+                <span>
+                  <span className="block text-[13px] font-medium">{INVITE_RIGHT_LABEL[role]}</span>
+                  <span className="block text-xs text-muted-foreground pretty">
+                    {INVITE_RIGHT_DESCRIPTION[role]}
+                  </span>
+                </span>
+              </label>
+            )
+          })}
+        </div>
+
+        {inviteRights.length === 0 && (
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-900">
+            With neither ticked, you are the only person who can invite anybody to {communityName}
+            or let in anyone who arrives through a link.
+          </p>
+        )}
+      </section>
+
+      {/* ── CENTRAL 25-A §7e — the Community's own titles ─────────────────── */}
+      <TitlesSection communityId={communityId} communityName={communityName} />
+
       <section className="central-card space-y-4 p-4">
         <div>
           <h2 className="text-sm font-semibold">Organisation</h2>

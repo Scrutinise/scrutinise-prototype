@@ -1,6 +1,7 @@
 'use client'
 
 import { SpendSection } from '@/components/admin/SpendSection'
+import { SIGN_IN_STATE_LABEL, type SignInState } from '@/lib/admin-users-labels'
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -29,11 +30,17 @@ interface AdminUser {
   id: string
   name: string
   email: string
+  username: string
   role: string
   status: string
   joinDate: string
   credibilityScore: string | null
   ideaCount: number
+  /** CENTRAL 25-A §6 — Clerk's, and the only sign-in fact that exists. */
+  lastSignInAt: string | null
+  signInState: SignInState
+  signInMethods: string[]
+  memberships: { communityId: string; name: string; isBranch: boolean; role: string; joinedAt: string }[]
 }
 
 interface PlatformConfig {
@@ -183,30 +190,43 @@ function ContentReportsSection() {
 // Users section (3b)
 // ─────────────────────────────────────────────────────────────────────────────
 
+function fmtDate(value: string) {
+  return new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
+}
+
+/**
+ * CENTRAL 25-A §6a — every registered user, what they belong to, and when they
+ * were last seen.
+ *
+ * ⚠ THE SIGN-IN COLUMN IS CLERK'S, NOT OURS. We keep no login record at all
+ * (see lib/admin-users.ts), so this column shows the one timestamp Clerk holds
+ * and says plainly when it cannot show one. ⚠ §6d: it is never blank — "Never
+ * signed in" and an empty cell look identical and mean opposite things.
+ */
 function UsersSection({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [sort, setSort] = useState<'lastSignIn' | 'joined' | 'name'>('lastSignIn')
+  const [clerkAnswered, setClerkAnswered] = useState(true)
   const [loaded, setLoaded] = useState(false)
   const [roleChanging, setRoleChanging] = useState<string | null>(null)
   const [roleError, setRoleError] = useState<string | null>(null)
 
-  function loadUsers(p: number) {
+  function loadUsers(nextSort: 'lastSignIn' | 'joined' | 'name') {
     setLoaded(false)
-    fetch(`/api/admin/users?page=${p}&limit=25`)
+    fetch(`/api/admin/users?sort=${nextSort}`)
       .then(r => r.json())
       .then(data => {
         setUsers(data.users ?? [])
         setTotal(data.total ?? 0)
-        setTotalPages(data.totalPages ?? 1)
-        setPage(p)
+        setClerkAnswered(data.clerkAnswered !== false)
+        setSort(nextSort)
         setLoaded(true)
       })
       .catch(() => setLoaded(true))
   }
 
-  useEffect(() => { loadUsers(1) }, [])
+  useEffect(() => { loadUsers('lastSignIn') }, [])
 
   async function handleRoleChange(userId: string, role: string) {
     setRoleChanging(userId)
@@ -234,11 +254,57 @@ function UsersSection({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     ? ['CITIZEN', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN']
     : ['CITIZEN', 'MODERATOR']
 
+  const SORTS: { key: 'lastSignIn' | 'joined' | 'name'; label: string }[] = [
+    { key: 'lastSignIn', label: 'Last signed in' },
+    { key: 'joined', label: 'Signed up' },
+    { key: 'name', label: 'Name' },
+  ]
+
+  const neverReturned = users.filter(
+    u => u.signInState === 'NEVER' || u.signInState === 'SIGNUP_ONLY',
+  ).length
+
   if (!loaded && users.length === 0) return <p className="text-sm text-muted-foreground">Loading users…</p>
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">{total} users total</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-xs text-muted-foreground">{total} users total</p>
+        <p className="text-xs text-muted-foreground">
+          {neverReturned} have not signed in since they signed up
+        </p>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">Sort by</span>
+          {SORTS.map(s => (
+            <button
+              key={s.key}
+              onClick={() => loadUsers(s.key)}
+              aria-pressed={sort === s.key}
+              /* ⚠ Colour is never the only cue (docs/CLAUDE.md §21): the chosen
+                 sort is a FILLED button against outlined ones, which is a
+                 lightness difference, plus a 2px border. */
+              className={
+                sort === s.key
+                  ? 'rounded border-2 border-foreground bg-foreground px-2 py-0.5 text-xs font-semibold text-background'
+                  : 'rounded border px-2 py-0.5 text-xs text-muted-foreground'
+              }
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ⚠ Said ONCE at the top rather than 33 times down the column: a failed
+          Clerk call and 33 users with no account are different findings. */}
+      {!clerkAnswered && (
+        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          Clerk did not answer, so no sign-in information could be read. The rows below are our own
+          records only — an empty sign-in column here means we could not ask, not that nobody has
+          signed in.
+        </p>
+      )}
+
       {roleError && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{roleError}</p>
       )}
@@ -248,10 +314,12 @@ function UsersSection({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             <tr className="border-b bg-muted/40">
               <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Name</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Email</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Signed up</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Signs in with</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Last signed in</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Belongs to</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Role</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Credibility</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Ideas</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Joined</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -259,6 +327,23 @@ function UsersSection({ isSuperAdmin }: { isSuperAdmin: boolean }) {
               <tr key={user.id} className="hover:bg-muted/20">
                 <td className="px-3 py-2 font-medium">{user.name}</td>
                 <td className="px-3 py-2 text-muted-foreground">{user.email}</td>
+                <td className="px-3 py-2 text-muted-foreground">{fmtDate(user.joinDate)}</td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {user.signInMethods.length > 0 ? user.signInMethods.join(', ') : 'Not known'}
+                </td>
+                {/* ⚠ §6d — NEVER BLANK. Every one of these six states has words. */}
+                <td className="px-3 py-2 text-muted-foreground">
+                  {user.lastSignInAt
+                    ? `${fmtDate(user.lastSignInAt)}${user.signInState === 'SIGNUP_ONLY' ? ' (sign-up only)' : ''}`
+                    : SIGN_IN_STATE_LABEL[user.signInState]}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {user.memberships.length === 0
+                    ? 'No community'
+                    : user.memberships
+                        .map(m => `${m.name}${m.isBranch ? ' (branch)' : ''} — ${m.role.toLowerCase()}`)
+                        .join('; ')}
+                </td>
                 <td className="px-3 py-2">
                   <select
                     value={user.role}
@@ -271,37 +356,17 @@ function UsersSection({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     ))}
                   </select>
                 </td>
-                <td className="px-3 py-2 text-muted-foreground">{user.credibilityScore ?? '—'}</td>
                 <td className="px-3 py-2 text-muted-foreground">{user.ideaCount}</td>
-                <td className="px-3 py-2 text-muted-foreground">
-                  {new Date(user.joinDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
-                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {totalPages > 1 && (
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page <= 1}
-            onClick={() => loadUsers(page - 1)}
-          >
-            Previous
-          </Button>
-          <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page >= totalPages}
-            onClick={() => loadUsers(page + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
+      <p className="text-xs text-muted-foreground">
+        Sign-in dates come from Clerk, which keeps only the most recent one per person — there is no
+        login history to show, here or anywhere, because nothing records one. &ldquo;Not since
+        signing up&rdquo; means their only sign-in was the one that created the account.
+      </p>
     </div>
   )
 }

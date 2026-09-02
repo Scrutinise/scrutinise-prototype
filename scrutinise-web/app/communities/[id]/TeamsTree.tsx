@@ -181,7 +181,7 @@ function TreeNode({
           {node.managerName ? (
             <span className="text-xs text-muted-foreground">· managed by {node.managerName}</span>
           ) : (
-            <span className="text-xs text-muted-foreground">· no manager</span>
+            <span className="text-xs text-muted-foreground">· no branch manager</span>
           )}
           {canManage && node.pendingRequestCount > 0 && (
             <Link
@@ -283,12 +283,12 @@ function TreeNode({
           <div className="ml-6 mt-2">
             {node.members.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                No one has joined this branch yet — a manager must be a member of it first.
+                No one has joined this branch yet — a branch manager must be a member of it first.
               </p>
             ) : (
               <div className="flex items-center gap-2">
                 <label htmlFor={`manager-${node.id}`} className="text-xs text-muted-foreground">
-                  Manager
+                  Branch manager
                 </label>
                 <select
                   id={`manager-${node.id}`}
@@ -297,7 +297,7 @@ function TreeNode({
                   disabled={busy}
                   onChange={(e) => handleAssignManager(e.target.value)}
                 >
-                  <option value="">No manager</option>
+                  <option value="">No branch manager</option>
                   {node.members.map((m) => (
                     <option key={m.userId} value={m.userId}>{m.name ?? m.username}</option>
                   ))}

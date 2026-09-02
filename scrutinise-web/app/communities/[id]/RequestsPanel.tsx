@@ -9,6 +9,9 @@ interface JoinRequest {
   message: string | null
   createdAt: string
   user: { id: string; name: string | null; username: string }
+  /** CENTRAL 25-A §3b — set when they arrived through a shared invite link. */
+  inviteId: string | null
+  invite: { inviteCode: string; createdByUserId: string } | null
 }
 
 /**
@@ -101,6 +104,14 @@ export default function RequestsPanel({
               <div key={r.id} className="central-inset p-2">
                 <p className="text-sm font-medium">{who}</p>
                 <p className="text-xs text-muted-foreground">@{r.user.username}</p>
+                {/* ⚠ 25-A §3b — an arrival through a link and somebody asking of
+                    their own accord are different things, and the person
+                    deciding should not have to guess which this is. */}
+                <p className="text-xs text-muted-foreground">
+                  {r.inviteId
+                    ? 'Arrived through a shared invite link — they are waiting to be let in.'
+                    : 'Asked to join from inside the Community.'}
+                </p>
                 {r.message && <p className="mt-1 text-xs italic text-muted-foreground">“{r.message}”</p>}
                 <div className="mt-2 flex gap-1.5">
                   <Button

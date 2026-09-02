@@ -694,7 +694,13 @@ export async function logSessionForMatch(params: {
         userId: other,
         type: 'SYSTEM',
         title: 'Training session logged',
-        message: `${match.listing.topic} — your activity claim is with your branch admin.`,
+        // ⚠ CENTRAL 25-B §1d — THIS SENTENCE WAS FALSE. It told the other person
+        // their claim was "with your branch admin" and awaiting a decision, when
+        // Stage 2e (24 Aug 2026) removed pre-approval: the claim is AWARDED on
+        // creation and `decidedByUserId` is null on both of the two that exist.
+        // A message that says a payment is pending when it has already been made
+        // is the kind of wrong that nobody reports, because it reads as normal.
+        message: `${match.listing.topic} — your points for it have been awarded.`,
         linkUrl: `/communities/${branchCommunityId}?tab=training`,
       },
     })

@@ -21,7 +21,16 @@ interface Found {
  * invite in its own right, because most invites go to people who are not on the
  * platform yet.
  */
-export default function InvitePanel({ communityId }: { communityId: string }) {
+export default function InvitePanel({
+  communityId,
+  isBranch,
+  nodeName,
+}: {
+  communityId: string
+  /** CENTRAL 25-A §7f — a branch invitation and a Community-wide one are for different people. */
+  isBranch: boolean
+  nodeName: string
+}) {
   const [q, setQ] = useState('')
   const [results, setResults] = useState<Found[]>([])
   const [emailFallback, setEmailFallback] = useState<string | null>(null)
@@ -124,6 +133,25 @@ export default function InvitePanel({ communityId }: { communityId: string }) {
 
   return (
     <div className="space-y-3">
+      {/* ⚠ CENTRAL 25-A §7f — WHO THIS INVITATION IS FOR, said before it is sent.
+          The scope is already enforced (a branch's people can only invite into
+          their own branch and the branches under it), but nothing on screen said
+          what a Community-wide invitation is FOR — and Charlie's rule is that it
+          is for branch chairs, with everybody else invited from their branch. */}
+      <p className="rounded-lg border border-border bg-muted/40 px-2.5 py-2 text-xs text-muted-foreground">
+        {isBranch ? (
+          <>
+            Whoever you invite here joins <strong>{nodeName}</strong>, and the Community it sits in
+            with it. This is the way to bring in the people of your own branch.
+          </>
+        ) : (
+          <>
+            This invites somebody to <strong>{nodeName}</strong> as a whole, which is meant for
+            branch chairs. Everybody else should be invited from their own branch, by the person
+            who runs it — that way the branch has a record of who brought them in.
+          </>
+        )}
+      </p>
       <div>
         <label htmlFor="invite-lookup" className="mb-1 block text-xs font-medium text-muted-foreground">
           Find someone by name or email address

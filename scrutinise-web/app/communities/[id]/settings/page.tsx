@@ -73,6 +73,7 @@ export default async function CommunitySettingsPage({ params }: Props) {
             approvalFeatureEnabled: branding.approvalFeatureEnabled,
             approvalMode: branding.approvalMode,
             namedApproverIds: branding.namedApproverIds,
+            inviteRights: branding.inviteRights,
           }}
           members={members.map((m) => m.user)}
         />

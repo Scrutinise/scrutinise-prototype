@@ -10,6 +10,7 @@ import BulletinBoard from './BulletinBoard'
 import InvitePanel from './InvitePanel'
 import RequestsPanel from './RequestsPanel'
 import MembersPanel from './MembersPanel'
+import InvitationsPanel from './InvitationsPanel'
 import SwitchOrAddChooser from './SwitchOrAddChooser'
 import FindYourBranch from './FindYourBranch'
 import ClaimsPanel from './ClaimsPanel'
@@ -61,7 +62,7 @@ interface Props {
   tree: CommunityTreeNode
   otherBranches: { id: string; name: string; role: 'OWNER' | 'ADMIN' | 'MEMBER' }[]
   showSwitchChooser: boolean
-  openPanel: 'requests' | 'members' | 'claims' | null
+  openPanel: 'requests' | 'members' | 'claims' | 'invitations' | null
   isCommunityMember: boolean
   hasPendingRequest: boolean
   myPoints: number
@@ -140,7 +141,9 @@ export default function CommunityDashboardClient({
     const res = await fetch(`/api/communities/${community.id}/invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ maxUses: 50, expiresInDays: 30 }),
+      // ⚠ 25-B decision 46 — was 50. A shared link is an introduction, not a
+      // door: each use raises a request somebody has to approve (§3b).
+      body: JSON.stringify({ maxUses: 10, expiresInDays: 30 }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -327,6 +330,14 @@ export default function CommunityDashboardClient({
                 />
                 <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
                 <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
+                {/* CENTRAL 25-A §2 — who was invited and what became of them.
+                    It sits beside Members deliberately: "who is here" and "who
+                    was asked and never arrived" are the two halves of the same
+                    question, and only the first of them existed. */}
+                <InvitationsPanel
+                  communityId={community.id}
+                  defaultOpen={openPanel === 'invitations'}
+                />
                 {/* ⚠ STAGE 2i ITEM 1. This was an outline button at the BOTTOM of
                     the panel, fourth in a stack of four identical ones below the
                     cards — and Charlie could not find it. The controls people
@@ -350,7 +361,7 @@ export default function CommunityDashboardClient({
                 <details className="central-card p-4">
                   <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
                   <div className="mt-3 space-y-3">
-                    <InvitePanel communityId={community.id} />
+                    <InvitePanel communityId={community.id} isBranch={isBranch} nodeName={community.name} />
                     <div className="border-t border-border pt-3">
                       <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
                         {generating ? 'Generating…' : 'Or generate a shareable link'}

@@ -131,7 +131,15 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
         otherBranches={otherBranches}
         showSwitchChooser={joined === '1' && otherBranches.length > 0}
         openPanel={
-          panel === 'requests' ? 'requests' : panel === 'members' ? 'members' : panel === 'claims' ? 'claims' : null
+          panel === 'requests'
+            ? 'requests'
+            : panel === 'members'
+              ? 'members'
+              : panel === 'claims'
+                ? 'claims'
+                : panel === 'invitations'
+                  ? 'invitations'
+                  : null
         }
         isCommunityMember={rootMembership !== null}
         hasPendingRequest={tree.viewerHasPendingRequest}
