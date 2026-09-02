@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
 import { sendCommunityInviteEmail } from '@/lib/email'
+// ⚠ 25-C §1a — a PURE module with no imports of its own, so this is not a cycle.
+import { tierForArrival, tierMayFoundBranch } from '@/lib/membership-tier'
 
 /**
  * Default bulletin-board category set, in display order (Stage 1.1, agreed
@@ -699,25 +701,44 @@ export async function joinCommunityAndRoot(
   }
 
   return prisma.$transaction(async (tx) => {
+    const existingRootBefore = await tx.communityMember.findUnique({
+      where: { communityId_userId: { communityId: rootId, userId } },
+      select: { tier: true },
+    })
+
+    // ⚠⚠ CENTRAL 25-C §1a — THE TIER IS DECIDED HERE, BY WHERE THEY ARRIVED.
+    // A join ON the root is GROUP; a join into a branch is BRANCH. The rule is
+    // `tierForArrival`, in one place, so this path and the §1f backfill cannot
+    // drift apart.
+    //
+    // ⚠ AN EXISTING ROOT MEMBERSHIP IS NEVER RE-TIERED BY A JOIN. A group
+    // member who later joins a branch stays a group member — arriving in a
+    // branch only makes somebody a branch member when it is how they got in at
+    // all. Demotion is a deliberate act with a reason (`setMembershipTier`),
+    // never a side-effect of joining something.
+    const tier = existingRootBefore?.tier ?? tierForArrival({ joinedNodeId: communityId, rootId })
+
     const existingNode = await tx.communityMember.findUnique({
       where: { communityId_userId: { communityId, userId } },
     })
     if (!existingNode) {
-      await tx.communityMember.create({ data: { communityId, userId, role, ...broughtIn } })
+      await tx.communityMember.create({ data: { communityId, userId, role, tier, ...broughtIn } })
     }
 
     let joinedRoot = false
     if (rootId !== communityId) {
-      const existingRoot = await tx.communityMember.findUnique({
-        where: { communityId_userId: { communityId: rootId, userId } },
-      })
-      if (!existingRoot) {
+      if (!existingRootBefore) {
         // ⚠ 25-A §7h — the same provenance on the root membership. A branch
         // chair who brings somebody into their branch has brought them into
         // the Community too (Stage 1.2's branch-implies-root rule), and the
         // accountability follows the fact.
+        //
+        // ⚠⚠ 25-C §1a — AND THE ROW IS STILL CREATED. The tier is what detaches
+        // the rights; deleting the row would break twelve gates and
+        // `check:central`'s branch-implies-root invariant, and would stop a
+        // branch member seeing the Community they belong to.
         await tx.communityMember.create({
-          data: { communityId: rootId, userId, role: 'MEMBER', ...broughtIn },
+          data: { communityId: rootId, userId, role: 'MEMBER', tier, ...broughtIn },
         })
         joinedRoot = true
       }
@@ -1063,7 +1084,15 @@ export async function canCreateBranchUnder(userId: string, parentId: string): Pr
     select: { parentCommunityId: true },
   })
   if (!parent || parent.parentCommunityId !== null) return false
-  return (await getCommunityMembership(userId, parentId)) !== null
+
+  // ⚠⚠ CENTRAL 25-C §1b — AND THE MEMBERSHIP IS NO LONGER ENOUGH ON ITS OWN.
+  // A branch member holds a root membership row because Stage 1.2 creates one;
+  // before the tier existed that row let them found a branch of their own,
+  // which is the growth mechanic aimed at people invited at TOP level, not at
+  // someone brought into one branch. The row stays; this right detaches.
+  const membership = await getCommunityMembership(userId, parentId)
+  if (!membership) return false
+  return tierMayFoundBranch(membership.tier)
 }
 
 export type CommunityTreeMember = { userId: string; name: string | null; username: string; role: CommunityRole }

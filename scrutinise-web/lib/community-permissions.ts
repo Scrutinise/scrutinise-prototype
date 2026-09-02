@@ -12,6 +12,7 @@ import {
   CommunityRuleError,
   canManageCommunity,
   getAncestorIds,
+  getCommunityTreeIds,
   getRootCommunityId,
   removeMember,
 } from '@/lib/community'
@@ -20,6 +21,7 @@ import {
   parseInviteRights,
   type InviteRightRole,
 } from '@/lib/invite-rights'
+import { tierMayFoundBranch, type MembershipTier } from '@/lib/membership-tier'
 
 const ADMIN_ROLES = ['OWNER', 'ADMIN'] as const
 
@@ -43,6 +45,8 @@ export type InviteRightReason =
   | 'BRANCH_MANAGER'
   /** CENTRAL 25-A §7e — a title this Community defined, carrying the right. */
   | 'TITLE'
+  /** CENTRAL 25-C §1d — an ordinary member of the branch being invited to. */
+  | 'BRANCH_MEMBER'
   | 'NOT_GRANTED'
   | 'NO_STANDING'
 
@@ -53,10 +57,30 @@ export type InviteRightReason =
  * here" and "admins here are not allowed to invite" are different sentences and
  * an owner narrowing the setting needs to see which one they caused.
  *
- * ⚠ §3d — SCOPE. A branch manager's right reaches their own branch and the
- * branches under it, and no further: it is derived from an OWNER/ADMIN row on
- * this node or an ancestor of it, and a branch manager holds no such row on the
- * root or on a sibling branch. A COMMUNITY_ADMIN's reaches the whole tree.
+ * ⚠⚠ CENTRAL 25-C §1c — THE ASSERTION THAT A BRANCH MANAGER'S RIGHT DOES NOT
+ * REACH THE COMMUNITY HAS BEEN MOVED, DELIBERATELY, AND HERE IS THE REASON.
+ * 25-A §3d measured it, and my own §3d recommendation kept it: a branch
+ * manager's right reached their own branch and the branches under it and no
+ * further. **Charlie has reversed that.** A branch manager must be able to
+ * bring in ANOTHER BRANCH MANAGER — somebody who will run a different branch —
+ * and there is no way to do that from inside one branch, because the person
+ * being brought in does not belong in the branch doing the inviting. In a
+ * party growing by branch chairs recruiting branch chairs, a rule that lets a
+ * chair recruit only into their own branch stops the growth mechanic dead.
+ *
+ * `check:central-25a`'s "a branch manager may not invite to the Community
+ * itself" has been REPLACED by an assertion of the new rule and a control on
+ * the old one, in `scripts/check-central-25c.ts`. It was not relaxed quietly
+ * and it was not deleted.
+ *
+ * ⚠ WHAT DID NOT MOVE, and this is the narrower half of the same rule: a branch
+ * manager still cannot invite into somebody ELSE'S branch. Reaching the root is
+ * not reaching the whole tree. `check:central-25a`'s sibling-branch assertion
+ * stands untouched.
+ *
+ * ⚠ §3d — SCOPE, otherwise unchanged. The right is derived from an OWNER/ADMIN
+ * row on this node or an ancestor of it. A COMMUNITY_ADMIN's reaches the whole
+ * tree.
  */
 export async function inviteRightFor(
   userId: string,
@@ -66,6 +90,20 @@ export async function inviteRightFor(
   const rights = await getInviteRights(communityId)
 
   const scopeIds = [communityId, ...(await getAncestorIds(communityId))]
+
+  // ⚠ 25-C §1c — AT THE ROOT, THE *ROLE* SCOPE IS THE WHOLE TREE. Everywhere
+  // else it is this node and its ancestors, exactly as before. The asymmetry is
+  // the decision: a branch manager reaches UP to the Community (to bring in
+  // another chair) but never SIDEWAYS into a sibling branch.
+  //
+  // ⚠⚠ THE TITLE SCOPE IS NOT WIDENED WITH IT, and that is not an oversight.
+  // 25-A §7e's rule is that a title "grants rights only within" the Community
+  // that defined it and has to be held on this node or one above it. Letting a
+  // title defined on one branch confer the right at the top of the tree is a
+  // different decision from §1c, nobody has taken it, and it would be invisible
+  // — which is why the two scopes are separate variables rather than one.
+  const roleScopeIds =
+    communityId === rootId ? await getCommunityTreeIds(rootId) : scopeIds
 
   // ⚠⚠ CENTRAL 25-A §7e — A TITLE IS CHECKED FIRST, AND IT IS NOT A ROLE.
   // A Community may give somebody the right to invite by titling them, without
@@ -84,7 +122,7 @@ export async function inviteRightFor(
   if (titled) return { allowed: true, reason: 'TITLE' }
 
   const rows = await prisma.communityMember.findMany({
-    where: { userId, communityId: { in: scopeIds }, role: { in: [...ADMIN_ROLES] } },
+    where: { userId, communityId: { in: roleScopeIds }, role: { in: [...ADMIN_ROLES] } },
     select: { communityId: true, role: true },
   })
   if (rows.length === 0) return { allowed: false, reason: 'NO_STANDING' }
@@ -118,12 +156,82 @@ export async function canInvite(userId: string, communityId: string): Promise<bo
   return (await inviteRightFor(userId, communityId)).allowed
 }
 
-/** Route guard. 404 for someone with no standing at all, so a tree's shape is not leaked. */
+/**
+ * Route guard for the MANAGEMENT of invitations: withdrawing one, restoring
+ * one, sending one again, and deciding a join request.
+ *
+ * ⚠⚠ CENTRAL 25-C §1d — THIS IS THE NARROW ONE AND IT MUST STAY NARROW. The
+ * trap 25-C names explicitly: `requireInviteRight` guards revoke and restore as
+ * well as creation, so widening creation to "any member of the branch" would
+ * have handed every member of every branch the power to withdraw the branch
+ * manager's invitations and to reinstate ones the manager had called off.
+ * **Create opens; revoke and restore stay with the manager.** The widened rule
+ * is a SEPARATE function (`requireInviteCreateRight`) used by exactly one route.
+ *
+ * 404 for someone with no standing at all, so a tree's shape is not leaked.
+ */
 export async function requireInviteRight(
   userId: string,
   communityId: string,
 ): Promise<NextResponse | null> {
   const { allowed, reason } = await inviteRightFor(userId, communityId)
+  if (allowed) return null
+  if (reason === 'NO_STANDING') return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json(
+    {
+      error:
+        'The owner of this Community has not given your role the right to invite people. Ask them to change it in Community settings.',
+    },
+    { status: 403 },
+  )
+}
+
+/**
+ * CENTRAL 25-C §1d — MAY THIS PERSON CREATE AN INVITATION TO THIS NODE?
+ *
+ * Everything `inviteRightFor` allows, plus: **any member of a branch may invite
+ * people into that branch.** Deliberately open — a branch grows by its members
+ * bringing people in, and requiring the chair to issue every invitation is the
+ * bottleneck the pilot has already hit.
+ *
+ * ⚠ EJECTION IS NOT OPENED WITH IT (§1d), and neither are revoke and restore.
+ * Only the branch manager, community admin and owner may eject
+ * (`canManageCommunity` → `archiveMembership`), and withdrawing or reinstating
+ * an invitation still goes through `requireInviteRight`.
+ *
+ * ⚠ THE ROOT IS NOT A BRANCH. This adds nothing at top level, which is what
+ * makes §1b's "a branch member may not invite at top level" true: a branch
+ * member holds no OWNER/ADMIN row and no title on the root, so `inviteRightFor`
+ * refuses them there, and this function has nothing to add.
+ */
+export async function inviteCreateRightFor(
+  userId: string,
+  communityId: string,
+): Promise<{ allowed: boolean; reason: InviteRightReason }> {
+  const base = await inviteRightFor(userId, communityId)
+  if (base.allowed) return base
+
+  const rootId = await getRootCommunityId(communityId)
+  if (communityId === rootId) return base
+
+  const membership = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId, userId } },
+    select: { id: true },
+  })
+  if (membership) return { allowed: true, reason: 'BRANCH_MEMBER' }
+  return base
+}
+
+export async function canCreateInvite(userId: string, communityId: string): Promise<boolean> {
+  return (await inviteCreateRightFor(userId, communityId)).allowed
+}
+
+/** Route guard for CREATING an invitation. See `inviteCreateRightFor`. */
+export async function requireInviteCreateRight(
+  userId: string,
+  communityId: string,
+): Promise<NextResponse | null> {
+  const { allowed, reason } = await inviteCreateRightFor(userId, communityId)
   if (allowed) return null
   if (reason === 'NO_STANDING') return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(
@@ -464,4 +572,310 @@ export async function branchIsVacant(communityId: string): Promise<boolean> {
     select: { id: true },
   })
   return owner === null
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CENTRAL 25-C §1 — THE TIER, READ AND WRITTEN.
+//
+// ⚠ The pure half (labels, `tierForArrival`, `tierMayFoundBranch`) is in
+// `lib/membership-tier.ts`, which has no imports so that client components can
+// take the labels without taking a database driver. This is the half that
+// touches rows, and it lives beside the gates that read it.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The tier that governs, for this person in this Community.
+ *
+ * ⚠ Takes ANY node id and resolves the root itself, so no caller has to
+ * remember to. Null when they hold no root membership at all — a different
+ * answer from BRANCH, and the callers treat it as one.
+ */
+export async function rootTierFor(
+  userId: string,
+  communityId: string,
+): Promise<MembershipTier | null> {
+  const rootId = await getRootCommunityId(communityId)
+  const row = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: rootId, userId } },
+    select: { tier: true },
+  })
+  return row?.tier ?? null
+}
+
+/** §1b/§1g — may this person found a branch here, on tier alone? */
+export async function mayFoundBranchByTier(userId: string, communityId: string): Promise<boolean> {
+  return tierMayFoundBranch(await rootTierFor(userId, communityId))
+}
+
+/**
+ * Move somebody between tiers, across the whole Community, in one transaction.
+ *
+ * ⚠⚠ §2e — A DEMOTION FROM GROUP TO BRANCH RESIGNS ANY BRANCH OWNERSHIP IN THE
+ * SAME ACTION. A branch member may not found a branch; leaving them managing
+ * one they founded while a group member is the state that makes the tier a
+ * decoration. They become an ordinary member of that branch, and the manager
+ * position goes VACANT (§2f) — the branch is not deleted and does not change
+ * hands.
+ *
+ * ⚠ The vacate goes through `vacateBranchOwnership`, the one path that writes
+ * the audit record and the notification. It is not re-implemented here
+ * (docs/CLAUDE.md §25.3).
+ */
+export async function setMembershipTier(params: {
+  communityId: string
+  targetUserId: string
+  tier: MembershipTier
+  actorUserId: string
+  reason: string
+}): Promise<{ tier: MembershipTier; vacatedBranchIds: string[] }> {
+  const rootId = await getRootCommunityId(params.communityId)
+  const reason = params.reason?.trim()
+  if (!reason) throw new CommunityRuleError('Say why their membership is changing', 422)
+
+  // ⚠ A COMMUNITY-LEVEL act, not a branch-level one: the tier lives on the root
+  // membership, so the right to change it is the right to manage the root.
+  if (!(await canManageCommunity(params.actorUserId, rootId))) {
+    throw new CommunityRuleError('You cannot change who is a group member here', 403)
+  }
+
+  const treeIds = await getCommunityTreeIds(rootId)
+  const rootRow = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: rootId, userId: params.targetUserId } },
+    select: { tier: true, role: true },
+  })
+  if (!rootRow) throw new CommunityRuleError('They are not a member of this Community', 404)
+
+  const vacatedBranchIds: string[] = []
+  if (params.tier === 'BRANCH') {
+    // ⚠ The Community's own owner is not demotable: `inviteRightFor`'s "the
+    // owner always holds the right" would be left with nobody — the same reason
+    // §2b refuses to vacate the root.
+    if (rootRow.role === 'OWNER') {
+      throw new CommunityRuleError(
+        'The owner of the Community cannot be made a branch member.',
+        409,
+      )
+    }
+    const owned = await prisma.communityMember.findMany({
+      where: { userId: params.targetUserId, communityId: { in: treeIds }, role: 'OWNER' },
+      select: { communityId: true, community: { select: { parentCommunityId: true } } },
+    })
+    for (const o of owned) {
+      if (o.community.parentCommunityId === null) continue // covered above
+      await vacateBranchOwnership({
+        communityId: o.communityId,
+        actorUserId: params.actorUserId,
+        reason: `Made a branch member — ${reason}`,
+      })
+      vacatedBranchIds.push(o.communityId)
+    }
+  }
+
+  await prisma.communityMember.updateMany({
+    where: { userId: params.targetUserId, communityId: { in: treeIds } },
+    data: { tier: params.tier },
+  })
+
+  await prisma.activityLog.create({
+    data: {
+      userId: params.actorUserId,
+      activityType: `MEMBERSHIP_TIER_${params.tier}`,
+      entityType: 'CommunityMember',
+      entityId: rootId,
+      description: `Membership set to ${params.tier === 'GROUP' ? 'group member' : 'branch member'} — ${reason}`,
+      metadata: {
+        subjectUserId: params.targetUserId,
+        from: rootRow.tier,
+        to: params.tier,
+        reason,
+        vacatedBranchIds,
+      },
+    },
+  })
+
+  return { tier: params.tier, vacatedBranchIds }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CENTRAL 25-C §2i — RESIGN AND NOMINATE, SUBJECT TO ADMIN APPROVAL.
+//
+// ⚠⚠ THE TWO DIRECTIONS ARE DIFFERENT BUGS AND ARE ASSERTED SEPARATELY.
+// "A pending nomination confers nothing" fails if resigning silently hands the
+// branch over; "an approved one transfers" fails if approval writes a status
+// and no role. `check:central-25c` reads the OWNER row back after each.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A branch manager stands down AND names who should follow them.
+ *
+ * ⚠ THE RESIGNATION IS IMMEDIATE; THE SUCCESSION IS NOT. Standing down is the
+ * manager's own act and needs nobody's permission (§2g's principle read the
+ * other way round). Choosing the next chair is the Community's, so it becomes a
+ * PENDING row and the position is VACANT in the meantime — which §2f says is a
+ * state the product must be able to represent, not an error.
+ */
+export async function resignAndNominate(params: {
+  communityId: string
+  actorUserId: string
+  nomineeUserId: string
+  reason: string
+}): Promise<{ nominationId: string; vacatedUserId: string }> {
+  const node = await requireBranch(params.communityId)
+
+  const reason = params.reason?.trim()
+  if (!reason) throw new CommunityRuleError('Say why you are standing down', 422)
+
+  const owner = await prisma.communityMember.findFirst({
+    where: { communityId: node.id, role: 'OWNER' },
+    select: { userId: true },
+  })
+  if (!owner || owner.userId !== params.actorUserId) {
+    throw new CommunityRuleError('Only the branch manager can resign this way', 403)
+  }
+  if (params.nomineeUserId === params.actorUserId) {
+    throw new CommunityRuleError('You cannot nominate yourself as your own replacement', 422)
+  }
+
+  const nominee = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: node.id, userId: params.nomineeUserId } },
+    select: { id: true },
+  })
+  // ⚠ Same rule as `appointBranchOwner`: a branch manager has to be IN the
+  // branch, or the members list would not show the person managing it.
+  if (!nominee) throw new CommunityRuleError('They have to be a member of the branch first', 409)
+
+  const existing = await prisma.branchOwnerNomination.findFirst({
+    where: { communityId: node.id, status: 'PENDING' },
+    select: { id: true },
+  })
+  if (existing) {
+    throw new CommunityRuleError('There is already a nomination waiting for a decision', 409)
+  }
+
+  // ⚠ THE ROW IS WRITTEN FIRST, then the vacate. If the vacate throws, no
+  // nomination is left standing for a branch whose manager never left.
+  const nomination = await prisma.branchOwnerNomination.create({
+    data: {
+      communityId: node.id,
+      nominatedByUserId: params.actorUserId,
+      nomineeUserId: params.nomineeUserId,
+      reason,
+    },
+    select: { id: true },
+  })
+
+  const { vacatedUserId } = await vacateBranchOwnership({
+    communityId: node.id,
+    actorUserId: params.actorUserId,
+    reason: `Resigned, nominating a replacement — ${reason}`,
+  })
+
+  // Everyone who can decide it should know it is waiting.
+  const deciders = await prisma.communityMember.findMany({
+    where: { communityId: await getRootCommunityId(node.id), role: { in: [...ADMIN_ROLES] } },
+    select: { userId: true },
+  })
+  await prisma.notification.createMany({
+    data: deciders.map((d) => ({
+      userId: d.userId,
+      type: 'SYSTEM' as const,
+      title: 'A branch manager has resigned and nominated a replacement',
+      message: `${node.name} — ${reason}. The branch has no manager until you decide.`,
+      linkUrl: `/communities/${node.id}?panel=members`,
+    })),
+  })
+
+  return { nominationId: nomination.id, vacatedUserId }
+}
+
+/**
+ * A community admin decides a nomination.
+ *
+ * ⚠ APPROVAL GOES THROUGH `appointBranchOwner`. That is still the only function
+ * outside creation that writes an OWNER row, it still demotes any incumbent in
+ * the same transaction, and it still records the act. A second write path here
+ * would be a second set of guards to keep in step.
+ */
+export async function decideBranchNomination(params: {
+  nominationId: string
+  actorUserId: string
+  approve: boolean
+  note?: string
+}): Promise<{ status: 'APPROVED' | 'DECLINED'; communityId: string; nomineeUserId: string }> {
+  const nomination = await prisma.branchOwnerNomination.findUnique({
+    where: { id: params.nominationId },
+    select: { id: true, communityId: true, nomineeUserId: true, status: true },
+  })
+  if (!nomination) throw new CommunityRuleError('Not found', 404)
+  if (nomination.status !== 'PENDING') {
+    throw new CommunityRuleError('That nomination has already been decided', 409)
+  }
+
+  const rootId = await getRootCommunityId(nomination.communityId)
+  if (!(await canManageCommunity(params.actorUserId, rootId))) {
+    throw new CommunityRuleError('Only a Community admin can decide a nomination', 403)
+  }
+
+  const note = params.note?.trim() || null
+
+  if (params.approve) {
+    await appointBranchOwner({
+      communityId: nomination.communityId,
+      targetUserId: nomination.nomineeUserId,
+      actorUserId: params.actorUserId,
+      reason: note ?? 'Nominated by the outgoing branch manager and approved',
+    })
+  }
+
+  await prisma.branchOwnerNomination.update({
+    where: { id: nomination.id },
+    data: {
+      status: params.approve ? 'APPROVED' : 'DECLINED',
+      decidedAt: new Date(),
+      decidedByUserId: params.actorUserId,
+      decisionNote: note,
+    },
+  })
+
+  if (!params.approve) {
+    await prisma.notification.create({
+      data: {
+        userId: nomination.nomineeUserId,
+        type: 'SYSTEM',
+        title: 'A nomination naming you was not approved',
+        message: note ?? 'The Community did not approve the nomination.',
+        linkUrl: `/communities/${nomination.communityId}`,
+      },
+    })
+  }
+
+  return {
+    status: params.approve ? 'APPROVED' : 'DECLINED',
+    communityId: nomination.communityId,
+    nomineeUserId: nomination.nomineeUserId,
+  }
+}
+
+/** Nominations waiting on a decision, for one node or a whole Community. */
+export async function listPendingNominations(communityId: string) {
+  const rootId = await getRootCommunityId(communityId)
+  const rows = await prisma.branchOwnerNomination.findMany({
+    where: { communityId: { in: await getCommunityTreeIds(rootId) }, status: 'PENDING' },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      community: { select: { id: true, name: true } },
+      nominatedBy: { select: { name: true, username: true } },
+      nominee: { select: { id: true, name: true, username: true } },
+    },
+  })
+  return rows.map((r) => ({
+    id: r.id,
+    communityId: r.community.id,
+    communityName: r.community.name,
+    nominatedByName: r.nominatedBy.name ?? r.nominatedBy.username,
+    nomineeUserId: r.nominee.id,
+    nomineeName: r.nominee.name ?? r.nominee.username,
+    reason: r.reason,
+    createdAt: r.createdAt,
+  }))
 }
