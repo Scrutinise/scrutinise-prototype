@@ -1,5 +1,7 @@
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { prisma } from './prisma'
+import { canCreateAccount } from './invite-gate'
+import { acceptInvitationsAtSignIn } from './invite-acceptance'
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 
@@ -57,6 +59,23 @@ export async function getAuthenticatedUser() {
         return { error: NextResponse.json({ error: 'User not found' }, { status: 404 }), user: null }
       }
 
+      // ⚠⚠ CENTRAL 25-A §7b — THE THIRD DOOR, AND IT USED TO HAVE NO LOCK.
+      //
+      // This path exists because the Clerk webhook can be late, and it creates a
+      // User row for any Clerk session that lacks one — with no invitation check
+      // at all. So the invite gate was enforced in exactly one of three places:
+      // a Clerk account that survived the webhook (delayed, undelivered, or its
+      // `deleteUser` call failed) was admitted here regardless.
+      //
+      // It asks the same question the other two ask. A late webhook is still
+      // served: a platform invitation is not marked used until the webhook runs,
+      // and a Community invitation is not consumed until the person joins, so a
+      // genuine invitee's credential is still valid at this moment.
+      if (!(await canCreateAccount(primaryEmail))) {
+        console.warn(`[auth] JIT sync refused: no valid invitation for ${primaryEmail}`)
+        return { error: NextResponse.json({ error: 'User not found' }, { status: 404 }), user: null }
+      }
+
       const firstName = clerkUser.firstName ?? 'User'
       const lastName = clerkUser.lastName ?? ''
       const fullName = [firstName, lastName].filter(Boolean).join(' ')
@@ -83,6 +102,11 @@ export async function getAuthenticatedUser() {
         await tx.credibilityScore.create({ data: { userId: newUser.id } })
         return newUser
       })
+
+      // ⚠ CENTRAL 25-A §7c — the other place a first sign-in can land. If the
+      // webhook was late, the account is created here instead, and the
+      // invitation has to be honoured here too or it never is.
+      void acceptInvitationsAtSignIn(primaryEmail)
 
     } catch (err) {
       console.error(`[auth] JIT sync failed for clerkId ${clerkUserId}:`, err)

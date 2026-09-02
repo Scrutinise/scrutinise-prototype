@@ -5,6 +5,8 @@ import { clerkClient } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { sendInviteMismatchNotificationEmail } from '@/lib/email'
+import { findInviteCredential } from '@/lib/invite-gate'
+import { acceptInvitationsAtSignIn } from '@/lib/invite-acceptance'
 
 // CLERK_WEBHOOK_SECRET must be set in Vercel env vars.
 // Subscribe endpoint to user.created (and user.updated for name sync).
@@ -106,23 +108,36 @@ export async function POST(req: Request) {
   }
 
   // ── Invite gate ────────────────────────────────────────────────────────────
-  // Only allow sign-up if a valid (unused, unrevoked, unexpired) invite exists
-  // for this email. If not, delete the Clerk account immediately.
-  const invite = await prisma.invite.findUnique({ where: { email: primaryEmail } })
+  // Only allow sign-up if this address holds a valid invitation. If not, the
+  // Clerk account is deleted immediately.
+  //
+  // ⚠⚠ CENTRAL 25-A §7b — THIS ASKS THE SAME FUNCTION THE SIGN-UP PAGE ASKS.
+  // It used to recognise only the platform `Invite` table while the sign-up page
+  // kept a rule of its own, and a Community invitation satisfied neither — which
+  // is how five real people were invited to a branch and could not create an
+  // account. If the door were widened without widening this in the same change,
+  // they would sign up successfully and be silently destroyed seconds later,
+  // which is worse than being refused because nobody finds out.
+  // `findInviteCredential` is the single decision, so there is nothing left to
+  // keep in sync.
   const now = new Date()
-  const inviteValid = invite && !invite.usedAt && !invite.revokedAt && invite.expiresAt > now
+  const credential = await findInviteCredential(primaryEmail, now)
 
-  if (!inviteValid) {
-    await deleteClerkUser(clerkId, `no valid invite for ${primaryEmail}`)
+  if (!credential) {
+    await deleteClerkUser(clerkId, `no valid invitation of any kind for ${primaryEmail}`)
     return NextResponse.json({ ok: true, action: 'deleted_no_invite' })
   }
 
-  // Mark invite used before creating the app-side user (idempotent on re-delivery
-  // because the upsert below will just no-op if the User row already exists)
-  await prisma.invite.update({
-    where: { id: invite.id },
-    data: { usedAt: now },
-  })
+  // ⚠ A PLATFORM invitation is spent by the sign-up it authorised. A COMMUNITY
+  // invitation is NOT: it is consumed when the person JOINS, and burning it here
+  // would leave them holding an account with no way into the branch they were
+  // invited to.
+  if (credential.consumeOnSignUp) {
+    await prisma.invite.update({
+      where: { id: credential.inviteId },
+      data: { usedAt: now },
+    })
+  }
   // ── End invite gate ────────────────────────────────────────────────────────
 
   // Username: Clerk may send null — always generate a unique fallback.
@@ -170,6 +185,12 @@ export async function POST(req: Request) {
 
       return newUser
     })
+
+    // ⚠ CENTRAL 25-A §7c — THE SECOND LINK THEY SHOULD NOT HAVE TO FIND.
+    // The account exists; the invitation that brought them here is redeemed for
+    // them now, so they arrive already in the branch they were invited to.
+    // Fire-and-forget: the account is created either way.
+    void acceptInvitationsAtSignIn(primaryEmail)
 
     // Check for pending collaborator invite to this email — if name differs, notify inviter
     const pendingInvite = await prisma.userInvite.findFirst({
