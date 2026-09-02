@@ -36,3 +36,12 @@ register_candidates_full.json
 # EXTENSION, with identical content next to it in another. Scoped to sources/ so
 # a report deliverable PDF elsewhere under report_run/ is unaffected.
 sources/*.pdf
+
+# CCW-B14a — Lex build exports. One JSON per build, carrying every pass output,
+# every citation and its evidence, and the coverage blocks. Ignored on the same
+# house rule as everything above: derived artefacts stay on disk, and if they
+# should be backed up, R2 is the right home, not git.
+#
+# ⚠ Added BEFORE the first export was written, not after. A rule added once the
+# files exist is a rule that has already failed once.
+builds/

@@ -132,6 +132,102 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-W — THE EMAIL THAT SAID IT HAD BEEN SENT, AND FOUR DECISIONS (2026-09-02 12:20 UTC)
+
+### §A — the notification: diagnosed, and it is category two of Charlie's four
+
+**The preference WAS stored.** Build `6547478c` on *Reinstating Biodegradable Plastic Straws*,
+enqueued 10:15:32 UTC and DONE at 10:22:37 (11:15–11:23 BST, which is the build Charlie means),
+carries `notifyEmail = true`. Charlie's recollection of ticking the box is correct.
+
+**The hypothesis in the brief is wrong, and the truth is narrower.** The notification is NOT wired
+to the tab-driven completion path. `settleBuild` is shared by every terminal path and the worker
+reached it: the log shows `25b build settled` for that build id at 10:22:38.
+
+**What actually happened, from the worker's own log, one second apart:**
+
+```
+2026-09-02T10:22:38 RESEND_API_KEY not set — email not sent to cl@scrutinise.org
+2026-09-02T10:22:38 [lex-diag] 25b build-complete email sent { buildId: '6547478c-…', status: 'DONE' }
+```
+
+⚠⚠ **THE BUILD WORKER WAS NEVER GIVEN A `RESEND_API_KEY`.** `scripts/deploy-build-worker.ts`
+created the service with 17 variables and that was not one of them. **Moving the build off the
+user's tab moved it off Vercel's environment**, and everything the web app gets for free — the mail
+key, `NEXT_PUBLIC_APP_URL` — had to be named there or the worker does not have it.
+
+⚠⚠ **AND THE SECOND LINE IS THE FAULT THAT MATTERS.** `sendEmail` returned `void` on three
+different outcomes — accepted by Resend, no key, address suppressed — so `notifyByEmail` had no way
+to tell a send from a skip and logged the optimistic sentence unconditionally. **There is no
+provider response id for that build, and there never was one for any build: the Resend response was
+being discarded entirely.**
+
+**Fixed:** `sendEmail` returns `{ sent, providerId, reason }` — `sent: true` only on a 2xx, with
+Resend's own id; `sent: false` with a stated reason where we declined; a throw where the provider
+refused. Those are exactly Charlie's four categories, now distinguishable at the call site.
+`build.ts` reports from the result. The worker prints `resolvedConfigLine()` and a mail-capability
+line at start-up, so a worker that cannot email says so on every boot instead of on no occasion.
+
+⚠ **The Railway variable itself is not set from this session** — the auto-mode classifier refused
+the production config write. `npm run set:worker-email` (report-only by default, `--write` to act)
+is built, guarded, re-reads what it wrote, and passes **no secret through the process**:
+`RESEND_API_KEY` is set as the Railway reference `${{Ingest.RESEND_API_KEY}}`.
+
+### §B — "email me when it's done" is ticked by default again
+
+The column default is now `true` (`prisma/lex_25w.sql`, **applied**), and the backfill is guarded:
+a row that has never started a build carries `false` because that was the default and nobody chose
+it; a row belonging to somebody who HAS built carries a choice, and is left alone.
+
+⚠ **§1h's driver-awareness STAYS, deliberately, and this is a departure from the letter of the
+instruction.** The tab warning renders only under `client`, where it is TRUE; production reads
+`worker` off `/api/health`, so the page already does not show it. Deleting the branch would make a
+flip back to `client` silently promise something the architecture could not keep — the exact defect
+§1h existed to prevent.
+
+### §C — a challenge title reaches a document for the first time (decision 53)
+
+`SnapshotIssue` now carries `title`, `sourceModel` and `runVersion`; the long report and the meeting
+pack print the title ahead of the text. **The third instance this sprint of correct data that never
+reached the output.** Then the backfill: **186 titled, 0 dropped, 1.4p**, re-read as **225 of 225
+titled**. A row with no title still renders exactly as before — nothing is invented from the text.
+
+### §D — 178 earlier challenges classified. NOTHING WRITTEN (decision 54)
+
+`docs/25W_CHALLENGE_CLASSIFICATION.md`, **6.4p**, plus **6.4p wasted** on a first run that did all
+eighteen model calls and then died writing its report to a path that did not exist. **DUPLICATE 119
+· APPLICABLE 43 · SUPERSEDED 16 · UNDECIDED 0**, and **7 merge groups covering 18 of the current
+47**. ⚠ Reported to Charlie before any write, with two cautions stated: several DUPLICATE reasons
+are topic-level rather than point-level, and 2 of the 16 SUPERSEDED are mislabelled — they are
+contradicted by the current set, not aimed at deleted text.
+
+### §E — a per-pass ceiling of 600 s (decision 55)
+
+`PASS_CEILING_MS`, enforced by `runNextPass` as a wall clock around the pass. ⚠ **It ends in
+`stopBuild`, not in a pass failure**, because `resumablePassKey` returns null for a hard FAILED pass
+— failing the pass would have left exactly the dead build the decision forbids. The stopped pass is
+reopened as NOT_REACHED and the build resumes from it. `writePass` now refuses to write to a settled
+build, which bounds the abandoned promise the race leaves running.
+
+### §F — decision 56, half done and honestly reported
+
+`/api/health` now reports `retrieval.vectorStreams`, resolved through the router's own parse.
+⚠ **This revises the endpoint's own "no stream list" rule, on purpose** — the rule made Vercel's
+value unreadable, which is why the worker has been retrieving with dense OFF on every stream since
+the driver flipped. **NOT CHECKED until the deploy lands:** production is serving `6495ead`, which
+predates the field. Then `npm run sync:worker-retrieval --write`.
+
+### §G — the scratch-idea test (decision 57)
+
+One throwaway idea carrying all four decision kinds, one full build. Results in the handoff.
+
+**`check:lex-25w` 23 passed / 0 failed / 2 NOT CHECKED / 4 controls / 0 dead.** ⚠ It failed three of
+its own assertions first run: one real (the migration had not been applied) and **two that were the
+check's own fault** — an absence assertion that matched the correctly-guarded line because it is
+indented, and a driver assertion that read `process.env` on this laptop and called it production.
+
+---
+
 ## CENTRAL 25-C — THE TWO-TIER MEMBERSHIP MODEL, AND A BRANCH CHAIR WHO CAN NOW NAME THEIR OWN SUCCESSOR (2026-09-02 11:56 UTC)
 
 **Shipped and gated.** The tier is live on production data, derived and not defaulted; the two dead
@@ -1576,6 +1672,79 @@ idea-team? Three options in the report, with a recommendation (two lists, not a 
 the switch is exactly the flag the schema argues against). **Say which.**
 
 ---
+
+## 2026-09-02 12:04 UTC — B14a STEP 1: THE BUILD RAN WITH NO CORPUS ACCESS AT ALL, COMPLETED "DONE", AND PRODUCED ZERO CITATIONS
+
+B14a step 1 executed and **stopped there, as the brief requires.** M-01 built, exported, reported in
+`docs/report_run/B14a_STEP1_REPORT.md`. **The remaining eleven have NOT been started.**
+
+▶▶ **THE BLOCKING FINDING, AND IT IS A THIRD PRE-FLIGHT NEITHER BRIEF NAMES.** The worker printed it
+at line 3 of its own run: `[config] fts=UNSET vector=... streams=NONE router=OFF DEGRADED(3)`.
+Per `lib/lex/harness-preflight.ts`: FTS_SEARCH_URL unset → "keyword retrieval contributes NOTHING";
+LEX_VECTOR_STREAMS empty → "dense retrieval is OFF on every stream, SILENTLY"; LEX_QUERY_ROUTER off →
+"every query fails open". ⚠ **VECTOR_SEARCH_URL IS set, which is what makes it deceptive** — with
+streams=NONE the dense leg is off anyway, so the one configured variable buys nothing.
+
+**Measured: `searchesBroke: 18, results: 0`**, and eighteen log lines of `[fts-search] search failed
+— returning empty, NOT a stub: FTS_SEARCH_URL not set`. **The build still finished DONE, 11/11
+passes, no failures, 0 citations, 0 URLs.** Twelve like it would cost £3.00 and 36 thirds and be
+unusable for a report whose cardinal rule is that every legal assertion resolves to a corpus row.
+
+⚠⚠ **THE GUARD EXISTS AND IS ONE IMPORT AWAY.** `harness-preflight.ts` exports
+`assertRetrievalConfig()`, which REFUSES TO RUN when degraded. `build-worker.ts:43` imports only
+`resolvedConfigLine()`, the printer. Same file; the worker took the one that cannot stop it. ⚠ Not
+changed here — build-worker.ts is currently modified in the tree by another session, and editing a
+file under another session is how a schema reached production early.
+
+▶ **THE ENGINE DID NOT FABRICATE, AND THAT IS WORTH SAYING.** Given nothing, it reported nothing:
+ORIENT `0 sources — ⚠ at least one corpus search did not complete`, carry sets `searchFailed`;
+RESEARCH `7 questions asked; reviewed 0 sources; 0 findings; 15 stated gaps`; carry reads "Nothing
+retrieved produced a finding." All 9 EvidenceItem rows come from SMART with **0 citations and 0
+URLs**. A full kernel with no sourced evidence, declared as such. The failure is the environment's.
+
+**B14a's four answers.** (1) Export shape: `builds/M-01.json`, 147,347 bytes, keyed passes + raw
+passes + named absences + coverage + evidence + 8 forks + 18 field states, all AWAITING_CONFIRMATION
+(the canonical Idea columns stay empty until a human accepts — dump:kernel's §0 trap). (2) **Cost
+25.0p** — 46,061 in / 33,425 out; twelve = **£3.00**. (3) **303 seconds**, not ten minutes; twelve
+serially ≈ 61 min, so no case for raising concurrency. (4) the gate, below.
+
+⚠⚠ **THE PROBLEM GATE: 0 OF 12 FIRE — AND THE CONTROL SHOWS WHY THAT PROVES LESS THAN IT LOOKS.**
+CCW's separation of complaint from remedy worked. But a gate that never fires proves nothing, so I
+ran it on the `goalDetail` fields, which are remedies BY CONSTRUCTION: **only 1 of 12 fires there
+either.** Single-variable substitution on M-01, changing nothing but the verb: "**Repeal** the Human
+Rights Act…" silent; "**Abolish** …" FIRES; "**Scrap** …" FIRES; "Denounce…" silent; "Withdraw
+from…" silent. `SOLUTION_OPENERS` (method.ts:214) lists abolish/scrap/ban/introduce and **NOT
+repeal, denounce or withdraw — the three characteristic verbs of this programme.** ⚠ Qualified twice:
+the code says the deterministic arm is "NOT a gate on its own — the model makes the judgement", and
+creating rows directly bypasses the chat flow, so the MODEL press was never exercised.
+`problemGateFired` is MEASURED from `looksLikeASolution()`, not left at its `false` default, which
+would have read as "evaluated and silent" when nothing had evaluated it.
+
+⚠⚠ **`goalKind` IS A FOUR-KEY ENUM AND NONE OF CCW'S TWELVE VALUES IS A VALID KEY.**
+`elicitationContext` resolves the label via `GOAL_KINDS.find(g => g.key === row.goalKind)` and falls
+back to the literal string **"not stated"** — so the prose written straight in would leave every
+build reading its goal kind as *not stated* while the sentence sat unused one column over. Silent and
+indistinguishable from a correct row. M-01 mapped to LAW_CHANGE; nothing reworded (the remedy is in
+`goalDetail`, which is what the build reads); CCW's wording preserved verbatim in
+`inputs_as_supplied`; mapping for all twelve proposed and awaiting confirmation.
+
+▶ **B14b's four allowance numbers, read through `readAllowance()` rather than recomputed.**
+cl@scrutinise.org: note SET (an explicit grant — the only reliable signal), granted **60**, spent
+**15** (non-zero, as B14b anticipated), remaining **45** → 15 full builds. Twelve need 36: **enough,
+9 spare.** ⚠ The decision gate was already satisfied before this run, by the instrument B14b
+recommends — a per-user admin grant at 09:34 today, not the env var. `LEX_PILOT_ALLOWANCE_THIRDS` is
+irrelevant to that account BECAUSE the note is set, which is B14b's trap #1 confirmed live.
+
+⚠ **`scrutinise-web/scripts/` IS TYPE-CHECKED BY NEITHER TSCONFIG** — excluded from
+`scrutinise-web/tsconfig.json` and outside `scripts/tsconfig.json`. Proved with a deliberate type
+error that both project configs ignored and only a direct `tsc` on the file caught. Second directory
+with this shape in two days.
+
+▶ `builds/` added to `docs/report_run/.gitignore` BEFORE the first export was written, verified with
+a real file that `find` sees and `git status` does not.
+
+**Awaiting Charlie: the three retrieval variables (I have not set LEX_VECTOR_STREAMS — vector-serve
+saturates at four concurrent and does not recover), and confirmation of the goalKind mapping.**
 
 ## 2026-08-31 23:14 UTC — B12: CCW's §4.4 IS RIGHT AND BOTH PROSPERITY INSTITUTE WELSH CITATIONS FAIL — AND THE TCA I ALMOST DECLARED UNREACHABLE IS IN THE CORPUS IN FULL
 
