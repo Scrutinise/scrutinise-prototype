@@ -4,10 +4,26 @@
 
 ---
 
-## CENTRAL THREAD — last updated 2026-09-01 22:00 UTC (25-A, 25-B)
+## CENTRAL THREAD — last updated 2026-09-02 06:50 UTC (25-A, 25-B)
 
 *This section belongs to the CENTRAL stream and is kept separate from the LEX stream's entry below,
 because the two run in this repository at the same time.*
+
+▼ **25-B §5 — A BRANCH CHAIR CAN NEVER BE REPLACED, AND THE REASON IS NOT THE GUARDS.**
+⚠⚠ **A Community has NO owner column** (the `ownerId`s belong to Group and Pack) — ownership is one
+`CommunityMember.role='OWNER'` row — **and only TWO code paths ever write it: creating a Community
+and creating a branch.** Nothing can make an existing member the owner of anything. ▶ **A vacant
+branch is NOT an orphan** — ancestors still manage it, decide its join requests and can delete it, so
+"vacant" is already representable and merely unreachable. ▶ **Keep the two guards, add a deliberate
+path, and `check:central` stays green** (it asserts them at 856/858). ▶ **Steps 1–4 need NO
+migration**; ⚠ the Members panel renders no control at all for an OWNER row and is the bulk of the
+work. ⚠⚠ **Already live: `rossengineering56@` owns Cramlington and `cl@` owns Bermondsey — neither
+can be replaced by anything the product can do.** ▶ Two decisions first: may an admin vacate a quiet
+chair without agreement, and must a vacate record a reason.
+▶ **39/45 done** — `ajaxhms@` is **Fraser Robertson** (his row said "User"); §7j now names both rows,
+both authorised. ▶ **43 recorded** (tier derived; demotes `charlie@whatmusic.com` only).
+▶ **46 built** — maxUses cap 10,000 → **10**, generator 50 → 10. ⚠ **The §7j `--write` is the FOURTH
+thing queued behind the provenance migration.** Earlier:
 
 ▼ **25-B — THEY LAND ON AN EMPTY DASHBOARD THAT ASKS THEM TO WRITE A POLICY IDEA.**
 ⚠⚠ **NONE OF 25-A IS DEPLOYED** (production = `f9d9eb5`; `invite-gate.ts` never committed), so the
@@ -167,7 +183,55 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-01 22:24 UTC — ▼ **LEX 25-T — THE BUILD IS OFF THE USER'S TAB, AND THE
+*Last updated: 2026-09-02 08:05 UTC — ▼ **LEX 25-U — IS THE REPORT FIT TO PUT IN FRONT OF SOMEONE?
+ANSWER: NOT TODAY.**
+▶ **§1 the build ran on the worker: 11/11, 36.95p, 525 s, no tab.** ⚠ **It spent the last of the
+allowance — 3 thirds → 0.** A fifth build needs a grant. §1b did not apply: 25-T already proved the
+build completes server-side.
+▶ The sort now runs — **0 of 21 sorted before, 24 of 24 sorted AND reasoned after**, and REVISE did
+not wipe them. ⚠⚠ **BUT IT DOES NOT REACH THE DOCUMENT.** The report's Guiding Policy section prints
+*"No approach has been committed to on this proposal yet."* and nothing else, because it renders the
+COMMITTED approach and none is committed. **The 411-word summary is more informative than the
+45,101-word report on the most important field in it.**
+⚠ **§1c's premise overturned: 0 of 352 challenges carry the prefix**; the backfill touched 0 rows.
+Attribution is missing anyway — **185 of 225 name no source model, 221 of 225 have no title.**
+▶▶ ⚠⚠ **THE WORST FINDING: A PROMPT'S OWN EXAMPLE CAME BACK AS DATA.** The long report listed
+*"No source quantifies how many bags enter waterways each year"* as a research gap **on a civil
+service proposal**. It is `deepening-client.ts:90`'s illustration of its own rule 5, copied verbatim
+by the model — and **this morning's build rewrote the row and put it back**, so it is live, not
+stale. Prompt now describes the SHAPE of an issue instead of supplying quotable prose;
+`scripts/purge-leaked-prompt-examples.ts` removed the stored row, **guarded so the plastic-bag
+proposal keeps the same gap, which is legitimate there.** Family: CLAUDE.md §24 mirrored — **what a
+prompt SHOWS reaches the output as readily as what it ASKS FOR.**
+▶▶ ⚠⚠ **3 CITATIONS IN 10 DO NOT SUPPORT WHAT THEY ARE CITED FOR.** One dead ("This page does not
+exist"); one cited as the Greensill report that loads **ARPA written evidence on poly-pills and
+artificial hearts**; one cited as "Managing Ministers' conflicts of interest" that loads **"Lessons
+still to be learned from the Chilcot inquiry"**. ⚠⚠ **All three returned the same HTTP 403 as the
+GOOD parliamentary citations** (Cloudflare bot challenge), so **an automated link-checker clears
+every one of them** — only opening them in a browser separated "blocked" from "wrong".
+▶ **§2a still leaking:** `KERNEL TEST FAILED` **× 32** in the long report (57 lines each in the
+evidence and meeting packs); `THE ROAD TAKEN AT "guidingPolicy:instrument"`; *"Drafted by Lex from
+the toolkit"* × 36; *"reasoned by gemini-2.5-pro"* × 8; a raw corpus key
+`[nao-reports:major-projects-…:1]`; and **"129 accepted findings" in the source label against "0 of
+56 findings… reviewed and accepted" in the body — same document.**
+▶ **§2b:** every empty section declares itself (correct) — but the two that are empty are **"The
+problem"** and **"Guiding Policy"**. ⚠ And *"Not evidenced — no source in the record backs this"*
+(×42) appears under items headed *"identified from the corpus"* that cite two select-committee
+reports in their own text: **the page contradicts itself.**
+▶ **§2c:** **58 date flags, ALL in the evidence pack, zero in the printed proposal.** ⚠ **100 rows
+share exactly `2010-01-01` and 25% of dated rows fall on 1 January** — a year coerced to a day, then
+printed as though it were the publication date.
+▶ **§2e:** **225 challenges, all OPEN, none marked addressed**, flat list, no titles. The content is
+the best thing in the document; the presentation reads as a demolition of its own proposal.
+▶ **§2i:** 45,101 / 26,978 / 21,638 / 3,468 / 411 words. 35 actions as 35 headings with three
+near-duplicate pairs; 25 double full stops; the two leading "Decisions still open" entries are
+**verbatim duplicates**.
+▶ **§3 NOT BUILT — one already exists.** "Decisions still open" (22) + "Questions the research could
+not answer" (21) + the challenges. What it lacks is §3's last rule: most items do not say **what
+would resolve them**.
+▶▶ **§5 — would I hand this to a think tank today? NO.** In order: **(1) the citations**, **(2) the
+empty problem and guiding policy**, **(3) `KERNEL TEST FAILED` × 32.**
+Earlier: 2026-09-01 22:24 UTC — ▼ **LEX 25-T — THE BUILD IS OFF THE USER'S TAB, AND THE
 MERGE IS A QUESTION AGAIN.**
 ▶▶ **§1 PASSES, MEASURED.** A full eleven-pass build ran to `DONE` on the Railway build worker —
 **480 s, 33.1p, 11/11** — enqueued by a script that had already exited. **No browser tab existed.**
