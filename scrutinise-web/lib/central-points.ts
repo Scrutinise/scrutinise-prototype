@@ -1,4 +1,7 @@
 import { prisma } from '@/lib/prisma'
+// ⚠ An `export ... from` re-export creates no LOCAL binding, so the list is
+// also imported: the three call sites below use it directly.
+import { ACTIVITY_TYPES } from '@/lib/activity-types'
 import type { Prisma } from '@prisma/client'
 import {
   CommunityRuleError,
@@ -59,14 +62,20 @@ export const LIVE_CLAIM_STATUSES = ['AWARDED', 'APPROVED'] as const
  */
 export const MARK_SOURCE_TYPES = ['BULLETIN_MARK', 'ANSWER_VOTE'] as const
 
-/** Offline activities a member can claim, and the tariff key each pays out on. */
-export const ACTIVITY_TYPES = [
-  { key: 'CANVASSING_SESSION', label: 'Canvassing session', tariffKey: 'CLAIM_CANVASSING_SESSION' },
-  { key: 'RAN_EVENT', label: 'Organised & ran an event', tariffKey: 'CLAIM_RAN_EVENT' },
-  { key: 'GAVE_TRAINING', label: 'Gave a training session', tariffKey: 'CLAIM_GAVE_TRAINING' },
-  { key: 'COMPLETED_TRAINING', label: 'Completed training as a trainee', tariffKey: 'CLAIM_COMPLETED_TRAINING' },
-] as const
-export type ActivityTypeKey = (typeof ACTIVITY_TYPES)[number]['key']
+/**
+ * Offline activities a member can claim, and the tariff key each pays out on.
+ *
+ * ⚠ MOVED to `lib/activity-types.ts` and re-exported here so every existing
+ * caller keeps working. It had to move because it lived in this file, which
+ * imports `prisma`, so the CLIENT form could not import it and kept a second
+ * copy of the list instead. One list now; both sides import it.
+ */
+export {
+  ACTIVITY_TYPES,
+  SELF_LOGGABLE_ACTIVITIES,
+  type ActivityTypeKey,
+  type ActivityTypeDef,
+} from '@/lib/activity-types'
 
 export const LEADERBOARD_WINDOWS = ['month', 'quarter', 'all'] as const
 export type LeaderboardWindow = (typeof LEADERBOARD_WINDOWS)[number]
@@ -756,6 +765,19 @@ export async function createActivityClaim(params: {
 
   const activity = ACTIVITY_TYPES.find((a) => a.key === activityType)
   if (!activity) throw new CommunityRuleError('Unknown activity type', 422)
+  // ⚠⚠ CENTRAL 25-C §4c — SELF-LOGGING IS NOT AVAILABLE FOR EVERY ACTIVITY, AND
+  // THE REFUSAL IS HERE RATHER THAN ONLY IN THE FORM. A form that stops offering
+  // an option is not a rule: this function is reachable from the route with any
+  // key a caller cares to send. `GAVE_TRAINING` is the one that matters today —
+  // the training exchange already requires both parties to agree that a session
+  // happened, and self-logging walks straight past that agreement. 40 of the 64
+  // points in the database exist because it did.
+  if (!activity.selfLoggable) {
+    throw new CommunityRuleError(
+      `“${activity.label}” is not something you log yourself — it is awarded through the training exchange, where both people confirm it happened.`,
+      422,
+    )
+  }
   if (occurredAt.getTime() > Date.now() + 60_000) {
     throw new CommunityRuleError('You cannot log an activity that has not happened yet', 422)
   }

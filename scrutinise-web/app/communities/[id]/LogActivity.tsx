@@ -5,13 +5,17 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { SELF_LOGGABLE_ACTIVITIES } from '@/lib/activity-types'
 
-const ACTIVITIES = [
-  { key: 'CANVASSING_SESSION', label: 'Canvassing session', points: 24 },
-  { key: 'RAN_EVENT', label: 'Organised & ran an event', points: 60 },
-  { key: 'GAVE_TRAINING', label: 'Gave a training session', points: 40 },
-  { key: 'COMPLETED_TRAINING', label: 'Completed training as a trainee', points: 20 },
-] as const
+/**
+ * ⚠⚠ DERIVED, NOT RESTATED (CENTRAL 25-C §4c). This was its own hard-coded copy
+ * of the list in lib/central-points.ts — four keys, four labels, four point
+ * values, maintained twice. Taking `GAVE_TRAINING` off one of them and not the
+ * other is a one-line change that looks right in whichever file you are reading.
+ * `SELF_LOGGABLE_ACTIVITIES` is the single list, filtered by the same flag the
+ * server refuses on.
+ */
+const ACTIVITIES = SELF_LOGGABLE_ACTIVITIES
 
 /**
  * Log offline activity. Self-claims only — the API takes the
