@@ -205,7 +205,42 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-02 09:52 UTC — ▼ **LEX 25-V — THE DOCUMENT MADE PRINTABLE.**
+*Last updated: 2026-09-02 10:57 UTC — ▼ **25-V ADDENDUM — FOUR QUESTIONS BEFORE A REBUILD.
+MEASUREMENT ONLY: no code changed, nothing written to the database.**
+▶ **Titling the untitled challenges costs ~1p and needs no build** — 186 on this idea (not 275,
+which was the all-ideas figure), ~30k in / 2.2k out on flash. It is a model call, spends **no
+allowance**, and only 14 of 186 have a liftable first sentence.
+▶▶ ⚠⚠ **BUT A TITLE IS INVISIBLE IN EVERY DOCUMENT.** `SnapshotIssue` has **no `title` field** and
+`issueRows.map` drops it — **no document has ever rendered a challenge title, not even the 39 that
+have one.** The screen does (`AgendaPanel.tsx:340`). **A third instance of the sprint's own class —
+correct data that never reaches the output.** The render fix is two lines and needs no build; do it
+BEFORE spending the penny.
+▶▶ ⚠⚠ **A RE-RUN ADDS, IT DOES NOT REPLACE.** v1 34 · v5 32 · v6 21 · v7 48 · v8 43 · v9 47 —
+**178 of 225 predate v9 and 0 of v9's 47 duplicate earlier text.** A re-run gives 186 untitled PLUS
+a new set. ⚠ And the snapshot query has **no version filter**, so the printed report carries the
+objections to **nine drafts**, oldest 24 Aug, including challenges to text that no longer exists.
+**Open question, deliberately untouched: should the report show only the current build's?**
+▶▶ ⚠⚠ **DOES A BUILD PRESERVE SETTLED DECISIONS? YES FOR THIS IDEA, NO IN GENERAL.**
+Measured on v9's window: ACCEPTED fields **7 created 0 / modified 0 / untouched 7**; user causes
+**4/4 untouched**; policy options **21 of 24 MODIFIED** (the sort). ⚠⚠ **The seven survived only
+because none is a field the build writes** — they are all Stage-1 elicitation keys, and the build
+writes 18 others (`rootCause`, `chosenApproach`, `causes`, `policyOptions`, …), **none accepted
+here**.
+⚠ **Three of the four could not be measured at all:** no root cause is marked here (5 exist across
+all ideas, **0 with a build since**); **`INCLUDED` has NEVER been written on any idea — "Add to
+report" has never been used**; 7 ruled-out policies, 0 with a build after. **0 of 88 accepted
+build-written fields anywhere has ever had a build run after acceptance.**
+▶ From the write paths (**code read, not measurement**): ⚠⚠ **`setStatus` has NO ACCEPTED guard** —
+a build writing one of its 18 keys knocks an accepted field back to `AWAITING_CONFIRMATION`; the
+`value` survives, the acceptance does not. ⚠⚠ **REVISE deletes causes scoped to
+`source: 'LEX_CORPUS'`**, so user causes are safe **but a root-cause mark on a LEX cause dies with
+the row** (1 of the 5 is that shape). ✓ `writeSort` never writes `status` and the sort excludes
+RULED_OUT, so a rejection is safe.
+▶▶ **BOTTOM LINE: rebuilding 452c5ade is SAFE.** ⚠ **Do not generalise** — `06ca807a`, `6dc530ce`,
+`42dd9f99`, `d90b880f` each carry 15–20 accepted build-written fields and would lose every
+acceptance. **What would settle the general case:** one build on a scratch idea with all four
+decisions set — 3 of the 48 thirds, ~9 min. **Not run** (spends allowance; asked as a report).
+Earlier: 2026-09-02 09:52 UTC — ▼ **LEX 25-V — THE DOCUMENT MADE PRINTABLE.**
 ▶▶ ⚠⚠ **25-U's HEADLINE IS CORRECTED: THE CITATION ERROR RATE IS 0%.** Measured across **all 183
 distinct sources** (25-U sampled ten): **141 decidable, 0 misnamed, 0 dead**, 42 unverifiable
 behind a Cloudflare challenge and reported as unchecked. What is wrong is the **link**, on 14 of
