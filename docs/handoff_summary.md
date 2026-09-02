@@ -293,9 +293,12 @@ not-checked**, because the sort has finally run.
 `grantedExplicitly` **true**, spent 12, **remaining 48 = 16 full builds** (not 20 — 12 were already
 spent). Pilot default unchanged: **12 thirds**. ⚠ The configuration **cannot express "3 builds and
 3 re-runs"** — it is a fungible budget, and the same 12 also buys 4 full builds.
-⚠⚠ **STILL OUTSTANDING FOR CHARLIE: `LEX_BUILD_DRIVER` is still `client` in Vercel** (read from
-`/api/health`). With 16 builds now available that matters — a build started from the UI runs in the
-tab, not on the worker.
+✓ **DONE — `LEX_BUILD_DRIVER` IS NOW `worker`.** Read from `/api/health` at 2026-09-02 10:59 UTC,
+twice: `"build":{"driver":"worker"}`. Charlie flipped it in Vercel some time after 09:56, when the
+same endpoint still read `client`. **25-T §1c is closed**, and a build started from the UI now goes
+to the Railway worker rather than being driven by the tab. ⚠ The endpoint reports what is IN FORCE
+via `buildDriver()`, so a capitalisation Vercel accepted but the app rejects would show here as
+`client` — it does not.
 Earlier: 2026-09-02 08:05 UTC — ▼ **LEX 25-U — IS THE REPORT FIT TO PUT IN FRONT OF SOMEONE?
 ANSWER: NOT TODAY.**
 ▶ **§1 the build ran on the worker: 11/11, 36.95p, 525 s, no tab.** ⚠ **It spent the last of the
