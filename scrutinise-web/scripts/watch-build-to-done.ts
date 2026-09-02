@@ -14,6 +14,7 @@
 // Usage: npx tsx --env-file=.env scripts/watch-build-to-done.ts <buildId> [--minutes 30]
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 
 const BUILD = process.argv[2]
@@ -48,7 +49,11 @@ async function main() {
   if (!BUILD) { console.log('usage: watch-build-to-done.ts <buildId>'); return }
   const deadline = Date.now() + MINUTES * 60_000
   const t0 = Date.now()
-  let row: { status: string; currentPass: string | null; passesComplete: number; startedAt: Date | null; completedAt: Date | null; failureReason: string | null; lastStopReason: string | null; estCostPence: number | null } | null = null
+  let row: { status: string; currentPass: string | null; passesComplete: number; startedAt: Date | null; completedAt: Date | null; failureReason: string | null; lastStopReason: string | null;
+    // ⚠ 25-B decision 52 — `estCostPence` is a Prisma `Decimal`, not a number.
+    // Typing it as `number` made the assignment below an error; it is only ever
+    // printed, so the runtime behaviour is unchanged.
+    estCostPence: Prisma.Decimal | null } | null = null
 
   while (Date.now() < deadline) {
     row = await prisma.ideaBuild.findUnique({

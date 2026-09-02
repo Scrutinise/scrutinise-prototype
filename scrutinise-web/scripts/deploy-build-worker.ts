@@ -1,3 +1,10 @@
+// ⚠ CENTRAL 25-B decision 52 — THIS MAKES THE FILE A MODULE, and that is the
+// whole fix. Without an import or an export TypeScript treats a .ts file as a
+// GLOBAL script, so these three siblings shared one scope and every top-level
+// `const T` / `SERVICE` and helper collided with its twin — nine of the twelve
+// errors that were failing `check:scripts` for everybody. No runtime change.
+export {}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 25-T §1a — DEPLOY THE SERVICE THAT RUNS `build:worker`.
 //
