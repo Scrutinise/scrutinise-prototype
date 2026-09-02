@@ -13,6 +13,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createHash } from 'crypto'
+import { betaBlocks } from './build-proposal'
+import { BETA_MARKER } from '../lex/beta-disclosure'
 import { prisma } from '@/lib/prisma'
 import type { Block, DocumentModel, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
@@ -107,6 +109,8 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
     .filter((g) => g.items.length > 0)
 
   const blocks: Block[] = []
+  // ⚠ 25-V §11a/§11b — first block on every generated document. See `betaBlocks`.
+  blocks.push(...betaBlocks())
 
   if (doc.summary && doc.summary.trim()) {
     blocks.push({ kind: 'note', text: doc.summary.trim() })
@@ -159,7 +163,7 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
   return {
     model: {
       title: idea.title || 'Initial Background',
-      subtitle: 'Initial Background briefing',
+      subtitle: `Initial Background briefing · ${BETA_MARKER}`,
       sourceLabel,
       generatedAt: new Date(),
       blocks,

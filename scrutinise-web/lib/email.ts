@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { PILOT_WELCOME_LINE } from './lex/beta-disclosure'
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
 const FROM = 'Scrutinise <noreply@messages.scrutinise.org>'
@@ -127,6 +128,8 @@ You've been invited${invitedByName ? ` by ${invitedByName}` : ''} to join Scruti
 
 This invite is locked to ${email} and expires in 14 days.
 
+${PILOT_WELCOME_LINE}
+
 Accept your invitation: ${url}
 `.trim()
 
@@ -137,6 +140,10 @@ Accept your invitation: ${url}
   <h1 style="font-size: 22px; font-weight: 600; margin-bottom: 16px;">Welcome to Scrutinise</h1>
   <p>You've been invited${invitedByName ? ` by <strong>${invitedByName}</strong>` : ''} to join Scrutinise — a community dedicated to bringing high standards of quality to policy development and scrutiny of legislation.</p>
   <p>This invite is locked to <strong>${email}</strong> and expires in 14 days.</p>
+  <!-- ⚠ 25-V §11d — Charlie's wording, verbatim. It ASKS FOR SOMETHING rather than warning about
+       something, which is what stops it reading as a disclaimer: a rough edge the user reports is
+       a contribution, and the same rough edge unannounced is a disappointment. -->
+  <p style="border-left: 3px solid #a1a1aa; padding-left: 12px; color: #3f3f46;">${PILOT_WELCOME_LINE}</p>
   <p style="margin: 32px 0;">
     <a href="${url}" style="background: #18181b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">Accept invitation</a>
   </p>

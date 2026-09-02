@@ -42,13 +42,19 @@ export const PANEL_KEYS: PanelKey[] = ['left', 'middle', 'right']
  * is neither "the proposal" (the implementation word 25-K retired) nor the bare "draft" that
  * left the middle column sounding like a scratchpad. Both earlier rules survive it.
  */
-export const PANEL_ROLES: Record<PanelKey, { name: string; role: string }> = {
+import { EVIDENCE_DISCLOSURE } from './beta-disclosure'
+
+export const PANEL_ROLES: Record<PanelKey, { name: string; role: string; disclosure?: string }> = {
   left: { name: 'WORKING AREA', role: '' },
   middle: { name: 'DRAFT STRATEGY', role: '' },
   right: {
     name: 'THE RESEARCH',
     role: 'This panel is where you’ll find the background, the research, the issues, the numbers '
       + 'and the debates behind your draft strategy.',
+    // ⚠ 25-V §11b — Charlie's wording, verbatim, on the surface where the evidence is READ.
+    // It sits with the panel's own role rather than inside a card, because it is a statement
+    // about everything in the column and a card would scroll away from what it qualifies.
+    disclosure: EVIDENCE_DISCLOSURE,
   },
 }
 

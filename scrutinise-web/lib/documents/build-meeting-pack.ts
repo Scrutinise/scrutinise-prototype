@@ -30,6 +30,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Block, DocumentModel, Run } from './model'
+import { betaBlocks } from './build-proposal'
+import { BETA_MARKER } from '../lex/beta-disclosure'
 import type { ProposalSnapshot } from './proposal-snapshot'
 import { snapshotHash } from './proposal-snapshot'
 import { QUESTION_HEADINGS, HEADING_ORDER, liveHeading, type HeadingKey } from '../lex/question-headings'
@@ -80,6 +82,8 @@ export function buildMeetingPackDocument(
   // not tell what they had not been shown.
   const want = new Set<MeetingPackSection>(opts.sections?.length ? opts.sections : ALL_MEETING_PACK_SECTIONS)
   const blocks: Block[] = []
+  // ⚠ 25-V §11a/§11b — first block on every generated document. See `betaBlocks`.
+  blocks.push(...betaBlocks())
 
   // ⚠ WHO THIS IS FOR, SAID FIRST. The reader did not ask for it and has thirty seconds to
   // decide whether it is worth an hour of their time.
@@ -265,7 +269,7 @@ export function buildMeetingPackDocument(
 
   const model: DocumentModel = {
     title: `${snapshot.title} — meeting pack`,
-    subtitle: 'What is open, and what would most help to discuss',
+    subtitle: `What is open, and what would most help to discuss · ${BETA_MARKER}`,
     sourceLabel: 'the proposal as it stands',
     generatedAt: new Date(),
     blocks,

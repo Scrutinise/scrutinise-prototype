@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { BETA_MARKER, BETA_TOOLTIP } from '@/lib/lex/beta-disclosure'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
@@ -159,9 +160,23 @@ export default function PublicNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight sm:text-xl">
-          Scrutinise
-        </Link>
+        {/* ══ 25-V §11a — THE BETA MARKER, BESIDE THE NAME, ON EVERY PAGE ═══════════════════
+            ⚠ IT IS A WORD IN A BORDERED PILL, NOT A COLOURED DOT. Charlie is colour blind and
+            docs/CLAUDE.md §21 is explicit that hue is never the only cue; the text "Beta" and the
+            border are both readable in greyscale.
+            ⚠ AND IT IS NOT A LINK. A badge that navigates somewhere is a badge people click by
+            accident on the way to the home link it sits against. */}
+        <div className="flex items-baseline gap-2">
+          <Link href="/" className="text-lg font-semibold tracking-tight sm:text-xl">
+            Scrutinise
+          </Link>
+          <span
+            title={BETA_TOOLTIP}
+            className="rounded-full border border-zinc-400 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-zinc-600"
+          >
+            {BETA_MARKER}
+          </span>
+        </div>
 
         {/* ══ DESKTOP NAV — 25-K §5 ═════════════════════════════════
             Order, left to right: My ideas · Browse · Central · About · Support · [Admin].

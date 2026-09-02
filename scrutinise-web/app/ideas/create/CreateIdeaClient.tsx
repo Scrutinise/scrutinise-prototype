@@ -1210,6 +1210,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   </button>
                 </div>
                 <p className="text-[11px] text-zinc-500 leading-snug pb-0.5">{PANEL_ROLES.right.role}</p>
+                {/* ══ 25-V §11b — THE EVIDENCE-BASE DISCLOSURE, ON THE SURFACE WHERE IT IS READ ══
+                    Charlie's wording, verbatim. ⚠ It is bordered rather than coloured: Charlie is
+                    colour blind, and a tint alone would be no cue at all (docs/CLAUDE.md §21). The
+                    left border and the leading word "Beta." are the two non-colour cues.
+                    ⚠ It states a property of the SEARCH, not a doubt about the citations — §11c
+                    draws that line and §1 fixed the citation side rather than disclosing it. */}
+                {PANEL_ROLES.right.disclosure && (
+                  <p className="mt-1.5 text-[11px] leading-snug text-zinc-700 border-l-2 border-zinc-400 pl-2 py-0.5">
+                    {PANEL_ROLES.right.disclosure}
+                  </p>
+                )}
               </div>
               <BackgroundPanel
                 ideaId={state.ideaId}
