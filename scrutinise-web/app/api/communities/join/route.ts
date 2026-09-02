@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { joinCommunityAndRoot } from '@/lib/community'
+import { joinCommunityAndRoot, getNodeManagerIds } from '@/lib/community'
+import { requestJoinViaInvite } from '@/lib/community-permissions'
+import { redemptionRefusal } from '@/lib/community-invitations'
 import { recordReferral } from '@/lib/central-points'
 
 const JoinSchema = z.object({ code: z.string().min(1) })
@@ -36,11 +38,13 @@ export async function POST(req: Request) {
   if (!invite) {
     return NextResponse.json({ error: 'Invalid invite code' }, { status: 404 })
   }
-  if (invite.expiresAt && invite.expiresAt < new Date()) {
-    return NextResponse.json({ error: 'This invite has expired' }, { status: 410 })
-  }
-  if (invite.usedCount >= invite.maxUses) {
-    return NextResponse.json({ error: 'This invite has already been used' }, { status: 410 })
+  // ⚠ CENTRAL 25-A §2d — withdrawn, expired and used up are all REFUSED HERE,
+  // by the one function the owner's list and the check also read. A revoke that
+  // merely removed a row from a list would not be a revoke at all, and the
+  // difference is invisible until somebody uses a link that was called off.
+  const refusal = redemptionRefusal(invite)
+  if (refusal) {
+    return NextResponse.json({ error: refusal.error }, { status: refusal.status })
   }
   if (invite.email && invite.email.toLowerCase() !== user.email.toLowerCase()) {
     return NextResponse.json(
@@ -56,10 +60,49 @@ export async function POST(req: Request) {
     return NextResponse.json({ community: invite.community, alreadyMember: true })
   }
 
+  // ⚠⚠ CENTRAL 25-A §3b — A SHARED LINK ASKS. IT DOES NOT JOIN.
+  //
+  // An invitation addressed to one person is a decision the inviter has already
+  // made, so it still admits them. A link with no address is a decision nobody
+  // has made about the person holding it — Charlie's rule is that only the
+  // people with invitation rights admit anybody, and a link that anyone can pass
+  // on made that unenforceable. So a link arrival becomes a PENDING request, and
+  // somebody with the right approves it.
+  if (!invite.email) {
+    const { requestId, alreadyPending } = await requestJoinViaInvite(user.id, invite)
+    const managerIds = await getNodeManagerIds(invite.communityId)
+    if (!alreadyPending && managerIds.length > 0) {
+      await prisma.notification.createMany({
+        data: managerIds.map((managerId) => ({
+          userId: managerId,
+          type: 'SYSTEM' as const,
+          title: 'Someone arrived through your invite link',
+          message: `${user.name} used an invite link to ${invite.community.name} and is waiting to be let in`,
+          linkUrl: `/communities/${invite.communityId}?panel=requests`,
+        })),
+      })
+    }
+    return NextResponse.json(
+      {
+        community: invite.community,
+        alreadyMember: false,
+        pending: true,
+        alreadyPending,
+        requestId,
+        isBranch: invite.community.parentCommunityId !== null,
+      },
+      { status: 202 },
+    )
+  }
+
   // A branch invite makes you a member of that branch AND of the Community it
   // sits in (Stage 1.2) — otherwise a branch invitee would never see the
   // Community-wide board or the rest of the tree.
-  const { rootId } = await joinCommunityAndRoot(user.id, invite.communityId, 'MEMBER')
+  // ⚠ 25-A §7h — the membership carries who brought them in, permanently.
+  const { rootId } = await joinCommunityAndRoot(user.id, invite.communityId, 'MEMBER', {
+    invitedByUserId: invite.createdByUserId,
+    invitedViaInviteId: invite.id,
+  })
 
   // Stage 2: redeeming a specific person's invite is what creates the referral
   // chain, per Community. A join request creates none, because nobody
@@ -69,6 +112,9 @@ export async function POST(req: Request) {
     communityId: rootId,
     inviterUserId: invite.createdByUserId,
     inviteeUserId: user.id,
+    // 25-A §2b — the link they actually came through, so an arrival is a fact
+    // rather than an inference from "matches no direct invitation".
+    inviteId: invite.id,
   })
 
   await prisma.communityInvite.update({

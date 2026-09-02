@@ -7,6 +7,7 @@ import {
   createCommunityInvite,
   requireCommunityAdmin,
 } from '@/lib/community'
+import { requireInviteRight } from '@/lib/community-permissions'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -22,7 +23,12 @@ const CreateInviteSchema = z.object({
   //   first and reports what it received. This bound is a size limit, not a
   //   second opinion. (320 = the RFC 5321 maximum.)
   email: z.string().max(320).optional(),
-  maxUses: z.number().int().min(1).max(10_000).default(1),
+  // ⚠ CENTRAL 25-B decision 46 — ONE USE BY DEFAULT, AND THE CAP IS LOW.
+  // This was `max(10_000)`. A link that advertises fifty uses reads as a door
+  // fifty people may walk through, which is the mental model §8e exists to
+  // remove — and since §3b each use only raises a REQUEST, so a high number
+  // buys nothing except a misleading sentence on the owner's screen.
+  maxUses: z.number().int().min(1).max(10).default(1),
   expiresInDays: z.number().int().min(1).max(365).optional(),
 })
 
@@ -62,7 +68,8 @@ export async function POST(req: Request, { params }: Params) {
 
   const { id: communityId } = await params
 
-  const denied = await requireCommunityAdmin(user.id, communityId)
+  // ⚠ CENTRAL 25-A §3a — the gate is the owner's SETTING, not a fixed rule.
+  const denied = await requireInviteRight(user.id, communityId)
   if (denied) return denied
 
   let body: unknown

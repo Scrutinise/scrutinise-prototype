@@ -685,15 +685,25 @@ export async function joinCommunityAndRoot(
   userId: string,
   communityId: string,
   role: CommunityRole = 'MEMBER',
+  /**
+   * CENTRAL 25-A §7h — who brought them in, written onto the membership itself.
+   * Omitted for somebody who asked to join of their own accord, and that is a
+   * real difference rather than a missing value.
+   */
+  provenance?: { invitedByUserId?: string | null; invitedViaInviteId?: string | null },
 ): Promise<{ joinedNode: boolean; joinedRoot: boolean; rootId: string }> {
   const rootId = await getRootCommunityId(communityId)
+  const broughtIn = {
+    invitedByUserId: provenance?.invitedByUserId ?? null,
+    invitedViaInviteId: provenance?.invitedViaInviteId ?? null,
+  }
 
   return prisma.$transaction(async (tx) => {
     const existingNode = await tx.communityMember.findUnique({
       where: { communityId_userId: { communityId, userId } },
     })
     if (!existingNode) {
-      await tx.communityMember.create({ data: { communityId, userId, role } })
+      await tx.communityMember.create({ data: { communityId, userId, role, ...broughtIn } })
     }
 
     let joinedRoot = false
@@ -702,7 +712,13 @@ export async function joinCommunityAndRoot(
         where: { communityId_userId: { communityId: rootId, userId } },
       })
       if (!existingRoot) {
-        await tx.communityMember.create({ data: { communityId: rootId, userId, role: 'MEMBER' } })
+        // ⚠ 25-A §7h — the same provenance on the root membership. A branch
+        // chair who brings somebody into their branch has brought them into
+        // the Community too (Stage 1.2's branch-implies-root rule), and the
+        // accountability follows the fact.
+        await tx.communityMember.create({
+          data: { communityId: rootId, userId, role: 'MEMBER', ...broughtIn },
+        })
         joinedRoot = true
       }
     }
@@ -841,9 +857,54 @@ export async function decideJoinRequest(
   if (!(await canManageCommunity(deciderId, request.communityId))) {
     throw new CommunityRuleError('You cannot decide requests for this branch', 403)
   }
+  // ⚠ CENTRAL 25-A §3b — somebody who arrived through a LINK is admitted only
+  // by a person the owner has given the invitation right to. A request somebody
+  // made of their own accord is unchanged and stays with manage rights, so this
+  // narrows nothing that was not created by a link.
+  if (request.inviteId) {
+    const { canInvite } = await import('./community-permissions')
+    if (!(await canInvite(deciderId, request.communityId))) {
+      throw new CommunityRuleError(
+        'Only people the owner has given the right to invite can let in someone who arrived through a link.',
+        403,
+      )
+    }
+  }
 
   if (decision === 'APPROVED') {
-    await joinCommunityAndRoot(request.userId, request.communityId, 'MEMBER')
+    // ⚠ 25-A §7h — somebody who came through a link was brought in by whoever
+    // issued that link, not by whoever happened to approve them. Somebody who
+    // asked of their own accord was brought in by nobody, and that stays null.
+    const invitedVia = request.inviteId
+      ? await prisma.communityInvite.findUnique({
+          where: { id: request.inviteId },
+          select: { id: true, createdByUserId: true },
+        })
+      : null
+    const { rootId } = await joinCommunityAndRoot(request.userId, request.communityId, 'MEMBER', {
+      invitedByUserId: invitedVia?.createdByUserId ?? null,
+      invitedViaInviteId: invitedVia?.id ?? null,
+    })
+
+    // The link arrival's referral and its use are recorded HERE, at the moment
+    // they are actually let in — not when they clicked. A request that is
+    // declined consumes nothing.
+    if (request.inviteId) {
+      const invite = invitedVia
+      if (invite) {
+        const { recordReferral } = await import('./central-points')
+        await recordReferral({
+          communityId: rootId,
+          inviterUserId: invite.createdByUserId,
+          inviteeUserId: request.userId,
+          inviteId: invite.id,
+        })
+        await prisma.communityInvite.update({
+          where: { id: invite.id },
+          data: { usedCount: { increment: 1 } },
+        })
+      }
+    }
   }
 
   const updated = await prisma.communityJoinRequest.update({
@@ -877,7 +938,13 @@ export async function decideJoinRequest(
 export async function listJoinRequests(communityId: string, status: JoinRequestStatus = 'PENDING') {
   return prisma.communityJoinRequest.findMany({
     where: { communityId, status },
-    include: { user: { select: { id: true, name: true, username: true } } },
+    include: {
+      user: { select: { id: true, name: true, username: true } },
+      // 25-A §3b — whether they arrived through a link, and which one. The
+      // person deciding needs to know they were introduced rather than that
+      // they walked up.
+      invite: { select: { inviteCode: true, createdByUserId: true } },
+    },
     orderBy: { createdAt: 'asc' },
   })
 }
@@ -903,8 +970,25 @@ export async function setMemberRole(
   })
 }
 
-/** Remove someone from a node. The OWNER cannot be removed. */
-export async function removeMember(communityId: string, targetUserId: string) {
+/**
+ * Remove someone from a node. The OWNER cannot be removed.
+ *
+ * ⚠ CENTRAL 25-A §3c — THIS ARCHIVES, IT DOES NOT DELETE. The membership row
+ * moves to `CommunityMembershipArchive` with the role they held, when they
+ * joined, who removed them and why. Before 25-A the row was simply deleted and
+ * there was no trace that the person had ever been a member.
+ *
+ * ⚠ AND IT TOUCHES NONE OF THEIR CONTRIBUTIONS, deliberately: bulletin posts,
+ * questions, answers, resources and ideas stay exactly where they are,
+ * attributed to them. Removing somebody takes away their access, not their
+ * words.
+ */
+export async function removeMember(
+  communityId: string,
+  targetUserId: string,
+  removedByUserId?: string,
+  reason?: string,
+): Promise<{ archiveId: string }> {
   const membership = await getCommunityMembership(targetUserId, communityId)
   if (!membership) throw new CommunityRuleError('That person is not a member of this node', 404)
   if (membership.role === 'OWNER') {
@@ -912,8 +996,8 @@ export async function removeMember(communityId: string, targetUserId: string) {
   }
 
   // Clear the manager pointer if it named them, so the node doesn't keep
-  // advertising a manager who is no longer in it.
-  await prisma.$transaction([
+  // advertising a branch manager who is no longer in it.
+  const [, , archived] = await prisma.$transaction([
     prisma.community.updateMany({
       where: { id: communityId, managerId: targetUserId },
       data: { managerId: null },
@@ -921,7 +1005,26 @@ export async function removeMember(communityId: string, targetUserId: string) {
     prisma.communityMember.delete({
       where: { communityId_userId: { communityId, userId: targetUserId } },
     }),
+    prisma.communityMembershipArchive.create({
+      data: {
+        communityId,
+        userId: targetUserId,
+        role: membership.role,
+        joinedAt: membership.joinedAt,
+        removedByUserId: removedByUserId ?? null,
+        reason: reason?.trim() || null,
+        // ⚠ 25-A §7h — WHO BROUGHT THEM IN TRAVELS WITH THE ARCHIVE. Charlie is
+        // relying on branch chairs being accountable for the people they
+        // brought in, so a removal must not be able to erase the link — in
+        // either direction, the removed person's or the inviter's.
+        invitedByUserId: membership.invitedByUserId,
+        invitedViaInviteId: membership.invitedViaInviteId,
+      },
+      select: { id: true },
+    }),
   ])
+
+  return { archiveId: archived.id }
 }
 
 /**

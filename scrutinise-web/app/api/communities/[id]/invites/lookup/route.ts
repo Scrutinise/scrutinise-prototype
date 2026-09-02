@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { requireCommunityAdmin, lookupInviteCandidates } from '@/lib/community'
+import { lookupInviteCandidates } from '@/lib/community'
+import { requireInviteRight } from '@/lib/community-permissions'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -16,7 +17,7 @@ export async function GET(req: Request, { params }: Params) {
 
   const { id: communityId } = await params
 
-  const denied = await requireCommunityAdmin(user.id, communityId)
+  const denied = await requireInviteRight(user.id, communityId)
   if (denied) return denied
 
   const { searchParams } = new URL(req.url)

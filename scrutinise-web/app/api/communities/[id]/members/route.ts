@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { canManageCommunity } from '@/lib/community'
+import { canManageCommunity, getRootCommunityId } from '@/lib/community'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -19,11 +19,26 @@ export async function GET(_req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const members = await prisma.communityMember.findMany({
-    where: { communityId },
-    include: { user: { select: { id: true, name: true, username: true } } },
-    orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
-  })
+  const [members, titles] = await Promise.all([
+    prisma.communityMember.findMany({
+      where: { communityId },
+      include: {
+        user: { select: { id: true, name: true, username: true } },
+        // ⚠ 25-A §7h — who brought them in, on the members list itself. §7g asked
+        // what a branch chair can actually see; before this, "who invited whom"
+        // was derivable only from a root-scoped referral table they never look at.
+        invitedBy: { select: { name: true, username: true } },
+        title: { select: { id: true, name: true } },
+      },
+      orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
+    }),
+    // The titles this Community defines, so the panel can offer them.
+    prisma.communityTitle.findMany({
+      where: { communityId: await getRootCommunityId(communityId) },
+      select: { id: true, name: true, grantsInvite: true },
+      orderBy: { name: 'asc' },
+    }),
+  ])
 
   return NextResponse.json({
     members: members.map((m) => ({
@@ -32,6 +47,13 @@ export async function GET(_req: Request, { params }: Params) {
       username: m.user.username,
       role: m.role,
       joinedAt: m.joinedAt,
+      // ⚠ Null is a real answer here and the panel says so in words: somebody
+      // who asked to join was brought in by nobody, which is not the same as a
+      // record we failed to keep.
+      invitedByName: m.invitedBy?.name ?? m.invitedBy?.username ?? null,
+      titleId: m.titleId,
+      titleName: m.title?.name ?? null,
     })),
+    titles,
   })
 }

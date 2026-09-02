@@ -573,8 +573,10 @@ export async function recordReferral(params: {
   communityId: string
   inviterUserId: string
   inviteeUserId: string
+  /** CENTRAL 25-A §2b — which invitation they came through, where it is known. */
+  inviteId?: string
 }): Promise<boolean> {
-  const { communityId, inviterUserId, inviteeUserId } = params
+  const { communityId, inviterUserId, inviteeUserId, inviteId } = params
   if (inviterUserId === inviteeUserId) return false
 
   const existing = await prisma.communityReferral.findUnique({
@@ -595,7 +597,9 @@ export async function recordReferral(params: {
     cursor = up?.inviterUserId ?? null
   }
 
-  await prisma.communityReferral.create({ data: { communityId, inviterUserId, inviteeUserId } })
+  await prisma.communityReferral.create({
+    data: { communityId, inviterUserId, inviteeUserId, inviteId },
+  })
   return true
 }
 

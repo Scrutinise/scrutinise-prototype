@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { CommunityRuleError, canManageCommunity, getRootCommunityId } from '@/lib/community'
 import { APPROVAL_MODES, getCommunityBranding, updateCommunitySettings } from '@/lib/approval'
+import { INVITE_RIGHT_ROLES } from '@/lib/invite-rights'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -12,6 +13,8 @@ const PatchSchema = z.object({
   approvalFeatureEnabled: z.boolean().optional(),
   approvalMode: z.enum(APPROVAL_MODES).optional(),
   namedApproverIds: z.array(z.string()).optional(),
+  // CENTRAL 25-A §3a — the owner's invitation setting.
+  inviteRights: z.array(z.enum(INVITE_RIGHT_ROLES)).optional(),
 })
 
 // GET /api/communities/[id]/settings

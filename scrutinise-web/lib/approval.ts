@@ -1,4 +1,9 @@
 import { prisma } from '@/lib/prisma'
+import {
+  DEFAULT_INVITE_RIGHTS,
+  parseInviteRights,
+  type InviteRightRole,
+} from '@/lib/invite-rights'
 import { CommunityRuleError, canManageCommunity, getRootCommunityId } from '@/lib/community'
 // The four modes, and the one function that decides them. Shared with the client
 // controls, which cannot import this file — see lib/approval-rule.ts.
@@ -36,6 +41,8 @@ export type CommunityBranding = {
   approvalFeatureEnabled: boolean
   approvalMode: ApprovalMode
   namedApproverIds: string[]
+  /** CENTRAL 25-A §3a — which roles besides the owner may invite. */
+  inviteRights: InviteRightRole[]
 }
 
 /** The defaults a Community that has never opened its settings behaves as. */
@@ -59,6 +66,10 @@ export async function getCommunityBranding(communityId: string): Promise<Communi
     approvalFeatureEnabled: settings?.approvalFeatureEnabled ?? DEFAULTS.approvalFeatureEnabled,
     approvalMode: (settings?.approvalMode as ApprovalMode) ?? DEFAULTS.approvalMode,
     namedApproverIds: named.map((n) => n.userId),
+    // ⚠ CENTRAL 25-A §3a — NO SETTINGS ROW IS NOT NO RIGHTS. Most Communities
+    // have never opened this page, and reading an absent row as an empty list
+    // would stop everyone but the owner inviting anybody.
+    inviteRights: settings ? parseInviteRights(settings.inviteRights) : DEFAULT_INVITE_RIGHTS,
   }
 }
 
@@ -163,6 +174,8 @@ export async function updateCommunitySettings(params: {
   approvalFeatureEnabled?: boolean
   approvalMode?: ApprovalMode
   namedApproverIds?: string[]
+  /** CENTRAL 25-A §3a — which roles besides the owner may invite. */
+  inviteRights?: InviteRightRole[]
 }) {
   const rootId = await getRootCommunityId(params.communityId)
   if (!(await canManageCommunity(params.actorUserId, rootId))) {
@@ -180,6 +193,7 @@ export async function updateCommunitySettings(params: {
     ...(params.organisationColour !== undefined && { organisationColour: params.organisationColour || null }),
     ...(params.approvalFeatureEnabled !== undefined && { approvalFeatureEnabled: params.approvalFeatureEnabled }),
     ...(params.approvalMode !== undefined && { approvalMode: params.approvalMode }),
+    ...(params.inviteRights !== undefined && { inviteRights: parseInviteRights(params.inviteRights) }),
   }
   const settings = await prisma.communitySettings.upsert({
     where: { communityId: rootId },
