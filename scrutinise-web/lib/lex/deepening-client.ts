@@ -86,9 +86,31 @@ const SYSTEM = [
   '   answered from the sources. Omitting a question is how the user learns what is still unknown,',
   '   so omission is useful and over-claiming is not.',
   '4. `gaps` is for what you looked for and could not find. A named gap is a strength.',
-  '5. `issues` are SPECIFIC and ADDRESSABLE — something the user can go and do. "Consider the',
-  '   evidence base" is useless; "no source quantifies how many bags enter waterways each year" is',
-  '   an issue. Do not raise an issue that merely restates a finding.',
+  // ══════════ ⚠⚠ 25-U — THE EXAMPLE HERE CAME BACK AS DATA, ON AN UNRELATED PROPOSAL ══════════
+  //
+  // This rule used to illustrate itself with a concrete sentence about plastic bags in waterways.
+  // A model copied it verbatim into its output for the CIVIL SERVICE ACCOUNTABILITY proposal, it
+  // was stored in `DeepeningPass.knownUnknowns`, and it rendered in the outward-facing 45,000-word
+  // report under "Questions the research could not answer" as a genuine gap in the research:
+  //
+  //     "No source quantifies how many bags enter waterways each year."
+  //
+  // ⚠ It is not a stale row. The build of 2 September 2026 07:50 rewrote that row and put it back.
+  //
+  // ⚠⚠ SO THE EXAMPLE IS NOW ABSTRACT AND SELF-DESCRIBING RATHER THAN A QUOTABLE SENTENCE. The
+  // rule needs to convey "name a specific missing measurement", and it can do that by describing
+  // the SHAPE of a good issue instead of supplying prose that can be lifted. Anything concrete
+  // enough to copy is concrete enough to be copied onto the wrong proposal — and a reader has no
+  // way to tell our illustration from our finding.
+  //
+  // (Family: CLAUDE.md §24 — schema permits ≠ prompt requires. This is the mirror image: what the
+  // prompt SHOWS is as capable of reaching the output as what the prompt ASKS FOR.)
+  '5. `issues` are SPECIFIC and ADDRESSABLE — something the user can go and do. An issue that says',
+  '   only "consider the evidence base" is useless. A good one names the exact measurement,',
+  '   definition or comparison that is missing FROM THIS PROPOSAL and that the user could go and',
+  '   look for. Do not raise an issue that merely restates a finding.',
+  '   ⚠ Every issue must be about the proposal in front of you. Never carry over an example, a',
+  '   subject or a figure from these instructions or from any other proposal.',
 ].join('\n')
 
 /**
