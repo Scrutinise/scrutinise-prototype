@@ -40,7 +40,19 @@ export interface RawFinding {
 
 export interface GatherResult {
   findings: RawFinding[]
-  issues: string[]
+  /**
+   * ⚠ 25-V §7 — AN ISSUE NOW CARRIES A TITLE, and the shape is a UNION on purpose.
+   *
+   * 221 of 225 stored challenges have no title, and the cause was not that titling failed: it was
+   * that `title` was only ever asked for in ONE of the seven places a challenge is created. Here —
+   * the research pass, which writes most of them — the contract was a bare string, so there was
+   * nothing to store.
+   *
+   * ⚠⚠ THE STRING FORM IS KEPT AND STILL ACCEPTED. A model that returns the old shape is not
+   * wrong, it is answering the contract it was given; rejecting it would turn a missing title into
+   * a lost challenge, and the challenges are the best content in the document.
+   */
+  issues: Array<{ title: string | null; text: string }>
   /** Which of the pass's mustAnswer questions this run actually answered — verbatim. */
   answered: string[]
   /** Gaps the pass itself names, beyond the unanswered mustAnswer questions. */
@@ -64,7 +76,20 @@ const SCHEMA = {
         required: ['kind', 'title', 'body', 'sourceId'],
       },
     },
-    issues: { type: 'array', items: { type: 'string' } },
+    // ⚠ 25-V §7 — an object, so there is somewhere for a title to go. `text` is required and
+    // `title` is not: a challenge without a heading is worth having, a heading without a
+    // challenge is not.
+    issues: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          text: { type: 'string' },
+        },
+        required: ['text'],
+      },
+    },
     answered: { type: 'array', items: { type: 'string' } },
     gaps: { type: 'array', items: { type: 'string' } },
   },
@@ -111,6 +136,10 @@ const SYSTEM = [
   '   look for. Do not raise an issue that merely restates a finding.',
   '   ⚠ Every issue must be about the proposal in front of you. Never carry over an example, a',
   '   subject or a figure from these instructions or from any other proposal.',
+  '   ⚠ Give every issue a `title`: at most eight words, naming what is missing or unresolved, in',
+  '   the language of the proposal rather than a category. "No baseline for delivery times" is a',
+  '   title; "Evidence gap" is not. The title is what a reader scans; the text is what they read',
+  '   when the title has earned it.',
 ].join('\n')
 
 /**
@@ -259,7 +288,17 @@ export async function generateDeepeningFindings(input: {
 
     return {
       findings,
-      issues: (Array.isArray(obj.issues) ? obj.issues : []).map(String).map((s) => s.trim()).filter(Boolean),
+      // ⚠ BOTH SHAPES. A string is the pre-25-V contract and is still honoured, titleless; an
+      // object carries the title. Neither is an error, and a model that mixes them in one array
+      // still gets every issue through.
+      issues: (Array.isArray(obj.issues) ? obj.issues : []).map((raw: unknown) => {
+        if (typeof raw === 'string') return { title: null, text: raw.trim() }
+        const o = raw as { title?: unknown; text?: unknown }
+        return {
+          title: typeof o?.title === 'string' && o.title.trim() ? o.title.trim().slice(0, 120) : null,
+          text: typeof o?.text === 'string' ? o.text.trim() : '',
+        }
+      }).filter((x) => x.text),
       answered: (Array.isArray(obj.answered) ? obj.answered : []).map(String).map((s) => s.trim()).filter(Boolean),
       gaps: (Array.isArray(obj.gaps) ? obj.gaps : []).map(String).map((s) => s.trim()).filter(Boolean),
     }

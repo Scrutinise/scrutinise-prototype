@@ -626,7 +626,11 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       passMethod: def.method,
       knownUnknowns: gathered.gaps,
     })
-    const issueTexts = adversarial ?? gathered.issues
+    // ⚠ 25-V §7 — `gathered.issues` now carries a title and `adversarial` is still a string list.
+    // Normalising here keeps both producers working and gives the write one shape to store.
+    const issueTexts: Array<{ title: string | null; text: string }> = adversarial
+      ? adversarial.map((t) => ({ title: null, text: t }))
+      : gathered.issues
     if (!adversarial) {
       console.warn('[deepening] adversarial issues call failed — falling back to the gather\'s own issues', { passKey })
     }
@@ -634,8 +638,10 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       passKey, adversarial: !!adversarial, raised: issueTexts.length, gatherWouldHaveRaised: gathered.issues.length,
     })
 
-    for (const text of issueTexts) {
-      await prisma.deepeningIssue.create({ data: { ideaId, passKey, runVersion, text, status: 'OPEN' } })
+    for (const issue of issueTexts) {
+      await prisma.deepeningIssue.create({
+        data: { ideaId, passKey, runVersion, text: issue.text, title: issue.title, status: 'OPEN' },
+      })
       issues++
     }
 

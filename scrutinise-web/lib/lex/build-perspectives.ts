@@ -36,7 +36,8 @@ export interface MergedFinding extends RawFinding {
 
 export interface MergedGather {
   findings: MergedFinding[]
-  issues: string[]
+  /** ⚠ 25-V §7 — an issue carries a title. See `deepening-client.ts`'s `issues` for why. */
+  issues: Array<{ title: string | null; text: string }>
   answered: string[]
   gaps: string[]
   /** §7 — what the extra perspectives actually bought, as numbers rather than prose. */
@@ -92,6 +93,23 @@ function findingKey(f: RawFinding): string {
 }
 
 /** Dedupe a list of strings case-insensitively, keeping the first spelling seen. */
+/**
+ * ⚠ 25-V §7 — the same rule as `dedupeText`, on the field that decides identity. Two perspectives
+ * raising the same challenge under different headings are one challenge; the first title wins
+ * rather than both being kept, and a titleless duplicate never overwrites a titled one.
+ */
+function dedupeIssues(values: Array<{ title: string | null; text: string }>): Array<{ title: string | null; text: string }> {
+  const byText = new Map<string, { title: string | null; text: string }>()
+  for (const v of values) {
+    const key = v.text.trim().toLowerCase()
+    if (!key) continue
+    const seen = byText.get(key)
+    if (!seen) byText.set(key, v)
+    else if (!seen.title && v.title) byText.set(key, v)
+  }
+  return [...byText.values()]
+}
+
 function dedupeText(values: string[]): string[] {
   const seen = new Set<string>()
   const out: string[] = []
@@ -163,7 +181,10 @@ export function mergePerspectives(runs: PerspectiveRun[]): MergedGather {
     // Unique findings FIRST. They are what the extra spend bought, and burying them
     // under the consensus ones is a quieter way of averaging them away.
     findings: [...findings].sort((a, b) => Number(b.unique) - Number(a.unique)),
-    issues: dedupeText(ok.flatMap((r) => r.result!.issues)),
+    // ⚠ 25-V §7 — an issue is now { title, text }, so it dedupes on its TEXT and keeps the first
+    // title seen. Deduping on the whole object would keep two copies of one challenge whenever two
+    // perspectives happened to title it differently, which is the opposite of what dedupe is for.
+    issues: dedupeIssues(ok.flatMap((r) => r.result!.issues)),
     answered: dedupeText(ok.flatMap((r) => r.result!.answered)),
     gaps: dedupeText(ok.flatMap((r) => r.result!.gaps)),
     divergence: {

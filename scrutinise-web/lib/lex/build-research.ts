@@ -610,9 +610,15 @@ export async function runResearch(input: {
         })
       }
 
-      for (const text of merged.issues) {
+      for (const issue of merged.issues) {
         await prisma.deepeningIssue.create({
-          data: { ideaId: input.ideaId, passKey: q.id, runVersion: input.buildVersion, text, status: 'OPEN' },
+          // ⚠ 25-V §7 — the title is stored where the model gave one, and left null where it did
+          // not. Never derived from the first sentence of the text: a title invented from prose is
+          // a claim about what the challenge is ABOUT, and that is the model's judgement to make.
+          data: {
+            ideaId: input.ideaId, passKey: q.id, runVersion: input.buildVersion,
+            text: issue.text, title: issue.title, status: 'OPEN',
+          },
         })
       }
     }
