@@ -1715,6 +1715,66 @@ the switch is exactly the flag the schema argues against). **Say which.**
 
 ---
 
+## 2026-09-02 16:27 UTC — B17: ALL TWELVE MEASURES BUILT ON FULL RETRIEVAL — 1,100 EVIDENCE ROWS, 937 CITED, NOT ONE FAILED PASS
+
+B17 executed. Eleven builds on the full configuration, exported and verified; M-01 v2 preserved as
+the keyword-only baseline. Report `docs/report_run/B17_TWELVE_BUILDS_COMPLETE.md`. **Allowance left:
+3 thirds.**
+
+▶▶ **WHAT THE ROUTER WAS WORTH.** M-01 v2 keyword-only returned **case law 1, legislation 3** and
+fourteen unattributed rows. M-02 on the full configuration returned **case law 33, legislation 18**,
+and later builds add source types keyword-only never produced at all — GUIDANCE, IMPACT_ASSESSMENT,
+EXPLANATORY_NOTE, BILL, CONSULTATION. ORIENT retrieved 240 against 48. CCW's §2 diagnosis was right
+for the reason given: *fourteen unattributed rows is what an unscoped query looks like.*
+
+⚠⚠ **BUT IT IS SUGGESTIVE, NOT MEASURED, AND MUST NOT PRINT AS MEASURED.** M-01 and M-02 are
+DIFFERENT MEASURES. The single-variable test is M-01 v3, which the allowance could not afford when
+step 3 called for it. **3 thirds remain, so it is affordable now** — offered to Charlie, not taken
+unilaterally.
+
+▶ **THE CLASSIFICATION AND THE EVIDENCE AGREE WITHOUT BEING MADE TO.** CCW's B15 §5 rule shows up in
+the retrieval profiles: LAW_CHANGE measures return legislation and case law in double figures;
+APPLICATION_CHANGE (M-08) returns **guidance 24**, the highest of the run; UNSURE (M-10) returns
+**legislation 5**, the lowest, and argument rather than instruments. Two independent routes agreeing.
+
+⚠⚠ **THREE THIN BUILDS THAT ARE FINDINGS, NOT SHORTFALLS**, and a reader comparing row counts will
+misread all three. **M-09** (83 rows) asked all seven questions, reviewed the full 600 sources, was
+not truncated, and found 1 contradiction with 12 gaps — that is what searching for something NEVER
+ENACTED looks like, and it is now the third independent route to that conclusion after CCW's reading
+and B12's provision retrieval. **M-10** (75 rows, legislation 5) names no instrument. **M-12** (52
+rows, the lightest) is the MASTER SCOPE STATEMENT, and its thinness is B5's finding from the other
+end: the scope is temporal, 1997-2010, not a list of instruments, so there is no statute to find.
+
+⚠ **THE SPEND CEILING TRUNCATED SIX OF ELEVEN.** M-02/03/04/05/08/10 asked 6 questions not 7, most
+saying "stopped at its own spend ceiling"; the other five asked all seven. M-01 v2 on keyword-only
+asked 7. **So some stated gaps are UNASKED QUESTIONS rather than unanswered ones, and the build
+output does not distinguish them** — that matters before a gaps section is read as a coverage claim.
+
+⚠⚠ **THE STOP-LOSS FIRED ON A CHECK THAT COULD NOT HAVE PASSED.** B17 step 2 says verify from the
+worker's `[config] … fully-configured` banner. That banner exists ONLY in the UNCOMMITTED
+working-tree copy of `build-worker.ts` (another session's edit, lines 43/133); `git show HEAD:` has
+no such import, and Railway builds from the repository. **The deployed worker cannot print it
+whatever its configuration.** Its absence was evidence about the verification path, not about the
+config — the same class CCW named for `sync-worker-retrieval.ts`. Did not revert, did not debug;
+reordered steps 3 and 4 so verification came from the next build's own evidence profile, and said so
+at the time rather than afterwards.
+
+▶ **Variables set and read back** on the Railway build-worker; previous values recorded BEFORE the
+change as `null` = ABSENT, which is a distinct state from empty and is restored by deletion, not
+blanking. `b17-set-worker-retrieval.ts --revert` does exactly that.
+
+⚠⚠ **TWO BUGS OF MINE, AND THEY ARE WHERE THE MARGIN WENT.** (1) `claimBuild` requires `framing`; I
+fixed the resume path when M-01 hit it and **left the new-idea path passing `undefined`**, so M-02 —
+the first new idea after that fix — failed identically after creating its Idea row. **One fix, two
+call sites, and only the site that had already failed got it.** (2) `b14-drain`'s guard was RIGHT and
+my architecture was WRONG: it reported "nothing moved" and stopped the run, correctly, because the
+Railway worker claims a QUEUED row within ~5s and a local `--once` drain was never going to move
+anything. Replaced by waiting on the ROW, which is true whichever worker runs it. Both created build
+rows before failing, and a created build spends — 39 thirds became exactly 33 for 11 builds.
+
+**Totals: 1,100 evidence rows, 937 with citation and URL, 497 deepening issues, eleven builds, ZERO
+failed passes.**
+
 ## 2026-09-02 13:30 UTC — B15a: THE EXPORT WAS MISSING 89 CHALLENGES, AND THE SCREEN SHOWS ZERO OF THEM TOO
 
 B15a executed. Both of CCW's gap candidates confirmed and closed, plus a third gap running the

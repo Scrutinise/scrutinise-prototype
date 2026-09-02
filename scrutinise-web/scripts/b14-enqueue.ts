@@ -47,11 +47,29 @@ const GO = process.argv.includes('--go')
  * the export, and CCW is asked to confirm it before the remaining eleven. Nothing is
  * reworded: the full remedy is in `goalDetail`, which IS what the build reads.
  */
+/**
+ * ⚠ CCW'S TABLE (B15 §5), NOT MINE. Their rule: *use the instrument the proposer names or
+ * clearly implies; where he names none, `UNSURE`, because inventing an instrument for him
+ * is what this report exists not to do.* Mine differed on three rows and theirs is right
+ * on all three — M-06 needs statute whatever the target, M-09 has no statute saying
+ * self-identification to repeal, and M-10 names no instrument at all.
+ *
+ * ⚠⚠ The distribution is itself a finding: a programme described throughout as a REPEAL
+ * programme has two measures with no statute to repeal and one with no stated instrument.
+ */
 const GOAL_KIND_MAP: Record<string, string> = {
-  'M-01': 'LAW_CHANGE', 'M-02': 'LAW_CHANGE', 'M-03': 'LAW_CHANGE',
-  'M-04': 'LAW_CHANGE', 'M-05': 'LAW_CHANGE', 'M-06': 'INSTITUTIONAL_PRESSURE',
-  'M-07': 'LAW_CHANGE', 'M-08': 'APPLICATION_CHANGE', 'M-09': 'LAW_CHANGE',
-  'M-10': 'APPLICATION_CHANGE', 'M-11': 'LAW_CHANGE', 'M-12': 'LAW_CHANGE',
+  'M-01': 'LAW_CHANGE',          // repeal and leave
+  'M-02': 'LAW_CHANGE',          // repeal
+  'M-03': 'LAW_CHANGE',          // abolition needs CRA 2005 Pt 3 repealed
+  'M-04': 'LAW_CHANGE',          // each body has a founding statute
+  'M-05': 'LAW_CHANGE',          // restricting JR needs statute
+  'M-06': 'LAW_CHANGE',          // ⚠ target ambiguous (1854 vs CRAG Pt 1) but any reversal needs statute
+  'M-07': 'LAW_CHANGE',          // independence conferred by the Bank of England Act 1998
+  'M-08': 'APPLICATION_CHANGE',  // ⚠ the complaint is about practice, not statute
+  'M-09': 'APPLICATION_CHANGE',  // ⚠ self-identification was never enacted — no statute to repeal
+  'M-10': 'UNSURE',              // ⚠ he names no instrument; legislation, grant conditions and guidance are all available
+  'M-11': 'LAW_CHANGE',          // statutory body
+  'M-12': 'LAW_CHANGE',          // one omnibus Act
 }
 
 /**
@@ -169,7 +187,12 @@ async function main() {
     },
   })
 
-  const buildId = await claimBuild(idea.id, undefined, false, 'FULL')
+  // ⚠ DEFAULT_FRAMING, not undefined. `framing` is required by claimBuild — it is the API
+  // route that supplies the default, not the engine. This was fixed in the resume branch
+  // above when M-01 hit it and NOT here, so the first NEW idea after that (M-02) failed
+  // the same way, after its Idea row had been created. One fix, two call sites, and only
+  // the site that had already failed got it.
+  const buildId = await claimBuild(idea.id, DEFAULT_FRAMING, false, 'FULL')
   const state = await prisma.ideaBuild.findUnique({
     where: { id: buildId }, select: { id: true, version: true, status: true, mode: true },
   })
