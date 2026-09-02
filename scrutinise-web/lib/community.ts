@@ -752,15 +752,36 @@ export async function leaveCommunity(userId: string, communityId: string): Promi
       ? await getCommunityTreeIds(communityId) // leaving the Community leaves all of it
       : [communityId]
 
-  const owned = await prisma.communityMember.findFirst({
+  // ⚠⚠ CENTRAL 25-B §5 — THIS USED TO BE A DEAD END. It refused to let anybody
+  // leave while they managed a branch inside the Community, and told them to
+  // "hand that branch over" — which nothing in the product could do, because
+  // ownership was only ever written at creation. So the instruction was to
+  // perform an act that did not exist.
+  //
+  // Leaving now stands them down from every branch they manage (§5a), leaving
+  // each one VACANT rather than deleted or reassigned (§5b). The branches, their
+  // boards and their members are untouched.
+  const owned = await prisma.communityMember.findMany({
     where: { userId, communityId: { in: targets }, role: 'OWNER' },
-    select: { communityId: true },
+    select: { communityId: true, community: { select: { parentCommunityId: true } } },
   })
-  if (owned) {
+  // The ROOT is still not leavable by its owner — there is nobody above it, and
+  // a Community with no owner has no one who can appoint anybody.
+  if (owned.some((o) => o.community.parentCommunityId === null)) {
     throw new CommunityRuleError(
-      'You own a branch inside this Community — hand that branch over before leaving.',
+      'An owner cannot leave — hand ownership to someone else first.',
       409,
     )
+  }
+  if (owned.length > 0) {
+    const { vacateBranchOwnership } = await import('./community-permissions')
+    for (const o of owned) {
+      await vacateBranchOwnership({
+        communityId: o.communityId,
+        actorUserId: userId,
+        reason: 'Left the Community',
+      })
+    }
   }
 
   const { count } = await prisma.communityMember.deleteMany({

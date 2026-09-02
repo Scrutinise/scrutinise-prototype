@@ -39,9 +39,14 @@ const ROLE_BADGE: Record<string, string> = {
 export default function MembersPanel({
   communityId,
   defaultOpen = false,
+  isBranch = false,
+  nodeName = 'this branch',
 }: {
   communityId: string
   defaultOpen?: boolean
+  /** CENTRAL 25-B §5 — ownership moves on BRANCHES only; the root is not vacatable. */
+  isBranch?: boolean
+  nodeName?: string
 }) {
   const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
@@ -50,6 +55,10 @@ export default function MembersPanel({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
+  // §5 — the ownership controls. `ownerAction` is the row being acted on, and a
+  // reason is required before either call is allowed to fire (decision 51).
+  const [ownerAction, setOwnerAction] = useState<{ kind: 'vacate' | 'appoint'; userId: string } | null>(null)
+  const [reason, setReason] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -65,6 +74,8 @@ export default function MembersPanel({
   useEffect(() => {
     load()
   }, [load])
+
+  const vacant = !members.some((m) => m.role === 'OWNER')
 
   async function act(userId: string, run: () => Promise<Response>) {
     setBusyId(userId)
@@ -107,6 +118,27 @@ export default function MembersPanel({
 
   const remove = (userId: string) =>
     act(userId, () => fetch(`/api/communities/${communityId}/members/${userId}`, { method: 'DELETE' }))
+
+  /**
+   * §5 — stand the branch manager down, or appoint one.
+   *
+   * ⚠ A separate route from the role control on purpose: `setMemberRole` still
+   * refuses to touch an OWNER, and it should. These are deliberate acts with a
+   * recorded reason, not a rung on the role ladder.
+   */
+  function ownership(userId: string, kind: 'vacate' | 'appoint') {
+    const body = kind === 'vacate' ? { action: 'vacate', reason } : { action: 'appoint', userId, reason }
+    return act(userId, () =>
+      fetch(`/api/communities/${communityId}/ownership`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+    ).then(() => {
+      setOwnerAction(null)
+      setReason('')
+    })
+  }
 
   return (
     <details open={defaultOpen} className="central-card p-4">
@@ -171,6 +203,68 @@ export default function MembersPanel({
                 </select>
               </div>
 
+              {/* ⚠⚠ CENTRAL 25-B §5 — THE OWNER ROW USED TO RENDER NOTHING AT ALL.
+                  Ownership was written once, at creation, and there was no
+                  control anywhere that could move it — so a branch manager who
+                  left, went quiet or was removed could never be replaced, and
+                  the branch could only be deleted and rebuilt. On a branch, the
+                  manager can now be stood down; the position then stays vacant
+                  until somebody is appointed, which is a state real branches are
+                  in and the product has to be able to show. */}
+              {m.role === 'OWNER' && isBranch && (
+                <div className="mt-1.5">
+                  {ownerAction?.kind === 'vacate' && ownerAction.userId === m.userId ? (
+                    <div className="space-y-1.5">
+                      <label className="block text-xs text-muted-foreground" htmlFor={`why-${m.userId}`}>
+                        Why are they standing down? This is recorded.
+                      </label>
+                      <input
+                        id={`why-${m.userId}`}
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        maxLength={500}
+                        placeholder="e.g. stood down at the branch AGM"
+                        className="w-full rounded border bg-background px-2 py-1 text-xs"
+                      />
+                      <div className="flex gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 text-xs"
+                          disabled={busyId === m.userId || !reason.trim()}
+                          onClick={() => ownership(m.userId, 'vacate')}
+                        >
+                          Stand them down
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => {
+                            setOwnerAction(null)
+                            setReason('')
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs text-muted-foreground"
+                      onClick={() => {
+                        setOwnerAction({ kind: 'vacate', userId: m.userId })
+                        setReason('')
+                      }}
+                    >
+                      Stand down as branch manager
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {m.role !== 'OWNER' && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {m.role === 'MEMBER' ? (
@@ -224,13 +318,78 @@ export default function MembersPanel({
                       Remove
                     </Button>
                   )}
+                  {/* §5 — appoint. Works whether the position is vacant or held;
+                      an incumbent is stood down in the same transaction. */}
+                  {isBranch &&
+                    (ownerAction?.kind === 'appoint' && ownerAction.userId === m.userId ? null : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs text-muted-foreground"
+                        onClick={() => {
+                          setOwnerAction({ kind: 'appoint', userId: m.userId })
+                          setReason('')
+                        }}
+                      >
+                        {vacant ? 'Make branch manager' : 'Make branch manager instead'}
+                      </Button>
+                    ))}
+                </div>
+              )}
+
+              {ownerAction?.kind === 'appoint' && ownerAction.userId === m.userId && (
+                <div className="mt-1.5 space-y-1.5">
+                  <label className="block text-xs text-muted-foreground" htmlFor={`appoint-${m.userId}`}>
+                    Why are they being appointed? This is recorded.
+                  </label>
+                  <input
+                    id={`appoint-${m.userId}`}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    maxLength={500}
+                    placeholder="e.g. elected at the branch AGM"
+                    className="w-full rounded border bg-background px-2 py-1 text-xs"
+                  />
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 text-xs"
+                      disabled={busyId === m.userId || !reason.trim()}
+                      onClick={() => ownership(m.userId, 'appoint')}
+                    >
+                      Appoint
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => {
+                        setOwnerAction(null)
+                        setReason('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           ))
         )}
+        {/* ⚠ §5b — A VACANT BRANCH IS A REAL STATE, NOT AN ERROR. Real branches
+            sometimes have no chair, and the product has to be able to say so
+            rather than showing a members list that quietly has no manager in it. */}
+        {isBranch && vacant && !loading && (
+          <p className="rounded border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+            <strong>{nodeName} has no branch manager.</strong> The branch and everything in it are
+            unaffected, and the Community’s admins can still manage it — but nobody here is
+            accountable for it until somebody is appointed.
+          </p>
+        )}
         <p className="pt-1 text-xs text-muted-foreground">
-          The owner’s role is fixed here — ownership has to be handed over, not demoted.
+          The owner’s role is not a rung on this ladder — a branch manager is stood down or
+          appointed as its own act, with a reason, and it is recorded.
         </p>
         <p className="text-xs text-muted-foreground">
           A title is this Community’s own word for somebody — &ldquo;Branch Chair&rdquo; and the

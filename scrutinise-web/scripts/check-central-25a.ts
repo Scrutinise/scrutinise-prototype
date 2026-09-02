@@ -35,12 +35,18 @@ import { acceptOutstandingInvitations } from '../lib/invite-acceptance'
 import {
   joinCommunityAndRoot,
   canManageCommunity,
+  setMemberRole,
+  removeMember,
+  leaveCommunity,
   getCommunityMembership,
   getCommunityTree,
   decideJoinRequest,
   listJoinRequests,
 } from '../lib/community'
 import {
+  appointBranchOwner,
+  branchIsVacant,
+  vacateBranchOwnership,
   archiveMembership,
   canInvite,
   inviteRightFor,
@@ -1146,6 +1152,233 @@ async function main() {
       !/prisma\.communityMember\.create/.test(sweepSrc),
   )
 
+  // ══ 25-B §5 — branch ownership is transferable and vacatable ════════
+  console.log('\n25-B §5 — standing a branch manager down, and appointing one')
+
+  // ⚠ ITS OWN BRANCH. The first version reused the §3a branch, which already had
+  // an OWNER — so `joinCommunityAndRoot(…, 'OWNER')` quietly added a SECOND one,
+  // the vacate demoted whichever `findFirst` returned, and the fixture read as
+  // "they already manage this branch". Nothing in the schema forbids two owners,
+  // which is exactly why `appointBranchOwner` demotes in the same transaction.
+  const ownBranch = await prisma.community.create({
+    data: { name: `Check 25A ownership ${MARK}`, parentCommunityId: community.id },
+    select: { id: true },
+  })
+  scratch.communityIds.unshift(ownBranch.id)
+
+  const founder = await makeUser('founder', `check25a+${MARK}+founder@example.invalid`)
+  const successor = await makeUser('successor', `check25a+${MARK}+successor@example.invalid`)
+  const bystander = await makeUser('bystander', `check25a+${MARK}+bystander@example.invalid`)
+  await joinCommunityAndRoot(founder.id, ownBranch.id, 'OWNER')
+  await joinCommunityAndRoot(successor.id, ownBranch.id, 'MEMBER')
+  await joinCommunityAndRoot(bystander.id, sibling.id, 'MEMBER')
+  assert(
+    'the fixture branch has exactly one manager to begin with',
+    (await prisma.communityMember.count({ where: { communityId: ownBranch.id, role: 'OWNER' } })) === 1,
+  )
+
+  assert(
+    'the branch has a manager to begin with',
+    !(await branchIsVacant(ownBranch.id)),
+  )
+
+  // ⚠ A REASON IS REQUIRED (decision 51).
+  const noReason = await vacateBranchOwnership({
+    communityId: ownBranch.id,
+    actorUserId: owner.id,
+    reason: '   ',
+  })
+    .then(() => null)
+    .catch((e) => e as Error)
+  assert('a vacate with no reason is refused', noReason !== null, noReason?.message ?? 'not refused')
+
+  // ⚠ THE ROOT IS NOT VACATABLE.
+  const rootVacate = await vacateBranchOwnership({
+    communityId: community.id,
+    actorUserId: owner.id,
+    reason: 'trying to empty the Community',
+  })
+    .then(() => null)
+    .catch((e) => e as Error)
+  assert(
+    'the Community itself cannot be left without an owner',
+    rootVacate !== null,
+    rootVacate?.message ?? 'not refused',
+  )
+  assert(
+    'and the Community still has its owner',
+    !(await branchIsVacant(community.id)),
+  )
+
+  // ⚠ Somebody with no standing cannot change who manages a branch.
+  const stranger = await vacateBranchOwnership({
+    communityId: ownBranch.id,
+    actorUserId: bystander.id,
+    reason: 'not mine to decide',
+  })
+    .then(() => null)
+    .catch((e) => e as Error)
+  assert(
+    'a member of another branch cannot stand this one\'s manager down',
+    stranger !== null,
+    stranger?.message ?? 'not refused',
+  )
+  control(
+    'the same test over the Community owner, who may',
+    (await vacateBranchOwnership({ communityId: ownBranch.id, actorUserId: owner.id, reason: 'probe' })
+      .then(() => null)
+      .catch((e) => e as Error)) !== null,
+  )
+  // the control above actually vacated it — put it back for the real assertions
+  await appointBranchOwner({
+    communityId: ownBranch.id,
+    targetUserId: founder.id,
+    actorUserId: owner.id,
+    reason: 'restoring the fixture',
+  })
+
+  // ⚠⚠ DECISION 50 — an admin may stand a manager down WITHOUT their agreement.
+  await vacateBranchOwnership({
+    communityId: ownBranch.id,
+    actorUserId: owner.id,
+    reason: 'Stood down by the Community, no agreement sought',
+  })
+  assert(
+    'a Community admin can stand a branch manager down without their agreement',
+    await branchIsVacant(ownBranch.id),
+  )
+  assert(
+    '⚠ §5a — and they remain an ordinary MEMBER of the branch, not removed from it',
+    (await getCommunityMembership(founder.id, ownBranch.id))?.role === 'MEMBER',
+  )
+  assert(
+    '§5b — the branch is not deleted and does not change hands',
+    (await prisma.community.findUnique({ where: { id: ownBranch.id }, select: { deletedAt: true } }))
+      ?.deletedAt === null,
+  )
+  assert(
+    'the manager pointer does not outlive the role',
+    (await prisma.community.findUniqueOrThrow({ where: { id: ownBranch.id }, select: { managerId: true } }))
+      .managerId === null,
+  )
+  control(
+    'the same test claiming the branch still has a manager',
+    !(await branchIsVacant(ownBranch.id)),
+  )
+
+  // ⚠ The reason is recorded — decision 51's whole point.
+  const vacateLog = await prisma.activityLog.findFirst({
+    where: { entityType: 'Community', entityId: ownBranch.id, activityType: 'BRANCH_OWNERSHIP_VACATED' },
+    orderBy: { createdAt: 'desc' },
+    select: { description: true, metadata: true },
+  })
+  assert(
+    'the reason it was vacated is recorded',
+    Boolean(vacateLog) && vacateLog!.description.includes('no agreement sought'),
+    vacateLog?.description ?? 'no log row',
+  )
+
+  // ⚠ A vacant branch is still manageable from above — §5b's whole premise.
+  assert(
+    'a vacant branch is still manageable by the Community',
+    await canManageCommunity(owner.id, ownBranch.id),
+  )
+
+  // §5e-adjacent: appointing transfers, and the incumbent is demoted with it.
+  await appointBranchOwner({
+    communityId: ownBranch.id,
+    targetUserId: successor.id,
+    actorUserId: owner.id,
+    reason: 'Elected at the branch AGM',
+  })
+  assert(
+    'appointing somebody makes them the branch manager',
+    (await getCommunityMembership(successor.id, ownBranch.id))?.role === 'OWNER',
+  )
+  assert(
+    'the branch is no longer vacant',
+    !(await branchIsVacant(ownBranch.id)),
+  )
+  assert(
+    '⚠ and there is exactly ONE manager — an incumbent is demoted in the same transaction',
+    (await prisma.communityMember.count({ where: { communityId: ownBranch.id, role: 'OWNER' } })) === 1,
+  )
+  control(
+    'the same test over a node where two owners would be tolerated',
+    (await prisma.communityMember.count({ where: { communityId: ownBranch.id, role: 'OWNER' } })) !== 1,
+  )
+  assert(
+    'appointing a non-member is refused — a manager has to be in the branch',
+    (await appointBranchOwner({
+      communityId: ownBranch.id,
+      targetUserId: bystander.id,
+      actorUserId: owner.id,
+      reason: 'not a member here',
+    })
+      .then(() => null)
+      .catch((e) => e as Error)) !== null,
+  )
+
+  // ⚠ THE GUARDS STAY. This is what stops a node being takeable by a co-admin.
+  const stillFixed = await setMemberRole(ownBranch.id, successor.id, 'MEMBER')
+    .then(() => null)
+    .catch((e) => e as Error)
+  assert(
+    'the ordinary role control STILL refuses to touch an owner',
+    stillFixed !== null,
+    stillFixed?.message ?? 'not refused',
+  )
+  const stillUnremovable = await removeMember(ownBranch.id, successor.id, owner.id)
+    .then(() => null)
+    .catch((e) => e as Error)
+  assert(
+    'and the owner still cannot be removed',
+    stillUnremovable !== null,
+    stillUnremovable?.message ?? 'not refused',
+  )
+
+  // ⚠ leaveCommunity was a DEAD END: it told people to hand a branch over,
+  // which nothing could do.
+  await appointBranchOwner({
+    communityId: sibling.id,
+    targetUserId: bystander.id,
+    actorUserId: owner.id,
+    reason: 'so they have a branch to leave',
+  })
+  const left = await leaveCommunity(bystander.id, community.id)
+    .then(() => null)
+    .catch((e) => e as Error)
+  assert(
+    'somebody who manages a branch can now leave the Community',
+    left === null,
+    left?.message ?? '',
+  )
+  assert(
+    '— and the branch they managed is left VACANT, not deleted',
+    (await branchIsVacant(sibling.id)) &&
+      (await prisma.community.findUnique({ where: { id: sibling.id }, select: { deletedAt: true } }))
+        ?.deletedAt === null,
+  )
+  control(
+    'the same test claiming the branch went with them',
+    (await prisma.community.findUnique({ where: { id: sibling.id }, select: { deletedAt: true } }))
+      ?.deletedAt !== null,
+  )
+
+  // The controls exist on the surface — without them the three functions above
+  // are unreachable, which is the whole reason §5c named the panel.
+  const membersPanelSrc = readFileSync('app/communities/[id]/MembersPanel.tsx', 'utf8')
+  assert(
+    'the Members panel offers the branch-manager controls on an OWNER row',
+    membersPanelSrc.includes('Stand down as branch manager') &&
+      membersPanelSrc.includes('Make branch manager') &&
+      membersPanelSrc.includes('/ownership'),
+  )
+  assert(
+    'and it says plainly when a branch has no manager',
+    membersPanelSrc.includes('has no branch manager'),
+  )
+
   // ══ §6 — the admin user list ═════════════════════════════════════════════
   console.log('\n§6 — the user list, and the sign-in cell that is never blank')
 
@@ -1325,6 +1558,12 @@ async function cleanup() {
   await attempt('credibility', () =>
     prisma.credibilityScore.deleteMany({ where: { userId: { in: scratch.userIds } } }),
   )
+  // ⚠ NEW IN 25-B §5: the ownership audit writes `ActivityLog` rows that reference
+  // the actor. They are a foreign key onto User, so the teardown that never knew
+  // about them left twenty-two fixture accounts standing on production.
+  await attempt('ownership audit', () =>
+    prisma.activityLog.deleteMany({ where: { userId: { in: scratch.userIds } } }),
+  )
   await attempt('users', () => prisma.user.deleteMany({ where: { id: { in: scratch.userIds } } }))
 
   // ⚠ THE SWEEP. Fixtures from an earlier run that died before its teardown —
@@ -1343,6 +1582,9 @@ async function cleanup() {
     )
     await attempt('sweep credibility', () =>
       prisma.credibilityScore.deleteMany({ where: { userId: { in: ids } } }),
+    )
+    await attempt('sweep ownership audit', () =>
+      prisma.activityLog.deleteMany({ where: { userId: { in: ids } } }),
     )
     await attempt('sweep users', () => prisma.user.deleteMany({ where: { id: { in: ids } } }))
   }

@@ -329,7 +329,12 @@ export default function CommunityDashboardClient({
                   defaultOpen={openPanel === 'requests'}
                 />
                 <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
-                <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
+                <MembersPanel
+                  communityId={community.id}
+                  defaultOpen={openPanel === 'members'}
+                  isBranch={isBranch}
+                  nodeName={community.name}
+                />
                 {/* CENTRAL 25-A §2 — who was invited and what became of them.
                     It sits beside Members deliberately: "who is here" and "who
                     was asked and never arrived" are the two halves of the same

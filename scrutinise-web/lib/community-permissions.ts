@@ -8,7 +8,13 @@
  */
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAncestorIds, getRootCommunityId, removeMember } from '@/lib/community'
+import {
+  CommunityRuleError,
+  canManageCommunity,
+  getAncestorIds,
+  getRootCommunityId,
+  removeMember,
+} from '@/lib/community'
 import {
   DEFAULT_INVITE_RIGHTS,
   parseInviteRights,
@@ -207,4 +213,255 @@ export async function listArchivedMemberships(communityId: string) {
     // §7h — who brought them in, still readable after they have gone.
     invitedByName: r.invitedByArchived?.name ?? r.invitedByArchived?.username ?? null,
   }))
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CENTRAL 25-B §5 / decision 44 — BRANCH OWNERSHIP IS TRANSFERABLE AND VACATABLE.
+//
+// ⚠⚠ THE GOVERNING PRINCIPLE, IN CHARLIE'S WORDS: who the branch manager is sits
+// OUTSIDE this system. It is a matter for the party. The product reflects that
+// reality; it does not decide it, and it does not require the person's consent
+// to record it (decision 50).
+//
+// ⚠⚠ WHAT WAS ACTUALLY WRONG, AND §8h GOT IT HALF RIGHT. It reported this as
+// unbuildable because `removeMember` and `setMemberRole` refuse to touch an
+// OWNER. The refusals were never the problem:
+//
+//   · a Community has NO owner column — ownership is one CommunityMember row
+//     with role OWNER, with no constraint that a node has one;
+//   · a vacant branch is ALREADY a representable state: canManageCommunity walks
+//     ancestors, so the Community's owner and admins still manage it, still
+//     decide its join requests and can still delete it;
+//   · but ONLY TWO code paths in the whole application ever wrote OWNER —
+//     creating a Community and creating a branch. **Nothing could make an
+//     existing member the owner of anything.** Ownership was granted once, at
+//     creation, and never again, so a branch chair who left, went quiet or was
+//     removed could never be replaced.
+//
+// ⚠ THE TWO GUARDS STAY. `setMemberRole` and `removeMember` still refuse an
+// OWNER, and `check:central` still asserts that they do. Relaxing them would
+// make a node takeable by any co-admin, which is exactly what they are for.
+// These are deliberate, separately-named acts instead.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The audit trail for both acts.
+ *
+ * ⚠ `ActivityLog`, deliberately, and not a new table: its only reader filters on
+ * `ideaId` AND `accessType: 'ADMIN_ACCESS'`, so a row with neither is invisible
+ * to it. A first-class table would be cleaner and would cost a migration; if one
+ * is ever added, these rows are the backfill.
+ */
+async function recordOwnershipEvent(params: {
+  actorUserId: string
+  subjectUserId: string
+  communityId: string
+  kind: 'VACATED' | 'APPOINTED'
+  reason: string
+  communityName: string
+}) {
+  await prisma.activityLog.create({
+    data: {
+      userId: params.actorUserId,
+      activityType: `BRANCH_OWNERSHIP_${params.kind}`,
+      entityType: 'Community',
+      entityId: params.communityId,
+      description:
+        params.kind === 'VACATED'
+          ? `Branch manager of “${params.communityName}” stood down or was stood down — ${params.reason}`
+          : `Appointed branch manager of “${params.communityName}” — ${params.reason}`,
+      metadata: { subjectUserId: params.subjectUserId, reason: params.reason },
+    },
+  })
+}
+
+/** A node whose ownership may move: a branch, never the Community itself. */
+async function requireBranch(communityId: string) {
+  const node = await prisma.community.findUnique({
+    where: { id: communityId },
+    select: { id: true, name: true, parentCommunityId: true, deletedAt: true },
+  })
+  if (!node || node.deletedAt) throw new CommunityRuleError('Not found', 404)
+  // ⚠ THE ROOT IS NOT VACATABLE. A Community with no owner would leave
+  // `inviteRightFor`'s "the owner always holds the right" with nobody, and there
+  // is no one above the root to manage it. Handing over a whole Community is a
+  // different act and is not built.
+  if (!node.parentCommunityId) {
+    throw new CommunityRuleError(
+      'The Community itself cannot be left without an owner — this is for branches.',
+      409,
+    )
+  }
+  return node
+}
+
+/**
+ * Stand a branch manager down. The branch is NOT deleted and does NOT change
+ * hands: the position becomes vacant and stays vacant until somebody is
+ * appointed (§5b). They remain an ordinary member of the branch (§5a).
+ *
+ * ⚠ A REASON IS REQUIRED (decision 51). A vacancy with no recorded reason later
+ * reads as a bug rather than a decision — and branch chairs are accountable, so
+ * why one was stood down is part of that record.
+ */
+export async function vacateBranchOwnership(params: {
+  communityId: string
+  actorUserId: string
+  reason: string
+}): Promise<{ vacatedUserId: string }> {
+  const node = await requireBranch(params.communityId)
+
+  const reason = params.reason?.trim()
+  if (!reason) {
+    throw new CommunityRuleError('Say why the branch manager is standing down', 422)
+  }
+
+  const owner = await prisma.communityMember.findFirst({
+    where: { communityId: node.id, role: 'OWNER' },
+    select: { userId: true },
+  })
+  if (!owner) throw new CommunityRuleError('This branch has no manager to stand down', 409)
+
+  // ⚠ DECISION 50 — an admin may do this WITHOUT the person's agreement. The
+  // product records what the party has decided; it does not adjudicate it. The
+  // person themselves may also stand down, which is the same act.
+  const isSelf = owner.userId === params.actorUserId
+  if (!isSelf && !(await canManageCommunity(params.actorUserId, node.id))) {
+    throw new CommunityRuleError('You cannot change who manages this branch', 403)
+  }
+
+  await prisma.$transaction([
+    prisma.communityMember.update({
+      where: { communityId_userId: { communityId: node.id, userId: owner.userId } },
+      data: { role: 'MEMBER' },
+    }),
+    // The manager pointer is informational and must not outlive the role.
+    prisma.community.updateMany({
+      where: { id: node.id, managerId: owner.userId },
+      data: { managerId: null },
+    }),
+  ])
+
+  await recordOwnershipEvent({
+    actorUserId: params.actorUserId,
+    subjectUserId: owner.userId,
+    communityId: node.id,
+    kind: 'VACATED',
+    reason,
+    communityName: node.name,
+  })
+
+  if (!isSelf) {
+    await prisma.notification.create({
+      data: {
+        userId: owner.userId,
+        type: 'SYSTEM',
+        title: 'You are no longer the branch manager',
+        message: `${node.name} — ${reason}. You are still a member of the branch.`,
+        linkUrl: `/communities/${node.id}`,
+      },
+    })
+  }
+
+  return { vacatedUserId: owner.userId }
+}
+
+/**
+ * Appoint a branch manager. Works whether the position is vacant or held.
+ *
+ * ⚠ THE INCUMBENT IS DEMOTED IN THE SAME TRANSACTION. Nothing in the schema
+ * forbids two OWNER rows on one node, and several reads would show both — a
+ * promotion that is not also a demotion silently creates that state.
+ */
+export async function appointBranchOwner(params: {
+  communityId: string
+  targetUserId: string
+  actorUserId: string
+  reason: string
+}): Promise<{ replacedUserId: string | null }> {
+  const node = await requireBranch(params.communityId)
+
+  const reason = params.reason?.trim()
+  if (!reason) throw new CommunityRuleError('Say why they are being appointed', 422)
+
+  if (!(await canManageCommunity(params.actorUserId, node.id))) {
+    throw new CommunityRuleError('You cannot change who manages this branch', 403)
+  }
+
+  const target = await prisma.communityMember.findUnique({
+    where: { communityId_userId: { communityId: node.id, userId: params.targetUserId } },
+    select: { role: true },
+  })
+  // ⚠ A branch manager has to be IN the branch. Appointing somebody who is not
+  // a member would create a manager the members list does not show.
+  if (!target) {
+    throw new CommunityRuleError('They have to be a member of the branch first', 409)
+  }
+  if (target.role === 'OWNER') {
+    throw new CommunityRuleError('They already manage this branch', 409)
+  }
+
+  const incumbent = await prisma.communityMember.findFirst({
+    where: { communityId: node.id, role: 'OWNER' },
+    select: { userId: true },
+  })
+
+  await prisma.$transaction([
+    ...(incumbent
+      ? [
+          prisma.communityMember.update({
+            where: { communityId_userId: { communityId: node.id, userId: incumbent.userId } },
+            data: { role: 'MEMBER' },
+          }),
+        ]
+      : []),
+    prisma.communityMember.update({
+      where: { communityId_userId: { communityId: node.id, userId: params.targetUserId } },
+      data: { role: 'OWNER' },
+    }),
+    prisma.community.updateMany({
+      where: { id: node.id },
+      data: { managerId: params.targetUserId },
+    }),
+  ])
+
+  if (incumbent) {
+    await recordOwnershipEvent({
+      actorUserId: params.actorUserId,
+      subjectUserId: incumbent.userId,
+      communityId: node.id,
+      kind: 'VACATED',
+      reason: `replaced — ${reason}`,
+      communityName: node.name,
+    })
+  }
+  await recordOwnershipEvent({
+    actorUserId: params.actorUserId,
+    subjectUserId: params.targetUserId,
+    communityId: node.id,
+    kind: 'APPOINTED',
+    reason,
+    communityName: node.name,
+  })
+
+  await prisma.notification.create({
+    data: {
+      userId: params.targetUserId,
+      type: 'SYSTEM',
+      title: 'You are now the branch manager',
+      message: `${node.name} — ${reason}`,
+      linkUrl: `/communities/${node.id}`,
+    },
+  })
+
+  return { replacedUserId: incumbent?.userId ?? null }
+}
+
+/** Is this branch without a manager? §5d's action item, and §5b's representable state. */
+export async function branchIsVacant(communityId: string): Promise<boolean> {
+  const owner = await prisma.communityMember.findFirst({
+    where: { communityId, role: 'OWNER' },
+    select: { id: true },
+  })
+  return owner === null
 }
