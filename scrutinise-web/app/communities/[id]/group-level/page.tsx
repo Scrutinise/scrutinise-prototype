@@ -38,12 +38,12 @@ export default async function GroupLevelPage({ params }: Props) {
     <div className="min-h-screen bg-background text-foreground">
       <PublicNav />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        {/* ⚠ The view is passed WHOLE, Dates included — the RSC payload carries
-            Date across intact. That matters because the client sorts with
-            `sortGroupMembers` from lib/group-view.ts, the same function this
-            file's data shape is declared by; stringifying the dates here would
-            have forced a second, copied sort in the component, which is the
-            drift docs/CLAUDE.md §26.5 exists to stop. */}
+        {/* ⚠ PLAIN SERIALISABLE DATA ONLY — `getGroupLevelView` returns
+            `joinedAt` as an ISO string, and every other field is a primitive or
+            an array of them. The query runs HERE, on the server; the client
+            component receives the result as props and imports only
+            `lib/group-view-types`, which has no imports at all. That separation
+            is what keeps the Postgres driver out of the browser bundle. */}
         <GroupLevel view={view} myUserId={user.id} />
       </main>
     </div>

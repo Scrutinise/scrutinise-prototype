@@ -5,13 +5,19 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+// ⚠⚠ `@/lib/group-view-types`, NOT `@/lib/group-view`. This import used to name
+// the latter, which imports `lib/prisma.ts` — and a VALUE import pulls the whole
+// module graph into the browser bundle, so the Postgres driver came with it and
+// every Vercel build died on dns/fs/net/tls. The query was already on the server
+// and the props were already plain; the EDGE was this line.
+// `npm run check:client-boundary` fails if it ever comes back.
 import {
   GROUP_SORTS,
   GROUP_SORT_LABEL,
   sortGroupMembers,
   type GroupLevelView,
   type GroupSort,
-} from '@/lib/group-view'
+} from '@/lib/group-view-types'
 import { TIER_DESCRIPTION, TIER_LABEL, type MembershipTier } from '@/lib/membership-tier'
 
 /**
@@ -25,9 +31,10 @@ import { TIER_DESCRIPTION, TIER_LABEL, type MembershipTier } from '@/lib/members
  * is the default sort, a count at the top, and a marked row, rather than
  * something a reader works out by scanning a column for blanks.
  *
- * ⚠ THE SORT IS `sortGroupMembers` FROM lib/group-view.ts, IMPORTED. The check
- * imports the same function and asserts on the same ordering; a copy here would
- * pass a check that still held the old rule (docs/CLAUDE.md §26.5).
+ * ⚠ THE SORT IS `sortGroupMembers` FROM lib/group-view-types.ts, IMPORTED. The
+ * check imports the same function from the same module and asserts on the same
+ * ordering; a copy here would pass a check that still held the old rule
+ * (docs/CLAUDE.md §26.5).
  *
  * ⚠ NO STATE IS CARRIED BY COLOUR. Charlie is colour blind: the anomaly is
  * marked by a WORD ("manages no branch") and a filled badge, never by hue.
@@ -238,7 +245,7 @@ export default function GroupLevel({
                       )}
                     </td>
                     <td className="tabular py-2 pr-3 text-xs">
-                      {m.joinedAt.toISOString().slice(0, 10)}
+                      {m.joinedAt.slice(0, 10)}
                     </td>
                     <td className="py-2 pr-3 text-xs">
                       {/* ⚠ §1h's anomaly, SAID rather than left as an empty cell. */}

@@ -31,6 +31,7 @@
     "check:central": "tsx --env-file=.env scripts/check-central-stage1.ts",
     "check:central-25a": "tsx --env-file=.env scripts/check-central-25a.ts",
     "check:central-25c": "tsx --env-file=.env scripts/check-central-25c.ts",
+    "check:client-boundary": "tsx scripts/check-client-server-boundary.ts",
     "check:orientation": "tsx --env-file=.env scripts/check-orientation.ts",
     "postinstall": "prisma generate",
     "check:flags": "tsx scripts/check-flags.ts",

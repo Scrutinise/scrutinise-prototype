@@ -1,5 +1,5 @@
 /**
- * CENTRAL 25-C §1h/§1i — THE CORRECTION SURFACE.
+ * CENTRAL 25-C §1h/§1i — THE CORRECTION SURFACE, server half.
  *
  * ⚠⚠ CHARLIE'S MODEL DEPENDS ON THIS, NOT ON THE GATES. He has chosen
  * monitoring over locking the doors: a group member who manages no branch is
@@ -12,53 +12,35 @@
  * column the view sorts on rather than something a reader infers by scanning a
  * branches column for blanks.
  *
+ * ⚠⚠ THE TYPES AND THE SORT LIVE IN `lib/group-view-types.ts`, WHICH IMPORTS
+ * NOTHING. They were carved out because the client component imported the sort
+ * from here, and this file imports `prisma` — which put the Postgres driver in
+ * the browser bundle and broke every Vercel deploy. **This module is
+ * server-only.** A client component must import from `group-view-types` and
+ * receive the data as props.
+ *
  * ⚠ Everything here is a plain read. No writes, no side effects, nothing that
  * arranges the state it then reports (docs/CLAUDE.md §26).
  */
 import { prisma } from '@/lib/prisma'
 import { getCommunityTreeIds, getRootCommunityId } from '@/lib/community'
-import type { MembershipTier } from '@/lib/membership-tier'
+import type {
+  GroupLevelMember,
+  GroupLevelView,
+  MembershipTierName,
+  VacantBranch,
+} from '@/lib/group-view-types'
 
-export type GroupLevelMember = {
-  userId: string
-  name: string
-  username: string
-  /** Their tier on the ROOT membership — the one that governs. */
-  tier: MembershipTier
-  /** Their role on the ROOT node. */
-  role: 'OWNER' | 'ADMIN' | 'MEMBER'
-  joinedAt: Date
-  /** §1h — who invited them. Null for somebody who arrived of their own accord. */
-  invitedByName: string | null
-  /** Which node the invitation they came through belonged to, where there was one. */
-  invitedViaNodeName: string | null
-  /** 25-A §7c/§7j — they never clicked anything; we accepted for them. */
-  acceptedOnBehalf: boolean
-  /** §1h — which branches they manage, by name. */
-  managesBranches: { id: string; name: string }[]
-  /** §1h — THE ANOMALY COLUMN. A group member with this false is the thing to look at. */
-  managesAnyBranch: boolean
-  /** Which branches they are merely a member of. */
-  memberOfBranchCount: number
-}
-
-export type VacantBranch = {
-  id: string
-  name: string
-  memberCount: number
-  /** §2i — a nomination waiting on a decision, which is the action to take. */
-  pendingNomineeName: string | null
-  pendingNominationId: string | null
-}
-
-export type GroupLevelView = {
-  rootId: string
-  rootName: string
-  members: GroupLevelMember[]
-  vacantBranches: VacantBranch[]
-  /** §1h — the count the view exists to make visible, computed once, server-side. */
-  groupMembersManagingNoBranch: number
-}
+// Re-exported so server callers and the check have one import site.
+export {
+  GROUP_SORTS,
+  GROUP_SORT_LABEL,
+  sortGroupMembers,
+  type GroupLevelMember,
+  type GroupLevelView,
+  type GroupSort,
+  type VacantBranch,
+} from '@/lib/group-view-types'
 
 /**
  * Everyone at group level, with the four facts §1h asks for and the anomaly
@@ -67,6 +49,9 @@ export type GroupLevelView = {
  * ⚠ ONE PASS OVER THE TREE, not a query per person. The membership rows for the
  * whole Community are small and the alternative is a query storm on a list that
  * is meant to be opened often.
+ *
+ * ⚠ RETURNS PLAIN SERIALISABLE DATA — `joinedAt` is an ISO string, not a
+ * `Date`. The page hands this straight to a client component as props.
  */
 export async function getGroupLevelView(communityId: string): Promise<GroupLevelView> {
   const rootId = await getRootCommunityId(communityId)
@@ -123,9 +108,9 @@ export async function getGroupLevelView(communityId: string): Promise<GroupLevel
         userId: m.userId,
         name: m.user.name ?? m.user.username,
         username: m.user.username,
-        tier: m.tier as MembershipTier,
+        tier: m.tier as MembershipTierName,
         role: m.role as 'OWNER' | 'ADMIN' | 'MEMBER',
-        joinedAt: m.joinedAt,
+        joinedAt: m.joinedAt.toISOString(),
         invitedByName: m.invitedBy?.name ?? m.invitedBy?.username ?? null,
         invitedViaNodeName: m.invitedVia?.community.name ?? null,
         acceptedOnBehalf: m.acceptedOnBehalfAt !== null,
@@ -163,55 +148,5 @@ export async function getGroupLevelView(communityId: string): Promise<GroupLevel
     groupMembersManagingNoBranch: members.filter(
       (m) => m.tier === 'GROUP' && !m.managesAnyBranch && m.role === 'MEMBER',
     ).length,
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// The sort. ⚠ A SHARED FUNCTION, NOT A COPY IN THE COMPONENT (docs/CLAUDE.md
-// §26.5): the check imports this and sorts the same rows the panel sorts, so a
-// change to the ordering cannot pass a check that still holds the old rule.
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const GROUP_SORTS = ['anomaly', 'name', 'joined', 'invitedBy', 'branches'] as const
-export type GroupSort = (typeof GROUP_SORTS)[number]
-
-export const GROUP_SORT_LABEL: Record<GroupSort, string> = {
-  anomaly: 'Managing no branch first',
-  name: 'Name',
-  joined: 'Joined (newest first)',
-  invitedBy: 'Who invited them',
-  branches: 'Most branches managed',
-}
-
-/**
- * ⚠ `anomaly` IS THE DEFAULT AND THAT IS THE POINT OF §1h. The list opens on
- * the people Charlie is watching for — group members managing no branch — and
- * he does not have to know to sort for them.
- */
-export function sortGroupMembers(rows: GroupLevelMember[], sort: GroupSort): GroupLevelMember[] {
-  const out = [...rows]
-  switch (sort) {
-    case 'anomaly':
-      return out.sort(
-        (a, b) =>
-          Number(a.tier !== 'GROUP') - Number(b.tier !== 'GROUP') ||
-          Number(a.managesAnyBranch) - Number(b.managesAnyBranch) ||
-          a.name.localeCompare(b.name),
-      )
-    case 'joined':
-      return out.sort((a, b) => b.joinedAt.getTime() - a.joinedAt.getTime())
-    case 'invitedBy':
-      return out.sort(
-        (a, b) =>
-          (a.invitedByName ?? '￿').localeCompare(b.invitedByName ?? '￿') ||
-          a.name.localeCompare(b.name),
-      )
-    case 'branches':
-      return out.sort(
-        (a, b) => b.managesBranches.length - a.managesBranches.length || a.name.localeCompare(b.name),
-      )
-    case 'name':
-    default:
-      return out.sort((a, b) => a.name.localeCompare(b.name))
   }
 }

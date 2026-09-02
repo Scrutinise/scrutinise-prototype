@@ -51,7 +51,10 @@ import {
   tierMayFoundBranch,
   type MembershipTier,
 } from '../lib/membership-tier'
-import { getGroupLevelView, sortGroupMembers } from '../lib/group-view'
+import { getGroupLevelView } from '../lib/group-view'
+// ⚠ The sort comes from the PURE module — the same import the panel uses, so the
+// check and the screen cannot order rows differently.
+import { sortGroupMembers } from '../lib/group-view-types'
 import { ACTIVITY_TYPES, SELF_LOGGABLE_ACTIVITIES } from '../lib/activity-types'
 import { createActivityClaim } from '../lib/central-points'
 
@@ -503,7 +506,9 @@ async function main() {
     idleRow !== undefined &&
       idleRow.tier === 'GROUP' &&
       idleRow.managesAnyBranch === false &&
-      idleRow.joinedAt instanceof Date &&
+      typeof idleRow.joinedAt === 'string' &&
+      // ⚠ plain serialisable: this crosses the server→client boundary as props
+      !Number.isNaN(Date.parse(idleRow.joinedAt)) &&
       'invitedByName' in idleRow,
   )
   assert(
@@ -547,6 +552,15 @@ async function main() {
   assert(
     '§1h — the panel imports sortGroupMembers rather than keeping its own copy',
     panelSrc.includes('sortGroupMembers'),
+  )
+  // ⚠⚠ AND IT IMPORTS IT FROM THE PURE MODULE. Importing the same function from
+  // `@/lib/group-view` puts the Postgres driver in the browser bundle and breaks
+  // every deploy — it built clean locally and failed on Vercel. A source
+  // assertion, correctly: the property is about which module this file names.
+  assert(
+    '§1h — and from group-view-types, so the client bundle does not reach prisma',
+    code(panelSrc).includes("from '@/lib/group-view-types'") &&
+      !code(panelSrc).includes("from '@/lib/group-view'"),
   )
 
   // ══════════════════════════════════════════════════════════════════════════
