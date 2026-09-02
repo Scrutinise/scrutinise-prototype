@@ -45,6 +45,23 @@ See `docs/CLAUDE.md` §12 for the rest of the git policy (single end-of-sprint
 it on its own and push to `Main` straight away — never batch it into the next
 `commit-all.sh`. It still carries the `Date:` trailer.
 
+## In a shared tree, uncommitted work is not protected work
+
+**A Prisma schema reached production twelve hours before its migration.** The Central session
+had deliberately held its own commit back *specifically* to stop that happening — and holding
+it back did not stop it, because another session's `git add` swept the uncommitted schema file
+in with its own work. The generated client then expected columns the database did not have.
+
+**So: commit a schema and its migration TOGETHER, as early as possible, rather than waiting**
+for the end-of-sprint `commit-all.sh`. Apply the SQL first, then push the pair in one commit.
+This is a second sanctioned mid-sprint git action alongside the build-break carve-out, and it
+exists because the alternative was tried and failed.
+
+⚠ **Commit by explicit file path. Never `git add -A`, never a directory-level add.** The rule
+already existed; breaking it once is how the schema shipped early. Two sessions (LEX and
+CENTRAL) share this repository at the same time, and `git add .` in one of them stages the
+other's half-finished work.
+
 ## Railway Operations
 
 ### Worker restart procedure

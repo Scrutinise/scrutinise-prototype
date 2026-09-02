@@ -132,6 +132,117 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## CENTRAL 25-C — THE TWO-TIER MEMBERSHIP MODEL, AND A BRANCH CHAIR WHO CAN NOW NAME THEIR OWN SUCCESSOR (2026-09-02 11:56 UTC)
+
+**Shipped and gated.** The tier is live on production data, derived and not defaulted; the two dead
+controls are gated on the same predicate the API decides with; the correction surface exists;
+resign-and-nominate works in both directions. `check:central-25c` **43 passed / 0 failed / 16
+controls fired / 0 dead**, `check:central-25a` **134/0/27/0**, `check:central` **727/727**.
+
+### §0 — the schema shipped WITH its migration, first, before any code that reads it
+Last sprint a Prisma schema reached production twelve hours ahead of its migration because another
+session's `git add` swept it in, and the Central session's decision to hold its commit back is what
+failed to protect it. So `6495ead` is the schema and `prisma/central_25c_tier.sql` **together**,
+pushed before a line of the code that reads them was written. Applied to
+`ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech` first; additive, nothing dropped.
+
+### §1 — the tier
+▶ **`CommunityMember.tier` (GROUP | BRANCH), and ⚠ THE ROOT MEMBERSHIP ROW IS STILL CREATED.**
+Twelve gates read that row and `check:central`'s branch-implies-root invariant asserts it; it stays,
+and is asserted to stay. **Only two rights detach:** `canCreateBranchUnder` and `inviteRightFor`.
+▶ **§1f — DERIVED, and it demoted exactly the one row it was predicted to.**
+`scripts/backfill-membership-tier.ts` ranks five ordered signals, prints which one decided each row,
+and reports a row no signal reaches as **NOT DETERMINED** rather than falling back to the default.
+⚠ **Five root rows, not the six the brief expected.** `charlie@whatmusic.com` → BRANCH on
+`CO_CREATED_WITH_BRANCH` — his root row and his Bermondsey row were written **0ms apart**, which is
+the signature of Stage 1.2's side-effect. `rossengineering56@` stayed GROUP on `ROOT_FIRST` (43s
+before his branch), the two September arrivals on `INVITE_PROVENANCE`, `cl@` as `FOUNDER`.
+**0 not determined.** The closing report is a re-read.
+▶ **§1c — the moved assertion, and it is recorded rather than relaxed.** `check-central-25a.ts`'s
+*"a branch manager's right does NOT reach the Community as a whole"* now asserts the opposite, in
+the same place, with the reversal and Charlie's reason written above it. ⚠ **What did NOT move:** a
+branch manager still cannot invite into a sibling branch, and ⚠ **a TITLE did not widen with it** —
+the role scope reaches the whole tree at the root; the title scope deliberately does not, because
+25-A §7e's "rights only within it" is a different decision nobody has taken. Two variables, not one.
+▶ **§1d — create opens; revoke and restore stay with the manager.** The trap the brief named is
+real: `requireInviteRight` guards revoke, restore AND resend. Creation moved to a **separate**
+`requireInviteCreateRight`; `[inviteId]/route.ts` is untouched and carries a note saying why, so
+nobody "fixes" it later. ⚠ **Resend is unnamed by §1d and was kept on the narrow side** — a judgment
+call, reported as one; the cost is that a branch member cannot re-send their own invitation.
+⚠ `decideJoinRequest` keeps the narrow gate too, so approving a join request did not widen.
+▶ **§1g — both dead controls gated on `tierMayFoundBranch`, imported, not restated.** A branch
+member holds a root row, so `isCommunityMember` was true for them, the button appeared and the API
+refused. `FindYourBranch`'s sentence changes with the control rather than leaving a headline about
+starting a branch above nothing.
+▶ **§1h/§1i — `/communities/[id]/group-level`.** The anomaly is a **count in a sentence**, the
+**default sort**, and a **marked cell reading "manages no branch"** — three ways, because Charlie
+has chosen monitoring over gates and a list nobody opens is not monitoring. Vacant branches sit in
+the same view with an appoint link and any pending nomination named on the row.
+
+### §2 — ownership
+▶ **§2e built:** a demotion to BRANCH stands the person down from every branch they manage, in the
+same action, through `vacateBranchOwnership` (not a second copy of it). The branch goes **vacant**,
+keeping its members. The Community's own owner is refused — `inviteRightFor`'s "the owner always
+holds the right" would be left with nobody.
+▶ **§2i built, asserted in BOTH directions:** a PENDING nomination is a row and nothing else — the
+nominee is still `MEMBER` and `canManageCommunity` says no; the APPROVAL transfers, through
+`appointBranchOwner`, still the only path outside creation that writes an OWNER row. A DECLINED row
+is kept, not deleted.
+▶ §2a–§2d, §2f–§2h and §2j were built in 25-B; they were verified live rather than re-built.
+
+### ⚠⚠ §2j's SIDE-EFFECT: `check:central` HAS BEEN RED SINCE 25-B SHIPPED, AND IT WAS HIDING TWO THINGS
+`check-central-stage1.ts` asserted *"someone who owns a branch cannot leave the Community out from
+under it"* — the **refusal 25-B deliberately removed**. That single stale assertion failed, and then
+⚠ **the teardown died on a foreign key it never handled** (`CommunityMembershipArchive`, which has
+existed since 25-A §3c), aborting the rest of it and **leaking three fixture Communities onto
+production per run** — which in turn made four *other* assertions fail, because the next run counted
+the leaked rows as real Communities missing their seeded categories. **One stale assertion, six red
+lines, and rows on production.** Assertion moved with the reason recorded, teardown fixed, six
+leaked `zz-check-*` Communities swept and the sweep re-read. **727/727.**
+
+### §3 — carried over
+▶ **§3a — already true, and confirmed by reading the rows: all 12 live invitations read `maxUses` 1**
+(25-B decision 46 applied it). ⚠ **But the GENERATOR still asked for 10**, so the next link would
+have been 10 again — that is the half that was actually outstanding, and it is now 1.
+▶ **§3b — CONFIRMED GONE by re-reading the exact address.** `check25a+a8652576+owner@example.invalid`
+is not there. ⚠ **Two OTHER fixture accounts are** — `verify25e-7ab5eda9@` and `verify25e-fe656373@`,
+both from 23 Aug, both a LEX 25-E artefact. Reported, not swept: they are not mine.
+
+### §4 — reported, and one premise is measurably wrong
+▶ ⚠⚠ **§4a IS NOT TRUE AS WRITTEN. Onboarding is not skipped entirely.**
+`chair.harrogateknaresborough@reformuk.com` signed up on **1 Sep at 15:33 and completed all of it** —
+terms, age and `experienceLevel: THINK_TANK_JUNIOR`. Three people who signed up in the same
+75 minutes (`ajaxhms@` 13:27, `mona@` 15:41, `jones.graham7@` 15:48) recorded none of it. The
+override is on **two `forceRedirectUrl` values in `app/sign-up/[[...sign-up]]/page.tsx`** — the
+community-invitation path (`landingFor(credential)`) and the platform-invitation path
+(`/dashboard`) — and a sign-up reaching Clerk any other way still gets `ClerkProvider`'s
+`signUpFallbackRedirectUrl="/onboarding"`. **So `/onboarding` works; two lines route past it.**
+⚠ **27 of 36 accounts have no `tcAgreedAt`; 1 of the 7 created since 1 August has one.**
+▶ **§4b reported only**, as instructed.
+▶ **§4c BUILT — the one change the brief named as available immediately**, and the tension with
+§4's "build nothing" heading is recorded here deliberately. `GAVE_TRAINING` is off the self-log list.
+⚠⚠ **AND IT WAS TWO LISTS.** `LogActivity.tsx` kept its own hard-coded copy of the four activities
+with its own point values, so taking one off the server list would have left the form still
+offering it. One list now (`lib/activity-types.ts`, pure so the client can import it), a
+`selfLoggable` flag, and ⚠ **the refusal is in `createActivityClaim`, not only in the form** — the
+route takes any key a caller sends. The training exchange still pays it: `raiseClaim` in
+`training.ts` writes directly and is untouched. Confirmed on the rows: the 40 points came from one
+`cl@scrutinise.org` claim on 24 Aug with **no evidence**, and are 40 of the 64 points in the ledger.
+
+### The checks
+`check:central-25c` is new: 43/0, **16 controls fired, 0 dead**, and ⚠ **it failed 2 of its own
+assertions on its first run**, which is the only evidence it can fail at all. Both were faults in
+the check: (1) a "must not appear" grep found `requireInviteCreateRight` **in the comment explaining
+why that file does not use it** — it now strips comments before asking about code; (2) a control on
+the sort ordering **did not fire**, because under the name sort the anomaly happened to come first
+anyway with those fixture names — it was measuring an accident of the alphabet, and was replaced
+with the `branches` sort, which puts managers first by construction. Part 6 is a **cold read**
+(§26): the live Community, rows the script did not create, `prisma.findMany` only, asserting **both
+tiers are present** — because a column where every row says the same thing is a column that was
+defaulted, and that is indistinguishable from a working backfill in every other assertion here.
+
+---
+
 ## LEX 25-V ADDENDUM — FOUR QUESTIONS ABOUT REBUILDING 452c5ade, MEASURED (2026-09-02 10:57 UTC)
 
 ⚠ **No code was changed and nothing was written to the database. This is measurement only**, taken

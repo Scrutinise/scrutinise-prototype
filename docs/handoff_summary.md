@@ -4,10 +4,42 @@
 
 ---
 
-## CENTRAL THREAD — last updated 2026-09-02 10:30 UTC (25-A, 25-B)
+## CENTRAL THREAD — last updated 2026-09-02 12:00 UTC (25-C)
 
 *This section belongs to the CENTRAL stream and is kept separate from the LEX stream's entry below,
 because the two run in this repository at the same time.*
+
+▼ **25-C SHIPPED. THE TIER IS LIVE, DERIVED, AND IT DEMOTED EXACTLY ONE ROW.**
+✅ `check:central-25c` **43/0, 16 controls fired, 0 dead** (it failed 2 of its own on the first run —
+a "must not appear" grep that read its own explanatory comment, and a sort control that did not fire
+because the fixture NAMES happened to order right). ✅ `check:central-25a` **134/0**.
+✅ **`check:central` 727/727** — ⚠⚠ **it had been RED since 25-B and was leaking rows onto
+production**: one stale assertion (`leaveCommunity` must refuse an owner — the refusal 25-B
+deliberately removed) failed, then the teardown died on `CommunityMembershipArchive`'s FK, aborting
+and **leaving three `zz-check-*` Communities per run**, which made four MORE assertions fail on the
+next run. Assertion moved with its reason, teardown fixed, six leaked Communities swept and re-read
+to zero.
+▶ **§0 OBEYED: schema + migration pushed TOGETHER and FIRST (`6495ead`)**, before a line that reads
+them. ▶ **§1f: five root rows, not six.** `charlie@whatmusic.com` → BRANCH on `CO_CREATED_WITH_BRANCH`
+(his root and Bermondsey rows are **0ms apart**); the rest GROUP on FOUNDER / ROOT_FIRST /
+INVITE_PROVENANCE. **0 not determined.** ▶ **§1c: the moved assertion is REPLACED IN PLACE with the
+reversal written above it** — ⚠ and a TITLE did NOT widen with it (two scope variables, not one).
+▶ **§1d: `requireInviteCreateRight` is a SEPARATE function** — creation opens, revoke/restore/resend
+and `decideJoinRequest` stay narrow, and `[inviteId]/route.ts` carries a note saying why.
+▶ §1h/§1i: `/communities/[id]/group-level`. ▶ §2e + §2i built (a PENDING nomination confers nothing;
+approval transfers through `appointBranchOwner`). ▶ **§3a: the ROWS already read 1 — the GENERATOR
+still said 10**, which was the outstanding half. ▶ **§3b: the 25-A fixture IS GONE (re-read by exact
+address)** — ⚠ but `verify25e-7ab5eda9@` and `verify25e-fe656373@` (LEX, 23 Aug) are still there.
+▶ **§4c BUILT and it was TWO LISTS** — `LogActivity.tsx` had its own hard-coded copy, so removing
+the activity from one would have changed nothing; now `lib/activity-types.ts` with a `selfLoggable`
+flag and the refusal in `createActivityClaim`, not just the form.
+⚠⚠ **§4a's PREMISE IS WRONG AND IT MATTERS: onboarding is NOT skipped entirely.**
+`chair.harrogateknaresborough@` completed it on 1 Sep (terms + age + `THINK_TANK_JUNIOR`); three
+people in the same 75 minutes recorded none of it. **`/onboarding` works** — two `forceRedirectUrl`
+values in `app/sign-up/[[...sign-up]]/page.tsx` route past it. **27 of 36 accounts have no
+`tcAgreedAt`; 1 of the 7 created since 1 August has one.** `docs/CENTRAL_25C_REPORT.md` §5 has what
+a fix costs. ⚠ **§6 lists what only Charlie can confirm in a browser** — the group-level page, and
+the ABSENCE of "Create your own branch" for `charlie@whatmusic.com`. Earlier:
 
 ▼ **SHIPPED AND GATED ON PRODUCTION (`c6ac78e`, `1cb0034`).** ✅ Dashboard renders for a signed-in
 member; ✅ all five outstanding invitations still pass the gate and **none consumed by the read**;
