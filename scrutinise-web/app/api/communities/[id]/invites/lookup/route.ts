@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { lookupInviteCandidates } from '@/lib/community'
-import { requireInviteRight } from '@/lib/community-permissions'
+import { requireInviteCreateRight } from '@/lib/community-permissions'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -17,7 +17,10 @@ export async function GET(req: Request, { params }: Params) {
 
   const { id: communityId } = await params
 
-  const denied = await requireInviteRight(user.id, communityId)
+  // ⚠ 25-C §1d — the lookup offers the address the CREATE will use, so it
+  // follows the create gate. Offering a name the next call refuses is how the
+  // zero-width-space bug in ../route.ts happened.
+  const denied = await requireInviteCreateRight(user.id, communityId)
   if (denied) return denied
 
   const { searchParams } = new URL(req.url)

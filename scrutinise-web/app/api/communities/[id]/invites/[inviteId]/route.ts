@@ -21,6 +21,20 @@ type Params = { params: Promise<{ id: string; inviteId: string }> }
  * Every one of them re-checks manage rights on the node the invitation belongs
  * to, and refuses an invitation belonging to a different node — the id in the
  * path is not evidence of anything on its own.
+ *
+ * ⚠⚠ CENTRAL 25-C §1d — THIS FILE DELIBERATELY DID NOT MOVE. §1d opened the
+ * CREATION of an invitation to any member of the branch, and the trap it names
+ * is that `requireInviteRight` guards these three verbs too. Widening the
+ * import here would let every member of every branch withdraw the branch
+ * manager's invitations and reinstate ones the manager had called off. **Create
+ * opens; revoke and restore stay with the manager**, so ../route.ts uses
+ * `requireInviteCreateRight` and this one keeps `requireInviteRight`.
+ *
+ * ⚠ RESEND (POST) IS NOT NAMED BY §1d and is kept on the narrow side, which is
+ * a judgment call and is reported as one: it acts on an existing invitation and
+ * puts mail in somebody's inbox, so the conservative reading applies until
+ * Charlie says otherwise. The cost is that a branch member who created an
+ * invitation cannot send it again themselves.
  */
 async function loadInvite(communityId: string, inviteId: string) {
   const invite = await prisma.communityInvite.findUnique({

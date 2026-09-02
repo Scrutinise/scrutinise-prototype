@@ -7,7 +7,7 @@ import {
   createCommunityInvite,
   requireCommunityAdmin,
 } from '@/lib/community'
-import { requireInviteRight } from '@/lib/community-permissions'
+import { requireInviteCreateRight } from '@/lib/community-permissions'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -69,7 +69,12 @@ export async function POST(req: Request, { params }: Params) {
   const { id: communityId } = await params
 
   // ⚠ CENTRAL 25-A §3a — the gate is the owner's SETTING, not a fixed rule.
-  const denied = await requireInviteRight(user.id, communityId)
+  // ⚠⚠ CENTRAL 25-C §1d — AND CREATION, ALONE, IS THE WIDE ONE. Any member of a
+  // branch may invite people into that branch. `requireInviteCreateRight` is a
+  // separate function from `requireInviteRight` precisely so that this line
+  // opening does not also open the DELETE and PATCH in ./[inviteId]/route.ts,
+  // which withdraw and reinstate invitations and stay with the manager.
+  const denied = await requireInviteCreateRight(user.id, communityId)
   if (denied) return denied
 
   let body: unknown
