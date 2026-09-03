@@ -343,6 +343,22 @@ export interface CanonicalCause {
   parentCauseId: string | null
   source: 'USER' | 'LEX_CORPUS'
   /**
+   * ⚠⚠ 25-X §2b (decision 60) — THIS CAUSE WAS WRITTEN BY LEX, MARKED BY THE USER AS THE ROOT
+   * CAUSE, AND KEPT THROUGH A LATER BUILD THAT REWROTE EVERY OTHER LEX-AUTHORED CAUSE.
+   *
+   * The screen has to say so, and the reason is that the alternative reads as a bug. After a
+   * revise the list is a set of freshly written causes with one older one sitting among them,
+   * and a user who is not told why will conclude the rewrite half-failed. §2b asks that the
+   * user learn what happened to the cause they chose; this is the affirmative half of it —
+   * under decision 60's exclude-don't-re-mark rule the cause cannot silently vanish, so what
+   * is left to say is that it was deliberately protected.
+   *
+   * ⚠ DERIVED, NOT STORED. It is "marked, Lex-authored, and older than the last completed
+   * build", which is true by construction and needs no column and no migration. It is false
+   * for a user-authored cause, which was never at risk from the deletion at all.
+   */
+  keptThroughRevision: boolean
+  /**
    * ⚠ 25-S §2a — THE STABLE NUMBER THE USER TYPES. It never moves: a removed 3 leaves a gap,
    * reordering does not renumber, nesting does not renumber. Not `orderIndex`, which is the
    * display position and is exactly the thing that moves.

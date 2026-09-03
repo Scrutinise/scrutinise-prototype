@@ -498,7 +498,15 @@ model User {
   /// AMENDMENT_25B §C4 — the user's remembered default for "email me when the build is
   /// done". A PREFERENCE, not a consent record: `EmailSuppression` remains the authority
   /// on whether we may email the address at all, and the send path checks it.
-  emailOnBuildComplete      Boolean             @default(false)
+  ///
+  /// ⚠ 25-W §B — THE DEFAULT IS NOW `true`, AND THE REASON IS ARCHITECTURAL, NOT COSMETIC.
+  /// It was `false` while a build was driven by the user's browser tab: offering to email
+  /// someone when their build finished was inviting them to close the laptop, and closing
+  /// the laptop stopped the build. 25-T moved builds onto the Railway worker and 25-V §1d
+  /// confirmed one completing with the tab shut, so the promise is now one the architecture
+  /// keeps, and a ten-minute job should not need anybody to sit and watch it.
+  /// See `prisma/lex_25w.sql` for the guarded backfill of rows that never made a choice.
+  emailOnBuildComplete      Boolean             @default(true)
   bio                       String?
   /// CENTRAL Stage 2d — optional, entered by the user in their own settings and
   /// used for NOTHING except training contact sharing on an accepted
@@ -3810,6 +3818,33 @@ model DeepeningIssue {
   /// the heading. Null where the challenge is our own reading rather than another model's.
   sourceModel          String?
   status               DeepeningIssueStatus @default(OPEN)
+
+  // ════════ 25-X §3 (decisions 54 + 58) — THE CHALLENGE CLEANUP ════════
+  //
+  // A re-run ADDS challenges rather than replacing them: 225 across nine drafts before this,
+  // so the printed report carried objections to text that no longer existed. The cleanup
+  // ARCHIVES, it never deletes — everything stays on screen under previous drafts.
+
+  /// ⚠ AN EARLIER CRITICISM THAT STILL BITES, SHOWN IN THIS BUILD'S SET. Null = not promoted.
+  /// The document filter is `runVersion = current OR promotedToVersion = current`.
+  ///
+  /// ⚠⚠ `runVersion` IS DELIBERATELY NOT REWRITTEN. It records the draft the criticism was
+  /// raised against, and that is precisely what the promotion is meant to DISPLAY — moving it
+  /// would destroy the provenance the feature exists to show.
+  promotedToVersion    Int?
+  /// The other challenge this one is related to: the current criticism it duplicates or may
+  /// duplicate, or the one it was merged into. See `relationKind`.
+  ///
+  /// ⚠ `onDelete: SetNull`, never Cascade. Deleting a criticism because a DIFFERENT criticism
+  /// was removed is the opposite of "archive, never delete".
+  relatedIssueId       String?
+  relatedIssue         DeepeningIssue?      @relation("IssueRelation", fields: [relatedIssueId], references: [id], onDelete: SetNull)
+  relatedFrom          DeepeningIssue[]     @relation("IssueRelation")
+  /// `DUPLICATE` (archived) · `POSSIBLY_DUPLICATE` (⚠ STAYS OPEN AND VISIBLE — same topic,
+  /// different point, and 25-X §3b's whole purpose is that a close call is not retired) ·
+  /// `MERGED_INTO` (archived into a sibling in the same build).
+  relationKind         String?
+
   /// Required by the application when status = DISMISSED. A dismissal without a stated
   /// reason is an unaccountable veto.
   dismissReason        String?

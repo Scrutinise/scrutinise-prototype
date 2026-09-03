@@ -894,7 +894,22 @@ function gapBlocks(snapshot: ProposalSnapshot): Block[] {
     })
   }
 
-  const openIssues = snapshot.issues.filter((i) => i.status === 'OPEN' || i.status === 'DEFERRED')
+  // ══ ⚠⚠ 25-X §3 — THE CURRENT BUILD'S SET, NOT NINE DRAFTS' WORTH ══════════════════════
+  //
+  // The snapshot query has never had a version filter, so this printed the accumulated
+  // objections to every draft — 225 of them by v9, including criticism of text that had been
+  // deleted four drafts earlier. `current` is derived once in the snapshot: raised against
+  // this build, or promoted into it because the point still bites.
+  //
+  // ⚠ THE REST ARE NOT DISCARDED. They render below, under their own heading, exactly as the
+  // dismissed ones already did. "Archive, never delete" has to be true of the DOCUMENT and not
+  // only of the database, or the row survives somewhere nobody looks.
+  const openIssues = snapshot.issues.filter(
+    (i) => (i.status === 'OPEN' || i.status === 'DEFERRED') && i.current !== false,
+  )
+  const earlierOpen = snapshot.issues.filter(
+    (i) => (i.status === 'OPEN' || i.status === 'DEFERRED') && i.current === false,
+  )
   if (openIssues.length) {
     anything = true
     // ══ §5c — SECTION 5. ⚠ IT IS A SECTION, NOT A LEVEL-2 HEADING INSIDE THE GAPS. §0 calls
@@ -905,9 +920,46 @@ function gapBlocks(snapshot: ProposalSnapshot): Block[] {
     out.push({ kind: 'heading', level: 1, runs: text('Challenges') })
     out.push({
       kind: 'bullets',
+      // ⚠⚠ 25-W §C — THE TITLE, AT LAST, AT THE FRONT. The rows have carried one since 25-Q
+      // and no document has ever printed it, so 225 challenges arrived as a flat wall of
+      // paragraphs — 25-U §2e: *"the presentation reads as a demolition of its own
+      // proposal."* A named point is a point a reader can navigate; the same point unnamed
+      // is one more complaint in a list of two hundred.
+      //
+      // ⚠ ABSENT IS ABSENT. A row with no title gets no heading run and reads exactly as it
+      // does today. Nothing is invented from the text.
       items: openIssues.map((i): Run[] => [
+        ...(i.title?.trim() ? [{ text: `${i.title.trim()} — `, bold: true }] : []),
         { text: i.text },
+        // ⚠ 25-X §3 — A PROMOTED CRITICISM SAYS WHICH DRAFT IT WAS RAISED AGAINST. That is the
+        // whole reason `runVersion` is not rewritten when a criticism is promoted: a reader
+        // who knows a point has survived four rewrites reads it differently.
+        {
+          text: i.promotedToVersion != null && i.runVersion !== i.promotedToVersion
+            ? ` [raised against draft ${i.runVersion}, still applies]` : '',
+          italic: true,
+        },
+        // ⚠ 25-X §3b — a close call is marked, not retired.
+        { text: i.relationKind === 'POSSIBLY_DUPLICATE' ? ' [may overlap another challenge]' : '', italic: true },
         { text: i.status === 'DEFERRED' ? ' [deferred]' : '', italic: true },
+      ]),
+    })
+  }
+
+  // ⚠ 25-X §3 — EARLIER DRAFTS' CRITICISMS THAT ARE STILL OPEN. Not part of the current set,
+  // not archived either: the classification could not place them, or they overlap a current
+  // one without duplicating it. They are printed rather than dropped, because a criticism
+  // nobody decided about is not a criticism that has been answered.
+  if (earlierOpen.length) {
+    anything = true
+    out.push({ kind: 'heading', level: 2, runs: text('Raised against earlier drafts, not yet resolved') })
+    out.push({
+      kind: 'bullets',
+      items: earlierOpen.map((i): Run[] => [
+        ...(i.title?.trim() ? [{ text: `${i.title.trim()} — `, bold: true }] : []),
+        { text: i.text },
+        { text: ` [draft ${i.runVersion}]`, italic: true },
+        { text: i.relationKind === 'POSSIBLY_DUPLICATE' ? ' [may overlap a current challenge]' : '', italic: true },
       ]),
     })
   }
@@ -921,6 +973,9 @@ function gapBlocks(snapshot: ProposalSnapshot): Block[] {
     out.push({
       kind: 'bullets',
       items: dismissed.map((i): Run[] => [
+        // ⚠ 25-W §C — the same title, in the same shape, because a reader scanning what was
+        // set aside needs the name as much as a reader scanning what still stands.
+        ...(i.title?.trim() ? [{ text: `${i.title.trim()} — `, bold: true }] : []),
         { text: i.text },
         { text: i.dismissReason ? ` — ${i.dismissReason}` : ' — no reason recorded', italic: true },
       ]),

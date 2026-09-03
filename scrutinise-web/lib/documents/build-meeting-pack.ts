@@ -188,9 +188,21 @@ export function buildMeetingPackDocument(
   if (want.has('challenges')) {
     blocks.push({ kind: 'section', title: 'WHAT A HOSTILE READER WOULD ASK' })
     blocks.push({ kind: 'heading', level: 1, runs: text('Challenges') })
-    const open = (snapshot.issues ?? []).filter((i) => i.status === 'OPEN')
+    // ⚠ 25-X §3 — the CURRENT build's set. A meeting pack is read in a room off a printed
+    // page; carrying nine drafts' objections into it was the surest way to have none of them
+    // discussed. `current !== false` keeps a pre-25-X stored snapshot rendering unchanged.
+    const open = (snapshot.issues ?? []).filter((i) => i.status === 'OPEN' && i.current !== false)
     if (open.length) {
-      blocks.push({ kind: 'bullets', items: open.map((i): Run[] => [{ text: i.text }]) })
+      // ⚠ 25-W §C — the title leads, where there is one. This pack is read in a room, out
+      // loud, off a page somebody is holding: an unnamed list of thirty objections is the
+      // hardest possible thing to chair.
+      blocks.push({
+        kind: 'bullets',
+        items: open.map((i): Run[] => [
+          ...(i.title?.trim() ? [{ text: `${i.title.trim()} — `, bold: true }] : []),
+          { text: i.text },
+        ]),
+      })
     } else {
       blocks.push({ kind: 'paragraph', runs: text('No open challenges are on the record.') })
     }

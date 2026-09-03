@@ -48,7 +48,7 @@ import { stripNullBytes } from './json-safe'
 import {
   BUILD_PASSES, passDef, frameQuery, effectiveBudgetMs, COST_CEILING_PENCE,
   INSTRUMENT_FORK_KEY, trimForkAlternatives, DOMAIN_TRANSFER_QUESTION,
-  HARD_STOP_MS, PASS_BUDGET_MS, perspectivesFor, modelForPass, buildDriver, WORKER_PICKUP_GRACE_MS,
+  HARD_STOP_MS, PASS_BUDGET_MS, PASS_CEILING_MS, perspectivesFor, modelForPass, buildDriver, WORKER_PICKUP_GRACE_MS,
   REUSABLE_PASSES, ORIENT_SOURCE_CAP,
   type BuildDriver, type BuildMode,
   type BuildPassKey, type Framing,
@@ -516,7 +516,10 @@ export async function buildState(ideaId: string): Promise<BuildState> {
     })),
     ceiling: { budgetMs: ceiling.ms, binding: ceiling.binding, costPence: COST_CEILING_PENCE },
     estimate,
-    emailDefault: owner?.creator.emailOnBuildComplete ?? false,
+    // ⚠ 25-W §B — the fallback is `true` because the COLUMN's default is now `true`. It fires
+    // only when the owner row could not be read at all, and a fallback that contradicted the
+    // schema would make the checkbox flicker between two answers on a slow read.
+    emailDefault: owner?.creator.emailOnBuildComplete ?? true,
     driver: buildDriver(),
     // Null for the placeholder, so the client can tell "not named yet" from "named".
     ideaTitle: owner?.title?.trim() && owner.title.trim() !== 'Untitled idea' ? owner.title.trim() : null,
@@ -717,7 +720,8 @@ export async function claimBuild(
     const u = idea && await prisma.user.findUnique({
       where: { id: idea.creatorId }, select: { emailOnBuildComplete: true },
     })
-    wantsEmail = u?.emailOnBuildComplete ?? false
+    // ⚠ 25-W §B — `true`, matching the column's own default. See `emailDefault` in `buildState`.
+    wantsEmail = u?.emailOnBuildComplete ?? true
   } else if (idea) {
     await prisma.user.update({
       where: { id: idea.creatorId },
@@ -1012,6 +1016,15 @@ type StopReason =
   | { kind: 'time'; elapsedMs: number }
   | { kind: 'cost'; price: BuildPrice }
   | { kind: 'cancel' }
+  /**
+   * ⚠ 25-W §E — ONE PASS OUTRAN `PASS_CEILING_MS`. A SEPARATE KIND, NOT `time`.
+   *
+   * The two say opposite things about the build. `time` means the work took longer than a
+   * build is allowed to take — the build is healthy and simply large. This means one pass
+   * stopped answering, which is a fault, and it names WHICH pass so the next reader is not
+   * left with "the build was slow" over a hang in a specific place.
+   */
+  | { kind: 'pass-time'; key: BuildPassKey; elapsedMs: number }
 
 /**
  * ⚠ THE HARD STOP IS MEASURED FROM THE ROW, NOT FROM THIS FUNCTION.
@@ -1068,6 +1081,15 @@ function stopMessage(stop: StopReason): string {
         'stopped. What it had already drafted is in the panel.'
     case 'cancel':
       return 'You stopped this build. Everything it had drafted before you did is in the panel and stays there.'
+    // ⚠ 25-W §E — IT NAMES THE PASS AND IT SAYS THE BUILD IS RESUMABLE, because both are
+    // true and neither is guessable from "it stopped". The stopped pass is reopened by
+    // `stopBuild` as NOT_REACHED, which is what `resumablePassKey` picks up.
+    case 'pass-time':
+      return `${passDef(stop.key)?.label ?? stop.key} stopped answering — it ran for ` +
+        `${Math.round(stop.elapsedMs / 1000)} seconds without finishing, past the ` +
+        `${Math.round(PASS_CEILING_MS / 1000)}-second limit for a single step, so the build stopped ` +
+        'there rather than waiting indefinitely. Everything the earlier steps drafted is in the ' +
+        'panel and kept, and the build can be carried on from this step.'
   }
 }
 
@@ -1089,7 +1111,29 @@ async function storedResults(ideaId: string): Promise<SearchResult[]> {
 async function writePass(
   buildId: string, key: BuildPassKey, patch: Partial<PassRecord>, extra: Record<string, unknown> = {},
 ): Promise<void> {
-  const row = await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { passes: true } })
+  const row = await prisma.ideaBuild.findUnique({
+    where: { id: buildId }, select: { passes: true, status: true },
+  })
+
+  // ══ ⚠⚠ 25-W §E — A SETTLED BUILD IS NOT WRITTEN TO. ═══════════════════════════════════
+  //
+  // §E's pass ceiling stops WAITING for a pass; it cannot stop the pass. So from the moment
+  // a build is stopped on a hung pass, a promise is still out there that will call this
+  // function if it ever returns — with `status: 'DONE'` on a pass the stop deliberately
+  // reopened as NOT_REACHED, on a row a user may already have resumed. Without this guard
+  // the late write would mark that pass complete, the resume would skip it, and the build
+  // would carry a step nobody ran.
+  //
+  // ⚠ It is a guard on ALL late writes, not only §E's, because the same shape exists
+  // wherever a request the platform killed leaves work running. It refuses and SAYS SO:
+  // a dropped write that logged nothing would be the silent half of the same problem.
+  if (row && row.status !== 'RUNNING' && row.status !== 'QUEUED') {
+    console.warn('[lex-diag] 25w late pass write DROPPED — the build has already settled', {
+      buildId, key, buildStatus: row.status, patch: Object.keys(patch),
+    })
+    return
+  }
+
   const log = readPassLog(row?.passes).map((p) => (p.key === key ? { ...p, ...patch } : p))
   await prisma.ideaBuild.update({
     where: { id: buildId },
@@ -1337,16 +1381,59 @@ export async function runNextPass(ideaId: string, userId: string, buildId: strin
   }
 
   console.log('[lex-diag] 25b pass starting', {
-    ideaId, buildId, key, passBudgetMs: PASS_BUDGET_MS, hardStopMs: HARD_STOP_MS,
+    ideaId, buildId, key, passBudgetMs: PASS_BUDGET_MS, passCeilingMs: PASS_CEILING_MS, hardStopMs: HARD_STOP_MS,
     perspectives: perspectivesFor(key).length, model: modelForPass(key),
   })
 
+  // ══ ⚠⚠ 25-W §E (decision 55) — A WALL CLOCK AROUND THE PASS ITSELF ═══════════════════
+  //
+  // Until now a pass could run for ever. `HARD_STOP_MS` is consulted by `checkStop`, which
+  // runs BETWEEN passes, so it cannot interrupt one; `PASS_BUDGET_MS` is a budget that
+  // exactly one pass reads (25-T §1e); and moving off Vercel functions removed the platform's
+  // own 300 s kill, which had been the real backstop nobody had noticed doing the work.
+  //
+  // ⚠ THE OUTCOME IS A STOP, NOT A PASS FAILURE, AND THE DIFFERENCE IS THE WHOLE
+  // REQUIREMENT. A pass marked FAILED makes `resumablePassKey` return null — a hard failure
+  // is not something a resume may skip past — so failing the pass would leave exactly the
+  // dead build Charlie's ⚠ forbids. `stopBuild` rewrites the RUNNING pass to NOT_REACHED,
+  // which IS resumable, and `lastStopReason` carries the sentence into the resume dialogue.
+  //
+  // ⚠ THE ORPHANED WORK IS BOUNDED, NOT CANCELLED, AND THAT IS STATED RATHER THAN HIDDEN.
+  // `runOnePass` keeps running after the race resolves; there is no one signal reaching every
+  // model client, and inventing one for a path that fires on a hang would be a large change
+  // to every pass to tidy up after a case where the underlying call is, by definition, not
+  // coming back. What the orphan CANNOT do is corrupt the row: `writePass` now refuses to
+  // touch a build that has reached a terminal status (see the guard there), so a late write
+  // from a pass we stopped waiting for is dropped and logged instead of resurrecting it.
   let outcome: PassOutcome
+  const passStartedAt = Date.now()
+  let ceilingTimer: ReturnType<typeof setTimeout> | undefined
   try {
-    outcome = await runOnePass(key, pctx)
+    const ceiling = new Promise<'ceiling'>((resolve) => {
+      ceilingTimer = setTimeout(() => resolve('ceiling'), PASS_CEILING_MS)
+    })
+    const raced = await Promise.race([runOnePass(key, pctx), ceiling])
+    if (raced === 'ceiling') {
+      const elapsedMs = Date.now() - passStartedAt
+      console.error('[lex-diag] 25w pass ceiling — the pass stopped answering', {
+        ideaId, buildId, key, elapsedMs, ceilingMs: PASS_CEILING_MS,
+      })
+      // ⚠ The spend the pass HAD recorded before it hung is written first. A pass that
+      // burned tokens and then hung still cost money, and a stop that discarded the record
+      // would under-report precisely where the cost is least expected.
+      if (passUsages.length) {
+        await writePass(buildId, key, { usages: [...passUsages] })
+      }
+      return stopBuild(buildId, { kind: 'pass-time', key, elapsedMs })
+    }
+    outcome = raced
   } catch (err) {
     outcome = { ok: false, reason: err instanceof Error ? err.message : String(err) }
     console.error('[lex-diag] 25b pass threw', { ideaId, buildId, key, reason: outcome.reason })
+  } finally {
+    // Otherwise a completed build holds the event loop open for the rest of the ceiling —
+    // which on the worker is ten minutes of a process that believes it has nothing to do.
+    if (ceilingTimer) clearTimeout(ceilingTimer)
   }
 
   if (passFailed(outcome)) {
@@ -2474,7 +2561,57 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
     // ⚠ REPLACES the pass-2 causes rather than appending. Two sets of causes on one idea
     // is not a revision, it is a duplicate — and the contradiction records below are what
     // preserve what the first set said, which is the honest way to keep it.
-    await prisma.diagnosisCause.deleteMany({ where: { ideaId, source: 'LEX_CORPUS' } })
+    //
+    // ══ ⚠⚠ 25-X §2 (DECISION 60) — EXCEPT A CAUSE THE USER MARKED AS THE ROOT CAUSE ══════
+    //
+    // The row was written by Lex; THE MARK IS THE USER'S. A user decision attached to a
+    // machine-written row is still a user decision, and this delete used to take it with the
+    // row — measured on the 25-W scratch idea, where a marked `LEX_CORPUS` cause was deleted
+    // at 11:59:35 and replaced by two new ones, neither marked, with nothing said anywhere.
+    //
+    // ⚠⚠ THE BRIEF OFFERED TWO WAYS AND THIS TAKES THE FIRST — EXCLUDE, NOT RE-MARK. The
+    // reason is that re-marking cannot be verified:
+    //
+    //   · Re-marking means deciding WHICH of the new causes is "the same cause". That is a
+    //     similarity judgement over rewritten prose. `match-cause.ts` exists and is good, but
+    //     its own header says the thing that settles this — *"refusing to choose is a valid
+    //     answer; choosing wrongly is not"* — and it refuses on ambiguity precisely because
+    //     the root cause is the most consequential single choice on the page.
+    //   · A wrong re-mark is SILENT. The user would find their root cause pointing at a
+    //     sentence they never chose, with the guiding policy and every action downstream of
+    //     it, and nothing to say it had moved. That is the same fault §1c rejected: a user
+    //     recorded as having decided something they did not.
+    //   · And the two surfaces would disagree. The accepted `rootCause` FIELD holds the text
+    //     the user agreed to; `DiagnosisCause.isRootCause` is the flag. Excluding keeps them
+    //     the same row. Re-marking makes the flag point at text the field does not contain.
+    //
+    // The cost of excluding is a visible near-duplicate when the revise rewrites the same
+    // cause in different words. That is a duplicate the user can see and delete, which is
+    // strictly better than a false attribution they cannot see at all.
+    //
+    // ⚠⚠ AND THE DETACH IS NOT OPTIONAL — `parent` IS `onDelete: Cascade`. Excluding the
+    // marked row from the `where` is not enough: if its PARENT is in the delete set, the
+    // database cascades straight through the exclusion and removes it anyway. So a marked
+    // cause is detached to the top level first. A root cause is conceptually top-level, and
+    // this is the one write that makes the exclusion true rather than merely intended.
+    const marked = await prisma.diagnosisCause.findMany({
+      where: { ideaId, source: 'LEX_CORPUS', isRootCause: true },
+      select: { id: true, cause: true, parentCauseId: true },
+    })
+    if (marked.length) {
+      await prisma.diagnosisCause.updateMany({
+        where: { id: { in: marked.map((m) => m.id) }, parentCauseId: { not: null } },
+        data: { parentCauseId: null },
+      })
+      console.log('[lex-diag] 25x revise KEPT the user\'s marked root cause(s) through the rewrite', {
+        ideaId, kept: marked.length,
+        detached: marked.filter((m) => m.parentCauseId).length,
+        causes: marked.map((m) => m.cause.slice(0, 60)),
+      })
+    }
+    await prisma.diagnosisCause.deleteMany({
+      where: { ideaId, source: 'LEX_CORPUS', isRootCause: false },
+    })
     await createCauses(ideaId, nestByDrivenBy(causes, buildId), 'LEX_CORPUS')
     await setLoopProposal(ideaId, 'causes', causes.map((x) => `(${x.classification === 'MATERIAL' ? 'material' : 'contributory'}) ${x.cause.trim()}`))
   }
@@ -3580,7 +3717,7 @@ async function notifyByEmail(
       ? (row.completedAt.getTime() - row.startedAt.getTime()) / 1000
       : null
 
-    await sendBuildCompleteEmail({
+    const result = await sendBuildCompleteEmail({
       toEmail: idea.creator.email,
       toName: idea.creator.name,
       ideaId: row.ideaId,
@@ -3591,7 +3728,31 @@ async function notifyByEmail(
       durationText: seconds == null ? 'a few minutes' : formatDuration(seconds),
       failureReason: row.failureReason,
     })
-    console.log('[lex-diag] 25b build-complete email sent', { buildId: row.id, status })
+
+    // ══ ⚠⚠ 25-W §A — THIS LINE USED TO BE UNCONDITIONAL, AND IT WAS THE LIE ═══════════
+    //
+    // On 2 September at 10:22:38 UTC the worker's log carried these two lines, in this
+    // order, one second apart, about the same build:
+    //
+    //     RESEND_API_KEY not set — email not sent to cl@scrutinise.org
+    //     [lex-diag] 25b build-complete email sent { buildId: '6547478c-…', status: 'DONE' }
+    //
+    // Nothing errored, because nothing had gone wrong in this function: `sendEmail`
+    // returned `void` for "I declined to send" exactly as it did for "Resend accepted it",
+    // so the only sentence this code could write was the optimistic one. THE LOG WAS THE
+    // ONLY WITNESS AND IT SAID THE OPPOSITE OF THE TRUTH.
+    //
+    // ⚠ So the send is now reported from the RESULT, and a successful one quotes the
+    // provider's own id. CLAUDE.md §18: an absence of errors is not evidence of a send.
+    if (result.sent) {
+      console.log('[lex-diag] 25b build-complete email sent', {
+        buildId: row.id, status, providerId: result.providerId ?? '(accepted, no id in the response)',
+      })
+    } else {
+      console.error('[lex-diag] 25b build-complete email NOT SENT — the build itself is unaffected', {
+        buildId: row.id, status, to: idea.creator.email, reason: result.reason,
+      })
+    }
   } catch (err) {
     console.error('[lex-diag] 25b build-complete email FAILED — the build itself is unaffected', {
       buildId: row.id, error: err instanceof Error ? err.message : err,

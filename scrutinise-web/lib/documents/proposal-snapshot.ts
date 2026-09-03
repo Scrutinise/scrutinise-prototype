@@ -242,6 +242,53 @@ export interface SnapshotIssue {
   passKey: string
   text: string
   status: string
+  /**
+   * ══ ⚠⚠ 25-W §C (decision 53) — THE TITLE, WHICH NO DOCUMENT HAS EVER PRINTED ══════════
+   *
+   * `DeepeningIssue.title` has existed since 25-Q and the screen renders it
+   * (`AgendaPanel.tsx`). This interface did not carry it and `issueRows.map` dropped it, so
+   * every generated document has printed a flat list of untitled paragraphs — including the
+   * 39 challenges that already had a perfectly good title sitting in the row.
+   *
+   * ⚠ THIRD INSTANCE OF THE SPRINT'S OWN CLASS: correct data that never reaches the output.
+   * The others were the policy sort (25-V §2) and the `kind`/`kindReason` the snapshot never
+   * carried. The shape is always this one — a field added at the write end, and a seam
+   * between the database and the renderer that was never widened to let it through.
+   *
+   * ⚠ NULL RENDERS AS NO TITLE, NEVER AS AN INVENTED ONE. See the column's own note: a title
+   * guessed downstream from the text is what 25-D §3 spent a sprint removing.
+   */
+  title: string | null
+  /**
+   * 25-Q §7 — the model that raised it, where one did. Rendered at the FOOT as the source,
+   * never as the heading, which is the defect §7 existed to fix.
+   */
+  sourceModel: string | null
+  /**
+   * ⚠ 25-W §D — WHICH BUILD RAISED IT. Carried so a document can show the CURRENT build's
+   * challenges rather than the accumulated objections to nine drafts: the snapshot query has
+   * never had a version filter, and a re-run ADDS challenges rather than replacing them, so
+   * by v9 the report was printing criticism of text that no longer existed.
+   */
+  runVersion: number
+  /**
+   * ⚠ 25-X §3 — an EARLIER criticism that still bites and has been promoted into this build's
+   * set. Null for everything else. `runVersion` is untouched, so the document can say which
+   * draft it was raised against — which is the point of promoting it rather than rewriting it.
+   */
+  promotedToVersion: number | null
+  /**
+   * ⚠ 25-X §3b — `POSSIBLY_DUPLICATE` on an OPEN challenge means a current criticism is about
+   * the same thing but objects to a different aspect. It stays visible and says so, because
+   * retiring a real criticism costs more than leaving a near-duplicate in.
+   */
+  relationKind: string | null
+  /**
+   * ⚠ 25-X §3 — TRUE for the challenges the CURRENT build's set consists of: raised against
+   * this build, or promoted into it. Derived here, once, so no renderer has to restate the
+   * rule — three renderers restating it is three places for it to drift.
+   */
+  current: boolean
   /** A dismissal without a stated reason is an unaccountable veto — it is rendered. */
   dismissReason: string | null
   resolutionNote: string | null
@@ -575,6 +622,10 @@ export async function buildProposalSnapshot(
       where: { ideaId, status: { not: 'REJECTED' } },
       orderBy: [{ passKey: 'asc' }, { createdAt: 'asc' }],
     }),
+    // ⚠ 25-X §3 — STILL UNFILTERED, DELIBERATELY. Every challenge is read; `current` marks
+    // which belong to this build's set and the renderers choose. Filtering here would make
+    // "archive, never delete" a lie one layer down — the archived ones must stay reachable
+    // for the previous-drafts section that keeps them visible.
     prisma.deepeningIssue.findMany({
       where: { ideaId },
       orderBy: [{ passKey: 'asc' }, { createdAt: 'asc' }],
@@ -729,11 +780,25 @@ export async function buildProposalSnapshot(
     status: e.status,
   }))
 
+  // ⚠ 25-X §3 — the build whose set is "current". The highest version any challenge carries,
+  // which is the last build that produced any: a build that raised none cannot be the frame
+  // for a document, and taking the highest BUILD version instead would empty the section.
+  const currentIssueVersion = issueRows.length
+    ? Math.max(...issueRows.map((i) => i.runVersion))
+    : 0
+
   const issues: SnapshotIssue[] = issueRows.map((i) => ({
     id: i.id,
     passKey: i.passKey,
     text: i.text,
     status: i.status,
+    // ⚠ 25-W §C — the three fields the map dropped. See `SnapshotIssue`.
+    title: i.title,
+    sourceModel: i.sourceModel,
+    runVersion: i.runVersion,
+    promotedToVersion: i.promotedToVersion,
+    relationKind: i.relationKind,
+    current: i.runVersion === currentIssueVersion || i.promotedToVersion === currentIssueVersion,
     dismissReason: i.dismissReason,
     resolutionNote: i.resolutionNote,
   }))
