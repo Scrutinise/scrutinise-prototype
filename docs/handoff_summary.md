@@ -237,7 +237,124 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-02 10:57 UTC — ▼ **25-V ADDENDUM — FOUR QUESTIONS BEFORE A REBUILD.
+*Last updated: 2026-09-03 10:35 UTC — ▼ **LEX 25-X — A BUILD MAY NO LONGER DESTROY A DECISION
+THE USER HAS MADE.**
+⚠⚠ **25-W HAD NEVER SHIPPED** — no commit, no Railway variable. Both dirty files
+(`schema.prisma`, `package.json`) are **claimed as 25-W's** and both sprints ship together.
+▶▶ **§1 (59) BUILT.** An ACCEPTED field keeps its value and its status; the build's version is
+written BESIDE it and the panel offers *Use Lex's version* / *Keep mine*. ⚠⚠ **The protection is
+on `setProposal`, not `setStatus`** — `reopenField` writes a proposal onto an ACCEPTED row too and
+must still move it, because that is the USER reopening their own field. ⚠⚠ **The rejected option
+is recorded in the code**: guarding the status alone leaves a field marked ACCEPTED whose words
+changed underneath — the user recorded as agreeing to a sentence they never read. ⚠ `state.ts`
+dropped every proposal that was not AWAITING_CONFIRMATION: **the same seam as 25-W's challenge
+title and 25-V's policy sort, three sprints running.**
+▶▶ **§2 (60) BUILT — EXCLUDE, NOT RE-MARK.** Re-marking cannot be verified: it is a similarity
+judgement over rewritten prose, and a wrong mark is silent and points the whole downstream chain
+at a sentence nobody chose. ⚠⚠ **AND THE DETACH IS NOT OPTIONAL — `parent` is `onDelete:
+Cascade`**, so excluding the marked row from the `where` is not enough; the check performs the
+un-detached version and confirms the cascade takes it. ▶ §2b says so on screen, DERIVED
+(`keptThroughRevision`), no column.
+▶▶ **§3 (54+58) APPLIED — 67 CRITICISMS SAVED FROM RETIREMENT.** DUPLICATE **119 → 63**,
+SUPERSEDED **16 → 5**, plus **49 POSSIBLY DUPLICATE** (new, stays open and marked) and **5
+ASSESSMENT** (not criticisms, not archived as such). ⚠⚠ **THE MERGE PASS WENT THE WRONG WAY**: the
+re-run found NINE groups covering 32 of 47, one merging C1–C8 under "these all require legislative
+changes" — §3a's own failure arriving in the merge pass because only the duplicate prompt was
+tightened. **Only the approved seven were applied.** ▶ Re-read: **225 rows before and after,
+nothing deleted**; 79 open in the current set, 79 archived with reasons, all still on screen.
+▶ **§4 REPORTED, NOTHING BUILT** — `docs/25X_CUMULATIVE_BUILD_PROPOSAL.md`. ✅ **The citation
+graph is reachable and the coverage contract permits it; what is missing is a caller.**
+⚠⚠ **§4c IS NOT WHOLLY TRUE — testimony reaches every build, UPLOADED DOCUMENTS DO NOT.**
+`build.ts` never reads `IdeaUserMaterial`; the elicitation context carries a filename with
+`read: false` HARDCODED; the document's findings are written at `runVersion: 1` and passes that
+filter on the current version cannot see them. Nine findings sit at v1 against a v9 build.
+**Fix that first, separately.** ▶ ~45–55p vs 37p; recommended to REPLACE `FULL`, with the
+allowance repriced — Charlie's call.
+▶ **§5 — NOTHING WAS SETTLED AT RANDOM.** 7 accepted fields, **0 root-cause marks, 0 ruled out, 0
+chosen**; all seven are Stage-1 projections and his own words, **not one a field a build writes**.
+Nothing cleared. `docs/25X_SETTLED_ON_ACCOUNTABILITY.md`.
+✅ `check:lex-25x` **32/0, 4 controls, 0 dead** — ⚠ two controls were DEAD first and **both were
+the check being wrong**: one asserted a property archive-never-delete makes false, the other
+matched a 60-char prefix dozens of these criticisms share. **A substring is not an identity.**
+✅ `tsc`, `check:scripts` and `check:client-boundary` all green (561 files, 133 client, 0
+crossings). ⚠ `check:scripts` is red only on another session's untracked `_b17*.ts` globals.
+⚠⚠ **STILL OUTSTANDING FROM 25-W AND IT IS ONE COMMAND: `npm run set:worker-email -- --write`.**
+The build worker still has no `RESEND_API_KEY`, so every "email me when it's done" build finishes
+without one — and until 25-W's code ships, says it sent one.
+Earlier: 2026-09-02 12:25 UTC — ▼ **LEX 25-W — THE LOG SAID THE EMAIL WAS SENT, ONE SECOND
+AFTER SAYING IT WAS NOT.**
+▶▶ ⚠⚠ **§A ANSWERED, AND IT IS CATEGORY TWO: STORED, AND NO SEND WAS ATTEMPTED.** Charlie is
+right that he ticked the box — build `6547478c` (*Biodegradable Plastic Straws*, 10:15–10:22 UTC
+= 11:15–11:23 BST) carries **`notifyEmail = true`**. ⚠ **The brief's hypothesis is WRONG**: the
+notification is not on the tab path, `settleBuild` is shared, and the worker reached it
+(`25b build settled`, 10:22:38). **There is no provider response id, and there never has been one
+for any build.** The worker's log, one second apart:
+`RESEND_API_KEY not set — email not sent to cl@scrutinise.org` then
+`[lex-diag] 25b build-complete email sent`.
+⚠⚠ **THE BUILD WORKER WAS NEVER GIVEN A `RESEND_API_KEY`** — `deploy-build-worker.ts` created it
+with 17 variables and that was not one of them. **Moving the build off the tab moved it off
+Vercel's environment**, and the mail key and `NEXT_PUBLIC_APP_URL` had to be named there.
+⚠⚠ **AND `sendEmail` RETURNED `void` ON THREE DIFFERENT OUTCOMES**, so the caller had no way to
+tell a send from a skip and the only sentence available was the optimistic one. Now returns
+`{ sent, providerId, reason }` — Charlie's four categories, distinguishable at the call site — and
+the worker prints its mail capability and `resolvedConfigLine()` at every boot.
+⚠ **ONE STEP IS CHARLIE'S: `npm run set:worker-email -- --write`** (auto mode refused the
+production config write). No secret passes through it: `${{Ingest.RESEND_API_KEY}}` is a Railway
+reference. **§A is not verified until a build sends and quotes an id.**
+▶ **§B DONE.** Column default `true`, applied; the backfill is guarded so a row that HAS built
+keeps the choice it made. ⚠ **§1h's driver-awareness STAYS, deliberately** — the tab warning
+renders only under `client`, where it is true, and production reads `worker`; deleting it would let
+a flip back promise something the architecture could not keep.
+▶▶ **§C (53) DONE — A CHALLENGE TITLE HAS REACHED A DOCUMENT FOR THE FIRST TIME.** `SnapshotIssue`
+now carries `title`/`sourceModel`/`runVersion`; long report and meeting pack print it. Backfill
+**186 titled, 0 dropped, 1.4p**, re-read **225 of 225**.
+▶▶ **§D (54) REPORTED, NOTHING WRITTEN — `docs/25W_CHALLENGE_CLASSIFICATION.md`, 6.4p**
+(⚠ +6.4p wasted: the first run made all 18 calls then died writing to a path that did not exist).
+**DUPLICATE 119 · APPLICABLE 43 · SUPERSEDED 16 · UNDECIDED 0**, and **7 merge groups over 18 of
+the current 47**. ⚠ **Two cautions Charlie must weigh before any write:** several DUPLICATE reasons
+are topic-level, not point-level; and **2 of the 6 SUPERSEDED rows I read are not criticisms at
+all** — older POSITIVE assessments the current set now contradicts, which is not the same thing as
+a criticism aimed at deleted text. ⚠ Sampled, not counted.
+▶ **§E (55) BUILT.** `PASS_CEILING_MS = 600_000`, a wall clock around the pass in `runNextPass`.
+⚠⚠ **It ends in `stopBuild`, NOT in a pass failure** — `resumablePassKey` returns null for a hard
+FAILED pass, so failing it would have left exactly the dead build the decision forbids. The stopped
+pass reopens as NOT_REACHED and resumes. `writePass` now refuses a settled build, bounding the
+orphaned promise the race leaves running.
+▶ **§F (56) HALF DONE AND SAID SO.** `/api/health` now reports `retrieval.vectorStreams` through
+the router's own parse — ⚠ **a deliberate revision of that file's own "no stream list" rule**,
+because that rule is what made Vercel's value unreadable while the worker ran with dense OFF on
+every stream. **NOT CHECKED until the deploy**: production serves `6495ead`, which predates the
+field. Then `npm run sync:worker-retrieval -- --write`.
+▶▶ **§G (57) RUN — 3 THIRDS SPENT (DONE 11/11, 30.18p, 462s) AND THREE OF THE FOUR DID NOT
+SURVIVE.** ⚠⚠ **Accepted `rootCause` and `chosenApproach` were both knocked back to
+`AWAITING_CONFIRMATION` — the VALUE survived, the acceptance did not.** ⚠⚠ **The root-cause mark
+on a Lex cause died because REVISE DELETED THE ROW** (11:59:35) and wrote two new `LEX_CORPUS`
+causes, neither marked; the user-authored cause survived. ✓ **The ruled-out policy survived with
+its reason.** **Every one of 25-V's code readings is now an observation** — and it generalises:
+the four ideas carrying 15–20 accepted build-written fields would lose every acceptance on a
+rebuild. ⚠ **Nothing was fixed** — an ACCEPTED guard on `setStatus` and a REVISE that re-marks
+rather than deletes are Charlie's decisions. Scratch idea `9910c16e` deliberately NOT deleted
+(`--sweep` when read).
+⚠ **§A REPRODUCED ON THIS BUILD TOO**, 12:03:55 UTC, the same two contradictory lines. Deterministic.
+✅ `check:lex-25w` **24/0, 3 FINDINGS, 1 NOT CHECKED, 4 controls, 0 dead** — ⚠ it failed three of its own
+assertions first run: one real (the migration), and **two that were the check's own fault** (an
+absence assertion that matched the correctly-guarded line because it is indented, and a driver
+assertion reading `process.env` on this laptop and calling it production).
+⚠ **BOTH TYPESCRIPT PROGRAMS ARE GREEN** — `tsc` and `check:scripts`. They were red mid-sprint on
+the Central thread's in-flight files and went green when that thread committed.
+⚠⚠ **AND THAT SAME COMMIT (`d1e8e96`) SWEPT MY CHANGE_LOG ENTRY IN AND PUSHED IT** before 25-W had
+a commit of its own — the shared-tree hazard, from the other side this time.
+⚠⚠ **CORRECTION TO MY OWN §F LINE: production was not merely OLD at `6495ead`, IT WAS STUCK.**
+Every deploy since had failed — a `'use client'` component value-importing a module that reaches
+`lib/prisma`, so the Postgres driver went into the browser bundle and the build died on
+dns/fs/net/tls. **Seven commits were behind it**, and it built clean on every machine, which is
+CLAUDE.md §20 in its purest form. Cleared by the Central session at ~12:40; **production is now
+GREEN on `44f0fcb`** (read off `/api/health`). ⚠ `44f0fcb` still predates `retrieval.vectorStreams`,
+so §F's NOT CHECKED stands unchanged — the reason was the outage, not the field.
+▶ **`npm run check:client-boundary` is new** (theirs): it walks every client component's value
+imports transitively and prints the chain. **Run and green here — 561 files, 133 client, 0
+crossings, control fired** — and it is now a pre-push gate in `commit-all.sh`.
+Earlier: 2026-09-02 10:57 UTC — ▼ **25-V ADDENDUM — FOUR QUESTIONS BEFORE A REBUILD.
 MEASUREMENT ONLY: no code changed, nothing written to the database.**
 ▶ **Titling the untitled challenges costs ~1p and needs no build** — 186 on this idea (not 275,
 which was the all-ideas figure), ~30k in / 2.2k out on flash. It is a model call, spends **no

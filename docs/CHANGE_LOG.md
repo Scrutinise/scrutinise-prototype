@@ -132,6 +132,115 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-X — A BUILD MAY NO LONGER DESTROY A DECISION THE USER HAS MADE (2026-09-03 10:35 UTC)
+
+### §0 — the two dirty files were 25-W's, and 25-W had never shipped
+
+`scrutinise-web/prisma/schema.prisma` and `scrutinise-web/package.json` are **claimed**: the
+diff is 25-W's `emailOnBuildComplete` default and three script registrations. ⚠ **25-W had no
+commit at all** — the code, the migration and the Railway variable were all still outstanding —
+so this sprint ships both, by explicit path.
+
+### §1 (decision 59) — an accepted field survives a build; the build's version arrives beside it
+
+Measured on the 25-W scratch idea: an accepted `rootCause` and an accepted `chosenApproach` both
+reverted to awaiting-confirmation, the text survived and the user was told nothing.
+
+⚠⚠ **The protection is on `setProposal`, not on `setStatus`, and that is load-bearing.**
+`reopenField` writes a proposal onto an ACCEPTED row too, and that must STILL move it — it is the
+user reopening their own field. The distinction is whose hand it is.
+
+⚠⚠ **The rejected option is recorded in the code so nobody rebuilds it.** Guarding the status
+alone would leave a field marked ACCEPTED whose words had changed underneath — the user recorded
+as having agreed to a sentence they never read. `check:lex-25x` asserts that exact state does not
+occur, as the absence of its symptom.
+
+▶ `state.ts` dropped every proposal that was not AWAITING_CONFIRMATION — **the same seam as the
+challenge title in 25-W and the policy sort in 25-V. Three sprints running, one seam.**
+▶ One shared `RefinementOffer` with three call sites, not three copies; **three non-colour cues**
+(a 2px border where the resting state has 1px, the words PROPOSED BY LEX — REFINE, and a sentence
+saying the accepted version stays if nothing is done). `keepMine` is its own action, deliberately
+not a flavour of `skip`. ▶ A proposal identical to the accepted text offers nothing.
+
+### §2 (decision 60) — a user's root-cause mark is a user decision
+
+⚠ **EXCLUDE, NOT RE-MARK, and the reason is that re-marking cannot be verified.** Deciding which
+new cause "is the same cause" is a similarity judgement over rewritten prose; `match-cause.ts`
+refuses on ambiguity for exactly this reason. A wrong re-mark is silent, and it would point the
+root cause — and every action downstream of it — at a sentence the user never chose. The two
+surfaces would also disagree: the accepted `rootCause` FIELD holds the text they agreed to.
+
+⚠⚠ **AND THE DETACH IS NOT OPTIONAL — `parent` IS `onDelete: Cascade`.** Excluding the marked row
+from the `where` is not enough: if its parent is in the delete set the database cascades straight
+through the exclusion. A marked cause is detached to the top level first. **`check:lex-25x`
+performs the un-detached version and confirms the cascade takes it** — that control is the only
+evidence the exclusion is real rather than intended.
+
+▶ §2b: the screen says so. `keptThroughRevision` is DERIVED (marked, Lex-authored, older than the
+last completed build) — no column, no migration, and false for a user-authored cause, which was
+never at risk.
+
+### §3 (decisions 54 + 58) — the cleanup, at a tighter bar. **67 criticisms saved from retirement**
+
+| verdict | 25-W | 25-X | what happened |
+|---|---:|---:|---|
+| DUPLICATE (same POINT) | 119 | **63** | archived, naming the current challenge |
+| POSSIBLY DUPLICATE | – | **49** | **new state — stays OPEN and visible, marked** |
+| APPLICABLE | 43 | **43** | promoted, marked with the draft raised against |
+| SUPERSEDED | 16 | **5** | archived, naming what is gone |
+| ASSESSMENT | – | **5** | **not a criticism — not archived as one** |
+| UNDECIDED | 0 | **13** | left alone |
+| **archived** | **135** | **68** | **67 fewer** |
+
+⚠⚠ **THE MERGE PASS WENT THE WRONG WAY AND ONLY THE APPROVED SEVEN WERE APPLIED.** The re-run
+found NINE groups covering 32 of 47 — including one merging C1–C8 under *"these all require
+legislative changes"* (objections about the Constitutional Reform Act, the Civil Service
+Commission, the NAO, civil service terms, a new board, public reporting and the Government Legal
+Department — same topic, seven different objections) and one merging C13–C17 under *"these all
+want more evidence"*, which describes what a criticism IS. **§3a's failure, arriving in the merge
+pass because only the duplicate prompt was tightened.** The seven Charlie approved were applied;
+the nine are reported.
+
+▶ **Applied, re-read: 225 rows before and after — nothing deleted.** 79 open in the current set,
+79 archived and still on screen with reasons, 49 marked possibly-duplicate and still open.
+▶ Three additive columns (`promotedToVersion`, `relatedIssueId`, `relationKind`); ⚠ `runVersion`
+is NOT rewritten, because the draft a criticism was raised against is the thing being displayed.
+▶ The documents show the current set by default and print earlier drafts' open criticisms under
+their own heading — **archive-never-delete had to be true of the document, not only the database.**
+
+### §4 — reported and proposed, nothing built. `docs/25X_CUMULATIVE_BUILD_PROPOSAL.md`
+
+✅ **The citation graph is reachable and the coverage contract already permits it** — 1,034,548
+rows, a built reader, a parity check, and a coverage block in which no figure is written down.
+**What is missing is a caller, not permission.**
+⚠⚠ **§4c is NOT wholly true today, and the brief was right to say confirm rather than assume.**
+Testimony reaches every pass of every build, verbatim. **Uploaded documents do not: `build.ts`
+never reads `IdeaUserMaterial`, the elicitation context carries a filename with `read: false`
+hardcoded, and the document's findings are written at `runVersion: 1` while passes that filter on
+the current build's version cannot see them.** On the accountability idea nine findings sit at v1
+against a v9 build. Recommended as a fix BEFORE any of §4.
+⚠ Entrenchment is the serious risk and it has already happened once — 25-U's plastic-bag gap was
+re-asserted by the next morning's build. Three proposals, chiefly: feed the carried frame to the
+contradiction pass labelled as inherited, and never carry transitively.
+▶ Estimated ~45–55p against 37p; recommended to REPLACE `FULL`, not become a third mode, with the
+allowance repriced — that is Charlie's call and a prerequisite.
+
+### §5 — nothing was settled at random, and the list is his
+
+`docs/25X_SETTLED_ON_ACCOUNTABILITY.md`. **7 accepted fields, 0 root-cause marks, 0 ruled-out
+options, 0 chosen approach.** ⚠ All seven are Stage-1 elicitation projections and his own words —
+**not one is a field a build writes**, so §1's protection freezes nothing he did not intend.
+Nothing was cleared; the script has no write path.
+
+**`check:lex-25x` 32 passed / 0 failed / 4 controls / 0 dead.** ⚠ Two of its controls were DEAD on
+first construction and **both were the check being wrong, not the code**: one asserted that not
+every open challenge appears in the document (they all do — that is what archive-never-delete
+means), and its replacement matched a 60-character prefix that dozens of these criticisms share.
+**A substring is not an identity.** The third version performs the pre-25-X filter and asks
+whether the property still holds.
+
+---
+
 ## LEX 25-W — THE EMAIL THAT SAID IT HAD BEEN SENT, AND FOUR DECISIONS (2026-09-02 12:20 UTC)
 
 ### §A — the notification: diagnosed, and it is category two of Charlie's four

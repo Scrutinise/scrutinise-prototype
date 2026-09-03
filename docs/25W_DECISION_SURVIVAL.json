@@ -1,0 +1,13 @@
+{
+  "ideaId": "9910c16e-141f-40c0-98a4-f2e2c791c6aa",
+  "rootCauseFieldStatus": "ACCEPTED",
+  "rootCauseFieldValue": "Nobody inside the authority is answerable for whether the licence conditions are ever checked.",
+  "chosenApproachFieldStatus": "ACCEPTED",
+  "chosenApproachFieldValue": "Put the checking duty on one named officer and publish whether it was done.",
+  "lexCauseId": "dc58a15b-b359-4e5f-ba1a-654f7dc8baee",
+  "lexCauseIsRoot": true,
+  "ruledOutOptionId": "7d0f5bed-1cd2-4201-96b6-e66614ec18ae",
+  "ruledOutStatus": "RULED_OUT",
+  "ruledOutReason": "The proposer has ruled this out: it removes the protection, not the failure to enforce it.",
+  "buildId": "147ef614-b8ea-445f-bbab-68875538b63e"
+}

@@ -1,0 +1,1512 @@
+{
+  "ideaId": "452c5ade-3153-400a-bf48-3b71aaa52773",
+  "currentVersion": 9,
+  "generatedAt": "2026-09-03T10:18:59.953Z",
+  "model": "gemini-2.5-flash",
+  "spend": "183,146 in / 10,922 out — estimated cost 6.5p",
+  "verdicts": [
+    {
+      "id": "fcf4c174-f2ac-46e0-a6ca-c5983153ecbb",
+      "runVersion": 1,
+      "title": "Statutory individual legal duties",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C1 raises the same point about the need for primary legislation for statutory duties.",
+      "duplicateOf": "40b82585-a698-4773-abe1-c66d6c9367c9"
+    },
+    {
+      "id": "71a00bee-782a-4a87-b2b1-66797ed17754",
+      "runVersion": 1,
+      "title": "Commission performance management powers",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C3 addresses the need for amendments to the Civil Service Commission's powers.",
+      "duplicateOf": "a5406fdf-a7ed-422c-9149-785e0a5bb213"
+    },
+    {
+      "id": "cab31c7b-81e9-4aa7-abfa-187320c4136c",
+      "runVersion": 1,
+      "title": "Mandatory outcome owner roles",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C7 covers legislative provisions for public reporting, which might include 'outcome owner' roles.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    },
+    {
+      "id": "f29aa09a-e9a2-4480-93fa-8d9d47674232",
+      "runVersion": 1,
+      "title": "NAO enhanced audit powers",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C4 directly addresses the need for legislative changes to the NAO's mandate.",
+      "duplicateOf": "f5e14a14-c6e4-4449-8d33-2182628c067f"
+    },
+    {
+      "id": "4ff1fb98-ef6c-46cc-a8ce-bb49e1098dd8",
+      "runVersion": 1,
+      "title": "Integration with existing framework",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C2 discusses interaction with Ministerial Responsibility, which is part of the existing framework.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "75968024-6c0a-4579-9e52-c5ddebafa9db",
+      "runVersion": 1,
+      "title": "Commission powers integration",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C3 covers the need for amendments to the Civil Service Commission's powers.",
+      "duplicateOf": "a5406fdf-a7ed-422c-9149-785e0a5bb213"
+    },
+    {
+      "id": "89809787-eefb-4103-a6d8-e8d7f2befa84",
+      "runVersion": 1,
+      "title": "Departmental reporting structures",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C7 covers legislative provisions for public reporting and departmental structures.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    },
+    {
+      "id": "4e0c5e2d-5527-439e-a658-8c1c6873e838",
+      "runVersion": 1,
+      "title": "NAO audit scope changes",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C4 addresses the need for legislative changes to the NAO's audit powers.",
+      "duplicateOf": "f5e14a14-c6e4-4449-8d33-2182628c067f"
+    },
+    {
+      "id": "53774d32-98b6-48e2-82fa-07be32c5efb0",
+      "runVersion": 1,
+      "title": "New statutory disciplinary procedures",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C5 mentions revising civil service terms, which would include disciplinary procedures.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "7dad05b6-4cd2-42d7-a9df-06c3636de1fe",
+      "runVersion": 1,
+      "title": "Statutory framework for rewards",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism specifically addresses the statutory framework for performance-based rewards.",
+      "duplicateOf": null
+    },
+    {
+      "id": "691266f3-06f8-4412-a028-c87a6c2dae4a",
+      "runVersion": 1,
+      "title": "CRAG Act judicial construction",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still involves a Bill that would interact with the CRAG Act, so judicial construction is relevant.",
+      "duplicateOf": null
+    },
+    {
+      "id": "5872b274-a1e2-4609-8b74-c33d579fd082",
+      "runVersion": 1,
+      "title": "Management Functions Act judicial construction",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still involves a Bill that would interact with the Management Functions Act, so judicial construction is relevant.",
+      "duplicateOf": null
+    },
+    {
+      "id": "839b31a6-054f-4d19-961c-31c211855060",
+      "runVersion": 1,
+      "title": "CRAG Act legislative history",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "7092ae10-1dbb-42f9-a5c4-96877e2a8654",
+      "runVersion": 1,
+      "title": "Civil Service Reform Plan",
+      "verdict": "APPLICABLE",
+      "reason": "The Civil Service Reform Plan's effectiveness on individual accountability is still relevant to the current proposal.",
+      "duplicateOf": null
+    },
+    {
+      "id": "b86bf299-4491-4ab0-a55f-37ddcf2cb47a",
+      "runVersion": 1,
+      "title": "Delegation of functions history",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "5403d719-c4cb-4a4f-a1b5-00a115e87422",
+      "runVersion": 1,
+      "title": "SCS performance management guidance",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "df93639b-a8c5-4d17-b7c2-b436d67e7136",
+      "runVersion": 1,
+      "title": "Departmental pay variation reasons",
+      "verdict": "APPLICABLE",
+      "reason": "The reasons for pay variation are still relevant to understanding accountability and performance incentives.",
+      "duplicateOf": null
+    },
+    {
+      "id": "5ed20699-3920-4dcd-8e08-8b874066319a",
+      "runVersion": 1,
+      "title": "Quantification of diffused responsibility",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "f5c1d75f-a32d-4f39-bb32-60966c20336f",
+      "runVersion": 1,
+      "title": "Clarity of performance metrics",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "3b7434ba-cbf9-41f0-b174-3a475df77e38",
+      "runVersion": 1,
+      "title": "Effectiveness of consequences and rewards",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "3f28177b-4bcd-49c5-8217-5112289746f2",
+      "runVersion": 1,
+      "title": "unquantified legal advisor oversight",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C8 addresses legal department changes and accountability, but not the specific lack of oversight or quantification.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "273d7a1b-236c-4224-892c-a9ed7d68206e",
+      "runVersion": 1,
+      "title": "unquantified decision-making complexity",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism quantifies decision-making complexity or its impact on accountability.",
+      "duplicateOf": null
+    },
+    {
+      "id": "7459ae49-4743-4360-bd1c-901d9ade5f8a",
+      "runVersion": 1,
+      "title": "unquantified individual accountability lack",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C44 addresses unquantified problem scale, but not the direct causal link to individual accountability.",
+      "duplicateOf": "a2db224e-d136-49d7-bb57-be0cc8f5f50b"
+    },
+    {
+      "id": "11517ed6-84c9-485e-92f8-296a9e1aaa6d",
+      "runVersion": 1,
+      "title": "Maude Review duplication risk",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C21 mentions the Maude Review, but this criticism specifically highlights the risk of duplication.",
+      "duplicateOf": "c18bbb55-3b8f-4407-8417-8a64c4185383"
+    },
+    {
+      "id": "f97dc601-fcad-4b17-a469-b02b65e0229b",
+      "runVersion": 1,
+      "title": "performance markings interaction",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C5 addresses revising civil service terms, but not the specific interaction with the 'guided distribution model'.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "dcdc7687-ddb0-4535-a3f4-98fa600cb323",
+      "runVersion": 1,
+      "title": "ministerial accountability definition",
+      "verdict": "DUPLICATE",
+      "reason": "C2 and C43 both address the conflict between new civil servant duties and Ministerial Responsibility.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "99c59139-dbc7-4e0a-bfa6-433c95d10753",
+      "runVersion": 1,
+      "title": "NAO powers integration",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C4 addresses NAO powers, but not its integration with existing parliamentary oversight mechanisms.",
+      "duplicateOf": "f5e14a14-c6e4-4449-8d33-2182628c067f"
+    },
+    {
+      "id": "f1f4ffda-662f-4af1-8fc8-58344d51e46c",
+      "runVersion": 1,
+      "title": "coherent legal framework",
+      "verdict": "ASSESSMENT",
+      "reason": "This is a positive assessment of the coherence of the actions, not a criticism.",
+      "duplicateOf": null
+    },
+    {
+      "id": "b065f9f6-1e09-4272-b220-72069cf63c53",
+      "runVersion": 1,
+      "title": "undefined statutory terms",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism addresses the lack of statutory definitions for 'senior civil servant' or 'outcome owner'.",
+      "duplicateOf": null
+    },
+    {
+      "id": "1a89c522-0369-405a-bc0d-cf5671781987",
+      "runVersion": 1,
+      "title": "unspecified legal duties",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C1 and C46 address the need for defining duties and 'failure to deliver', but not the legal vehicle for enforcement.",
+      "duplicateOf": "40b82585-a698-4773-abe1-c66d6c9367c9"
+    },
+    {
+      "id": "bf3474b7-90d3-4576-a278-cccb2f4bf825",
+      "runVersion": 1,
+      "title": "unclarified body capacity",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C47 raises the cost of new infrastructure, which includes resources for enhanced powers, but not capacity.",
+      "duplicateOf": "5c031986-fcfc-4e7f-b8e0-1242159822cc"
+    },
+    {
+      "id": "f245c28b-bb69-4510-af78-ad95a0138774",
+      "runVersion": 1,
+      "title": "ministerial accountability conflict",
+      "verdict": "DUPLICATE",
+      "reason": "C2 and C43 both address the conflict between individual civil servant accountability and ministerial responsibility.",
+      "duplicateOf": "f73a0663-0af2-4dea-b038-71be10d71a2d"
+    },
+    {
+      "id": "9848ba03-b6a7-4813-9e76-91412e91247d",
+      "runVersion": 1,
+      "title": "existing statutory powers",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C1 addresses the interaction with the Constitutional Reform and Governance Act 2010, which includes ministerial powers.",
+      "duplicateOf": "40b82585-a698-4773-abe1-c66d6c9367c9"
+    },
+    {
+      "id": "91643c42-55d9-4c5c-9f93-9744749cc3be",
+      "runVersion": 1,
+      "title": "unquantified reporting burden",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C47 raises the unestimated cost of new infrastructure, which could include reporting burden.",
+      "duplicateOf": "5c031986-fcfc-4e7f-b8e0-1242159822cc"
+    },
+    {
+      "id": "843b113e-d23c-49eb-b543-d8a475ac374d",
+      "runVersion": 5,
+      "title": "coherent accountability framework",
+      "verdict": "ASSESSMENT",
+      "reason": "This is a positive assessment of the coherence of actions, not a criticism.",
+      "duplicateOf": null
+    },
+    {
+      "id": "24ab9742-68f5-4f49-9c82-cb21f7493987",
+      "runVersion": 5,
+      "title": "ministerial hire-fire power",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not address whether ministers need direct hire-and-fire power for senior management.",
+      "duplicateOf": null
+    },
+    {
+      "id": "4f959b20-6a2c-4ca3-a43f-5fb5ffaf12c3",
+      "runVersion": 5,
+      "title": "anonymised data limitation",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C7 discusses legislative provisions for public reporting, which could include naming individuals.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    },
+    {
+      "id": "1796ac27-2767-4793-b0d0-b89f8fe3f92d",
+      "runVersion": 5,
+      "title": "existing roles integration",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C45 questions why existing roles like Accounting Officers are insufficient, which is related to integrating new roles.",
+      "duplicateOf": "5b2c4091-f2ad-4503-bd50-73d120fe7327"
+    },
+    {
+      "id": "97a53e40-0047-4ff6-b223-2b3ce1eedacb",
+      "runVersion": 5,
+      "title": "civil service impartiality tension",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not explicitly address the constitutional tension with civil service impartiality.",
+      "duplicateOf": null
+    },
+    {
+      "id": "76b2c9f5-e0f4-4100-988d-a3c64058abf1",
+      "runVersion": 5,
+      "title": "absence of task closure",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal addresses lawyer autonomy but not the specific failure mode of an absence of task closure.",
+      "duplicateOf": null
+    },
+    {
+      "id": "d14d88d5-fb9f-4ccd-a28f-17068a8f3884",
+      "runVersion": 5,
+      "title": "GLD lawyers' duty of confidentiality",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still notes the issue but doesn't diagnose the underlying cause of legal advisors' duty.",
+      "duplicateOf": null
+    },
+    {
+      "id": "66050759-a28f-4f8e-8620-9f85ee4ed28a",
+      "runVersion": 5,
+      "title": "New oversight bodies diffusing responsibility",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C24 and C26 discuss balancing authority and responsibility, which relates to diffusing responsibility.",
+      "duplicateOf": "d83f0e3f-89cc-4942-82b4-6c605b2129be"
+    },
+    {
+      "id": "0bf63065-2975-4176-97aa-37acd7748962",
+      "runVersion": 5,
+      "title": "Existing failure distinction frameworks",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal mentions distinguishing failure types but doesn't explicitly reference existing frameworks like 'Managing Public Money'.",
+      "duplicateOf": null
+    },
+    {
+      "id": "5c139424-9319-4356-9750-595950d0b666",
+      "runVersion": 5,
+      "title": "ALB accountability via existing machinery",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still bundles quango solutions into a major new Bill without considering existing machinery.",
+      "duplicateOf": null
+    },
+    {
+      "id": "1a9a0b9f-0e1f-4b3a-ba33-1a25ff61bbca",
+      "runVersion": 5,
+      "title": "Punishing individuals for systemic failures",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C46 discusses the need to define 'failure to deliver' and distinguish causes, which relates to this point.",
+      "duplicateOf": "b1495f89-82ee-46a7-a858-bb3f91f4e4f5"
+    },
+    {
+      "id": "a030f85e-4be1-40a6-889f-6eb5cc1bb655",
+      "runVersion": 5,
+      "title": "Misdiagnosis as headcount problem",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C44 notes the lack of quantification for the '2x too many people' claim, which is related.",
+      "duplicateOf": "a2db224e-d136-49d7-bb57-be0cc8f5f50b"
+    },
+    {
+      "id": "6b81cffa-cd29-4f17-8536-18c97ebacb44",
+      "runVersion": 5,
+      "title": "Diagnosis is a list of problems",
+      "verdict": "DUPLICATE",
+      "reason": "C32 states the diagnosis is an inventory of causes, not a simplification.",
+      "duplicateOf": "b6b3786a-53ac-4ddd-a0c9-0278a9aea183"
+    },
+    {
+      "id": "b4a337b3-259e-4813-a646-cb55644892ad",
+      "runVersion": 5,
+      "title": "Missing guiding policy",
+      "verdict": "DUPLICATE",
+      "reason": "C41 states the kernel does not contain a guiding policy.",
+      "duplicateOf": "953601ab-7eb4-4d58-8e6c-7814884c3fc3"
+    },
+    {
+      "id": "9fc2fe5d-dd73-4c27-b6e8-f55e49ffcf0b",
+      "runVersion": 5,
+      "title": "Actions are a list",
+      "verdict": "DUPLICATE",
+      "reason": "C36 states the actions are a long, repetitive list, not coordinated steps.",
+      "duplicateOf": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+    },
+    {
+      "id": "993b67f3-92f3-4f1c-adb8-761fe3b18f50",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The problem is stated as a problem, not as a solution.",
+      "verdict": "SUPERSEDED",
+      "reason": "The current draft now clearly states 'The problem' and 'The idea, as agreed'.",
+      "duplicateOf": null
+    },
+    {
+      "id": "3d6dd85f-4ba1-40bd-91c4-10a62b100e4b",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C31 makes the same point about missing pivotal obstacle.",
+      "duplicateOf": "b97c11ae-b8bb-44e8-86ff-033181eb64d8"
+    },
+    {
+      "id": "1d90bfd4-ebeb-4c39-a1c5-38269cf7bfc8",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The diagnosis simplifies rather than inventories.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C32 makes the same point about diagnosis being an inventory.",
+      "duplicateOf": "b6b3786a-53ac-4ddd-a0c9-0278a9aea183"
+    },
+    {
+      "id": "892ab1b1-f8dc-4349-a2d5-91999a01d746",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The guiding policy rules things out.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C33 makes the same point about missing guiding policy.",
+      "duplicateOf": "414aa09c-9a9f-479c-ac2f-38c9e9c104d6"
+    },
+    {
+      "id": "0c842848-6744-4558-a697-24cdd1c6d253",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The guiding policy is an approach, not a goal.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C34 makes the same point about missing guiding policy.",
+      "duplicateOf": "6683494a-eeb6-4e16-bbc6-8f11129cd6fe"
+    },
+    {
+      "id": "a0f25754-a42d-48de-aa36-a766cc28a428",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The approach has leverage on the named obstacle.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C35 makes the same point about missing pivotal obstacle and guiding policy.",
+      "duplicateOf": "2cd47945-21f7-4a33-9c8d-9f7fa0536450"
+    },
+    {
+      "id": "a1e3c761-4828-421d-8afd-ff57d052cbd9",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The actions defeat the diagnosed causes.",
+      "verdict": "SUPERSEDED",
+      "reason": "The current draft includes actions to address legal advisors' accountability (C8, Action 4).",
+      "duplicateOf": null
+    },
+    {
+      "id": "e5c1f137-a240-45ea-b8b2-e1dcc5f9582f",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — The actions cohere with each other.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C36 makes the same point about actions lacking coherence.",
+      "duplicateOf": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+    },
+    {
+      "id": "5931bbc7-bf32-433f-8c63-aadea3052b84",
+      "runVersion": 5,
+      "title": "The strategy does not yet meet this test — No bad-strategy smell.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C37 makes the same point about 'Goals Mistaken for Strategy'.",
+      "duplicateOf": "51adbb77-d17b-4c59-ab36-a8a8a059a8d8"
+    },
+    {
+      "id": "86a67f9d-30f0-4c38-82fe-547d105d4e23",
+      "runVersion": 5,
+      "title": "Guiding policy not connected to actions",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C41 makes the same point about guiding policy not connected to actions.",
+      "duplicateOf": "953601ab-7eb4-4d58-8e6c-7814884c3fc3"
+    },
+    {
+      "id": "a4cb502f-6ad1-49f0-b1ac-a74cbc7154b4",
+      "runVersion": 5,
+      "title": "Legal advisors cause unaddressed",
+      "verdict": "SUPERSEDED",
+      "reason": "The current draft includes actions to address legal advisors' accountability (C8, Action 4).",
+      "duplicateOf": null
+    },
+    {
+      "id": "e0cc6eb1-126d-4b4a-b232-d97f529a7242",
+      "runVersion": 5,
+      "title": "Undefined policy/operational failure distinction",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still lacks a clear definition for distinguishing policy from operational failure, which is crucial for statutory duties.",
+      "duplicateOf": null
+    },
+    {
+      "id": "60747f70-0bd9-46a1-bf65-b609e7bae21b",
+      "runVersion": 5,
+      "title": "Unacknowledged Senior Responsible Owner role",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "207e3eba-d416-4768-b5a0-219b6a3b8a06",
+      "runVersion": 5,
+      "title": "Civil Service Compensation Scheme impact",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not address how proposed sanctions interact with the Civil Service Compensation Scheme.",
+      "duplicateOf": null
+    },
+    {
+      "id": "9413fa33-a53a-448b-acd3-47edfe918bc7",
+      "runVersion": 5,
+      "title": "Carltona principle conflict",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "b3f7e52d-290e-48f4-9c48-c00fa3cf5894",
+      "runVersion": 5,
+      "title": "Unknown caseload for new boards",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "4a2c1dd9-a9dc-4acf-94ba-d4f32e9ad0f2",
+      "runVersion": 5,
+      "title": "Legal advice not outcome-based",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "7b321efd-d0c2-4098-8bc3-22a5224910a2",
+      "runVersion": 6,
+      "title": "Coherence of actions",
+      "verdict": "ASSESSMENT",
+      "reason": "This is a positive assessment of the coherence of actions, not a criticism.",
+      "duplicateOf": null
+    },
+    {
+      "id": "64b09bfd-26dc-4fc2-9a38-1cf3b20bab4c",
+      "runVersion": 6,
+      "title": "Existing accountability roles ignored",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "6bdff39f-3e48-4045-8463-96b4a833ea73",
+      "runVersion": 6,
+      "title": "Actions are a laundry list",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "8ad12314-7625-4e39-8730-86eb93a236b3",
+      "runVersion": 6,
+      "title": "Diagnosis of culture as cause",
+      "verdict": "UNDECIDED",
+      "reason": "called a duplicate but named no current challenge — not accepted",
+      "duplicateOf": null
+    },
+    {
+      "id": "632f5516-4060-4852-82c0-b981dade23ab",
+      "runVersion": 6,
+      "title": "Avoidance of Ministerial Responsibility",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C2 addresses the need to review Ministerial Responsibility, which is the core of this point.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "beb1876e-0113-4bb1-9f07-922f0d373123",
+      "runVersion": 6,
+      "title": "A choice that may have been made the wrong way, on guiding policy — instrument",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C25 questions the reliance on primary legislation versus executive action, touching on this point.",
+      "duplicateOf": "7a43bf4d-29d2-4c3a-9cb2-f81c32a37b68"
+    },
+    {
+      "id": "5f82bd88-1d2c-401d-b338-d10a8627f294",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — The problem is stated as a problem, not as a solution.",
+      "verdict": "SUPERSEDED",
+      "reason": "The problem statement is now clearly defined in the current draft, not just a goal.",
+      "duplicateOf": null
+    },
+    {
+      "id": "725b74dc-656a-4b73-a5ef-1681e5e4f8d7",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C31 and C32 both state that the pivotal obstacle is not distinct from root causes.",
+      "duplicateOf": "b97c11ae-b8bb-44e8-86ff-033181eb64d8"
+    },
+    {
+      "id": "6f5dd648-c534-4ab7-b30e-9219885d4cef",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — The guiding policy rules things out.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C33 states that the guiding policy is missing and thus rules nothing out.",
+      "duplicateOf": "414aa09c-9a9f-479c-ac2f-38c9e9c104d6"
+    },
+    {
+      "id": "8798bffc-1644-4981-96d4-fae3e2734424",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — The guiding policy is an approach, not a goal.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C34 states that the guiding policy is missing and cannot be assessed as an approach.",
+      "duplicateOf": "6683494a-eeb6-4e16-bbc6-8f11129cd6fe"
+    },
+    {
+      "id": "4836bb8e-cd48-4d83-a936-1f026aead9b0",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — The approach has leverage on the named obstacle.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C35 states that without a pivotal obstacle and guiding policy, leverage cannot be assessed.",
+      "duplicateOf": "2cd47945-21f7-4a33-9c8d-9f7fa0536450"
+    },
+    {
+      "id": "77e62d77-e23a-45cb-8b1b-57c480c2675c",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — The actions cohere with each other.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C36 states that the actions are not coherent and are a repetitive list of ideas.",
+      "duplicateOf": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+    },
+    {
+      "id": "9ff64ec5-cc5b-4f02-94ab-44b676573711",
+      "runVersion": 6,
+      "title": "The strategy does not yet meet this test — No bad-strategy smell.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C37 states the kernel smells of 'Goals Mistaken for Strategy' due to a wish-list of reforms.",
+      "duplicateOf": "51adbb77-d17b-4c59-ab36-a8a8a059a8d8"
+    },
+    {
+      "id": "61deedf4-5fb1-44ec-8b6f-94d648558507",
+      "runVersion": 6,
+      "title": "Multiple competing action proposals",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C27 and C36 both highlight the uncoordinated and repetitive nature of the actions.",
+      "duplicateOf": "b3dcf3c9-f72c-4c94-8088-0f169ffd13d8"
+    },
+    {
+      "id": "afe74d47-c318-41c9-8929-722ff3ad2e7d",
+      "runVersion": 6,
+      "title": "Disconnected legal advice action",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C8 addresses legal advice processes, but this older criticism focuses on its disconnection from the core strategy.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "11dce536-22e6-44c2-9a23-8e7066f90da7",
+      "runVersion": 6,
+      "title": "Unsubstantiated financial and staffing projections",
+      "verdict": "DUPLICATE",
+      "reason": "C44 directly addresses the lack of quantification for financial and staffing projections.",
+      "duplicateOf": "a2db224e-d136-49d7-bb57-be0cc8f5f50b"
+    },
+    {
+      "id": "5c81695f-36d7-4cd5-a93a-ddccfd2c63e2",
+      "runVersion": 6,
+      "title": "Undefined 'duty to deliver outcomes'",
+      "verdict": "DUPLICATE",
+      "reason": "C46 directly addresses the undefined nature of 'failure to deliver' and its legal implications.",
+      "duplicateOf": "b1495f89-82ee-46a7-a858-bb3f91f4e4f5"
+    },
+    {
+      "id": "915bec62-1159-4b3d-9b43-1877f03d9c36",
+      "runVersion": 6,
+      "title": "Ambiguous enforcement mechanism",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C6 discusses the legal basis of a new board and its powers, which includes enforcement mechanisms.",
+      "duplicateOf": "e958865c-ca40-4603-a3bc-5696c143ead7"
+    },
+    {
+      "id": "948085ad-476e-429c-bb71-36124170dd40",
+      "runVersion": 6,
+      "title": "Lack of political interference insulation",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism addresses the insulation of new accountability mechanisms from political interference.",
+      "duplicateOf": null
+    },
+    {
+      "id": "57a5566b-465f-49da-9a3d-a1f0792df8d4",
+      "runVersion": 6,
+      "title": "Unjustified replacement of CRAG Act",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C1 and C45 discuss the interaction with CRAG Act and existing accountability, but not direct replacement justification.",
+      "duplicateOf": "40b82585-a698-4773-abe1-c66d6c9367c9"
+    },
+    {
+      "id": "d7546a84-ccea-481e-b127-442cfc33ccd0",
+      "runVersion": 6,
+      "title": "Missing legal advisor accountability mechanism",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C8 addresses legal advice processes, but this older criticism focuses on the lack of a specific mechanism for external stakeholders.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "b8d01518-12c8-470b-9048-f4eebd324740",
+      "runVersion": 7,
+      "title": "Unspecified Bill legislative path",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C1 discusses the interaction with CRAG Act, which implies clarifying the legislative path.",
+      "duplicateOf": "40b82585-a698-4773-abe1-c66d6c9367c9"
+    },
+    {
+      "id": "86217a39-e0e7-46cd-86ed-2bc4612e4456",
+      "runVersion": 7,
+      "title": "Integration of Civil Service Commission powers",
+      "verdict": "DUPLICATE",
+      "reason": "C3 directly addresses the need for amendments to the Civil Service Commission's existing statutory duties and powers.",
+      "duplicateOf": "a5406fdf-a7ed-422c-9149-785e0a5bb213"
+    },
+    {
+      "id": "c52b21d3-4d3b-4225-8c53-3a050228ddf9",
+      "runVersion": 7,
+      "title": "Interaction with existing legal frameworks",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C5 discusses revising civil service terms, and C2 discusses interaction with constitutional frameworks.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "8a014e20-8398-42f0-9666-401eae328792",
+      "runVersion": 7,
+      "title": "Unspecified NAO mandate amendments",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C4 makes the same point about legislative changes needed for NAO powers.",
+      "duplicateOf": "f5e14a14-c6e4-4449-8d33-2182628c067f"
+    },
+    {
+      "id": "47f7daa6-3f66-442f-ab99-39bd680052bf",
+      "runVersion": 7,
+      "title": "Legal basis for terms and conditions changes",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C5 makes the same point about revising civil service terms and conditions.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "f0a9527a-7d76-48cc-afd4-b9fb78ad2077",
+      "runVersion": 7,
+      "title": "Relationship of new oversight bodies",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C6 addresses the legal basis of a new board, but this is broader about relationships between multiple new/existing bodies.",
+      "duplicateOf": "e958865c-ca40-4603-a3bc-5696c143ead7"
+    },
+    {
+      "id": "d27a27e4-421a-4709-aeea-d0b4373f8ba6",
+      "runVersion": 7,
+      "title": "Data protection for performance data",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C7 addresses legislative provisions for public reporting, but this is specifically about data protection laws.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    },
+    {
+      "id": "88d80be5-dd43-4333-826f-da41bd23e91d",
+      "runVersion": 7,
+      "title": "Legal basis for legal advisor engagement",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C8 addresses changes to the Government Legal Department, but this is specifically about mandating external engagement.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "89550d49-5ed7-4158-a542-4a1fc04406d6",
+      "runVersion": 7,
+      "title": "Legal force of Responsibility Charter",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still includes a 'Responsibility Charter' and its legal force is not specified.",
+      "duplicateOf": null
+    },
+    {
+      "id": "1d60398f-5df9-4ab1-9cdd-eb9bd39c988a",
+      "runVersion": 7,
+      "title": "Unquantified financial claims",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C44 makes the same point about unquantified financial claims.",
+      "duplicateOf": "a2db224e-d136-49d7-bb57-be0cc8f5f50b"
+    },
+    {
+      "id": "eb98cc44-7e94-49a4-9526-79e616b3eba1",
+      "runVersion": 7,
+      "title": "Existing accountability mechanisms",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C45 makes the same point about insufficient explanation of existing accountability mechanisms.",
+      "duplicateOf": "5b2c4091-f2ad-4503-bd50-73d120fe7327"
+    },
+    {
+      "id": "0a6e2a75-f24c-4c3d-969b-426529c35e77",
+      "runVersion": 7,
+      "title": "Legal advisor accountability evidence gap",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still lacks specific evidence or sources addressing legal advisor accountability beyond the proposer's experience.",
+      "duplicateOf": null
+    },
+    {
+      "id": "e65fe241-43b9-4d46-932a-045cf0ba6a42",
+      "runVersion": 7,
+      "title": "Public register feasibility",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still includes a public register of key decision-makers, and its feasibility is not addressed.",
+      "duplicateOf": null
+    },
+    {
+      "id": "9f7ca0a6-a10c-4133-a41e-bb11b4397733",
+      "runVersion": 7,
+      "title": "Civil Service Act history",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C1 addresses the interaction with CRAG 2010, which would include previous attempts at a Civil Service Act.",
+      "duplicateOf": "40b82585-a698-4773-abe1-c66d6c9367c9"
+    },
+    {
+      "id": "e37c5de9-2bcd-4655-ae03-2938a4f6d9bd",
+      "runVersion": 7,
+      "title": "Civil Service Commission powers",
+      "verdict": "DUPLICATE",
+      "reason": "C3 directly addresses the need for amendments to the Civil Service Commission's powers.",
+      "duplicateOf": "a5406fdf-a7ed-422c-9149-785e0a5bb213"
+    },
+    {
+      "id": "633f5d0a-bddc-43d1-93d4-244046dc6b7c",
+      "runVersion": 7,
+      "title": "Performance-related pay history",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C5 addresses revising civil service terms, which would include performance-related pay.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "caf06a4c-6cfb-408a-bf61-5f16f7f83d4c",
+      "runVersion": 7,
+      "title": "Public performance data extent",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C7 addresses legislative provisions for public reporting, which includes performance data.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    },
+    {
+      "id": "b4dac3d1-7b5f-48a9-9b8c-82d4f5b87fb7",
+      "runVersion": 7,
+      "title": "Government legal advisor accountability",
+      "verdict": "DUPLICATE",
+      "reason": "C8 directly addresses changes to the Government Legal Department and legal advisor accountability.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "74b76d34-14d7-4d71-b52b-5d530b6bb406",
+      "runVersion": 7,
+      "title": "Coherence of actions",
+      "verdict": "ASSESSMENT",
+      "reason": "This is a positive assessment of the coherence of actions, not a criticism.",
+      "duplicateOf": null
+    },
+    {
+      "id": "53995966-f08b-40f0-b445-a752ea7d05a4",
+      "runVersion": 7,
+      "title": "Constitutional role accommodation",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still needs to explicitly show how private sector ideas adapt to constitutional constraints.",
+      "duplicateOf": null
+    },
+    {
+      "id": "41457011-5707-4e58-ad33-66450bb61518",
+      "runVersion": 7,
+      "title": "SRO model extension",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not explicitly engage with extending the existing SRO model.",
+      "duplicateOf": null
+    },
+    {
+      "id": "50cc6c84-5c9e-4fa6-ba31-8e5a07186ac1",
+      "runVersion": 7,
+      "title": "Delegated authority and resources",
+      "verdict": "DUPLICATE",
+      "reason": "C24 and C26 both address the need to balance responsibility with delegated authority and resources.",
+      "duplicateOf": "d83f0e3f-89cc-4942-82b4-6c605b2129be"
+    },
+    {
+      "id": "2750859d-a309-4cf4-a644-2714664042e5",
+      "runVersion": 7,
+      "title": "Statutory Duty of Candour",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal focuses on external accountability and does not address an internal duty of candour.",
+      "duplicateOf": null
+    },
+    {
+      "id": "7d1a7242-0c61-4e03-b6b6-5a500d4dc66b",
+      "runVersion": 7,
+      "title": "Ministerial risk appetite",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still focuses on civil servant accountability without addressing ministerial risk appetite.",
+      "duplicateOf": null
+    },
+    {
+      "id": "4d191ead-a1ec-47c6-85a9-aae60aeb78d8",
+      "runVersion": 7,
+      "title": "Arm's-Length Body accountability",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still aims for full control over quangos but lacks detail on their specific accountability.",
+      "duplicateOf": null
+    },
+    {
+      "id": "13cb3bf3-5dde-410f-8f4f-32cbdaeb5820",
+      "runVersion": 7,
+      "title": "Systemic vs individual failure",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C46 discusses defining 'failure to deliver', which relates to distinguishing failure types.",
+      "duplicateOf": "b1495f89-82ee-46a7-a858-bb3f91f4e4f5"
+    },
+    {
+      "id": "569826b6-5951-4cf4-bf73-7cc0a5017324",
+      "runVersion": 7,
+      "title": "Headcount and accountability conflation",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still conflates headcount reduction with improved accountability without addressing the distinction.",
+      "duplicateOf": null
+    },
+    {
+      "id": "eee49a36-287a-44de-8d55-9e9cf53a00c2",
+      "runVersion": 7,
+      "title": "Quango control scope",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still aims for full control over quangos, a large constitutional question, without clear boundaries.",
+      "duplicateOf": null
+    },
+    {
+      "id": "7c5e55dd-b208-4a0e-94fb-2d6b6f559d9a",
+      "runVersion": 7,
+      "title": "Administrative instruments first",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still heavily relies on primary legislation, potentially overlooking faster administrative fixes.",
+      "duplicateOf": null
+    },
+    {
+      "id": "09c2b331-31f4-4d9b-b998-318a4977dfb5",
+      "runVersion": 7,
+      "title": "Pilot program specificity",
+      "verdict": "APPLICABLE",
+      "reason": "The pilot program lacks specificity to test the reforms against complex, cross-departmental problems.",
+      "duplicateOf": null
+    },
+    {
+      "id": "ffc5a0dc-3d99-4490-ac32-8e804da1da3b",
+      "runVersion": 7,
+      "title": "Politicisation of civil service",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not address the risk of politicising the civil service by creating direct accountability.",
+      "duplicateOf": null
+    },
+    {
+      "id": "22d13eae-15df-478f-8080-8a80a4f88a5d",
+      "runVersion": 7,
+      "title": "Neglect of existing accountability roles",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C45 questions why existing roles like SROs and AOs are insufficient, which is related.",
+      "duplicateOf": "5b2c4091-f2ad-4503-bd50-73d120fe7327"
+    },
+    {
+      "id": "4199897e-2f08-493a-bad7-e388d00572bf",
+      "runVersion": 7,
+      "title": "Counter-productive Arm's Length Body control",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still aims for direct control over ALBs, potentially damaging their necessary independence.",
+      "duplicateOf": null
+    },
+    {
+      "id": "21aaecab-f404-4d2f-9a65-9129c4a79072",
+      "runVersion": 7,
+      "title": "Overlooking administrative and regulatory reforms",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C25 argues primary legislation is the wrong tool, similar to this point.",
+      "duplicateOf": "7a43bf4d-29d2-4c3a-9cb2-f81c32a37b68"
+    },
+    {
+      "id": "07fabf32-34d5-44c6-bc0c-d4c89bdfc9a6",
+      "runVersion": 7,
+      "title": "GLD guidance change overlooked",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C8 addresses changes to the Government Legal Department's operational framework.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "1495f5fe-f234-4995-87b1-7c91347017d3",
+      "runVersion": 7,
+      "title": "New Act's diffusion problem",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C2 addresses the need to review Ministerial Responsibility and the Carltona principle.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "c465310b-85f0-4cf5-8e15-8567302f6c55",
+      "runVersion": 7,
+      "title": "Lack of Arm's Length Body strategy",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still lacks a specific strategy for the 1,200 arm's-length bodies.",
+      "duplicateOf": null
+    },
+    {
+      "id": "242fb6e2-e59e-464d-a6f4-665b19e8db66",
+      "runVersion": 7,
+      "title": "Misleading productivity benchmarks",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C44 notes the lack of quantification for the problem scale, including the '2x too many people' claim.",
+      "duplicateOf": "a2db224e-d136-49d7-bb57-be0cc8f5f50b"
+    },
+    {
+      "id": "6a68c97e-243b-45ee-9a39-3a96e296be94",
+      "runVersion": 7,
+      "title": "Employment law interaction",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C5 directly addresses the need to revise civil service terms and conditions and employment laws.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "e8060794-3df8-482d-9102-5bdd5460c467",
+      "runVersion": 7,
+      "title": "Actions section is laundry list",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C27 and C36 make the same point about the actions being a repetitive laundry list.",
+      "duplicateOf": "b3dcf3c9-f72c-4c94-8088-0f169ffd13d8"
+    },
+    {
+      "id": "7cbfc3b7-edf4-4efa-907b-a5889580f7ca",
+      "runVersion": 7,
+      "title": "Missing guiding policy",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C28, C33, C34, and C41 all state that the guiding policy is missing.",
+      "duplicateOf": "138401e2-bef8-4461-921f-53730b4fb7a9"
+    },
+    {
+      "id": "8f067412-c1e1-4d25-8e5d-26be8532e4f4",
+      "runVersion": 7,
+      "title": "Uncoordinated and repetitive actions",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C27 and C36 make the same point about the actions being uncoordinated and repetitive.",
+      "duplicateOf": "b3dcf3c9-f72c-4c94-8088-0f169ffd13d8"
+    },
+    {
+      "id": "af65fba5-4fe5-4736-a6b0-3184bae22e3d",
+      "runVersion": 7,
+      "title": "A choice that may have been made the wrong way, on guiding policy — instrument",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "Current criticism C25 argues primary legislation is the wrong tool, similar to this point about instrument choice.",
+      "duplicateOf": "7a43bf4d-29d2-4c3a-9cb2-f81c32a37b68"
+    },
+    {
+      "id": "6d280634-0cde-4589-9885-3e760c37d93e",
+      "runVersion": 7,
+      "title": "The strategy does not yet meet this test — The problem is stated as a problem, not as a solution.",
+      "verdict": "SUPERSEDED",
+      "reason": "The title has been updated to reflect a problem statement, not a solution.",
+      "duplicateOf": null
+    },
+    {
+      "id": "1b89d564-9dc3-4b22-a924-7b8ef3721e82",
+      "runVersion": 7,
+      "title": "The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C40 makes the same point about a missing pivotal obstacle.",
+      "duplicateOf": "30a29dcf-659a-48af-a37e-da8b89d1eb0f"
+    },
+    {
+      "id": "2058a9eb-c3bb-4dea-824b-cc9f2e2a65c5",
+      "runVersion": 7,
+      "title": "The strategy does not yet meet this test — The approach has leverage on the named obstacle.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C35 makes the same point about inability to assess leverage without a pivotal obstacle.",
+      "duplicateOf": "2cd47945-21f7-4a33-9c8d-9f7fa0536450"
+    },
+    {
+      "id": "bc4ed57b-8436-462e-8944-b9d894cf5d69",
+      "runVersion": 7,
+      "title": "The strategy does not yet meet this test — The actions cohere with each other.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C36 makes the same point about actions being a repetitive list, not coherent.",
+      "duplicateOf": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+    },
+    {
+      "id": "d96b0be2-5e7c-4d03-8d45-3324426d26a0",
+      "runVersion": 7,
+      "title": "The strategy does not yet meet this test — No bad-strategy smell.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C37 makes the same point about mistaking goals for strategy and a wish-list of actions.",
+      "duplicateOf": "51adbb77-d17b-4c59-ab36-a8a8a059a8d8"
+    },
+    {
+      "id": "4b2903dd-7a55-4588-874c-6b2f027d2b97",
+      "runVersion": 8,
+      "title": "Interaction with ministerial responsibility",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C2 makes the same point about interaction with Ministerial Responsibility.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "e1504fb8-400f-4ccf-b7a7-5217969341c1",
+      "runVersion": 8,
+      "title": "Civil Service Commission remit expansion",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C3 makes the same point about amendments to Civil Service Commission powers.",
+      "duplicateOf": "a5406fdf-a7ed-422c-9149-785e0a5bb213"
+    },
+    {
+      "id": "7e603432-613c-4f1c-9f7f-9a4552fe9702",
+      "runVersion": 8,
+      "title": "National Audit Office powers",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C4 makes the same point about legislative changes to NAO mandate.",
+      "duplicateOf": "f5e14a14-c6e4-4449-8d33-2182628c067f"
+    },
+    {
+      "id": "fc9754d9-2de7-4c36-b39d-d79601c0464b",
+      "runVersion": 8,
+      "title": "Civil Service terms revision",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C5 makes the same point about revision of civil service terms.",
+      "duplicateOf": "837565a4-26b4-4e7b-b674-93c6274a4ef7"
+    },
+    {
+      "id": "143d1e11-c32f-4b92-9527-071a8a07d9f6",
+      "runVersion": 8,
+      "title": "Independent Board's mandate",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C6 makes the same point about the legal basis of a new accountability board.",
+      "duplicateOf": "e958865c-ca40-4603-a3bc-5696c143ead7"
+    },
+    {
+      "id": "68bfb854-f6f5-4c63-9a88-2b95e501c314",
+      "runVersion": 8,
+      "title": "Publication of performance data",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C7 makes the same point about legislative provisions for public reporting.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    },
+    {
+      "id": "7edfae55-87d5-44a5-8749-ec863ad959e9",
+      "runVersion": 8,
+      "title": "Legal advice accountability",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C2 addresses the Carltona principle and Ministerial Responsibility, but this is broader.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "919102df-9eef-4e8b-a0c1-889b76f4fb42",
+      "runVersion": 8,
+      "title": "Carltona principle interaction",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C2 addresses the Carltona principle and Ministerial Responsibility, but this is broader.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "e4e43250-183f-4084-b14f-c89fbbf4a454",
+      "runVersion": 8,
+      "title": "Legal advisor accountability gap",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C8 makes the same point about legal advisor accountability.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "548d5c12-0331-4d11-bb08-4cee74756a99",
+      "runVersion": 8,
+      "title": "Challenge to Carltona principle",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C2 addresses the Carltona principle and Ministerial Responsibility, but this is broader.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "8d326bab-9868-451d-83d3-455457226cef",
+      "runVersion": 8,
+      "title": "Previous reform limitations",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism specifically addresses how the proposal builds on or differs from previous reform efforts.",
+      "duplicateOf": null
+    },
+    {
+      "id": "04cbcacb-671a-4294-92e4-2acc93cb452e",
+      "runVersion": 8,
+      "title": "Operational accountability gap",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism specifically addresses the gap in accountability for timely and effective service delivery.",
+      "duplicateOf": null
+    },
+    {
+      "id": "c55dd874-3235-4af2-987d-f5564e105e48",
+      "runVersion": 8,
+      "title": "Addressing responsibility diffusion",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism explicitly addresses how the reforms will tackle incentives for responsibility diffusion.",
+      "duplicateOf": null
+    },
+    {
+      "id": "5cf8c87f-4da6-495e-9e4a-bf9424d4c10f",
+      "runVersion": 8,
+      "title": "Efficiency versus service delivery",
+      "verdict": "APPLICABLE",
+      "reason": "No current criticism addresses how efficiency gains will be measured against service delivery or individual accountability.",
+      "duplicateOf": null
+    },
+    {
+      "id": "82302bdd-956c-45ea-a7c6-bbf895b35156",
+      "runVersion": 8,
+      "title": "Vagueness of performance metrics",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C42 addresses undefined performance metrics, but this is about avoiding vagueness in the framework.",
+      "duplicateOf": "a1fb7ac7-5318-4bc6-b76b-1dab6015eaea"
+    },
+    {
+      "id": "2ef2ac67-0dcd-4f74-a4fe-c7e0d3252929",
+      "runVersion": 8,
+      "title": "Internal legal services performance",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C8 addresses legal department changes, but this focuses on performance/responsiveness of legal services.",
+      "duplicateOf": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+    },
+    {
+      "id": "150e57fa-e8ec-4ad3-8d9e-1508591c1e54",
+      "runVersion": 8,
+      "title": "Historical outcome measurement gap",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still lacks explicit linkage to addressing the historical gap in outcome-based metrics for government spending.",
+      "duplicateOf": null
+    },
+    {
+      "id": "4e327162-263b-4802-a066-bbed4141d5a5",
+      "runVersion": 8,
+      "title": "Liaison Committee guidelines implementation",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not investigate the Liaison Committee's 2012 recommendations on accountability guidelines.",
+      "duplicateOf": null
+    },
+    {
+      "id": "631f134e-5c57-4306-8476-077cfe6c1c79",
+      "runVersion": 8,
+      "title": "IPPR report historical context",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not examine the 2005 IPPR report for historical context on reform will.",
+      "duplicateOf": null
+    },
+    {
+      "id": "344b95ce-f89c-4e5c-94fe-618997d7aff4",
+      "runVersion": 8,
+      "title": "Time-served pay progression status",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not quantify the impact of ending time-served pay progression on accountability.",
+      "duplicateOf": null
+    },
+    {
+      "id": "d51ed34a-39a7-4278-8879-0c3ee116e039",
+      "runVersion": 8,
+      "title": "Leadership Academy effectiveness",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal does not research the effectiveness of Civil Service Leadership Academy in fostering accountability.",
+      "duplicateOf": null
+    },
+    {
+      "id": "c6c331ac-2733-46d5-b7e4-c0f40e1cbb30",
+      "runVersion": 8,
+      "title": "Coherence of actions",
+      "verdict": "ASSESSMENT",
+      "reason": "This is a positive assessment of the coherence of actions, not a criticism.",
+      "duplicateOf": null
+    },
+    {
+      "id": "b6d1587e-328b-4bb3-a849-7373efa9e3df",
+      "runVersion": 8,
+      "title": "Risk of legislative overhaul",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C25 argues primary legislation is the wrong tool, similar to this point about risk of legislative overhaul.",
+      "duplicateOf": "7a43bf4d-29d2-4c3a-9cb2-f81c32a37b68"
+    },
+    {
+      "id": "8f50f1ab-5b48-468f-844d-170e8e831475",
+      "runVersion": 8,
+      "title": "Distinguishing individual and systemic failure",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C46 discusses defining 'failure to deliver', which relates to distinguishing individual vs. systemic failure.",
+      "duplicateOf": "b1495f89-82ee-46a7-a858-bb3f91f4e4f5"
+    },
+    {
+      "id": "fd210498-4c8f-4202-ad19-c6e5118e3bf9",
+      "runVersion": 8,
+      "title": "Arm's-length body purpose",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still focuses on the core civil service and does not address accountability in arm's-length bodies.",
+      "duplicateOf": null
+    },
+    {
+      "id": "46174d67-8847-4fc9-bf91-5c9ccf428c26",
+      "runVersion": 8,
+      "title": "Private sector practices conflict",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal still suggests private sector-style consequences without addressing public law conflicts.",
+      "duplicateOf": null
+    },
+    {
+      "id": "6be5eb55-38ef-49a5-b92d-8a07cb1e20b1",
+      "runVersion": 8,
+      "title": "Missing guiding policy",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C28 makes the same point about a missing guiding policy.",
+      "duplicateOf": "138401e2-bef8-4461-921f-53730b4fb7a9"
+    },
+    {
+      "id": "103fe879-8e67-42a4-a136-355ac36d7fe3",
+      "runVersion": 8,
+      "title": "Uncoordinated list of actions",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C27 makes the same point about uncoordinated and repetitive actions.",
+      "duplicateOf": "b3dcf3c9-f72c-4c94-8088-0f169ffd13d8"
+    },
+    {
+      "id": "7c864965-230d-4258-a04e-db1d290c90b3",
+      "runVersion": 8,
+      "title": "Goals mistaken for strategy",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C37 makes the same point about goals mistaken for strategy.",
+      "duplicateOf": "51adbb77-d17b-4c59-ab36-a8a8a059a8d8"
+    },
+    {
+      "id": "b90b453c-ca61-4eef-8bf3-c6be9efc4317",
+      "runVersion": 8,
+      "title": "The strategy does not yet meet this test — The guiding policy rules things out.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C33 makes the same point about the guiding policy not ruling things out.",
+      "duplicateOf": "414aa09c-9a9f-479c-ac2f-38c9e9c104d6"
+    },
+    {
+      "id": "77e73a7b-622e-44e8-8772-5318fdcb0874",
+      "runVersion": 8,
+      "title": "The strategy does not yet meet this test — The guiding policy is an approach, not a goal.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C34 makes the same point about the guiding policy being an approach, not a goal.",
+      "duplicateOf": "6683494a-eeb6-4e16-bbc6-8f11129cd6fe"
+    },
+    {
+      "id": "8887cf9f-4ee5-440e-aead-a27de0ca3160",
+      "runVersion": 8,
+      "title": "The strategy does not yet meet this test — The actions cohere with each other.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C36 makes the same point about actions not cohering with each other.",
+      "duplicateOf": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+    },
+    {
+      "id": "f4dc7515-7091-420d-b523-21ca581da74a",
+      "runVersion": 8,
+      "title": "The strategy does not yet meet this test — No bad-strategy smell.",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C37 makes the same point about the 'goals mistaken for strategy' smell.",
+      "duplicateOf": "51adbb77-d17b-4c59-ab36-a8a8a059a8d8"
+    },
+    {
+      "id": "f5df89f3-e710-473d-9432-47522580f5a9",
+      "runVersion": 8,
+      "title": "Multiple overlapping proposals",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C36 makes the same point about multiple overlapping proposals in actions.",
+      "duplicateOf": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+    },
+    {
+      "id": "99d4301c-6386-4249-9b6d-a13be8687dd0",
+      "runVersion": 8,
+      "title": "Unsubstantiated claim of acknowledgement",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C13 makes the same point about the unsubstantiated claim of acknowledgement.",
+      "duplicateOf": "0819d4cf-6e9f-4ae8-9bee-e91bb8770de8"
+    },
+    {
+      "id": "aee83e01-5bc6-403a-bce9-855ca2e71d8e",
+      "runVersion": 8,
+      "title": "Unaddressed cause of problem",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C39 makes the same point about the unsupported assertion of human nature as a cause.",
+      "duplicateOf": "9aaef9e3-6beb-42a7-be87-860c361c43a3"
+    },
+    {
+      "id": "88b79b62-3a50-486c-89b9-02fa4bc2101e",
+      "runVersion": 8,
+      "title": "Undefined relationship with existing bodies",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C6 addresses the legal basis of a new board, which might cover its relationship with existing bodies.",
+      "duplicateOf": "e958865c-ca40-4603-a3bc-5696c143ead7"
+    },
+    {
+      "id": "f499597c-f25e-426b-8239-d5f7014e4dc0",
+      "runVersion": 8,
+      "title": "Undefined meaning of failure",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C46 makes the same point about the undefined meaning of 'failure to deliver'.",
+      "duplicateOf": "b1495f89-82ee-46a7-a858-bb3f91f4e4f5"
+    },
+    {
+      "id": "aee1623d-5439-4a98-bf42-0768d07f0e26",
+      "runVersion": 8,
+      "title": "Unclear authority for sanctions",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C6 discusses the legal basis and powers of a new board, which could include authority for sanctions.",
+      "duplicateOf": "e958865c-ca40-4603-a3bc-5696c143ead7"
+    },
+    {
+      "id": "8ab4f75a-9905-45ba-8b78-c477eeb8bd7e",
+      "runVersion": 8,
+      "title": "Unanalysed cost of new architecture",
+      "verdict": "DUPLICATE",
+      "reason": "Current criticism C47 makes the same point about the unestimated cost of new infrastructure.",
+      "duplicateOf": "5c031986-fcfc-4e7f-b8e0-1242159822cc"
+    },
+    {
+      "id": "540fe5c4-848c-4395-a200-8b7537344b46",
+      "runVersion": 8,
+      "title": "Unaddressed culture of responsibility diffusion",
+      "verdict": "APPLICABLE",
+      "reason": "The proposal focuses on senior civil servants, leaving the culture among lower grades unaddressed.",
+      "duplicateOf": null
+    },
+    {
+      "id": "0d4df5da-ab09-47cc-bc26-ff0b7a054cc7",
+      "runVersion": 8,
+      "title": "Unaddressed constitutional consequences",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C2 addresses the review of Ministerial Responsibility, which includes the Carltona principle.",
+      "duplicateOf": "8ba92457-e626-4d69-b2df-044210813d9f"
+    },
+    {
+      "id": "47addae7-e2a0-473b-9971-b3001f057a06",
+      "runVersion": 8,
+      "title": "Conflict with civil service anonymity",
+      "verdict": "POSSIBLY_DUPLICATE",
+      "reason": "C7 discusses legislative provisions for public reporting, which might touch on civil service anonymity.",
+      "duplicateOf": "cf575a69-3030-484e-a301-bcc044893cdd"
+    }
+  ],
+  "mergeGroups": [
+    {
+      "reason": "These criticisms all point out that the proposed actions require specific legislative or regulatory changes to existing frameworks.",
+      "ids": [
+        "40b82585-a698-4773-abe1-c66d6c9367c9",
+        "8ba92457-e626-4d69-b2df-044210813d9f",
+        "a5406fdf-a7ed-422c-9149-785e0a5bb213",
+        "f5e14a14-c6e4-4449-8d33-2182628c067f",
+        "837565a4-26b4-4e7b-b674-93c6274a4ef7",
+        "e958865c-ca40-4603-a3bc-5696c143ead7",
+        "cf575a69-3030-484e-a301-bcc044893cdd",
+        "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d"
+      ]
+    },
+    {
+      "reason": "These criticisms all request more specific evidence, sources, or examples to substantiate claims made in the problem diagnosis.",
+      "ids": [
+        "0819d4cf-6e9f-4ae8-9bee-e91bb8770de8",
+        "ed634666-877d-4c8d-ab66-605e41cc0452",
+        "dd1f47fe-277d-41b8-a626-c93601b07404",
+        "0122a46d-7ba0-4486-a0f4-cea04b8a72ac",
+        "35565df8-69c2-4496-9006-9cfad2c86c5c"
+      ]
+    },
+    {
+      "reason": "These criticisms both highlight the need to balance increased responsibility with corresponding authority and resources for civil servants.",
+      "ids": [
+        "d83f0e3f-89cc-4942-82b4-6c605b2129be",
+        "2a15a9f6-25c3-482b-80c3-5d790eb25750"
+      ]
+    },
+    {
+      "reason": "These criticisms both state that the actions are repetitive and lack coherence or a logical sequence.",
+      "ids": [
+        "b3dcf3c9-f72c-4c94-8088-0f169ffd13d8",
+        "50ac728c-2b76-462f-b4e9-cca8f29f4ae7"
+      ]
+    },
+    {
+      "reason": "These criticisms all point out the absence of a clear guiding policy or strategic approach in the kernel.",
+      "ids": [
+        "138401e2-bef8-4461-921f-53730b4fb7a9",
+        "414aa09c-9a9f-479c-ac2f-38c9e9c104d6",
+        "6683494a-eeb6-4e16-bbc6-8f11129cd6fe",
+        "953601ab-7eb4-4d58-8e6c-7814884c3fc3"
+      ]
+    },
+    {
+      "reason": "These criticisms all argue that some 'causes' are too generic, restate the problem, or are unsupported assertions.",
+      "ids": [
+        "fe83b5cd-f299-4518-86f1-d31d85906053",
+        "db55c574-cad2-417d-9b53-8e9414f96017",
+        "9aaef9e3-6beb-42a7-be87-860c361c43a3"
+      ]
+    },
+    {
+      "reason": "These criticisms all identify a missing pivotal obstacle or a failure to simplify the problem by naming one.",
+      "ids": [
+        "b97c11ae-b8bb-44e8-86ff-033181eb64d8",
+        "b6b3786a-53ac-4ddd-a0c9-0278a9aea183",
+        "2cd47945-21f7-4a33-9c8d-9f7fa0536450",
+        "30a29dcf-659a-48af-a37e-da8b89d1eb0f"
+      ]
+    },
+    {
+      "reason": "These criticisms both question how the proposed new accountability framework interacts with or improves upon existing mechanisms like Ministerial Responsibility and Accounting Officers.",
+      "ids": [
+        "f73a0663-0af2-4dea-b038-71be10d71a2d",
+        "5b2c4091-f2ad-4503-bd50-73d120fe7327"
+      ]
+    },
+    {
+      "reason": "These criticisms both point out the lack of quantification regarding the problem's scale and the cost of the proposed solutions.",
+      "ids": [
+        "a2db224e-d136-49d7-bb57-be0cc8f5f50b",
+        "5c031986-fcfc-4e7f-b8e0-1242159822cc"
+      ]
+    }
+  ]
+}

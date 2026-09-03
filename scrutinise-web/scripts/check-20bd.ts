@@ -171,10 +171,13 @@ function fixture(overrides: Partial<ProposalSnapshot> = {}): ProposalSnapshot {
       },
     ],
     issues: [
-      { id: 'i1', passKey: 'LEGAL', text: 'No post-implementation review of the 2013 order exists', status: 'OPEN', dismissReason: null, resolutionNote: null },
-      { id: 'i2', passKey: 'LEGAL', text: 'Devolved competence in Scotland is unclear', status: 'DISMISSED', dismissReason: 'Reserved matter — confirmed against the Scotland Act', resolutionNote: null },
+      // ⚠ 25-W §C — i1 CARRIES A TITLE AND i2/i3 DO NOT, deliberately. The renderer has to
+      // put a title in front of the text where there is one and change nothing at all where
+      // there is not; a fixture in which every row is titled would only test half of that.
+      { id: 'i1', passKey: 'LEGAL', title: 'No post-implementation review', sourceModel: null, runVersion: 1, promotedToVersion: null, relationKind: null, current: true, text: 'No post-implementation review of the 2013 order exists', status: 'OPEN', dismissReason: null, resolutionNote: null },
+      { id: 'i2', passKey: 'LEGAL', title: null, sourceModel: null, runVersion: 1, promotedToVersion: null, relationKind: null, current: true, text: 'Devolved competence in Scotland is unclear', status: 'DISMISSED', dismissReason: 'Reserved matter — confirmed against the Scotland Act', resolutionNote: null },
       // ⚠ Dismissed with NO reason — the document must name that absence.
-      { id: 'i3', passKey: 'FINANCIAL', text: 'Whether recovery would improve at all', status: 'DISMISSED', dismissReason: null, resolutionNote: null },
+      { id: 'i3', passKey: 'FINANCIAL', title: null, sourceModel: null, runVersion: 1, promotedToVersion: null, relationKind: null, current: true, text: 'Whether recovery would improve at all', status: 'DISMISSED', dismissReason: null, resolutionNote: null },
     ],
     knownUnknowns: [
       { question: 'What did the 2013 uprating actually achieve?', why: 'No post-implementation review was published', passKey: 'EVIDENCE' },
