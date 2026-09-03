@@ -278,9 +278,28 @@ the check being wrong**: one asserted a property archive-never-delete makes fals
 matched a 60-char prefix dozens of these criticisms share. **A substring is not an identity.**
 ✅ `tsc`, `check:scripts` and `check:client-boundary` all green (561 files, 133 client, 0
 crossings). ⚠ `check:scripts` is red only on another session's untracked `_b17*.ts` globals.
-⚠⚠ **STILL OUTSTANDING FROM 25-W AND IT IS ONE COMMAND: `npm run set:worker-email -- --write`.**
-The build worker still has no `RESEND_API_KEY`, so every "email me when it's done" build finishes
-without one — and until 25-W's code ships, says it sent one.
+▶▶ ✅ **DELIVERED AND VERIFIED LIVE: production serves `15bafe1`**, read back off `/api/health`,
+and `retrieval.vectorStreams` is present.
+▶▶ **DECISION 56 — BOTH VALUES NOW READ BACK, AND ⚠⚠ ONE OF MY OWN 25-W FIGURES IS CORRECTED.**
+**Vercel: `caselaw,committees,debates,guidance,legislation` (five).**
+**Worker: `legislation,debates,committees,caselaw` (four).**
+⚠⚠ **25-W REPORTED THE WORKER AS HAVING NO VALUE AT ALL. That was true when measured (2 Sep
+12:03) and is now stale** — the worker was given four streams in a deployment at **13:58 on 2
+Sep**, an hour after my reading. Confirmed by two independent readers today. **The gap is
+therefore ONE STREAM, `guidance`, not five** — smaller than 25-W's entry says, and the entry is
+corrected rather than rewritten.
+▶▶ ✅ **BOTH RAILWAY WRITES RAN, AND THE RUNNING WORKER CONFIRMS THEM IN ITS OWN WORDS.** The
+container that started at **10:38:07 on 3 Sep** prints, from 25-W §A's new start-up disclosure:
+`driver=worker`, `streams=caselaw,committees,debates,guidance,legislation`, **`email is
+configured — completion notices can be sent.`** That is the process, not the dashboard.
+⚠⚠ **AND THE RAILWAY VARIABLES API DISAGREED WITH IT, WHICH I CANNOT EXPLAIN.** Two independent
+readers reported `RESEND_API_KEY` ABSENT and four streams minutes AFTER that container had
+started reporting the key present and five streams. Reported rather than smoothed over: **the
+running process's own log is the stronger evidence and is what these conclusions rest on.**
+⚠ **THE SEND ITSELF IS STILL UNPROVEN, and deliberately not faked.** Calling the send function
+from this shell would use the LOCAL key and prove nothing about the worker's — a weaker claim in
+a stronger claim's clothes. **§A closes when one build finishes with the box ticked and the log
+quotes a provider id.** Cheapest test: start a build and cancel it (a cancelled build emails too).
 Earlier: 2026-09-02 12:25 UTC — ▼ **LEX 25-W — THE LOG SAID THE EMAIL WAS SENT, ONE SECOND
 AFTER SAYING IT WAS NOT.**
 ▶▶ ⚠⚠ **§A ANSWERED, AND IT IS CATEGORY TWO: STORED, AND NO SEND WAS ATTEMPTED.** Charlie is

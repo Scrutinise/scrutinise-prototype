@@ -328,6 +328,34 @@ value unreadable, which is why the worker has been retrieving with dense OFF on 
 the driver flipped. **NOT CHECKED until the deploy lands:** production is serving `6495ead`, which
 predates the field. Then `npm run sync:worker-retrieval --write`.
 
+⚠⚠ **CORRECTED 2026-09-03 10:55 UTC, AND THE CORRECTION IS TO A FIGURE OF MINE.** The sentence
+above — and the claim in 25-W's handoff entry that the worker "has no value at all" — was true
+when measured at 12:03 on 2 September and became false an hour later: **a deployment at 13:58 on
+2 September gave the worker `legislation,debates,committees,caselaw`.** Both values are now read
+back through the delivered endpoint, and confirmed by two independent readers:
+
+| | LEX_VECTOR_STREAMS |
+|---|---|
+| Vercel (production, `15bafe1`) | `caselaw,committees,debates,guidance,legislation` — **five** |
+| Railway build-worker | `legislation,debates,committees,caselaw` — **four** |
+
+**The gap is one stream, `guidance`, not five.**
+
+▶▶ ✅ **BOTH WRITES THEN RAN, AND THE RUNNING WORKER CONFIRMS THEM.** Its start-up line — the
+disclosure 25-W §A added for exactly this — reads, at 10:38:07 on 3 September:
+`streams=caselaw,committees,debates,guidance,legislation router=ON` and **`email is configured —
+completion notices can be sent.`**
+
+⚠⚠ **AND THE RAILWAY VARIABLES API DISAGREED WITH THE RUNNING PROCESS, WHICH IS UNEXPLAINED.**
+Two independent readers reported `RESEND_API_KEY` absent and four streams several minutes after
+that container had already started reporting the key present and five streams. It is recorded
+rather than reconciled: **the process's own log is the stronger evidence** — §19's rule that a
+behavioural reading beats a config read, arriving from the direction nobody expected.
+
+⚠ **THE SEND REMAINS UNPROVEN AND IS NOT FAKED.** Calling `sendBuildCompleteEmail` from a session
+would use the LOCAL key and prove nothing about the worker's. §A closes when a build finishes
+with the box ticked and the log quotes a provider id.
+
 ⚠⚠ **CORRECTION, 12:45 UTC: `6495ead` WAS NOT AN OLD DEPLOY, IT WAS A STUCK ONE.** Every Vercel
 build since had failed and **seven commits were queued behind it** — a `'use client'` component
 value-imported a module that reaches `lib/prisma`, so the Postgres driver went into the browser
