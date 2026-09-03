@@ -1,0 +1,334 @@
+{
+  "generatedAt": "2026-09-03T20:06:21.171Z",
+  "model": "gemini-2.5-flash",
+  "spend": "8,593 in / 904 out — estimated cost under 1p",
+  "currentVersion": 9,
+  "setSize": 47,
+  "groups": [
+    {
+      "reason": "The proposal needs to clarify how new civil servant duties will interact with the Constitutional Reform and Governance Act 2010 and the doctrine of Ministerial Responsibility.",
+      "members": [
+        {
+          "n": 1,
+          "id": "40b82585-a698-4773-abe1-c66d6c9367c9",
+          "title": "Interaction with Constitutional Reform Act",
+          "alreadyMerged": false
+        },
+        {
+          "n": 2,
+          "id": "8ba92457-e626-4d69-b2df-044210813d9f",
+          "title": "Review of Ministerial Responsibility doctrine",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The proposal requires legislative amendments to the statutory duties and powers of both the Civil Service Commission and the National Audit Office.",
+      "members": [
+        {
+          "n": 3,
+          "id": "a5406fdf-a7ed-422c-9149-785e0a5bb213",
+          "title": "Amendments to Civil Service Commission powers",
+          "alreadyMerged": false
+        },
+        {
+          "n": 4,
+          "id": "f5e14a14-c6e4-4449-8d33-2182628c067f",
+          "title": "Legislative changes to NAO mandate",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The proposal necessitates legislative or regulatory changes to civil service terms and conditions and the Government Legal Department's operational framework.",
+      "members": [
+        {
+          "n": 5,
+          "id": "837565a4-26b4-4e7b-b674-93c6274a4ef7",
+          "title": "Revision of civil service terms",
+          "alreadyMerged": false
+        },
+        {
+          "n": 8,
+          "id": "2e8bffe9-9eab-4224-82ef-c8c9de5e3f8d",
+          "title": "Changes to Government Legal Department",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The proposal must define the legal basis, powers, and scope of new accountability bodies and public reporting mechanisms, including data protection.",
+      "members": [
+        {
+          "n": 6,
+          "id": "e958865c-ca40-4603-a3bc-5696c143ead7",
+          "title": "Legal basis of new accountability board",
+          "alreadyMerged": false
+        },
+        {
+          "n": 7,
+          "id": "cf575a69-3030-484e-a301-bcc044893cdd",
+          "title": "Legislative provisions for public reporting",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The proposal needs to provide a detailed analysis of the Osmotherly Rules, their historical context, and their practical impact on civil servant accountability and parliamentary scrutiny.",
+      "members": [
+        {
+          "n": 9,
+          "id": "f20c5f07-b352-4449-a017-fd393dc35883",
+          "title": "Assessment of Osmotherly Rules changes",
+          "alreadyMerged": false
+        },
+        {
+          "n": 10,
+          "id": "43ca322c-5839-42b0-a271-03f3856d815e",
+          "title": "Reforms' impact on individual accountability",
+          "alreadyMerged": false
+        },
+        {
+          "n": 11,
+          "id": "80708225-01cf-42a5-86eb-b7e2b390c563",
+          "title": "Disclosure of policy advice to committees",
+          "alreadyMerged": false
+        },
+        {
+          "n": 12,
+          "id": "e539696d-0514-4246-b997-edee5f251f60",
+          "title": "Osmotherly Rules' unilateral creation",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The diagnosis requires external reports or studies to substantiate the claim that the current accountability system is 'not working effectively' due to a gap in practical enforcement.",
+      "members": [
+        {
+          "n": 13,
+          "id": "0819d4cf-6e9f-4ae8-9bee-e91bb8770de8",
+          "title": "Source for accountability system failure",
+          "alreadyMerged": false
+        },
+        {
+          "n": 16,
+          "id": "0122a46d-7ba0-4486-a0f4-cea04b8a72ac",
+          "title": "Gap in rules' practical enforcement",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The diagnosis needs specific evidence linking the 'human desire to avoid responsibility' to the civil service context, beyond general assertion.",
+      "members": [
+        {
+          "n": 14,
+          "id": "ed634666-877d-4c8d-ab66-605e41cc0452",
+          "title": "Evidence for responsibility avoidance",
+          "alreadyMerged": false
+        },
+        {
+          "n": 39,
+          "id": "9aaef9e3-6beb-42a7-be87-860c361c43a3",
+          "title": "Unsupported assertion about human nature",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The diagnosis requires specific examples or studies to illustrate how responsibility avoidance is institutionalized within the civil service, beyond circular reasoning.",
+      "members": [
+        {
+          "n": 17,
+          "id": "35565df8-69c2-4496-9006-9cfad2c86c5c",
+          "title": "Institutionalized responsibility avoidance examples",
+          "alreadyMerged": false
+        },
+        {
+          "n": 38,
+          "id": "db55c574-cad2-417d-9b53-8e9414f96017",
+          "title": "Circular reasoning in cause",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The proposal must ensure that increased individual responsibility for civil servants is balanced with corresponding authority and resources to deliver outcomes.",
+      "members": [
+        {
+          "n": 24,
+          "id": "d83f0e3f-89cc-4942-82b4-6c605b2129be",
+          "title": "Responsibility Without Authority",
+          "alreadyMerged": false
+        },
+        {
+          "n": 26,
+          "id": "2a15a9f6-25c3-482b-80c3-5d790eb25750",
+          "title": "Balancing Authority and Responsibility",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The proposal needs to justify why primary legislation is the appropriate instrument for reform, given the executive's existing powers for management structures.",
+      "members": [
+        {
+          "n": 25,
+          "id": "7a43bf4d-29d2-4c3a-9cb2-f81c32a37b68",
+          "title": "Legislative vs. Executive Action",
+          "alreadyMerged": false
+        },
+        {
+          "n": 30,
+          "id": "b858b6cd-c61f-4bf7-8b97-a7c8deae18a0",
+          "title": "A choice that may have been made the wrong way, on guiding policy — instrument",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The actions section needs to be a coordinated, sequenced plan rather than a repetitive list of similar ideas for new laws, frameworks, and boards.",
+      "members": [
+        {
+          "n": 27,
+          "id": "b3dcf3c9-f72c-4c94-8088-0f169ffd13d8",
+          "title": "Uncoordinated and repetitive actions",
+          "alreadyMerged": false
+        },
+        {
+          "n": 36,
+          "id": "50ac728c-2b76-462f-b4e9-cca8f29f4ae7",
+          "title": "The strategy does not yet meet this test — The actions cohere with each other.",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The kernel is missing a clear guiding policy that states the chosen approach to overcome the pivotal obstacle, making the actions feel disconnected.",
+      "members": [
+        {
+          "n": 28,
+          "id": "138401e2-bef8-4461-921f-53730b4fb7a9",
+          "title": "Missing guiding policy statement",
+          "alreadyMerged": false
+        },
+        {
+          "n": 33,
+          "id": "414aa09c-9a9f-479c-ac2f-38c9e9c104d6",
+          "title": "The strategy does not yet meet this test — The guiding policy rules things out.",
+          "alreadyMerged": true
+        },
+        {
+          "n": 34,
+          "id": "6683494a-eeb6-4e16-bbc6-8f11129cd6fe",
+          "title": "The strategy does not yet meet this test — The guiding policy is an approach, not a goal.",
+          "alreadyMerged": true
+        },
+        {
+          "n": 41,
+          "id": "953601ab-7eb4-4d58-8e6c-7814884c3fc3",
+          "title": "Absence of guiding policy",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The 'Causes' section contains generic or restated entries, and the 'Actions' section lists desired outcomes rather than a coherent strategic approach.",
+      "members": [
+        {
+          "n": 29,
+          "id": "fe83b5cd-f299-4518-86f1-d31d85906053",
+          "title": "Generic or restated causes",
+          "alreadyMerged": false
+        },
+        {
+          "n": 37,
+          "id": "51adbb77-d17b-4c59-ab36-a8a8a059a8d8",
+          "title": "The strategy does not yet meet this test — No bad-strategy smell.",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The kernel needs to identify a distinct pivotal obstacle that explains why the problem persists, rather than just listing causes, to focus the strategy.",
+      "members": [
+        {
+          "n": 31,
+          "id": "b97c11ae-b8bb-44e8-86ff-033181eb64d8",
+          "title": "The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause.",
+          "alreadyMerged": false
+        },
+        {
+          "n": 32,
+          "id": "b6b3786a-53ac-4ddd-a0c9-0278a9aea183",
+          "title": "The strategy does not yet meet this test — The diagnosis simplifies rather than inventories.",
+          "alreadyMerged": true
+        },
+        {
+          "n": 35,
+          "id": "2cd47945-21f7-4a33-9c8d-9f7fa0536450",
+          "title": "The strategy does not yet meet this test — The approach has leverage on the named obstacle.",
+          "alreadyMerged": true
+        },
+        {
+          "n": 40,
+          "id": "30a29dcf-659a-48af-a37e-da8b89d1eb0f",
+          "title": "Missing pivotal obstacle identification",
+          "alreadyMerged": true
+        }
+      ]
+    },
+    {
+      "reason": "The proposal must define the mechanism for creating meaningful, outcome-based performance metrics and clarify how 'failure to deliver' will be distinguished from other causes.",
+      "members": [
+        {
+          "n": 42,
+          "id": "a1fb7ac7-5318-4bc6-b76b-1dab6015eaea",
+          "title": "undefined performance metric mechanism",
+          "alreadyMerged": false
+        },
+        {
+          "n": 46,
+          "id": "b1495f89-82ee-46a7-a858-bb3f91f4e4f5",
+          "title": "undefined 'failure to deliver'",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The proposal needs to explain why existing accountability roles (e.g., Accounting Officers) are insufficient and clarify how new duties resolve conflicts with Ministerial Responsibility.",
+      "members": [
+        {
+          "n": 43,
+          "id": "f73a0663-0af2-4dea-b038-71be10d71a2d",
+          "title": "Ministerial Responsibility conflict",
+          "alreadyMerged": false
+        },
+        {
+          "n": 45,
+          "id": "5b2c4091-f2ad-4503-bd50-73d120fe7327",
+          "title": "insufficient existing accountability explanation",
+          "alreadyMerged": false
+        }
+      ]
+    },
+    {
+      "reason": "The proposal must quantify the scale of the problem and estimate the operating cost of the new accountability infrastructure to assess cost-effectiveness.",
+      "members": [
+        {
+          "n": 44,
+          "id": "a2db224e-d136-49d7-bb57-be0cc8f5f50b",
+          "title": "unquantified problem scale",
+          "alreadyMerged": false
+        },
+        {
+          "n": 47,
+          "id": "5c031986-fcfc-4e7f-b8e0-1242159822cc",
+          "title": "unestimated new infrastructure cost",
+          "alreadyMerged": false
+        }
+      ]
+    }
+  ]
+}

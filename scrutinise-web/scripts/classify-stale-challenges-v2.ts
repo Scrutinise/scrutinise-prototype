@@ -114,17 +114,49 @@ const SCHEMA = {
   required: ['verdicts'],
 }
 
+// ══ ⚠⚠ 25-Y §2b — THE MERGE PROMPT AT THE SAME POINT-LEVEL BAR AS THE DUPLICATE PROMPT ══════
+//
+// 25-X tightened DUPLICATE and left this one alone, and the fault simply moved: the merge pass
+// returned a group of EIGHT under "these all require legislative changes" — objections about
+// the Constitutional Reform Act, the Civil Service Commission, the NAO's mandate, civil service
+// terms, a new board's legal basis, public reporting and the Government Legal Department. Same
+// subject area; seven different objections about seven different bodies. And a second group of
+// five under "these all want more evidence", which describes what a criticism IS.
+//
+// ⚠ The single test below — WOULD ONE ANSWER SATISFY ALL OF THEM — is the merge equivalent of
+// the duplicate prompt's "would answering the current one also answer this one". It is stated
+// as a test the model must apply to each pair, rather than as an adjective, because "the same
+// point" is exactly the phrase both loose groups would have claimed to satisfy.
 const MERGE_SYSTEM = [
   'You are given the criticisms raised against the current draft of a policy proposal, each',
-  'numbered. Find the groups that make the SAME point in different words.',
+  'numbered. Find the groups that make the SAME POINT in different words.',
   '',
-  'A group is two or more criticisms a reader would be annoyed to meet twice — they object to',
-  'the same thing for the same reason, and answering one answers the others. Criticisms about',
-  'the same TOPIC that object to different things are NOT a group.',
+  'THE TEST, and apply it to every pair in a group before you return it:',
+  '  Could ONE answer satisfy both of them completely?',
+  'If a single fix, sentence or piece of evidence would close both, they are a group. If',
+  'answering one would leave the other still standing, they are NOT — however similar they look',
+  'and however much subject matter they share.',
   '',
-  'Return only genuine groups. Returning none is valid; inventing groups to look productive',
-  'merges two distinct objections and loses one of them. For each group give the numbers and a',
-  'reason of at most 25 words saying what the shared point is.',
+  'What is NOT a group, stated because these are the mistakes actually made:',
+  '  · SAME AREA OF LAW OR POLICY. Objections about different bodies, powers, duties or',
+  '    instruments are different objections even when all of them concern one statute or one',
+  '    reform. Amending body A and amending body B are two pieces of work, not one.',
+  '  · SAME KIND OF COMPLAINT. "These all ask for more evidence", "these all want more detail",',
+  '    "these all say something is missing" describe what a criticism IS. Every criticism asks',
+  '    for something. That is not a shared point.',
+  '  · SAME STAGE OR SECTION of the proposal.',
+  '  · A GENERAL one and a SPECIFIC one. If a group needs a heading broader than any criticism',
+  '    in it, you have found a topic and not a point.',
+  '',
+  'A pair is the normal size of a group. A group of four should be rare, and you should be able',
+  'to state the one answer that closes all four. A group of eight is almost certainly a topic.',
+  '',
+  'Return only genuine groups. Returning none is a valid and common answer; inventing groups to',
+  'look productive merges distinct objections and loses one of them for good — and a criticism',
+  'lost to a loose match costs far more than a duplicate left in.',
+  '',
+  'For each group give the numbers and, as the reason, THE ONE ANSWER that would close all of',
+  'them, in at most 25 words. If you cannot write that sentence, it is not a group.',
 ].join('\n')
 
 const MERGE_SCHEMA = {
@@ -168,7 +200,82 @@ function draftText(s: Awaited<ReturnType<typeof buildProposalSnapshot>>): string
 
 const oneLine = (t: string) => t.replace(/\s+/g, ' ').trim()
 
+/**
+ * ⚠ 25-Y §2b — RE-RUN THE MERGE PASS ALONE, over the SAME 47 the first run saw.
+ *
+ * The 178 verdicts are already applied and re-running them would cost 6p to reproduce work
+ * that is done. What §2b asks for is the merge pass at the tightened bar, compared against
+ * the old result — so the comparison is made over the ORIGINAL v9 set regardless of what has
+ * since been merged away, because comparing against a set the first run never saw would not
+ * be a comparison at all.
+ */
+async function mergeOnly() {
+  const snapshot = await buildProposalSnapshot(IDEA)
+  const draft = draftText(snapshot)
+  const rows = await prisma.deepeningIssue.findMany({
+    where: { ideaId: IDEA },
+    select: { id: true, runVersion: true, title: true, text: true, status: true, relationKind: true },
+    orderBy: [{ runVersion: 'asc' }, { createdAt: 'asc' }],
+  })
+  const currentVersion = Math.max(...rows.map((r) => r.runVersion))
+  const current = rows.filter((r) => r.runVersion === currentVersion)
+  const currentList = current
+    .map((r, i) => `C${i + 1}. ${r.title ? `[${r.title}] ` : ''}${oneLine(r.text).slice(0, 400)}`)
+    .join('\n')
+
+  console.log(`\nre-running the MERGE pass alone over the original v${currentVersion} set (${current.length})`)
+  const res = await callModelJson<{ groups?: Array<{ members?: number[]; reason?: string }> }>({
+    model: MODEL, system: MERGE_SYSTEM,
+    user: `=== THE DRAFT AS IT NOW STANDS ===\n${draft}\n\n=== CRITICISMS (${current.length}) ===\n${currentList}`,
+    schema: MERGE_SCHEMA, maxOutputTokens: 3000, timeoutMs: 180_000, temperature: 0.1,
+    label: '25y-merge-tightened', stream: 'lex', pass: 'MERGE_TIGHTENED',
+  })
+  const price = priceBuild([{ model: MODEL, tokensIn: res.usage.tokensIn, tokensOut: res.usage.tokensOut }])
+  if (!res.ok) {
+    const fail = res as { reason: string; detail: string }
+    console.error(`FAILED: ${fail.reason} — ${fail.detail}`)
+    return
+  }
+  const groups: Array<{ members: number[]; reason: string }> = []
+  for (const g of res.value.groups ?? []) {
+    const members = (g.members ?? []).filter((m) => Number.isInteger(m) && m >= 1 && m <= current.length)
+    if (new Set(members).size >= 2) groups.push({ members: [...new Set(members)], reason: oneLine(String(g.reason ?? '')) })
+  }
+  const covered = groups.reduce((a, g) => a + g.members.length, 0)
+  const biggest = groups.reduce((a, g) => Math.max(a, g.members.length), 0)
+
+  console.log(`\n-- 2b: new against old --`)
+  console.log(`  25-W (first run, loose)    : 7 groups, 18 covered, biggest 4`)
+  console.log(`  25-X (re-run, still loose) : 9 groups, 32 covered, biggest 8`)
+  console.log(`  25-Y (tightened)           : ${groups.length} groups, ${covered} covered, biggest ${biggest}`)
+  console.log(`\n  cost: ${formatSpend(price)}`)
+  console.log(`\n-- the groups it now returns --`)
+  const applied = new Set(rows.filter((r) => r.relationKind === 'MERGED_INTO').map((r) => r.id))
+  for (const g of groups) {
+    console.log(`\n  ONE ANSWER: ${g.reason}`)
+    for (const m of g.members) {
+      const c = current[m - 1]
+      console.log(`    C${m} ${applied.has(c.id) ? '[already merged]' : '[still separate]'} ${c.title ?? oneLine(c.text).slice(0, 70)}`)
+    }
+  }
+  const big = groups.find((g) => g.members.length >= 6)
+  console.log(`\n  a group of six or more: ${big ? `STILL PRESENT (${big.members.length}) - ${big.reason}` : 'none'}`)
+  writeFileSync('../docs/25Y_MERGE_RERUN.json', JSON.stringify({
+    generatedAt: new Date().toISOString(), model: MODEL, spend: formatSpend(price),
+    currentVersion, setSize: current.length,
+    groups: groups.map((g) => ({
+      reason: g.reason,
+      members: g.members.map((m) => ({
+        n: m, id: current[m - 1].id, title: current[m - 1].title,
+        alreadyMerged: applied.has(current[m - 1].id),
+      })),
+    })),
+  }, null, 2), 'utf8')
+  console.log('\n  written to ../docs/25Y_MERGE_RERUN.json - nothing was written to the database.')
+}
+
 async function main() {
+  if (process.argv.includes('--merge-only')) return mergeOnly()
   // ⚠ Prove the output paths before spending anything — 25-W's first run made eighteen paid
   // calls and then died writing its report to a directory that did not exist.
   writeFileSync(OUT, '(this run has not finished)\n', 'utf8')
