@@ -87,7 +87,12 @@ const CTX = {
   ruledOut: 'UNIQUERULEDOUTMARKER a new national Act',
   ownKnowledge: 'UNIQUETESTIMONYMARKER the depot supervisor told me two rounds were merged without notice.',
   aboutYou: 'UNIQUEPROFILEMARKER I chair the residents association.',
-  reading: { url: null, fileName: null, read: false as const },
+  reading: { url: null, fileName: null, read: false },
+  // ⚠ 25-Y §1a — a document the user supplied, WITH a unique marker, so the framing check
+  // proves the same thing about it that it proves about the testimony and the profile: arm B
+  // carries it and arm A does not. A fixture with an empty materials list would have compiled
+  // and asserted nothing about the new block.
+  materials: [{ label: 'UNIQUEMATERIALMARKER council collection standard.pdf', kind: 'FILE', findingCount: 3, read: true }],
 }
 
 const CHECKS: Check[] = [
@@ -424,7 +429,7 @@ const CHECKS: Check[] = [
     run: (s) => {
       const a = frameQuery('A_NAIVE', CTX)
       const b = frameQuery('B_CONTEXTUALISED', CTX)
-      for (const marker of ['UNIQUERULEDOUTMARKER', 'UNIQUETESTIMONYMARKER', 'UNIQUEPROFILEMARKER']) {
+      for (const marker of ['UNIQUERULEDOUTMARKER', 'UNIQUETESTIMONYMARKER', 'UNIQUEPROFILEMARKER', 'UNIQUEMATERIALMARKER']) {
         if (a.promptBlock.includes(marker)) return `arm A leaked ${marker} — the arms are not distinct`
         if (!b.promptBlock.includes(marker)) return `arm B is missing ${marker}`
       }

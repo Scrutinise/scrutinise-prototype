@@ -237,7 +237,40 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-03 10:35 UTC — ▼ **LEX 25-X — A BUILD MAY NO LONGER DESTROY A DECISION
+*Last updated: 2026-09-03 20:15 UTC — ▼ **LEX 25-Y — THE USER'S OWN DOCUMENTS REACH EVERY
+BUILD, AND THE EMAIL IS PROVEN.**
+▶▶ **§3 ✅ PROVIDER ID `9716f86f-e461-4621-8bb0-98695febacc6`.** Build `08e546bb`, notifyEmail
+true, cancelled at pass 5, settled CANCELLED, **5.79p**, log line quotes the id, to
+`cl@scrutinise.org`. ⚠ **The first send this platform has ever demonstrated** — 25-W diagnosed it
+and 25-X set the variables; neither could show an id.
+▶▶ **§1 FIXED AND PROVEN COLD. 38 findings from four documents were invisible to every build
+after v1.**
+⚠ **§1a — never written, not removed:** `git log --all -S "IdeaUserMaterial" -- build.ts` returns
+nothing. Extraction shipped as its own path in 25-D and the build was never taught about it.
+⚠⚠ **§1b's PREMISE IS CORRECTED AND THE TRUTH IS WORSE.** The hardcoded `read: false` was NOT
+reaching a prompt — `ElicitationContext.reading` had **no consumer anywhere**. The model was not
+being told the document was unread; **it was not being told the document existed.** Both fixed:
+`read` comes off the column, and every pass's prompt names each document and its finding count.
+⚠ **§1a lives in `elicitationContext`, not `build.ts`, deliberately** — every pass already gets
+that object, and a second reader of the same table is the drift risk that caused this.
+▶ **§1c — EXEMPT, not re-stamp.** Re-stamping is a write that must run for ever, can half-apply,
+races an upload and destroys when the document was read; exempting is a predicate that states the
+truth — **a user's document belongs to the idea, not to a run.** One shared
+`evidence-scope.ts`, imported by both read sites, asserted not restated.
+▶ **§1d: `buildHighlights(452c5ade, 9)` now carries 38 of 112 shown findings from the user's
+documents, same row ids.** Before this sprint: 80 findings shown, none of them his.
+▶▶ **§2a — NOTHING TO REVERSE, read from live rows:** all 6 distinct objections the loose group
+would have collapsed are OPEN and unmerged; 11 `MERGED_INTO` rows = the approved seven groups.
+▶▶ **§2b — the loose SHAPE is gone, ⚠ the VOLUME is not.** 7 groups/18 covered/biggest 4 →
+9/32/**8** → **17/40/4**. ⚠⚠ **Both the 9 and the 17 would leave exactly 24 of 47** — the
+tightening changed the shape, not the amount. ⚠ It still merges *"amend body A"* with *"amend
+body B"* (Commission+NAO, civil service terms+GLD) **despite the prompt saying those are two
+pieces of work.** **Nothing beyond the approved seven applied** — Charlie reads the other ten
+first. `docs/25Y_MERGE_RERUN.json`, under 1p.
+✅ `check:lex-25y` **18/0, 2 controls, 0 dead**; `check:lex-25x` 32/0; `check:build-25a` 40/40
+(⚠ its framing fixture now carries a marker document, so the new prompt block is actually
+asserted rather than compiled past); `tsc`, `check:scripts`, `check:client-boundary` green.
+Earlier: 2026-09-03 10:35 UTC — ▼ **LEX 25-X — A BUILD MAY NO LONGER DESTROY A DECISION
 THE USER HAS MADE.**
 ⚠⚠ **25-W HAD NEVER SHIPPED** — no commit, no Railway variable. Both dirty files
 (`schema.prisma`, `package.json`) are **claimed as 25-W's** and both sprints ship together.

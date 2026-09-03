@@ -132,6 +132,83 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-Y — THE USER'S OWN DOCUMENTS REACH EVERY BUILD, AND THE EMAIL IS PROVEN (2026-09-03 20:15 UTC)
+
+### §1 — 38 findings from four documents were invisible to every build after v1
+
+**§1a — it was never written, not removed.** `git log --all -S "IdeaUserMaterial" -- lib/lex/build.ts`
+returns nothing: the string has never appeared in that file in any commit. Extraction shipped in
+25-D as its own path (upload → findings → evidence layer) and the build was never taught about it.
+
+⚠ **§1b's premise is corrected, and the truth is worse rather than better.** The hardcoded
+`read: false` was NOT reaching a prompt — `ElicitationContext.reading` had **no consumer
+anywhere in the codebase**. It was a dead field carrying a stale comment from 25-A, which
+genuinely could not read a document. So the model was not being told the document was unread;
+**it was not being told the document existed.** Both are now fixed: `read` comes off the column,
+and every pass's prompt block names each document with its finding count.
+
+⚠ **§1a is implemented in `elicitationContext`, not in `build.ts`, and that is a departure.**
+Every pass already receives that object on every request, so one read reaches all eleven. A
+second reader of the same table inside `build.ts` is the drift risk `statutory-graph.ts`
+documents at length — and two readers disagreeing is what produced this bug.
+
+**§1c — EXEMPT, not re-stamp, and the reasoning is the same one 25-X used to refuse rewriting
+`runVersion` on challenges.** Re-stamping is a WRITE that must run on every build for ever, can
+half-apply, races an upload, and destroys the record of when the document was read. Exempting is
+a predicate: no write, idempotent by construction, and it states the truth — **a user's document
+belongs to the idea, not to a run.** Its one risk is scatter, so it is ONE exported predicate
+(`lib/lex/evidence-scope.ts`) that both version-scoped read sites import; the check asserts
+neither restates it.
+
+▶ **§1d PROVEN END TO END, COLD.** `buildHighlights(452c5ade, 9)` — the function the finished-build
+screen calls, on an idea the check did not create — now carries **38 of 112 shown findings from
+the user's four documents**, and they are the same row ids the extraction wrote. Before this
+sprint the v9 screen showed 80 findings and none of them was the user's.
+▶ **§1e: 38 findings, four documents, one idea** — all at `runVersion: 1` against a v9 build.
+The only idea affected, because it is the only one with uploads.
+
+### §2 — the merge fault: not applied, and the prompt is now at the same bar
+
+▶ **§2a — NOTHING TO REVERSE.** Read from live rows, not from memory: **6 of the 6 distinct
+objections the loose group would have collapsed are OPEN and unmerged**, and the only merge
+touching that block is the approved C1+C2 pair. 11 `MERGED_INTO` rows in total = the seven
+approved groups. The five "these all want more evidence" challenges are likewise all still open.
+
+▶ **§2b — the loose shape is gone. ⚠ THE VOLUME IS NOT.** The tightened prompt replaces "same
+point" with a test — *could ONE answer satisfy both completely* — and names the two mistakes
+actually made.
+
+| | groups | challenges covered | biggest group |
+|---|---:|---:|---:|
+| 25-W (first run) | 7 | 18 | 4 |
+| 25-X (re-run, still loose) | 9 | 32 | **8** |
+| 25-Y (tightened) | **17** | **40** | **4** |
+
+⚠⚠ **AND THE ARITHMETIC IS THE FINDING: both the 9 and the 17 would leave exactly 24 of 47.**
+The tightening changed the SHAPE — the eight-block became four defensible pairs, nothing above
+four survives — **and not the amount.** ⚠ It also still merges *"amend body A"* with *"amend
+body B"* (C3 Civil Service Commission + C4 NAO; C5 civil service terms + C8 Government Legal
+Department) **despite the prompt saying in terms that those are two pieces of work.**
+▶ **NOTHING BEYOND THE APPROVED SEVEN WAS APPLIED**, and on §3a's own principle — a real
+criticism lost to a loose match costs more than a duplicate left in — none of the other ten
+should be until Charlie has read them. `docs/25Y_MERGE_RERUN.json`. Under 1p.
+
+### §3 — the completion email is proven
+
+✅ **PROVIDER ID `9716f86f-e461-4621-8bb0-98695febacc6`.** Build `08e546bb` on the scratch idea,
+started with `notifyEmail = true`, cancelled at pass 5, settled CANCELLED at 20:07:54, **5.79p**.
+The worker's log carries `[lex-diag] 25b build-complete email sent` with that id, to
+`cl@scrutinise.org`. A cancelled build emails by design, which is what made this the cheap test.
+
+⚠ **This is the first send this platform has ever demonstrated.** 25-W diagnosed it, 25-X set the
+variables, and neither could show an id. An absence of errors was never evidence; this is.
+
+**`check:lex-25y` 18 passed / 0 failed / 2 controls / 0 dead.** `check:lex-25x` 32/0,
+`check:build-25a` 40/40 — ⚠ its framing fixture now carries a `UNIQUEMATERIALMARKER` document, so
+the arm-A/arm-B assertion covers the new prompt block rather than compiling past it.
+
+---
+
 ## LEX 25-X — A BUILD MAY NO LONGER DESTROY A DECISION THE USER HAS MADE (2026-09-03 10:35 UTC)
 
 ### §0 — the two dirty files were 25-W's, and 25-W had never shipped
