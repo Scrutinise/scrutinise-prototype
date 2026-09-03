@@ -693,7 +693,31 @@ export interface ElicitationContext {
   /** ⚠ USER TESTIMONY. Never a citable source. */
   ownKnowledge: string
   aboutYou: string
-  reading: { url: string | null; fileName: string | null; read: false }
+  /**
+   * ⚠⚠ 25-Y §1b — `read` IS NO LONGER THE LITERAL `false`, AND THE OLD COMMENT WAS OUT OF DATE
+   * RATHER THAN WRONG. It was written for 25-A, which genuinely could not read a document.
+   * Extraction shipped later (`user-material.ts`), and the literal type outlived the limitation
+   * it described — so the context has been saying "not read" about four documents that were
+   * read, and whose 38 findings are in the evidence layer.
+   */
+  reading: { url: string | null; fileName: string | null; read: boolean }
+  /**
+   * ⚠⚠ 25-Y §1a — THE DOCUMENTS THE USER UPLOADED. This is the field whose absence was the
+   * defect: `build.ts` never read `IdeaUserMaterial` — git history shows the string has never
+   * appeared in that file in any commit, so it was never written rather than removed.
+   *
+   * ⚠ IT IS READ HERE AND NOT IN `build.ts`, deliberately, though §1a asks for the latter.
+   * Every pass already receives this object, on every request, so one read here reaches all
+   * eleven; a second reader of the same table in `build.ts` is the drift risk
+   * `statutory-graph.ts` documents at length, and the failure it guards against — two readers
+   * disagreeing — is exactly what produced this bug in the first place.
+   *
+   * ⚠ METADATA ONLY, NOT THE TEXT. The findings are already in the evidence layer, with
+   * provenance and a verbatim quote each; putting 60,000 characters per document into every
+   * pass's prompt would cost more than the build and would re-do work the extraction did once.
+   * What the prompt needs is to KNOW the documents exist and were read.
+   */
+  materials: Array<{ label: string; kind: string; findingCount: number; read: boolean }>
   /**
    * 25-L §1 — what the user said was wrong with the LAST run, when this build is a re-run
    * they asked for through the dialogue. Null on a first build.
@@ -709,6 +733,12 @@ export async function elicitationContext(ideaId: string, userId: string): Promis
   const row = await prisma.ideaElicitation.findUnique({ where: { ideaId } })
   if (!row) return null
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { aboutYouNarrative: true } })
+  // ⚠ 25-Y §1a — the user's own uploaded documents, read on every pass of every build.
+  const materials = await prisma.ideaUserMaterial.findMany({
+    where: { ideaId },
+    select: { label: true, kind: true, findingCount: true, findingsAt: true },
+    orderBy: { createdAt: 'asc' },
+  })
   return {
     problem: row.problem ?? '',
     goalKind: row.goalKind,
@@ -717,8 +747,17 @@ export async function elicitationContext(ideaId: string, userId: string): Promis
     ruledOut: row.ruledOut ?? '',
     ownKnowledge: row.ownKnowledge ?? '',
     aboutYou: user?.aboutYouNarrative ?? '',
-    // `read` is a literal false, not a column read: 25-A cannot read a document, and a
-    // field that could ever be true here would be the never-claim rule waiting to break.
-    reading: { url: row.readingUrl, fileName: row.readingFileName, read: false },
+    // ⚠ 25-Y §1b — READ FROM THE COLUMN. The never-claim rule is honoured by reading the truth,
+    // not by hardcoding the pessimistic answer: `readingStatus` is what the extraction sets.
+    reading: { url: row.readingUrl, fileName: row.readingFileName, read: row.readingStatus === 'READ' },
+    materials: materials.map((m) => ({
+      label: m.label,
+      kind: m.kind,
+      findingCount: m.findingCount ?? 0,
+      // ⚠ `findingsAt` is the stamp the extraction writes when it has finished reading. A
+      // document with no findings that HAS been read is a real and different state from one
+      // nobody has opened, and the prompt must not conflate them.
+      read: m.findingsAt != null,
+    })),
   }
 }

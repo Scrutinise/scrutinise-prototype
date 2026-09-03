@@ -45,6 +45,7 @@ import { plainFailure, llmFailed, llmOk, type LlmUsage } from './build-llm'
 import { settleAbandonedBuilds } from './build-settle'
 import { briefingBody } from './build-briefing'
 import { stripNullBytes } from './json-safe'
+import { evidenceForBuild } from './evidence-scope'
 import {
   BUILD_PASSES, passDef, frameQuery, effectiveBudgetMs, COST_CEILING_PENCE,
   INSTRUMENT_FORK_KEY, trimForkAlternatives, DOMAIN_TRANSFER_QUESTION,
@@ -3170,8 +3171,13 @@ async function adversarialPass(c: PassContext): Promise<PassOutcome> {
 
   // Every finding the build produced, as the clerk's reading material. Rejected ones are
   // excluded: a finding the user has thrown out should not be pressed on them again.
+  //
+  // ⚠⚠ 25-Y §1c — AND EVERY FINDING FROM A DOCUMENT THE USER UPLOADED, whatever build read it.
+  // This filter used to be `runVersion: c.buildVersion` alone, so from build 2 onward the
+  // hostile-clerk pass could not see the user's own documents — 38 findings from four documents
+  // were invisible to every build after v1. `evidenceForBuild` is imported, never restated.
   const evidence = await prisma.evidenceItem.findMany({
-    where: { ideaId, runVersion: c.buildVersion, status: { not: 'REJECTED' } },
+    where: { ...evidenceForBuild(ideaId, c.buildVersion), status: { not: 'REJECTED' } },
     orderBy: { createdAt: 'asc' },
     select: { kind: true, title: true, body: true },
   })

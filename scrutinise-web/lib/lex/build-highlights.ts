@@ -51,6 +51,7 @@ import { prisma } from '@/lib/prisma'
 import { headingFor, HEADING_ORDER, type HeadingKey } from './question-headings'
 import { resolveHeading } from './heading-map'
 import { SMART_PASS_KEY, SMART_VOCABULARY_PASS_KEY, CONFIRMED_TERMS_TITLE } from './build-smart'
+import { evidenceForBuild } from './evidence-scope'
 
 export interface HighlightFinding {
   id: string
@@ -223,8 +224,11 @@ export async function buildHighlights(ideaId: string, runVersion: number): Promi
       where: { ideaId, fieldKey: { in: DRAFTED_FIELDS.map((f) => f.key) } },
       select: { fieldKey: true, status: true, value: true, proposal: true },
     }),
+    // ⚠ 25-Y §1c — the build's own findings PLUS the user's own documents, which belong to the
+    // idea rather than to a run. Without this the finished-build screen showed a user their
+    // corpus findings and silently omitted the ones from the document they supplied.
     prisma.evidenceItem.findMany({
-      where: { ideaId, runVersion, status: { not: 'REJECTED' } },
+      where: { ...evidenceForBuild(ideaId, runVersion), status: { not: 'REJECTED' } },
       orderBy: { createdAt: 'asc' },
       select: {
         id: true, kind: true, title: true, body: true, citation: true, url: true,

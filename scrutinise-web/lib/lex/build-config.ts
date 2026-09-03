@@ -564,6 +564,28 @@ export function frameQuery(framing: Framing, ctx: ElicitationContext): FramedQue
       ? `\nTHE USER'S OWN KNOWLEDGE (USER TESTIMONY — not a retrieved source, never cite it as one):\n${ctx.ownKnowledge.slice(0, 4000)}`
       : '',
     ctx.aboutYou ? `\nABOUT THE USER: ${ctx.aboutYou.slice(0, 1500)}` : '',
+    // ══ ⚠⚠ 25-Y §1a/§1b — THE DOCUMENTS THE USER SUPPLIED, NAMED, IN EVERY PASS'S PROMPT ══
+    //
+    // Until now no prompt mentioned them at all. The findings extracted from them sat in the
+    // evidence layer where several passes could not see them (§1c), and nothing told the model
+    // the documents existed — so a build could research a question the user had already
+    // answered with a document, and never say it had one.
+    //
+    // ⚠ THE COUNT AND THE READ FLAG ARE BOTH TRUE VALUES, not a hopeful sentence. A document
+    // that yielded nothing says so: "read, 0 findings" is a real state and a different one
+    // from "not read", and a prompt that blurred them would invite the model to treat an
+    // unopened document as a useless one.
+    //
+    // ⚠ NAMES ONLY — the findings themselves reach the model through the evidence layer, with
+    // their provenance and a verbatim quote each. Repeating the text here would pay twice for
+    // the same reading and would strip the quotes that make a finding checkable.
+    ctx.materials?.length
+      ? '\nDOCUMENTS THE USER SUPPLIED (their own material — findings from these are in the '
+        + 'evidence you have been given, marked as theirs):\n'
+        + ctx.materials.map((m) => `  · "${m.label}" — ${m.read
+            ? `read, ${m.findingCount} finding${m.findingCount === 1 ? '' : 's'} taken`
+            : 'NOT YET READ'}`).join('\n')
+      : '',
     critique,
   ].filter(Boolean).join('\n')
 
