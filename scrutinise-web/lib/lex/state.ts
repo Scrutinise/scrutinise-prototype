@@ -80,8 +80,14 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
   const toCanonicalField = (def: (typeof PAGE_SEQUENCE)[number]['fields'][number]): CanonicalField => {
     const row = byKey.get(def.key)
     const status = (row?.status ?? 'EMPTY') as FieldStatus
+    // ⚠⚠ 25-X §1b — ACCEPTED CARRIES A PROPOSAL TOO NOW, AND THIS LINE WAS THE SEAM.
+    //
+    // Decision 59 keeps an accepted value and writes the build's version beside it. This read
+    // dropped every proposal that was not AWAITING_CONFIRMATION, so the offer would have been
+    // written to the row correctly and been invisible on every screen — the same shape as the
+    // challenge title in 25-W and the policy sort in 25-V. Three sprints running, one seam.
     const proposal =
-      status === 'AWAITING_CONFIRMATION' && row?.proposal
+      (status === 'AWAITING_CONFIRMATION' || status === 'ACCEPTED') && row?.proposal
         ? (row.proposal as { value: unknown; rationale?: string | null })
         : null
     return {
@@ -153,7 +159,18 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     select: {
       id: true, cause: true, whyPersisted: true, evidence: true, isRootCause: true,
       classification: true, parentCauseId: true, source: true, number: true,
+      // ⚠ 25-X §2b — needed to derive `keptThroughRevision`. See CanonicalCause.
+      createdAt: true,
     },
+  })
+
+  // ⚠ 25-X §2b — the last build that FINISHED, which is the one whose revise pass would have
+  // rewritten the Lex-authored causes. A running build has not deleted anything yet, and a
+  // failed one may have stopped before REVISE, so neither can date the survival.
+  const lastCompletedBuild = await prisma.ideaBuild.findFirst({
+    where: { ideaId, status: 'DONE', completedAt: { not: null } },
+    orderBy: { completedAt: 'desc' },
+    select: { completedAt: true },
   })
   const diagnosisCauses: CanonicalCause[] = causeRows.map((c) => ({
     id: c.id,
@@ -164,6 +181,14 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     classification: c.classification as CanonicalCause['classification'],
     parentCauseId: c.parentCauseId,
     source: c.source as 'USER' | 'LEX_CORPUS',
+    // ⚠ 25-X §2b — marked by the user, written by Lex, and older than the build that rewrote
+    // the rest. Anything else is false: a user-authored cause was never at risk, and a cause
+    // created BY that build is simply new.
+    keptThroughRevision:
+      c.isRootCause
+      && c.source === 'LEX_CORPUS'
+      && !!lastCompletedBuild?.completedAt
+      && c.createdAt < lastCompletedBuild.completedAt,
     number: c.number,
   }))
 

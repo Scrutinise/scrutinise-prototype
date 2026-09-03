@@ -474,7 +474,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   )
 
   const transition = useCallback(
-    (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen', value?: string | string[] | Record<string, string>) =>
+    (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen' | 'keepMine', value?: string | string[] | Record<string, string>) =>
       post('/fields', { fieldKey, action, value }),
     [post],
   )
@@ -1128,6 +1128,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onAcceptOutput={(key, value) => transition(key, 'accept', value)}
                 onSkip={(key) => transition(key, 'skip')}
                 onReopen={(key) => transition(key, 'reopen')}
+                // ⚠ 25-X §1b — "Use Lex's version" is an ACCEPT of the proposed value, so it
+                // goes down the same path any other acceptance takes and gets the same
+                // validation and the same mirror write. "Keep mine" is its own action.
+                onUseLexVersion={(key, value) =>
+                  transition(key, 'accept', value as string | string[] | Record<string, string>)}
+                onKeepMine={(key) => transition(key, 'keepMine')}
                 onGoToPage={goToPage}
                 causesApi={causesApi}
                 policyApi={policyApi}

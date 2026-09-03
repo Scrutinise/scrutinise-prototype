@@ -210,6 +210,76 @@ function isTerminal(f: CanonicalField) {
   return f.status === 'ACCEPTED' || f.status === 'SKIPPED'
 }
 
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// ⚠⚠ 25-X §1b (DECISION 59) — THE BUILD'S VERSION, BESIDE THE ONE THE USER ACCEPTED
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// A build used to knock an accepted field back to awaiting-confirmation: the text survived,
+// the acceptance did not, and nothing on any screen said so. It now leaves the accepted value
+// exactly where it is and writes its own version into `proposal` beside it. This is where that
+// second version becomes visible, and it is the whole user-facing half of the decision.
+//
+// ⚠ ONE COMPONENT, THREE CALLERS. Narrative boxes, output fields and structured fields all
+// reach this; three copies of the offer is three places for the two buttons to drift apart,
+// and the "keep mine" button is the one that must never quietly become "reopen".
+//
+// ⚠ COLOUR IS NEVER THE ONLY CUE (docs/CLAUDE.md §21 — Charlie is colour blind). This block
+// carries THREE non-colour cues: a 2px border where the resting state has 1px, the words
+// PROPOSED BY LEX — REFINE in the label, and a sentence saying what happens if he does
+// nothing. The blue is the fourth cue, for the people who can see it.
+function RefinementOffer({
+  field, busy, onUseLexVersion, onKeepMine,
+}: {
+  field: CanonicalField
+  busy: boolean
+  onUseLexVersion: (key: string, value: unknown) => void
+  onKeepMine: (key: string) => void
+}) {
+  // Only on an ACCEPTED field. On anything else the proposal IS the field's content and is
+  // rendered by the field itself — showing both would offer the same text twice.
+  if (field.status !== 'ACCEPTED' || !field.proposal) return null
+  const v = field.proposal.value
+  const text = Array.isArray(v)
+    ? (v as string[]).join(', ')
+    : typeof v === 'string' ? v : JSON.stringify(v, null, 1)
+  if (!text?.trim()) return null
+
+  return (
+    <div className="mt-2.5 rounded-lg border-2 border-blue-300 bg-blue-50/60 p-2.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+        Proposed by Lex — refine
+      </p>
+      <p className="text-[11px] text-zinc-600 mt-0.5 mb-1.5 leading-snug">
+        The latest build suggests this instead. {/* ⚠ What happens if they do nothing, said
+        plainly: the default is THEIR words, and a user who closes the tab has lost nothing. */}
+        Your accepted version above stays unless you take it.
+      </p>
+      <p className="text-xs text-zinc-800 whitespace-pre-wrap">{text}</p>
+      {field.proposal.rationale && (
+        <p className="text-[11px] text-zinc-500 mt-1.5 leading-snug border-l-2 border-blue-200 pl-2">
+          {field.proposal.rationale}
+        </p>
+      )}
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={() => onUseLexVersion(field.key, v)}
+          disabled={busy}
+          className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+        >
+          Use Lex’s version
+        </button>
+        <button
+          onClick={() => onKeepMine(field.key)}
+          disabled={busy}
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-600 hover:bg-white disabled:opacity-40"
+        >
+          Keep mine
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function Tick() {
   return (
     <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,12 +313,15 @@ function FieldHeader({ field, right }: { field: CanonicalField; right?: ReactNod
 
 // A narrative box the user writes directly (Page 1 Box 1/2/3).
 function BoxField({
-  field, busy, onSubmitBox, onSkip,
+  field, busy, onSubmitBox, onSkip, onUseLexVersion, onKeepMine,
 }: {
   field: CanonicalField
   busy: boolean
   onSubmitBox: (key: string, value: string) => void
   onSkip: (key: string) => void
+  // ⚠ 25-X §1b — the refinement offer's two controls. See RefinementOffer.
+  onUseLexVersion: (key: string, value: unknown) => void
+  onKeepMine: (key: string) => void
 }) {
   const proposed =
     field.status === 'AWAITING_CONFIRMATION' && typeof field.proposal?.value === 'string'
@@ -296,6 +369,7 @@ function BoxField({
           </button>
         )}
       </div>
+      <RefinementOffer field={field} busy={busy} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
     </div>
   )
 }
@@ -305,13 +379,15 @@ function BoxField({
 // §19-B Task 1, editable-and-saveable here too: every non-terminal card carries its own
 // action buttons, so no field can ever render inert. Terminal = read-out + Change.
 function OutputField({
-  field, busy, onAcceptOutput, onSkip, onReopen,
+  field, busy, onAcceptOutput, onSkip, onReopen, onUseLexVersion, onKeepMine,
 }: {
   field: CanonicalField
   busy: boolean
   onAcceptOutput: (key: string, value: string | string[]) => void
   onSkip: (key: string) => void
   onReopen: (key: string) => void
+  onUseLexVersion: (key: string, value: unknown) => void
+  onKeepMine: (key: string) => void
 }) {
   const accepted = field.status === 'ACCEPTED'
   const terminal = isTerminal(field)
@@ -342,6 +418,10 @@ function OutputField({
         <p className="text-xs mt-1 ml-6 text-zinc-500 whitespace-pre-wrap">
           {accepted ? asText(field.value) : 'Skipped'}
         </p>
+        {/* ⚠ 25-X §1b — a terminal field is exactly where the offer belongs: the accepted
+            text is above it and unchanged, and the build's version is the thing being
+            offered. This card used to be the end of the story for an accepted field. */}
+        <RefinementOffer field={field} busy={busy} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
       </div>
     )
   }
@@ -426,14 +506,19 @@ function QueuedField({ field, waitingOn }: { field: CanonicalField; waitingOn?: 
 // A structured field with labelled slots (whoAffectedImpactCost / legalLandscape).
 // The box IS the accept surface: pre-filled from the seed/proposal, Save accepts the object.
 function StructuredField({
-  field, busy, onAccept, onSkip,
+  field, busy, onAccept, onSkip, onUseLexVersion, onKeepMine,
 }: {
   field: CanonicalField
   busy: boolean
   onAccept: (key: string, value: Record<string, string>) => void
   onSkip: (key: string) => void
+  onUseLexVersion: (key: string, value: unknown) => void
+  onKeepMine: (key: string) => void
 }) {
   const slots = fieldDef(field.key)?.slots ?? []
+  // ⚠ 25-X §1b — the read-out source is the ACCEPTED value on a terminal field, which is
+  // still right: an accepted structured field now MAY also carry a proposal, and that
+  // proposal belongs in the offer below, never silently in the slots above it.
   const source = (field.status === 'AWAITING_CONFIRMATION' ? field.proposal?.value : field.value) as
     | Record<string, unknown> | null | undefined
   const baseline: Record<string, string> = Object.fromEntries(
@@ -475,6 +560,7 @@ function StructuredField({
               {typeof source?.[k] === 'string' && source![k] ? (source![k] as string) : <span className="text-zinc-300">—</span>}
             </p>
           ))}
+          <RefinementOffer field={field} busy={busy} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
         </div>
       ) : (
         <>
@@ -668,6 +754,19 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
           </p>
           {cause.whyPersisted && <p className="text-[11px] text-zinc-500 mt-0.5">Persists because: {cause.whyPersisted}</p>}
           {cause.evidence && <p className="text-[11px] text-zinc-400 mt-0.5 italic">{cause.evidence}</p>}
+          {/* ══ ⚠⚠ 25-X §2b (DECISION 60) — SAY THAT THE MARK WAS PROTECTED ═══════════════
+              The revise pass rewrites every Lex-authored cause. Until now it deleted this one
+              too and the user's root-cause mark died with the row, silently. It is now
+              excluded from that delete — and the exclusion has to be VISIBLE, because
+              otherwise the list reads as a set of freshly written causes with one stale
+              survivor among them and the user concludes the rewrite half-failed.
+              ⚠ Not a colour: a bordered line with words in it (Charlie is colour blind). */}
+          {cause.keptThroughRevision && (
+            <p className="text-[11px] text-zinc-600 mt-1 border-l-2 border-zinc-300 pl-2 leading-snug">
+              You marked this as the root cause, so the latest build kept it. The other causes
+              Lex wrote were rewritten.
+            </p>
+          )}
         </div>
         {cause.source === 'LEX_CORPUS' && (
           <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from past debates</span>
@@ -1443,6 +1542,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
 export default function FieldsPanel({
   pages, causes, policyOptions, actions, costLines, benchmarks, busy, currentFieldKey,
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
+  onUseLexVersion, onKeepMine,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId,
 }: {
   pages: CanonicalState['pages']
@@ -1460,6 +1560,15 @@ export default function FieldsPanel({
   onAcceptOutput: (key: string, value: string | string[]) => void
   onSkip: (key: string) => void
   onReopen: (key: string) => void
+  /**
+   * ⚠ 25-X §1b (decision 59) — the two controls on the build's refinement of an ACCEPTED
+   * field. `onUseLexVersion` accepts the proposed value; `onKeepMine` clears the offer and
+   * leaves the acceptance exactly as it was. They are deliberately NOT `onAcceptOutput` and
+   * `onSkip`: skipping a field is a different act with a different outcome, and reusing it
+   * here would turn "I prefer my wording" into "I do not want this field".
+   */
+  onUseLexVersion: (key: string, value: unknown) => void
+  onKeepMine: (key: string) => void
   /** §19-D Task 3 — move the working context into an already-reached stage. */
   onGoToPage: (pageKey: string) => void
   causesApi: CausesApi
@@ -1500,7 +1609,7 @@ export default function FieldsPanel({
   }, [activePageKey])
 
   const renderField = (f: CanonicalField) => {
-    if (f.type === 'narrative') return <BoxField field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} />
+    if (f.type === 'narrative') return <BoxField field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
     // §19-D Task 2a, second instance — found on the 12 Aug walk, not by a type error.
     //
     // `keywords` is declared `type: 'structured'` (page1-config.ts) and carries NO `slots`,
@@ -1519,7 +1628,7 @@ export default function FieldsPanel({
     // Guarding on slots rather than special-casing the key means the next slotless structured
     // field cannot reintroduce the empty claim either.
     if (f.type === 'structured' && (fieldDef(f.key)?.slots?.length ?? 0) > 0) {
-      return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} />
+      return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
     }
     if (f.type === 'loop') {
       if (f.key === 'policyOptions') {
@@ -1542,7 +1651,7 @@ export default function FieldsPanel({
       if (f.key === 'chosenApproach') return <ChosenApproachField field={f} options={policyOptions} busy={busy} api={policyApi} />
       return <RootCauseField field={f} causes={causes} busy={busy} api={causesApi} />
     }
-    return <OutputField field={f} busy={busy} onAcceptOutput={onAcceptOutput} onSkip={onSkip} onReopen={onReopen} />
+    return <OutputField field={f} busy={busy} onAcceptOutput={onAcceptOutput} onSkip={onSkip} onReopen={onReopen} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
   }
 
   return (

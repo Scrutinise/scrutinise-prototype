@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { isDerivedPageOneField } from './page-one'
 import {
   ALL_FIELDS,
@@ -232,15 +233,87 @@ export async function submitBox(ideaId: string, userId: string, fieldKey: string
   await mirrorValue(ideaId, userId, fieldKey, value)
 }
 
-/** Lex proposed a value → AWAITING_CONFIRMATION (the confirmation card renders). */
+/**
+ * Lex proposed a value → AWAITING_CONFIRMATION (the confirmation card renders).
+ *
+ * ══ ⚠⚠ 25-X §1 (DECISION 59) — UNLESS THE FIELD IS ALREADY ACCEPTED ═══════════════════════
+ *
+ * Measured on the 25-W scratch idea: a full build knocked an accepted `rootCause` and an
+ * accepted `chosenApproach` back to AWAITING_CONFIRMATION. The text survived, the acceptance
+ * did not, and the user was told nothing. Across the four ideas carrying 15–20 accepted
+ * build-written fields, a rebuild would have done that to every one of them.
+ *
+ * ⚠⚠ THE OBVIOUS FIX IS THE WRONG ONE, AND IT IS RECORDED HERE SO NOBODY BUILDS IT LATER.
+ * Guarding the STATUS alone — refusing to move ACCEPTED, but still writing the new text into
+ * `value` — leaves a field marked ACCEPTED whose words have changed underneath it. That
+ * records the user as having agreed to a sentence they have never read, which is worse than
+ * losing the acceptance: the first is a lost click, the second is a false attribution in a
+ * document that goes out under their name.
+ *
+ * ⚠ SO THE VALUE AND THE PROPOSAL COEXIST. The accepted `value` is untouched and the status
+ * stays ACCEPTED; the build's version goes into `proposal` BESIDE it, and the panel renders
+ * it as an offer with the accepted text still in place. The user takes it or leaves it.
+ *
+ * ⚠ THIS IS DELIBERATELY NOT IN `setStatus`. `reopenField` also writes a proposal onto an
+ * ACCEPTED row and MUST still move it to AWAITING_CONFIRMATION — that is the user reopening
+ * their own field on purpose. The distinction is whose hand it is, so the protection belongs
+ * on Lex's path and not on the shared writer.
+ */
 export async function setProposal(
   ideaId: string,
   fieldKey: string,
   proposal: { value: unknown; rationale?: string },
 ) {
+  const row = await prisma.ideaFieldState.findUnique({
+    where: { ideaId_fieldKey: { ideaId, fieldKey } },
+    select: { status: true, value: true },
+  })
+
+  if (row?.status === 'ACCEPTED') {
+    // ⚠ A PROPOSAL IDENTICAL TO THE ACCEPTED TEXT IS NOT AN OFFER. Writing one would put a
+    // "Lex suggests a revision" card on screen over a sentence that has not changed, and the
+    // user would open it to find nothing to decide. Silence is the honest output.
+    const next = encode(proposal.value)
+    if (row.value != null && next === row.value) {
+      console.log('[field-machine] 25x proposal matches the accepted value — nothing offered', {
+        ideaId, fieldKey,
+      })
+      return
+    }
+    await prisma.ideaFieldState.update({
+      where: { ideaId_fieldKey: { ideaId, fieldKey } },
+      // ⚠ `status` and `value` are ABSENT from this write, not set to what they already are.
+      // An update that restates them is one refactor away from being an update that changes
+      // them, and this is the write the whole decision turns on.
+      data: { proposal: { value: proposal.value, rationale: proposal.rationale ?? null } as never },
+    })
+    console.log('[field-machine] 25x build proposed a revision to an ACCEPTED field — value kept', {
+      ideaId, fieldKey,
+    })
+    return
+  }
+
   await setStatus(ideaId, fieldKey, 'AWAITING_CONFIRMATION', {
     proposal: { value: proposal.value, rationale: proposal.rationale ?? null },
   })
+}
+
+/**
+ * ⚠ 25-X §1b — "KEEP MINE". The user has read the build's suggestion and declined it.
+ *
+ * It clears the offer and touches nothing else: the accepted value stays accepted, exactly
+ * as it was. Declining a refinement is not reopening a field, and must not look like one.
+ *
+ * ⚠ IT IS GUARDED ON ACCEPTED. On an AWAITING_CONFIRMATION field, dropping the proposal would
+ * leave a row that is awaiting confirmation of nothing — a state with no way back onto any
+ * screen. That is a `skip`, and the user has a Skip button for it.
+ */
+export async function dismissProposal(ideaId: string, fieldKey: string): Promise<boolean> {
+  const cleared = await prisma.ideaFieldState.updateMany({
+    where: { ideaId, fieldKey, status: 'ACCEPTED' },
+    data: { proposal: Prisma.DbNull },
+  })
+  return cleared.count > 0
 }
 
 /**

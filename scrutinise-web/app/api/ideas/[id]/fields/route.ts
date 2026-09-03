@@ -10,6 +10,7 @@ import {
   acceptField,
   skipField,
   reopenField,
+  dismissProposal,
   fireSearchTrigger,
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
@@ -27,7 +28,8 @@ type Params = { params: Promise<{ id: string }> }
 
 const BodySchema = z.object({
   fieldKey: z.string().min(1),
-  action: z.enum(['submitBox', 'accept', 'skip', 'reopen']),
+  // ⚠ 25-X §1b — `keepMine` is its own action and not a flavour of skip. See dismissProposal.
+  action: z.enum(['submitBox', 'accept', 'skip', 'reopen', 'keepMine']),
   // value: a string (narrative/title/challenge), string[] (keywords), or an object
   // (structured fields — whoAffectedImpactCost/legalLandscape). Optional for
   // accept-as-proposed / skip / reopen.
@@ -94,6 +96,24 @@ export async function POST(req: Request, { params }: Params) {
       case 'reopen':
         await reopenField(id, fieldKey)
         break
+      // ⚠⚠ 25-X §1b (decision 59) — "keep mine". The user read the build's suggested
+      // revision to a field they had already accepted, and declined it. The offer goes; the
+      // acceptance and its value are untouched.
+      //
+      // ⚠ A 409, NOT A SILENT SUCCESS, when there was nothing to dismiss. `dismissProposal`
+      // is guarded on ACCEPTED, so a stale tab pressing this on a field the user has since
+      // reopened would otherwise get an OK for a write that did not happen — and the screen
+      // would show the offer gone until the next poll put it back.
+      case 'keepMine': {
+        const cleared = await dismissProposal(id, fieldKey)
+        if (!cleared) {
+          return NextResponse.json(
+            { error: 'There is no suggestion to dismiss on that field — it may have changed in another tab.' },
+            { status: 409 },
+          )
+        }
+        break
+      }
     }
   } catch (err) {
     console.error('[fields] transition failed:', err)
