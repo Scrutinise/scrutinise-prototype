@@ -22,16 +22,48 @@ interface SendEmailOptions {
   replyTo?: string
 }
 
-async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions): Promise<void> {
+/**
+ * ══ 25-W §A — WHAT ACTUALLY HAPPENED, RETURNED, WITH THE PROVIDER'S OWN ID ══════════════
+ *
+ * ⚠⚠ THIS FUNCTION USED TO RETURN `void` ON THREE DIFFERENT OUTCOMES, AND THAT IS THE WHOLE
+ * DEFECT OF 25-W §A. `sendEmail` returned the same nothing whether Resend had accepted the
+ * message, whether the key was missing, or whether the address was suppressed — so
+ * `notifyByEmail` logged *"build-complete email sent"* on the line immediately after
+ * *"RESEND_API_KEY not set — email not sent to cl@scrutinise.org"*, in the same second, in
+ * the same log, on 2 September at 10:22 UTC. Both lines were true of the code that wrote
+ * them and only one was true of the world.
+ *
+ * ⚠ A caller that cannot tell a send from a skip WILL claim the send. Returning `void` is
+ * what made "I sent it" the only sentence available. So:
+ *
+ *   · `sent: true` ONLY where Resend answered 2xx, and `providerId` is its own id for the
+ *     message — the thing you quote when asked to prove a send happened, and the thing
+ *     CLAUDE.md §18 means by evidence rather than an absence of errors;
+ *   · `sent: false` with a stated `reason` where we declined to send (no key, suppressed);
+ *   · a THROW where the provider refused, because a refusal is not a decision of ours and
+ *     several callers (invites, the welcome mail) surface it to a user.
+ *
+ * Those are exactly the four outcomes §A asks a diagnosis to distinguish, and they are now
+ * distinguishable at the call site rather than only in a log a human happens to read.
+ */
+export interface SendResult {
+  sent: boolean
+  /** Resend's id for the message. Null whenever nothing was handed to Resend. */
+  providerId: string | null
+  /** Why nothing was sent. Null on a successful send. */
+  reason: string | null
+}
+
+async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions): Promise<SendResult> {
   if (!process.env.RESEND_API_KEY) {
     console.warn('RESEND_API_KEY not set — email not sent to', to)
-    return
+    return { sent: false, providerId: null, reason: 'RESEND_API_KEY is not set on this deployment' }
   }
 
   const suppressed = await isEmailSuppressed(to)
   if (suppressed) {
     console.info(`Email suppressed for ${to} — not sent`)
-    return
+    return { sent: false, providerId: null, reason: 'the address is on the suppression list' }
   }
 
   const body: Record<string, unknown> = { from: FROM, to, subject, html, text }
@@ -50,6 +82,17 @@ async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions)
     const resBody = await res.text()
     throw new Error(`Resend error ${res.status}: ${resBody}`)
   }
+
+  // ⚠ The id was being discarded. Resend answers `{ id: "..." }`; a body we cannot parse is
+  // still a 2xx and still a send, so it reports sent with no id rather than pretending failure.
+  let providerId: string | null = null
+  try {
+    const parsed = await res.json() as { id?: unknown }
+    if (typeof parsed?.id === 'string') providerId = parsed.id
+  } catch {
+    providerId = null
+  }
+  return { sent: true, providerId, reason: null }
 }
 
 export async function sendCollaboratorInviteEmail({
@@ -720,7 +763,7 @@ export async function sendBuildCompleteEmail({
   status: 'DONE' | 'FAILED' | 'CANCELLED'
   durationText: string
   failureReason?: string | null
-}): Promise<void> {
+}): Promise<SendResult> {
   const unsubscribeUrl = `${APP_URL}/unsubscribe/${Buffer.from(toEmail).toString('base64')}`
   const url = `${APP_URL}/ideas/create?ideaId=${ideaId}`
   const name = toName?.trim() || 'there'
@@ -763,5 +806,7 @@ export async function sendBuildCompleteEmail({
     </div>
   `
 
-  await sendEmail({ to: toEmail, subject, html, text })
+  // ⚠ 25-W §A — RETURNED, NOT SWALLOWED. The caller logs what happened, and it cannot say
+  // "sent" unless this says so.
+  return sendEmail({ to: toEmail, subject, html, text })
 }

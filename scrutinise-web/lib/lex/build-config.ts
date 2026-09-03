@@ -237,6 +237,33 @@ export const HARD_STOP_MS = parseInt(process.env.LEX_BUILD_HARD_STOP_MS ?? '9000
 export const PASS_BUDGET_MS = parseInt(process.env.LEX_BUILD_PASS_BUDGET_MS ?? '240000', 10)
 
 /**
+ * ══ ⚠⚠ 25-W §E (decision 55) — THE WALL CLOCK ON ONE PASS. NOT FOR SPEED. ═══════════════
+ *
+ * Charlie: *"A per-pass ceiling of 600 s. Not for speed: SMART's observed maximum is 285 s,
+ * so it will not bite in normal use. ⚠ It exists because nothing now catches a hung call —
+ * the 900 s clock only fires between passes. The pass must fail with a stated reason,
+ * leaving a resumable build, not a dead one."*
+ *
+ * ⚠ IT IS A DIFFERENT INSTRUMENT FROM `PASS_BUDGET_MS`, WHICH IS WHY BOTH EXIST.
+ * `PASS_BUDGET_MS` is a BUDGET a pass consults — 25-T §1e measured where it is honoured and
+ * found exactly one place, the research pass's question loop. Every other pass ignores it,
+ * because nothing asks. A budget nobody reads is not a ceiling, and off the Vercel functions
+ * there is no platform kill behind it any more: on the worker a pass may run for ever and the
+ * only clock is `HARD_STOP_MS`, which `checkStop` consults BETWEEN passes and so cannot
+ * interrupt one. A single call that never returns is therefore unbounded today.
+ *
+ * This is a WALL CLOCK, enforced by `runNextPass` around the pass itself, so it binds on
+ * every pass whether or not that pass knows it exists.
+ *
+ * ⚠ 600 s IS DELIBERATELY GENEROUS. The slowest pass ever measured is SMART at 285.5 s (25-Q
+ * addendum) and the longest complete build is 525 s of pass time across eleven passes. At
+ * twice the worst single pass this cannot fire on work; it fires on a hang. A ceiling set
+ * close to the observed maximum would start failing healthy builds the first time a model was
+ * slow, which is how a guard gets raised until it means nothing.
+ */
+export const PASS_CEILING_MS = parseInt(process.env.LEX_BUILD_PASS_CEILING_MS ?? '600000', 10)
+
+/**
  * Retained under its 25-A name because the check harness, the state payload and the
  * `ceiling.binding` string all read it. It now means "the budget for the request in
  * front of you", which is the pass budget.

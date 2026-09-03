@@ -66,6 +66,35 @@ const VARIABLES: Record<string, string> = {
   // (Note: this is `LEX_BUILD_WORKER_CONCURRENCY`; Ingest's `WORKER_CONCURRENCY=20` is a
   // different variable for a different worker and is deliberately not referenced.)
   LEX_BUILD_WORKER_CONCURRENCY: '1',
+
+  // ══ ⚠⚠ 25-W §A — THE OMISSION THAT MADE "EMAIL ME WHEN IT'S DONE" A DEAD CONTROL ══════
+  //
+  // This list is what the service was created with, and it did not name RESEND_API_KEY. The
+  // engine's notification path was correct, the preference was stored on the row, the worker
+  // reached the send — and `sendEmail` declined for want of a key, wrote a warning, and
+  // returned the same nothing it returns on success. A build finished at 10:22 UTC on 2
+  // September with `notifyEmail = true`, nobody was told, and no error existed anywhere.
+  //
+  // ⚠ MOVING THE BUILD OFF THE TAB MOVED IT OFF VERCEL'S ENVIRONMENT TOO. Everything the web
+  // app gets for free — the mail key, the public app URL — has to be named here or the worker
+  // does not have it. That is the general lesson and it is why both lines are below.
+  RESEND_API_KEY: '${{Ingest.RESEND_API_KEY}}',
+  // Without this the completion email's "Read it" link falls back to the bare apex domain
+  // rather than the canonical host the rest of the product uses.
+  NEXT_PUBLIC_APP_URL: 'https://www.scrutinise.org',
+
+  // ══ ⚠⚠ 25-W §F (decision 56) — RETRIEVE THE WAY THE THING WE MEASURED RETRIEVES ═══════
+  //
+  // Unset, dense retrieval is OFF on every stream — silently, with no error and no number
+  // recording it (see `harness-preflight.ts`). Every worker build would then retrieve
+  // differently from every client build and from every gold measurement ever taken, and
+  // nothing on any surface would say so.
+  //
+  // ⚠ NOT WRITTEN HERE AS A LITERAL, DELIBERATELY. A hardcoded copy of another deployment's
+  // setting is a copy that goes stale the first time the other one changes, with nothing
+  // saying it had — the same shape as the omission above. `scripts/sync-worker-retrieval.ts`
+  // reads production's value off `/api/health` and writes THAT, at the moment of writing,
+  // and reports both values back. Run it after this script.
 }
 
 async function main() {

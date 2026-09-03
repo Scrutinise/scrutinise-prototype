@@ -40,6 +40,7 @@ import {
   autoResumeStoppedBuilds,
 } from '../lib/lex/build'
 import { WORKER_CONCURRENCY, WORKER_IDLE_MS, buildDriver } from '../lib/lex/build-config'
+import { resolvedConfigLine } from '../lib/lex/harness-preflight'
 
 const ONCE = process.argv.includes('--once')
 
@@ -111,6 +112,30 @@ async function main() {
   if (buildDriver() !== 'worker') {
     console.warn(`[build-worker ${WORKER_ID}] ⚠ LEX_BUILD_DRIVER is not "worker" — the web app is ` +
       'driving builds itself, so nothing will ever be enqueued for this process.')
+  }
+
+  // ══ ⚠⚠ 25-W §A / §F — SAY WHAT THIS PROCESS CANNOT DO, AT START-UP ════════════════════
+  //
+  // Two settings decide whether this worker behaves like the deployment everything was
+  // tested against, and BOTH of them degrade in total silence when absent:
+  //
+  //   · RESEND_API_KEY — without it, `sendEmail` declines and every "email me when it's
+  //     done" build settles with no email and no error. That is 25-W §A: a build finished
+  //     at 10:22 on 2 September with `notifyEmail = true` and nothing was sent.
+  //   · LEX_VECTOR_STREAMS — without it, dense retrieval is OFF on every stream, so a
+  //     worker build RETRIEVES DIFFERENTLY from a Vercel build and no number anywhere
+  //     records that it did. That is §F, and `resolvedConfigLine()` is the sentence that
+  //     ends it: the configuration is printed beside the work, every time, so a build's
+  //     log says what retrieval it had rather than what we assume it had.
+  //
+  // ⚠ IT WARNS, IT DOES NOT REFUSE. A worker that will not start is worse than a worker
+  // that cannot email — but a worker that is quiet about it is worse than both.
+  console.log(`[build-worker ${WORKER_ID}] ${resolvedConfigLine()}`)
+  if (!process.env.RESEND_API_KEY) {
+    console.warn(`[build-worker ${WORKER_ID}] ⚠⚠ RESEND_API_KEY is NOT SET — every build that asked ` +
+      'to be emailed will finish without one, and nothing will error. See 25-W §A.')
+  } else {
+    console.log(`[build-worker ${WORKER_ID}] email is configured — completion notices can be sent.`)
   }
 
   let idleTicks = 0
