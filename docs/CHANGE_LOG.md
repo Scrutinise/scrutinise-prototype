@@ -132,6 +132,62 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX — POSITIONS: REPORT ONLY, NOTHING BUILT (2026-09-03 21:10 UTC)
+
+`docs/25Z_POSITIONS_REPORT.md`. Four measurements, one correction to a previous report, two
+corrections to my own first readings, and a decision not to build.
+
+▶▶ **§A.1 — 25-M §3's "no carrier" is CORRECTED. The POSITIONS heading DOES reach all three
+generated documents**, measured by rendering them and matching the exact heading string.
+⚠⚠ **The carrier was never missing; the content was.** All three builders group by `headingKey`
+and skip empty headings, so POSITIONS was absent because nothing had been filed under it.
+⚠⚠ **And what it carries today is ONE line — from Charlie's own uploaded document.** Exactly one
+`EvidenceItem` in the database has `headingKey = 'POSITIONS'`, written by the material extraction
+on 30 August, not by any Lex pass. So the printed report already has a section headed *"Key people
+and groups likely to support or oppose"* containing one sentence he supplied himself.
+⚠ Screen-only: the `NO_PRODUCER_NOTE` caveat (`statedGap` is called from `question-panel.ts` and
+nowhere else — no document imports it) and the `ClaimReview` beta surface.
+
+▶ **§A.2 — nothing to build; it is already carried.** The adjacent option is the caveat: 3 files,
+~15 lines, no migration, no build. ⚠ It prints a disclaimer rather than an assessment.
+
+▶▶ **§A.3 — THERE IS NO FLAG. The surface is gated only by being signed in**, deliberately
+(the route's own header: gating it to admins would mean only its authors ever score it).
+⚠ `LEX_SEARCH_GRAPH` reads **false** live on `f272ec7` — **but it gates a different thing**, the
+graph leg of retrieval in `search-gateway.ts`, and does not touch positions in either direction.
+
+▶▶ **§A.4 — IT RENDERS NOTHING ON HIS IDEA, WHICH IS WHY HE COULD NOT FIND IT.**
+`findClaimTarget` on the idea's own words returns NO TARGET, so the route returns `claim: null`
+and an honest note. **The failure is the idea→target mapping, not the graph** — the graph returns
+366 signals for a single recent Commons division, and on "plastic bags" the same path yields a
+real claim (Lord Goldsmith of Richmond Park, 1 ground).
+⚠ **Two corrections to my own first readings, both from re-running rather than reasoning:** I
+reported "no vote edges" after querying `graph_edge` (which holds only `gave-evidence-to` and
+`declared-interest`) — votes come through `position_signal_for`; and my first `claimFor` call put
+`questionText` where `actorId` belongs and returned a false null.
+⚠ **The screen's own caveat is now false on this idea** — it promises "the record itself, in
+beta" where nothing renders.
+
+▶▶ **THE COMMONS DIVISION RECORD BEGINS 2016-03-09 AND NOTHING SAYS SO.** `grep "2016"` across
+every positions file returns no match. Commons: 2,361 divisions, 2016-03-09 → 2026-07-15. Lords:
+3,284, from 1999-11-24. What the user sees instead is a computed count — *"1 person has a record
+here"* — which invites the reader to conclude nobody else took a position. ⚠ Same class as the
+citation defect 25-V fixed: a true sentence that misleads because its coverage is unstated. One
+line in `claim-review.ts`; recommended, not tonight.
+
+▶ **§B — NOT BUILT, as the brief directs.** §A.2's answer is "nothing to build", and the caveat
+option prints a disclaimer under a heading the title page's "in development" notice already
+covers. **No files changed.**
+
+▶ **§C — the design point is recorded.** Recorded positions print as statements; likely positions
+print as Lex's reasoning with their dated, linked grounds shown. ⚠⚠ **The guard must be a TYPE,
+not a review step: the inference and its grounds must be ONE object, so a renderer cannot print
+the claim alone.** This is the fifth instance of the thread's recurring fault — correct data
+reaching the output stripped of the qualification that made it correct — and the coverage window
+belongs on every likely position for the reason above.
+
+---
+
 ## LEX 25-Y — THE USER'S OWN DOCUMENTS REACH EVERY BUILD, AND THE EMAIL IS PROVEN (2026-09-03 20:15 UTC)
 
 ### §1 — 38 findings from four documents were invisible to every build after v1

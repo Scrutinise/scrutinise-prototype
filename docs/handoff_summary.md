@@ -237,7 +237,33 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ## LEX THREAD
 
 
-*Last updated: 2026-09-03 20:15 UTC — ▼ **LEX 25-Y — THE USER'S OWN DOCUMENTS REACH EVERY
+*Last updated: 2026-09-03 21:10 UTC — ▼ **LEX — POSITIONS: REPORT ONLY, NOTHING BUILT.**
+`docs/25Z_POSITIONS_REPORT.md`.
+▶▶ **§A.1 CORRECTS 25-M §3: the POSITIONS heading REACHES all three documents** — measured by
+rendering them. ⚠⚠ **The carrier was never missing, the content was** — builders skip empty
+headings. ⚠⚠ **And it carries ONE line today, from Charlie's own upload** (the only
+`headingKey='POSITIONS'` row in the database, written by the material extraction, not a Lex pass).
+So tonight's report already has a section headed *"Key people and groups likely to support or
+oppose"* containing one sentence he supplied. ⚠ Screen-only: the no-producer caveat and
+`ClaimReview`.
+▶ **§A.2 — nothing to build, it is already carried.** The caveat option is 3 files / ~15 lines,
+no build — ⚠ but it prints a disclaimer, not an assessment. **Charlie's call.**
+▶▶ **§A.3 — NO FLAG AT ALL; signed-in only, deliberately.** ⚠ `LEX_SEARCH_GRAPH` is **false**
+live but **gates a different thing** (the retrieval graph leg) and does not touch positions.
+▶▶ **§A.4 — IT RENDERS NOTHING ON HIS IDEA.** `findClaimTarget` returns NO TARGET on the idea's
+own words → `claim: null`. **The idea→target mapping is the failure, not the graph** (366 signals
+on one division; "plastic bags" yields a real claim). ⚠ Two of my own first readings were wrong
+and were re-run: `graph_edge` is the wrong table for votes, and my first `claimFor` call passed
+`questionText` as `actorId`.
+▶▶ ⚠⚠ **THE COMMONS DIVISION RECORD BEGINS 2016-03-09 AND NOTHING ANYWHERE SAYS SO.** Commons
+2,361 divisions from 2016-03-09; Lords 3,284 from 1999-11-24. The user sees a count — *"1 person
+has a record here"* — which reads as "nobody else took a position". One line in
+`claim-review.ts`; **next sprint.**
+▶ **§B NOT BUILT**, as directed. No files changed.
+▶ **§C recorded:** recorded = statement, likely = Lex's reasoning with dated linked grounds shown.
+⚠⚠ **The guard must be a TYPE — inference and grounds as ONE object — so a renderer cannot print
+the claim alone.** Fifth instance of the thread's recurring fault.
+Earlier: 2026-09-03 20:15 UTC — ▼ **LEX 25-Y — THE USER'S OWN DOCUMENTS REACH EVERY
 BUILD, AND THE EMAIL IS PROVEN.**
 ▶▶ **§3 ✅ PROVIDER ID `9716f86f-e461-4621-8bb0-98695febacc6`.** Build `08e546bb`, notifyEmail
 true, cancelled at pass 5, settled CANCELLED, **5.79p**, log line quotes the id, to
