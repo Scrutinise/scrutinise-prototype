@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { capabilitySnapshot } from '@/lib/env-flags';
 import { buildDriver } from '@/lib/lex/build-config';
+import { resolvedVectorStreams } from '@/lib/lex/query-router';
 
 /**
  * ⚠ THIS ENDPOINT ANSWERS "WHAT IS PRODUCTION ACTUALLY RUNNING?" — see docs/CLAUDE.md §20.
@@ -61,9 +62,13 @@ import { buildDriver } from '@/lib/lex/build-config';
  * was SET — which is the entire distinction that makes the endpoint worth building. A `TRUE`
  * would appear here as `false`, exactly as the app sees it, and that is the bug being caught.
  *
- * ⚠ NAMES AND BOOLEANS ONLY. No key, no length, no prefix, no model id, no URL, no stream list
- * — nothing that reveals account configuration. A capability NAME is the same class of public
- * fact as the commit SHA that already sits beside it.
+ * ⚠ NAMES AND BOOLEANS ONLY. No key, no length, no prefix, no model id, no URL — nothing that
+ * reveals account configuration. A capability NAME is the same class of public fact as the
+ * commit SHA that already sits beside it.
+ *
+ * ⚠ 25-W §F REVISED THE "no stream list" HALF OF THAT LINE, ON PURPOSE. The stream names are
+ * published now, and the reasoning sits at `retrieval.vectorStreams` below rather than here,
+ * because that is where a reader deciding whether to add the next field will be looking.
  */
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +91,26 @@ export async function GET() {
         vectorSearchUrl: Boolean(process.env.VECTOR_SEARCH_URL?.trim()),
         ftsSearchUrl: Boolean(process.env.FTS_SEARCH_URL?.trim()),
         geminiKey: Boolean(process.env.GEMINI_API_KEY?.trim()),
+        // ══════════════════════════════════════════════════════════════════════════════════
+        // ⚠⚠ 25-W §F (decision 56) — AND THIS ONE REVISES THE RULE FOUR LINES ABOVE.
+        // ══════════════════════════════════════════════════════════════════════════════════
+        // The header said "no stream list", and this is a deliberate departure from it rather
+        // than an oversight, so the reasoning is here rather than in a report:
+        //
+        //   · A boolean cannot answer the question that was actually asked. The build moved
+        //     onto a Railway worker on 1 September; `LEX_VECTOR_STREAMS` was never set there.
+        //     Every worker build has therefore retrieved with dense OFF on every stream, while
+        //     Vercel's value — whatever it is — was UNREADABLE from any session (SAML, §19).
+        //     "Set the worker to match Vercel" was an instruction nobody could carry out, and
+        //     "they differ" was a state nothing could report.
+        //   · A stream name is not account configuration. They are `legislation`, `debates`,
+        //     `committees`, `caselaw`, `guidance` — English words naming public corpora, in the
+        //     same class as the capability NAMES already published beside them. No key, no
+        //     length, no prefix, no URL, no model id: that part of the rule is unchanged.
+        //   · It is read through `resolvedVectorStreams()`, the router's own parse, so a value
+        //     the router will never match reports as absent — the `TRUE`-shaped bug, caught
+        //     rather than echoed, exactly as `capabilities` and `build.driver` are.
+        vectorStreams: resolvedVectorStreams(),
       },
       // ══════════════════════════════════════════════════════════════════════════════════════
       // ⚠⚠ 25-T §1c — WHICH DRIVER IS IN FORCE. Added because the flip is Charlie's to make and

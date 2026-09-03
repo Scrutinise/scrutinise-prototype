@@ -153,6 +153,23 @@ function vectorStreams(): Set<string> {
   )
 }
 
+/**
+ * ⚠⚠ 25-W §F — THE LIST AS THE ROUTER RESOLVES IT, FOR `/api/health` TO REPORT.
+ *
+ * Exported through THIS parse rather than read from `process.env` by the caller, for the reason
+ * that endpoint exists at all: a value with a stray space or a capitalised name is a stream the
+ * router will never match, and a health endpoint that echoed the raw string would report it as
+ * configured. This reports what is IN FORCE.
+ *
+ * Decision 56 needed production's value and there was no way to read it — Vercel's environment
+ * is unreadable from a session (SAML, docs/CLAUDE.md §19) — so the worker had been running with
+ * dense retrieval OFF on every stream against a Vercel deployment whose setting nobody could
+ * state. One request now settles it in both directions.
+ */
+export function resolvedVectorStreams(): string[] {
+  return [...vectorStreams()].sort()
+}
+
 /** True when per-stream dense retrieval is active for ANY stream — the gateway uses this to
  *  stand down its legacy whole-query fusion, so a result can never be fused twice. */
 export function perStreamVectorActive(): boolean {
