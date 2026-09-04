@@ -228,6 +228,92 @@ indexes); `agreed` is three-way because "not sure" is a real answer. **Nothing w
 
 ---
 
+## LEX 25-Z — THE THREE PANELS, RESTRUCTURED (2026-09-04 01:05 UTC)
+
+### §1 — the research items did not open, and it was never a touch problem
+
+⚠⚠ **IT IS (a): THERE IS NO DETAIL VIEW AND NEVER HAS BEEN.** `EntryCard` rendered a title, a
+badge, a citation, one sentence of *why* and three buttons. No expand, no modal, no route.
+
+⚠⚠ **AND THE PASSAGE WAS ALREADY IN THE ROW.** `EvidenceItem.body` is populated on **131 of 131
+rows** on the pilot idea — median 296 to 1,145 characters a heading — and the panel assembler
+was *already reading it*: it passes `body` into `evidenceStanding` and then drops it.
+**The content the user wants has been one field away from the screen the whole time.** Sixth
+instance of this thread's recurring fault: correct data discarded at a seam.
+
+⚠ **The exact symptom has a second, sharper cause.** The title was an anchor only when the row
+had a URL and a plain div otherwise — inert on **any** device, which is why this is not an iPad
+problem: **ARGUED 10 of 21 have no URL, HOW_HARD 17 of 17, LAW_NOW 3 of 51.** And even where the
+link worked it left the platform, which is not what *"I want to read the debate"* asks for.
+
+▶ **Built:** the title is a full-width button that opens the passage in place, with its
+citation, its date and *Open the original*, and an honest line where no link was recorded. The
+tap target is the whole title row rather than a few words of text.
+
+### §2 — the middle panel
+
+▶▶ **§2a — 25-R's rule HELD; the gap is between A1's intent and the status model.** `lexPage`
+pointed at COHERENT_ACTIONS, so `computeCanonicalState` gave that page `active` — and a page is
+**either active or visited, never both**, because status is one value and active wins. Three
+collapsed, the fourth expanded, exactly as written. ⚠ A build does not clear the page pointer,
+so there is always one `active` page whether or not the user is working in it: **`lexPage`
+records where they got to and was being read as where they are.**
+▶ **The answer is a second FACT, not a second rule:** `collapsedByDefault(status, {
+freshlyOpened })`. Until the user touches something everything is shut and neither scroll fires;
+afterwards the status rule is untouched.
+
+▶▶ **§2b — the difference was not arbitrary, and the colour was carrying state alone.** The pill
+was gated on `reachable && !isActive`, so it was hidden on exactly the section you were in, and
+the stage accent (`accentFor`) was the only mark that it was active. ⚠⚠ **That is the
+colour-blind rule broken by the one cue Charlie cannot see.** All four sections now carry the
+same control in the same place; the active one reads **"Working on this"** and is disabled,
+because re-entering the section you are in does nothing.
+
+▶ **§2c applied:** *What you have put in the report* to Outputs, as **"For Report Inclusion"**;
+*Challenges* to THE RESEARCH, inside **"How hard will this be to achieve?"**; the Deepening link
+and the duplicate *What to do next* heading removed.
+⚠⚠ **§2d — THREE BLOCKS THE TABLE DOES NOT NAME, AND I HAVE NOT MOVED THEM.** The `work` view
+also holds **what to read**, **gaps in what we hold** and **what you know that we don't**.
+Removing the wrapper wholesale would have deleted them, so they stay in the middle panel
+untouched, pending Charlie's answer — §0 says ask rather than guess a destination.
+
+### §3 — every string, and the old one asserted gone
+
+Nine replacements, all read back. ⚠ **The check asserts the OLD text is absent as well as the
+new text present** — a wording sprint whose check only looks for the new string passes happily
+with both on the page. ⚠ *"This panel lists the decisions…"* existed in **two** files
+(`WorkList` and `AgendaPanel`); both replaced.
+
+### §4 — the chat opens clean
+
+The history present **at mount** is hidden, all but the arrival line, behind an upward
+**"prior chat"** control that says how many messages are behind it. ⚠ The count is frozen at
+mount deliberately: hiding "all but the last" would re-hide the conversation the user is
+having. Nothing is filtered from the data — only from the view.
+
+### §5 — headings and the Beta notice
+
+▶ **§5a/§5b:** all three headings are `text-base font-bold` near-black; the check asserts **no
+hue** on any of them, so removing colour changes nothing about which is which.
+▶ **§5c/§5d:** the disclosure has left THE RESEARCH's header and is a one-time modal on first
+opening a **search-derived** item — ⚠ never on the user's own document, because telling somebody
+their own file may be off-topic is not what the sentence is for. **The text is imported, not
+retyped**; the check asserts the component does not contain a copy.
+▶ **§5e — where the marker still stands, verified:** the public header, the proposal, the
+summary, the evidence pack, the meeting pack and the background briefing. Both earlier decisions
+survive the move.
+
+**`check:lex-25z` 50 passed / 0 failed / 3 controls / 0 dead.** ⚠ It failed once, on a real
+leftover: `canReEnter` was still declared after the JSX had stopped using it. `tsc`, lint,
+`check:scripts` and `check:client-boundary` all green.
+
+⚠⚠ **NOT TESTABLE FROM HERE — CHARLIE'S iPAD ONLY (§7):** that a TAP opens an entry and the
+target is thumb-sized; that the headings read as primary at iPad width; that the modal dismisses
+on touch without trapping the page; and that a freshly opened idea is scrolled to the top on a
+touch viewport. A desktop pass is not confirmation of any of them.
+
+---
+
 ## LEX — POSITIONS: REPORT ONLY, NOTHING BUILT (2026-09-03 21:10 UTC)
 
 `docs/25Z_POSITIONS_REPORT.md`. Four measurements, one correction to a previous report, two

@@ -271,7 +271,35 @@ whether the Lex build should file positions (one line in `build.ts`), and the no
 ## LEX THREAD
 
 
-*Last updated: 2026-09-03 21:10 UTC — ▼ **LEX — POSITIONS: REPORT ONLY, NOTHING BUILT.**
+*Last updated: 2026-09-04 01:05 UTC — ▼ **LEX 25-Z — THE THREE PANELS, RESTRUCTURED.**
+▶▶ **§1 — IT IS (a): NO DETAIL VIEW, AND NEVER HAS BEEN.** ⚠⚠ **But the passage was already in
+the row** — `EvidenceItem.body` on **131 of 131** entries, and the assembler was reading it and
+throwing it away. **Sixth instance of correct data discarded at a seam.** ⚠ **Not a touch
+problem**: the title was an anchor only where a URL existed and a plain div otherwise — inert on
+any device (ARGUED 10/21 no URL, HOW_HARD 17/17, LAW_NOW 3/51). ▶ Built: the whole title row
+opens the passage in place, with citation, date and a route to the original.
+▶▶ **§2a — 25-R's RULE HELD.** `lexPage` made COHERENT_ACTIONS `active`, and a page is either
+active or visited, never both. ⚠ **A build does not clear the pointer, so `lexPage` records
+where they GOT TO and was read as where they ARE.** Fixed with a second FACT, not a second rule:
+`freshlyOpened` collapses everything and stops both scrolls until the user acts.
+▶▶ **§2b — the colour WAS carrying state alone.** The pill was gated `reachable && !isActive`,
+so it vanished on the section you were in and the stage accent was the only mark. All four now
+carry the same control; the active one says **"Working on this"**.
+▶ **§2c done.** ⚠⚠ **§2d — THREE BLOCKS THE TABLE DOES NOT NAME AND I HAVE NOT MOVED:** *what to
+read*, *gaps in what we hold*, *what you know that we do not*. They stay in the middle panel
+pending Charlie's answer — removing the wrapper would have deleted them.
+▶ **§3 — nine strings, and the check asserts the OLD text is GONE as well as the new present.**
+⚠ "This panel lists the decisions…" existed in TWO files; both done.
+▶ **§4** history hidden at mount behind "prior chat" with a count; nothing filtered from the
+data. ▶ **§5** three headings primary with **no hue**; disclosure is now a one-time modal on
+first opening a SEARCH-derived item (never the user's own document), text imported not retyped;
+**§5e marker verified on the header and all five documents.**
+✅ `check:lex-25z` **50/0, 3 controls, 0 dead** — ⚠ it failed once on a real leftover
+(`canReEnter` still declared after the JSX moved on).
+⚠⚠ **CHARLIE'S iPAD ONLY (§7):** that a TAP opens an entry and the target is thumb-sized; that
+the headings read as primary at iPad width; that the modal dismisses on touch; that a fresh idea
+is scrolled to the top on a touch viewport.
+Earlier: 2026-09-03 21:10 UTC — ▼ **LEX — POSITIONS: REPORT ONLY, NOTHING BUILT.**
 `docs/25Z_POSITIONS_REPORT.md`.
 ▶▶ **§A.1 CORRECTS 25-M §3: the POSITIONS heading REACHES all three documents** — measured by
 rendering them. ⚠⚠ **The carrier was never missing, the content was** — builders skip empty
