@@ -153,11 +153,20 @@ const LAYER_WORDS: Record<SignalType, { what: string; gloss: string | null; cons
     gloss: 'the only signal here that is a plain fact about an act rather than a reading of one',
     consequence: 'without it there is no record of how anybody actually voted',
   },
+  // ══ ⚠⚠ CORRECTED BY SURFACE 4. THIS SAID "signatures on Early Day Motions" AND WE HOLD NO
+  // SIGNATURES. `edm_sponsor` holds exactly one row per motion — the count of rows and the count
+  // of distinct motions are the same number — so what we hold is the member who TABLED each
+  // motion, not the members who signed it. An EDM's evidential weight is its signatories; the
+  // design document calls a signature "the highest-confidence position signal anywhere", and we
+  // have never had one.
+  //
+  // ⚠ This is why an EDM target returns exactly ONE actor on every idea, which is the literal
+  // cause of "shows up a couple". Describing it as signatures made a limit look like a result.
   edm_signature: {
-    what: 'signatures on Early Day Motions',
-    gloss: 'voluntary, unwhipped and deliberate',
-    consequence: 'without it a member who never got a vote on a subject, but signed motions about '
-      + 'it for years, looks silent',
+    what: 'Early Day Motions a member tabled',
+    gloss: 'the sponsor only — we do not hold the members who signed them',
+    consequence: 'without the signatories, a motion shows the one member who tabled it and none '
+      + 'of the members who put their name to it, which is where a motion’s weight actually lies',
   },
   amendment_sponsorship: {
     what: 'amendments a member put their name to',

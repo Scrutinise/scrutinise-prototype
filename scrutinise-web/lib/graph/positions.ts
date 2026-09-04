@@ -57,6 +57,12 @@ export interface Ground {
   direction: number
   weight: number
   sourceUrl: string | null
+  /**
+   * ⚠ SURFACE 4 §3 — the party the member sat for WHEN THEY DID THIS, from the vote record.
+   * Null on a signal type that carries no party. Never their current party: a member who has
+   * crossed the floor since must not appear under today's label beside an old act.
+   */
+  partyAtTheTime: string | null
   /** `corpus_sections.id` values — what a drill-down fetches. Never empty. */
   evidenceIds: string[]
 }
@@ -218,6 +224,7 @@ interface SignalRow {
   identity_statement: string
   identity_caveat: string | null
   parl_member_id: number | null
+  party_at_the_time: string | null
   target_type: TargetType
   target_id: string
   target_label: string | null
@@ -266,6 +273,16 @@ const SIGNAL_SQL = `
          i.parl_member_id,
          s.target_type, s.target_id, s.signal_ref, s.signal_type,
          s.direction, s.derivation, s.raw_weight, s.observed_at::text, s.evidence_ids,
+         -- ⚠⚠ SURFACE 4 §3 — THE PARTY THE MEMBER SAT FOR WHEN THEY DID THIS, not today's.
+         -- The brief asks the document to carry "party at the time", and division_votes records
+         -- it per vote, which is the only place it is a fact about the ACT rather than about the
+         -- person now. A member who has crossed the floor since must not be printed under their
+         -- current party beside a vote they cast under another.
+         -- ⚠ No backticks in SQL comments in this file: it is a JS template literal and a
+         -- backtick ends the string, producing a parse error nowhere near the real line.
+         -- ⚠ NULL for an EDM or an inquiry: those rows carry no party, and an invented one would
+         -- be exactly the kind of plausible wrong detail this graph exists to refuse.
+         dv.party AS party_at_the_time,
          COALESCE(d.title, cs."sectionTitle", ge.object_label, org.canonical_name) AS target_label,
          COALESCE(d.source_url, cs."sourceUrl", don.source_url)                    AS source_url
     FROM position_signal_for($1::text[], $2::text[]) s
@@ -280,6 +297,14 @@ const SIGNAL_SQL = `
      AND d.division_id = (CASE WHEN s.target_type = 'division'
                                 AND split_part(s.target_id, ':', 2) ~ '^[0-9]+$'
                                THEN split_part(s.target_id, ':', 2)::int END)
+    -- ⚠ Reached through the member id on the identity row, because the signal itself carries a
+    -- graph entity id and not a Parliament member id. Indexed by (house, division_id).
+    LEFT JOIN division_votes dv
+      ON s.target_type = 'division'
+     AND dv.house = split_part(s.target_id, ':', 1)
+     AND dv.division_id = (CASE WHEN split_part(s.target_id, ':', 2) ~ '^[0-9]+$'
+                                THEN split_part(s.target_id, ':', 2)::int END)
+     AND dv.member_id = i.parl_member_id
     LEFT JOIN corpus_sections cs
       ON s.target_type = 'edm'
      AND cs.id = 'early-day-motions:' || s.target_id || ':1'
@@ -427,6 +452,7 @@ export async function positionsFor(
         direction: s.direction,
         weight: s.raw_weight,
         sourceUrl: s.source_url,
+        partyAtTheTime: s.party_at_the_time,
         evidenceIds: s.evidence_ids,
       }))
 
