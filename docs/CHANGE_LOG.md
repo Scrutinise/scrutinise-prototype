@@ -132,6 +132,78 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SURFACE 4 — THE CARD AND THE DOCUMENT WERE ASKING TWO DIFFERENT QUESTIONS, AND WE HOLD NO EDM SIGNATURES (2026-09-04 02:14 UTC)
+
+`docs/SURFACE_4_REPORT.md`. Charlie: *"Key people and groups shows up a couple but you can't
+click through."* The audit found three causes, two of them mine from SURFACE 3.
+
+▶▶ ⚠⚠ **THE EVIDENCE WAS NEVER MISSING FROM THE PAYLOAD — THE SCREEN AND THE DOCUMENT WERE
+RESOLVING THE IDEA TO DIFFERENT TARGETS.** `findClaimTarget` took one text blob with the TITLE
+LEFT OUT; `filePositionsForIdea` passed the title separately. **Measured: they disagreed on 4 of
+25 of Charlie's ideas, EVERY ONE in the direction where the document carried positions and the
+clickable card rendered nothing.** The names he could see were the filed document rows; the thing
+with the links was blank. ▶ Fixed by DELETION, not by patching both: one resolver
+(`lib/graph/idea-target.ts`), both callers import it. ✅ **83 of 83 live ideas now agree, 0
+disagree**, and the control calling the old title-less shape **diverges on 12 of 40**, so the fix
+is load-bearing rather than cosmetic.
+
+▶▶ ⚠⚠ **"A COUPLE" IS LITERALLY CORRECT, AND THE CAUSE IS THAT WE HOLD NO EDM SIGNATURES AT ALL.**
+A DIVISION target returns 189–254 actors; an EDM target returns **exactly one, always**. Because
+`edm_sponsor` holds **60,995 rows over 60,995 motions — 1.00 per motion** — while its own
+`sponsors_count` column says Parliament publishes **2,125,547 signatories, 34.8 per motion, with
+58,193 motions carrying more than one**. **We hold the member who TABLED each motion and none of
+the ~2.06 million signatures.** ⚠⚠ The design document calls an EDM signature *"the
+highest-confidence position signal anywhere"* — we have never had one.
+⚠ **This corrects SURFACE 3's own coverage wording**, which said "signatures on Early Day
+Motions". It is sponsorships, and calling it signatures made a limit look like a result.
+
+▶▶ ⚠⚠ **THE FIVE NAMES IN THE DOCUMENT WERE ALPHABETICAL AND NOTHING SAID SO.** On *Human Rights
+Act 1998*: **254 actors matched, 12 tied at the top**, `shownOrderIsNameOrderOnly = true`, and
+`positionsFor()` had already produced the sentence *"5 of 254 actors, tied at this confidence
+(0.394, 1 signal) — ordered by name. This is not a ranking."* **Both of my SURFACE 3 assemblers
+discarded it.** So the report printed an alphabetical slice as though those five were the
+significant people — the exact failure `Ranking` was built to prevent, and **the third time this
+thread has had correct data computed and then dropped by the layer that assembles the output.**
+Now carried into the card and the document, asserted, with a control.
+
+▶ **§3 — THE DOCUMENT NOW CARRIES WHAT A READER NEEDS TO CHECK IT**, verified by rendering the
+real document: the actor with **Parliament member id**, the **party at the time** (read off the
+vote record and printed beside the ACT, never beside the name — a member who has crossed the floor
+must not appear under today's label next to an old vote), the target, the act with its own URL,
+confidence **as words AND as a number** (three bands cannot separate 0.36 from 0.64), the config
+version and date, and the coverage statement as its own row.
+⚠ **The body is now PLAIN TEXT** — the question panel renders that field `whitespace-pre-wrap`
+and NOT as markdown, so SURFACE 3's `**bold**` and `- ` bullets were printing as literal
+characters.
+
+▶ **§2 — THE THREE KINDS OF NOTHING, COUNTED.** Of 83 live ideas 44 find a target; of the other
+39, **6 name something Parliament HAS debated** where we hold no division, and **33 match nothing
+we hold anywhere** (several untitled or scratch; one is *Addressing Litter in Huddersfield*).
+Each gets its own sentence instead of one apology.
+⚠⚠ **My first count was WRONG and printing the corpus list caught it**: it queried for corpora
+named `debates`/`commons-debates`, **which do not exist** (they are `pwdata-debates`,
+`historic-hansard`, `pwdata-lords`), and returned a confident "0 discussed elsewhere, 39
+nowhere" — a wrong question answered without complaint.
+
+▶ **§4 — ONE OF SURFACE 3's DECISIONS HAS LANDED.** Lex shipped `1f157f2` (26-A §3):
+`NO_PRODUCER_NOTE.POSITIONS` is deleted, `HEADINGS_WITH_NO_PRODUCER` is `['COST_DURATION']` alone,
+and `heading-map.ts` records positions as a producer — *"a capability is a capability whichever
+code path exercises it."* ✅ `check:lex-25d` **77/0** with my changes in the tree.
+⚠ **The one-line `build.ts` change has NOT landed**; positions are still filed only by
+`npm run positions:file` or the route. ⚠ **`DonationReview` still has no route** — the exact
+one-line change is named in the report; not made, because it is Lex's file.
+
+⚠ **A hardcoded figure I wrote and caught before it shipped:** the new "nothing anywhere" sentence
+first read *"our Commons division record begins in March 2016"* — a figure about the graph, written
+down, in a file no check was grepping, one sprint after I wrote the rule forbidding it.
+`check:surface-4` now greps that file too, with a planted control.
+
+✅ `check:surface-4` **26/0, 8 controls, 0 dead** · `check:surface-3` 41/0 ·
+`check:surface-3-donations` 23/0 · `check:lex-25d` 77/0 · `tsc`, `check:client-boundary` and
+`check-clean-build.sh --fast` all clean.
+
+---
+
 ## SURFACE 3 — THE POSITIONS SURFACE HAD RENDERED NOTHING FOR ANYBODY, ON EVERY IDEA, SINCE IT SHIPPED (2026-09-04 00:21 UTC)
 
 `docs/SURFACE_3_REPORT.md`. §1 and §2 built and live; §3 built and blocked only on an API key;

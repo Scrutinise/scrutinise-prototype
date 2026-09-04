@@ -234,6 +234,36 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## SURFACE THREAD — last updated 2026-09-04 02:14 UTC (SURFACE 4)
+
+▼▼ **SURFACE 4 SHIPPED. THE CARD AND THE DOCUMENT WERE ASKING TWO DIFFERENT QUESTIONS.**
+`docs/SURFACE_4_REPORT.md`. Charlie: *"shows up a couple but you can't click through."*
+▶▶ ⚠⚠ **THE EVIDENCE WAS ALWAYS IN THE PAYLOAD.** `findClaimTarget` read a text blob WITHOUT THE
+TITLE while the document filer passed the title separately — **they disagreed on 4 of 25 ideas,
+every one where the document had positions and the clickable card had nothing.** One resolver now
+(`lib/graph/idea-target.ts`); ✅ **83 of 83 agree**, control diverges on 12 of 40.
+▶▶ ⚠⚠ **WE HOLD NO EDM SIGNATURES — 60,995 rows over 60,995 motions, 1.00 per motion, against
+2,125,547 signatories Parliament publishes (34.8 per motion).** We hold the member who TABLED each
+motion. That is why an EDM target returns exactly ONE actor and a division returns 189–254, and it
+is the literal cause of "a couple". **The design calls an EDM signature the highest-confidence
+position signal anywhere; we have never had one.** ⚠ SURFACE 3's coverage wording said
+"signatures" and is corrected to sponsorships.
+▶▶ ⚠⚠ **THE FIVE NAMES IN THE REPORT WERE ALPHABETICAL.** 254 matched, 12 tied at the top;
+`positionsFor()` had already written *"This is not a ranking"* and **both my SURFACE 3 assemblers
+dropped it** — third instance of the thread's recurring fault, this time mine. Now carried.
+▶ **§3 the document carries member id, party AT THE TIME (beside the act, never the name),
+numeric confidence, every act with its own URL.** Body is plain text now — the panel renders
+`whitespace-pre-wrap`, not markdown.
+▶ **§2 counted: 44 of 83 find a target; of the 39, SIX name something Parliament has debated and
+33 match nothing we hold.** ⚠ My first count queried corpora that DO NOT EXIST and answered
+confidently; printing the corpus list caught it.
+▶ **§4: Lex landed `1f157f2` (26-A §3)** — the no-producer note is gone, `check:lex-25d` 77/0.
+⚠ **`build.ts` still does not call `filePositionsForIdea`**, and **`DonationReview` still has no
+route** — exact one-line change named in the report, not made.
+▶ **FOUR DECISIONS**: ingest EDM signatures (recommended); "show me the others" on the card
+(recommend no); one confidence vocabulary or two (recommend two); a re-run on a published report
+(recommend yes).
+
 ## SURFACE THREAD — last updated 2026-09-04 00:21 UTC (SURFACE 3)
 
 ▼▼ **SURFACE 3 SHIPPED. THE POSITIONS SURFACE HAD RENDERED NOTHING FOR ANYBODY, ON EVERY IDEA,
