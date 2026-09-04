@@ -234,6 +234,40 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## SURFACE THREAD — last updated 2026-09-04 00:21 UTC (SURFACE 3)
+
+▼▼ **SURFACE 3 SHIPPED. THE POSITIONS SURFACE HAD RENDERED NOTHING FOR ANYBODY, ON EVERY IDEA,
+SINCE IT SHIPPED — AND IT NOW DOES.** `docs/SURFACE_3_REPORT.md`.
+▶▶ ⚠⚠ **`findClaimTarget` RETURNED NO TARGET ON ALL TWELVE LIVE IDEAS.** `findTargets` passes the
+whole 200-char problem statement as ONE `ILIKE` pattern. 25-Z found it on one idea and called it
+"the idea→target mapping"; it was universal. **Phrase matching now: 45 of 84 ideas find a target,
+from 0.** ⚠ Word-level matching was measured and REJECTED — `permanent` → *Shoemakers Museum
+shortlisted for Permanent Exhibition* is confident, sourced and wrong.
+▶▶ **§1 LIVE ON EVERY SURFACE INCLUDING THE EMPTY PATH:** *"Our record of recorded divisions of the
+House of Commons begins on 9 March 2016"*, generated, never hardcoded. Ladder DERIVED from the
+config. ✅ `check:surface-3` **41/0, 9 controls, 0 dead** — ⚠⚠ and it found that the natural
+hardcoded-figure regex **cannot match a percentage** (trailing `\b` after `%`); **the graph
+stream's `check-4a-coverage.ts` has the same blind spot — reported, not edited.**
+▶▶ **§2 — THE BRIEF'S PREMISE WAS ALREADY OVERTURNED BY 25-Z AND NOTHING LEX-OWNED HAD TO CHANGE.**
+The carrier reaches all three documents; the missing piece was a PRODUCER. **Filed for 22 of
+Charlie's 47 ideas.** ⚠ The claim and its grounds are ONE object as a **non-empty tuple** — a claim
+without its acts does not compile.
+▶ **§3 BUILT, BLOCKED ON `COMPANIES_HOUSE_API_KEY`.** ⚠⚠ **The brief's ~11× is corrected to ~7.8×
+and recorded before the run**: a signal needs BOTH ends resolved, so 14,879 rows yield at most
+1,659 new signals, not 14,879's worth. 640 lookups, 36 min.
+▶ **§4 BUILT AND CHECKED — the hard line is a TYPE**: `PartyAlignment` has no direction and no
+target field, so "supports your bill" cannot be constructed. ✅ `check:surface-3-donations`
+**23/0, 6 controls, 0 dead**. Live case: *Joseph Rowntree Reform Trust, £7.88m to three parties* →
+NO DIRECTION. ⚠ **No route renders `DonationReview` yet** — every candidate parent is Lex-owned.
+▶▶ **§0a — `SEARCH_TO_LEX_POSITION_SOURCES.md` DOES NOT EXIST** (not on disk, not tracked, not in
+any ref's history), so it could not be marked superseded. `docs/POSITION_SOURCE_FAMILIES.md` is
+generated instead. ⚠⚠ **The members-interests disagreement is a GRAIN ERROR, not a contradiction:**
+3,448 is a SEARCH-CORPUS document count, not a position-graph figure. `graph_edge` is deduplicated
+to a pair; signals are dated — hence 1,505 edges / 1,723 signals, and 162,733 / 175,290.
+▶ **FOUR DECISIONS FOR CHARLIE** in the report: verdict aggregation, the two-word match floor,
+whether the Lex build should file positions (one line in `build.ts`), and the now-misleading
+`NO_PRODUCER_NOTE.POSITIONS`.
+
 ## LEX THREAD
 
 

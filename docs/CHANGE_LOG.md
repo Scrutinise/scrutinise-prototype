@@ -132,6 +132,102 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SURFACE 3 — THE POSITIONS SURFACE HAD RENDERED NOTHING FOR ANYBODY, ON EVERY IDEA, SINCE IT SHIPPED (2026-09-04 00:21 UTC)
+
+`docs/SURFACE_3_REPORT.md`. §1 and §2 built and live; §3 built and blocked only on an API key;
+§4 built, checked and not yet rendered by any route. §0a done and it produced three corrections.
+
+▶▶ **§0a — `SEARCH_TO_LEX_POSITION_SOURCES.md` DOES NOT EXIST.** Not on disk, not tracked, not in
+the history of any ref; the only file naming it is the brief. **It could not be marked superseded
+because there is nothing to mark.** The substantive half was done instead:
+`docs/POSITION_SOURCE_FAMILIES.md` is now GENERATED (`npm run report:position-sources -- --write`),
+every figure a live query, every row stating its grain.
+⚠⚠ **The members-interests disagreement is not a contradiction — it is a GRAIN ERROR and every
+number is correct.** 4,100 published · **3,448 documents in the SEARCH CORPUS** · 1,505 edges ·
+1,723 signals. The 3,448 that circulates as "the interests we hold" is a search-corpus document
+count, marked excluded-by-design for retrieval, and **is not a position-graph figure at all.**
+⚠⚠ **AND "MORE SIGNALS THAN EDGES" IS NOT CORRUPTION.** `graph_edge` is deduplicated to a (subject,
+object) PAIR; the signal layer is DATED. Exact: interests cover **1,505 pairs / 1,723 dated
+triples**; witnesses **162,733 pairs / 175,290 dated triples** — the pair counts equal the edge
+counts to the row. A witness who appeared before one inquiry on three days is ONE edge, THREE
+signals. ⚠ Votes are not nested at all (a division CONTAINS votes); the only lossy step is
+**2,129,113 votes → 2,080,585 signals (97.7%)**, the rest being unresolved members.
+
+▶▶ ⚠⚠ **§2's REAL BLOCKER, AND 25-Z UNDERSTATED IT: `findClaimTarget` RETURNED NO TARGET ON ALL
+TWELVE LIVE IDEAS**, and the title control found nothing on eight of eight. `findTargets` runs
+`title ILIKE '%' || $1 || '%'` **with the whole 200-character problem statement as one pattern**,
+which can only match if that entire sentence appears verbatim in a division title. **The surface
+has rendered nothing for anybody since it shipped.**
+⚠⚠ **AND THE OBVIOUS FIX IS WORSE THAN THE BUG** — measured, not assumed: word-level matching gives
+`diversity` → *Biodiversity Beyond National Jurisdiction Bill*, `permanent` → *Shoemakers Museum
+shortlisted for Permanent Exhibition*. Confident, sourced, wrong. It would have repealed
+`findClaimTarget`'s own never-a-weak-match rule while looking like a fix.
+▶ **Phrase matching instead** (`lib/graph/phrases.ts`): 2–4 word phrases, same two tables, no new
+retrieval. **45 of 84 ideas now find a target, from 0 of 84.** ⚠ The ranking took FOUR measured
+wrong answers: title-first (*United Kingdom Supreme Court* → *Young farmers' organisations across
+the United Kingdom*), content-words-not-length ("public and private" beat "civil service"),
+phrase-length ("money campaign" beat "publicly funded"), then date.
+⚠⚠ **AND TWICE I CAPPED THE PHRASE LIST WITH THE RANKING RULE AND SILENTLY DISCARDED THE MATCHING
+PHRASE** — v1 took the longest 40 (four-word phrases fill the quota); v2 capped per band and
+*Enhancing Civil Service Accountability* STILL lost "civil service" behind "delivering
+accountability". **Both were a RANKING rule acting as a FILTER.** No selection rule now exists;
+every phrase is tried. Affordable only because the EDM arm was cross-joining every phrase against
+every sponsorship row before comparing a title.
+
+▶▶ **§2 — THE BRIEF'S PREMISE WAS ALREADY OVERTURNED, AND THAT IS GOOD NEWS.** 25-M's "no carrier"
+was corrected by 25-Z; the carrier reaches all three documents and **nothing Lex-owned had to
+change.** Verified by reading the seam: the snapshot selects every non-REJECTED `EvidenceItem` with
+no version filter. **Filed for 22 of Charlie's 47 ideas**, re-read after every write.
+⚠ **The evidence travels with the claim AS A TYPE** — `grounds` is a non-empty tuple
+`[RecordedAct, ...RecordedAct[]]`, so a claim without its acts does not fail a check, **it does not
+compile**. 25-Z §C's instruction taken literally.
+⚠ The long report carries the coverage statement IN FULL; the evidence and meeting packs print
+title + citation + siftReason only, so the act rides in `siftReason` and the coverage substance in
+the title. Measured by rendering all three through the real builders.
+
+▶▶ **§1 — THE COVERAGE STATEMENT IS LIVE ON EVERY SURFACE, INCLUDING THE EMPTY PATH.** *"Our record
+of recorded divisions of the House of Commons begins on 9 March 2016"* — a sentence that has never
+existed anywhere before today. Ladder DERIVED from `POSITION_CONFIG.halfLifeYears`, so a new signal
+type appears with no edit. ⚠ The "starts late" test has **no threshold**: a record is late if it
+begins after the earliest date the graph holds anywhere — arithmetic on two queried dates.
+✅ `check:surface-3` **41/0, 9 controls, 0 dead.**
+⚠⚠ **AND IT FOUND A BLIND SPOT SHARED WITH THE GRAPH STREAM'S OWN CHECK.** The natural
+hardcoded-figure regex ends in `\b` after an alternation containing `%` — and **that can never
+match `46%`**, because `%` and the following space are both non-word characters. Found by planting
+*"we hold 46% of divisions"* and watching the control come back DEAD.
+▶ `scripts/ingest/graph/check-4a-coverage.ts` has the same construction and the same blind spot —
+**reported, not edited; it is graph-owned.**
+
+▶ **§3 BUILT, BLOCKED ON THE KEY.** `--plan` runs today: **3,887 distinct normalised numbers, 640
+that can yield a signal, 36.3 min at 600 req / 5 min.**
+⚠⚠ **THE BRIEF'S ~11× IS CORRECTED AND THE PREDICTION IS RECORDED BEFORE THE RUN.** A donation
+signal needs BOTH ends resolved: of 14,879 rows with a number we lack, only **1,682** have a
+resolvable recipient, collapsing to **1,659** (donee, number, date) triples. **So 244 → at most
+1,903 signals, ~7.8×, not 11× — and that is a CEILING.** The 11× is right about ROWS and wrong
+about SIGNALS: the per-source-hits-inflate-counts trap.
+⚠ A hypothesis tested and abandoned: padded/unpadded numbers (`1430799` vs `01430799`) recover only
+**8 rows / 4 numbers**, none with a resolved donee. Normalisation still cuts 4,458 raw strings to
+3,887 real companies.
+
+▶▶ **§4 — THE HARD LINE IS A TYPE, NOT A WORDING RULE.** A `PartyAlignment` has **no `direction`,
+no `stanceScore`, no `targetId`, no `targetType`** — the sentence *"supports your bill"* cannot be
+constructed because the value it needs does not exist. `directionForTarget()` returns a REFUSAL
+with its reason for every input. Multi-party is **absorbing**: a decade of giving to one party plus
+one gift to another is still multi-party.
+✅ `check:surface-3-donations` **23/0, 6 controls, 0 dead**, including the banned implementation
+watched failing. **The live case is the one the design exists for:** *Joseph Rowntree Reform Trust —
+£7,880,624 to three parties* → **"NO DIRECTION AT ALL … about seeking access and nothing about
+belief."** `GraphDonationJudgement` applied to production and re-read (20 columns, 5 CHECKs, 4
+indexes); `agreed` is three-way because "not sure" is a real answer. **Nothing writes back to
+`position_signal` or `position_estimate`** — asserted with a control.
+⚠ **NOT DONE AND SAID SO: no route renders `DonationReview`.** Every candidate parent is Lex-owned.
+
+✅ `tsc` clean · `check:client-boundary` clean (569 files, 134 client, 0 crossings) ·
+`check-clean-build.sh --fast` PASS · ⚠ `check:scripts` red **only** on another session's untracked
+`_b17*.ts` globals.
+
+---
+
 ## LEX — POSITIONS: REPORT ONLY, NOTHING BUILT (2026-09-03 21:10 UTC)
 
 `docs/25Z_POSITIONS_REPORT.md`. Four measurements, one correction to a previous report, two
