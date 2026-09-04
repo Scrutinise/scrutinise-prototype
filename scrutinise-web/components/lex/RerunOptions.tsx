@@ -36,7 +36,7 @@ interface BuildState {
   // definition of the same thing announces itself, and the one place it was allowed to.
   reuse: RerunReuse | null
   reuseBlockedReason: string | null
-  estimate: { line: string | null } | null
+  estimate: { line: string | null; minutes: number | null } | null
   allowance: { line: string | null; canStartFull?: boolean } | null
 }
 
@@ -65,7 +65,19 @@ export default function RerunOptions({ ideaId }: { ideaId: string }) {
       const res = await fetch(`/api/ideas/${ideaId}/build`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, ...(critique.trim() ? { critique: critique.trim() } : {}) }),
+        body: JSON.stringify({
+          mode,
+          ...(critique.trim() ? { critique: critique.trim() } : {}),
+          // ⚠⚠ SENT EXPLICITLY, BECAUSE THIS CARD MAKES THE PROMISE IN WORDS.
+          //
+          // `claimBuild` would otherwise fall back to the user's remembered preference, which
+          // 25-X §B defaults to true — so the email would very probably be sent anyway. "Very
+          // probably" is not what a sentence on the screen says. The line below tells them they
+          // will be emailed; this is what makes the row agree with it, whatever that preference
+          // happens to be. A promise on a card and a flag on a row that can disagree is the
+          // shape of the defect 25-W spent a sprint on.
+          notifyEmail: true,
+        }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -122,13 +134,35 @@ export default function RerunOptions({ ideaId }: { ideaId: string }) {
               Re-run this idea…
             </button>
           </div>
+          {/* ══ ⚠⚠ HOW LONG, AND THAT THEY WILL BE TOLD — CHARLIE, 4 SEPTEMBER ══════════════
+              *"This may take about ten minutes, we will email you when it's finished."*
+
+              ⚠ THE NUMBER IS THE MEASURED ONE, NOT THE WORD "TEN". It happens to BE ten right
+              now — the mean over the last 20 builds is 614.6 seconds — so his sentence and the
+              data agree today. Hardcoding it would make the card contradict the estimate line
+              beneath it the first time a build got faster, and this codebase has retired two
+              hardcoded figures that outlived their own truth already. "About ten minutes" is
+              the fallback for an idea with nothing measured yet, where a figure would be a
+              guess wearing a number's clothes.
+
+              ⚠ AND IT IS A PROMISE THE ARCHITECTURE KEEPS. 25-T moved the build onto the
+              Railway worker, 25-V confirmed one completing with the tab shut, and 25-Y proved
+              the send with a provider id. The email is not new; saying so here is. */}
+          <p className="mt-2 text-sm text-zinc-700">
+            This may take about {build.estimate?.minutes ?? 10} minutes — we will email you when
+            it’s finished, so you can close this page.
+          </p>
           {/* ⚠ The balance is on the PAGE, not only inside the dialogue (25-N §1d): deciding
               whether to open the re-run is already a decision about spending one. */}
           {build.allowance?.line && (
             <p className="mt-2 text-xs font-medium text-zinc-700">{build.allowance.line}</p>
           )}
+          {/* ⚠ The cost half only — the duration is said above, in Charlie's words, and printing
+              the estimate line whole would say "about 10 minutes" twice on one card. */}
           {build.estimate?.line && (
-            <p className="text-[11px] text-zinc-500 mt-1">{build.estimate.line}</p>
+            <p className="text-[11px] text-zinc-500 mt-1">
+              {build.estimate.line.replace(/^This usually takes[^.]*\.\s*/, '')}
+            </p>
           )}
         </>
       )}

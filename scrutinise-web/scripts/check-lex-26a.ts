@@ -211,6 +211,22 @@ async function main() {
   control('an ordinary array type would have permitted the empty case', () =>
     /grounds: RecordedAct\[\]/.test(code('lib/graph/position-block.ts')))
 
+  // ══ THE RE-RUN CARD'S PROMISE, AND THE FLAG THAT KEEPS IT ════════════════════════════
+  //
+  // ⚠⚠ A SENTENCE ON A CARD AND A FLAG ON A ROW THAT CAN DISAGREE IS THE 25-W DEFECT. The card
+  // says the user will be emailed; the POST has to say so too, or the promise depends on a
+  // remembered preference that may be false.
+  console.log('\nthe re-run card promises an email, and the request asks for one')
+  const rerun = code('components/lex/RerunOptions.tsx')
+  ok('the card tells the user how long it takes and that they will be emailed',
+    /we will email you when/.test(rerun) && /minutes/.test(rerun))
+  ok('the duration is the MEASURED figure, not a hardcoded ten',
+    /build\.estimate\?\.minutes \?\? 10/.test(rerun))
+  ok('and the request sets notifyEmail so the promise is kept whatever the preference says',
+    /notifyEmail: true/.test(rerun))
+  control('the sentence without the flag would be a promise resting on a preference', () =>
+    !/notifyEmail: true/.test(rerun))
+
   // ══ §6 — COLOUR, CORRECTED ═══════════════════════════════════════════════════════════
   console.log('\n§6 — colour')
   const cic = code('app/ideas/create/CreateIdeaClient.tsx')

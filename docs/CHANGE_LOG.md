@@ -350,8 +350,23 @@ pensions"** on *"civil service"* — topically defensible. ⚠ The two-word floo
 **the finding stands**, and it stays a finding rather than an assertion because moving the floor
 reverses a documented decision of theirs.
 
-`check:lex-26a` **23/0, 1 finding, 4 controls, 0 dead**; `check:lex-25z` **50/0**; tsc,
+`check:lex-26a` **26/0, 1 finding, 5 controls, 0 dead**; `check:lex-25z` **50/0**; tsc,
 check:scripts and check:client-boundary green.
+
+### And the card now says how long it takes, and asks for the email it promises
+
+⚠ **The email itself is not new.** 25-W diagnosed why it had never sent, 25-X set the Railway
+variables, and 25-Y demonstrated a real send (provider id `9716f86f-…`). The worker still reports
+*"email is configured"* at start-up, re-read today.
+▶ **What is new is the sentence and one flag.** `claimBuild` would otherwise fall back to the
+user's remembered preference — which 25-X defaults to `true`, so it would very probably be sent.
+⚠⚠ **"Very probably" is not what a sentence on a screen says.** The card promises an email and
+the request now asks for one, so the two cannot disagree: a promise on a card and a flag on a row
+that can drift apart is the exact shape 25-W spent a sprint on. Asserted, with a firing control.
+▶ ⚠ **The number is MEASURED, not the word "ten".** It happens to be ten today — the mean over
+the last 20 builds is **614.6 s**. Hardcoding it would make this card contradict the cost line
+directly beneath it the first time a build got faster, and two figures that were right when typed
+have already been retired from this codebase for outliving their own truth.
 
 ---
 
