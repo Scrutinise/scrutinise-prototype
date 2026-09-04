@@ -536,3 +536,118 @@ export async function findTargets(query: string, limit = 20): Promise<Array<Posi
       LIMIT $2)`, [q, limit])
   return rows.map((r) => ({ type: r.type as TargetType, id: r.id, label: r.label, date: r.date }))
 }
+
+/** A target found by one of several phrases, carrying the phrase that found it. */
+export type PhraseMatch = PositionTarget & {
+  label: string
+  date: string | null
+  /** ⚠ THE PHRASE THAT MATCHED, carried out so the surface can SHOW what it matched on. */
+  matchedPhrase: string
+  /** Words in that phrase. The relevance claim is "we matched N words of your subject", nothing more. */
+  matchedWords: number
+  /** ⚠ Words in it that NAME something — the ranking number. See `Phrase.contentWords`. */
+  matchedContentWords: number
+  /** ⚠ TRUE when the phrase came from the proposal's own title rather than its body. */
+  fromTitle: boolean
+}
+
+/**
+ * ══ SURFACE 3 §2 — SEVERAL PHRASES, ONE QUERY, AND THE MATCH SAYS WHICH ONE FOUND IT ═══════════
+ *
+ * ⚠ WHY THIS IS NOT A LOOP OVER `findTargets`. A loop issues one round trip per phrase (forty of
+ * them on a real idea) and then has to merge and re-rank the results in JavaScript, where the
+ * ordering rule would live in a second place. `unnest` puts the phrase list in the query, so the
+ * database does the join and the ranking once and hands back the phrase that matched with the row
+ * it matched — which is the field the screen has to print.
+ *
+ * ⚠⚠ THE ORDER IS: LONGEST MATCHED PHRASE FIRST, THEN MOST RECENT. Longest first because a longer
+ * phrase is a narrower and more defensible claim of relevance (see `phrases.ts`); most recent
+ * second because where two matches are equally well justified, the current Parliament is the one a
+ * proposer is writing for. The order is stated here and printed on the surface, so a reader can
+ * see what it claims — the same rule `RANK_KEY_WORDING` exists for.
+ */
+export const PHRASE_MATCH_WORDING =
+  'a phrase from the proposal’s own title where one matched, then the phrase naming the most '
+  + 'things, then the longest, then the most recent'
+
+export async function findTargetsByPhrases(
+  phrases: Array<{ text: string; words: number; contentWords: number; fromTitle: boolean }>,
+  limit = 10,
+): Promise<PhraseMatch[]> {
+  if (!phrases.length) return []
+  const pool = getNeonPool()
+  const texts = phrases.map((p) => p.text)
+  const counts = phrases.map((p) => p.words)
+  const content = phrases.map((p) => p.contentWords)
+  const titles = phrases.map((p) => p.fromTitle)
+
+  // ⚠ `p.n DESC` is the phrase's word count, carried in as a parallel array. Ranking on
+  // `length(p.t)` instead would prefer one long word over two short ones, which is the opposite of
+  // the rule: it is the number of words of the user's subject we matched that justifies the match.
+  const { rows } = await pool.query<{
+    type: string; id: string; label: string; date: string | null; phrase: string; words: number
+    content_words: number; from_title: boolean
+  }>(`
+    WITH p AS (SELECT * FROM unnest($1::text[], $2::int[], $3::int[], $4::boolean[])
+                 AS t(t, n, c, title)),
+    hits AS (
+      (SELECT 'division' AS type, d.house || ':' || d.division_id AS id, d.title AS label,
+              d.division_date::text AS date, p.t AS phrase, p.n AS words,
+              p.c AS content_words, p.title AS from_title
+         FROM p JOIN divisions d
+           ON d.title ILIKE '%' || p.t || '%' OR d.bill_title ILIKE '%' || p.t || '%')
+      UNION ALL
+      -- ⚠⚠ THE TITLES ARE MATCHED FIRST AND THE SPONSOR TABLE IS REACHED AFTERWARDS. The obvious
+      -- shape (phrases JOIN edm_sponsor ON TRUE, then JOIN corpus_sections on the built id) is a
+      -- CROSS JOIN of every phrase against every sponsorship row before a single title is
+      -- compared. corpus_sections holds one row per motion, so filtering there first turns the
+      -- cross join into a scan of the motions, and the date is fetched per surviving motion in a
+      -- LATERAL. This is what made it affordable to stop capping the phrase list at all.
+      (SELECT 'edm', split_part(cs.id, ':', 2), cs."sectionTitle", d.date_tabled::text, p.t, p.n,
+              p.c, p.title
+         FROM p JOIN corpus_sections cs
+           ON cs.corpus = 'early-day-motions'
+          AND cs."sectionTitle" ILIKE '%' || p.t || '%'
+         LEFT JOIN LATERAL (
+           SELECT s.date_tabled FROM edm_sponsor s
+            WHERE s.motion_id::text = split_part(cs.id, ':', 2)
+            LIMIT 1
+         ) d ON TRUE)
+    )
+    -- ⚠ THE UNION IS WRAPPED IN A CTE BECAUSE POSTGRES REFUSES an ORDER BY on a FUNCTION of a
+    -- column directly over a UNION: "Only result column names can be used, not expressions or
+    -- functions" (0A000). It is a parse-time error at the database, so tsc is clean and the first
+    -- RUN is what finds it — the same shape as the ANY(record[]) note further up this file.
+    --
+    -- ⚠⚠ AND THE FIX ITSELF BROKE THE FILE ONCE: the first version of this comment quoted the
+    -- clause in backticks, INSIDE A JS TEMPLATE LITERAL, which ended the string and produced an
+    -- esbuild parse error nowhere near the real line. No backticks in SQL comments in this file.
+    --
+    -- ⚠⚠ FOUR KEYS, AND EVERY ONE OF THEM WAS ADDED AFTER A MEASURED WRONG ANSWER.
+    --
+    --  from_title    — a phrase the proposer put in their own title beats one found in the body.
+    --                  Nothing lexical can tell a central subject from a passing mention;
+    --                  "northern ireland" really is in the text of a civil service proposal.
+    --  content_words — words that NAME something, not raw length. Ranking on raw length put
+    --                  "public and private" above "civil service" and offered PUBLIC AND PRIVATE
+    --                  HEALTHCARE PROVISION under a proposal about civil service accountability.
+    --  length        — at equal specificity the longer phrase is the narrower claim. Without it
+    --                  "publicly funded" lost a date tiebreak to "money campaign" and the surface
+    --                  offered NARPO Love or Money Campaign under a proposal about charities.
+    --  date          — last, because where two matches are equally justified the current
+    --                  Parliament is the one a proposer is writing for.
+    SELECT * FROM hits
+    ORDER BY from_title DESC, content_words DESC, length(phrase) DESC, date DESC NULLS LAST
+    LIMIT $5`, [texts, counts, content, titles, limit])
+
+  return rows.map((r) => ({
+    type: r.type as TargetType,
+    id: r.id,
+    label: r.label,
+    date: r.date,
+    matchedPhrase: r.phrase,
+    matchedWords: r.words,
+    matchedContentWords: r.content_words,
+    fromTitle: r.from_title,
+  }))
+}
