@@ -27,8 +27,9 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseTarget } from '@/lib/graph/positions'
 import {
-  claimFor, findClaimTarget, isUserVerdict, BETA_INVITATION, agreementRate,
+  claimFor, findClaimTarget, isUserVerdict, BETA_INVITATION, agreementRate, matchBasis,
 } from '@/lib/graph/claim-review'
+import { getPositionCoverage, coverageSentences } from '@/lib/graph/position-coverage'
 
 export async function GET(req: NextRequest) {
   const { error } = await getAuthenticatedUser()
@@ -39,6 +40,8 @@ export async function GET(req: NextRequest) {
 
   let targets = null as ReturnType<typeof parseTarget>[] | null
   let questionText = ''
+  // SURFACE 3 §2 — how the target was arrived at, where it was arrived at rather than given.
+  let basis: string | null = null
 
   if (explicit) {
     const t = parseTarget(explicit)
@@ -53,28 +56,39 @@ export async function GET(req: NextRequest) {
       where: { ideaId }, select: { problem: true, goalDetail: true },
     })
     const found = await findClaimTarget(`${row?.problem ?? ''} ${row?.goalDetail ?? ''}`)
-    if (found) { targets = found.targets; questionText = found.questionText }
+    if (found) {
+      targets = found.targets
+      questionText = found.questionText
+      basis = matchBasis(found.matchedPhrase, found.matchedWords)
+    }
   }
 
   if (!targets?.length) {
     // ⚠ AN HONEST NOTHING. "We could not find a division that bears on your subject" is a
     // statement about our coverage, and §5 requires gaps to be stated rather than dressed
     // as an empty list.
+    //
+    // ⚠⚠ SURFACE 3 §1 — AND THIS IS THE PATH THAT MOST NEEDED IT. An empty answer with one
+    // apologetic sentence under it is precisely the "silent gap that reads as nobody has a
+    // position". The coverage statement is attached HERE as well as to a successful claim,
+    // because a reader who sees nothing has more to be misled about, not less.
     return NextResponse.json({
       claim: null,
       invitation: BETA_INVITATION,
       note: 'We could not find a vote or motion in the record that clearly bears on this subject, '
         + 'so there is nothing here to check. That is a gap in what we hold, not a statement '
         + 'about whether anybody has taken a position.',
+      coverageNotes: coverageSentences(await getPositionCoverage()),
     })
   }
 
-  const found = await claimFor(targets.filter((t): t is NonNullable<typeof t> => !!t), null, questionText)
+  const found = await claimFor(targets.filter((t): t is NonNullable<typeof t> => !!t), null, questionText, basis)
   if (!found) {
     return NextResponse.json({
       claim: null,
       invitation: BETA_INVITATION,
       note: 'We found the vote but hold no recorded position for anybody on it.',
+      coverageNotes: coverageSentences(await getPositionCoverage()),
     })
   }
 

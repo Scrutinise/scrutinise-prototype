@@ -73,6 +73,11 @@ interface PositionsResponse {
   configVersion: string | null
   elapsedMs: number
   unparseableTargets: number
+  /**
+   * ⚠ SURFACE 3 §1 — the coverage block, generated server-side from live state on every call. Not
+   * optional in the response; typed optional only so a stale client cannot crash on an old one.
+   */
+  coverage?: string[]
   config: {
     version: string
     weights: Record<string, number>
@@ -239,6 +244,21 @@ export default function PositionGraphExplorer() {
                 actors are neutral.
               </div>
             )}
+
+            {/* ══ SURFACE 3 §1 — WHAT THIS ANSWER COULD NOT SEE ═══════════════════════════════
+                ⚠ OPEN BY DEFAULT, unlike the config block below it. A caveat behind a disclosure
+                triangle is a caveat most readers never open, and the whole point of this block is
+                that the list above cannot be read as complete without it. */}
+            {result.coverage?.length ? (
+              <details open className="mt-2 border-t border-zinc-200 pt-2">
+                <summary className="cursor-pointer font-semibold">
+                  What this answer could not see
+                </summary>
+                <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-[11px] leading-relaxed text-zinc-700">
+{result.coverage.join('\n')}
+                </pre>
+              </details>
+            ) : null}
           </div>
 
           {result.actors.map((a) => (

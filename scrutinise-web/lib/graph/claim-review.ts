@@ -29,8 +29,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { positionsFor, findTargets, parseTarget, RANK_KEY_WORDING, type PositionTarget } from './positions'
+import {
+  positionsFor, findTargetsByPhrases, parseTarget, RANK_KEY_WORDING, type PositionTarget,
+} from './positions'
 import { configVersion } from './position-config'
+import { getPositionCoverage, coverageSentences } from './position-coverage'
+import { extractPhrases, MIN_PHRASE_CHARS } from './phrases'
 
 export type UserVerdict = 'supports' | 'opposes' | 'unclear' | 'not-enough'
 
@@ -71,9 +75,29 @@ export interface ClaimQuestion {
   identityCaveat: string | null
   targetKey: string
   questionText: string
+  /**
+   * ⚠ SURFACE 3 §2 — HOW WE GOT HERE FROM THE USER'S OWN WORDS, and how good that match is.
+   * Null when the caller supplied the target explicitly (the admin path), where there is no
+   * matching step to disclose.
+   */
+  matchBasis: string | null
   grounds: ClaimGround[]
   /** ⚠ COMPUTED FROM WHAT THE GRAPH REPORTED, never a written sentence (§5). */
   coverage: string
+  /**
+   * ══ SURFACE 3 §1 — WHAT THIS ANSWER COULD NOT SEE ═══════════════════════════════════════════
+   *
+   * ⚠⚠ THE COUNT ABOVE IS TRUE AND, ON ITS OWN, MISLEADING. *"1 person has a record here"* invites
+   * the reader to conclude that nobody else took a position; what it actually reflects is that our
+   * Commons division record begins in 2016 and that two whole signal types have no source data at
+   * all. A silent gap reads as "nobody has a position", which is the exact opposite of the truth.
+   *
+   * ⚠ GENERATED FROM LIVE STATE ON EVERY CALL, never a hardcoded sentence — `position-coverage.ts`
+   * holds the queries and `check-surface-3.ts` fails the build if a figure about the graph appears
+   * in a string there. This field is the SAME object the generated document prints, so the screen
+   * and the printed report cannot drift apart.
+   */
+  coverageNotes: string[]
 }
 
 /** Our answer, released only after the user has given theirs. */
@@ -109,6 +133,8 @@ export async function claimFor(
   targets: PositionTarget[],
   actorId: string | null,
   questionText: string,
+  /** SURFACE 3 §2 — the disclosure from `matchBasis()`, where the target came from a text match. */
+  basis: string | null = null,
 ): Promise<{ question: ClaimQuestion; assessment: ClaimAssessment } | null> {
   const result = await positionsFor(targets, { limit: 25, actorKind: 'person', maxGroundsPerActor: 12 })
   const actor = actorId
@@ -129,6 +155,16 @@ export async function claimFor(
     `. ${result.actorsMatched} ${result.actorsMatched === 1 ? 'person has' : 'people have'} a record here.`,
   ].join(' ').replace(/\s+\./g, '.')
 
+  // ⚠ SURFACE 3 §1. `used` is what ACTUALLY contributed to the answer being shown, merged across
+  // the actors on screen — so "searched and found nothing" is a statement about this question and
+  // not a guess. Passing nothing here would report every signal type as unused, which is the
+  // flattering direction to be wrong in and therefore the one to rule out.
+  const used: Record<string, { n: number }> = {}
+  for (const a of result.actors) {
+    for (const [k, v] of Object.entries(a.signalCounts)) used[k] = { n: (used[k]?.n ?? 0) + v.n }
+  }
+  const coverageNotes = coverageSentences(await getPositionCoverage({ used }))
+
   return {
     question: {
       actorId: actor.actorId,
@@ -137,6 +173,7 @@ export async function claimFor(
       identityCaveat: actor.identityCaveat,
       targetKey,
       questionText,
+      matchBasis: basis,
       grounds: actor.grounds.map((g) => ({
         what: g.targetLabel ?? `${g.targetType} ${g.targetId}`,
         date: g.date,
@@ -145,6 +182,7 @@ export async function claimFor(
         direction: directionWord(g.direction),
       })),
       coverage,
+      coverageNotes,
     },
     assessment: {
       stance: actor.stanceWording,
@@ -165,13 +203,40 @@ export async function claimFor(
  * is true and sourced; offering a division that has nothing to do with the user's subject
  * would collect judgements about our search rather than about the graph, and the agreement
  * rate would then be measuring the wrong thing entirely.
+ *
+ * ══ ⚠⚠ SURFACE 3 §2 — REWRITTEN, BECAUSE IT RETURNED NULL ON EVERY IDEA IN THE DATABASE ═══════
+ *
+ * The old body passed the user's whole problem statement to `findTargets`, which runs
+ * `title ILIKE '%' || $1 || '%'`. That is a substring match of the ENTIRE 200-character
+ * statement against a division title, and it can only succeed if the statement appears verbatim
+ * inside one. **Measured before this was touched: NO TARGET on all twelve live ideas, and the
+ * title control found nothing on eight of eight.** 25-Z reported it on one idea; it was universal,
+ * and it meant the positions surface had rendered nothing for anybody since it shipped.
+ *
+ * ⚠⚠ AND THE WORD-LEVEL FIX WAS MEASURED AND REJECTED — see `phrases.ts`. It produced
+ * *Shoemakers Museum shortlisted for Permanent Exhibition* for "permanent", which is a real
+ * division a real member really voted in, presented under a proposal about the civil service.
+ * Weak matches here do not degrade the feature; they poison the measurement it exists to collect.
+ *
+ * ⚠ SO THE MATCHED PHRASE COMES BACK WITH THE TARGET AND IS SHOWN. The bar is two words of the
+ * user's own subject; that is a real bar and it is not a high one, and the honest response to a
+ * bar that is not high is to print what was matched so a reader can tell us it was wrong. 25-L
+ * already built the verdict for exactly this — "Not enough here", whose header says it is the
+ * signal that "our coverage, not the member, is the problem".
  */
 export async function findClaimTarget(
   terms: string,
-): Promise<{ targets: PositionTarget[]; questionText: string } | null> {
-  const query = terms.trim().slice(0, 200)
-  if (query.length < 3) return null
-  const found = await findTargets(query, 5)
+): Promise<{
+  targets: PositionTarget[]
+  questionText: string
+  matchedPhrase: string
+  matchedWords: number
+} | null> {
+  const text = terms.trim()
+  if (text.length < MIN_PHRASE_CHARS) return null
+  const phrases = extractPhrases(text)
+  if (!phrases.length) return null
+  const found = await findTargetsByPhrases(phrases, 5)
   if (!found.length) return null
   const top = found[0]
   const parsed = parseTarget(`${top.type}:${top.id}`)
@@ -179,7 +244,25 @@ export async function findClaimTarget(
   return {
     targets: [parsed],
     questionText: `Where does this member stand on “${top.label}”?`,
+    matchedPhrase: top.matchedPhrase,
+    matchedWords: top.matchedWords,
   }
+}
+
+/**
+ * How the target was arrived at, in ordinary words, for printing beside the question.
+ *
+ * ⚠ IT NAMES THE WEAKNESS WHERE THERE IS ONE. A two-word match is the floor, and a floor that is
+ * not disclosed is a floor a reader assumes is a ceiling. Composed from the match, never written
+ * down as a fixed sentence.
+ */
+export function matchBasis(matchedPhrase: string, matchedWords: number): string {
+  const strength = matchedWords >= 3
+    ? 'That is a close match to your subject.'
+    : 'That is a loose match — only two words of your subject — so it may not be the right question '
+      + 'at all. If it is not, “Not enough here” is the useful answer.'
+  return `We picked this by matching the phrase “${matchedPhrase}” from your own words against the `
+    + `titles of divisions and motions we hold. ${strength}`
 }
 
 /**

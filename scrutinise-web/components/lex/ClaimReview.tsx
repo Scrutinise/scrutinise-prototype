@@ -38,8 +38,10 @@ interface ClaimQuestion {
   identityCaveat: string | null
   targetKey: string
   questionText: string
+  matchBasis: string | null
   grounds: Ground[]
   coverage: string
+  coverageNotes: string[]
 }
 interface Assessment {
   stance: string
@@ -60,10 +62,41 @@ const VERDICTS: Array<{ key: string; label: string }> = [
   { key: 'not-enough', label: 'Not enough here' },
 ]
 
+/**
+ * ══ SURFACE 3 §1 — WHAT WE COULD NOT SEE, SAID IN ORDINARY WORDS ═══════════════════════════════
+ *
+ * ⚠⚠ EVERY SENTENCE ARRIVES FROM THE SERVER, GENERATED FROM LIVE STATE. There is no copy in this
+ * component — not one date, not one count — because a caveat written into a component is a caveat
+ * that is correct on the day it is typed and unfalsifiable afterwards. `position-coverage.ts` is
+ * the only place these sentences exist, and `check-surface-3.ts` fails the build if a figure about
+ * the graph appears in a string there.
+ *
+ * ⚠ IT RENDERS ON THE EMPTY PATH TOO. A gap that says nothing reads as "nobody has a position".
+ *
+ * ⚠ NO COLOUR CARRIES ANY STATE HERE (docs/CLAUDE.md §21): it is a bordered block with a heading,
+ * which survives greyscale.
+ */
+function CoverageStatement({ notes }: { notes: string[] }) {
+  if (!notes.length) return null
+  return (
+    <div className="border-t-2 border-zinc-200 pt-2 space-y-1">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+        What this does not cover
+      </p>
+      {notes.map((n, i) => (
+        <p key={i} className="text-[11px] leading-relaxed text-zinc-600">{n}</p>
+      ))}
+    </div>
+  )
+}
+
 export default function ClaimReview({ ideaId }: { ideaId: string }) {
   const [claim, setClaim] = useState<ClaimQuestion | null>(null)
   const [invitation, setInvitation] = useState('')
   const [note, setNote] = useState<string | null>(null)
+  // ⚠ SURFACE 3 §1. Held separately from `claim` because it must render on BOTH paths — the empty
+  // one especially. See the route's own note: a reader shown nothing has more to be misled about.
+  const [coverageNotes, setCoverageNotes] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [verdict, setVerdict] = useState<string | null>(null)
   const [reason, setReason] = useState('')
@@ -79,6 +112,7 @@ export default function ClaimReview({ ideaId }: { ideaId: string }) {
         setClaim(j?.claim ?? null)
         setInvitation(j?.invitation ?? '')
         setNote(j?.note ?? null)
+        setCoverageNotes(j?.coverageNotes ?? j?.claim?.coverageNotes ?? [])
       })
       .catch(() => setNote('We could not reach the record just now.'))
       .finally(() => setLoading(false))
@@ -138,7 +172,10 @@ export default function ClaimReview({ ideaId }: { ideaId: string }) {
       {invitation && <p className="text-sm leading-relaxed text-zinc-700">{invitation}</p>}
 
       {!claim ? (
-        <p className="text-xs text-zinc-600">{note}</p>
+        <>
+          <p className="text-xs text-zinc-600">{note}</p>
+          <CoverageStatement notes={coverageNotes} />
+        </>
       ) : (
         <>
           <div>
@@ -149,6 +186,15 @@ export default function ClaimReview({ ideaId }: { ideaId: string }) {
               {claim.identityStatement}
               {claim.identityCaveat ? ` — ${claim.identityCaveat}` : ''}
             </p>
+            {/* ⚠ SURFACE 3 §2 — WHY THIS QUESTION AND NOT ANOTHER. The target is matched from the
+                user's own words against division and motion titles, and a match that is not
+                disclosed is a match a reader assumes was chosen by understanding. It is composed
+                on the server from the phrase that actually matched. */}
+            {claim.matchBasis && (
+              <p className="text-[11px] text-zinc-600 mt-1 border-l-2 border-zinc-300 pl-2">
+                {claim.matchBasis}
+              </p>
+            )}
           </div>
 
           {/* ⚠ THE RECORD, UNGATED. This is what they are being asked to judge. */}
@@ -172,6 +218,7 @@ export default function ClaimReview({ ideaId }: { ideaId: string }) {
             ))}
           </ul>
           <p className="text-[11px] text-zinc-500">{claim.coverage}</p>
+          <CoverageStatement notes={coverageNotes.length ? coverageNotes : claim.coverageNotes} />
 
           {/* ══ THE USER JUDGES FIRST ═══════════════════════════════════════════ */}
           {!assessment && (

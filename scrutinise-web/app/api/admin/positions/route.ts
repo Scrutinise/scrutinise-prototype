@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { positionsFor, findTargets, parseTarget } from '@/lib/graph/positions'
 import { POSITION_CONFIG, configVersion } from '@/lib/graph/position-config'
+import { getPositionCoverage, describePositionCoverage } from '@/lib/graph/position-coverage'
 
 // GET /api/admin/positions — Admin+. GRAPH 3A §6.
 //
@@ -61,10 +62,22 @@ export async function GET(req: NextRequest) {
       asOf: q.asOf,
     })
 
+    // ══ SURFACE 3 §1 — THE COVERAGE STATEMENT, ON THE ADMIN SURFACE TOO ══════════════════════
+    //
+    // ⚠ THE SAME OBJECT THE USER SURFACE AND THE DOCUMENT USE, rendered as the full block rather
+    // than as sentences. Charlie eyeballs this page against his own political knowledge, and a
+    // ranked list of members with no statement of what the graph could not see is exactly the
+    // artefact that makes a short answer look like a complete one.
+    const used: Record<string, { n: number }> = {}
+    for (const a of result.actors) {
+      for (const [k, v] of Object.entries(a.signalCounts)) used[k] = { n: (used[k]?.n ?? 0) + v.n }
+    }
+
     return NextResponse.json({
       mode: 'positions',
       ...result,
       unparseableTargets: unparseable,
+      coverage: describePositionCoverage(await getPositionCoverage({ used })),
       // Shown on the page rather than kept in a log: an estimate whose weights nobody can see is
       // an estimate nobody can argue with, and the whole product claim is that we show our working.
       config: {
