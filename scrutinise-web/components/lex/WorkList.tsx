@@ -321,9 +321,9 @@ export default function WorkList({
             §3d gives this its exact wording. It is the sentence that says what this column is
             FOR, which is the question a user asks of a list of instructions before they follow
             any of them. */}
+        {/* ⚠ 25-Z §3 — Charlie's wording, verbatim. */}
         <p className="mt-1 text-[11px] text-zinc-600 leading-snug">
-          This panel lists the decisions and actions you need to take to build the draft strategy
-          I’ve prepared for you into your formal proposal.
+          Here are your decisions and actions:
         </p>
 
         {/* ══ 25-N §3e — THE FOUR PARTS, HIDDEN UNTIL CLICKED ═══════════════════

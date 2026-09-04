@@ -152,6 +152,28 @@ export default function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // ══════════ ⚠⚠ 25-Z §4 — THE CHAT OPENS CLEAN ═══════════════════════════════════════════
+  //
+  // Charlie, on the walkthrough: the panel greeted him with a wall of earlier conversation.
+  // §4a: on load the user sees the input box and the arrival line, not the history.
+  //
+  // ⚠ NOTHING IS DELETED OR UNREACHABLE (§4c). Every message is still in `messages` and one
+  // press of "prior chat" renders all of it — this hides, it does not filter and it does not
+  // fetch less.
+  //
+  // ⚠ THE COUNT IS FROZEN AT MOUNT, which is what makes this behave correctly afterwards.
+  // Hiding "all but the last message" would re-hide the conversation the user is having: send
+  // three messages and two of them would vanish. What is hidden is *everything that was
+  // already there when they arrived*, minus the arrival line itself, so anything said from
+  // now on simply appears.
+  const [showPrior, setShowPrior] = useState(false)
+  const arrivedWith = useRef<number | null>(null)
+  if (arrivedWith.current === null && messages.length > 0) arrivedWith.current = messages.length
+  // ⚠ `- 1` IS THE ARRIVAL LINE. The last thing Lex said is what the user came back to read;
+  // hiding it too would open the panel on nothing at all.
+  const hiddenCount = showPrior ? 0 : Math.max(0, (arrivedWith.current ?? 0) - 1)
+  const visibleMessages = hiddenCount > 0 ? messages.slice(hiddenCount) : messages
+
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
@@ -170,7 +192,9 @@ export default function ChatPanel({
   // Group consecutive messages into stage runs (untagged inherits the previous stage).
   const groups: { stage: string; items: ChatMessage[] }[] = []
   let lastStage = currentStage ?? 'ORIENTATION'
-  for (const m of messages) {
+  // ⚠ 25-Z §4a — grouped over what is VISIBLE, so a hidden run does not leave an empty
+  // stage divider behind it.
+  for (const m of visibleMessages) {
     const stage = m.stage ?? lastStage
     lastStage = stage
     const g = groups[groups.length - 1]
@@ -182,6 +206,22 @@ export default function ChatPanel({
   return (
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {/* ⚠ 25-Z §4b — THE WAY BACK. An upward control, labelled, saying how much is behind
+            it — "prior chat" alone leaves the user guessing whether it is three messages or
+            three hundred. It disappears once opened, because then there is nothing hidden. */}
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowPrior(true)}
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[11px] font-medium text-zinc-600 hover:bg-zinc-100"
+          >
+            <span aria-hidden>↑</span>
+            prior chat
+            <span className="text-zinc-400">
+              — {hiddenCount} earlier message{hiddenCount === 1 ? '' : 's'}
+            </span>
+          </button>
+        )}
         {groups.map((g, gi) => {
           // A prior-stage group collapses under a divider unless the user expands it.
           const isCurrent = g.stage === currentStage || gi === groups.length - 1
@@ -278,7 +318,7 @@ export default function ChatPanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
             }}
-            placeholder="Type your reply…"
+            placeholder="Chat to Lex"
             // ⚠ 25-R A3 — "with a large chat box". It was one row and grew on typing, so an
             // empty panel offered a single line and read as a search field rather than a place
             // to think out loud. It still grows to the same 160px ceiling.
