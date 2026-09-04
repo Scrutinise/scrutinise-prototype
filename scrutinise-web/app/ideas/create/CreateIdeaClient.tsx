@@ -933,14 +933,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   user who cannot say what a column is FOR cannot decide whether to widen it,
                   and until now all three were guessed at from their contents. */}
               <div className="flex items-baseline gap-2 shrink-0 border-b border-zinc-100 px-3 py-1">
-                {/* ══ ⚠⚠ 25-Z §5a/§5b — THE PRIMARY NAVIGATION OF THE WHOLE SCREEN ═══════════
-                    Charlie: these three "currently read as labels". They are how a user knows
-                    which column they are in, so they are typed as headings, not as captions.
-                    ⚠ SIZE AND WORDS ONLY — no colour is added (§5b: Charlie is colour blind).
-                    Remove every hue from this screen and the three headings are still the
-                    largest text in their columns, still in their fixed positions, and still
-                    say what they are. The tracking and weight carry it. */}
-                <span className="text-base font-bold uppercase tracking-wide text-zinc-900 flex-1">
+                {/* ══ ⚠⚠ 26-A §6a — BRIGHT, DISTINCT COLOUR, AND 25-Z's READING IS CORRECTED ══
+                    25-Z treated colour as merely tolerated and used near-black on all three.
+                    Charlie: he does not mind colour and would like it bright and distinct,
+                    primary ideally — as long as what it signifies is clear.
+                    ⚠⚠ AND THE RULE THAT STANDS IS NARROWER THAN "NO COLOUR" (§6b): no STATE may
+                    be carried by colour alone. A panel IDENTITY may be coloured, because it also
+                    has a large heading and a fixed position — strip the hue and the three are
+                    still the largest text in their columns, still in the same order, still named.
+                    That is the §6c test and this passes it; what failed it was the ACTIVE-section
+                    accent in the kernel, which carried a state and nothing else (25-Z §2b). */}
+                <span className="text-base font-bold uppercase tracking-wide text-blue-700 flex-1">
                   {PANEL_ROLES.left.name}
                 </span>
                 <button
@@ -1094,8 +1097,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             )}
             <div className={`h-full min-h-0 min-w-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} ${showFields ? 'lg:block' : 'lg:hidden'}`}>
               <div className="flex items-baseline gap-2 border-b border-zinc-100 px-3 py-1">
-                {/* ⚠ 25-Z §5a — primary, as the left panel's. One size for all three. */}
-                <span className="text-base font-bold uppercase tracking-wide text-zinc-900 flex-1">
+                {/* ⚠ 26-A §6a — primary, and its own colour. One size for all three; the hue
+                    distinguishes identity, never state. */}
+                <span className="text-base font-bold uppercase tracking-wide text-red-700 flex-1">
                   {lexStage === 'deepening' ? 'THE PASSES' : PANEL_ROLES.middle.name}
                 </span>
                 <button
@@ -1209,8 +1213,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   six different kinds of thing and its name cannot say so. */}
               <div className="border-b border-zinc-100 px-3 py-1">
                 <div className="flex items-baseline gap-2">
-                  {/* ⚠ 25-Z §5a — primary, as the other two. */}
-                  <span className="text-base font-bold uppercase tracking-wide text-zinc-900 flex-1">
+                  {/* ⚠ 26-A §6a — primary, and its own colour. See the left panel's note. */}
+                  <span className="text-base font-bold uppercase tracking-wide text-green-700 flex-1">
                     {PANEL_ROLES.right.name}
                   </span>
                   <button
