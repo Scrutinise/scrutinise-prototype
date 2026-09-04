@@ -204,7 +204,11 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
   // middle panel, where it sat in a box that made it look more important than the kernel.
   const challengesOnly = view === 'challenges'
   // ⚠ AN INSTANCE WITH NOTHING OF ITS OWN RENDERS NOTHING. See the `AgendaView` note.
-  const hasWork = a.challenges.length > 0 || a.reading.length > 0 || a.gaps.length > 0
+  // ⚠⚠ CHALLENGES CAME OUT OF THIS GATE, 4 SEPTEMBER, AND LEAVING THEM IN WAS A LATENT BUG.
+  // 25-Z moved the challenges into THE RESEARCH but left them counted here — so an idea with
+  // challenges and nothing else would have rendered this box with a heading, a count, and an
+  // empty body. The gate must ask about what this view actually draws.
+  const hasWork = a.reading.length > 0 || a.gaps.length > 0
     || !!a.contribution.ownKnowledge || a.contribution.wouldStrengthen.length > 0
   const hasJudgements = a.decisions.length > 0 || a.contradictions.length > 0
   const hasChallenges = a.challenges.length > 0
@@ -473,27 +477,41 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
   // ⚠ ACTIONABLE = A DECISION ONLY YOU CAN MAKE, OR A GAP ONLY YOU CAN FILL. Both are blocked
   // on the user personally. An open challenge is work; it is counted, named and reachable —
   // one line lower, inside, where its size is information rather than a barrier.
-  const decisions = a.decisions.filter((d) => !d.resolved).length
+  // ⚠⚠ THE COUNTS NOW DESCRIBE WHAT IS IN THE BOX, which they had stopped doing. §4b's rule is
+  // that the header counts what the user can act on — and after 25-Z the challenges are not in
+  // this view and the decisions never were (they are the `judgements` view, in THE RESEARCH).
+  // Counting either here would be a number about somewhere else.
   const onlyYou = a.gaps.filter((g) => g.task === 'only-you').length
-  const challenges = a.challenges.filter((c) => c.status === 'OPEN').length
-  const actionable = decisions + onlyYou
-  const total = actionable + challenges
+  const reading = a.reading.length
+  const otherGaps = a.gaps.length - onlyYou
+  const actionable = onlyYou
+  const total = reading + a.gaps.length
 
   const part = (n: number, one: string, many: string) =>
     n ? `${n} ${n === 1 ? one : many}` : ''
-  const insideLine = [part(decisions, 'decision', 'decisions'),
+  const insideLine = [part(reading, 'thing to read', 'things to read'),
     part(onlyYou, 'gap only you can fill', 'gaps only you can fill'),
-    part(challenges, 'open challenge', 'open challenges')].filter(Boolean).join(', ')
+    part(otherGaps, 'other gap', 'other gaps')].filter(Boolean).join(', ')
 
   return (
     <CollapsedSection
-      title="What to do next"
+      // ⚠⚠ CHARLIE, 4 SEPTEMBER — RENAMED, BECAUSE THE BOX MOVED AND THE OLD NAME WAS A
+      // DUPLICATE. "What to do next" is the WORKLIST at the top of the WORKING AREA, and this
+      // box now sits beneath it; two headings with the same words, one above the other, is the
+      // duplication 25-Z §2c was removing.
+      //
+      // ⚠ AND THE NEW NAME IS ACCURATE RATHER THAN TIDY. The challenges left this view in 25-Z
+      // (they render under "How hard will this be to achieve?" now), so what remains is what to
+      // read, the gaps in what we hold, and what the user knows that we do not. It is a
+      // reading-and-gaps list, and calling it a to-do list was the §4b complaint in the first
+      // place.
+      title="Reading, gaps and what only you know"
       count={actionable}
       hint={actionable === 0
-        ? challenges
-          // ⚠ NOT "nothing is waiting on you". 135 open challenges with no decision outstanding
-          // is a real and useful state, and saying "nothing" about it would be false.
-          ? `Nothing is blocked on you. ${challenges} open challenge${challenges === 1 ? '' : 's'} inside.`
+        ? total
+          // ⚠ NOT "nothing is waiting on you". Reading and gaps with no gap blocked on the user
+          // personally is a real and useful state, and saying "nothing" about it would be false.
+          ? `Nothing is blocked on you. ${total} item${total === 1 ? '' : 's'} inside.`
           : 'Nothing is waiting on you here.'
         : `${actionable} waiting on you. ${total} in all — ${insideLine}.`}
     >

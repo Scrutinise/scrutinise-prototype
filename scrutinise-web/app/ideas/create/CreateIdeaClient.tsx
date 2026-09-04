@@ -19,6 +19,7 @@ import StageBar from '@/components/lex/StageBar'
 import PanelDivider, { RowDivider } from '@/components/lex/PanelDivider'
 import NotesPanel from '@/components/lex/NotesPanel'
 import RerunBanner from '@/components/lex/RerunBanner'
+import RerunOptions from '@/components/lex/RerunOptions'
 import { usePanelLayout } from '@/components/lex/usePanelLayout'
 import { PANEL_ROLES, HIDE_PANEL_LABEL } from '@/lib/lex/panel-layout'
 import type { EditOffer } from '@/lib/lex/field-edit'
@@ -966,6 +967,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                     refreshNonce={worklistNonce}
                     onOutstanding={setWaitingCount}
                   />
+                  {/* ══ ⚠⚠ RE-HOMED HERE, 4 SEPTEMBER, RATHER THAN DROPPED ══════════════════
+                      Charlie asked for the "What to do next" box to come out of the middle
+                      panel. Three sections travelled inside it that his 25-Z §2c table never
+                      named — what to read, the gaps in what we hold, and what he knows that we
+                      do not — and nothing else in the product rendered them, so removing the
+                      call alone would have made all three unreachable.
+                      ⚠ THE WORKING AREA IS WHERE THEY BELONG on §2c's own reasoning: that table
+                      says "what to do next" already exists at the top of this panel. They sit
+                      under the worklist, collapsed, renamed to what they actually contain now
+                      that the challenges have gone to THE RESEARCH. */}
+                  <AgendaPanel ideaId={ideaId} view="work" />
                 </div>
               )}
 
@@ -1188,7 +1200,19 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                         ⚠ 25-N §3b — AND IT IS THE `work` HALF ONLY. Decisions and "Where
                         the research changed my mind" moved to THE RESEARCH, where the raw
                         material and the judgements to be made about it now live. */}
-                    <AgendaPanel ideaId={state.ideaId} view="work" />
+                    {/* ══ ⚠⚠ CHARLIE, 4 SEPTEMBER — "REMOVE THE WHAT TO DO NEXT BOX AND PUT
+                        THE REBUILD OPTIONS THERE" ══════════════════════════════════════════
+                        This is the answer to 25-Z §2d, which held the `work` view here pending
+                        a destination for the three blocks the §2c table did not name — what to
+                        read, gaps in what we hold, and what you know that we don't. They go with
+                        it. ⚠⚠ AND THEY ARE NOT DROPPED: removing this call alone would have
+                        made all three unreachable, because nothing else rendered the `work`
+                        view. They move to the WORKING AREA, under the worklist — which is where
+                        §2c said "what to do next" belonged all along — and the box is renamed
+                        there to what it now actually contains.
+                        ⚠ "What to do next" also still exists at the top of the WORKING AREA
+                        (`WorkList`), which is where §2c said it belonged all along. */}
+                    <RerunOptions ideaId={state.ideaId} />
                   </>
                 }
               />
