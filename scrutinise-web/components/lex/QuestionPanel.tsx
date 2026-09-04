@@ -40,6 +40,7 @@ import ClaimReview from './ClaimReview'
 import OutputsPanel from './OutputsPanel'
 import AgendaPanel from './AgendaPanel'
 import BetaSearchNotice, { betaNoticeSeen, markBetaNoticeSeen } from './BetaSearchNotice'
+import { positionsCaveat, tallyPositions } from '@/lib/lex/positions-caveat'
 
 /**
  * §3b — what an EMPTY item says on the contents list, in three or four words.
@@ -789,6 +790,20 @@ export default function QuestionPanel({
               renders them. */}
           {openHeading.key === 'HOW_HARD' && (
             <AgendaPanel ideaId={ideaId} view="challenges" />
+          )}
+
+          {/* ══ ⚠⚠ 26-A §3 (DECISION 70) — WHAT IS BEHIND THIS SECTION, AND WHOSE IT IS ═══════
+              The heading promises an assessment of who is for and against. On 3 September the
+              single item under it had been extracted from a document Charlie uploaded himself,
+              by no Lex pass at all — so the section handed the proposer back their own sentence
+              under a heading claiming research.
+              ⚠ Computed from the rows on every render, never written down: the note next door
+              (`NO_PRODUCER_NOTE.POSITIONS`) is the cautionary tale, a sentence that was true
+              when typed and outlived its own truth. */}
+          {openHeading.key === 'POSITIONS' && (
+            <p className="text-xs text-zinc-700 border-l-2 border-zinc-400 pl-2 py-0.5 leading-snug">
+              {positionsCaveat(tallyPositions(openHeading.entries))}
+            </p>
           )}
 
           {openHeading.key === 'POSITIONS' && (

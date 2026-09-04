@@ -328,7 +328,21 @@ export type EmptyReason =
  * heading cannot both be declared unbuildable AND carry findings, because that combination
  * would tell the user their evidence does not exist while showing it to them.
  */
-export const HEADINGS_WITH_NO_PRODUCER: HeadingKey[] = ['POSITIONS', 'COST_DURATION']
+/**
+ * ⚠⚠ 26-A §3 — `POSITIONS` HAS COME OUT OF THIS LIST, AND THE RULE ABOVE IS WHY.
+ *
+ * *"An entry here is a promise to remove it. When a producer starts writing findings under a
+ * heading, its key comes out of this list in the same commit."* Positions are now filed under
+ * it (SURFACE 3 §2 — a route and a script, `positions:file`), so the promise falls due.
+ *
+ * ⚠ The Surface-3 session found this and correctly did not touch it: the file is Lex-owned and
+ * their note said the sentence *"stays literally true (no pass does)"* while being misleading.
+ * That is the sharpest possible description of the defect — a caveat can be true word by word
+ * and still tell the reader the opposite of the truth. Its replacement is computed from the
+ * rows (`positions-caveat.ts`) rather than written down, so it cannot outlive its own truth
+ * the same way.
+ */
+export const HEADINGS_WITH_NO_PRODUCER: HeadingKey[] = ['COST_DURATION']
 
 export const NO_PRODUCER_NOTE: Record<string, string> = {
   // ══ 25-N §4 — THE COSTING HEADING EXISTS BEFORE THE COSTING PASS DOES ═══════════
@@ -345,15 +359,17 @@ export const NO_PRODUCER_NOTE: Record<string, string> = {
     + 'lines you and Lex have put on individual actions, in DRAFT STRATEGY, and each carries its '
     + 'own assumptions. Read them as a purely financial view: they leave out the human costs and '
     + 'benefits entirely, and where the kernel is still unsettled the figures rest on a draft.',
-  // ⚠ 25-L §5 — REWRITTEN, BECAUSE HALF OF IT STOPPED BEING TRUE. Lex still writes no
-  // findings under this heading — no pass reads the position graph into the evidence — but
-  // the record itself is now readable here, in beta, below this note. Leaving the old
-  // sentence would have told the user we cannot reach something they can see on the same
-  // screen, which is the never-claim rule breaking in the flattering direction.
-  POSITIONS:
-    'No pass writes findings under this heading yet — the position graph is not part of the '
-    + 'build. What is here instead, in beta, is the record itself: how members have actually '
-    + 'voted, with the source for each. Nothing was searched for on your behalf.',
+  // ⚠⚠ 26-A §3 — THE `POSITIONS` NOTE IS DELETED, NOT REWRITTEN AGAIN.
+  //
+  // It has now been wrong twice in two different ways: 25-L rewrote it when half of it stopped
+  // being true, and by 3 September the rewrite was misleading too — it said no pass writes
+  // findings here, which stayed literally true (a route and a script do) while positions were
+  // appearing under the heading.
+  //
+  // A third rewrite would be a third sentence waiting to go stale. What replaces it is
+  // `positionsCaveat`, computed from the rows on every render, which says how many items are
+  // there and how many came from the proposer's own documents. A caveat that counts cannot
+  // drift from what it describes.
 }
 
 /**

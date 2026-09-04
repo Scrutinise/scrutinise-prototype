@@ -38,6 +38,7 @@ import { betaBlocks } from './build-proposal'
 import { BETA_MARKER } from '../lex/beta-disclosure'
 import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { QUESTION_HEADINGS, liveHeading, type HeadingKey } from '@/lib/lex/question-headings'
+import { positionsCaveat, tallyPositions } from '@/lib/lex/positions-caveat'
 import {
   assertRenderableSnapshot,
   snapshotHash,
@@ -150,6 +151,13 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
     anyEvidence = true
     const def = QUESTION_HEADINGS.find((h) => h.key === (key as HeadingKey))
     blocks.push({ kind: 'heading', level: 3, runs: text(def?.heading ?? NOT_FILED) })
+    // ⚠⚠ 26-A §3b — THE POSITIONS CAVEAT TRAVELS INTO THE DOCUMENT. §3b: it renders on screen
+    // AND in every document that carries the heading. A caveat that is screen-only is a caveat
+    // absent from the artefact that leaves the building under the proposer's name — which is
+    // exactly what happened to the no-producer note for two sprints.
+    if (key === 'POSITIONS') {
+      blocks.push({ kind: 'note', text: positionsCaveat(tallyPositions(items)) })
+    }
     if (!def) {
       blocks.push({
         kind: 'note',

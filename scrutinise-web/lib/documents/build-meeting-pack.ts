@@ -35,6 +35,7 @@ import { BETA_MARKER } from '../lex/beta-disclosure'
 import type { ProposalSnapshot } from './proposal-snapshot'
 import { snapshotHash } from './proposal-snapshot'
 import { QUESTION_HEADINGS, HEADING_ORDER, liveHeading, type HeadingKey } from '../lex/question-headings'
+import { positionsCaveat, tallyPositions } from '../lex/positions-caveat'
 import type { ProposalBuildResult } from './build-proposal'
 
 function text(s: string): Run[] {
@@ -255,6 +256,10 @@ export function buildMeetingPackDocument(
       if (!rows?.length) continue
       const def = QUESTION_HEADINGS.find((h) => h.key === key)
       blocks.push({ kind: 'heading', level: 1, runs: text(def?.heading ?? key) })
+      // ⚠ 26-A §3b — the same caveat, from the same function. See `positions-caveat.ts`.
+      if (key === 'POSITIONS') {
+        blocks.push({ kind: 'note', text: positionsCaveat(tallyPositions(rows)) })
+      }
       // ⚠ TITLES AND CITATIONS ONLY. This is a pack somebody reads in a meeting, not the
       // evidence pack — printing every finding's body would be the hundred pages §5c's running
       // headers exist to help a reader survive, handed to somebody with an hour.

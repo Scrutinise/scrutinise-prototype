@@ -101,6 +101,19 @@ export function headingsWithProducers(): Set<HeadingKey> {
   // in either library, exactly like `ADVERSARIAL` above it.
   out.add('HOW_HARD')
   out.add('KEY_SOURCES')
+  // ══ ⚠⚠ 26-A §3 — `POSITIONS` HAS A PRODUCER NOW, AND IT IS NOT A PASS ═══════════════════
+  //
+  // SURFACE 3 §2 files positions under this heading through a route and a script
+  // (`filePositionsForIdea`, `npm run positions:file`), because the build pipeline is
+  // Lex-owned and that sprint was not permitted to edit it.
+  //
+  // ⚠ THE SET ABOVE IS BUILT FROM PASSES AND LIBRARY QUESTIONS ONLY, so a producer that is
+  // neither read as "no producer at all" — and `check:lex-25d` correctly went red the moment
+  // POSITIONS left `HEADINGS_WITH_NO_PRODUCER`. That red was the honest signal: the old note
+  // survived precisely because "no *pass* writes here" stayed literally true while the
+  // heading filled up. **A capability is a capability whichever code path exercises it**, and
+  // `YOUR_MATERIAL` two lines above is the same case, already settled the same way.
+  out.add('POSITIONS')
   // ⚠ 25-N §4 — `COST_DURATION` IS DELIBERATELY ABSENT FROM THIS SET, and that is the honest
   // answer rather than an omission. §4 asks for the heading to EXIST — it did not, so a user
   // asking what this would cost had nowhere to look and no statement that we could not say.

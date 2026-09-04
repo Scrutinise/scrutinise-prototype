@@ -29,6 +29,7 @@ import { markdownToBlocks } from './markdown'
 import { historyLine, GROUP_HEADINGS } from '../lex/policy-history'
 import { DRAFTED_ATTRIBUTION, readableForkKey } from '../lex/reader-language'
 import { EVIDENCE_DISCLOSURE, BETA_MARKER } from '../lex/beta-disclosure'
+import { positionsCaveat, tallyPositions } from '../lex/positions-caveat'
 // 25-M §2b — the write-up carries every section the right-hand panel holds, in the panel's
 // own order. ⚠ The heading vocabulary is IMPORTED, never restated: `question-headings.ts`
 // imports nothing and is held to §20-B's import ban precisely so the document stack can read
@@ -280,6 +281,11 @@ function panelBlocks(snapshot: ProposalSnapshot): Block[] {
     if (!rows?.length) continue
     const def = QUESTION_HEADINGS.find((h) => h.key === key)
     blocks.push({ kind: 'heading', level: 2, runs: text(def?.heading ?? key) })
+    // ⚠ 26-A §3b — the positions caveat, in the document as well as on screen. See
+    // `positions-caveat.ts`: one definition, three surfaces.
+    if (key === 'POSITIONS') {
+      blocks.push({ kind: 'note', text: positionsCaveat(tallyPositions(rows)) })
+    }
     blocks.push(...evidenceRows(rows))
   }
 
