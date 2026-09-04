@@ -34,7 +34,7 @@ import {
 } from './positions'
 import { configVersion } from './position-config'
 import { getPositionCoverage, coverageSentences } from './position-coverage'
-import { extractPhrases, MIN_PHRASE_CHARS } from './phrases'
+import { targetForIdea, whatThisTargetCanYield } from './idea-target'
 
 export type UserVerdict = 'supports' | 'opposes' | 'unclear' | 'not-enough'
 
@@ -98,6 +98,21 @@ export interface ClaimQuestion {
    * and the printed report cannot drift apart.
    */
   coverageNotes: string[]
+  /**
+   * ══ ⚠⚠ SURFACE 4 — WHY THIS PERSON AND NOT ONE OF THE OTHER 253 ═══════════════════════════
+   *
+   * `positionsFor()` has computed this since GRAPH 3B and BOTH of my SURFACE 3 assemblers threw
+   * it away. Measured on Charlie's *Human Rights Act 1998* idea: 254 actors matched, 12 tied at
+   * the top, `shownOrderIsNameOrderOnly = true`, and the note the graph produced reads
+   * *"5 of 254 actors, tied at this confidence (0.394, 1 signal) — ordered by name. This is not
+   * a ranking."*
+   *
+   * ⚠ Without it the surface presents an ALPHABETICAL SLICE as though it were the significant
+   * people. That is the exact failure `Ranking` was built to prevent — `/admin/positions` once
+   * said "showing the top 40" over a list in name order — and it is the third time this thread
+   * has had correct data computed and then dropped by the layer that assembles the output.
+   */
+  ranking: { note: string | null; ofMatched: number; shown: number; key: string }
 }
 
 /** Our answer, released only after the user has given theirs. */
@@ -167,6 +182,13 @@ export async function claimFor(
 
   return {
     question: {
+      // ⚠ SURFACE 4 — carried, not recomputed. The graph decides what its own order means.
+      ranking: {
+        note: result.ranking.note,
+        ofMatched: result.ranking.ofMatched,
+        shown: 1,
+        key: result.ranking.key,
+      },
       actorId: actor.actorId,
       actorName: actor.name,
       identityStatement: actor.identityStatement,
@@ -225,27 +247,27 @@ export async function claimFor(
  * signal that "our coverage, not the member, is the problem".
  */
 export async function findClaimTarget(
-  terms: string,
+  ideaId: string,
 ): Promise<{
   targets: PositionTarget[]
   questionText: string
   matchedPhrase: string
   matchedWords: number
+  targetType: string
 } | null> {
-  const text = terms.trim()
-  if (text.length < MIN_PHRASE_CHARS) return null
-  const phrases = extractPhrases(text)
-  if (!phrases.length) return null
-  const found = await findTargetsByPhrases(phrases, 5)
-  if (!found.length) return null
-  const top = found[0]
-  const parsed = parseTarget(`${top.type}:${top.id}`)
-  if (!parsed) return null
+  // ⚠⚠ SURFACE 4 — IT TAKES AN ideaId AND CALLS THE SHARED RESOLVER, and both of those are the
+  // fix. It used to take a text blob assembled by the caller, WITHOUT THE TITLE, while the
+  // document filer passed the title separately — and the two disagreed on 4 of 25 of Charlie's
+  // ideas, every one of them in the direction where the document shows positions and this card
+  // shows nothing. See `idea-target.ts` for the measurement.
+  const found = await targetForIdea(ideaId)
+  if (!found) return null
   return {
-    targets: [parsed],
-    questionText: `Where does this member stand on “${top.label}”?`,
-    matchedPhrase: top.matchedPhrase,
-    matchedWords: top.matchedWords,
+    targets: [found.target],
+    questionText: `Where does this member stand on “${found.label}”?`,
+    matchedPhrase: found.matchedPhrase,
+    matchedWords: found.matchedWords,
+    targetType: found.targetType,
   }
 }
 
@@ -256,13 +278,19 @@ export async function findClaimTarget(
  * not disclosed is a floor a reader assumes is a ceiling. Composed from the match, never written
  * down as a fixed sentence.
  */
-export function matchBasis(matchedPhrase: string, matchedWords: number): string {
+export function matchBasis(
+  matchedPhrase: string, matchedWords: number, targetType?: string,
+): string {
   const strength = matchedWords >= 3
     ? 'That is a close match to your subject.'
     : 'That is a loose match — only two words of your subject — so it may not be the right question '
       + 'at all. If it is not, “Not enough here” is the useful answer.'
+  // ⚠ SURFACE 4 — AND WHAT THIS KIND OF TARGET CAN POSSIBLY SHOW. One name under a motion is
+  // not a thin result; it is the most a motion can ever give us, because we hold the sponsor and
+  // not the signatories. Saying so is the difference between a limit and an apparent failure.
+  const kind = targetType ? ` ${whatThisTargetCanYield(targetType)}` : ''
   return `We picked this by matching the phrase “${matchedPhrase}” from your own words against the `
-    + `titles of divisions and motions we hold. ${strength}`
+    + `titles of divisions and motions we hold. ${strength}${kind}`
 }
 
 /**

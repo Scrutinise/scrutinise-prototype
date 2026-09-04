@@ -30,6 +30,7 @@ import {
   claimFor, findClaimTarget, isUserVerdict, BETA_INVITATION, agreementRate, matchBasis,
 } from '@/lib/graph/claim-review'
 import { getPositionCoverage, coverageSentences } from '@/lib/graph/position-coverage'
+import { explainNoTarget } from '@/lib/graph/idea-target'
 
 export async function GET(req: NextRequest) {
   const { error } = await getAuthenticatedUser()
@@ -42,6 +43,8 @@ export async function GET(req: NextRequest) {
   let questionText = ''
   // SURFACE 3 §2 — how the target was arrived at, where it was arrived at rather than given.
   let basis: string | null = null
+  // SURFACE 4 §2 — which of the three kinds of nothing this is, where there is nothing.
+  let noTargetReason: string | null = null
 
   if (explicit) {
     const t = parseTarget(explicit)
@@ -49,17 +52,16 @@ export async function GET(req: NextRequest) {
     targets = [t]
     questionText = 'Where does this member stand on this?'
   } else if (ideaId) {
-    // ⚠ THE IDEA'S OWN WORDS, and it is the user's problem statement rather than the
-    // drafted kernel: the kernel is Lex's language and searching it would find the
-    // divisions Lex already had in mind.
-    const row = await prisma.ideaElicitation.findUnique({
-      where: { ideaId }, select: { problem: true, goalDetail: true },
-    })
-    const found = await findClaimTarget(`${row?.problem ?? ''} ${row?.goalDetail ?? ''}`)
+    // ⚠⚠ SURFACE 4 — THE SHARED RESOLVER, so this card and the generated document cannot
+    // resolve the same idea to different targets. They did: on 4 of 25 of Charlie's ideas the
+    // document carried positions while this card returned nothing, because this path assembled
+    // its own text blob and left the TITLE out. `targetForIdea` reads the fields; the caller
+    // no longer decides which they are.
+    const found = await findClaimTarget(ideaId)
     if (found) {
       targets = found.targets
       questionText = found.questionText
-      basis = matchBasis(found.matchedPhrase, found.matchedWords)
+      basis = matchBasis(found.matchedPhrase, found.matchedWords, found.targetType)
     }
   }
 
@@ -72,12 +74,32 @@ export async function GET(req: NextRequest) {
     // apologetic sentence under it is precisely the "silent gap that reads as nobody has a
     // position". The coverage statement is attached HERE as well as to a successful claim,
     // because a reader who sees nothing has more to be misled about, not less.
+    // ══ ⚠⚠ SURFACE 4 §2 — WHICH KIND OF NOTHING THIS IS ═══════════════════════════════════
+    //
+    // One apologetic sentence for three different situations is the empty panel wearing a
+    // caption. Measured over the live ideas: some name something Parliament has demonstrably
+    // debated and we simply hold no division on it; some name nothing our record mentions at
+    // all; and some name nothing concrete enough to look up, which is the design working rather
+    // than failing. The three deserve three different sentences, and only one of them is about
+    // our coverage.
+    let why = 'We could not find a vote or motion in the record that clearly bears on this '
+      + 'subject, so there is nothing here to check. That is a gap in what we hold, not a '
+      + 'statement about whether anybody has taken a position.'
+    if (ideaId) {
+      const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { title: true } })
+      const el = await prisma.ideaElicitation.findUnique({
+        where: { ideaId }, select: { problem: true, goalDetail: true },
+      })
+      const ex = await explainNoTarget(
+        idea?.title ?? '', `${el?.problem ?? ''} ${el?.goalDetail ?? ''}`.trim())
+      why = ex.text
+      noTargetReason = ex.reason
+    }
     return NextResponse.json({
       claim: null,
       invitation: BETA_INVITATION,
-      note: 'We could not find a vote or motion in the record that clearly bears on this subject, '
-        + 'so there is nothing here to check. That is a gap in what we hold, not a statement '
-        + 'about whether anybody has taken a position.',
+      note: why,
+      noTargetReason,
       coverageNotes: coverageSentences(await getPositionCoverage()),
     })
   }
