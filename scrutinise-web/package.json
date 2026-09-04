@@ -148,6 +148,7 @@
     "report:position-sources": "tsx --env-file=.env --tsconfig tsconfig.json scripts/report-position-source-families.ts",
     "positions:file": "tsx --env-file=.env --tsconfig tsconfig.json scripts/file-positions.ts",
     "check:surface-3-donations": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-surface-3-donations.ts",
+    "check:surface-4": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-surface-4.ts",
     "check:surface-3": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-surface-3.ts",
     "verify:positions": "tsx --env-file=.env --tsconfig tsconfig.json scripts/verify-positions-api.ts",
     "check:20bd": "tsx scripts/check-20bd.ts",
