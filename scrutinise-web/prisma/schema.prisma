@@ -656,6 +656,7 @@ model User {
   lexFeedbackItems          FeedbackItem[]
   /// 25-L §5 — this user's blind-first judgements of graph claims.
   graphJudgements           GraphClaimJudgement[]
+  graphDonationJudgements   GraphDonationJudgement[]
   proposalVersions          ProposalVersion[]   @relation("ProposalVersionCreator")
 
   @@index([clerkId])
@@ -914,6 +915,7 @@ model Idea {
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
   graphJudgements           GraphClaimJudgement[]
+  graphDonationJudgements   GraphDonationJudgement[]
 
   @@index([creatorId])
   @@index([stage])
@@ -4316,6 +4318,71 @@ model GraphClaimJudgement {
   updatedAt            DateTime  @updatedAt
 
   @@index([actorId])
+  @@index([userId])
+  @@index([agreed])
+}
+
+/// ══ SURFACE 3 §4 — A USER'S VERDICT ON A DONATION-DERIVED ALIGNMENT ═══════════════════════
+///
+/// ⚠⚠ A VERDICT IS A SIGNAL, NOT A TRUTH, AND THIS TABLE IS WHY THAT IS STRUCTURAL RATHER THAN
+/// A PROMISE. §4: *"Store verdicts as observations with who, when, and the config version. One
+/// verdict must not overwrite an estimate."*
+///
+/// Nothing anywhere writes back from here into `position_signal` or `position_estimate`. The
+/// alignment on screen is recomputed from the Electoral Commission register on every read; a
+/// disagreement raises a flag for a human to look at and changes no number. That is the same
+/// rule `GraphClaimJudgement` follows for positions, and for the same reason: a partisan sample
+/// agrees with itself, and an agreement rate that had silently tuned the thing it measures is
+/// worthless as a measurement.
+///
+/// ⚠ HOW MANY VERDICTS SHOULD MOVE AN ESTIMATE, AND IN WHAT DIRECTION, IS DELIBERATELY NOT
+/// DECIDED HERE. It is Charlie's decision and the options are set out in
+/// `docs/SURFACE_3_REPORT.md`. Storing the observations first is what makes any of those options
+/// available later; deciding now would have picked one before there was a single row to reason
+/// about.
+///
+/// ⚠ THE ORDER IS THE MEASUREMENT, exactly as it is for positions. `userVerdict` is recorded
+/// BEFORE `ourTier` is revealed, and `revealedAt` is stamped in the same write, so a row cannot
+/// claim a blind judgement it did not collect.
+model GraphDonationJudgement {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Null when judged on the standalone review surface rather than inside an idea.
+  ideaId        String?
+  idea          Idea?     @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+
+  /// `graph_entity.id` of the donor organisation. Text, because that table is outside Prisma.
+  donorEntityId String
+  donorName     String
+  /// The parties given to, as published, joined — the FACT the user judged.
+  partiesShown  String    @db.Text
+  /// How many published donations were on screen. Two records and forty are not the same evidence.
+  factsShown    Int       @default(0)
+
+  /// sympathetic | not-sympathetic | no-direction | not-enough — their reading of the record alone.
+  userVerdict   String
+  userReason    String?   @db.Text
+  judgedAt      DateTime  @default(now())
+
+  revealedAt    DateTime?
+  /// sustained-single-party | one-off-single-party | multi-party
+  ourTier       String?
+  ourInference  String?   @db.Text
+  ourConfidence String?
+  configVersion String?
+
+  /// ⚠ THREE-WAY, NOT A BOOLEAN. right | wrong | not-sure. "Not sure" is the answer a careful
+  /// person gives to a thin record, and collapsing it into "wrong" would make the agreement rate
+  /// a measure of how decisive our users are.
+  agreed        String?
+  agreedReason  String?   @db.Text
+  answeredAt    DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([donorEntityId])
   @@index([userId])
   @@index([agreed])
 }
