@@ -51,6 +51,26 @@ export interface PanelEntry {
    * where none was recorded, and the UI says so rather than filling it in.
    */
   why: string | null
+  /**
+   * ══ ⚠⚠ 25-Z §1 — THE PASSAGE ITSELF. THE FIELD THAT WAS READ AND THROWN AWAY. ═══════════
+   *
+   * Charlie, on an iPad: entries under *Who has argued about this*, *How the courts have read
+   * it* and *What the law says now* look interesting, he taps them, and nothing happens.
+   *
+   * ⚠⚠ THE CONTENT WAS NEVER MISSING. `EvidenceItem.body` is populated on **131 of 131 rows**
+   * on the pilot idea — median 296 to 1,145 characters a heading — and this assembler was
+   * already reading it: it passes `body` into `evidenceStanding` and then drops it. The
+   * passage the user wants to read has been one field away from the screen the whole time.
+   *
+   * ⚠ THE OLD COMMENT BELOW — "`text` IS NOT SELECTED. The panel never renders a document
+   * body" — is about `IdeaUserMaterial.text`, which is a fifty-page document and stays off the
+   * wire. This is `EvidenceItem.body`, which is the extracted passage a finding was drawn
+   * from: a few hundred characters, already fetched, and the whole point of the card.
+   *
+   * ⚠ It is the platform's central promise — every finding traces to its source — so this is
+   * not a nice-to-have: without it the promise is unkept on every entry that has no URL.
+   */
+  body: string | null
   /** TRUE when this is the user's own document or link (§25.6), not corpus material. */
   yourSource: boolean
   /** Deterministically assembled by us, rather than a model's reading. */
@@ -220,6 +240,8 @@ export async function buildQuestionPanel(
       exclusionReason: exclusionKey ? excluded.get(exclusionKey) ?? null : null,
       // §A1 — the SAME rule as the exclusion above, from the same function.
       priority: !!decisionKey(e, priority),
+      // ⚠ 25-Z §1 — the passage, at last. See `PanelEntry.body`.
+      body: e.body,
       // ⚠ 25-P §2d — computed by the one function, never restated here. See PanelEntry above.
       sourceDate: e.sourceDate ? e.sourceDate.toISOString().slice(0, 10) : null,
       ...(({ staleness, standing, label }) => ({ staleness, standing, standingLabel: label }))(
@@ -269,6 +291,11 @@ export async function buildQuestionPanel(
       bearsOnFocus: false,
       excluded: false,
       exclusionReason: null,
+      // ⚠ 25-Z §1 — NULL, AND DELIBERATELY. A "Your material" row is the DOCUMENT, not a
+      // passage: its text is fifty pages and stays off the wire (see the note on the query).
+      // What it produced is in its findings, filed under the questions they answer, each of
+      // which carries its own passage.
+      body: null,
       // A finding written by a pass is not a retrieved source and has no decision row of
       // its own; it can be set aside like anything else, but it is never a "priority
       // source" in the document sense, which is about a SOURCE the proposer chose.

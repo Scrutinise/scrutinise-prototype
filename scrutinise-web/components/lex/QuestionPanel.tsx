@@ -39,6 +39,7 @@ import YourMaterial from './YourMaterial'
 import ClaimReview from './ClaimReview'
 import OutputsPanel from './OutputsPanel'
 import AgendaPanel from './AgendaPanel'
+import BetaSearchNotice, { betaNoticeSeen, markBetaNoticeSeen } from './BetaSearchNotice'
 
 /**
  * §3b — what an EMPTY item says on the contents list, in three or four words.
@@ -80,7 +81,8 @@ const GAP_STYLE: Record<string, string> = {
 const SPECIAL_TITLES: Record<string, string> = {
   __outputs: 'Outputs',
   __decisions: 'Decisions',
-  __changed_mind: 'Where the research changed my mind',
+  // ⚠ 25-Z §3 — renamed. See AgendaPanel's heading; both read from a decision, not a copy.
+  __changed_mind: 'Notable Research',
   __inputs_retrieved: 'Everything we retrieved, by document type',
   __inputs_background: 'The basic idea — initial background',
   __unfiled: 'Not filed under a question',
@@ -123,7 +125,7 @@ function HeadingRow({
 }
 
 function EntryCard({
-  e, onExclude, onInclude, onPrioritise, onMove, sections, currentHeading, busy,
+  e, onExclude, onInclude, onPrioritise, onMove, sections, currentHeading, busy, onOpenedSearchItem,
 }: {
   e: PanelEntry
   onExclude: (entry: PanelEntry, reason: string) => void
@@ -143,11 +145,16 @@ function EntryCard({
   sections: Array<{ key: string; heading: string }>
   /** The heading this card is currently filed under, so the menu can leave it out. */
   currentHeading: string | null
+  /** ⚠ 25-Z §5c — fired the first time a search-derived entry is opened. See BetaSearchNotice. */
+  onOpenedSearchItem?: () => void
   busy: boolean
 }) {
   const [asking, setAsking] = useState(false)
   const [reason, setReason] = useState('')
   const [moving, setMoving] = useState(false)
+  // ⚠ 25-Z §1 — open the passage. Closed by default: a heading with fifty entries must stay
+  // scannable, and the whole complaint is that there was no way to open one at all.
+  const [open, setOpen] = useState(false)
 
   return (
     <div className={`rounded-lg border p-2.5 ${
@@ -156,14 +163,39 @@ function EntryCard({
     }`}>
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          {e.url ? (
-            <a href={e.url} target="_blank" rel="noopener noreferrer"
-              className={`text-sm font-medium hover:underline ${e.excluded ? 'text-zinc-400 line-through' : 'text-zinc-800'}`}>
-              {e.title}
-            </a>
-          ) : (
-            <div className={`text-sm font-medium ${e.excluded ? 'text-zinc-400 line-through' : 'text-zinc-800'}`}>{e.title}</div>
-          )}
+          {/* ══ ⚠⚠ 25-Z §1 — THE TITLE OPENS THE PASSAGE. IT USED TO OPEN NOTHING. ══════════
+              Charlie tapped entries under three headings and nothing happened. Two reasons,
+              both here:
+                · the title was an <a> ONLY when the row had a URL, and a plain <div>
+                  otherwise — 10 of 21 rows under "Who has argued about this" have no URL, and
+                  17 of 17 under "How hard will this be to achieve". Those were inert on any
+                  device, which is why this is not an iPad problem;
+                · and even where the link worked it left the platform, which is not what
+                  "I want to read the debate" asks for.
+              ⚠ THE TAP TARGET IS NOW THE WHOLE TITLE ROW, not a few words of text — a
+              full-width button, which is what a thumb needs. The link to the original moves
+              into the opened passage, where it reads as "and here is the original" rather
+              than competing with it. */}
+          <button
+            type="button"
+            onClick={() => {
+              // ⚠ 25-Z §5c — the disclosure fires on the FIRST open of a SEARCH-DERIVED item,
+              // which is this moment. Not on the user's own document: `yourSource` rows are
+              // theirs, and telling somebody their own file may be off-topic is not what the
+              // sentence is for. Reported upward; the panel decides whether it has been shown.
+              if (!open && !e.yourSource) onOpenedSearchItem?.()
+              setOpen((v) => !v)
+            }}
+            aria-expanded={open}
+            className={`w-full text-left text-sm font-medium ${
+              e.excluded ? 'text-zinc-400 line-through' : 'text-zinc-800 hover:text-zinc-950'
+            }`}
+          >
+            {/* ⚠ A CHARACTER, NOT A COLOUR (docs/CLAUDE.md §21 — Charlie is colour blind).
+                Two different glyphs, and the state also changes the block below. */}
+            <span aria-hidden className="text-zinc-400 mr-1">{open ? '▾' : '▸'}</span>
+            {e.title}
+          </button>
           <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
             <span className="text-[10px] uppercase tracking-wide text-zinc-400">{e.label}</span>
             {/* §4 — visibly marked as the user's own source, never as something we found. */}
@@ -280,6 +312,40 @@ function EntryCard({
         {e.standingLabel}
       </p>
 
+      {/* ══ ⚠⚠ 25-Z §1c — THE PASSAGE, ITS SOURCE, ITS DATE AND A ROUTE TO THE ORIGINAL ═══
+          The platform's promise is that every finding traces to its source. Until now the
+          card showed a title, a badge and one sentence of why — and the passage the finding
+          was drawn from, which is already in the row, never left the server. */}
+      {open && (
+        <div className="mt-2 rounded-lg border border-zinc-200 bg-zinc-50/70 p-2.5">
+          {e.body?.trim() ? (
+            <p className="text-xs text-zinc-800 whitespace-pre-wrap leading-relaxed">{e.body.trim()}</p>
+          ) : (
+            // ⚠ AN HONEST NOTHING. A row with no stored passage says so, rather than opening
+            // to an empty box the user reads as a failure of the control they just pressed.
+            <p className="text-xs text-zinc-500 italic">
+              No passage was stored for this one — only the reference above.
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500">
+            {e.citation && <span className="font-medium text-zinc-700">{e.citation}</span>}
+            {/* ⚠ The date is the one the evidence layer stored, with its own basis already
+                reflected in the standing line above; an undated row shows nothing here rather
+                than today's date. */}
+            {e.sourceDate && <span>{e.sourceDate}</span>}
+            {e.url ? (
+              <a href={e.url} target="_blank" rel="noopener noreferrer"
+                className="font-medium text-zinc-700 underline hover:text-zinc-950">
+                Open the original ↗
+              </a>
+            ) : (
+              // ⚠ SAYS WHY THERE IS NO LINK. "No link" on its own reads as a broken card.
+              <span className="italic">No link was recorded for this source.</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {e.excluded && (
         <p className="text-xs mt-1.5 text-zinc-500">
           <span className="font-medium">Set aside:</span>{' '}
@@ -392,6 +458,8 @@ export default function QuestionPanel({
    * list that shows what is in each.
    */
   const [openKey, setOpenKey] = useState<string | null>(null)
+  /** ⚠ 25-Z §5c — the one-time evidence-base disclosure. See `BetaSearchNotice`. */
+  const [showBetaNotice, setShowBetaNotice] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -474,6 +542,11 @@ export default function QuestionPanel({
 
   const cardProps = {
     busy,
+    // ⚠ 25-Z §5c — one handler, shared by every card, so the notice cannot fire from one list
+    // and not another. `showBetaNotice` decides; the card only reports the event.
+    onOpenedSearchItem: () => {
+      if (!betaNoticeSeen()) setShowBetaNotice(true)
+    },
     onExclude: (entry: PanelEntry, reason: string) => void decide(entry, 'EXCLUDED', reason),
     onInclude: (entry: PanelEntry) => void decide(entry, 'INCLUDED'),
     // 25-L §3d — demoting goes back to INCLUDED, never to "no decision". The user HAS
@@ -485,6 +558,13 @@ export default function QuestionPanel({
 
   return (
     <div className="space-y-3">
+      {/* ══ ⚠⚠ 25-Z §5c — SHOWN ONCE, WHEN IT IS RELEVANT ══════════════════════════════════
+          The disclosure left THE RESEARCH's header, where it rendered on every paint and had
+          become furniture. It appears the first time this user opens a search-derived entry —
+          the moment the sentence is actually about — and never again on this browser. */}
+      {showBetaNotice && (
+        <BetaSearchNotice onClose={() => { markBetaNoticeSeen(); setShowBetaNotice(false) }} />
+      )}
       {/* ══ 25-L §3a — THE HEADER, AND THE WAY HOME ══════════════════════
           ⚠ THE HOME CONTROL IS A BUTTON WITH A WORD ON IT, not a bare ‹ chevron. A user who
           has gone two items deep into a library needs to know what pressing it returns them
@@ -570,7 +650,7 @@ export default function QuestionPanel({
                 onClick={() => setOpenKey('__changed_mind')}
                 className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
               >
-                <span className="text-sm flex-1 text-zinc-800">Where the research changed my mind</span>
+                <span className="text-sm flex-1 text-zinc-800">Notable Research</span>
                 <span aria-hidden className="text-zinc-300 text-xs">›</span>
               </button>
             </li>
@@ -701,6 +781,16 @@ export default function QuestionPanel({
               producer at all — "we hold the voting record and Lex cannot read it". It can
               now, and the first thing it does with it is ask the user whether it is right
               before telling them what it thinks. */}
+          {/* ══ ⚠⚠ 25-Z §2c — THE CHALLENGES, UNDER THE QUESTION THEY ANSWER ═══════════════
+              They were in the middle panel, in a box, below the kernel — which Charlie says
+              made them look more important than the kernel itself. "How hard will this be to
+              achieve?" is the question a challenge is an answer to, so this is where they go.
+              ⚠ Nothing is deleted and nothing is duplicated: the `work` view no longer
+              renders them. */}
+          {openHeading.key === 'HOW_HARD' && (
+            <AgendaPanel ideaId={ideaId} view="challenges" />
+          )}
+
           {openHeading.key === 'POSITIONS' && (
             <ClaimReview ideaId={ideaId} />
           )}
