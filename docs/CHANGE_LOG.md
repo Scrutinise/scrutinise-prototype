@@ -300,6 +300,61 @@ indexes); `agreed` is three-way because "not sure" is a real answer. **Nothing w
 
 ---
 
+## LEX — THE RE-RUN CONTROLS ON THE MAIN IDEA PAGE (2026-09-04 04:05 UTC)
+
+Charlie: *"I've lost the rebuild button on the main idea page. Remove the 'What to do next' box
+from the middle panel and replace it with the rebuild options we had there before."*
+
+⚠⚠ **IT WAS NEVER ON THAT PAGE, AND SAYING SO IS BETTER THAN QUIETLY "RESTORING" IT.**
+`git log -S "Re-run this idea" -- app/ideas/create/CreateIdeaClient.tsx` returns nothing: the
+re-run block has only ever lived on `/ideas/build`. What the main idea page has is `RerunBanner`,
+which reports a run **already in progress** and disappears when it finishes — so on a settled
+idea there is nothing to press, which is exactly the experience of having lost a button. It is a
+**new** control there.
+
+▶ `components/lex/RerunOptions.tsx` — fetches its own build state (as `ReportAdditions` and
+`AgendaPanel` beside it do; the create page does not read the build endpoint at all) and opens
+**the same `RerunDialogue` the build page opens**, not a second copy of the choice. 25-L §1's
+rule holds wherever it is opened: one button, and the mode lives inside the dialogue.
+⚠ It renders nothing before a first build — there is no re-run of a run that has not happened.
+⚠ `RerunReuse` is imported from the dialogue rather than restated; a local look-alike compiled
+happily until it met `fromVersion`, which is how a second definition announces itself.
+
+▶▶ ⚠⚠ **AND REMOVING THE BOX WOULD HAVE SILENTLY DROPPED THREE SECTIONS.** This is 25-Z §2d's
+open question answered: *what to read*, *gaps in what we hold* and *what you know that we don't*
+travelled inside the "What to do next" box, and **nothing else in the product rendered the `work`
+view** — removing the call alone would have made all three unreachable. They move to the WORKING
+AREA under the worklist, which is where §2c's own table said "what to do next" belonged, and the
+box is renamed **"Reading, gaps and what only you know"** because "What to do next" directly
+beneath the worklist would be the duplication §2c was removing.
+
+▶ ⚠ **A LATENT BUG FOUND ON THE WAY, from 25-Z's own change.** `hasWork` still counted the
+challenges after they had moved to THE RESEARCH, and the header still counted challenges and
+decisions that are not in this view. An idea with challenges and nothing else would have rendered
+this box with a heading, a count and an **empty body**. The gate and the counts now describe what
+the view actually draws.
+
+### ⚠⚠ And a correction to `check:lex-26a`, found by re-running it
+
+A **SURFACE-4** sprint landed between the 26-A push and this change, and the check went red on
+*"the pilot idea resolves to a target at all — still nothing"*. **It was the check that was
+wrong.** SURFACE 4 changed `findClaimTarget(terms: string)` to `findClaimTarget(ideaId: string)`
+so the title is passed separately — the card and the document had been resolving the same idea to
+different targets — and **both signatures are `string`, so the check went on compiling cleanly
+while handing a 4,444-character paragraph to a lookup by id.** ⚠ **A green typecheck is not a
+green call.**
+
+▶ **And their fix materially improved 26-A's finding:** the pilot idea resolved to a
+machinery-safety regulation matched on *"northern ireland"*; it now resolves to **"Civil Service
+pensions"** on *"civil service"* — topically defensible. ⚠ The two-word floor is unchanged, so
+**the finding stands**, and it stays a finding rather than an assertion because moving the floor
+reverses a documented decision of theirs.
+
+`check:lex-26a` **23/0, 1 finding, 4 controls, 0 dead**; `check:lex-25z` **50/0**; tsc,
+check:scripts and check:client-boundary green.
+
+---
+
 ## LEX 26-A — POSITIONS THAT MEAN SOMETHING, AND A CAVEAT THAT COUNTS (2026-09-04 01:45 UTC)
 
 ⚠⚠ **FIRST, AND IT CHANGES THE SHAPE OF THE SPRINT: A SURFACE-3 SESSION BUILT MOST OF §1, §2 AND

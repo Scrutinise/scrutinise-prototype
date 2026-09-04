@@ -71,10 +71,13 @@ async function main() {
 
   // ══ §1 — THE MAPPING (SURFACE-3'S; VERIFIED HERE, ON A REAL IDEA) ═════════════════════
   console.log('§1 — the idea finds something (verifying SURFACE 3 §2)')
-  const elicit = await prisma.ideaElicitation.findUnique({
-    where: { ideaId: PILOT }, select: { problem: true, goalDetail: true },
-  })
-  const target = await findClaimTarget(`${elicit?.problem ?? ''} ${elicit?.goalDetail ?? ''}`)
+  // ⚠⚠ IT TAKES AN ideaId, NOT A TEXT BLOB — AND THE TYPE SYSTEM CANNOT SEE THE DIFFERENCE.
+  // SURFACE 4 changed `findClaimTarget(terms: string)` to `findClaimTarget(ideaId: string)` so
+  // the title is passed separately: the card and the document had been resolving the same idea
+  // to different targets. Both signatures are `string`, so this check went on compiling cleanly
+  // while handing a 4,444-character paragraph to a lookup by id, and reported the resulting
+  // null as a product regression. ⚠ A GREEN TYPECHECK IS NOT A GREEN CALL.
+  const target = await findClaimTarget(PILOT)
   ok('§1 — the pilot idea now resolves to a target at all (it returned NO TARGET on 3 Sept)',
     !!target, target ? `${target.targets[0].type}:${target.targets[0].id}` : 'still nothing')
   if (target) {
@@ -84,20 +87,27 @@ async function main() {
       `"${target.matchedPhrase}" · ${target.matchedWords} words`)
 
     // ⚠⚠ THE FINDING, NOT AN ASSERTION. §7 asks that no target be resolved on similarity. A
-    // two-word ILIKE phrase match IS a similarity resolution; SURFACE 3 chose to DISCLOSE the
-    // floor rather than refuse below it, and documented that choice. On this idea the choice
-    // produces a machinery-safety regulation under a civil-service-accountability proposal.
-    // Recorded as a finding because reversing another sprint's documented decision is
-    // Charlie's call, not this check's.
+    // two-word phrase match IS a similarity resolution; SURFACE 3 chose to DISCLOSE the floor
+    // rather than refuse below it, and documented that choice.
+    //
+    // ⚠ SURFACE 4 THEN IMPROVED THE RESULT WITHOUT MOVING THE FLOOR. When this check was first
+    // written the pilot idea resolved to a machinery-safety regulation matched on "northern
+    // ireland"; passing the title separately made it "Civil Service pensions" on "civil
+    // service" — topically defensible. The floor is unchanged, so the finding stands, and it is
+    // recorded rather than asserted because moving it reverses another sprint's documented
+    // decision, which is Charlie's call and not this check's.
     if (target.matchedWords < 3) {
-      finding('§1d — the pilot idea\'s target rests on a two-word phrase match',
-        `"${target.matchedPhrase}" → ${target.questionText.slice(0, 90)}… — disclosed, but this `
-        + 'is a similarity resolution and §7 asks for none. Raising the floor to three content '
-        + 'words is one line in findClaimTarget; it reverses a documented SURFACE-3 decision.')
+      finding('§1d — the pilot idea target still rests on a two-word phrase match',
+        `"${target.matchedPhrase}" -> ${target.questionText.slice(0, 80)}... - SURFACE 4 improved `
+        + 'this materially by passing the title separately (it resolved to a machinery-safety '
+        + 'regulation matched on "northern ireland" before), and the match is now topically '
+        + 'defensible. But two words is still a similarity resolution and section 7 asks for none.')
     }
   }
-  const controlTarget = await findClaimTarget('xyzzy plugh frobnicate')
-  control('a nonsense subject would still find a target', () => controlTarget !== null)
+  // ⚠ An id that resolves to no idea at all: the resolver must answer nothing rather than
+  // falling back to something.
+  const controlTarget = await findClaimTarget('00000000-0000-0000-0000-000000000000')
+  control('an idea that does not exist would still find a target', () => controlTarget !== null)
 
   // ══ §2 — THE COVERAGE WINDOW, READ FROM THE DATA ═════════════════════════════════════
   console.log('\n§2 — the coverage window')
