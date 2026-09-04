@@ -42,6 +42,7 @@ interface ClaimQuestion {
   grounds: Ground[]
   coverage: string
   coverageNotes: string[]
+  ranking: { note: string | null; ofMatched: number; shown: number; key: string }
 }
 interface Assessment {
   stance: string
@@ -218,6 +219,21 @@ export default function ClaimReview({ ideaId }: { ideaId: string }) {
             ))}
           </ul>
           <p className="text-[11px] text-zinc-500">{claim.coverage}</p>
+
+          {/* ══ ⚠⚠ SURFACE 4 — WHY THIS PERSON, AND NOT ONE OF THE OTHERS ═══════════════════
+              The graph computes this and SURFACE 3 dropped it. One name out of 254, chosen by
+              an order that cannot separate them, presented without saying so, reads as "this is
+              the person who matters". It is not; it is the first name alphabetically among a
+              dozen tied at the same score. */}
+          {claim.ranking?.ofMatched > 1 && (
+            <p className="text-[11px] leading-relaxed text-zinc-600 border-l-2 border-zinc-300 pl-2">
+              We are showing <strong>one of {claim.ranking.ofMatched.toLocaleString()}</strong> people
+              with a record on this.{' '}
+              {claim.ranking.note
+                ? claim.ranking.note
+                : `Ordered by ${claim.ranking.key}.`}
+            </p>
+          )}
           <CoverageStatement notes={coverageNotes.length ? coverageNotes : claim.coverageNotes} />
 
           {/* ══ THE USER JUDGES FIRST ═══════════════════════════════════════════ */}

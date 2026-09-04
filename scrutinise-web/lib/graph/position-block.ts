@@ -79,6 +79,8 @@ export const POSITIONS_SOURCE_TYPE = 'POSITION_GRAPH'
 export interface RecordedAct {
   what: string
   date: string
+  /** ⚠ SURFACE 4 §3 — the party they sat for WHEN THEY DID THIS. Null where the act carries none. */
+  partyAtTheTime: string | null
   /** 'for' | 'against' | 'took part' — how they acted, in words a non-specialist reads. */
   direction: 'for' | 'against' | 'took part'
   signalType: string
@@ -101,6 +103,15 @@ export interface PositionForDocument {
   claim: string
   claimCaveat: string | null
   confidenceWording: string
+  /**
+   * ⚠ SURFACE 4 §3 — THE NUMBER AS WELL AS THE WORDS. The brief asks for both, and the reason is
+   * not bookkeeping: the words come from a three-band vocabulary, so two readings that differ by
+   * a factor of two can print the same adjective. The number is what makes a printed report
+   * checkable against a re-run.
+   */
+  confidence: number
+  /** Parliament's member id where we hold one — the identifier §3 asks the document to carry. */
+  parlMemberId: number | null
   /** ⚠ NON-EMPTY BY CONSTRUCTION. */
   grounds: [RecordedAct, ...RecordedAct[]]
   /** What the graph was asked about, and how we got there from the proposer's own words. */
@@ -132,6 +143,7 @@ export function positionForDocument(
   const acts: RecordedAct[] = actor.grounds.map((g) => ({
     what: g.targetLabel ?? `${g.targetType} ${g.targetId}`,
     date: g.date,
+    partyAtTheTime: g.partyAtTheTime,
     direction: directionWord(g.direction),
     signalType: g.signalType,
     sourceUrl: g.sourceUrl,
@@ -145,6 +157,8 @@ export function positionForDocument(
     claim: actor.claim,
     claimCaveat: actor.claimCaveat,
     confidenceWording: actor.confidenceWording,
+    confidence: actor.confidence,
+    parlMemberId: actor.parlMemberId,
     grounds: [acts[0], ...acts.slice(1)],
     targetLabel: ctx.targetLabel,
     targetKey: ctx.targetKey,
@@ -166,33 +180,66 @@ export function positionForDocument(
  * ⚠ AND IT IS LABELLED AS OUR READING, IN WORDS, EVERY TIME. 25-Z §C: *"LIKELY — printed as Lex's
  * reasoning, never as the actor's position."*
  */
-export function renderPositionBody(p: PositionForDocument): string {
+export function renderPositionBody(p: PositionForDocument, ranking?: RankingNote | null): string {
   const lines: string[] = []
 
-  lines.push(`**What the record shows.** ${p.actorName} — ${p.identityStatement}`
+  // ⚠ SURFACE 4 §3 — the actor, with the identifier that makes them checkable. A name alone is
+  // not an identity: two members have shared a name, and a report a reader cannot verify against
+  // Parliament's own record is a report they have to take on trust.
+  const who = [
+    p.actorName,
+    p.parlMemberId !== null ? `Parliament member id ${p.parlMemberId}` : null,
+  ].filter(Boolean).join(', ')
+  lines.push(`What the record shows. ${who} — ${p.identityStatement}`
     + `${p.identityCaveat ? ` (${p.identityCaveat})` : ''}.`)
   lines.push('')
   for (const g of p.grounds) {
-    lines.push(`- ${g.date} — ${g.direction} “${g.what}” (${g.signalType})`
-      + `${g.sourceUrl ? ` · ${g.sourceUrl}` : ' · no link held for this record'}`)
+    // ⚠ EACH ACT ON ITS OWN LINE WITH ITS OWN LINK, SPELLED OUT IN FULL. The question panel
+    // renders this field with `whitespace-pre-wrap` and NOT as markdown, so a bullet written as
+    // "- " shows a literal hyphen and a markdown link shows its brackets. Plain lines and bare
+    // URLs are what that renderer can actually present, and a bare URL is at least selectable.
+    // ⚠ THE PARTY IS THE ONE ON THE VOTE RECORD, so it is printed beside the act and never
+    // beside the name: it was true of that act on that day and may not be true today.
+    lines.push(`${g.date} — ${g.direction} “${g.what}” (${g.signalType}`
+      + `${g.partyAtTheTime ? `, sitting as ${g.partyAtTheTime}` : ''})`)
+    lines.push(g.sourceUrl ? `    ${g.sourceUrl}` : '    No link is held for this record.')
   }
   lines.push('')
   // ⚠ THE WORD "OUR READING" IS NOT DECORATION. Without it the sentence below is a statement
   // about a member's beliefs rather than a statement about what we computed from the acts above.
-  lines.push(`**Our reading of those acts**, which is an estimate and not a finding: `
-    + `${p.claim}.${p.claimCaveat ? ` ${p.claimCaveat}.` : ''} Confidence: ${p.confidenceWording}.`)
+  lines.push(`Our reading of those acts, which is an estimate and not a finding: `
+    + `${p.claim}.${p.claimCaveat ? ` ${p.claimCaveat}.` : ''} `
+    + `Confidence: ${p.confidenceWording} (${p.confidence.toFixed(2)} on a scale of 0 to 1).`)
   lines.push('')
-  lines.push(`**How this question was chosen.** We matched the phrase “${p.matchedPhrase}” `
+  lines.push(`How this question was chosen. We matched the phrase “${p.matchedPhrase}” `
     + `(${p.matchedWords} word${p.matchedWords === 1 ? '' : 's'}) from the proposal's own text `
     + `against the titles of divisions and motions we hold, and asked the graph about `
     + `“${p.targetLabel}”.`)
+  // ══ ⚠⚠ SURFACE 4 — AND WHY THIS PERSON RATHER THAN ANOTHER ═══════════════════════════════
+  // Five names out of 254, in name order, printed without saying so, read as the five who
+  // matter. `positionsFor()` computes the sentence that makes that honest and SURFACE 3's filer
+  // discarded it.
+  if (ranking && ranking.ofMatched > ranking.shown) {
+    lines.push('')
+    lines.push(`Who else is here. ${ranking.note
+      ?? `${ranking.shown} of ${ranking.ofMatched.toLocaleString()} people with a record on this, `
+        + `ordered by ${ranking.key}.`}`)
+  }
   lines.push('')
   // ⚠⚠ THE FREEZE, IN THE PROSE. See the file header: the stored snapshot protects the published
   // document, and this sentence protects any paragraph anybody copies out of it.
-  lines.push(`*Computed on ${p.asOf} under method ${p.configVersion}. The graph changes; this `
-    + `paragraph does not. Re-read it against the live record before relying on it.*`)
+  lines.push(`Computed on ${p.asOf} under method ${p.configVersion}. The graph changes; this `
+    + `paragraph does not. Re-read it against the live record before relying on it.`)
 
   return lines.join('\n')
+}
+
+/** The order, in the graph's own words. ⚠ Never restated by a caller — see `Ranking`. */
+export interface RankingNote {
+  note: string | null
+  ofMatched: number
+  shown: number
+  key: string
 }
 
 /**
@@ -291,6 +338,12 @@ export interface FiledPositions {
   replaced: number
   /** ⚠ Stated on every run, whether or not anything was filed. */
   coverage: PositionCoverage
+  /**
+   * ⚠⚠ SURFACE 4 — WHY THESE NAMES AND NOT THE OTHER 249. `positionsFor()` has computed this
+   * since GRAPH 3B and SURFACE 3's filer threw it away, so the document printed an ALPHABETICAL
+   * SLICE of a 254-actor division as though those five were the significant people.
+   */
+  ranking: { note: string | null; ofMatched: number; shown: number; key: string } | null
   /** ⚠ Why nothing was filed, where nothing was. Never an empty result with no reason. */
   reason: string | null
 }
@@ -341,6 +394,7 @@ export async function filePositionsForIdea(
       written: 0,
       replaced: 0,
       coverage,
+      ranking: null,
       reason: 'No phrase of two or more words from the proposal matched the title of any division '
         + 'or motion we hold, so there was nothing to ask the graph about. That is a limit of our '
         + 'matching and of our record, not a statement about whether anybody has taken a position.',
@@ -351,7 +405,7 @@ export async function filePositionsForIdea(
   const target = parseTarget(`${m.type}:${m.id}`)
   if (!target) {
     return {
-      ideaId, target: null, positions: [], written: 0, replaced: 0, coverage,
+      ideaId, target: null, positions: [], written: 0, replaced: 0, coverage, ranking: null,
       reason: `The matched target (${m.type}:${m.id}) could not be parsed.`,
     }
   }
@@ -360,6 +414,16 @@ export async function filePositionsForIdea(
   const result = await positionsFor([target as PositionTarget], {
     limit, actorKind: 'person', maxGroundsPerActor: 12, asOf,
   })
+
+  // ⚠⚠ SURFACE 4 — CARRIED, NOT RECOMPUTED. The graph decides what its own order means, and
+  // `Ranking` exists precisely because "showing the top 5" over a list in name order is a claim
+  // the data does not support.
+  const ranking = {
+    note: result.ranking.note,
+    ofMatched: result.ranking.ofMatched,
+    shown: Math.min(limit, result.actors.length),
+    key: result.ranking.key,
+  }
 
   const ctx = {
     targetLabel: m.label,
@@ -385,7 +449,7 @@ export async function filePositionsForIdea(
   if (!positions.length) {
     return {
       ideaId, target: ctx, positions: [], written: 0, replaced: 0, coverage: scopedCoverage,
-      reason: `We found “${m.label}” by matching “${m.matchedPhrase}”, but hold no recorded `
+      ranking, reason: `We found “${m.label}” by matching “${m.matchedPhrase}”, but hold no recorded `
         + `position for anybody on it.`,
     }
   }
@@ -393,7 +457,7 @@ export async function filePositionsForIdea(
   if (opts.dryRun) {
     return {
       ideaId, target: ctx, positions, written: 0, replaced: 0, coverage: scopedCoverage,
-      reason: 'Dry run — nothing was written.',
+      ranking, reason: 'Dry run — nothing was written.',
     }
   }
 
@@ -415,7 +479,7 @@ export async function filePositionsForIdea(
           // ⚠ THE TITLE NAMES THE PERSON AND THE THING, never the stance. A heading that reads
           // "Lord X opposes this" is the sentence 25-Z §C forbids, arrived at through a title.
           title: `${p.actorName} — recorded acts bearing on “${p.targetLabel}”`,
-          body: renderPositionBody(p),
+          body: renderPositionBody(p, ranking),
           sourceType: POSITIONS_SOURCE_TYPE,
           citation: `Position graph, method ${p.configVersion}, computed ${p.asOf}`,
           url: p.grounds.find((g) => g.sourceUrl)?.sourceUrl ?? null,
@@ -464,6 +528,7 @@ export async function filePositionsForIdea(
     written: positions.length + 1,
     replaced,
     coverage: scopedCoverage,
+    ranking,
     reason: null,
   }
 }
