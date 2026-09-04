@@ -228,6 +228,108 @@ indexes); `agreed` is three-way because "not sure" is a real answer. **Nothing w
 
 ---
 
+## LEX 26-A — POSITIONS THAT MEAN SOMETHING, AND A CAVEAT THAT COUNTS (2026-09-04 01:45 UTC)
+
+⚠⚠ **FIRST, AND IT CHANGES THE SHAPE OF THE SPRINT: A SURFACE-3 SESSION BUILT MOST OF §1, §2 AND
+§4 OVERNIGHT** (`3f41b34`, `431a380`, `a7fb4aa`, `84b2e88`, landing 01:23, thirty-six minutes
+before this brief was written). This sprint therefore **verifies** those against real data and
+builds what they explicitly could not: §3, which their own report names as not done because the
+file is Lex-owned.
+
+### §1 — the mapping, verified, and one finding that matters
+
+▶ **The mechanism (§1a):** `findClaimTarget` passed the user's WHOLE problem paragraph to
+`findTargets`, which does `title ILIKE '%<the entire string>%'`. No division title contains a
+paragraph, so it matched nothing. *"plastic bags"* worked because it is short enough to be an
+EDM title. **It was never that civil-service accountability has no targets** — `findTargets('civil
+service')` returned five EDMs on 3 September.
+▶ **What a target can be (§1b), in plain English:** a **concrete artefact** — a recorded division,
+an Early Day Motion, a committee inquiry, a bill, an instrument or an organisation. **Not a
+topic.** A broad policy idea has no target of its own; it can only be mapped to specific things
+that bear on it, and whether any exist is a question about coverage, not about the idea.
+▶ ✅ **Surface-3 fixed it with phrase extraction** and the pilot idea now resolves.
+
+⚠⚠ **AND THE RESULT ON CHARLIE'S OWN IDEA IS A FINDING, NOT A PASS.** It resolves to
+*"Draft Supply of Machinery (Safety) … (Enforcement etc. in Northern Ireland) Regulations 2026"*
+— matched on the two words **"northern ireland"** — under a civil-service-accountability
+proposal. The match basis is disclosed, which is the mitigation Surface-3 chose and documented.
+**But §1d says a wrongly resolved target attributes positions to the wrong subject, and §7 asks
+that none be resolved on similarity. A two-word ILIKE match is a similarity resolution.**
+▶ **Recommended, NOT built: raise the floor to three content words** and return no target below
+it — one line in `findClaimTarget`. It reverses another sprint's documented decision, so it is
+Charlie's. **The check records it as a FINDING rather than a failure.**
+
+### §2 — the coverage window: built by Surface-3, verified here
+
+✅ Read from the data, live: *"Our record of recorded divisions of the House of Commons begins on
+9 March 2016 and runs to 15 July 2026 — anything before that date is absent from this answer,
+which is not the same as nobody having taken a position."* Lords likewise from 24 November 1999.
+⚠ **No hardcoded year in either `claim-review.ts` or `position-coverage.ts`** — asserted.
+
+### §3 — the caveat, and it names its source (decision 70). BUILT.
+
+⚠⚠ **Surface-3 found the stale note and correctly did not touch it**, recording that
+`NO_PRODUCER_NOTE.POSITIONS` *"stays literally true (no pass does)"* while positions appear under
+the heading. **That is the sharpest description of the defect in this whole thread: a caveat can
+be true word by word and still tell the reader the opposite of the truth.**
+
+▶ `lib/lex/positions-caveat.ts` — **computed from the rows, never written down**, on screen and
+in all three documents from one definition. On the pilot idea it now reads: *"3 items here: 2
+from the public record and from research, and 1 taken from a document you supplied yourself,
+marked as yours."*
+▶ ⚠ **The stale note is DELETED, not rewritten a third time.** It had already been wrong twice in
+two different ways. A sentence with a number in it that is not read from the data will outlive
+its own truth; a caveat that counts cannot.
+▶ `POSITIONS` comes out of `HEADINGS_WITH_NO_PRODUCER` — the file's own rule is that an entry
+there is a promise to remove it. ⚠ `check:lex-25d` went **red** the moment it did, because
+`headingsWithProducers()` is built from passes and library questions only and positions are filed
+by a route and a script. **That red was the honest signal**, and it is why the old note survived:
+"no *pass* writes here" stayed literally true while the heading filled up. A capability is a
+capability whichever code path exercises it — 77/0 now.
+
+### §4 — the impossibility, asserted by attempting it
+
+✅ Surface-3's `grounds: [RecordedAct, ...RecordedAct[]]` is a non-empty tuple with a single
+constructor returning null. ⚠ **§4b's requirement is met by construction, not by rendering:** the
+check *attempts* to build a groundless position and requires the attempt to yield `null`, with a
+control confirming an ordinary array type would have permitted it.
+
+### §5 — reported. `docs/26A_QUALIFICATION_TYPES.md`
+
+⚠⚠ **THE HONEST ANSWER IS TWO, NOT FIVE.** The citation defect was a *manufactured wrong value*,
+not a dropped qualification — nothing was stripped, something was composed from the wrong id
+space, and a type cannot help (a verifier can, and 25-V built one). The accepted field was
+destroyed at the *write* path before any renderer saw it. **Only the challenge title and the
+policy sort share the positions shape.**
+▶ **Recommended first: the challenge title** — one nullable field, one construction point, three
+readers, ~60 lines, no migration. It has already failed once and been fixed by hand, and nothing
+stops the next field added to `SnapshotIssue` going the same way. ⚠ **And it proves or disproves
+the idea cheaply**: if authors route around the union with `title ?? ''`, we learn that in sixty
+lines rather than in a day.
+▶ ⚠ **The boundary, stated:** a type makes a qualification *present*, never *good*. §1's finding
+is a well-formed claim with real dated acts about the wrong regulation. **The type held perfectly
+and the output is still wrong.**
+
+### §6 — colour, corrected
+
+▶ **§6a: 25-Z's reading is superseded.** The three headings are now blue, red and green — bright
+and distinct. ⚠ **§6b's narrower rule is what the check asserts:** strip the hue and all three
+remain identical in weight and size, so identity survives on size, position and words. A panel
+*identity* may be coloured; a *state* may not.
+▶ **§6d was already answered in 25-Z:** the Coherent Actions colouring signified **"this is the
+active section"** and was the ONLY cue for it. All four sections now carry the same control and
+the active one says **"Working on this"**.
+
+### Also confirmed, because Charlie is waiting on it
+
+✅ **25-Y §1 SHIPPED** — `evidence-scope.ts` is in `origin/Main` (`d8b021f`). Uploaded documents
+reach every pass of every build. **The rebuild is not blocked on it.**
+
+**`check:lex-26a` 23 passed / 0 failed / 1 FINDING / 4 controls / 0 dead.** `check:lex-25d`
+77/0, `check:lex-25z` 50/0, `tsc`, `check:scripts` and `check:client-boundary` green.
+
+---
+
 ## LEX 25-Z — THE THREE PANELS, RESTRUCTURED (2026-09-04 01:05 UTC)
 
 ### §1 — the research items did not open, and it was never a touch problem

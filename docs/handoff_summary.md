@@ -271,7 +271,47 @@ whether the Lex build should file positions (one line in `build.ts`), and the no
 ## LEX THREAD
 
 
-*Last updated: 2026-09-04 01:05 UTC — ▼ **LEX 25-Z — THE THREE PANELS, RESTRUCTURED.**
+*Last updated: 2026-09-04 01:45 UTC — ▼ **LEX 26-A — POSITIONS THAT MEAN SOMETHING, AND A
+CAVEAT THAT COUNTS.**
+⚠⚠ **A SURFACE-3 SESSION BUILT MOST OF §1, §2 AND §4 OVERNIGHT** (landing 01:23, 36 minutes
+before this brief was written). This sprint VERIFIES those and builds what they could not: §3,
+which their own report names as not done because the file is Lex-owned.
+▶ **§1a the mechanism:** `findClaimTarget` passed the WHOLE problem paragraph to a
+`title ILIKE '%…%'`. No division title contains a paragraph. **It was never that civil service
+accountability has no targets** — `findTargets('civil service')` returned five EDMs.
+▶ **§1b in plain English:** a target is a **concrete artefact** — a division, an EDM, an inquiry,
+a bill, an instrument, an organisation. **Not a topic.** A broad policy idea has no target of its
+own; it can only map to specific things bearing on it.
+▶▶ ⚠⚠ **§1 FINDING, NOT A PASS: Charlie's idea now resolves to a MACHINERY-SAFETY REGULATION,
+matched on the two words "northern ireland".** Disclosed, which is Surface-3's documented
+mitigation — **but §7 asks that no target be resolved on similarity and a two-word ILIKE match
+is one.** ▶ **Recommended, NOT built: raise the floor to three content words** (one line). It
+reverses another sprint's documented decision, so it is Charlie's.
+▶ **§2 verified live** — "begins on 9 March 2016 and runs to 15 July 2026 … not the same as
+nobody having taken a position", Lords from 1999, **no hardcoded year in either file**.
+▶▶ **§3 BUILT (decision 70).** ⚠⚠ Surface-3 found the stale note and correctly left it: it
+*"stays literally true (no pass does)"* while positions appear under the heading — **the sharpest
+description of this thread's fault: a caveat can be true word by word and still tell the reader
+the opposite of the truth.** `positions-caveat.ts` is **computed from the rows**, on screen and in
+all three documents from one definition. On the pilot: *"3 items here: 2 from the public record
+and from research, and 1 taken from a document you supplied yourself."* ⚠ The stale note is
+**DELETED, not rewritten a third time**. ⚠ `check:lex-25d` went RED when POSITIONS left
+`HEADINGS_WITH_NO_PRODUCER` — because producers are modelled as passes only and positions are
+filed by a route. **That red was the honest signal.** 77/0 now.
+▶ **§4** verified by ATTEMPTING the impossible construction and requiring null.
+▶▶ **§5 REPORTED — `docs/26A_QUALIFICATION_TYPES.md`. ⚠⚠ THE HONEST ANSWER IS TWO, NOT FIVE.**
+The citation defect was a MANUFACTURED WRONG VALUE, not a dropped qualification; the accepted
+field was destroyed at the WRITE path. Only the challenge title and the policy sort share the
+shape. ▶ **Recommended first: the challenge title** (~60 lines, no migration) — and it proves or
+disproves the idea cheaply. ⚠ **The boundary: a type makes a qualification PRESENT, never GOOD.**
+§1's finding is a well-formed claim with real dated acts about the wrong regulation.
+▶ **§6a colour corrected** — blue/red/green on the three headings; ⚠ strip the hue and all three
+remain identical in weight and size. **§6d was already answered in 25-Z**: the colouring meant
+"active section" and was its only cue.
+✅ **25-Y §1 SHIPPED** (`d8b021f`, in origin/Main) — **the rebuild is NOT blocked on it.**
+✅ `check:lex-26a` **23/0, 1 FINDING, 4 controls, 0 dead**; `check:lex-25d` 77/0, `check:lex-25z`
+50/0; tsc, check:scripts, check:client-boundary green.
+Earlier: 2026-09-04 01:05 UTC — ▼ **LEX 25-Z — THE THREE PANELS, RESTRUCTURED.**
 ▶▶ **§1 — IT IS (a): NO DETAIL VIEW, AND NEVER HAS BEEN.** ⚠⚠ **But the passage was already in
 the row** — `EvidenceItem.body` on **131 of 131** entries, and the assembler was reading it and
 throwing it away. **Sixth instance of correct data discarded at a seam.** ⚠ **Not a touch

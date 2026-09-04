@@ -169,10 +169,16 @@ async function main() {
 
   // ══ §5 — HEADINGS AND THE BETA NOTICE ════════════════════════════════════════════════
   console.log('\n§5 — headings and the Beta notice')
-  const headings = cic.match(/text-base font-bold uppercase tracking-wide text-zinc-900 flex-1/g) ?? []
+  // ⚠ 26-A §6a — the colour varies now, so the size assertion matches on the size.
+  const headings = cic.match(/text-base font-bold uppercase tracking-wide text-[a-z]+-\d00 flex-1/g) ?? []
   ok('§5a — all three panel headings are primary-sized', headings.length === 3, `${headings.length} of 3`)
-  ok('§5b — and they carry no colour of their own beyond near-black',
-    !/text-(blue|amber|violet|emerald|green|red)-\d00 flex-1/.test(cic))
+  // ⚠⚠ 26-A §6a CORRECTS 25-Z's READING OF THIS. Colour on the headings is welcome; what is
+  // forbidden is a STATE carried by colour alone (§6b). A panel IDENTITY may be coloured
+  // because it also has a large heading and a fixed position — so the assertion is now that
+  // all three are PRIMARY-SIZED and DISTINCT from each other, not that they are grey.
+  ok('§5a/26-A §6a — the three headings are distinctly coloured, identity not state',
+    new Set((cic.match(/text-base font-bold uppercase tracking-wide text-([a-z]+)-\d00 flex-1/g) ?? []))
+      .size === 3)
   ok('§5c — the disclosure has left THE RESEARCH\'s header',
     !/PANEL_ROLES\.right\.disclosure/.test(cic))
   ok('§5c — and is shown once, on opening a search-derived item',
