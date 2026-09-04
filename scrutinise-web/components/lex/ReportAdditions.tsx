@@ -34,13 +34,19 @@ import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-
 import CollapsedSection from './CollapsedSection'
 
 export default function ReportAdditions({
-  ideaId, refreshKey, onChanged,
+  ideaId, refreshKey, onChanged, title = 'What you have put in the report',
 }: {
   ideaId: string
   /** Bumped by the parent when something may have changed what is in the report. */
   refreshKey?: number
   /** Called after a removal, so the right-hand panel can re-read its own copy. */
   onChanged?: () => void
+  /**
+   * ⚠ 25-Z §2c — the heading, because this block moved and was renamed with it. Under
+   * Outputs in THE RESEARCH it is **"For Report Inclusion"**; the default is the wording it
+   * had in the middle panel, so any caller that has not been moved keeps what it had.
+   */
+  title?: string
 }) {
   const [data, setData] = useState<PanelData | null>(null)
   const [busy, setBusy] = useState(false)
@@ -96,7 +102,7 @@ export default function ReportAdditions({
     // decision rather than a search. A user with nothing in their report can read that fact
     // without opening anything; a user with six items can see there are six.
     <CollapsedSection
-      title="What you have put in the report"
+      title={title}
       count={total}
       hint={total === 0
         ? 'Nothing yet — open an item in THE RESEARCH and press “Add to report”.'

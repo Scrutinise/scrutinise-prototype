@@ -933,7 +933,14 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   user who cannot say what a column is FOR cannot decide whether to widen it,
                   and until now all three were guessed at from their contents. */}
               <div className="flex items-baseline gap-2 shrink-0 border-b border-zinc-100 px-3 py-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 flex-1">
+                {/* ══ ⚠⚠ 25-Z §5a/§5b — THE PRIMARY NAVIGATION OF THE WHOLE SCREEN ═══════════
+                    Charlie: these three "currently read as labels". They are how a user knows
+                    which column they are in, so they are typed as headings, not as captions.
+                    ⚠ SIZE AND WORDS ONLY — no colour is added (§5b: Charlie is colour blind).
+                    Remove every hue from this screen and the three headings are still the
+                    largest text in their columns, still in their fixed positions, and still
+                    say what they are. The tracking and weight carry it. */}
+                <span className="text-base font-bold uppercase tracking-wide text-zinc-900 flex-1">
                   {PANEL_ROLES.left.name}
                 </span>
                 <button
@@ -1087,7 +1094,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             )}
             <div className={`h-full min-h-0 min-w-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} ${showFields ? 'lg:block' : 'lg:hidden'}`}>
               <div className="flex items-baseline gap-2 border-b border-zinc-100 px-3 py-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 flex-1">
+                {/* ⚠ 25-Z §5a — primary, as the left panel's. One size for all three. */}
+                <span className="text-base font-bold uppercase tracking-wide text-zinc-900 flex-1">
                   {lexStage === 'deepening' ? 'THE PASSES' : PANEL_ROLES.middle.name}
                 </span>
                 <button
@@ -1143,18 +1151,26 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 ideaId={state.ideaId}
                 deepening={
                   <>
-                    {/* ══ 25-N §3a — WHAT THE USER HAS PUT IN THE REPORT ═════════════
-                        §3: *"The middle column holds only what is going in the report.
-                        Nothing arrives there until the user puts it there."* Before this,
-                        "Add to report" set a flag whose only visible effect was inside a
-                        generated .docx — a control with no feedback on the screen that
-                        produced it. */}
-                    <ReportAdditions
-                      ideaId={state.ideaId}
-                      refreshKey={reportNonce}
-                      onChanged={() => setReportNonce((n) => n + 1)}
-                    />
+                    {/* ══════════ ⚠⚠ 25-Z §2c — WHAT LEFT THE MIDDLE PANEL, AND WHERE IT WENT ══
+                        Charlie, on the walkthrough: the blocks below the kernel *"are in boxes,
+                        which makes them look more important than the kernel itself"*. Nothing
+                        was deleted; each moved to where it is actually about.
 
+                        · "What you have put in the report"  → THE RESEARCH, under Outputs, as
+                          **"For Report Inclusion"** (`OutputsPanel`).
+                        · "Challenges"                       → THE RESEARCH, inside **"How hard
+                          will this be to achieve?"** (`AgendaPanel view="challenges"`).
+                        · The Deepening stage link           → REMOVED as a duplicate. It is
+                          already in the stage header.
+                        · "What to do next"                  → the heading is a duplicate of the
+                          WORKLIST at the top of the WORKING AREA and is not repeated here.
+
+                        ⚠⚠ WHAT REMAINS BELOW, AND WHY IT HAS NOT MOVED. §2c's table names four
+                        blocks; the `work` view also holds THREE MORE that the table does not —
+                        *what to read*, *gaps in what we hold* and *what you know that we don't*.
+                        §0 says to ask rather than guess a destination, and §2d asks for exactly
+                        this list, so they stay here, untouched, pending Charlie's answer.
+                        Removing the wrapper wholesale would have deleted them. */}
                     {/* 25-C §3 — THE AGENDA. The user is handed what to DO rather than a
                         library to search. It renders nothing until a build has completed,
                         and it is what the worklist's rows jump to.
@@ -1169,17 +1185,6 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                         the research changed my mind" moved to THE RESEARCH, where the raw
                         material and the judgements to be made about it now live. */}
                     <AgendaPanel ideaId={state.ideaId} view="work" />
-                    <a
-                      href={`/ideas/create?ideaId=${state.ideaId}&stage=deepening`}
-                      className="block rounded-lg border-2 border-zinc-200 bg-white px-3 py-2.5 hover:border-zinc-400 hover:bg-zinc-50"
-                    >
-                      <span className="text-sm font-semibold text-zinc-900">
-                        {stageByKey('deepening').n} · {stageByKey('deepening').name} →
-                      </span>
-                      <span className="block text-xs text-zinc-600 mt-0.5">
-                        {stageByKey('deepening').purpose}
-                      </span>
-                    </a>
                   </>
                 }
               />
@@ -1204,7 +1209,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   six different kinds of thing and its name cannot say so. */}
               <div className="border-b border-zinc-100 px-3 py-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 flex-1">
+                  {/* ⚠ 25-Z §5a — primary, as the other two. */}
+                  <span className="text-base font-bold uppercase tracking-wide text-zinc-900 flex-1">
                     {PANEL_ROLES.right.name}
                   </span>
                   <button
@@ -1216,17 +1222,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   </button>
                 </div>
                 <p className="text-[11px] text-zinc-500 leading-snug pb-0.5">{PANEL_ROLES.right.role}</p>
-                {/* ══ 25-V §11b — THE EVIDENCE-BASE DISCLOSURE, ON THE SURFACE WHERE IT IS READ ══
-                    Charlie's wording, verbatim. ⚠ It is bordered rather than coloured: Charlie is
-                    colour blind, and a tint alone would be no cue at all (docs/CLAUDE.md §21). The
-                    left border and the leading word "Beta." are the two non-colour cues.
-                    ⚠ It states a property of the SEARCH, not a doubt about the citations — §11c
-                    draws that line and §1 fixed the citation side rather than disclosing it. */}
-                {PANEL_ROLES.right.disclosure && (
-                  <p className="mt-1.5 text-[11px] leading-snug text-zinc-700 border-l-2 border-zinc-400 pl-2 py-0.5">
-                    {PANEL_ROLES.right.disclosure}
-                  </p>
-                )}
+                {/* ══ ⚠⚠ 25-Z §5c — THE BETA DISCLOSURE HAS LEFT THIS HEADER ═══════════════════
+                    Charlie: too wordy for here. It is a hundred-word paragraph sitting above
+                    the panel on every render, which is how a sentence that matters becomes
+                    furniture the eye skips.
+                    ⚠⚠ THE TEXT IS UNCHANGED, WORD FOR WORD (§5d) — it was agreed as written and
+                    is doing honest work. What changed is WHEN it is shown: once, the first time
+                    the user opens a search-derived item in THE RESEARCH, which is the moment it
+                    is about. See `BetaSearchNotice`.
+                    ⚠ 25-V §11b's reasoning survives the move: it states a property of the
+                    SEARCH, not a doubt about the citations. */}
               </div>
               <BackgroundPanel
                 ideaId={state.ideaId}

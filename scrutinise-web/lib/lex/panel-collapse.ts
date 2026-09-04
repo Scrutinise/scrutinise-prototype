@@ -58,6 +58,30 @@ export type PageStatus = 'active' | 'complete' | 'visited' | 'locked'
  * ⚠ `visited` IS BACK IN THE RULE, AND THIS TIME IT IS DELIBERATE RATHER THAN INHERITED. It
  * means "a build has written here", which is exactly the set of sections A1 wants tidy.
  */
-export function collapsedByDefault(status: PageStatus | string): boolean {
+export function collapsedByDefault(
+  status: PageStatus | string,
+  opts: { freshlyOpened?: boolean } = {},
+): boolean {
+  // ══ ⚠⚠ 25-Z §2a — A FRESHLY OPENED PAGE COLLAPSES EVERYTHING, INCLUDING THE ACTIVE ONE ══
+  //
+  // §2a asks why 25-R's addendum rule "did not hold". **It held.** A1 says a finished stage
+  // opens collapsed and the one you are working in opens expanded, and that is exactly what
+  // happened: `Idea.lexPage` pointed at COHERENT_ACTIONS, `computeCanonicalState` therefore
+  // gave that page `active` — and a page is EITHER active OR visited, never both, because the
+  // status is a single value and active wins. So three sections collapsed and the fourth,
+  // the one the pointer named, expanded.
+  //
+  // ⚠⚠ THE GAP IS BETWEEN A1'S INTENT AND THE STATUS MODEL, NOT A BUG IN EITHER. A1 said
+  // "after a build, all kernel sections are collapsed and tidy" — but a build does not clear
+  // the page pointer, so there is always one page called `active` whether or not the user is
+  // working in it. `lexPage` records where they got to, and it was being read as where they
+  // are. On a page the user has only just opened, those are different things.
+  //
+  // ⚠ SO THE ANSWER IS A SECOND FACT, NOT A SECOND RULE. Nothing about the status rule
+  // changes; it is asked a narrower question — *has the user done anything on this page yet?*
+  // Until they have, everything is shut. The moment they touch a section the rule below
+  // resumes exactly as written, so a user working in Coherent Actions still finds it open on
+  // every subsequent render.
+  if (opts.freshlyOpened) return true
   return status === 'complete' || status === 'visited'
 }

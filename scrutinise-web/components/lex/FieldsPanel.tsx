@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   fieldDef,
   type CanonicalState, type CanonicalField, type CanonicalCause, type CauseClassification,
@@ -1594,18 +1594,48 @@ export default function FieldsPanel({
   const activeRef = useRef<HTMLDivElement>(null)
   const stageHeaderRef = useRef<HTMLDivElement>(null)
 
+  /**
+   * ══ ⚠⚠ 25-Z §2a — HAS THE USER DONE ANYTHING ON THIS PAGE YET? ═══════════════════════
+   *
+   * False until they open, shut or save something. While it is false every kernel section is
+   * collapsed and nothing scrolls, so a freshly opened idea shows four headings at the top of
+   * the panel. The moment they touch one, the ordinary status rule resumes.
+   *
+   * ⚠ IT IS A REF, NOT STATE, FOR THE SCROLL HALF and state for the collapse half — the
+   * scrolls fire inside effects that must not re-run when this flips, and the collapse must
+   * re-render when it does. One flag driving both would either scroll late or not re-render.
+   */
+  const [touched, setTouched] = useState(false)
+  const touchedRef = useRef(false)
+  const markTouched = useCallback(() => {
+    touchedRef.current = true
+    setTouched(true)
+  }, [])
+
   const activePageKey = pages.find((p) => p.status === 'active')?.key ?? null
 
   // A3: bring the newly-active box to the top of the panel on Save (currentFieldKey change).
+  //
+  // ⚠ 25-Z §2a — NOT ON ARRIVAL. This fired on first paint and jumped the panel down to
+  // whatever field the pointer named, which is half of "it opens in the wrong place": the user
+  // arrives part-way down a page they have not chosen to be on. It is a SAVE behaviour, and a
+  // save cannot happen before the user has touched anything.
   useEffect(() => {
-    if (currentFieldKey) activeRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    if (currentFieldKey && touchedRef.current) {
+      activeRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    }
   }, [currentFieldKey])
 
   // §19-B Task 3: on STAGE entry the new stage's header goes to the top. Declared after
   // the field effect so it wins when both fire in the same commit (a stage change also
   // changes the current field).
+  //
+  // ⚠ 25-Z §2a — likewise on ENTRY, not on arrival. "On stage entry" means the user moved
+  // into a stage; on load nobody has moved anywhere.
   useEffect(() => {
-    if (activePageKey) stageHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    if (activePageKey && touchedRef.current) {
+      stageHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    }
   }, [activePageKey])
 
   const renderField = (f: CanonicalField) => {
@@ -1664,9 +1694,10 @@ export default function FieldsPanel({
           the sentence that fixes that is also the sentence that tells them the two ways to
           change it. */}
       <p className="text-sm text-zinc-700 leading-relaxed border-l-2 border-zinc-300 pl-3">
-        Here is the draft strategy I have written for you to review and develop into your formal
-        proposal. As you go through this you can edit and improve it by typing directly in any box
-        or discussing with Lex and asking Lex to write it for you.
+        {/* ⚠ 25-Z §3 — Charlie's wording, verbatim. Shorter, and it names the three ways to
+            change it in the order a user reaches for them. */}
+        Here is your draft strategy to review and develop into your formal proposal. Edit
+        directly, discuss with Lex or ask Lex to improve it for you.
       </p>
 
       {pages.map((page) => {
@@ -1679,7 +1710,10 @@ export default function FieldsPanel({
         // "Work on this" moves chat, panel and the save path there together; the header
         // click keeps its old job (expand/collapse), because conflating "let me look at
         // that" with "take me back there" is how you lose your place by accident.
-        const canReEnter = page.reachable && !isActive
+        // ⚠ 25-Z §2b — `canReEnter` IS GONE. It was `page.reachable && !isActive`, which is
+        // what hid the pill on the section you were already in. The control now renders on
+        // every reachable section and changes its verb instead; the check caught this
+        // declaration still sitting here, unused, after the JSX had moved on.
         // ══ 25-N §1c — EVERY HEADING TOGGLES BOTH WAYS, ALWAYS ═══════════════════════
         //
         // ⚠⚠ `collapsible` USED TO BE `complete || visited`, WHICH IS WHY "WORK ON THIS"
@@ -1723,12 +1757,17 @@ export default function FieldsPanel({
         // ⚠ 25-R — THE RULE IS IMPORTED, NOT WRITTEN HERE. `check:lex-25r` kept a copy of it
         // plus a guard asserting the copy still matched, and that guard went red the first
         // time the rule changed. A shared function is better than a guard against drift.
-        const collapsedByDefault = pageCollapsedByDefault(page.status)
+        // ⚠ 25-Z §2a — `freshlyOpened` collapses everything until the user acts. See the rule.
+        const collapsedByDefault = pageCollapsedByDefault(page.status, { freshlyOpened: !touched })
         const collapsed = collapsedByDefault
           ? !manualExpanded.has(page.key)
           : manualCollapsed.has(page.key)
         // 25-N §1c — the toggle writes to whichever set overrules THIS section's default.
         const toggle = () => {
+          // ⚠ 25-Z §2a — the first toggle is what ends "freshly opened". Marked BEFORE the
+          // flip: `collapsedByDefault` is captured above from the pre-touch value, so the set
+          // this writes into is the right one for the state the user is actually looking at.
+          markTouched()
           const flip = (s: Set<string>) => {
             const n = new Set(s)
             n.has(page.key) ? n.delete(page.key) : n.add(page.key)
@@ -1776,14 +1815,33 @@ export default function FieldsPanel({
                 <span className="text-[11px] text-zinc-400 whitespace-nowrap">{done} of {total} approved</span>
               )}
               {isLocked && <span className="text-[11px] text-zinc-300">soon</span>}
-              {canReEnter && (
+              {/* ══ ⚠⚠ 25-Z §2b — ALL FOUR SECTIONS CARRY THE SAME CONTROL ══════════════════
+                  Charlie: *"They should all be the same."* Three carried a "Work on this" pill
+                  and Coherent Actions carried none and was coloured instead — because
+                  the old gate was `reachable && !isActive`, so the pill was hidden on exactly
+                  the section you were already in, and the accent colour was the only thing
+                  marking it.
+                  ⚠⚠ AND THAT COLOUR WAS THE SOLE CUE FOR "THIS IS THE ACTIVE SECTION", which
+                  Charlie cannot see (docs/CLAUDE.md §21). It was not decoration — it was
+                  carrying state on its own. The state now has a WORD.
+                  ⚠ Same shape, same position, same size on all four; only the verb changes,
+                  and the current one is disabled because re-entering the section you are in
+                  does nothing. A control that looks live and does nothing is worse than one
+                  that says why it is inert. */}
+              {page.reachable && (
                 <button
-                  disabled={busy}
-                  onClick={(e) => { e.stopPropagation(); onGoToPage(page.key) }}
-                  title="Move back into this section — Lex, the research panel and your edits all follow. Nothing later is lost."
-                  className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border border-zinc-300 text-zinc-500 hover:border-blue-400 hover:text-blue-600 disabled:opacity-40"
+                  disabled={busy || isActive}
+                  onClick={(e) => { e.stopPropagation(); if (!isActive) onGoToPage(page.key) }}
+                  title={isActive
+                    ? 'This is the section you are working in. Lex, the research panel and the save path are all pointed here.'
+                    : 'Move back into this section — Lex, the research panel and your edits all follow. Nothing later is lost.'}
+                  className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border disabled:opacity-100 ${
+                    isActive
+                      ? 'border-zinc-800 bg-zinc-800 text-white'
+                      : 'border-zinc-300 text-zinc-500 hover:border-blue-400 hover:text-blue-600 disabled:opacity-40'
+                  }`}
                 >
-                  Work on this
+                  {isActive ? 'Working on this' : 'Work on this'}
                 </button>
               )}
               {/* ⚠ TWO DIFFERENT CHARACTERS, never one recoloured (docs/CLAUDE.md §21), and

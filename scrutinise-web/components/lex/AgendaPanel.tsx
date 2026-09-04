@@ -151,10 +151,16 @@ function Section({ id, title, count, hint, children }: {
  * this is a claim about our own output).
  */
 export type AgendaView =
-  /** The middle column: challenges, reading, gaps, what you know that we don't. */
+  /**
+   * The middle column: reading, gaps, what you know that we don't.
+   * ⚠ 25-Z §2c — CHALLENGES LEFT THIS VIEW. It renders in THE RESEARCH now, inside "How hard
+   * will this be to achieve?", which is the question it answers.
+   */
   | 'work'
   /** The right-hand panel: decisions, and where the research changed Lex's mind. */
   | 'judgements'
+  /** ⚠ 25-Z §2c — the challenges alone, rendered under HOW_HARD in THE RESEARCH. */
+  | 'challenges'
 
 export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string; view?: AgendaView }) {
   const [agenda, setAgenda] = useState<Agenda | null>(null)
@@ -193,11 +199,16 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
   const a = agenda
 
   const judgements = view === 'judgements'
+  // ⚠ 25-Z §2c — the CHALLENGES view: the challenges section alone, so it can be rendered
+  // inside "How hard will this be to achieve?" in THE RESEARCH. Charlie moved it out of the
+  // middle panel, where it sat in a box that made it look more important than the kernel.
+  const challengesOnly = view === 'challenges'
   // ⚠ AN INSTANCE WITH NOTHING OF ITS OWN RENDERS NOTHING. See the `AgendaView` note.
   const hasWork = a.challenges.length > 0 || a.reading.length > 0 || a.gaps.length > 0
     || !!a.contribution.ownKnowledge || a.contribution.wouldStrengthen.length > 0
   const hasJudgements = a.decisions.length > 0 || a.contradictions.length > 0
-  if (judgements ? !hasJudgements : !hasWork) return null
+  const hasChallenges = a.challenges.length > 0
+  if (challengesOnly ? !hasChallenges : judgements ? !hasJudgements : !hasWork) return null
 
   // ══ ADDENDUM §A2 — THE MIDDLE COLUMN'S COPY IS CLOSED BY DEFAULT ═══════════
   //
@@ -210,8 +221,9 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
         // ⚠ 25-N §3d's WORDING SURVIVES, MOVED INSIDE. It is the sentence that says what this
         // panel is FOR, which a user needs on opening it rather than on the closed header.
         <p className="px-4 pt-3 text-xs text-zinc-500">
-          This panel lists the decisions and actions you need to take to build the draft strategy
-          I’ve prepared for you into your formal proposal.
+          {/* ⚠ 25-Z §3 — Charlie's wording, verbatim. The same sentence as the worklist's,
+              from the same decision; both surfaces say one thing. */}
+          Here are your decisions and actions:
         </p>
       )}
       {judgements && (
@@ -228,9 +240,11 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
 
       {/* ── §3b — CONTRADICTIONS LEAD ─────────────────────────────────────── */}
       {judgements && a.contradictions.length > 0 && (
+        // ⚠ 25-Z §3 — "Notable Research". The old heading described Lex's experience of the
+        // research; the new one describes the research, which is what the reader wants.
         <Section
           id="agenda-contradictions"
-          title="Where the research changed my mind"
+          title="Notable Research"
           count={a.contradictions.length}
           hint="I drafted this before I had looked anything up. These are the places the evidence moved me."
         >
@@ -243,7 +257,8 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
               <p className="text-sm text-zinc-900 font-medium">{c.evidenceSays}</p>
               {c.whyChanged && (
                 <>
-                  <p className="text-xs text-zinc-500 mt-2">Why I changed my mind</p>
+                  {/* ⚠ 25-Z §3 — "Why notable", matching the section's new name. */}
+                  <p className="text-xs text-zinc-500 mt-2">Why notable</p>
                   <p className="text-sm text-zinc-700">{c.whyChanged}</p>
                 </>
               )}
@@ -319,7 +334,10 @@ export default function AgendaPanel({ ideaId, view = 'work' }: { ideaId: string;
       )}
 
       {/* ── §3c — CHALLENGES ──────────────────────────────────────────────── */}
-      {!judgements && a.challenges.length > 0 && (
+      {/* ⚠ 25-Z §2c — rendered by the `work` view no longer, and by the `challenges` view in
+          THE RESEARCH instead. The condition names both so a third view added later cannot
+          pick it up by accident. */}
+      {challengesOnly && a.challenges.length > 0 && (
         <Section
           id="agenda-challenges"
           title="Challenges"

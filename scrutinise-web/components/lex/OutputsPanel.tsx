@@ -25,6 +25,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useState } from 'react'
+import ReportAdditions from './ReportAdditions'
 
 interface ExportStatus {
   kind: string
@@ -168,6 +169,14 @@ export default function OutputsPanel({ ideaId }: { ideaId: string }) {
         What you can take away. Generating and downloading both happen here — the Documents tab on
         the idea holds the same records.
       </p>
+
+      {/* ══ ⚠⚠ 25-Z §2c — "FOR REPORT INCLUSION", MOVED OUT OF THE MIDDLE PANEL ═══════════
+          Charlie, on the walkthrough: the three blocks below the kernel were in boxes, which
+          made them look more important than the kernel itself. This one is what he has marked
+          to go into the report, and it belongs beside the documents that will carry it rather
+          than under the draft it is not part of.
+          ⚠ NOTHING IS DELETED — the same component, the same data, a different home. */}
+      <ReportAdditions ideaId={ideaId} title="For Report Inclusion" />
 
       {error && (
         <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">{error}</p>
