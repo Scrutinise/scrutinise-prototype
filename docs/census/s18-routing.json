@@ -1,0 +1,1058 @@
+{
+  "takenAt": "2026-09-07T21:37:29.124Z",
+  "config": "[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=off SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=off BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=off FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=off ROUTER_CONFIDENCE=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation,debates,committees,caselaw GEMINI_API_KEY=set | FTS_SEARCH_URL=set | GEMINI_API_KEY=set",
+  "degraded": [],
+  "repeat": 3,
+  "arms": [
+    "v1",
+    "v2"
+  ],
+  "ftsUrl": "https://fts-serve-production.up.railway.app",
+  "distribution": {
+    "SELECTION": 4,
+    "MATCHING": 5,
+    "TIER": 0,
+    "SCOPE": 0,
+    "TIER-UNREAD": 0
+  },
+  "rows": [
+    {
+      "code": "I1",
+      "n": 31,
+      "question": "What did the government think banning plastic straws would cost?",
+      "cls": "MATCHING",
+      "why": "the stream is routed and admits it, and the key is not in the top 200 even scoped to its OWN collection — routing cannot fix this",
+      "keys": [
+        {
+          "id": "impact-assessments:2020-57:1",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2020-57:2",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 1,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Environmental Protection Act 1990 plastic straw ban",
+              "debates": "plastic straw ban impact assessment cost government",
+              "committees": "Environmental Audit Committee plastic straw ban inquiry",
+              "guidance": "Defra guidance single-use plastics ban impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Environmental Protection Act 1990 plastic straw ban",
+              "debates": "plastic straw ban impact assessment cost government",
+              "committees": "Environmental Audit Committee plastic waste inquiry evidence",
+              "guidance": "Defra guidance single-use plastics ban impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Environmental Protection Act 1990 plastic straw ban regulations",
+              "debates": "plastic straw ban impact assessment cost government",
+              "committees": "Environmental Audit Committee plastic waste inquiry evidence",
+              "guidance": "Defra guidance single-use plastics ban impact assessment"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "plastic straws ban impact assessment costs benefits"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "plastic straws ban impact assessment costs benefits"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "plastic straws ban impact assessment costs benefits"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I2",
+      "n": 32,
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "cls": "MATCHING",
+      "why": "the stream is routed and admits it, and the key is not in the top 200 even scoped to its OWN collection — routing cannot fix this",
+      "keys": [
+        {
+          "id": "impact-assessments:2023-77:1",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2023-77:2",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2023-77:3",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 1,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Building Safety Act 2022 levy scheme regulations",
+              "debates": "building safety levy scheme government predictions impact",
+              "committees": "levy scheme building safety inquiry evidence government",
+              "guidance": "building safety levy scheme developer guidance government"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Building Safety Act 2022 levy scheme regulations",
+              "debates": "building safety levy scheme government predictions impact",
+              "committees": "levy scheme building safety inquiry evidence government",
+              "guidance": "HMRC building safety levy scheme guidance"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Building Safety Act 2022 levy scheme regulations",
+              "debates": "building safety levy scheme impact government predictions",
+              "committees": "levy scheme building safety committee inquiry evidence",
+              "guidance": "HMRC building safety levy scheme guidance"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "building safety levy scheme predicted costs benefits government"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "building safety levy scheme predicted costs benefits government"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "building safety levy scheme predicted costs benefits government"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I3",
+      "n": 33,
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "cls": "SELECTION",
+      "why": "admitted by [legislation] and findable scoped (best rank Infinity), but the router named that stream on only 0/3 rolls",
+      "keys": [
+        {
+          "id": "impact-assessments:2023-14:1",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2023-14:3",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 0,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "residual waste reduction target predicted cost",
+              "committees": "waste reduction target cost inquiry evidence",
+              "guidance": "Defra residual waste reduction target impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "residual waste reduction target predicted cost",
+              "committees": "waste reduction targets cost assessment inquiry",
+              "guidance": "residual waste reduction target cost benefit analysis"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "residual waste reduction target predicted cost",
+              "committees": "waste reduction target cost inquiry evidence",
+              "guidance": "residual waste reduction target cost assessment"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "residual waste reduction target predicted cost impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "residual waste reduction target predicted cost impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "residual waste reduction target predicted cost impact assessment"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I4",
+      "n": 34,
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "cls": "SELECTION",
+      "why": "admitted by [legislation] and findable scoped (best rank Infinity), but the router named that stream on only 0/3 rolls",
+      "keys": [
+        {
+          "id": "impact-assessments:2017-78:2",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 0,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "Regulatory Policy Committee tobacco products fees regulations approval",
+              "committees": "Regulatory Policy Committee tobacco products fees scrutiny",
+              "guidance": "Regulatory Policy Committee impact assessment tobacco fees"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "Regulatory Policy Committee tobacco products fees regulations approval",
+              "committees": "Regulatory Policy Committee scrutiny tobacco products fees",
+              "guidance": "Regulatory Policy Committee impact assessment tobacco fees"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "Regulatory Policy Committee tobacco products fees regulations approval",
+              "committees": "Regulatory Policy Committee tobacco products fees scrutiny",
+              "guidance": "Regulatory Policy Committee impact assessment tobacco fees"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "tobacco products fees regulations RPC opinion approval"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "tobacco products fees regulations RPC opinion approval"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "tobacco products fees regulations RPC opinion approval"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I5",
+      "n": 35,
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "cls": "SELECTION",
+      "why": "admitted by [legislation] and findable scoped (best rank Infinity), but the router named that stream on only 0/3 rolls",
+      "keys": [
+        {
+          "id": "impact-assessments:2017-78:3",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 0,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "tobacco products duty business cost impact assessment",
+              "committees": "tobacco duty changes business impact evidence",
+              "guidance": "HMRC tobacco products duty consultation impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "tobacco fee changes business cost government statement",
+              "committees": "tobacco control inquiry business impact assessment evidence",
+              "guidance": "DHSC tobacco fees consultation impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "tobacco products duty business cost impact assessment",
+              "committees": "tobacco duty changes business impact evidence",
+              "guidance": "HMRC tobacco products duty consultation business costs"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "tobacco products duty fees business cost impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "tobacco products duty fees business costs impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "tobacco products duty fees business costs impact assessment"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I6",
+      "n": 36,
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "cls": "MATCHING",
+      "why": "the stream is routed and admits it, and the key is not in the top 200 even scoped to its OWN collection — routing cannot fix this",
+      "keys": [
+        {
+          "id": "impact-assessments:2018-21:1",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2018-21:2",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2018-21:3",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 1,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Environmental Permitting Regulations impact assessment changes",
+              "debates": "environmental permitting changes impact assessment debate",
+              "committees": "environmental permitting changes impact assessment committee evidence",
+              "guidance": "Environment Agency environmental permitting changes impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Environmental Permitting Regulations impact assessment changes",
+              "debates": "environmental permitting changes impact assessment debate",
+              "committees": "environmental permitting changes impact assessment committee evidence",
+              "guidance": "Environment Agency environmental permitting impact assessment guidance"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Environmental Permitting Regulations impact assessment changes",
+              "debates": "environmental permitting changes impact assessment debate",
+              "committees": "environmental permitting changes impact assessment inquiry",
+              "guidance": "Environment Agency environmental permitting impact assessment guidance"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "Environmental Permitting Regulations impact assessment costs benefits"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "Environmental Permitting Regulations impact assessment costs benefits"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "Environmental Permitting Regulations impact assessment costs benefits"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I7",
+      "n": 37,
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "cls": "MATCHING",
+      "why": "the stream is routed and admits it, and the key is not in the top 200 even scoped to its OWN collection — routing cannot fix this",
+      "keys": [
+        {
+          "id": "impact-assessments:2022-92:1",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2022-92:2",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 1,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Data Protection Act 2018 adequacy regulations South Korea",
+              "debates": "data adequacy decision South Korea government expectations",
+              "committees": "DCMS Committee inquiry data adequacy South Korea",
+              "guidance": "ICO international data transfers adequacy assessment South Korea"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Data Protection Act 2018 adequacy regulations South Korea",
+              "debates": "data adequacy decision South Korea government expectations",
+              "committees": "DCMS Committee inquiry data adequacy South Korea",
+              "guidance": "ICO international data transfers adequacy assessment South Korea"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Data Protection Act 2018 adequacy regulations South Korea",
+              "debates": "data adequacy decision South Korea government expectations",
+              "committees": "DCMS Committee evidence data adequacy South Korea",
+              "guidance": "ICO international data transfers adequacy assessment South Korea"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "South Korea data adequacy decision government expectations benefits costs"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "South Korea data adequacy decision government expectations benefits"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "South Korea data adequacy decision government expectations benefits costs"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I8",
+      "n": 38,
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "cls": "MATCHING",
+      "why": "the stream is routed and admits it, and the key IS findable scoped (best rank 89) — it loses inside the stream, not before it",
+      "keys": [
+        {
+          "id": "impact-assessments:2017-92:4",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": 89,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2017-92:3",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 1,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Public Guardian fees statutory instrument justification",
+              "debates": "Public Guardian fees increase debate written question",
+              "committees": "Justice Committee Public Guardian fees evidence",
+              "guidance": "Office of Public Guardian fee increase consultation"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Public Guardian fees statutory instrument justification",
+              "debates": "Public Guardian fee increase debate written question",
+              "committees": "Justice Committee Public Guardian fees evidence inquiry",
+              "guidance": "Office of Public Guardian fee review consultation"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "legislation": "Public Guardian fees statutory instrument justification",
+              "debates": "Public Guardian fee increase debate written question",
+              "committees": "Justice Committee Public Guardian fees evidence inquiry",
+              "guidance": "Office of Public Guardian fee review consultation"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance",
+              "impact-assessments",
+              "consultations",
+              "explanatory"
+            ],
+            "queries": {
+              "legislation": "Public Guardian fees statutory instrument regulations",
+              "debates": "Public Guardian fees increase justification debate",
+              "committees": "Public Guardian fees scrutiny committee report",
+              "guidance": "Office of Public Guardian fees practice direction",
+              "impact-assessments": "Public Guardian fees impact assessment costs benefits",
+              "consultations": "Public Guardian fees consultation response proposals",
+              "explanatory": "Public Guardian fees explanatory memorandum purpose justification"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance",
+              "impact-assessments",
+              "consultations",
+              "explanatory"
+            ],
+            "queries": {
+              "legislation": "Public Guardian fees statutory instrument regulations",
+              "debates": "Public Guardian fees increase justification debate",
+              "committees": "Public Guardian fees scrutiny committee report",
+              "guidance": "Office of Public Guardian fee increase guidance",
+              "impact-assessments": "Public Guardian fees impact assessment costs benefits",
+              "consultations": "Public Guardian fees consultation response justification",
+              "explanatory": "Public Guardian fees explanatory memorandum purpose justification"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "legislation",
+              "debates",
+              "committees",
+              "guidance",
+              "impact-assessments",
+              "consultations",
+              "explanatory"
+            ],
+            "queries": {
+              "legislation": "Public Guardian fees statutory instrument regulations",
+              "debates": "Public Guardian fees increase justification debate",
+              "committees": "Public Guardian fees scrutiny committee report",
+              "guidance": "Office of Public Guardian fee increase guidance",
+              "impact-assessments": "Public Guardian fees impact assessment costs benefits",
+              "consultations": "Public Guardian fees consultation response justification",
+              "explanatory": "Public Guardian fees explanatory memorandum purpose justification"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    },
+    {
+      "code": "I9",
+      "n": 39,
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "cls": "SELECTION",
+      "why": "admitted by [legislation] and findable scoped (best rank 45), but the router named that stream on only 0/3 rolls",
+      "keys": [
+        {
+          "id": "impact-assessments:2017-92:6",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": 45,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        },
+        {
+          "id": "impact-assessments:2017-92:7",
+          "corpus": "impact-assessments",
+          "servedTier": "legislation",
+          "scopedRank": -1,
+          "admittedBy": [
+            "legislation"
+          ],
+          "admittedByV2": [
+            "legislation",
+            "impact-assessments"
+          ]
+        }
+      ],
+      "legislationRollRate": 0,
+      "rolls": {
+        "v1": [
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "Public Guardian fee setting government options consideration",
+              "committees": "Public Guardian fees inquiry evidence government options",
+              "guidance": "Office of Public Guardian fee review consultation"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "Public Guardian fee setting government options consideration",
+              "committees": "Public Guardian fee scrutiny government options evidence",
+              "guidance": "Office of Public Guardian fee review consultation"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "debates",
+              "committees",
+              "guidance"
+            ],
+            "queries": {
+              "debates": "Public Guardian fee government options consideration",
+              "committees": "Public Guardian fee setting inquiry evidence",
+              "guidance": "Office of Public Guardian fee review consultation"
+            },
+            "failedOpen": false
+          }
+        ],
+        "v2": [
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "Public Guardian fee options appraised impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "Public Guardian fee options appraised impact assessment"
+            },
+            "failedOpen": false
+          },
+          {
+            "streams": [
+              "impact-assessments"
+            ],
+            "queries": {
+              "impact-assessments": "Public Guardian fee options appraised impact assessment"
+            },
+            "failedOpen": false
+          }
+        ]
+      }
+    }
+  ]
+}

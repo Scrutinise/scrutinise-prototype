@@ -1,0 +1,909 @@
+{
+  "takenAt": "2026-09-07T22:10:54.083Z",
+  "config": "[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=off SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=off BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=off FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=off ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation,debates,committees,caselaw GEMINI_API_KEY=set | GEMINI_API_KEY=set",
+  "repeat": 3,
+  "scope": "all",
+  "control": true,
+  "summary": {
+    "impact": {
+      "n": 10,
+      "gainedLegislation": 0,
+      "lostLegislation": 0
+    },
+    "others": {
+      "n": 36,
+      "gainedLegislation": 0,
+      "lostLegislation": 0,
+      "lostAnyStream": 3
+    }
+  },
+  "rows": [
+    {
+      "code": "C1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "committees"
+      ],
+      "onStreams": [
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees"
+      ],
+      "onStreams": [
+        "debates",
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "committees"
+      ],
+      "onStreams": [
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees"
+      ],
+      "onStreams": [
+        "debates",
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "committees"
+      ],
+      "onStreams": [
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "committees"
+      ],
+      "onStreams": [
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "committees"
+      ],
+      "onStreams": [
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "committees"
+      ],
+      "onStreams": [
+        "committees"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "C10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees"
+      ],
+      "gained": [],
+      "lost": [
+        "guidance"
+      ]
+    },
+    {
+      "code": "K2",
+      "collection": "caselaw",
+      "question": "What did the Supreme Court decide about prorogation of Parliament?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "K3",
+      "collection": "caselaw",
+      "question": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "caselaw"
+      ],
+      "onStreams": [
+        "caselaw"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "K4",
+      "collection": "caselaw",
+      "question": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "K5",
+      "collection": "caselaw",
+      "question": "Is there a Supreme Court case about employment tribunal fees?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "caselaw"
+      ],
+      "onStreams": [
+        "caselaw"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "K6",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "offRate": 0.3333333333333333,
+      "onRate": 0,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "caselaw"
+      ],
+      "gained": [],
+      "lost": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ]
+    },
+    {
+      "code": "K10",
+      "collection": "caselaw",
+      "question": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "caselaw"
+      ],
+      "onStreams": [
+        "caselaw"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G1",
+      "collection": "guidance",
+      "question": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [
+        "debates",
+        "committees"
+      ],
+      "lost": []
+    },
+    {
+      "code": "G2",
+      "collection": "guidance",
+      "question": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G3",
+      "collection": "guidance",
+      "question": "What happens when someone is accused of making a false allegation of rape?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G4",
+      "collection": "guidance",
+      "question": "What are the rules police have to follow when stopping and searching someone?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G5",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "guidance"
+      ],
+      "onStreams": [
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G6",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G7",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "offRate": 0.6666666666666666,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G8",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "guidance"
+      ],
+      "onStreams": [
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G9",
+      "collection": "guidance",
+      "question": "When can HMRC depart from the strict letter of the law?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "G10",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I1",
+      "collection": "impact-assessments",
+      "question": "What did the government think banning plastic straws would cost?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I2",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I3",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I4",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "offRate": 0,
+      "onRate": 0.3333333333333333,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I5",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": [
+        "committees"
+      ]
+    },
+    {
+      "code": "I6",
+      "collection": "impact-assessments",
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I7",
+      "collection": "impact-assessments",
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I8",
+      "collection": "impact-assessments",
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I9",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "I10",
+      "collection": "impact-assessments",
+      "question": "Has anyone assessed whether the plastic straw ban actually worked?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N1",
+      "collection": "consultations",
+      "question": "What did the government consult on about reducing sewage discharges?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N2",
+      "collection": "consultations",
+      "question": "Was there a consultation on the smoking age ban?",
+      "offRate": 0,
+      "onRate": 0.3333333333333333,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N3",
+      "collection": "consultations",
+      "question": "What did the government propose to change about building safety regulation?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N4",
+      "collection": "consultations",
+      "question": "Has the government consulted on gambling sponsorship?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N5",
+      "collection": "consultations",
+      "question": "What has the government asked about AI and copyright?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N6",
+      "collection": "consultations",
+      "question": "What was consulted on for leasehold reform?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N7",
+      "collection": "consultations",
+      "question": "Is there guidance being consulted on for storm overflows?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "guidance"
+      ],
+      "gained": [],
+      "lost": [
+        "debates",
+        "committees"
+      ]
+    },
+    {
+      "code": "N8",
+      "collection": "consultations",
+      "question": "What did the government consult on for net zero aviation?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N9",
+      "collection": "consultations",
+      "question": "Was there a consultation about electrical safety in building regulations?",
+      "offRate": 1,
+      "onRate": 1,
+      "offStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    },
+    {
+      "code": "N10",
+      "collection": "consultations",
+      "question": "What did respondents say about the renters' reform proposals?",
+      "offRate": 0,
+      "onRate": 0,
+      "offStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "onStreams": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "gained": [],
+      "lost": []
+    }
+  ]
+}

@@ -1,0 +1,386 @@
+{
+  "takenAt": "2026-09-07T22:11:03.068Z",
+  "config": "[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=off SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=off BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=off FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=off ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation,debates,committees,caselaw GEMINI_API_KEY=set | FTS_SEARCH_URL=set",
+  "depth": 200,
+  "collection": {
+    "n": 18759,
+    "docs": 1172
+  },
+  "kindTally": {
+    "COVER-SHEET": 5,
+    "STRIPPED-TABLE": 4,
+    "SUBSTANTIVE": 7,
+    "DECLARED-ABSENT": 2
+  },
+  "unanswerableKeys": 9,
+  "totalKeys": 18,
+  "granularity": {
+    "n": 9,
+    "sectionHit20": 0,
+    "docHit20": 4,
+    "sectionHitDepth": 2,
+    "docHitDepth": 8
+  },
+  "figureSurvival": {
+    "Preferred option": {
+      "n": 40,
+      "money": 9,
+      "labels": 6,
+      "labelsNoMoney": 2
+    },
+    "Summary": {
+      "n": 52,
+      "money": 3,
+      "labels": 4,
+      "labelsNoMoney": 3
+    },
+    "Costs and benefits": {
+      "n": 58,
+      "money": 38,
+      "labels": 50,
+      "labelsNoMoney": 15
+    }
+  },
+  "rows": [
+    {
+      "code": "I1",
+      "n": 31,
+      "question": "What did the government think banning plastic straws would cost?",
+      "sectionRank": -1,
+      "docRank": 3,
+      "keys": [
+        {
+          "id": "impact-assessments:2020-57:1",
+          "sectionTitle": "Summary",
+          "kind": "COVER-SHEET",
+          "markers": [
+            "IA No",
+            "RPC Reference No",
+            "Lead department or agency",
+            "Contact for enquiries",
+            "Source of intervention",
+            "Type of measure",
+            "Summary: Intervention and Options",
+            "Stage:"
+          ],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 71,
+          "r2Present": true,
+          "bodyHead": "1 Title: Impact Assessment on the proposal to ban the supply of plastic drinking straws to the end user in England IA No: RPC Reference No: RPC-4316(3)-DEFRA Lead department or agency: Department for Environment, Food and Rural Affairs (Defra) Other departments or agencies: Impact Assessment (IA) Date: 13/05/2020 Stage: Final Source of intervention: Domestic Type of measure: Secondary legislation "
+        },
+        {
+          "id": "impact-assessments:2020-57:2",
+          "sectionTitle": "Preferred option",
+          "kind": "STRIPPED-TABLE",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": true,
+          "declaresAbsent": false,
+          "words": 17,
+          "r2Present": true,
+          "bodyHead": "Cost of Preferred Option (2016 prices, 2017 present value) Total Net Present Value Business Net Present Value"
+        }
+      ]
+    },
+    {
+      "code": "I2",
+      "n": 32,
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "sectionRank": -1,
+      "docRank": 2,
+      "keys": [
+        {
+          "id": "impact-assessments:2023-77:1",
+          "sectionTitle": "Summary",
+          "kind": "COVER-SHEET",
+          "markers": [
+            "IA No",
+            "RPC Reference No",
+            "Lead department or agency",
+            "Contact for enquiries",
+            "Source of intervention",
+            "Type of measure",
+            "Summary: Intervention and Options",
+            "Stage:"
+          ],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 60,
+          "r2Present": true,
+          "bodyHead": "1 Title: Impact assessment: Building Safety (Responsible Actors Scheme and Prohibitions) Regulations 2023 IA No: N/A RPC Reference No: N/A Lead department or agency: Department for Levelling Up, Housing and Communities Other departments or agencies: N/A Impact Assessment (IA) Date: 25/04/2023 Stage: Final Source of intervention: Domestic Type of measure: Secondary Legislation Contact for enquiries"
+        },
+        {
+          "id": "impact-assessments:2023-77:2",
+          "sectionTitle": "Preferred option",
+          "kind": "STRIPPED-TABLE",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": true,
+          "declaresAbsent": false,
+          "words": 16,
+          "r2Present": true,
+          "bodyHead": "Cost of Preferred Option (in 2019 prices) Total Net Present Social Value Business Net Present Value"
+        },
+        {
+          "id": "impact-assessments:2023-77:3",
+          "sectionTitle": "Costs and benefits",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": true,
+          "hasCostLabels": true,
+          "declaresAbsent": true,
+          "words": 15,
+          "r2Present": true,
+          "bodyHead": "Net cost to business per year Business Impact Target Status -£0.9m -£0.4m £0.0m Non-Qualifying Provision"
+        }
+      ]
+    },
+    {
+      "code": "I3",
+      "n": 33,
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "sectionRank": -1,
+      "docRank": 5,
+      "keys": [
+        {
+          "id": "impact-assessments:2023-14:1",
+          "sectionTitle": "Summary",
+          "kind": "COVER-SHEET",
+          "markers": [
+            "IA No",
+            "RPC Reference No",
+            "Lead department or agency",
+            "Contact for enquiries",
+            "Source of intervention",
+            "Type of measure",
+            "Summary: Intervention and Options",
+            "Stage:"
+          ],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 57,
+          "r2Present": true,
+          "bodyHead": "1 Title: Environment Act Targets Impact Analysis: Waste Reduction IA No: N/A RPC Reference No: N/A Lead department or agency: Department for Environment Food and Rural Affairs (Defra) Other departments or agencies: N/A Impact Assessment (IA) Date: 19/12/2022 Stage: Final Source of intervention: Domestic Type of measure: Secondary legislation Contact for enquiries: ResourcesandWasteTargets@defra.go"
+        },
+        {
+          "id": "impact-assessments:2023-14:3",
+          "sectionTitle": "Costs and benefits",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": true,
+          "hasCostLabels": true,
+          "declaresAbsent": false,
+          "words": 17,
+          "r2Present": true,
+          "bodyHead": "Net cost to business per year Business Impact Target Status Not direct regulatory policy £3,157m N/A N/A"
+        }
+      ]
+    },
+    {
+      "code": "I4",
+      "n": 34,
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "sectionRank": -1,
+      "docRank": 30,
+      "keys": [
+        {
+          "id": "impact-assessments:2017-78:2",
+          "sectionTitle": "RPC opinion",
+          "kind": "DECLARED-ABSENT",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": true,
+          "declaresAbsent": true,
+          "words": 19,
+          "r2Present": true,
+          "bodyHead": "RPC Opinion: Not Applicable Cost of Preferred (or more likely) Option Total Net Present Value Business Net Present Value"
+        }
+      ]
+    },
+    {
+      "code": "I5",
+      "n": 35,
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "sectionRank": -1,
+      "docRank": 21,
+      "keys": [
+        {
+          "id": "impact-assessments:2017-78:3",
+          "sectionTitle": "Costs and benefits",
+          "kind": "DECLARED-ABSENT",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": true,
+          "declaresAbsent": true,
+          "words": 29,
+          "r2Present": true,
+          "bodyHead": "Net cost to business per year (EANDCB in 2014 prices, 2015 present value) One-In, Three-Out Business Impact Target Status Not estimated N/A N/A Not in scope Non qualifying provision"
+        }
+      ]
+    },
+    {
+      "code": "I6",
+      "n": 36,
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "sectionRank": -1,
+      "docRank": 35,
+      "keys": [
+        {
+          "id": "impact-assessments:2018-21:1",
+          "sectionTitle": "Summary",
+          "kind": "COVER-SHEET",
+          "markers": [
+            "IA No",
+            "Lead department or agency",
+            "Source of intervention",
+            "Type of measure",
+            "Summary: Intervention and Options",
+            "Stage:"
+          ],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 83,
+          "r2Present": true,
+          "bodyHead": "Page 1 Title: Amendments to environmental permitting regulations to improve air quality by application of emission controls to high NO x generators in anticipation of the 2020 NO x emission ceiling within the Gothenburg Protocol IA No: DEFRA2039 Lead department or agency: Department for Environment, Food and Rural Affairs Other departments or agencies: Department for Business, Energy, & Industrial"
+        },
+        {
+          "id": "impact-assessments:2018-21:2",
+          "sectionTitle": "RPC opinion",
+          "kind": "STRIPPED-TABLE",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": true,
+          "declaresAbsent": false,
+          "words": 21,
+          "r2Present": true,
+          "bodyHead": "RPC Opinion: Green (fit for purpose) Cost of Preferred (or more likely) Option Total Net Present Value Business Net Present Value"
+        },
+        {
+          "id": "impact-assessments:2018-21:3",
+          "sectionTitle": "Costs and benefits",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": true,
+          "hasCostLabels": true,
+          "declaresAbsent": true,
+          "words": 25,
+          "r2Present": true,
+          "bodyHead": "Net cost to business per year (EANCB 2014 prices) In scope of One-In, Three-Out? Measure qualifies as £-49.03m -£106.8m £8.1m Out of Scope Non-qualifying provision"
+        }
+      ]
+    },
+    {
+      "code": "I7",
+      "n": 37,
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "sectionRank": -1,
+      "docRank": -1,
+      "keys": [
+        {
+          "id": "impact-assessments:2022-92:1",
+          "sectionTitle": "Summary",
+          "kind": "COVER-SHEET",
+          "markers": [
+            "IA No",
+            "RPC Reference No",
+            "Lead department or agency",
+            "Contact for enquiries",
+            "Source of intervention",
+            "Type of measure",
+            "Summary: Intervention and Options",
+            "Stage:"
+          ],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 58,
+          "r2Present": true,
+          "bodyHead": "OFFICIAL-SENSITIVE Title: Impact Assessment New International Data Transfers Adequacy Decision - Republic of Korea IA No: RPC Reference No: RPC-DCMS-5221(1) Lead department or agency: Department for Digital, Culture, Media & Sport Other departments or agencies: Impact Assessment (IA) Date: 11/07/2022 Stage:Final Source of intervention: Domestic Type of measure: Secondary Contact for enquiries:data"
+        },
+        {
+          "id": "impact-assessments:2022-92:2",
+          "sectionTitle": "Preferred option",
+          "kind": "STRIPPED-TABLE",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": true,
+          "declaresAbsent": false,
+          "words": 18,
+          "r2Present": true,
+          "bodyHead": "Cost of Preferred Option (2019 prices, 2020 present value) Total Net Present Social Value Business Net Present Value"
+        }
+      ]
+    },
+    {
+      "code": "I8",
+      "n": 38,
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "sectionRank": 89,
+      "docRank": 89,
+      "keys": [
+        {
+          "id": "impact-assessments:2017-92:4",
+          "sectionTitle": "Problem under consideration",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 57,
+          "r2Present": true,
+          "bodyHead": "What is the problem under consideration? Why is government intervention necessary? Due to the large volume of applications to register powers of attorney, the Office of the Public Guardian (OPG) is currently receiving more income through registration fees than the cost of the service. Government intervention is necessary to set a new fee to rectify the situation."
+        },
+        {
+          "id": "impact-assessments:2017-92:3",
+          "sectionTitle": "Costs and benefits",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": true,
+          "hasCostLabels": true,
+          "declaresAbsent": true,
+          "words": 25,
+          "r2Present": true,
+          "bodyHead": "Net cost to business per year (EANCB on 2014 prices) In scope of One-In, Three-Out? Measure qualifies as -£0.1m N/A N/A Not in scope N/A"
+        }
+      ]
+    },
+    {
+      "code": "I9",
+      "n": 39,
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "sectionRank": 45,
+      "docRank": 1,
+      "keys": [
+        {
+          "id": "impact-assessments:2017-92:6",
+          "sectionTitle": "Options considered",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": true,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 64,
+          "r2Present": true,
+          "bodyHead": "What policy options have been considered, including any alternatives to regulation? Please justify preferred option. The following options are considered: • Option 0: Do Nothing. Maintain the current fee structure • Option 1: Introduce enhanced charging for powers of attorney which recovers the cost of the services, including remission and exemptions and lower the registration fee to £82 and the r"
+        },
+        {
+          "id": "impact-assessments:2017-92:7",
+          "sectionTitle": "Preferred option",
+          "kind": "SUBSTANTIVE",
+          "markers": [],
+          "hasMoney": false,
+          "hasCostLabels": false,
+          "declaresAbsent": false,
+          "words": 16,
+          "r2Present": true,
+          "bodyHead": "The Government’s preferred option is to implement Option 1 as this best meets the policy objective."
+        }
+      ]
+    }
+  ]
+}
