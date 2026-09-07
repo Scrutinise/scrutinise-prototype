@@ -61,12 +61,33 @@ const LEG_MEANING: Record<PrecedentLeg['leg'], string> = {
 }
 
 /**
- * ⚠ THE SECTION-TITLE RULE THAT SEPARATES "PREDICTED" FROM "OBSERVED".
+ * ⚠⚠⚠ THE SECTION-TITLE RULE IS WRONG ABOUT THE WORLD, AND IT IS WRONG IN THE ONE DIRECTION THIS
+ * FILE EXISTS TO PREVENT. CORRECTED 2026-09-07 (S18 §2). DO NOT USE — see `impactLegOf` below.
  *
- * Both live in `impact-assessments`. A row whose section title names a post-implementation review
- * is the OBSERVED leg; everything else in that collection is PREDICTED. Exported so it can be
- * tested without a database, because getting this backwards would present a prediction as an
- * outcome — the single most misleading thing this intent could do.
+ * The rule reads: *"A row whose section title names a post-implementation review is the OBSERVED
+ * leg."* The title test is accurate. **The inference from it is not.** Every standard HMG impact
+ * assessment carries a front-matter box HEADED "Post-implementation review", and what is inside
+ * that box is a TICK: *"Will the policy be reviewed? It will be reviewed. If applicable, set
+ * review date: 5 years post implementation."* It is a promise to look, written before the measure
+ * commenced. One of the sampled sections reads *"Will the policy be reviewed? **No.** If
+ * applicable, set review date: N/A"* — and under the title rule that document is the answer to
+ * "what actually HAPPENED".
+ *
+ * MEASURED, 30 such sections sampled by md5(id) and read out of R2:
+ *   promise-only 25 · review-only 1 · both 0 · neither 4
+ *
+ * ⚠ THE DEFECT WAS INVISIBLE UNTIL THE JOIN WAS FIXED, WHICH IS WHY IT SURFACED NOW. The
+ * `impact-assessments` legs of `retrievePrecedent` had never returned a row (the id/parentDocId
+ * bug fixed below), so this rule had never once been applied to a real document. The first render
+ * after the fix put a signature page and a review date under the heading "what actually HAPPENED".
+ * **Fixing a retrieval bug ARMED a labelling bug**, and a fix that shipped without reading its own
+ * output would have converted a silent gap into a confident falsehood on 952 instruments.
+ *
+ * @deprecated Title-only, and title is not enough. Kept and exported because
+ *   `check-s7-retrieval.ts` and `check-deepening.ts` assert on it and a signature that vanishes
+ *   under its callers is its own incident. It now answers the question it can actually answer —
+ *   *does this section's TITLE name a review* — and no caller in this codebase decides a leg
+ *   from it any more.
  */
 export function legForImpactSection(sectionTitle: string | null): 'predicted' | 'observed' {
   return /post[-\s]?implementation|pir\b|review of the (regulation|order|instrument)/i
@@ -74,7 +95,61 @@ export function legForImpactSection(sectionTitle: string | null): 'predicted' | 
 }
 
 /**
- * Assemble the three legs for one instrument.
+ * ⚠⚠ THE RULE THAT SEPARATES "PREDICTED" FROM "OBSERVED", AND IT IS A PROPERTY OF THE DOCUMENT,
+ * NOT OF THE SECTION.
+ *
+ * legislation.gov.uk publishes a post-implementation review as its OWN `ukia` document, and the
+ * stage is carried on every one of its rows in `attribution` — *"Health and Safety Executive —
+ * Post Implementation"*. A section is an OUTCOME if and only if the assessment it belongs to is
+ * itself a post-implementation review. Counted over the live collection:
+ *
+ *   Final 1,081 · **Post Implementation 71** · Enactment 11 · Consultation 2 · Implementation 1 · Options 1
+ *
+ * — i.e. 71 of 1,169 assessments, 6.1%, are reviews. (CC-Ingest's independent sweep of the source
+ * feed found 73 on the same day, from the other side; the two agree.)
+ *
+ * ⚠ THE UNKNOWN CASE DEFAULTS TO `predicted`, AND THAT DIRECTION IS DELIBERATE. A prediction
+ * mislabelled as an outcome tells a user that something was measured when nothing was; an outcome
+ * mislabelled as a prediction merely understates what we hold. Only the first is a claim about the
+ * world that we cannot support, so a null or unrecognised stage is never an outcome.
+ *
+ * Exported and self-tested without a database, for the reason the old rule gave and did not meet.
+ */
+export function impactLegOf(
+  attribution: string | null,
+): 'predicted' | 'observed' {
+  // `attribution` is "{department} — {stage}"; the stage is what decides it.
+  const stage = (attribution ?? '').split('—').slice(1).join('—').trim().toLowerCase()
+  return /^post[\s-]?implementation\b/.test(stage) ? 'observed' : 'predicted'
+}
+
+/**
+ * ⚠⚠ THE PREDICTED AND OBSERVED LEGS HAD NEVER RETURNED A ROW. FIXED 2026-09-07 (S18 §1).
+ *
+ * The join was `s.id LIKE '%:{gid}:%'`, which is right for explanatory material — an explanatory
+ * note's id is `explanatory-notes:ukpga/2010/25:1`, and the instrument gid is literally inside it.
+ * **It cannot be right for an impact assessment.** An assessment's id is
+ * `impact-assessments:2020-57:1`: the middle segment is the ASSESSMENT's own number on
+ * legislation.gov.uk, not the instrument it appraises. The instrument lives in `parentDocId`.
+ *
+ * Measured before the fix, not reasoned:
+ *
+ *   · **0 of 18,759** `impact-assessments` ids contain a `/` at all, so not one of them could ever
+ *     satisfy a LIKE against a gid — the two legs were structurally dead from the day S7 shipped.
+ *   · The correct join reaches **1,049 instruments** and **17,770 sections**.
+ *   · **952 instruments** were being told *"NO POST-IMPLEMENTATION REVIEW EXISTS for this
+ *     instrument — nobody has published an assessment of whether it worked"* while we hold
+ *     **1,197 post-implementation-review sections** for them.
+ *
+ * ⚠⚠ THAT LAST LINE IS WHY THIS IS A CORRECTNESS FIX AND NOT A RECALL IMPROVEMENT. The block's
+ * whole purpose is to keep a prediction from being read as an outcome, and the note is written to
+ * be trusted. A confident, cited "nobody has ever checked" — over a review we are holding — is the
+ * same class of error pointing the other way, and it is worse, because the absence is the finding
+ * this platform sells.
+ *
+ * ⚠ 989 impact-assessment sections carry a NULL `parentDocId` and remain unreachable BY INSTRUMENT
+ * by either join. Reported to ingest, not papered over here: they are reachable by subject search
+ * and by nothing else.
  *
  * ⚠ NEVER INVENTS A LEG. A missing post-implementation review is extremely common — most
  * instruments have never had one — and the honest output says so. Filling the gap with the impact
@@ -84,23 +159,85 @@ export function legForImpactSection(sectionTitle: string | null): 'predicted' | 
 export async function retrievePrecedent(gid: string): Promise<Precedent> {
   const rows = await prisma.$queryRaw<Array<{
     id: string; corpus: string; sectionTitle: string | null; sourceUrl: string | null
-    itemDate: string | null; parentTitle: string | null
+    itemDate: string | null; parentTitle: string | null; wordCount: number | null
+    attribution: string | null
   }>>`
     SELECT s.id, s.corpus, s."sectionTitle", s."sourceUrl", s."itemDate"::text AS "itemDate",
-           a.title AS "parentTitle"
+           s."wordCount", s.attribution, a.title AS "parentTitle"
     FROM corpus_sections s
     LEFT JOIN corpus_acts a ON a.gid = s."parentDocId"
-    WHERE s.corpus IN ('explanatory-notes', 'explanatory-memoranda', 'impact-assessments')
-      AND s.id LIKE ${'%:' + gid + ':%'}
-      AND s.status = 'compiled'
-    ORDER BY s.corpus, s.id
-    LIMIT 60`
+    WHERE s.status = 'compiled'
+      AND (
+        -- explanatory material: the gid IS in the id
+        (s.corpus IN ('explanatory-notes', 'explanatory-memoranda') AND s.id LIKE ${'%:' + gid + ':%'})
+        -- impact assessments: the gid is in parentDocId and NOWHERE in the id
+        OR (s.corpus = 'impact-assessments' AND s."parentDocId" = ${gid})
+      )
+      -- WARNING: a flat LIMIT here would reintroduce the bug it replaced. Ordered by corpus,
+      -- explanatory-notes sorts before impact-assessments, and a long Act's notes run to
+      -- hundreds of sections, so a single cap would silently drop the assessment rows again and
+      -- the block would say "no impact assessment is held" for exactly the biggest instruments.
+      -- The cap is therefore PER COLLECTION, not per instrument.
+      -- (No backticks in this comment: it lives inside a JS template literal.)
+      AND s.id IN (
+        SELECT id FROM (
+          SELECT s2.id, row_number() OVER (PARTITION BY s2.corpus ORDER BY s2.id) AS rn
+          FROM corpus_sections s2
+          WHERE s2.status = 'compiled'
+            AND (
+              (s2.corpus IN ('explanatory-notes', 'explanatory-memoranda') AND s2.id LIKE ${'%:' + gid + ':%'})
+              OR (s2.corpus = 'impact-assessments' AND s2."parentDocId" = ${gid})
+            )
+        ) t WHERE t.rn <= 120
+      )
+    ORDER BY s.corpus, s.id`
+
+  // ⚠⚠ AND THE SECOND HALF OF THE SAME DEFECT: WHICH section of the assessment is picked.
+  //
+  // The old code took the first row in `ORDER BY s.corpus, s.id`, which for an assessment is
+  // section `:1` — and section `:1` is the HMG front sheet. Read out of R2 for the plastic-straws
+  // assessment it is seventy-one words of *"Title: … IA No: … RPC Reference No: … Contact for
+  // enquiries: Dan Quinlan"*. It carries no cost, no benefit and no finding. The PREDICTED leg
+  // would have been the cover of the document even after the join was fixed.
+  //
+  // This is S16's committees finding in a second collection — *"C1's currently-PASSING key is the
+  // report's COVER PAGE … retrieving on its title and answering nothing"* — and it is why the leg
+  // is now chosen by what the section IS, with the front sheet ranked LAST rather than first.
+  //
+  // ⚠ IT IS A PREFERENCE, NOT A FILTER. A ranking rule used as a filter discards the rows that
+  // would have matched; if an assessment holds nothing but its front sheet, the front sheet is
+  // still returned — with `Summary` as its title, so the reader can see what they were given.
+  const PREDICTED_PREFERENCE = [
+    'costs and benefits', 'preferred option', 'options considered',
+    'problem under consideration', 'policy objectives', 'rationale for intervention',
+    'risks and assumptions', 'rpc opinion',
+  ]
+  const rank = (r: { sectionTitle: string | null; wordCount: number | null }): number => {
+    const t = (r.sectionTitle ?? '').trim().toLowerCase()
+    const i = PREDICTED_PREFERENCE.findIndex((p) => t.startsWith(p))
+    if (i >= 0) return i
+    // Unnamed or unrecognised sections sit between the preferred list and the front sheet.
+    if (t === 'summary') return PREDICTED_PREFERENCE.length + 1
+    return PREDICTED_PREFERENCE.length
+  }
+  const ordered = [...rows].sort((a, b) => {
+    if (a.corpus !== b.corpus) return a.corpus < b.corpus ? -1 : 1
+    if (a.corpus !== 'impact-assessments') return a.id < b.id ? -1 : 1
+    const d = rank(a) - rank(b)
+    // Longest first inside a preference band: a 15-word "Costs and benefits" stub and a 1,700-word
+    // one are both correctly named, and only one of them says anything.
+    return d !== 0 ? d : (b.wordCount ?? 0) - (a.wordCount ?? 0)
+  })
 
   const legs: PrecedentLeg[] = []
   const seen = new Set<string>()
-  for (const r of rows) {
+  for (const r of ordered) {
+    // ⚠⚠ THE STAGE DECIDES, NOT THE SECTION TITLE. See `impactLegOf` — 25 of 30 sections titled
+    // "Post-implementation review" are the front-sheet box promising a future review, and one of
+    // them promises NOT to hold one. Deciding from the title put a signature page under the
+    // heading "what actually HAPPENED".
     const leg: PrecedentLeg['leg'] = r.corpus === 'impact-assessments'
-      ? legForImpactSection(r.sectionTitle)
+      ? impactLegOf(r.attribution)
       : 'intended'
     // One document per leg — the comparison is between legs, not within them.
     if (seen.has(leg)) continue
