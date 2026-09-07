@@ -301,7 +301,42 @@ whether the Lex build should file positions (one line in `build.ts`), and the no
 ## LEX THREAD
 
 
-*Last updated: 2026-09-04 01:45 UTC — ▼ **LEX 26-A — POSITIONS THAT MEAN SOMETHING, AND A
+*Last updated: 2026-09-04 04:20 UTC — ▼ **LEX — THE RE-RUN CONTROLS ON THE MAIN IDEA PAGE.**
+(Two commits after 26-A: `40bedf1`, `4532a2f`, `33bdcfb`. Production verified on `33bdcfb`.)
+▶▶ ⚠⚠ **THE REBUILD BUTTON WAS NEVER ON THAT PAGE.** `git log -S "Re-run this idea" --
+CreateIdeaClient.tsx` returns nothing — the block has only ever lived on `/ideas/build`. What the
+main idea page has is `RerunBanner`, which reports a run **already in progress** and disappears
+when it finishes, so on a settled idea there is nothing to press. **`RerunOptions` is new**: it
+fetches its own build state and opens the SAME `RerunDialogue` the build page opens.
+▶ **The card says: "This may take about 10 minutes — we will email you when it's finished."**
+⚠ The number is the **measured** mean (614.6 s over 20 builds), not the word "ten" — hardcoding
+it would contradict the cost line beneath it the first time a build got faster.
+⚠⚠ **And the POST sets `notifyEmail: true` EXPLICITLY.** `claimBuild` would otherwise fall back
+to the remembered preference (default `true` since 25-X), so it would *very probably* send —
+**and "very probably" is not what a sentence on a screen says.** Asserted, with a firing control.
+▶ **The email itself is NOT new** — 25-W diagnosed it, 25-X set the Railway variables, 25-Y
+proved a real send (provider id `9716f86f-…`). Worker re-read: `RESEND_API_KEY` PRESENT,
+start-up line says *"email is configured"*.
+▶▶ ⚠⚠ **REMOVING THE "WHAT TO DO NEXT" BOX WOULD HAVE SILENTLY DROPPED THREE SECTIONS** — this
+answers 25-Z §2d. *What to read*, *gaps in what we hold* and *what you know that we don't* lived
+inside it and **nothing else rendered the `work` view**. They moved to the WORKING AREA under the
+worklist, renamed **"Reading, gaps and what only you know"**.
+▶ ⚠ **A latent bug from 25-Z, found on the way:** `hasWork` still counted the challenges after
+they moved to THE RESEARCH, so an idea with challenges and nothing else would have rendered that
+box with a heading, a count and an **empty body**. Gate and counts now describe what it draws.
+▶▶ ⚠⚠ **AND `check:lex-26a` WAS WRONG, NOT THE PRODUCT.** SURFACE 4 changed
+`findClaimTarget(terms)` → `findClaimTarget(ideaId)`; **both signatures are `string`**, so the
+check compiled cleanly while handing a 4,444-character paragraph to a lookup by id and reported
+the null as a regression. **A green typecheck is not a green call.** ▶ Their fix also improved
+26-A's finding: the pilot idea went from a *machinery-safety regulation* matched on "northern
+ireland" to **"Civil Service pensions"** on "civil service". ⚠ The two-word floor is unchanged,
+so **the finding stands**.
+✅ `check:lex-26a` **26/0, 1 FINDING, 5 controls, 0 dead**; `check:lex-25z` 50/0; tsc,
+check:scripts, check:client-boundary green.
+⚠ **THE ONE THING ONLY CHARLIE CAN CONFIRM: that the email actually LANDS.** The send is proven
+at the provider — a 2xx and an id — but whether Resend delivers to `cl@scrutinise.org` rather
+than filing it somewhere is not visible from a session.
+Earlier: 2026-09-04 01:45 UTC — ▼ **LEX 26-A — POSITIONS THAT MEAN SOMETHING, AND A
 CAVEAT THAT COUNTS.**
 ⚠⚠ **A SURFACE-3 SESSION BUILT MOST OF §1, §2 AND §4 OVERNIGHT** (landing 01:23, 36 minutes
 before this brief was written). This sprint VERIFIES those and builds what they could not: §3,
