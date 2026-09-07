@@ -1,0 +1,61 @@
+{
+  "generated": "2026-09-07T21:52:51.634Z",
+  "rows": [
+    {
+      "ukia": "ukia/2007/13",
+      "title": "Planning Bill: Impact Assessment of amending s237 Town and Country Planning Act and equivalents - Impact Assessment",
+      "pdfUrl": "https://www.legislation.gov.uk/ukia/2007/13/pdfs/ukia_20070013_en.pdf",
+      "pdfBytes": 1092360,
+      "pdfHash": "7a617294bfbb3042",
+      "freshChars": 375965,
+      "freshHash": "754fb97228ec17b4",
+      "heldChars": 375961,
+      "heldHash": "045e5b6dae9ab7c8",
+      "freshMatchesHeld": true,
+      "freshHead": "Planning Bill – Impact Assessment www.communities.gov.uk community, opportunity, prosperity Planning Bill – Impact Assessment November 2007: London Departmen",
+      "heldHead": "Planning Bill – Impact Assessment www.communities.gov.uk community, opportunity, prosperity Planning Bill – Impact Assessment November 2007: London Department "
+    },
+    {
+      "ukia": "ukia/2007/20",
+      "title": "Planning Bill: Impact Assessment of granting local planning authorities the discretion to allow minor amendments to existing planning permissions - Impact Assessment",
+      "pdfUrl": "https://www.legislation.gov.uk/ukia/2007/20/pdfs/ukia_20070020_en.pdf",
+      "pdfBytes": 1092360,
+      "pdfHash": "7a617294bfbb3042",
+      "freshChars": 375965,
+      "freshHash": "754fb97228ec17b4",
+      "heldChars": 375961,
+      "heldHash": "045e5b6dae9ab7c8",
+      "freshMatchesHeld": true,
+      "freshHead": "Planning Bill – Impact Assessment www.communities.gov.uk community, opportunity, prosperity Planning Bill – Impact Assessment November 2007: London Departmen",
+      "heldHead": "Planning Bill – Impact Assessment www.communities.gov.uk community, opportunity, prosperity Planning Bill – Impact Assessment November 2007: London Department "
+    },
+    {
+      "ukia": "ukia/2019/24",
+      "title": "EU (Withdrawal) Act - Financial Services SIs (iii) - Impact Assessment",
+      "pdfUrl": "https://www.legislation.gov.uk/ukia/2019/24/pdfs/ukia_20190024_en.pdf",
+      "pdfBytes": 588335,
+      "pdfHash": "1dfe1190bf14953e",
+      "freshChars": 162513,
+      "freshHash": "5919ce30c65556ed",
+      "heldChars": 159938,
+      "heldHash": "ca630bbbb7b7b925",
+      "freshMatchesHeld": true,
+      "freshHead": "1 Title: European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) IA No: RPC-4329(1)-HMT RPC Reference No: RPC-4329(1)-HMT",
+      "heldHead": "1 Title: European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) IA No: RPC-4329(1)-HMT RPC Reference No: RPC-4329(1)-HMT"
+    },
+    {
+      "ukia": "ukia/2019/94",
+      "title": "Impact Assesment - Impact Assessment",
+      "pdfUrl": "https://www.legislation.gov.uk/ukia/2019/94/pdfs/ukia_20190094_en.pdf",
+      "pdfBytes": 588232,
+      "pdfHash": "3ef2802e8cb97ffb",
+      "freshChars": 162513,
+      "freshHash": "5919ce30c65556ed",
+      "heldChars": 159938,
+      "heldHash": "ca630bbbb7b7b925",
+      "freshMatchesHeld": true,
+      "freshHead": "1 Title: European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) IA No: RPC-4329(1)-HMT RPC Reference No: RPC-4329(1)-HMT",
+      "heldHead": "1 Title: European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) IA No: RPC-4329(1)-HMT RPC Reference No: RPC-4329(1)-HMT"
+    }
+  ]
+}

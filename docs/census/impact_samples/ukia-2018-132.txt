@@ -1,0 +1,837 @@
+
+
+═══════ [impact-assessments:2018-132:1] Summary  (69 words) ═══════
+1 
+Title:    Control of pregabalin and gabapentin, post 
+consultation review 
+IA No:  
+HO0321 
+RPC Reference No:   
+N/A 
+Lead department or agency:  Home Office 
+Other departments or agencies:   
+The Department of Health, 
+The Advisory Council on the Misuse of Drugs
+ 
+Impact Assessment (IA) 
+Date October 2018 
+Stage: Final  
+Source of intervention: Domestic 
+Type of measure: Secondary legislation  
+Contact for enquiries: Drugs and Alcohol 
+Unit, Home Office           
+Summary: Intervention and Options
+
+═══════ [impact-assessments:2018-132:2] RPC opinion  (19 words) ═══════
+RPC Opinion: Not applicable 
+ 
+Cost of Preferred (or more likely) Option 
+Total Net 
+Present Value 
+Business Net 
+Present Value
+
+═══════ [impact-assessments:2018-132:3] Costs and benefits  (25 words) ═══════
+Net cost to business per 
+year (EANDCB in 2014 prices) 
+One-In,  
+Three-Out 
+Business Impact Target       
+Status 
+ 
+-£54m -£0.1m £0.01m Not applicable Not a regulatory provision
+
+═══════ [impact-assessments:2018-132:4] Problem under consideration  (129 words) ═══════
+What is the problem under consideration? Why is government intervention necessary? 
+The number of deaths related to pregabalin and gabapentin have increased in recent years (170 
+deaths registered in England and Wales in 2016, compared to 139 deaths in 2015 and 64 deaths 
+in 2014), and concerns have been raised by a number of organisations relating to their harms. The 
+Advisory Council on the Misuse of Drugs undertook a review of these substances and found 
+significant evidence of potential harms, recommending that they are controlled under the Misuse 
+of Drugs Act 1971 (the 1971 Act) as Class C substances and scheduled under Schedule 3 of the 
+Misuse of Drugs Regulations 2001 (the 2001 Regulations).  
+Government intervention is necessary to provide a stronger legal framework to restrict their illicit 
+supply.
+
+═══════ [impact-assessments:2018-132:5] Policy objectives  (56 words) ═══════
+What are the policy objectives and the intended effects? 
+The policy objective is to reduce the harms associated with the misuse of pregabalin and 
+gabapentin in the UK.  Law enforcement agencies will be given the necessary powers to do so. 
+The intended effect is to restrict their illicit supply, while maintaining their availability for healthcare 
+purposes.
+
+═══════ [impact-assessments:2018-132:6] Options considered  (84 words) ═══════
+What policy options have been considered, including any alternatives to regulation? Please justify preferred 
+option (further details in Evidence Base) 
+Option 1: Do nothing. This would leave both drugs subject to the provisions in the Psychoactive 
+Substances Act 2016 when taken for their psychoactive effect. The Government did not consult on 
+this option. 
+Option 2: Place pregabalin and gabapentin in class C of the 1971 Act and Schedule 3 to the 2001 
+Regulations (but exclude application of safe custody requirements). This is the Government’s
+
+═══════ [impact-assessments:2018-132:7] Post-implementation review  (469 words) ═══════
+Will the policy be reviewed?  It will not be reviewed.  If applicable, set review date:  N/A 
+Does implementation go beyond minimum EU requirements? N/A 
+Are any of these organisations in scope? 
+Micro
+Yes/No 
+Small
+Yes/No 
+Medium
+Yes/No 
+Large
+Yes/No 
+What is the CO
+2
+ equivalent change in greenhouse gas emissions?  
+(Million tonnes CO
+2
+ equivalent)   
+Traded:    
+N/A 
+Non-traded:    
+N/A 
+I have read the Impact Assessment and I am satisfied that, given the available evidence, it represents a 
+reasonable view of the likely costs, benefits and impact of the leading options. 
+Signed by the responsible Minister: 
+Victoria Atkins 
+ Date: 12th October 2018 
+
+ 
+2 
+Summary: Analysis & Evidence Policy Option 2 
+Description: Place pregabalin and gabapentin in class C of the 1971 Act and Schedule 3 to the 2001 Regulations (but 
+exclude application of safe custody requirements).             
+FULL ECONOMIC ASSESSMENT 
+Price Base 
+Year 2018  
+PV Base 
+Year 2018 
+     
+Time Period 
+Years 10  
+Net Benefit (Present Value (PV)) (£m) 
+Low: Optional High: Optional 
+-54.0 
+ 
+COSTS (£m) 
+Total Transition  
+ (Constant Price) Years 
+ 
+Average Annual  
+(excl. Transition) (Constant Price) 
+Total Cost
+  
+(Present Value) 
+Low  
+ 
+ 
+ 
+ 
+High  
+  
+ 
+Best Estimate 
+0.3  6.2 54.0 
+Description and scale of key monetised costs by ‘main affected groups’  
+There will be a familiarisation cost to healthcare professionals who prescribe and take 
+prescriptions for the drugs.  The cost to pharmacies is estimated to be £97,000 in year 1, and the 
+cost to GPs is estimated to be £172,000 in year 1.  There is an additional dispensing cost to the 
+NHS which is estimated at a present value of £53.7 million over the 10 years of the policy.
+ 
+Other key non-monetised costs by ‘main affected groups’  
+Prescribers will incur the cost of having to complete a form every 30 days and provide a wet 
+signature to issue prescriptions (but the expectation is that electronic prescriptions will in future be 
+available), while wholesalers will incur costs from record keeping requirements.  Police forces, law 
+enforcement agencies and the criminal justice system may also incur costs through the more 
+stringent penalties on supply and production, and the imposition of possession penalties, arising 
+from control under the 1973 Act. 
+ 
+BENEFITS (£m) 
+Total Transition  
+ (Constant Price) Years 
+ 
+Average Annual  
+(excl. Transition) (Constant Price) 
+Total Benefit  
+(Present Value) 
+Low  
+ 
+ 
+ 
+ 
+High  
+  
+ 
+Best Estimate 
+Not known Not known Not known 
+Description and scale of key monetised benefits by ‘main affected groups’  
+It has not been possible to monetise the benefits of this option due to a lack of data.  
+Other key non-monetised benefits by ‘main affected groups’  
+This option will reduce the risk of diversion of these drugs, reducing the potential for misuse. As a 
+result, there will likely be benefits to health services, law enforcement and the public. There may 
+also be a reduction in the prescribing of these medicines, which could generate significant cost 
+savings for the health service.
+
+═══════ [impact-assessments:2018-132:8] Risks and assumptions (part 1)  (1697 words) ═══════
+Key assumptions/sensitivities/risks Discount rate (%) 
+3.5% 
+Excluding the application of Safe Custody requirements may mean that the risk of diversion is not 
+fully mitigated. 
+
+BUSINESS ASSESSMENT (Option 2) 
+Direct impact on business (Equivalent Annual) £m:  Score for Business Impact Target (qualifying 
+provisions only) £m: 
+Costs:          0.01 Benefits:      0.00 Net:         -0.01 
+         N/A 
+
+3 
+
+Evidence Base (for summary sheets) 
+
+A.   Strategic Overview 
+
+A.1   Background 
+
+1. Pregabalin and gabapentin are indicated for the management of a number of conditions including 
+of neuropathic pain, epilepsy, as an adjunct therapy for partial seizures, generalised anxiety 
+disorder. 
+
+2. However, the chronic harms of pregabalin and gabapentin include physical dependence. Public 
+Health England (PHE) has issued guidance
+1
+ to state that prescribing pregabalin and gabapentin 
+for patients with a known or suspected propensity to misuse may place such people at greater 
+risks from their usage. As a result, the guidance advises prescribers to carry out a proportionate 
+risk benefit assessment prior to prescribing or issuing repeat prescriptions. 
+
+3. As shown in the tables below, the number of prescriptions of pregabalin and gabapentin has 
+increased in recent years. Tramadol has been included in the tables for comparison purposes, as it 
+was also recently made subject to control as a Class C drug under Schedule 3 without safe 
+custody requirements. 
+
+Table 1 – Items of pregabalin, gabapentin and tramadol dispensed in England, 2012 to 2017
+2
+
+  2012 2013 2014 2015 2016 2017 
+Pregabalin 2,730,730 3,349,784 4,086,432 4,801,622 5,547,560 6,253,045 
+Gabapentin 3,531,887 4,212,289 4,978,915 5,722,990 6,466,482 7,086,846 
+Tramadol Hydrochloride 7,608,409 7,913,030 7,909,333 7,542,483 7,331,639 6,888,354 
+
+4. A number of organisations have raised concerns relating to the harms associated with these 
+substances. For example, PHE have written to prescribers to highlight the potential issues related 
+to their misuse, diversion and dependence problems, while the 2014 DrugScope Street Drug 
+Survey
+3
+ reported the significant use of both drugs mainly among the opioid-using and prison 
+populations. In February 2015 Her Majesty’s Inspectorate of Prisons reported findings from health 
+staff that a significant number of prisons had high numbers of prisoners being prescribed 
+pregabalin or gabapentin in a way that did not meet best practice guidelines
+4
+. Initial concerns 
+about the potential misuse of pregabalin were raised in 2014 by the Health and Social Care Board, 
+who noted that the use of pregabalin in Northern Ireland was significantly higher than in the rest of 
+the UK and highlighted growing misuse and abuse
+5
+. 
+
+5. The number of deaths related to these substances has also increased in recent years. Office of 
+National Statistics (ONS) data shows that there were 111 deaths in England and Wales in 2016 
+where pregabalin was mentioned on the death certificate and 59 where gabapentin was 
+mentioned
+6
+. This compares with 90 deaths from pregabalin and 49 from gabapentin in 2015, and 
+38 and 26 respectively in 2014. Statistics from the Northern Ireland Statistics and Research 
+
+1
+ https://www.gov.uk/government/publications/pregabalin-and-gabapentin-advice-for-prescribers-on-the-risk-of-misuse 
+2
+ http://digital.nhs.uk/catalogue/PUB30014  Trend tables, table 10. 
+3
+ http://www.senedd.assembly.wales/documents/s36166/HSC4-04-15%20Paper%203.pdf 
+4 HMI Prisons response to ACMD request for update on intelligence on the misuse of pregabalin in prisons in England and Wales, February 
+2015
+
+5
+ https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/491854/ACMD_Advice_-
+_Pregabalin_and_gabapentin.pdf  See page 1,  
+6
+https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/bulletins/deathsrelatedtodrugpoisoninginenglandand
+wales/2016registrations#deaths-involving-selected-substances 
+
+4 
+
+Agency report “Drug related and Drug Misuse Deaths 2006-2016” indicate that there were 8 deaths 
+related to pregabalin in 2016. This is an increase from zero in 2006
+7
+. 
+
+6. Following these concerns, the Advisory Council for the Misuse of Drugs (ACMD) undertook a 
+review into the potential harms arising from the misuse of pregabalin and gabapentin. The review 
+was published on the 14
+th
+ January 2016
+8
+, and found evidence of significant potential harms. The 
+report recommended that both drugs be controlled as Class C drugs under the Misuse of Drugs 
+Act 1971 (‘the 1971 Act’), and scheduled under Schedule 3 (see Glossary for further information) 
+of the Misuse of Drugs Regulations 2001 (‘the 2001 Regulations’). 
+
+A.2  Groups Affected 
+
+•    Healthcare providers. 
+•    Pharmacies. 
+•    Pharmaceutical manufacturers and wholesalers. 
+•    Patients. 
+•    Law  enforcement  agencies:  police  forces  in  England  and  Wales;  Police  Scotland; 
+National Crime Agency and Border Force. 
+•    Criminal  justice  agencies:  Crown  Prosecution  Service;  courts  and  HM  Prison  and 
+Probation Service. 
+
+A.3   Consultation  
+
+Within Government 
+
+7. The Government consulted the Department of Health and Social Care on the consultation 
+document that was published on 13 November.  
+Public Consultation 
+
+8. Following the recommendations of the ACMD, the Government published a consultation which 
+asked for views about categorising the drugs under Schedule 3 of the 2001 Regulations
+9
+, which 
+ran from 13 November 2017 until 22 January 2018. This considered three options and a baseline 
+option.  
+
+Option 1 - Control pregabalin and gabapentin as Class C Drugs under the 1971 Act and place both 
+in Schedule 3 to the 2001 Regulations, applying the provisions of the Misuse of Drugs (Safe 
+Custody) Regulations 1973 (the 1973 Regulations).  
+Option 2 - Control pregabalin and gabapentin as Class C Drugs under the 1971 Act and place both 
+in Schedule 3 to the 2001 Regulations (but exclude the application of safe custody requirements),  
+Option 3 - Control pregabalin and gabapentin as Class C Drugs under the 1971 Act and place both 
+in Part 1 of Schedule 4 to the 2001 Regulations.   
+
+9. Around 53 per cent of respondents favoured Option 2, compared with 16 per cent who favoured 
+Option 1 and 25 per cent who favoured Option 3. While Option 1 was the recommendation of the 
+ACMD, concerns were raised in relation to the burdens on pharmacies and wards to obtain new 
+controlled drug cabinets for the storage of these substances if they were made subject to the safe 
+
+7
+ Statistics from the Northern Ireland Statistics and Research Agency report “Drug related and Drug Misuse Deaths 2006-2016 indicate that 
+there were 8 deaths from pregabalin in 2016. 
+8
+ https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/491854/ACMD_Advice_-_Pregabalin_and_gabapentin.pdf 
+9
+ https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/491854/ACMD_Advice_-_Pregabalin_and_gabapentin.pdf 
+
+5 
+
+custody requirements. This included difficulties that could arise from identifying the drugs given 
+that pack sizes vary according to the dosage/strength of the drugs. 
+
+B.   Rationale 
+
+10.    In the ACMD’s review into pregabalin and gabapentin, they considered that the harms associated 
+with these substances were equivalent to those of other substances controlled under the 1971 Act, 
+and they therefore recommended that they were controlled as Class C substances under the 1971 
+Act and scheduled under the 2001 Regulations as Schedule 3, so as not to preclude legitimate use 
+on prescription.  
+
+11.    This would provide a stronger legal framework compared to the Psychoactive Substances Act 
+2016 (the 2016 Act), which pregabalin and gabapentin are currently subject to. Control under the 
+1971 Act includes a possession offence, whereas the 2016 Act does not. The offences in the 2016 
+Act only prohibit the production and distribution of psychoactive substances to be consumed for 
+psychoactive effect, while control under the 1971 Act offers stricter offences of production and 
+distribution than the 2016 Act under any circumstances without a licence. The maximum penalty 
+for committing an offence involving a Class C drug is 14 years imprisonment. This contrasts with 
+the 7-year maximum sentence under the 2016 Act.  
+
+12.    These more stringent penalties may prove a stronger deterrent to the supply of these drugs, and 
+may therefore more effectively restrict their availability, reduce the risk of diversion and decrease 
+misuse and deaths. The differences between the 2016 Act and the 1971 Act reflect that drugs 
+controlled under the 1971 Act have been subjected to a full harms assessment by the ACMD and 
+that they are being, or are judged by the ACMD likely to be, misused. In addition to this, the misuse 
+of these drugs is judged by the ACMD to have sufficiently harmful effects to constitute a social 
+problem. The 1971 Act is a more appropriate control mechanism than the 2016 Act where this 
+harm assessment has been made.  
+C.   Objectives 
+
+13.    The policy objective is to prevent the misuse of pregabalin and gabapentin and reduce the harms 
+associated with the drugs by restricting their illicit supply, while ensuring that they remain available 
+for legitimate use in healthcare. 
+D.   Options  
+
+14. Option 1: Make no changes (do nothing), leaving both pregabalin and gabapentin subject to the 
+provisions in the Psychoactive Substances Act 2016.  
+
+15. Option 2: Control pregabalin and gabapentin as Class C Drugs under the 1971 Act, and place 
+both in Schedule 3 to the 2001 Regulations, excluding the application of the 1973 (Safe Custody) 
+Regulations.  
+
+16.    Option 1 would not address the risks and issues that have been identified with the current control 
+of pregabalin and gabapentin. Option 2 would reduce the opportunities for the two drugs being 
+diverted into the illicit market by the record keeping requirements of Schedule 3 of the 2001 
+Regulations, without imposing the excessive cost to medical suppliers of the drugs that the 1973 
+Regulations require. 
+
+6 
+
+E.    Appraisal (Costs and Benefits) 
+
+GENERAL ASSUMPTIONS & DATA 
+
+For the purpose of estimating costs, the following prescription data for pregabalin and gabapentin 
+Is used: 
+
+Table 2 – Items of pregabalin and gabapentin dispensed in England, Wales, Scotland and 
+Northern Ireland, 2016 
+
+Scotland 
+(2015/16)
+10
+
+England 
+(2016)
+11
+
+Wales 
+(2016)
+12
+
+Northern Ireland 
+(2016)
+13
+
+Total 
+Pregabalin    435,498 5,547,560 400,201 294,060 
+6,677,319 
+Gabapentin    694,293 6,466,482 506,429 165,759 
+7,832,963 
+Total 
+
+1,129,791 12,014,042 906,630 459,819 14,510,282 
+
+•   It is assumed that it will take health professionals five minutes to acquaint themselves with the 
+change in legislation. This is based on the fact that healthcare professionals are likely to 
+already deal with many drugs controlled under the 2001 Regulations, and will be familiar with 
+the new processes for pregabalin and gabapentin.  
+•   Non-wage labour costs are assumed to be equivalent to an additional 21 per cent of wage 
+costs
+14. 
+•   It is assumed that pharmacies already stock other drugs which are controlled under the 2001 
+Regulations. 
+•   It is assumed that healthcare professionals already write prescriptions for other drugs which 
+are controlled under the 2001 Regulations.  
+•   It is assumed that the extra cost on pharmacies from having to pick up prescriptions is 
+negligible as this service is already provided for other medicines. 
+
+OPTION 2 – Place pregabalin and gabapentin in class C of the 1971 Act and Schedule 3 to 
+the 2001 Regulations (but exclude the application of safe custody requirements)  
+
+COSTS 
+
+Set-up costs 
+
+Businesses
+
+═══════ [impact-assessments:2018-132:9] Risks and assumptions (part 2)  (1784 words) ═══════
+17.    There may be a familiarisation cost to prescribers, as they acquaint themselves with the changes 
+to the control of pregabalin and gabapentin. These will already be familiar with the requirements of 
+the 2001 Regulations, as they are likely to hold drugs which are already subject to these 
+regulations. New substances are regularly added to the 2001 Regulations (for example tramadol 
+was controlled under Class C of the 1971 Act and made subject to Schedule 3 to the 2001 
+Regulations (without safe custody requirements) in 2014), so the amount of familiarisation time 
+associated with this change is likely to be minimal. 
+
+10
+ http://www.isdscotland.org/Health-Topics/Prescribing-and-Medicines/Community-Dispensing/Prescription-Cost-Analysis/  
+11
+ https://digital.nhs.uk/data-and-information/publications/statistical/prescriptions-dispensed-in-the-community/prescriptions-dispensed-in-the-
+community-statistics-for-england-2006-2016-pas 
+12
+ https://gov.wales/statistics-and-research/prescriptions-dispensed-community/?lang=en  
+13
+ http://www.hscbusiness.hscni.net/services/1806.htm  
+14
+https://www.ons.gov.uk/file?uri=/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashet
+able14/2017provisional/table142017provisional.zip table 14.5, code 711 
+
+7 
+
+18.    It is assumed that it will take health professionals five minutes to acquaint themselves with the new 
+classification of the drugs. The median hourly wage for pharmacists, taken from the Annual Survey 
+for Household Earnings (ASHE) in 2017 was £20.50
+15
+. To account for non-wage labour costs, this 
+was up-rated by 21 per cent to give a total hourly cost of £24.73
+16
+. The familiarisation cost per 
+pharmacist was therefore £2.06 (£24.54 x 5/60). There are estimated to be 47,000 pharmacists in 
+the UK. This gives a total familiarisation cost to pharmacists of £97,000 (47,000 x £2.06)
+17
+. It 
+should be noted that not all pharmacists are involved in the supply of controlled drugs, so this 
+figure may be an overestimate. 
+
+19.    The majority of GPs are funded by the NHS, but data suggests that around 5% of GPs undertake 
+some private work. However, it is also possible that these GPs also undertake a combination of 
+private and NHS work. Due to the limitations of the data, it is not possible to quantify the number of 
+GPs that may be affected, but the number is likely to be low. As a proportion of all the costs on 
+GPs , the impact on private business is likely to be less than £10,000. 
+Public health services 
+
+20.    There may also be a familiarisation cost to NHS healthcare professionals, such as GPs and 
+hospital staff, who issue prescriptions and supply pregabalin and gabapentin. As above it is 
+assumed to take NHS healthcare professionals five minutes to acquaint themselves with the new 
+classification of the drugs. The median hourly wage for healthcare practitioners is estimated to be 
+£33.52, taken from ASHE. This is up-rated by 21 per cent to account for non-wage labour cost, 
+giving a total hourly cost of £40.44. The cost to each GP is therefore estimated to be £3.37 (£40.44 
+x 5/60). There are estimated to be 51,000 GPs in the UK
+18
+; the total familiarisation cost to GPs is 
+therefore estimated to be £172,000 (£3.34 x 51,000). 
+Law enforcement agencies 
+
+21.    There may be a familiarisation cost to police forces and enforcement agencies, as their staff 
+become acquainted with the new legal status of pregabalin and gabapentin. Substances are 
+regularly brought under the control of the 1971 Act, so the additional familiarisation costs 
+associated with the control of pregabalin and gabapentin are therefore likely to be negligible. 
+Ongoing costs 
+
+Businesses  
+
+22.    As a result of this legislation, prescriptions will be limited to 30 days treatment and cannot currently 
+be issued by electronic prescription, due to the requirement of a wet signature. The additional time 
+spent processing these prescriptions imposes ongoing costs, as this time could have been spent 
+on other productive activities. However, the NHS provides an additional payment of £0.43 per item 
+to pharmacies for the dispensing of Schedule 3 substances, to compensate for these higher costs, 
+so it is assumed that there are no significant costs for these businesses as a result of this 
+legislation. In Question 8 of the consultation, respondents were asked to provide an estimate of the 
+costs of these changes. Of the respondents who provided estimates, approximately 66 per cent 
+indicated that the additional monthly cost of these changes would be between £0 to £99 per 
+organisation. 
+
+23.    There may also be an ongoing cost to wholesalers who deliver pregabalin and gabapentin, as the 
+new regulations require them to keep records of their stock of these drugs, which may take extra 
+time. Due to a lack of data on the additional costs of this record keeping, it has not been possible 
+to quantify this cost. 
+
+15
+ https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14 
+16
+ http://ec.europa.eu/eurostat/statistics-explained/index.php/Hourly_labour_costs 
+17
+ https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14 
+18
+ ‘General practise in the UK – background briefing’ British Medical Association, April 2017 
+
+8 
+
+Public Sector 
+
+24.    As a result of this legislation, GPs and other public sector healthcare professionals issuing 
+prescriptions for pregabalin or gabapentin will be subject to more stringent requirements. These 
+requirements are as follows: 
+a.   Repeat dispensing for Schedule 3 controlled drugs is not permitted, which is likely to 
+cause the number of GP appointments and the number of prescriptions for gabapentin 
+and pregabalin to increase.  
+b.   The Department for Health and Social Care (DHSC) and the Scottish Government 
+recommend that the maximum quantity of a Scheduled 3 controlled drug prescription 
+should not exceed 30 days. This is likely to cause an increase in the number of GP 
+appointments required, especially if the current prescription lengths for pregabalin and 
+gabapentin exceed this limit. Although it should be noted that a GP appointment will not 
+always be required. 
+c.   There is likely to be a corresponding increase in GP time spent writing prescriptions to 
+meet the ‘wet signature’ requirements for Schedule 3 controlled drugs. This may be 
+mitigated in the future if the Electronic Prescribing System (EPS) can be used to prescribe 
+controlled drugs electronically instead. 
+
+25.    The additional time spent processing these prescriptions imposes ongoing costs, as this time could 
+have been spent on other productive activities. Whilst pharmacists are compensated for these 
+additional costs via an additional payment for each item prescribed, this is not the case for GPs. 
+However, the costs to GPs of these requirements could not be quantified due to a lack of data, for 
+example on the number of GP appointments where pregabalin or gabapentin would be prescribed, 
+and how prescribing behaviour may change as a result of these requirements. 
+
+26.    There may also be additional costs to the NHS from the time required for staff to supervise doses 
+of pregabalin and gabapentin and to witness the supply of controlled drugs, as these activities are 
+required for Schedule 3 substances. These costs have not been quantified as it is not known how 
+many organisations already undertake these activities. 
+
+27.    There is an additional cost to the National Health Service as Schedule 3 substances attract an 
+additional dispensing payment of £0.43 per item, as previously identified. As shown in Table 2, in 
+2016 there was a total of 14.5 million pregabalin and gabapentin items prescribed in the United 
+Kingdom, which equates to an additional cost of the National Health Service of £6.2 million per 
+year as a result of these changes (14.5 million items x £0.43 per items). This is a PV cost of £53.7 
+million over the 10 years of the policy. It is likely that the number of prescriptions issued will fall as 
+a result of these changes, but it is not known with any uncertainty how much they might fall. In the 
+absence of this information it has been assumed that the volume of prescriptions will remain at its 
+current level, which means that this cost is likely to be an overestimate. 
+
+Law enforcement agencies 
+
+28.    There may be some cost to police forces, law enforcement bodies and the criminal justice system 
+as a result of classifying pregabalin and gabapentin under Class C of the 1974 Act, given the more 
+stringent penalties for supply and production, and the introduction of penalties for possession. 
+However, it is assumed that this enforcement activity would be met using existing resources, so the 
+additional costs are assumed to be negligible. 
+Patients 
+
+29.    At present, those with a valid prescription for pregabalin or gabapentin can acquire a number of 
+packages at a time, as the prescription is not limited to use within 28 days. In contrast, the 
+dispensing of Schedule 3 drugs is limited to quantities of not more than 30 days’ supply. A 
+separate prescription would have to be sought at the end of that 30-day period, if needed, as 
+repeat dispensing is not possible for Schedule 3 drugs.   
+
+30.    There may therefore be costs for patients prescribed pregabalin and gabapentin for medicinal use 
+arising from having to visit a their doctor and pharmacy at least every 30 days to obtain their 
+
+9 
+
+prescription. This is especially true for people who are not exempt from paying prescription 
+charges. They will have to pay for a prescription each time they go to have it dispensed. There 
+may also be costs to patients from having to physically take the prescription to a pharmacy for 
+dispensing rather than using electronic prescriptions. This cost could not be quantified as it is not 
+known how many additional visits to pharmacies would be required by patients. 
+BENEFITS 
+31.    Including the drugs under Schedule 3 of the 2001 Regulations requires that due consideration is 
+given to whether a person should be given the drugs in question. There are stringent prescription 
+requirements along with audit processes for Schedule 3 control. Specifically, these are that a 
+prescription requires dosage, a wet signature and private prescriptions must be written on specific 
+forms and be sent for audit similar to NHS and HSCNI prescriptions. As a result, more careful 
+consideration must be given to the decision to prescribe or re-prescribe a person either of the 
+drugs. This may reduce diversion and the number of prescriptions to individuals with potential to 
+misuse, producing benefits to both the patient, the health service and wider society.  
+Businesses 
+32.    The stricter controls on the availability and storage of pregabalin and gabapentin may reduce the 
+diversion of these substances, and therefore create savings for businesses that supply or prescribe 
+them, as the loss of their stock through diversion is reduced. This benefit could not be quantified 
+due to a lack of data on the amount of diversion that might be avoided. 
+
+10 
+
+Public Sector 
+33.    If the changes in the regulations reduce diversion and therefore misuse of pregabalin and 
+gabapentin, there may be savings to health services arising from a reduction in the number of 
+people seeking medical assistance after misusing these substances. Qualitative data from 
+responses to the consultation also indicates that there is likely to be a greater awareness of the 
+dangers of the two drugs as a result of controlling them under the 1971 Act, potentially further 
+reducing misuse and associated harms. There may also be savings to the health service from 
+pregabalin and gabapentin being prescribed less frequently.
+
+═══════ [impact-assessments:2018-132:10] Risks and assumptions (part 3)  (1622 words) ═══════
+34.    When tramadol became a Schedule 3 controlled drug in 2014, the number of prescriptions fell by 
+13 per cent, from 7.9 million in 2014 to 6.9 million in 2017, after significant increases in previous 
+years. This indicates that the changes to tramadol had a considerable impact on reducing the 
+amount prescribed, which may have generated savings for the health service. If the number of 
+pregabalin and gabapentin prescriptions also fell by 13 per cent, then this would generate savings 
+of approximately £34 million per year for the NHS in England (based on the current cost to the 
+NHS of £262 million per year
+19
+). This provides a broad indication of the level of savings that could 
+be realised, but this benefit has not been included in the Net Present Value as it is not possible to 
+estimate with any certainty, as tramadol has significantly different clinical uses to pregabalin and 
+gabapentin. 
+Personal and Society 
+35.    If the new regulation reduces the availability and therefore misuse of the two drugs, society may 
+experience a benefit through the reduction in the harmful health and social effects resulting from 
+the misuse of drugs, for example a reduction in the number of deaths related to pregabalin and 
+gabapentin. In 2016 there were 170 deaths registered in England and Wales where pregabalin or 
+gabapentin were mentioned on the death certificate
+20
+, an increase compared to 64 deaths 
+registered in 2014 and 139 deaths registered in 2015. The number of deaths related to tramadol 
+fell after it became a Schedule 3 controlled drug, from 240 deaths registered in 2014 to 184 deaths 
+registered in 2016, although it is not possible to identify how much of this fall was due to the 
+change in controls.  These benefits therefore cannot be quantified due to a lack of data. 
+Total costs and benefits, NPV, BNPV and EANDCB 
+36.    The Net Present Value of the policy is -£54 million, the Business Net Present Value is -£0.1 million 
+and the EANDCB is £0.01 million. 
+
+F.    Risks 
+
+37. OPTION 1 – The risk of diversion and subsequent misuse of pregabalin and gabapentin would 
+continue, and the potential harms arising from the misuse of the drugs would continue  
+
+38. OPTION 2 – Excluding the application of Safe Custody requirements may mean that the risk of 
+diversion is not fully mitigated. The requirement of a wet signature and prescriptions every 30 days 
+may add significant costs to organisations prescribing pregabalin and gabapentin. Some 
+responses to the consultation expressed concern that there might be instances in which a person 
+might run low on supplies of either drug and be at risk of, for example a seizure. However, 
+emergency provisions for pharmacists enable them to supply prescription-only medicines to a 
+patient without a prescription in an emergency at the request of a prescriber of a patient. 
+
+19
+ https://digital.nhs.uk/data-and-information/publications/statistical/prescription-cost-analysis/prescription-cost-analysis-england-2017 
+20
+https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/bulletins/deathsrelatedtodrugpoisoninginenglandan
+dwales/2016registrations 
+
+11 
+
+G.   Enforcement 
+
+39.    Enforcement of the legislation will be undertaken by police forces, Border Force, the Home Office 
+Drug Licensing unit and other relevant agencies responsible for enforcing the legislative and 
+regulatory framework for controlled drugs in the UK. Police enforcement will form part of their wide 
+approach to tackling new psychoactive substances as well as other drugs controlled under the 
+1971 Act. Border Force will enforce import controls by seizing suspected substances at the ports, 
+also as part of their wider customs role. There will be no temporary control measures in law 
+enforcement and regulatory agencies as part of their routine activities.  
+
+H.   Summary and Recommendations 
+
+40.    Table H.1 outlines the costs and benefits of the proposed changes.   
+
+Table H.1 Costs and Benefits 
+Option Costs Benefits 
+2 £54.0 million (PV over 10 years) £N/A (PV over 10 years) 
+
+-There will be a one-off cost of £97,000 
+from pharmacists becoming familiar with 
+the new policy. 
+
+-There will be a one off cost of £172,000 
+from GPs becoming familiar with the new 
+policy. 
+
+- There will be an ongoing dispensing cost 
+of £6.2 million per year to the national 
+health service, a PV of £53.7 million over 
+the 10 years of the policy. 
+
+-There will be an non-monetised cost to 
+healthcare professionals, public and 
+private, through the increased time taken to 
+issue prescriptions and supply the drugs 
+with increased record keeping. 
+
+-There will be an non-monetised cost to 
+wholesale retailers through the record 
+keeping requirements arising from the 2001 
+Regulations. 
+
+-There may be an non-monetised cost to 
+police forces, law enforcement and the 
+criminal justice system arising from the 
+enforcement of demand penalties, and 
+more stringent ones for production and 
+supply.  
+- The provision is likely to restrict the 
+number of unnecessary prescriptions 
+of the two drugs and therefore 
+associated health harms. 
+
+- It is likely to provide a better audit 
+trail which may reduce the 
+opportunities for diversion into the illicit 
+market.    
+
+- It may also reinforce public 
+awareness of the harms of both drugs 
+by making clear that this substance is 
+of concern, by classifying it according 
+to harm and providing stricter penalties 
+for offences under the Misuse of Drugs 
+Act 1971. 
+Source: Home Office internal analysis. 
+
+I.     Implementation 
+
+12 
+
+41.    The Government plans to implement the control of pregabalin and gabapentin under the 1971 Act 
+via the affirmative resolution procedure. Any change to the 2001 Regulations is undertaken via the 
+negative resolution procedure Order, subject to Parliament’s approval. The DOH (NI) plans to 
+implement the changes via negative resolution, subject to the approval of the Northern Ireland 
+Assembly.  It is intend that these changes will come into effect before the end of 2018.  
+
+J.    Monitoring and Evaluation 
+
+42.    As part of its statutory duties under the 1971 Act, the ACMD keeps the situation relating to the 
+misuse of drugs under review. Together with the Government, they will continue to monitor 
+pregabalin and gabapentin by reviewing data on its prevalence and misuse. The effectiveness of 
+the new regime would be monitored by the Care Quality Commission for England and the 
+healthcare regulatory bodies for Wales and Scotland. The Health Act 2006 also established the 
+role of Accountable Officers with responsibility to establish and ensure appropriate arrangements 
+to comply with misuse of drugs legislation. Accountable officers have a duty to establish local 
+intelligence networks to analyse prescribing practices in their area and ensure that their areas have 
+processes for establishing an incident panel if serious concerns are raised about controlled drugs.   
+
+K.   Feedback 
+
+43.    Information gathered from the monitoring and evaluation process will inform future ACMD advice 
+on the classification, designation and scheduling of pregabalin and gabapentin, including any 
+future legitimate uses of these compounds. 
+
+13 
+
+Impact Assessment Checklist 
+
+The impact assessment checklist provides a comprehensive list of specific impact tests and policy 
+considerations (as of October 2015). Where an element of the checklist is relevant to the policy, the 
+appropriate advice or guidance should be followed. Where an element of the checklist is not applied, 
+consider whether the reasons for this decision should be recorded as part of the Impact Assessment and 
+reference the relevant page number or annex in the checklist below. 
+
+The checklist should be used in addition to 
+HM Treasury’s Green Book guidance on appraisal and 
+evaluation in central government. 
+
+Economic Impact Tests 
+
+Does your policy option/proposal consider...? Yes/No 
+(page) 
+Business Impact Target 
+The Small Business, Enterprise and Employment Act 2015 (s. 21-23) creates a requirement 
+to assess the economic impacts of qualifying regulatory provisions on the activities of 
+business and civil society organisations. [
+Better Regulation Framework Manual] or  
+[Check with the Home Office Better Regulation Unit]  
+
+Not in 
+scope of 
+BIT 
+
+14 
+
+GLOSSARY 
+
+UK Law: The Schedules  
+The 2001 Regulations determine in what circumstances it is lawful to possess, supply, produce, export 
+and import controlled drugs. The authorised scope of activity will depend on the schedule to which the 
+controlled drug is assigned. There are five schedules. Schedule 1 contains those drugs that are 
+considered to have little or no therapeutic value and are subjected to the most restrictive control. 
+Schedule 5 contains drugs that are considered to have therapeutic value and are commonly available as 
+over the counter medicines.  
+
+Schedule 1  
+
+Drugs belonging to this schedule are thought to have no therapeutic value and therefore cannot be 
+lawfully possessed or prescribed. These include LSD, MDMA (ecstasy) and cannabis. Schedule 1 drugs 
+may be used for the purposes of research but a Home Office licence is required.  
+
+Schedule 2 & 3  
+
+The drugs in these schedules can be prescribed and therefore legally possessed and supplied by 
+pharmacists and doctors. They can also be possessed lawfully by anyone who has a prescription. It is an 
+offence contrary to the 1971 Act to possess any drug belonging to Schedule 2 or 3 without prescription 
+or lawful authority. Examples of schedule 2 drugs are methadone and diamorphine (heroin). Schedule 3 
+drugs include subutex and most of the barbiturate family.  
+
+The difference between Schedule 2 and Schedule 3 drugs is limited to the application of the 2001 
+Regulations concerning record keeping and storage requirements in respect of schedule 2 drugs.  
+
+Schedule 4 (i) & (ii)  
+
+Schedule 4 was divided into two parts by the 2001 Regulations [as amended by the Misuse of Drugs 
+(Amendment No. 2) Regulations 2012.  
+Schedule 4(i) controls most of the benzodiazepines. Schedule 4(i) drugs can only be lawfully possessed 
+under prescription. Otherwise, possession is an offence under the 1971 Act.  
+Schedule 4(ii) drugs can be possessed as long as they are clearly for personal use. Drugs in this 
+schedule can also be imported or exported for personal use where a person himself carries out that 
+importation or exportation. The most common example of a schedule 4(ii) drug is steroids.  
+
+Schedule 5  
+
+Schedule 5 drugs are sold over the counter and can be legally possessed without a prescription.

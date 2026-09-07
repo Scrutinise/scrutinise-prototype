@@ -1,0 +1,587 @@
+{
+  "generated": "2026-09-07T21:51:19.594Z",
+  "groupsProbed": 10,
+  "totalGroups": 163,
+  "verdicts": [
+    {
+      "n": 17,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 17,
+      "distinctTitles": 10,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2019/24",
+          "pdf": "/ukia/2019/24/pdfs/ukia_20190024_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services SIs (iii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/28",
+          "pdf": "/ukia/2019/28/pdfs/ukia_20190028_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services SIs (iii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/29",
+          "pdf": "/ukia/2019/29/pdfs/ukia_20190029_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/30",
+          "pdf": "/ukia/2019/30/pdfs/ukia_20190030_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/31",
+          "pdf": "/ukia/2019/31/pdfs/ukia_20190031_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/32",
+          "pdf": "/ukia/2019/32/pdfs/ukia_20190032_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/33",
+          "pdf": "/ukia/2019/33/pdfs/ukia_20190033_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/34",
+          "pdf": "/ukia/2019/34/pdfs/ukia_20190034_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/35",
+          "pdf": "/ukia/2019/35/pdfs/ukia_20190035_en.pdf",
+          "title": "European Union (Withdrawal) Act – Financial Services Statutory Instruments (III) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/49",
+          "pdf": "/ukia/2019/49/pdfs/ukia_20190049_en.pdf",
+          "title": "The Financial Conglomerates and Other Financial Groups (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/57",
+          "pdf": "/ukia/2019/57/pdfs/ukia_20190057_en.pdf",
+          "title": "The Collective Investment Schemes (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/58",
+          "pdf": "/ukia/2019/58/pdfs/ukia_20190058_en.pdf",
+          "title": "The Alternative Investment Fund Managers (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/60",
+          "pdf": "/ukia/2019/60/pdfs/ukia_20190060_en.pdf",
+          "title": "The Venture Capital Funds (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/62",
+          "pdf": "/ukia/2019/62/pdfs/ukia_20190062_en.pdf",
+          "title": "The Financial Markets and Insolvency (Amendment and Transitional Provision) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/63",
+          "pdf": "/ukia/2019/63/pdfs/ukia_20190063_en.pdf",
+          "title": "The Social Entrepreneurship Funds (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/67",
+          "pdf": "/ukia/2019/67/pdfs/ukia_20190067_en.pdf",
+          "title": "The Money Market Funds (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/94",
+          "pdf": "/ukia/2019/94/pdfs/ukia_20190094_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 15,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 15,
+      "distinctTitles": 15,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2007/13",
+          "pdf": "/ukia/2007/13/pdfs/ukia_20070013_en.pdf",
+          "title": "Planning Bill: Impact Assessment of amending s237 Town and Country Planning Act and equivalents - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/15",
+          "pdf": "/ukia/2007/15/pdfs/ukia_20070015_en.pdf",
+          "title": "Planning Bill: Impact Assessment of establishing Local Member Review Bodies to determine minor appeals - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/16",
+          "pdf": "/ukia/2007/16/pdfs/ukia_20070016_en.pdf",
+          "title": "Planning Bill: Impact Assessment of proposal to provide whole double deemed fees to local authorities - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/17",
+          "pdf": "/ukia/2007/17/pdfs/ukia_20070017_en.pdf",
+          "title": "Planning Bill: Impact Assessment of Planning Bill proposals for nationally significant infrastructure - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/18",
+          "pdf": "/ukia/2007/18/pdfs/ukia_20070018_en.pdf",
+          "title": "Planning Bill: Impact Assessment of introducing Fees for Planning Appeals - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/19",
+          "pdf": "/ukia/2007/19/pdfs/ukia_20070019_en.pdf",
+          "title": "Planning Bill: Impact Assessment for the simplification of the statutory rules relating to Tree Preservation Orders - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/20",
+          "pdf": "/ukia/2007/20/pdfs/ukia_20070020_en.pdf",
+          "title": "Planning Bill: Impact Assessment of granting local planning authorities the discretion to allow minor amendments to existing planning permissions - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/21",
+          "pdf": "/ukia/2007/21/pdfs/ukia_20070021_en.pdf",
+          "title": "Planning Bill: Impact Assessment of removing the requirement for independent examination of Statements of Community Involvement - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/22",
+          "pdf": "/ukia/2007/22/pdfs/ukia_20070022_en.pdf",
+          "title": "Planning Bill: Impact Assessment of allowing the Planning Inspectorate (on behalf of the S of S) to determine the appeal method - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/23",
+          "pdf": "/ukia/2007/23/pdfs/ukia_20070023_en.pdf",
+          "title": "Planning Bill: Assessment of changes to compensation rights when changes are made to permitted developments - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/24",
+          "pdf": "/ukia/2007/24/pdfs/ukia_20070024_en.pdf",
+          "title": "Planning Bill: Impact Assessment of removing requirement of SPDs to undergo a sustainability appraisal. - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/25",
+          "pdf": "/ukia/2007/25/pdfs/ukia_20070025_en.pdf",
+          "title": "Planning Bill: Impact Assessment of enabling the High Court to remit a development plan to an intermediate stage in the preparation process - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/26",
+          "pdf": "/ukia/2007/26/pdfs/ukia_20070026_en.pdf",
+          "title": "Planning Bill: Impact Assessment of removing the formal requirement of SPDs to be listed in the local development scheme - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/27",
+          "pdf": "/ukia/2007/27/pdfs/ukia_20070027_en.pdf",
+          "title": "Planning Bill: Impact Assessment of proposals to set out the role of local authorities in tackling energy efficiency and climate change - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2007/28",
+          "pdf": "/ukia/2007/28/pdfs/ukia_20070028_en.pdf",
+          "title": "Planning Bill: Impact Assessment of removing requirement SPDs to undergo a sustainability appraisal. - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 15,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 15,
+      "distinctTitles": 12,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2018/149",
+          "pdf": "/ukia/2018/149/pdfs/ukia_20180149_en.pdf",
+          "title": "Impact Assessment - EU (Withdrawal) Act Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/150",
+          "pdf": "/ukia/2018/150/pdfs/ukia_20180150_en.pdf",
+          "title": "Impact Assessment - EU (Withdrawa)l Act Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/151",
+          "pdf": "/ukia/2018/151/pdfs/ukia_20180151_en.pdf",
+          "title": "Impact Assessment EU (Withdrawal) Act - Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/152",
+          "pdf": "/ukia/2018/152/pdfs/ukia_20180152_en.pdf",
+          "title": "Impact Assessment EU (Withdrawal) Act - Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/153",
+          "pdf": "/ukia/2018/153/pdfs/ukia_20180153_en.pdf",
+          "title": "Impact Assessment EU (WIthdrawal) Act - Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/154",
+          "pdf": "/ukia/2018/154/pdfs/ukia_20180154_en.pdf",
+          "title": "Impact Assessment EU (Withdrawal) Act - Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/155",
+          "pdf": "/ukia/2018/155/pdfs/ukia_20180155_en.pdf",
+          "title": "Impact Assessment EU (Withdrawal) Act - Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/158",
+          "pdf": "/ukia/2018/158/pdfs/ukia_20180158_en.pdf",
+          "title": "Impact Assesssment - EU (Withdrawal) Act Financial Services (ii) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/168",
+          "pdf": "/ukia/2018/168/pdfs/ukia_20180168_en.pdf",
+          "title": "The Trade Repositories (Amendment and Transitional Provision) (EU Exit) Regulations 2018 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/169",
+          "pdf": "/ukia/2018/169/pdfs/ukia_20180169_en.pdf",
+          "title": "The Central Securities Depositories (Amendment) (EU Exit) Regulations 2018 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/170",
+          "pdf": "/ukia/2018/170/pdfs/ukia_20180170_en.pdf",
+          "title": "The Short Selling (Amendment) (EU Exit) Regulations 2018 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/186",
+          "pdf": "/ukia/2018/186/pdfs/ukia_20180186_en.pdf",
+          "title": "The Markets in Financial Instruments (Amendment) (EU Exit) Regulations 2018 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/3",
+          "pdf": "/ukia/2019/3/pdfs/ukia_20190003_en.pdf",
+          "title": "The Credit Rating Agencies (Amendment, etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/50",
+          "pdf": "/ukia/2019/50/pdfs/ukia_20190050_en.pdf",
+          "title": "The Credit Rating Agencies (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/6",
+          "pdf": "/ukia/2019/6/pdfs/ukia_20190006_en.pdf",
+          "title": "The Solvency 2 and Insurance (Amendment, etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 11,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 11,
+      "distinctTitles": 6,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2019/100",
+          "pdf": "/ukia/2019/100/pdfs/ukia_20190100_en.pdf",
+          "title": "The Benchmarks (Amendment and Transitional Provision) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/107",
+          "pdf": "/ukia/2019/107/pdfs/ukia_20190107_en.pdf",
+          "title": "The Official Listing of Securities, Prospectus and Transparency (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/41",
+          "pdf": "/ukia/2019/41/pdfs/ukia_20190041_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/42",
+          "pdf": "/ukia/2019/42/pdfs/ukia_20190042_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/43",
+          "pdf": "/ukia/2019/43/pdfs/ukia_20190043_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/45",
+          "pdf": "/ukia/2019/45/pdfs/ukia_20190045_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/46",
+          "pdf": "/ukia/2019/46/pdfs/ukia_20190046_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/47",
+          "pdf": "/ukia/2019/47/pdfs/ukia_20190047_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/68",
+          "pdf": "/ukia/2019/68/pdfs/ukia_20190068_en.pdf",
+          "title": "The Financial Services Contracts (Transitional and Saving Provision) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/69",
+          "pdf": "/ukia/2019/69/pdfs/ukia_20190069_en.pdf",
+          "title": "The Packaged Retail and Insurance-based Investment Products (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/99",
+          "pdf": "/ukia/2019/99/pdfs/ukia_20190099_en.pdf",
+          "title": "The Financial Services and Markets Act 2000 (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 10,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 10,
+      "distinctTitles": 5,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2019/101",
+          "pdf": "/ukia/2019/101/pdfs/ukia_20190101_en.pdf",
+          "title": "The Securitisation (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/102",
+          "pdf": "/ukia/2019/102/pdfs/ukia_20190102_en.pdf",
+          "title": "The Payment Accounts (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/103",
+          "pdf": "/ukia/2019/103/pdfs/ukia_20190103_en.pdf",
+          "title": "The Investment Exchanges, Clearing Houses and Central Securities Depositories (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/52",
+          "pdf": "/ukia/2019/52/pdfs/ukia_20190052_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/53",
+          "pdf": "/ukia/2019/53/pdfs/ukia_20190053_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/54",
+          "pdf": "/ukia/2019/54/pdfs/ukia_20190054_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/55",
+          "pdf": "/ukia/2019/55/pdfs/ukia_20190055_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/56",
+          "pdf": "/ukia/2019/56/pdfs/ukia_20190056_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/83",
+          "pdf": "/ukia/2019/83/pdfs/ukia_20190083_en.pdf",
+          "title": "The Transparency of Securities Financing Transactions and of Reuse (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/86",
+          "pdf": "/ukia/2019/86/pdfs/ukia_20190086_en.pdf",
+          "title": "Impact Assesment - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 6,
+      "distinctTitles": 6,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2017/21",
+          "pdf": "/ukia/2017/21/pdfs/ukia_20170021_en.pdf",
+          "title": "The Court of Judicature (Non-Contentious Probate) Fees (Amendment) Order (Northern Ireland) 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/22",
+          "pdf": "/ukia/2017/22/pdfs/ukia_20170022_en.pdf",
+          "title": "The Judgment Enforcement Fees (Amendment) Order (Northern Ireland) 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/23",
+          "pdf": "/ukia/2017/23/pdfs/ukia_20170023_en.pdf",
+          "title": "The Magistrates’ Courts Fees (Amendment) Order (Northern Ireland) 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/24",
+          "pdf": "/ukia/2017/24/pdfs/ukia_20170024_en.pdf",
+          "title": "The Court of Judicature Fees (Amendment) Order (Northern Ireland) 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/25",
+          "pdf": "/ukia/2017/25/pdfs/ukia_20170025_en.pdf",
+          "title": "The County Court Fees (Amendment) Order (Northern Ireland) 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/26",
+          "pdf": "/ukia/2017/26/pdfs/ukia_20170026_en.pdf",
+          "title": "The Family Proceedings Fees (Amendment) Order (Northern Ireland) 2017 - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 6,
+      "distinctTitles": 6,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2017/43",
+          "pdf": "/ukia/2017/43/pdfs/ukia_20170043_en.pdf",
+          "title": "The Important Public Services (Fire) Regulations 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/44",
+          "pdf": "/ukia/2017/44/pdfs/ukia_20170044_en.pdf",
+          "title": "The Trade Union Act 2016 (Political Funds) (Transition Period) Regulations 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/45",
+          "pdf": "/ukia/2017/45/pdfs/ukia_20170045_en.pdf",
+          "title": "The Important Public Services (Health) Regulations 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/46",
+          "pdf": "/ukia/2017/46/pdfs/ukia_20170046_en.pdf",
+          "title": "The Important Public Services (Education) Regulations 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/47",
+          "pdf": "/ukia/2017/47/pdfs/ukia_20170047_en.pdf",
+          "title": "The Important Public Services (Transport) Regulations 2017 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2017/48",
+          "pdf": "/ukia/2017/48/pdfs/ukia_20170048_en.pdf",
+          "title": "The Important Public Services (Border Security) Regulations 2017 - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 6,
+      "distinctTitles": 3,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2018/134",
+          "pdf": "/ukia/2018/134/pdfs/ukia_20180134_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services Statutory Instruments - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/136",
+          "pdf": "/ukia/2018/136/pdfs/ukia_20180136_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services Statutory Instruments (i) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/137",
+          "pdf": "/ukia/2018/137/pdfs/ukia_20180137_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services Statutory Instruments (i) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/138",
+          "pdf": "/ukia/2018/138/pdfs/ukia_20180138_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services Statutory Instruments (i) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/139",
+          "pdf": "/ukia/2018/139/pdfs/ukia_20180139_en.pdf",
+          "title": "EU (Withdrawal) Act - Financial Services Statutory Instruments (i) - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2018/146",
+          "pdf": "/ukia/2018/146/pdfs/ukia_20180146_en.pdf",
+          "title": "The Central Counterparties (Amendment, etc., and Transitional Provision) (EU Exit) Regulations 2018 - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 6,
+      "distinctTitles": 3,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2019/112",
+          "pdf": "/ukia/2019/112/pdfs/ukia_20190112_en.pdf",
+          "title": "The Medicines for Human Use (Clinical Trials) (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/115",
+          "pdf": "/ukia/2019/115/pdfs/ukia_20190115_en.pdf",
+          "title": "The Medical Devices (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/118",
+          "pdf": "/ukia/2019/118/pdfs/ukia_20190118_en.pdf",
+          "title": "The Human Medicines (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/14",
+          "pdf": "/ukia/2019/14/pdfs/ukia_20190014_en.pdf",
+          "title": "The Medicines for Human Use (Clinical Trials) (Amendment) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/15",
+          "pdf": "/ukia/2019/15/pdfs/ukia_20190015_en.pdf",
+          "title": "The Human Medicines (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/17",
+          "pdf": "/ukia/2019/17/pdfs/ukia_20190017_en.pdf",
+          "title": "The Medical Devices (Amendment etc.) (EU Exit) Regulations 2019 - Impact Assessment"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "verdict": "DIFFERENT SOURCE PDFs — investigate",
+      "distinctPdfs": 6,
+      "distinctTitles": 6,
+      "unreachable": 0,
+      "members": [
+        {
+          "ukia": "ukia/2019/146",
+          "pdf": "/ukia/2019/146/pdfs/ukia_20190146_en.pdf",
+          "title": "The Court of Judicature (Non-Contentious Probate) Fees (Amendment) Order (Northern Ireland) 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/147",
+          "pdf": "/ukia/2019/147/pdfs/ukia_20190147_en.pdf",
+          "title": "The County Court Fees (Amendment) Order (Northern Ireland) 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/148",
+          "pdf": "/ukia/2019/148/pdfs/ukia_20190148_en.pdf",
+          "title": "The Judgment Enforcement Fees (Amendment) Order (Northern Ireland) 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/149",
+          "pdf": "/ukia/2019/149/pdfs/ukia_20190149_en.pdf",
+          "title": "The Family Proceedings Fees (Amendment) Order (Northern Ireland) 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/150",
+          "pdf": "/ukia/2019/150/pdfs/ukia_20190150_en.pdf",
+          "title": "The Magistrates’ Courts Fees (Amendment) Order (Northern Ireland) 2019 - Impact Assessment"
+        },
+        {
+          "ukia": "ukia/2019/151",
+          "pdf": "/ukia/2019/151/pdfs/ukia_20190151_en.pdf",
+          "title": "The Court of Judicature Fees (Amendment) Order (Northern Ireland) 2019 - Impact Assessment"
+        }
+      ]
+    }
+  ]
+}

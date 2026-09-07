@@ -1,0 +1,539 @@
+
+
+═══════ [impact-assessments:2019-64:1] Summary  (61 words) ═══════
+1 
+ 
+Title: Ensuring continuity, certainty and control in the interoperability 
+regime after exiting the EU 
+IA No: DfT00404  
+RPC Reference No:  RPC-4310(1)-DfT   
+Lead department or agency: Department for Transport 
+Other departments or agencies: N/A 
+ 
+Impact Assessment (IA) 
+Date: 21/01/2019 
+Stage: Final 
+Source of intervention: Domestic 
+Type of measure: Secondary legislation 
+Contact for enquiries: James Le Grice 
+james.legrice@dft.gov.uk 
+ 
+ Summary: Intervention and Options
+
+═══════ [impact-assessments:2019-64:2] RPC opinion  (20 words) ═══════
+RPC Opinion: Fit for purpose 
+ 
+Cost of Preferred (or more likely) Option 
+Total Net 
+Present Value 
+Business Net 
+Present Value
+
+═══════ [impact-assessments:2019-64:3] Costs and benefits  (22 words) ═══════
+Net cost to business per 
+year (EANDCB in 2016 prices) 
+One-In,  
+Three-Out 
+Business Impact Target 
+Status 
+N/A N/A   N/A N/A Qualifying provision
+
+═══════ [impact-assessments:2019-64:4] Problem under consideration  (157 words) ═══════
+What is the problem under consideration? Why is government intervention necessary? 
+New legislation is necessary to amend the Railways (Interoperability) Regulations 2011 to ensure that 
+they continue to function effectively as a result of the UK’s withdrawal from the European Union. There 
+are a range of aspects of the railways interoperability regime that will be affected when the UK leaves 
+the EU, and as a result, EU-specific terminology will need to be amended. In particular, the UK’s 
+approach to recognition of rail interoperability constituents 
+(tradeable rail products defined in harmonised 
+standards), subsystems and vehicle authorisations requires amendment to reflect the fact that the UK is 
+no longer a member of the EU. Also, since the UK will be producing its own National Technical 
+Specification Notices for rail (NTSNs) to replace EU technical standards, a new NTSN framework will be 
+established, and references to the EU’s Technical Specifications for Interoperability (TSIs) in UK 
+implementing legislation will be corrected.
+
+═══════ [impact-assessments:2019-64:5] Policy objectives  (75 words) ═══════
+What are the policy objectives and the intended effects? 
+The overall objectives of the SI are to make sure that the UK’s interoperability regime remains operable 
+and that the new NTSN framework is clear and accessible for stakeholders. The establishment of the 
+system of Secretary of State published NTSNs in the SI will also make it possible for the UK to diverge 
+from or keep pace with EU TSIs swiftly and flexibly following exit.  
+ 
+ 
+ 
+
+ 
+2
+
+═══════ [impact-assessments:2019-64:6] Options considered  (13 words) ═══════
+What policy options have been considered, including any alternatives to regulation? Please justify
+
+═══════ [impact-assessments:2019-64:7] Preferred option  (161 words) ═══════
+preferred option (further details in Evidence Base) 
+Option 0.1: Current arrangements, pre-EU Exit, are such that the Railways (Interoperability) 
+Regulations 2011 require compliance with TSIs and other relevant EU tertiary legislation without the 
+ability to diverge.   
+ 
+Option 0.2: Do nothing. References, terminology and obligations that are appropriate for the UK as an 
+EU Member State, but not as a third country, would remain in the regulations.  
+ 
+Option 1: Amend the interoperability regulations to make appropriate corrections to ensure that  
+aspects of the legal framework will continue to function effectively if the UK is not part of 
+the EU. The amended SI will include provisions establishing a new domestic framework for the 
+publication of UK technical standards and rules, and as such these provisions will be akin to an  
+enabling power. 
+ 
+Option 1 is the Government’s preferred outcome, as it ensures certainty, continuity and control in the  
+interoperability regime as the UK exits the EU, and effectively delivers on the referendum result.
+
+═══════ [impact-assessments:2019-64:8] Post-implementation review  (507 words) ═══════
+Will the policy be reviewed?  It will be reviewed.  If applicable, set review date:  N/A 
+ 
+Does implementation go beyond minimum EU/International requirements? Yes 
+Are any of these organisations in scope? 
+Micro 
+Yes 
+Small 
+Yes 
+Medium 
+Yes 
+Large 
+Yes 
+What is the CO
+2
+ equivalent change in greenhouse gas emissions?  
+(Million tonnes CO
+2
+ equivalent)   
+Traded:    
+n/a 
+Non-traded:    
+n/a 
+I have read the Impact Assessment and I am satisfied that, given the available evidence, it represents a 
+reasonable view of the likely costs, benefits and impact of the leading options. 
+Signed by the responsible 
+Minister: Andrew Jones 
+ Date
+:     21.2.19       
+ 
+Summary: Analysis & Evidence Policy Option 1 
+Description:  Amend the interoperability regulations to fix aspects of the transposing legislation that will no longer 
+function correctly if the UK is not part of the EU. 
+FULL ECONOMIC ASSESSMENT 
+Price Base 
+Year: N/A         
+PV Base 
+Year: N/A         
+Time Period 
+Years: N/A         
+Net Benefit (Present Value (PV)) (£m) 
+Low: N/A High: N/A Best Estimate: N/A 
+ 
+COSTS (£m) 
+Total Transition  
+ (Constant Price) Years 
+ 
+ 
+Average Annual  
+(excl. Transition) (Constant 
+Price) 
+Total Cost  
+(Present Value) 
+Low  
+N/A 
+      
+N/A 
+N/A 
+High  
+N/A N/A 
+N/A 
+Best Estimate 
+ 
+          N/A           N/A 
+          N/A 
+Description and scale of key monetised costs by ‘main affected groups’  
+Given that this SI establishes a framework for UK technical standards for rail providing the scope for  
+divergence, rather than specifying new standards itself, it is not possible to provide monetised costs in  
+respect of each potential future divergence between UK and EU standards. A narrative approach has  
+been taken instead for this IA. See Section 3 of the Evidence Base for the rationale.  
+ 
+ 
+ 
+
+ 
+3 
+Other key non-monetised costs by ‘main affected groups’  
+As the SI seeks to maintain continuity of the current interoperability regime with EU Exit-related 
+inoperabilities fixed, we do not envisage the creation of new costs beyond those reported in the Impact 
+Assessment for the Railways (Interoperability) Regulations 2011. Costs may be incurred in the future 
+as a result of having to reassess some products from outside the UK against divergent UK 
+standards. However, it is not possible to predict what these costs may be as it is uncertain how, 
+when and the extent to which the UK may diverge.  
+ 
+BENEFITS (£m) 
+Total Transition  
+ (Constant Price) Years 
+ 
+ 
+Average Annual  
+(excl. Transition) (Constant 
+Price)
+ 
+Total Benefit  
+(Present Value) 
+Low  
+N/A 
+      
+N/A 
+N/A 
+High  
+N/A N/A 
+N/A 
+Best Estimate 
+ 
+          N/A           N/A 
+          N/A 
+Description and scale of key monetised benefits by ‘main affected groups’  
+Given that this SI establishes a framework for UK technical standards for rail, it is not possible to 
+provide monetised benefits. A narrative approach has been taken instead for this IA. See Section 3 of 
+the Evidence Base for the rationale.  
+ 
+ 
+ 
+Other key non-monetised benefits by ‘main affected groups’  
+There are indirect benefits which may occur as a result of future decisions taken under the framework  
+established for diverging from EU TSIs. The benefits of any divergence would be assessed on a case  
+by case basis. This SI is merely enabling and does not create policy divergence from the EU TSIs.
+
+═══════ [impact-assessments:2019-64:9] Risks and assumptions (part 1)  (1875 words) ═══════
+Key assumptions/sensitivities/risks Discount rate (%) 
+
+It is uncertain which aspects of EU TSIs the UK may wish to diverge from in the future.  
+
+BUSINESS ASSESSMENT (Option 1) 
+Direct impact on business (Annualised) £m:  
+Score for Business Impact Target (qualifying 
+provisions only) £m:  N/A 
+Costs:  
+N/A 
+Benefits:  
+N/A 
+Net:  
+N/A 
+
+4 
+
+Evidence Base (for summary sheets) 
+1    Title of Proposal  
+1.1 Ensuring continuity, certainty and control in the interoperability regime after exiting the EU. 
+2    Purpose and intended effect 
+3 Background to interoperability  
+3.1 Interoperability is a European initiative to help rail compete more effectively with other modes of 
+transport through a set of common standards and authorisation processes. It is intended to reduce 
+costs and provide safe and uninterrupted movement of trains across Europe through increased 
+compatibility between the different elements of the rail system. The key aims of interoperability can 
+be summarised as follows: 
+● Ensure compatibility between European railways to allow for through running of trains 
+between Member States; 
+● Harmonise Member State design assessment, acceptance and approval processes to 
+prevent barriers to trade and to promote a single European market for railway products and 
+services; 
+
+● Deliver benefits of standardisation through economies of scale for railway components, 
+improving the economic performance of European railways and the environmental 
+performance of the whole European transport system.
+
+4 Harmonised standards 
+4.1 Technical Specifications for Interoperability (TSIs) are common, EU-wide technical and operational 
+standards for new or upgraded rail infrastructure, vehicles and component parts. They set out how 
+components must be built, and compliance assessed and verified, to ensure the interoperability of 
+the rail system. The TSIs may cover one or a number of subsystems, and these documents are 
+subject to revision from time to time after they are first issued.
+
+4.2 TSIs are developed by working groups of the European Union Agency for Railways. The UK sends 
+technical experts to participate in the working groups, and votes on the final TSI as a member of 
+the Railways Interoperability and Safety Committee (RISC). Once published in the Official Journal 
+of the European Union, TSIs automatically apply in the UK without the need to create additional 
+regulations. 
+
+5 National rules 
+5.1 In addition, Member States have the right to produce their own national technical rules to 
+supplement TSIs, such as where there are open points not covered by a TSI. In the UK, national 
+rules are derived from rail industry standards. The Rail Safety and Standards Board (RSSB) 
+proposes which industry standards the DfT should notify to the European Commission as notified 
+national technical rules (NNTR) against each TSI.  
+6 Assessment 
+6.1 Rail projects that come within the scope of interoperability (i.e. projects that are not light rail, 
+metros, trams, local lines, heritage, touristic or private freight) must be certified to conform to the 
+relevant TSIs and NNTRs before they can be authorised to be placed into service on the Great 
+Britain network by the ORR, the National Safety Authority. In Northern Ireland, the Safety Authority 
+is the Department for Infrastructure and for the Channel Tunnel it is the Intergovernmental 
+Commission (IGC). Assessment bodies that certify conformity to TSIs are called notified bodies – 
+the DfT must notify them to the European Commission - and bodies that certify conformity to 
+NNTRs are called designated bodies.
+
+7 The 2008 Interoperability Directive and 2011 Interoperability Regulations 
+
+5 
+7.1 The interoperability regime in the UK is established by the Railways (Interoperability) Regulations 
+2011 (RIR 2011), as amended in 2013, 2014 and 2015. 
+7.2 These regulations implement European Directive 2008/57/EC on the Interoperability of the Rail 
+System. Key elements of the Directive include: 
+● Widening the scope of interoperability beyond the Trans European Network (TEN); 
+● Enabling a more streamlined ‘type’ authorisation process for vehicles to reduce burdens on 
+industry and safety authorities; 
+● Excluding from the scope of interoperability certain lines and vehicles such as metros, 
+trams and light rail; 
+● Allowing Member States to seek additional authorisation of vehicles already authorised in 
+another Member State; and 
+● Ensuring the requirements set out in a specification for infrastructure and vehicle registers 
+are met. 
+7.3 RIR 2011 gives the DfT the power to issue derogations against TSIs in defined circumstances, 
+typically if projects are at an advanced stage of development when the TSI was published or if 
+conforming to the applicable TSI would compromise the economic viability of the project. RIR 2011 
+also gives the DfT the power to decide whether authorisation against a TSI is required for a 
+renewal or upgrade project. The DfT must inform, and in some cases seek the permission of, the 
+European Commission in these decisions.
+
+8 EU Exit SI preparation 
+8.1    It is the duty of a responsible government to prepare for a range of potential outcomes, including 
+the unlikely event of 'no deal’. This piece of legislation therefore seeks to minimise any potential 
+disruption as a result of the UK’s departure from the EU, and helps effectively deliver on the 
+referendum result. 
+8.2    Government Departments are preparing Statutory Instruments (SIs) to address specific aspects of 
+EU arrangements. Plans have been designed to provide the flexibility to respond to a negotiated 
+agreement, as well as preparing us for the unlikely eventuality of leaving without a deal.  
+8.3    The UK is starting from a position of high alignment with EU standards and the SI creates an 
+appropriate framework to manage this alignment for rail technical standards. We may diverge as 
+we will no longer be a part of the EU, but this will be managed through the publication of the new 
+standards and we will be able to align with TSIs if it is in the UK’s interests. 
+9 The Railways (Interoperability) (Amendment) (EU Exit) Regulations 
+9.1 The Railways (Interoperability) (Amendment) (EU Exit) Regulations, hereafter referred to as the SI, 
+are intended to ensure that the UK’s interoperability regime remains workable and that 
+stakeholders have a clear and accessible technical standards framework post-exit. 
+
+9.2 In practice, this means correcting certain aspects of the interoperability regime that would no 
+longer function correctly if the UK is not an EU Member State. These ‘inoperabilities’ include:
+
+● The blanket application of EU technical requirements to the UK, with no option for the UK to 
+align or diverge from these to address specific national needs;  
+● The lack of a clear mechanism for recognition of EU assessments of rail products 
+undertaken by third parties; 
+● Continued obligations to notify third party conformity assessment bodies to the European 
+Commission or seek the Commission’s permission to issue a derogation against a TSI; 
+● Obligations remaining on the National Safety Authority to provide information to the 
+European Union Agency for Railways; 
+● The inclusion of redundant EU terminology in UK regulations in some cases, such as ‘EC 
+Declaration of Conformity’ and ‘Member State’;
+
+9.3 The SI will amend the text of RIR 2011 to fix these and other inoperabilities.  
+
+6 
+9.4 The SI will create a new system of UK National Technical Specification Notices (NTSNs) published 
+by the Secretary of State for Transport, to replace EU TSIs. The UK will be able to diverge from or 
+keep pace with EU TSIs via the publication of these notices. 
+9.5 Initially, it is proposed that existing TSI content will be replicated in its entirety within the system of 
+NTSNs. It will then be possible to either diverge from or keep pace with new EU TSIs and in the 
+event of any divergence the intention is that this can be clearly indicated within the text of the UK 
+NTSN. 
+
+9.6 
+Decisions on whether it is necessary to keep pace or diverge will be made by the Secretary of 
+State. These decisions will be informed through consultation with industry about the suitability of 
+new TSIs. It is expected that this process will involve the Rail Safety and Standards Board (RSSB) 
+and other stakeholders with an interest in technical standards.  
+
+9.7 
+This system will avoid a lengthy freeze in standards in cases where the UK wishes to be aligned 
+with new TSIs. When new TSIs come into force within the EU, they can be adopted via the 
+publication of the NTSN or we may diverge when appropriate. 
+
+9.8 
+Where TSIs and NTSNs remain aligned, the UK will continue to recognise conformity assessment 
+certificates issued against the TSI. Where there is divergence, the UK will require any new product 
+affected by the divergent requirement to be assessed against the UK standard by a UK Approved 
+Body. As a result, there may be situations where new products already holding conformity 
+assessment documents issued against TSIs will need to be reassessed for placement on the UK 
+market. The need for reassessment will be clearly identified in the NTSN, and any reassessment 
+would be limited to the area of divergence. 
+
+9.9 
+The SI will also require rail vehicles first authorised in the EU to undergo a mandatory additional 
+authorisation for use in the UK. The UK regulations currently make this voluntary. The 
+reassessment of vehicles would be limited to those areas where the UK has diverged from EU 
+standards, plus assessment against any national technical rules in place. This will ensure that 
+vehicles, and component parts, fully comply with the UK’s technical standards.
+
+10  Baseline and Rationale for a Narrative Impact Assessment  
+10.1 The SI is limited to amending the existing interoperability regime so that it can continue to function 
+in the event of a ‘No Deal’ EU Exit scenario. It does not change the scope of the interoperability 
+regime, disapply standards, or make fundamental changes to the existing conformity assessment 
+and authorisation processes.
+
+10.2 Since its main purpose is to broadly ensure the continued functioning of the existing regime rather 
+than create a new one, we do not anticipate that it will significantly alter the cost-benefit estimates 
+within the Impact Assessment that was prepared when this regime was established in 2011. 
+
+10.3 However, the SI contains provisions which function akin to an enabling power, i.e. creating a 
+framework for future divergence from TSIs. This could have impacts beyond those identified in the 
+RIR 2011 Impact Assessment. 
+10.4 The subsequent publication of the UK NTSNs would constitute a regulatory provision in its own 
+right. The impact of each NTSN, including any reassessment of products from outside of the UK 
+that may be necessary, would be considered during the process where the DfT consults with 
+stakeholders. There are well established mechanisms to do this via the RSSB consultation process 
+for changes to railway technical standards. 
+10.5 The DfT is aware from discussions with stakeholders that there may be financial benefits from 
+diverging from certain provisions within existing TSIs. However, any specific areas of divergence 
+will be the subject of further discussions, and it is not possible at this stage to predict exactly how 
+and when the UK may choose to diverge from EU TSIs. The DfT’s position is to remain aligned 
+with developments in the EU TSIs unless there is sufficient reason not to do so. 
+
+10.6 
+Due to the uncertainty over how and when divergence may occur, it is not possible to provide a 
+fully quantified cost-benefit analysis of the SI.  
+10.7 Instead, this Impact Assessment provides a high level narrative analysis comparing the possible 
+benefits that could be realised through the ability to diverge from EU TSIs against a baseline of
+
+═══════ [impact-assessments:2019-64:10] Risks and assumptions (part 2)  (1664 words) ═══════
+7 
+‘current arrangements’, in which TSIs and other related EU tertiary legislation apply in the UK 
+without the ability to diverge.  
+11  Option 0.1: Current Arrangements 
+11.1 The baseline comparison is the status quo of RIR 2011 unamended and the existing EU acquis 
+pre-EU Exit. Under current arrangements, TSIs and other EU tertiary legislation related to the 
+Interoperability Directive apply in the UK without the ability to diverge, except where authorised by 
+the European Union.  
+11.2 The original Impact Assessment (IA) produced for the introduction of RIR 2011 assessed the costs 
+and benefits of complying with the interoperability regulations for a period lasting from 2012 to 
+2022. The IA estimated that the regulations would generate total benefits of £111 million and total 
+costs of £35.8 million, with a net benefit of £75.2 million by 2022.
+1
+ Under Option 0.1, we would not 
+anticipate an increase in the total benefits previously estimated as the regulations would remain 
+unchanged. However, since the IA for RIR 2011 was produced, the DfT has been made aware of 
+additional costs that could arise as a result of compliance with EU TSIs. 
+
+11.3 Specifically, DfT analysis has indicated that HS2 could incur costs from complying with the platform 
+height requirements specified in the Infrastructure TSI (Regulation 1299/2014/EU). The TSI 
+requires platforms to be built at a height of 550mm or 760mm above the running surface, and 
+includes a UK Specific Case allowing a higher platform height of 915mm.  
+11.4 
+HS2 has prioritised provision of a level interface between trains and platforms. The intention is both 
+to improve accessibility as well as to reduce dwell time in intermediate stations, enabling a high 
+frequency service.  
+11.5 
+To achieve a level interface, HS2 platforms would need to have a height of circa 1100mm – as this 
+is expected to be the approximate floor height of the rolling stock. This is higher than the height 
+allowed by the Infrastructure TSI and the NNTR referred to in the Specific Case.  
+11.6 Compliance with the TSI platform height specification would result in longer station dwell times and 
+consequently a less frequent service.
+
+11.7 DfT analysis carried out on the most intensively used HS2 station, Old Oak Common, suggests 
+that longer dwell times would lead to losses in revenue and passenger benefits. Furthermore, it is 
+possible that the increased dwell time at Old Oak Common and other stations will lead to a 
+reduction in the number of HS2 services that can be operated once Phase 2b is operational and 
+this could increase costs further. 
+
+11.8  Additionally, stakeholder evidence submitted for the 2016 Post Implementation Review of RIR 
+2011 indicated that compliance with the testing requirements in the Noise TSI (Regulation 
+1304/2014/EU) is increasing costs for the freight wagon industry. Specifically, the TSI’s testing 
+requirements mean that new freight wagons must be transported at the project entity’s expense to 
+a testing facility in mainland Europe. Stakeholders say that this has already increased the cost of 
+introducing new freight wagons in the UK.  
+12 O
+ption 0.2: Do Nothing 
+12.1  If the UK were not to enact the proposed legislation (Option 0.2), a flexible framework to permit  
+divergence from EU standards and the ability to keep pace with the frequently changing EU 
+technical standards where that was required, would not be in place. This is likely to result in 
+unintended divergence between UK and EU technical standards, at least for a certain period of 
+time. This is because amending the retained EU legislation that sets out the current TSIs to correct 
+EU references and reflect future EU changes would be a much lengthier process if we were 
+
+1
+ The HS2 platform heights impacts are appraised over a 67 year period for the full network, from 2026 (the opening of Phase One) to 2093 (60 
+years after the opening of the full Y network in 2033). In reality, we would expect the capacity benefits that could be lost due to higher platforms 
+to accrue from the opening of Phase 2b, so these are likely to fall into the 60 year period after 2033. In order to be compared to the dwell time 
+impact, a 67 year average has been taken on impacts. 
+
+8 
+required to make these changes by way of a UK statutory instrument each time a change was 
+required. This is the alternative to a system of Secretary of State published NTSNs.   
+12.2  Option 0.2 would also mean that, post EU Exit, RIR 2011 would contain terminology, references 
+and obligations that would be inappropriate for the UK as a third country. Primarily, these 
+inoperabilities arise from EU legislation applying in the UK as an EU Member State, inclusion of EU 
+terminology (such as ‘EC’ certificates) in the regulations, requirements to share information with 
+the European Union Agency for Railways, obligations to notify third party conformity assessment 
+bodies and national technical rules to the European Commission and obligations to seek 
+permission from the Commission to grant derogations from TSIs. Further, there would not be 
+effective processes and procedures in place to deal with the recognition and assessment of EU 
+products due to be placed into service or onto the UK market once the UK becomes a third country 
+and there would therefore be unwelcome uncertainty for manufacturers and conformity 
+assessment bodies. 
+12.3  If the inoperabilities in RIR 2011 are not fixed ahead of Exit, rail industry stakeholders could be 
+unclear about their obligations and about which standards are applicable in the UK. This could 
+result in delays to the certification of rail products, and the authorisation of vehicles and 
+subsystems, and an increased risk of challenge for major rail projects depending on these 
+subsystems or vehicles.  
+13  Option 1: Amend the Interoperability Regulations 
+13.1 The preferred option is to amend RIR 2011 in order to fix the deficiencies in the regulations and, 
+with the establishment of a system of Secretary of State published NTSNs, to put in place a flexible 
+alternative to the amendment of the TSIs contained in retained EU law by way of statutory 
+instrument. These are changes resulting from the UK’s exit from the EU, and create a framework 
+for diverging from or maintaining alignment with TSIs in the future. 
+
+13.2 The SI would not change the scope of interoperability, but rather seek to ensure continuity of the 
+current regime in the event of a ‘No Deal’ scenario. As such, we do not anticipate that this SI would 
+in itself result in a major departure from the overall costs and benefits for compliance with the 
+interoperability regime estimated in the original IA for RIR 2011. 
+
+13.3 However, the ability to diverge from EU TSIs through this new framework could result in changes 
+to the cost benefit ratio in the future. As our expected position is to remain aligned with EU TSIs 
+unless there are reasonable grounds for divergence, it is difficult to predict with certainty how and 
+when divergence may occur. The expected impact of each instance of divergence would be 
+assessed by the DfT and take into account the wider industry consultation processes for 
+developing UK NTSNs. 
+
+13.4 
+It is expected that the UK will diverge from TSI requirements to allow HS2 to build higher platforms. 
+However, this SI will not create that divergence, and costs and benefits will be assessed separately 
+during amendment of the appropriate NTSN.  
+13.5 
+The ability to diverge could also allow more flexibility in how rail technical standards are applied in 
+the UK. For example, stakeholders in the freight industry have suggested that costs could be 
+avoided if the UK had the same ‘grandfather rights’ that the Wagons TSI (EU Regulation 321/2013) 
+confers on projects wishing to use older wagon designs for use in other Member States. This 
+would enable the UK to make continued use of older designs of freight wagons and avoid some of 
+the costs associated with the testing requirements set out in the Noise TSI. These ‘grandfather 
+rights’ could be conferred through a new UK Specific Case, subject to seeking wider views. This 
+would not be a case of lowering environmental standards on railway noise, but rather enabling 
+flexibilities within a separate TSI similar to those that the European Commission has agreed to for 
+other Member States. The impacts would be assessed and stakeholders consulted before a 
+decision is taken. 
+
+13.6 
+Likewise, DfT will explore how the ability to diverge could allow more flexibility in terms of the way 
+specific aspects of NTSNs are applied on particular lines. Stakeholders have previously referred to 
+the need for greater flexibility in terms of the application of TSIs. The ability for the UK to diverge 
+from the EU TSIs may open up further flexibilities such as creating additional UK Specific Cases 
+for certain secondary lines.
+
+9 
+13.7 These are some examples of how the ability to diverge could create benefits through cost 
+avoidance. Impacts of divergence, including any reassessment that may be needed for new 
+products previously certified against TSIs, will be assessed on a case by case basis as and when 
+the decision is taken to use this power. 
+
+13.8 
+The amendment to RIR 2011 relating to mandatory additional vehicle authorisations is not 
+expected to impose an additional cost or administrative burden on rail operators seeking to use 
+vehicles that were first authorised in the EU, as it reflects existing practice. Such operators already 
+usually seek an additional authorisation in the UK, in order to ensure their vehicle’s acceptance by 
+the managers of the UK’s infrastructure. The proposed move to a mandatory additional 
+authorisation procedure is also consistent with how most Member States apply the authorisation 
+process for vehicles and with our international obligations in this area.
+
+14  Post Implementation Review Plan 
+14.1 As the Principal Regulations already provide for a review clause, the Regulations as amended will 
+be subject to a review no later than five years from the last review (January 2017). The next review 
+will provide an opportunity to evaluate how the framework allowing the UK to diverge from EU 
+technical standards has been used.

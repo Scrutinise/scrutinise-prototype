@@ -1,0 +1,2006 @@
+{
+  "generated": "2026-09-07T21:39:41.446Z",
+  "n": 50,
+  "rows": [
+    {
+      "ukia": "ukia/2007/4",
+      "url": "https://www.legislation.gov.uk/ukia/2007/4",
+      "sections": 6,
+      "fetched": true,
+      "srcChars": 11329,
+      "heldChars": 11310,
+      "bulkPct": 99.8,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 4,
+      "heldMoney": 4,
+      "moneyPct": 100,
+      "srcNums": 102,
+      "heldNums": 102,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/12",
+      "url": "https://www.legislation.gov.uk/ukia/2017/12",
+      "sections": 12,
+      "fetched": true,
+      "srcChars": 30883,
+      "heldChars": 30717,
+      "bulkPct": 99.5,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 23,
+      "heldMoney": 23,
+      "moneyPct": 100,
+      "srcNums": 212,
+      "heldNums": 212,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2018/133",
+      "url": "https://www.legislation.gov.uk/ukia/2018/133",
+      "sections": 13,
+      "fetched": true,
+      "srcChars": 44870,
+      "heldChars": 44556,
+      "bulkPct": 99.3,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 104,
+      "heldMoney": 104,
+      "moneyPct": 100,
+      "srcNums": 489,
+      "heldNums": 489,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2021/60",
+      "url": "https://www.legislation.gov.uk/ukia/2021/60",
+      "sections": 19,
+      "fetched": true,
+      "srcChars": 124347,
+      "heldChars": 122851,
+      "bulkPct": 98.8,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 278,
+      "heldMoney": 278,
+      "moneyPct": 100,
+      "srcNums": 1121,
+      "heldNums": 1121,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/166",
+      "url": "https://www.legislation.gov.uk/ukia/2017/166",
+      "sections": 12,
+      "fetched": true,
+      "srcChars": 33419,
+      "heldChars": 33280,
+      "bulkPct": 99.6,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 170,
+      "heldMoney": 170,
+      "moneyPct": 100,
+      "srcNums": 423,
+      "heldNums": 423,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/58",
+      "url": "https://www.legislation.gov.uk/ukia/2023/58",
+      "sections": 19,
+      "fetched": true,
+      "srcChars": 117214,
+      "heldChars": 116186,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 82,
+      "heldMoney": 82,
+      "moneyPct": 100,
+      "srcNums": 1149,
+      "heldNums": 1149,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/150",
+      "url": "https://www.legislation.gov.uk/ukia/2017/150",
+      "sections": 22,
+      "fetched": true,
+      "srcChars": 162965,
+      "heldChars": 160747,
+      "bulkPct": 98.6,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 71,
+      "heldMoney": 71,
+      "moneyPct": 100,
+      "srcNums": 1447,
+      "heldNums": 1447,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/163",
+      "url": "https://www.legislation.gov.uk/ukia/2017/163",
+      "sections": 15,
+      "fetched": true,
+      "srcChars": 74406,
+      "heldChars": 73758,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 115,
+      "heldMoney": 115,
+      "moneyPct": 100,
+      "srcNums": 893,
+      "heldNums": 893,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2021/24",
+      "url": "https://www.legislation.gov.uk/ukia/2021/24",
+      "sections": 10,
+      "fetched": true,
+      "srcChars": 10805,
+      "heldChars": 10794,
+      "bulkPct": 99.9,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 0,
+      "heldMoney": 0,
+      "moneyPct": null,
+      "srcNums": 73,
+      "heldNums": 73,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2026/64",
+      "url": "https://www.legislation.gov.uk/ukia/2026/64",
+      "sections": 10,
+      "fetched": true,
+      "srcChars": 78435,
+      "heldChars": 77664,
+      "bulkPct": 99,
+      "parts": {
+        "summary sheet": {
+          "source": false,
+          "held": false
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 14,
+      "heldMoney": 14,
+      "moneyPct": 100,
+      "srcNums": 794,
+      "heldNums": 791,
+      "numPct": 99.6,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2021/66",
+      "url": "https://www.legislation.gov.uk/ukia/2021/66",
+      "sections": 11,
+      "fetched": true,
+      "srcChars": 29699,
+      "heldChars": 29418,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 102,
+      "heldMoney": 102,
+      "moneyPct": 100,
+      "srcNums": 405,
+      "heldNums": 405,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2019/69",
+      "url": "https://www.legislation.gov.uk/ukia/2019/69",
+      "sections": 24,
+      "fetched": true,
+      "srcChars": 170534,
+      "heldChars": 169121,
+      "bulkPct": 99.2,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 12,
+      "heldMoney": 12,
+      "moneyPct": 100,
+      "srcNums": 802,
+      "heldNums": 802,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2021/29",
+      "url": "https://www.legislation.gov.uk/ukia/2021/29",
+      "sections": 73,
+      "fetched": true,
+      "srcChars": 754777,
+      "heldChars": 745098,
+      "bulkPct": 98.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 1802,
+      "heldMoney": 1802,
+      "moneyPct": 100,
+      "srcNums": 8059,
+      "heldNums": 8059,
+      "numPct": 100,
+      "srcRows": 6,
+      "intactRows": 3,
+      "rowPct": 50
+    },
+    {
+      "ukia": "ukia/2017/104",
+      "url": "https://www.legislation.gov.uk/ukia/2017/104",
+      "sections": 11,
+      "fetched": true,
+      "srcChars": 36466,
+      "heldChars": 36248,
+      "bulkPct": 99.4,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 4,
+      "heldMoney": 4,
+      "moneyPct": 100,
+      "srcNums": 315,
+      "heldNums": 315,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/132",
+      "url": "https://www.legislation.gov.uk/ukia/2023/132",
+      "sections": 11,
+      "fetched": true,
+      "srcChars": 29309,
+      "heldChars": 29250,
+      "bulkPct": 99.8,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 4,
+      "heldMoney": 4,
+      "moneyPct": 100,
+      "srcNums": 143,
+      "heldNums": 143,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2019/169",
+      "url": "https://www.legislation.gov.uk/ukia/2019/169",
+      "sections": 20,
+      "fetched": true,
+      "srcChars": 126173,
+      "heldChars": 124961,
+      "bulkPct": 99,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 67,
+      "heldMoney": 67,
+      "moneyPct": 100,
+      "srcNums": 907,
+      "heldNums": 907,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2018/90",
+      "url": "https://www.legislation.gov.uk/ukia/2018/90",
+      "sections": 23,
+      "fetched": true,
+      "srcChars": 156506,
+      "heldChars": 154276,
+      "bulkPct": 98.6,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 216,
+      "heldMoney": 216,
+      "moneyPct": 100,
+      "srcNums": 1977,
+      "heldNums": 1977,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2007/32",
+      "url": "https://www.legislation.gov.uk/ukia/2007/32",
+      "sections": 6,
+      "fetched": true,
+      "srcChars": 10465,
+      "heldChars": 10434,
+      "bulkPct": 99.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 10,
+      "heldMoney": 10,
+      "moneyPct": 100,
+      "srcNums": 64,
+      "heldNums": 64,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2026/73",
+      "url": "https://www.legislation.gov.uk/ukia/2026/73",
+      "sections": 17,
+      "fetched": true,
+      "srcChars": 97871,
+      "heldChars": 97008,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 172,
+      "heldMoney": 172,
+      "moneyPct": 100,
+      "srcNums": 906,
+      "heldNums": 906,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2022/54",
+      "url": "https://www.legislation.gov.uk/ukia/2022/54",
+      "sections": 23,
+      "fetched": true,
+      "srcChars": 188613,
+      "heldChars": 185869,
+      "bulkPct": 98.5,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 142,
+      "heldMoney": 142,
+      "moneyPct": 100,
+      "srcNums": 2130,
+      "heldNums": 2130,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2026/30",
+      "url": "https://www.legislation.gov.uk/ukia/2026/30",
+      "sections": 11,
+      "fetched": true,
+      "srcChars": 32090,
+      "heldChars": 31916,
+      "bulkPct": 99.5,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 65,
+      "heldMoney": 65,
+      "moneyPct": 100,
+      "srcNums": 229,
+      "heldNums": 229,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/55",
+      "url": "https://www.legislation.gov.uk/ukia/2017/55",
+      "sections": 12,
+      "fetched": true,
+      "srcChars": 38521,
+      "heldChars": 38149,
+      "bulkPct": 99,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 82,
+      "heldMoney": 82,
+      "moneyPct": 100,
+      "srcNums": 299,
+      "heldNums": 299,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2018/170",
+      "url": "https://www.legislation.gov.uk/ukia/2018/170",
+      "sections": 20,
+      "fetched": true,
+      "srcChars": 133883,
+      "heldChars": 131768,
+      "bulkPct": 98.4,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 73,
+      "heldMoney": 73,
+      "moneyPct": 100,
+      "srcNums": 947,
+      "heldNums": 947,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/54",
+      "url": "https://www.legislation.gov.uk/ukia/2023/54",
+      "sections": 15,
+      "fetched": true,
+      "srcChars": 62500,
+      "heldChars": 62089,
+      "bulkPct": 99.3,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 66,
+      "heldMoney": 66,
+      "moneyPct": 100,
+      "srcNums": 480,
+      "heldNums": 480,
+      "numPct": 100,
+      "srcRows": 1,
+      "intactRows": 0,
+      "rowPct": 0
+    },
+    {
+      "ukia": "ukia/2023/184",
+      "url": "https://www.legislation.gov.uk/ukia/2023/184",
+      "sections": 25,
+      "fetched": true,
+      "srcChars": 187454,
+      "heldChars": 184466,
+      "bulkPct": 98.4,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 25,
+      "heldMoney": 25,
+      "moneyPct": 100,
+      "srcNums": 1786,
+      "heldNums": 1786,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/1",
+      "url": "https://www.legislation.gov.uk/ukia/2017/1",
+      "sections": 10,
+      "fetched": true,
+      "srcChars": 31580,
+      "heldChars": 31386,
+      "bulkPct": 99.4,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 83,
+      "heldMoney": 83,
+      "moneyPct": 100,
+      "srcNums": 325,
+      "heldNums": 325,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2020/77",
+      "url": "https://www.legislation.gov.uk/ukia/2020/77",
+      "sections": 15,
+      "fetched": true,
+      "srcChars": 73381,
+      "heldChars": 72808,
+      "bulkPct": 99.2,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 185,
+      "heldMoney": 185,
+      "moneyPct": 100,
+      "srcNums": 882,
+      "heldNums": 881,
+      "numPct": 99.9,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2020/18",
+      "url": "https://www.legislation.gov.uk/ukia/2020/18",
+      "sections": 17,
+      "fetched": true,
+      "srcChars": 91307,
+      "heldChars": 90630,
+      "bulkPct": 99.3,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 164,
+      "heldMoney": 164,
+      "moneyPct": 100,
+      "srcNums": 824,
+      "heldNums": 824,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2026/2",
+      "url": "https://www.legislation.gov.uk/ukia/2026/2",
+      "sections": 21,
+      "fetched": true,
+      "srcChars": 197782,
+      "heldChars": 195415,
+      "bulkPct": 98.8,
+      "parts": {
+        "summary sheet": {
+          "source": false,
+          "held": false
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": false,
+          "held": false
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 57,
+      "heldMoney": 57,
+      "moneyPct": 100,
+      "srcNums": 1951,
+      "heldNums": 1951,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/5",
+      "url": "https://www.legislation.gov.uk/ukia/2017/5",
+      "sections": 22,
+      "fetched": true,
+      "srcChars": 149947,
+      "heldChars": 147984,
+      "bulkPct": 98.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 179,
+      "heldMoney": 179,
+      "moneyPct": 100,
+      "srcNums": 1474,
+      "heldNums": 1474,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2021/79",
+      "url": "https://www.legislation.gov.uk/ukia/2021/79",
+      "sections": 25,
+      "fetched": true,
+      "srcChars": 195291,
+      "heldChars": 192896,
+      "bulkPct": 98.8,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 236,
+      "heldMoney": 236,
+      "moneyPct": 100,
+      "srcNums": 1964,
+      "heldNums": 1964,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/139",
+      "url": "https://www.legislation.gov.uk/ukia/2017/139",
+      "sections": 15,
+      "fetched": true,
+      "srcChars": 76615,
+      "heldChars": 75934,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 55,
+      "heldMoney": 55,
+      "moneyPct": 100,
+      "srcNums": 866,
+      "heldNums": 866,
+      "numPct": 100,
+      "srcRows": 1,
+      "intactRows": 1,
+      "rowPct": 100
+    },
+    {
+      "ukia": "ukia/2019/138",
+      "url": "https://www.legislation.gov.uk/ukia/2019/138",
+      "sections": 12,
+      "fetched": true,
+      "srcChars": 26443,
+      "heldChars": 26319,
+      "bulkPct": 99.5,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 84,
+      "heldMoney": 84,
+      "moneyPct": 100,
+      "srcNums": 438,
+      "heldNums": 438,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/188",
+      "url": "https://www.legislation.gov.uk/ukia/2023/188",
+      "sections": 5,
+      "fetched": true,
+      "srcChars": 37770,
+      "heldChars": 37227,
+      "bulkPct": 98.6,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 7,
+      "heldMoney": 7,
+      "moneyPct": 100,
+      "srcNums": 277,
+      "heldNums": 274,
+      "numPct": 98.9,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/45",
+      "url": "https://www.legislation.gov.uk/ukia/2023/45",
+      "sections": 9,
+      "fetched": true,
+      "srcChars": 83481,
+      "heldChars": 82062,
+      "bulkPct": 98.3,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 15,
+      "heldMoney": 15,
+      "moneyPct": 100,
+      "srcNums": 527,
+      "heldNums": 525,
+      "numPct": 99.6,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2020/65",
+      "url": "https://www.legislation.gov.uk/ukia/2020/65",
+      "sections": 22,
+      "fetched": true,
+      "srcChars": 165864,
+      "heldChars": 162416,
+      "bulkPct": 97.9,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 83,
+      "heldMoney": 83,
+      "moneyPct": 100,
+      "srcNums": 2130,
+      "heldNums": 2130,
+      "numPct": 100,
+      "srcRows": 21,
+      "intactRows": 9,
+      "rowPct": 42.9
+    },
+    {
+      "ukia": "ukia/2022/113",
+      "url": "https://www.legislation.gov.uk/ukia/2022/113",
+      "sections": 19,
+      "fetched": true,
+      "srcChars": 124638,
+      "heldChars": 123063,
+      "bulkPct": 98.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 171,
+      "heldMoney": 171,
+      "moneyPct": 100,
+      "srcNums": 1315,
+      "heldNums": 1315,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2021/16",
+      "url": "https://www.legislation.gov.uk/ukia/2021/16",
+      "sections": 6,
+      "fetched": true,
+      "srcChars": 5140,
+      "heldChars": 5143,
+      "bulkPct": 100.1,
+      "parts": {
+        "summary sheet": {
+          "source": false,
+          "held": false
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": false,
+          "held": false
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 1,
+      "heldMoney": 1,
+      "moneyPct": 100,
+      "srcNums": 40,
+      "heldNums": 40,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2020/79",
+      "url": "https://www.legislation.gov.uk/ukia/2020/79",
+      "sections": 18,
+      "fetched": true,
+      "srcChars": 115239,
+      "heldChars": 114231,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 191,
+      "heldMoney": 191,
+      "moneyPct": 100,
+      "srcNums": 1488,
+      "heldNums": 1488,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/130",
+      "url": "https://www.legislation.gov.uk/ukia/2023/130",
+      "sections": 10,
+      "fetched": true,
+      "srcChars": 43542,
+      "heldChars": 43411,
+      "bulkPct": 99.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 107,
+      "heldMoney": 107,
+      "moneyPct": 100,
+      "srcNums": 409,
+      "heldNums": 409,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2022/82",
+      "url": "https://www.legislation.gov.uk/ukia/2022/82",
+      "sections": 9,
+      "fetched": true,
+      "srcChars": 11701,
+      "heldChars": 11695,
+      "bulkPct": 99.9,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 6,
+      "heldMoney": 6,
+      "moneyPct": 100,
+      "srcNums": 55,
+      "heldNums": 55,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2017/47",
+      "url": "https://www.legislation.gov.uk/ukia/2017/47",
+      "sections": 22,
+      "fetched": true,
+      "srcChars": 142070,
+      "heldChars": 140164,
+      "bulkPct": 98.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 179,
+      "heldMoney": 179,
+      "moneyPct": 100,
+      "srcNums": 1359,
+      "heldNums": 1359,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2020/42",
+      "url": "https://www.legislation.gov.uk/ukia/2020/42",
+      "sections": 6,
+      "fetched": true,
+      "srcChars": 8131,
+      "heldChars": 8133,
+      "bulkPct": 100,
+      "parts": {
+        "summary sheet": {
+          "source": false,
+          "held": false
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": false,
+          "held": false
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 4,
+      "heldMoney": 4,
+      "moneyPct": 100,
+      "srcNums": 76,
+      "heldNums": 76,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2026/90",
+      "url": "https://www.legislation.gov.uk/ukia/2026/90",
+      "sections": 12,
+      "fetched": true,
+      "srcChars": 101733,
+      "heldChars": 100810,
+      "bulkPct": 99.1,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": false,
+          "held": false
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 116,
+      "heldMoney": 116,
+      "moneyPct": 100,
+      "srcNums": 768,
+      "heldNums": 768,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2026/10",
+      "url": "https://www.legislation.gov.uk/ukia/2026/10",
+      "sections": 4,
+      "fetched": true,
+      "srcChars": 40249,
+      "heldChars": 39308,
+      "bulkPct": 97.7,
+      "parts": {
+        "summary sheet": {
+          "source": false,
+          "held": false
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": false,
+          "held": false
+        },
+        "costs table": {
+          "source": false,
+          "held": false
+        }
+      },
+      "srcMoney": 128,
+      "heldMoney": 128,
+      "moneyPct": 100,
+      "srcNums": 821,
+      "heldNums": 821,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/159",
+      "url": "https://www.legislation.gov.uk/ukia/2023/159",
+      "sections": 27,
+      "fetched": true,
+      "srcChars": 217536,
+      "heldChars": 215448,
+      "bulkPct": 99,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 380,
+      "heldMoney": 380,
+      "moneyPct": 100,
+      "srcNums": 1941,
+      "heldNums": 1941,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2019/161",
+      "url": "https://www.legislation.gov.uk/ukia/2019/161",
+      "sections": 12,
+      "fetched": true,
+      "srcChars": 32852,
+      "heldChars": 32741,
+      "bulkPct": 99.7,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 22,
+      "heldMoney": 22,
+      "moneyPct": 100,
+      "srcNums": 206,
+      "heldNums": 206,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/79",
+      "url": "https://www.legislation.gov.uk/ukia/2023/79",
+      "sections": 13,
+      "fetched": true,
+      "srcChars": 102421,
+      "heldChars": 101277,
+      "bulkPct": 98.9,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 48,
+      "heldMoney": 48,
+      "moneyPct": 100,
+      "srcNums": 910,
+      "heldNums": 910,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2023/78",
+      "url": "https://www.legislation.gov.uk/ukia/2023/78",
+      "sections": 14,
+      "fetched": true,
+      "srcChars": 60820,
+      "heldChars": 60435,
+      "bulkPct": 99.4,
+      "parts": {
+        "summary sheet": {
+          "source": true,
+          "held": true
+        },
+        "evidence base": {
+          "source": true,
+          "held": true
+        },
+        "annex": {
+          "source": false,
+          "held": false
+        },
+        "PIR / review": {
+          "source": true,
+          "held": true
+        },
+        "costs table": {
+          "source": true,
+          "held": true
+        }
+      },
+      "srcMoney": 84,
+      "heldMoney": 84,
+      "moneyPct": 100,
+      "srcNums": 423,
+      "heldNums": 423,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    },
+    {
+      "ukia": "ukia/2020/89",
+      "url": "https://www.legislation.gov.uk/ukia/2020/89",
+      "sections": 2,
+      "fetched": true,
+      "srcChars": 13971,
+      "heldChars": 13834,
+      "bulkPct": 99,
+      "parts": {
+        "summary sheet": {
+          "source": false,
+          "held": false
+        },
+        "evidence base": {
+          "source": false,
+          "held": false
+        },
+        "annex": {
+          "source": true,
+          "held": true
+        },
+        "PIR / review": {
+          "source": false,
+          "held": false
+        },
+        "costs table": {
+          "source": false,
+          "held": false
+        }
+      },
+      "srcMoney": 0,
+      "heldMoney": 0,
+      "moneyPct": null,
+      "srcNums": 97,
+      "heldNums": 97,
+      "numPct": 100,
+      "srcRows": 0,
+      "intactRows": 0,
+      "rowPct": null
+    }
+  ]
+}
