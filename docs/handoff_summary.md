@@ -298,6 +298,124 @@ to a pair; signals are dated — hence 1,505 edges / 1,723 signals, and 162,733 
 whether the Lex build should file positions (one line in `build.ts`), and the now-misleading
 `NO_PRODUCER_NOTE.POSITIONS`.
 
+## SEARCH THREAD — last updated 2026-09-07 22:16 UTC (S18 COSTING)
+
+*This section belongs to the SEARCH stream. Its entries were previously interleaved into the
+LEX thread's rolling log; the older SEARCH entries (S17 and before) are still down there.*
+
+### SEARCH S18 — THE BRIEF'S PREMISE IS OVERTURNED, AND `PRECEDENT` HAD BEEN TELLING 952 INSTRUMENTS NOBODY EVER REVIEWED THEM (2026-09-07 22:16 UTC)
+
+`docs/SEARCH_S18_REPORT.md` · `docs/COSTING_QUESTIONS_V1.md` · artefacts `docs/census/s18-*.json`
+
+▼▼ **§1 SAYS "THE RIGHT STREAM IS NEVER SEARCHED". IT IS SEARCHED.** Routed on **5 of 9**
+(3/3 stable, live — reproducing S17's NOT-ROUTED four exactly), admitted by `legislation` on every
+row, tier read back **off the served index**, scope tested with the **imported** `streamCanSelect`.
+⚠ **My prediction P-1 (fewer than half) is REFUTED** — logged before the run.
+
+▶▶ **THE CONTROL THAT DECIDES IT: scoped to the collection ALONE, BM25-only —
+section-level recall@20 `0 of 9`, DOCUMENT-level `4 of 9`, document-level in top 200 `8 of 9`.**
+The right ASSESSMENT comes back for eight of nine questions; the key comes back for two.
+
+⚠⚠ **BECAUSE HALF THE KEYS CANNOT ANSWER ANYTHING. 9 of 18 — 5 COVER SHEETS and 4 STRIPPED
+TABLES.** I1's key is 71 words of *"Title: … IA No: … RPC Reference No: … Contact for enquiries: Dan
+Quinlan"*; its other key is 17 words reading *"Cost of Preferred Option (2016 prices) / Total Net
+Present Value / Business Net Present Value"* — **the column headings, and not one digit under any of
+them.** This is S16's committees cover-page finding in a second collection. ⚠ **S17 swept for it and
+could not have seen it**: its `kindOf()` returns `'impact assessment'` for every row, so a cover
+sheet and a 1,748-word rationale are the same kind. **The axis collapses inside this collection**;
+a second axis, computed from the BODY, is added. ⚠ And S17's uncomputable one-of-many hazard **has
+fired** — 16.0 sections per assessment, and here the sections genuinely ARE all about one measure.
+
+⚠⚠ **AND A FIFTH KIND HAD TO BE INVENTED MID-SPRINT BECAUSE MY OWN CLASSIFIER COMMITTED THE
+BRIEF'S OWN TRAP.** *"Not estimated / Not in scope / Non qualifying provision"* and a table whose
+figures our extraction lost wear the identical shape and are **opposite facts** — the department
+publishing an absence versus us losing a number. The first version called both `STRIPPED-TABLE` and
+both `UNANSWERABLE`, i.e. §2 rule 3 (*"'Not monetised' is not zero"*) failing inside the instrument
+written to measure it. Separated, counted apart, **never summed**.
+
+▶▶▶ **§2 FOUND TWO LIVE DEFECTS IN THE JOB IT WAS TOLD TO EXTEND, AND THE SECOND WAS ARMED BY
+FIXING THE FIRST.**
+⚠⚠ **(1) `retrievePrecedent`'s PREDICTED and OBSERVED legs had never returned a row, ever.** The
+join was `id LIKE '%:{gid}:%'` and **0 of 18,759 `impact-assessments` ids contain a `/`** — the
+middle segment is the assessment's own number, the instrument is in `parentDocId`. So **952
+instruments were being told *"NO POST-IMPLEMENTATION REVIEW EXISTS — nobody has published an
+assessment of whether it worked"* while we hold 1,197 review sections for them.** The correct join
+reaches 1,049 instruments / 17,770 sections. Blast radius in production **one row** (re-read, not
+assumed); the mechanism was total. ⚠ 989 sections have a NULL `parentDocId` and stay unreachable by
+instrument — reported to ingest.
+⚠⚠ **(2) A "Post-implementation review" SECTION IS USUALLY A PROMISE.** Every standard assessment
+carries a front-sheet box of that name containing a tick — *"Will the policy be reviewed? It will be
+reviewed. If applicable, set review date: 5 years post implementation"* — and one sampled section
+says *"Will the policy be reviewed? **No.**"* **Measured over 30 sampled by md5(id): promise 25 ·
+review 1 · neither 4.** The title rule had never once been applied to a real document, so **fixing
+the retrieval bug ARMED the labelling bug**, and the first render put a minister's signature under
+*"what actually HAPPENED"*. The STAGE decides now (`Final 1,081 · Post Implementation 71 ·
+Enactment 11 · …`): **71 of 1,169 assessments, 6.1%, are actually reviews.** ⚠ (3) The PREDICTED leg
+was section `:1` — the cover sheet — even after the join was fixed; the leg is now chosen by a
+PREFERENCE with the front sheet ranked last, never a filter.
+
+▶ **THE BLOCK** (`lib/lex/costing.ts`): five rows, all five always rendered, `NOT KNOWN` first-class.
+A specialisation of `PRECEDENT`, not a parallel assembler. It never touches the ranker except for
+`COMPARABLE`, which collapses to DOCUMENTS — the unit §1 measured as working. ⚠ **The PSED worked
+example is three absences plus a warning that the only thing on the page resembling an answer is
+not one**: the statistics catalogue returns alcohol duty, tobacco duty and customs duties, every one
+matched on the word **"duty"**, so the block now prints `matched on: duty` beside each. **Disclosure,
+not a filter** — a threshold would silently drop the right series the day a subject shares one word.
+⚠ `figureStateOf` returns **null** for prose, because the first render captioned a 179-word passage
+about policy options with *"we do not hold the figure for this table"* — an accusation against our
+own corpus manufactured out of ordinary prose.
+
+▶ **§1.3 `LEX_ROUTER_APPRAISAL`, DEFAULT OFF, AND THE NOISE-FLOOR CONTROL HALVED ITS HEADLINE
+COST.** Impact-assessment selection **5/10 → 10/10** (control: 5 → 5, 0 gained). The first read of
+the regression gate said 19.4% of other questions lose a stream; **OFF-vs-OFF says 8.3% is the noise
+floor**, so the real cost is ~11pp — about four of 36 — but **4 lose `legislation` itself against a
+control floor of zero.** ⚠⚠ **It cannot move recall and the flag comment says so**: routing cannot
+make a cover sheet come back. ⚠ Re-measured in passing: with `ROUTER_STREAMS_V2` on the router sends
+**8 of these 10 questions to `impact-assessments` ALONE** — it does not dilute impact assessments,
+**it starves everything else**, which is a better account of S8's 32 → 29.
+
+▶ **§4 `costSummary` IS NEITHER SKIPPED, FAILED NOR UNWIRED — IT IS STARVED, and P-4 is REFUTED.**
+The path is complete and REACHED on 19 ideas; **18 of them had nothing to total.** Across the whole
+database **0 of 119 coherent actions carry a cost range and there is 1 cost line.** Correct code,
+empty input. ⚠ **And "EMPTY" was never true of the table** — 4 of 112 ideas carry real text, so
+25-F's sample was read as a fact about the field. ⚠⚠ **Two of those four carry a never-claim
+violation that renders into documents today** — *"£57–57/yr"* and *"All figures are ranges with a
+stated basis"* over an empty set, the exact defect §19-D Task 7 describes. **The code is fixed
+(`check:cost-summary` 17/17); the stored rows were never corrected.** Lex's, reported not touched.
+
+▶ **§5 `docs/COSTING_QUESTIONS_V1.md` — 8 questions, 6 recall + 2 behaviour controls, 4 forward /
+4 backward, 7 keys read out of R2, 0 refused.** ⚠⚠ **The generator REFUSES to write the file if any
+key classifies COVER-SHEET, STRIPPED-TABLE or EMPTY** — validated by this sprint's own classifier,
+because proposing a new set without that check would repeat the finding inside its own report.
+Traps exercised: **the sign convention** (a negative EANDCB is a net BENEFIT; two keys carry one,
+−£161.43m and −£9,949.8m), "not monetised is not zero", a review quoting its own prediction.
+**Nothing is scored.**
+
+❌ **NO RECALL FIGURE PUBLISHED AND NONE SUPERSEDED.** The §5 re-run was to follow "§1 only", and
+§1's finding is that the routing fix cannot move the number while half the keys are unanswerable.
+S17's D-6 (a baseline under production's real flag string) is **still open**.
+
+✅ `check:s18-costing` **46/0** · `audit-s18-keys --self-test` **20/0** · `check:cost-summary`
+**17/0** · `tsc` clean · `check-clean-build.sh --fast` PASS.
+⚠⚠ **Every guard watched failing, and it took FOUR breaks to cover the classifier** — a permissive
+one fails only 4 of 15 because eleven assertions are in the negative direction. **And watching
+`check:s18-costing` fail found a hole in it**: reverting the leg rule to the pre-sprint title test
+failed exactly ONE of 45, a source grep, because the promise and the prediction are different
+sections of the SAME assessment so the id-inequality guard cannot see it. The assertion that pins it
+asks the corpus what the cited document's STAGE is, and exists because the break revealed its
+absence.
+
+▶▶ **CHARLIE: six decisions in `docs/SEARCH_S18_REPORT.md`** — **D-1 re-key the nine questions (the
+gate on every number in this area, same shape as S17's still-open D-2)**, D-2 a document-level match
+rule scoped to this collection only, D-3 leave `LEX_ROUTER_APPRAISAL` off until D-1 lands, D-4 where
+the block renders (⚠ not `costSummary`), D-5 the four stale rows, D-6 to ingest — *"Costs and
+benefits"* carries a £ figure **65.5%** of the time and 25.9% carry labels with no figure at all.
+
+⚠ No file owned by ingest, graph or lex was edited. `scripts/ingest/search/` was not touched, so
+`vector-serve`'s auto-deploy was not triggered — checked, not assumed.
+
+---
+
 ## INGEST THREAD — last updated 2026-09-07 21:53 UTC (IMPACT ASSESSMENTS §1)
 
 *This section belongs to the INGEST stream. CENTRAL, SURFACE, LEX and SEARCH keep their own above

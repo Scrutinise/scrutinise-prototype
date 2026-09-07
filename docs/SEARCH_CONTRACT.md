@@ -207,6 +207,72 @@ in real persisted output, not just present as a constant (`docs/S8_DEEPENING_VER
 Both are wired into the Deepening (`EVIDENCE_PRECEDENT` and `LEGAL` respectively) as of S8; before
 that they were built, tested and called by nothing.
 
+### ⚠⚠ A THIRD STRUCTURED JOB — `retrieveCosting(subject, { gid })`, THE COST AND BENEFIT BLOCK (S18 §2/§3)
+
+`lib/lex/costing.ts`. A **specialisation of `retrievePrecedent`**, not a second assembler: the
+PREDICTED and CHECKED rows are built from that job's own legs, so there is exactly one place in the
+codebase that decides which document is a prediction and which is an outcome.
+
+Five rows, and **all five are always present** — an empty block is the failure mode this feature
+exists to avoid, and a user cannot tell "nobody measured it" from "we did not look":
+
+| row | what it holds |
+|---|---|
+| `PREDICTED` | what the department said it would cost and gain, with the **price base year** |
+| `CHECKED` | whether anyone assessed it afterwards, and what they found |
+| `MEASURED` | which official statistics series bear on it — **never a value** |
+| `NOT KNOWN` | what nobody has established, ⚠ **a first-class row and never an error state** |
+| `COMPARABLE` | measures of a similar kind — ⚠ **by SUBJECT, and it says so** |
+
+⚠⚠ **A FIGURE HAS THREE STATES AND COLLAPSING ANY PAIR INVERTS AN ANSWER.** `PUBLISHED` (we hold
+the number), `NOT_ESTIMATED` (**the department said it never produced one** — a finding, with a
+citation), `NOT_EXTRACTED` (a table whose figures our extraction lost — a defect on our side), plus
+`null` for a passage that is not a figure at all. **The damaging collapse is `NOT_ESTIMATED` → 0**,
+which would make every honestly-unquantified measure read as a measure with no benefits.
+
+⚠ **Figures from different price base years are never compared and never deflated here.** Where the
+base year cannot be read the block prints *"price base year NOT STATED — not comparable with
+another figure"* rather than treating it as today's money.
+
+⚠ **The `MEASURED` row prints the words each series matched on.** Asked for the *public sector
+equality duty*, the catalogue returns alcohol duty, tobacco duty and customs duties — all matched on
+`duty`. The mitigation is disclosure, not a threshold: a filter tuned here would silently drop the
+right series on the day a subject shares one word with it.
+
+⚠ **The coverage line is generated from live state on every call**, and states what is NOT built —
+comparison by mechanism, and any link from a measure to an NAO, PAC or independent review of it.
+
+### ⚠⚠ CORRECTED — `retrievePrecedent`'s PREDICTED AND OBSERVED LEGS HAD NEVER RETURNED A ROW (S18 §2)
+
+The line above — *"A missing post-implementation review is NEVER filled from the impact
+assessment"* — was true and was protecting nothing, because **the impact-assessment half of the job
+had never retrieved anything at all.** The join was `s.id LIKE '%:{gid}:%'`, and **0 of 18,759
+`impact-assessments` ids contain a `/`**: an assessment's id carries its own number
+(`impact-assessments:2020-57:1`), never the instrument's gid, which lives in `parentDocId`.
+
+**952 instruments were being told "NO POST-IMPLEMENTATION REVIEW EXISTS … nobody has published an
+assessment of whether it worked" while the platform held 1,197 post-implementation-review sections
+for them.** Fixed; the correct join reaches 1,049 instruments and 17,770 sections.
+
+⚠⚠ **AND A SECOND RULE WAS WRONG ABOUT THE WORLD, INVISIBLY, BECAUSE OF THE FIRST.**
+`legForImpactSection` decided the OBSERVED leg from the SECTION TITLE. Every standard assessment
+carries a front-matter box headed *"Post-implementation review"* whose content is a tick —
+*"Will the policy be reviewed? It will be reviewed. If applicable, set review date: 5 years post
+implementation"* — and one sampled section reads *"Will the policy be reviewed? **No.**"*
+Measured over 30 sections sampled by `md5(id)`: **promise-only 25 · review-only 1 · neither 4.**
+
+▶ **The stage decides, not the title.** `impactLegOf(attribution)` reads the assessment's own stage:
+**Final 1,081 · Post Implementation 71 · Enactment 11 · Consultation 2 · Implementation 1 ·
+Options 1** — so **71 of 1,169 assessments (6.1%) are actually reviews**. An unknown stage defaults
+to `predicted`, the only direction that cannot overclaim. `legForImpactSection` is deprecated and
+now answers only what it can: whether a title names a review.
+
+⚠ **Fixing the retrieval bug ARMED the labelling bug.** The legs had never returned a row, so the
+title rule had never once been applied to a real document; the first render after the fix put a
+minister's signature and a promised review date under the heading *"what actually HAPPENED"*.
+
+---
+
 ---
 
 ## 3. What cannot be asked for yet
