@@ -521,9 +521,37 @@ Hansard will discuss the subject at length and will not contain the answer, so d
 Include every corpus you named, exactly once, and nothing else. Names only — no numbers, no
 explanation.`
 
+/**
+ * S18 §1.3 — WHERE THE APPRAISAL MATERIAL ACTUALLY LIVES. `LEX_ROUTER_APPRAISAL`, default OFF.
+ *
+ * ⚠ IT ADDS NO STREAM. It tells the model that a stream it already has holds a kind of document
+ * the stream's own description does not mention. `legislation` is described as *"primary Acts,
+ * statutory instruments, retained-EU law"*, and impact assessments, explanatory notes and
+ * explanatory memoranda all sit in the `legislation` tier — so a question about what a measure was
+ * PREDICTED to cost is, structurally, a legislation-stream question, and nothing in the prompt says
+ * so. Measured with everything off, 3 rolls per question, 3/3 stable: `legislation` is named on
+ * 5 of the 9 impact-assessment questions and omitted on four.
+ *
+ * ⚠ APPENDED, NOT WOVEN IN, for the reason S8 §4 gives: `ROUTER_PROMPT_BASE` reaches the model
+ * byte-identical with the flag off and byte-identical up to its last character with it on. The five
+ * stream descriptions, the exact-citation special case and the three worked examples are unchanged.
+ *
+ * ⚠ IT DOES NOT TELL THE MODEL TO PREFER legislation. A router that fired on `legislation` for
+ * every question would be worse than one that omits it on four — the failure S9's statistics block
+ * is written against at length. The instruction is CONDITIONAL and names the trigger.
+ */
+const ROUTER_PROMPT_APPRAISAL = `
+
+One thing the corpus descriptions above do not say: the legislation corpus ALSO holds the government's own appraisal material for each instrument — impact assessments (what a measure was predicted to cost and to achieve, the options weighed, the Regulatory Policy Committee's opinion) and explanatory notes and memoranda (what a provision was for).
+
+So route to legislation, IN ADDITION to whatever else you choose, when the question asks what a measure was PREDICTED or EXPECTED to cost or achieve, what options were considered before it, whether it has been reviewed since, or what the RPC said about it. Tailor that query with the instrument or policy name plus the appraisal words the document itself uses — for example "Environmental Permitting Regulations impact assessment costs benefits" or "residual waste reduction target impact assessment predicted cost".
+
+⚠ This does not make legislation relevant to everything. A question about what a measure DID, what a court decided, or what a committee concluded is not an appraisal question, and legislation should be omitted from it exactly as before.`
+
 function routerSystemPrompt(): string {
   const base = ROUTER_PROMPT_BASE
     + (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_PROMPT_V2_STREAMS : '')
+    + (flagEnabled('LEX_ROUTER_APPRAISAL') ? ROUTER_PROMPT_APPRAISAL : '')
     + (flagEnabled('LEX_STATS_STREAM') ? ROUTER_PROMPT_STATS_STREAM : '')
     + (flagEnabled('LEX_ROUTER_CONFIDENCE') ? ROUTER_PROMPT_CONFIDENCE : '')
   return base + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)

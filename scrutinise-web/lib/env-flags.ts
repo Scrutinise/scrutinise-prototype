@@ -159,6 +159,37 @@ export const CAPABILITY_FLAGS = [
   // the round-robin ordering; defaulting them to zero would delete a routed stream from the window
   // on the strength of a field the model simply omitted.
   'LEX_ROUTER_CONFIDENCE',
+  // ═══════════════════════════════════════════════════════════════════════════════════════════
+  // S18 §1.3. THE APPRAISAL SENTENCE — one paragraph telling the router where impact assessments
+  // live. `lib/lex/query-expansion.ts::ROUTER_PROMPT_APPRAISAL`.
+  // ═══════════════════════════════════════════════════════════════════════════════════════════
+  //
+  // MEASURED FIRST, 3 rolls per question, and stable 3/3 on every one: with everything off, the
+  // router names `legislation` on **5 of the 9** impact-assessment questions and omits it on four
+  // (I3, I4, I5, I9), routing them to debates + committees + guidance instead. That reproduces
+  // S17's NOT-ROUTED set exactly. The cause is legible in the prompt: `legislation` is described
+  // as *"primary Acts, statutory instruments, retained-EU law"*, under which "what was the
+  // predicted cost of the residual waste reduction target" is plainly not a legislation question
+  // — and the impact assessments sit in the legislation tier.
+  //
+  // ⚠⚠ AND IT WILL NOT MOVE THE RECALL NUMBER, WHICH IS SAID HERE RATHER THAN DISCOVERED LATER.
+  // S18 §1 measured the collection SCOPED TO ITSELF, with every other collection removed from the
+  // race: section-level recall@20 is **0 of 9**. The keys are cover sheets and stripped appraisal
+  // tables (9 of 18), so routing the right stream cannot make them come back. This flag fixes a
+  // real defect in stream selection and buys nothing until the keys are re-cut. A flag that
+  // claimed otherwise would be a guard that cannot fail.
+  //
+  // ⚠ DEFAULT OFF, and off the base prompt reaches the model byte-identical, so any change in the
+  // selection of the five existing streams is attributable to this paragraph existing rather than
+  // to the prompt having been rewritten around it — the same arrangement S8 §4 and S9 §4 use.
+  //
+  // ⚠ IT IS NOT `LEX_ROUTER_STREAMS_V2`, AND THE DIFFERENCE IS THE POINT. V2 adds three streams and
+  // was measured as a regression (32 → 29). Re-measured here, the mechanism is visible: with V2 on,
+  // the router routes 8 of these 10 questions to `impact-assessments` **ALONE**, dropping
+  // legislation, debates, committees and guidance entirely. It does not dilute impact assessments;
+  // it starves everything else. This paragraph adds no stream and removes none — it only tells the
+  // model that an existing stream holds this material.
+  'LEX_ROUTER_APPRAISAL',
   //
   // ⚠⚠ `LEX_MERGE_COVERAGE` WAS HERE AND WAS RETIRED ON 2026-08-26 (S14 §2). It was S13's minimal
   // experiment — reallocate the post-floor slots by query-term coverage. Measured: **+2 of 65**
