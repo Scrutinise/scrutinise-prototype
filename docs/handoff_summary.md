@@ -298,6 +298,64 @@ to a pair; signals are dated — hence 1,505 edges / 1,723 signals, and 162,733 
 whether the Lex build should file positions (one line in `build.ts`), and the now-misleading
 `NO_PRODUCER_NOTE.POSITIONS`.
 
+## INGEST THREAD — last updated 2026-09-07 21:53 UTC (IMPACT ASSESSMENTS §1)
+
+*This section belongs to the INGEST stream. CENTRAL, SURFACE, LEX and SEARCH keep their own above
+and below; three sessions share this repository, so commits are by explicit path only.*
+
+▼ **IMPACT ASSESSMENTS §1 AUDIT COMPLETE. §2/§3/§4 NOT BUILT — the brief gates them on this
+report, and §1 changed the sprint's shape four times.** Executes `docs/BRIEF_INGEST_IMPACT_NUMBERS.md`
+§1 in full. Report: **`docs/INGEST_IMPACT_NUMBERS_REPORT.md`**. CHANGE_LOG (2026-09-07 21:53 UTC).
+**Nothing written to any database; no stored body rewritten, so no search baseline is voided.**
+
+✅ **§1.1 — RETENTION IS NOT THE BLOCKER, SO THE SPRINT PROCEEDS.** 50 assessments sampled by
+`md5(id)`, each re-fetched from the PDF link **read off the item page, never constructed**. **50 of 50
+fetched; 6,288 of 6,288 £ figures, 47,709 of 47,718 numeric tokens and 29 of 29 annexes survived
+ingest**; bulk text median 99.1%. Not GRAPH 4B's 41.3%.
+
+⚠⚠ **THE BRIEF'S TWO HEADLINE NUMBERS ARE BOTH WRONG, IN OPPOSITE DIRECTIONS.** We hold **1,169
+ukia ids / 869 distinct bodies, not 18,700** — 18,756 is the SECTION count and `CORPUS_SCOPE.md`
+prints it under exactly that heading. And there are **73 post-implementation reviews, not ~1,000** —
+the ~1,000 sections titled `Post-implementation review` are **our own sectioner** matching the
+proforma QUESTION "Will the policy be reviewed?", asked of every measure; the publisher's
+`ukm:DocumentStage` (which ingest never stored, and `impact/feed-meta.ts` now recovers) says 73, of
+which 71 are held. ⚠ An outcome-language detector is **not** a substitute: mine gets 25% recall on
+the real reviews and fires on 49 `Final` IAs. **Use the stage field.**
+
+⚠⚠ **463 IDS SHARE A BODY — CHECKED AGAINST THE PUBLISHER'S BYTES, AND IT IS NOT AN INGEST BUG.**
+The first evidence pointed the wrong way (every member advertises its own PDF URL; the 2007 group has
+15 distinct titles). Downloading and hashing settled it: `ukia/2007/13` `/20` `/28` are a
+**byte-identical PDF** at three URLs, and `ukia/2019/24` / `/94` are two files extracting to identical
+text. Held text matched a fresh extraction of each id's own PDF, 5 of 5. ⚠ **But a title is not the
+document**: 15 ids named for 15 different Planning Bill measures share one 375,965-char umbrella
+assessment, so a figure read from it belongs to the **whole Bill**. De-duplicate on the **body hash**.
+
+⚠⚠ **THE LAYOUT IS STABLE IN MEANING, UNSTABLE IN SURFACE — WHICH INVERTS §2's DESIGN.** The
+summary sheet is a header **block** (five column names wrapped over nine lines) then a value **row**;
+**"find the label, take the next number" returns the price year 2014 as the EANDCB.** Hand-read
+counter-examples: `ukia/2021/16` (EANDCB alone, no NPV columns), `ukia/2023/159` (BIT status moved into
+the header; ` £300-£500m £-120m £8.4m`), `ukia/2017/124` (`EANCB on 2014 prices` — the
+department's typo — and bare numbers `-1.17 -9.29 1.0`), `ukia/2026/90` (no anchor at all).
+⚠ **And a correction to my own first measurement**: it said 27 header orderings / 72.8% mismatched;
+hand-reading four mismatches found all four carried the full canonical five columns — the PDF
+justifies the headings. Whitespace-normalising took it to **12 orderings, 35.8% canonical (82.4% of
+anchored with the 4-column variant)**. **The corpus was more regular than the reader.**
+
+▶ **THE TEMPLATE IS BEING ABANDONED**: proforma 97.0% (2017) → **51.9% (2026)**; `COSTS (£m)`
+96.4% → **33.3%**; RPC in-document 87.6% → **38.8%**. Coverage of the route we hold is 1,169/1,186
+(98.6%); the 2008–2016 and 2024–2025 feed gaps were **re-probed live and are still real**.
+▶ **§3's overdue count, at its true strength**: of 231 assessments promising a review with a due
+year and an instrument, **2 (0.9%)** have a review deposit and **196 (84.8%)** are past due with none
+— **a floor on the gap, not the answer**, because a PIR can be published on gov.uk alone and
+**gov.uk's and the RPC's routes have never been ingested** (every held row is `legislation.gov.uk/ukia/`).
+⚠ Their sizes (1,932 / 826) are quoted from the source module's comments and were NOT re-verified.
+
+▶▶ **CHARLIE: FIVE NUMBERED DECISIONS in `docs/INGEST_IMPACT_NUMBERS_REPORT.md`.** The
+load-bearing one is decision 2 — **label-mapped extraction with a refusal path, not the
+regex-per-field pass §2's table implies**: on a header/cell mismatch a fixed-ordinal reader does not
+fail, it returns the wrong figure under the right field name. New scripts are all read-only, under
+`scripts/ingest/impact/`.
+
 ## LEX THREAD
 
 
