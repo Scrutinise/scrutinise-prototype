@@ -58,9 +58,10 @@ const QUESTIONS: Q[] = [
     n: 1, code: 'X1', shape: 'FORWARD', scoring: 'recall',
     question: 'If we brought in a new charge on single-use plastic items, what have comparable measures been predicted to cost?',
     verdict:
-      'The plastic-straws ban is the closest comparable and its appraisal table gives a net cost to '
-      + 'business per year with a Business Impact Target status. A correct answer names a comparable '
-      + 'MEASURE and its predicted figure, and says the comparison is by subject.',
+      'The plastic-straws ban is the closest comparable and its appraisal table is the "Net cost to '
+      + 'business per year" row. A correct answer names a comparable MEASURE, quotes the row, and says '
+      + 'the comparison is by subject. ⚠ The row carries NEGATIVE figures, which in this table mean a '
+      + 'benefit to business rather than a cost — see X4.',
     keys: ['impact-assessments:2020-57:3'],
     exercises: 'the forward shape — there is no assessment of the proposal, only of comparable measures.',
   },
@@ -86,9 +87,15 @@ const QUESTIONS: Q[] = [
     n: 4, code: 'X4', shape: 'FORWARD', scoring: 'recall',
     question: 'Is there a measure the government predicted would SAVE business money rather than cost it?',
     verdict:
-      '⚠⚠ THE SIGN CONVENTION. A NEGATIVE EANDCB is a net BENEFIT to business. Both keys carry one '
-      + '(−£161.43m and −£9,949.8m). An answer that reads either as a cost has inverted every '
-      + 'deregulatory measure in the corpus.',
+      '⚠⚠ THE SIGN CONVENTION. A NEGATIVE figure on the "Net cost to business per year" row is a net '
+      + 'BENEFIT to business. Both keys carry one; an answer that reads either as a cost has inverted '
+      + 'every deregulatory measure in the corpus.\n\n'
+      + '  ⚠ AND A SECOND THING CHARLIE HAS TO DECIDE, WHICH IS WHY THE VERDICT STOPS SHORT. The row '
+      + 'arrives from the PDF as a flattened sequence — `"… Business Impact Target Status Qualifying '
+      + 'provision £ 1.3m -£ 9949.8m £ 1206.8m"` — and WHICH of those three is the EANDCB is not '
+      + 'recoverable from the text. Naming one would be reading a column header off position, which '
+      + 'is the same class of inference as calling a cover sheet an answer. So the key is proposed for '
+      + 'the SIGN, and the column identity waits for CC-Ingest\'s extracted table.',
     keys: ['impact-assessments:2017-81:3', 'impact-assessments:2023-74:3'],
     exercises: '⚠ the sign convention, which the ingest brief names as the trap that would invert an answer.',
   },

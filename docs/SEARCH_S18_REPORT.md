@@ -388,10 +388,17 @@ pass**:
   Required: **both** absences — there was no prediction to test (*"Not estimated"*) **and** no
   review is held. Giving only the second implies a figure was waiting to be checked.
 
-Four of the six recall questions exercise a specific trap: the sign convention (**a negative EANDCB
-is a net BENEFIT**; two keys carry one, −£161.43m and −£9,949.8m), "not monetised is not zero", a
-review that quotes its own prediction, and the forward shape where no assessment of the proposal
-exists.
+Four of the six recall questions exercise a specific trap: the sign convention, "not monetised is
+not zero", a review that quotes its own prediction, and the forward shape where no assessment of
+the proposal exists.
+
+⚠ **X4's verdict stops short of naming the EANDCB, deliberately.** A negative figure on the "Net
+cost to business per year" row is a net BENEFIT to business, and both keys carry one — but the row
+arrives from the PDF flattened (`"… Business Impact Target Status Qualifying provision £ 1.3m -£
+9949.8m £ 1206.8m"`) and **which of the three is the EANDCB is not recoverable from the text**.
+Naming one would be reading a column header off position, which is the same class of inference as
+calling a cover sheet an answer. The key is proposed for the SIGN; the column identity waits for
+CC-Ingest's extracted table. ⚠ **The first draft of this report asserted it** and is corrected here.
 
 ---
 
