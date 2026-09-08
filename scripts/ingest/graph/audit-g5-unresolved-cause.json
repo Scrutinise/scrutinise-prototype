@@ -1,0 +1,372 @@
+{
+  "generatedAt": "2026-09-08T13:57:17.654Z",
+  "totals": {
+    "short-form": 247,
+    "title-absent": 1539,
+    "title-mismatch": 133,
+    "mis-cited-year": 606
+  },
+  "counted": 2525,
+  "rows": [
+    {
+      "span": "vat act 1994",
+      "spans": 328,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "town country planning act 1990",
+      "spans": 128,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "withdrawal act 2018",
+      "spans": 124,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "human rights act 1988",
+      "spans": 112,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"human rights act\" Act of 1988; we hold that name for 1998"
+    },
+    {
+      "span": "registered homes act 1984",
+      "spans": 101,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "judicature act 1873",
+      "spans": 91,
+      "cause": "short-form",
+      "evidence": "strict suffix of \"supreme court of judicature act 1873\" (ukpga/1873/66)"
+    },
+    {
+      "span": "telecom act 1988",
+      "spans": 81,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "sh a act 1908",
+      "spans": 62,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "crime and disorder act 1988",
+      "spans": 61,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"crime and disorder act\" Act of 1988; we hold that name for 1998"
+    },
+    {
+      "span": "property act 1882",
+      "spans": 59,
+      "cause": "short-form",
+      "evidence": "strict suffix of \"married women's property act 1882\" (ukpga/1882/75)"
+    },
+    {
+      "span": "telecommunications act 2001",
+      "spans": 50,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"telecommunications act\" Act of 2001; we hold that name for 1984"
+    },
+    {
+      "span": "fair competition act 2002",
+      "spans": 47,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "port of london act 1968",
+      "spans": 43,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"port of london act\" Act of 1968; we hold that name for 1908"
+    },
+    {
+      "span": "united kingdom borders act 2007",
+      "spans": 41,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "nhs act 2006",
+      "spans": 40,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "equalities act 2010",
+      "spans": 40,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "nia act 2002",
+      "spans": 40,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "housing grants (construction and regeneration) act 1996",
+      "spans": 40,
+      "cause": "title-mismatch",
+      "evidence": "held as ukpga/1996/53; differs from the span only by punctuation/spacing"
+    },
+    {
+      "span": "taxes act 1988",
+      "spans": 38,
+      "cause": "short-form",
+      "evidence": "strict suffix of \"income and corporation taxes act 1988\" (ukpga/1988/1)"
+    },
+    {
+      "span": "criminal justice act 1998",
+      "spans": 36,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"criminal justice act\" Act of 1998; we hold that name for 1925, 1948, 1961, 1965, 1967"
+    },
+    {
+      "span": "road traffic act 1998",
+      "spans": 32,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"road traffic act\" Act of 1998; we hold that name for 1930, 1934, 1937, 1956, 1960"
+    },
+    {
+      "span": "customs excise management act 1979",
+      "spans": 32,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "companies act 1986",
+      "spans": 31,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"companies act\" Act of 1986; we hold that name for 1877, 1879, 1883, 1886, 1898"
+    },
+    {
+      "span": "thames conservancy act 1932",
+      "spans": 31,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "hearings (scotland) act 2011",
+      "spans": 30,
+      "cause": "short-form",
+      "evidence": "strict suffix of \"children's hearings (scotland) act 2011\" (asp/2011/1)"
+    },
+    {
+      "span": "magistrates courts act 1980",
+      "spans": 30,
+      "cause": "title-mismatch",
+      "evidence": "held as ukpga/1980/43; differs from the span only by punctuation/spacing"
+    },
+    {
+      "span": "harassment act 1997",
+      "spans": 29,
+      "cause": "short-form",
+      "evidence": "strict suffix of \"protection from harassment act 1997\" (ukpga/1997/40)"
+    },
+    {
+      "span": "eu (withdrawal) act 2018",
+      "spans": 29,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "corporations act 2001",
+      "spans": 29,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "immigration act 1999",
+      "spans": 29,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"immigration act\" Act of 1999; we hold that name for 1971, 1988, 2014, 2016"
+    },
+    {
+      "span": "lands clauses consolidation act 1845",
+      "spans": 27,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "public bodies corrupt practices act 1889",
+      "spans": 27,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "immigration asylum act 1999",
+      "spans": 27,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "adoption children act 2002",
+      "spans": 26,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "telecoms act 1998",
+      "spans": 26,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "bankers books evidence act 1879",
+      "spans": 25,
+      "cause": "title-mismatch",
+      "evidence": "held as ukpga/1879/11; differs from the span only by punctuation/spacing"
+    },
+    {
+      "span": "supreme court act 1981",
+      "spans": 25,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "sea act 1936",
+      "spans": 25,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "race relations act 1976",
+      "spans": 25,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"race relations act\" Act of 1976; we hold that name for 1965, 1968"
+    },
+    {
+      "span": "listed building act 1990",
+      "spans": 25,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "bvi business companies act 2004",
+      "spans": 24,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "banking act 2015",
+      "spans": 24,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"banking act\" Act of 2015; we hold that name for 1979, 2009"
+    },
+    {
+      "span": "telecommunications act 2000",
+      "spans": 24,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"telecommunications act\" Act of 2000; we hold that name for 1984"
+    },
+    {
+      "span": "planning and compensation act 2004",
+      "spans": 23,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"planning and compensation act\" Act of 2004; we hold that name for 1991"
+    },
+    {
+      "span": "protection of harassment act 1997",
+      "spans": 23,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "limitation act 1995",
+      "spans": 22,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"limitation act\" Act of 1995; we hold that name for 1939, 1963, 1975, 1980"
+    },
+    {
+      "span": "nhs and community care act 1990",
+      "spans": 21,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "civil liability contribution act 1978",
+      "spans": 20,
+      "cause": "title-mismatch",
+      "evidence": "held as ukpga/1978/47; differs from the span only by punctuation/spacing"
+    },
+    {
+      "span": "european communities act 1972",
+      "spans": 20,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "equality act 2020",
+      "spans": 20,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"equality act\" Act of 2020; we hold that name for 2006, 2010"
+    },
+    {
+      "span": "sentencing act 2000",
+      "spans": 19,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"sentencing act\" Act of 2000; we hold that name for 2020, 2026"
+    },
+    {
+      "span": "landlord tenant act 1954",
+      "spans": 19,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "a to the vat act 1994",
+      "spans": 19,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "data protection act 1988",
+      "spans": 19,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"data protection act\" Act of 1988; we hold that name for 1998, 2018"
+    },
+    {
+      "span": "charitable trusts act 1853",
+      "spans": 18,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"charitable trusts act\" Act of 1853; we hold that name for 1887, 1914, 1925"
+    },
+    {
+      "span": "insurance act 2001",
+      "spans": 18,
+      "cause": "mis-cited-year",
+      "evidence": "⚠ no \"insurance act\" Act of 2001; we hold that name for 2015"
+    },
+    {
+      "span": "crime sentences act 1997",
+      "spans": 18,
+      "cause": "title-mismatch",
+      "evidence": "held as ukpga/1997/43; differs from the span only by punctuation/spacing"
+    },
+    {
+      "span": "riot act 1714",
+      "spans": 18,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "listed buildings and conservation areas act 1990",
+      "spans": 17,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    },
+    {
+      "span": "nationality immigration asylum act 2002",
+      "spans": 17,
+      "cause": "title-absent",
+      "evidence": "no instrument of that name in corpus_acts under any title, normalised or loose"
+    }
+  ]
+}

@@ -1,0 +1,428 @@
+{
+  "generatedAt": "2026-09-08T13:54:01.427Z",
+  "documentsRead": 74896,
+  "documentsWithLegRef": 52861,
+  "refs": {
+    "total": 1283574,
+    "byForm": {
+      "bare-provision": 715814,
+      "full-title": 226621,
+      "other": 176371,
+      "short-form": 164768
+    },
+    "hrefNamesProvision": 725611,
+    "hrefNamesActOnly": 557963
+  },
+  "backReferenceResolvedByPublisher": {
+    "bare": 715814,
+    "hrefCarriesAct": 715814
+  },
+  "markupCompleteness": {
+    "actNameSpans": 252195,
+    "marked": 228326,
+    "unmarked": 23869,
+    "pct": 90.53549832470905
+  },
+  "structure": {
+    "documentsWithAnyDivision": 0,
+    "divisions": {
+      "decision": 77141
+    },
+    "decisionOnly": 74896
+  },
+  "unresolved": {
+    "total": 12276,
+    "distinct": 5647,
+    "top": [
+      [
+        "vat act 1994",
+        328
+      ],
+      [
+        "town country planning act 1990",
+        128
+      ],
+      [
+        "withdrawal act 2018",
+        124
+      ],
+      [
+        "human rights act 1988",
+        112
+      ],
+      [
+        "registered homes act 1984",
+        101
+      ],
+      [
+        "judicature act 1873",
+        91
+      ],
+      [
+        "telecom act 1988",
+        81
+      ],
+      [
+        "sh a act 1908",
+        62
+      ],
+      [
+        "crime and disorder act 1988",
+        61
+      ],
+      [
+        "property act 1882",
+        59
+      ],
+      [
+        "telecommunications act 2001",
+        50
+      ],
+      [
+        "fair competition act 2002",
+        47
+      ],
+      [
+        "port of london act 1968",
+        43
+      ],
+      [
+        "united kingdom borders act 2007",
+        41
+      ],
+      [
+        "nhs act 2006",
+        40
+      ],
+      [
+        "equalities act 2010",
+        40
+      ],
+      [
+        "nia act 2002",
+        40
+      ],
+      [
+        "housing grants (construction and regeneration) act 1996",
+        40
+      ],
+      [
+        "taxes act 1988",
+        38
+      ],
+      [
+        "criminal justice act 1998",
+        36
+      ],
+      [
+        "road traffic act 1998",
+        32
+      ],
+      [
+        "customs excise management act 1979",
+        32
+      ],
+      [
+        "companies act 1986",
+        31
+      ],
+      [
+        "thames conservancy act 1932",
+        31
+      ],
+      [
+        "hearings (scotland) act 2011",
+        30
+      ],
+      [
+        "magistrates courts act 1980",
+        30
+      ],
+      [
+        "harassment act 1997",
+        29
+      ],
+      [
+        "eu (withdrawal) act 2018",
+        29
+      ],
+      [
+        "corporations act 2001",
+        29
+      ],
+      [
+        "immigration act 1999",
+        29
+      ],
+      [
+        "lands clauses consolidation act 1845",
+        27
+      ],
+      [
+        "public bodies corrupt practices act 1889",
+        27
+      ],
+      [
+        "immigration asylum act 1999",
+        27
+      ],
+      [
+        "adoption children act 2002",
+        26
+      ],
+      [
+        "telecoms act 1998",
+        26
+      ],
+      [
+        "bankers books evidence act 1879",
+        25
+      ],
+      [
+        "supreme court act 1981",
+        25
+      ],
+      [
+        "sea act 1936",
+        25
+      ],
+      [
+        "race relations act 1976",
+        25
+      ],
+      [
+        "listed building act 1990",
+        25
+      ],
+      [
+        "bvi business companies act 2004",
+        24
+      ],
+      [
+        "banking act 2015",
+        24
+      ],
+      [
+        "telecommunications act 2000",
+        24
+      ],
+      [
+        "planning and compensation act 2004",
+        23
+      ],
+      [
+        "protection of harassment act 1997",
+        23
+      ],
+      [
+        "limitation act 1995",
+        22
+      ],
+      [
+        "nhs and community care act 1990",
+        21
+      ],
+      [
+        "civil liability contribution act 1978",
+        20
+      ],
+      [
+        "european communities act 1972",
+        20
+      ],
+      [
+        "equality act 2020",
+        20
+      ],
+      [
+        "sentencing act 2000",
+        19
+      ],
+      [
+        "landlord tenant act 1954",
+        19
+      ],
+      [
+        "a to the vat act 1994",
+        19
+      ],
+      [
+        "data protection act 1988",
+        19
+      ],
+      [
+        "charitable trusts act 1853",
+        18
+      ],
+      [
+        "insurance act 2001",
+        18
+      ],
+      [
+        "crime sentences act 1997",
+        18
+      ],
+      [
+        "riot act 1714",
+        18
+      ],
+      [
+        "listed buildings and conservation areas act 1990",
+        17
+      ],
+      [
+        "nationality immigration asylum act 2002",
+        17
+      ]
+    ]
+  },
+  "volume": {
+    "refsPerJudgment": 17.138084810937833,
+    "judgments": 74896,
+    "projectedRows": 1283574,
+    "projectedGB": 1.48894584,
+    "projectedUsdPerMonth": 0.521131044
+  },
+  "examples": [
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "bare-provision",
+      "words": "section 33",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Will4and1Vict/7/26/section/33",
+      "sentence": "of a substitutionary clause, a disclaimed gift will pass under the rules of intestacy. 16. However, this position was altered by section 33 A of the Wills Act 1837 , introduced by amendment with effect from 1 February 2012 by section 2 of the Estates of Deceased Person"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "full-title",
+      "words": "the Wills Act 1837",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Will4and1Vict/7/26",
+      "sentence": "onary clause, a disclaimed gift will pass under the rules of intestacy. 16. However, this position was altered by section 33 A of the Wills Act 1837 , introduced by amendment with effect from 1 February 2012 by section 2 of the Estates of Deceased Persons (Forfeiture Rule and L"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "bare-provision",
+      "words": "section 2",
+      "href": "http://www.legislation.gov.uk/id/ukpga/2011/7/section/2",
+      "sentence": "er, this position was altered by section 33 A of the Wills Act 1837 , introduced by amendment with effect from 1 February 2012 by section 2 of the Estates of Deceased Persons (Forfeiture Rule and Law of Succession) Act 2011 ). This provides, so far as relevant: 33A Dis"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "full-title",
+      "words": "Estates of Deceased Persons (Forfeiture Rule and Law of Succession) Act 2011",
+      "href": "http://www.legislation.gov.uk/id/ukpga/2011/7",
+      "sentence": "was altered by section 33 A of the Wills Act 1837 , introduced by amendment with effect from 1 February 2012 by section 2 of the Estates of Deceased Persons (Forfeiture Rule and Law of Succession) Act 2011 ). This provides, so far as relevant: 33A Disclaimer or forfeiture of gift (1) This section applies where a will contains a devis"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "other",
+      "words": "this Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/2011/7",
+      "sentence": "on who (a) disclaims it, or (2) The person is, unless a contrary intention appears by the will, to be treated for the purposes of this Act as having died immediately before the testator. (emphasis added) 17. A corresponding amendment was made the rules governing succe"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "full-title",
+      "words": "Administration of Estates Act 1925",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Geo5/15-16/23",
+      "sentence": "y before the testator. (emphasis added) 17. A corresponding amendment was made the rules governing succession on intestacy in the Administration of Estates Act 1925 , by inserting as section 46 A (again, so far as relevant): 46A Disclaimer or forfeiture on intestacy (1) This section applies wh"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "bare-provision",
+      "words": "section 46",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Geo5/15-16/23/section/46",
+      "sentence": "onding amendment was made the rules governing succession on intestacy in the Administration of Estates Act 1925 , by inserting as section 46 A (again, so far as relevant): 46A Disclaimer or forfeiture on intestacy (1) This section applies where a person (a) is entitled"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "bare-provision",
+      "words": "section 46",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Geo5/15-16/23/section/46",
+      "sentence": "onding amendment was made the rules governing succession on intestacy in the Administration of Estates Act 1925 , by inserting as section 46 A (again, so far as relevant): 46A Disclaimer or forfeiture on intestacy (1) This section applies where a person (a) is entitled"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "bare-provision",
+      "words": "sections 46",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Geo5/15-16/23/section/46",
+      "sentence": "on forfeits the right to inherit from an intestate through having killed them, the rules of intestate succession, as laid down in sections 46 and 47 of the Administration of Estates Act 1925 (as amended), should be applied as if the killer had died immediately before the"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "full-title",
+      "words": "Administration of Estates Act 1925",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Geo5/15-16/23",
+      "sentence": "y before the testator. (emphasis added) 17. A corresponding amendment was made the rules governing succession on intestacy in the Administration of Estates Act 1925 , by inserting as section 46 A (again, so far as relevant): 46A Disclaimer or forfeiture on intestacy (1) This section applies wh"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "full-title",
+      "words": "the Wills Act 1837",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Will4and1Vict/7/26",
+      "sentence": "onary clause, a disclaimed gift will pass under the rules of intestacy. 16. However, this position was altered by section 33 A of the Wills Act 1837 , introduced by amendment with effect from 1 February 2012 by section 2 of the Estates of Deceased Persons (Forfeiture Rule and L"
+    },
+    {
+      "id": "tna-caselaw:[2025] EWHC 115 (Ch):1",
+      "form": "other",
+      "words": "this Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/Will4and1Vict/7/26",
+      "sentence": "on who (a) disclaims it, or (2) The person is, unless a contrary intention appears by the will, to be treated for the purposes of this Act as having died immediately before the testator. (emphasis added) 17. A corresponding amendment was made the rules governing succe"
+    },
+    {
+      "id": "tna-caselaw:[2003] EWHC 101 (Admin):1",
+      "form": "short-form",
+      "words": "the 1996 Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1996/52",
+      "sentence": "een immediately by Westminster's officials. By 2nd August 2001 Westminster gave the claimant a formal notice under section 184 of the 1996 Act acknowledging its duty to make sure that the claimant had a home. The notice offered temporary accommodation at a boarding house"
+    },
+    {
+      "id": "tna-caselaw:[2003] EWHC 101 (Admin):1",
+      "form": "other",
+      "words": "the Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1996/52",
+      "sentence": "wrote to the claimant rejecting his arguments, indicating that it considered that it had discharged its duty under section 193 of the Act , and stating that the hotel manager had been instructed to terminate the claimant's booking at the boarding house as from 16th O"
+    },
+    {
+      "id": "tna-caselaw:[2003] EWHC 101 (Admin):1",
+      "form": "other",
+      "words": "the Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1996/52",
+      "sentence": "wrote to the claimant rejecting his arguments, indicating that it considered that it had discharged its duty under section 193 of the Act , and stating that the hotel manager had been instructed to terminate the claimant's booking at the boarding house as from 16th O"
+    },
+    {
+      "id": "tna-caselaw:[2003] EWHC 101 (Admin):1",
+      "form": "other",
+      "words": "the Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1996/52",
+      "sentence": "wrote to the claimant rejecting his arguments, indicating that it considered that it had discharged its duty under section 193 of the Act , and stating that the hotel manager had been instructed to terminate the claimant's booking at the boarding house as from 16th O"
+    },
+    {
+      "id": "tna-caselaw:[2003] EWHC 101 (Admin):1",
+      "form": "short-form",
+      "words": "the 1996 Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1996/52",
+      "sentence": "een immediately by Westminster's officials. By 2nd August 2001 Westminster gave the claimant a formal notice under section 184 of the 1996 Act acknowledging its duty to make sure that the claimant had a home. The notice offered temporary accommodation at a boarding house"
+    },
+    {
+      "id": "tna-caselaw:[2017] EWHC 1769 (Ch):1",
+      "form": "short-form",
+      "words": "the 1994 Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1994/26",
+      "sentence": "matters. This defence is still part of the law as far as the UK trade mark is concerned because currently the relevant section of the 1994 Act , which is Section 11(2) (a), is drafted in such a way that the own name defence remains a defence available for a corporate enti"
+    },
+    {
+      "id": "tna-caselaw:[2017] EWHC 1769 (Ch):1",
+      "form": "short-form",
+      "words": "the 1994 Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1994/26",
+      "sentence": "matters. This defence is still part of the law as far as the UK trade mark is concerned because currently the relevant section of the 1994 Act , which is Section 11(2) (a), is drafted in such a way that the own name defence remains a defence available for a corporate enti"
+    },
+    {
+      "id": "tna-caselaw:[2019] EWHC 2701 (Ch):1",
+      "form": "short-form",
+      "words": "the 1986 Act",
+      "href": "http://www.legislation.gov.uk/id/ukpga/1986/45",
+      "sentence": "ainst the Appellant on 11 January 2017, and his application for a review and rescission of that order, pursuant to section 375 of the 1986 Act . 4. The basis of the application to annul etc. was that the court lacked jurisdiction to make the bankruptcy order because the A"
+    }
+  ]
+}
