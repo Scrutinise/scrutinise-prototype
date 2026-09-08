@@ -20,7 +20,10 @@ import { jobQuestion } from '../lib/lex/deepening-jobs'
 import {
   cleanCitationText, groupReferences, describeScale, DISPOSITIONS,
 } from '../lib/lex/statutory-consequences'
-import { describeCoverage, coverageStateKey, type Coverage } from '../lib/lex/statutory-graph'
+import {
+  describeCoverage, coverageStateKey, splitInbound,
+  type Coverage, type Detection, type InboundRow,
+} from '../lib/lex/statutory-graph'
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8').split('\r\n').join('\n')
 
@@ -61,6 +64,16 @@ const FAKE: Coverage = {
   unresolvedTargets: { rows: 2, total: 7, pct: 28.6 },
   sourceTypes: [{ sourceType: 'primary', rows: 7 }],
   caseLaw: null,
+  // ⚠ SURFACE 5 — the fixture gained these when `Coverage` did. It is typed `Coverage`, and
+  // `tsc --noEmit` in the web app did NOT catch the omission: `scrutinise-web/scripts/` is
+  // excluded from that program, so a check's own fixture is typechecked by a different one.
+  // The three assertions below threw on `undefined` instead, which is how it was found.
+  identityBridge: { built: true, ambiguousTargets: 3 },
+  recorded: [{
+    key: 'si_schedule_retention_pct', n: 41.3, note: 'a sampled retention percentage',
+    measuredAt: '2026-01-01T00:00:00.000Z', measuredBy: 'graph/audit', ageDays: 2, stale: false,
+  }],
+  staleFacts: [],
 }
 
 const CHECKS: Check[] = [
@@ -166,21 +179,45 @@ const CHECKS: Check[] = [
     }),
   },
   {
-    name: '§7 title-only references are SEPARATED, not filtered and not mixed in',
-    run: (src) => {
-      const s = codeOnly(src['lib/lex/statutory-graph.ts'])
-      if (!/titleOnly: all\.filter\(\(r\) => r\.sourceProvisionRef === null\)/.test(s)) {
-        return 'title-only rows are not returned separately'
+    // ⚠⚠ SURFACE 5 — THIS WAS A REGEX OVER THE SPLIT'S SOURCE, AND IT AGREED WITH THE SPLIT
+    // RIGHT UP TO THE MOMENT THE SPLIT WAS WRONG. The expression it matched put every enabling
+    // row — the strongest kind in the table, and the only kind that may FALL with the target —
+    // into the list whose own description reads "not provisions that would break", because the
+    // enacting words sit above any provision and the provision ref was tested first. A grep
+    // cannot see that; it would have gone on passing over a rewrite that reintroduced the same
+    // fault in different words (CLAUDE.md §25). It is now a VALUE assertion over the real
+    // `splitInbound`, imported and never re-implemented.
+    name: '§7/S5§1 the split is by KIND FIRST — disjoint, exhaustive, enabling never buried',
+    run: () => {
+      const r = (detection: Detection, prov: string | null): InboundRow => ({
+        sourceDocUri: 'u', sourceGid: 'uksi/2010/1', sourceProvisionRef: prov,
+        citationText: 'x', sourceType: 'SI', detection, targetProvisionRef: null,
+      })
+      // ⚠ THE FIXTURE IS THE REAL SHAPE: every enabling row in the graph has a NULL provision
+      // ref, measured, all of them. A fixture giving one a provision ref would test a case
+      // that does not occur and miss the one that does.
+      const all = [r('enabling', null), r('enabling', null), r('markup', 'section-3'), r('text', null)]
+      const s = splitInbound(all)
+      if (s.enabling.length !== 2) return `enabling rows were not kept together: ${s.enabling.length}`
+      if (s.titleOnly.some((x) => x.detection === 'enabling')) {
+        return 'an enabling row was filed as a title-only mention — the strongest kind buried in the weakest list'
       }
-      return /rows: all\.filter\(\(r\) => r\.sourceProvisionRef !== null\)/.test(s)
-        ? null
-        : 'the provision list is not filtered, so title-only rows are mixed into the work count'
+      if (s.rows.some((x) => x.sourceProvisionRef === null)) return 'a row with no provision ref is in the provision list'
+      const total = s.enabling.length + s.rows.length + s.titleOnly.length
+      return total === all.length ? null : `the split is not exhaustive: ${total} of ${all.length}`
     },
-    break: (src) => ({
-      ...src,
-      'lib/lex/statutory-graph.ts': src['lib/lex/statutory-graph.ts']
-        .replace('titleOnly: all.filter((r) => r.sourceProvisionRef === null)', 'titleOnly: []'),
-    }),
+    // ⚠ THE CONTROL IS THE OLD BEHAVIOUR, EXACTLY. It returns whether the PROPERTY holds under
+    // a provision-ref-first split, not whether some string still matches.
+    control: () => {
+      const all: InboundRow[] = [{
+        sourceDocUri: 'u', sourceGid: 'uksi/2010/1', sourceProvisionRef: null,
+        citationText: 'x', sourceType: 'SI', detection: 'enabling', targetProvisionRef: null,
+      }]
+      const buried = { enabling: [], titleOnly: all.filter((x) => x.sourceProvisionRef === null) }
+      return buried.enabling.length === 0 && buried.titleOnly.length === 1
+        ? null
+        : 'the control did not reproduce the provision-ref-first split'
+    },
   },
 
   // ═══ §3/§4 — GROUPING AND CLASSIFICATION ═════════════════════════════════

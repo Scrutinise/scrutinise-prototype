@@ -62,9 +62,34 @@ async function main() {
     const prov = Number(direct[0].prov)
     ok(`${t}: provision rows match the table`, mine.rows.length === prov,
       `reader ${mine.rows.length}, table ${prov}`)
-    ok(`${t}: nothing is dropped (provision + title-only = total)`,
-      mine.rows.length + mine.titleOnly.length === total,
-      `${mine.rows.length} + ${mine.titleOnly.length} = ${mine.rows.length + mine.titleOnly.length}, table ${total}`)
+    // ⚠⚠ SURFACE 5 — THREE LISTS NOW, NOT TWO, AND THIS ASSERTION HAD TO LEARN THE THIRD.
+    // It read `provision + title-only = total` and passed for a fortnight while every enabling
+    // row in the graph was being reported as a `markup` one: the counts were right and the
+    // KINDS were wrong, and a reconciliation of counts cannot see that. It is the reason the
+    // kind-for-kind comparison below exists.
+    const mineAll = mine.enabling.length + mine.rows.length + mine.titleOnly.length + mine.unrecognised.length
+    ok(`${t}: nothing is dropped (enabling + provision + title-only + unknown = total)`,
+      mineAll === total,
+      `${mine.enabling.length} + ${mine.rows.length} + ${mine.titleOnly.length} + ${mine.unrecognised.length} = ${mineAll}, table ${total}`)
+
+    // ⚠⚠ THE COMPARISON THE OLD CHECK COULD NOT MAKE. `detection` is what separates a power an
+    // instrument was made under from a passing mention of the same Act, and a check that
+    // compares only totals agrees with a reader that has confused the two.
+    const byKind = await prisma.$queryRawUnsafe<Array<{ detection: string; n: bigint }>>(
+      `SELECT detection, COUNT(*)::bigint AS n FROM citation_edge
+        WHERE target_act_id = ANY($1::text[]) GROUP BY 1`, [t, t.toLowerCase()])
+    const truth = new Map(byKind.map((r) => [r.detection, Number(r.n)]))
+    const seen = new Map<string, number>()
+    for (const r of [...mine.enabling, ...mine.rows, ...mine.titleOnly]) {
+      seen.set(r.detection, (seen.get(r.detection) ?? 0) + 1)
+    }
+    const wrong = [...truth.entries()].filter(([k, n]) => (seen.get(k) ?? 0) !== n)
+    ok(`${t}: every row keeps the KIND the table gave it`,
+      wrong.length === 0,
+      wrong.map(([k, n]) => `${k}: table ${n}, reader ${seen.get(k) ?? 0}`).join('; '))
+    ok(`${t}: no enabling row is filed as a title-only mention`,
+      !mine.titleOnly.some((r) => r.detection === 'enabling'),
+      `${mine.titleOnly.filter((r) => r.detection === 'enabling').length} enabling rows in the title-only list`)
   }
 
   // 2. The coverage layer ids must match theirs, or our caveat under-reports what is missing.
@@ -94,9 +119,12 @@ async function main() {
         const mine = await inboundFor(t)
         const res = await graph.inbound(t)
         const theirCount = Array.isArray(res.rows) ? res.rows.length : -1
+        // ⚠ ALL THREE LISTS. Theirs returns one array over every detection value, so ours has
+        // to be summed across the partition or the comparison is between different questions.
+        const mineCount = mine.enabling.length + mine.rows.length + mine.titleOnly.length
         ok(`${t}: same row count as inbound()`,
-          mine.rows.length + mine.titleOnly.length === theirCount,
-          `ours ${mine.rows.length + mine.titleOnly.length}, theirs ${theirCount}`)
+          mineCount === theirCount,
+          `ours ${mineCount}, theirs ${theirCount}`)
       } catch (e) {
         console.log(`  ⚠ ${t}: their reader threw — ${e instanceof Error ? e.message : String(e)}`)
       }

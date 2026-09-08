@@ -71,9 +71,13 @@ async function main() {
     console.log(`    sourceType=${r.sourceType} citation=${r.citation ?? '—'}`)
     // ⚠ THE TWO PROPERTIES §3 AND §5 DEMAND, asserted on the STORED row rather than assumed:
     // the disposition must carry its source words, and the count must carry its coverage.
-    const hasQuote = /“[^”]{40,}”/.test(r.body ?? '')
+    // ⚠ A COVERAGE ROW IS NOT A FINDING AND CARRIES NO QUOTATION — it is a statement about
+    // our holdings. Reporting ✗ on correct behaviour is how a check gets switched off before
+    // the real one arrives, so the requirement is stated per KIND of row.
+    const isCoverage = r.sourceType === 'CITATION_GRAPH_COVERAGE'
+    const hasQuote = isCoverage ? true : /“[^”]{40,}”/.test(r.body ?? '')
     const hasCoverage = /does not yet cover|Treat any number here/.test(r.body ?? '')
-    console.log(`    carries a quotation: ${hasQuote ? '✓' : '✗'}   carries the coverage statement: ${hasCoverage ? '✓' : '✗'}`)
+    console.log(`    carries a quotation: ${isCoverage ? 'n/a — this IS the coverage statement' : hasQuote ? '✓' : '✗'}   carries the coverage statement: ${hasCoverage ? '✓' : '✗'}`)
     console.log(`    ${(r.body ?? '').replace(/\s+/g, ' ').slice(0, 200)}…`)
   }
 
