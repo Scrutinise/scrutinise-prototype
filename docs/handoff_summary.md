@@ -234,6 +234,57 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## SURFACE THREAD — last updated 2026-09-08 13:33 UTC (SURFACE 5)
+
+▼▼ **SURFACE 5 SHIPPED. THE STRONGEST KIND OF REFERENCE IN THE GRAPH WAS ARRIVING WEARING THE
+WEAKEST KIND'S NAME.** `docs/SURFACE_5_REPORT.md`.
+▶▶ ⚠⚠ **§0's PREMISE IS HALF WRONG AND THE OTHER HALF IS WORSE.** `lib/lex/statutory-graph.ts` has
+read `citation_edge` since 27 Aug and a whole Deepening pass sits on it — **and the pass had NEVER
+RUN**: 0 `DeepeningPass` rows, 0 `EvidenceItem` rows from the graph, any idea, ever. Cause is
+upstream: the pass refuses to guess its target and **exactly ONE idea in the database has a linked
+instrument**.
+▶▶ ⚠⚠ **`detection: r.detection === 'text' ? 'text' : 'markup'`** — an else-branch flattened
+**191,258 `enabling` rows** into `markup`, and because every enabling row has a NULL
+`source_provision_ref` (enacting words sit in a preamble) the two-way split then filed **100% of
+them** under `titleOnly`, described as *"not provisions that would break"*. The one kind that may
+FALL with the target, in the bucket labelled least consequential. `tsc` clean, counts right,
+nothing logged. ECA 1972: **6,017 rows**. ⚠ **The parity check built for this drift compares
+COUNTS and could not see it** — it now compares `detection` row by row.
+▶ **§1 ORDER BY KIND — the only order this data supports.** `detection` is a stored column with a
+CHECK constraint; `DETECTION_KINDS.strength` is the ladder and `kindsPresent()` derives from it.
+⚠⚠ **The in-force question is REFUSED, on screen, with the reason**: the repeal record is
+corpus-prefixed at four granularities and **the absence of a repeal edge is not evidence of being in
+force**, so ordering by it would rank live law below repealed law.
+▶ **§2 THE WORDS DID NOT TRAVEL.** Meeting pack prints `title + citation` ONLY; evidence pack
+`title + siftReason`. The sift reason was the same sentence on every row with no quotation, no count
+and no source; the coverage statement lived in `body` and so reached **1 document of 3**; `no_action`
+printed as a raw enum. All fixed — coverage is now its own row with the substance in its TITLE, and
+`consequences-caveat.ts` renders on the panel and in all three documents from one definition.
+▶ **§3 FOUR FACTS WERE QUERIED EVERY CALL AND PRINTED NOWHERE** (21.8% not-in-a-provision, 14.1%
+unheld targets, 77 identity refusals, the recorded facts with their age). ⚠⚠ **And
+`amendment-effects` decided "held elsewhere" by counting `graph_edge` — the POSITION graph's table**,
+which holds no statutory effect: right status, unrelated evidence.
+▶▶ **LIVE, ON `374c54e5` — "Abolish the Supreme Court" → `ukpga/2005/4`.** 8 rows on production now
+at runVersion 2, PROPOSED: **120 instruments recorded as made under it**, 840 provision references in
+6 groups, + the coverage row. **0.0839p, 5.8s.** ▶ **Charlie: open that idea, heading "What else
+refers to this law", and open the first item.**
+▶▶ ⚠⚠ **READING THAT OUTPUT FOUND A VERIFIED MISATTRIBUTION IN THE GRAPH.** `nisr/2010/381` is
+filed under CRA 2005 and its **entire** `<EnactingText>` names only the Judicature (NI) Act 1978,
+which is not among its recorded targets. Every enabling quotation is now checked against the target's
+own title and labelled in place: **60 of CRA's 120, 0 of the Equality Act's 74, 14 of ECA's 3,054**.
+⚠ The label is deliberately *"the words we can quote do not name the target"* — a 300-char
+`citation_text` cap and a real misattribution look identical from here. ⚠ **Two measurement errors
+of mine, caught first:** stripping only `(revoked)` flagged **100% of 3,054**; requiring the year
+flagged clipped preambles.
+✅ `check:surface-5` **16/0, 7 controls, 0 dead**, 16 of 16 executed, incl. a COLD READ; all three
+defects reintroduced and watched failing. ✅ `check:statutory` 17/0 (4 failed first — all stale
+check). ✅ parity holds kind for kind. ✅ `check:client-boundary`, `tsc`, `--fast` clean.
+⚠ **`check:deepening` has ONE pre-existing failure, not mine, their file not edited** —
+`check-deepening.ts:358` greps a line `686eaf7` rewrote; exact fix in the report §7.
+▶ **FIVE DECISIONS** in the report: keep enabling leading; build the in-force join; **give more
+ideas a linked instrument (highest value, Lex-owned)**; the `citation_text` cap + footnote question
+for Search/Graph; and whether a re-run should replace its own rows.
+
 ## SURFACE THREAD — last updated 2026-09-04 02:14 UTC (SURFACE 4)
 
 ▼▼ **SURFACE 4 SHIPPED. THE CARD AND THE DOCUMENT WERE ASKING TWO DIFFERENT QUESTIONS.**
