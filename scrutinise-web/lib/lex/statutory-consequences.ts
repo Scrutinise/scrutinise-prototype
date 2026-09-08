@@ -22,9 +22,27 @@
 import { callJson, llmOk } from './build-llm'
 import { modelFor } from './model-registry'
 import { recordSpend } from './spend-ledger'
-import type { InboundRow } from './statutory-graph'
+import { DETECTION_KINDS, type Detection, type InboundRow } from './statutory-graph'
 
 export type Disposition = 'repeal' | 'amend' | 'save' | 'replace' | 'no_action'
+
+/**
+ * ⚠ SURFACE 5 — THE DISPOSITION IN WORDS A READER READS.
+ *
+ * The row title printed `no_action` — a raw enum member, in the one field the meeting pack
+ * prints and nothing else. A user in a room with that document was handed an identifier from
+ * our schema and asked to make sense of it.
+ *
+ * ⚠ AN EXPLICIT `Record<Disposition, string>`, so adding a disposition is a compile error
+ * here rather than a member that silently prints as itself.
+ */
+export const DISPOSITION_WORDS: Record<Disposition, string> = {
+  repeal: 'would go with the target',
+  amend: 'would need rewording',
+  save: 'would need expressly saving',
+  replace: 'would need a substitute reference',
+  no_action: 'needs no action',
+}
 
 export const DISPOSITIONS: Record<Disposition, string> = {
   repeal: 'this provision exists only to serve the target; if the target goes, it goes',
