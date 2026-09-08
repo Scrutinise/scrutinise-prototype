@@ -48,8 +48,15 @@ import {
 } from './deepening-retrieval'
 import { gidFromId } from './legislation-url'
 import type { HeadingKey } from './question-headings'
-import { inboundFor, describeCoverage } from './statutory-graph'
-import { groupReferences, classifyGroups, describeScale, describeMembers } from './statutory-consequences'
+import { inboundFor, describeCoverage, targetTitle } from './statutory-graph'
+import {
+  groupReferences, classifyGroups, describeScale, describeMembers, DISPOSITION_WORDS,
+} from './statutory-consequences'
+import {
+  kindsPresent, describeOrdering, groupEnabling, renderEnablingBody, enablingSiftReason,
+  consequencesSiftReason,
+} from './consequences-ordering'
+import { CONSEQUENCE_SOURCE_TYPES } from './consequences-caveat'
 import { sourceDateFields } from './evidence-date'
 
 /** The structured retrieval jobs a pass can declare. Adding one is an entry here plus a case in
@@ -424,14 +431,62 @@ async function runStatutoryConsequences(
   for (const inst of instruments) {
     const inbound = await inboundFor(inst.gid)
     const grouped = groupReferences(inbound.rows, inbound.titleOnly.length)
+    // ⚠⚠ SURFACE 5 §1 — THE ENABLING ROWS, WHICH USED TO ARRIVE HERE DISGUISED AS TWO OTHER
+    // THINGS AT ONCE: relabelled `markup` by the reader's mapper, and then filed under
+    // `titleOnly` because their enacting words sit above any provision. They reached no group,
+    // no disposition and no document. They are the strongest kind in the table.
+    // ⚠ THE TARGET'S TITLE IS PASSED IN so each enabling quotation can be checked against the
+    // Act it is supposed to name. Without it the block would assert "in their own enacting
+    // words" over quotations that name a different Act — see `quotedWordsNameTheTarget`.
+    const enabling = groupEnabling(inbound.enabling, await targetTitle(inst.gid))
+    const ordering = describeOrdering(kindsPresent([...inbound.enabling, ...inbound.rows, ...inbound.titleOnly]))
 
-    if (!grouped.totalReferences && !grouped.titleOnly) {
+    if (!grouped.totalReferences && !grouped.titleOnly && !enabling.instruments) {
       details.push(`${inst.gid}: nothing in the graph refers to it`)
       continue
     }
 
     const classified = await classifyGroups(inst.gid, grouped, { ideaId })
     const coverage = describeCoverage(inbound.coverage)
+
+    // ══ ⚠⚠ THE ENABLING BLOCK GOES FIRST, AND IT IS ITS OWN ROW ══════════════════════════
+    //
+    // §1: *"enabling — the strongest and the most consequential."* Its own row rather than a
+    // paragraph inside a group, because the meeting pack prints one line per item: folded into
+    // a group's body it would reach one document out of three, which is the exact failure the
+    // positions coverage note had for two sprints.
+    if (enabling.instruments > 0) {
+      await prisma.evidenceItem.create({
+        data: {
+          ideaId,
+          passKey,
+          runVersion,
+          headingKey: 'REFERS_TO_THIS',
+          fieldRef: null,
+          kind: 'FINDING',
+          ...sourceDateFields(null),
+          // ⚠ NAMES THE FACT, NEVER THE CONCLUSION. "would fall with it" is a legal opinion;
+          // "were made under it" is what the enacting words say.
+          // ⚠ "RECORDED AS MADE UNDER", NOT "WERE MADE UNDER". The title is the one field the
+          // meeting pack prints, and on the first live run 60 of these 120 quote enacting words
+          // that do not name this Act. An unqualified claim in the field that travels furthest is
+          // the claim that gets quoted.
+          title: `${enabling.instruments.toLocaleString()} `
+            + `${enabling.instruments === 1 ? 'instrument is' : 'instruments are'} recorded as made `
+            + `under ${inst.gid} — the strongest kind of reference here`,
+          body: [renderEnablingBody(inst.gid, enabling), `\n${ordering}`, `\n${coverage}`].join('\n'),
+          sourceType: CONSEQUENCE_SOURCE_TYPES.enabling,
+          sourceId: inst.gid,
+          citation: enabling.groups.find((g) => g.words)?.sourceGid ?? null,
+          url: `https://www.legislation.gov.uk/${inst.gid}`,
+          status: 'PROPOSED',
+          // ⚠ THE WORDS TRAVEL. See `enablingSiftReason` — this is the only field the evidence
+          // pack prints beside the title.
+          siftReason: enablingSiftReason(inst.gid, enabling),
+        },
+      })
+      written++
+    }
 
     for (const g of classified.groups) {
       // ⚠ ONE EVIDENCE ROW PER GROUP, NOT PER REFERENCE. §4: group, classify the group, then
@@ -449,7 +504,21 @@ async function runStatutoryConsequences(
           // take a date from. Recorded as NO_SOURCE_ROW rather than left blank: §2c counts what
           // could not be dated and has to be able to say why for every row.
           ...sourceDateFields(null),
-          title: `${g.members.length} ${g.members.length === 1 ? 'reference' : 'references'} that ${g.label} — ${g.disposition}`,
+          // ⚠ SURFACE 5 — THE DISPOSITION IN WORDS. This printed the raw enum (`no_action`) in
+          // the ONE field the meeting pack shows, so a reader in a room was handed an
+          // identifier out of our schema. `DISPOSITION_WORDS` is keyed by the union, so a new
+          // disposition is a compile error rather than a member that prints as itself.
+          // ⚠ AND THE SENTENCE AGREES WITH ITSELF. `${n} references that ${label}` produced
+          // "335 references that mentions the target" — the labels are third-person singular
+          // because they describe ONE reference. "each" is what makes them agree, and it is
+          // also the truer word: the pattern matched every member individually.
+          // ⚠⚠ "AS A KIND" IS NOT PADDING. The disposition is a judgement about a KIND of
+          // reference, not a legal opinion on each provision, and the report that shipped this
+          // pass said so in its own limitations. A title reading "335 references … need no
+          // action" asserts it of all 335 individually, which is more than we know.
+          title: `${g.members.length} ${g.members.length === 1 ? 'reference' : 'references'}`
+            + ` — ${g.members.length === 1 ? 'it' : 'each'} ${g.label}.`
+            + ` As a kind: ${DISPOSITION_WORDS[g.disposition]}.`,
           // ⚠⚠ THE QUOTE TRAVELS WITH THE DISPOSITION, in the same row. §3: "a disposition
           // with no visible source words is Lex putting confident prose on top of a verified
           // fact and destroying its verifiability". And ⚠ THE COVERAGE IS ADJACENT TO THE
@@ -466,21 +535,69 @@ async function runStatutoryConsequences(
             // are, bounded, with the remainder counted rather than trimmed away.
             describeMembers(g),
             `\n\n${describeScale(grouped)}`,
+            `\n${ordering}`,
             `\n${coverage}`,
           ].filter(Boolean).join('\n'),
-          sourceType: 'CITATION_GRAPH',
+          sourceType: CONSEQUENCE_SOURCE_TYPES.reference,
           sourceId: inst.gid,
           citation: g.evidence ? `${g.evidence.sourceGid}${g.evidence.provision ? ` ${g.evidence.provision}` : ''}` : null,
           url: `https://www.legislation.gov.uk/${inst.gid}`,
           status: 'PROPOSED',
-          siftReason: `From the citation graph: what refers to ${inst.gid}.`,
+          // ⚠⚠ SURFACE 5 §2 — THE WORDS TRAVEL, OR IT DOES NOT GO IN. This said *"From the
+          // citation graph: what refers to <gid>"* — identical on every row, carrying no count,
+          // no quotation and no source. It is the only field the evidence pack prints beside
+          // the title, so on paper the disposition stood with nothing behind it.
+          siftReason: consequencesSiftReason(g),
         },
       })
       written++
     }
+
+    // ══ ⚠⚠ §3 — THE COVERAGE STATEMENT AS A ROW OF ITS OWN ═══════════════════════════════
+    //
+    // It was appended to every group's BODY, and the body is printed by one of the three
+    // documents. The meeting pack prints `title — citation`; the evidence pack prints the
+    // title and the sift reason. So the statement of what this answer could not see reached
+    // the long report and nothing else — and a summary document that prints counts without it
+    // is the bare array this graph's signature exists to prevent.
+    //
+    // ⚠ ITS SUBSTANCE IS IN ITS TITLE, because the title is the one field EVERY builder
+    // prints. A row titled "What this section does not cover" is, in the meeting pack, a
+    // promise with no content.
+    const missingLayers = inbound.coverage.layers.filter((l) => l.status !== 'searched')
+    await prisma.evidenceItem.create({
+      data: {
+        ideaId,
+        passKey,
+        runVersion,
+        headingKey: 'REFERS_TO_THIS',
+        fieldRef: null,
+        kind: 'FINDING',
+        ...sourceDateFields(null),
+        title: 'What this reference search could not see — '
+          + `${missingLayers.length} ${missingLayers.length === 1 ? 'layer is' : 'layers are'} not searched, `
+          + 'and every count here is what we found in the layers we have',
+        body: [ordering, '', coverage].join('\n'),
+        sourceType: CONSEQUENCE_SOURCE_TYPES.coverage,
+        sourceId: inst.gid,
+        citation: `Citation graph coverage, generated ${inbound.coverage.generatedAt.slice(0, 10)}`,
+        url: null,
+        status: 'PROPOSED',
+        siftReason: coverage,
+      },
+    })
+    written++
+
+    // ⚠ AN UNRECOGNISED DETECTION VALUE IS REPORTED, NEVER FOLDED. Normally none; if the
+    // extractors gain a fourth kind, this is what says so instead of it arriving disguised.
+    if (inbound.unrecognised.length) {
+      details.push(`${inst.gid}: ⚠ ${inbound.unrecognised.length} rows carry a detection value this build does not know`)
+    }
     details.push(
       `${inst.gid}: ${grouped.totalGroups} groups over ${grouped.totalReferences} provision references`
-      + ` (+${grouped.titleOnly} title-only)${classified.classified ? '' : ' — NOT fully classified'}`
+      + ` (+${grouped.titleOnly} title-only, +${enabling.instruments} enabling instruments over `
+      + `${enabling.references} enacting references)`
+      + `${classified.classified ? '' : ' — NOT fully classified'}`
       + `${classified.spend ? `, ${classified.spend.pence.toFixed(4)}p` : ''}`,
     )
   }
