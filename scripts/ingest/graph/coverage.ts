@@ -78,7 +78,8 @@ export type Coverage = {
   /** ⚠ any recorded fact past FRESHNESS_DAYS, by key */
   staleFacts: string[]
   /** case-law boundary, present only when case law is in scope for the caller */
-  caseLawBoundary: { corpora: string[]; earliest: string | null; latest: string | null } | null
+  /** ⚠⚠ NOT a min/max. Per COLLECTION, with a derived FLOOR — see `caselaw-coverage.ts`. */
+  caseLawBoundary: Awaited<ReturnType<typeof caseLawCoverage>> | null
   /** ⚠⚠ GRAPH 4B §1 + §4. The identity bridge's RESIDUAL. Every figure live.
    *  A result that joined the two graph tables is only as complete as this. */
   identityBridge: {
@@ -138,9 +139,16 @@ const LAYER_PROBES: Array<{
     // EXCLUDES <SecondaryPreamble>, so citation_edge structurally cannot hold an
     // enabling edge; building one means a new detection value, which means
     // widening the CHECK constraint, which is what flips this to 'searched'.
+    // ⚠⚠ THIS PROBE WAS DEFINED BY EXCLUSION AND THAT BROKE IT. It read
+    // `detection NOT IN ('markup', 'text')`, which was exactly right while those were the only
+    // other value — and the moment GRAPH 5 added `caselaw-markup` the enabling layer silently
+    // absorbed 1,288,630 case-law rows and reported 1,479,888 where the truth is 191,258.
+    // Nothing failed; the number simply got larger, in the direction that flatters us.
+    // **A set defined as "everything except the ones I know about" is a promise that nobody will
+    // ever add a value**, and this codebase adds one per sprint. Named positively now.
     count: async () => {
       const n = await countEdges(`edge_type = 'made-under'`)
-      const here = await countCitation(`detection NOT IN ('markup', 'text')`)
+      const here = await countCitation(`detection = 'enabling'`)
       return { rows: here, where: n > 0 ? `${EDGE_TABLE} (${n.toLocaleString()} rows, no evidence column)` : undefined }
     },
   },
@@ -176,7 +184,25 @@ async function countEdges(where: string): Promise<number> {
   return Number(rows[0].n)
 }
 
-const CASE_LAW_CORPORA = ['caselaw', 'caselaw-fcl', 'et-decisions', 'tax-tribunals']
+/**
+ * ⚠⚠ THIS LIST WAS WRONG FROM THE DAY IT WAS WRITTEN, AND IT WAS WRONG IN THE REASSURING
+ * DIRECTION. It read `['caselaw', 'caselaw-fcl', 'et-decisions', 'tax-tribunals']`. Measured
+ * against the live table on 8 Sep 2026: `caselaw` holds ZERO rows and `caselaw-fcl` holds ZERO
+ * rows — neither corpus has ever existed under those names — and the list omitted `tna-caselaw`,
+ * which is the entire English holding, along with `scottish-courts`, `ni-judgments`, `echr-hudoc`
+ * and `cma-cases`.
+ *
+ * So the boundary was computed over the two tribunal collections that happened to be spelled
+ * right, and `MIN("itemDate")` across them returned **1989** — telling any reader that our case
+ * law reaches back to 1989 when the English cliff is 2003. ⚠ A corpus name that matches nothing
+ * is indistinguishable from a corpus that is empty, and the resulting figure looked entirely
+ * normal.
+ *
+ * GRAPH 5 §1 replaces the whole mechanism: `caselaw-coverage.ts` owns the list, reports a
+ * collection it names but cannot find, and reports a FLOOR rather than a minimum. This module
+ * imports that list so there is one copy.
+ */
+import { CASE_LAW_COLLECTIONS, caseLawCoverage, describeCaseLawBoundary } from './caselaw-coverage'
 
 export type CoverageOptions = {
   /** include the case-law date boundary — only relevant when case law is in scope */
@@ -225,14 +251,15 @@ export async function getCoverage(opts: CoverageOptions = {}): Promise<Coverage>
     stale: Number(r.age_days) > FRESHNESS_DAYS,
   }))
 
-  let caseLawBoundary: Coverage['caseLawBoundary'] = null
-  if (opts.caseLaw) {
-    const { rows: cl } = await pool.query(`
-      SELECT array_agg(DISTINCT corpus) AS corpora,
-             MIN("itemDate")::text AS earliest, MAX("itemDate")::text AS latest
-      FROM corpus_sections WHERE corpus = ANY($1::text[])`, [CASE_LAW_CORPORA])
-    caseLawBoundary = { corpora: cl[0].corpora ?? [], earliest: cl[0].earliest, latest: cl[0].latest }
-  }
+  // ⚠⚠ GRAPH 5 §1: "Every case-law edge result carries the boundary in its coverage statement."
+  // So it is NOT gated on the caller passing a flag. `opts.caseLaw` can force it on, but the
+  // boundary appears WHENEVER the table actually holds case-law rows — because a caller who
+  // forgets the flag is precisely the case §1 is about, and the omission would present as a
+  // clean answer rather than as a missing caveat. An opt-in caveat is one nobody opts into.
+  const hasCaseLaw = layers.some(l => l.id === 'case-law-citations' && l.rows > 0)
+  const caseLawBoundary: Coverage['caseLawBoundary'] =
+    (opts.caseLaw || hasCaseLaw) ? await caseLawCoverage() : null
+  void CASE_LAW_COLLECTIONS
 
   // ── the identity bridge's residual, live ────────────────────────────────────
   // ⚠ Everything here is a query. A bridge that stopped being rebuilt would
@@ -360,9 +387,9 @@ export function describeCoverage(c: Coverage): string[] {
   lines.push(`    — ⚠ a scheduled agreement that was not ingested presents as a SHORT DOCUMENT, not as an error.`)
 
   if (c.caseLawBoundary) {
-    const b = c.caseLawBoundary
-    lines.push(`  case-law boundary: ${b.corpora.length === 0 ? 'NO case-law corpus is held' : `${b.corpora.join(', ')} — ${b.earliest ?? 'unknown'} to ${b.latest ?? 'unknown'}`}`)
-    lines.push(`    — an authority outside that window cannot appear, and its absence is not evidence.`)
+    // ⚠ the case-law block is generated by its own module so the wording, the floor and the
+    //   ramp/cliff distinction cannot drift between the two places they are printed.
+    for (const l of describeCaseLawBoundary(c.caseLawBoundary)) lines.push(`  ${l}`)
   }
   return lines
 }

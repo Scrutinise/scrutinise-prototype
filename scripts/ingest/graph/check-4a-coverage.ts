@@ -89,8 +89,15 @@ async function main() {
   assert(Number(evidenced.rows[0].n) === 0,
     'every enabling row carries its evidence — an edge with no quotable source is a claim, not a fact',
     `${Number(evidenced.rows[0].n)} rows with empty evidence`)
-  assert(cov.caseLawBoundary != null, 'the case-law date boundary is reported when asked for',
-    cov.caseLawBoundary ? `${cov.caseLawBoundary.earliest} … ${cov.caseLawBoundary.latest}` : '')
+  // ⚠ GRAPH 5 §1 replaced the min/max boundary with a PER-COLLECTION one carrying a derived
+  //   floor. The old shape read `.earliest … .latest` across every case-law corpus at once, which
+  //   is the summed-across-jurisdictions answer §1 exists to refuse (Strasbourg runs to 1956, so
+  //   one minimum told a reader our English case law did too).
+  assert(cov.caseLawBoundary != null, 'the case-law boundary is reported when asked for',
+    cov.caseLawBoundary
+      ? `${cov.caseLawBoundary.collections.length} collections, floors: ` +
+        cov.caseLawBoundary.collections.map(c => `${c.corpus}=${c.continuousFrom ?? c.shape}`).join(' ')
+      : '')
 
   console.log('\n── ⚠ THE BLOCK MUST MOVE WHEN THE STATE MOVES (negative control) ──')
   const before = (await getCoverage()).recorded.length

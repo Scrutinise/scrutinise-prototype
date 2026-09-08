@@ -28,7 +28,17 @@
     "check:4b": "npm run check:4b-identity && npm run check:4b-layer2 && npm run check:4a-coverage",
     "setup:identity": "tsx graph/setup-identity-table.ts",
     "graph:coverage": "tsx graph/print-coverage.ts",
-    "audit:4b": "tsx graph/audit-4b-identity.ts --json graph/audit-4b-identity.json && tsx graph/audit-4b-schedules.ts --zip-sample 800 --json graph/audit-4b-schedules.json && tsx graph/audit-4b-layer2.ts --sample 2000 --json graph/audit-4b-layer2.json && tsx graph/audit-4b-tax.ts --json graph/audit-4b-tax.json && tsx graph/record-4b-facts.ts"
+    "audit:4b": "tsx graph/audit-4b-identity.ts --json graph/audit-4b-identity.json && tsx graph/audit-4b-schedules.ts --zip-sample 800 --json graph/audit-4b-schedules.json && tsx graph/audit-4b-layer2.ts --sample 2000 --json graph/audit-4b-layer2.json && tsx graph/audit-4b-tax.ts --json graph/audit-4b-tax.json && tsx graph/record-4b-facts.ts",
+    "check:graph5-prereq": "tsx graph/check-graph5-prereq.ts",
+    "check:graph5-boundary": "tsx graph/check-graph5-boundary.ts",
+    "check:graph5-citation": "tsx graph/check-graph5-citation.ts",
+    "check:graph5-treatment": "tsx graph/check-graph5-treatment.ts",
+    "check:graph5": "npm run check:graph5-prereq && npm run check:graph5-boundary && npm run check:graph5-citation && npm run check:graph5-treatment",
+    "graph:caselaw-coverage": "tsx graph/print-caselaw-coverage.ts",
+    "audit:g5": "tsx graph/audit-g5-citation-forms.ts --json graph/audit-g5-citation-forms.json && tsx graph/audit-g5-unresolved-cause.ts --json graph/audit-g5-unresolved-cause.json",
+    "extract:g5-citations": "tsx graph/extract-caselaw-citation-edges.ts",
+    "extract:g5-treatment": "tsx graph/extract-caselaw-treatment.ts",
+    "build:g5-validation": "tsx graph/build-g5-validation-set.ts --n 15 --out ../../docs/GRAPH_5_VALIDATION.md"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
