@@ -24,6 +24,11 @@
 // rather than a decision repeated per writer.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ⚠ ONE IMPORT, AND IT IS A MODULE THAT IMPORTS NOTHING (CLAUDE.md §28). This file is reached
+// from `'use client'` components through the panel, so anything it pulls in is followed into
+// the browser bundle. `consequences-caveat.ts` is deliberately dependency-free for that reason.
+import { CONSEQUENCE_SOURCE_TYPE_VALUES } from './consequences-caveat'
+
 /**
  * `sourceType` values that mean "assembled by us, deterministically".
  *
@@ -35,6 +40,18 @@ const ASSEMBLED_SOURCE_TYPES: ReadonlySet<string> = new Set([
   'PRECEDENT_GROUP',
   // deepening-jobs.ts runDevolutionScope — the jurisdiction-led group.
   'DEVOLUTION_SCOPE',
+  // ⚠⚠ SURFACE 5 — THE CITATION GRAPH'S ROWS WERE BADGED "Finding" AND ARE NOT ONE.
+  //
+  // They are assembled deterministically from `citation_edge`, grouped in code by what the
+  // words do, and every one carries a real quotation from a real provision. Wearing the same
+  // badge as a model's reading of one document is precisely the confusion 25-C §2.3 built
+  // this file to end — and here it was the more damaging direction of the two, because a
+  // verified reference list read as an opinion.
+  //
+  // ⚠ THE THREE KINDS ARE ALL ASSEMBLED. They differ in the strength of the underlying
+  // evidence, which the row itself states in its own words; that is not what this badge is
+  // about, and folding the distinction in here would put it in two places.
+  ...CONSEQUENCE_SOURCE_TYPE_VALUES,
 ])
 
 export function isAssembled(sourceType: string | null | undefined): boolean {

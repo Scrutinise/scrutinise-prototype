@@ -36,6 +36,7 @@ import type { ProposalSnapshot } from './proposal-snapshot'
 import { snapshotHash } from './proposal-snapshot'
 import { QUESTION_HEADINGS, HEADING_ORDER, liveHeading, type HeadingKey } from '../lex/question-headings'
 import { positionsCaveat, tallyPositions } from '../lex/positions-caveat'
+import { consequencesCaveat, tallyConsequences } from '../lex/consequences-caveat'
 import type { ProposalBuildResult } from './build-proposal'
 
 function text(s: string): Run[] {
@@ -259,6 +260,12 @@ export function buildMeetingPackDocument(
       // ⚠ 26-A §3b — the same caveat, from the same function. See `positions-caveat.ts`.
       if (key === 'POSITIONS') {
         blocks.push({ kind: 'note', text: positionsCaveat(tallyPositions(rows)) })
+      }
+      // ⚠⚠ SURFACE 5 §2 — THIS PACK PRINTS `title — citation` AND NOTHING ELSE, so it is the
+      // document where a count can most easily stand alone. The caveat is the only thing on the
+      // page saying the count is of what we found in the layers we searched.
+      if (key === 'REFERS_TO_THIS') {
+        blocks.push({ kind: 'note', text: consequencesCaveat(tallyConsequences(rows)) })
       }
       // ⚠ TITLES AND CITATIONS ONLY. This is a pack somebody reads in a meeting, not the
       // evidence pack — printing every finding's body would be the hundred pages §5c's running

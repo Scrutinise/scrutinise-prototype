@@ -30,6 +30,7 @@ import { historyLine, GROUP_HEADINGS } from '../lex/policy-history'
 import { DRAFTED_ATTRIBUTION, readableForkKey } from '../lex/reader-language'
 import { EVIDENCE_DISCLOSURE, BETA_MARKER } from '../lex/beta-disclosure'
 import { positionsCaveat, tallyPositions } from '../lex/positions-caveat'
+import { consequencesCaveat, tallyConsequences } from '../lex/consequences-caveat'
 // 25-M §2b — the write-up carries every section the right-hand panel holds, in the panel's
 // own order. ⚠ The heading vocabulary is IMPORTED, never restated: `question-headings.ts`
 // imports nothing and is held to §20-B's import ban precisely so the document stack can read
@@ -285,6 +286,10 @@ function panelBlocks(snapshot: ProposalSnapshot): Block[] {
     // `positions-caveat.ts`: one definition, three surfaces.
     if (key === 'POSITIONS') {
       blocks.push({ kind: 'note', text: positionsCaveat(tallyPositions(rows)) })
+    }
+    // ⚠ SURFACE 5 §3 — one definition, four surfaces. See `consequences-caveat.ts`.
+    if (key === 'REFERS_TO_THIS') {
+      blocks.push({ kind: 'note', text: consequencesCaveat(tallyConsequences(rows)) })
     }
     blocks.push(...evidenceRows(rows))
   }

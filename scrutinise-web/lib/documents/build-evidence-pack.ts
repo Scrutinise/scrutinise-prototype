@@ -39,6 +39,7 @@ import { BETA_MARKER } from '../lex/beta-disclosure'
 import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { QUESTION_HEADINGS, liveHeading, type HeadingKey } from '@/lib/lex/question-headings'
 import { positionsCaveat, tallyPositions } from '@/lib/lex/positions-caveat'
+import { consequencesCaveat, tallyConsequences } from '@/lib/lex/consequences-caveat'
 import {
   assertRenderableSnapshot,
   snapshotHash,
@@ -157,6 +158,12 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
     // exactly what happened to the no-producer note for two sprints.
     if (key === 'POSITIONS') {
       blocks.push({ kind: 'note', text: positionsCaveat(tallyPositions(items)) })
+    }
+    // ⚠⚠ SURFACE 5 §3 — THE SAME RULE FOR THE REFERENCE GRAPH. Its counts arrive here as
+    // titles and sift reasons; the statement of what the search could not see is a row of its
+    // own, and this sentence is what tells a reader to go and read it before quoting a number.
+    if (key === 'REFERS_TO_THIS') {
+      blocks.push({ kind: 'note', text: consequencesCaveat(tallyConsequences(items)) })
     }
     if (!def) {
       blocks.push({

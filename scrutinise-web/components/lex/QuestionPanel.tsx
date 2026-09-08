@@ -41,6 +41,7 @@ import OutputsPanel from './OutputsPanel'
 import AgendaPanel from './AgendaPanel'
 import BetaSearchNotice, { betaNoticeSeen, markBetaNoticeSeen } from './BetaSearchNotice'
 import { positionsCaveat, tallyPositions } from '@/lib/lex/positions-caveat'
+import { consequencesCaveat, tallyConsequences } from '@/lib/lex/consequences-caveat'
 
 /**
  * §3b — what an EMPTY item says on the contents list, in three or four words.
@@ -803,6 +804,20 @@ export default function QuestionPanel({
           {openHeading.key === 'POSITIONS' && (
             <p className="text-xs text-zinc-700 border-l-2 border-zinc-400 pl-2 py-0.5 leading-snug">
               {positionsCaveat(tallyPositions(openHeading.entries))}
+            </p>
+          )}
+
+          {/* ⚠⚠ SURFACE 5 §3 — THE COVERAGE STATEMENT IS THE FEATURE, NOT THE FOOTNOTE.
+              A heading that prints groups and counts with no statement of what the graph could
+              not see is a bare array drawn on a screen — the exact thing `{ rows, coverage }`
+              exists to make impossible one layer down.
+              ⚠ Computed from the rows on every render, from the same function all three
+              documents call. The live figures are in the coverage ROW this sentence points at;
+              nothing here states a figure about the corpus, because a figure written into a
+              component cannot move when the graph does. */}
+          {openHeading.key === 'REFERS_TO_THIS' && (
+            <p className="text-xs text-zinc-700 border-l-2 border-zinc-400 pl-2 py-0.5 leading-snug">
+              {consequencesCaveat(tallyConsequences(openHeading.entries))}
             </p>
           )}
 

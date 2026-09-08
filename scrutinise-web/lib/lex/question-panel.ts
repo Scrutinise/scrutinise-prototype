@@ -75,6 +75,16 @@ export interface PanelEntry {
   yourSource: boolean
   /** Deterministically assembled by us, rather than a model's reading. */
   assembled: boolean
+  /**
+   * ⚠ SURFACE 5 — WHERE THE ROW CAME FROM, CARRIED RATHER THAN DERIVED TWICE.
+   *
+   * `assembled` and `label` are both computed FROM this and both lose it: a caveat that has to
+   * know an enabling-power row from a grouped-reference row cannot get that back out of a
+   * display string, and reading it out of the title would break the first time somebody
+   * reworded a title. `positions-caveat.ts` reached for exactly this and had to accept two
+   * different fields from two surfaces instead; this is the field.
+   */
+  sourceType: string | null
   /** The field this bears on — `challenge`, `causes:<id>`, `actions:<id>`, or null. */
   fieldRef: string | null
   /** §3 rule 3 — TRUE when it bears on what the user is looking at right now. */
@@ -234,6 +244,7 @@ export async function buildQuestionPanel(
       why: e.siftReason?.trim() || null,
       yourSource: isUserMaterialPass(e.passKey),
       assembled: isAssembled(e.sourceType),
+      sourceType: e.sourceType,
       fieldRef: e.fieldRef,
       bearsOnFocus: !!focus && e.fieldRef === focus,
       excluded: !!exclusionKey,
@@ -287,6 +298,8 @@ export async function buildQuestionPanel(
             : 'Read, and nothing in it bore on the proposal.',
       yourSource: true,
       assembled: false,
+      // ⚠ A user's own document has no producer source type — null, never a borrowed one.
+      sourceType: null,
       fieldRef: null,
       bearsOnFocus: false,
       excluded: false,
