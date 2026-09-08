@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-09-08T13:41:29.551Z",
+  "collections": [
+    {
+      "corpus": "et-decisions",
+      "rows": 161753,
+      "undated": 4,
+      "earliestItem": "2017-02-08",
+      "latestItem": "2026-06-11",
+      "shape": "cliff",
+      "continuousFrom": 2017,
+      "tailRows": 0
+    },
+    {
+      "corpus": "tna-caselaw",
+      "rows": 74896,
+      "undated": 0,
+      "earliestItem": "1965-08-09",
+      "latestItem": "2026-06-11",
+      "shape": "cliff",
+      "continuousFrom": 2003,
+      "tailRows": 239
+    },
+    {
+      "corpus": "cma-cases",
+      "rows": 22898,
+      "undated": 20336,
+      "earliestItem": "2001-04-18",
+      "latestItem": "2026-06-12",
+      "shape": "cliff",
+      "continuousFrom": 2003,
+      "tailRows": 15
+    },
+    {
+      "corpus": "tax-tribunals",
+      "rows": 13099,
+      "undated": 1010,
+      "earliestItem": "1989-11-09",
+      "latestItem": "2024-06-11",
+      "shape": "cliff",
+      "continuousFrom": 2003,
+      "tailRows": 34
+    },
+    {
+      "corpus": "scottish-courts",
+      "rows": 13070,
+      "undated": 0,
+      "earliestItem": "1999-02-06",
+      "latestItem": "2026-06-19",
+      "shape": "cliff",
+      "continuousFrom": 1999,
+      "tailRows": 0
+    },
+    {
+      "corpus": "ni-judgments",
+      "rows": 7927,
+      "undated": 155,
+      "earliestItem": "1984-09-07",
+      "latestItem": "2026-06-11",
+      "shape": "cliff",
+      "continuousFrom": 2002,
+      "tailRows": 244
+    },
+    {
+      "corpus": "echr-hudoc",
+      "rows": 4460,
+      "undated": 50,
+      "earliestItem": "1956-06-02",
+      "latestItem": "2026-04-29",
+      "shape": "ramp",
+      "continuousFrom": null,
+      "tailRows": 4369
+    }
+  ],
+  "namedButEmpty": [],
+  "totalRows": 298103
+}
