@@ -132,6 +132,191 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 5 — THE PUBLISHER HAD ALREADY DONE THE HARD HALF, AND THE COVERAGE BLOCK NAMED TWO CORPORA THAT DO NOT EXIST (2026-09-08 14:20 UTC)
+
+`BRIEF_GRAPH_5.md` §0–§5. Report: `docs/GRAPH_5_REPORT.md`. Validation sheet for Charlie:
+`docs/GRAPH_5_VALIDATION.md`. Predictions logged 13:46 UTC and scored in the report — **one of six
+refuted**.
+
+▼ **§0 GATE OPEN, RE-MEASURED ON ALL THREE SURFACES.** `check:graph5-prereq` **8/0**, every gate
+assertion first watched rejecting the verbatim BEFORE-state stylesheet body. ✅ stored bodies:
+**0 of 400 open with a stylesheet, 0 of 20,540,760 characters are CSS**; ✅ titles **99.98%**;
+⚠ **and chunk 0 is clean too (0 of 300)** — the brief's "77% → 0%" was measured on the CHUNK
+surface, which `INGEST_CASELAW_TEXT_REPORT.md` left explicitly NOT fixed as Decision 1 (a ~$31
+re-embed). It has since been done. **Checking all three rather than the one the sentence described
+was the point.** ⚠ The 2 rows lacking the re-compile route are `empty-at-source` — the publisher
+serves an empty `<judgmentBody>`; 74,896 − 2 = 74,894, exactly the brief's figure.
+
+▶▶ **THE DESIGN CAME OUT THE OPPOSITE OF ITS SIBLING'S, AND THE AUDIT IS WHAT DECIDED IT.** The
+compiled body is plain text, but **the raw Akoma Ntoso is held for 74,896 of 74,896 judgments** and
+carries TNA's own `<ref uk:type="legislation" href="…legislation.gov.uk/id/…">`. Markup
+completeness **90.5%** against GRAPH 4A's 2–5% for legislation, so the extractor is **markup-only**.
+⚠⚠ **The back-reference problem §2.1 warned about does not exist: the publisher already solved it.**
+55.8% of references are words naming only a provision (*"Section 11(2)"*, *"s. 31(7)"*) and in
+**100.0%** of those the href carries the Act. Nothing of ours resolves *"the 1994 Act"*.
+
+▶ **1,288,630 case-law citation edges**, 52,861 of 74,896 judgments, **99.0% resolving** to an
+instrument we hold, 0 URIs failing to parse, 71.1% anchored to the judge's own paragraph number.
+Inside the predicted 0.9M–1.4M band. **1.49 GB → $0.52/month** (storage is a bill, not a wall; no
+alarm raised). ⚠ `detection = 'caselaw-markup'`, NOT `'markup'`, because **every ref carries
+`uk:origin="TNA"` — the court did not mark these up, the National Archives' enrichment did.** A
+measured fact and an inferred one must not look identical in a count.
+
+⚠⚠ **§2.2 IS ANSWERED AND THE ANSWER IS NO, AT 100%.** **74,896 of 74,896 judgments carry
+`<decision>` and nothing else** — no `<background>`, no `<motivation>`, no procedural division
+anywhere in the corpus. The structure cannot tell a provision the case turned on from one recited
+in the history, so the reference is stored WITHOUT the distinction and `check:graph5-citation`
+asserts **no column exists** named for ratio, obiter, reasoning, centrality, weight or rank.
+**An honest flat list beats a confident wrong ranking.**
+
+⚠⚠ **`coverage.ts` HAD BEEN NAMING TWO CASE-LAW CORPORA THAT DO NOT EXIST.** `CASE_LAW_CORPORA` read
+`['caselaw', 'caselaw-fcl', 'et-decisions', 'tax-tribunals']`: **the first two hold ZERO rows** and
+the list **omitted `tna-caselaw` — all 74,896 English judgments** — plus `scottish-courts`,
+`ni-judgments`, `echr-hudoc` and `cma-cases`. The block therefore ran `MIN("itemDate")` over what
+was left and reported a case-law boundary of **1989**. ⚠ **A corpus name that matches nothing is
+indistinguishable from a corpus that is empty**, and the figure looked entirely normal.
+
+▶ **§1 BUILT FIRST, and there is no `2003` written anywhere in it.** `caselaw-coverage.ts` derives
+the floor from the live annual histogram, and the derivation **independently reproduces 2003 for
+`tna-caselaw` and 1999 for `scottish-courts`**. ⚠ **MIN(date) is a decoy** — `tna-caselaw`'s
+earliest item is 1965 and it holds 239 items below the floor against 74,657 above it. Pre-2001
+holding reconciles to the brief exactly: 210 + 1,203 + 235 + 2 + 2,053 = **3,703**.
+⚠⚠ **THREE SHAPES, NOT TWO**: the rule's first version reported `tax-tribunals` as "continuous from
+2024 to 2024" — **the floor it named was the cut-off of our own ingest run** — and would have given
+`echr-hudoc`, which ramps from one 1956 decision with no floor at all, a spurious 2025. Both real
+histograms are now fixtures in the check.
+
+▶ **§3: 1,756 treatment edges built, 1,749 stored**, 9 treatments × 2 subject types, court on
+99.3%, date on 100%, paragraph on 98.4%, **0 blank quotes**. ⚠ **16,455 of 18,211 phrases (90.4%)
+produce NO edge — most citations are not treatments and a refusal is the honest result.** Refusals:
+**75.3% no subject on the declared side, 11.4% more than one candidate (refused, never guessed),
+3.7% an uncited case name sits nearer the phrase**.
+⚠⚠ **A FIFTH DEFECT, AND THE WORST: a treatment edge named the case that DID the overruling as the
+case overruled.** *"…ex parte DPP [1994] 1 AC 9), during the course of which, both ex parte Belsham
+and … ex parte Randle were expressly overruled"* — Belsham and Randle are cited BY NAME ONLY, so the
+citation parser cannot see them and the only visible candidate belongs to the overruling vehicle.
+**The direction rule was working correctly and still produced the wrong answer.** A new refusal
+drops the row; **case-subject attributions fell 42% (1,593 → 923) while provision subjects were
+untouched (829 → 826)** — which is the corroboration that the guard cuts the right thing.
+⚠⚠ **And that guard SHIPPED DEAD.** Written through a shell heredoc, its `\b` became a literal
+backspace (0x08), so the pattern required a control byte, matched nothing, and reported **0
+refusals on the very judgment it was written for** — a zero that reads as "this shape is rare", not
+"this pattern is dead". `grep`, `sed` and every editor view render 0x08 invisibly; only `od -c`
+showed it. **Run every new guard against the case that motivated it before believing its zero.**
+⚠⚠⚠ **§0's line is enforced structurally**: the check asserts no column matching
+`good_law|status|valid|authority_score|superseded` exists, so "no longer good law" has nowhere to go.
+
+⚠⚠ **FOUR DEFECTS FOUND BY READING OUTPUT RATHER THAN CODE, THREE OF THEM MINE:**
+**(1)** the extractor reported **974,802 rows written having written 1,288,630** — a lost-update
+race on `written += await …` across 32 workers. The DATA was complete; only the counter lied, and a
+run reporting fewer rows than it wrote looks exactly like one that dropped them. **(2)** the
+`doubted` pattern fired on doubt about **facts** (*"There is doubt as to when the claimant applied
+for transfer"*) — caught only because no citation happened to sit nearby; **a false positive that
+survives by luck of adjacency is a false positive**. **(3)** **193,226 stored quotes — 15.0%, one in
+seven — opened with XML debris** (`uk:origin="TNA" uk:type="legislation">section 138D…`) because the
+400-character evidence window can begin inside an attribute list and `/<[^>]*>/` needs an opening
+bracket. Every constraint passed and the count reconciled exactly; **only the round-trip assertion
+that looks for the quote IN the judgment caught it.** Rows rebuilt. **(4)** the validation sheet
+rendered dates as *"Thu Nov 29"* — **no year** — because pg returns a `date` as a JS Date; a
+year-less date defeats the whole reason §3.2 requires the date.
+
+⚠⚠ **AND WIDENING AN ENUM SILENTLY BROKE A NEIGHBOURING LAYER.** `coverage.ts`'s `enabling-power`
+probe was `detection NOT IN ('markup','text')` — correct while those were the only other values, and
+the moment `caselaw-markup` existed the enabling layer absorbed 1,288,630 case-law rows and reported
+**1,479,888 where the truth is 191,258**. Nothing failed; the number just got bigger, in the
+flattering direction. **A set defined as "everything except the ones I know about" is a promise that
+nobody will ever add a value**, and this codebase adds one per sprint. Named positively now.
+
+⚠ **§2.1's cause breakdown carries GRAPH 4A over almost exactly, and my prediction was refuted:**
+title-absent **61.0%** (4A: 59.2%), short-form **9.8%** (4A: 9.3%), title-mismatch 5.3%, plus a
+bucket 4A did not have — **mis-cited-year 24.0%**, the source naming the right Act with the wrong
+year. I predicted short-form would come out *below* 9.3%; it is slightly above. **Short forms are
+~10% of the problem in both corpora and the lever everyone reaches for is the wrong one twice.**
+⚠ My first classifier compared a NORMALISED span against a RAW title and reported **title-absent
+78.1% / title-mismatch 0.0%** — *"magistrates courts act 1980"* filed as an Act we do not hold
+because the judgment omitted an apostrophe. **A bucket that can never be non-zero is an instrument
+that cannot produce one of its own answers.**
+
+✅ **CHECKS, NAMED IN FULL:** `check:graph5-prereq` **8** · `check:graph5-boundary` **18** (5
+controls) · `check:graph5-citation` **19** (3 controls) · `check:graph5-treatment` **48** (15
+controls). **93 assertions, 23 controls, 0 dead, 0 not run.** ⚠ `check:graph5-citation` FAILED 1 of
+19 on its first run — that failure is what found the markup debris. Every polarity pair is asserted
+in **both** directions, and direction is asserted on *"Alpha was overruled in Gamma"* with a control
+confirming the wrong answer really does sit on the other side.
+
+▶ **Migrations additive only**: both `citation_edge` CHECK constraints accept strictly more than
+before; `caselaw_treatment_edge` is new. Nothing dropped, no column retyped, no data moved. The
+`whichdb` check is inside the setup script and refuses a non-Neon endpoint.
+
+⚠ **DECISIONS FOR CHARLIE (report §5):** Q1 score the 15 validation rows — **I have deliberately not
+tuned the patterns after reading the sample, because fitting the extractor to its own validation set
+destroys the measurement**; Q2 whether §3 reaches a user surface at all given that two of the first
+four rows I read are word-sense/hypothetical-clause false positives; Q3 the **218,207 case-law
+documents (74% of the corpus) with no raw XML**; Q4 `export COURT_FROM_NEUTRAL` from
+`caseref/build-records.ts` so there is one copy; Q5 the mis-cited years — record, never "correct",
+because resolving them means deciding a judge meant a different Act; Q6 no text detector.
+
+---
+
+## GRAPH 5 — PREDICTIONS, RECORDED BEFORE THE §2.1 AUDIT RUNS (2026-09-08 13:46 UTC)
+
+`BRIEF_GRAPH_5.md` §2.1 and §5. Written after a 200-document pilot and BEFORE the full-corpus
+audit, so a surprising number is a finding rather than a shrug. Nothing below is a result.
+
+⚠ The pilot that these rest on is itself reported, because a prediction resting on a measurement
+is a different thing from a guess: 200 documents sampled `ORDER BY md5(id)`, read from `r2RawKey`.
+
+**P-1 — the markup is NOT ~2% complete here, and that inverts the extraction design.** GRAPH 4A
+measured `<Citation URI>` markup at 2–5% of the act-name mentions in legislation, which is why
+`citation_edge` needed a text detector at all. TNA's case-law AkN is a different publisher doing a
+different job: the pilot found **82.4%** of plain-text "<Name> Act <year>" mentions already wearing
+a `<ref uk:type="legislation" href="…legislation.gov.uk/id/…">`. I predict the full audit, run with
+the SHARED `ACT_NAME_RX` rather than the pilot's crude one, lands **between 80% and 92%** — and
+that the shared regex moves it UP, because the pilot's unmarked bucket contains its own artefacts
+("Senior Courts Act 1985", "A of the Criminal Justice Act 2003").
+*Refuted by:* under 70%, which would mean a text detector is load-bearing here as it was in 4A.
+
+**P-2 — the back-reference problem is solved by the publisher, not by us.** §2.1 lists "the bare
+provision once the Act has been named earlier" as a form to expect. The pilot says **53.6%** of
+legislation refs have words that are a bare provision (`"s16(4)"`, `"section 39"`) while the href
+names the Act in full. I predict the full audit puts bare-provision-with-resolved-href **above 45%**
+and that the number of bare provisions we must resolve OURSELVES, in the marked-up half, is
+**approximately zero**.
+*Refuted by:* a substantial population of refs whose href names a provision but no Act.
+
+**P-3 — GRAPH 4A's counter-intuitive breakdown does NOT carry over, and short-form matters even
+less here.** 4A found unresolved names were 59.2% title-absent, 31.6% title-mismatch, 9.3%
+short-form. I predict short-form comes out **below 9.3%** for case law — lower than 4A's already
+small share — because the commonest reason an act name in a judgment resolves to nothing is that
+it is a foreign, EU, or repealed-and-not-held instrument, not that it is an abbreviation.
+I predict **title-absent remains the largest single bucket, above 50%**.
+*Refuted by:* short-form above 15%, which would make short-form resolution the lever after all.
+
+**P-4 — volume: 0.9M to 1.4M rows, and storage is not a question.** Pilot mean 14.74 legislation
+refs per judgment over 200 documents × 74,896 judgments ≈ **1.10M rows**. At `citation_edge`'s
+measured 1,160 bytes/row that is **~1.28 GB → ~$0.45/month** at $0.35/GB-month. ⚠ I am not raising
+a storage alarm and there is no threshold in this prediction; the figure is recorded because the
+brief asks for it.
+*Refuted by:* outside 0.9M–1.4M.
+
+**P-5 — ⚠⚠ §2.2's answer is NO, and I expect to have to report a flat list.** The pilot found
+`<decision>` covering 99.7–100% of `<judgmentBody>` in every document examined, and **no**
+`<introduction>`, `<background>`, `<motivation>` or `<arguments>` element anywhere. If that holds at
+scale, the AkN structure cannot separate a provision the case turned on from one recited in the
+procedural history, and §2.2's instruction is explicit: say so and store the reference without the
+distinction. I predict **fewer than 2% of judgments carry any AkN division other than `<decision>`**.
+*Refuted by:* a populated `<background>`/`<motivation>` split in any material share.
+
+**P-6 — coverage: the markup route reaches ONE of seven case-law collections.** `r2RawKey` is
+populated for 74,896 of 74,896 `tna-caselaw` rows and for **0** rows of `et-decisions`,
+`scottish-courts`, `ni-judgments`, `tax-tribunals`, `echr-hudoc` and `cma-cases`. I predict this is
+confirmed at 100%/0% and that the honest coverage statement therefore names case-law citation
+support as **England & Wales + UKSC/UKPC only, from 2003**, with the other 218,207 case-law
+documents carrying no legislation edges at all.
+*Refuted by:* any raw XML in a second collection.
+
+---
+
 ## SURFACE 5 — THE STRONGEST KIND OF REFERENCE IN THE GRAPH WAS ARRIVING WEARING THE WEAKEST KIND'S NAME (2026-09-08 13:33 UTC)
 
 `BRIEF_SURFACE_5.md`, in full. Report: **`docs/SURFACE_5_REPORT.md`**. No schema change, no

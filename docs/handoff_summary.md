@@ -234,6 +234,87 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## GRAPH THREAD — last updated 2026-09-08 14:20 UTC (GRAPH 5)
+
+*This section belongs to the GRAPH stream. Report: `docs/GRAPH_5_REPORT.md`.
+**Charlie's action: score the 15 rows in `docs/GRAPH_5_VALIDATION.md` — two verdicts each, A and B.***
+
+▼ **GRAPH 5 SHIPPED. THE CASE-LAW HALF OF THE CITATOR EXISTS, AND THE PUBLISHER HAD ALREADY DONE
+THE HARD PART.**
+✅ `check:graph5-prereq` **8/0** · `check:graph5-boundary` **18/0** (5 controls) ·
+`check:graph5-citation` **19/0** (3 controls) · `check:graph5-treatment` **48/0** (15 controls) —
+**93 assertions, 23 controls, 0 dead, 0 not run.**
+
+▶ **§0 GATE OPEN ON ALL THREE SURFACES, re-measured live and watched failing first.** Stored bodies:
+**0 of 400 open with a stylesheet; 0 of 20.5M characters are CSS**; titles **99.98%**. ⚠ **And
+chunk 0 is clean (0 of 300)** — the brief's "77% → 0%" was measured on the CHUNK surface, which the
+August report left explicitly NOT fixed (Decision 1, ~$31 re-embed); it has since been done.
+Checking all three rather than the one the sentence named was the point.
+
+▶▶ ⚠⚠ **THE EXTRACTION DESIGN IS THE OPPOSITE OF ITS SIBLING'S.** The compiled body is plain text
+but **the raw Akoma Ntoso is held for 74,896 of 74,896 judgments** with TNA's own
+`<ref uk:type="legislation" href=…>`. Markup completeness **90.5%** against GRAPH 4A's 2–5%, so the
+extractor is markup-only. ⚠⚠ **The back-reference problem does not exist here — the publisher solved
+it: 55.8% of references name only a provision and in 100.0% of those the href carries the Act.**
+▶ **1,288,630 edges**, 52,861 judgments, **99.0% resolving**, 0 bad URIs, 71.1% anchored to the
+judge's paragraph. **$0.52/month.** ⚠ `detection='caselaw-markup'` not `'markup'` — every ref is
+`uk:origin="TNA"`, so **the enrichment asserted the identity, not the court.**
+
+▶▶ ⚠⚠ **§2.2 ANSWERED, AT 100%: 74,896 of 74,896 judgments carry `<decision>` AND NOTHING ELSE.**
+No `<background>`, no `<motivation>`, nowhere in the corpus. The reasoning cannot be separated from
+the procedural history, so the reference is stored WITHOUT the distinction and the check asserts
+**no column exists** for ratio/obiter/weight/rank. An honest flat list beats a confident wrong
+ranking.
+
+⚠⚠ **`coverage.ts` HAD BEEN NAMING TWO CASE-LAW CORPORA THAT DO NOT EXIST** (`caselaw`,
+`caselaw-fcl` — **0 rows each**) **and omitting `tna-caselaw`, all 74,896 English judgments.** Its
+boundary ran over the leftovers and answered **1989**. ▶ §1 replaces it: the floor is **derived from
+the live histogram, with no `2003` written anywhere**, and the derivation independently reproduces
+**2003** for `tna-caselaw` and **1999** for Scotland. Pre-2001 holding reconciles exactly: **3,703**.
+⚠⚠ **Three shapes, not two** — the first version reported `tax-tribunals` "continuous from 2024 to
+2024" (**the floor it named was our own ingest cut-off**) and would have given `echr-hudoc`, which
+ramps from one 1956 decision, a spurious floor. Both real histograms are now fixtures.
+
+▶ **§3: 1,756 treatment edges built, 1,749 stored**, 9 treatments × 2 subject types, court 99.3%,
+date 100%, paragraph 98.4%, **0 blank quotes**. ⚠ **16,455 of 18,211 phrases (90.4%) produce NO
+edge — most citations are not treatments and a refusal is the honest result.** Refusals — **75.3%
+no subject on the declared side, 11.4% ambiguous, 3.7% an uncited case name sits nearer the phrase**.
+⚠⚠ **THE WORST DEFECT OF THE SPRINT: an edge named the case that DID the overruling as the case
+overruled** — *Belsham* and *Randle* were cited BY NAME ONLY, invisible to the citation parser, so
+the only visible candidate was the overruling vehicle. The direction rule was working and still got
+it wrong. The new refusal cut **case subjects 42% (1,593 → 923) with provision subjects untouched
+(829 → 826)**, which is the corroboration it cuts the right thing. ⚠⚠ **And the guard SHIPPED
+DEAD** — a heredoc turned its `\b` into a literal backspace, so it matched nothing and printed
+"0 refusals" on the very judgment it was written for. ⚠⚠⚠ §0's line is structural: **no column
+exists that could hold "no longer good law".**
+
+⚠⚠ **FOUR DEFECTS FOUND BY READING OUTPUT, THREE MINE.** **(1)** the run reported **974,802 rows
+written having written 1,288,630** — a lost-update race on `+=` across an await; the data was
+complete, only the counter lied. **(2)** the `doubted` pattern fired on doubt about **facts**,
+surviving only because no citation sat nearby. **(3)** ⚠⚠ **193,226 quotes (15.0%) opened with XML
+debris** — every constraint passed, the count reconciled exactly, and **only the round-trip
+assertion that looks for the quote IN the judgment caught it.** Rows rebuilt. **(4)** the validation
+sheet printed dates with **no year**.
+⚠⚠ **AND WIDENING AN ENUM BROKE A NEIGHBOUR**: `enabling-power`'s probe was
+`detection NOT IN ('markup','text')`, so it absorbed the case-law rows and reported **1,479,888 for
+191,258**. **A set defined as "everything except what I know about" is a promise nobody adds a
+value**, and this codebase adds one a sprint.
+
+⚠ **§2.1's cause split carries 4A over almost exactly and REFUTED my prediction**: title-absent
+**61.0%** (4A 59.2%), short-form **9.8%** (4A 9.3% — I said it would be lower), plus a new bucket,
+**mis-cited-year 24.0%**, the source naming the right Act with the wrong year.
+
+⚠⚠ **NEXT ACTION AND IT IS CHARLIE'S: score `docs/GRAPH_5_VALIDATION.md`.** I have **deliberately
+not tuned the patterns after reading the sample** — fitting the extractor to its own validation set
+destroys the measurement. ⚠ On my own reading, **two of the first four rows are false positives on
+question B**: a hypothetical *"even if another court could decline to follow"*, and *"persons are
+distinguishable from each other"*, which is a different word sense. **That is the position-graph
+shape exactly — direction right, claims made far too often** — and it is why the two questions are
+asked on separate lines. Six decisions in the report's §5, of which Q2 is whether §3 reaches a user
+surface at all.
+
+---
+
 ## SURFACE THREAD — last updated 2026-09-08 13:33 UTC (SURFACE 5)
 
 ▼▼ **SURFACE 5 SHIPPED. THE STRONGEST KIND OF REFERENCE IN THE GRAPH WAS ARRIVING WEARING THE
