@@ -111,6 +111,32 @@ async function main() {
         w(`⚠ Questions filed here that did **not** run on this draft: ${h.questionsNotRun.map(esc).join('; ')}`)
         w('')
       }
+      // ══ ⚠⚠ CCW-B21 §4a — THE ROW WAS NEVER BLANK. THIS RENDERER THREW IT AWAY. ═════════
+      //
+      // The brief reports that "Key sources" emits
+      //     | What to read first | — | Undated. No retrievable source record… | _no reason recorded_ |
+      // on all twelve measures, and calls it a pass that "runs and fills nothing".
+      //
+      // **It fills plenty.** Every one of the twelve has a real reading list in
+      // `EvidenceItem.body`, naming documents — the Scotland Act's entrenchment of the HRA,
+      // *For Women Scotland v Scottish Ministers*, the Public Administration Committee on
+      // arm's-length bodies. What is null on those rows is `citation`, `url` and
+      // `siftReason`, **deliberately**: `recordPrognosis` sets them null because the row is
+      // Lex's reasoning over the whole proposal and attaching a citation to a judgement
+      // would be the never-claim breach the rest of the build refuses.
+      //
+      // So the four columns this table prints are exactly the four fields such a row does
+      // not have, and the one field carrying its entire value — `body` — was not printed.
+      // `PanelEntry.body` has been populated since 25-Z §1. **Seventh instance in this
+      // codebase of correct data discarded at a seam**, and the symptom pointed at the
+      // producing pass rather than at the renderer.
+      //
+      // ⚠ The body is printed only where it is the row's value — no citation, no URL, and a
+      // body that is not already the "why". A source row with a real citation keeps the
+      // compact table it had.
+      const bodyIsTheValue = (e: (typeof h.entries)[number]) =>
+        !e.citation && !e.url && !!e.body?.trim() && e.body.trim() !== (e.why ?? '').trim()
+
       w('| Source | Citation | Standing | Why it matters |')
       w('|---|---|---|---|')
       for (const e of h.entries) {
@@ -123,6 +149,25 @@ async function main() {
         w(`| ${title}${marks ? `<br>${marks}` : ''} | ${esc(e.citation ?? '—')} | ${esc(e.standingLabel)} | ${esc(e.why ?? '_no reason recorded_')} |`)
       }
       w('')
+
+      // The bodies, below the table, for the rows whose value is the body.
+      const carried = h.entries.filter(bodyIsTheValue)
+      for (const e of carried) {
+        w(`**${esc(e.title)}**`)
+        w('')
+        // Verbatim. `recordPrognosis` writes these as `• Title — why it leads` lines, which
+        // are already a list; reformatting them here would be a second opinion about their
+        // shape held in a file that cannot see how they were written.
+        for (const line of e.body.split('\n')) w(line.trimEnd())
+        w('')
+      }
+      if (carried.length) {
+        w(`*The ${carried.length} block(s) above carry no citation because they are Lex's reasoning `
+          + 'over the whole proposal rather than retrieved documents — which is why they have no row '
+          + 'in the table\'s Citation column. The documents they name are cited where they appear '
+          + 'under their own headings.*')
+        w('')
+      }
     }
 
     if (panel.unfiled.length) {

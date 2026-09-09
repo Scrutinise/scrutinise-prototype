@@ -1,6 +1,6 @@
 # Appendix — the Research panel, in full, for each measure
 
-*Generated 2026-09-09 04:14 UTC by `scripts/b18-export-research-panel.ts`, which calls `buildQuestionPanel` — the same function that serves the panel to the browser.*
+*Generated 2026-09-09 13:27 UTC by `scripts/b18-export-research-panel.ts`, which calls `buildQuestionPanel` — the same function that serves the panel to the browser.*
 
 ## The panel's vocabulary
 
@@ -26,17 +26,135 @@ Every heading the panel can draw, in the order it draws them. A heading with not
 
 ## M-01 — Human Rights Act 1998 and the European Convention on Human Rights
 
-**136 entries** across **9 of 13 headings**. ⚠ **6 entries resolve to no heading** and are listed at the end — a gap in the library, not sources to drop.
+**180 entries** across **9 of 13 headings**. ⚠ **15 entries resolve to no heading** and are listed at the end — a gap in the library, not sources to drop.
 
 ### How hard will this be to achieve?
 
 | Source | Citation | Standing | Why it matters |
 |---|---|---|---|
 | How hard this will be to pass | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| The barriers this will actually meet | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| How hard this will be to pass | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| The barriers this will actually meet | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| How hard this will be to pass | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | The barriers this will actually meet | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Extremely hard. This is one of the most constitutionally significant and politically contentious legislative changes possible. It would face ferocious opposition in the House of Lords, potentially requiring use of the Parliament Acts, which is a constitutional tool of last resort. It is most likely to die at the second reading in the Lords or be amended so heavily as to defeat its purpose.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. The Good Friday Agreement: The agreement commits the UK to incorporating the ECHR into Northern Ireland law. Repeal and withdrawal would be seen by many as a breach of this international peace treaty, with profound implications for stability in Northern Ireland and relations with Ireland and the US.
+2. The Devolution Settlements: The Scotland Act 1998 and Government of Wales Act 2006 also embed ECHR compliance. Unpicking this would require either the consent of devolved legislatures (unlikely) or overriding them, triggering a major constitutional crisis.
+3. The UK-EU Trade and Cooperation Agreement: Continued adherence to the ECHR is a condition for parts of the security and law enforcement cooperation. Withdrawal would put these arrangements at risk.
+4. Parliamentary Opposition: There is no guaranteed majority for this in either House. It would face determined opposition from opposition parties, and likely trigger significant rebellions from the governing party's own MPs and a near-certain defeat or 'mauling' in the House of Lords.
+5. Judicial Opposition: While judges would apply the law, the senior judiciary would likely signal its profound constitutional concerns, and courts would be tasked with managing a chaotic legal transition.
+6. International Reputation: Withdrawing from the ECHR, a treaty the UK helped draft, would be portrayed as the UK joining a small club of non-compliant states like Russia and Belarus, causing significant damage to its international standing.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 10%. For this to succeed, a government would need a large, disciplined parliamentary majority, a clear mandate for this specific action, a willingness to face down opposition from the judiciary and civil service, and a plan to manage the severe fallout in Northern Ireland, Scotland, and with the EU. No government has possessed this combination of political capital and will since the HRA was passed. The political and constitutional costs are so high that governments have always pulled back from the brink.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The policy will be defeated by the constitutional complexity of the devolution settlements. The government will find it cannot repeal the HRA cleanly without triggering a crisis in Northern Ireland due to the Good Friday Agreement, and will be forced to either abandon the policy or create a messy, partial repeal that leaves the core problem unsolved.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The entire original list of 16 'Actions'. — It is repetitive and unordered, failing the basic test of coherent action. It contains multiple near-identical entries for drafting a bill, running communications, and securing passage. It is a brainstorm, not a plan, and should be replaced entirely by the rewritten, coherent actions.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How hard this will be to pass**
+
+Extremely difficult. The proposal would trigger a constitutional crisis with the devolved nations, particularly Scotland and Northern Ireland. It would almost certainly be blocked in the House of Lords and face legal challenges. The most likely point of failure is the government backing down when faced with the reality of unilaterally rewriting the devolution settlements and the potential unravelling of the Good Friday Agreement.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. The Scotland Act 1998 and Government of Wales Act 2006 make ECHR compliance a limit on devolved power; overriding this without consent would be seen as an attack on devolution.
+2. The Good Friday Agreement requires ECHR incorporation in Northern Ireland; withdrawal would be seen by many as a breach of this international peace treaty.
+3. Achieving a stable, disciplined majority in the House of Commons willing to force through such a constitutionally explosive bill.
+4. Overcoming guaranteed, significant opposition in the House of Lords, which sees its role as defending the UK's constitutional arrangements.
+5. Managing the diplomatic fallout with Ireland, the US, and the EU over the Good Friday Agreement.
+6. The immense legal and administrative complexity of disentangling 25+ years of jurisprudence and statutory references to the HRA and ECHR from UK law.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Very low, under 10%. The strategy as proposed requires a government with a large, disciplined majority, a high tolerance for constitutional crisis, and a willingness to face severe international diplomatic pressure. The barriers, particularly the devolution and Good Friday Agreement aspects, are not merely political but are fundamental to the structure of the modern UK state.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The government will be forced into a retreat when confronted with the choice between its policy goal and triggering a full-blown constitutional crisis with Scotland and breaching the Good Friday Agreement. The political cost of the latter will be deemed too high to bear.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The entire existing 'ACTIONS' section. — It is a highly repetitive list, not a set of coordinated actions. It says the same three things over and over, which is a hallmark of bad strategy. The rewritten 'summaryCoherentActions' provides a concise, sequenced, and genuinely coherent alternative.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How hard this will be to pass**
+
+Extremely hard. This would be one of the most contentious pieces of legislation in modern British history, facing ferocious opposition in the House of Lords, the judiciary, the legal profession, the devolved administrations, and civil society. It is most likely to die in the House of Lords, where a government may lack a majority and where constitutional and legal arguments will hold significant weight. Even if the Parliament Acts were used to force it through, the political cost would be immense.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. The Belfast/Good Friday Agreement: The ECHR is a core component of the agreement. Unilaterally removing it would be seen by many as a breach of an international treaty and could destabilise the political settlement in Northern Ireland.
+2. The Devolution Settlements: The Scotland Act and Northern Ireland Act embed ECHR compliance. Repeal would require complex and contested amendments to these acts, likely without the consent of the devolved legislatures, triggering a major constitutional crisis.
+3. House of Lords Opposition: The upper house has a strong cross-party contingent of legal experts and former senior judges who would likely oppose the bill on constitutional and rule-of-law grounds, leading to legislative gridlock.
+4. Judicial Opposition: While judges would apply the law, the senior judiciary would likely signal its profound disapproval through public statements and lectures, creating a hostile legal environment for the government.
+5. International Ramifications: Withdrawal would align the UK with Russia and Belarus as the only European states outside the ECHR, damaging its international reputation and potentially violating other treaties (like the EU-UK Trade and Cooperation Agreement) that presuppose ECHR membership.
+6. Lack of a Settled Alternative: The government would be removing a 25-year-old legal framework without a clear, consensus-based replacement, creating massive legal uncertainty for citizens, businesses, and public authorities.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 20%. The legal, political, and constitutional barriers are enormous. Success would require a government with a very large, disciplined majority in the Commons, a willingness to override the House of Lords, and a readiness to face down major crises in Northern Ireland and Scotland, all while weathering significant international condemnation. The proposer's own evidence—that multiple senior legal figures and political factions have proposed different, partial solutions—demonstrates the lack of a unified political front needed to execute such a radical policy.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The strategy will most likely collapse when confronted with the reality of the Belfast/Good Friday Agreement. The US, EU, and Irish governments would exert immense diplomatic pressure, and the potential to destabilise the peace settlement in Northern Ireland would likely prove a price too high for any UK government to pay, forcing a retreat from a 'clean break' to another form of partial, and ultimately ineffective, reform.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The entire original 'ACTIONS' list. — It is a repetitive and uncoordinated list that fails the test of coherent action. It has been replaced by a concise, sequenced set of actions in the rewrite.
+• The original 'CAUSES' section. — It is a weak and incomplete diagnosis that merely restates the problem. It has been replaced by a proper diagnosis that identifies the root cause and pivotal obstacle.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 15 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -46,22 +164,6 @@ Every heading the panel can draw, in the order it draws them. A heading with not
 
 | Source | Citation | Standing | Why it matters |
 |---|---|---|---|
-| [Declaration of Incompatibility: Limited Power](https://www.scotcourts.gov.uk/media/fg1fsuvr/2009csoh91-s-m-as-guardian-of-the-child-j-m-vadvocate-general-for-scotland-acting-on-behalf-of-the-uk-government.pdf) | Court of Session: 2009csoh91 s m as guardian of the child j m vadvocate general for scotland acting on behalf of the uk government | From 2009-06-25, 17 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
-| [Declaration of Incompatibility: Scope](https://www.legislation.gov.uk/ukpga/1998/42/section/4) | Human Rights Act 1998, s.4 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [Declaration of Incompatibility: Application to Legislation](https://www.judiciaryni.uk/judicial-decisions/2024-nikb-35) | Northern Ireland Human Rights Commission's Application and JR295's Application and In the the matter of The Illegal Migration Act 2023 | From 2024-05-13. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
-| [Declaration of Incompatibility: Effect on Parliament](https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2000-11-30a.xml) | Criminal Justice and Court Services Bill — HUMAN RIGHTS (JOINT COMMITTEE) | From 2000-11-30, 25 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
-| [Declaration of Incompatibility: Historical Usage](http://www.publications.parliament.uk/pa/cm201011/cmhansrd/cm110317/text/110317w0003.htm#11031776001756) | JUSTICE — Human Rights | From 2011-03-17, 15 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [European Convention on Human Rights (ECHR): Incorporation into UK Law](https://www.legislation.gov.uk/ukpga/1998/42/schedule/1/part/I/chapter/1/paragraph/1) | Human Rights Act 1998, sch.1 Pt.I Ch.1 para.1 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [European Convention on Human Rights (ECHR): Specific Rights](https://www.legislation.gov.uk/ukpga/1998/42/schedule/1/part/I/chapter/1/paragraph/1) | Human Rights Act 1998, sch.1 Pt.I Ch.1 para.1 | From 1998, 28 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
-| [European Convention on Human Rights (ECHR): Relevance in UK Casework](https://www.gov.uk/government/publications/considering-human-rights-claims-instruction) | Considering human rights claims: caseworker guidance | From 2009-10-27, 16 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
-| [European Court of Human Rights (ECtHR): Success of HRA](https://committees.parliament.uk/writtenevidence/110537/html/) | Legislative Scrutiny: Bill of Rights Bill — BOR0015 | From 2022-09-23. | _no reason recorded_ |
-| [Good Friday Agreement: ECHR Requirement](https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2016-04-26a.xml) | JUSTICE — British Bill of Rights | From 2016-04-26, 10 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
-| [Human Rights Act 1998: Convention Rights](https://www.legislation.gov.uk/ukpga/1998/42/section/1) | Human Rights Act 1998, s.1 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [Human Rights Act 1998: Parliamentary Sovereignty](http://www.publications.parliament.uk/pa/cm200102/cmhansrd/vo021028/debtext/21028-26.htm#21028-26_spnew8) | Human Rights Act | From 2002-10-28, 23 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [Human Rights Act 1998: Judicial Review](https://www.scotcourts.gov.uk/media/fg1fsuvr/2009csoh91-s-m-as-guardian-of-the-child-j-m-vadvocate-general-for-scotland-acting-on-behalf-of-the-uk-government.pdf) | Court of Session: 2009csoh91 s m as guardian of the child j m vadvocate general for scotland acting on behalf of the uk government | From 2009-06-25, 17 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [Parliamentary Sovereignty: Preserved by HRA](https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2000-11-30a.xml) | Criminal Justice and Court Services Bill — HUMAN RIGHTS (JOINT COMMITTEE) | From 2000-11-30, 25 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
-| [Parliamentary Sovereignty: Declaration of Incompatibility](https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2020-02-12c.xml) | Terrorist Offenders (Restriction of Early Release) Bill — Clause 1 - Eligibility for release on licence of terrorist prisoners: England and Wales | From 2020-02-12, 6 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
-| Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | [Human Rights Act 1998 incorporates ECHR into domestic law](https://www.legislation.gov.uk/ukpga/1998/42/section/3) | Human Rights Act 1998, s.3 | From 1998, 28 years old. Check the figures against current ones before relying on them. | This section of the Human Rights Act 1998 outlines the interpretive duty of courts to read legislation compatibly with Convention rights, which is a core mechanism the proposal seeks to remove. |
 | [Courts must 'take into account' ECtHR judgments](https://www.legislation.gov.uk/ukpga/1998/42/section/3) | Human Rights Act 1998, s.3 | From 1998, 28 years old, and quotes no figures — an assertion rather than evidence. | This section of the Human Rights Act 1998 outlines the interpretive duty of courts to read legislation compatibly with Convention rights, which is a core mechanism the proposal seeks to remove. |
 | [Interpretive duty under HRA Section 3](https://www.legislation.gov.uk/ukpga/1998/42/section/3) | Human Rights Act 1998, s.3 | From 1998, 28 years old, and quotes no figures — an assertion rather than evidence. | This section of the Human Rights Act 1998 outlines the interpretive duty of courts to read legislation compatibly with Convention rights, which is a core mechanism the proposal seeks to remove. |
@@ -96,6 +198,93 @@ Every heading the panel can draw, in the order it draws them. A heading with not
 | [The Human Rights Act 1998 (Amendment) Order 2004 amended HRA Section 1(1)(c) and 21(1)](https://www.legislation.gov.uk/uksi/2004/1574/article/2) | The Human Rights Act 1998 (Amendment) Order 2004, art.2 | From 2004, 22 years old. Check the figures against current ones before relying on them. | This statutory instrument amends Section 1(1)(c) and Section 21(1) of the Human Rights Act 1998, demonstrating how the Act's definitions and scope can be altered, which is relevant to the proposal's aim of repeal. |
 | [The Human Rights Act 1998 (Amendment) Order 2005 reflects derogations](https://www.legislation.gov.uk/uksi/2005/1071/memorandum/contents) | Explanatory Memorandum to The Human Rights Act 1998 (Amendment) Order 2005 | Undated. The source is in the corpus and carries no date. | This explanatory memorandum clarifies the Secretary of State's duty under Sections 14(5) and 16(7) of the HRA to amend the Act to reflect derogations and withdrawals, which is relevant to the procedural aspects of denouncing the ECHR. |
 | [Falkland Islands Constitution Order 2008 requires courts to consider ECtHR judgments](https://www.legislation.gov.uk/uksi/2008/2846/schedule/paragraph/19) | The Falkland Islands Constitution Order 2008, para.19 | From 2008, 18 years old. Check the figures against current ones before relying on them. | This statutory instrument for the Falkland Islands Constitution Order 2008 includes a provision for courts to take into account ECHR judgments, demonstrating how the ECHR's influence extends beyond the UK mainland and would be affected by denunciation. |
+| [Council of Europe and ECHR withdrawal](http://www.publications.parliament.uk/pa/cm200102/cmhansrd/vo011119/debtext/11119-36.htm#11119-36_spnew4) | Human Rights | From 2001-11-19, 24 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| [Council of Europe membership and international example](http://www.publications.parliament.uk/pa/cm200102/cmhansrd/vo011119/debtext/11119-36.htm#11119-36_spnew6) | Human Rights | From 2001-11-19, 24 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| [Declaration of Incompatibility mechanism](https://www.legislation.gov.uk/ukpga/1998/42/section/4) | Human Rights Act 1998, s.4 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| Declaration of Incompatibility and Parliamentary Sovereignty | Report: Ninth Report - Legislative Scrutiny: Bill of Rights Bill — Human Rights (Joint Committee) | From 2023-01-25. | _no reason recorded_ |
+| Declaration of Incompatibility has no legal effect | Report: Third Report - The Government’s Independent Review of the Human Rights Act — Human Rights (Joint Committee) | From 2021-07-08, 5 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Declaration of Incompatibility in practice](https://www.judiciaryni.uk/judicial-decisions/summary-judgment-court-delivers-abortion-legislation-judgment) | Summary of judgment - Court Delivers Abortion Legislation Judgment | From 2019-10-03, 6 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [European Convention on Human Rights (ECHR) as international treaty](https://www.scotcourts.gov.uk/media/l4mnnfas/2012csoh176-graeme-donaldson-for-judicial-review-of-a-decision-of-the-scottish-legal-aid-board.pdf) | Court of Session: 2012csoh176 graeme donaldson for judicial review of a decision of the scottish legal aid board | From 2012-11-20, 13 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| [ECHR incorporation into UK law](https://www.gov.uk/hmrc-internal-manuals/vat-civil-penalties/vcp10160) | VCP10160 — Introduction: Human Rights Act  | From 2016-02-09, 10 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [ECHR binding on UK regardless of HRA](https://committees.parliament.uk/writtenevidence/65501/html/) | Potential impact of repealing the Human Rights Act on EU Law inquiry — HRA0004 | From 2016-04-25, 10 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| [European Court of Human Rights (ECtHR) decisions](https://www.scotcourts.gov.uk/media/l4mnnfas/2012csoh176-graeme-donaldson-for-judicial-review-of-a-decision-of-the-scottish-legal-aid-board.pdf) | Court of Session: 2012csoh176 graeme donaldson for judicial review of a decision of the scottish legal aid board | From 2012-11-20, 13 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| ECtHR case law and domestic courts | Report: Ninth Report - Legislative Scrutiny: Bill of Rights Bill — Human Rights (Joint Committee) | From 2023-01-25. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| [Good Friday Agreement and ECHR](http://www.publications.parliament.uk/pa/cm201516/cmhansrd/cm160302/halltext/160302h0002.htm#160302h0002.htm_spnew25) | Human Rights Framework: Scotland | From 2016-03-02, 10 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| Good Friday Agreement and ECHR incorporation | Correspondence: Correspondence to the Secretary of State, relating to ECHR: potential implications for Northern Ireland of UK withdrawal, 24 May 2024 | From 2024-05-24. | _no reason recorded_ |
+| [Human Rights Act 1998 purpose](https://assets.publishing.service.gov.uk/media/5a7c1dd2e5274a25a91408ec/consideringhrclaims.pdf) | Considering human rights claims | From 2009-10-27, 16 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Human Rights Act 1998 and public authorities](https://www.gov.uk/hmrc-internal-manuals/information-disclosure-guide/idg40140) | IDG40140 — Sharing information outside of HMRC: legal obligations: Human Rights Act 1998 | From 2022-01-20. | _no reason recorded_ |
+| Human Rights Act 1998 and parliamentary sovereignty | Report: Third Report - The Government’s Independent Review of the Human Rights Act — Human Rights (Joint Committee) | From 2021-07-08, 5 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| Parliamentary Sovereignty as supreme legal authority | Report: Ninth Report - Legislative Scrutiny: Bill of Rights Bill — Human Rights (Joint Committee) | From 2023-01-25. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| [Parliamentary Sovereignty and HRA mechanisms](https://committees.parliament.uk/writtenevidence/23048/html/) | The Government’s Independent Human Rights Act Review — HRA0028 | From 2021-02-24, 5 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Royal Prerogative and judicial review](https://www.judiciaryni.uk/judicial-decisions/2023-nikb-5) | Hughes (Oliver) Application for Judicial Review and in the matter of decisions of The Department for Communities | From 2023-02-03. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| [Royal Prerogative scope for appointments](https://www.judiciaryni.uk/judicial-decisions/2006-nica-24) | In the matter of an application by Brenda Downes for leave to apply for judicial review | From 2006-05-22, 20 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| [Council of Europe defined as ECHR signatory body](https://www.legislation.gov.uk/ukpga/1998/42/section/21) | Human Rights Act 1998, s.21 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Human Rights Act 1998 incorporates ECHR into UK law](https://www.gov.uk/hmrc-internal-manuals/compliance-handbook/ch300100) | CH300100 — The Human Rights Act and Penalties: background  | From 2018-03-20, 8 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Human Rights Act 1998 requires courts to consider ECtHR judgments](https://www.legislation.gov.uk/ukpga/1998/42/section/2) | Human Rights Act 1998, s.2 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Human Rights Act 1998 allows declarations of incompatibility](https://www.legislation.gov.uk/ukpga/1998/42/section/4) | Human Rights Act 1998, s.4 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Human Rights Act 1998 and parliamentary sovereignty](https://www.theyworkforyou.com/pwdata/scrapedxml/westminhall/westminster2025-07-14a.xml) | Northern Ireland Veterans: Prosecution — [David Mundell in the Chair] | From 2025-07-14. | _no reason recorded_ |
+| [Scotland Act 1998 and devolution issues](https://www.legislation.gov.uk/ukpga/1998/46/section/98) | Scotland Act 1998, s.98 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| Article 58 ECHR governs denunciation procedure | Report: Second Report - Safety of Rwanda (Asylum and Immigration) Bill — Human Rights (Joint Committee) | From 2024-02-12. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| [Declaration of incompatibility does not invalidate legislation](https://www.legislation.gov.uk/ukpga/1998/42/section/4) | Human Rights Act 1998, s.4 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [Multiple declarations of incompatibility have been made](http://www.publications.parliament.uk/pa/cm201011/cmhansrd/cm110426/text/110426w0005.htm#11042749003984) | JUSTICE — Human Rights | From 2011-04-26, 15 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [European Convention on Human Rights incorporated into UK law by HRA](https://www.gov.uk/hmrc-internal-manuals/information-disclosure-guide/idg40140) | IDG40140 — Sharing information outside of HMRC: legal obligations: Human Rights Act 1998 | From 2022-01-20. | _no reason recorded_ |
+| [European Convention on Human Rights is an international treaty](http://www.publications.parliament.uk/pa/ld201516/ldhansrd/text/150601-0002.htm#st_109) | Queen’s Speech — Debate (3rd Day) (Continued) | From 2015-06-01, 11 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [European Court of Human Rights judgments must be taken into account by UK courts](https://www.legislation.gov.uk/ukpga/1998/42/section/2) | Human Rights Act 1998, s.2 | From 1998, 28 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| [European Court of Human Rights judges may be re-elected](http://www.publications.parliament.uk/pa/ld199900/ldhansrd/vo000502/text/00502w01.htm#00502w01_wqn4) | European Court of Human Rights: Judicial Independence | From 2000-05-02, 26 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
+| [Government of Wales Act 2006 amendments](https://www.legislation.gov.uk/mwa/2009/1/schedule/paragraph/21) |  | From 2009, 17 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| Human Rights Act 1998, section 2 governs relationship with ECtHR | Report: Third Report - The Government’s Independent Review of the Human Rights Act — Human Rights (Joint Committee) | From 2021-07-08, 5 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| Human Rights Act 1998, section 3 concerns interpretation of legislation | Report: Third Report - The Government’s Independent Review of the Human Rights Act — Human Rights (Joint Committee) | From 2021-07-08, 5 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
+| Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Council of Europe (institution)
+• Declaration of Incompatibility (mechanism)
+• European Convention on Human Rights (ECHR) (regime)
+• European Court of Human Rights (ECtHR) (institution)
+• Good Friday Agreement (regime)
+• Human Rights Act 1998 (statute)
+• Parliamentary Sovereignty (doctrine)
+• Royal Prerogative (doctrine)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+**Terms of art the record confirms**
+
+• Council of Europe (institution)
+• Human Rights Act 1998 (statute)
+• Scotland Act 1998 (statute)
+• Article 58 ECHR (mechanism)
+• Declaration of incompatibility (mechanism)
+• European Convention on Human Rights (convention)
+• European Convention on Human Rights (ECHR) (regime)
+• European Court of Human Rights (institution)
+• European Court of Human Rights (ECtHR) (institution)
+• Government of Wales Act 2006 (statute)
+• Human Rights Act 1998, section 2 (mechanism)
+• Human Rights Act 1998, section 3 (mechanism)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+**Terms of art the record confirms**
+
+• Council of Europe (institution)
+• Human Rights Act 1998 (statute)
+• Parliamentary Sovereignty (doctrine)
+• Article 58 ECHR (mechanism)
+• Belfast/Good Friday Agreement (convention)
+• Declaration of Incompatibility (mechanism)
+• European Convention on Human Rights (convention)
+• European Convention on Human Rights (ECHR) (regime)
+• European Court of Human Rights (institution)
+• European Court of Human Rights (ECtHR) (institution)
+• Good Friday Agreement (regime)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 3 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -217,7 +406,33 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 
 | Source | Citation | Standing | Why it matters |
 |---|---|---|---|
-| What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+| What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+| What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**What to read first**
+
+• Human Rights Act — [Mr Clive Betts in the Chair] — This finding on the Scotland Act 1998 immediately surfaces the primary legal obstacle: the HRA is entrenched in the devolution settlements, meaning repeal is not a simple matter and will have major constitutional consequences.
+• Human Rights Legislation Reform — [Yvonne Fovargue in the Chair] — This presents the view of the Joint Committee on Human Rights that the HRA is working as intended and there is no compelling case for repeal. This is the core of the institutional opposition's argument and must be understood and countered.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What to read first**
+
+• Scotland Act 1998 protects HRA from Scottish Parliament modification — This finding is the core of the pivotal obstacle. It shows that repealing the HRA is not just a Westminster decision but directly impacts the powers and constitutional settlement of Scotland.
+• Northern Ireland Act 1998 references HRA for human rights protection — This demonstrates the even greater complexity regarding Northern Ireland, where ECHR compliance is tied to the Good Friday Agreement, an international peace treaty. This elevates the stakes from a domestic constitutional issue to an international relations one.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What to read first**
+
+• The proposer's own account. — It clearly frames the problem not as one of rights, but of sovereignty and final authority ('who has the last word'), which is the essential political diagnosis the strategy must address.
+• Belfast/Good Friday Agreement (convention) - term of art. — This is the single greatest legal and political obstacle to a simple repeal and denunciation, as the ECHR is hard-wired into the Northern Ireland peace settlement. Any viable strategy must have a specific plan for this, and it is the most likely point of failure.
+• Scotland Act 1998 protects HRA from Scottish Parliament modification — Along with the Good Friday Agreement, this finding highlights that repeal is not a simple Westminster-only matter. It has profound constitutional implications for devolution, which the current kernel overlooks and which will be a major source of political and legal opposition.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 3 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Your material
 
@@ -225,12 +440,21 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 
 ### ⚠ Not filed under any heading
 
+- The research changed my mind about guidingPolicy:instrument
+- The research changed my mind about contradicts
 - The critique rewrote summaryDiagnosis
 - The critique rewrote pivotalObstacle
 - The critique rewrote summaryGuidingPolicy
+- The critique rewrote whatItRulesOut
 - The critique rewrote summaryCoherentActions
-- The research changed my mind about guidingPolicy:instrument
-- The research changed my mind about contradicts
+- The critique rewrote pivotalObstacle
+- The critique rewrote summaryCoherentActions
+- The critique rewrote summaryDiagnosis
+- The critique rewrote summaryDiagnosis
+- The critique rewrote pivotalObstacle
+- The critique rewrote summaryGuidingPolicy
+- The critique rewrote whatItRulesOut
+- The critique rewrote summaryCoherentActions
 
 ---
 
@@ -247,6 +471,42 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Extremely hard. The proposal will be characterised by opponents as a direct assault on equality and the rights of minorities, women, and disabled people. It will face a coordinated and well-funded campaign from NGOs, opposition parties, and public sector unions. It is most likely to die from a lack of political will in the face of this opposition, either before a bill is introduced or during its passage through the House of Lords, where it would be heavily amended or rejected.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Political Narrative: Opponents will successfully frame the repeal as 'scrapping equality protections', making it toxic for the government to pursue.
+2. Legal Complexity: The PSED is referenced in a vast web of secondary legislation, contracts, and public body guidance; unpicking it without creating legal chaos is a major technical challenge.
+3. Public Sector Inertia: A 'compliance culture' is deeply embedded. Removing the statutory duty will not automatically change institutional behaviour without a massive and sustained effort to reorient public managers.
+4. Judicial Resistance: There is a risk that courts, deprived of the PSED, could interpret other statutes (like the Human Rights Act) more broadly to imply similar process-based duties, undermining the policy's objective.
+5. Lack of a Compelling Alternative: The policy focuses on removing a negative but doesn't offer a positive vision for how equality will be advanced, making it an easy political target.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Low, less than 20%. Success requires a government with a large majority, strong party discipline, and a willingness to spend enormous political capital on a protracted and ugly public fight. It is far more likely that a government would opt for a weaker 'reform' via new guidance or minor amendment, which the diagnosis correctly identifies as having failed before, rather than pursue this high-risk, high-reward repeal.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The government will lose control of the public narrative. The debate will be successfully shifted away from administrative reform and onto whether the government is hostile to equality itself, forcing a political retreat into a compromised position that fails to solve the core problem.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The duplicated actions in the original 'ACTIONS' list. — They were redundant and cluttered the plan, making it look like a brainstormed list rather than a focused set of coherent actions. Removing them is essential for clarity and focus.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -296,6 +556,24 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [EHRC updates PSED and data protection guidance](https://assets.publishing.service.gov.uk/media/687f4e408adf4250705c9712/EHRC_Annual_Report_and_Accounts_2024-2025.pdf) | Equality and Human Rights Commission: annual report and accounts 2024 to 2025 | From 2025-07-22. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | [EHRC and interpretation of sex and gender in Equality Act 2010](https://ico.org.uk/media2/sfqh4qbl/ic-429168-s4k1.pdf) | The Equality and Human Rights Commission | From 2026-01-21. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Judicial Review (mechanism)
+• Belfast/Good Friday Agreement (convention)
+• Due regard (doctrine)
+• Equality Act 2006 (statute)
+• Equality Act 2010 (statute)
+• Equality Act 2010, s.149 (statute)
+• Equality and Human Rights Commission (institution)
+• Equality and Human Rights Commission (EHRC) (institution)
+• Northern Ireland Act 1998, s.75 (statute)
+• private member's bill procedure (mechanism)
+• Public Sector Equality Duty (PSED) (regime)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -401,6 +679,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 
+**What to read first**
+
+• The Proposer's Own Account — It frames the problem perfectly as a shift in the fundamental purpose of public administration, which is the core of the strategic diagnosis.
+• R (on the application of Marouf) v Secretary of State for the Home Department — This court finding authoritatively establishes the PSED as a 'duty of process and not outcome,' which is the legal mechanism at the heart of the problem.
+• Policy Exchange report cited in parliamentary debate (pwdata-westminster:westminster2025-09-10b:9) — This provides the concrete evidence of 'tens of millions' in costs and a 'culture of pre-emptive overreach,' grounding the abstract diagnosis in tangible harms.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -431,6 +719,42 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Very hard. The revised proposal for a Lords-only committee is more plausible than a joint committee, but it still requires primary legislation (a 'Constitutional Scrutiny Bill') to give it teeth, such as the power to compel a parliamentary vote on its findings. Getting scarce legislative time for such a bill will be difficult, especially when the government may see it as creating a new source of political trouble for itself. It is most likely to die at the stage of securing a place in the government's legislative programme.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Political Apathy: As the proposer notes, there has been no legislative attempt to touch this issue in 15 years. Overcoming this inertia for a 'good governance' bill with no immediate electoral payoff is a major hurdle.
+2. Judicial Resistance: The judiciary will likely view this as an unacceptable intrusion into its independence, even with the change from 'mandating' to 'inviting' testimony. They can be expected to lobby strongly against it behind the scenes.
+3. Government Opposition: Any government will be wary of creating a powerful new committee that could criticise its own legislation and create constitutional headaches. They may prefer the current ambiguity.
+4. Lack of Commons Support: The research indicates the House of Commons has little interest in this area. A bill to create a powerful Lords committee may face opposition or indifference from MPs who see it as a power grab by the other place.
+5. Defining 'Constitutional Legislation': The bill would have to precisely define the committee's remit, a notoriously difficult and contentious task that could bog the legislation down in endless definitional debates.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 20%. The strategy is a significant improvement on the original kernel because it acknowledges the political and constitutional realities. However, it still requires overcoming profound institutional inertia and resistance from both the government and the judiciary to get a new piece of primary legislation onto the statute book. Its success depends on a rare alignment of political will, likely triggered only by a major, unpopular Supreme Court ruling that creates a window of opportunity.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The government will refuse to grant the necessary legislative time for the 'Constitutional Scrutiny Bill', killing the proposal quietly. Without a major public controversy to force the issue onto the agenda, it will be seen as a niche constitutional tinkering exercise that offers ministers more risk than reward.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The action to 'empower the Joint Committee to recommend to Parliament statutory amendments'. — This is redundant. All select committees already have the power to make recommendations in their reports. Stating it as a separate action adds nothing and makes the plan seem less focused.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -504,6 +828,21 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [Separation of Powers means ministers cannot override judicial decisions](https://caselaw.nationalarchives.gov.uk/ewhc/admin/2013/1960/data.xml) | Evans, R (on the application of) v HM Attorney General & Anor | From 2013-07-09, 13 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | [Separation of Powers reflected in HRA 1998 declaration of incompatibility](https://www.judiciaryni.uk/judicial-decisions/2025-nica-71) | AD and Lelia Joanne Armstrong and Department for Communities and Department for Work and Pensions | From 2025-02-21. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Appellate Committee of the House of Lords (institution)
+• Appellate Jurisdiction Act 1876 (statute)
+• Constitutional Reform Act 2005 (statute)
+• Lord Chancellor (office)
+• Lords of Appeal in Ordinary (office)
+• Parliamentary Sovereignty (doctrine)
+• R (Miller) v The Prime Minister [2019] UKSC 41 (case)
+• Separation of Powers (doctrine)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -613,6 +952,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• Report: 1st Report - Ensuring standards in the quality of legislation - Volume I — Political and Constitutional Reform Committee — This 2013 report explicitly recommended AGAINST creating a new joint constitutional scrutiny committee, the central pillar of the original proposal. Any viable strategy must start by addressing why this recommendation should now be overturned.
+• Erskine May: The courts and parliamentary privilege: The twenty-first century — This source establishes the constitutional principle that 'it is for the courts, not a select committee, to decide questions of law', which directly challenges the practicability of the kernel's proposal to have a committee assess judicial interpretation.
+• Report: 15th Report - The Process of Constitutional Change — Constitution Committee — This Lords committee report calls for 'comprehensive post-legislative scrutiny' for all significant constitutional legislation, providing the core justification for the revised strategy's focus on creating such a mechanism.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -643,6 +992,42 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Extremely hard. This is a fundamental 'machinery of government' reform that challenges the established way power is exercised and accountability is diffused. It will face intense resistance from every government department, the civil service leadership, and the ALBs themselves. It is most likely to die at the Cabinet committee stage, where multiple Secretaries of State will object to losing the flexibility and political shielding their ALBs provide.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Whitehall resistance: Permanent Secretaries and senior officials will view this as a power grab that undermines their autonomy and operational effectiveness.
+2. Ministerial opposition: Sponsoring ministers will fight to protect 'their' ALBs, fearing both the loss of a political shield and the administrative burden of direct control.
+3. Legislative bottleneck: A major constitutional bill like this will require significant, scarce parliamentary time and will be vulnerable to being amended into incoherence by MPs lobbied by specific ALBs.
+4. The 'independence' argument: Opponents will frame the reform as a political attack on the expert, independent, and impartial decision-making of bodies like the Sentencing Council, creating a difficult public narrative.
+5. Complexity of the task: The sheer scale of reviewing ~400 bodies, each with unique statutory foundations, is a massive administrative challenge that could cause the reform to collapse under its own weight.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 20%. While the diagnosis is sound, the political will required to overcome the combined, entrenched opposition of the entire permanent state and many ministers is immense. Previous attempts, like the 2010 'bonfire of the quangos', resulted in reclassification and fudge rather than fundamental reform. Without a Prime Minister and Cabinet Office minister willing to make this their single, overriding priority and spend significant political capital, it will fail.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The reform will be captured by the very system it seeks to change. The new Act will be passed, but the 'strict statutory criteria' for justifying an ALB's existence will be drafted by the civil service to be so broad and flexible that every Accounting Officer can easily certify their bodies, resulting in a huge administrative exercise with no actual change in accountability.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• Implement a public information campaign explaining the new accountability framework... — This is a generic, low-impact action that would follow any significant government reform. It's not a strategic action that concentrates force on the pivotal obstacle; it's a communications task that can be assumed. Including it dilutes the focus on the core, difficult actions.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -683,6 +1068,19 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [Cabinet Office review of ALBs and reform](https://questions-statements.parliament.uk/written-statements/detail/2026-04-23/hlws1547) | Ministry of Defence — MOD Arm’s Length Bodies Reforms | From 2026-04-23. | _no reason recorded_ |
 | [The Haldane Principle and research funding](http://www.publications.parliament.uk/pa/ld200809/ldhansrd/text/90622-0001.htm#09062210000010) | Stem Cell Research — Question | From 2009-06-22, 17 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Accounting Officer (office)
+• Commissioner for Public Appointments (office)
+• Framework Document (mechanism)
+• Ministerial Responsibility (convention)
+• The Cabinet Office (institution)
+• The Haldane Principle (doctrine)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -792,6 +1190,15 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• Report: 1st Report - Who's accountable? Relationships between Government and arm's-length bodies — Public Administration Committee — This parliamentary report directly confirms the core problem, stating that accountability is 'confused, overlapping and neglected'. It provides official validation that the diagnosis is correct.
+• Public Bodies Act 2011, s.7 & s.12 — This is the crucial precedent. It shows that a similar legislative tool has been tried, but its weaknesses (time limits and restrictions on ministerial power) explain why a new, stronger Act is necessary and why simply using existing powers is not a viable policy.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -821,6 +1228,45 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Extremely hard. Any such legislation would face intense scrutiny and opposition in the House of Lords, from the legal profession, and from civil society groups. It would be portrayed as a constitutional power grab and an attack on the rule of law. It is most likely to die in the House of Lords, where it would be amended to the point of ineffectiveness.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. The Independent Review of Administrative Law (IRAL) finding no systemic problem, which will be used by opponents to argue the legislation is unnecessary.
+2. Principled and sustained opposition from the senior judiciary, who will see it as an attack on their constitutional role.
+3. Fierce political and legislative opposition in the House of Lords, which has a strong contingent of senior lawyers and former judges.
+4. The technical difficulty of drafting statutory language that is truly 'judge-proof' against the principle of legality.
+5. The risk of the government losing the first test case under the new Act, which would politically and legally invalidate the entire strategy.
+6. Negative media and public narrative framing the move as the executive trying to mark its own homework and evade accountability.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Low, perhaps 20%. The strategy correctly identifies the pivotal obstacle (the *Anisminic* doctrine) and proposes a plausible approach (narrow, targeted legislation). However, the political, legal, and constitutional headwinds are immense. The government would need to expend huge political capital to pass the legislation in a meaningful form, and even then, its ultimate success would depend on a future court decision, which is inherently uncertain.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The legislation will be passed, but in a form so diluted by parliamentary amendments (particularly from the House of Lords) that it fails to effectively constrain the courts in the first significant test case, leaving the government politically weakened and the legal status quo unchanged.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The action: 'Establish a new, mandatory 'pre-decision review' mechanism within the relevant department's legal advisory function...' — This is a different strategy. It's about making government a better litigant under the existing rules, not changing the rules. It dilutes the focus of the kernel, which is about legislative change.
+• The action: 'Introduce a statutory requirement for a 'statement of reasons' accompanying all ministerial decisions...' — Like the pre-decision review, this is an administrative improvement, not a strategic move to narrow the scope of judicial review itself. It's good practice, but it's not coherent with the guiding policy.
+• The action: 'Amend the Civil Procedure Rules (CPR) to introduce a fast-track procedure...' — This is a procedural tweak that addresses the speed of challenges, not their substantive legal basis. It does not serve the guiding policy of narrowing the grounds of review.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -891,6 +1337,28 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [Ultra vires: Extension by Anisminic](https://www.judiciaryni.uk/judicial-decisions/2008-niqb-13) | In the matter of an application for Judicial Review by Belfast City Council | From 2008-02-05, 18 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
 | [Ultra vires: Application in Practice](https://www.scotcourts.gov.uk/media/wsnjjpxr/p486_00-douglas-stewart-vperth-and-kinross-council-for-judicial-review-of-a-decision-of-perth-and-kinross-district-council-dated-18-2-94-to-refuse-t.pdf) | Court of Session: p486_00 douglas stewart vperth and kinross council for judicial review of a decision of perth and kinross district council dated 18 2 94 to refuse t | From 2000-09-01, 26 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Judicial Review and Courts Act 2022 (statute)
+• Safety of Rwanda (Asylum and Immigration) Act 2024 (statute)
+• Anisminic Ltd v Foreign Compensation Commission (case)
+• Anisminic Ltd v Foreign Compensation Commission [1969] (case)
+• Delegated Powers and Regulatory Reform Committee (institution)
+• House of Lords Constitution Committee (institution)
+• Independent Review of Administrative Law (institution)
+• Independent Review of Administrative Law (IRAL) (institution)
+• Ouster clause (mechanism)
+• Parliamentary Sovereignty (doctrine)
+• Principle of Legality (doctrine)
+• R (Privacy International) v Investigatory Powers Tribunal (case)
+• R (Privacy International) v Investigatory Powers Tribunal [2019] (case)
+• Rule of Law (doctrine)
+• Ultra vires (doctrine)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -977,6 +1445,15 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• Correspondence: Letter from the Justice Secretary, Rt Hon Robert Buckland QC MP on Independent Review of Administrative Law, dated 31.7.20 — This is the central, inconvenient fact. The government's own independent review, set up to find a problem, concluded there was no systemic overreach. Any proposal must start by addressing this.
+• R v Investigatory Powers Tribunal and others [2019] UKSC 22 (Privacy International) — This Supreme Court case, along with *Anisminic*, is the definitive statement of the pivotal obstacle: the judiciary's deep-seated resistance to ousting its jurisdiction. It explains why past attempts have failed and what any new attempt is up against.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -1005,6 +1482,45 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Extremely hard. This is not a minor legislative tweak; it is a fundamental reversal of a 170-year-old constitutional settlement. It would face ferocious opposition from within the civil service, from all opposition parties, from constitutional watchdogs in the House of Lords, and from former ministers and civil servants. It is most likely to die at the Cabinet committee stage, where the sheer scale of the political and legislative battle required would become apparent and deter any Prime Minister from proceeding.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Political consensus: There is a deep and wide consensus that an impartial, permanent civil service is a core feature of UK governance. Overcoming this is the primary barrier.
+2. Legislative opposition: A Bill of this nature would be considered a major constitutional measure and would face determined, line-by-line opposition in both the Commons and, especially, the Lords.
+3. Institutional resistance: The Civil Service itself, particularly its senior leadership and unions like the FDA, would mount a powerful campaign against the changes.
+4. Lack of a developed alternative: The proposal is to dismantle a working system. There is no well-developed, tested model for what would replace it, creating huge uncertainty and risk.
+5. Public perception: The change would be easily and effectively framed by opponents as a government 'power grab' to install political cronies, making it publicly toxic.
+6. Practical implementation: The sheer complexity of transferring accountability (e.g., the Accounting Officer role) and rewriting the entire management framework for hundreds of thousands of staff would be immense.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 5%. The proposal runs contrary to the entire direction of modern governance reform in the UK, which has been towards strengthening, not dismantling, the statutory basis for an impartial civil service. Every serious review, including the recent one by Lord Maude, has examined the proposer's diagnosis and rejected their remedy. For this to succeed, it would require a government with a huge majority, a unified cabinet, a willingness to spend immense political capital, and a complete lack of other pressing priorities. This combination is exceptionally rare.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The government will lose control of the narrative. The policy will be successfully branded by opponents as a corrupt 'spoils system' designed to reward political loyalists and silence impartial advice, making the government look authoritarian and self-serving. This toxic perception will unite opposition and make it impossible to pass the legislation.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The entire 'THE APPROACH' section. — It is a less specific version of the 'GUIDING POLICY' and its content ('Leverage existing statutory powers... without requiring primary legislation') directly contradicts the 'ACTIONS' section, creating fatal confusion.
+• The entire 'THE PLAN' section. — This section outlines a third, different plan of action from the two plans listed in the 'ACTIONS' section. It is completely incoherent with the rest of the kernel and adds to the confusion.
+• Four of the eight bullet points in the 'ACTIONS' section. — The section lists two mutually exclusive plans (one to amend CRAG, one to repeal it). A strategy requires a choice, not a menu. The rewrite makes that choice, rendering the rejected options and their associated actions redundant.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -1076,6 +1592,23 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [Osmotherly Rules and Ministerial Discretion](http://www.publications.parliament.uk/pa/ld201213/ldselect/ldconst/61/61.pdf) | Report: 6th Report - The accountability of civil servants — Constitution Committee — Nonetheless, on occasion a select committee will want to question a | From 2012-11-20, 13 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | [Osmotherly Rules and Hindrance to Scrutiny](http://www.publications.parliament.uk/pa/ld201213/ldselect/ldconst/61/61.pdf) | Report: 6th Report - The accountability of civil servants — Constitution Committee — Nonetheless, on occasion a select committee will want to question a | From 2012-11-20, 13 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Accounting Officer (office)
+• Civil Service Commission (institution)
+• Constitutional Reform and Governance Act 2010 (statute)
+• Managing Public Money (regime)
+• Northcote-Trevelyan Report (regime)
+• Royal Prerogative (doctrine)
+• Senior Responsible Owner (office)
+• The Carltona principle (doctrine)
+• The Civil Service Code (regime)
+• The Osmotherly Rules (convention)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -1179,6 +1712,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• The claude-sonnet-5 model's diagnosis — It correctly identifies the central flaw in the proposer's thinking: the mismatch between their target (the 1854 settlement) and their remedy (repealing the 2010 Act). Understanding this is the prerequisite for any viable strategy.
+• Explanatory Notes to Constitutional Reform and Governance Act 2010 — This source confirms that CRAG 2010 codified existing principles rather than creating them, and that there was 'overwhelming support' for putting the impartial civil service on a statutory footing. This directly undermines the idea that repealing it is a simple or popular fix.
+• Accountability of Civil Servants: Constitution Committee Report — Motion to Take Note — This source shows that objections to giving ministers the final say are strong and come from key institutions like the Civil Service Commission, highlighting the political resistance the proposal would face.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -1209,6 +1752,43 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Extremely difficult. This proposal challenges a quarter-century of economic orthodoxy supported by the Treasury, the Bank of England, the financial services industry, and the leadership of both major political parties. It would be portrayed as a reckless act of economic vandalism. It is most likely to die at the earliest stage: the attempt to get a major political party to adopt it as policy.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. A near-universal political and institutional consensus that operational independence is critical for economic stability and low inflation.
+2. The high probability of a severe, negative reaction from financial markets (rising government borrowing costs, a fall in the pound) to any credible move to restore political control.
+3. The fact that the government of the day benefits from the status quo, as it can deflect blame for unpopular interest rate rises onto the 'independent' Bank.
+4. The lack of a well-developed and credible alternative framework for making monetary policy decisions politically.
+5. The existence of the Section 19 reserve power, which will be used as an argument that sufficient political control already exists for emergencies, making full repeal unnecessary.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 5%. The political and economic barriers are formidable. Success would likely require a paradigm-shifting economic crisis that completely discredits the current model of central banking in the eyes of the public and political elites, a scenario that is not currently on the horizon.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The proposal will be immediately and overwhelmingly dismissed by the entire political and economic establishment as populist, irresponsible, and economically illiterate, failing to gain any serious traction and being rejected before it even becomes a subject of public debate.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The entire original 'ACTIONS' list. — This is not a set of strategic actions; it is a generic description of the UK's legislative process. It provides no insight into how to overcome the specific challenges of this proposal and mistakes procedure for strategy.
+• The original 'CAUSES' list. — This is a restatement of the problem, not a diagnosis of the forces that prevent its resolution. It has been superseded by a proper diagnosis that distinguishes the root cause from the pivotal obstacle.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -1259,6 +1839,19 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [Treasury Committee scrutinises MPC appointments](http://www.publications.parliament.uk/pa/cm201516/cmselect/cmtreasy/811/811.pdf) | Report: 8th Report - The Treasury Committee’s scrutiny of appointments — Treasury Committee — 1 The Treasury Committee’s scrutiny of appointments Contents | From 2016-02-26, 10 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
 | [Treasury Committee has non-statutory role in appointments](https://committees.parliament.uk/writtenevidence/120037/html/) | Bank of England: how is independence working? — IBE0007 | From 2023-04-18. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Asset Purchase Facility (APF) (mechanism)
+• Bank of England Act 1998 (statute)
+• Inflation Target (regime)
+• Monetary Policy Committee (MPC) (institution)
+• Quantitative Easing (QE) (mechanism)
+• Treasury Committee (institution)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -1383,6 +1976,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• The analysis from the `claude-sonnet-5` model. — It provides the sharpest diagnosis, correctly identifying that the problem is not a total lack of accountability but the toothless, low-salience nature of the existing mechanisms, and that the Chancellor benefits from this ambiguity.
+• Bank of England Act 1998, s.19 — This finding is pivotal because it establishes that a mechanism for political override already exists in law, which fundamentally changes the nature of the problem from 'how to create political control' to 'why is the existing control not used'.
+• Lords: Monetary Policy Committee: Select Committee Report — This finding, which notes the Chancellor's significant influence over MPC appointments, directly challenges the premise of pure 'independence' and supports the proposer's view that the arrangement is political, providing a key piece of evidence for the rewritten strategy.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -1411,6 +2014,36 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | The barriers this will actually meet | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Moderately hard. The proposed actions do not require new primary legislation, which is a major advantage. They rely on the executive using its existing powers through the Cabinet Office and Treasury. However, it will face significant internal resistance from within the Civil Service, including from staff networks, HR departments, and unions who benefit from or believe in the current system. The most likely stage for it to die is in implementation, where passive resistance, 'malicious compliance', and legal challenges to the new guidance could dilute or stall the changes until political attention moves elsewhere.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Internal Resistance: Deeply embedded cultural norms and incentives within the Civil Service will lead to pushback and attempts to water down the new guidance during implementation.
+2. Legal Challenge: The revised guidance will almost certainly be subject to judicial review by campaigning groups, arguing it unlawfully fetters the 'due regard' duty established by the Equality Act 2010.
+3. Political Attack: The policy will be framed by opponents as an attack on equality, minorities, and a modern workplace, creating political pressure to abandon it.
+4. Lack of Enforcement Capacity: The central bodies (Cabinet Office, Treasury) may lack the resources and detailed knowledge to effectively monitor and enforce compliance across dozens of disparate departments.
+5. Complexity of 'Merit': Defining 'merit' in a way that is legally robust and operationally clear, while disentangling it from years of DEI-influenced practice, is a significant technical challenge for the Civil Service Commission.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+40%. The strategy is sound in that it correctly identifies the leverage points (central administrative control) and avoids a difficult legislative battle. However, its success depends entirely on sustained, long-term political will from ministers to see through the implementation against determined internal and external opposition. This kind of focused, administrative follow-through is rare in government. The policy is likely to be announced and some guidance issued, but its transformative effect will probably be blunted by bureaucratic resistance over time.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The new guidance will be interpreted by departments in a minimalist way that satisfies the letter of the new rules while changing nothing of substance in their recruitment and management practices. Without relentless, detailed oversight from the centre—which is difficult to maintain—the 'institutional inertia' identified in the diagnosis will simply absorb the reform and carry on as before.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 4 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -1473,6 +2106,23 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [PSED and judicial review](https://www.scotcourts.gov.uk/media/uvkjnwg1/2025csoh102-petition-of-roseanna-mcphee-for-judicial-review-of-a-decision-by-perth-and-kinross-council.pdf) | Court of Session: 2025csoh102 petition of roseanna mcphee for judicial review of a decision by perth and kinross council | From 2025-11-05. | _no reason recorded_ |
 | [Stonewall Workplace Equality Index as an external driver](https://assets.publishing.service.gov.uk/media/5a7c3768e5274a1f5cc76931/Review_of_the_Public_Sector_Equality_Duty_by_the_Independent_Steering_Group.pdf) | Review of the Public Sector Equality Duty by the Independent Steering Group | From 2013-10-10, 12 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Accounting Officer (office)
+• Cabinet Office (institution)
+• Carltona principle (doctrine)
+• Civil Service Commission (institution)
+• Civil Service Management Code (regime)
+• Constitutional Reform and Governance Act 2010 (statute)
+• Equality Act 2010 (statute)
+• Managing Public Money (regime)
+• Public Sector Equality Duty (PSED) (regime)
+• Stonewall Workplace Equality Index (mechanism)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -1570,6 +2220,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• Civil Service Diversity and Inclusion Strategy: 2022 to 2025 — This document is primary evidence of the Civil Service's intent, stating it will 'go further than the current Equality Act provisions'. This directly supports the diagnosis that the practice is a discretionary policy choice, not a legal compulsion.
+• Review of the Public Sector Equality Duty by the Independent Steering Group (2013) — This review shows that concerns about 'over-compliance' and 'gold-plating' of the PSED are not new. It establishes a history of the problem and validates the diagnosis that the duty is prone to expansive interpretation.
+• London Borough of Hackney v Haque — This legal precedent establishes that 'due regard' is a matter of substance, not just form. Understanding how the courts have interpreted the duty is essential to crafting guidance that is both effective and legally robust.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -1598,6 +2258,36 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | The barriers this will actually meet | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+The revised strategy, using ministerial powers, is significantly easier to implement than passing a new Act of Parliament. It does not require a legislative slot or navigating the full parliamentary process. However, it will face intense political and media opposition and likely legal challenges (via judicial review) from groups who oppose the clarification. The hardest stage will be enforcing compliance across the public sector, where there is likely to be significant passive and active resistance.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Political will: A Minister must be willing to use the guidance-making power and face the resulting political backlash.
+2. Legal challenge: Any new statutory guidance will almost certainly be challenged in court via judicial review, delaying implementation.
+3. Institutional resistance: Public bodies, particularly those with a strong ideological commitment to the previous interpretation (e.g., in the NHS, universities), may resist, delay, or subvert the new guidance.
+4. Enforcement capacity: The EHRC may lack the resources or the will to pursue enforcement actions against numerous non-compliant public bodies.
+5. Complexity of exceptions: While the core principle is now clear, defining the precise boundaries for the treatment of GRC holders in specific contexts (e.g., prisons, hospital wards) will remain complex and contentious.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Moderate, around 60%. The legal position is now strong following the Supreme Court judgment, which provides a firm basis for ministerial action. The success of the strategy hinges almost entirely on the government's political determination to see it through against concerted opposition. If the government is committed, the legal tools exist. If commitment wavers, the strategy will stall in the face of institutional inertia and legal challenges.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The government will issue the guidance, declare victory, but then fail to dedicate the political capital and resources needed for the long, difficult process of enforcing it across hundreds of resistant public bodies. The guidance will then exist on paper, but practice on the ground will change very little.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 4 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -1638,6 +2328,18 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | GEO responsible for equalities legislation and policy | Government Response: Fifth special report - Reform of the Gender Recognition Act: Government response to the Committee’s Third Report — Women and Equalities Committee | From 2022-03-24. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | [GEO faced judicial review regarding GRA 2004 requirements](https://www.judiciaryni.uk/judicial-decisions/2021-niqb-130) | In the matter of an application by JR111 for Judicial Review (Ruling on Remedy) | From 2021-05-21, 5 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Equality Act 2010 (statute)
+• Equality and Human Rights Commission (EHRC) (institution)
+• Forstater v CGD Europe (case)
+• Gender Recognition Act 2004 (statute)
+• Government Equalities Office (GEO) (institution)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -1723,6 +2425,15 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16 — This Supreme Court ruling is the single most important fact. It reframes the entire problem from one of legal ambiguity to one of enforcement and compliance.
+• Equality Act 2010, sch.1 para.13-15 — This finding establishes that the Minister already has a specific power to issue statutory guidance, which is the central instrument in the revised strategy. It shows a path exists that avoids the need for a new Bill.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -1754,6 +2465,42 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+As an administrative change driven by the Treasury and Cabinet Office, it does not require a vote in Parliament, which makes it easier than legislation. However, implementation will be very hard. It is most likely to die from passive-aggressive resistance from government departments who will see it as a bureaucratic burden that damages their relationships with key delivery partners for no direct gain.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Fierce and coordinated opposition from the charity sector, which will frame this as an illegitimate 'gagging clause' intended to stifle dissent.
+2. The fungibility of money: it is extremely difficult to prove that a specific pound of government grant money, rather than a pound from another donor, paid for a specific lobbying activity.
+3. Defining 'campaigning against the stated policies of the funding body' in a legally robust way that doesn't inadvertently block legitimate feedback or advocacy.
+4. Lack of enforcement capacity and will. A central unit cannot police every grant, and individual grant managers have strong incentives to maintain good relationships with their charity partners, not to act as auditors.
+5. Political risk: a minister may face negative headlines for appearing to 'bully' a popular charity that works on a sympathetic cause (e.g., children's health, animal welfare).
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Low, perhaps 20-30%. The 2016 precedent shows that such a clause can be introduced, but the fact the problem is still seen as current suggests it was not effectively enforced. The underlying incentives for departments to turn a blind eye are powerful and persistent. Success would require continuous, high-level political will from the centre (No. 10/Cabinet Office) to override departmental inertia, which is rare.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+Departments will adopt the mandatory grant clause on paper but will not enforce it in practice. Grant managers will avoid confrontation with their delivery partners, and in the absence of a major scandal, there will be no central audit or political pressure to force them to act. The policy will become a dead letter.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The entire 'CAUSES' section. — This section is a weak description of the legal landscape, not a diagnosis. It has been superseded by the much sharper 'summaryDiagnosis' and 'pivotalObstacle' which explain why the problem persists, rather than just stating the background conditions.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -1788,6 +2535,22 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [National Audit Office reports on Charity Commission](https://committees.parliament.uk/writtenevidence/55250/html/) | Draft Protection of Charities Bill Joint Committee - publications — PCB0008 | From 2015-01-05, 11 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | [Transparency of Lobbying, Non-party Campaigning and Trade Union Administration Act 2014 impact](https://www.publications.parliament.uk/pa/ld201617/ldselect/ldchar/133/133.pdf) | Report: Report - Stronger charities for a stronger society — Select Committee on Charities | From 2017-03-26, 9 years old. Check the figures against current ones before relying on them. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Accounting Officer (office)
+• Charities Act 2011 (statute)
+• Cabinet Office (institution)
+• Charity Commission (institution)
+• Charity Commission for England and Wales (institution)
+• Grant Agreement (mechanism)
+• National Audit Office (institution)
+• Public Accounts Committee (institution)
+• Transparency of Lobbying, Non-party Campaigning and Trade Union Administration Act 2014 (statute)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -1876,6 +2639,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 
+**What to read first**
+
+• Non-governmental Organisations — This finding on the Government Compact establishes the core political difficulty: the government has explicitly promised to respect the right of funded bodies to campaign and challenge policy. Any solution must work within this constraint.
+• Cabinet Office — Charities: Lobbying — This is the key precedent from 2016. It shows that using a grant clause has been tried before, making the proposed approach credible but also raising the question of why it didn't solve the problem permanently.
+• Special Report: 4th Special Report... Charity Commission Response... — This shows the Charity Commission explicitly stating that this is a public spending issue for Parliament, not a charity regulation issue for them. This validates the guiding policy's choice to focus on the grantor, not the regulator.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -1906,6 +2679,42 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | What I would cut | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**How hard this will be to pass**
+
+Very difficult. Although a government with a majority can force legislation through the House of Commons, this proposal faces profound constitutional objections. The evidence shows strong opposition from the House of Lords Constitution Committee and the judiciary. It is most likely to be defeated or significantly diluted in the House of Lords, which sees its role as defending constitutional principles like judicial independence from executive overreach.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. Constitutional clash: The proposal will be framed by opponents as a breach of judicial independence, a core principle of the UK constitution.
+2. Judicial resistance: The judiciary may view politically-approved guidelines as illegitimate, leading to inconsistent application or legal challenges, undermining the entire framework.
+3. House of Lords opposition: The Bill will face intense, expert-led opposition in the Lords, particularly from Law Lords and the Constitution Committee, who can delay and force amendments.
+4. Politicisation of sentencing: Every use of the Lord Chancellor's veto will become a major political story, creating instability and pressure for decisions based on headlines rather than evidence.
+5. Lack of a fallback: If the new system fails or leads to judicial non-cooperation, there is no clear alternative, risking a return to the inconsistent, case-by-case sentencing the guidelines were created to solve.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Low (30%). While the government can introduce the Bill, the combined weight of judicial and constitutional opposition will be immense. The most probable outcome is a forced compromise where the 'absolute veto' is watered down to a power to delay or refer back, falling short of the proposer's goal of direct ministerial control. Success in passing the Bill as currently conceived would require huge political capital and a willingness to face down a constitutional crisis.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The Lord Chancellor, under political pressure, will use the veto power to block a guideline for populist reasons. This will be seen by the judiciary as the political interference they always feared, triggering a constitutional conflict, damaging the relationship between ministers and judges, and potentially leading to judges refusing to apply the politically-mandated guidelines, creating chaos in the courts.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What I would cut**
+
+• The list of two '(MATERIAL) CAUSES'. — These points are now fully incorporated into the rewritten 'summaryDiagnosis', which provides a more coherent and insightful explanation of the problem. Retaining them would be redundant.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 5 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Cost and duration
 
@@ -1953,6 +2762,20 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [Sentencing guidelines are subject to consultation and review](https://www.legislation.gov.uk/ukpga/2009/25/notes) | Explanatory Notes to Coroners and Justice Act 2009 | Undated. The source is in the corpus and carries no date. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 | [Sentencing guidelines aim to promote public confidence](http://www.publications.parliament.uk/pa/cm200809/cmselect/cmjust/715/715.pdf) | Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee | From 2015-05-18, 11 years old, and quotes no figures — an assertion rather than evidence. | _no reason recorded_ |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Coroners and Justice Act 2009 (statute)
+• Criminal Justice Act 2003 (statute)
+• Judicial independence (doctrine)
+• Justice Select Committee (institution)
+• Lord Chancellor (office)
+• Sentencing Council for England and Wales (institution)
+• Sentencing Guidelines (regime)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -2057,6 +2880,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 
+**What to read first**
+
+• Ministry of Justice — Sentencing: Parliamentary Scrutiny — This finding confirms the government is already pursuing this exact policy via a 'Sentencing Bill', making the central challenge one of political passage, not policy invention.
+• Government Response: Letter from Jake Richards MP... regarding the Sentencing Bill — This shows the high-level, official constitutional objections from the House of Lords Constitution Committee, defining the primary battleground for the proposal.
+• Sentencing Guidelines (Pre-sentence Reports) Bill - Second Reading (Lord Justice Davis's view) — This quote provides the judiciary's stark position: their acceptance of guidelines is conditional on the Council's independence. It highlights the profound risk of non-cooperation if this reform passes.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Your material
 
 *Nothing under this heading.* **Nothing added yet. A document or a link you add here is read once into findings, filed under the question it answers, and marked as yours — the file itself is never stored.**
@@ -2090,6 +2923,36 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | How likely this is to succeed | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
 | What is most likely to go wrong | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
 
+**How hard this will be to pass**
+
+Extremely difficult. This would be one of the most contentious pieces of legislation in modern British history, far exceeding the political difficulty of the Brexit legislation. It would face ferocious, unified opposition in Parliament, from the judiciary, from all devolved administrations, and from civil society. It is most likely to die at the Second Reading in the House of Lords, if it even makes it out of the Commons, where it would likely require the Parliament Acts to overcome the Lords' opposition.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**The barriers this will actually meet**
+
+1. The Belfast/Good Friday Agreement: Unilaterally altering the human rights provisions that underpin this international treaty would likely be considered a breach by the Republic of Ireland and the USA, causing a major diplomatic crisis.
+2. The Devolved Settlements: The Scottish Parliament and Welsh Senedd would refuse legislative consent, and repealing their founding statutes over their heads would trigger a constitutional crisis and an immediate, powerful push for independence referendums.
+3. Judicial Resistance: The judiciary, led by the Supreme Court (an institution this Act seeks to abolish), would deploy every available interpretive principle (e.g., the principle of legality, constitutional statutes) to frustrate the Act's purpose, leading to years of litigation.
+4. Parliamentary Opposition: The Bill would be subject to mass amendments and procedural warfare in the Commons. The House of Lords, whose own 1999 reform would be reversed, would almost certainly reject it, forcing a multi-year battle using the Parliament Acts.
+5. Lack of a Settled Alternative: The proposal is to repeal, but it is silent on what replaces the current settlement. This vacuum would be attacked as chaotic and irresponsible, making it hard to build a coalition for change beyond a desire for repeal itself.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**How likely this is to succeed**
+
+Less than 5%. For this to succeed, it would require a government with a huge, disciplined parliamentary majority, a public mandate specifically for this programme, a willingness to provoke constitutional crises with Scotland and Wales, readiness to breach an international peace treaty, and a plan to face down the judiciary. The combination of all these conditions being met is vanishingly small. The strategy, even as rewritten, only addresses the legislative mechanics, not the overwhelming political and legal forces arrayed against it.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+**What is most likely to go wrong**
+
+The single thing most likely to go wrong is that the government will discover that it cannot unilaterally legislate its way out of the Belfast/Good Friday Agreement. The attempt to do so will provoke an immediate international crisis with Ireland and the US, which will force a humiliating retreat on the entire legislative programme long before the domestic obstacles are even fully engaged.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 4 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
+
 ### Cost and duration
 
 *Nothing under this heading.* **No pass costs this yet — nothing in the build works out what implementing your proposal would cost, over what period, or what it would return. What figures exist are the cost lines you and Lex have put on individual actions, in DRAFT STRATEGY, and each carries its own assumptions. Read them as a purely financial view: they leave out the human costs and benefits entirely, and where the kernel is still unsettled the figures rest on a draft.**
@@ -2110,6 +2973,21 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | [HRA and Supreme Court](https://www.legislation.gov.uk/ukpga/2005/4/schedule/9/paragraph/66) | Constitutional Reform Act 2005, sch.9 para.66 | From 2005, 21 years old. Check the figures against current ones before relying on them. | This shows an amendment to the Human Rights Act 1998 within the target date range, specifically altering how declarations of incompatibility are handled by replacing 'House of Lords' with 'Supreme Court', which is a direct constitutional change. |
 | [Parliamentary sovereignty over legislation](https://www.hansard-archive.parliament.uk/The_Official_Report,_House_of_Lords_(5th_Series)_Vol_1_(Jan_1909)_to_2004/S5LV0589P0.zip) | Lords: Government of Wales Bill | From 1998-04-11, 28 years old, and quotes no figures — an assertion rather than evidence. | This debate excerpt from 1998 directly discusses the principle of parliamentary sovereignty in relation to the Government of Wales Bill, acknowledging that Parliament can make and unmake laws, which is central to the proposal's legal strategy. |
 | Terms of art the record confirms | — | Undated. No retrievable source record, so there is nothing to take a date from. | _no reason recorded_ |
+
+**Terms of art the record confirms**
+
+• Constitutional Reform Act 2005 (statute)
+• Human Rights Act 1998 (statute)
+• Ouster Clause (mechanism)
+• Parliamentary Sovereignty (doctrine)
+• Rule of Law (doctrine)
+• Scotland Act 1998 (statute)
+• Sewel Convention (convention)
+• Supreme Court (institution)
+
+These are terms of art another model reached for when given your own account, and the corpus does hold documents that mention them. That is what "confirmed" means here — the word is real and the record uses it. What the record SAYS about each is in the findings below, where it carries a citation.
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### What else refers to this law
 
@@ -2184,6 +3062,16 @@ Questions that did **not** run on this draft: Whether this is Westminster’s to
 | Source | Citation | Standing | Why it matters |
 |---|---|---|---|
 | What to read first | — | Undated. No retrievable source record, so there is nothing to take a date from. No figures are quoted, so this is an assertion rather than evidence. | _no reason recorded_ |
+
+**What to read first**
+
+• The proposer's own testimony regarding Lord Wolfson KC's advice — This is the single most important piece of evidence. It corroborates the 'interlock' diagnosis but also contains the crucial warning that a simple repeal is insufficient to achieve a 'factory reset' because of case law and other provisions. This insight, from a source the proposer trusts, is the key to understanding the problem's true depth.
+• Report: Third Report - The Government’s Independent Review of the Human Rights Act — ¶36 — Human Rights (Joint Committee) — This finding, which states the Government should not pursue HRA reform without devolved consent, crystallises the political and constitutional crisis inherent in the proposal. It demonstrates that the devolution settlements are a primary, and perhaps insurmountable, obstacle.
+• The Government’s Independent Human Rights Act Review — HRA0044 — This finding links the Human Rights Act directly to the Belfast (Good Friday) Agreement, an international treaty. It elevates the problem from a domestic constitutional issue to one of international law, which cannot be solved by an Act of Parliament alone. This is likely the hardest part of the entire problem.
+
+(This is a judgement, reasoned by gemini-2.5-pro over the whole proposal — not a retrieved source. Nothing here carries a citation because none would be honest.)
+
+*The 1 block(s) above carry no citation because they are Lex's reasoning over the whole proposal rather than retrieved documents — which is why they have no row in the table's Citation column. The documents they name are cited where they appear under their own headings.*
 
 ### Your material
 

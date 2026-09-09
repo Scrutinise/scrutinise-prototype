@@ -151,6 +151,53 @@ async function exportOne(ref: string, inputs: any) {
       guiding_policy_unresolved_why: idea.guidingPolicyUnresolvedWhy,
     },
 
+    // ══ ⚠⚠ CCW-B21 §4b — WHICH STRINGS IN THIS FILE MAY BE QUOTED IN A REPORT ═══════════
+    //
+    // This file mixes two kinds of string and nothing in it said so. The report build has
+    // been telling them apart with a hardcoded list of JSON paths in its own detruncation
+    // pass, which is a consumer restating a rule only the producer knows — the shape that
+    // goes stale the first time a pass is added.
+    //
+    // ⚠ THE MEASUREMENT, BEFORE THE RULE, BECAUSE THE PREMISE WAS PARTLY WRONG. Across the
+    // twelve exports there are 120 `carry` strings; **12 carry the `[FINDING]` /
+    // `[CONTRADICTS]` markers** and the rest are ordinary prose. And **not one
+    // `EvidenceItem.body` or `DeepeningIssue.text` in the twelve contains either marker**,
+    // so no scaffolding has reached a report heading through the database. What the carry
+    // fields do contain is a pass talking to the next pass — `SMART`'s verdict opens
+    // "VERDICT ON THE KERNEL:", the verification carry opens "KERNEL COMPLIANCE (model):" —
+    // which is publishable as a finding ABOUT the proposal and not as the proposal's voice.
+    //
+    // So this is declared rather than inferred: a renderer can read `quotable` and stop
+    // guessing from path shapes.
+    provenance: {
+      note: 'Which paths in this file are the proposal\'s own content and which are internal '
+        + 'scaffolding passed between passes. A renderer that quotes from `scaffolding` puts '
+        + 'process chat into a document that must not contain any; one that ignores it loses '
+        + 'real findings. Declared here so no consumer has to infer it from path shapes.',
+      quotable: [
+        '/kernel/', '/inputs_as_supplied/', '/evidence[]/body', '/evidence[]/title',
+        '/deepening/issues[]/text', '/build/',
+      ],
+      scaffolding: ['/passes_by_key/*/carry/*', '/coverage/*/carry', '/passes_raw[]/carry'],
+      scaffolding_note: 'Addressed to the next pass, not to a reader. Several are substantive — '
+        + 'SMART\'s carry is its verdict on the kernel — but they are a pass\'s voice, so they are '
+        + 'attributable ("the critique pass found…") and never quotable as the proposal\'s own words. '
+        + 'Where one is the only source for a finding, split it on its [FINDING] and [CONTRADICTS] '
+        + 'markers and file each part under the heading it belongs to.',
+      measured_on_export: {
+        carry_strings: EXPECTED_PASSES.reduce((n, k) => n
+          + Object.values((byKey[k]?.carry ?? {}) as Record<string, unknown>)
+            .filter((v) => typeof v === 'string').length, 0),
+        carry_strings_with_markers: EXPECTED_PASSES.reduce((n, k) => n
+          + Object.values((byKey[k]?.carry ?? {}) as Record<string, unknown>)
+            .filter((v) => typeof v === 'string'
+              && (v.includes('[FINDING]') || v.includes('[CONTRADICTS]'))).length, 0),
+        evidence_bodies_with_markers: evidence.filter((e: any) =>
+          typeof e.body === 'string'
+          && (e.body.includes('[FINDING]') || e.body.includes('[CONTRADICTS]'))).length,
+      },
+    },
+
     // ── every pass, keyed and raw ─────────────────────────────────────────
     passes_by_key: Object.fromEntries(EXPECTED_PASSES.map(k => [k, byKey[k] ?? null])),
     passes_raw: passes,
@@ -238,8 +285,14 @@ async function exportOne(ref: string, inputs: any) {
     field_states: fields,
   }
 
-  mkdirSync(OUT_DIR, { recursive: true })
-  const path = join(OUT_DIR, `${ref}.json`)
+  // ⚠ CCW-B21 — `--out <dir>` EXISTS SO A CHANGE TO THIS EXPORTER CAN BE PROVED WITHOUT
+  // OVERWRITING THE TWELVE FILES THE REPORT IS CURRENTLY BEING WRITTEN FROM. Re-exporting in
+  // place to test a new field would rewrite CCW's inputs mid-draft; the default path is
+  // unchanged, so nothing that calls this today moves.
+  const outArg = process.argv.indexOf('--out')
+  const outDir = outArg > -1 ? process.argv[outArg + 1] : OUT_DIR
+  mkdirSync(outDir, { recursive: true })
+  const path = join(outDir, `${ref}.json`)
   writeFileSync(path, JSON.stringify(doc, null, 2))
   return { ref, written: path, bytes: JSON.stringify(doc, null, 2).length, status: build?.status, passes: passes.length, evidence: evidence.length, missing }
 }
