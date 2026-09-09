@@ -1,0 +1,184 @@
+════ attempt 1 — 2026-09-09 05:12:05 UTC ════
+
+════ WHERE, AND WHAT FOR ═══════════════════════════════════════════════════════════
+   host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+   APPLY — rows will be written
+   concurrency 2, starting gap 250ms/worker, 20s request timeout
+   ⚠ the pace SELF-TUNES and stops speeding up for good at the first 429 — the limiter is
+     a Cloudflare rule (error 1015) whose penalty is a fixed instant about an hour out.
+(node:16052) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+   ⚠ --first: 17 named motions moved to the front of the work list
+   edm_sponsor motions        60,995
+   already fetched (status 2xx) 1,399
+   to fetch this run          59,596
+   published signature target 2,125,547  (INCLUDES the primary sponsor — §1.C)
+
+════ SWEEPING ══════════════════════════════════════════════════════════════════════
+   500/59,596 motions   17,839 sponsor rows   3.93/s   gap 238ms   429s 0   eta 4.2 h
+   1,000/59,596 motions   33,564 sponsor rows   4.06/s   gap 226ms   429s 0   eta 4.0 h
+   1,500/59,596 motions   49,630 sponsor rows   4.15/s   gap 215ms   429s 0   eta 3.9 h
+   2,500/59,596 motions   83,913 sponsor rows   4.12/s   gap 184ms   429s 0   eta 3.8 h
+   3,000/59,596 motions   101,510 sponsor rows   4.08/s   gap 175ms   429s 0   eta 3.9 h
+   3,500/59,596 motions   118,633 sponsor rows   4.03/s   gap 166ms   429s 0   eta 3.9 h
+   4,000/59,596 motions   136,420 sponsor rows   4.10/s   gap 150ms   429s 0   eta 3.8 h
+   4,500/59,596 motions   153,916 sponsor rows   4.09/s   gap 143ms   429s 0   eta 3.7 h
+   5,000/59,596 motions   170,343 sponsor rows   4.23/s   gap 136ms   429s 0   eta 3.6 h
+   5,500/59,596 motions   188,327 sponsor rows   4.34/s   gap 129ms   429s 0   eta 3.5 h
+   6,000/59,596 motions   206,069 sponsor rows   4.36/s   gap 120ms   429s 0   eta 3.4 h
+   6,500/59,596 motions   224,285 sponsor rows   4.43/s   gap 120ms   429s 0   eta 3.3 h
+   7,000/59,596 motions   242,676 sponsor rows   4.50/s   gap 120ms   429s 0   eta 3.2 h
+   7,500/59,596 motions   260,825 sponsor rows   4.58/s   gap 120ms   429s 0   eta 3.2 h
+   8,000/59,596 motions   278,483 sponsor rows   4.61/s   gap 120ms   429s 0   eta 3.1 h
+   8,500/59,596 motions   294,557 sponsor rows   4.67/s   gap 120ms   429s 0   eta 3.0 h
+   9,000/59,596 motions   311,582 sponsor rows   4.69/s   gap 120ms   429s 0   eta 3.0 h
+   9,000/59,596 motions   311,582 sponsor rows   4.69/s   gap 120ms   429s 0   eta 3.0 h
+   9,500/59,596 motions   330,049 sponsor rows   4.72/s   gap 120ms   429s 0   eta 2.9 h
+   10,000/59,596 motions   346,319 sponsor rows   4.76/s   gap 120ms   429s 0   eta 2.9 h
+   10,500/59,596 motions   362,928 sponsor rows   4.78/s   gap 120ms   429s 0   eta 2.9 h
+   11,000/59,596 motions   381,084 sponsor rows   4.82/s   gap 120ms   429s 0   eta 2.8 h
+   11,500/59,596 motions   398,329 sponsor rows   4.87/s   gap 120ms   429s 0   eta 2.7 h
+   12,000/59,596 motions   415,594 sponsor rows   4.88/s   gap 120ms   429s 0   eta 2.7 h
+   12,500/59,596 motions   431,934 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.7 h
+   13,000/59,596 motions   449,837 sponsor rows   4.90/s   gap 120ms   429s 0   eta 2.6 h
+   13,500/59,596 motions   465,703 sponsor rows   4.90/s   gap 120ms   429s 0   eta 2.6 h
+   14,000/59,596 motions   484,538 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.6 h
+   14,500/59,596 motions   502,230 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.6 h
+   15,000/59,596 motions   521,010 sponsor rows   4.91/s   gap 120ms   429s 0   eta 2.5 h
+   15,500/59,596 motions   539,362 sponsor rows   4.91/s   gap 120ms   429s 0   eta 2.5 h
+   16,000/59,596 motions   556,509 sponsor rows   4.92/s   gap 120ms   429s 0   eta 2.5 h
+   17,000/59,596 motions   590,102 sponsor rows   4.86/s   gap 120ms   429s 0   eta 2.4 h
+   17,500/59,596 motions   607,968 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.4 h
+   18,000/59,596 motions   624,068 sponsor rows   4.90/s   gap 120ms   429s 0   eta 2.4 h
+   18,500/59,596 motions   641,747 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.3 h
+   19,000/59,596 motions   659,679 sponsor rows   4.90/s   gap 120ms   429s 0   eta 2.3 h
+   19,500/59,596 motions   678,899 sponsor rows   4.90/s   gap 120ms   429s 0   eta 2.3 h
+   20,000/59,596 motions   696,170 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.2 h
+   20,500/59,596 motions   712,862 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.2 h
+   21,000/59,596 motions   730,065 sponsor rows   4.89/s   gap 120ms   429s 0   eta 2.2 h
+   21,500/59,596 motions   747,130 sponsor rows   4.88/s   gap 120ms   429s 0   eta 2.2 h
+   22,000/59,596 motions   765,269 sponsor rows   4.88/s   gap 120ms   429s 0   eta 2.1 h
+   22,500/59,596 motions   782,297 sponsor rows   4.86/s   gap 120ms   429s 0   eta 2.1 h
+   23,000/59,596 motions   799,618 sponsor rows   4.85/s   gap 120ms   429s 0   eta 2.1 h
+   23,500/59,596 motions   817,235 sponsor rows   4.86/s   gap 120ms   429s 0   eta 2.1 h
+   24,000/59,596 motions   836,219 sponsor rows   4.86/s   gap 120ms   429s 0   eta 2.0 h
+   24,500/59,596 motions   854,388 sponsor rows   4.86/s   gap 120ms   429s 0   eta 2.0 h
+   25,500/59,596 motions   888,975 sponsor rows   4.82/s   gap 120ms   429s 0   eta 2.0 h
+   26,000/59,596 motions   905,749 sponsor rows   4.82/s   gap 120ms   429s 0   eta 1.9 h
+   26,500/59,596 motions   922,485 sponsor rows   4.81/s   gap 120ms   429s 0   eta 1.9 h
+   27,000/59,596 motions   940,513 sponsor rows   4.81/s   gap 120ms   429s 0   eta 1.9 h
+   27,500/59,596 motions   958,512 sponsor rows   4.83/s   gap 120ms   429s 0   eta 1.8 h
+   28,000/59,596 motions   975,463 sponsor rows   4.84/s   gap 120ms   429s 0   eta 1.8 h
+   28,500/59,596 motions   993,067 sponsor rows   4.83/s   gap 120ms   429s 0   eta 1.8 h
+   29,000/59,596 motions   1,010,260 sponsor rows   4.84/s   gap 120ms   429s 0   eta 1.8 h
+   29,500/59,596 motions   1,027,479 sponsor rows   4.85/s   gap 120ms   429s 0   eta 1.7 h
+   30,000/59,596 motions   1,045,440 sponsor rows   4.85/s   gap 120ms   429s 0   eta 1.7 h
+   30,500/59,596 motions   1,062,829 sponsor rows   4.85/s   gap 120ms   429s 0   eta 1.7 h
+   31,000/59,596 motions   1,080,471 sponsor rows   4.84/s   gap 120ms   429s 0   eta 1.6 h
+   32,000/59,596 motions   1,116,692 sponsor rows   4.81/s   gap 120ms   429s 0   eta 1.6 h
+   32,500/59,596 motions   1,134,973 sponsor rows   4.81/s   gap 120ms   429s 0   eta 1.6 h
+   33,000/59,596 motions   1,153,428 sponsor rows   4.80/s   gap 120ms   429s 0   eta 1.5 h
+   33,500/59,596 motions   1,169,825 sponsor rows   4.77/s   gap 120ms   429s 0   eta 1.5 h
+   34,000/59,596 motions   1,188,496 sponsor rows   4.77/s   gap 120ms   429s 0   eta 1.5 h
+   34,500/59,596 motions   1,206,921 sponsor rows   4.76/s   gap 120ms   429s 0   eta 1.5 h
+   35,000/59,596 motions   1,223,123 sponsor rows   4.77/s   gap 120ms   429s 0   eta 1.4 h
+   35,500/59,596 motions   1,241,163 sponsor rows   4.76/s   gap 120ms   429s 0   eta 1.4 h
+   36,000/59,596 motions   1,258,370 sponsor rows   4.77/s   gap 120ms   429s 0   eta 1.4 h
+   36,500/59,596 motions   1,275,418 sponsor rows   4.78/s   gap 120ms   429s 0   eta 1.3 h
+   37,000/59,596 motions   1,293,859 sponsor rows   4.76/s   gap 120ms   429s 0   eta 1.3 h
+   37,500/59,596 motions   1,310,911 sponsor rows   4.75/s   gap 120ms   429s 0   eta 1.3 h
+   38,000/59,596 motions   1,328,190 sponsor rows   4.75/s   gap 120ms   429s 0   eta 1.3 h
+   38,500/59,596 motions   1,346,179 sponsor rows   4.75/s   gap 120ms   429s 0   eta 1.2 h
+   39,000/59,596 motions   1,363,391 sponsor rows   4.75/s   gap 120ms   429s 0   eta 1.2 h
+   39,500/59,596 motions   1,381,637 sponsor rows   4.74/s   gap 120ms   429s 0   eta 1.2 h
+   40,000/59,596 motions   1,397,406 sponsor rows   4.75/s   gap 120ms   429s 0   eta 1.1 h
+   40,500/59,596 motions   1,414,735 sponsor rows   4.76/s   gap 120ms   429s 0   eta 1.1 h
+   41,000/59,596 motions   1,433,112 sponsor rows   4.76/s   gap 120ms   429s 0   eta 1.1 h
+   41,500/59,596 motions   1,450,364 sponsor rows   4.75/s   gap 120ms   429s 0   eta 1.1 h
+   42,000/59,596 motions   1,466,029 sponsor rows   4.73/s   gap 120ms   429s 0   eta 1.0 h
+   42,500/59,596 motions   1,482,416 sponsor rows   4.72/s   gap 120ms   429s 0   eta 1.0 h
+   43,000/59,596 motions   1,500,532 sponsor rows   4.72/s   gap 120ms   429s 0   eta 1.0 h
+   43,500/59,596 motions   1,516,654 sponsor rows   4.72/s   gap 120ms   429s 0   eta 0.9 h
+   44,000/59,596 motions   1,534,346 sponsor rows   4.70/s   gap 120ms   429s 0   eta 0.9 h
+   44,500/59,596 motions   1,552,080 sponsor rows   4.70/s   gap 120ms   429s 0   eta 0.9 h
+   45,000/59,596 motions   1,569,308 sponsor rows   4.70/s   gap 120ms   429s 0   eta 0.9 h
+   45,500/59,596 motions   1,586,317 sponsor rows   4.69/s   gap 120ms   429s 0   eta 0.8 h
+   46,000/59,596 motions   1,603,140 sponsor rows   4.69/s   gap 120ms   429s 0   eta 0.8 h
+   46,500/59,596 motions   1,621,348 sponsor rows   4.69/s   gap 120ms   429s 0   eta 0.8 h
+   47,000/59,596 motions   1,638,157 sponsor rows   4.66/s   gap 120ms   429s 0   eta 0.8 h
+   47,500/59,596 motions   1,654,216 sponsor rows   4.65/s   gap 120ms   429s 0   eta 0.7 h
+   48,000/59,596 motions   1,671,651 sponsor rows   4.66/s   gap 120ms   429s 0   eta 0.7 h
+   48,500/59,596 motions   1,689,631 sponsor rows   4.64/s   gap 120ms   429s 0   eta 0.7 h
+   49,000/59,596 motions   1,708,568 sponsor rows   4.64/s   gap 120ms   429s 0   eta 0.6 h
+   49,500/59,596 motions   1,726,360 sponsor rows   4.63/s   gap 120ms   429s 0   eta 0.6 h
+   50,000/59,596 motions   1,744,167 sponsor rows   4.62/s   gap 120ms   429s 0   eta 0.6 h
+   51,000/59,596 motions   1,780,135 sponsor rows   4.61/s   gap 120ms   429s 0   eta 0.5 h
+   51,500/59,596 motions   1,797,411 sponsor rows   4.61/s   gap 120ms   429s 0   eta 0.5 h
+   52,000/59,596 motions   1,815,605 sponsor rows   4.59/s   gap 120ms   429s 0   eta 0.5 h
+   52,500/59,596 motions   1,832,417 sponsor rows   4.58/s   gap 120ms   429s 0   eta 0.4 h
+   53,000/59,596 motions   1,850,958 sponsor rows   4.59/s   gap 120ms   429s 0   eta 0.4 h
+   53,500/59,596 motions   1,869,481 sponsor rows   4.58/s   gap 120ms   429s 0   eta 0.4 h
+   54,000/59,596 motions   1,886,558 sponsor rows   4.57/s   gap 120ms   429s 0   eta 0.3 h
+   54,500/59,596 motions   1,903,567 sponsor rows   4.57/s   gap 120ms   429s 0   eta 0.3 h
+   55,000/59,596 motions   1,921,970 sponsor rows   4.57/s   gap 120ms   429s 0   eta 0.3 h
+   55,500/59,596 motions   1,940,772 sponsor rows   4.57/s   gap 120ms   429s 0   eta 0.2 h
+   56,000/59,596 motions   1,957,385 sponsor rows   4.57/s   gap 120ms   429s 0   eta 0.2 h
+   56,500/59,596 motions   1,974,579 sponsor rows   4.55/s   gap 120ms   429s 0   eta 0.2 h
+   56,500/59,596 motions   1,974,579 sponsor rows   4.55/s   gap 120ms   429s 0   eta 0.2 h
+   57,000/59,596 motions   1,991,590 sponsor rows   4.54/s   gap 120ms   429s 0   eta 0.2 h
+   57,500/59,596 motions   2,008,280 sponsor rows   4.53/s   gap 120ms   429s 0   eta 0.1 h
+   58,000/59,596 motions   2,026,254 sponsor rows   4.54/s   gap 120ms   429s 0   eta 0.1 h
+   58,500/59,596 motions   2,042,644 sponsor rows   4.51/s   gap 120ms   429s 0   eta 0.1 h
+   59,000/59,596 motions   2,059,428 sponsor rows   4.52/s   gap 120ms   429s 0   eta 0.0 h
+   59,500/59,596 motions   2,076,485 sponsor rows   4.53/s   gap 120ms   429s 0   eta 0.0 h
+
+════ WHAT CAME BACK ════════════════════════════════════════════════════════════════
+   elapsed                        219.1 min  (4.5 motions/s)
+   HTTP                           200×59,596
+   retries spent                  0
+   ⚠ 429s drawn                    0   (slept 0.0 min on the shared brake; longest Retry-After 0s)
+   final gap                      120ms/worker  (never throttled — the pace was still improving)
+   ⚠ requests that TIMED OUT       0   (a hung socket is an error here, not a stall)
+   motions read OK                59,596
+   ⚠ motions that FAILED          0
+
+   sponsor rows returned          2,079,854
+     of which SponsoringOrder = 1 59,566   ← the sponsor, already held as an edge
+     of which withdrawn           14,395   ← kept, dated, NOT signalled
+   ⚠ rows with no MNIS id         0   ← stored as NULL, never name-matched
+   ⚠ rows with no CreatedWhen     0   ← REFUSED (signed_at is the act's date)
+   ⚠ rows with no signature Id    0   ← REFUSED (no key to be idempotent on)
+   ⚠ repeated signature Id in one batch 0   (would have been a FATAL)
+   ⚠ list count ≠ array length    196 of 59,596
+
+════ ATTEMPTED vs STORED — read back, not assumed ══════════════════════════════════
+   INSERT reported                edm_signatory 2,079,854   edm_signatory_fetch 59,596
+   edm_signatory rows             2,126,171 over 60,993 motions
+     withdrawn                    14,680
+     primary sponsors (order 1)   60,965
+     unidentified (mnis NULL)     0
+   signed_at range                1989-11-21 00:00:00 → 2026-09-08 16:21:16.3
+   edm_signatory_fetch rows       60,995   non-200: 0
+   Σ sponsors_seen at fetch time  2,126,171
+   ⚠ seen − stored                0   ✓ every row the API returned is in the table
+   ⚠ (motion, member) pairs held twice  271
+     of those, both sides still LIVE   79   ← only these could double-count
+   motions where stored < seen                                      0
+   motions where stored > seen                                      0
+   motions where the publisher count differs from the array       199
+   motions fetched but never answered (status <> 200)               0
+
+   graph_edm_signature_edge       2,002,653 signature edges over 2,006 people
+   graph_signed_motion_edge       59,925 sponsorship edges (2D-2, unchanged)
+
+   edm_signatory 262 MB   edm_signatory_fetch 5424 kB   database 21 GB
+── exit 0 at 08:51:27 UTC
+── motions still unfetched: 0
+════ SWEEP COMPLETE — every motion answered 08:51:28 UTC ════

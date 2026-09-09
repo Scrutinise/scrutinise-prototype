@@ -1,0 +1,44 @@
+host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+config_version 3c.7bac2c10d652   as_of 2026-09-09   
+confidence saturation 0.9, attention ceiling 0.15
+(node:25284) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+87,942 actors carry at least one signal; actor_id 1…89060
+position_estimate truncated.
+  … 16,493 actors, 265,412 signals, 257,370 estimates, 9,272/s
+  … 31,484 actors, 618,353 signals, 607,947 estimates, 10,188/s
+  … 46,464 actors, 959,195 signals, 947,786 estimates, 10,469/s
+  … 61,453 actors, 1,188,281 signals, 1,176,403 estimates, 10,336/s
+  … 76,431 actors, 1,592,963 signals, 1,580,326 estimates, 10,584/s
+
+════ BUILT ════  333.1s
+  signals read       4,320,351
+  estimates produced 4,307,442
+
+════ READ BACK ════
+  division         2,080,585  mean confidence 0.096  mean |stance| 0.124
+  edm              2,062,509  mean confidence 0.045  mean |stance| 0.058
+  inquiry            162,733  mean confidence 0.049  mean |stance| 0.000
+  organisation         1,615  mean confidence 0.078  mean |stance| 0.000
+
+  config_version on the table: 3c.7bac2c10d652 (1 distinct — more than one means a partial rebuild)
+  attention-only estimates: 164,348; of those, 0 exceed the 0.15 ceiling  ✓
+
+════ IS IT A DISTRIBUTION? ════
+  distinct stance_score values      14,330   ✓ (§1 wants ≥ 20)
+  distinct consistency values            3   (the OLD stance_score; 3 before this sprint)
+  rows at |stance| = 1.00                0   0.0000% of all estimates (was 92.87%)
+
+════ WHAT IT COST ════
+  position_estimate   1092 MB  (265.9 bytes/row)
+                      = $0.40 / month at $0.35/GB-month
+  database            22.43 → 22.43 GiB
+  storage cost        $8.43 / month   (checked 2026-08-21 (BRIEF_GRAPH_3C.md §5, Neon console, Launch plan))

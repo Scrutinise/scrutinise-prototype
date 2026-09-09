@@ -168,3 +168,35 @@ docs/census/CASEREF_citations.pilot.jsonl
 docs/census/caseref-shards/
 # per-run resume state for caseref/extract.ts — regenerated on every run, never committed
 scripts/ingest/caseref/extract-checkpoint.json
+
+# ── CCW-B20 §7c — the vector-delta work lists (2026-09-09) ────────────────────────────────────
+# 58 MB across three files. ⚠⚠ NOT REGENERABLE, and the command that looks like it would
+# regenerate them is the trap: `v33-vec-delta.ts --write --run <tag>` writes the set of
+# `corpus_sections` rows that have no vector AT THAT MOMENT, and the catch-up has since run, so a
+# re-run today yields a near-empty list — a different fact under the same filename. The script's
+# own header says the before and after runs "are two different facts".
+# MIRRORED FIRST, then ignored: r2://scrutinise-legislation/research/ingest_worklists/, uploaded
+# and read back byte-for-byte on 2026-09-09 11:29 UTC. Named file by file, not as a `*` pattern,
+# because §20 check 1 exists because a broad rule silently excluded a real route directory once.
+scripts/ingest/v33-vec-delta.jsonl
+scripts/ingest/v35-vec-delta.jsonl
+scripts/ingest/v36-vec-delta.jsonl
+
+# The 3c boundary check's incremental build info — a tsc artefact, rewritten every run.
+scrutinise-web/tsconfig.3c-check.tsbuildinfo
+
+# ⚠ §22 names scratch scripts with a leading underscore and asks that they be deleted in the same
+# turn. This is the backstop for the turn where that is forgotten, so a throwaway probe can never
+# be committed or mistaken for a check. Nothing tracked matches it today (`git ls-files
+# "scrutinise-web/scripts/_*.ts"` is empty), and a scratch script that ought to survive is renamed
+# rather than force-added.
+scrutinise-web/scripts/_*.ts
+scripts/ingest/_*.ts
+
+# ── CCW-B20 §7d — the EDM sweep trace is EVIDENCE, not a log ──────────────────────────────────
+# `*.log` at line 28 is right for run output and wrong for this: these five files are the raw
+# 219-minute trace the EDM signature figures were read off, kept deliberately so the numbers in
+# the report can be checked against the run that produced them. ⚠ `git add` REFUSING them is what
+# surfaced this — §20 check 1 exists because an ignored file never appears in `git status`.
+!docs/ingest_traces/
+!docs/ingest_traces/*.log

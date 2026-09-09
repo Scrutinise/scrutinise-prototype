@@ -1,0 +1,207 @@
+motions still unfetched: 0
+
+════ 1 · SIGNALS (append-only; the sponsorship dates corrected in one statement) ════
+
+════ WHERE, AND WITH WHAT NUMBER ═══════════════════════════════════════════════════
+   host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+   raw_weight 0.6  (POSITION_CONFIG.weights.edm_signature — read, not restated)
+   derivation signatory:v1
+   APPLY
+(node:12580) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+   position_raw_weight('edm_signature','signatory:v1') = 0.6  ✓ agrees with the config
+
+════ BEFORE ════════════════════════════════════════════════════════════════════════
+   edm_signatory rows                       2,126,171
+   graph_edm_signature_edge (signal-ready)  2,002,653
+   live edm_signature signals               92,027
+     of which primary-sponsor:v1          59,922
+     of which signatory:v1                32,102
+
+════ WHAT THE EDGE VIEW EXCLUDES, AND WHY ══════════════════════════════════════════
+   sponsor rows held                        2,126,171
+   − withdrawn (a changed position)         14,680
+   − the primary sponsor (already an edge)  60,967
+   − no MNIS id (never name-matched)        0
+   − no graph_entity for that member        45,004
+   − no corpus_sections row to evidence it  2,867
+   ⚠ the last two OVERLAP with each other; the edge view applies both, so the
+     arithmetic below is the check, not this subtraction.
+
+   signature_id 165,560…2,299,894 in 54 ranges of 39,525
+
+════ INSERTING ═════════════════════════════════════════════════════════════════════
+   11%   180,189 inserted   9s
+   20%   372,922 inserted   16s
+   31%   603,430 inserted   25s
+   41%   794,231 inserted   32s
+   50%   976,457 inserted   39s
+   61%   1,202,302 inserted   47s
+   70%   1,394,916 inserted   55s
+   81%   1,620,358 inserted   64s
+   91%   1,801,654 inserted   72s
+   100%   1,970,524 inserted   78s
+
+   INSERT reported 1,970,524 rows in 1.3 min
+
+════ CORRECTING THE SPONSORSHIP DATES ══════════════════════════════════════════════
+   corrected rows inserted   2,472
+   old rows superseded       2,472
+   ⚠ inserted − superseded   0   ✓ one new row per retired row
+   1s
+
+════ READ BACK ═════════════════════════════════════════════════════════════════════
+   live edm_signature signals   2,062,551
+     signatory:v1                    2,002,626 over 2,006 people and 57,890 motions
+     primary-sponsor:v1          57,450
+     primary-sponsor:v2          2,475
+   retired (superseded)         2,475
+   observed_at range            1989-11-21 → 2026-09-08
+
+   ⚠ (actor, motion) pairs with MORE THAN ONE live signal: 42  e.g. 88411 / 27181
+     ← each is one member with two dated signatures on one motion; see the report
+
+   position_signal_stored 719 MB   database 22 GB
+
+   ⚠ position_estimate is NOT rebuilt here. Brief §2: recompute AFTER loading, not
+     during. Run scripts/graph/build-position-estimates.ts next.
+
+════ 2 · ESTIMATES (truncate-and-rebuild; offline, and §2.5 re-established that nobody serves from it) ════
+host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+config_version 3c.7bac2c10d652   as_of 2026-09-09   
+confidence saturation 0.9, attention ceiling 0.15
+(node:20896) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+87,942 actors carry at least one signal; actor_id 1…89060
+position_estimate truncated.
+  … 16,493 actors, 265,412 signals, 257,370 estimates, 9,715/s
+  … 31,484 actors, 618,353 signals, 607,947 estimates, 10,014/s
+  … 46,464 actors, 959,195 signals, 947,786 estimates, 10,244/s
+  … 61,453 actors, 1,188,281 signals, 1,176,403 estimates, 10,198/s
+  … 76,431 actors, 1,592,963 signals, 1,580,326 estimates, 10,580/s
+
+════ BUILT ════  339.2s
+  signals read       4,320,393
+  estimates produced 4,307,442
+
+════ READ BACK ════
+  division         2,080,585  mean confidence 0.096  mean |stance| 0.124
+  edm              2,062,509  mean confidence 0.045  mean |stance| 0.058
+  inquiry            162,733  mean confidence 0.049  mean |stance| 0.000
+  organisation         1,615  mean confidence 0.078  mean |stance| 0.000
+
+  config_version on the table: 3c.7bac2c10d652 (1 distinct — more than one means a partial rebuild)
+  attention-only estimates: 164,348; of those, 0 exceed the 0.15 ceiling  ✓
+
+════ IS IT A DISTRIBUTION? ════
+  distinct stance_score values      14,361   ✓ (§1 wants ≥ 20)
+  distinct consistency values            3   (the OLD stance_score; 3 before this sprint)
+  rows at |stance| = 1.00                0   0.0000% of all estimates (was 92.87%)
+
+════ WHAT IT COST ════
+  position_estimate   1092 MB  (265.9 bytes/row)
+                      = $0.40 / month at $0.35/GB-month
+  database            21.97 → 22.43 GiB
+  storage cost        $8.43 / month   (checked 2026-08-21 (BRIEF_GRAPH_3C.md §5, Neon console, Launch plan))
+
+════ 3 · ASSERTIONS — the self-test FIRST, because a check that cannot fail is not a check ════
+
+════ VERIFY — EDM SIGNATURES ══════════════════════════════════════════════════
+   host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+
+   SELF-TEST: each assertion that carries a planted counter-example is run against it.
+   A check that does not fail here cannot fail anywhere.
+
+(node:20080) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+   ✓ A1 refused the planted counter-example (counted 1)
+   ✓ A2 refused the planted counter-example (counted -7)
+   ✓ A3 refused the planted counter-example (counted 199)
+   ✓ A6 refused the planted counter-example (counted 28)
+   ✓ B2 refused the planted counter-example (counted 59925)
+
+   5/5 plants refused. 17 checks carry no plant and are
+   argued for by their own arithmetic instead (see each check’s "counted" line).
+
+
+════ VERIFY — EDM SIGNATURES ══════════════════════════════════════════════════
+   host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+
+(node:12064) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+   ✓ A1  every motion in edm_sponsor was attempted, and answered
+        counted: motions in edm_sponsor with no status-200 row in edm_signatory_fetch = 0
+   ✓ A2  every sponsor row the API returned is in edm_signatory — attempted reconciles with stored
+        counted: Σ sponsors_seen − COUNT(edm_signatory), over motions answered 200 = 0   [2126171]
+   ✓ A3  the API never returned FEWER signatures than its own count — a short array means a truncated fetch
+        counted: motions answered 200 where Sponsors.length < the publisher’s sponsors_count = 0
+   ✓ A3b  growth since the 2026-08-16 sponsor sweep is REPORTED, and every case of it is a recent motion
+        counted: motions with MORE signatures than the August snapshot whose date_tabled is before 2026-01-01 (recent growth is expected; growth on an old motion would not be) = 0   [199]
+   ✓ A4  no signature is undated — observed_at is the act, so an undated row could not have one
+        counted: edm_signatory rows with a NULL signed_at = 0
+   ✓ A5  no signature was identified by a NAME — brief §1.2, stop-and-report if any were
+        counted: edm_signatory rows with mnis_id IS NULL = 0
+   ✓ A6  never MORE than one primary sponsor per motion — two would make the exclusion drop a real signature
+        counted: motions with 2 or more sponsoring_order = 1 rows = 0
+   ✓ A6b  the sponsor never leaks into the signature edges — including on the motions with NO order-1 row
+        counted: signature edges whose subject_mnis_id is the motion’s own sponsor = 0
+   ✓ A6c  the `sponsoring_order <> 1` clause has never dropped a real signature
+        counted: live rows excluded by order = 1 that are NOT the motion’s sponsor = 0
+   ✓ A7  the order-1 row IS the member edm_sponsor names — the identity the edge view relies on
+        counted: motions where the order-1 signatory’s mnis_id differs from edm_sponsor.mnis_id = 0
+   ✓ B1  no signature edge exists for a motion we cannot show — every evidence id resolves
+        counted: graph_edm_signature_edge rows whose evidence_section_id is not in corpus_sections = 0
+   ✓ B2  the primary sponsor is NOT also a signature edge — one act is not counted twice
+        counted: signature edges whose subject is the motion’s own sponsor = 0
+   ✓ B3  no withdrawn signature is an edge
+        counted: signature edges whose underlying row is withdrawn = 0
+   ✓ B4  observed_on is the date SIGNED, not the date tabled — the fact §1 said decides the sprint
+        counted: signature edges where observed_on = the motion’s date_tabled, as a percentage = 16   [2002653]
+   ✓ B5  2D-2’s sponsorship edge is unchanged by this sprint
+        counted: graph_signed_motion_edge rows (was 59,925 before this sprint) = 59,925
+   ✓ C1  every signal has evidence — the CHECK asserts it, so this asserts the CHECK is on
+        counted: edm_signature signals with an empty evidence_ids array = 0
+   ❌ C2  no (actor, motion) pair carries more than one live signal
+        counted: (actor_id, target_id) pairs with >1 live edm_signature signal = 42   [10195]
+   ✓ C3  every signal that should exist does — the edge view and the signal layer agree
+        counted: signature edges with no matching live signal row = 0
+   ✓ C4  the weight on every signature signal is the config’s, not a number typed here
+        counted: edm_signature signals whose raw_weight <> 0.6 = 0
+   ✓ C5  sponsorship and signature are DISTINGUISHABLE on every row — brief §2
+        counted: live edm_signature signals whose derivation is neither a sponsorship nor a signatory = 0
+   ✓ C6  a superseded row is never live, and a live row is never superseded — the correction held
+        counted: rows both retired and returned by the position_signal view = 0
+   ✓ C7  the read path the SURFACE uses returns the new signals — the function, not the view
+        counted: signals position_signal_for() returns for the 20 motions with the most signatures, minus what the view returns for the same 20 = 0   [7535]
+
+════ 21 passed, 1 failed ════════════════════════════════════════════════════
+   ❌ C2 no (actor, motion) pair carries more than one live signal — counted 42 (10195)

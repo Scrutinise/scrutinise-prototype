@@ -1,0 +1,29 @@
+════ attempt 1 — 2026-09-09 04:52:24 UTC ════
+
+════ WHERE, AND WHAT FOR ═══════════════════════════════════════════════════════════
+   host ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech
+   APPLY — rows will be written
+   concurrency 2, starting gap 400ms/worker, 20s request timeout
+   ⚠ the pace SELF-TUNES and stops speeding up for good at the first 429 — the limiter is
+     a Cloudflare rule (error 1015) whose penalty is a fixed instant about an hour out.
+(node:28560) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+   ⚠ --first: 17 named motions moved to the front of the work list
+   edm_sponsor motions        60,995
+   already fetched (status 2xx) 64
+   to fetch this run          60,931
+   published signature target 2,125,547  (INCLUDES the primary sponsor — §1.C)
+
+════ SWEEPING ══════════════════════════════════════════════════════════════════════
+   ⚠ 429 after only 0 successful requests this run — sleeping, but NOT slowing down: this
+     mitiga   500/60,931 motions   17,532 sponsor rows   0.54/s   gap 800ms   429s 4   eta 31.1 h
+   1,000/60,931 motions   34,427 sponsor rows   0.88/s   gap 800ms   429s 4   eta 18.9 h
+31 motions   17,553 sponsor rows   0.58/s   gap 400ms   429s 4   eta 29.0 h
+   1,000/60,931 motions   34,427 sponsor rows   0.94/s   gap 400ms   429s 4   eta 17.7 h
