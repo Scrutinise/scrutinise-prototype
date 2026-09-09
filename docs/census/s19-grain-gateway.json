@@ -1,0 +1,4744 @@
+{
+  "takenAt": "2026-09-09T04:33:39.814Z",
+  "setVersion": "S10 GOLD_CANDIDATES_S8 (validated 20 Aug) + GOLD_CANDIDATES_V2 (validated 22 Aug), pre-re-key",
+  "arms": [
+    "gateway"
+  ],
+  "depth": 500,
+  "denseDepth": 200,
+  "localFlags": "[capabilities] QUERY_EXPANSION=ON QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=ON SEARCH_RERANKER=ON SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=ON BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=ON FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=ON ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off SEARCH_GRAIN=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=caselaw,committees,debates,guidance,legislation GEMINI_API_KEY=set",
+  "productionHealth": {
+    "status": "ok",
+    "commit": "3f205a257573b23c14946bef8e2698b47c8c7b7d",
+    "env": "production",
+    "mail": true,
+    "capabilities": {
+      "LEX_QUERY_EXPANSION": true,
+      "LEX_QUERY_ROUTER": true,
+      "LEX_WEB_ORIENTATION": false,
+      "LEX_SEARCH_VECTOR": true,
+      "LEX_SEARCH_RERANKER": true,
+      "LEX_SEARCH_GRAPH": false,
+      "LEX_COHERENCE_CORPUS": false,
+      "LEX_SEARCH_STUB": false,
+      "LEX_TIER_FUSION": true,
+      "LEX_BUILD_PERSPECTIVES": false,
+      "LEX_ROUTER_STREAMS_V2": false,
+      "LEX_STATS_STREAM": true,
+      "LEX_FUSION_WEIGHTS": false,
+      "LEX_SEARCH_JUDGED_MERGE": true,
+      "LEX_ROUTER_CONFIDENCE": false,
+      "LEX_ROUTER_APPRAISAL": false
+    },
+    "retrieval": {
+      "vectorSearchUrl": true,
+      "ftsSearchUrl": true,
+      "geminiKey": true,
+      "vectorStreams": [
+        "caselaw",
+        "committees",
+        "debates",
+        "guidance",
+        "legislation"
+      ]
+    },
+    "build": {
+      "driver": "worker"
+    }
+  },
+  "flagNote": [
+    "gateway arm forced to production's flag string from /api/health (commit 3f205a2); LEX_VECTOR_STREAMS=caselaw,committees,debates,guidance,legislation"
+  ],
+  "chunkGrainNote": "no served surface returns a ranked chunk list; the dense leg scores chunks and collapses to sections before returning, so chunk-grain recall is measured as the dense arm and is bounded above by its section-grain recall",
+  "vectorServeBefore": {
+    "build": "S15-cancel-bounded-batch",
+    "served": 3033,
+    "errors": 81,
+    "cold_ms": 44566,
+    "warm_p50_ms": 2297,
+    "warm_p95_ms": 6946,
+    "warm_n": 2197,
+    "all_p50_ms": 1854,
+    "all_p95_ms": 5589,
+    "all_n": 3033,
+    "embed_p50_ms": 234,
+    "embed_p95_ms": 278,
+    "stages": {
+      "queue_p50_ms": 0,
+      "queue_p95_ms": 0,
+      "ann_p50_ms": 1708,
+      "ann_p95_ms": 4690,
+      "snippet_p50_ms": 269,
+      "snippet_p95_ms": 1472,
+      "cpu_p50_ms": 4994,
+      "cpu_p95_ms": 7519,
+      "cpu_over_wall": 1.55,
+      "n": 2198
+    },
+    "concurrency": {
+      "max": 16,
+      "maxQueue": 32,
+      "inFlight": 0,
+      "queued": 0,
+      "queueHighWaterMark": 0,
+      "rejections": 0,
+      "abandoned": 0,
+      "liveKeys": 0
+    },
+    "host": {
+      "cpus": 48,
+      "loadavg": [
+        9.69,
+        11.74,
+        11.71
+      ]
+    },
+    "cache": {
+      "hits": 835,
+      "misses": 2176,
+      "coalesced": 0,
+      "evictions": 1510,
+      "expired": 85,
+      "size": 500,
+      "maxEntries": 500,
+      "ttlMs": 300000,
+      "hitRate": 0.277
+    },
+    "memory": {
+      "rss_mb": 4903,
+      "peak_rss_mb": 4903,
+      "peak_rss_at": "2026-09-09T04:20:27.927Z",
+      "heap_used_mb": 138,
+      "external_mb": 9,
+      "cap_mb": 7629,
+      "pct_of_cap": 64.3,
+      "peak_pct_of_cap": 64.3
+    },
+    "config": {
+      "nprobes": 64,
+      "chunkOverscan": 5,
+      "refineFactor": 2,
+      "distance": "cosine",
+      "model": "gemini-embedding-001",
+      "dims": 768
+    },
+    "uptime_s": 1052252,
+    "started_at": "2026-08-28T00:03:51.124Z"
+  },
+  "vectorServeAfter": {
+    "build": "S15-cancel-bounded-batch",
+    "served": 3309,
+    "errors": 81,
+    "cold_ms": 44566,
+    "warm_p50_ms": 2311,
+    "warm_p95_ms": 6579,
+    "warm_n": 2473,
+    "all_p50_ms": 1907,
+    "all_p95_ms": 5589,
+    "all_n": 3309,
+    "embed_p50_ms": 232,
+    "embed_p95_ms": 277,
+    "stages": {
+      "queue_p50_ms": 0,
+      "queue_p95_ms": 0,
+      "ann_p50_ms": 1716,
+      "ann_p95_ms": 4576,
+      "snippet_p50_ms": 275,
+      "snippet_p95_ms": 1420,
+      "cpu_p50_ms": 5083,
+      "cpu_p95_ms": 7486,
+      "cpu_over_wall": 1.59,
+      "n": 2474
+    },
+    "concurrency": {
+      "max": 16,
+      "maxQueue": 32,
+      "inFlight": 0,
+      "queued": 0,
+      "queueHighWaterMark": 0,
+      "rejections": 0,
+      "abandoned": 0,
+      "liveKeys": 0
+    },
+    "host": {
+      "cpus": 48,
+      "loadavg": [
+        12.09,
+        11.56,
+        11.55
+      ]
+    },
+    "cache": {
+      "hits": 835,
+      "misses": 2452,
+      "coalesced": 0,
+      "evictions": 1786,
+      "expired": 85,
+      "size": 500,
+      "maxEntries": 500,
+      "ttlMs": 300000,
+      "hitRate": 0.254
+    },
+    "memory": {
+      "rss_mb": 5068,
+      "peak_rss_mb": 5068,
+      "peak_rss_at": "2026-09-09T04:33:39.624Z",
+      "heap_used_mb": 161,
+      "external_mb": 12,
+      "cap_mb": 7629,
+      "pct_of_cap": 66.4,
+      "peak_pct_of_cap": 66.4
+    },
+    "config": {
+      "nprobes": 64,
+      "chunkOverscan": 5,
+      "refineFactor": 2,
+      "distance": "cosine",
+      "model": "gemini-embedding-001",
+      "dims": 768
+    },
+    "uptime_s": 1052989,
+    "started_at": "2026-08-28T00:03:51.124Z"
+  },
+  "aborted": null,
+  "missingKeys": [],
+  "collectionShape": {
+    "college-of-policing": {
+      "sections": 332,
+      "documents": 332,
+      "perDoc": 1,
+      "collapses": true
+    },
+    "committees-evidence": {
+      "sections": 142315,
+      "documents": 142315,
+      "perDoc": 1,
+      "collapses": true
+    },
+    "committees-reports": {
+      "sections": 344773,
+      "documents": 51000,
+      "perDoc": 6.760254901960784,
+      "collapses": false
+    },
+    "consultations": {
+      "sections": 7448,
+      "documents": 7448,
+      "perDoc": 1,
+      "collapses": true
+    },
+    "cps-guidance": {
+      "sections": 270,
+      "documents": 270,
+      "perDoc": 1,
+      "collapses": true
+    },
+    "historic-hansard": {
+      "sections": 4641117,
+      "documents": 4026,
+      "perDoc": 1152.7861400894187,
+      "collapses": false
+    },
+    "hmrc-manuals": {
+      "sections": 85197,
+      "documents": 85197,
+      "perDoc": 1,
+      "collapses": true
+    },
+    "impact-assessments": {
+      "sections": 18759,
+      "documents": 1172,
+      "perDoc": 16.005972696245735,
+      "collapses": false
+    },
+    "niassembly-hansard": {
+      "sections": 196348,
+      "documents": 632,
+      "perDoc": 310.67721518987344,
+      "collapses": false
+    },
+    "primary-acts-2000plus": {
+      "sections": 147975,
+      "documents": 938,
+      "perDoc": 157.75586353944564,
+      "collapses": false
+    },
+    "primary-acts-pre-2000": {
+      "sections": 179435,
+      "documents": 16622,
+      "perDoc": 10.795030682228372,
+      "collapses": false
+    },
+    "pwdata-debates": {
+      "sections": 6393542,
+      "documents": 20087,
+      "perDoc": 318.2925275053517,
+      "collapses": false
+    },
+    "pwdata-lords": {
+      "sections": 755411,
+      "documents": 5724,
+      "perDoc": 131.972571628232,
+      "collapses": false
+    },
+    "pwdata-westminster": {
+      "sections": 241030,
+      "documents": 3973,
+      "perDoc": 60.66700226529071,
+      "collapses": false
+    },
+    "regional": {
+      "sections": 357161,
+      "documents": 38120,
+      "perDoc": 9.369386149003148,
+      "collapses": false
+    },
+    "scottish-parliament-or": {
+      "sections": 1044188,
+      "documents": 7452,
+      "perDoc": 140.12184648416533,
+      "collapses": false
+    },
+    "si-2010plus": {
+      "sections": 287078,
+      "documents": 28401,
+      "perDoc": 10.108024365339249,
+      "collapses": false
+    },
+    "tna-caselaw": {
+      "sections": 74896,
+      "documents": 74896,
+      "perDoc": 1,
+      "collapses": true
+    }
+  },
+  "control": {
+    "questionsInCollapseCollections": 29,
+    "disagreements": 0,
+    "sortOrderChecked": 65,
+    "sortOrderDisagreements": 42
+  },
+  "unhydratedRetrievedIds": [
+    "oecd:-government-news-new-blueprint-for-ai-regulation-could-speed-up-planning-approvals-slash-nhs-waiting-times-and-drive-gro:1",
+    "oecd:-government-calls-for-evidence-call-for-views-on-the-cyber-security-of-ai:1",
+    "et-decisions:employment-tribunal-decisions/mrs-k-miller-v-mr-r-belcher-3311676-slash-2023:1",
+    "et-decisions:employment-tribunal-decisions/mr-r-frost-v-john-miller-ltd-8001860-slash-2024:1",
+    "et-decisions:employment-tribunal-decisions/mrs-l-douglas-v-r-and-d-miller-ltd-in-liquidation-1311261-slash-2024:1",
+    "et-decisions:employment-tribunal-decisions/miss-m-miller-v-greggs-plc-2305373-slash-2019:1",
+    "et-decisions:employment-tribunal-decisions/mr-a-miller-v-university-of-edinburgh-4105421-slash-2020:1",
+    "et-decisions:employment-tribunal-decisions/miss-a-miller-v-mochridhe-ltd-4103102-slash-2023:1",
+    "et-decisions:employment-tribunal-decisions/mr-b-miller-v-euro-car-parts-ltd-1305779-2018:1",
+    "et-decisions:employment-tribunal-decisions/mr-jh-miller-v-the-scottish-ministers-4107535-2019:1",
+    "et-decisions:employment-tribunal-decisions/ms-lorraine-miller-v-bute-house-ltd-t-a-acorn-park-care-home-4104186-2018:1",
+    "et-decisions:employment-tribunal-decisions/miss-r-miller-v-north-east-dance-company-uk-ltd-2500313-2017:1",
+    "et-decisions:employment-tribunal-decisions/mr-r-miller-v-abellio-east-anglia-ltd-t-slash-a-greater-anglia-3205407-slash-2021:1",
+    "et-decisions:employment-tribunal-decisions/ms-k-miller-v-earl-shilton-town-council-2602588-2018:1",
+    "et-decisions:employment-tribunal-decisions/mrs-n-miller-v-john-tompkins-1800565-2019:1",
+    "et-decisions:employment-tribunal-decisions/mr-a-l-miller-v-wildearth-group-ltd-3306137-slash-2023:1",
+    "et-decisions:employment-tribunal-decisions/mrs-g-miller-v-manchester-university-nhs-foundation-trust-2408973-slash-2023:1",
+    "et-decisions:employment-tribunal-decisions/j-miller-v-tesco-stores-ltd-2301258-slash-2018-and-2302881-slash-2018:1",
+    "et-decisions:employment-tribunal-decisions/ms-e-miller-and-others-v-north-tyneside-council-2501795-2018-and-others:1",
+    "et-decisions:employment-tribunal-decisions/mr-darren-higgins-v-miller-druck-international-stone-ltd-in-voluntary-liquidation-2300512-2020:1",
+    "et-decisions:employment-tribunal-decisions/ms-j-herger-v-miller-druck-international-stone-ltd-in-liquidation-2300069-slash-2020:1",
+    "et-decisions:employment-tribunal-decisions/mrs-thompson-v-miller-graphics-corniche-ltd-1802326-slash-2021:1",
+    "et-decisions:employment-tribunal-decisions/ms-m-dows-miller-v-montessori-st-nicholas-1403084-slash-2020:1",
+    "et-decisions:employment-tribunal-decisions/mrs-j-miller-v-albion-tividale-ltd-1306960-2020:1",
+    "et-decisions:employment-tribunal-decisions/ms-s-miller-v-velindre-university-nhs-trust-1600609-2018:1",
+    "et-decisions:employment-tribunal-decisions/mr-m-bocian-v-millers-of-speyside-ltd-s-4118198-2018:1",
+    "et-decisions:employment-tribunal-decisions/ms-m-alvarez-garcia-v-ellis-miller-london-ltd-3320638-slash-2019:1",
+    "et-decisions:employment-tribunal-decisions/mr-m-miller-v-designworks-windsor-ltd-and-designworks-2-ltd-3305255-slash-2024:1",
+    "et-decisions:employment-tribunal-decisions/mr-d-cook-v-afe-group-ltd-t-a-millers-vanguard-2417902-2018:1",
+    "et-decisions:employment-tribunal-decisions/ms-a-mcgeachie-v-st-marys-kenmure-and-mr-k-miller-4104941-slash-2020:1",
+    "et-decisions:employment-tribunal-decisions/mr-michael-miller-v-mr-rajeev-atchuthananthan-t-a-swallow-filling-station-2501606-2017:1",
+    "et-decisions:employment-tribunal-decisions/mr-j-mckenzie-v-a-miller-son-ltd-and-miller-bathrooms-ltd-4102738-2019:1",
+    "et-decisions:employment-tribunal-decisions/mrs-r-quarcoo-v-crown-office-the-scottish-ministers-4113563-slash-2019:1",
+    "et-decisions:employment-tribunal-decisions/mr-c-miller-v-psl2021-realisations-ltd-in-administration-and-the-secretary-of-state-for-business-energy-and-industrial-strategy-1600447-slash-2021:1",
+    "et-decisions:employment-tribunal-decisions/mr-r-cook-v-miller-homes-ltd-1305743-2019:1",
+    "et-decisions:employment-tribunal-decisions/r-miller-v-secretary-of-state-for-justice-1804063-slash-2024:1",
+    "et-decisions:employment-tribunal-decisions/mr-r-miller-v-jd-sports-fashion-plc-2402880-2016:1",
+    "et-decisions:employment-tribunal-decisions/mrs-r-wigmore-v-unison-and-others-2400089-2018-and-2403176-2018:1",
+    "oecd:-government-publications-statement-of-practice-1-2018:1",
+    "oecd:-government-publications-new-data-adequacy-agreement-in-principle-between-the-uk-and-republic-of-korea:1",
+    "oecd:-government-publications-uk-us-data-bridge-supporting-documents:1",
+    "oecd:-government-publications-spring-statement-2025-document:1",
+    "oecd:-government-publications-autumn-budget-2024:1",
+    "oecd:-government-publications-digital-services-tax-review:1",
+    "et-decisions:employment-tribunal-decisions/mr-t-beddall-v-sovereign-park-and-leisure-homes-ltd-1601166-2018:1",
+    "et-decisions:employment-tribunal-decisions/mr-anthony-tait-v-mrs-clare-grant-t-a-the-wheatsheaf-2501524-2017:1",
+    "et-decisions:employment-tribunal-decisions/mrs-j-taylor-v-terrance-graham-elliott-s-4104201-2018:1",
+    "et-decisions:employment-tribunal-decisions/mrs-s-harris-v-cavendish-property-investments-ltd-1803066-slash-2023:1",
+    "oecd:-guidance-packaging-waste-apply-for-registration-and-accreditation-as-a-reprocessor-or-exporter:1",
+    "et-decisions:employment-tribunal-decisions/mr-craig-mcluskey-v-scottish-ministers-s-4106852-2017:1",
+    "et-decisions:employment-tribunal-decisions/mr-b-mctague-and-others-v-the-scottish-ministers-4103512-slash-2023-and-others:1",
+    "et-decisions:employment-tribunal-decisions/r-chambers-v-lucky-chip-ltd-2218805-slash-2024:1",
+    "et-decisions:employment-tribunal-decisions/21cc-group-ltd-v-t-s-reeves-and-hm-inspector-of-health-and-safety-4101412-slash-2020:1",
+    "et-decisions:employment-tribunal-decisions/oakwood-leisure-ltd-v-s-breen-one-of-hm-inspectors-of-health-and-safety-2409562-slash-2022:1",
+    "et-decisions:employment-tribunal-decisions/britannia-hotels-ltd-and-britannia-hotels-number-2-ltd-v-environmental-health-officer-r-parkinson-and-environmental-health-officer-t-gee-2408345-slash-2022:1"
+  ],
+  "summary": [
+    {
+      "arm": "gateway",
+      "collection": "committees",
+      "n": 10,
+      "notMeasured": 0,
+      "section20": 3,
+      "documentCollapse20": 4,
+      "documentMax20": 3,
+      "documentSumTop3_20": 3,
+      "documentBestMember20": 3,
+      "documentInSectionSlots20": 3,
+      "sectionDepth": 6,
+      "documentCollapseDepth": 6,
+      "medianWordsOfTop20": 716,
+      "under30Share": 0.005,
+      "over1500Share": 0.29,
+      "top20Counted": 200
+    },
+    {
+      "arm": "gateway",
+      "collection": "caselaw",
+      "n": 6,
+      "notMeasured": 0,
+      "section20": 4,
+      "documentCollapse20": 4,
+      "documentMax20": 4,
+      "documentSumTop3_20": 4,
+      "documentBestMember20": 4,
+      "documentInSectionSlots20": 4,
+      "sectionDepth": 6,
+      "documentCollapseDepth": 6,
+      "medianWordsOfTop20": 6940,
+      "under30Share": 0,
+      "over1500Share": 0.8833333333333333,
+      "top20Counted": 120
+    },
+    {
+      "arm": "gateway",
+      "collection": "guidance",
+      "n": 10,
+      "notMeasured": 0,
+      "section20": 6,
+      "documentCollapse20": 6,
+      "documentMax20": 3,
+      "documentSumTop3_20": 1,
+      "documentBestMember20": 3,
+      "documentInSectionSlots20": 6,
+      "sectionDepth": 8,
+      "documentCollapseDepth": 8,
+      "medianWordsOfTop20": 1551,
+      "under30Share": 0.01,
+      "over1500Share": 0.42,
+      "top20Counted": 200
+    },
+    {
+      "arm": "gateway",
+      "collection": "impact-assessments",
+      "n": 9,
+      "notMeasured": 0,
+      "section20": 2,
+      "documentCollapse20": 2,
+      "documentMax20": 2,
+      "documentSumTop3_20": 2,
+      "documentBestMember20": 0,
+      "documentInSectionSlots20": 2,
+      "sectionDepth": 3,
+      "documentCollapseDepth": 3,
+      "medianWordsOfTop20": 451,
+      "under30Share": 0.012578616352201259,
+      "over1500Share": 0.1949685534591195,
+      "top20Counted": 159
+    },
+    {
+      "arm": "gateway",
+      "collection": "consultations",
+      "n": 9,
+      "notMeasured": 0,
+      "section20": 6,
+      "documentCollapse20": 6,
+      "documentMax20": 6,
+      "documentSumTop3_20": 6,
+      "documentBestMember20": 6,
+      "documentInSectionSlots20": 6,
+      "sectionDepth": 9,
+      "documentCollapseDepth": 9,
+      "medianWordsOfTop20": 364,
+      "under30Share": 0,
+      "over1500Share": 0.18888888888888888,
+      "top20Counted": 180
+    },
+    {
+      "arm": "gateway",
+      "collection": "debates",
+      "n": 11,
+      "notMeasured": 0,
+      "section20": 2,
+      "documentCollapse20": 7,
+      "documentMax20": 8,
+      "documentSumTop3_20": 8,
+      "documentBestMember20": 2,
+      "documentInSectionSlots20": 7,
+      "sectionDepth": 4,
+      "documentCollapseDepth": 9,
+      "medianWordsOfTop20": 603,
+      "under30Share": 0.0091324200913242,
+      "over1500Share": 0.1598173515981735,
+      "top20Counted": 219
+    },
+    {
+      "arm": "gateway",
+      "collection": "legislation",
+      "n": 10,
+      "notMeasured": 0,
+      "section20": 4,
+      "documentCollapse20": 7,
+      "documentMax20": 7,
+      "documentSumTop3_20": 8,
+      "documentBestMember20": 3,
+      "documentInSectionSlots20": 7,
+      "sectionDepth": 7,
+      "documentCollapseDepth": 10,
+      "medianWordsOfTop20": 485,
+      "under30Share": 0.025,
+      "over1500Share": 0.24,
+      "top20Counted": 200
+    }
+  ],
+  "rows": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:34458:189872-0001",
+          "words": 491,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:34458:189872-0002",
+          "words": 505,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 1,
+          "documentSumTop3": 2,
+          "documentBestMember": 1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 716,
+            "p25": 522,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 1
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:34458:189872-0001",
+          "committees-reports:publication:40187:196307-0001",
+          "pwdata-lords:daylord2023-10-16b:77",
+          "committees-reports:publication:34458:189872-0003",
+          "committees-reports:publication:34458:189872-0007",
+          "pwdata-lords:daylord2023-10-16b:75",
+          "pwdata-lords:daylord2023-10-16b:80",
+          "pwdata-lords:daylord2023-10-16b:82",
+          "committees-reports:publication:31843:179085",
+          "pwdata-lords:daylord2023-10-16b:76",
+          "committees-reports:publication:33580:182731",
+          "pwdata-lords:daylord2023-10-16b:85",
+          "pwdata-lords:daylord2025-04-28a:68",
+          "pwdata-lords:daylord2022-07-07b:96",
+          "pwdata-lords:daylord2022-07-07b:95",
+          "pwdata-lords:daylord2024-02-22a:117",
+          "pwdata-lords:daylord2024-02-29b:131",
+          "pwdata-lords:daylord2024-02-29b:148",
+          "pwdata-lords:daylord2024-10-09a:147",
+          "pwdata-lords:daylord2024-02-29b:137"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:48294:252814",
+          "words": 216,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:34605:190516",
+          "words": 967,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 48,
+          "documentCollapse": 23,
+          "documentMax": 28,
+          "documentSumTop3": 29,
+          "documentBestMember": 28,
+          "documentInSectionSlots": 48,
+          "topWords": {
+            "n": 20,
+            "median": 567,
+            "p25": 467,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 1
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:8879:95841-0003",
+          "committees-reports:publication:8879:95841-0004",
+          "committees-reports:publication:8879:95841-0002",
+          "committees-reports:publication:8879:95841-0005",
+          "committees-reports:publication:8879:95841-0026",
+          "committees-reports:publication:8879:95841-0027",
+          "committees-reports:publication:8879:95841-0028",
+          "committees-reports:publication:43719:216940-0002",
+          "committees-reports:publication:8879:95841-0024",
+          "committees-reports:publication:52110:290159-0004",
+          "committees-reports:publication:52110:290159-0028",
+          "committees-reports:publication:53709:299682-0007",
+          "committees-reports:publication:43352:215850",
+          "committees-reports:publication:8879:95841-0009",
+          "committees-reports:publication:22018:163573-0019",
+          "committees-reports:publication:8879:95841-0006",
+          "committees-reports:publication:8879:95841-0016",
+          "committees-reports:publication:8879:95841-0022",
+          "committees-reports:publication:8879:95841-0017",
+          "committees-reports:publication:22018:163573-0002"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:46883:241779",
+          "words": 773,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 7,
+          "documentCollapse": 7,
+          "documentMax": 28,
+          "documentSumTop3": 44,
+          "documentBestMember": 28,
+          "documentInSectionSlots": 7,
+          "topWords": {
+            "n": 20,
+            "median": 1130,
+            "p25": 181,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 6
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2025-03-17:199",
+          "committees-reports:publication:49441:263245",
+          "pwdata-lordswms:lordswms2024-12-02:2",
+          "pwdata-wms:ministerial2024-12-02:3",
+          "pwdata-lordswms:lordswms2025-02-13:1",
+          "pwdata-wms:ministerial2025-02-13:3",
+          "committees-reports:publication:46883:241779",
+          "pwdata-lords:daylord2024-09-09b:74",
+          "pwdata-debates:debates2024-09-04c:129",
+          "pwdata-debates:debates2026-06-11c:312",
+          "pwdata-lords:daylord2025-02-27a:162",
+          "pwdata-lords:daylord2025-02-27a:161",
+          "pwdata-debates:debates2025-02-26c:139",
+          "pwdata-debates:debates2026-02-25c:238",
+          "pwdata-wrans:answers2025-02-11:149",
+          "pwdata-lordswms:lordswms2026-05-20:3",
+          "pwdata-lordswms:lordswms2020-06-02:7",
+          "pwdata-lords:daylord2019-10-31a:117",
+          "pwdata-lords:daylord2024-11-22b:3",
+          "pwdata-lordswms:lordswms2019-10-30:4"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:22289:164915",
+          "words": 2118,
+          "chunks": 5
+        },
+        {
+          "key": "committees-reports:publication:22289:165036",
+          "words": 1391,
+          "chunks": 3
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 24,
+          "documentCollapse": 7,
+          "documentMax": 11,
+          "documentSumTop3": 13,
+          "documentBestMember": 11,
+          "documentInSectionSlots": 24,
+          "topWords": {
+            "n": 20,
+            "median": 489,
+            "p25": 458,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:18217:arc-0003",
+          "committees-reports:publication:18217:arc-0020",
+          "committees-reports:publication:18217:arc-0002",
+          "committees-reports:publication:19856:arc-0003",
+          "committees-reports:publication:19856:arc-0002",
+          "committees-reports:publication:19856:arc-0005",
+          "committees-reports:publication:19856:arc-0004",
+          "committees-reports:publication:17961:arc-0029",
+          "committees-reports:publication:18217:arc-0012",
+          "committees-reports:publication:18217:arc-0022",
+          "committees-reports:publication:18217:arc-0007",
+          "committees-reports:publication:18217:arc-0021",
+          "committees-reports:publication:18217:arc-0018",
+          "committees-reports:publication:18217:arc-0011",
+          "committees-reports:publication:18217:arc-0008",
+          "committees-reports:publication:18217:arc-0004",
+          "committees-reports:publication:18217:arc-0005",
+          "committees-reports:publication:18756:arc-0002",
+          "committees-reports:publication:18380:arc-0007",
+          "committees-reports:publication:18380:arc-0019"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:34123:187763",
+          "words": 641,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:255:1142",
+          "words": 641,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:257:1111",
+          "words": 229,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 122,
+            "p25": 101,
+            "under30": 0,
+            "under100": 5,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2025-05-07:174",
+          "pwdata-wrans:answers2022-06-30:232",
+          "pwdata-wrans:answers2025-03-04:68",
+          "pwdata-wrans:answers2019-07-01:163",
+          "pwdata-wrans:answers2022-06-06:307",
+          "pwdata-wrans:answers2024-11-21:146",
+          "pwdata-wrans:answers2019-02-05:164",
+          "pwdata-wrans:answers2025-03-19:200",
+          "pwdata-wrans:answers2018-04-18:185",
+          "pwdata-wrans:answers2025-05-27:115",
+          "pwdata-wrans:answers2020-10-19:206",
+          "pwdata-lordswrans:lordswrans2025-09-30:2",
+          "pwdata-wrans:answers2023-04-24:760",
+          "pwdata-lordswrans:lordswrans2024-12-04:43",
+          "pwdata-wrans:answers2021-10-18:220",
+          "pwdata-lordswrans:lordswrans2025-01-15:7",
+          "pwdata-wrans:answers2021-01-20:222",
+          "pwdata-lordswrans:lordswrans2025-01-13:11",
+          "pwdata-wrans:answers2022-10-25:582",
+          "pwdata-wrans:answers2024-12-16:217"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:112256:179384",
+          "words": 763,
+          "chunks": 2
+        },
+        {
+          "key": "committees-evidence:writtenevidence:112257:175552",
+          "words": 789,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 3055,
+            "p25": 1340,
+            "under30": 1,
+            "under100": 2,
+            "over1500": 14
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "quangos-govuk:government/publications/national-commission-into-the-regulation-of-ai-in-healthcare-research-engagement-and-call-for-evidence-findings:2",
+          "quangos-govuk:government/publications/national-commission-into-the-regulation-of-ai-in-healthcare-research-engagement-and-call-for-evidence-findings:1",
+          "quangos-govuk:government/publications/national-commission-into-the-regulation-of-ai-in-healthcare-research-engagement-and-call-for-evidence-findings:3",
+          "consultations:government_consultations_ai-regulation-a-pro-innovation-approach-policy-proposals:1",
+          "committees-evidence:writtenevidence:113802:179453",
+          "committees-evidence:writtenevidence:113796:179439",
+          "committees-evidence:writtenevidence:113873:178624",
+          "committees-evidence:writtenevidence:113752:179396",
+          "committees-evidence:writtenevidence:113848:179509",
+          "committees-evidence:writtenevidence:113874:178627",
+          "committees-evidence:writtenevidence:113820:179472",
+          "committees-evidence:writtenevidence:113858:179517",
+          "committees-evidence:writtenevidence:113792:179432",
+          "committees-evidence:writtenevidence:113850:179508",
+          "quangos-govuk:government/publications/artificial-intelligence-and-public-standards-focus-group-summary:1",
+          "quangos-govuk:government/publications/evidence-to-support-the-analysis-of-impacts-for-artificial-intelligence-governance:3",
+          "quangos-govuk:government/publications/response-to-the-ai-growth-lab-call-for-evidence:1",
+          "quangos-govuk:government/publications/response-to-the-ai-growth-lab-call-for-evidence:2",
+          "quangos-govuk:government/publications/cspl-submission-to-lords-communications-and-digital-committee-inquiry-on-large-language-models:2",
+          "quangos-govuk:government/publications/artificial-intelligence-and-public-standards-regulators-survey-and-responses:2"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:129871:220666",
+          "words": 3075,
+          "chunks": 7
+        },
+        {
+          "key": "committees-evidence:writtenevidence:129872:220668",
+          "words": 4261,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 2,
+          "documentCollapse": 2,
+          "documentMax": 3,
+          "documentSumTop3": 13,
+          "documentBestMember": 3,
+          "documentInSectionSlots": 2,
+          "topWords": {
+            "n": 20,
+            "median": 2598,
+            "p25": 1709,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 17
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-evidence:writtenevidence:129866:220663",
+          "committees-evidence:writtenevidence:129871:220666",
+          "committees-evidence:writtenevidence:130008:221220",
+          "committees-evidence:writtenevidence:129643:219935",
+          "committees-evidence:writtenevidence:129526:219440",
+          "committees-evidence:writtenevidence:129843:220661",
+          "committees-evidence:writtenevidence:129870:220664",
+          "committees-evidence:writtenevidence:129751:220212",
+          "committees-evidence:writtenevidence:129004:219332",
+          "committees-evidence:writtenevidence:129927:220733",
+          "committees-evidence:writtenevidence:129880:220677",
+          "committees-evidence:writtenevidence:106726:161212",
+          "committees-reports:publication:4978:49812",
+          "committees-evidence:writtenevidence:129792:220328",
+          "committees-evidence:writtenevidence:129877:221044",
+          "committees-evidence:writtenevidence:106682:160834",
+          "committees-evidence:writtenevidence:129874:220672",
+          "committees-evidence:writtenevidence:38796:75590",
+          "committees-evidence:writtenevidence:38813:75774",
+          "committees-evidence:writtenevidence:106632:160743"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:100004:146799",
+          "words": 3648,
+          "chunks": 8
+        },
+        {
+          "key": "committees-evidence:writtenevidence:100008:145455",
+          "words": 137,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 12268,
+            "p25": 559,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 12
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-evidence:oralevidence:17497:294353",
+          "committees-evidence:oralevidence:17498:294354",
+          "committees-evidence:oralevidence:15501:243483",
+          "committees-evidence:oralevidence:15502:243486",
+          "committees-evidence:oralevidence:9644:158847",
+          "committees-reports:publication:24383:arc-0015",
+          "committees-reports:publication:24972:arc-0002",
+          "committees-reports:publication:24383:arc-0010",
+          "committees-reports:publication:24383:arc-0002",
+          "committees-evidence:oralevidence:8202:157339",
+          "committees-evidence:oralevidence:8732:157943",
+          "committees-evidence:oralevidence:8626:157740",
+          "committees-evidence:oralevidence:8854:157968",
+          "committees-evidence:oralevidence:9083:158241",
+          "committees-evidence:oralevidence:9236:158411",
+          "committees-evidence:oralevidence:9299:158463",
+          "committees-reports:publication:21251:arc-0104",
+          "committees-reports:publication:941:7292-0014",
+          "committees-reports:publication:49545:265377-0140",
+          "committees-reports:publication:46238:231788-0022"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:100005:145526",
+          "words": 1738,
+          "chunks": 4
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 56,
+          "documentCollapse": 33,
+          "documentMax": 30,
+          "documentSumTop3": 31,
+          "documentBestMember": 30,
+          "documentInSectionSlots": 56,
+          "topWords": {
+            "n": 20,
+            "median": 572,
+            "p25": 512,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-evidence:oralevidence:9125:158301",
+          "committees-evidence:oralevidence:9242:158418",
+          "committees-reports:publication:20800:arc-0073",
+          "committees-evidence:writtenevidence:93264:138235",
+          "committees-reports:publication:20800:arc-0012",
+          "committees-reports:publication:20800:arc-0005",
+          "committees-reports:publication:328:1315-0002",
+          "committees-reports:publication:20800:arc-0067",
+          "committees-reports:publication:20800:arc-0017",
+          "committees-reports:publication:20800:arc-0019",
+          "committees-reports:publication:20800:arc-0010",
+          "committees-reports:publication:20800:arc-0025",
+          "committees-reports:publication:20800:arc-0002",
+          "committees-reports:publication:20800:arc-0004",
+          "committees-reports:publication:20800:arc-0071",
+          "committees-reports:publication:20800:arc-0049",
+          "committees-reports:publication:20800:arc-0065",
+          "committees-reports:publication:20800:arc-0072",
+          "committees-reports:publication:20800:arc-0057",
+          "committees-reports:publication:20800:arc-0052"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:50376:272506",
+          "words": 156,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:22555:166025",
+          "words": 827,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 571,
+            "p25": 491,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:34131:187908-0012",
+          "committees-reports:publication:20216:arc-0013",
+          "committees-reports:publication:8352:85020-0002",
+          "committees-reports:publication:40172:195992-0001",
+          "committees-reports:publication:9266:160332-0013",
+          "committees-reports:publication:50242:271529-0013",
+          "committees-reports:publication:8352:85020-0009",
+          "committees-evidence:writtenevidence:38240:75503",
+          "committees-reports:publication:50242:271529-0008",
+          "committees-reports:publication:8352:85020-0003",
+          "committees-evidence:writtenevidence:38648:75276",
+          "committees-reports:publication:9266:160332-0002",
+          "committees-reports:publication:8352:85020-0020",
+          "committees-reports:publication:22460:165545-0001",
+          "committees-reports:publication:8352:85020-0008",
+          "committees-evidence:writtenevidence:41477:83730",
+          "committees-evidence:writtenevidence:41544:83725",
+          "committees-reports:publication:20216:arc-0003",
+          "committees-evidence:writtenevidence:102439:147659",
+          "committees-evidence:writtenevidence:140487:248233"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "question": "What did the Supreme Court decide about prorogation of Parliament?",
+      "keys": [
+        "tna-caselaw:[2019] UKSC 41:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "tna-caselaw"
+      ],
+      "keyShape": [
+        {
+          "key": "tna-caselaw:[2019] UKSC 41:1",
+          "words": 10810,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 2,
+          "documentSumTop3": 2,
+          "documentBestMember": 2,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 6940,
+            "p25": 4521,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 20
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "tna-caselaw:[2019] UKSC 41:1",
+          "tna-caselaw:[2019] EWHC 2381 (QB):1",
+          "tna-caselaw:[2025] EWCA Civ 673:1",
+          "tna-caselaw:[2020] EWHC 676 (QB):1",
+          "ni-judgments:2021-nica-49:1",
+          "scottish-courts:media/1naav0gj/reclaiming-motion-by-joanna-cherry-qc-mp-and-others-against-the-advocate-general:1",
+          "scottish-courts:media/n1nagpji/first-joanna-cherry-qc-mp-and-others-for-judicial-review:1",
+          "tna-caselaw:[2019] EWCA Civ 1761:1",
+          "scottish-courts:media/nvzncsee/first-joanna-cherry-qc-mp-and-others-for-judicial-review-2:1",
+          "scottish-courts:media/qgloryig/1-dale-vince-obe-2-jolyon-maugham-qc-and-3-joanna-cherry-qc-mp-against-the-right-honourable-boris-johnston-and-the-lord-keen-of-elie:1",
+          "tna-caselaw:[2008] EWHC 936 (Admin):1",
+          "tna-caselaw:[2017] EWHC 3174 (Admin):1",
+          "tna-caselaw:[2017] EWHC 1948 (Admin):1",
+          "tna-caselaw:[2018] EWHC 3393 (QB):1",
+          "tna-caselaw:[2017] EWHC 3379 (QB):1",
+          "tna-caselaw:[2019] EWHC 3282 (Admin):1",
+          "ni-judgments:summary-judgment-court-refuses-leave-issue-proceedings-against-prime-minister-re:1",
+          "ni-judgments:2020-niqb-80:1",
+          "scottish-courts:media/wotbimgh/andrew-wightman-msp-and-others-for-judicial-review-against-the-secretary-of-state-for-exiting-the-european-union:1",
+          "tna-caselaw:[2016] EWHC 2768 (Admin):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "question": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "keys": [
+        "tna-caselaw:[2021] UKSC 5:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "tna-caselaw"
+      ],
+      "keyShape": [
+        {
+          "key": "tna-caselaw:[2021] UKSC 5:1",
+          "words": 18588,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 22,
+          "documentSumTop3": 23,
+          "documentBestMember": 22,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 5943,
+            "p25": 2340,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 17
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "tna-caselaw:[2021] UKSC 5:1",
+          "et-decisions:employment-tribunal-decisions/ms-a-dolphin-and-others-v-rhythmix-in-liquidation-ltd-and-the-secretary-of-state-for-business-energy-and-industrial-strategy-2305253-slash-2019:2",
+          "et-decisions:employment-tribunal-decisions/mr-c-masaquiza-masaquiza-and-other-v-c-palace-living-ltd-3302110-slash-2020-and-3302111-slash-2020:4",
+          "et-decisions:employment-tribunal-decisions/mr-s-w-kibrom-v-uber-london-ltd-3201530-slash-2023:2",
+          "tna-caselaw:[2024] EAT 43:1",
+          "et-decisions:employment-tribunal-decisions/mrs-p-hebden-jacks-v-aura-leisure-and-libraries-ltd-1601737-slash-2019:2",
+          "et-decisions:employment-tribunal-decisions/g-bains-v-shrewsbury-and-telford-hospital-nhs-trust-1302699-slash-2024:2",
+          "et-decisions:employment-tribunal-decisions/mr-d-hughes-v-costain-ltd-and-me-global-resources-ltd-1304006-slash-2023-and-1304002-slash-2023:2",
+          "et-decisions:employment-tribunal-decisions/miss-t-tyrell-v-skylark-solutions-ltd-and-background-clubs-ltd-3200737-slash-2024:2",
+          "et-decisions:employment-tribunal-decisions/mr-m-ter-berg-v-simply-smile-manor-house-ltd-and-others-3334608-2018:7",
+          "et-decisions:employment-tribunal-decisions/mr-z-ali-v-leeds-taxi-owners-ltd-1800150-slash-2020:2",
+          "et-decisions:employment-tribunal-decisions/mr-z-bandi-and-others-v-bolt-operations-ou-and-bolt-services-uk-ltd-2206953-slash-2021-and-others:3",
+          "et-decisions:employment-tribunal-decisions/mr-a-khan-v-nuffield-health-1801624-2017:2",
+          "et-decisions:employment-tribunal-decisions/mr-d-loader-v-the-secretary-of-state-for-business-and-trade-and-markline-construction-ltd-in-administration-1404278-slash-2023:2",
+          "et-decisions:employment-tribunal-decisions/miss-d-martin-v-mr-p-carroll-t-slash-a-cripps-dental-centre-2603718-slash-2020:2",
+          "et-decisions:employment-tribunal-decisions/mr-s-o-eachtiarna-and-others-v-city-sprint-uk-ltd-2301176-2018-and-others:2",
+          "et-decisions:employment-tribunal-decisions/mr-t-f-olajumoke-v-s-j-global-investments-worldwide-ltd-in-voluntary-liquidation-3203071-slash-2019:2",
+          "et-decisions:employment-tribunal-decisions/mrs-z-kankevich-v-mr-jason-cocks-t-a-jc-cleaning-services-3325021-2017:2",
+          "et-decisions:employment-tribunal-decisions/ms-l-thomas-v-newsteam-group-ltd-1600331-slash-2023:3",
+          "et-decisions:employment-tribunal-decisions/ms-c-griffiths-v-the-institution-of-mechanical-engineers-2200023-2020:2"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "question": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "keys": [
+        "tna-caselaw:[2014] UKSC 19:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "tna-caselaw"
+      ],
+      "keyShape": [
+        {
+          "key": "tna-caselaw:[2014] UKSC 19:1",
+          "words": 19037,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 67,
+          "documentCollapse": 59,
+          "documentMax": 43,
+          "documentSumTop3": 49,
+          "documentBestMember": 43,
+          "documentInSectionSlots": 67,
+          "topWords": {
+            "n": 20,
+            "median": 5740,
+            "p25": 4846,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 20
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "ni-judgments:2019-nifam-9:1",
+          "tna-caselaw:[2024] EWHC 493 (Fam):1",
+          "quangos-govuk:government/consultations/changes-to-the-mca-code-of-practice-and-implementation-of-the-lps:2",
+          "tna-caselaw:[2020] EWHC 139 (Fam):1",
+          "tna-caselaw:[2018] EWFC 47:1",
+          "tna-caselaw:[2024] EWHC 228 (Fam):1",
+          "tna-caselaw:[2020] EWCOP 39:1",
+          "tna-caselaw:[2015] EWCA Civ 599:1",
+          "tna-caselaw:[2014] EWCOP 25:1",
+          "tna-caselaw:[2014] EWCOP 37:1",
+          "tna-caselaw:[2015] EWHC 922 (Fam):1",
+          "tna-caselaw:[2015] EWHC 3125 (Fam):1",
+          "tna-caselaw:[2013] EWHC 272 (Fam):1",
+          "tna-caselaw:[2015] EWCOP 47:1",
+          "tna-caselaw:[2009] EWHC 1737 (Fam):1",
+          "tna-caselaw:[2009] EWCOP 1737:1",
+          "ni-judgments:2017-nifam-1:1",
+          "tna-caselaw:[2018] EWHC 3103 (Fam):1",
+          "tna-caselaw:[2023] EWHC 3416 (Fam):1",
+          "tna-caselaw:[2018] EWHC 2961 (Fam):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "question": "Is there a Supreme Court case about employment tribunal fees?",
+      "keys": [
+        "tna-caselaw:[2017] UKSC 51:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "tna-caselaw"
+      ],
+      "keyShape": [
+        {
+          "key": "tna-caselaw:[2017] UKSC 51:1",
+          "words": 18586,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 4,
+          "documentCollapse": 4,
+          "documentMax": 4,
+          "documentSumTop3": 5,
+          "documentBestMember": 4,
+          "documentInSectionSlots": 4,
+          "topWords": {
+            "n": 20,
+            "median": 10443,
+            "p25": 4176,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 19
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "tna-caselaw:[2014] EWHC 218 (Admin):1",
+          "tna-caselaw:[2015] EWCA Civ 935:1",
+          "tna-caselaw:[2014] EWHC 4198 (Admin):1",
+          "tna-caselaw:[2017] UKSC 51:1",
+          "et-decisions:employment-tribunal-decisions/mr-d-vardy-v-healthcare-environmental-group-ltd-2501177-2017:2",
+          "ni-judgments:2019-nica-55:1",
+          "et-decisions:employment-tribunal-decisions/miss-g-machingura-v-oxford-university-hospitals-nhs-foundation-trust-3328077-2017:2",
+          "tna-caselaw:[2006] EWHC 504 (Admin):1",
+          "tna-caselaw:[2012] EWHC 3062 (Admin):1",
+          "tna-caselaw:[2017] EWHC 258 (Ch):1",
+          "tna-caselaw:[2017] EWHC 410 (Admin):1",
+          "tna-caselaw:[2006] EWHC 251 (Admin):1",
+          "tna-caselaw:[2020] EWHC 336 (Admin):1",
+          "tna-caselaw:[2015] EWHC 523 (Admin):1",
+          "tna-caselaw:[2023] EWHC 1475 (KB):1",
+          "tna-caselaw:[2011] EWHC 1146 (Admin):1",
+          "tna-caselaw:[2014] EWHC 1840 (Admin):1",
+          "tna-caselaw:[2013] UKSC 78:1",
+          "et-decisions:employment-tribunal-decisions/ms-v-mccloud-and-others-mr-n-mostyn-and-others-v-the-lord-chancellor-and-secretary-of-state-for-justice-and-ministry-of-justice-2201483-2015-and-others-2202075-2015-and-others:3",
+          "tna-caselaw:[2015] EWHC 250 (QB):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "keys": [
+        "tna-caselaw:[2011] UKSC 20:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "tna-caselaw"
+      ],
+      "keyShape": [
+        {
+          "key": "tna-caselaw:[2011] UKSC 20:1",
+          "words": 25163,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 29,
+          "documentCollapse": 29,
+          "documentMax": 13,
+          "documentSumTop3": 13,
+          "documentBestMember": 13,
+          "documentInSectionSlots": 29,
+          "topWords": {
+            "n": 20,
+            "median": 13450,
+            "p25": 7723,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 20
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "tna-caselaw:[2010] EWCA Civ 1479:1",
+          "tna-caselaw:[2016] EWHC 1892 (Admin):1",
+          "tna-caselaw:[2016] EWHC 6 (Admin):1",
+          "tna-caselaw:[2020] EWCA Civ 738:1",
+          "tna-caselaw:[2004] EWCA Civ 1439:1",
+          "ni-judgments:2025-nicoroner-1:1",
+          "ni-judgments:2021-nicoroner-6:1",
+          "tna-caselaw:[2007] EWCA Civ 1375:1",
+          "tna-caselaw:[2005] EWHC 728 (Admin):1",
+          "tna-caselaw:[2006] EWCA Civ 143:1",
+          "ni-judgments:2006-niqb-90-0:1",
+          "tna-caselaw:[2006] EWHC 2558 (Admin):1",
+          "tna-caselaw:[2003] EWHC 1414 (Admin):1",
+          "tna-caselaw:[2009] EWHC 2416 (Admin):1",
+          "tna-caselaw:[2005] EWCA Civ 890:1",
+          "tna-caselaw:[2009] EWHC 13 (Admin):1",
+          "echr-hudoc:001-194982:1",
+          "tna-caselaw:[2018] EWHC 1501 (Admin):1",
+          "tna-caselaw:[2013] EWHC 3055 (Admin):1",
+          "tna-caselaw:[2014] EWHC 1586 (Admin):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "question": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "keys": [
+        "tna-caselaw:[2003] EWCA Civ 1769:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "tna-caselaw"
+      ],
+      "keyShape": [
+        {
+          "key": "tna-caselaw:[2003] EWCA Civ 1769:1",
+          "words": 14902,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 17,
+          "documentSumTop3": 17,
+          "documentBestMember": 17,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 1593,
+            "p25": 619,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 10
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "tna-caselaw:[2003] EWCA Civ 1769:1",
+          "tna-caselaw:[2003] EWCA Civ 1899:1",
+          "tna-caselaw:[2003] EWCA Civ 1781:1",
+          "tna-caselaw:[2003] EWCA Civ 1574:1",
+          "tna-caselaw:[2004] EWCA Civ 145:1",
+          "tna-caselaw:[2003] EWCA Civ 703:1",
+          "scottish-courts:media/3omliexi/appeal-by-catherine-fraser-and-george-fraser-against-george-mcdonald-and-marjory-mcdonald:1",
+          "tna-caselaw:[2005] EWCA Civ 446:1",
+          "tna-caselaw:[2004] EWCA Civ 1049:1",
+          "tna-caselaw:[2003] EWCA Civ 1169:1",
+          "tna-caselaw:[2004] EWCA Civ 1019:1",
+          "tna-caselaw:[2003] EWCA Civ 469:1",
+          "tna-caselaw:[2003] EWCA Civ 1817:1",
+          "tna-caselaw:[2003] EWCA Civ 884:1",
+          "tna-caselaw:[2003] EWCA Civ 1921:1",
+          "tna-caselaw:[2003] EWCA Civ 1349:1",
+          "et-decisions:employment-tribunal-decisions/mr-h-pabla-v-mbda-uk-ltd-3311737-slash-2020:3",
+          "tna-caselaw:[2003] EWCA Civ 1193:1",
+          "tna-caselaw:[2007] EWCA Civ 1495:1",
+          "tna-caselaw:[2003] EWCA Civ 182:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "question": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "hmrc-manuals"
+      ],
+      "keyShape": [
+        {
+          "key": "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1",
+          "words": 497,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 8,
+          "documentSumTop3": 8,
+          "documentBestMember": 8,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 535,
+            "p25": 242,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 1
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52200:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh33206:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh45815:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52775:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52300:1",
+          "quangos-govuk:guidance/being-an-authorised-corporate-service-provider:1",
+          "quangos-govuk:guidance/applying-to-register-as-a-companies-house-authorised-agent:1",
+          "quangos-govuk:government/publications/list-of-authorised-corporate-service-providers-acsps:1",
+          "hmrc-codes-guidance:-guidance-money-laundering-regulations-apply-for-the-fit-and-proper-test:1",
+          "hmrc-codes-guidance:-anti-money-laundering-registration:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh40500:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh50000:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh31000:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh21025:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh21075:1",
+          "hmrc-manuals:hmrc-internal-manuals/debt-management-and-banking/dmbm540210:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh21500:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh82796:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52550:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "question": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/domestic-abuse:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "cps-guidance"
+      ],
+      "keyShape": [
+        {
+          "key": "cps-guidance:prosecution-guidance/domestic-abuse:1",
+          "words": 31698,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 33,
+          "documentSumTop3": 34,
+          "documentBestMember": 33,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 7993,
+            "p25": 5482,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 20
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "cps-guidance:prosecution-guidance/domestic-abuse:1",
+          "college-of-policing:app-content/major-investigation-and-public-protection/domestic-abuse/post-arrest-management-of-suspect-and-casefile:1",
+          "college-of-policing:app-content/major-investigation-and-public-protection/domestic-abuse/arrest-and-other-positive-approaches:1",
+          "cps-guidance:prosecution-guidance/offences-against-person-incorporating-charging-standard:1",
+          "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1",
+          "cps-guidance:prosecution-guidance/violence-against-women-and-girls-guidance:1",
+          "cps-guidance:prosecution-guidance/directors-guidance-charging-sixth-edition-december-2020-incorporating-national:1",
+          "quangos-govuk:government/publications/mou-between-the-aibs-and-the-cps:2",
+          "cps-guidance:publication/code-crown-prosecutors:1",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-resource-accounts-for-the-period-2007-to-2008:2",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-accounts-2010-to-2011:2",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-accounts-2011-to-2012:2",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-1997-to-1998:2",
+          "quangos-govuk:government/publications/the-crown-prosecution-service-autumn-performance-report-2006:2",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-resource-accounts-for-the-period-2008-to-2009:2",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-1999-to-2000:2",
+          "ico:action-weve-taken/decision-notices/2013/07/fs50487238:1",
+          "cps-guidance:prosecution-guidance/judicial-review-cps-prosecuting-decisions-appeals:1",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-accounts-2014-to-2015:2",
+          "ico:action-weve-taken/decision-notices/2025/07/ic-353444-g4b0:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "question": "What happens when someone is accused of making a false allegation of rape?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "cps-guidance"
+      ],
+      "keyShape": [
+        {
+          "key": "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1",
+          "words": 6123,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 495,
+          "returned": 495,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 73,
+          "documentSumTop3": 100,
+          "documentBestMember": 73,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 1889,
+            "p25": 209,
+            "under30": 1,
+            "under100": 4,
+            "over1500": 10
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1",
+          "pwdata-wrans:answers2006-12-06c:4",
+          "pwdata-lordswms:lordswms2013-03-13a:3",
+          "college-of-policing:app-content/major-investigation-and-public-protection/child-abuse/complex-investigations:1",
+          "pwdata-lordswrans:lordswrans2007-02-26b:9",
+          "tna-caselaw:[2011] EWCA Crim 1099:1",
+          "tna-caselaw:[2008] EWCA Crim 2301:1",
+          "tna-caselaw:[2010] EWCA Crim 2913:1",
+          "tna-caselaw:[2012] EWCA Crim 434:1",
+          "echr-hudoc:001-148219:1",
+          "tna-caselaw:[2016] UKUT 306 (AAC):1",
+          "primary-acts-pre-2000:ukpga/1997/50:schedule-8A-paragraph-13A",
+          "primary-acts-2000plus:ukpga/2015/30:schedule-4-paragraph-5",
+          "primary-acts-2000plus:ukpga/2004/4:section-7",
+          "regional:ssi/2007/513:schedule-paragraph-47",
+          "tna-caselaw:[2018] EWHC 1724 (Admin):1",
+          "tna-caselaw:[2020] EWHC 3573 (Admin):1",
+          "tna-caselaw:[2016] EWHC 837 (Admin):1",
+          "primary-acts-pre-2000:ukpga/1967/58:section-5",
+          "primary-acts-pre-2000:ukpga/1967/80:section-89"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "question": "What are the rules police have to follow when stopping and searching someone?",
+      "keys": [
+        "college-of-policing:app-content/stop-and-search:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "college-of-policing"
+      ],
+      "keyShape": [
+        {
+          "key": "college-of-policing:app-content/stop-and-search:1",
+          "words": 2528,
+          "chunks": 6
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 499,
+          "returned": 499,
+          "section": 5,
+          "documentCollapse": 3,
+          "documentMax": 13,
+          "documentSumTop3": 40,
+          "documentBestMember": 13,
+          "documentInSectionSlots": 5,
+          "topWords": {
+            "n": 20,
+            "median": 318,
+            "p25": 127,
+            "under30": 0,
+            "under100": 5,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "govuk-core-docs:government/publications/pace-code-a-december-2023:1",
+          "govuk-core-docs:government/publications/pace-code-a-2023:1",
+          "govuk-core-docs:government/publications/pace-code-a-2023:2",
+          "govuk-core-docs:government/publications/pace-code-a-december-2023:2",
+          "college-of-policing:app-content/stop-and-search:1",
+          "college-of-policing:app-content/stop-and-search/quick-access-tools/qrg-legal/qrg-legal-application-search-options:1",
+          "explanatory-memoranda:em:uksi/2004/1887:1",
+          "explanatory-memoranda:em:uksi/2005/3503:1",
+          "consultations:government_consultations_revising-pace-code-a-2022:1",
+          "consultations:government_consultations_consultation-on-revised-pace-codes-of-practice-2013:1",
+          "si-2010plus:uksi/2023/1422:article-2",
+          "consultations:government_consultations_revised-pace-code-a:1",
+          "primary-acts-pre-2000:ukpga/1988/33:section-140",
+          "si-pre-2010:uksi/1995/450:article-3",
+          "si-2010plus:uksi/2015/418:article-2",
+          "si-2010plus:uksi/2023/20:article-2",
+          "primary-acts-2000plus:ukpga/2019/17:section-10",
+          "primary-acts-pre-2000:ukpga/1994/33:section-60",
+          "primary-acts-pre-2000:ukpga/1994/33:section-59",
+          "si-pre-2010:uksi/1999/1998:article-5"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/abuse-process:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "cps-guidance"
+      ],
+      "keyShape": [
+        {
+          "key": "cps-guidance:prosecution-guidance/abuse-process:1",
+          "words": 4680,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 29,
+          "documentSumTop3": 33,
+          "documentBestMember": 29,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 4680,
+            "p25": 880,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 12
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "cps-guidance:prosecution-guidance/abuse-process:1",
+          "cps-guidance:prosecution-guidance/judicial-review-cps-prosecuting-decisions-appeals:1",
+          "college-of-policing:app-content/prosecution-and-case-management/linked-reference-material:1",
+          "cps-guidance:prosecution-guidance/deceased-suspects-cps-policy-charging-decisions:1",
+          "cps-guidance:prosecution-guidance/coronavirus-interim-cps-case-review-guidance-application-public-interest-covid:1",
+          "cps-guidance:prosecution-guidance/coronavirus-related-prosecution-guidance:1",
+          "cps-guidance:prosecution-guidance/coronavirus-interim-cps-charging-protocol-between-national-police-chiefs:1",
+          "college-of-policing:app-content/major-investigation-and-public-protection/hate-crime/criminal-justice-processes:1",
+          "quangos-govuk:government/publications/framework-agreement-between-the-law-officers-and-the-director-of-public-prosecutions-cps:2",
+          "quangos-govuk:government/publications/joint-sfo-cps-corporate-prosecution-guidance:1",
+          "quangos-govuk:government/publications/insolvency-service-criminal-enforcement-victims-code-guidance:2",
+          "quangos-govuk:government/publications/crown-prosecution-service-report-and-accounts-april-2005-to-march-2006:2",
+          "cps-guidance:prosecution-guidance/violence-against-women-and-girls-guidance:1",
+          "cps-guidance:prosecution-guidance/criminal-allegations-made-against-police:1",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-accounts-2010-to-2011:2",
+          "cps-guidance:prosecution-guidance/child-sexual-abuse-guidelines-prosecuting-cases-child-sexual-abuse:1",
+          "quangos-govuk:government/publications/crown-prosecution-service-annual-report-and-accounts-2014-to-2015:2",
+          "quangos-govuk:government/publications/forensic-image-comparison-and-interpretation-evidence-issue-2:1",
+          "quangos-govuk:government/publications/inquiry-into-crown-prosecution-service-decision-making-in-relation-to-deaths-in-custody-and-related-matters:2",
+          "cps-guidance:prosecution-guidance/cps-policy-claiming-costs-extradition-cases:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "cps-guidance"
+      ],
+      "keyShape": [
+        {
+          "key": "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1",
+          "words": 3878,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 496,
+          "returned": 496,
+          "section": 154,
+          "documentCollapse": 118,
+          "documentMax": 91,
+          "documentSumTop3": 117,
+          "documentBestMember": 91,
+          "documentInSectionSlots": 154,
+          "topWords": {
+            "n": 20,
+            "median": 506,
+            "p25": 402,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 8
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "quangos-govuk:government/publications/criminal-investigation-court-proceedings:2",
+          "si-2010plus:uksi/2012/1726:article-9.7",
+          "si-2010plus:uksi/2013/1554:article-9.7",
+          "si-2010plus:uksi/2014/1610:article-9.7",
+          "si-2010plus:uksi/2014/1610:article-9.14",
+          "si-2010plus:uksi/2012/1726:article-10.5",
+          "si-pre-2010:uksi/2005/384:rule-10.5",
+          "si-2010plus:uksi/2012/1726:article-10.1",
+          "si-2010plus:uksi/2012/1726:article-9.11",
+          "si-2010plus:uksi/2014/1610:article-9.11",
+          "primary-acts-2000plus:ukpga/2020/17:section-20",
+          "pwdata-wrans:answers2016-03-08:92",
+          "primary-acts-2000plus:ukpga/2020/17:section-21",
+          "tna-caselaw:[2004] EWHC 2172 (Admin):1",
+          "tna-caselaw:[2008] EWHC 601 (Admin):1",
+          "tna-caselaw:[2009] EWHC 1538 (Admin):1",
+          "tna-caselaw:[2004] EWHC 2240 (Admin):1",
+          "tna-caselaw:[2003] EWHC 3217 (Admin):1",
+          "tna-caselaw:[2003] EWHC 2279 (Admin):1",
+          "tna-caselaw:[2023] EWHC 2464 (Admin):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/appeals-administrative-court:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "cps-guidance"
+      ],
+      "keyShape": [
+        {
+          "key": "cps-guidance:prosecution-guidance/appeals-administrative-court:1",
+          "words": 3192,
+          "chunks": 7
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 497,
+          "returned": 497,
+          "section": 132,
+          "documentCollapse": 96,
+          "documentMax": 72,
+          "documentSumTop3": 94,
+          "documentBestMember": 72,
+          "documentInSectionSlots": 132,
+          "topWords": {
+            "n": 20,
+            "median": 524,
+            "p25": 177,
+            "under30": 0,
+            "under100": 4,
+            "over1500": 6
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "quangos-govuk:guidance/administrative-court-bring-a-case-to-the-court:1",
+          "hmrc-manuals:hmrc-internal-manuals/appeals-reviews-and-tribunals-guidance/artg12050:1",
+          "quangos-govuk:government/publications/judicial-reviews-and-private-law-claims:2",
+          "hmrc-manuals:hmrc-internal-manuals/appeals-reviews-and-tribunals-guidance/artg12060:1",
+          "si-pre-2010:uksi/1998/3132:rule-54.2",
+          "primary-acts-2000plus:ukpga/2007/15:section-15",
+          "primary-acts-2000plus:ukpga/2007/15:section-141",
+          "primary-acts-2000plus:ukpga/2007/15:section-19",
+          "quangos-govuk:guidance/apply-for-a-judicial-review-in-an-immigration-or-asylum-case:2",
+          "quangos-govuk:government/publications/practice-note-judicial-review-case-management:3",
+          "quangos-govuk:government/publications/practice-note-judicial-review-case-management:4",
+          "hmrc-manuals:hmrc-internal-manuals/appeals-reviews-and-tribunals-guidance/artg12020:1",
+          "quangos-govuk:government/consultations/consultation-on-the-pre-action-protocol-for-judicial-review:3",
+          "quangos-govuk:government/consultations/consultation-on-the-pre-action-protocol-for-judicial-review:2",
+          "pwdata-debates:debates2013-02-05b:112",
+          "committees-reports:publication:10616:arc-0002",
+          "ni-judgments:2008-niqb-63:1",
+          "primary-acts-pre-2000:ukpga/1981/54:schedule-4-paragraph-1",
+          "pwdata-lords:daylord2013-04-23a:14",
+          "committees-reports:publication:8105:83261-0006"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "hmrc-manuals"
+      ],
+      "keyShape": [
+        {
+          "key": "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1",
+          "words": 10,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 855,
+            "p25": 337,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh32575:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh51075:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh32910:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh33300:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh33201:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh33215:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh33112:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh33600:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh55175:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52325:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52800:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-levy/ecl01100:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh31000:1",
+          "hmrc-codes-guidance:-guidance-money-laundering-regulations-business-inspections:1",
+          "hmrc-codes-guidance:-guidance-money-laundering-regulations-apply-for-the-fit-and-proper-test:1",
+          "hmrc-codes-guidance:-government-publications-anti-money-laundering-communication-resources:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh45780:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh47531:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh45792:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh34001:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "question": "When can HMRC depart from the strict letter of the law?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "hmrc-manuals"
+      ],
+      "keyShape": [
+        {
+          "key": "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1",
+          "words": 214,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 500,
+          "returned": 500,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 2,
+          "documentSumTop3": 22,
+          "documentBestMember": 2,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 1551,
+            "p25": 214,
+            "under30": 1,
+            "under100": 4,
+            "over1500": 10
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1",
+          "hmrc-ancillary:government/consultations/extra-statutory-concessions-escs-technical-consultation-on-draft-legislation:3",
+          "primary-acts-2000plus:ukpga/2008/9:section-160",
+          "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml5100:1",
+          "hmrc-manuals:hmrc-internal-manuals/complaints-and-remedy-guidance/crg5050:1",
+          "hmrc-ancillary:government/publications/vat-notice-48-extra-statutory-concessions:1",
+          "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4300:1",
+          "consultations:government_consultations_extra-statutory-concessions-escs-technical-consultation-on-draft-legislation:1",
+          "si-2010plus:uksi/2011/1037:article-4",
+          "hmrc-ancillary:government/publications/revenue-and-customs-brief-1-2026-removal-of-linked-goods-concession:1",
+          "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4400:1",
+          "tna-caselaw:[2025] UKFTT 418 (TC):1",
+          "tna-caselaw:[2024] UKFTT 224 (TC):1",
+          "tna-caselaw:[2024] UKFTT 773 (TC):1",
+          "tna-caselaw:[2018] EWCA Civ 315:1",
+          "tna-caselaw:[2024] EWHC 3014 (Admin):1",
+          "tna-caselaw:[2024] UKUT 242 (TCC):1",
+          "tna-caselaw:[2026] UKUT 195 (TCC):1",
+          "tna-caselaw:[2022] UKUT 118 (TCC):1",
+          "tna-caselaw:[2024] UKFTT 929 (TC):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "hmrc-manuals"
+      ],
+      "keyShape": [
+        {
+          "key": "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+          "words": 44,
+          "chunks": 1
+        },
+        {
+          "key": "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1",
+          "words": 273,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 500,
+          "returned": 500,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 2132,
+            "p25": 110,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 11
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "tna-caselaw:[2026] UKFTT 315 (TC):1",
+          "pwdata-wrans:answers2018-03-21:85",
+          "pwdata-westminster:westminster2013-07-02a:47",
+          "pwdata-wrans:answers2011-06-07b:282",
+          "pwdata-wrans:answers2011-03-21c:173",
+          "pwdata-wrans:answers2007-10-24b:272",
+          "pwdata-wrans:answers2010-10-21b:158",
+          "pwdata-wrans:answers2011-07-07b:71",
+          "pwdata-debates:debates2016-11-04a:84",
+          "scottish-parliament-or:11018:72",
+          "pwdata-westminster:westminster2013-07-02a:46",
+          "tna-caselaw:[2025] UKFTT 418 (TC):1",
+          "tna-caselaw:[2024] EWHC 3670 (Admin):1",
+          "tna-caselaw:[2024] UKFTT 460 (TC):1",
+          "tna-caselaw:[2024] UKFTT 224 (TC):1",
+          "tna-caselaw:[2024] UKFTT 929 (TC):1",
+          "tna-caselaw:[2024] UKFTT 788 (TC):1",
+          "tna-caselaw:[2024] UKFTT 161 (TC):1",
+          "tna-caselaw:[2026] UKUT 62 (TCC):1",
+          "tna-caselaw:[2022] UKUT 116 (TCC):1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "question": "What did the government think banning plastic straws would cost?",
+      "keys": [
+        "impact-assessments:2020-57:1",
+        "impact-assessments:2020-57:2"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2020-57:1",
+          "words": 71,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2020-57:2",
+          "words": 17,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 197,
+            "p25": 135,
+            "under30": 0,
+            "under100": 5,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "quangos-govuk:government/publications/proposal-to-ban-the-supply-of-plastic-drinking-straws-rpc-opinion:2",
+          "quangos-govuk:government/publications/proposal-to-ban-the-supply-of-plastic-drinking-straws-rpc-opinion:1",
+          "pwdata-wrans:answers2019-07-30:67",
+          "pwdata-lords:daylord2024-02-13b:38",
+          "pwdata-lords:daylord2020-07-10a:82",
+          "consultations:government_consultations_single-use-plastic-banning-the-distribution-andor-sale-of-plastic-straws-stirrers-and-plastic-stemmed-cotton-buds-in-england:1",
+          "pwdata-wrans:answers2019-06-05:171",
+          "committees-reports:publication:31509:176742-0004",
+          "pwdata-wrans:answers2018-10-11:276",
+          "pwdata-wrans:answers2018-06-01:8",
+          "pwdata-wrans:answers2018-06-01:9",
+          "quangos-govuk:government/publications/the-environmental-protection-plastic-straws-cotton-buds-and-stirrers-england-regulations-2020-pir-rpc-opinion-green-rated:2",
+          "quangos-govuk:government/publications/proposal-to-ban-the-sale-and-supply-of-plastic-stemmed-cotton-buds-in-england-rpc-opinion:2",
+          "quangos-govuk:government/publications/banning-of-various-single-use-plastic-sup-products-rpc-opinions-green-rated:1",
+          "quangos-govuk:government/publications/proposal-to-ban-the-sale-and-supply-of-plastic-drink-stirrers-in-england-rpc-opinion:1",
+          "quangos-govuk:government/publications/the-environmental-protection-wet-wipes-containing-plastic-england-regulations-2025-impact-assessment-rpc-opinion-red-rated:1",
+          "pwdata-wrans:answers2018-04-30:142",
+          "pwdata-wrans:answers2019-04-15:238",
+          "quangos-govuk:government/publications/the-environmental-protection-wet-wipes-containing-plastic-england-regulations-2025-impact-assessment-rpc-opinion-red-rated:2",
+          "pwdata-wrans:answers2020-12-21:79"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "keys": [
+        "impact-assessments:2023-77:1",
+        "impact-assessments:2023-77:2",
+        "impact-assessments:2023-77:3"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2023-77:1",
+          "words": 60,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2023-77:2",
+          "words": 16,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2023-77:3",
+          "words": 15,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 451,
+            "p25": 124,
+            "under30": 0,
+            "under100": 4,
+            "over1500": 1
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wms:ministerial2025-07-10:1",
+          "pwdata-lordswms:lordswms2025-07-10:1",
+          "quangos-govuk:guidance/building-safety-levy-guidance/annex-c-methodology-note:1",
+          "committees-reports:publication:47171:244299-0023",
+          "quangos-govuk:government/consultations/the-building-safety-levy-consultation:1",
+          "quangos-govuk:government/consultations/the-building-safety-levy:1",
+          "quangos-govuk:government/publications/building-safety-remediation-and-funding-government-response-to-the-select-committee-reports:2",
+          "quangos-govuk:guidance/the-building-safety-act:1",
+          "committees-reports:publication:43113:214523",
+          "committees-reports:publication:49309:262543",
+          "committees-reports:publication:49202:262175",
+          "pwdata-wms:ministerial2025-03-24:1",
+          "pwdata-lordswms:lordswms2025-03-24:1",
+          "pwdata-wrans:answers2025-04-03:253",
+          "pwdata-wrans:answers2025-07-25:67",
+          "pwdata-wrans:answers2024-09-10:136",
+          "pwdata-wrans:answers2024-10-31:191",
+          "pwdata-wrans:answers2021-03-08:277",
+          "pwdata-wrans:answers2021-02-25:233",
+          "pwdata-wrans:answers2021-02-22:211"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "keys": [
+        "impact-assessments:2023-14:1",
+        "impact-assessments:2023-14:3"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2023-14:1",
+          "words": 57,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2023-14:3",
+          "words": 17,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 0,
+          "returned": 0,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 0,
+            "median": 0,
+            "p25": 0,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": []
+      }
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "keys": [
+        "impact-assessments:2017-78:2"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2017-78:2",
+          "words": 19,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 308,
+            "p25": 141,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 1
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "primary-acts-pre-2000:ukpga/1979/7:section-8B",
+          "primary-acts-2000plus:ukpga/2006/25:section-2",
+          "primary-acts-2000plus:ukpga/2007/29:section-51",
+          "pwdata-wrans:answers2011-05-16d:165",
+          "consultations:government_consultations_fees-proposals-tobacco-and-herbal-products-for-smoking:1",
+          "pwdata-wrans:answers2010-12-21b:322",
+          "pwdata-wrans:answers2020-08-03:67",
+          "pwdata-wrans:answers2010-10-18b:475",
+          "pwdata-wrans:answers2022-01-21:48",
+          "pwdata-wrans:answers2022-02-02:114",
+          "quangos-govuk:guidance/e-cigarettes-regulations-for-consumer-products:1",
+          "quangos-govuk:government/consultations/regulatory-fees-for-e-cigarettes:3",
+          "pwdata-wrans:answers2016-04-18:468",
+          "pwdata-lords:daylord2022-02-04b:131",
+          "niassembly-hansard:359906:27",
+          "quangos-govuk:government/consultations/regulatory-fees-for-e-cigarettes:4",
+          "consultations:government_consultations_draft-regulations-on-the-sale-and-manufacture-of-tobacco-products:1",
+          "pwdata-lordswrans:lordswrans2023-09-19:38",
+          "pwdata-lordswrans:lordswrans2014-11-03a:45",
+          "committees-reports:publication:13529:arc-0005"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "keys": [
+        "impact-assessments:2017-78:3"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2017-78:3",
+          "words": 29,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 419,
+            "p25": 200,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 6
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "quangos-govuk:government/consultations/mandating-quit-information-messages-inside-tobacco-packs:2",
+          "quangos-govuk:government/publications/impact-assessment-opinion-standardised-packaging-of-tobacco-products-final:2",
+          "committees-reports:publication:23892:arc-0004",
+          "committees-reports:publication:23892:arc-0005",
+          "quangos-govuk:government/publications/impact-assessment-opinion-age-of-sale-nicotine-inhaling-products:2",
+          "quangos-govuk:government/consultations/regulatory-fees-for-e-cigarettes:2",
+          "quangos-govuk:government/consultations/regulatory-fees-for-e-cigarettes:4",
+          "pwdata-wrans:answers2009-01-14d:212",
+          "pwdata-wrans:answers2016-03-04:202",
+          "pwdata-wrans:answers2016-05-10:65",
+          "quangos-govuk:government/publications/impact-assessment-opinion-standardised-packaging-of-tobacco-products:2",
+          "pwdata-lordswrans:lordswrans2016-02-10:60",
+          "committees-reports:publication:25191:arc-0035",
+          "committees-reports:publication:23689:arc-0048",
+          "pwdata-wrans:answers2010-11-03b:112",
+          "pwdata-wrans:answers2016-05-10:176",
+          "pwdata-wrans:answers2010-10-21b:115",
+          "quangos-govuk:government/publications/tobacco-advertising-and-promotion-display-regulationsengland-2010-rpc-opinion:2",
+          "committees-evidence:writtenevidence:52079:97787",
+          "scottish-parliament-or:13442:60"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "keys": [
+        "impact-assessments:2018-21:1",
+        "impact-assessments:2018-21:2",
+        "impact-assessments:2018-21:3"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2018-21:1",
+          "words": 83,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2018-21:2",
+          "words": 21,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2018-21:3",
+          "words": 25,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": 133,
+          "documentCollapse": 107,
+          "documentMax": 109,
+          "documentSumTop3": 119,
+          "documentBestMember": 109,
+          "documentInSectionSlots": 133,
+          "topWords": {
+            "n": 20,
+            "median": 811,
+            "p25": 413,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 6
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:41008:199687",
+          "committees-reports:publication:11177:arc-0013",
+          "explanatory-memoranda:em:uksi/2013/390:1-0001",
+          "explanatory-memoranda:em:uksi/2009/3381:1-0001",
+          "explanatory-memoranda:em:uksi/2009/3381:1-0029",
+          "committees-reports:publication:15525:arc-0008",
+          "committees-reports:publication:39332:193099-0003",
+          "committees-reports:publication:39342:193148",
+          "committees-reports:publication:39332:193099-0004",
+          "committees-evidence:writtenevidence:99020:144428",
+          "committees-reports:publication:41521:204416-0021",
+          "committees-evidence:writtenevidence:100849:146339",
+          "quangos-govuk:government/publications/hot-rolling-of-ferrous-metals-additional-guidance:1",
+          "quangos-govuk:government/publications/developments-requiring-planning-permission-and-environmental-permits:2",
+          "quangos-govuk:government/publications/waste-incinerators-guidance-on-impact-assessment-for-group-3-metals-stack:1",
+          "quangos-govuk:government/publications/noise-and-vibration-risk-assessment-using-the-noise-advisory-tool:1",
+          "quangos-govuk:government/publications/dn11-0ps-eco-power-environmental-limited-environmental-permit-refused-epreb3207lhv005:6",
+          "explanatory-memoranda:em:uksi/2017/583:1",
+          "explanatory-memoranda:em:uksi/2020/1497:1",
+          "explanatory-memoranda:em:uksi/2017/580:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "keys": [
+        "impact-assessments:2022-92:1",
+        "impact-assessments:2022-92:2"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2022-92:1",
+          "words": 58,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2022-92:2",
+          "words": 18,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": 4,
+          "documentCollapse": 1,
+          "documentMax": 4,
+          "documentSumTop3": 1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 19,
+            "median": 485,
+            "p25": 359,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 5
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "impact-assessments:2022-92:6",
+          "quangos-govuk:government/publications/new-international-data-transfers-adequacy-decision-republic-of-korea-rpc-opinion-green-rated:1",
+          "quangos-govuk:government/publications/new-international-data-transfers-adequacy-decision-republic-of-korea-rpc-opinion-green-rated:2",
+          "impact-assessments:2022-92:1",
+          "committees-reports:publication:31951:179376-0003",
+          "si-2010plus:uksi/2022/1213:regulation-2",
+          "committees-reports:publication:41635:206232",
+          "oecd:-government-publications-new-data-adequacy-agreement-in-principle-between-the-uk-and-republic-of-korea:1",
+          "quangos-govuk:government/publications/data-adequacy-assessments-umbrella-ia-rpc-opinion-green-rated:2",
+          "committees-reports:publication:31951:179376-0004",
+          "committees-reports:publication:41787:207018-0011",
+          "committees-reports:publication:5884:67067-0019",
+          "committees-evidence:oralevidence:14880:224260",
+          "committees-reports:publication:33240:179907",
+          "committees-reports:publication:33970:186418",
+          "committees-reports:publication:1360:12467",
+          "committees-reports:publication:21281:arc-0002",
+          "committees-reports:publication:1404:12866-0020",
+          "pwdata-lords:daylord2019-02-18b:105",
+          "quangos-govuk:government/publications/ppn-0322-updated-guidance-on-data-protection-legislation:2"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "keys": [
+        "impact-assessments:2017-92:4",
+        "impact-assessments:2017-92:3"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2017-92:4",
+          "words": 57,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2017-92:3",
+          "words": 25,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": 3,
+          "documentCollapse": 2,
+          "documentMax": 16,
+          "documentSumTop3": 5,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 2,
+          "topWords": {
+            "n": 20,
+            "median": 1404,
+            "p25": 239,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 7
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "explanatory-memoranda:em:uksi/2011/2189:1",
+          "impact-assessments:2017-92:9",
+          "impact-assessments:2017-92:4",
+          "impact-assessments:2017-56:4",
+          "impact-assessments:2017-56:9",
+          "pwdata-lordswrans:lordswrans2011-06-07a:66",
+          "pwdata-lords:daylord2002-05-09a:213",
+          "pwdata-lords:daylord2002-05-09a:216",
+          "pwdata-lords:daylord2002-05-09a:218",
+          "pwdata-lords:daylord2002-05-09a:215",
+          "pwdata-lordswms:lordswms2007-07-19b:9",
+          "pwdata-wms:ministerial2007-07-19b:12",
+          "quangos-govuk:government/publications/office-of-the-public-guardian-business-plan-2014-to-2015:2",
+          "quangos-govuk:government/publications/opg-annual-report-and-accounts-2013-to-2014:2",
+          "quangos-govuk:government/publications/office-of-the-public-guardian-annual-report-and-accounts-april-2011-to-march-2012:2",
+          "quangos-govuk:government/publications/office-of-the-public-guardian-annual-report-and-accounts-2010-to-2011:2",
+          "consultations:government_consultations_transforming-the-services-of-the-office-of-the-public-guardian-enabling-digital-by-default:1",
+          "consultations:government_consultations_guardianship-missing-persons-act-2017-implementing-the-act:1",
+          "pwdata-westminster:westminster2019-02-12b:19",
+          "si-2010plus:uksi/2025/1126:article-4"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "keys": [
+        "impact-assessments:2017-92:6",
+        "impact-assessments:2017-92:7"
+      ],
+      "set": "s10",
+      "corpora": [
+        "impact-assessments"
+      ],
+      "keyShape": [
+        {
+          "key": "impact-assessments:2017-92:6",
+          "words": 64,
+          "chunks": 1
+        },
+        {
+          "key": "impact-assessments:2017-92:7",
+          "words": 16,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 492,
+            "p25": 239,
+            "under30": 2,
+            "under100": 2,
+            "over1500": 2
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-lordswms:lordswms2009-03-11a:3",
+          "pwdata-lordswrans:lordswrans2011-06-07a:66",
+          "pwdata-wms:ministerial2007-07-19b:12",
+          "pwdata-lordswms:lordswms2007-07-19b:9",
+          "quangos-govuk:government/publications/office-of-the-public-guardian-business-plan-2014-to-2015:2",
+          "committees-reports:publication:14306:arc-0012",
+          "pwdata-westminster:westminster2019-02-12b:19",
+          "committees-reports:publication:18405:arc-0015",
+          "committees-reports:publication:24571:arc-0004",
+          "consultations:government_consultations_guardianship-of-the-property-and-affairs-of-missing-persons:1",
+          "consultations:government_consultations_guardianship-missing-persons-act-2017-implementing-the-act:1",
+          "pwdata-debates:debates2013-07-02a:90",
+          "consultations:government_consultations_transforming-the-services-of-the-office-of-the-public-guardian-enabling-digital-by-default:1",
+          "scottish-parliament-or:arch-10208:57",
+          "consultations:government_consultations_aligning-the-fees-for-grants-of-probate-to-cost-recovery:1",
+          "committees-reports:publication:18202:arc-0006",
+          "consultations:government_consultations_fee-proposals-for-grants-of-probate:1",
+          "consultations:government_consultations_court-fees-proposals-for-reform:1",
+          "committees-reports:publication:14388:arc-0003",
+          "consultations:government_consultations_fee-remissions-in-the-courts-and-tribunals:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "question": "What did the government consult on about reducing sewage discharges?",
+      "keys": [
+        "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+        "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+          "words": 122,
+          "chunks": 1
+        },
+        {
+          "key": "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1",
+          "words": 199,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 1,
+          "documentSumTop3": 7,
+          "documentBestMember": 1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 235,
+            "p25": 200,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 1
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+          "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1",
+          "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1",
+          "hmrc-codes-guidance:-government-consultations-draft-information-and-guidance-on-storm-overflows:1",
+          "pwdata-wrans:answers2022-04-28:658",
+          "consultations:government_consultations_continuous-water-quality-monitoring-and-event-duration-monitoring:1",
+          "pwdata-wrans:answers2023-04-21:81",
+          "quangos-govuk:guidance/river-basin-management-plans-updated-2022-summary-programmes-of-measures/5-topic-action-plans:1",
+          "pwdata-wrans:answers2025-02-25:120",
+          "pwdata-wrans:answers2022-04-28:673",
+          "pwdata-wrans:answers2021-06-28:272",
+          "pwdata-wrans:answers2021-11-04:225",
+          "pwdata-wrans:answers2022-03-14:249",
+          "pwdata-wrans:answers2024-05-13:228",
+          "pwdata-wrans:answers2025-02-12:143",
+          "pwdata-wrans:answers2022-07-05:193",
+          "pwdata-wrans:answers2024-05-09:135",
+          "pwdata-lordswrans:lordswrans2022-06-27:52",
+          "pwdata-debates:debates2020-09-10a:6",
+          "pwdata-wrans:answers2022-04-22:79"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "question": "Was there a consultation on the smoking age ban?",
+      "keys": [
+        "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1",
+          "words": 436,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 96,
+          "documentCollapse": 77,
+          "documentMax": 86,
+          "documentSumTop3": 101,
+          "documentBestMember": 86,
+          "documentInSectionSlots": 96,
+          "topWords": {
+            "n": 20,
+            "median": 369,
+            "p25": 222,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2024-01-15:253",
+          "pwdata-wms:ministerial2024-01-29:1",
+          "pwdata-lordswms:lordswms2024-01-29:1",
+          "pwdata-lordswms:lordswms2023-10-16:10",
+          "pwdata-wrans:answers2022-12-21:147",
+          "pwdata-wrans:answers2005-06-27a:506",
+          "pwdata-lords:daylord2004-04-22a:34",
+          "pwdata-westminster:westminster2021-11-16b:21",
+          "scottish-parliament-or:15785:74",
+          "quangos-govuk:government/consultations/nicotine-inhaling-products-introducing-a-minimum-age-of-sale:2",
+          "quangos-govuk:government/consultations/nicotine-inhaling-products-introducing-a-minimum-age-of-sale:10",
+          "quangos-govuk:government/consultations/nicotine-inhaling-products-introducing-a-minimum-age-of-sale:11",
+          "quangos-govuk:government/consultations/nicotine-inhaling-products-introducing-a-minimum-age-of-sale:4",
+          "consultations:government_consultations_nicotine-inhaling-products-introducing-a-minimum-age-of-sale:1",
+          "pwdata-wrans:answers2008-02-07h:392",
+          "pwdata-wrans:answers2008-07-03d:254",
+          "pwdata-wrans:answers2008-06-24c:125",
+          "pwdata-wrans:answers2009-02-09h:558",
+          "pwdata-wrans:answers2005-11-08c:356",
+          "pwdata-wrans:answers2023-12-12:44"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "question": "What did the government propose to change about building safety regulation?",
+      "keys": [
+        "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1",
+          "words": 489,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": 104,
+          "documentCollapse": 67,
+          "documentMax": 78,
+          "documentSumTop3": 94,
+          "documentBestMember": 78,
+          "documentInSectionSlots": 104,
+          "topWords": {
+            "n": 20,
+            "median": 423,
+            "p25": 409,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "explanatory-notes:en:ukpga/2022/30:1-0013",
+          "pwdata-wrans:answers2020-12-03:170",
+          "committees-reports:publication:2404:46718-0004",
+          "pwdata-wrans:answers2021-10-18:195",
+          "quangos-govuk:guidance/the-building-safety-act:1",
+          "explanatory-notes:en:ukpga/2022/30:1-0010",
+          "quangos-govuk:government/publications/building-safety-regulator-strategic-plan-2023-to-2026:2",
+          "quangos-govuk:government/publications/collaborative-procurement-guidance-for-design-and-construction-to-support-building-safety:2",
+          "quangos-govuk:government/publications/collaborative-procurement-guidance-for-design-and-construction-to-support-building-safety:3",
+          "explanatory-notes:en:ukpga/2022/30:1-0012",
+          "explanatory-notes:en:ukpga/2022/30:1-0118",
+          "explanatory-notes:en:ukpga/2022/30:1-0058",
+          "explanatory-notes:en:ukpga/2022/30:1-0122",
+          "explanatory-notes:en:ukpga/2022/30:1-0121",
+          "explanatory-notes:en:ukpga/2022/30:1-0117",
+          "explanatory-notes:en:ukpga/2022/30:1-0124",
+          "explanatory-notes:en:ukpga/2022/30:1-0119",
+          "explanatory-notes:en:ukpga/2022/30:1-0061",
+          "explanatory-notes:en:ukpga/2022/30:1-0033",
+          "quangos-govuk:government/publications/mou-between-hse-and-opss:2"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "question": "Has the government consulted on gambling sponsorship?",
+      "keys": [
+        "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1",
+          "words": 264,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 174,
+          "documentCollapse": 159,
+          "documentMax": 153,
+          "documentSumTop3": 156,
+          "documentBestMember": 153,
+          "documentInSectionSlots": 174,
+          "topWords": {
+            "n": 20,
+            "median": 221,
+            "p25": 158,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wms:ministerial2026-07-15:3",
+          "pwdata-wrans:answers2023-05-02:268",
+          "pwdata-lordswrans:lordswrans2024-04-04:42",
+          "pwdata-wrans:answers2024-03-07:239",
+          "pwdata-lordswrans:lordswrans2024-08-06:41",
+          "pwdata-lordswrans:lordswrans2020-03-09:106",
+          "pwdata-wrans:answers2021-10-18:255",
+          "pwdata-lordswrans:lordswrans2020-10-12:61",
+          "pwdata-wrans:answers2021-02-08:138",
+          "pwdata-wrans:answers2022-01-05:366",
+          "pwdata-wrans:answers2018-03-02:118",
+          "pwdata-wrans:answers2006-12-18c:398",
+          "pwdata-westminster:westminster2024-03-13a:68",
+          "pwdata-lordswrans:lordswrans2021-06-14:6",
+          "committees-reports:publication:42630:211944-0006",
+          "pwdata-wrans:answers2021-03-02:431",
+          "committees-reports:publication:42630:211944-0002",
+          "committees-reports:publication:44296:220160-0004",
+          "committees-reports:publication:42630:211944-0008",
+          "committees-reports:publication:42630:211944-0009"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "question": "What has the government asked about AI and copyright?",
+      "keys": [
+        "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+        "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+          "words": 687,
+          "chunks": 2
+        },
+        {
+          "key": "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1",
+          "words": 819,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 1,
+          "documentSumTop3": 15,
+          "documentBestMember": 1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 279,
+            "p25": 130,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+          "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1",
+          "consultations:government_consultations_copyright-and-artificial-intelligence:1",
+          "quangos-govuk:government/publications/copyright-and-artificial-intelligence-progress-report:3",
+          "quangos-govuk:government/publications/copyright-and-artificial-intelligence-progress-report:4",
+          "quangos-govuk:government/publications/copyright-and-artificial-intelligence-progress-report:2",
+          "quangos-govuk:government/consultations/artificial-intelligence-and-intellectual-property-call-for-views:1",
+          "hmrc-codes-guidance:-government-consultations-artificial-intelligence-and-ip-copyright-and-patents:1",
+          "pwdata-wrans:answers2025-03-05:23",
+          "pwdata-lordswrans:lordswrans2025-06-04:16",
+          "pwdata-wrans:answers2025-06-25:301",
+          "pwdata-lordswrans:lordswrans2025-02-27:7",
+          "pwdata-wrans:answers2025-10-21:428",
+          "pwdata-wrans:answers2025-02-28:184",
+          "pwdata-wrans:answers2025-10-21:424",
+          "committees-reports:publication:50795:278180",
+          "pwdata-lordswrans:lordswrans2025-02-27:6",
+          "pwdata-wrans:answers2026-07-10:71",
+          "pwdata-wrans:answers2025-11-12:235",
+          "pwdata-wrans:answers2025-01-13:316"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "question": "What was consulted on for leasehold reform?",
+      "keys": [
+        "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1",
+          "words": 376,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 68,
+          "returned": 68,
+          "section": 2,
+          "documentCollapse": 2,
+          "documentMax": 16,
+          "documentSumTop3": 19,
+          "documentBestMember": 16,
+          "documentInSectionSlots": 2,
+          "topWords": {
+            "n": 20,
+            "median": 41790,
+            "p25": 270,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 12
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "consultations:government_consultations_reforming-the-leasehold-and-commonhold-systems-in-england-and-wales:1",
+          "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1",
+          "consultations:government_consultations_tackling-unfair-practices-in-the-leasehold-market:1",
+          "quangos-govuk:government/consultations/reforming-the-leasehold-and-commonhold-systems-in-england-and-wales:1",
+          "quangos-govuk:government/publications/leasehold-home-ownership-report-on-options-to-reduce-the-price-payable:2",
+          "quangos-govuk:government/publications/termination-of-tenancies-for-tenant-default:2",
+          "lawcom:termination-of-tenancies-for-tenant-default:1",
+          "quangos-govuk:government/publications/updating-the-land-registration-act-2002:2",
+          "quangos-govuk:government/publications/event-fees-in-retirement-properties:3",
+          "quangos-govuk:government/publications/event-fees-in-retirement-properties:2",
+          "quangos-govuk:government/publications/annual-report-2020-21:1",
+          "lawcom:business-tenancies-consultation-paper-1-and-summar:1",
+          "lawcom:business-tenancies-the-right-to-renew-consultation-paper-1-models-of-security-of-tenure:1",
+          "govuk-core-docs:government/publications/commonhold-white-paper:3",
+          "govuk-core-docs:government/publications/commonhold-white-paper:2",
+          "govuk-core-docs:government/publications/commonhold-white-paper:1",
+          "quangos-govuk:government/publications/reinvigorating-commonhold-the-alternative-to-leasehold-ownership:1",
+          "quangos-govuk:government/publications/leasehold-home-ownership-buying-your-freehold-or-extending-your-lease:2",
+          "quangos-govuk:government/publications/reinvigorating-commonhold-the-alternative-to-leasehold-ownership:2",
+          "quangos-govuk:government/publications/leasehold-home-ownership-report-on-options-to-reduce-the-price-payable:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "question": "Is there guidance being consulted on for storm overflows?",
+      "keys": [
+        "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1",
+          "words": 258,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 1,
+          "documentSumTop3": 4,
+          "documentBestMember": 1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 364,
+            "p25": 132,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 6
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1",
+          "hmrc-codes-guidance:-government-consultations-draft-information-and-guidance-on-storm-overflows:1",
+          "hmrc-codes-guidance:-government-publications-storm-overflow-assessment-framework-2025:1",
+          "hmrc-codes-guidance:-government-publications-water-companies-environmental-permits-for-storm-overflows-and-emergency-overflows:1",
+          "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+          "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1",
+          "quangos-govuk:government/publications/h1-annex-d2-assessment-of-sanitary-and-other-pollutants-in-surface-water-discharges:2",
+          "quangos-govuk:guidance/discharges-to-surface-water-and-groundwater-environmental-permits:1",
+          "quangos-govuk:government/consultations/onshore-oil-and-gas-sector-guidance-consultation:2",
+          "quangos-govuk:government/consultations/environmental-permitting-standard-rules-consultation-no-23:2",
+          "quangos-govuk:government/consultations/water-resources-management-plans-technical-guidelines-consultation:1",
+          "quangos-govuk:government/consultations/environment-agency-charge-proposals-kielder-reservoir-and-transfer-scheme:2",
+          "quangos-govuk:government/publications/rg19-8bq-persimmon-homes-limited-environmental-permit-draft-decision-advertisement:1",
+          "quangos-govuk:government/consultations/rationalising-the-main-river-network-de-maining-proposals:3",
+          "quangos-govuk:government/publications/river-basin-management-plans-record-of-consultation-and-engagement:2",
+          "quangos-govuk:government/publications/oxford-flood-alleviation-scheme-consultation-response:1",
+          "consultations:government_consultations_regulation-of-solid-radioactive-waste-disposal-facilities-proposed-guidance:1",
+          "consultations:government_consultations_guidance-on-requirements-for-release-of-nuclear-sites-from-radioactive-substances-regulation:1",
+          "consultations:government_consultations_climate-change-enforcement-and-sanctions-guidance:1",
+          "quangos-govuk:government/consultations/environmental-permitting-changes-to-landfill-permits:2"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "question": "What did the government consult on for net zero aviation?",
+      "keys": [
+        "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1",
+          "words": 280,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 2,
+          "documentCollapse": 2,
+          "documentMax": 2,
+          "documentSumTop3": 9,
+          "documentBestMember": 2,
+          "documentInSectionSlots": 2,
+          "topWords": {
+            "n": 20,
+            "median": 257,
+            "p25": 202,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "consultations:government_consultations_jet-zero-updated-evidence-and-analysis-to-inform-our-strategy-for-net-zero-aviation:1",
+          "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1",
+          "pwdata-wrans:answers2021-11-04:18",
+          "pwdata-wrans:answers2022-07-05:8",
+          "pwdata-wrans:answers2022-06-27:294",
+          "pwdata-wrans:answers2022-07-07:18",
+          "pwdata-wrans:answers2021-10-27:14",
+          "pwdata-westminster:westminster2021-09-21c:93",
+          "pwdata-wrans:answers2021-05-18:11",
+          "consultations:government_consultations_pathway-to-net-zero-aviation-developing-the-uk-sustainable-aviation-fuel-mandate:1",
+          "consultations:government_consultations_mandating-the-use-of-sustainable-aviation-fuels-in-the-uk:1",
+          "pwdata-wrans:answers2021-05-26:26",
+          "consultations:government_consultations_renewable-transport-fuel-obligation-addressing-multiple-incentives:1",
+          "consultations:government_consultations_amending-the-renewable-transport-fuels-obligation-rtfo-to-increase-carbon-savings-on-land-air-and-at-sea:1",
+          "consultations:government_consultations_uk-emissions-trading-scheme-treatment-of-sustainable-aviation-fuel:1",
+          "consultations:government_consultations_implementing-the-carbon-offsetting-and-reduction-scheme-for-international-aviation:1",
+          "consultations:government_consultations_uk-emissions-trading-scheme-regional-aviation-connectivity:1",
+          "consultations:government_consultations_aviation-2050-the-future-of-uk-aviation:1",
+          "consultations:government_consultations_sustainable-framework-for-uk-aviation-consultation:1",
+          "consultations:government_consultations_air-navigation-guidance-for-the-civil-aviation-authority:1"
+        ]
+      }
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "question": "Was there a consultation about electrical safety in building regulations?",
+      "keys": [
+        "consultations:government_consultations_building-regulations-electrical-safety:1"
+      ],
+      "set": "s10",
+      "corpora": [
+        "consultations"
+      ],
+      "keyShape": [
+        {
+          "key": "consultations:government_consultations_building-regulations-electrical-safety:1",
+          "words": 238,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 1,
+          "documentSumTop3": 9,
+          "documentBestMember": 1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 633,
+            "p25": 404,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "consultations:government_consultations_building-regulations-electrical-safety:1",
+          "committees-reports:publication:24464:arc-0014",
+          "consultations:government_consultations_building-regulations-the-building-control-system:1",
+          "consultations:government_consultations_building-regulations-access-statements-security-changing-places-toilets-and-regulation-7:1",
+          "consultations:government_consultations_building-regulations-conservation-of-fuel-and-power:1",
+          "committees-reports:publication:24464:arc-0023",
+          "committees-reports:publication:24464:arc-0004",
+          "committees-reports:publication:24464:arc-0003",
+          "committees-reports:publication:24464:arc-0002",
+          "committees-reports:publication:24464:arc-0076",
+          "committees-evidence:writtenevidence:47058:92824",
+          "committees-reports:publication:10435:arc-0030",
+          "committees-reports:publication:10435:arc-0008",
+          "committees-reports:publication:24464:arc-0089",
+          "committees-reports:publication:24464:arc-0059",
+          "committees-reports:publication:24463:arc-0018",
+          "committees-reports:publication:24463:arc-0005",
+          "committees-reports:publication:24463:arc-0020",
+          "committees-evidence:writtenevidence:47029:92825",
+          "committees-evidence:writtenevidence:47045:92816"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "question": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "keys": [
+        "pwdata-debates:debates2024-11-29d:3",
+        "pwdata-debates:debates2024-11-29d:78"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-debates"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-debates:debates2024-11-29d:3",
+          "words": 1086,
+          "chunks": 3
+        },
+        {
+          "key": "pwdata-debates:debates2024-11-29d:78",
+          "words": 920,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": 3,
+          "documentMax": 3,
+          "documentSumTop3": 3,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 5,
+          "topWords": {
+            "n": 20,
+            "median": 558,
+            "p25": 483,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-westminster:westminster2024-04-29a:27",
+          "pwdata-westminster:westminster2022-07-04a:55",
+          "pwdata-westminster:westminster2022-07-04a:65",
+          "pwdata-westminster:westminster2024-04-29a:23",
+          "pwdata-debates:debates2024-11-29d:121",
+          "pwdata-debates:debates2019-10-08c:104",
+          "pwdata-westminster:westminster2020-01-23a:39",
+          "pwdata-debates:debates2024-11-29d:153",
+          "pwdata-debates:debates2024-11-29d:40",
+          "pwdata-lords:daylord2025-09-19b:73",
+          "pwdata-debates:debates2019-07-04b:395",
+          "pwdata-westminster:westminster2022-07-04a:64",
+          "pwdata-westminster:westminster2024-04-29a:72",
+          "pwdata-westminster:westminster2022-07-04a:12",
+          "scottish-parliament-or:20140:324",
+          "pwdata-lords:daylord2021-10-22c:99",
+          "pwdata-lords:daylord2026-02-06a:59",
+          "pwdata-debates:debates2020-11-05c:136",
+          "pwdata-westminster:westminster2022-07-04a:68",
+          "pwdata-lords:daylord2025-09-12c:15"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "question": "Did peers back the assisted dying bill when it reached the Lords?",
+      "keys": [
+        "pwdata-lords:daylord2025-09-12c:4"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-lords"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-lords:daylord2025-09-12c:4",
+          "words": 2634,
+          "chunks": 6
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": 10,
+          "documentMax": 3,
+          "documentSumTop3": 2,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 11,
+          "topWords": {
+            "n": 20,
+            "median": 603,
+            "p25": 429,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 7
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "lords-divisions-votes:1885:1",
+          "lords-divisions-votes:2740:1",
+          "lords-divisions-votes:981:1",
+          "lords-divisions-votes:1275:1",
+          "pwdata-lords:daylord2026-01-28a:112",
+          "lords-divisions-votes:2010:1",
+          "lords-divisions-votes:3075:1",
+          "pwdata-lords:daylord2021-10-22c:131",
+          "pwdata-lords:daylord2021-10-22c:31",
+          "pwdata-lords:daylord2006-05-12b:96",
+          "pwdata-lords:daylord2025-09-12c:87",
+          "pwdata-lords:daylord2025-09-12c:93",
+          "pwdata-lords:daylord2026-04-24a:5",
+          "pwdata-lords:daylord2021-10-22c:6",
+          "pwdata-lords:daylord2022-03-16a:179",
+          "pwdata-lords:daylord2021-10-22c:38",
+          "pwdata-lords:daylord2006-05-12b:72",
+          "pwdata-lords:daylord2025-09-19b:54",
+          "pwdata-lords:daylord2004-03-10a:111",
+          "pwdata-lords:daylord2025-09-19b:16"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "question": "What did ministers at Stormont say about the botched green energy scheme?",
+      "keys": [
+        "niassembly-hansard:286438:151"
+      ],
+      "set": "v2",
+      "corpora": [
+        "niassembly-hansard"
+      ],
+      "keyShape": [
+        {
+          "key": "niassembly-hansard:286438:151",
+          "words": 4780,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 8,
+          "documentCollapse": 7,
+          "documentMax": 18,
+          "documentSumTop3": 5,
+          "documentBestMember": 18,
+          "documentInSectionSlots": 8,
+          "topWords": {
+            "n": 20,
+            "median": 283,
+            "p25": 109,
+            "under30": 0,
+            "under100": 4,
+            "over1500": 2
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "niassembly-hansard:288331:382",
+          "niassembly-hansard:288331:471",
+          "niassembly-hansard:298480:68",
+          "niassembly-hansard:284535:223",
+          "niassembly-hansard:287723:174",
+          "niassembly-hansard:483369:27",
+          "niassembly-hansard:259250:348",
+          "niassembly-hansard:286438:151",
+          "niassembly-hansard:147039:26",
+          "niassembly-hansard:414507:325",
+          "niassembly-hansard:414507:327",
+          "niassembly-hansard:368499:219",
+          "niassembly-hansard:415337:263",
+          "niassembly-hansard:305232:172",
+          "pwdata-lordswrans:lordswrans2017-01-06:1",
+          "pwdata-wrans:answers2017-01-17:169",
+          "pwdata-wrans:answers2016-12-16:24",
+          "pwdata-wrans:answers2017-01-16:262",
+          "pwdata-wrans:answers2017-01-16:263",
+          "pwdata-wrans:answers2017-01-20:48"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "question": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "keys": [
+        "pwdata-westminster:westminster2022-04-21a:27",
+        "pwdata-westminster:westminster2018-11-27c:55"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-westminster"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-westminster:westminster2022-04-21a:27",
+          "words": 1360,
+          "chunks": 3
+        },
+        {
+          "key": "pwdata-westminster:westminster2018-11-27c:55",
+          "words": 1444,
+          "chunks": 4
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 31,
+          "documentCollapse": 2,
+          "documentMax": 2,
+          "documentSumTop3": 1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 2,
+          "topWords": {
+            "n": 20,
+            "median": 283,
+            "p25": 168,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-lords:daylord2026-03-12c:132",
+          "pwdata-westminster:westminster2022-04-21a:2",
+          "pwdata-debates:debates2026-02-23f:498",
+          "pwdata-westminster:westminster2022-04-21a:23",
+          "pwdata-westminster:westminster2022-04-21a:13",
+          "pwdata-debates:debates2026-02-03d:384",
+          "pwdata-debates:debates2026-02-23f:515",
+          "pwdata-westminster:westminster2022-04-21a:28",
+          "pwdata-debates:debates2026-06-29a:21",
+          "pwdata-debates:debates2025-07-15c:265",
+          "scottish-parliament-or:16778:11",
+          "pwdata-lords:daylord2022-03-22a:97",
+          "pwdata-westminster:westminster2022-04-21a:18",
+          "pwdata-debates:debates1989-04-24a:345",
+          "pwdata-wrans:answers2026-03-09:21",
+          "pwdata-lords:daylord2025-07-09a:66",
+          "pwdata-westminster:westminster2018-11-27c:73",
+          "scottish-parliament-or:15430:154",
+          "pwdata-lords:daylord2022-07-08a:31",
+          "pwdata-westminster:westminster2023-07-11b:41"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "question": "What did peers say about overturning the subpostmasters' convictions?",
+      "keys": [
+        "pwdata-lords:daylord2024-05-13a:113"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-lords"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-lords:daylord2024-05-13a:113",
+          "words": 2080,
+          "chunks": 5
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 10,
+          "documentCollapse": 1,
+          "documentMax": 2,
+          "documentSumTop3": 1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 737,
+            "p25": 518,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 2
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-lords:daylord2024-05-13a:109",
+          "pwdata-lords:daylord2024-01-10a:61",
+          "pwdata-debates:debates2024-01-10c:155",
+          "pwdata-lords:daylord2024-02-27a:117",
+          "pwdata-lordswrans:lordswrans2024-02-28:37",
+          "pwdata-wrans:answers2024-02-07:211",
+          "pwdata-wrans:answers2024-09-10:111",
+          "scottish-parliament-or:15896:254",
+          "pwdata-lords:daylord2024-01-16a:215",
+          "pwdata-lords:daylord2024-05-13a:113",
+          "pwdata-lords:daylord2024-05-13a:112",
+          "pwdata-lords:daylord2024-05-23b:224",
+          "pwdata-lords:daylord2024-02-27a:116",
+          "pwdata-lords:daylord2024-05-13a:125",
+          "pwdata-lords:daylord2024-01-10a:77",
+          "pwdata-lords:daylord2024-05-13a:126",
+          "pwdata-debates:debates2024-04-29a:469",
+          "pwdata-lords:daylord2024-05-23b:226",
+          "pwdata-lords:daylord2023-09-19a:217",
+          "pwdata-debates:debates2020-03-19a:441"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "question": "When did Parliament last seriously debate bringing back the death penalty?",
+      "keys": [
+        "historic-hansard:S5LV0198P0:1798",
+        "historic-hansard:S5LV0306P0:1905"
+      ],
+      "set": "v2",
+      "corpora": [
+        "historic-hansard"
+      ],
+      "keyShape": [
+        {
+          "key": "historic-hansard:S5LV0198P0:1798",
+          "words": 5102,
+          "chunks": 8
+        },
+        {
+          "key": "historic-hansard:S5LV0306P0:1905",
+          "words": 5714,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 1005,
+            "p25": 444,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-debates:debates1990-12-17a:192",
+          "pwdata-debates:debates1991-06-17a:353",
+          "pwdata-debates:debates1994-02-21a:204",
+          "pwdata-debates:debates1990-12-17a:333",
+          "pwdata-debates:debates1990-12-17a:353",
+          "pwdata-debates:debates1990-12-17a:354",
+          "pwdata-debates:debates1990-12-17a:265",
+          "pwdata-debates:debates1990-12-17a:342",
+          "pwdata-debates:debates1994-02-21a:229",
+          "pwdata-debates:debates1988-06-07a:365",
+          "pwdata-debates:debates1982-05-11a:269",
+          "pwdata-debates:debates1988-06-07a:340",
+          "pwdata-debates:debates1983-07-13a:183",
+          "pwdata-debates:debates1988-06-07a:287",
+          "pwdata-debates:debates1990-12-17a:335",
+          "pwdata-debates:debates1982-05-11a:325",
+          "pwdata-debates:debates1983-07-13a:266",
+          "pwdata-debates:debates1983-07-13a:214",
+          "pwdata-debates:debates1982-05-11a:317",
+          "pwdata-debates:debates1973-04-11a:213"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "question": "What happened to the plan to make the House of Lords elected?",
+      "keys": [
+        "pwdata-lords:daylord2012-04-30a:76"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-lords"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-lords:daylord2012-04-30a:76",
+          "words": 2978,
+          "chunks": 7
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": 13,
+          "documentMax": 11,
+          "documentSumTop3": 5,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 14,
+          "topWords": {
+            "n": 20,
+            "median": 1279,
+            "p25": 745,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 6
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2010-11-23b:222",
+          "quangos-govuk:government/publications/house-of-lords-reform-draft-bill:2",
+          "quangos-govuk:government/publications/house-of-lords-reform-draft-bill--3:2",
+          "pwdata-lordswrans:lordswrans2011-03-29a:32",
+          "quangos-govuk:government/publications/house-of-lords-reform-draft-bill:1",
+          "pwdata-debates:debates2008-07-14c:119",
+          "pwdata-lords:daylord2008-07-14a:86",
+          "pwdata-lords:daylord2011-05-17a:71",
+          "pwdata-lords:daylord2012-06-27a:68",
+          "pwdata-debates:debates2011-05-17c:144",
+          "pwdata-debates:debates2001-11-07:90",
+          "pwdata-lords:daylord2002-01-10a:95",
+          "pwdata-lords:daylord2025-03-10c:104",
+          "pwdata-lords:daylord2012-04-30a:165",
+          "pwdata-lords:daylord2011-06-22a:107",
+          "pwdata-lords:daylord2011-06-22a:28",
+          "pwdata-lords:daylord2007-03-13b:108",
+          "historic-hansard:S5LV0593P0:3062",
+          "pwdata-lords:daylord2011-06-22a:42",
+          "historic-hansard:S5LV0573P0:5525"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "keys": [
+        "scottish-parliament-or:14066:193"
+      ],
+      "set": "v2",
+      "corpora": [
+        "scottish-parliament-or"
+      ],
+      "keyShape": [
+        {
+          "key": "scottish-parliament-or:14066:193",
+          "words": 2084,
+          "chunks": 5
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": -1,
+          "documentCollapse": 8,
+          "documentMax": 13,
+          "documentSumTop3": 8,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 20,
+          "topWords": {
+            "n": 20,
+            "median": 499,
+            "p25": 83,
+            "under30": 2,
+            "under100": 6,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-debates:debates2023-01-17c:242",
+          "pwdata-debates:debates2023-01-17c:480",
+          "scottish-parliament-or:14071:140",
+          "scottish-parliament-or:14071:180",
+          "scottish-parliament-or:14071:143",
+          "scottish-parliament-or:14071:194",
+          "scottish-parliament-or:13858:11",
+          "scottish-parliament-or:14071:98",
+          "scottish-parliament-or:14071:175",
+          "scottish-parliament-or:14071:97",
+          "scottish-parliament-or:14071:198",
+          "scottish-parliament-or:14071:202",
+          "scottish-parliament-or:14071:199",
+          "pwdata-debates:debates2023-01-17c:468",
+          "pwdata-debates:debates2025-04-22b:344",
+          "scottish-parliament-or:14071:171",
+          "scottish-parliament-or:13716:9",
+          "scottish-parliament-or:12182:181",
+          "scottish-parliament-or:14069:277",
+          "scottish-parliament-or:14066:637"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "question": "Why were energy companies forcing people onto prepayment meters?",
+      "keys": [
+        "pwdata-debates:debates2022-12-15b:298"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-debates"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-debates:debates2022-12-15b:298",
+          "words": 1551,
+          "chunks": 4
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 57,
+          "documentCollapse": 45,
+          "documentMax": 6,
+          "documentSumTop3": 19,
+          "documentBestMember": 6,
+          "documentInSectionSlots": 57,
+          "topWords": {
+            "n": 20,
+            "median": 149,
+            "p25": 129,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 2
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-debates:debates2023-01-18e:424",
+          "pwdata-debates:debates2023-02-06d:210",
+          "pwdata-debates:debates2024-01-16e:92",
+          "pwdata-wrans:answers2022-12-13:40",
+          "pwdata-wrans:answers2023-01-17:61",
+          "pwdata-wrans:answers2022-12-05:54",
+          "pwdata-wrans:answers2023-02-10:123",
+          "pwdata-wrans:answers2023-01-24:62",
+          "pwdata-wrans:answers2023-01-09:34",
+          "pwdata-wrans:answers2023-01-24:60",
+          "pwdata-debates:debates2023-02-06d:257",
+          "pwdata-wrans:answers2023-01-25:23",
+          "pwdata-debates:debates2023-01-23a:224",
+          "pwdata-wrans:answers2023-03-21:169",
+          "pwdata-wrans:answers2023-03-15:115",
+          "pwdata-wrans:answers2023-03-09:231",
+          "committees-evidence:writtenevidence:128216:215298",
+          "ofgem:publications/market-compliance-review-remote-mode-switching-and-pre-payment-meter-warrant-installations:1",
+          "committees-reports:publication:33423:181651",
+          "committees-evidence:oralevidence:12825:189436"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "question": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "keys": [
+        "pwdata-debates:debates2024-12-02c:452"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-debates"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-debates:debates2024-12-02c:452",
+          "words": 2910,
+          "chunks": 7
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": 133,
+          "documentMax": 137,
+          "documentSumTop3": 63,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 205,
+          "topWords": {
+            "n": 20,
+            "median": 1130,
+            "p25": 262,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 8
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wms:ministerial2026-05-20:3",
+          "pwdata-lordswms:lordswms2026-05-20:3",
+          "committees-reports:publication:49441:263245",
+          "pwdata-debates:debates2026-02-25c:238",
+          "pwdata-wrans:answers2025-03-17:199",
+          "pwdata-wms:ministerial2025-12-17:4",
+          "committees-reports:publication:47864:250397",
+          "pwdata-wrans:answers2024-12-04:99",
+          "pwdata-lordswrans:lordswrans2022-02-08:14",
+          "pwdata-wms:ministerial2020-11-02:3",
+          "pwdata-lordswms:lordswms2020-11-03:3",
+          "pwdata-lordswms:lordswms2020-06-02:7",
+          "committees-reports:publication:49716:266488",
+          "hmrc-codes-guidance:-government-publications-grenfell-tower-inquiry-phase-2-report-government-response:1",
+          "pwdata-wrans:answers2025-03-19:167",
+          "hmrc-codes-guidance:-government-publications-grenfell-tower-inquiry-government-progress-report-may-2025:1",
+          "hmrc-codes-guidance:-government-publications-grenfell-tower-inquiry-government-progress-report-may-2026:1",
+          "quangos-govuk:government/publications/grenfell-tower-inquiry-government-annual-report-february-2026-translations:10",
+          "quangos-govuk:government/publications/grenfell-tower-inquiry-government-annual-report-february-2026-translations:8",
+          "quangos-govuk:government/publications/grenfell-tower-inquiry-government-annual-report-february-2026-translations:6"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "question": "What did the Chancellor announce in the Spring Statement?",
+      "keys": [
+        "pwdata-debates:debates2025-03-26b:130"
+      ],
+      "set": "v2",
+      "corpora": [
+        "pwdata-debates"
+      ],
+      "keyShape": [
+        {
+          "key": "pwdata-debates:debates2025-03-26b:130",
+          "words": 4422,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 19,
+            "median": 1038,
+            "p25": 280,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 5
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wms:ministerial2018-03-13:1",
+          "pwdata-lords:daylord2018-03-15a:138",
+          "pwdata-lords:daylord2019-03-20b:160",
+          "scottish-parliament-or:16356:193",
+          "committees-reports:publication:20237:arc-0006",
+          "committees-reports:publication:47695:249155",
+          "committees-reports:publication:47696:249157",
+          "hmrc-codes-guidance:-government-publications-modernising-the-tax-system-through-making-tax-digital:1",
+          "pwdata-wrans:answers2025-04-11:206",
+          "committees-reports:publication:47551:248084",
+          "hmrc-codes-guidance:-government-publications-spring-statement-2025-document:1",
+          "oecd:-government-publications-spring-statement-2025-document:1",
+          "committees-evidence:oralevidence:10021:161688",
+          "committees-evidence:oralevidence:10055:162172",
+          "committees-evidence:oralevidence:9137:158289",
+          "committees-evidence:oralevidence:15665:245517",
+          "ots-reports:-government-publications-spring-budget-2017-documents:1",
+          "ots-reports:-government-publications-spring-budget-2023:1",
+          "ots-reports:-government-publications-spring-budget-2024:1",
+          "hmrc-codes-guidance:-government-publications-spring-budget-2024:1"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "question": "Can my landlord evict me without giving a reason?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/50:section-21"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-pre-2000"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-pre-2000:ukpga/1988/50:section-21",
+          "words": 1124,
+          "chunks": 3
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 500,
+          "returned": 500,
+          "section": 11,
+          "documentCollapse": 11,
+          "documentMax": 1,
+          "documentSumTop3": 1,
+          "documentBestMember": 1,
+          "documentInSectionSlots": 11,
+          "topWords": {
+            "n": 20,
+            "median": 1096,
+            "p25": 154,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 8
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2021-10-18:221",
+          "quangos-govuk:government/consultations/a-new-deal-for-renting-resetting-the-balance-of-rights-and-responsibilities-between-landlords-and-tenants:1",
+          "pwdata-wrans:answers2020-02-06:102",
+          "pwdata-wrans:answers2022-10-24:558",
+          "pwdata-wrans:answers2020-11-10:246",
+          "pwdata-wrans:answers2023-10-24:381",
+          "pwdata-wrans:answers2021-11-15:242",
+          "pwdata-wrans:answers2022-10-18:767",
+          "pwdata-wms:ministerial2023-05-17:2",
+          "pwdata-lords:daylord2023-10-26a:68",
+          "primary-acts-pre-2000:ukpga/1988/50:section-21",
+          "tna-caselaw:[2013] EWCA Civ 1600:1",
+          "tna-caselaw:[2020] EWCA Civ 175:1",
+          "tna-caselaw:[2020] EWCA Civ 854:1",
+          "tna-caselaw:[2003] EWCA Civ 1219:1",
+          "tna-caselaw:[2018] EWCA Civ 2414:1",
+          "tna-caselaw:[2019] EWCA Civ 1174:1",
+          "tna-caselaw:[2018] EWHC 2454 (QB):1",
+          "tna-caselaw:[2025] EWHC 3267 (Admin):1",
+          "primary-acts-pre-2000:ukpga/1988/50:section-21C"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "question": "Has the law on no-fault evictions actually changed?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2025/26:section-146",
+        "primary-acts-2000plus:ukpga/2025/26:section-147"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-2000plus"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-2000plus:ukpga/2025/26:section-146",
+          "words": 187,
+          "chunks": 1
+        },
+        {
+          "key": "primary-acts-2000plus:ukpga/2025/26:section-147",
+          "words": 223,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": -1,
+          "documentCollapse": 148,
+          "documentMax": 124,
+          "documentSumTop3": 14,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 217,
+          "topWords": {
+            "n": 20,
+            "median": 474,
+            "p25": 100,
+            "under30": 0,
+            "under100": 5,
+            "over1500": 7
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "bills-api:3764:128",
+          "bills-api:3764:102",
+          "bills-api:3764:126",
+          "bills-api:3764:88",
+          "bills-api:3764:108",
+          "bills-api:3462:24",
+          "pwdata-lords:daylord2023-10-26a:68",
+          "pwdata-wrans:answers2023-10-24:381",
+          "pwdata-lords:daylord2024-02-20d:68",
+          "pwdata-debates:debates2023-10-23d:432",
+          "pwdata-debates:debates2024-04-22c:4",
+          "pwdata-westminster:westminster2022-10-25b:84",
+          "pwdata-debates:debates2024-10-09d:383",
+          "pwdata-debates:debates2023-05-11a:271",
+          "pwdata-debates:debates2021-01-11c:31",
+          "pwdata-wrans:answers2025-02-20:23",
+          "pwdata-wrans:answers2020-02-06:102",
+          "pwdata-wrans:answers2020-04-28:176",
+          "pwdata-wrans:answers2022-02-15:215",
+          "bills-api:3462:19"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "question": "My employer won't make changes for my disability — what does the law require?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2010/15:section-20"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-2000plus"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-2000plus:ukpga/2010/15:section-20",
+          "words": 580,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 499,
+          "returned": 499,
+          "section": -1,
+          "documentCollapse": 24,
+          "documentMax": 9,
+          "documentSumTop3": 1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 27,
+          "topWords": {
+            "n": 20,
+            "median": 598,
+            "p25": 225,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 8
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2025-07-15:90",
+          "pwdata-wrans:answers2025-04-10:111",
+          "pwdata-wrans:answers2025-01-14:255",
+          "pwdata-wrans:answers2023-03-27:316",
+          "pwdata-wrans:answers2024-05-09:98",
+          "pwdata-wrans:answers2020-01-30:299",
+          "primary-acts-pre-2000:ukpga/1995/50:section-18B",
+          "primary-acts-pre-2000:ukpga/1995/50:section-3A",
+          "et-decisions:employment-tribunal-decisions/miss-c-sutton-v-sheffield-children-s-nhs-foundation-trust-1800471-2017:2",
+          "quangos-govuk:government/publications/access-to-elected-office-for-disabled-people-strategy-compliance-with-the-equality-act-2010-guidance-for-political-parties:1",
+          "quangos-govuk:government/publications/access-to-elected-office-for-disabled-people-strategy-compliance-with-the-equality-act-2010-guidance-for-political-parties--2:2",
+          "quangos-govuk:government/publications/access-to-elected-office-for-disabled-people-strategy-compliance-with-the-equality-act-2010-guidance-for-political-parties:2",
+          "quangos-govuk:government/publications/access-to-elected-office-for-disabled-people-strategy-compliance-with-the-equality-act-2010-guidance-for-political-parties--2:1",
+          "quangos-govuk:government/publications/small-business-recruitment-guidance:2",
+          "quangos-govuk:government/publications/recruitment-asking-questions-about-disability-and-health:2",
+          "tna-caselaw:[2025] EAT 132:1",
+          "et-decisions:employment-tribunal-decisions/ms-j-mccarthy-v-sainsburys-supermarkets-ltd-2205689-slash-2019:2",
+          "et-decisions:employment-tribunal-decisions/ms-e-fatoye-adeloye-v-guys-and-st-thomass-nhs-foundation-trust-2300170-slash-2019:2",
+          "et-decisions:employment-tribunal-decisions/mrs-j-moore-v-home-office-2301170-slash-2021:2",
+          "et-decisions:employment-tribunal-decisions/mr-c-johnson-v-transport-for-london-2305160-slash-2021:2"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q15",
+      "collection": "legislation",
+      "question": "Is the old law banning schools from promoting homosexuality still in force?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/9:section-28"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-pre-2000"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-pre-2000:ukpga/1988/9:section-28",
+          "words": 33,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 497,
+          "returned": 497,
+          "section": -1,
+          "documentCollapse": 13,
+          "documentMax": 57,
+          "documentSumTop3": 12,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 20,
+          "topWords": {
+            "n": 20,
+            "median": 226,
+            "p25": 68,
+            "under30": 4,
+            "under100": 7,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-debates:debates2003-03-10:297",
+          "pwdata-debates:debates2000-07-05a:149",
+          "pwdata-debates:debates2000-07-05a:221",
+          "pwdata-debates:debates2000-07-05a:204",
+          "pwdata-debates:debates2000-07-25a:579",
+          "pwdata-debates:debates2000-07-05a:186",
+          "pwdata-debates:debates2003-03-10:302",
+          "pwdata-debates:debates2000-07-05a:216",
+          "historic-hansard:S5LV0593P0:815",
+          "pwdata-debates:debates2000-07-25a:562",
+          "pwdata-debates:debates2000-07-25a:534",
+          "regional:nisi/2005/1968:article-28",
+          "primary-acts-2000plus:ukpga/2003/26:schedule-7-paragraph-28",
+          "primary-acts-2000plus:ukpga/2011/20:schedule-4-paragraph-28",
+          "si-2010plus:uksi/2010/862:article-3",
+          "regional:asc/2026/7:schedule-2-paragraph-28",
+          "si-pre-2010:uksi/1991/344:article-3",
+          "si-pre-2010:uksi/1996/593:schedule-1-paragraph-28",
+          "si-pre-2010:uksi/1989/404:article-2",
+          "primary-acts-pre-2000:ukpga/1988/9:section-41"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "question": "What exactly did the government ban when it banned plastic straws?",
+      "keys": [
+        "si-2010plus:uksi/2020/971:regulation-2",
+        "si-2010plus:uksi/2020/971:regulation-20"
+      ],
+      "set": "v2",
+      "corpora": [
+        "si-2010plus"
+      ],
+      "keyShape": [
+        {
+          "key": "si-2010plus:uksi/2020/971:regulation-2",
+          "words": 473,
+          "chunks": 1
+        },
+        {
+          "key": "si-2010plus:uksi/2020/971:regulation-20",
+          "words": 648,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 299,
+          "returned": 299,
+          "section": 157,
+          "documentCollapse": 95,
+          "documentMax": 90,
+          "documentSumTop3": 21,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 145,
+          "topWords": {
+            "n": 20,
+            "median": 523,
+            "p25": 140,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 7
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "impact-assessments:2023-60:10",
+          "impact-assessments:2023-61:10",
+          "impact-assessments:2023-111:10",
+          "impact-assessments:2023-110:10",
+          "quangos-govuk:government/publications/circular-economy-package-policy-statement:4",
+          "impact-assessments:2023-111:11",
+          "impact-assessments:2023-61:11",
+          "impact-assessments:2023-110:18",
+          "pwdata-wrans:answers2019-10-17:124",
+          "pwdata-lordswrans:lordswrans2023-01-26:56",
+          "pwdata-lords:daylord2020-07-10a:82",
+          "pwdata-wrans:answers2020-12-21:79",
+          "pwdata-lordswrans:lordswrans2020-08-07:7",
+          "pwdata-wrans:answers2019-07-30:67",
+          "pwdata-wrans:answers2024-12-12:298",
+          "pwdata-debates:debates2020-06-15a:342",
+          "pwdata-debates:debates2020-11-26d:17",
+          "pwdata-wrans:answers2019-04-15:238",
+          "pwdata-lordswrans:lordswrans2022-04-26:8",
+          "pwdata-lords:daylord2022-03-07b:68"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "question": "Does Scotland have a minimum price for alcohol?",
+      "keys": [
+        "regional:ssi/2024/127:article-2"
+      ],
+      "set": "v2",
+      "corpora": [
+        "regional"
+      ],
+      "keyShape": [
+        {
+          "key": "regional:ssi/2024/127:article-2",
+          "words": 30,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 500,
+          "returned": 500,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 10,
+          "documentSumTop3": 25,
+          "documentBestMember": 10,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 231,
+            "p25": 156,
+            "under30": 1,
+            "under100": 4,
+            "over1500": 2
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "regional:ssi/2024/127:article-2",
+          "regional:asp/2012/4:section-1",
+          "scottish-parliament-or:15698:222",
+          "scottish-parliament-or:11207:33",
+          "regional:ssi/2024/128:article-2",
+          "regional:asp/2005/16:schedule-4-paragraph-5A",
+          "regional:asp/2005/16:schedule-3-paragraph-6A",
+          "regional:asp/2012/4:section-2",
+          "scottish-courts:media/ejej4xos/2016csih77-the-scotch-whisky-association-and-others-against-the-lord-advocate-and-the-advocate-general:1",
+          "committees-reports:publication:23014:168608-0024",
+          "committees-reports:publication:24707:arc-0019",
+          "committees-reports:publication:24719:arc-0021",
+          "committees-reports:publication:24707:arc-0020",
+          "scottish-parliament-or:11385:6",
+          "scottish-parliament-or:15535:51",
+          "niassembly-hansard:476719:52",
+          "pwdata-westminster:westminster2020-03-17b:17",
+          "pwdata-wrans:answers2018-07-10:55",
+          "scottish-parliament-or:13405:25",
+          "scottish-parliament-or:13405:51"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "question": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1985/70:section-11"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-pre-2000"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-pre-2000:ukpga/1985/70:section-11",
+          "words": 771,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 498,
+          "returned": 498,
+          "section": 96,
+          "documentCollapse": 1,
+          "documentMax": 5,
+          "documentSumTop3": 2,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 208,
+            "p25": 123,
+            "under30": 0,
+            "under100": 4,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "primary-acts-pre-2000:ukpga/1985/70:section-9A",
+          "primary-acts-pre-2000:ukpga/1985/70:section-10",
+          "primary-acts-2000plus:ukpga/2018/34:section-1",
+          "primary-acts-pre-2000:ukpga/1985/70:section-8",
+          "tna-caselaw:[2024] EWHC 2831 (Ch):1",
+          "tna-caselaw:[2023] EWHC 1817 (Admin):1",
+          "tna-caselaw:[2024] EWCC 30:1",
+          "tna-caselaw:[2007] EWCA Civ 938:1",
+          "pwdata-lordswrans:lordswrans2023-12-05:44",
+          "pwdata-lords:daylord2023-03-16c:48",
+          "pwdata-wrans:answers2023-03-01:184",
+          "pwdata-wrans:answers2024-02-12:14",
+          "pwdata-wrans:answers2025-02-26:104",
+          "pwdata-debates:debates2023-03-27c:66",
+          "pwdata-wrans:answers2024-01-30:193",
+          "pwdata-lords:daylord2024-01-10a:16",
+          "pwdata-debates:debates2025-01-20b:48",
+          "pwdata-debates:debates2023-03-27c:65",
+          "pwdata-wrans:answers2023-03-20:282",
+          "scottish-parliament-or:15315:70"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "question": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2006/28:section-2",
+        "primary-acts-2000plus:ukpga/2006/28:section-3"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-2000plus"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-2000plus:ukpga/2006/28:section-2",
+          "words": 235,
+          "chunks": 1
+        },
+        {
+          "key": "primary-acts-2000plus:ukpga/2006/28:section-3",
+          "words": 407,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 500,
+          "returned": 500,
+          "section": 1,
+          "documentCollapse": 1,
+          "documentMax": 4,
+          "documentSumTop3": 1,
+          "documentBestMember": 4,
+          "documentInSectionSlots": 1,
+          "topWords": {
+            "n": 20,
+            "median": 202,
+            "p25": 130,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "primary-acts-2000plus:ukpga/2006/28:section-2",
+          "pwdata-wrans:answers2005-12-19e:897",
+          "primary-acts-2000plus:ukpga/2006/28:section-1",
+          "pwdata-debates:debates1989-05-08a:314",
+          "primary-acts-2000plus:ukpga/2006/28:section-7",
+          "primary-acts-2000plus:ukpga/2006/28:section-8",
+          "primary-acts-2000plus:ukpga/2006/28:section-4",
+          "primary-acts-2000plus:ukpga/2006/28:section-3",
+          "pwdata-lords:daylord2004-11-16a:76",
+          "pwdata-lordswrans:lordswrans2000-03-20a:28",
+          "pwdata-wrans:answers2003-04-03:213",
+          "pwdata-lordswrans:lordswrans2004-10-25a:19",
+          "scottish-parliament-or:arch-1900:292",
+          "pwdata-lords:daylord2004-02-09a:24",
+          "pwdata-debates:debates2003-03-11:303",
+          "pwdata-lordswrans:lordswrans2004-10-20a:8",
+          "pwdata-debates:debates2003-04-14:219",
+          "tna-caselaw:[2016] EWCA Civ 125:1",
+          "tna-caselaw:[2017] UKSC 81:1",
+          "tna-caselaw:[2008] EWHC 1096 (Admin):1"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "question": "What does the law make social media companies do to protect children?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2023/50:section-12"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-2000plus"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-2000plus:ukpga/2023/50:section-12",
+          "words": 892,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": 65,
+          "documentCollapse": 2,
+          "documentMax": 9,
+          "documentSumTop3": 2,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 8,
+          "topWords": {
+            "n": 20,
+            "median": 485,
+            "p25": 428,
+            "under30": 0,
+            "under100": 3,
+            "over1500": 5
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "explanatory-notes:en:ukpga/2023/50:1-0039",
+          "explanatory-notes:en:ukpga/2023/50:1-0038",
+          "explanatory-notes:en:ukpga/2023/50:1-0026",
+          "explanatory-notes:en:ukpga/2023/50:1-0027",
+          "explanatory-notes:en:ukpga/2023/50:1-0060",
+          "explanatory-notes:en:ukpga/2023/50:1-0003",
+          "explanatory-notes:en:ukpga/2023/50:1-0042",
+          "primary-acts-2000plus:ukpga/2023/50:section-91",
+          "explanatory-notes:en:ukpga/2023/50:1-0040",
+          "pwdata-lords:daylord2025-05-21a:20",
+          "primary-acts-2000plus:ukpga/2023/50:section-29",
+          "quangos-govuk:government/publications/online-safety-act-protection-of-children-codes-of-practice-explanatory-memorandum:2",
+          "quangos-govuk:government/publications/online-safety-and-data-protection-a-joint-statement-by-ofcom-and-the-information-commissioners-office:2",
+          "quangos-govuk:government/publications/online-safety-act-draft-amendments-to-the-protection-of-children-code-of-practice-for-user-to-user-services:2",
+          "quangos-govuk:government/publications/online-safety-act-illegal-content-codes-of-practice-2024-explanatory-memorandum:2",
+          "quangos-govuk:government/publications/online-safety-act-protection-of-children-codes-of-practice-explanatory-memorandum:3",
+          "ofcom:online-safety/protecting-children/preserving-information-about-a-childs-online-activity-following-a-coroners-request:1",
+          "quangos-govuk:government/publications/online-safety-act-draft-amendments-to-the-protection-of-children-code-of-practice-for-user-to-user-services:1",
+          "ofcom:online-safety/illegal-and-harmful-content/countdown-to-a-safer-life-online:1",
+          "quangos-govuk:government/publications/online-safety-act-protection-of-children-codes-of-practice-explanatory-memorandum:1"
+        ]
+      }
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "question": "How do I find out what a company holds about me?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2018/12:section-45"
+      ],
+      "set": "v2",
+      "corpora": [
+        "primary-acts-2000plus"
+      ],
+      "keyShape": [
+        {
+          "key": "primary-acts-2000plus:ukpga/2018/12:section-45",
+          "words": 596,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 400,
+          "returned": 400,
+          "section": 2,
+          "documentCollapse": 2,
+          "documentMax": 9,
+          "documentSumTop3": 3,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 2,
+          "topWords": {
+            "n": 20,
+            "median": 513,
+            "p25": 317,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "retained-eu:eur/2016/679:article-15",
+          "primary-acts-2000plus:ukpga/2018/12:section-45",
+          "quangos-govuk:government/publications/slc-data-protection-policy:1",
+          "primary-acts-2000plus:ukpga/2025/18:section-78",
+          "primary-acts-2000plus:ukpga/2018/12:section-180A",
+          "primary-acts-2000plus:ukpga/2018/12:section-95",
+          "hmrc-manuals:hmrc-internal-manuals/information-disclosure-guide/idg30220:1",
+          "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh151500:1",
+          "quangos-govuk:government/publications/data-subject-access-requests-dsar-policy:2",
+          "retained-eu:eur/2016/679:article-12",
+          "committees-reports:publication:24853:arc-0029",
+          "committees-reports:publication:24853:arc-0105",
+          "committees-reports:publication:24853:arc-0028",
+          "committees-reports:publication:24852:arc-0117",
+          "committees-reports:publication:24852:arc-0131",
+          "committees-reports:publication:24852:arc-0063",
+          "committees-reports:publication:24852:arc-0049",
+          "committees-reports:publication:44622:221634-0002",
+          "committees-reports:publication:47760:249582",
+          "committees-reports:publication:47760:249685"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,4039 @@
+{
+  "takenAt": "2026-09-09T04:32:48.422Z",
+  "localFlags": "[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=off SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=off BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=off FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=off ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off SEARCH_GRAIN=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation,debates,committees,caselaw GEMINI_API_KEY=set",
+  "productionHealth": {
+    "status": "ok",
+    "commit": "3f205a257573b23c14946bef8e2698b47c8c7b7d",
+    "env": "production",
+    "mail": true,
+    "capabilities": {
+      "LEX_QUERY_EXPANSION": true,
+      "LEX_QUERY_ROUTER": true,
+      "LEX_WEB_ORIENTATION": false,
+      "LEX_SEARCH_VECTOR": true,
+      "LEX_SEARCH_RERANKER": true,
+      "LEX_SEARCH_GRAPH": false,
+      "LEX_COHERENCE_CORPUS": false,
+      "LEX_SEARCH_STUB": false,
+      "LEX_TIER_FUSION": true,
+      "LEX_BUILD_PERSPECTIVES": false,
+      "LEX_ROUTER_STREAMS_V2": false,
+      "LEX_STATS_STREAM": true,
+      "LEX_FUSION_WEIGHTS": false,
+      "LEX_SEARCH_JUDGED_MERGE": true,
+      "LEX_ROUTER_CONFIDENCE": false,
+      "LEX_ROUTER_APPRAISAL": false
+    },
+    "retrieval": {
+      "vectorSearchUrl": true,
+      "ftsSearchUrl": true,
+      "geminiKey": true,
+      "vectorStreams": [
+        "caselaw",
+        "committees",
+        "debates",
+        "guidance",
+        "legislation"
+      ]
+    },
+    "build": {
+      "driver": "worker"
+    }
+  },
+  "ftsServe": {
+    "url": "https://fts-serve-production.up.railway.app",
+    "build": "S16-fts-cancel-bounded",
+    "served": 3989,
+    "uptime_s": 1052465
+  },
+  "probeTries": 6,
+  "collections": [
+    {
+      "corpus": "bills-api",
+      "sections": 6574,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "BILL"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "building-regs",
+      "sections": 21,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "cma-cases",
+      "sections": 22898,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "college-of-policing",
+      "sections": 332,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "committees-evidence",
+      "sections": 142315,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "COMMITTEE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [
+        "committees"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "committees-reports",
+      "sections": 344773,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "COMMITTEE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "committees"
+      ],
+      "admittedByV2": [
+        "committees"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "commons-divisions-votes",
+      "sections": 2361,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DIVISION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "consultations",
+      "sections": 7448,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CONSULTATION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "consultations",
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "cps-guidance",
+      "sections": 270,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "early-day-motions",
+      "sections": 60737,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "other",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [],
+      "admittedByV2": [],
+      "verdict": "deferred-to-graph",
+      "note": "a named list of members endorsing a proposition on a date — a high-confidence position-graph edge, not a document to retrieve and read"
+    },
+    {
+      "corpus": "echr-hudoc",
+      "sections": 4460,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "caselaw",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CASE_LAW"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [
+        "caselaw"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "erskine-may",
+      "sections": 2038,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "other",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "et-decisions",
+      "sections": 161753,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "caselaw",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CASE_LAW"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 12
+      },
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [
+        "caselaw"
+      ],
+      "verdict": "reachable",
+      "note": "⚠ only 12 of 20 returned ids hydrate"
+    },
+    {
+      "corpus": "eur-lex",
+      "sections": 241571,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "EU_LEGISLATION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "explanatory-memoranda",
+      "sections": 27428,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "EXPLANATORY_NOTE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "explanatory",
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "explanatory-notes",
+      "sections": 18801,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "EXPLANATORY_NOTE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "explanatory",
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "fca-handbook",
+      "sections": 3661,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "govuk-core-docs",
+      "sections": 176,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "historic-hansard",
+      "sections": 4641117,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "hmrc-ancillary",
+      "sections": 479,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "hmrc-codes-guidance",
+      "sections": 14067,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "hmrc-manuals",
+      "sections": 85197,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "hmrc-tiins",
+      "sections": 791,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "ico",
+      "sections": 26591,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "impact-assessments",
+      "sections": 18759,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "IMPACT_ASSESSMENT"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "impact-assessments",
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "independent-reviews",
+      "sections": 667,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "inquiry-evidence",
+      "sections": 90,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "inquiry-reports",
+      "sections": 146,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "lawcom",
+      "sections": 263,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "lda-commonsdivisions",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [debates] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    },
+    {
+      "corpus": "lda-commonsoralquestions",
+      "sections": 69529,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 13,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "lda-commonswrittenquestions",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [debates] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    },
+    {
+      "corpus": "lda-lordsdivisions",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [debates] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    },
+    {
+      "corpus": "lda-lordswrittenquestions",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [debates] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    },
+    {
+      "corpus": "lgsco",
+      "sections": 40,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "lords-divisions-votes",
+      "sections": 3284,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DIVISION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "members-interests",
+      "sections": 3448,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "other",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [],
+      "nullTypeShare": 1,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [],
+      "admittedByV2": [],
+      "verdict": "excluded-by-design",
+      "note": "political-risk / people-graph input, not general search (SEARCH_STRATEGY.md §3.1)"
+    },
+    {
+      "corpus": "nao-reports",
+      "sections": 3983,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "ni-judgments",
+      "sections": 7927,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "caselaw",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CASE_LAW"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [
+        "caselaw"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "niassembly-hansard",
+      "sections": 196348,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "nilawcom",
+      "sections": 17,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 17,
+        "found": 17
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "oecd",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [guidance] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    },
+    {
+      "corpus": "ofcom",
+      "sections": 4169,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "ofgem",
+      "sections": 17161,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "ots-reports",
+      "sections": 497,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "parliament-treaties",
+      "sections": 328,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "petitions",
+      "sections": 49529,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "other",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [],
+      "admittedByV2": [],
+      "verdict": "deferred-to-graph",
+      "note": "the same shape as an EDM but for public salience rather than parliamentary position"
+    },
+    {
+      "corpus": "planning-policy",
+      "sections": 64,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "sections": 147975,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "PRIMARY_LEGISLATION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "sections": 179435,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "PRIMARY_LEGISLATION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-debates",
+      "sections": 6393542,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-lords",
+      "sections": 755411,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-lordswms",
+      "sections": 21483,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-lordswrans",
+      "sections": 176246,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-westminster",
+      "sections": 241030,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-wms",
+      "sections": 24983,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "pwdata-wrans",
+      "sections": 1237825,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "quangos-govuk",
+      "sections": 171190,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "regional",
+      "sections": 357161,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "STATUTORY_INSTRUMENT"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "retained-eu",
+      "sections": 319346,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "EU_LEGISLATION"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "scotlawcom",
+      "sections": 350,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "scottish-courts",
+      "sections": 13070,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "caselaw",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CASE_LAW"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [
+        "caselaw"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "sections": 1044188,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "other",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "senedd-cofnod",
+      "sections": 191756,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "sentencing-council",
+      "sections": 253,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "guidance",
+      "tierSource": "id",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "GUIDANCE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "guidance"
+      ],
+      "admittedByV2": [
+        "guidance"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "si-2010plus",
+      "sections": 287078,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "STATUTORY_INSTRUMENT"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "si-pre-2010",
+      "sections": 489450,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "legislation",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "STATUTORY_INSTRUMENT"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "legislation"
+      ],
+      "admittedByV2": [
+        "legislation"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "tax-treaties-dta",
+      "sections": 324,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "TREATY"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [],
+      "admittedByV2": [],
+      "verdict": "keyword-only",
+      "note": "no router stream admits it; it surfaces only when routing is off or has failed open"
+    },
+    {
+      "corpus": "tax-tribunals",
+      "sections": 13099,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "caselaw",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CASE_LAW"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [
+        "caselaw"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "tna-caselaw",
+      "sections": 74896,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "caselaw",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "CASE_LAW"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "caselaw"
+      ],
+      "admittedByV2": [
+        "caselaw"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "uk-treaties",
+      "sections": 3264,
+      "nameSources": [
+        "artefact",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "TREATY"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [],
+      "admittedByV2": [],
+      "verdict": "keyword-only",
+      "note": "no router stream admits it; it surfaces only when routing is off or has failed open"
+    },
+    {
+      "corpus": "uk-treaties-fcdo",
+      "sections": 23372,
+      "nameSources": [
+        "artefact",
+        "discovery",
+        "neon"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "title",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 20
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "corpus": "written-answers",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [debates] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    },
+    {
+      "corpus": "written-statements",
+      "sections": 0,
+      "nameSources": [
+        "artefact"
+      ],
+      "servedTier": "parliamentary",
+      "tierSource": "generic",
+      "probesTried": 1,
+      "prefilterHonoured": true,
+      "types": [
+        "DEBATE"
+      ],
+      "nullTypeShare": 0,
+      "hydrates": {
+        "checked": 20,
+        "found": 0
+      },
+      "admittedBy": [
+        "debates"
+      ],
+      "admittedByV2": [
+        "debates"
+      ],
+      "verdict": "ORPHANED-IN-INDEX",
+      "note": "admitted by [debates] and 0 of 20 returned ids exist in corpus_sections — the product returns a card titled with the corpus name, no citation, no date, no URL"
+    }
+  ],
+  "byVerdict": {
+    "reachable": {
+      "n": 62,
+      "sections": 18241533
+    },
+    "deferred-to-graph": {
+      "n": 2,
+      "sections": 110266
+    },
+    "ORPHANED-IN-INDEX": {
+      "n": 7,
+      "sections": 0
+    },
+    "excluded-by-design": {
+      "n": 1,
+      "sections": 3448
+    },
+    "keyword-only": {
+      "n": 2,
+      "sections": 3588
+    }
+  },
+  "routing": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates",
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates",
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "committees",
+          "guidance"
+        ],
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ],
+        [
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "couldAnswer": [
+        "committees"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "question": "What did the Supreme Court decide about prorogation of Parliament?",
+      "couldAnswer": [
+        "caselaw"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "caselaw"
+        ],
+        [
+          "debates",
+          "committees",
+          "caselaw"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "question": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "couldAnswer": [
+        "caselaw"
+      ],
+      "rolls": [
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "question": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "couldAnswer": [
+        "caselaw"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "question": "Is there a Supreme Court case about employment tribunal fees?",
+      "couldAnswer": [
+        "caselaw"
+      ],
+      "rolls": [
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "couldAnswer": [
+        "caselaw"
+      ],
+      "rolls": [
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "question": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "couldAnswer": [
+        "caselaw"
+      ],
+      "rolls": [
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "question": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "question": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "question": "What happens when someone is accused of making a false allegation of rape?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "question": "What are the rules police have to follow when stopping and searching someone?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "guidance"
+        ],
+        [
+          "guidance"
+        ],
+        [
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "caselaw"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 2,
+      "repeat": 3,
+      "cls": "INTERMITTENT"
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "guidance"
+        ],
+        [
+          "guidance"
+        ],
+        [
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "question": "When can HMRC depart from the strict letter of the law?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "question": "What did the government think banning plastic straws would cost?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 0,
+      "repeat": 3,
+      "cls": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 0,
+      "repeat": 3,
+      "cls": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 0,
+      "repeat": 3,
+      "cls": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 0,
+      "repeat": 3,
+      "cls": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "question": "What did the government consult on about reducing sewage discharges?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "question": "Was there a consultation on the smoking age ban?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "question": "What did the government propose to change about building safety regulation?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "question": "Has the government consulted on gambling sponsorship?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "question": "What has the government asked about AI and copyright?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "question": "What was consulted on for leasehold reform?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "question": "Is there guidance being consulted on for storm overflows?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "question": "What did the government consult on for net zero aviation?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "question": "Was there a consultation about electrical safety in building regulations?",
+      "couldAnswer": [
+        "guidance"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "question": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "question": "Did peers back the assisted dying bill when it reached the Lords?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "question": "What did ministers at Stormont say about the botched green energy scheme?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "question": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates",
+          "committees"
+        ],
+        [
+          "debates",
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "question": "What did peers say about overturning the subpostmasters' convictions?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "question": "When did Parliament last seriously debate bringing back the death penalty?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "question": "What happened to the plan to make the House of Lords elected?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ],
+        [
+          "debates",
+          "committees"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "question": "Why were energy companies forcing people onto prepayment meters?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "question": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "question": "What did the Chancellor announce in the Spring Statement?",
+      "couldAnswer": [
+        "debates"
+      ],
+      "rolls": [
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "question": "Can my landlord evict me without giving a reason?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "question": "Has the law on no-fault evictions actually changed?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "question": "My employer won't make changes for my disability — what does the law require?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q15",
+      "collection": "legislation",
+      "question": "Is the old law banning schools from promoting homosexuality still in force?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "question": "What exactly did the government ban when it banned plastic straws?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "question": "Does Scotland have a minimum price for alcohol?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "question": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "question": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "question": "What does the law make social media companies do to protect children?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "question": "How do I find out what a company holds about me?",
+      "couldAnswer": [
+        "legislation"
+      ],
+      "rolls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "failOpen": 0,
+      "hitRolls": 3,
+      "repeat": 3,
+      "cls": "ROUTED"
+    }
+  ],
+  "routingRun": true
+}

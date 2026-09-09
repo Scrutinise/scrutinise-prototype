@@ -1,0 +1,66 @@
+{
+  "sprint": "SEARCH S19",
+  "writtenAt": "2026-09-09 04:05 UTC — BEFORE any retrieval was run in this sprint",
+  "why": "BRIEF_SEARCH_S19.md §2: 'Predict first. State, per collection, which grain you expect to win and why. A refuted prediction here is worth more than a confirmed one — it would mean the grain is not the mechanism and §3 should not be built as written.' A prediction written after the number is not a prediction.",
+
+  "what_was_already_known_before_predicting": [
+    "S18 §1 published, scoped BM25 over impact-assessments alone: section-level 0 of 9, DOCUMENT-level 4 of 9, document-level in top 200 8 of 9. So the impact-assessments row is a REPRODUCTION, not a prediction, and is labelled as such below.",
+    "ARGUMENT 1A: 12,705,570 of 13,724,557 parliamentary sections (92.6%) are a single chunk.",
+    "S17: a debates key is 1 of a 369-speech median sitting day; a legislation key 1 of a 200-section median Act.",
+    "docs/census/s19-idshape (this sprint, §2 preliminaries, run before these predictions): sections-per-document measured per collection from corpus_sections."
+  ],
+
+  "P0_structural": {
+    "claim": "For three of the seven collections carrying validated recall questions — caselaw, guidance and consultations — ONE DOCUMENT HOLDS EXACTLY ONE SECTION, so the document grain and the section grain are the same unit and recall at the two grains must be IDENTICAL, not merely similar.",
+    "basis": "corpus_sections, measured 2026-09-09: tna-caselaw 74,896 sections / 74,896 documents; consultations 7,448/7,448; cps-guidance 270/270; hmrc-manuals 85,197/85,197; college-of-policing 332/332.",
+    "affected_questions": "6 caselaw + 10 guidance + 9 consultations = 25 of the 66 scoreable recall questions",
+    "status": "This is a derivation, not a prediction, and it is used as a CONTROL: if the harness reports different section- and document-grain recall for any of those three collections, the document rule in lib/lex/grain.ts is wrong and every other number in the table is suspect."
+  },
+
+  "P1_impact_assessments": {
+    "prediction": "REPRODUCTION, not a prediction: document > section, section ≈ 0 of 9.",
+    "numbers": { "section_recall_at_20": "0 of 9", "document_recall_at_20": "3 to 5 of 9" },
+    "confidence": "high — S18 measured exactly this on the same arm three days ago"
+  },
+
+  "P2_debates": {
+    "prediction": "Document WINS, and by the largest margin of any collection, on the collection-scoped BM25 arm. A key is one speech of a 318-speech sitting day, and the words of the question are spread across the day rather than concentrated in the one speech that answers it.",
+    "numbers": { "section_recall_at_20": "0 to 2 of 11", "document_recall_at_20": "at least 3 more than section" },
+    "but": "I predict the document grain is NOT usable for debates even if it wins, because a debates 'document' is a whole sitting day (median 318 speeches, historic-hansard's parent is a whole VOLUME at ~1,000 sections). Winning the recall number by returning an object no user can read is the failure the brief's §3 'retrieve at the grain that finds it; display the passage that matched' is written to avoid.",
+    "confidence": "high on the ordering, low on the size"
+  },
+
+  "P3_legislation": {
+    "prediction": "The brief's expected shape says 'sections for legislation'. I predict that is REFUTED ON THE NUMBER and CONFIRMED ON THE UNIT: document-grain recall will be materially higher than section-grain, because an Act's title matches the question and the Act is 158 sections, but the answer a user needs is still the section.",
+    "numbers": { "document_beats_section": true, "margin": "at least 3 of 10" },
+    "confidence": "medium"
+  },
+
+  "P4_committees": {
+    "prediction": "SPLIT WITHIN THE COLLECTION, and this is the one I most expect to be interesting. committees-reports holds 344,773 sections over 51,000 reports (6.8 per report) so the document grain can move it; committees-evidence holds 142,315 sections over 142,315 submissions (1.0) so the document grain CANNOT move it at all. 12 of the 19 committee keys are reports and 7 are evidence.",
+    "numbers": { "document_beats_section": true, "margin": "1 to 3 of 10" },
+    "confidence": "medium"
+  },
+
+  "P5_chunk_vs_section": {
+    "prediction": "The dense arm (which scores ~3,200-character chunks and takes each section's best) will beat the sparse arm (which scores the whole section as one bag of words) on DEBATES and COMMITTEES, and lose to it on LEGISLATION and GUIDANCE.",
+    "reasoning": "Chunking can only help where sections are long enough to be chunked. 92.6% of parliamentary sections are a single chunk, so for debates the dense arm's advantage — if any — is the embedding, not the grain. Legislation sections are short and vocabulary-exact, which is BM25's home ground.",
+    "confidence": "low on debates, medium on legislation",
+    "note": "If this is refuted in the direction 'dense wins everywhere', the mechanism is the embedding and not the grain, and §3 should not be built as a grain setting."
+  },
+
+  "P6_length": {
+    "prediction": "The median word count of what comes back at SECTION grain on debates will be under 100 words, and more than a quarter of returned debates sections will be under 30 words.",
+    "basis": "ARGUMENT 1A measured 48.8% of dense candidates under 30 words with a median of 32, but that was the dense arm on an argument probe; this is the gold set through both arms, so I expect the fragment share to be lower than 48.8% and still large.",
+    "confidence": "medium"
+  },
+
+  "P7_gateway_vs_scoped": {
+    "prediction": "Every grain will score LOWER through the real gateway than scoped to the collection alone, and the gap will be widest for the collections with the smallest share of their tier — impact assessments (18,759 of a 2.09M legislation tier) and committees (487,088 of a 13.7M parliamentary tier). A grain that wins in isolation and loses in the merge is not a win, and I expect at least one grain/collection pair to do exactly that.",
+    "confidence": "high on the direction"
+  },
+
+  "P8_what_would_make_me_abandon_section_3": {
+    "claim": "If the document grain wins on FEWER than three of the seven collections through the real gateway, the grain is not the mechanism and §3 should not be built as a per-collection grain setting. I am recording that threshold now so it cannot be moved afterwards."
+  }
+}
