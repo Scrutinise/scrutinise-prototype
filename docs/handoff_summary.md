@@ -773,7 +773,65 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-09 03:53 UTC — ▼▼ **CCW-B18 — THE FOUR PASSES THAT CRITICISE A PROPOSAL HAD
+*Last updated: 2026-09-09 11:35 UTC — ▼▼ **CCW-B20 — THE KERNEL FIX IS DEPLOYED, AND A "SOURCE
+REBUILD" SHIPPED THE OLD COMMIT WITH A NEW ID.** Report: `docs/report_run/B20_REPORT.md`. Exports:
+`docs/report_run/critique/`. **No model was called all sprint — §5 turned out to be an export.**
+▶▶ **PUSHED: sixteen commits `0491e1a..5b92b93`** (nine INGEST EDM, seven B18). Production reads
+back `5b92b93`, `env: production`. `check-clean-build.sh --fast` PASS, run BEFORE the push.
+▶▶ ⚠⚠ **`serviceInstanceDeployV2` WITHOUT `commitSha` RETURNED SUCCESS ON THE OLD COMMIT.** The
+brief warned that `deploymentRedeploy` would produce a new id with identical behaviour; **the
+SOURCE-REBUILD mutation did it instead.** Deployment `a47cdcaa` went green in four minutes with
+`meta.commitHash` still `15bafe1f` and nothing anywhere said so. Named explicitly, `13a413f3` built
+`5b92b93de2dd`. ⚠ **Read the SHA — never the status, never the id**; both were SUCCESS, both had
+fresh ids, one meant nothing. ▶ The running container prints `retrieval configuration OK …`, which
+is `assertRetrievalConfig`'s own line and which the old container could not produce; both fixes
+confirmed in the sha (`build.ts:3446 currentFieldValues`, `build-worker.ts:173`).
+▶ ⚠ **`build-worker`'s `watchPatterns` are `[]`** — that is why sixteen pushes made no deployment
+record for it at all. It is deployed by hand, every time. ▶ `fts-serve`/`vector-serve`'s 25 SKIPPED
+are **correct**: watch path `scripts/ingest/search/**`, untouched. Both serving, unsaturated.
+▶▶ ⚠⚠ **THE B18 REPORT IS WRONG ABOUT M-01, IN OUR FAVOUR — it has a fixed-path number after all.**
+It says *"M-01 has no kernel number on the fixed path"*; it was written while the row read FAILED.
+The row is DONE: **KERNEL_CHECK 8 of 9, LOGIC holds, 0 defects.** So all three of §5's measures
+already carried a complete-kernel critique and nothing needed re-running.
+⚠ **Not taken on trust — the deployed worker DID resume that row at 04:15:52 on 3-Sep code.** Two
+checks settle it: (a) **`KERNEL_CHECK` prompt size steps 1,827/2,096/2,400 → 3,829 on M-01, 1,801 →
+3,549 on M-02, 1,841 → 3,332 on M-06**, landing on exactly the three fixed-path runs; (b) the worker
+has logged **two** `25f kernel check done` lines ever — 4 Sep and 03:30:21 (which is M-01 **v3**).
+⚠ **One honest gap: `SMART` on M-01 v4 records a 1.07-SECOND window while carrying five model calls
+and 33,465 input tokens.** The resume rewrote `startedAt`. Cite its content, not the run.
+▶▶ ⚠⚠ **M-06 CONFIRMS B18'S QUALIFICATION FROM A SECOND DIRECTION AND THIS IS THE REPORT'S
+SENTENCE: its prompt nearly DOUBLED, 1,841 → 3,332, and its score did not move at all (6 of 9,
+twice).** Twice the material, same verdict — measured on prompt size, not inferred from words. **The
+old verdicts were ARBITRARY, not harsh.** ▶ And `SMART` still says **WEAK** on the complete kernel,
+on a substantive ground (the ECHR is embedded in the devolution settlements), so the critique is not
+rubber-stamping.
+▶ **§4 ANSWERED: all four passes CAN run standalone** — `KERNEL_CHECK`/`LOGIC_CHECK` take a kernel
+string and a model; `ADVERSARIAL` and `SMART` take stored rows of an existing build. It needs one
+`export` on `runOnePass` and a `PassContext` built the way `runNextPass` builds it (~30 lines).
+⚠⚠ **A standalone pass costs ZERO ALLOWANCE** — the counter is `DONE IdeaBuild` rows — and
+⚠⚠ **re-running `SMART` is no longer idempotent: it REWRITES up to five fields via `setProposal`,
+and since the B18 fix those rewrites ARE VISIBLE to the three markers that follow it.** For a
+single-variable comparison, run the three verification passes without `SMART`.
+▶ **Allowance: granted 200 · spent 70 · remaining 130 = 43 full builds**, explicitly granted.
+⚠ The brief's 142 predates FOUR runs, not one (M-01 v3, M-02 v2, M-06 v2 **and** M-01 v4, which the
+B18 report calls a failure and which is DONE and spent its three).
+▶ **§6: the brief's premise was out of date** — `report_src_v2` was NOT untracked; 34 of 38 files
+went in with `ba432cd`. Four new + four modified committed as `394d9c8`. ⚠ **The three RESTORATION
+PDFs deliberately left out** — `build.js` moved in the same window, so they are outputs of a build
+still changing. Charlie's call.
+▶ **§7c: the three `vec-delta.jsonl` are NOT regenerable and the command that looks like it would
+regenerate them is the trap** — it writes the rows with no vector *at that moment*, and the catch-up
+has run. **Mirrored to R2 and read back byte-for-byte, with an absent control key, BEFORE the
+gitignore line landed.** Ignored file by file, every rule checked with `git check-ignore -v` plus
+controls that must not match. ▶ §7a ten spent `commit-*.sh` deleted (backed up first);
+⚠ `commit-all.sh` itself was NOT on the list of ten and is still in the root. ▶ §7d the EDM trace
+was still in the INGEST scratchpad — five files now in `docs/ingest_traces/`.
+✅ `tsc --noEmit` (web) clean. ⚠ `check:scripts` is RED and **not from this sprint**:
+`scripts/_b17logs.ts`/`_b17wait.ts` (another session's untracked scratch, the global-script collision)
+and `b18-run-consequences.ts(67,45)`. My own error in the exporter was fixed, as was a units bug it
+found in itself — `estCostPence` is already pence, so a 34p build printed as "0.34 p".
+❌ **Items 2 and 3 (the renderer, the build-row lease) NOT STARTED.**
+Earlier: 2026-09-09 03:53 UTC — ▼▼ **CCW-B18 — THE FOUR PASSES THAT CRITICISE A PROPOSAL HAD
 NEVER SEEN THE PROPOSAL.** Report: `docs/report_run/B18_REPORT.md`. Predictions logged before the run
 (`B18_KERNEL_PREDICTIONS.md`) and scored: **two confirmed, one REFUTED, one not made.**
 ▶▶ ⚠⚠ **`kernelText()` READ THE CANONICAL `Idea` COLUMNS AND A BUILD NEVER WRITES THEM.** It feeds
