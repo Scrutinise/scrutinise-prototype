@@ -34,10 +34,31 @@ full and retrievable; nothing here is a summary or an abstract.
 Acts, but **21.4% of pre-2000 primary Acts** and 24.5% of retained EU law. If an answer depends on an
 old Act, the absence of a result is as likely to be an ingest gap as an absence of law.
 
-⚠ **Retrievable is not the same as held.** Some collections are in the corpus and reachable by no
-search stream at all — see `docs/CORPUS_REACHABILITY.md`. Today that includes `members-interests`,
-`erskine-may` where not bridged, `uk-treaties`, `tax-treaties-dta`, and `bills-api` outside the
-legislation stream.
+⚠ **Retrievable is not the same as held.** ▶ **RE-MEASURED 2026-09-09 (S19 §1.1), by probing the
+served index one collection at a time — 74 names, tier read back off `fts-serve`, never from a map**
+(`docs/census/s19-reach.json`). The list above this line used to name five collections and **three of
+them are now wrong**: `erskine-may` and `bills-api` are reachable through their streams'
+`extraCorpora` legs, and `members-interests` is excluded ON PURPOSE, which is a different fact.
+
+**Exactly two collections can be returned by no query at any setting: `uk-treaties` (3,264 sections)
+and `tax-treaties-dta` (324).** Both sit in the `parliamentary` tier and are excluded **twice** — by
+display type (`TREATY`, which no stream admits) and **by name**, in the debates stream's
+`excludeCorpora`. ⚠ `uk-treaties-fcdo`, seven times larger and the same material, is reachable purely
+because it is display-typed `DEBATE`. Both are now named in `UNREACHABLE_PENDING_DECISION`
+(`lib/lex/corpus-type-map.ts`) with what blocks the fix, and `check:s19-grain` fails if any other
+collection joins them unnamed. **18,241,533 of 18,358,835 database sections (99.36%) sit in a
+collection some router stream can select.**
+
+⚠⚠ **AND A CALLER MUST NOW EXPECT A RESULT THAT CANNOT BE OPENED. Seven collections are in the
+SERVED INDEX, are admitted by real streams, and hold ZERO rows in `corpus_sections`** —
+`lda-commonsdivisions`, `lda-commonswrittenquestions`, `lda-lordsdivisions`,
+`lda-lordswrittenquestions`, `oecd`, `written-answers`, `written-statements`. The hydrate finds
+nothing, so the adapter returns a `SearchResult` whose **`title` is the literal collection name, with
+`citation`, `url` and `date` all empty**. Measured through `runFtsSearch`, not inferred: 30 such rows
+from one probe. `et-decisions` is the same defect partially — **12 of 20 returned ids hydrate**,
+because the collection was purged from Neon (293,403 → 161,753) and the index still serves the
+removed rows. **Reported to ingest 2026-09-09; not fixed.** Until it is, a caller rendering a result
+with an empty `url` should suppress it rather than show a dead card, and Lex must not cite one.
 
 ---
 
@@ -418,6 +439,47 @@ turned over separately, restoring `body.slice(0, 300)` exactly.
 ⚠ **It is a SERVING change and needs a REBUILD, not a restart.** `tsx search/{fts,vector}-serve-run.ts
 redeploy`. The probe that is false on the old build: `vector-search` at `limit=10, tier=caselaw`
 returns `0` empty snippets where the pre-fix build returns exactly `5`.
+
+### ⚠⚠ WHICH DOCUMENT A RESULT BELONGS TO — `parentDocId` AND `wordCount` (added S19 §3)
+
+Every `SearchResult` from both retrieval legs now carries two more fields, hydrated on the round-trip
+that already fetched url, date and title. Same query, two more columns, no extra call.
+
+| field | means |
+|---|---|
+| `parentDocId` | `corpus_sections."parentDocId"` — the report, the sitting day, the inquiry. ⚠ **`undefined` means the hydrate did not run or MISSED THE ROW**, which is the live state of seven collections that sit in the served index and hold no rows in the database (§1). `null` means the collection genuinely stores no parent (`consultations`, the Acts, the SIs, judgments). **Three states, never two.** |
+| `wordCount` | the section's length. `undefined` is *not measured*, never *short* |
+
+⚠⚠ **DO NOT DERIVE THE DOCUMENT FROM THE ID. USE `lib/lex/grain.ts::documentKeyOf`.** The obvious
+rule — the id's second colon segment — is right for `impact-assessments:2020-57:12` and
+**catastrophic** for `committees-reports:publication:34458:189872-0001`, where segment 2 is the
+literal word `publication`: **all 344,773 committee-report sections of all 51,000 reports collapse
+into one document.** The opposite error is equally live: `parentDocId` for `impact-assessments` names
+the **instrument appraised**, not the assessment, so two assessments of one SI would merge.
+`documentKeyOf` handles both and always prefixes the collection, because two collections use bare
+integers as parents. It is dependency-free and importable from `scripts/ingest/**`.
+
+### ⚠ THE GRAIN SETTING — `LEX_SEARCH_GRAIN`, DEFAULT OFF (S19 §3)
+
+**A per-collection choice between scoring a SECTION and scoring a DOCUMENT.** `LEX_SEARCH_GRAIN_MAP`
+is `corpus:grain` pairs (`impact-assessments:document,debates:document`); an unrecognised grain is
+refused and warned about rather than read as `section`. A stream whose collection is set to
+`document` returns **one result per document, being that document's best-scoring retrieved section**
+— so the object a caller receives is still a section, with its own snippet, url and attribution, and
+nothing downstream learns a new shape.
+
+⚠ **With the flag off `applyGrain` returns its argument by reference and the ranking is
+byte-identical.** `check:s19-grain` asserts that by comparing rankings, not by reading the default.
+
+⚠⚠ **IT IS OFF, AND S19 §4 IS THE REASON.** The document grain is worth **+18 questions of 65
+scoped to a collection and +9 through the real gateway** — but *"the right document came back"* is
+not *"the user is shown the right passage"*, and measured, the passage it shows is the answer on
+only **22 of 65** (sparse) against **23 of 65** for the section grain it replaces. For debates it is
+**0 of 11 on both arms**. Read `docs/SEARCH_S19_REPORT.md` §2.2 before turning it on for anything.
+
+`GatewayResult.meta.merge.grainPolicy` reports whether the policy was in force, because *"off"* and
+*"on and it changed nothing"* produce identical rankings and must not be the same object
+(CLAUDE.md §18's corollary).
 
 ### ⚠ WHO SAID IT — `attribution` (added S8 §2)
 

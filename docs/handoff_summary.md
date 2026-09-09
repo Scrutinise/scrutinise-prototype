@@ -242,8 +242,25 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 ▼ **GRAPH 5 SHIPPED. THE CASE-LAW HALF OF THE CITATOR EXISTS, AND THE PUBLISHER HAD ALREADY DONE
 THE HARD PART.**
 ✅ `check:graph5-prereq` **8/0** · `check:graph5-boundary` **18/0** (5 controls) ·
-`check:graph5-citation` **19/0** (3 controls) · `check:graph5-treatment` **48/0** (15 controls) —
-**93 assertions, 23 controls, 0 dead, 0 not run.**
+`check:graph5-citation` **19/0** (3 controls) · `check:graph5-treatment` **48/0** (15 controls) ·
+`check:graph5-case-edges` **24/0** (6 controls) — **117 assertions, 29 controls, 0 dead, 0 not run.**
+
+▶▶ **§2.4 BUILT: 565,931 case-to-case edges over 137,153 distinct authorities.** A judgment we do
+not hold can still be a TARGET — pre-2003 authorities are cited by the post-2003 judgments we hold.
+⚠ Only INBOUND: we can say what cites *Wednesbury*, never what *Wednesbury* cited.
+⚠⚠ **HELD IS THREE-VALUED**: held 24.1% · not-held 54.9% · **unknown 21.0%** — a law-report citation
+at or after our floor that we MAY already hold under its neutral citation. `[2011] 1 WLR 2900` and
+`[2011] UKSC 50` **are the same case** (*Rainy Sky*). Calling `unknown` "not held" would say we lack
+what we have, for one authority in five.
+⚠⚠ **BAILII: nothing was fetched, and the check asserts that on the SOURCE** (comments stripped,
+watched firing on a planted `fetch`). ⚠ The link declines rather than guesses — the first version
+sent every Administrative Court case to `/EWHC/QB/` because the division sits in trailing
+parentheses. **A wrong deep link is worse than none.**
+⚠⚠ **IDENTITY IS THE CITATION**: 22,184 observed names appear against MORE THAN ONE citation, mean
+2.1 variants per authority, max 119 — the name would have merged different cases. **13.6% of names
+are unusable for display** (Q8).
+⚠ A first run printed the three states summing to **110.4%** — counters on occurrences, denominator
+on stored edges. Three percentages over 100 are visibly wrong; one figure would not have been.
 
 ▶ **§0 GATE OPEN ON ALL THREE SURFACES, re-measured live and watched failing first.** Stored bodies:
 **0 of 400 open with a stylesheet; 0 of 20.5M characters are CSS**; titles **99.98%**. ⚠ **And
@@ -430,10 +447,98 @@ to a pair; signals are dated — hence 1,505 edges / 1,723 signals, and 162,733 
 whether the Lex build should file positions (one line in `build.ts`), and the now-misleading
 `NO_PRODUCER_NOTE.POSITIONS`.
 
-## SEARCH THREAD — last updated 2026-09-07 22:16 UTC (S18 COSTING)
+## SEARCH THREAD — last updated 2026-09-09 05:01 UTC (S19)
 
-*This section belongs to the SEARCH stream. Its entries were previously interleaved into the
-LEX thread's rolling log; the older SEARCH entries (S17 and before) are still down there.*
+*This section belongs to the SEARCH stream. Report: `docs/SEARCH_S19_REPORT.md`.
+**Charlie's action: six numbered decisions in its §6 — Q1 gates everything else in the sprint.***
+
+### SEARCH S19 — THE UNIT IS WORTH 18 QUESTIONS OF 65, AND THE HALF THAT REACHES A USER DOES NOT FOLLOW FROM THE HALF THAT FINDS THE DOCUMENT (2026-09-09 05:01)
+
+▼▼ **§2 IS THE SPRINT: the first per-collection answer to "what is the right unit".** BM25 scoped to
+each key's own collection, recall@20: **section 23 of 65 → document 41 of 65.** Concentrated —
+impact assessments **0→6/9**, debates **2→7/11**, legislation **2→6/10**, committees **0→3/10** — and
+**structurally zero** for caselaw, guidance and consultations, where **one document holds exactly one
+section**. ⚠ Six of the eighteen collections carrying a key are 1.0 sections/document and they hold
+**29 of the 65 questions**; that is also the harness's own control (29 questions, 0 disagreements).
+
+▶▶ ⚠⚠ **AND IT REFUTES §3 AS THE BRIEF WROTE IT.** Showing the document's best-scoring RETRIEVED
+section scores **22 of 65 — worse than the 23 the section grain already gets**; **debates 0 of 11 on
+BOTH arms**, impact assessments 0 of 9. **The mechanism: for 11 of the 18 questions the document
+grain rescues, the answer section is not in the top 500 of its own collection** — never retrieved, so
+no re-ranking can reach it. **What is missing is a retrieval scoped to ONE DOCUMENT, and neither
+`fts-serve` nor `vector-serve` accepts a document, a parent or an id list.** That is Q1.
+
+▶▶ ⚠⚠ **P-5 REFUTED: the chunk-grain scorer (dense) beats the section-grain scorer (BM25) on EVERY
+collection** — legislation **2→6 of 10**, overall 23→38 at section grain and 41→54 at document grain.
+I predicted dense would LOSE on legislation and guidance and logged it first. **So the grain is real
+(+18 sparse, +16 dense) and is not the larger half of what moves these numbers.**
+
+▶ ⚠⚠ **P-6 REFUTED and it relocates the fragment problem.** The sparse arm's median returned debates
+section is **549 words with 0.5% under 30** — BM25 *prefers* long sections. ARGUMENT 1A's 48.8% is a
+**dense-arm** property (9–13% here). The floor is built and OFF, and the report names the arm it would
+act on. ⚠ The other end is bigger and uncounted: **84.2% of sparse caselaw results are over 1,500
+words** (96.7% dense) — a whole judgment is one section and no grain setting reaches it.
+
+▶ **§2.6 THROUGH THE REAL GATEWAY (production's flag string, read live off `/api/health`) MOST OF IT
+IS TAKEN BACK: section 27/65, document 36/65 — +9, not +18.** It survives for debates (2→7) and
+legislation (4→7) and is **annihilated for impact assessments (6/9 scoped, 2/9 merged; document adds
+nothing, 2→2)** — 18,759 sections cannot win interleave slots against a 2.09M tier. **A grain change
+cannot help a collection that gets no slots.**
+
+▶ **S17's D-6 CLOSED**: **27 of 65 (41.5%) at section grain** is the first recall figure taken with
+production's real flag string *verified*. ⚠ Not comparable to S15's 19 of 64 and not presented as one.
+
+▶ ⚠ **A CONTROL DELETED TWO COLUMNS OF MY OWN TABLE**: max-aggregation must order a score-sorted list
+as a collapse does — true on all 130 scoped results, **false on 42 of 65 gateway results**, because
+`runRoutedSearch` returns results INTERLEAVED ROUND-ROBIN and `score-scope.ts` forbids sorting it.
+Withheld, not footnoted.
+
+▶▶ ⚠⚠ **§1'S FINDING IS NOT REACHABILITY — SEVEN COLLECTIONS ARE IN THE SERVED INDEX, ADMITTED BY
+REAL STREAMS, AND HOLD ZERO ROWS IN `corpus_sections`** (`oecd`, `written-answers`,
+`written-statements`, four `lda-*`). Measured through `runFtsSearch`: the product returns a card
+**titled with the literal collection name, no citation, no date, nothing to click** — 30 from one
+probe, and Lex may cite them. ⚠ **`et-decisions` is the same defect partially: 12 of 20 ids hydrate**
+after the C2 L2 purge (293,403 → 161,753) which the index never followed. **INGEST, reported not
+fixed.** The instrument to verify a fix exists now (ids from the index, looked up in the database).
+
+▶ **§1.1: TWO collections, not four, can be returned by no query** — `uk-treaties` + `tax-treaties-dta`,
+3,588 sections. 62 reachable, **99.36%** of database sections. ⚠ **The brief's account is half right:
+they are excluded TWICE** (display type AND by name in `NON_DEBATE_PARLIAMENTARY`), so re-typing them
+`DEBATE` would not work.
+
+▶ **§1.2 shipped as a GUARD, not a widening.** A fourth register, `UNREACHABLE_PENDING_DECISION` —
+*unreachable, not intended, here is what blocks the fix* — because the three existing words could not
+say that. `check:s19-grain` counts **67 collections: 62 admitted, 5 registered, 0 owned by nobody**
+and fails both if that third moves AND if a registered collection becomes reachable. **Option A (a
+routing attribute independent of display type; ~1 day, no reindex, does not touch rendering) is
+recommended and BLOCKED — the validated set has ZERO treaty questions.** Q3.
+
+▶ **§1.3: there is no class of "four collections never routed to."** Router rolled 3× over all 65:
+**ROUTED 60 · INTERMITTENT 1 · NOT-ROUTED 4**, and the four are *exactly* S17's and S18's
+(S10-Q33/34/35/39), 12 rolls of 12. ⚠ S17's fifth (S10-Q27) is now INTERMITTENT 2/3.
+
+▶ **BUILT: `LEX_SEARCH_GRAIN`, DEFAULT OFF**, through `flagEnabled()`. `lib/lex/grain.ts` (the
+document key, dependency-free so `scripts/ingest` takes the same object), `lib/lex/grain-policy.ts`,
+one call site at the end of `fusedStream` on every path out and **before** the interleave.
+`SearchResult` gains `parentDocId` + `wordCount` on the existing hydrate — ⚠⚠ **without
+`parentDocId` the regroup would use the id's second segment, the literal word `publication`, and
+merge all 51,000 committee reports into ONE document.** Three states: `undefined` is refused, `null`
+falls back to the id.
+
+▶ **§4: THE FLAG STAYS OFF, AND THE MEASUREMENT IS WHY.** Three gateway runs in one session — OFF, OFF again as a noise-floor control, ON. ⚠ The two OFF runs agree EXACTLY (section 27/65, document 36/65) while only 21 of 65 top-20 lists are identical — the rankings churn, the aggregate is stable to ±1. **ON: 27 → 23 at section, 36 → 34 at document, 21 → 24 at doc→best§.** Four questions of 65 lost against a drift of zero. ▶▶ ⚠⚠ **And `guidance` drops 6 → 4 while NO guidance collection is in the map** — the interleave allocates slots from the total result count, so shrinking one stream changes every other stream's share. **A per-collection grain setting is not per-collection in its effects.**
+
+✅ `check:s19-grain` **30/0, 10 controls, 0 dead**, **every assertion watched failing against six real
+broken states** (three took a control dead with them). ⚠⚠ **The break harness's first version
+reported "NOTHING FAILED" six times for six working breaks** — it captured empty output, including on
+the clean run; it now proves it can see the check before breaking anything.
+✅ `tsc` clean · `check-clean-build.sh --fast` PASS · **`scripts/ingest/search/` untouched, so
+`vector-serve`'s auto-deploy was not triggered — checked.** `vector-serve` warm p95 was watched across
+four gateway runs and FELL 6,957 → 6,145ms.
+
+⚠ No file owned by ingest, graph, lex, central or the argument stream was edited.
+
+Earlier:
+
 
 ### SEARCH S18 — THE BRIEF'S PREMISE IS OVERTURNED, AND `PRECEDENT` HAD BEEN TELLING 952 INSTRUMENTS NOBODY EVER REVIEWED THEM (2026-09-07 22:16 UTC)
 
@@ -609,7 +714,51 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-04 04:20 UTC — ▼ **LEX — THE RE-RUN CONTROLS ON THE MAIN IDEA PAGE.**
+*Last updated: 2026-09-09 03:53 UTC — ▼▼ **CCW-B18 — THE FOUR PASSES THAT CRITICISE A PROPOSAL HAD
+NEVER SEEN THE PROPOSAL.** Report: `docs/report_run/B18_REPORT.md`. Predictions logged before the run
+(`B18_KERNEL_PREDICTIONS.md`) and scored: **two confirmed, one REFUTED, one not made.**
+▶▶ ⚠⚠ **`kernelText()` READ THE CANONICAL `Idea` COLUMNS AND A BUILD NEVER WRITES THEM.** It feeds
+`SMART`, `KERNEL_CHECK`, `LOGIC_CHECK` and `ADVERSARIAL`; the drafting passes write through
+`setProposal` into `IdeaFieldState.proposal`, and the column stays empty until a human accepts.
+**16 ideas with a DONE build, 0 with a complete kernel in those columns, 15 with ZERO of seven;
+`rootCause`/`pivotalObstacle`/`summaryDiagnosis`/`chosenApproach`/`summaryGuidingPolicy`/
+`summaryCoherentActions` 0 of 16 EACH, against 16 of 16 in `IdeaFieldState`.** Every kernel verdict
+this product has ever produced was a reading of a title, some causes and some actions.
+▶▶ **SINGLE VARIABLE, M-02: `KERNEL_CHECK` 2 of 9 → 8 of 9; `LOGIC_CHECK` "does NOT hold, 2 defects"
+→ "holds, 0 defects".** Cold read: kernel strings with all seven sections **0 of 12 → 12 of 12**.
+⚠⚠ **BUT M-06 IS 6 of 9 → 6 of 9, NO CHANGE**, with LOGIC 1 → 4 defects (worse) and SMART
+NOT_A_KERNEL → WEAK (better). The MECHANISM is not in doubt; the effect on VERDICTS is not uniform.
+**The old verdicts were not harsh, they were ARBITRARY** — with a title and two lists the marker had
+less to fail as well as less to pass. **Feed none of them back, in either direction.**
+⚠⚠ **P-3 REFUTED and it points the same way — `SMART` still says WEAK on the complete kernel, on
+both.** A real critique remains. ⚠⚠ **The brief's §2 would have spent 36–48 builds on the artefact.**
+▶ Fix: `currentFieldValues()` in `field-machine.ts`. ⚠ Deliberately NOT `computeCanonicalState` —
+that calls `initializeFieldStates`, which WRITES (CLAUDE.md §26).
+✅ `check:b18-kernel-text` **36/0, 2 controls, 0 dead**, a cold read importing the real function.
+▶ **§3: M-01 v3 with retrieval live — evidence 73 → 101, ORIENT 48 → 241, engagement MEASURED
+(fts +136 · vector +136).** v2 had reported DONE 11/11 on eighteen dead searches. `build-worker.ts`
+imported the PRINTER not the GUARD; it now refuses to start, watched failing first.
+⚠ **NOT DEPLOYED** — Railway has served the same container since 3 Sep and builds from the repo.
+▶ **§4: five instrument links written (M-01/02/03/07/11), SEVEN REFUSED** — judicial review is common
+law, self-ID was never enacted, the ALB estate is ~400 unnamed bodies, the Great Repeal is temporal.
+▶ **§5 citator run: 246 case-law sources → 78 addressable, 52 NOT CHECKED, 1 treatment.**
+⚠⚠ **1 of 15 validation rows scored — CHARLIE'S ACTION, ten minutes, and it gates every citator
+sentence in the report.** ⚠ `EvidenceItem.citation` holds the case NAME (0 of 2,244 carry a neutral
+citation), so the lookup bridges through the corpus id; by name it would merge different cases.
+▶ **§8 panel appendix, 2,118 lines, from `buildQuestionPanel` itself.** ⚠ Five headings empty on all
+twelve; ⚠ **~95 sources resolve to NO heading**; ⚠ ***What's devolved* empty on all twelve is
+UNEXPLAINED** and the report's devolution material was hand-verified for that very measure.
+▶ **§10: no model-authored citation can reach a build** (`citation`/`url`/date copied from the corpus
+row); the fabrications are a property of the HAND-RUN sweep, whose model id is not readable from here.
+▶ **§11: 46 files / 12.66 MB backed up and read back.** ⚠⚠ **`scripts/starkey/r2-backup.ts` cannot
+run from this tree at all** (no `@aws-sdk` above `scripts/`) — so its 857 keys were verified here.
+▶ **§6 REGISTER BUILT AND IT SAYS DON'T PUBLISH IT AS ONE: 2 of 12 measures return >1 person, 8
+return exactly ONE (EDMs — we hold the tabler, not the signatures), 2 no target.** ⚠⚠ Several targets
+are the WRONG SUBJECT (ALB estate → "advertising standards"; civil service AND DEI both → *Civil
+Service pensions*). ⚠ **The 44% is INTERPRETATION, not fabrication — the quote round-trips into its
+source 98.4% of the time** (16,196 positions, reached independently). ❌ **§7 cost NOT BUILT.** ⚠ Brief's §2 refs were wrong (M-03/04/05); the
+three worked in full are **M-01, M-02, M-06** — found here, since confirmed by Charlie.
+Earlier: 2026-09-04 04:20 UTC — ▼ **LEX — THE RE-RUN CONTROLS ON THE MAIN IDEA PAGE.**
 (Two commits after 26-A: `40bedf1`, `4532a2f`, `33bdcfb`. Production verified on `33bdcfb`.)
 ▶▶ ⚠⚠ **THE REBUILD BUTTON WAS NEVER ON THAT PAGE.** `git log -S "Re-run this idea" --
 CreateIdeaClient.tsx` returns nothing — the block has only ever lived on `/ideas/build`. What the
