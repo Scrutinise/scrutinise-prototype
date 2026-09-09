@@ -1,0 +1,248 @@
+{
+  "generated_at": "2026-09-02",
+  "generated_by": "CCW",
+  "purpose": "Twelve Lex build inputs for the Restoration Programme report run. One Idea + one confirmed IdeaElicitation per measure, then one build each.",
+  "how_to_use": "For each entry: create Idea with the `idea` fields; create IdeaElicitation with the `elicitation` fields; set understanding, status=CONFIRMED, confirmedAt=now(); then claimBuild(). See CCW-B14 for the script brief.",
+  "cardinal_rule_note": "Column `problem` is written as a PROBLEM, not a solution, because the elicitation carries a deterministic problem-gate that fires on solution-shaped input. Every one of Starkey's measures is stated by him as a remedy. Separating the complaint from the remedy is done here, deliberately, and the separation is itself reportable.",
+  "sourcing_key": {
+    "his_words": "The problem statement paraphrases, and the goal quotes, material in register_proposals.json sourced to a video and timestamp.",
+    "inferred": "The measure appears on a third-party reading of the programme but we hold no verbatim statement of it. FLAGGED — must not be presented as his position without confirmation."
+  },
+  "measures": [
+    {
+      "ref": "M-01",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-02", "SP-05", "SP-06"],
+      "idea": {
+        "title": "Human Rights Act 1998 and the European Convention on Human Rights",
+        "summaryDescription": "The Human Rights Act 1998 and the United Kingdom's adherence to the European Convention on Human Rights are said to have transferred political decisions to judges. The proposal is repeal of the Act and denunciation of the Convention.",
+        "govtArea": "Justice and constitutional affairs",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "Decisions that used to be settled politically — on borders, on deportation, on protest, on what public bodies must do — are now settled by courts applying the Convention, and the elected government cannot reverse them. The complaint is not about the text of the Convention but about who has the last word under it, and about the fact that no election changes the answer.",
+        "goalKind": "Repeal primary legislation and withdraw from an international treaty",
+        "goalDetail": "Repeal the Human Rights Act 1998 and denounce the European Convention on Human Rights under Article 58, so that Convention rights cease to be enforceable in domestic courts and the United Kingdom ceases to be subject to the Strasbourg court.",
+        "ruledOut": "Reform of the Convention system from within. Remaining a signatory while repealing the Act. Sequential or measure-by-measure change, which the proposer says would be defeated by whatever is left standing. A replacement Bill of Rights modelled on the Convention.",
+        "ownKnowledge": "The proposal comes from a lecture series and interviews, not a published paper; column one of our register quotes him and is machine-transcribed. Four other documents on the same side propose different mechanisms: the Prosperity Institute (Case Law Review Commission under a sunset clause), Lord Wolfson KC's advice to the Leader of the Opposition (seven options, declines to choose), Lord Sumption (withdraw and re-enact the same rights domestically), and Dominic Grieve KC against. Two Bills are before the Commons: the ECHR (Notification of Withdrawal) Bill, Bill 4242, Mike Wood MP, second reading listed 11 September 2026, which takes withdrawal without repealing the Act; and the failed Bill of Rights Bill 2022, which took repeal without withdrawal."
+      }
+    },
+    {
+      "ref": "M-02",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-02"],
+      "idea": {
+        "title": "Equality Act 2010",
+        "summaryDescription": "The Equality Act 2010, and in particular the public sector equality duty, is said to have politicised public administration and empowered the judiciary. The proposal is repeal.",
+        "govtArea": "Equalities and public administration",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "Public bodies organise their decisions around demonstrating compliance with equality obligations rather than around the service they exist to deliver, and the obligations are open-ended enough that a court, not a minister, decides whether they have been met. The complaint is that this changes what public administration is for and that no elected person chose it.",
+        "goalKind": "Repeal primary legislation",
+        "goalDetail": "Repeal the Equality Act 2010, including the public sector equality duty in section 149.",
+        "ruledOut": "Guidance and leadership change short of legislation, which the proposer treats as having been tried. Amendment rather than repeal.",
+        "ownKnowledge": "The Act does not extend to Northern Ireland save for sections 82, 105(3)-(4) and 199 (section 217(3)); section 149 has never applied there and the nearest analogue is section 75 of the Northern Ireland Act 1998, which derives from the Belfast/Good Friday Agreement. The Public Sector Equality Duty (Repeal) Bill, Bill 4189, Joy Morrissey MP, is before the Commons and takes section 149 and Schedule 18 only. Kemi Badenoch announced on 9 June 2026 that a Conservative government would repeal the duty in its entirety while keeping the substantive anti-discrimination protections, and named whole-Act repeal as Reform UK's position, not hers. For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16 has already decided the sex/gender construction point by litigation."
+      }
+    },
+    {
+      "ref": "M-03",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-04"],
+      "idea": {
+        "title": "The United Kingdom Supreme Court",
+        "summaryDescription": "The creation of a Supreme Court is said to be incompatible with a sovereign Parliament. The proposal is abolition and the return of final appeal to the House of Lords.",
+        "govtArea": "Justice and constitutional affairs",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "A court named and housed as a supreme court comes, over time, to understand itself as a constitutional guardian above the legislature, whatever the statute that created it says about its powers. The complaint is about the institution's self-conception and its effect on how judges behave, not about a specific power it holds.",
+        "goalKind": "Repeal primary legislation and reconstitute an earlier institution",
+        "goalDetail": "Repeal Part 3 of the Constitutional Reform Act 2005 and return final appellate jurisdiction to the Appellate Committee of the House of Lords.",
+        "ruledOut": "Renaming the court while leaving its jurisdiction intact.",
+        "ownKnowledge": "No Bill has been introduced in the last fifteen years to abolish the Supreme Court and return appeals to the Lords; three independent research passes each found none. Lord Sumption, who is otherwise the most senior voice for the diagnosis, is reported to have argued publicly that the 2005 change was largely cosmetic and that the Court has never had power to strike down statutes — we have not verified that article and it must not be cited until we have."
+      }
+    },
+    {
+      "ref": "M-04",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-03", "SP-13"],
+      "idea": {
+        "title": "The arm's-length body estate",
+        "summaryDescription": "Several hundred arm's-length bodies are said to exercise governmental power without democratic accountability. The proposal is to abolish, privatise or absorb them into departments.",
+        "govtArea": "Public administration",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "A large number of bodies make decisions with real public consequence — on sentencing guidance, on advertising standards, on regulation of whole sectors — while sitting outside the line of accountability that runs from a minister to Parliament to an electorate. The complaint is that nobody can be removed for what they decide.",
+        "goalKind": "Abolish or absorb statutory bodies at scale",
+        "goalDetail": "Abolish, privatise, or fully absorb into departments and Parliament the arm's-length body estate, which the proposer numbers at around four hundred.",
+        "ruledOut": "Reviewing bodies one at a time, which the proposer says is defeated by the remainder.",
+        "ownKnowledge": "Each body has its own founding statute or statutory instrument, so this is an omnibus problem rather than one repeal. The proposer names the Sentencing Council and advertising standards as instances rather than as separate measures."
+      }
+    },
+    {
+      "ref": "M-05",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-08"],
+      "idea": {
+        "title": "Judicial review of executive decisions",
+        "summaryDescription": "Judicial review is said to have become a route by which courts substitute their judgement for ministers'. The proposal is to restrict it.",
+        "govtArea": "Justice and constitutional affairs",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "Ministerial decisions are routinely reopened in court on grounds that shade from legality into the merits, so that the practical question of what government may do is settled after the decision rather than at the election. The complaint is about the frequency and reach of the intervention, not about the existence of a remedy.",
+        "goalKind": "Restrict a common law jurisdiction by statute",
+        "goalDetail": "Narrow judicial review of executive action, by ouster clause or by statutory restriction of the available grounds.",
+        "ruledOut": "Procedural reform of the kind already enacted, which the proposer treats as insufficient.",
+        "ownKnowledge": "The Independent Review of Administrative Law (Lord Faulks KC, March 2021) was commissioned to examine exactly this and found no systemic overreach; the Judicial Review and Courts Act 2022 followed and made modest changes. Courts have historically read general ouster clauses down — Anisminic (1969), Privacy International (2019) — so recent drafting has used narrow, targeted clauses instead. The Safety of Rwanda (Asylum and Immigration) Act 2024 is the furthest recent example of the targeted method."
+      }
+    },
+    {
+      "ref": "M-06",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-09"],
+      "idea": {
+        "title": "The permanent, appointed civil service",
+        "summaryDescription": "The permanent civil service established by the Northcote-Trevelyan reforms is said to have become a separate estate of the realm. The proposal is to reverse the model.",
+        "govtArea": "Public administration",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "A permanent official class, appointed rather than chosen and effectively irremovable, forms settled institutional views that outlast governments, so that an elected administration finds its programme moderated by people it did not appoint and cannot replace. The complaint is about where authority actually sits inside a department.",
+        "goalKind": "Reverse an institutional settlement",
+        "goalDetail": "Reverse the permanent appointed civil service model, restoring ministerial control over senior appointments and removals.",
+        "ruledOut": "Reform within the present statutory framework, which the proposer treats as leaving the underlying structure intact.",
+        "ownKnowledge": "⚠⚠ THE TARGET IS AMBIGUOUS AND THIS IS THE MOST IMPORTANT INPUT NOTE OF THE TWELVE. The proposer names the Northcote-Trevelyan reforms of 1854 as the thing he objects to. Part 1 of the Constitutional Reform and Governance Act 2010 is the 2010 statutory codification of that settlement. They are not the same target: repealing CRAG Part 1 returns civil service management to the prerogative but leaves the 170-year-old settlement itself in place as convention. No Bill has ever been introduced to repeal CRAG Part 1, no review has recommended it, and three independent research passes each found no developed legal case for it. Lord Maude's Independent Review of Governance and Accountability in the Civil Service (13 November 2023) reaches the same diagnosis and expressly retains the permanent politically impartial service. The Public Office (Accountability) Bill, a Government Bill at Lords second reading on 1 September 2026, moves in the opposite direction by adding statutory duties to officials."
+      }
+    },
+    {
+      "ref": "M-07",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-11"],
+      "idea": {
+        "title": "Operational independence of the Bank of England",
+        "summaryDescription": "The Bank of England's independence since 1998 is said to have produced mismanagement without accountability. The proposal is to reverse it.",
+        "govtArea": "Economy and finance",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "Monetary policy has large distributional consequences and is decided by people who cannot be removed by an electorate, and when the decisions go wrong there is no mechanism by which anyone answers for them. The complaint is that a political choice was reclassified as a technical one.",
+        "goalKind": "Reverse a statutory grant of institutional independence",
+        "goalDetail": "Reverse the operational independence of the Bank of England conferred in 1998.",
+        "ruledOut": "Not stated by the proposer.",
+        "ownKnowledge": "The independence was conferred by the Bank of England Act 1998. This measure appears once in our corpus and is stated as a complaint rather than developed as a proposal; the confidence that it is intended as a measure of the programme is medium, not high."
+      }
+    },
+    {
+      "ref": "M-08",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-10"],
+      "idea": {
+        "title": "Diversity, equity and inclusion practice in the civil service",
+        "summaryDescription": "DEI practice within the civil service is said to have been imposed without democratic mandate. The proposal is its removal.",
+        "govtArea": "Public administration",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "A body of practice governing recruitment, promotion and internal conduct in the civil service was adopted without ever being put to Parliament or an electorate, and now shapes who is hired and what officials may say. The complaint is about the absence of an authorising decision.",
+        "goalKind": "Remove administrative practice, by legislation if required",
+        "goalDetail": "End the diversity, equity and inclusion agenda in the civil service.",
+        "ruledOut": "Not stated by the proposer.",
+        "ownKnowledge": "⚠ This may be a consequence of measure M-02 rather than a separate measure: much of the practice complained of is defended by reference to section 149. Whether the proposer intends it as a distinct target is one of the questions the register hands back. The Institute for Government argues the duty does not require the practice, which if right means repealing section 149 would not by itself end it."
+      }
+    },
+    {
+      "ref": "M-09",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-10"],
+      "idea": {
+        "title": "Gender self-identification",
+        "summaryDescription": "The move towards gender self-identification is named as part of the programme's target.",
+        "govtArea": "Equalities",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "A change in how legal sex is determined was brought about incrementally through administrative practice and litigation rather than by a decision of Parliament, with consequences for single-sex provision that were never voted on.",
+        "goalKind": "Reverse a legal position",
+        "goalDetail": "Reverse gender self-identification.",
+        "ruledOut": "Not stated by the proposer.",
+        "ownKnowledge": "⚠⚠ Self-identification was never enacted in Great Britain — the Gender Recognition Act 2004 requires a certificate on evidence — and For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16 has since held that sex in the Equality Act 2010 means biological sex. The position complained of has been substantially resolved by litigation, in the direction the proposer wants, without legislation. What remains to be legislated for, if anything, is the open question."
+      }
+    },
+    {
+      "ref": "M-10",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-12"],
+      "idea": {
+        "title": "Publicly funded charities campaigning on government policy",
+        "summaryDescription": "Charities in receipt of public money are said to campaign against the government that funds them. The proposal is to stop it.",
+        "govtArea": "Civil society and public spending",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "Organisations funded from public money campaign to change the policy of the body funding them, so that public spending underwrites one side of a political argument without anyone having decided that it should.",
+        "goalKind": "Restrict the use of public funds for campaigning",
+        "goalDetail": "Prevent publicly funded charities from campaigning against government policy.",
+        "ruledOut": "Not stated by the proposer.",
+        "ownKnowledge": "The proposer's term is 'sock puppets'. Charity campaigning is already regulated by the Charities Act 2011 and Charity Commission guidance, and grant conditions have been used for this purpose before; whether the instrument intended is legislation, grant conditions or Commission guidance is unstated."
+      }
+    },
+    {
+      "ref": "M-11",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-13"],
+      "idea": {
+        "title": "The Sentencing Council and sentencing guidelines",
+        "summaryDescription": "Sentencing guidance issued by an unelected body is named as an instance of the arm's-length body problem.",
+        "govtArea": "Justice",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "The framework within which sentences are set is issued by a body that no one elected and that no minister directs, so that a question with obvious political content is settled administratively.",
+        "goalKind": "Abolish or subordinate a statutory body",
+        "goalDetail": "Remove sentencing guidance from an independent council and return it to Parliament or to ministers.",
+        "ruledOut": "Not stated by the proposer.",
+        "ownKnowledge": "⚠ The proposer names this as an example of the quango problem (M-04) rather than as a separate measure. It is run separately here so the register can show what a single named instance costs to deliver, and because the Sentencing Council has been the subject of live political dispute; whether it is one of the twelve is a question for the proposer."
+      }
+    },
+    {
+      "ref": "M-12",
+      "sourcing": "his_words",
+      "source_proposals": ["SP-01", "SP-07", "SP-14"],
+      "idea": {
+        "title": "The Great Repeal: the programme as a single instrument",
+        "summaryDescription": "The programme is stated as one Act repealing the constitutional legislation of 1997 to 2010, on the ground that sequential change would be defeated. The proposal is the omnibus statute itself.",
+        "govtArea": "Constitutional affairs",
+        "country": "GB"
+      },
+      "elicitation": {
+        "problem": "The constitutional changes made between 1997 and 2010 interlock, so that undoing any one of them leaves the others in place to reproduce the effect complained of. A government that proceeds measure by measure will be defeated by whatever it has not yet reached, and will run out of time and political capital before it finishes.",
+        "goalKind": "A single omnibus Act",
+        "goalDetail": "One Act repealing the constitutional legislation passed between 1997 and 2010, drafted to be, in the proposer's words, legally watertight, and passed at once rather than in sequence.",
+        "ruledOut": "Sequential repeal. Reform of individual institutions. Any approach that depends on the cooperation of the bodies being reformed.",
+        "ownKnowledge": "⚠⚠ THIS IS THE MEASURE THAT MAKES THE OTHER ELEVEN A PROGRAMME RATHER THAN A LIST, AND IT IS THE ONE THE INTERLOCK ANALYSIS TESTS. The proposer defines the target by a DATE RANGE (1997-2010) rather than by a schedule of Acts, so the first drafting question is which Acts are in scope. He states the drafting standard himself: it will be fought every inch of the way, so it has to be legally watertight. Lord Wolfson KC, at paragraph 345 of his advice, says that leaving the ECHR and repealing the Human Rights Act would not amount to a factory reset and that achieving anything like that would involve a complicated legislative programme aimed at rolling back case law and relevant legislative provisions — which is corroboration of the diagnosis from the Shadow Attorney General, and a description of the work this build is being asked to scope. R (Miller) v Secretary of State (Miller I) closes the prerogative route, so primary legislation is the only vehicle."
+      }
+    }
+  ],
+  "not_run_and_why": [
+    {
+      "measure": "Restore the office of Lord Chancellor",
+      "reason": "Appears on third-party readings of the programme. We hold no verbatim statement of it in 287 transcripts. FLAGGED as inferred; must be confirmed by the proposer before it is attributed to him or built."
+    },
+    {
+      "measure": "Repeal the Climate Change Act 2008 / kill the Net Zero duty",
+      "reason": "Same. Appears on a third-party reading; no verbatim statement located in our corpus."
+    },
+    {
+      "measure": "Abolish the Judicial Appointments Commission / restore political patronage in judicial appointments",
+      "reason": "Same. No verbatim statement located."
+    },
+    {
+      "measure": "Removal of named judges; mass creation of peers",
+      "reason": "Mass creation of peers is discussed by the proposer as a means of getting the programme through the Lords rather than as one of its objectives, so it belongs in the delivery analysis, not the register. Removal of named judges is on a third-party reading only."
+    }
+  ],
+  "reportable_finding": "A widely circulated 'twelve-point programme' table exists as a third-party reading. Four of its items cannot be sourced to anything the proposer is recorded as saying in 287 transcripts, and two items he does say (the Bank of England, publicly funded charities) do not appear on it. The list the programme is being discussed under is not the list he has stated. That is a finding about the discourse, not about him, and it is the first thing the register corrects."
+}

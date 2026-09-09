@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-08-07T10:42:38.302Z",
+  "held": {
+    "bodies": 3842,
+    "sections": 78776,
+    "chars": 249364314,
+    "tokens": 62341079,
+    "lossy": 0,
+    "missing": 0,
+    "perDoc": 20.503904216553877
+  },
+  "archiveOnly": {
+    "Report": 5835,
+    "Government Response": 937,
+    "Special Report": 879,
+    "total": 7651,
+    "projSections": 156875,
+    "projChars": 496585594,
+    "projTokens": 124146399
+  },
+  "cost": {
+    "basisUsdPerMTokens": 0.075,
+    "heldUsd": 4.675580925,
+    "projUsd": 9.310979925
+  }
+}

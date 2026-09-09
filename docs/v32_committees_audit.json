@@ -1,0 +1,640 @@
+{
+  "generatedAt": "2026-08-06T23:20:34.583Z",
+  "dbKinds": [
+    {
+      "kind": "(untitled / marker)",
+      "rows": 26154,
+      "compiled": 0,
+      "avg_words": 0,
+      "max_words": 0,
+      "under_500w": 0,
+      "total_words": "0"
+    },
+    {
+      "kind": "Correspondence",
+      "rows": 17813,
+      "compiled": 17813,
+      "avg_words": 1109,
+      "max_words": 224604,
+      "under_500w": 7217,
+      "total_words": "19751015"
+    },
+    {
+      "kind": "Report",
+      "rows": 2575,
+      "compiled": 2575,
+      "avg_words": 12122,
+      "max_words": 125347,
+      "under_500w": 9,
+      "total_words": "31215401"
+    },
+    {
+      "kind": "Minutes and decisions",
+      "rows": 789,
+      "compiled": 789,
+      "avg_words": 1039,
+      "max_words": 49233,
+      "under_500w": 344,
+      "total_words": "819762"
+    },
+    {
+      "kind": "Special Report",
+      "rows": 667,
+      "compiled": 667,
+      "avg_words": 6869,
+      "max_words": 51655,
+      "under_500w": 2,
+      "total_words": "4581391"
+    },
+    {
+      "kind": "Estimate memoranda",
+      "rows": 660,
+      "compiled": 660,
+      "avg_words": 3416,
+      "max_words": 19393,
+      "under_500w": 14,
+      "total_words": "2254333"
+    },
+    {
+      "kind": "Government Response",
+      "rows": 600,
+      "compiled": 600,
+      "avg_words": 5117,
+      "max_words": 127019,
+      "under_500w": 32,
+      "total_words": "3070083"
+    },
+    {
+      "kind": "Agendas and papers",
+      "rows": 554,
+      "compiled": 554,
+      "avg_words": 1060,
+      "max_words": 37955,
+      "under_500w": 436,
+      "total_words": "587384"
+    },
+    {
+      "kind": "Scrutiny evidence",
+      "rows": 462,
+      "compiled": 462,
+      "avg_words": 11603,
+      "max_words": 462710,
+      "under_500w": 54,
+      "total_words": "5360757"
+    },
+    {
+      "kind": "Formal Minutes",
+      "rows": 292,
+      "compiled": 292,
+      "avg_words": 9322,
+      "max_words": 124466,
+      "under_500w": 55,
+      "total_words": "2722069"
+    },
+    {
+      "kind": "Attendance statistics",
+      "rows": 214,
+      "compiled": 214,
+      "avg_words": 386,
+      "max_words": 887,
+      "under_500w": 194,
+      "total_words": "82643"
+    },
+    {
+      "kind": "Engagement document",
+      "rows": 123,
+      "compiled": 123,
+      "avg_words": 3853,
+      "max_words": 53864,
+      "under_500w": 7,
+      "total_words": "473943"
+    },
+    {
+      "kind": "Declarations of interest",
+      "rows": 111,
+      "compiled": 111,
+      "avg_words": 298,
+      "max_words": 1622,
+      "under_500w": 95,
+      "total_words": "33103"
+    },
+    {
+      "kind": "Gender balance statistics",
+      "rows": 12,
+      "compiled": 12,
+      "avg_words": 1435,
+      "max_words": 3097,
+      "under_500w": 1,
+      "total_words": "17219"
+    },
+    {
+      "kind": "Other document",
+      "rows": 4,
+      "compiled": 4,
+      "avg_words": 2792,
+      "max_words": 7655,
+      "under_500w": 0,
+      "total_words": "11168"
+    }
+  ],
+  "reportRowVerdict": {
+    "rows": 2575,
+    "titles": 2511,
+    "avg_words": 12122,
+    "min_words": 56,
+    "max_words": 125347,
+    "over_10k": 993,
+    "under_500": 9,
+    "median": 7524
+  },
+  "govResponses": [
+    {
+      "kind": "Special Report",
+      "rows": 667,
+      "avg_words": 6869,
+      "median": 5476,
+      "under_500": 2
+    },
+    {
+      "kind": "Government Response",
+      "rows": 600,
+      "avg_words": 5117,
+      "median": 3006,
+      "under_500": 32
+    }
+  ],
+  "evidenceKinds": [
+    {
+      "kind": "written",
+      "rows": 125303,
+      "avg_words": 2267,
+      "median": 1824,
+      "max_words": 295387,
+      "under_500": 16291,
+      "over_5k": 8465
+    },
+    {
+      "kind": "oral",
+      "rows": 15264,
+      "avg_words": 14694,
+      "median": 14511,
+      "max_words": 63642,
+      "under_500": 5,
+      "over_5k": 14766
+    }
+  ],
+  "heldByYear": [
+    {
+      "yr": 2005,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 0
+    },
+    {
+      "yr": 2008,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 0
+    },
+    {
+      "yr": 2010,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 0
+    },
+    {
+      "yr": 2012,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 78
+    },
+    {
+      "yr": 2013,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 2961
+    },
+    {
+      "yr": 2014,
+      "reports": 2,
+      "responses": 0,
+      "evidence": 8024
+    },
+    {
+      "yr": 2015,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 7326
+    },
+    {
+      "yr": 2016,
+      "reports": 1,
+      "responses": 0,
+      "evidence": 14166
+    },
+    {
+      "yr": 2017,
+      "reports": 0,
+      "responses": 0,
+      "evidence": 8950
+    },
+    {
+      "yr": 2018,
+      "reports": 1,
+      "responses": 0,
+      "evidence": 13230
+    },
+    {
+      "yr": 2019,
+      "reports": 8,
+      "responses": 0,
+      "evidence": 10133
+    },
+    {
+      "yr": 2020,
+      "reports": 460,
+      "responses": 130,
+      "evidence": 12729
+    },
+    {
+      "yr": 2021,
+      "reports": 508,
+      "responses": 265,
+      "evidence": 12665
+    },
+    {
+      "yr": 2022,
+      "reports": 459,
+      "responses": 222,
+      "evidence": 10110
+    },
+    {
+      "yr": 2023,
+      "reports": 469,
+      "responses": 248,
+      "evidence": 11119
+    },
+    {
+      "yr": 2024,
+      "reports": 202,
+      "responses": 149,
+      "evidence": 5343
+    },
+    {
+      "yr": 2025,
+      "reports": 307,
+      "responses": 156,
+      "evidence": 17790
+    },
+    {
+      "yr": 2026,
+      "reports": 158,
+      "responses": 97,
+      "evidence": 5943
+    }
+  ],
+  "markers": [
+    {
+      "corpus": "committees-reports",
+      "availability_note": "committees-api item has no documents",
+      "n": 24341
+    },
+    {
+      "corpus": "committees-reports",
+      "availability_note": "no extractable document text (original format unparseable, no Html/Pdf conversion)",
+      "n": 1813
+    },
+    {
+      "corpus": "committees-evidence",
+      "availability_note": "no extractable document text (original format unparseable, no Html/Pdf conversion)",
+      "n": 910
+    },
+    {
+      "corpus": "committees-evidence",
+      "availability_note": "committees-api item has no documents",
+      "n": 838
+    }
+  ],
+  "api": {
+    "byYear": {
+      "2005": {
+        "withDocs": 2,
+        "archiveOnly": 38,
+        "neither": 0,
+        "total": 40
+      },
+      "2006": {
+        "withDocs": 0,
+        "archiveOnly": 47,
+        "neither": 0,
+        "total": 47
+      },
+      "2007": {
+        "withDocs": 0,
+        "archiveOnly": 52,
+        "neither": 0,
+        "total": 52
+      },
+      "2008": {
+        "withDocs": 2,
+        "archiveOnly": 64,
+        "neither": 0,
+        "total": 66
+      },
+      "2009": {
+        "withDocs": 0,
+        "archiveOnly": 45,
+        "neither": 0,
+        "total": 45
+      },
+      "2010": {
+        "withDocs": 3,
+        "archiveOnly": 1097,
+        "neither": 0,
+        "total": 1100
+      },
+      "2011": {
+        "withDocs": 2,
+        "archiveOnly": 1547,
+        "neither": 0,
+        "total": 1549
+      },
+      "2012": {
+        "withDocs": 6,
+        "archiveOnly": 1094,
+        "neither": 0,
+        "total": 1100
+      },
+      "2013": {
+        "withDocs": 0,
+        "archiveOnly": 1700,
+        "neither": 0,
+        "total": 1700
+      },
+      "2014": {
+        "withDocs": 2,
+        "archiveOnly": 1698,
+        "neither": 0,
+        "total": 1700
+      },
+      "2015": {
+        "withDocs": 3,
+        "archiveOnly": 1497,
+        "neither": 0,
+        "total": 1500
+      },
+      "2016": {
+        "withDocs": 1,
+        "archiveOnly": 3297,
+        "neither": 0,
+        "total": 3298
+      },
+      "2017": {
+        "withDocs": 1,
+        "archiveOnly": 1499,
+        "neither": 0,
+        "total": 1500
+      },
+      "2018": {
+        "withDocs": 9,
+        "archiveOnly": 3691,
+        "neither": 0,
+        "total": 3700
+      },
+      "2019": {
+        "withDocs": 22,
+        "archiveOnly": 3178,
+        "neither": 0,
+        "total": 3200
+      },
+      "2020": {
+        "withDocs": 3167,
+        "archiveOnly": 25,
+        "neither": 8,
+        "total": 3200
+      },
+      "2021": {
+        "withDocs": 1495,
+        "archiveOnly": 0,
+        "neither": 5,
+        "total": 1500
+      },
+      "2022": {
+        "withDocs": 3388,
+        "archiveOnly": 8,
+        "neither": 4,
+        "total": 3400
+      },
+      "2023": {
+        "withDocs": 696,
+        "archiveOnly": 4,
+        "neither": 0,
+        "total": 700
+      },
+      "2024": {
+        "withDocs": 190,
+        "archiveOnly": 10,
+        "neither": 0,
+        "total": 200
+      },
+      "2025": {
+        "withDocs": 3523,
+        "archiveOnly": 176,
+        "neither": 1,
+        "total": 3700
+      },
+      "2026": {
+        "withDocs": 2941,
+        "archiveOnly": 151,
+        "neither": 8,
+        "total": 3100
+      }
+    },
+    "reportsByYear": {
+      "2005": {
+        "withDocs": 0,
+        "archiveOnly": 11,
+        "neither": 0,
+        "total": 11
+      },
+      "2006": {
+        "withDocs": 0,
+        "archiveOnly": 16,
+        "neither": 0,
+        "total": 16
+      },
+      "2007": {
+        "withDocs": 0,
+        "archiveOnly": 18,
+        "neither": 0,
+        "total": 18
+      },
+      "2008": {
+        "withDocs": 0,
+        "archiveOnly": 22,
+        "neither": 0,
+        "total": 22
+      },
+      "2009": {
+        "withDocs": 0,
+        "archiveOnly": 18,
+        "neither": 0,
+        "total": 18
+      },
+      "2010": {
+        "withDocs": 0,
+        "archiveOnly": 196,
+        "neither": 0,
+        "total": 196
+      },
+      "2011": {
+        "withDocs": 0,
+        "archiveOnly": 708,
+        "neither": 0,
+        "total": 708
+      },
+      "2012": {
+        "withDocs": 0,
+        "archiveOnly": 438,
+        "neither": 0,
+        "total": 438
+      },
+      "2013": {
+        "withDocs": 0,
+        "archiveOnly": 604,
+        "neither": 0,
+        "total": 604
+      },
+      "2014": {
+        "withDocs": 2,
+        "archiveOnly": 518,
+        "neither": 0,
+        "total": 520
+      },
+      "2015": {
+        "withDocs": 0,
+        "archiveOnly": 401,
+        "neither": 0,
+        "total": 401
+      },
+      "2016": {
+        "withDocs": 1,
+        "archiveOnly": 536,
+        "neither": 0,
+        "total": 537
+      },
+      "2017": {
+        "withDocs": 0,
+        "archiveOnly": 288,
+        "neither": 0,
+        "total": 288
+      },
+      "2018": {
+        "withDocs": 1,
+        "archiveOnly": 570,
+        "neither": 0,
+        "total": 571
+      },
+      "2019": {
+        "withDocs": 8,
+        "archiveOnly": 440,
+        "neither": 0,
+        "total": 448
+      },
+      "2020": {
+        "withDocs": 381,
+        "archiveOnly": 0,
+        "neither": 0,
+        "total": 381
+      },
+      "2021": {
+        "withDocs": 193,
+        "archiveOnly": 0,
+        "neither": 0,
+        "total": 193
+      },
+      "2022": {
+        "withDocs": 380,
+        "archiveOnly": 1,
+        "neither": 0,
+        "total": 381
+      },
+      "2023": {
+        "withDocs": 84,
+        "archiveOnly": 2,
+        "neither": 0,
+        "total": 86
+      },
+      "2024": {
+        "withDocs": 10,
+        "archiveOnly": 9,
+        "neither": 0,
+        "total": 19
+      },
+      "2025": {
+        "withDocs": 256,
+        "archiveOnly": 111,
+        "neither": 0,
+        "total": 367
+      },
+      "2026": {
+        "withDocs": 195,
+        "archiveOnly": 69,
+        "neither": 0,
+        "total": 264
+      }
+    },
+    "houses": {
+      "Commons / Other": {
+        "withDocs": 52,
+        "total": 187
+      },
+      "Commons / Select": {
+        "withDocs": 927,
+        "total": 4050
+      },
+      "Joint / Other": {
+        "withDocs": 46,
+        "total": 113
+      },
+      "Lords / Select": {
+        "withDocs": 320,
+        "total": 1483
+      },
+      "Joint / Select": {
+        "withDocs": 166,
+        "total": 532
+      },
+      "Lords / General": {
+        "withDocs": 0,
+        "total": 47
+      },
+      "Lords / Other": {
+        "withDocs": 0,
+        "total": 13
+      },
+      "Commons / General": {
+        "withDocs": 0,
+        "total": 61
+      },
+      "Joint / General": {
+        "withDocs": 0,
+        "total": 1
+      }
+    },
+    "inquiryIdSeen": {
+      "withInquiry": 2990,
+      "withoutInquiry": 3497
+    },
+    "respLinks": {
+      "reportsWithResponse": 1445,
+      "reportsTotal": 6487
+    },
+    "totals": {
+      "reports": 6487,
+      "downloadable": 1511,
+      "archiveOnly": 4976,
+      "neither": 0
+    }
+  }
+}

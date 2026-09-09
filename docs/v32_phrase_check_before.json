@@ -1,0 +1,180 @@
+{
+  "generatedAt": "2026-08-06T23:34:00.814Z",
+  "scanned": 3842,
+  "scope": "reports",
+  "results": [
+    {
+      "phrase": "recklessness, hubris and greed",
+      "note": "Carillion (HC 769, May 2018) — the BEIS/Work & Pensions verdict on the directors",
+      "docs": 0,
+      "rawDocs": 0,
+      "hits": []
+    },
+    {
+      "phrase": "hubris and greed",
+      "note": "shorter variant of the same",
+      "docs": 0,
+      "rawDocs": 0,
+      "hits": []
+    },
+    {
+      "phrase": "rotten corporate culture",
+      "note": "Carillion — alternative wording from the same Summary",
+      "docs": 0,
+      "rawDocs": 0,
+      "hits": []
+    },
+    {
+      "phrase": "cosy club",
+      "note": "Carillion — the Big Four verdict",
+      "docs": 0,
+      "rawDocs": 0,
+      "hits": []
+    },
+    {
+      "phrase": "most important public health failures",
+      "note": "Coronavirus: lessons learned to date (HC 92, Oct 2021)",
+      "docs": 2,
+      "rawDocs": 0,
+      "hits": [
+        {
+          "id": "committees-reports:publication:7497:78688",
+          "title": "Report: Sixth Report - Coronavirus: lessons learned to date",
+          "date": "Tue Oct 12",
+          "words": 68522,
+          "rawHit": false
+        },
+        {
+          "id": "committees-reports:publication:7496:78687",
+          "title": "Report: Third Report - Coronavirus: lessons learned to date",
+          "date": "Tue Oct 12",
+          "words": 68522,
+          "rawHit": false
+        }
+      ]
+    },
+    {
+      "phrase": "public health failures",
+      "note": "shorter variant of the same",
+      "docs": 2,
+      "rawDocs": 0,
+      "hits": [
+        {
+          "id": "committees-reports:publication:7497:78688",
+          "title": "Report: Sixth Report - Coronavirus: lessons learned to date",
+          "date": "Tue Oct 12",
+          "words": 68522,
+          "rawHit": false
+        },
+        {
+          "id": "committees-reports:publication:7496:78687",
+          "title": "Report: Third Report - Coronavirus: lessons learned to date",
+          "date": "Tue Oct 12",
+          "words": 68522,
+          "rawHit": false
+        }
+      ]
+    },
+    {
+      "phrase": "gradual and incremental",
+      "note": "lessons learned — on the initial covid strategy",
+      "docs": 3,
+      "rawDocs": 3,
+      "hits": [
+        {
+          "id": "committees-reports:publication:7497:78688",
+          "title": "Report: Sixth Report - Coronavirus: lessons learned to date",
+          "date": "Tue Oct 12",
+          "words": 68522,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:7496:78687",
+          "title": "Report: Third Report - Coronavirus: lessons learned to date",
+          "date": "Tue Oct 12",
+          "words": 68522,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:9141:159550",
+          "title": "Report: 1st Report - The net zero transformation: delivery, regulation and the consumer",
+          "date": "Fri Mar 04",
+          "words": 29126,
+          "rawHit": true
+        }
+      ]
+    },
+    {
+      "phrase": "unimaginable cost",
+      "note": "PAC on Test and Trace",
+      "docs": 0,
+      "rawDocs": 0,
+      "hits": []
+    },
+    {
+      "phrase": "measurable difference",
+      "note": "PAC — whether Test and Trace met its objective",
+      "docs": 2,
+      "rawDocs": 1,
+      "hits": [
+        {
+          "id": "committees-reports:publication:33872:185310",
+          "title": "Report: Thirty-Fifth Report - Introducing Integrated Care Systems",
+          "date": "Wed Feb 08",
+          "words": 8073,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:43577:216462",
+          "title": "Report: Seventeenth Report - Cabinet Office functional savings",
+          "date": "Fri Mar 01",
+          "words": 8861,
+          "rawHit": false
+        }
+      ]
+    },
+    {
+      "phrase": "eye-watering",
+      "note": "PAC variant",
+      "docs": 26,
+      "rawDocs": 26,
+      "hits": [
+        {
+          "id": "committees-reports:publication:22039:163739",
+          "title": "Report: Thirteenth Report - NHS litigation reform",
+          "date": "Thu Apr 28",
+          "words": 30221,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:22223:164721",
+          "title": "Report: First Report - Department for Business, Energy & Industrial Strategy Annual Report",
+          "date": "Wed May 18",
+          "words": 7581,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:22002:163618",
+          "title": "Report: Fiftieth Report - Bounce Back Loans Scheme: Follow-up",
+          "date": "Wed Apr 27",
+          "words": 9552,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:23102:180406",
+          "title": "Report: First Report - Channel crossings, migration and asylum",
+          "date": "Mon Jul 18",
+          "words": 24316,
+          "rawHit": true
+        },
+        {
+          "id": "committees-reports:publication:28475:171637",
+          "title": "Government Response: Treasury minutes: Government response to the Committee of Public Acco",
+          "date": "Fri Sep 02",
+          "words": 3973,
+          "rawHit": true
+        }
+      ]
+    }
+  ]
+}

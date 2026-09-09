@@ -1,0 +1,165 @@
+{
+  "measuredAt": "2026-09-09T04:27:37.582Z",
+  "cpw": 6.152563887095205,
+  "rate": 0.075,
+  "totals": {
+    "compiledSections": 18110087,
+    "unvectored": 7903,
+    "words": 1503264,
+    "chunks": 8503,
+    "embeddedChars": 9334994,
+    "tokens": 2333749,
+    "cost": 0.175031175
+  },
+  "band": [
+    {
+      "cpw": 5.537307498385685,
+      "cost": 0.15752805
+    },
+    {
+      "cpw": 6.152563887095205,
+      "cost": 0.175031175
+    },
+    {
+      "cpw": 6.767820275804726,
+      "cost": 0.19253430000000002
+    }
+  ],
+  "perCorpus": [
+    {
+      "corpus": "fca-handbook",
+      "tier": "guidance",
+      "sections": 3661,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "tier": "legislation",
+      "sections": 147788,
+      "missing": 3,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "tier": "legislation",
+      "sections": 166290,
+      "missing": 3,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "pwdata-debates",
+      "tier": "parliamentary",
+      "sections": 6389499,
+      "missing": 3035,
+      "words": 570355,
+      "chunks": 3365,
+      "embChars": 3355680
+    },
+    {
+      "corpus": "pwdata-lords",
+      "tier": "parliamentary",
+      "sections": 753669,
+      "missing": 1011,
+      "words": 319692,
+      "chunks": 1296,
+      "embChars": 2103725
+    },
+    {
+      "corpus": "pwdata-lordswms",
+      "tier": "parliamentary",
+      "sections": 20952,
+      "missing": 20,
+      "words": 14160,
+      "chunks": 35,
+      "embChars": 94318
+    },
+    {
+      "corpus": "pwdata-lordswrans",
+      "tier": "parliamentary",
+      "sections": 175707,
+      "missing": 131,
+      "words": 16850,
+      "chunks": 131,
+      "embChars": 103672
+    },
+    {
+      "corpus": "pwdata-westminster",
+      "tier": "parliamentary",
+      "sections": 239707,
+      "missing": 838,
+      "words": 260256,
+      "chunks": 1021,
+      "embChars": 1689095
+    },
+    {
+      "corpus": "pwdata-wms",
+      "tier": "parliamentary",
+      "sections": 23884,
+      "missing": 21,
+      "words": 14173,
+      "chunks": 36,
+      "embChars": 94398
+    },
+    {
+      "corpus": "pwdata-wrans",
+      "tier": "parliamentary",
+      "sections": 1235560,
+      "missing": 2618,
+      "words": 307778,
+      "chunks": 2619,
+      "embChars": 1894106
+    },
+    {
+      "corpus": "regional",
+      "tier": "legislation",
+      "sections": 341093,
+      "missing": 10,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "tier": "other",
+      "sections": 1043264,
+      "missing": 183,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-2010plus",
+      "tier": "legislation",
+      "sections": 275744,
+      "missing": 26,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-pre-2010",
+      "tier": "legislation",
+      "sections": 462809,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "tna-caselaw",
+      "tier": "caselaw",
+      "sections": 74896,
+      "missing": 2,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    }
+  ]
+}
