@@ -89,12 +89,75 @@ async function main() {
     serviceInstanceUpdate(serviceId: $s, environmentId: $e, input: $in)
   }`, { s: WORKER, e: ENV, in: { watchPatterns: PATTERNS } })
 
+  // ══ ⚠⚠ AND THE WATCH PATHS WERE THE SYMPTOM, NOT THE LAYER ══════════════════════════════
+  //
+  // Setting `watchPatterns` alone changed nothing, and the read-back said it had worked.
+  // **`build-worker` had NO REPO TRIGGER AT ALL** — `repoTriggers` returned 0 for it and 1 for
+  // every other repo-backed service in the project. So no push has ever reached it, and the
+  // empty watch list was irrelevant because there was nothing arriving to be filtered.
+  //
+  // That is why the service was the only one with NO deployment record per push while
+  // `fts-serve` and `vector-serve` got a SKIPPED one each: a SKIPPED record is a trigger
+  // firing and the watch declining. No record is no trigger.
+  //
+  // ⚠ A trigger means a push touching a watched path now REPLACES THE CONTAINER, which
+  // interrupts a build in flight. That is the deliberate trade: the watch list is scoped to
+  // what the worker actually runs, and six days of silent staleness is the alternative.
+  const { project } = await gql(`query($id: String!) {
+    project(id: $id) { services { edges { node { id name repoTriggers { edges { node { id branch repository provider } } } } } } }
+  }`, { id: (await gql('query { projectToken { projectId } }') as any).projectToken.projectId }) as any
+  const me = project.services.edges.find((e: any) => e.node.id === WORKER)?.node
+  const existing = me?.repoTriggers?.edges ?? []
+  console.log(`\n  repoTriggers on build-worker: ${existing.length}`)
+
+  if (!existing.length) {
+    // Copied from a sibling that works, rather than typed from memory.
+    const sibling = project.services.edges
+      .map((e: any) => e.node.repoTriggers?.edges?.[0]?.node)
+      .find(Boolean)
+    if (!sibling) throw new Error('no sibling trigger to copy the repo/branch/provider from')
+    console.log(`  creating one, copying ${sibling.repository}@${sibling.branch} (${sibling.provider}) from a sibling`)
+    const pt = (await gql('query { projectToken { projectId environmentId } }') as any).projectToken
+    try {
+      await gql(`mutation($in: DeploymentTriggerCreateInput!) { deploymentTriggerCreate(input: $in) { id } }`, {
+        in: {
+          branch: sibling.branch, repository: sibling.repository, provider: sibling.provider,
+          serviceId: WORKER, environmentId: pt.environmentId, projectId: pt.projectId,
+        },
+      })
+    } catch (e) {
+      // ⚠⚠ `Bad Access` — AND IT IS NOT A DEAD TOKEN. `serviceInstanceUpdate` above succeeded
+      // with the same credential, so the refusal is specific to the GitHub linkage:
+      // `deploymentTriggerCreate` and `serviceInstanceAutoDeployUpdate` both need the ACCOUNT's
+      // connection to the repository, which a Project-Access-Token does not carry.
+      // This is Charlie's, in the dashboard, and it is one action.
+      console.error(`\n⚠⚠ COULD NOT CREATE THE TRIGGER: ${(e as Error).message}`)
+      console.error('   A project token cannot link a service to GitHub. `serviceInstanceUpdate`')
+      console.error('   worked with this same token, so the credential is fine and the permission')
+      console.error('   is not.')
+      console.error('\n   CHARLIE, ONE ACTION: Railway → build-worker → Settings → Source →')
+      console.error(`   connect ${sibling.repository} @ ${sibling.branch}, and enable auto-deploy.`)
+      console.error('   The watch paths are already set, so it will build only on the files above.')
+      console.error('\n   Until then the worker is deployed by hand:')
+      console.error('     serviceInstanceDeployV2(serviceId, environmentId, commitSha) — and READ THE SHA BACK.')
+    }
+  }
+
   // ⚠ READ IT BACK. A mutation that returns without error is a claim about a request.
   const after = await read()
+  const trig = await gql(`query($id: String!) {
+    project(id: $id) { services { edges { node { id repoTriggers { edges { node { id branch repository } } } } } } }
+  }`, { id: (await gql('query { projectToken { projectId } }') as any).projectToken.projectId }) as any
+  const nowTriggers = trig.project.services.edges.find((e: any) => e.node.id === WORKER)?.node?.repoTriggers?.edges ?? []
+
   console.log('\n── build-worker, after (read back, not assumed) ──')
   console.log(`  watchPatterns : ${JSON.stringify(after.watchPatterns)}`)
-  const ok = JSON.stringify(after.watchPatterns) === JSON.stringify(PATTERNS)
-  console.log('\n' + (ok ? '✔ set and read back identical.' : '⚠⚠ WHAT CAME BACK IS NOT WHAT WAS SENT.'))
+  console.log(`  repoTriggers  : ${nowTriggers.length}${nowTriggers.length ? ` — ${nowTriggers[0].node.repository}@${nowTriggers[0].node.branch}` : ''}`)
+  const ok = JSON.stringify(after.watchPatterns) === JSON.stringify(PATTERNS) && nowTriggers.length > 0
+  console.log('\n' + (ok
+    ? '✔ set and read back. ⚠ THIS IS STILL NOT PROOF — push a change to a watched path and\n'
+      + '  confirm a deployment appears for the service that nobody triggered.'
+    : '⚠⚠ WHAT CAME BACK IS NOT WHAT WAS SENT.'))
   process.exit(ok ? 0 : 1)
 }
 

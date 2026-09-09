@@ -130,3 +130,25 @@ it replaced.
 `scrutinise-web/lib/**` rather than `lib/lex/**`: `build.ts` imports `@/lib/prisma`,
 `@/lib/env-flags` and `@/lib/ai/*`, and `prisma/**` is watched because the client is generated at
 deploy time. Set with `scripts/b21-railway-watch.ts`, which reads the list back after writing it.
+
+### ⚠⚠ …and `watchPatterns` was the symptom. The layer below it is `repoTriggers` (9 Sep 2026)
+
+**Setting the watch paths changed nothing, and reading them back said it had worked.**
+
+`repoTriggers` on `build-worker` is **0**. Every other repo-backed service in the project has **1**.
+So no push has ever reached the service, and the empty watch list was irrelevant because there was
+nothing arriving to be filtered. **A `SKIPPED` deployment record is a trigger firing and the watch
+declining. NO record at all is no trigger** — which is why `build-worker` was the only service with
+no deployment row per push, and why its silence read as "nothing to do".
+
+⚠ **This is why the config read-back is not the test.** `watchPatterns` was set, verified identical
+on read-back, and the service still does not auto-deploy. **The test is a push to a watched path
+followed by a deployment appearing that nobody triggered.** Anything short of that is the
+guard-that-cannot-fail in its deployment-shaped form.
+
+⚠ **A PROJECT token cannot fix it.** `deploymentTriggerCreate` and `serviceInstanceAutoDeployUpdate`
+both return **`Bad Access`** with the `Project-Access-Token`; they need the account's GitHub
+linkage. `serviceInstanceUpdate` (watch paths, variables) works fine, so the failure is specific and
+not a dead token. **Connecting the repo is Charlie's, in the Railway dashboard:** build-worker →
+Settings → Source → connect `Scrutinise/scrutinise-prototype` @ `Main`. Until then the worker is
+deployed by hand with `serviceInstanceDeployV2(..., commitSha)` and the sha read back.
