@@ -40,9 +40,24 @@ import {
   autoResumeStoppedBuilds,
 } from '../lib/lex/build'
 import { WORKER_CONCURRENCY, WORKER_IDLE_MS, buildDriver } from '../lib/lex/build-config'
-import { resolvedConfigLine } from '../lib/lex/harness-preflight'
+import { assertRetrievalConfig, resolvedConfigLine } from '../lib/lex/harness-preflight'
 
 const ONCE = process.argv.includes('--once')
+
+/**
+ * ══ ⚠⚠ CCW-B18 §3 — THE ESCAPE HATCH, AND WHY THERE IS ONE ═══════════════════════════
+ *
+ * The worker now REFUSES to start under degraded retrieval (see `main`). A deliberately
+ * degraded run is nonetheless a real thing we do: `M-01_v2_keyword_only.json` is a
+ * keyword-only baseline that was preserved on purpose, and a guard with no way to say
+ * "degraded IS the measurement" would have made that build impossible rather than
+ * careless.
+ *
+ * ⚠ SO IT MUST BE ASKED FOR, BY NAME, AND IT ANNOUNCES ITSELF. That is the whole
+ * difference from what was here before: the degraded state is now a decision somebody
+ * made and can be seen to have made, instead of a default nobody noticed.
+ */
+const ALLOW_DEGRADED = process.env.LEX_BUILD_ALLOW_DEGRADED_RETRIEVAL === '1'
 
 /** A name in the log, so two workers can be told apart. */
 const WORKER_ID = `bw-${Math.random().toString(36).slice(2, 8)}`
@@ -128,9 +143,47 @@ async function main() {
   //     ends it: the configuration is printed beside the work, every time, so a build's
   //     log says what retrieval it had rather than what we assume it had.
   //
-  // ⚠ IT WARNS, IT DOES NOT REFUSE. A worker that will not start is worse than a worker
-  // that cannot email — but a worker that is quiet about it is worse than both.
+  // ══ ⚠⚠ CCW-B18 §3 — AND FOR RETRIEVAL IT NOW REFUSES, NOT WARNS ══════════════════════
+  //
+  // The line below used to read "IT WARNS, IT DOES NOT REFUSE", and that was written about
+  // the EMAIL. It is still right about the email: a worker that will not start is worse
+  // than a worker that cannot send a completion notice.
+  //
+  // ⚠⚠ IT WAS NEVER RIGHT ABOUT RETRIEVAL, AND THERE IS NOW A MEASURED CASE. M-01 — the
+  // flagship Human Rights Act chapter of the Restoration Programme report — ran on 2
+  // September with `FTS_SEARCH_URL` unset and `LEX_VECTOR_STREAMS` empty. Eighteen
+  // searches returned nothing. The build reported **DONE, 11 of 11 passes, zero
+  // failures**, and the resulting chapter carried two statutory instruments and one
+  // judgment where the Equality Act, run on a working configuration, returned 107
+  // provisions and 33 judgments. Nothing on the row said the difference was retrieval.
+  // The discrepancy was caught by a human reading the finished report, five days later.
+  //
+  // `assertRetrievalConfig` has existed in `harness-preflight.ts` since S3 §7.2 for exactly
+  // this, and this file imported `resolvedConfigLine` — the PRINTER — and not the GUARD.
+  // A degradation that is printed and not enforced is a degradation that will be read past,
+  // because the line it prints sits above ten minutes of ordinary-looking progress output.
+  //
+  // ⚠ REFUSING TO START IS THE LESSER FAILURE. A worker that will not run is visible within
+  // one build: the user's build sits at QUEUED and somebody asks why. A worker that runs
+  // degraded produces confident, well-formed, thinly-evidenced proposals that cost real
+  // money and are indistinguishable from good ones until a reader who knows the subject
+  // notices. The first is an outage; the second is a wrong answer with no error attached.
   console.log(`[build-worker ${WORKER_ID}] ${resolvedConfigLine()}`)
+  try {
+    assertRetrievalConfig(`build-worker ${WORKER_ID}`, { allowDegraded: ALLOW_DEGRADED })
+    if (ALLOW_DEGRADED) {
+      console.warn(`[build-worker ${WORKER_ID}] ⚠⚠ LEX_BUILD_ALLOW_DEGRADED_RETRIEVAL=1 — running ` +
+        'ANYWAY under the degradation above. Every build this worker completes is a degraded ' +
+        'measurement and must be labelled as one wherever its numbers are quoted.')
+    }
+  } catch (err) {
+    console.error(`[build-worker ${WORKER_ID}] ${err instanceof Error ? err.message : err}`)
+    console.error(`[build-worker ${WORKER_ID}] ⚠⚠ NOT STARTING. A build run in this state would ` +
+      'report DONE having retrieved nothing — see M-01 v2, 2 September 2026. Set the missing ' +
+      'values, or set LEX_BUILD_ALLOW_DEGRADED_RETRIEVAL=1 if a degraded run IS the measurement.')
+    await prisma.$disconnect().catch(() => {})
+    process.exit(1)
+  }
   if (!process.env.RESEND_API_KEY) {
     console.warn(`[build-worker ${WORKER_ID}] ⚠⚠ RESEND_API_KEY is NOT SET — every build that asked ` +
       'to be emailed will finish without one, and nothing will error. See 25-W §A.')
