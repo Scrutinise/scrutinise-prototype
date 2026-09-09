@@ -64,17 +64,46 @@ async function main() {
     if (!GO) continue
     if (already) { console.log('        already has rows at this version — not re-running'); continue }
 
-    if (!(await claimPass(ideaId, PASS_KEY, runVersion))) {
-      console.log('        could not claim the pass (already running or done)')
+    // ══ ⚠⚠ TWO FUNCTIONS ARE CALLED `claimPass` AND THIS CALLED ONE AGAINST THE OTHER'S
+    //    CONTRACT. Fixed by CCW-B21; not this session's code, and the fault is worth naming.
+    //
+    //   `build.ts`      claimPass(buildId, key)            → Promise<boolean>, false if lost
+    //   `deepening.ts`  claimPass(ideaId, passKey)         → Promise<number>, THROWS if lost
+    //
+    // This file imports the second and was written against the first: three arguments where
+    // there are two — which is the type error `check:scripts` reports — and
+    // `if (!(await claimPass(...)))` over a return that is a runVersion.
+    //
+    // ⚠ SO THE GUARD COULD NOT FIRE. A claimed version is always >= 1 and therefore always
+    // truthy, and a genuine conflict does not return falsy — it throws, past this branch
+    // entirely. The "could not claim the pass" line was unreachable in both directions.
+    //
+    // ⚠ AND THE VERSION IT CLAIMS IS THE ONE TO USE. `claimPass` increments the deepening
+    // pass's OWN runVersion, which need not equal the build version computed above; passing
+    // the build's version to `runPass` would write findings under a version the pass row does
+    // not think it is on. The claimed value is what the product's own callers use.
+    let claimedVersion: number
+    try {
+      claimedVersion = await claimPass(ideaId, PASS_KEY)
+    } catch (err) {
+      console.log(`        could not claim the pass: ${err instanceof Error ? err.message : String(err)}`)
       continue
     }
-    const outcome = await runPass(ideaId, PASS_KEY, runVersion)
+    if (claimedVersion !== runVersion) {
+      console.log(`        ⚠ the pass claimed v${claimedVersion}; the build is v${runVersion}. `
+        + 'Running under the claimed version, which is what the pass row records.')
+    }
+    const outcome = await runPass(ideaId, PASS_KEY, claimedVersion)
     console.log(`        → ${JSON.stringify(outcome).slice(0, 400)}`)
 
     // ⚠ RE-READ, NOT THE COUNTER. `RunOutcome.findings` moving proves rows were counted, not
     // that any of them says anything — the rule verify-s8-deepening.ts exists to keep.
+    // ⚠⚠ AND IT RE-READS THE VERSION THE PASS ACTUALLY WROTE. Reading `runVersion` here while
+    // the run happened under `claimedVersion` would report "0 rows" on a run that worked, or
+    // an earlier run's rows on one that did not — a re-read of the wrong thing is worse than
+    // no re-read, because it looks like verification.
     const rows = await prisma.evidenceItem.findMany({
-      where: { ideaId, headingKey: 'REFERS_TO_THIS', runVersion },
+      where: { ideaId, headingKey: 'REFERS_TO_THIS', runVersion: claimedVersion },
       select: { title: true, body: true },
       orderBy: { createdAt: 'asc' },
     })
