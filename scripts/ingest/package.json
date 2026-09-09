@@ -33,12 +33,14 @@
     "check:graph5-boundary": "tsx graph/check-graph5-boundary.ts",
     "check:graph5-citation": "tsx graph/check-graph5-citation.ts",
     "check:graph5-treatment": "tsx graph/check-graph5-treatment.ts",
-    "check:graph5": "npm run check:graph5-prereq && npm run check:graph5-boundary && npm run check:graph5-citation && npm run check:graph5-treatment",
+    "check:graph5": "npm run check:graph5-prereq && npm run check:graph5-boundary && npm run check:graph5-citation && npm run check:graph5-treatment && npm run check:graph5-case-edges",
     "graph:caselaw-coverage": "tsx graph/print-caselaw-coverage.ts",
     "audit:g5": "tsx graph/audit-g5-citation-forms.ts --json graph/audit-g5-citation-forms.json && tsx graph/audit-g5-unresolved-cause.ts --json graph/audit-g5-unresolved-cause.json",
     "extract:g5-citations": "tsx graph/extract-caselaw-citation-edges.ts",
     "extract:g5-treatment": "tsx graph/extract-caselaw-treatment.ts",
-    "build:g5-validation": "tsx graph/build-g5-validation-set.ts --n 15 --out ../../docs/GRAPH_5_VALIDATION.md"
+    "build:g5-validation": "tsx graph/build-g5-validation-set.ts --n 15 --out ../../docs/GRAPH_5_VALIDATION.md",
+    "check:graph5-case-edges": "tsx graph/check-graph5-case-edges.ts",
+    "extract:g5-case-edges": "tsx graph/extract-caselaw-case-edges.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

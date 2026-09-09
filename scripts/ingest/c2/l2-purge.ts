@@ -45,6 +45,9 @@
  *    holding the bodies are NEVER deleted, so the text itself survives regardless.
  *  · GUARDED. The delete re-counts inside the transaction and ABORTS if the count does not
  *    match the manifest. A collection that grew between staging and execution stops the run.
+ *  · IN SCOPE. A target may retire its collection only if its predicate covers the WHOLE
+ *    collection and the delete leaves nothing behind — `retireVerdict` below, watched failing by
+ *    `check-purge-scope-guard.ts`. A partial purge deletes its rows and leaves the target alone.
  *  · TRANSACTIONAL per collection, so a failure part-way cannot leave a half-deleted corpus.
  *  · The vector and FTS layers are keyed off the SAME manifest, so the three layers cannot
  *    drift apart.
@@ -64,7 +67,7 @@ const ONLY = (process.argv.find(a => a.startsWith('--only=')) ?? '').split('=')[
 const MANIFEST_DIR = path.join(__dirname, 'purge-manifests')
 
 /** Each target names the rows it removes as a SQL predicate, and says why in words. */
-const TARGETS = [
+export const TARGETS = [
   {
     key: 'et-decisions-landing',
     corpus: 'et-decisions',
@@ -131,6 +134,31 @@ const TARGETS = [
 
 const n = (x: number) => x.toLocaleString()
 
+/**
+ * THE SCOPE GUARD — added 27 Aug 2026, after this script retired a collection it had not emptied.
+ *
+ * `et-decisions-landing` removes `corpus='et-decisions' AND format='html'`. The retire step keyed
+ * off `t.corpus`, not off `t.where`, so it set retired=true, blocked=true on the WHOLE
+ * `et-decisions` target — hiding the 161,753 judgment PDFs the purge had deliberately KEPT.
+ * The three-layer doctrine says the target, the rows and the vectors move together; a target whose
+ * predicate is narrower than its collection moves only part of the rows, so it may not move the target.
+ *
+ * The test is EMPIRICAL — the predicate's count against the collection's count — not a reading of
+ * the predicate string, because "this obviously covers the whole collection" is the exact claim
+ * that was wrong. Exported so `check-purge-scope-guard.ts` can watch it fire before it is trusted.
+ */
+export function retireVerdict(matched: number, whole: number): { retire: boolean; why: string } {
+  if (matched < whole) return {
+    retire: false,
+    why: `NARROWER than its collection — ${n(whole - matched)} rows survive the purge, so the target must NOT be retired`,
+  }
+  if (matched > whole) return {
+    retire: false,
+    why: `REACHES OUTSIDE its collection — ${n(matched - whole)} matched rows do not belong to this corpus, so this target does not own them`,
+  }
+  return { retire: true, why: 'covers its whole collection — retiring the target is in scope' }
+}
+
 async function main() {
   const p = pool()
   const q = async (s: string, a: any[] = []) => (await p.query(s, a)).rows
@@ -155,6 +183,12 @@ async function main() {
       before === t.expect ? '✓ matches' : '⚠ DIFFERS — staging against the live count, not the expected one'}`)
     console.log(`   words: ${n(Number(words))}`)
 
+    // ── scope guard, evaluated at STAGING so a dry run shows the verdict without deleting anything
+    const whole = (await q(`SELECT count(*)::int n FROM corpus_sections WHERE corpus = $1`, [t.corpus]))[0].n
+    const scope = retireVerdict(before, whole)
+    console.log(`   scope: matches ${n(before)} of the ${n(whole)} rows in corpus='${t.corpus}' — ${scope.why}`)
+    if (!scope.retire) console.log(`   ✋ the target row will NOT be retired by this run.`)
+
     if (before === 0) { console.log('   nothing to do.\n'); continue }
 
     // ── the manifest: FULL ROWS, so this is reversible, not just auditable.
@@ -174,7 +208,7 @@ async function main() {
     if (!EXECUTE) {
       console.log(`   DRY RUN — would delete ${n(before)} rows from corpus_sections,`)
       console.log(`             then ${n(before)} sections' chunks from ${process.env.VECTOR_CHUNKS_TABLE ?? 'corpus_chunks'} / ${process.env.VECTOR_VEC_TABLE ?? 'corpus_vec'} and from corpus_fts.\n`)
-      summary.push({ key: t.key, rows: before, words: Number(words), executed: false })
+      summary.push({ key: t.key, rows: before, words: Number(words), executed: false, wouldRetireTarget: scope.retire })
       continue
     }
 
@@ -209,18 +243,31 @@ async function main() {
       continue
     } finally { c.release() }
 
-    // ── retire the target row too, so the register stops counting it
-    await p.query(
-      `UPDATE corpus_targets SET retired = true, blocked = true,
-         blocked_reason = coalesce(blocked_reason, '') || ' · C2 Lane 2: rows and vectors purged ' || $2,
-         updated_at = now()
-       WHERE corpus_key = $1`, [t.corpus, stamp])
+    // ── retire the target row too, so the register stops counting it — BUT ONLY IN SCOPE.
+    //    Re-counted after the delete: the staged verdict says what the predicate covers, this says
+    //    what the collection has left. Both must agree before a target row is touched.
+    const left = (await q(`SELECT count(*)::int n FROM corpus_sections WHERE corpus = $1`, [t.corpus]))[0].n
+    let retired = false
+    if (!scope.retire || left > 0) {
+      console.log(`   ✋ TARGET NOT RETIRED — ${scope.retire
+        ? `${n(left)} rows still stand in corpus='${t.corpus}' after the delete`
+        : scope.why}`)
+      console.log(`      corpus_targets.'${t.corpus}' is left exactly as it was; only the ${n(before)} matched rows went.`)
+    } else {
+      await p.query(
+        `UPDATE corpus_targets SET retired = true, blocked = true,
+           blocked_reason = coalesce(blocked_reason, '') || ' · C2 Lane 2: rows and vectors purged ' || $2,
+           updated_at = now()
+         WHERE corpus_key = $1`, [t.corpus, stamp])
+      retired = true
+      console.log(`   ✓ target retired (collection is empty: ${n(left)} rows remain)`)
+    }
 
     const after = (await q(`SELECT count(*)::int n FROM corpus_sections WHERE ${t.where}`))[0].n
     console.log(`   after: ${n(after)} rows remain  ${after === 0 ? '✓' : '⚠'}`)
     console.log(`   NEXT (index layer, not done here): drop these ids from the vector and FTS tables using`)
     console.log(`     ${path.relative(process.cwd(), idsPath)}\n`)
-    summary.push({ key: t.key, rows: before, words: Number(words), executed: true, after })
+    summary.push({ key: t.key, rows: before, words: Number(words), executed: true, after, retiredTarget: retired })
   }
 
   const total = summary.reduce((s, x) => s + (x.executed ? x.rows : 0), 0)
@@ -236,4 +283,6 @@ async function main() {
   await p.end()
 }
 
-main().catch(e => { console.error('FAIL', e.message); process.exit(1) })
+// only when run directly — `check-purge-scope-guard.ts` imports TARGETS and retireVerdict from here,
+// and importing this file must never start a purge.
+if (require.main === module) main().catch(e => { console.error('FAIL', e.message); process.exit(1) })

@@ -5,8 +5,19 @@
 131,654) · BAILII dropped, Lane 3 to be the tribunal chambers plus a UKHL scope · Lane 2 driven
 end-to-end first.
 
-**Artefacts:** `docs/census/C2_L2_baseline.json` · `C2_L2_dotleaders.json` · `C2_L2_item8_lords.json` ·
+**Artefacts:** `docs/census/C2_L2_baseline2.json` · `C2_L2_dotsig.json` · `C2_L2_dotmiss.json` ·
+`C2_L2_dotscale.json` · `C2_L2_dotleaders.json` · `C2_L2_item8_lords.json` ·
 `C2_L2_item9_legacy.json` · `C2_L2_et_refetch_list.json` · `C2_L2_purge_plan.json`
+
+> ⚠ **`C2_L2_baseline.json` does not exist and is not being regenerated.** This report cited it in
+> its first draft. `l2-measure.ts` crashed on its last query — `column "itemId" does not exist`,
+> reading `LegislationSection` — *before* reaching its `writeFileSync`, so the file was never
+> written; the measurements themselves reached the console and are quoted in full below and in the
+> CHANGE_LOG. It is deliberately **not** re-run, because the dot-leader repair has since executed:
+> a fresh `l2-measure` would write a POST-repair snapshot under the name `baseline`, which is worse
+> than an absent file. The one figure that moved is `section_repeals` (178,826 → 249,256) and both
+> ends of it are recorded. *A script that measures and then writes has to write incrementally, or
+> its last query can destroy the whole run's output.*
 **Code:** `scripts/ingest/c2/*.ts` (all read-only bar `l2-recensus-eu.ts`, which only inserts, and
 `l2-purge.ts`, which is dry-run by default) · one fix in `scripts/ingest/shared/compile.ts`.
 

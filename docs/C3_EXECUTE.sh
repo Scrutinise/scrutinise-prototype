@@ -78,7 +78,7 @@ echo "════════ STEP 3 — LANE A: the purge, layer three (the SE
 #     corpus_vec     170,789 rows to remove, 373,036 survivors
 # Budget 45–75 minutes. It aborts if any predicate matches zero — see the header for the
 # silent-no-op trap that guard exists to catch.
-STAMP="PUT_THE_STAMP_FROM_STEP_2_HERE"
+STAMP="2026-08-27T02-20-26-375Z"
 if [ "$STAMP" = "PUT_THE_STAMP_FROM_STEP_2_HERE" ]; then
   echo "⛔ Edit STAMP in this script to the stamp step 2 printed, then re-run from here."
   exit 1
