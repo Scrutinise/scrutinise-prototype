@@ -80,3 +80,53 @@ Manual staggered restart is only needed when workers crash and Railway's auto-re
 
 Always use `backboard.railway.com/graphql/v2` — NOT `api.railway.app`.
 The api.railway.app endpoint returns stale deployment data in queries.
+
+### ⚠⚠ A deploy is proved by `meta.commitHash`. Never by the status, never by the id (9 Sep 2026)
+
+**`serviceInstanceDeployV2` takes a THIRD argument. Called with two, it returns SUCCESS with a
+fresh deployment id while building the OLD commit.**
+
+```
+serviceInstanceDeployV2(serviceId, environmentId)              → SUCCESS on the pinned commit
+serviceInstanceDeployV2(serviceId, environmentId, commitSha)   → builds what you asked for
+```
+
+On 9 September, deployment `a47cdcaa` went green in four minutes with `meta.commitHash` still
+`15bafe1f` — the 3 September commit — when the intended commit was `5b92b93`. Nothing in the call,
+the response, or the deployment status said so. Named explicitly, `13a413f3` built the right commit.
+(`serviceInstanceDeploy` additionally takes `latestCommit: Boolean`.)
+
+**This is the fourth mutation of the same error pattern, and the first where the fix for the trap
+was itself trapped.** The brief being followed *warned* that `deploymentRedeploy` re-runs the same
+artefact and that a new deployment id would read as evidence a fix was live. The source-rebuild
+mutation, chosen precisely to avoid that, did it anyway.
+
+**So, after every deploy:**
+
+1. **Read `meta.commitHash` off the deployment and confirm it is the commit you intended.** Both
+   deployments that day were `SUCCESS` with fresh ids and one of them meant nothing.
+2. **Where the service prints something the new code alone can produce, read that too.** The
+   `build-worker` container built from `5b92b93` prints `retrieval configuration OK — …`, which is
+   `assertRetrievalConfig`'s own line; a container built before that morning cannot produce it. A
+   string only the new build can emit is proof; a green status is inference.
+
+### ⚠ A service with no `watchPatterns` is deployed by hand, for ever, silently
+
+`build-worker` ran with `watchPatterns: []` from 3 to 9 September. **Sixteen pushes produced no
+deployment record for it at all**, while `fts-serve` and `vector-serve` each got a `SKIPPED` record
+for every one — so the service that runs every build was the only one with no trace in the
+deployment list, and its absence read as "nothing to do". That is the root cause of the six-day
+staleness, and of the trap above.
+
+⚠ **A `SKIPPED` deployment is healthy.** It means Railway compared the push against the watch paths
+and correctly declined to rebuild. **No record at all is the danger sign.**
+
+⚠ **Watch paths are REPO-ROOT-RELATIVE, not relative to `rootDirectory`.** `fts-serve`'s
+`rootDirectory` is `scripts/ingest` and its working pattern is `scripts/ingest/search/**`. A pattern
+written relative to the root directory matches nothing and is indistinguishable from the empty list
+it replaced.
+
+⚠ **Watch the dependencies, not just the interesting file.** `build-worker` now watches
+`scrutinise-web/lib/**` rather than `lib/lex/**`: `build.ts` imports `@/lib/prisma`,
+`@/lib/env-flags` and `@/lib/ai/*`, and `prisma/**` is watched because the client is generated at
+deploy time. Set with `scripts/b21-railway-watch.ts`, which reads the list back after writing it.

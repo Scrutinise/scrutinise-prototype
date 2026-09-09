@@ -168,6 +168,18 @@ async function main() {
   // degraded produces confident, well-formed, thinly-evidenced proposals that cost real
   // money and are indistinguishable from good ones until a reader who knows the subject
   // notices. The first is an outage; the second is a wrong answer with no error attached.
+  // ══ ⚠⚠ CCW-B21 TRACK 1 — AND THIS FILE IS NOW WATCHED, WHICH IT WAS NOT ══════════════
+  //
+  // The guard above shipped on 9 September and did not run for six days, because
+  // `build-worker`'s `watchPatterns` were `[]`: sixteen pushes produced no deployment record
+  // for this service at all, while every other service got a `SKIPPED` one for each. The
+  // absence of a record read as "nothing to do".
+  //
+  // ⚠ The line below is what proves a deploy landed. `retrieval configuration OK — …` comes
+  // from `assertRetrievalConfig` and cannot be produced by a container built before that
+  // morning, which printed `resolvedConfigLine()` and nothing else. Read it, and read
+  // `meta.commitHash` — never the deployment status and never its id. See CLAUDE.md,
+  // "Railway Operations".
   console.log(`[build-worker ${WORKER_ID}] ${resolvedConfigLine()}`)
   try {
     assertRetrievalConfig(`build-worker ${WORKER_ID}`, { allowDegraded: ALLOW_DEGRADED })
