@@ -203,9 +203,10 @@ async function hydrateVecHits(hits: VecHit[], limit: number): Promise<SearchResu
       // ⚠ `speaker` added for S8 §2, in step with fts-search.ts. The dense half is live on
       // whichever streams `LEX_VECTOR_STREAMS` names, so a debate found by the ANN half must
       // not lose the speaker the same row keeps when BM25 finds it.
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; speaker: string | null; parentTitle: string | null }>>`
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; speaker: string | null; parentTitle: string | null; parentDocId: string | null; wordCount: number | null }>>`
         SELECT s.id, s."sourceUrl", s."itemDate"::text AS "itemDate", s."sectionTitle",
-               s.attribution, s.speaker, a.title AS "parentTitle"
+               s.attribution, s.speaker, a.title AS "parentTitle",
+               s."parentDocId", s."wordCount"
         FROM corpus_sections s
         LEFT JOIN corpus_acts a ON a.gid = s."parentDocId" AND a.title IS NOT NULL
         WHERE s.id IN (${Prisma.join(ids)})`,
@@ -270,6 +271,10 @@ async function hydrateVecHits(hits: VecHit[], limit: number): Promise<SearchResu
         id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'vector' as const,
         url, date, attribution,
         snippetMatched: h.snippetMatched, snippetLocation: h.snippetLocation,
+        // S19 §3 — the dense twin of the same two columns in fts-search.ts. ⚠ Both adapters must
+        // carry them or `applyGrain` would regroup a stream's BM25 half and leave its dense half
+        // alone, which is a ranking neither arm produced.
+        parentDocId: meta?.parentDocId, wordCount: meta?.wordCount,
       }
     })
     return results.slice(0, limit * 3)

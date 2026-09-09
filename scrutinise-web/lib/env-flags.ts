@@ -190,6 +190,25 @@ export const CAPABILITY_FLAGS = [
   // it starves everything else. This paragraph adds no stream and removes none — it only tells the
   // model that an existing stream holds this material.
   'LEX_ROUTER_APPRAISAL',
+  // S19 §3. THE PER-COLLECTION GRAIN SETTING — retrieve a collection at DOCUMENT grain and return
+  // each document's best-scoring section, rather than scoring every section independently.
+  //
+  // Measured before it was built (`docs/census/s19-grain.json`, BM25 scoped to each key's own
+  // collection, depth 500, recall@20 over Charlie's validated set): section 23 of 65, document
+  // 41 of 65. The gain is concentrated — impact-assessments 0→6 of 9, debates 2→7 of 11,
+  // legislation 2→6 of 10, committees 0→3 of 10 — and is exactly ZERO for caselaw, guidance and
+  // consultations, where one document holds one section and the two grains are the same unit.
+  // That is why it is a per-collection map (`LEX_SEARCH_GRAIN_MAP`) and not a switch.
+  //
+  // ⚠ DEFAULT OFF, and with it off `applyGrain` returns its argument BY REFERENCE — the shipped
+  // ranking is byte-identical, which `check:s19-grain` asserts by comparing rankings rather than
+  // by reading this comment. The brief's own requirement: nothing widened before it is measured.
+  //
+  // ⚠⚠ AND THE NUMBER IT SHOULD BE JUDGED ON IS NOT THE ONE ABOVE. "The right document came back"
+  // is not "the user is shown the right passage": a debates document is a 318-speech sitting day.
+  // §2 measured that fourth number too — see `docs/SEARCH_S19_REPORT.md` §2 — and it is the one
+  // that decides whether this flag should ever be turned on for the parliamentary collections.
+  'LEX_SEARCH_GRAIN',
   //
   // ⚠⚠ `LEX_MERGE_COVERAGE` WAS HERE AND WAS RETIRED ON 2026-08-26 (S14 §2). It was S13's minimal
   // experiment — reallocate the post-floor slots by query-term coverage. Measured: **+2 of 65**

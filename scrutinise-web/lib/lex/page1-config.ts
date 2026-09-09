@@ -588,4 +588,24 @@ export interface SearchResult {
   /** Where in the document the passage sits, in readable words ("about 62% of the way through").
    *  Null/undefined when there is no located passage to place. */
   snippetLocation?: string | null
+  /**
+   * S19 §3 — WHICH DOCUMENT THIS SECTION BELONGS TO, hydrated from `corpus_sections."parentDocId"`
+   * on the same round-trip that already fetches url, date and title.
+   *
+   * ⚠⚠ IT CANNOT BE DERIVED FROM THE ID, and that is the whole reason it is carried. The obvious
+   * rule — the id's second colon segment — is right for `impact-assessments:2020-57:12` and
+   * CATASTROPHIC for `committees-reports:publication:34458:189872-0001`, where segment 2 is the
+   * literal word `publication`: all 344,773 sections of all 51,000 reports would collapse into one
+   * document. `lib/lex/grain.ts::documentKeyOf` takes this field where it exists and falls back to
+   * the id only where ingest stores no parent (consultations, the Acts, the SIs, judgments).
+   *
+   * ⚠ UNDEFINED IS A THIRD STATE, not null: it means the hydrate did not run or missed this row —
+   * which is the live condition of seven collections that sit in the served index and hold no rows
+   * in `corpus_sections` at all (S19 §1.1). `applyGrain` refuses to regroup an undefined rather
+   * than grouping it on a fallback key.
+   */
+  parentDocId?: string | null
+  /** S19 §3 — the section's length, for the retrieval-side length floor. Same round-trip.
+   *  ⚠ Undefined means not measured, never "short"; the floor keeps an unmeasured row. */
+  wordCount?: number | null
 }

@@ -73,6 +73,51 @@ export const EXCLUDED_BY_DESIGN: Record<string, string> = {
   'members-interests': 'political-risk / people-graph input, not general search (SEARCH_STRATEGY.md §3.1)',
 }
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * S19 §1.2 — THE FOURTH WORD: UNREACHABLE, NOT INTENDED, AND BLOCKED ON SOMETHING NAMED.
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * `EXCLUDED_BY_DESIGN` says *nobody is meant to reach this*. `DEFERRED_TO_GRAPH` says *retrieval is
+ * the wrong door*. Neither is true of the two treaty collections, and calling them either would be
+ * a lie of exactly the kind the first register was invented to stop: **no query can return them,
+ * that is not what anyone wanted, and it has been true since at least 20 August.**
+ *
+ * So they get their own word, and the entry carries WHAT IS BLOCKING THE FIX rather than a reason
+ * for the state — because the state has no reason, only a cause.
+ *
+ * ⚠ THIS REGISTRY CHANGES NOTHING AT RUNTIME. `corpusToType` does not consult it; these
+ * collections keep their display type and their (absent) reachability. Its only job is to let
+ * `check:s19-grain` §5 distinguish "unreachable and somebody knows" from "unreachable and nobody
+ * does" — which is the whole of §1.2's durable fix, and the reason a collection can no longer fall
+ * out of every stream in silence.
+ *
+ * ⚠⚠ AN ENTRY HERE IS A DEBT, NOT A DECISION. `check:s19-grain` also fails if a collection named
+ * here has BECOME reachable, so the register cannot quietly turn into a place where problems are
+ * filed and forgotten.
+ *
+ * ── The two entries, measured live on 2026-09-09 (`docs/census/s19-reach.json`) ────────────────
+ *
+ * `uk-treaties` (3,264 sections) and `tax-treaties-dta` (324) read back tier `parliamentary` off
+ * the served index and display type `TREATY`. `uk-treaties-fcdo` — 23,372 sections, SEVEN TIMES
+ * LARGER, the same material — reads back the same tier and display type `DEBATE`, and is reachable.
+ * The corpus answers treaty questions from one collection and not from its sibling, on a
+ * distinction no user made.
+ *
+ * ⚠ AND THE BRIEF'S ACCOUNT OF WHY IS HALF RIGHT, WHICH MATTERS FOR THE FIX. BRIEF_SEARCH_S19 §0
+ * says they are unreachable "because they are display-typed TREATY". They are excluded TWICE:
+ *   1. by the display type — the debates stream takes `types: ['DEBATE','DIVISION']`, and
+ *   2. by NAME — both are listed in `NON_DEBATE_PARLIAMENTARY`, the debates stream's
+ *      `excludeCorpora`.
+ * So re-typing them `DEBATE` would NOT make them reachable, and neither would a routing attribute
+ * independent of display type on its own. Two locks, one door. Stated here because a fix aimed at
+ * one of them would ship, measure as a no-op, and look like the mechanism was misunderstood.
+ */
+export const UNREACHABLE_PENDING_DECISION: Record<string, string> = {
+  'uk-treaties': 'no stream admits it (display type TREATY, AND named in NON_DEBATE_PARLIAMENTARY). Blocked on: the validated set has ZERO treaty questions, so a change to what the debates stream returns has nothing to score against — SEARCH_S19_REPORT.md Q3',
+  'tax-treaties-dta': 'the same two locks as uk-treaties, 324 sections. Blocked on the same missing questions — SEARCH_S19_REPORT.md Q3',
+}
+
 // gid doctype → type, for the legislation tier (corpus alone can't split acts vs SIs;
 // `regional` mixes devolved acts AND devolved SIs, so we read the doctype off the gid).
 const PRIMARY_DOCTYPES = new Set([

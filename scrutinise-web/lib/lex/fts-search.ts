@@ -238,9 +238,10 @@ export async function runFtsSearch(
       // index's copy is baked in at build time and Neon's is current — the same staleness axis
       // `dbTitleSupersedesIndex` exists for. Neon wins; the index value is the fallback for a
       // row the hydrate misses. One more column, no extra round-trip.
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; speaker: string | null; parentTitle: string | null }>>`
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; speaker: string | null; parentTitle: string | null; parentDocId: string | null; wordCount: number | null }>>`
         SELECT s.id, s."sourceUrl", s."itemDate"::text AS "itemDate", s."sectionTitle",
-               s.attribution, s.speaker, a.title AS "parentTitle"
+               s.attribution, s.speaker, a.title AS "parentTitle",
+               s."parentDocId", s."wordCount"
         FROM corpus_sections s
         LEFT JOIN corpus_acts a ON a.gid = s."parentDocId" AND a.title IS NOT NULL
         WHERE s.id IN (${Prisma.join(ids)})`,
@@ -338,6 +339,11 @@ export async function runFtsSearch(
         // too old to say" into "we looked and found nothing", which is the one distinction the
         // field exists to preserve.
         snippetMatched: h.snippetMatched, snippetLocation: h.snippetLocation,
+        // S19 §3 — same round-trip, two more columns. ⚠ `meta?.x` is UNDEFINED for a row the
+        // hydrate missed and NULL for a row that genuinely has no parent, and `applyGrain` treats
+        // those differently: it refuses to regroup the first and falls back to the id for the
+        // second. Writing `?? null` here would destroy that distinction on this line.
+        parentDocId: meta?.parentDocId, wordCount: meta?.wordCount,
       }
     })
 

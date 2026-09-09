@@ -27,6 +27,9 @@ import { coverageSignalPresent } from './term-coverage'
 import { rerankCandidates, rerankerEnabled, type RerankCandidate, type RerankOutcome } from './reranker'
 import { sortByScore } from './score-scope'
 import { activeStreamScopes, type StreamScope } from './stream-scopes'
+// S19 §3 — the per-collection grain setting. Inert (returns its argument by reference) unless
+// `LEX_SEARCH_GRAIN` is on AND a grain has been set for a collection.
+import { applyGrain, grainPolicyActive } from './grain-policy'
 import type { RouteResult, RouterStreamName } from './query-expansion'
 import { mapWithLimit, streamConcurrency } from './stream-batch'
 import { flagEnabled } from '@/lib/env-flags'
@@ -213,9 +216,19 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
     // `parliamentary` tier and are separated downstream by display type, so a tier-keyed flag
     // could not enable one without the other — and the two streams have entirely different
     // evidence behind them. Name-keying keeps the blast radius one stream wide.
+    // S19 §3 — the grain regroup is the LAST thing a stream does, on every path out of this
+    // function, so a stream cannot return an un-regrouped list by taking an early exit. With
+    // `LEX_SEARCH_GRAIN` off it returns its argument by reference and this is a no-op.
+    // ⚠ It is here rather than in `runRoutedSearch` deliberately: the interleave allocates SLOTS
+    // per stream, so collapsing a stream's 300 sections to 40 documents before the interleave is
+    // what gives the documents the stream's slots. Doing it after would collapse a list that had
+    // already been cut to 20 and buy nothing — which is the same mistake `extraCorpora` made with
+    // the division roll-calls (see the debates note in stream-scopes.ts).
+    const grain = (rs: SearchResult[]) => applyGrain(rs, { label: name }).results
+
     if (!vectorStreams().has(name)) {
       const [main, extra] = await Promise.all([bm25Only(query, limit), extraFts])
-      return mergeLegs(main, extra, `${name} bm25 legs`, limit)
+      return grain(mergeLegs(main, extra, `${name} bm25 legs`, limit))
     }
 
     const [mainB, denseMain, extraB, extraV] = await Promise.all([
@@ -246,9 +259,12 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
     // ⚠ CAPTURED BEFORE THE EARLY RETURN, so a stream whose dense half came back empty is recorded
     // as `vector: []` rather than not recorded at all. "No dense leg" and "not measured" are
     // different statements and a sweep that could not tell them apart would average over both.
+    // ⚠ THE LEGS ARE CAPTURED BEFORE THE REGROUP, deliberately. The weight sweep replays these
+    // two rankings to compute fusion at other weights; handing it regrouped legs would make every
+    // swept number describe a configuration the sweep did not set.
     emitLegs({ stream: name, query, bm25, vector: vec, weight })
-    if (!vec.length) return bm25
-    const fused = fuseWeightedRrf(vec, bm25, weight).slice(0, Math.max(limit, bm25.length))
+    if (!vec.length) return grain(bm25)
+    const fused = grain(fuseWeightedRrf(vec, bm25, weight).slice(0, Math.max(limit, bm25.length)))
     // The resolved weight is logged next to the stream name on EVERY fused call. A stream that is
     // absent from `LEX_VECTOR_STREAMS` never reaches this line at all, so "dial set but dense off"
     // — which does nothing, silently — is told apart from "dial set and working" by reading the
@@ -389,6 +405,16 @@ export interface RoutedSearchResult {
     windowShare?: Record<string, number>
     /** The reranker's outcome when it ran — including when it ran and failed. */
     rerank?: Pick<RerankOutcome, 'applied' | 'reason' | 'read' | 'omitted' | 'invented' | 'duplicated' | 'model' | 'pence' | 'ms'>
+    /**
+     * S19 §3 — whether the per-collection grain policy was IN FORCE for this search.
+     *
+     * ⚠ FALSE AND "TRUE BUT IT CHANGED NOTHING" ARE DIFFERENT FACTS, and a ranking cannot tell
+     * them apart — the same reason `mode` names the merge arm rather than leaving it to be
+     * inferred from a flag (CLAUDE.md §18's corollary). A grain set for a collection no routed
+     * stream reached produces an identical ranking to the flag being off, and only this field
+     * separates them.
+     */
+    grainPolicy?: boolean
   }
   /**
    * ⚠⚠ S15 §3 — STREAMS WHOSE DENSE HALF DID NOT RUN, AND WHY. Absent when every routed
@@ -572,6 +598,6 @@ async function runRoutedSearchInner(
   return {
     results,
     perStream: active.map((s, i) => ({ stream: s.name, ids: perStream[i].map((r) => r.id) })),
-    merge,
+    merge: { ...merge, grainPolicy: grainPolicyActive() },
   }
 }
