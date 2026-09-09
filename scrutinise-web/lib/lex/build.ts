@@ -36,7 +36,7 @@ import { readAllowance, allowanceBlock, FULL_BUILD_THIRDS, REUSE_BUILD_THIRDS } 
 import type { SearchResult } from './page1-config'
 import { runSearch } from './search-gateway'
 import { storeStageSearch, type StageSearchRecord } from './stage-search'
-import { setProposal, setLoopProposal, createCauses, createPolicyOptions, createActions } from './field-machine'
+import { setProposal, setLoopProposal, createCauses, createPolicyOptions, createActions, currentFieldValues } from './field-machine'
 import { appendTranscript, lexBubble } from './transcript'
 import { elicitationContext, isConfirmed, type ElicitationContext } from './elicitation'
 import { CREDIBILITY_NOTE, DIRECT_EDITING_NOTE } from './elicitation-config'
@@ -3388,7 +3388,7 @@ async function causesCommentaryPass(c: PassContext): Promise<PassOutcome> {
   }
 }
 
-async function kernelText(ideaId: string): Promise<string> {
+export async function kernelText(ideaId: string): Promise<string> {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
     select: {
@@ -3407,20 +3407,97 @@ async function kernelText(ideaId: string): Promise<string> {
     }
     return ''
   }
-  return [
-    idea.title && `TITLE: ${idea.title}`,
-    idea.challenge && `THE PROBLEM: ${idea.challenge}`,
-    asText(idea.whoAffectedImpactCost) && `WHO IS AFFECTED: ${asText(idea.whoAffectedImpactCost)}`,
+
+  // ══ ⚠⚠ CCW-B18 §2 — WHERE THE KERNEL ACTUALLY LIVES ═════════════════════════════════
+  //
+  // Everything above reads the canonical `Idea` COLUMNS. **A build never writes those.**
+  // `diagnosisPass`, `approachPass` and `actionsPass` all write through `setProposal`,
+  // which puts the drafted text in `IdeaFieldState.proposal` at AWAITING_CONFIRMATION and
+  // leaves the column untouched until a human accepts the field —
+  // `dump-build-kernel.ts`'s own §0 note says exactly this, and says a reviewer who reads
+  // the columns "would conclude the build produced nothing".
+  //
+  // ⚠⚠ THAT IS WHAT THE VERIFICATION PASSES HAVE BEEN CONCLUDING. Measured on 9 September
+  // 2026 across every idea in the database with a completed build:
+  //
+  //     ideas with a DONE build                                      16
+  //     with a COMPLETE kernel in the columns kernelText read         0
+  //     with ZERO of the seven kernel columns populated              15
+  //     rootCause / pivotalObstacle / summaryDiagnosis /
+  //       chosenApproach / summaryGuidingPolicy /
+  //       summaryCoherentActions, populated                    0 of 16 each
+  //     the same seven fields present in IdeaFieldState        16 of 16 each
+  //
+  // So KERNEL_CHECK and LOGIC_CHECK have never once marked a complete kernel. They were
+  // handed a title, a list of causes and a list of actions — the three things that live in
+  // columns and child tables rather than behind `setProposal` — and they marked exactly
+  // that, accurately. The Equality Act's verdict, *"This kernel is not a strategy… It fails
+  // to state the problem… provides no diagnosis… offers no guiding policy"*, is a correct
+  // reading of an input that was missing all three. The build had written all three.
+  //
+  // ⚠ THE SYMPTOM POINTED AT THE MODEL AND THE FAULT WAS ONE LAYER DOWN. Twelve measures
+  // were about to be re-run against that critique — thirty-six to forty-eight builds — to
+  // fix a kernel that was not broken in the way the critique said.
+  //
+  // ⚠ THE USER'S DECISION STILL WINS. Where a field is ACCEPTED its accepted value is what
+  // is marked: that is the proposer's own text and a build does not get to overrule it.
+  // The proposal is used only where the field is NOT accepted, which is the state every
+  // freshly-drafted field is in at the moment these passes run.
+  const fields = await currentFieldValues(ideaId)
+  let drafted = 0
+  /** The current wording of one kernel field. Falls back to the column so a field with no
+   *  state row is not silently dropped — the column is still the right answer there.
+   *  ⚠ CALLED ONCE PER FIELD, into `v` below. Calling it twice per line — once to test and
+   *  once to render — would count every drafted field twice in the note. */
+  const k = (key: string, column: unknown): string => {
+    const f = fields.get(key)
+    if (f) {
+      const text = asText(f.value).trim()
+      if (text) { if (!f.accepted) drafted++; return asText(f.value) }
+    }
+    return asText(column)
+  }
+
+  const v = {
+    title: k('title', idea.title) || idea.title,
+    challenge: k('challenge', idea.challenge),
+    who: k('whoAffectedImpactCost', idea.whoAffectedImpactCost),
+    rootCause: k('rootCause', idea.rootCause),
+    obstacle: k('pivotalObstacle', idea.pivotalObstacle),
+    diagnosis: k('summaryDiagnosis', idea.summaryDiagnosis),
+    landscape: k('legalLandscape', idea.legalLandscape),
+    approach: k('chosenApproach', idea.chosenApproach),
+    policy: k('summaryGuidingPolicy', idea.summaryGuidingPolicy),
+    plan: k('summaryCoherentActions', idea.summaryCoherentActions),
+  }
+
+  const body = [
+    v.title && `TITLE: ${v.title}`,
+    v.challenge && `THE PROBLEM: ${v.challenge}`,
+    v.who && `WHO IS AFFECTED: ${v.who}`,
     idea.diagnosisCauses.length && `CAUSES:\n${idea.diagnosisCauses.map((x) => `- (${x.classification}) ${x.cause}`).join('\n')}`,
-    idea.rootCause && `ROOT CAUSE: ${idea.rootCause}`,
-    idea.pivotalObstacle && `PIVOTAL OBSTACLE: ${idea.pivotalObstacle}`,
-    idea.summaryDiagnosis && `THE DIAGNOSIS: ${idea.summaryDiagnosis}`,
-    asText(idea.legalLandscape) && `THE LEGAL LANDSCAPE AS STATED: ${asText(idea.legalLandscape)}`,
-    idea.chosenApproach && `THE APPROACH: ${idea.chosenApproach}`,
-    idea.summaryGuidingPolicy && `THE GUIDING POLICY: ${idea.summaryGuidingPolicy}`,
+    v.rootCause && `ROOT CAUSE: ${v.rootCause}`,
+    v.obstacle && `PIVOTAL OBSTACLE: ${v.obstacle}`,
+    v.diagnosis && `THE DIAGNOSIS: ${v.diagnosis}`,
+    v.landscape && `THE LEGAL LANDSCAPE AS STATED: ${v.landscape}`,
+    v.approach && `THE APPROACH: ${v.approach}`,
+    v.policy && `THE GUIDING POLICY: ${v.policy}`,
     idea.lexActions.length && `ACTIONS:\n${idea.lexActions.map((a) => `- ${a.practicalStep}${a.whoImplements ? ` — ${a.whoImplements}` : ''}`).join('\n')}`,
-    idea.summaryCoherentActions && `THE PLAN: ${idea.summaryCoherentActions}`,
+    v.plan && `THE PLAN: ${v.plan}`,
   ].filter(Boolean).join('\n\n')
+
+  if (!body.trim()) return ''
+
+  // ⚠ SAID ONCE, AT THE TOP, AND NOT FIELD BY FIELD. The marker needs to know it is reading
+  // a draft; it must not be given a per-field confirmation status it could start marking
+  // instead of the text (CLAUDE.md §27 — what a prompt SHOWS reaches the output as readily
+  // as what it asks for). One sentence about the whole kernel cannot be mistaken for a test.
+  const note = drafted
+    ? `⚠ ${drafted} of the fields below were drafted by this build and are awaiting the `
+      + 'proposer\'s confirmation. Mark the WORDING, which is the kernel as it currently stands. '
+      + 'Do not mark a field down for being unconfirmed.\n\n'
+    : ''
+  return note + body
 }
 
 /** Cost lines as entered, for the passes that scrutinise them. Never invented. */

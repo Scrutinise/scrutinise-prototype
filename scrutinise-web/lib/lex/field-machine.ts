@@ -227,6 +227,68 @@ export function assertWriteable(fieldKey: string): void {
   if (isDerivedPageOneField(fieldKey)) throw new DerivedFieldNotWriteable(fieldKey)
 }
 
+/**
+ * ══ ⚠⚠ CCW-B18 §2 — WHAT A FIELD SAYS RIGHT NOW, WITHOUT WRITING ANYTHING ════════════════
+ *
+ * The rule is the field machine's own and it has never been available as a value: a field's
+ * current wording is its ACCEPTED value where the user has accepted one, and otherwise
+ * whatever the last build PROPOSED. `setProposal` above is the other half of it — on an
+ * accepted field it writes `proposal` and deliberately leaves `value` alone, so the two
+ * columns hold two different people's answers and neither alone is "the field".
+ *
+ * ⚠⚠ IT EXISTS BECAUSE READING IT ANY OTHER WAY GOT IT WRONG. `kernelText` in `build.ts`
+ * read the canonical `Idea` COLUMNS, which only a human acceptance ever fills, so the two
+ * verification passes marked a kernel with no diagnosis, no obstacle, no guiding policy and
+ * no plan — on every idea in the database, every time, since the passes shipped.
+ *
+ * ⚠ AND IT DOES NOT CALL `computeCanonicalState`, WHICH WOULD HAVE BEEN THE OBVIOUS REUSE.
+ * That function calls `initializeFieldStates`, which CREATES rows. It is idempotent and
+ * harmless on a page load, but it is a write, and a write on the path a verification pass
+ * takes is the shape CLAUDE.md §26 exists to keep out: a reader that arranges the world
+ * before measuring it. This is a plain read and nothing else.
+ */
+export interface CurrentFieldValue {
+  status: string
+  /** The wording as it stands: accepted where accepted, otherwise the standing proposal. */
+  value: unknown
+  /** TRUE where `value` is the user's own accepted text rather than a build's draft. */
+  accepted: boolean
+}
+
+/** The inverse of `encode`: an object round-trips, a plain string stays a plain string.
+ *  ⚠ Only a JSON OBJECT is unwrapped. A stored sentence that happens to parse as a JSON
+ *  number or `null` must come back as the sentence, not as the parse. */
+function decode(value: string | null): unknown {
+  if (value == null) return null
+  try {
+    const parsed = JSON.parse(value)
+    if (parsed && typeof parsed === 'object') return parsed
+  } catch { /* a plain string, which is the common case */ }
+  return value
+}
+
+export async function currentFieldValues(ideaId: string): Promise<Map<string, CurrentFieldValue>> {
+  const rows = await prisma.ideaFieldState.findMany({
+    where: { ideaId },
+    select: { fieldKey: true, status: true, value: true, proposal: true },
+  })
+  const out = new Map<string, CurrentFieldValue>()
+  for (const r of rows) {
+    const proposed = (r.proposal && typeof r.proposal === 'object' && 'value' in r.proposal)
+      ? (r.proposal as { value: unknown }).value
+      : null
+    const accepted = r.status === 'ACCEPTED' && r.value != null
+    out.set(r.fieldKey, {
+      status: r.status,
+      // ⚠ THE USER'S DECISION WINS. Where they have accepted text, that is the field —
+      // a build's later suggestion sits beside it as an offer and does not replace it.
+      value: accepted ? decode(r.value) : (proposed ?? decode(r.value)),
+      accepted,
+    })
+  }
+  return out
+}
+
 export async function submitBox(ideaId: string, userId: string, fieldKey: string, value: string) {
   assertWriteable(fieldKey)
   await setStatus(ideaId, fieldKey, 'ACCEPTED', { value, proposal: null })
