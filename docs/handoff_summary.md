@@ -773,7 +773,65 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-09 11:35 UTC — ▼▼ **CCW-B20 — THE KERNEL FIX IS DEPLOYED, AND A "SOURCE
+*Last updated: 2026-09-09 13:35 UTC — ▼▼ **CCW-B21 / B21a — FOUR TRACKS RUN UNSUPERVISED, AND
+THREE OF THE FOUR PREMISES WERE ONE LAYER ABOVE THE FAULT.** Report: `docs/report_run/B21_REPORT.md`.
+Appendices: `WHAT_DAVID_SAID.md`, `POSITION_REGISTER.md`, `RESEARCH_PANEL_all.md`,
+`critique/B21_KERNEL_LOGIC_ALL_TWELVE.md`.
+▶▶ **THE PATTERN IS THE HEADLINE: each brief named the layer where the fault was VISIBLE.** Acting
+on any of the three literally would have produced a green report and no fix.
+▶▶ ⚠⚠ **TRACK 1 — `watchPatterns: []` WAS THE SYMPTOM; `build-worker` HAS NO REPO TRIGGER AT ALL**
+(0, against 1 on every sibling service). The paths were set, read back identical, a real change
+pushed to a watched path — **and no deployment appeared.** ⚠ **A `SKIPPED` record is a trigger firing
+and the watch declining; NO record is no trigger.** ⚠⚠ **The config read-back is not the test** —
+reporting this done on it would have been the guard-that-cannot-fail in deployment shape.
+⚠ **`deploymentTriggerCreate` and `serviceInstanceAutoDeployUpdate` return `Bad Access` to a PROJECT
+token**, while `serviceInstanceUpdate` succeeded on the same credential minutes earlier — a specific
+permission boundary, not a dead token. **⚠⚠ CHARLIE, ONE ACTION AND TRACK 1 IS DONE: Railway →
+build-worker → Settings → Source → connect the repo, enable auto-deploy.** Recorded in `CLAUDE.md`
+→ Railway Operations beside the B20 `commitSha` rule.
+▶▶ **TRACK 2 — THE REGISTER'S OWN HEADER WAS THE FALSEHOOD.** It said in capitals *"we hold no
+signatures"*; `position_signal_stored` holds **2,062,509** `edm_signature` signals against 60,995.
+Re-running it untouched would have regenerated a freshly-dated appendix asserting the opposite of
+the database. **Measures returning exactly one person: 8 of 12 → 0 of 12** (M-06 1→44, M-02 1→11,
+M-11 1→189). ⚠⚠ **Tabling and signing are told apart by `derivation`, not `signal_type`** —
+`primary-sponsor:*` 59,925 vs `signatory:*` 2,002,584; one verb over both would say every signatory
+tabled the motion. ▶ **The assessment is now DERIVED** — it re-found the hand-written collisions
+(M-06 and M-08 both → *Civil Service pensions* on "civil service") and found what the prose could
+not: **9 of 10 targets matched on two content words or fewer.** ⚠ The 40-row cap is now
+load-bearing (M-01 matches 254) and says so.
+▶▶ **TRACK 3 — 87 HITS OVER 8 VIDEOS → 2,764 OCCURRENCES OVER 254 OF 285**, on 102 terms built from
+the measures. ⚠⚠ **AND THE FINDING IS ABOUT THE CORPUS: 98.7% has never been cross-checked.** Only
+**3 videos of 285** hold a second transcript (`asr` 6,126 passages, `turboscribe` 29, `human` 2), so
+marking only the divergences would have been a guard that cannot fail — an unmarked entry reads as
+"two engines agreed" when there was no second engine. **Absence of a disagreement is not agreement**;
+every entry now states its status in words. ⚠ An occurrence is a **moment, not a transcript row**
+(4,003 raw → 2,764) and the windows are **not chained**. ⚠ 10 of 102 terms found nothing, listed.
+▶▶ **TRACK 4a — "KEY SOURCES" WAS NEVER BLANK.** Every one of the twelve has a real reading list in
+`EvidenceItem.body`. `citation`/`url`/`siftReason` are null **deliberately** (`recordPrognosis`: a
+citation on a judgement is the never-claim breach) — and the exporter printed exactly those four
+fields and not `body`, which has been populated since 25-Z §1. **Seventh instance of correct data
+discarded at a seam.** `RESEARCH_PANEL_all.md` 2,202 → 3,091 lines. ❌ Charlie's four-slot redesign
+NOT built — it needs a producer, not a renderer fix.
+▶ **TRACK 4b — THE PREMISE, MEASURED: 0 `EvidenceItem` bodies and 0 of 764 `DeepeningIssue` texts
+carry `[FINDING]`/`[CONTRADICTS]`**; 12 of 120 carry strings do, and ORIENT/DIAGNOSIS/APPROACH
+carries are ordinary prose. **There is no Lex-side renderer** turning an export into report
+markdown; the mapping is in CCW's `_pass_detruncate.py`, which already filters by provenance path.
+So the durable fix went in the PRODUCER: `b14-export.ts` now DECLARES which paths are quotable and
+which are scaffolding, with marker counts measured per export. ⚠ `--out <dir>` added so it was
+proved without overwriting the twelve files CCW is drafting from.
+▶▶ ⚠⚠ **B21a — ALL TWELVE CRITIQUED READ-ONLY, AND `LOGIC_CHECK` IS NOT REPRODUCIBLE.** No DB write,
+no build, no allowance spent. **The control is the point: M-02 and M-06 reproduced their build prompt
+sizes EXACTLY (3,549 / 3,332)**, so the harness feeds the marker what a build feeds it. Across FOUR
+readings on unchanged kernels: **`KERNEL_CHECK` never moved more than one test of nine**; **
+`LOGIC_CHECK` on M-01 went holds,0 → does NOT hold,2 → holds,0 → holds,0.** Defect counts are not
+measurements (M-06 4→3→3→3, M-03 1→2). **What survives is the DIRECTION where consistent — M-06
+fails on all four.** ⚠ `ADVERSARIAL`/`SMART` deliberately not run: SMART rewrites the kernel and
+those rewrites now reach every marker after it; ADVERSARIAL's prompt is built from the build's
+carried state, so running it outside a build restates a prompt rather than importing one.
+✅ `tsc` (web) clean; `check:scripts` clean for every file this sprint touched.
+❌ **The build-row lease NOT started, as instructed.** ⚠ Nothing in `report_src_v2/` was edited; the
+three RESTORATION PDFs are still uncommitted and still Charlie's call.
+Earlier: 2026-09-09 11:35 UTC — ▼▼ **CCW-B20 — THE KERNEL FIX IS DEPLOYED, AND A "SOURCE
 REBUILD" SHIPPED THE OLD COMMIT WITH A NEW ID.** Report: `docs/report_run/B20_REPORT.md`. Exports:
 `docs/report_run/critique/`. **No model was called all sprint — §5 turned out to be an export.**
 ▶▶ **PUSHED: sixteen commits `0491e1a..5b92b93`** (nine INGEST EDM, seven B18). Production reads
