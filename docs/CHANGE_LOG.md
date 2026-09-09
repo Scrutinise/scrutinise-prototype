@@ -252,6 +252,95 @@ caselaw unit, Q6 whether `LEX_ROUTER_STREAMS_V2` should now be reconsidered on t
 
 ---
 
+## INGEST EDM SIGNATURES — 2,126,171 SIGNATURES LOADED, AND FOUR OF MY OWN CHECKS WERE WRONG ABOUT THEIR OWN SUBJECT (2026-09-09 09:15 UTC)
+
+`docs/BRIEF_INGEST_EDM_SIGNATURES.md`, executed in full. Report:
+`docs/INGEST_EDM_SIGNATURES_REPORT.md`. Predictions logged 04:00 UTC **before** the run and scored
+below — **five confirmed, two missed, and one deliberately not made.**
+
+### The predictions, scored
+
+| # | predicted | measured | |
+| --- | --- | --- | --- |
+| 1 | 2,125,547 sponsor rows / 2,064,552 new signatures | **2,126,171 / 2,065,206** | ✅ **100.03%** — the +624 is signatures added since the 16 Aug snapshot, over 199 recent motions |
+| 2 | ~14,600 withdrawn | **14,680** (0.69%) | ✅ |
+| 3 | ~2,050,000 signals | **2,002,584** signature signals; 2,062,509 live `edm_signature` | ✅ within 2.3% |
+| 4 | an EDM goes 1 actor → **roughly 35** | **1 → 2–45, mean 15.4** on the 21 ideas that resolve to a motion | ❌ **MISSED** — see below |
+| 5 | ~32 min at concurrency 4 | **3 h 39 min at 4.5 motions/s** | ❌ **WRONG, and the check behind it could not fail** |
+| 6 | ~1.9 GiB, $0.67/month | **+1.34 GiB, $0.47/month** | ✅ better; `edm_signatory` came in at 131 B/row against a predicted 132 |
+| 7 | *not made*: how many resolve to a `graph_entity` | **2,016 of 2,126 members (94.8%)**; 110 missing cost 45,004 signatures (2.1%) | — |
+
+**Why 4 missed, and it is not the load.** The corpus mean is **34.86** signatures per motion — the
+brief's floor is exactly right *about the corpus*. The 17 motions our phrase matcher resolves these
+ideas to hold **2 to 46, mean 15.4**. ⚠ **Quoting a wider population's rate to predict a narrower one**
+is the same error I made twice more in this sprint (§2.3's sponsor-date framing, and reading the first
+eight rows of an id-ordered query as a population). The largest motion we hold carries **486**
+signatures — the corpus can deliver the brief's number, but only for an idea that reaches such a motion.
+
+### ⚠⚠ FOUR ASSERTIONS WERE TRUE OF THE SAMPLE AND FALSE OF THE CORPUS
+
+Every one passed on the 150-motion audit and the 64-motion pilot, and failed once all 60,995 were in.
+**A check that has only ever seen a sample has not yet been tested.**
+
+* **A3** — "the publisher's count equals the array it returned". Failed on 199 motions, all recent, all
+  with MORE rows: `edm_sponsor` was swept 16 Aug and the detail endpoint is read today. Now asserts the
+  only direction that can mean a defect — the API must never return **fewer** rows than its own count.
+* **A6** — "exactly one primary sponsor per motion". Failed on **28**, all the ZERO shape: motion 62502's
+  orders run 2,3,4,5,6 and the sponsor is absent from the array entirely. Now asserts never **more**
+  than one, because two is what would make the exclusion discard a real signature; zero is absence, and
+  absence is what the identity half of the clause handles (A6b/A6c both measure 0).
+* **C2** — "no (actor, motion) pair carries more than one live signal". Failed on **42** — of 271
+  duplicate pairs, 183 have one side withdrawn and 79 are both live. Concentrated on Michael Foster (21
+  motions), Harold Walker (11), Robert Hughes (4). A member cannot sign twice without withdrawing, so
+  the second row is a duplicate RECORD not a second ACT: earliest kept, later retired via `superseded_by`.
+* **C3** — fired on its **own remedy**: it asserted every edge has a live signal *at that edge's date*,
+  which the duplicate fix deliberately breaks for 42 edges. Split into C3 (no edge unrepresented) and
+  C3b (the date-level gap equals exactly the retired duplicates).
+
+### ⚠⚠ AND TWO INSTRUMENTS MANUFACTURED FINDINGS
+
+* **A1** counted rows from a subquery with `LIMIT 20` in it, reporting **20** where the truth was
+  **60,931** — right verdict, fictional quantity.
+* **The projection's error bar was wrong twice, in both directions of useless.** First `sd × √N ×
+  √((N−n)/(N−1))` — no `√n`, so it never shrank — reporting ±16,392 and turning noise into a five-sigma
+  deficit. Then at 100% the finite-population correction takes it to **zero**, so a real +624 printed as
+  **"624.0σ … re-read this at 100%"** while at 100%. **A guard right in the middle of its range and
+  absurd at its boundary is still broken.** ✅ The gap dissolved as predicted: 2.8σ → 2.4σ → 1.2σ → +624.
+
+### The load
+
+✅ **60,995 of 60,995 motions, HTTP 200 × 59,596, ZERO 429s, 0 retries, 0 timeouts, 0 failures.**
+`Σ sponsors_seen − COUNT(edm_signatory) = 0`. **23 of 23 assertions pass**, 5 of 5 plants refused.
+Estimates rebuilt: **4,307,442 rows**, one config_version, **14,330 distinct stance values**, 0 rows at
+|stance| = 1.00, 0 attention-only estimates over the 0.15 ceiling.
+
+✅ **§3's hand-check: 35 of 35 signatures — name, ORDER and DATE — against `edm.parliament.uk`**, a
+surface independent of the API. ✅ **Latency: no regression, and the division CONTROL is identical at
+101 ms** while the stored arm grew tenfold; the 486-signature motion answers in 82 ms.
+✅ **Every one of the 21 motion-target ideas moved off 1 actor**, and "Who else is here. 5 of 45 people…"
+travels into the rendered paragraph.
+
+### ⚠⚠ THE RATE LIMIT, AND THE FEAR THAT DID NOT MATERIALISE
+
+§1 costed the sweep at 32 min from "0 × 429 in 150 calls" — 150 requests finish before the limiter
+reacts. The first `--apply` run drew **429 on 101 of its first 119 motions** and then **stopped dead**
+(`fetch()` has no default timeout). It is a **Cloudflare rule (`error code: 1015`)** whose `Retry-After`
+counts 60/minute to a fixed instant an hour out. ⚠ The probe written to measure a safe rate **measured
+one lockout five times**. ⚠ The mitigation is not total, so my single-request readiness test said
+"cleared" with 23 minutes left. ⚠⚠ **And `pkill -f` from the Bash tool does not kill Windows processes
+and fails silently — four sweeps ran at once**, which voided every throughput reading in that window,
+*including the one I changed the pace on*. At 4.5 req/s the whole corpus ran clean.
+
+▶▶ **CHARLIE: SIX NUMBERED DECISIONS.** Load-bearing is **decision 2** — brief §2 asks for distinct
+signal TYPES; this delivered distinct **DERIVATIONS at the same weight**, because
+`lib/graph/position-config.ts` is CC-Graph's and §5 says report rather than edit. Nothing is lost
+permanently (one `UPDATE` re-weights rows that already know which act they are), but until it lands
+*the member who tabled a motion counts exactly as much as the member who signed it*. **Decision 3** is
+the coverage statement, whose count moved by itself from 59,925 to 2,062,509 while its wording still
+says *"the sponsor only — we do not hold the members who signed them"*.
+
+---
+
 ## INGEST EDM SIGNATURES — §1 AUDIT RESULT AND THE PREDICTIONS, BEFORE THE BULK RUN (2026-09-09 04:00 UTC)
 
 `docs/BRIEF_INGEST_EDM_SIGNATURES.md`. Report to follow at

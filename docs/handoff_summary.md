@@ -653,6 +653,65 @@ benefits"* carries a £ figure **65.5%** of the time and 25.9% carry labels with
 
 ---
 
+## INGEST THREAD — last updated 2026-09-09 09:15 UTC (EDM SIGNATURES)
+
+*This section belongs to the INGEST stream. CENTRAL, SURFACE, LEX and SEARCH keep their own above
+and below; three sessions share this repository, so commits are by explicit path only.*
+
+▼▼ **EDM SIGNATURES SHIPPED. 2,126,171 SIGNATURES LOADED — 100.03% OF THE PUBLISHED FIGURE — AND
+EVERY IDEA THAT RESOLVES TO A MOTION MOVED OFF ONE ACTOR.** Executes
+`docs/BRIEF_INGEST_EDM_SIGNATURES.md` in full. Report: **`docs/INGEST_EDM_SIGNATURES_REPORT.md`**.
+CHANGE_LOG (2026-09-09 09:15 UTC). Predictions logged 04:00 UTC before the run: **five confirmed, two
+missed, one deliberately not made.**
+
+✅ **60,995 of 60,995 motions, HTTP 200 × 59,596, ZERO 429s, 0 retries, 0 timeouts, 0 failures**, in
+3 h 39 min at 4.5 motions/s. `Σ sponsors_seen − COUNT(edm_signatory) = 0`. **2,002,584 signature
+signals** + 59,925 sponsorships = **2,062,509 live**. Estimates rebuilt to **4,307,442 rows**,
+**14,330 distinct stance values**, 0 rows at |stance| = 1.00. **23 of 23 assertions pass**, 5 of 5
+plants refused. Latency unchanged and the **division CONTROL is identical at 101 ms** while the stored
+arm grew tenfold; a 486-signature motion answers in 82 ms.
+
+⚠⚠ **FOUR OF MY OWN ASSERTIONS WERE TRUE OF THE SAMPLE AND FALSE OF THE CORPUS** — every one passed the
+150-motion audit and failed once all 60,995 were in. **A3** (the publisher's count equals the array —
+199 recent motions have grown since our 16 Aug snapshot); **A6** (exactly one primary sponsor — 28
+motions have ZERO, the sponsor simply absent from the array); **C2** (one live signal per actor/motion —
+42 duplicates, concentrated on Michael Foster 21, Harold Walker 11); and **C3, which fired on its own
+remedy.** ⚠ **A check that has only ever seen a sample has not yet been tested.**
+
+⚠⚠ **AND TWO INSTRUMENTS MANUFACTURED FINDINGS.** A1 counted from a subquery with `LIMIT 20` in it and
+reported **20** where the truth was **60,931**. The projection's error bar was wrong twice — first with
+no `√n` in it (±16,392, turning noise into five sigma), then at 100% where the finite-population
+correction takes it to zero and a real +624 printed as "624.0σ, re-read at 100%" while at 100%. ✅ The
+apparent 5% deficit dissolved exactly as refusing to explain it predicted: **2.8σ → 2.4σ → 1.2σ → +624**,
+and the +624 is signatures added since the August snapshot.
+
+⚠⚠ **THE RATE LIMIT: §1's OWN COST ESTIMATE WAS A CHECK THAT COULD NOT FAIL** ("0 × 429 in 150 calls
+→ 32 minutes"; 150 requests finish before the limiter reacts). The first run drew **429 on 101 of its
+first 119 motions** then **stopped dead** — `fetch()` has no default timeout. Cloudflare `error code:
+1015`, `Retry-After` counting 60/minute to a fixed instant an hour out. ⚠ The probe written to measure
+a safe rate **measured one lockout five times**. ⚠⚠ **`pkill -f` from the Bash tool does not kill
+Windows processes and fails silently — FOUR sweeps ran at once**, voiding every throughput reading in
+that window *including the one I changed the pace on*. Use `Get-CimInstance Win32_Process | Where
+CommandLine -match … | Stop-Process`.
+
+▶ **§3's hand-check: 35 of 35 signatures — name, ORDER and DATE — against `edm.parliament.uk`**, a
+surface independent of the API. ▶ **§3's "roughly 35" is MISSED at mean 15.4**, and the reason is the
+matcher not the load: the corpus mean is 34.86 but the 17 motions ideas actually resolve to hold 2–46.
+▶ `SponsoringOrder` uses **99999 as a sentinel** and the first load died on `out of range for
+type smallint`. ▶ **`SponsorsCount` means different things on two endpoints** — 0 on 150 of 150 detail
+responses whose array was not empty.
+
+▶▶ **CHARLIE: SIX NUMBERED DECISIONS.** Load-bearing is **decision 2** — brief §2 asks for distinct
+signal TYPES and this delivered distinct **DERIVATIONS at the same weight**, because
+`scrutinise-web/lib/graph/position-config.ts` is CC-Graph's and §5 says report the change rather than
+make it. Nothing is lost permanently (one `UPDATE`), but until it lands *the member who tabled a motion
+counts exactly as much as the member who signed it*. **Decision 3**: the coverage statement's count
+moved by itself from 59,925 to 2,062,509 while its wording still says *"the sponsor only — we do not
+hold the members who signed them"* — CC-Surface's file, patch supplied.
+
+⚠ **CC-SEARCH AND CC-SURFACE: this changes what the positions surface shows and what the coverage
+statement says**, and either could be mid-measurement.
+
 ## INGEST THREAD — last updated 2026-09-07 21:53 UTC (IMPACT ASSESSMENTS §1)
 
 *This section belongs to the INGEST stream. CENTRAL, SURFACE, LEX and SEARCH keep their own above
