@@ -95,6 +95,9 @@ export type Coverage = {
     unbridgeableTargets: number
     regnalTargets: number
   }
+  /** ⚠⚠ GRAPH 5 §2.4. Case targets by held state. An unheld target must never render like a
+   *  held one, so the block states the split the way it states unresolved legislation targets. */
+  caseTargets: { edges: number; distinct: number; held: number; notHeld: number; unknown: number } | null
   /** ⚠ GRAPH 4B §2.2 + §4. Schedule coverage, because a scheduled treaty that
    *  is absent presents as a SHORT DOCUMENT, not as an error. */
   schedules: {
@@ -166,6 +169,21 @@ const LAYER_PROBES: Array<{
     what: 'a judgment citing a statutory provision',
     consequence: 'a provision may be read down, disapplied or construed by a court with nothing here to show it',
     count: async () => ({ rows: await countCitation(`source_type = 'caselaw'`) }),
+  },
+  {
+    // ⚠⚠ GRAPH 5 §2.4. A judgment we do NOT hold can still be a target: references to pre-2003
+    // authorities appear in the post-2003 judgments we do hold. The direction that is unavailable
+    // is OUTBOUND, from a judgment we lack — inbound to it is what our own corpus supplies.
+    id: 'case-to-case-citations',
+    what: 'a judgment we hold citing another CASE, whether or not we hold that case',
+    consequence: 'a line of authority cannot be followed at all, and an authority we do not hold looks like an authority that does not exist',
+    count: async () => {
+      const { rows } = await getNeonPool().query(
+        `SELECT COUNT(*)::bigint n FROM information_schema.tables WHERE table_name = 'caselaw_case_edge'`)
+      if (Number(rows[0].n) === 0) return { rows: 0 }
+      const r = await getNeonPool().query(`SELECT COUNT(*)::bigint n FROM caselaw_case_edge`)
+      return { rows: Number(r.rows[0].n) }
+    },
   },
   {
     id: 'treaty-obligations',
@@ -301,6 +319,26 @@ export async function getCoverage(opts: CoverageOptions = {}): Promise<Coverage>
   const instruments = Number(sched[0].instruments)
   const withSchedule = Number(sched[0].with_schedule)
 
+  // ⚠⚠ §2.4's figure, live. Present only when the table exists, so the block cannot claim a split
+  //    for a layer that has not been built.
+  let caseTargets: Coverage['caseTargets'] = null
+  const { rows: ceExists } = await pool.query(
+    `SELECT COUNT(*)::int n FROM information_schema.tables WHERE table_name = 'caselaw_case_edge'`)
+  if (Number(ceExists[0].n) > 0) {
+    const { rows: ct } = await pool.query(`
+      SELECT COUNT(*)::bigint edges, COUNT(DISTINCT target_citation)::bigint distinct_targets,
+             COUNT(DISTINCT target_citation) FILTER (WHERE held_state='held')::bigint held,
+             COUNT(DISTINCT target_citation) FILTER (WHERE held_state='not-held')::bigint not_held,
+             COUNT(DISTINCT target_citation) FILTER (WHERE held_state='unknown')::bigint unknown
+        FROM caselaw_case_edge`)
+    if (Number(ct[0].edges) > 0) {
+      caseTargets = {
+        edges: Number(ct[0].edges), distinct: Number(ct[0].distinct_targets),
+        held: Number(ct[0].held), notHeld: Number(ct[0].not_held), unknown: Number(ct[0].unknown),
+      }
+    }
+  }
+
   const value: Coverage = {
     generatedAt: new Date().toISOString(),
     layers,
@@ -318,6 +356,7 @@ export async function getCoverage(opts: CoverageOptions = {}): Promise<Coverage>
     recorded,
     staleFacts: recorded.filter(f => f.stale).map(f => f.key),
     caseLawBoundary,
+    caseTargets,
     identityBridge: { built, bridgedForms, ambiguousTargets, unbridgeableTargets, regnalTargets },
     schedules: {
       instruments, instrumentsWithASchedule: withSchedule,
@@ -386,6 +425,16 @@ export function describeCoverage(c: Coverage): string[] {
   lines.push(`  schedule coverage: ${c.schedules.instrumentsWithASchedule.toLocaleString()} of ${c.schedules.instruments.toLocaleString()} instruments hold a schedule section (${c.schedules.pct.toFixed(1)}%)`)
   lines.push(`    — ⚠ a scheduled agreement that was not ingested presents as a SHORT DOCUMENT, not as an error.`)
 
+  if (c.caseTargets) {
+    const t = c.caseTargets
+    lines.push(`  case targets, by whether we hold the judgment (⚠ an unheld target must never render like a held one):`)
+    lines.push(`    ${t.edges.toLocaleString()} citation edges reaching ${t.distinct.toLocaleString()} distinct authorities`)
+    lines.push(`    held: ${t.held.toLocaleString()}  ·  NOT held: ${t.notHeld.toLocaleString()}  ·  unknown: ${t.unknown.toLocaleString()}`)
+    lines.push(`    — ⚠⚠ "unknown" is a law report citation at or after our floor: we MAY hold that judgment under`)
+    lines.push(`      its neutral citation, unlinked. Calling it not-held would say we lack something we have.`)
+    lines.push(`    — ⚠ an authority we do not hold is a node with NO TEXT. What is shown for it is the passage from`)
+    lines.push(`      OUR judgment that cites it, never a headnote and never an extract of the judgment itself.`)
+  }
   if (c.caseLawBoundary) {
     // ⚠ the case-law block is generated by its own module so the wording, the floor and the
     //   ramp/cliff distinction cannot drift between the two places they are printed.

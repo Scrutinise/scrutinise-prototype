@@ -278,6 +278,121 @@ quoted verbatim; the *identity* is TNA's assertion.
 
 ---
 
+### §2.4 — CITED BUT NOT HELD
+
+**A judgment we do not hold can still be a target.** References to pre-2003 authorities appear in
+the post-2003 judgments we *do* hold, so the edges are buildable — the direction that is
+unavailable is **outbound**, from a judgment we lack. Inbound to it is exactly what our corpus
+supplies.
+
+`caselaw_case_edge` · `extract-caselaw-case-edges.ts` · `check:graph5-case-edges` — **24 passed,
+0 failed, 6 controls, 0 dead**.
+
+| | |
+|---|---:|
+| citation occurrences (self-citations excluded: 138) | 625,806 |
+| **edges stored** | **565,931** |
+| distinct authorities reached | **137,153** |
+| citing judgments | 60,523 of 74,896 (80.8%) |
+| ⚠ dropped: the passage did not contain its own citation | 59,406 (9.5%) |
+| carrying the judge's paragraph number | 98.0% |
+| carrying a derived BAILII link | 42.4% |
+
+### ⚠⚠ Held is THREE-valued, and the third value is the one that matters
+
+§2.4 requires the unheld target to be *visibly marked*. Two states would have been wrong in a
+measurable band, and the pilot found the proof in one pair:
+
+> `[2011] 1 WLR 2900` — **not held** · `[2011] UKSC 50` — **held**
+> **The same case.** *Rainy Sky SA v Kookmin Bank*, cited in both forms.
+
+| state | meaning | distinct authorities |
+|---|---|---:|
+| **held** | a neutral citation matching a `tna-caselaw` row | **32,990 (24.1%)** |
+| **not-held** | a law-report citation before the derived English floor. A permanent boundary, not a backlog | **75,366 (54.9%)** |
+| **unknown** | ⚠⚠ a law-report citation *at or after* the floor. We MAY hold it under its neutral citation, unlinked | **28,797 (21.0%)** |
+
+⚠ **Calling `unknown` "not held" would tell a user we lack something we have** — for one authority
+in five. An unknown fact is unknown, not absent. The floor itself is **read from live state**
+(`caselaw-coverage.ts`), never written into this file.
+
+The database enforces the mark rather than trusting the writer: a `held` row must name the judgment
+it resolves to, and a non-`held` row **may not carry a judgment id at all**. Both halves are watched
+being refused.
+
+### ⚠ Identity is the citation, never the name
+
+We cannot verify a resolution against a document we do not hold, so nothing is merged on
+resemblance. The measurement that justifies the rule:
+
+- **180,740 distinct observed names** across 137,153 citations — a mean of **2.1 name variants per
+  authority, and a maximum of 119** (*Investors Compensation Scheme v West Bromwich BS*).
+- **22,184 observed names appear against more than one citation.** Had the name been the identity,
+  every one of those would have merged two different cases.
+- ⚠ **13.6% of observed names are unusable as a display name** — 11.2% run past 70 characters
+  because they carry the citing sentence with them (*"well-known principles of interpretation for
+  commercial documents (Investors Compensation Scheme v…"*), 3.2% begin mid-sentence in lower case.
+
+▶ **The name is stored as an OBSERVATION with its variants, and nothing joins on it.** For display,
+the **modal** variant is markedly better than the longest — *"Investors Compensation Scheme Ltd v
+West Bromwich Building Society"*, *"In re H (Minors) (Sexual Abuse: Standard of Proof)"*,
+*"R v Lucas"*. That is a surface decision (Q8), not a storage one.
+
+### ⚠⚠ BAILII: link only, and the abstinence is asserted on the source
+
+Their terms forbid storing search results or HTML versions of judgments and forbid robot access;
+the register already records them as blocked. **Nothing in this sprint fetched anything from
+BAILII.** A comment saying so is worth nothing, so `check:graph5-case-edges` **reads the
+extractor's own source, with comments stripped, and fails if it contains any network call at all** —
+and that rule is watched firing on a planted `fetch`.
+
+⚠ **The link is derived from the citation alone and declines rather than guesses.** A first version
+read the division only where it precedes the number, so `[2004] EWHC 254 (Admin)` — division in
+trailing parentheses — produced `…/EWHC/QB/2004/254.html`: **a confident link to the wrong
+division**, for every Administrative Court case. Now both forms are read, and an `EWHC`/`EWCA`
+citation carrying **no** division yields **null** rather than a guess. **A wrong deep link is worse
+than none**: the reader follows it, lands elsewhere, and stops trusting the record.
+
+### ▶ What is shown instead of a headnote
+
+The passage from **our own** judgment — which is our document, and which tells the reader what the
+case is being cited *for*. There is **no column** in `caselaw_case_edge` that could hold a headnote,
+a summary, or an extract of a judgment we do not hold, and the check asserts that over the table's
+text columns.
+
+⚠ The passage is required to **contain the citation it is evidence for** — the same invariant the
+treatment layer needed. **59,406 candidate edges (9.5%) were dropped for failing it**, and all
+565,931 stored rows pass. *(A naive `position(target_raw in passage)` reports 2,499 false misses,
+because `target_raw` preserves the source's own spacing while `passage` is collapsed; the check
+normalises both sides and the control confirms the un-normalised form really does mis-report.)*
+
+Rendered from real data, the most-cited authority we do not hold:
+
+> **Investors Compensation Scheme Ltd v West Bromwich Building Society** — `[1998] 1 WLR 896`
+> **NOT HELD.** Our English case law is continuous from 2003.
+> Cited in **760** judgments we hold, 845 times.
+> *What our judgments say when citing it:* "…the inherent circumstances to which the court may have
+> regard extend beyond those which may be adduced in evidence for the purposes of determining the
+> true interpretation of the agreement under the well known test…"
+> → search BAILII for `[1998] 1 WLR 896` *(the citation determines no path, so no deep link is offered)*
+
+### Predictions, scored
+
+| # | predicted | measured | |
+|---|---|---|---|
+| P-1 | `unknown` between 10% and 25% of distinct | **21.0%** | ✓ |
+| P-2 | not-held + unknown 60–75%; not-held alone 35–50% | **75.9%** and **54.9%** | ✗ **refuted on magnitude, both above the band** — the gap is larger than I predicted |
+| P-3 | edges 550k–700k; distinct 150k–200k | **565,931** ✓ ; **137,153** ✗ below | ~ half |
+| P-4 | ≥15% of observed names unusable | **13.6%** | ✗ narrowly below — but the finding stands: mean 2.1 variants, max 119 |
+| P-5 | usable passage for >95% of edges | **90.5%** of occurrences yield one | ✗ below, because the invariant is stricter than "non-empty" |
+
+**Three of five refuted, all on magnitude and none on direction.** ⚠ P-5's miss is the instructive
+one: I predicted against "a usable passage" and then built a *stricter* test than the one I had in
+mind — the passage must contain the citation, not merely exist. The 9.5% it drops are real failures
+I would otherwise have stored.
+
+---
+
 ## §3 — HOW COURTS HAVE TREATED IT
 
 *(Gated on §2's measurement, which is complete. §3.1's premise — patterns, not similarity — is
@@ -459,7 +574,10 @@ so the rule is load-bearing rather than decorative. Taking the nearest citation 
 
 ## §4 — WHAT IS NOT DONE, NAMED
 
-1. **Case-to-case citation is out of scope and remains unbuilt.** A line of authority needs it.
+1. ~~**Case-to-case citation is out of scope.**~~ **BUILT — §2.4**, 565,931 edges over 137,153
+   distinct authorities. ⚠ **But only INBOUND.** We can say what cites *Wednesbury*; we cannot say
+   what *Wednesbury* cited, because we do not hold it. A line of authority can be walked forwards
+   from a case we hold and never backwards through one we do not.
 2. **Six of seven case-law collections carry no legislation edges at all.** `r2RawKey` is populated
    for 74,896 of 74,896 `tna-caselaw` rows and for **0** rows of `et-decisions` (161,753),
    `cma-cases` (22,898), `tax-tribunals` (13,099), `scottish-courts` (13,070), `ni-judgments`
@@ -508,8 +626,9 @@ corpora, and the lever everyone reaches for is the wrong one twice.**
 ### The checks, named in full — every check in the suite, run or not
 
 `check:graph5-prereq` **8**  ·  `check:graph5-boundary` **18** (5 controls)  ·
-`check:graph5-citation` **19** (3 controls)  ·  `check:graph5-treatment` **48** (15 controls).
-**93 assertions, 23 controls, 0 dead, 0 not run.**
+`check:graph5-citation` **19** (3 controls)  ·  `check:graph5-treatment` **48** (15 controls)  ·
+`check:graph5-case-edges` **24** (6 controls).
+**117 assertions, 29 controls, 0 dead, 0 not run.**
 
 ⚠ `check:graph5-citation` **failed 1 of 19 on its first run** — the round-trip assertion, which
 found the markup debris. That failure is the reason the rows were rebuilt.
@@ -577,6 +696,23 @@ gap. ⚠ **Resolving them means deciding a judge meant a different Act from the 
 which is a legal inference wearing a data-cleaning costume. *Consequence of recording only:* a real
 signal about source quality, and 606 spans stay unresolved. *Consequence of correcting:* we would
 be silently amending judgments.
+
+**Q7 — The 28,797 `unknown` authorities: link them to their neutral citations?** *(Recommended:
+yes, and it is cheap.)* These are law-report citations at or after our floor which we may already
+hold under a neutral citation — one authority in five. Matching them needs a party-name + year
+join, ⚠ **which is exactly the similarity merge §2.3 forbids** unless a second fact agrees. The
+safe form is: propose a link only where the case NAME and the YEAR both agree and the proposal is
+recorded as a proposal. *Consequence of no:* 21% of authorities stay in a state that reads as
+uncertainty when many are simply unlinked. *Consequence of doing it loosely:* two different cases
+merged, which is the one outcome §2.3 exists to prevent.
+
+**Q8 — Which name to display for an unheld authority?** *(Recommended: the modal variant, and show
+the variant count.)* Mean 2.1 variants per authority, max 119, and **13.6% of observed names are
+unusable** — they carry the citing sentence with them. The modal variant is markedly better than
+the longest or the first. *Consequence of picking naively:* the platform displays *"well-known
+principles of interpretation for commercial documents (Investors Compensation Scheme v…"* as a case
+name. *Consequence of showing none:* a citation with no name cannot be found by a user typing the
+name, which was the original complaint.
 
 **Q6 — Build a text detector for the ~9.5% of act names with no markup?** *(Recommended: no.)*
 The residual is **12,276 spans, 4.9% of all act-name spans**, and 61% of it is Acts we do not hold

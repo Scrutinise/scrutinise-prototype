@@ -93,15 +93,16 @@ it states a figure about the corpus.
 > silently, and this project has already had one figure survive being retired twice by living in a
 > comment.
 
-Reading of **2026-09-08 14:28 UTC**, after GRAPH 5:
+Reading of **2026-09-08 22:52 UTC**, after GRAPH 5 §2.4:
 
 ```
-COVERAGE — what this answer could NOT see (generated 2026-09-08T14:29Z)
+COVERAGE — what this answer could NOT see (generated 2026-09-08T22:54Z)
   searched:
     markup-citations — references the document asserted by <Citation URI> (385,346 rows)
     text-citations — act NAMES resolved in running text against corpus_acts titles (649,202 rows)
     enabling-power — made-under: "this instrument was made under section N of that Act", with the enacting words attached (191,258 rows)
     case-law-citations — a judgment citing a statutory provision (1,288,630 rows)
+    case-to-case-citations — a judgment we hold citing another CASE, whether or not we hold that case (565,931 rows)
   NOT searched:
     amendment-effects — amends / repeals / commences / modifies, from TNA’s own effects data
         held in legislation_edges (1,997,033 rows), not joined here
@@ -119,21 +120,21 @@ COVERAGE — what this answer could NOT see (generated 2026-09-08T14:29Z)
   rows whose target is an instrument the corpus holds no text for: 185,069 (7.4%)
   measured at extraction time:
     dta_orders_recoverable_from_held_bytes: 127 — double taxation Orders whose scheduled agreement is ABSENT from the corpus but PRESENT in the bulk CLML already on disk. No fetch is needed to recover these; an ingest pass is. The remainder need the source.
-        measured 11.6 days ago by graph/audit-4b-tax.ts
+        measured 11.9 days ago by graph/audit-4b-tax.ts
     identity_ambiguous_calendar_forms: 419 — calendar-year id forms that name MORE THAN ONE Act, because two parliamentary sessions can fall inside one calendar year and each numbers its chapters from the start. REFUSED a bridge and recorded as refusals, never resolved by first-wins.
-        measured 11.6 days ago by graph/audit-4b-identity.ts
+        measured 11.9 days ago by graph/audit-4b-identity.ts
     madeunder_section_refs_wrong_pct: 36.1 — percentage of the pre-2026-08-28 preamble parser's SECTION-level refs that were wrong — a bracketed subsection read as a section, or a ref list attached to a different Act named in the same preamble. legislation_edges still holds them; citation_edge's enabling rows were written by the fixed parser.
-        measured 11.6 days ago by graph/audit-4b-layer2.ts
+        measured 11.9 days ago by graph/audit-4b-layer2.ts
     oi15_documents_skipped: 2,431 — documents in the bulk CLML file the shipped calendar-year entry filter skipped, of the total it should have read
-        measured 13.1 days ago by graph/audit-4a-blast-radius.ts
+        measured 13.4 days ago by graph/audit-4a-blast-radius.ts
     oi15_residual_edges: 924 — citation edges recoverable from the pre-1963 documents the July cites extractor never opened; the residual against legislation_edges, which has NOT been re-extracted. citation_edge itself reads every document.
-        measured 13.1 days ago by graph/audit-4a-t2-hole.ts
+        measured 13.4 days ago by graph/audit-4a-t2-hole.ts
     si_schedule_retention_pct: 41.3 — percentage of sampled instruments whose bulk-CLML schedule also reached the corpus as a schedule section. A schedule the ingest dropped presents as a SHORT DOCUMENT, not as an error, so this bounds every answer that depends on scheduled text — a treaty above all.
-        measured 11.6 days ago by graph/audit-4b-schedules.ts
+        measured 11.9 days ago by graph/audit-4b-schedules.ts
     unresolved_act_name_spans: 97,095 — act-name spans in running text that resolved to no instrument we hold a title for — short forms ("the 1998 Act"), pre-1963 Acts under the other id form, and Acts the corpus does not hold. Counted, never dropped silently; short-form resolution is not built.
-        measured 13.1 days ago by graph/audit-4a-t3-spans.ts
+        measured 13.4 days ago by graph/audit-4a-t3-spans.ts
     unresolved_spans_in_target_docs_pct: 29.9 — percentage of those unresolved spans sitting in a document that also carries a resolved citation to one of twelve research-target Acts — the number that decides whether short-form resolution is urgent
-        measured 13.1 days ago by graph/audit-4a-t3-spans.ts
+        measured 13.4 days ago by graph/audit-4a-t3-spans.ts
   identity bridge (pre-1963 Acts are cited by regnal year, and the two graph tables disagree):
     13,454 id forms resolve to a canonical identity
     regnal-form targets in this table: 1,219, of which 39 have no calendar twin
@@ -142,7 +143,14 @@ COVERAGE — what this answer could NOT see (generated 2026-09-08T14:29Z)
         — two parliamentary sessions inside one calendar year, each numbering its chapters from the start.
   schedule coverage: 9,418 of 109,202 instruments hold a schedule section (8.6%)
     — ⚠ a scheduled agreement that was not ingested presents as a SHORT DOCUMENT, not as an error.
-  CASE-LAW COVERAGE — the window these edges could have been found in (generated 2026-09-08T14:29Z)
+  case targets, by whether we hold the judgment (⚠ an unheld target must never render like a held one):
+    565,931 citation edges reaching 137,153 distinct authorities
+    held: 32,990  ·  NOT held: 75,366  ·  unknown: 28,797
+    — ⚠⚠ "unknown" is a law report citation at or after our floor: we MAY hold that judgment under
+      its neutral citation, unlinked. Calling it not-held would say we lack something we have.
+    — ⚠ an authority we do not hold is a node with NO TEXT. What is shown for it is the passage from
+      OUR judgment that cites it, never a headnote and never an extract of the judgment itself.
+  CASE-LAW COVERAGE — the window these edges could have been found in (generated 2026-09-08T22:54Z)
       et-decisions — 161,753 documents, CONTINUOUS FROM 2017 to 2026
           ⚠ 4 documents carry no date and cannot be placed inside or outside this window.
       tna-caselaw — 74,896 documents, CONTINUOUS FROM 2003 to 2026
@@ -183,6 +191,14 @@ Named here so nobody has to infer it from an empty result:
   ⚠⚠ **And the judgment structure cannot say whether the case TURNED ON a provision or merely
   recited it**: 74,896 of 74,896 judgments carry `<decision>` and no other division, so the
   reference is stored flat and no column pretends otherwise.
+- **A case we do not hold is now a NODE, but only inbound** *(GRAPH 5 §2.4)* — 565,931 edges to
+  137,153 distinct authorities, **54.9% of which we do not hold and 21.0% of which are `unknown`**
+  (a law-report citation at or after our floor that may already be held under a neutral citation).
+  ⚠ We can say what cites *Wednesbury*; we cannot say what *Wednesbury* cited. **A line of authority
+  can be walked forwards from a case we hold and never backwards through one we do not.**
+  ⚠⚠ For an unheld authority the platform shows the passage from OUR OWN judgment that cites it —
+  never a headnote, never an extract of a judgment we lack, and **nothing is ever fetched from
+  BAILII**, which is asserted against the extractor's source rather than promised in a comment.
 - **No treaty obligations.** A change may be prevented by an international obligation this graph
   cannot see. ⚠ The OECD Multilateral Instrument modifies many double taxation agreements **without
   amending each Order**, so an agreement read off legislation.gov.uk can be out of date without
@@ -202,5 +218,6 @@ Named here so nobody has to infer it from an empty result:
 | the coverage block | `scripts/ingest/graph/coverage.ts` |
 | the extractors | `extract-citation-edges.ts` (markup + text) · `extract-enabling-edges.ts` (enabling) · `extract-caselaw-citation-edges.ts` (case law) |
 | the treatment layer | `caselaw_treatment_edge` · `treatment-patterns.ts` · `extract-caselaw-treatment.ts` |
+| the case-to-case layer | `caselaw_case_edge` · `extract-caselaw-case-edges.ts` — ⚠ inbound only, and `held_state` is THREE-valued |
 | the case-law boundary | `caselaw-coverage.ts` — ⚠ a derived FLOOR per collection, never `MIN(date)` |
 | the checks | `check-25h-*`, `check-4a-coverage.ts`, `check-4b-identity.ts`, `check-4b-layer2.ts`, `check-graph5-*` (prereq · boundary · citation · treatment) |
