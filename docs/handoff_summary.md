@@ -773,7 +773,51 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-10 11:45 UTC — ▼▼ **CCW-B22 — THE CHAIN VERDICT FLIPS ON THREE OF TWELVE,
+*Last updated: 2026-09-10 14:30 UTC — ▼▼ **CCW-B22 CONTINUED — THE PLAN CLOSES NONE OF FORTY-NINE
+ATTACK ROUTES, AND RAILWAY'S LAST SWITCH WAS INVISIBLE.** Report: `docs/report_run/B23_REPORT.md`.
+▶▶ ⚠⚠ **RAILWAY IS CLOSED. THREE SWITCHES, ONLY ONE READABLE.** `watchPatterns` (was `[]`), a **repo
+trigger** (was 0), and **auto-deploy enabled** — and the third is the trap: **after the repo was
+connected `repoTriggers` read 1, identical to every healthy sibling, while a push to a watched path
+still produced no deployment.** A service with a trigger and auto-deploy off is indistinguishable
+through this API from one that works. ▶ **Proof in order:** `abf125c5` pushed 14:08 → `1dda5512`
+appeared UNPROMPTED at 14:08:49 with `meta.commitHash = abf125c56194` → SUCCESS → container printed
+`retrieval configuration OK` at 14:13. Sha, then the string only the new build emits.
+▶▶ ⚠⚠ **§1 ADDENDUM — THE OPPONENT IS NOT A SCEPTIC.** `lib/lex/adversarial-prepared.ts`, twelve
+exports `critique/B23_OPPONENT_M-XX.md`. The reviewer is a **public-law specialist instructed
+against the proposal with a settled position**; the question is **where a first-rate lawyer would
+attack and whether the plan closes that route**. ⚠⚠ **THE ATTACK THAT WORKS IS ALMOST NEVER A
+REFUSAL — IT IS A READING**; a court construes rather than declines, so the mechanisms are
+enumerated and *"this will be unpopular"* is refused as a route.
+▶ **49 routes across twelve. CLOSES 0 · PARTLY 5 · DOES NOT CLOSE 33 · MAKES IT WORSE 11.** Seven
+measures have every route open. ⚠ **I nearly published "closes 5 of 49"** — five are PARTLY, and
+counting a partial closure as a closure is the rounding this project keeps catching elsewhere.
+▶▶ ⚠⚠ **ARM A WAS NOT TOLD ABOUT THE COMMON-LAW MIGRATION AND FOUND IT ANYWAY.** Since 2013 the
+senior judiciary has moved rights protection onto the common law (Osborn, Kennedy, A v BBC, UNISON),
+so repeal does not restore 1997. Handing the pass that paragraph would have told it the answer, so
+`doctrinalContext` is optional and OFF by default. **Unhinted it named UNISON [2017] UKSC 51 and
+rated the common-law substitution MAKES_IT_WORSE** — removing the Convention removes its limitations
+and qualifications, so the substitute is LESS constrained than what was repealed. **The hinted arm
+produced the same four routes.** The reframing is doing the work, not the hint.
+▶ **§6 — THE COST ROUTE IS BUILT** (`lib/lex/cost-route.ts`, `appendices/COSTS.md`); it was a design
+note this morning. A range never a point; **no line without a basis and every drop listed**; a
+benchmark **cited or absent, never implied** — a cited id that does not exist is rejected as a
+fabricated source.
+▶▶ ⚠⚠ **BUILDING IT PROVED MY OWN DESIGN NOTE WRONG, THREE HOURS AFTER I WROTE IT.** The note said
+`COST_DURATION` should join `headingsWithProducers()` once a producer existed. That function asserts
+a producer exists FOR THAT HEADING; the panel feeds it from `EvidenceItem` rows carrying it, still
+**0**. This route writes `CostLine` rows against actions — **a different surface**. Adding it would
+flip the heading from *"our gap, in amber"* to *"we asked and found nothing"*. **It stays out**, and
+the open question is named: should the costing appear in the panel at all?
+⚠⚠ **I nearly published that `FRICTION` was never used** — from a ONE-MEASURE pilot, and wrong: across
+twelve it is `IMPLEMENTATION` 58 · `FRICTION` 6 · `ENFORCEMENT` 4 of 68 lines. ⚠⚠ **And the pass is
+not deterministic — the same M-01 actions gave 4 costed lines on the pilot and 13 on the full run**,
+so what moves is how much of the proposal is judged COSTABLE. ⚠⚠ **And the actions list carries duplicates across
+build versions**: M-01 has 16 coherent actions of which twelve are duplicates of four, so **any
+count of "actions" in the report counts build revisions, not distinct work.**
+▶ §1, §2, §4, §5, §7 delivered earlier the same day and verified still in place.
+✅ `tsc` and `check:scripts` clean. ⚠ **Nothing was written to the database this turn** — costings
+and spawns are proposed, not applied, and the report says which.
+Earlier: 2026-09-10 11:45 UTC — ▼▼ **CCW-B22 — THE CHAIN VERDICT FLIPS ON THREE OF TWELVE,
 AND A PROPOSAL CAN NOW NAME THE QUESTIONS IT CANNOT SETTLE.** Report: `docs/report_run/B22_REPORT.md`.
 Seven items: five built, one reported, one still Charlie's.
 ▶▶ **§1 — ALL TWELVE CRITIQUED, ONE FILE EACH (`critique/B22_CRITIQUE_M-XX.md`), AND B21's FINDING
