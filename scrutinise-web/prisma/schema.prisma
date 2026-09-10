@@ -722,6 +722,30 @@ model Idea {
   /// Who archived it and why. An archive with no record of who made it is the unaccountable
   /// act `buildAllowanceNote` exists to prevent, one table over.
   archivedReason            String?
+
+  /// ══ CCW-B22 §7 — THE QUESTIONS THIS PROPOSAL COULD NOT SETTLE, AS THEIR OWN IDEAS ═══
+  ///
+  /// Charlie: *"Identifying things that need their own idea-project is a valid output from an
+  /// idea. It's not an ever-flowing hierarchy."* The Human Rights Act measure produced five
+  /// questions that cannot be resolved inside it — does each protection survive elsewhere, is
+  /// it abandoned, or must it be re-enacted — and the system had nowhere to put them.
+  ///
+  /// ⚠⚠ IT TERMINATES ON THIS COLUMN. `refuseToSpawn()` refuses when `spawnedFromIdeaId` is
+  /// set, so depth is capped at one BY THE ROW rather than by an instruction in a prompt. A
+  /// spawned idea is named and queued and never built; nothing recurses without a person.
+  ///
+  /// ⚠ `SetNull`, NOT `Cascade`. A spawned idea is independent work, not a detail of its
+  /// parent: deleting the parent must leave the question standing, orphaned and visible,
+  /// rather than silently deleting a work item somebody may already have started.
+  spawnedFromIdeaId         String?
+  spawnedFrom               Idea?           @relation("IdeaSpawn", fields: [spawnedFromIdeaId], references: [id], onDelete: SetNull)
+  spawnedChildren           Idea[]          @relation("IdeaSpawn")
+  /// The question, as a question. Also copied into `challenge` so the idea does not open blank.
+  spawnedQuestion           String?
+  /// Why it could not be settled inside the parent — the test the whole pass turns on.
+  spawnedWhyNotHere         String?
+  spawnedByPassKey          String?
+  spawnedAt                 DateTime?
   /// 25-N §3c — the working notes, private to whoever wrote them.
   notesPrivate              IdeaNote[]
   fieldRevisions            FieldRevision[]
