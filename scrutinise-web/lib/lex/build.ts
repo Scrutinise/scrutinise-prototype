@@ -3501,7 +3501,11 @@ export async function kernelText(ideaId: string): Promise<string> {
 }
 
 /** Cost lines as entered, for the passes that scrutinise them. Never invented. */
-async function costLinesFor(ideaId: string): Promise<string[]> {
+/** ⚠ EXPORTED FOR CCW-B22 §1, not changed. The adversarial pass is re-run read-only outside a
+ *  build, and it must be handed the same cost lines the pass itself gets — a re-implementation
+ *  in a script would be a second definition of what the clerk is shown. No caller inside this
+ *  file changes; `export` is the whole diff. */
+export async function costLinesFor(ideaId: string): Promise<string[]> {
   const actions = await prisma.lexCoherentAction.findMany({
     where: { ideaId },
     select: { costLines: { select: { label: true, low: true, high: true, unit: true, basis: true } } },
