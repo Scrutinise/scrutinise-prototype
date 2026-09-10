@@ -773,7 +773,65 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-09 13:35 UTC — ▼▼ **CCW-B21 / B21a — FOUR TRACKS RUN UNSUPERVISED, AND
+*Last updated: 2026-09-10 11:45 UTC — ▼▼ **CCW-B22 — THE CHAIN VERDICT FLIPS ON THREE OF TWELVE,
+AND A PROPOSAL CAN NOW NAME THE QUESTIONS IT CANNOT SETTLE.** Report: `docs/report_run/B22_REPORT.md`.
+Seven items: five built, one reported, one still Charlie's.
+▶▶ **§1 — ALL TWELVE CRITIQUED, ONE FILE EACH (`critique/B22_CRITIQUE_M-XX.md`), AND B21's FINDING
+GENERALISES.** Two readings each on unchanged kernels: **`KERNEL_CHECK` moved on 4 of 12, never by
+more than one test of nine; `LOGIC_CHECK`'s VERDICT FLIPPED on 3 of 12** (M-02, M-04, M-05).
+⚠⚠ **Two readings is a FLOOR, not a measurement** — three flipping on one pair is consistent with a
+verdict that flips well under half the time, so the true rate is HIGHER. **M-03 flipped between the
+pilot pair and the run pair**, making four demonstrably unstable and **none stable-by-demonstration**.
+▶ A score is quotable with ±1 as noise; a verdict from one run is not. Where the DIRECTION is
+consistent (M-06, M-07, M-09 fail on both) that is the form the claim should take.
+▶ `ADVERSARIAL` re-run read-only and faithfully — its prompt is the build's own carry read off the
+pass log, not a reconstruction; `costLinesFor` exported (one word). ⚠ `SMART` deliberately NOT
+re-run: it rewrites the kernel and those rewrites now reach every marker after it. Nothing written to
+the database, no build run, no allowance spent.
+▶▶ **§2 — `appendices/LEGISLATION_AND_JUDGMENTS.md` BUILT, AND THE BRIEF'S ROUTE IS NOT AVAILABLE.**
+The consequences pass had ALREADY run on all five linkable measures, so the pass was never the gap —
+the appendix was. **Seven cannot be linked without naming an instrument David did not name** (B18 §4's
+deliberate refusal); each prints with its reason and says it does NOT mean the measure touches no
+legislation.
+⚠⚠ **ROWS ARE NOT INSTRUMENTS: it printed 212 under the word "instruments" where the count is 120**,
+and only CCW's brief quoting 120 caught it. ⚠ I then hit the same trap one line below fixing it.
+⚠ **GitHub push protection found a real defect** — raw legislation.gov.uk XML was reaching the column
+headed "the words in the source"; `cleanCitationText` imported rather than re-implemented.
+▶ **§4 — `SEAM_REGISTER.md` + `b22-seam-sweep.ts`.** Nine claims with the query that answers each:
+**3 moved (all small), 6 hold**. ⚠⚠ **Its first finding was my own false positive** (counted all
+`graph_position` rows, 21,461 of which record `no-position`) — recorded beside the query. The fix
+produced a keeper: `positions-never-round-tripped` is **0**, so the 98.4% denominator is sound.
+▶ 675 numeric claims listed for triage.
+▶ **§5 — the sweep collapses per measure**; peak is one measure's hits (617) not 4,003. **The test is
+that the output did not move: 2,764 occurrences, identical as sets AND in order.**
+▶▶ ⚠⚠ **§7 — BUILT AND SHIPPED. `lib/lex/spawn.ts`, `Idea.spawnedFromIdeaId`.** Schema + migration
+together and FIRST, applied to Neon and **read back off `information_schema`/`pg_constraint`** — five
+nullable columns, `SET NULL` confirmed (`confdeltype='n'`), partial index present.
+⚠ **`SET NULL` not `CASCADE`**: deleting a parent leaves the question standing rather than deleting a
+work item somebody may have picked up.
+▶ **Termination is TWO MECHANISMS, neither a prompt**: `refuseToSpawn()` refuses any row with
+`spawnedFromIdeaId` set (depth capped at one BY THE ROW), and a spawned idea is created and NOT built.
+**Both watched working** — M-01 has 3 children, all STAGE_1/DRAFT/PRIVATE with **0 builds**, and the
+first child asked to spawn and refused. ⚠ `summaryDescription: ''` is LOAD-BEARING — Stage 1→2 fires
+when title and summary are both non-empty.
+▶▶ ⚠⚠ **THE PASS IS NOT DETERMINISTIC.** Three runs on one kernel gave four, then three different,
+then four different questions. **Idempotency by TITLE cannot hold**, so re-writing would have grown
+the queue for ever with every addition looking like a finding. `writeSpawns` refuses a parent that
+already has children unless asked deliberately; watched refusing. **Treat the queue as a starting
+point somebody edits, not as an answer.** ⚠ Only M-01 was written; the other eleven are proposed in
+`SPAWNED_IDEAS.md` and nothing was written for them — Charlie's call.
+❌ **§6 — THE COST ROUTE IS NOT BUILT.** `docs/COST_MODULE_DESIGN_NOTE.md`. ⚠ Two corrections that
+change where to start: **1 of 135** coherent actions carry a cost range (not 0 of 119), so the write
+path is demonstrably reachable; and **53 `CostBenchmark` rows already exist, unused**. Charlie's
+constraint recorded: do not rename the module to promise a cost-benefit analysis while it attempts
+only the money.
+❌ **§3 — RAILWAY IS STILL CHARLIE'S, UNCHANGED FROM B21.** `repoTriggers` re-checked, still 0;
+`deploymentTriggerCreate`/`serviceInstanceAutoDeployUpdate` still `Bad Access` to a project token
+while `serviceInstanceUpdate` succeeds on the same credential. **Railway → build-worker → Settings →
+Source → connect the repo.**
+✅ `tsc` and `check:scripts` both clean. ⚠ **The build-row lease is still parked** — but note §7's
+schema change has now landed cleanly on production, so the next one ships into a settled tree.
+Earlier: 2026-09-09 13:35 UTC — ▼▼ **CCW-B21 / B21a — FOUR TRACKS RUN UNSUPERVISED, AND
 THREE OF THE FOUR PREMISES WERE ONE LAYER ABOVE THE FAULT.** Report: `docs/report_run/B21_REPORT.md`.
 Appendices: `WHAT_DAVID_SAID.md`, `POSITION_REGISTER.md`, `RESEARCH_PANEL_all.md`,
 `critique/B21_KERNEL_LOGIC_ALL_TWELVE.md`.
