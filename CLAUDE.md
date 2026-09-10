@@ -152,3 +152,25 @@ linkage. `serviceInstanceUpdate` (watch paths, variables) works fine, so the fai
 not a dead token. **Connecting the repo is Charlie's, in the Railway dashboard:** build-worker →
 Settings → Source → connect `Scrutinise/scrutinise-prototype` @ `Main`. Until then the worker is
 deployed by hand with `serviceInstanceDeployV2(..., commitSha)` and the sha read back.
+
+### ⚠⚠ RESOLVED 10 Sep — and it took THREE switches, two of which look identical from the API
+
+`build-worker` now auto-deploys. Getting there needed all three of these, and **only the first is
+visible as a value you can read back**:
+
+| | what | how it reads when wrong |
+|---|---|---|
+| 1 | `watchPatterns` | readable — was `[]`, set and verified identical |
+| 2 | a **repo trigger** | `repoTriggers` = 0 where every sibling had 1 |
+| 3 | **auto-deploy enabled** | ⚠⚠ **`repoTriggers` reads 1 and nothing happens** |
+
+⚠ **Step 3 is the trap.** After the repository was connected, `repoTriggers` read `1` — identical to
+every healthy sibling — while a push to `prisma/schema.prisma`, a watched path, still produced no
+deployment. **A service with a trigger and auto-deploy off is indistinguishable, through this API,
+from one that is working.** Do not conclude from `repoTriggers = 1` that pushes deploy.
+
+**The test is, and remains: push a change to a watched path and watch a deployment appear that
+nobody triggered.** On 10 September that finally worked — `abf125c5` pushed at 14:08, deployment
+`1dda5512` appeared unprompted at 14:08:49 carrying `meta.commitHash = abf125c56194`, went SUCCESS,
+and the container printed `retrieval configuration OK — …` at 14:13. Sha, then the string only the
+new build can emit. Never the status, never the id.
