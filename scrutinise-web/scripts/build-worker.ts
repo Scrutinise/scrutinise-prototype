@@ -180,6 +180,17 @@ async function main() {
   // morning, which printed `resolvedConfigLine()` and nothing else. Read it, and read
   // `meta.commitHash` — never the deployment status and never its id. See CLAUDE.md,
   // "Railway Operations".
+  //
+  // ══ ⚠ 10 SEPTEMBER — THE OTHER HALF ARRIVED, AND IT WAS A SECOND SWITCH ═══════════════
+  //
+  // Setting `watchPatterns` was necessary and not sufficient TWICE OVER. The service had no
+  // repo trigger at all (B21), and once Charlie connected the repository it still had
+  // auto-deploy disabled — so `repoTriggers` read 1 while a push to `prisma/schema.prisma`,
+  // a watched path, still produced no deployment. **Three things had to be true and two of
+  // them looked like the same thing from the API.**
+  //
+  // ⚠ Which is why the test is not "the settings look right". It is a push to a watched path
+  // followed by a deployment appearing that nobody triggered. This edit is that push.
   console.log(`[build-worker ${WORKER_ID}] ${resolvedConfigLine()}`)
   try {
     assertRetrievalConfig(`build-worker ${WORKER_ID}`, { allowDegraded: ALLOW_DEGRADED })
