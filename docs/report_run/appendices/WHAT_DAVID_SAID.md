@@ -1,6 +1,6 @@
 # Appendix — what David said, by measure
 
-*Generated 2026-09-09 13:23 UTC from the transcript corpus.*
+*Generated 2026-09-10 11:21 UTC from the transcript corpus.*
 
 **285 videos · 6,157 searchable passages · 102 search terms built from the twelve measures.**
 

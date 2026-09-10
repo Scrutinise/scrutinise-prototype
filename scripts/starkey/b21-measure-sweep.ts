@@ -143,10 +143,29 @@ async function main() {
   console.log(`term list: ${termCount} terms across ${MEASURES.length} measures (the existing pass used 22 over 8 videos)\n`)
   if (!GO) { console.log('PLAN ONLY — nothing searched. Re-run with --go.'); await p.end(); return }
 
-  const hits: Hit[] = []
+  // ══ ⚠⚠ CCW-B22 §5 — COLLAPSED PER MEASURE, NOT AT THE END ══════════════════════════════
+  //
+  // The first version held all 4,003 `Hit` objects — each carrying a FULL passage — until
+  // every term of every measure had run, and the process was killed under memory pressure
+  // while a 3.9 MB appendix and a 4.2 MB JSON were being written beside it. Nothing was lost,
+  // and it would bite as the corpus grows.
+  //
+  // ⚠ THE COLLAPSE IS SAFE TO DO EARLY BECAUSE OF WHAT IT GROUPS BY. A hit only ever joins a
+  // bucket of the SAME measure and the SAME video, and the loop is measure-outer — so once a
+  // measure's last term has run, nothing that could join its buckets is still to come. Peak
+  // memory is now one measure's hits (the largest is M-12 at 617) rather than all of them, and
+  // it stays that way however many measures are added.
+  //
+  // ⚠ The occurrences themselves are still held, because the appendix's header counts them
+  // before its body prints them. They are ~1/1.45 of the hits and hold one text per SOURCE
+  // rather than one per TERM, so this fixes the large half of the problem and not all of it.
+  let rawHits = 0
   const perTerm: Array<{ measure: string; term: string; passages: number; videos: number }> = []
+  const occurrences: Occurrence[] = []
 
   for (const m of MEASURES) {
+    /** ⚠ THIS MEASURE'S HITS ONLY — it goes out of scope at the bottom of this iteration. */
+    const hits: Hit[] = []
     for (const term of m.terms) {
       const { rows } = await p.query(`
         select p.video_id, p.source, p.start_s::float s, p.end_s::float e, p.text,
@@ -169,21 +188,20 @@ async function main() {
       }
       process.stdout.write(`  ${m.ref} ${term.padEnd(34)} ${String(rows.length).padStart(5)} passages / ${String(vids.size).padStart(3)} videos\n`)
     }
-  }
 
-  // ══ COLLAPSE TO OCCURRENCES ═══════════════════════════════════════════════════════════
-  //
-  // ⚠ Grouped per MEASURE, so the same passage bearing on two measures appears under both —
-  // which is right, because the appendix is read one measure at a time.
-  const occurrences: Occurrence[] = []
-  const byMeasureVideo = new Map<string, Hit[]>()
-  for (const h of hits) {
-    const k = `${h.measure} ${h.video_id}`
-    byMeasureVideo.set(k, [...(byMeasureVideo.get(k) ?? []), h])
-  }
+    // ══ COLLAPSE THIS MEASURE NOW, WHILE ITS HITS ARE STILL THE ONLY ONES IN MEMORY ═══════
+    rawHits += hits.length
+    const byVideo = new Map<string, Hit[]>()
+    for (const h of hits) {
+      // ⚠ PUSH, NOT REBUILD. `[...(prev ?? []), h]` copies the whole array on every hit, which
+      // is quadratic in the size of a bucket and allocates every copy. It was not the thing
+      // that ran the process out of memory, but it is the same carelessness one layer down.
+      const list = byVideo.get(h.video_id)
+      if (list) list.push(h); else byVideo.set(h.video_id, [h])
+    }
 
-  for (const [k, group] of byMeasureVideo) {
-    const measure = k.split(' ')[0]
+    for (const [, group] of byVideo) {
+      const measure = m.ref
     const sorted = [...group].sort((a, b) => a.start_s - b.start_s)
     const buckets: Hit[][] = []
     for (const h of sorted) {
@@ -213,6 +231,7 @@ async function main() {
       })
     }
   }
+  }
   occurrences.sort((a, b) => a.measure.localeCompare(b.measure)
     || String(a.published_on).localeCompare(String(b.published_on))
     || a.start_s - b.start_s)
@@ -222,7 +241,7 @@ async function main() {
     corpus: { videos, passages },
     measures: MEASURES.map((m) => ({ ref: m.ref, title: m.title, terms: m.terms })),
     per_term: perTerm,
-    raw_hits: hits.length,
+    raw_hits: rawHits,
     occurrences: occurrences.length,
     hits: occurrences,
   }, null, 1), 'utf8')
@@ -375,7 +394,7 @@ async function main() {
 
   fs.mkdirSync(path.dirname(OUT_MD), { recursive: true })
   fs.writeFileSync(OUT_MD, L.join('\n'), 'utf8')
-  console.log(`\nraw transcript hits : ${hits.length}`)
+  console.log(`\nraw transcript hits : ${rawHits}`)
   console.log(`occurrences         : ${occurrences.length}  (the difference is the second transcript)`)
   console.log(`videos with a hit   : ${vidsWithAnything.size} of ${videos}`)
   console.log(`terms finding zero  : ${zero.length} of ${perTerm.length}`)
