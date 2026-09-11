@@ -773,8 +773,24 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-10 14:30 UTC — ▼▼ **CCW-B22 CONTINUED — THE PLAN CLOSES NONE OF FORTY-NINE
-ATTACK ROUTES, AND RAILWAY'S LAST SWITCH WAS INVISIBLE.** Report: `docs/report_run/B23_REPORT.md`.
+*Last updated: 2026-09-11 16:30 UTC — ▼▼ **CCW-B23 — THE FINISH LINE — "CLOSES: 0" HOLDS ACROSS THREE RUNS, TWO
+REPORT COUNTS ARE BUILD REVISIONS, ALL FOUR QUOTATIONS VERBATIM, ALL TWELVE ON THE SCHEDULE.** Report:
+`docs/report_run/B23_REPORT.md` (yesterday's B22-continued report moved to `B22_CONTINUED_REPORT.md`).
+▶▶ ⚠⚠ **§1: 49 / 47 / 47 routes across three unhinted runs, CLOSES 0 / 0 / 0**, partly 5 / 4 / 3, does not
+close 33 / 35 / 33, worse 11 / 8 / 11; all-open measures 7 / 8 / 9 (M-02, M-03, M-09 every run); of 45
+paired routes 35 kept their verdict, 10 moved, none into closes. Print the ranges; the zero is stable.
+▶▶ ⚠⚠ **§2: actions and challenges collapse across builds, evidence does not.** §4.1 prints 8 actions
+(true 4) and 89 challenges (v2 raised 59); 67 action rows → 47 true. ⚠ §4.1 describes v2 (M-01 is on v4),
+§4.2/§4.3 describe v1 (both on v2). ⚠ My B22 schedule had the same collapse in its judgments (22 → 12); fixed.
+▶ **§3: all four verbatim** — Osborn [55],[63]; Kennedy [46] Mance, [133] Toulson; Jackson [104],[102],[159].
+⚠⚠ **The corpus holds 0 UKHL**; Jackson checked against the Lords' publication via the Internet Archive.
+▶ **§4: ten links across the seven unlinked measures, each marked NAMED BY THE BUILD'S DRAFTED KERNEL, NOT
+BY DAVID**, consequences pass run on all seven, schedule regenerated with provenance, multi-instrument
+measures, build-scoped judgments and a court column read off the citation. ⚠ M-05/M-10 links are
+framework-only and say so. ✅ `check:scripts` clean. ⚠ DB writes: 10 `IdeaLegislation` rows + seven
+consequences runs. **Stopped there, as instructed.**
+Earlier: 2026-09-10 14:30 UTC — ▼▼ **CCW-B22 CONTINUED — THE PLAN CLOSES NONE OF FORTY-NINE
+ATTACK ROUTES, AND RAILWAY'S LAST SWITCH WAS INVISIBLE.** Report: `docs/report_run/B22_CONTINUED_REPORT.md`.
 ▶▶ ⚠⚠ **RAILWAY IS CLOSED. THREE SWITCHES, ONLY ONE READABLE.** `watchPatterns` (was `[]`), a **repo
 trigger** (was 0), and **auto-deploy enabled** — and the third is the trap: **after the repo was
 connected `repoTriggers` read 1, identical to every healthy sibling, while a push to a watched path
