@@ -45,6 +45,15 @@ const GO = process.argv.includes('--go')
 const HINTED = process.argv.includes('--hinted')
 const onlyArg = process.argv.indexOf('--only')
 const ONLY = onlyArg > -1 ? process.argv[onlyArg + 1] : null
+/**
+ * B23 §1 — `--run N` labels a repeat run so it does not overwrite the first. Files become
+ * `B23_OPPONENT_M-XX_runN.md` and the structured routes go to `B23_OPPONENT_runN.json`, which
+ * is what `b23-opponent-spread.ts` compares. ⚠ The pass is not deterministic; one run is not a
+ * measurement, and the point of the label is that three runs can sit side by side.
+ */
+const runArg = process.argv.indexOf('--run')
+const RUN = runArg > -1 ? process.argv[runArg + 1] : null
+const SUFFIX = (HINTED ? '_hinted' : '') + (RUN ? `_run${RUN}` : '')
 const ALL = Array.from({ length: 12 }, (_, i) => `M-${String(i + 1).padStart(2, '0')}`)
 
 /**
@@ -206,7 +215,7 @@ async function main() {
     console.log(`  ${ref}  ${r.result?.routes.length ?? 'null'} route(s), ${open} not closed  `
       + `${r.strongHit ? '★ named a migration case' : ''}  ${((Date.now() - t) / 1000).toFixed(0)}s`)
 
-    const file = join(OUT, `B23_OPPONENT_${ref}${HINTED ? '_hinted' : ''}.md`)
+    const file = join(OUT, `B23_OPPONENT_${ref}${SUFFIX}.md`)
     writeFileSync(file, render(r).join('\n'), 'utf8')
   }
 
@@ -224,7 +233,7 @@ async function main() {
   idx.push('|---|---|---|---|')
   for (const r of rows) {
     const open = r.result?.routes.filter((x) => x.planCloses === 'DOES_NOT_CLOSE' || x.planCloses === 'MAKES_IT_WORSE').length ?? 0
-    idx.push(`| [${r.ref}](B23_OPPONENT_${r.ref}${HINTED ? '_hinted' : ''}.md) — ${esc(r.title)} `
+    idx.push(`| [${r.ref}](B23_OPPONENT_${r.ref}${SUFFIX}.md) — ${esc(r.title)} `
       + `| ${r.result?.routes.length ?? '⚠ failed'} | ${open} | ${r.strongHit ? '**yes**' : 'no'} |`)
   }
   idx.push('')
@@ -262,7 +271,24 @@ async function main() {
   idx.push('guarantee — and a fabricated authority would destroy the reading it sits in.')
   idx.push('')
 
-  writeFileSync(join(OUT, `B23_OPPONENT_INDEX${HINTED ? '_hinted' : ''}.md`), idx.join('\n'), 'utf8')
+  writeFileSync(join(OUT, `B23_OPPONENT_INDEX${SUFFIX}.md`), idx.join('\n'), 'utf8')
+  if (RUN) {
+    // The structured record, so a later comparison reads routes and not re-parsed prose.
+    // ⚠ Runs 2 and 3 on 11 Sep were made before this block existed (a botched edit left the
+    // index unsuffixed and no JSON); `b23-opponent-spread.ts` therefore parses the per-measure
+    // markdown, which every run writes, and this JSON is for the next run.
+    writeFileSync(join(OUT, `B23_OPPONENT${SUFFIX}.json`), JSON.stringify({
+      run: RUN, hinted: HINTED, at: new Date().toISOString(),
+      rows: rows.map((r) => ({
+        ref: r.ref, title: r.title, tokensIn: r.tokensIn, tokensOut: r.tokensOut,
+        strongHit: r.strongHit, markersHit: r.markersHit,
+        overallLine: r.result?.overallLine ?? null,
+        routes: r.result?.routes.map((x) => ({
+          route: x.route, mechanism: x.mechanism, planCloses: x.planCloses, restsOn: x.restsOn,
+        })) ?? null,
+      })),
+    }, null, 2), 'utf8')
+  }
   console.log(`\nwritten: ${rows.length} file(s) + index`)
   await prisma.$disconnect()
 }

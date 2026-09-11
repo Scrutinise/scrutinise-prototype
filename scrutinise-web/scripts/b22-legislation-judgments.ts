@@ -34,6 +34,16 @@ export {}
 // ⚠ NOTHING HERE IS WRITTEN TO THE DATABASE. Read-only over `citation_edge` and the evidence
 // already gathered by the builds.
 //
+// ══ CCW-B23 §4 — ALL TWELVE, AND WHOSE NAMING EACH INSTRUMENT IS ═══════════════════════
+//
+// `b23-link-instruments.ts` linked the seven B18 refused — to the enactment the BUILD'S OWN
+// DRAFTED KERNEL names, never one David named — and every link carries that in `notes`. This
+// schedule now prints the provenance on every measure (David's words / the build's draft, with
+// the grade), handles more than one instrument per measure (M-12 has four), scopes the
+// judgments to the build the measure stands on (⚠ B23 §2: the unscoped query counted every
+// build's case law — M-01 printed 22 where its current build holds 12), and reads the court
+// off the neutral citation where one exists rather than off the case name.
+//
 //   npx tsx --env-file=.env scripts/b22-legislation-judgments.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -54,6 +64,26 @@ const CONFIRMED_MISATTRIBUTIONS = new Set(['nisr/2010/381'])
 const esc = (s: string) => s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').trim()
 const legUrl = (gid: string, prov?: string | null) =>
   `https://www.legislation.gov.uk/${gid}${prov ? `/${prov.replace(/^([a-z]+)-/, '$1/')}` : ''}`
+
+/**
+ * B23 §4 — THE COURT, READ OFF THE CITATION AND NEVER OFF THE NAME. `sourceId` begins with the
+ * neutral citation for TNA rows (`tna-caselaw:[2020] UKSC 19:1`), the judiciaryni slug names
+ * the court (`2021-nica-52`), the Scottish slug carries `csoh`/`csih`, and HUDOC is Strasbourg.
+ * Anything else prints `—`: a court that cannot be read is not written.
+ */
+function courtOf(sourceId: string | null, url: string | null): string {
+  const s = sourceId ?? ''
+  // `[2024] EWHC 1197 (Fam)`, `[2001] EWCA Civ 540`, `[2020] UKSC 19` — the division follows the number.
+  let m = s.match(/^tna-caselaw:\[\d{4}\] ([A-Z]+(?: [A-Za-z]+)?) \d+(?: (\([A-Za-z]+\)))?/)
+  if (m) return m[2] ? `${m[1]} ${m[2]}` : m[1]
+  m = s.match(/^ni-judgments:\d{4}-(ni[a-z]+)-/)
+  if (m) return m[1].toUpperCase()
+  m = (url ?? '').match(/\/\d{4}(cs[io]h)\d+/i)
+  if (m) return m[1].toUpperCase()
+  if (s.startsWith('echr-hudoc:')) return 'ECtHR'
+  if (s.startsWith('et-decisions:')) return 'ET'
+  return '—'
+}
 
 /**
  * One provision row, as a reader needs it.
@@ -94,6 +124,14 @@ async function main() {
   L.push('Per measure: every provision that refers to the instrument the measure names, and every judgment')
   L.push('the research found bearing on it.')
   L.push('')
+  L.push('⚠⚠ **Whose naming.** Five instruments (M-01, M-02, M-03, M-07, M-11) are the enactment DAVID names, in')
+  L.push('his own words (B18 §4). The other ten links, across seven measures, are the enactment **the build\'s')
+  L.push('drafted kernel names** — Lex\'s reading of his words, not his words — written by `b23-link-instruments.ts`')
+  L.push('on 11 September 2026 with that provenance in every row. Each measure prints which it is, and for the')
+  L.push('seven, how far the draft *targets* the Act as against naming it as the framework it works within.')
+  L.push('Two of the seven (M-05, M-10) are the second kind: the draft\'s own instrument is a new Bill or grant')
+  L.push('conditions, and the linked Act is the law it would operate around, not the law it would change.')
+  L.push('')
 
   // ══ THE COVERAGE STATEMENT, ONCE, AT THE TOP, FROM THE PRODUCT'S OWN FUNCTION ══════════
   const cov = await graphCoverage()
@@ -118,9 +156,9 @@ async function main() {
   L.push('---')
   L.push('')
 
-  const index: string[] = ['| Measure | Instrument | Made under it | Refer from a provision | Title/preamble only | Judgments |',
-    '|---|---|---|---|---|---|',
-    '| | | *instruments (references)* | *documents (references)* | *documents (references)* | |']
+  const index: string[] = ['| Measure | Instrument | Named by | Made under it | Refer from a provision | Title/preamble only | Judgments (current build) |',
+    '|---|---|---|---|---|---|---|',
+    '| | | | *instruments (references)* | *documents (references)* | *documents (references)* | |']
 
   for (const ref of ALL) {
     let ideaId: string
@@ -129,38 +167,42 @@ async function main() {
     if (!idea) continue
 
     const links = await prisma.ideaLegislation.findMany({
-      where: { ideaId },
-      select: { legislationItem: { select: { legislationGovUkId: true, title: true } } },
+      where: { ideaId }, orderBy: { createdAt: 'asc' },
+      select: { notes: true, legislationItem: { select: { legislationGovUkId: true, title: true } } },
     })
-    const gid = links[0]?.legislationItem?.legislationGovUkId ?? null
+    const build = await prisma.ideaBuild.findFirst({
+      where: { ideaId, status: 'DONE' }, orderBy: { version: 'desc' }, select: { version: true },
+    })
+    const buildVersion = build?.version ?? 1
 
     L.push(`## ${ref} — ${idea.title}`)
     L.push('')
 
-    // ── the provisions ───────────────────────────────────────────────────
-    let enablingN = 0, rowsN = 0, titleN = 0
-    let enablingDocs = 0, rowsDocs = 0, titleDocs = 0
-    if (!gid) {
-      // ⚠ THE REASON IS THE ROW. A schedule that printed "none" here would read as "this
-      // measure touches no legislation", which is the opposite of true for most of them.
-      L.push('### Provisions — ⚠ no instrument can be named for this measure')
-      L.push('')
-      L.push('**There is no legislation schedule for this measure, and that is a finding rather than a**')
-      L.push('**gap.** The reference layer works from a named enactment; David names none here, and')
-      L.push('naming one on his behalf would assert a target he did not choose. B18 §4 recorded the')
-      L.push('reason for each refusal — a common law jurisdiction with no conferring Act, a policy that')
-      L.push('was never enacted, an estate of ~400 unnamed bodies, a scope that is temporal rather than')
-      L.push('a list, or a genuine ambiguity that is Charlie\'s to settle.')
+    // ── whose naming ─────────────────────────────────────────────────────
+    //
+    // ⚠⚠ THE PROVENANCE IS THE FIRST LINE OF EVERY INSTRUMENT. A B18 link carries the clause of
+    // David's stated intention; a B23 link says in capitals that the build's draft named it.
+    // Printing them under one heading without this line would let the seven read as his.
+    const provenanceOf = (notes: string | null) =>
+      (notes ?? '').startsWith('CCW-B23') ? 'the build\'s drafted kernel — NOT David' : 'David\'s own words (B18 §4)'
+    const perGid: Array<{ gid: string; enablingN: number; rowsN: number; titleN: number; enablingDocs: number; rowsDocs: number; titleDocs: number; prov: string }> = []
+
+    if (!links.length) {
+      L.push('### Provisions — ⚠ no instrument is linked to this measure')
       L.push('')
       L.push('⚠ **This does not mean the measure touches no legislation.** It means the measure has not')
-      L.push('yet been given the one thing the schedule is computed from.')
+      L.push('been given the one thing the schedule is computed from.')
       L.push('')
-    } else {
+    }
+    for (const link of links) {
+      const gid = link.legislationItem?.legislationGovUkId
+      if (!gid) continue
+      const prov = provenanceOf(link.notes)
       const title = await targetTitle(gid)
       const inbound = await inboundFor(gid)
-      enablingN = inbound.enabling.length
-      rowsN = inbound.rows.length
-      titleN = inbound.titleOnly.length
+      const enablingN = inbound.enabling.length
+      const rowsN = inbound.rows.length
+      const titleN = inbound.titleOnly.length
       // ⚠ DISTINCT, NOT ROWS — the same trap as the instrument counts above, and I walked
       // into it again one line below fixing it: `nisr/2010/381` carries four rows and printed
       // as "4 confirmed misattributions", listing one instrument four times. A gid can appear
@@ -178,15 +220,20 @@ async function main() {
       // the discrepancy surfaced. Both are printed, each labelled, and the count that goes in
       // a sentence about instruments is the distinct one.
       const distinct = (xs: InboundRow[]) => new Set(xs.map((x) => x.sourceGid)).size
-      enablingDocs = distinct(inbound.enabling)
-      rowsDocs = distinct(inbound.rows)
-      titleDocs = distinct(inbound.titleOnly)
+      const enablingDocs = distinct(inbound.enabling)
+      const rowsDocs = distinct(inbound.rows)
+      const titleDocs = distinct(inbound.titleOnly)
+      perGid.push({ gid, enablingN, rowsN, titleN, enablingDocs, rowsDocs, titleDocs, prov })
       const allRows = [...inbound.enabling, ...inbound.rows, ...inbound.titleOnly]
       const siGids = new Set(allRows.filter((r) => r.sourceType === 'SI').map((r) => r.sourceGid))
       const enablingGids = new Set(inbound.enabling.map((r) => r.sourceGid))
       const siNoEnabling = [...siGids].filter((g) => !enablingGids.has(g)).length
 
       L.push(`### Provisions — [${esc(gid)}](${legUrl(gid)})${title ? ` · ${esc(title)}` : ''}`)
+      L.push('')
+      L.push(`**Whose naming:** ${prov}.`)
+      L.push('')
+      L.push(`> ${esc((link.notes ?? '').replace(/^CCW-B\d+ §4 — /, ''))}`)
       L.push('')
       L.push(`**${enablingDocs} instrument(s) identified as made under the Act**, from ${enablingN} `
         + `enabling reference(s) — one instrument can carry several. A further **${rowsDocs} document(s)** `
@@ -239,12 +286,18 @@ async function main() {
     // ⚠ FROM THE RESEARCH THE BUILD DID, NOT FROM A FRESH SEARCH. These are the judgments the
     // measure's own build retrieved and kept; a new search would produce a different list and
     // the report's text is written against this one.
+    //
+    // ⚠⚠ SCOPED TO THE BUILD THE MEASURE STANDS ON (B23 §2). The B22 version of this query had
+    // no `runVersion` filter and so listed every build's case law together — M-01 printed 22
+    // judgments where its v4 build holds 12. The rows from superseded builds still exist; they
+    // are not this build's research and are not listed as if they were.
     const judgments = await prisma.evidenceItem.findMany({
-      where: { ideaId, sourceType: 'CASE_LAW', status: { not: 'REJECTED' } },
-      select: { title: true, body: true, citation: true, url: true, sourceDate: true, sourceDateBasis: true },
+      where: { ideaId, sourceType: 'CASE_LAW', status: { not: 'REJECTED' }, runVersion: buildVersion },
+      select: { title: true, body: true, citation: true, url: true, sourceId: true, sourceDate: true, sourceDateBasis: true },
       orderBy: [{ sourceDate: 'desc' }, { createdAt: 'asc' }],
     })
-    L.push(`### Judgments — ${judgments.length}`)
+    const allVersions = await prisma.evidenceItem.count({ where: { ideaId, sourceType: 'CASE_LAW', status: { not: 'REJECTED' } } })
+    L.push(`### Judgments — ${judgments.length} (build v${buildVersion}${allVersions !== judgments.length ? `; ${allVersions} across all builds, not listed` : ''})`)
     L.push('')
     if (!judgments.length) {
       L.push('*The research for this measure retrieved no case law.* ⚠ That is a statement about this')
@@ -255,27 +308,26 @@ async function main() {
       L.push('would return a different list; the report\'s text is written against this one. **Never**')
       L.push('**described as complete, and no case is described as no longer good law.**')
       L.push('')
-      L.push('| Case | Date | Holding, as the research recorded it | Source |')
-      L.push('|---|---|---|---|')
+      L.push('| Case | Court | Date | Holding, as the research recorded it | Source |')
+      L.push('|---|---|---|---|---|')
       for (const j of judgments) {
         const name = j.url ? `[${esc(j.citation ?? j.title)}](${j.url})` : esc(j.citation ?? j.title)
         const date = j.sourceDate
           ? `${j.sourceDate.toISOString().slice(0, 10)}${j.sourceDateBasis ? `<br>*${esc(String(j.sourceDateBasis))}*` : ''}`
           : '⚠ undated'
-        L.push(`| ${name} | ${date} | ${esc(j.title)} — ${esc(j.body).slice(0, 260)} | ${j.url ? 'linked' : '⚠ no link'} |`)
+        L.push(`| ${name} | ${courtOf(j.sourceId, j.url)} | ${date} | ${esc(j.title)} — ${esc(j.body).slice(0, 260)} | ${j.url ? 'linked' : '⚠ no link'} |`)
       }
       L.push('')
-      // ⚠ THE COURT IS ASKED FOR AND WE DO NOT HOLD IT AS A FIELD. Said, not faked.
-      L.push('⚠ **The brief asks for the court and this schedule does not carry a court column, because')
-      L.push('the evidence rows have no court field.** Where the citation is a neutral one the court is')
-      L.push('readable from it (`UKSC`, `EWCA`, `UKHL`); where the citation is a case name it is not.')
-      L.push('Inferring a court from a case name would be a manufactured value, which is the defect this')
-      L.push('report has already recorded once.')
+      // ⚠ THE COURT IS READ, NEVER INFERRED. Where the row carries no citation it prints `—`.
+      L.push('⚠ **The court column is read off the neutral citation in the source id** (`UKSC`, `EWHC (Admin)`,')
+      L.push('`NICA`, `CSOH`), never off the case name — 22,184 case names map to more than one citation.')
+      L.push('`—` means the row carries no citation the court can be read from; it is not a missing court.')
       L.push('')
     }
 
-    index.push(`| ${ref} | ${gid ? `\`${gid}\`` : '⚠ none nameable'} | ${gid ? `${enablingDocs} (${enablingN})` : '—'} `
-      + `| ${gid ? `${rowsDocs} (${rowsN})` : '—'} | ${gid ? `${titleDocs} (${titleN})` : '—'} | ${judgments.length} |`)
+    if (!perGid.length) index.push(`| ${ref} | ⚠ none linked | — | — | — | — | ${judgments.length} |`)
+    perGid.forEach((g, i) => index.push(`| ${i === 0 ? ref : ''} | \`${g.gid}\` | ${g.prov.startsWith('David') ? 'David' : '⚠ the build\'s draft'} | ${g.enablingDocs} (${g.enablingN}) `
+      + `| ${g.rowsDocs} (${g.rowsN}) | ${g.titleDocs} (${g.titleN}) | ${i === 0 ? judgments.length : ''} |`))
     L.push('---')
     L.push('')
   }
