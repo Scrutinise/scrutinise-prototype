@@ -1,30 +1,10 @@
-# Part 5.1 · The Supreme Court
-## 5.1 · The Supreme Court
-### The question examined
+# Part 7.1 · The Supreme Court
+## 7.1 · The Supreme Court
+
+### Diagnosis
+
 **The problem, as stated:** A court named and housed as a supreme court comes, over time, to understand itself as a constitutional guardian above the legislature, whatever the statute that created it says about its powers. The complaint is about the institution's self-conception and its effect on how judges behave, not about a specific power it holds.
 
-**What David proposes:** Repeal Part 3 of the Constitutional Reform Act 2005 and return final appellate jurisdiction to the Appellate Committee of the House of Lords.
-
-**What David has ruled out:** Renaming the court while leaving its jurisdiction intact.
-
-### The evidence base
-**128 pieces of evidence, 111 with a full citation and 113 with a working link.**
-
-| Kind of source | Pieces |
-|---|---|
-| Parliamentary debate | 41 |
-| Select committee material | 23 |
-| Court judgments | 23 |
-| Not attributed to a type | 15 |
-| Acts of Parliament | 14 |
-| Official guidance | 7 |
-| Statutory instruments | 4 |
-| CONSULTATION | 1 |
-
-**Understanding the terrain:** 322 retrieved, 40 read; 7 cited · 1 of 1 queries written
-**Evidence base:** 6 questions asked; reviewed 600 sources; 94 findings, 4 running the other way; 16 stated gaps · 7 of 7 queries written
-
-### What is wrong, and why it persists
 The Constitutional Reform Act 2005, by creating a physically and institutionally separate Supreme Court, inadvertently fostered a judicial culture that sees itself as a constitutional guardian rather than a creature of statute. This cultural drift persists because Parliament lacks a dedicated, robust mechanism to conduct post-legislative scrutiny of constitutional statutes and their judicial interpretation, creating a vacuum which the court's self-conception has filled.
 
 **2 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -35,10 +15,16 @@ The Constitutional Reform Act 2005, by creating a physically and institutionally
 **Cause 2 — MATERIAL.** Parliamentary mechanisms for comprehensive post-legislative scrutiny of constitutional legislation are not consistently applied or sufficiently robust.
 *Why it persists:* While calls for comprehensive scrutiny exist, and some post-legislative scrutiny is conducted, there is no guaranteed mechanism to systematically assess the judiciary's interpretation of constitutional statutes against original parliamentary intent, allowing potential deviations to persist unchallenged. The Political and Constitutional Reform Committee explicitly recommended against a new joint constitutional legislation scrutiny committee, believing existing processes were sufficient (Report: 1st Report - Ensuring standards in the quality of legislation - Volume I).
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Repeal Part 3 of the Constitutional Reform Act 2005 and return final appellate jurisdiction to the Appellate Committee of the House of Lords.
+
+**What David has ruled out:** Renaming the court while leaving its jurisdiction intact.
+
 Re-establish parliamentary supremacy over constitutional interpretation not by abolishing the court, but by creating a new, powerful mechanism to scrutinise and, where necessary, correct judicial interpretation of constitutional statutes. The approach is to create a formal dialogue and accountability loop where one is currently missing.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Draft and introduce a 'Constitutional Scrutiny Bill' establishing a joint committee of both Houses of Parliament with a mandate for mandatory, quinquennial post-legislative review of all constitutional legislation, including the Constitutional Reform Act 2005.
@@ -53,72 +39,17 @@ Re-establish parliamentary supremacy over constitutional interpretation not by a
 **4.** Establish a formal process for Parliament to consider and vote on the Joint Committee's recommendations within a specified timeframe, ensuring that the scrutiny process leads to concrete parliamentary action or explicit affirmation of the status quo.
 *Who does it:* House of Commons and House of Lords
 
-### The law as it stands
-**9 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Constitutional Reform Act 2005, s.40** — Constitutional Reform Act 2005 established the Supreme Court
-The Constitutional Reform Act 2005 established the Supreme Court, replacing the Appellate Committee of the House of Lords. Debates from the time indicate that the move was considered long overdue by some, aimed at achieving a clearer separation of powers and modernizing the highest court.
+### Consequential decisions
 
-**Constitutional Reform Act 2005, sch.1 para.11** — Amendments to Supreme Court Act 1981
-Schedule 1, paragraph 11 of the Constitutional Reform Act 2005 states that 'The Supreme Court Act 1981 is amended as follows.'
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Constitutional Reform Act 2005, sch.9 para.20** — Amendments to Administration of Justice Act 1969
-Schedule 9, paragraph 20 of the Constitutional Reform Act 2005 amends the Administration of Justice Act 1969. Part 2 is renamed 'Appeal from High Court to Supreme Court'. References to 'House of Lords' are substituted with 'Supreme Court' in sections 12 and 13, and section 14 is omitted.
-
-**Constitutional Reform Act 2005, sch.9 para.36** — Amendments to Supreme Court Act 1981 regarding judicial business and appeals
-Schedule 9, paragraph 36 of the Constitutional Reform Act 2005 amends the Supreme Court Act 1981. In section 9 (assistance for transaction of judicial business) subsection (6A), 'House of Lords' is substituted with 'Supreme Court'.
-
-**Constitutional Reform Act 2005, sch.9 para.42** — Amendments to Transport Act 1985
-Schedule 9, paragraph 42 of the Constitutional Reform Act 2005 amends the Transport Act 1985. In section 9 (appeals against traffic regulation conditions) subsection (9), 'House of Lords' is substituted with 'Supreme Court' in each place.
-
-**Constitutional Reform Act 2005, sch.9 para.116** — Amendments to devolution issues proceedings
-Schedule 9, paragraph 116 of the Constitutional Reform Act 2005 amends Part 3 of Schedule 10 (proceedings in England and Wales on devolution issues). In paragraph 16 (reference in civil proceedings), in sub-paragraph (2)(a), 'House of Lords' is substituted with 'Supreme Court'.
-
-**Constitutional Reform Act 2005, sch.17 para.9** — Appellate Jurisdiction Act 1876 ceased to have effect
-The Constitutional Reform Act 2005 explicitly states that the Appellate Jurisdiction Act 1876 ceased to have effect.
-
-### What the courts have said
-**16 judgments were retrieved and read.**
-
-**For Women Scotland Ltd v The Scottish Ministers** — Judicial interpretation seeks Parliament's meaning
-The courts, in conducting statutory interpretation, are 'seeking the meaning of the words which Parliament used'. Statutory interpretation is an exercise which requires the court to identify the meaning borne by the words in question in the particular context.
-
-**Buddington, R (on the application of) v Secretary of State for the Home Department** — Parliamentary intent as sole object in statutory interpretation
-Discerning the parliamentary intention has been described as 'the sole object in statutory interpretation'.
-
-**Exolum Pipeline System Ltd, R (on the application of) v Crown Court at Great Grimsby** — Judicial review of statutory powers and duties
-There is a recognised constitutional principle that judicial review cannot be regarded as having been dispensed with when Parliament has conferred statutory powers and imposed statutory duties.
-
-**Court of Session: court of session petition of sooy against the secretary of state for the home department 14 december 2023** — Exclusion of supervisory jurisdiction
-The UK Supreme Court has decided that, properly construed, section 67(8) of an unspecified Act did not exclude the High Court’s judicial review jurisdiction. Lord Carnwarth opined, obiter, that 'a strong case for holding that, consistently with the rule of  law, binding effect cannot be given to a clause which purports wholly to exclude the supervisory jurisdiction of the High Court to review a decision of an inferior court or tribunal, whether for excess or abuse of jurisdiction, or error of law.'
-
-**Court of Session: 2025csih4 reclaiming motion in petition for judicial review by ragbir singh and others** — Court of Session's supervisory jurisdiction
-If Parliament wished to exclude or restrict the supervisory jurisdiction of the Court of Session, then it should legislate expressly to that effect.
-
-### Evidence that runs the other way
-**12 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**Constitutional vandalism**
-Some members of Parliament viewed the Constitutional Reform Bill as 'constitutional vandalism' for replacing the Appellate Committee of the House of Lords with an 'unnecessary supreme court' and undermining the office of the Lord Chancellor.
-*Source: Orders of the Day — Constitutional Reform Bill [Lords] — [3rd Allotted Day] — New Clause 9 — Disqualification from holding further ministerial office*
-
-**Little evidence of judicial overreach in UK**
-A Member of Parliament stated there is 'extraordinarily little evidence that judges in this country are overreaching', distinguishing it from the situation in Europe and the European Court.
-*Source: Public Libraries and Museums Act 1964 (Amendment) — Clause 2 — Early parliamentary general elections*
-
-**Fears over judicial activism misplaced in domestic law**
-A Member of Parliament expressed the view that fears over judicial activism are 'misplaced' in domestic law, though acknowledging the independent Supreme Court might not always exercise restraint.
-*Source: Public Libraries and Museums Act 1964 (Amendment) — Clause 2 — Early parliamentary general elections*
-
-**Recommendation against a new joint constitutional legislation scrutiny committee**
-The Political and Constitutional Reform Committee in 2013 explicitly recommended against the creation of a 'new joint constitutional legislation standards scrutiny committee.' They believed existing processes, combined with a proposed Code of Legislative Standards, would sufficiently improve scrutiny of constitutional legislation.
-*Source: Report: 1st Report - Ensuring standards in the quality of legislation - Volume I — Political and Constitutional Reform Committee — 136 Ev w17 137 Ev w17*
-
-**The research changed my mind about causes**
-I first concluded: The UK Supreme Court has developed a self-conception as a constitutional guardian above the legislature, despite its statutory creation, leading to judicial behavior that exceeds its intended appellate role and undermines parliamentary sovereignty.
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**46 open challenges. Every one is a question the proposal has not yet answered.**
+
+**46 open challenges. Each one is a question the proposal has not yet answered.**
 
 **Does a power to do this already exist?** — 3
 
@@ -166,7 +97,7 @@ I first concluded: The UK Supreme Court has developed a self-conception as a con
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are highly concentrated on establishing and empowering a specific parliamentary scrutiny mechanism. They are logically sequenced, starting with drafting legislation to create the committee, then defining its  mandate and powers, and finally establishing a process for parliamentary response. The implementers are clearly assigned, from the Ministry of Justice for drafting to the Houses of Parliament for voting on recommendations. There are no obvious missing implementers or steps.
+On the coherence of the actions: The actions are highly concentrated on establishing and empowering a specific parliamentary scrutiny mechanism. They are logically sequenced, starting with drafting legislation to create the committee, then defining its  mandate and powers, and finally establishing a process for parliamentary response. The implementers are clearly assigned, from the Ministry of Justice for drafting to the Houses of Parliament for voting on recommendations. There are no obvious missing implementers or steps.
 
 **Read back by other models** — 11
 
@@ -178,52 +109,115 @@ I first concluded: The UK Supreme Court has developed a self-conception as a con
 
 **Tested as a strategy** — 8
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state a problem. It provides a title, which is a topic, not a statement of what is wrong, for whom, and why it matters. The text that fails  it: "The kernel has no section for THE PROBLEM."
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state a problem. It provides a title, which is a topic, not a statement of what is wrong, for whom, and why it matters. The text that fails  it: "The kernel has no section for THE PROBLEM."
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not identify a root cause or a pivotal obstacle.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not identify a root cause or a pivotal obstacle.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The diagnosis is an inventory of two points rather than a simplification that names the one thing that is pivotal.
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The diagnosis is an inventory of two points rather than a simplification that names the one thing that is pivotal.
 
 **Tested as an argument** — 1
 
-**** — A LINK IN THE CHAIN IS MISSING — The kernel provides a diagnosis (Causes) and a set of actions, but omits the pivotal obstacle and the guiding policy.
+A LINK IN THE CHAIN IS MISSING — The kernel provides a diagnosis (Causes) and a set of actions, but omits the pivotal obstacle and the guiding policy.
 
 **Read as a hostile clerk** — 5
 
-**** — The proposal hinges on the Joint Committee assessing judicial interpretation against 'original parliamentary intent'. The findings show this is an objective concept imputed by the court, not the subjective intention of ministers ([72], [29]). The proposal  does not specify how a committee of politicians, years after the fact, could establish a definitive 'intent' to measure judicial interpretation against, nor how it would handle cases where parliamentary language was deliberately ambiguous.
+The proposal hinges on the Joint Committee assessing judicial interpretation against 'original parliamentary intent'. The findings show this is an objective concept imputed by the court, not the subjective intention of ministers ([72], [29]). The proposal  does not specify how a committee of politicians, years after the fact, could establish a definitive 'intent' to measure judicial interpretation against, nor how it would handle cases where parliamentary language was deliberately ambiguous.
 
-**** — The central mechanism is for the Supreme Court to provide testimony on its 'interpretative methodologies'. This has been revised from 'mandate' to 'invite' to avoid a constitutional crisis. What is the contingency plan for when the judiciary, citing the  separation of powers and judicial independence ([24], [62]), declines the invitation? Without their testimony, the committee's core function is rendered speculative.
+The central mechanism is for the Supreme Court to provide testimony on its 'interpretative methodologies'. This has been revised from 'mandate' to 'invite' to avoid a constitutional crisis. What is the contingency plan for when the judiciary, citing the  separation of powers and judicial independence ([24], [62]), declines the invitation? Without their testimony, the committee's core function is rendered speculative.
 
-**** — The 'Constitutional Scrutiny Bill' must define the scope of 'constitutional legislation' to give the new committee its remit. This is identified as a 'notoriously difficult and contentious task' ([124]). The proposal offers no definition, leaving a central  term of art unspecified. A bill that cannot define its own subject matter is unlikely to survive its second reading.
+The 'Constitutional Scrutiny Bill' must define the scope of 'constitutional legislation' to give the new committee its remit. This is identified as a 'notoriously difficult and contentious task' ([124]). The proposal offers no definition, leaving a central  term of art unspecified. A bill that cannot define its own subject matter is unlikely to survive its second reading.
 
+### Difficulties caused by the law today
 
-# Part 5.2 · The arm's-length bodies
-## 5.2 · The arm's-length bodies
-### The question examined
-**The problem, as stated:** A large number of bodies make decisions with real public consequence — on sentencing guidance, on advertising standards, on regulation of whole sectors — while sitting outside the line of accountability that runs from a minister to Parliament to an electorate. The complaint is that nobody can be removed for what they decide.
+**9 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
 
-**What David proposes:** Abolish, privatise, or fully absorb into departments and Parliament the arm's-length body estate, which the proposer numbers at around four hundred.
+**Constitutional Reform Act 2005, s.40** — Constitutional Reform Act 2005 established the Supreme Court
+The Constitutional Reform Act 2005 established the Supreme Court, replacing the Appellate Committee of the House of Lords. Debates from the time indicate that the move was considered long overdue by some, aimed at achieving a clearer separation of powers and modernizing the highest court.
 
-**What David has ruled out:** Reviewing bodies one at a time, which the proposer says is defeated by the remainder.
+**Constitutional Reform Act 2005, sch.1 para.11** — Amendments to Supreme Court Act 1981
+Schedule 1, paragraph 11 of the Constitutional Reform Act 2005 states that 'The Supreme Court Act 1981 is amended as follows.'
+
+**Constitutional Reform Act 2005, sch.9 para.20** — Amendments to Administration of Justice Act 1969
+Schedule 9, paragraph 20 of the Constitutional Reform Act 2005 amends the Administration of Justice Act 1969. Part 2 is renamed 'Appeal from High Court to Supreme Court'. References to 'House of Lords' are substituted with 'Supreme Court' in sections 12 and 13, and section 14 is omitted.
+
+**Constitutional Reform Act 2005, sch.9 para.36** — Amendments to Supreme Court Act 1981 regarding judicial business and appeals
+Schedule 9, paragraph 36 of the Constitutional Reform Act 2005 amends the Supreme Court Act 1981. In section 9 (assistance for transaction of judicial business) subsection (6A), 'House of Lords' is substituted with 'Supreme Court'.
+
+**Constitutional Reform Act 2005, sch.9 para.42** — Amendments to Transport Act 1985
+Schedule 9, paragraph 42 of the Constitutional Reform Act 2005 amends the Transport Act 1985. In section 9 (appeals against traffic regulation conditions) subsection (9), 'House of Lords' is substituted with 'Supreme Court' in each place.
+
+**Constitutional Reform Act 2005, sch.9 para.116** — Amendments to devolution issues proceedings
+Schedule 9, paragraph 116 of the Constitutional Reform Act 2005 amends Part 3 of Schedule 10 (proceedings in England and Wales on devolution issues). In paragraph 16 (reference in civil proceedings), in sub-paragraph (2)(a), 'House of Lords' is substituted with 'Supreme Court'.
+
+**Constitutional Reform Act 2005, sch.17 para.9** — Appellate Jurisdiction Act 1876 ceased to have effect
+The Constitutional Reform Act 2005 explicitly states that the Appellate Jurisdiction Act 1876 ceased to have effect.
+
+### What the courts have said
+
+**16 judgments were retrieved and read.**
+
+**For Women Scotland Ltd v The Scottish Ministers** — Judicial interpretation seeks Parliament's meaning
+The courts, in conducting statutory interpretation, are 'seeking the meaning of the words which Parliament used'. Statutory interpretation is an exercise which requires the court to identify the meaning borne by the words in question in the particular context.
+
+**Buddington, R (on the application of) v Secretary of State for the Home Department** — Parliamentary intent as sole object in statutory interpretation
+Discerning the parliamentary intention has been described as 'the sole object in statutory interpretation'.
+
+**Exolum Pipeline System Ltd, R (on the application of) v Crown Court at Great Grimsby** — Judicial review of statutory powers and duties
+There is a recognised constitutional principle that judicial review cannot be regarded as having been dispensed with when Parliament has conferred statutory powers and imposed statutory duties.
+
+**Court of Session: court of session petition of sooy against the secretary of state for the home department 14 december 2023** — Exclusion of supervisory jurisdiction
+The UK Supreme Court has decided that, properly construed, section 67(8) of an unspecified Act did not exclude the High Court’s judicial review jurisdiction. Lord Carnwarth opined, obiter, that 'a strong case for holding that, consistently with the rule of  law, binding effect cannot be given to a clause which purports wholly to exclude the supervisory jurisdiction of the High Court to review a decision of an inferior court or tribunal, whether for excess or abuse of jurisdiction, or error of law.'
+
+**Court of Session: 2025csih4 reclaiming motion in petition for judicial review by ragbir singh and others** — Court of Session's supervisory jurisdiction
+If Parliament wished to exclude or restrict the supervisory jurisdiction of the Court of Session, then it should legislate expressly to that effect.
+
+### Evidence that runs the other way
+
+**12 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Constitutional vandalism**
+Some members of Parliament viewed the Constitutional Reform Bill as 'constitutional vandalism' for replacing the Appellate Committee of the House of Lords with an 'unnecessary supreme court' and undermining the office of the Lord Chancellor.
+*Source: Orders of the Day — Constitutional Reform Bill [Lords] — [3rd Allotted Day] — New Clause 9 — Disqualification from holding further ministerial office*
+
+**Little evidence of judicial overreach in UK**
+A Member of Parliament stated there is 'extraordinarily little evidence that judges in this country are overreaching', distinguishing it from the situation in Europe and the European Court.
+*Source: Public Libraries and Museums Act 1964 (Amendment) — Clause 2 — Early parliamentary general elections*
+
+**Fears over judicial activism misplaced in domestic law**
+A Member of Parliament expressed the view that fears over judicial activism are 'misplaced' in domestic law, though acknowledging the independent Supreme Court might not always exercise restraint.
+*Source: Public Libraries and Museums Act 1964 (Amendment) — Clause 2 — Early parliamentary general elections*
+
+**Recommendation against a new joint constitutional legislation scrutiny committee**
+The Political and Constitutional Reform Committee in 2013 explicitly recommended against the creation of a 'new joint constitutional legislation standards scrutiny committee.' They believed existing processes, combined with a proposed Code of Legislative Standards, would sufficiently improve scrutiny of constitutional legislation.
+*Source: Report: 1st Report - Ensuring standards in the quality of legislation - Volume I — Political and Constitutional Reform Committee — 136 Ev w17 137 Ev w17*
+
+**The position taken on the causes**
+The UK Supreme Court has developed a self-conception as a constitutional guardian above the legislature, despite its statutory creation, leading to judicial behavior that exceeds its intended appellate role and undermines parliamentary sovereignty.
 
 ### The evidence base
-**103 pieces of evidence, 89 with a full citation and 89 with a working link.**
+
+**128 pieces of evidence, 111 with a full citation and 113 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
-| Parliamentary debate | 34 |
-| Court judgments | 16 |
-| Not attributed to a type | 14 |
-| Acts of Parliament | 13 |
-| Select committee material | 13 |
-| Official guidance | 10 |
-| Bills before Parliament | 2 |
-| EXPLANATORY_NOTE | 1 |
+| Parliamentary debate | 41 |
+| Select committee material | 23 |
+| Court judgments | 23 |
+| Not attributed to a type | 15 |
+| Acts of Parliament | 14 |
+| Official guidance | 7 |
+| Statutory instruments | 4 |
+| CONSULTATION | 1 |
 
-**Understanding the terrain:** 304 retrieved, 40 read; 10 cited · 1 of 1 queries written
-**Evidence base:** 6 questions asked; reviewed 600 sources; 78 findings, 3 running the other way; 9 stated gaps — ⚠ an existing power may remove the need for a Bill · 7 of 7 queries written
+**How this was searched:** 6 research questions asked; 600 sources reviewed; 94 findings recorded, of which 4 run against the measure; 16 gaps stated.
 
-### What is wrong, and why it persists
+# Part 7.2 · The arm's-length bodies
+## 7.2 · The arm's-length bodies
+
+### Diagnosis
+
+**The problem, as stated:** A large number of bodies make decisions with real public consequence — on sentencing guidance, on advertising standards, on regulation of whole sectors — while sitting outside the line of accountability that runs from a minister to Parliament to an electorate. The complaint is that nobody can be removed for what they decide.
+
 The accountability gap is not an accident but a design feature. The ALB estate is fragmented across hundreds of individual statutes precisely because this diffusion of responsibility benefits both ministers, who can delegate blame for controversial decisions, and officials, who can exercise power without direct accountability. This deliberate fragmentation is why piecemeal reform always fails; there is no single lever to pull.
 
 **3 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -237,10 +231,16 @@ The accountability gap is not an accident but a design feature. The ALB estate i
 **Cause 3 — CONTRIBUTORY.** The Public Bodies Act 2011, while providing powers to abolish, merge, or modify ALBs, includes deliberate restrictions on ministerial powers for independent functions.
 *Why it persists:* Section 7 of the Act explicitly prevents modification or transfer of functions from preventing independent exercise in cases like judicial functions or oversight of ministerial actions, thereby maintaining a degree of independence that can limit direct ministerial accountability for certain ALB decisions.
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Abolish, privatise, or fully absorb into departments and Parliament the arm's-length body estate, which the proposer numbers at around four hundred.
+
+**What David has ruled out:** Reviewing bodies one at a time, which the proposer says is defeated by the remainder.
+
 Attack the fragmentation itself, not the individual bodies. Create a single, powerful statutory mechanism that forces every ALB to be sorted into one of a few mandatory accountability templates (e.g., full absorption, statutory body with ministerial override, privatisation, or abolition) on a fixed, rolling timetable.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Draft and introduce an 'Arm's-Length Body Accountability Bill' that establishes a unified statutory framework for ministerial oversight and direct accountability of ALB decision-makers, including provisions for removal based on performance or policy divergence.
@@ -255,68 +255,17 @@ Attack the fragmentation itself, not the individual bodies. Create a single, pow
 **4.** Implement a public information campaign explaining the new accountability framework, its benefits for democratic oversight, and the process for public engagement with ALB decisions, managed by the relevant departmental communications teams.
 *Who does it:* Government Communications Service / Departmental Communications Teams
 
-### The law as it stands
-**6 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Public Bodies Act 2011, s.1** — Existing power to abolish or merge ALBs
-The Public Bodies Act 2011, specifically sections 1 and 2, confers power on a Minister to abolish or merge arm's-length bodies (ALBs) by order. This power also allows for the transfer of functions from abolished bodies to eligible persons, including Ministers or other public functionaries.
+### Consequential decisions
 
-**Public Bodies Act 2011, s.11** — Procedure for exercising existing powers
-If a Minister decides to proceed with an order under sections 1 to 5 of the Public Bodies Act 2011, they must lay a draft order and an explanatory document before Parliament.
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Public Bodies Act 2011, s.12** — Time limit on existing powers
-The power to abolish or merge ALBs under the Public Bodies Act 2011 is time-limited. Any entry in Schedules 1 to 5 of the Act ceases to have effect after five years from its commencement, though orders already made by virtue of that entry remain unaffected.
-
-**Public Bodies Act 2011, s.5** — Existing power to modify or transfer functions
-A Minister may, by order, modify the functions of a body or office specified in Schedule 5 of the Public Bodies Act 2011, or transfer a function of such a person to an eligible person. Modifying functions includes conferring, abolishing, or changing the purpose, objective, or conditions of a function.
-
-**Public Bodies Act 2011, s.8** — Conditions for orders under Public Bodies Act 2011
-A Minister can make an order under sections 1 to 5 of the Public Bodies Act 2011 only if they consider it improves the exercise of public functions, considering efficiency, effectiveness, economy, and securing appropriate accountability to Ministers (s.8).
-
-**Public Bodies Act 2011, s.7** — Restrictions on Ministerial powers under Public Bodies Act 2011
-The modification or transfer of a function by an order under sections 1 to 5 of the Public Bodies Act 2011 must not prevent its independent exercise in cases of judicial functions, enforcement activities against Ministers, or oversight/scrutiny of Ministerial actions (s.7).
-
-### What the courts have said
-**14 judgments were retrieved and read.**
-
-**Austin v Chief Constable of Surrey Police** — Carltona principle allows ministerial delegation to officials
-The 'Carltona principle' generally allows ministers to delegate functions to officials, with the minister remaining accountable to Parliament.
-
-**In the matter of an application for judicial review by John Vincent McCann, a solicitor and a member of the Solicitor's Criminal Bar Association and In the matter of the payment of fees for a Solicitor's work in criminal matters under the Legal aid, Advice and assistance (NI) Order 1981** — Carltona principle applies to subordinate legislation
-The Carltona principle applies to the making of subordinate legislation, allowing officials within a department to make rules in the Minister's name.
-
-**In the matter of an application by Joseph Lockhart for Judicial Review** — Carltona principle can be displaced by contrary statutory intention
-The Carltona principle may be displaced by a contrary intention expressed in a particular act of Parliament. Parliament may expressly limit the power to devolve or delegate a decision, requiring the specified decision-maker to exercise the power in person.
-
-**Castle v Crown Prosecution Service** — Carltona principle reinforced in later cases
-Lord Greene's observations on the Carltona principle, though potentially obiter dicta, have acquired powerful support in later cases, amplifying and reinforcing the principle.
-
-**R v Adams (Northern Ireland)** — Carltona principle does not mean personal attention to every matter
-The Carltona principle acknowledges that public business could not be carried on if ministers had to personally attend to every multifarious function assigned to them; duties and powers are normally exercised under their authority by responsible departmental.
-
-### Evidence that runs the other way
-**10 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**Time limit on existing powers**
-The power to abolish or merge ALBs under the Public Bodies Act 2011 is time-limited. Any entry in Schedules 1 to 5 of the Act ceases to have effect after five years from its commencement, though orders already made by virtue of that entry remain unaffected.
-*Source: Public Bodies Act 2011, s.12*
-
-**Arm's length bodies do not absolve Ministers of responsibility**
-A debate on Civil Service Reform noted that the 'fiction that an arm’s length body can somehow absolve Ministers of responsibility' does not work in the real world, and accountability will ultimately remain with Ministers.
-*Source: Cabinet Office — Civil Service Reform*
-
-**Loosening ministerial involvement in accountability**
-One witness suggested that the process of accountability needs to be loosened, with the minister being less involved, an approach that was questioned in a Scottish Parliament debate.
-*Source: Scottish Parliament: On resuming—*
-
-**The research changed my mind about guidingPolicy:instrument**
-I first concluded: Primary legislation · national · reserved The evidence says: The Public Bodies Act 2011, specifically sections 1 and 2, confers power on a Minister to abolish or merge arm's-length bodies (ALBs) by order. This power also allows for the transfer of functions from abolished bodies to eligible persons, including Ministers or other public functionaries. Section 5 of the Public Bodies Act 2011 confers power on a  Minister to make provision by order to modify the functions of a body or office-holder listed in Schedule 5, or to transfer a function of such a body or office-holder to an eligible person., which reaches part of this and not the rest. Before anything else, decide whether you need a new Act at all.
-
-**The research changed my mind about causes**
-I first concluded: The core problem is that the constitutional principle of ministerial responsibility, while central to the UK system, inadvertently shields individual arm's-length body decision-makers from direct accountability and removal, creating a democratic deficit.
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**46 open challenges. Every one is a question the proposal has not yet answered.**
+
+**46 open challenges. Each one is a question the proposal has not yet answered.**
 
 **Does a power to do this already exist?** — 2
 
@@ -364,7 +313,7 @@ I first concluded: The core problem is that the constitutional principle of mini
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are concentrated on amending and utilising the Public Bodies Act 2011, providing a clear direction. The sequencing is logical, starting with legislative changes and task force establishment before developing  guidance and public campaigns. Implementers are clearly named, primarily the Ministry of Justice and Cabinet Office, with departmental involvement for guidance and communications.
+On the coherence of the actions: The actions are concentrated on amending and utilising the Public Bodies Act 2011, providing a clear direction. The sequencing is logical, starting with legislative changes and task force establishment before developing  guidance and public campaigns. Implementers are clearly named, primarily the Ministry of Justice and Cabinet Office, with departmental involvement for guidance and communications.
 
 **Read back by other models** — 13
 
@@ -376,49 +325,107 @@ I first concluded: The core problem is that the constitutional principle of mini
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel is missing the 'PROBLEM' section. A strategy must begin with a clear statement of what is wrong, for whom, and why it matters. The text that fails it  : "The kernel has no section for THE PROBLEM."
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel is missing the 'PROBLEM' section. A strategy must begin with a clear statement of what is wrong, for whom, and why it matters. The text that fails it  : "The kernel has no section for THE PROBLEM."
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel is missing the 'DIAGNOSIS' section.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel is missing the 'DIAGNOSIS' section.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel is missing the 'DIAGNOSIS' section. A diagnosis must simplify the situation to name the one thing that must be defeated for anything else to matter. The  text that fails it: "The kernel has no section for DIAGNOSIS."
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel is missing the 'DIAGNOSIS' section. A diagnosis must simplify the situation to name the one thing that must be defeated for anything else to matter. The  text that fails it: "The kernel has no section for DIAGNOSIS."
 
 **Read as a hostile clerk** — 6
 
-**** — The central claim that 'nobody can be removed for what they decide' is an unquantified assertion. The proposal rests entirely on this premise, but provides no specific examples of ALB leaders who could not be removed for poor performance or policy divergence  under existing public appointment rules and framework agreements.
+The central claim that 'nobody can be removed for what they decide' is an unquantified assertion. The proposal rests entirely on this premise, but provides no specific examples of ALB leaders who could not be removed for poor performance or policy divergence  under existing public appointment rules and framework agreements.
 
-**** — The proposal is to introduce removal powers based on 'policy divergence'. This term is undefined. For bodies designed to provide independent advice, such as those under the Haldane Principle or the Climate Change Committee, divergence from government policy  is a feature of their function, not a failure. Without a precise, legally defensible definition, this power will be challenged as an attempt to politicise independent functions.
+The proposal is to introduce removal powers based on 'policy divergence'. This term is undefined. For bodies designed to provide independent advice, such as those under the Haldane Principle or the Climate Change Committee, divergence from government policy  is a feature of their function, not a failure. Without a precise, legally defensible definition, this power will be challenged as an attempt to politicise independent functions.
 
-**** — The new Bill will create statutory powers of removal, which will inevitably be subject to judicial review. The proposal is silent on how it will withstand legal challenges from removed ALB leaders, particularly where the body has quasi-judicial functions or  was established to be independent of ministerial control.
+The new Bill will create statutory powers of removal, which will inevitably be subject to judicial review. The proposal is silent on how it will withstand legal challenges from removed ALB leaders, particularly where the body has quasi-judicial functions or  was established to be independent of ministerial control.
 
+### Difficulties caused by the law today
 
-# Part 5.3 · Judicial review of ministers’ decisions
-## 5.3 · Judicial review of ministers’ decisions
-### The question examined
-**The problem, as stated:** Ministerial decisions are routinely reopened in court on grounds that shade from legality into the merits, so that the practical question of what government may do is settled after the decision rather than at the election. The complaint is about the frequency and reach of the intervention, not about the existence of a remedy.
+**6 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
 
-**What David proposes:** Narrow judicial review of executive action, by ouster clause or by statutory restriction of the available grounds.
+**Public Bodies Act 2011, s.1** — Existing power to abolish or merge ALBs
+The Public Bodies Act 2011, specifically sections 1 and 2, confers power on a Minister to abolish or merge arm's-length bodies (ALBs) by order. This power also allows for the transfer of functions from abolished bodies to eligible persons, including Ministers or other public functionaries.
 
-**What David has ruled out:** Procedural reform of the kind already enacted, which the proposer treats as insufficient.
+**Public Bodies Act 2011, s.11** — Procedure for exercising existing powers
+If a Minister decides to proceed with an order under sections 1 to 5 of the Public Bodies Act 2011, they must lay a draft order and an explanatory document before Parliament.
+
+**Public Bodies Act 2011, s.12** — Time limit on existing powers
+The power to abolish or merge ALBs under the Public Bodies Act 2011 is time-limited. Any entry in Schedules 1 to 5 of the Act ceases to have effect after five years from its commencement, though orders already made by virtue of that entry remain unaffected.
+
+**Public Bodies Act 2011, s.5** — Existing power to modify or transfer functions
+A Minister may, by order, modify the functions of a body or office specified in Schedule 5 of the Public Bodies Act 2011, or transfer a function of such a person to an eligible person. Modifying functions includes conferring, abolishing, or changing the purpose, objective, or conditions of a function.
+
+**Public Bodies Act 2011, s.8** — Conditions for orders under Public Bodies Act 2011
+A Minister can make an order under sections 1 to 5 of the Public Bodies Act 2011 only if they consider it improves the exercise of public functions, considering efficiency, effectiveness, economy, and securing appropriate accountability to Ministers (s.8).
+
+**Public Bodies Act 2011, s.7** — Restrictions on Ministerial powers under Public Bodies Act 2011
+The modification or transfer of a function by an order under sections 1 to 5 of the Public Bodies Act 2011 must not prevent its independent exercise in cases of judicial functions, enforcement activities against Ministers, or oversight/scrutiny of Ministerial actions (s.7).
+
+### What the courts have said
+
+**14 judgments were retrieved and read.**
+
+**Austin v Chief Constable of Surrey Police** — Carltona principle allows ministerial delegation to officials
+The 'Carltona principle' generally allows ministers to delegate functions to officials, with the minister remaining accountable to Parliament.
+
+**In the matter of an application for judicial review by John Vincent McCann, a solicitor and a member of the Solicitor's Criminal Bar Association and In the matter of the payment of fees for a Solicitor's work in criminal matters under the Legal aid, Advice and assistance (NI) Order 1981** — Carltona principle applies to subordinate legislation
+The Carltona principle applies to the making of subordinate legislation, allowing officials within a department to make rules in the Minister's name.
+
+**In the matter of an application by Joseph Lockhart for Judicial Review** — Carltona principle can be displaced by contrary statutory intention
+The Carltona principle may be displaced by a contrary intention expressed in a particular act of Parliament. Parliament may expressly limit the power to devolve or delegate a decision, requiring the specified decision-maker to exercise the power in person.
+
+**Castle v Crown Prosecution Service** — Carltona principle reinforced in later cases
+Lord Greene's observations on the Carltona principle, though potentially obiter dicta, have acquired powerful support in later cases, amplifying and reinforcing the principle.
+
+**R v Adams (Northern Ireland)** — Carltona principle does not mean personal attention to every matter
+The Carltona principle acknowledges that public business could not be carried on if ministers had to personally attend to every multifarious function assigned to them; duties and powers are normally exercised under their authority by responsible departmental.
+
+### Evidence that runs the other way
+
+**10 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Time limit on existing powers**
+The power to abolish or merge ALBs under the Public Bodies Act 2011 is time-limited. Any entry in Schedules 1 to 5 of the Act ceases to have effect after five years from its commencement, though orders already made by virtue of that entry remain unaffected.
+*Source: Public Bodies Act 2011, s.12*
+
+**Arm's length bodies do not absolve Ministers of responsibility**
+A debate on Civil Service Reform noted that the 'fiction that an arm’s length body can somehow absolve Ministers of responsibility' does not work in the real world, and accountability will ultimately remain with Ministers.
+*Source: Cabinet Office — Civil Service Reform*
+
+**Loosening ministerial involvement in accountability**
+One witness suggested that the process of accountability needs to be loosened, with the minister being less involved, an approach that was questioned in a Scottish Parliament debate.
+*Source: Scottish Parliament: On resuming—*
+
+**Where the evidence settled the instrument**
+The Public Bodies Act 2011, specifically sections 1 and 2, confers power on a Minister to abolish or merge arm's-length bodies (ALBs) by order. This power also allows for the transfer of functions from abolished bodies to eligible persons, including Ministers or other public functionaries. Section 5 of the Public Bodies Act 2011 confers power on a  Minister to make provision by order to modify the functions of a body or office-holder listed in Schedule 5, or to transfer a function of such a body or office-holder to an eligible person., which reaches part of this and not the rest. Before anything else, decide whether you need a new Act at all.
+
+**The position taken on the causes**
+The core problem is that the constitutional principle of ministerial responsibility, while central to the UK system, inadvertently shields individual arm's-length body decision-makers from direct accountability and removal, creating a democratic deficit.
 
 ### The evidence base
-**109 pieces of evidence, 96 with a full citation and 83 with a working link.**
+
+**103 pieces of evidence, 89 with a full citation and 89 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
-| Parliamentary debate | 30 |
-| Court judgments | 23 |
-| Select committee material | 16 |
-| Not attributed to a type | 13 |
-| Bills before Parliament | 11 |
-| EXPLANATORY_NOTE | 7 |
-| Acts of Parliament | 7 |
-| CONSULTATION | 1 |
-| Official guidance | 1 |
+| Parliamentary debate | 34 |
+| Court judgments | 16 |
+| Not attributed to a type | 14 |
+| Acts of Parliament | 13 |
+| Select committee material | 13 |
+| Official guidance | 10 |
+| Bills before Parliament | 2 |
+| EXPLANATORY_NOTE | 1 |
 
-**Understanding the terrain:** 267 retrieved, 40 read; 15 cited · 1 of 1 queries written
-**Evidence base:** 6 questions asked; reviewed 600 sources; 58 findings, 2 running the other way; 7 stated gaps — ⚠ an existing power may remove the need for a Bill · 7 of 7 queries written
+**How this was searched:** 6 research questions asked; 600 sources reviewed; 78 findings recorded, of which 3 run against the measure; 9 gaps stated. ⚠ an existing power may remove the need for a Bill
 
-### What is wrong, and why it persists
+# Part 7.3 · Judicial review of ministers’ decisions
+## 7.3 · Judicial review of ministers’ decisions
+
+### Diagnosis
+
+**The problem, as stated:** Ministerial decisions are routinely reopened in court on grounds that shade from legality into the merits, so that the practical question of what government may do is settled after the decision rather than at the election. The complaint is about the frequency and reach of the intervention, not about the existence of a remedy.
+
 Despite the Independent Review of Administrative Law finding no systemic judicial overreach, the executive perceives that in high-stakes cases, judicial review blurs the line between legality and policy merits. This perception fuels a desire for legislative certainty. The root cause is the constitutional tension between parliamentary sovereignty and the rule of law.
 
 **2 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -429,10 +436,16 @@ Despite the Independent Review of Administrative Law finding no systemic judicia
 **Cause 2 — MATERIAL.** The prevailing legal interpretation of ouster clauses by courts limits their effectiveness, allowing for continued judicial scrutiny of executive decisions.
 *Why it persists:* The judiciary's historical resistance to broad ouster clauses, rooted in the protection of the rule of law, means legislative attempts are often read down or challenged.
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Narrow judicial review of executive action, by ouster clause or by statutory restriction of the available grounds.
+
+**What David has ruled out:** Procedural reform of the kind already enacted, which the proposer treats as insufficient.
+
 Assert parliamentary sovereignty by using narrow, targeted primary legislation that defines the precise boundaries of judicial review for a specific statutory power, rather than attempting a broad, general ouster. The approach is to make the statutory language so explicit that for a court to set it aside would require it to directly challenge Parliament's authority, not merely 'interpret' its intent.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Draft primary legislation to amend the relevant Act(s) for a specific, high-frequency area of challenge (e.g., immigration decisions), introducing statutory definitions of 'merits' and 'legality' that explicitly delineate the boundaries of judicial review for decisions made under that Act. This legislation should specify that decisions falling within the 'merits' as defined are not subject to judicial review on those grounds.
@@ -447,71 +460,17 @@ Assert parliamentary sovereignty by using narrow, targeted primary legislation t
 **4.** Amend the Civil Procedure Rules (CPR) to introduce a fast-track procedure for challenges to the scope of judicial review under the new legislation, specifically for cases where the claimant argues a decision falls outside the statutory 'merits' definition. This would provide early clarity on jurisdictional questions.
 *Who does it:* Civil Procedure Rule Committee (CPRC)
 
-### The law as it stands
-**7 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Tribunals, Courts and Enforcement Act 2007, s.11A** — Judicial Review and Courts Act 2022 amended Tribunals, Courts and Enforcement Act 2007
-Section 11A of the Tribunals, Courts and Enforcement Act 2007, inserted by the Judicial Review and Courts Act 2022, explicitly states that the supervisory jurisdiction does not extend to, and no application for judicial review may be made in relation to, certain decisions of the Upper Tribunal, particularly regarding errors.
+### Consequential decisions
 
-**Courts and Tribunals (Judiciary and Functions of Staff) Act 2018, s.3** — Courts and Tribunals (Judiciary and Functions of Staff) Act 2018 allows regulations for judicial functions
-Section 3 of the Courts and Tribunals (Judiciary and Functions of Staff) Act 2018 allows the Secretary of State or Lord Chancellor to make regulations by statutory instrument to provide for authorised court and tribunal staff to provide legal advice to judges and justices of the peace, and to exercise judicial functions where.
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Terrorism Prevention and Investigation Measures Act 2011, s.17** — Terrorism Prevention and Investigation Measures Act 2011 includes specific ouster clause
-Section 17 of the Terrorism Prevention and Investigation Measures Act 2011 states that TPIM decisions are not to be questioned in any legal proceedings other than proceedings in 'the court' or appeals from such proceedings. 'The court' is defined as the appropriate tribunal for Human Rights Act 1998 purposes.
-
-**Justice and Security (Northern Ireland) Act 2007, s.7** — Justice and Security (Northern Ireland) Act 2007 limits challenge of certificates
-Section 7 of the Justice and Security (Northern Ireland) Act 2007 limits challenges to decisions of the Director of Public Prosecutions for Northern Ireland regarding the issue of certificates under section 1.
-
-**Judicial Review and Courts Act 2022, s.2** — Ouster Clauses in Judicial Review and Courts Act 2022
-The Judicial Review and Courts Act 2022 includes an ouster clause (section 11A) designed to reverse 'Cart' judicial reviews, which sought to remove a person's ability to judicially review a decision of the Upper Tribunal to refuse permission to appeal from the First-tier Tribunal.
-
-**Judicial Review and Courts Act 2022** — Civil Procedure Rules and Judicial Review
-The Judicial Review and Courts Act 2022 indicates that Procedure Rules may refer to provisions made or to be made by directions under sections 7A or 29A. This suggests that amendments to the Civil Procedure Rules (CPR) are a recognized mechanism for implementing changes related to judicial review procedures.
-
-**Border Security, Asylum and Immigration Act 2025, s.40** — Safety of Rwanda (Asylum and Immigration) Act 2024: Repeal
-The Border Security, Asylum and Immigration Act 2025 explicitly repeals the Safety of Rwanda (Asylum and Immigration) Act 2024 in its entirety.
-
-### What the courts have said
-**14 judgments were retrieved and read.**
-
-**R v Investigatory Powers Tribunal and others** — Privacy International reaffirmed Anisminic principle
-The Supreme Court in R v Investigatory Powers Tribunal and others [2019] UKSC 22 reaffirmed the Anisminic principle, stating that any determination based on an error of law, whether going to the jurisdiction of the tribunal or not, was not a 'determination'.
-
-**LA (Albania), R (on the application of) v The Upper Tribunal (Immigration & Asylum Chamber)** — Judicial Resistance to Ouster Clauses
-Courts have historically resisted broad ouster clauses, interpreting them narrowly to preserve judicial review for errors of law, as demonstrated in cases like Anisminic (1969) and Privacy International (2019).
-
-**Secretary of State for the Foreign & Commonwealth Affairs v Bancoult, R (on the application of)** — Judicial review of prerogative powers established in 1967
-The reviewability of ministerial acts in the exercise of the royal prerogative was not established until the landmark decision of the Divisional Court in R v Criminal Injuries Compensation Board, ex p Lain [1967] 2 QB 864.
-
-**R (on the application of Cart) v The Upper Tribunal** — Judicial review of Upper Tribunal decisions (Cart case)
-The Supreme Court in R (Cart) v The Upper Tribunal [2011] UKSC 28 decided that judicial review was an available remedy for otherwise unappealable decisions of the Upper Tribunal.
-
-**Privacy International, R (on the application of) v Secretary of State for Foreign and Commonwealth Affairs & Ors** — Anisminic Ltd v Foreign Compensation Commission: Ouster Clause Interpretation
-In Anisminic Ltd v Foreign Compensation Commission [1969] 2 AC 147, the House of Lords held that an ouster clause stating decisions 'shall not be called in question in any court of law' did not prevent judicial review for errors of law. This case is  considered a classic example of the courts' highly restrictive approach to interpreting statutory provisions that purport to oust the High Court's jurisdiction.
-
-### Evidence that runs the other way
-**9 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**IRAL found no systemic overreach by courts**
-The Independent Review of Administrative Law (IRAL) concluded that there was no systemic overreach by the courts, despite the government's commitment to updating administrative law.
-*Source: Correspondence: Letter from the Justice Secretary, Rt Hon Robert Buckland QC MP on Independent Review of Administrative Law, dated 31.7.20*
-
-**Government proceeded with reforms beyond IRAL recommendations**
-Despite the IRAL's conclusion of no systemic overreach, the government proceeded with a consultation on changes to judicial review that went beyond the IRAL's recommendations. This included proposals to increase the circumstances in which judicial review would not apply. The proposer notes this in their account.
-*Source: Correspondence: Letter from Rt Hon Robert Buckland QC MP, Lord Chancellor and Secretary of State for Justice, dated 17 March 2021, regarding Independent Review of Administrative Law*
-
-**The research changed my mind about causes**
-I first concluded: Ministerial decisions are frequently challenged in court on grounds that extend beyond strict legality into the merits, leading to policy being determined by courts rather than elected officials, which undermines executive effectiveness.
-
-**Parliamentary Sovereignty: Not Untrammelled Executive Authority**
-It has been argued that the Judicial Review and Courts Bill does not assert parliamentary sovereignty but rather promotes untrammelled Executive authority. This perspective suggests the Bill is not about respecting Parliament's will but about allowing government and public authorities to exceed or ignore limits placed on them by Parliament.
-*Source: Judicial Review and Courts Bill — New Clause 4 - Publicly funded legal representation for bereaved people at inquests*
-
-**The critique rewrote summaryDiagnosis**
-It was saying: The diagnosis was a simple assertion that courts were overreaching into the merits of decisions. It now says: The diagnosis now acknowledges the contradictory IRAL finding and reframes the problem as one of executive perception and constitutional tension, which is more defensible.
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**50 open challenges. Every one is a question the proposal has not yet answered.**
+
+**50 open challenges. Each one is a question the proposal has not yet answered.**
 
 **Does a power to do this already exist?** — 4
 
@@ -561,7 +520,7 @@ It was saying: The diagnosis was a simple assertion that courts were overreachin
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are concentrated on defining and enforcing the boundary between legality and merits. The sequencing is logical: legislation defines the terms, internal review applies them, statements of reasons document  compliance, and CPR amendments provide a mechanism for early resolution of jurisdictional disputes. The implementers are clearly named, primarily the Ministry of Justice and relevant policy departments, with the CPRC for procedural rules.
+On the coherence of the actions: The actions are concentrated on defining and enforcing the boundary between legality and merits. The sequencing is logical: legislation defines the terms, internal review applies them, statements of reasons document  compliance, and CPR amendments provide a mechanism for early resolution of jurisdictional disputes. The implementers are clearly named, primarily the Ministry of Justice and relevant policy departments, with the CPRC for procedural rules.
 
 **Read back by other models** — 13
 
@@ -573,51 +532,121 @@ It was saying: The diagnosis was a simple assertion that courts were overreachin
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel is missing the 'PROBLEM' section. It begins with a list of causes without first stating what is wrong, for whom, and why it matters. The text that  fails it: "The kernel has no section for THE PROBLEM."
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel is missing the 'PROBLEM' section. It begins with a list of causes without first stating what is wrong, for whom, and why it matters. The text that  fails it: "The kernel has no section for THE PROBLEM."
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel provides an inventory of two causes rather than a diagnosis that simplifies the problem to a single pivotal obstacle.
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel provides an inventory of two causes rather than a diagnosis that simplifies the problem to a single pivotal obstacle.
 
 **Tested as an argument** — 1
 
-**** — A LINK IN THE CHAIN IS MISSING — The kernel jumps from diagnosis (Causes) to execution (Actions) without stating the pivotal obstacle or the guiding policy.
+A LINK IN THE CHAIN IS MISSING — The kernel jumps from diagnosis (Causes) to execution (Actions) without stating the pivotal obstacle or the guiding policy.
 
 **Read as a hostile clerk** — 7
 
-**** — The proposal's core mechanism is to introduce statutory definitions of 'merits' and 'legality', but it provides no draft text or even a principle for how these concepts can be defined in a way that circumvents the long-standing judicial interpretation  established in Anisminic and Privacy International.
+The proposal's core mechanism is to introduce statutory definitions of 'merits' and 'legality', but it provides no draft text or even a principle for how these concepts can be defined in a way that circumvents the long-standing judicial interpretation  established in Anisminic and Privacy International.
 
-**** — The proposal rests on the unquantified claim that challenges on 'merits' grounds are frequent. In light of the Independent Review of Administrative Law finding no systemic overreach, the absence of data on the number and type of cases this legislation would  affect makes it impossible to assess the scale of the problem or the impact of the solution.
+The proposal rests on the unquantified claim that challenges on 'merits' grounds are frequent. In light of the Independent Review of Administrative Law finding no systemic overreach, the absence of data on the number and type of cases this legislation would  affect makes it impossible to assess the scale of the problem or the impact of the solution.
 
-**** — The mandatory 'pre-decision review' mechanism requires internal legal advice to be recorded and made available to potential challengers. This appears to create a new litigation risk for the government by arming opponents with a discoverable record of internal  dissent or legal uncertainty, potentially chilling the provision of candid advice.
+The mandatory 'pre-decision review' mechanism requires internal legal advice to be recorded and made available to potential challengers. This appears to create a new litigation risk for the government by arming opponents with a discoverable record of internal  dissent or legal uncertainty, potentially chilling the provision of candid advice.
 
+### The critique revisions
 
-# Part 5.4 · The independence of the Bank of England
-## 5.4 · The independence of the Bank of England
-### The question examined
-**The problem, as stated:** Monetary policy has large distributional consequences and is decided by people who cannot be removed by an electorate, and when the decisions go wrong there is no mechanism by which anyone answers for them. The complaint is that a political choice was reclassified as a technical one.
+**The critique is an adversarial review by a different AI model**, given the measure and asked to attack its logic rather than its politics. Where it found a defect that could be fixed, the measure was rewritten and the change is recorded here — what it said before, what it says now, and why. Where nothing was weighed against a change, that is said rather than hidden.
 
-**What David proposes:** Reverse the operational independence of the Bank of England conferred in 1998.
+**On the diagnosis**
+**Was:** The diagnosis was a simple assertion that courts were overreaching into the merits of decisions. 
 
-**What David has ruled out:** Not stated by the proposer.
+**Now:** The diagnosis now acknowledges the contradictory IRAL finding and reframes the problem as one of executive perception and constitutional tension, which is more defensible.
+
+### Difficulties caused by the law today
+
+**7 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+
+**Tribunals, Courts and Enforcement Act 2007, s.11A** — Judicial Review and Courts Act 2022 amended Tribunals, Courts and Enforcement Act 2007
+Section 11A of the Tribunals, Courts and Enforcement Act 2007, inserted by the Judicial Review and Courts Act 2022, explicitly states that the supervisory jurisdiction does not extend to, and no application for judicial review may be made in relation to, certain decisions of the Upper Tribunal, particularly regarding errors.
+
+**Courts and Tribunals (Judiciary and Functions of Staff) Act 2018, s.3** — Courts and Tribunals (Judiciary and Functions of Staff) Act 2018 allows regulations for judicial functions
+Section 3 of the Courts and Tribunals (Judiciary and Functions of Staff) Act 2018 allows the Secretary of State or Lord Chancellor to make regulations by statutory instrument to provide for authorised court and tribunal staff to provide legal advice to judges and justices of the peace, and to exercise judicial functions where.
+
+**Terrorism Prevention and Investigation Measures Act 2011, s.17** — Terrorism Prevention and Investigation Measures Act 2011 includes specific ouster clause
+Section 17 of the Terrorism Prevention and Investigation Measures Act 2011 states that TPIM decisions are not to be questioned in any legal proceedings other than proceedings in 'the court' or appeals from such proceedings. 'The court' is defined as the appropriate tribunal for Human Rights Act 1998 purposes.
+
+**Justice and Security (Northern Ireland) Act 2007, s.7** — Justice and Security (Northern Ireland) Act 2007 limits challenge of certificates
+Section 7 of the Justice and Security (Northern Ireland) Act 2007 limits challenges to decisions of the Director of Public Prosecutions for Northern Ireland regarding the issue of certificates under section 1.
+
+**Judicial Review and Courts Act 2022, s.2** — Ouster Clauses in Judicial Review and Courts Act 2022
+The Judicial Review and Courts Act 2022 includes an ouster clause (section 11A) designed to reverse 'Cart' judicial reviews, which sought to remove a person's ability to judicially review a decision of the Upper Tribunal to refuse permission to appeal from the First-tier Tribunal.
+
+**Judicial Review and Courts Act 2022** — Civil Procedure Rules and Judicial Review
+The Judicial Review and Courts Act 2022 indicates that Procedure Rules may refer to provisions made or to be made by directions under sections 7A or 29A. This suggests that amendments to the Civil Procedure Rules (CPR) are a recognized mechanism for implementing changes related to judicial review procedures.
+
+**Border Security, Asylum and Immigration Act 2025, s.40** — Safety of Rwanda (Asylum and Immigration) Act 2024: Repeal
+The Border Security, Asylum and Immigration Act 2025 explicitly repeals the Safety of Rwanda (Asylum and Immigration) Act 2024 in its entirety.
+
+### What the courts have said
+
+**14 judgments were retrieved and read.**
+
+**R v Investigatory Powers Tribunal and others** — Privacy International reaffirmed Anisminic principle
+The Supreme Court in R v Investigatory Powers Tribunal and others [2019] UKSC 22 reaffirmed the Anisminic principle, stating that any determination based on an error of law, whether going to the jurisdiction of the tribunal or not, was not a 'determination'.
+
+**LA (Albania), R (on the application of) v The Upper Tribunal (Immigration & Asylum Chamber)** — Judicial Resistance to Ouster Clauses
+Courts have historically resisted broad ouster clauses, interpreting them narrowly to preserve judicial review for errors of law, as demonstrated in cases like Anisminic (1969) and Privacy International (2019).
+
+**Secretary of State for the Foreign & Commonwealth Affairs v Bancoult, R (on the application of)** — Judicial review of prerogative powers established in 1967
+The reviewability of ministerial acts in the exercise of the royal prerogative was not established until the landmark decision of the Divisional Court in R v Criminal Injuries Compensation Board, ex p Lain [1967] 2 QB 864.
+
+**R (on the application of Cart) v The Upper Tribunal** — Judicial review of Upper Tribunal decisions (Cart case)
+The Supreme Court in R (Cart) v The Upper Tribunal [2011] UKSC 28 decided that judicial review was an available remedy for otherwise unappealable decisions of the Upper Tribunal.
+
+**Privacy International, R (on the application of) v Secretary of State for Foreign and Commonwealth Affairs & Ors** — Anisminic Ltd v Foreign Compensation Commission: Ouster Clause Interpretation
+In Anisminic Ltd v Foreign Compensation Commission [1969] 2 AC 147, the House of Lords held that an ouster clause stating decisions 'shall not be called in question in any court of law' did not prevent judicial review for errors of law. This case is  considered a classic example of the courts' highly restrictive approach to interpreting statutory provisions that purport to oust the High Court's jurisdiction.
+
+### Evidence that runs the other way
+
+**9 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**IRAL found no systemic overreach by courts**
+The Independent Review of Administrative Law (IRAL) concluded that there was no systemic overreach by the courts, despite the government's commitment to updating administrative law.
+*Source: Correspondence: Letter from the Justice Secretary, Rt Hon Robert Buckland QC MP on Independent Review of Administrative Law, dated 31.7.20*
+
+**Government proceeded with reforms beyond IRAL recommendations**
+Despite the IRAL's conclusion of no systemic overreach, the government proceeded with a consultation on changes to judicial review that went beyond the IRAL's recommendations. This included proposals to increase the circumstances in which judicial review would not apply. The proposer notes this in their account.
+*Source: Correspondence: Letter from Rt Hon Robert Buckland QC MP, Lord Chancellor and Secretary of State for Justice, dated 17 March 2021, regarding Independent Review of Administrative Law*
+
+**The position taken on the causes**
+Ministerial decisions are frequently challenged in court on grounds that extend beyond strict legality into the merits, leading to policy being determined by courts rather than elected officials, which undermines executive effectiveness.
+
+**Parliamentary Sovereignty: Not Untrammelled Executive Authority**
+It has been argued that the Judicial Review and Courts Bill does not assert parliamentary sovereignty but rather promotes untrammelled Executive authority. This perspective suggests the Bill is not about respecting Parliament's will but about allowing government and public authorities to exceed or ignore limits placed on them by Parliament.
+*Source: Judicial Review and Courts Bill — New Clause 4 - Publicly funded legal representation for bereaved people at inquests*
 
 ### The evidence base
-**119 pieces of evidence, 105 with a full citation and 95 with a working link.**
+
+**109 pieces of evidence, 96 with a full citation and 83 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
-| Parliamentary debate | 45 |
-| Select committee material | 27 |
-| Acts of Parliament | 21 |
-| Not attributed to a type | 14 |
-| Court judgments | 6 |
-| Official guidance | 5 |
-| EXPLANATORY_NOTE | 1 |
+| Parliamentary debate | 30 |
+| Court judgments | 23 |
+| Select committee material | 16 |
+| Not attributed to a type | 13 |
+| Bills before Parliament | 11 |
+| EXPLANATORY_NOTE | 7 |
+| Acts of Parliament | 7 |
+| CONSULTATION | 1 |
+| Official guidance | 1 |
 
-**Understanding the terrain:** 265 retrieved, 40 read; 14 cited · 1 of 1 queries written
-**Evidence base:** 7 questions asked; reviewed 600 sources; 87 findings, 10 running the other way; 10 stated gaps — ⚠ an existing power may remove the need for a Bill · 7 of 7 queries written
+**How this was searched:** 6 research questions asked; 600 sources reviewed; 58 findings recorded, of which 2 run against the measure; 7 gaps stated. ⚠ an existing power may remove the need for a Bill
 
-### What is wrong, and why it persists
+# Part 7.4 · The independence of the Bank of England
+## 7.4 · The independence of the Bank of England
+
+### Diagnosis
+
+**The problem, as stated:** Monetary policy has large distributional consequences and is decided by people who cannot be removed by an electorate, and when the decisions go wrong there is no mechanism by which anyone answers for them. The complaint is that a political choice was reclassified as a technical one.
+
 The 1998 Bank of England Act reclassified the inherently political and distributional choices of monetary policy as a technical exercise in inflation targeting. The pivotal obstacle to reversing this is not legal but political: a deeply entrenched, cross-party consensus that operational independence is essential for economic credibility. This consensus allows incumbent governments to outsource blame for unpopular but necessary decisions (like raising interest rates), meaning the key political actors benefit from the status quo and have a strong incentive to resist any change that would return accountability directly to them.
 
 **2 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -628,10 +657,16 @@ The 1998 Bank of England Act reclassified the inherently political and distribut
 **Cause 2 — MATERIAL.** Monetary policy decisions, despite having significant distributional consequences, are perceived as technical rather than political choices.
 *Why it persists:* The statutory framework and established practice treat monetary policy as an independent technical domain, obscuring its political impact and reducing direct accountability.
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Reverse the operational independence of the Bank of England conferred in 1998.
+
+**What David has ruled out:** Not stated by the proposer.
+
 Attack the legitimacy of the consensus by reframing monetary policy as an issue of democratic accountability for distributional outcomes. The approach is to create new, unavoidable political pressure by systematically exposing the political choices and consequences currently disguised as 'technical' decisions, thereby making the status quo politically indefensible.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Draft a Bill to amend or repeal the relevant sections of the Bank of England Act 1998 that confer operational independence on the Monetary Policy Committee (MPC) for setting interest rates and other monetary policy tools.
@@ -646,70 +681,17 @@ Attack the legitimacy of the consensus by reframing monetary policy as an issue 
 **4.** Establish new institutional arrangements within HM Treasury or Parliament to support the political decision-making process for monetary policy, including analytical capacity, advisory functions, and reporting structures.
 *Who does it:* HM Treasury and the House of Commons (e.g., Treasury Committee)
 
-### The law as it stands
-**10 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Bank of England Act 1998, s.13** — Bank of England Act 1998 confers operational independence
-The Bank of England Act 1998, specifically section 13, establishes the Monetary Policy Committee (MPC) and confers upon it the responsibility for formulating monetary policy within the Bank of England.
+### Consequential decisions
 
-**Bank of England Act 1998, s.19** — Treasury has reserve powers to direct monetary policy
-Section 19(1) of the Bank of England Act 1998 grants the Treasury the power to give the Bank directions with respect to monetary policy by order.
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Bank of England Act 1998, sch.1 para.1** — Appointment terms for Governor and Deputy Governor
-Appointment as Governor of the Bank is for a period of 8 years, and as Deputy Governor for 5 years. A person may not be appointed as Governor more than once, or as Deputy Governor more than twice. These roles require exclusive work for the Bank.
-
-**Bank of England Act 1998, sch.1 para.10** — Court of Directors' role in Bank governance
-The Bank of England Act 1998 establishes the court of directors, which consists of the Governor, Deputy Governors, and non-executive directors. The court may appoint sub-committees and delegate duties and powers, but not those expressly imposed or conferred on the court by enactment.
-
-**Bank of England Act 1998, sch.1 para.12A** — Publication of Court of Directors' meeting records
-The Bank must publish a record of each meeting of the court, specifying decisions and a summary of deliberations, within six weeks or two weeks of the next meeting if no meeting is held in the initial period. Information whose publication would be against the public interest can be excluded.
-
-**Bank of England and Financial Services Act 2016, s.6** — FPC status and membership
-The Bank of England and Financial Services Act 2016 made the Financial Policy Committee (FPC) a committee of the Bank instead of a sub-committee of the court of directors.
-
-**Bank of England Act 1998, s.30F** — FMI Committee established by Bank of England Act 1998
-Section 30F of the Bank of England Act 1998 establishes the Financial Market Infrastructure Committee (FMI Committee), consisting of a chair appointed by the Bank (Governor or Deputy Governor), at least three independent members appointed by the Bank, and other members appointed by the Bank.
-
-### What the courts have said
-**4 judgments were retrieved and read.**
-
-**Buddington, R (on the application of) v Secretary of State for the Home Department** — Statutory interpretation considers historical context
-The construction of controversial statutory provisions should consider the statute as a whole and the historical context that led to its enactment.
-
-**William Hill Organization Ltd, R (on the application of) v The Horserace Betting Levy Board & Ors** — Interpreting statutes for unforeseen facts
-When interpreting an Act of Parliament, it is necessary to consider the state of affairs existing and known by Parliament at the time of enactment.
-
-**Gamesa Energy UK Ltd., R (on the application of) v The National Assembly for Wales** — Judicial review of administrative acts
-Courts may intervene to correct a public wrong when there are grounds to allege the unlawfulness of an administrative act.
-
-**ZN & Anor, R (On the Application Of) v Bromley Youth Court** — Human Rights Act's interpretative provision
-Section 3 of the Human Rights Act 1998 requires domestic legislation to be read compatibly with convention rights.
-
-### Evidence that runs the other way
-**17 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**Existing power to direct monetary policy in extreme circumstances**
-The proposal states a need to 're-establish direct political control over monetary policy decisions' through new primary legislation. However, the Bank of England Act 1998, section 19, already provides a reserve power for the Treasury to give directions on monetary policy in 'extreme economic circumstances', and this order can modify MPC provisions.
-*Source: Bank of England Act 1998, s.19*
-
-**Chancellor's influence on MPC composition**
-Of the nine members of the Monetary Policy Committee, seven are chosen directly by or on the advice of the Chancellor. Even the other two are appointed by the Governor after consultation with the Chancellor. This raises questions about the true independence of the MPC, as the Chancellor can claim credit when things go well due to his influence over the committee, but stand back if things go wrong.
-*Source: Lords: Monetary Policy Committee: Select Committee Report*
-
-**Monetary and fiscal policy interdependencies**
-It is fanciful to suggest that monetary policy can operate completely independently of government fiscal policy, because, in the short term, the two economic policy levers impact on the same economic variables, either stimulating or contracting the real economy. If the two are not co-ordinated, the optimal outcome will not be achieved.
-*Source: Bank of England (Economic Affairs Committee Report) - Motion to Take Note*
-
-**Independence not universally seen as cause of low inflation**
-While independence is widely seen as the best way to achieve price stability, some evidence suggests that the years of low and stable inflation were not solely due to central bank independence, with globalisation playing a significant role.
-*Source: Bank of England (Economic Affairs Committee Report) - Motion to Take Note*
-
-**Independence led to lower inflation and interest rates**
-The effect of independence for the Bank of England and accompanying monetary and fiscal policy is that inflation, interest rates, and mortgage rates have been half what they were in the previous 18 years.
-*Source: TREASURY — Monetary Policy Committee*
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**46 open challenges. Every one is a question the proposal has not yet answered.**
+
+**46 open challenges. Each one is a question the proposal has not yet answered.**
 
 **Does a power to do this already exist?** — 2
 
@@ -759,7 +741,7 @@ The effect of independence for the Bank of England and accompanying monetary and
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are concentrated on activating and defining the existing Section 19 power. The sequencing is logical, starting with the intent and parliamentary approval, then defining criteria, and finally implementing enhanced  scrutiny. There are no obvious missing implementers, with the Treasury, Parliament, and the Bank of England all having defined roles.
+On the coherence of the actions: The actions are concentrated on activating and defining the existing Section 19 power. The sequencing is logical, starting with the intent and parliamentary approval, then defining criteria, and finally implementing enhanced  scrutiny. There are no obvious missing implementers, with the Treasury, Parliament, and the Bank of England all having defined roles.
 
 **Read back by other models** — 12
 
@@ -771,51 +753,112 @@ The effect of independence for the Bank of England and accompanying monetary and
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not contain a 'PROBLEM' section. It begins with 'CAUSES' without first establishing what is wrong, for whom, and why it matters.
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not contain a 'PROBLEM' section. It begins with 'CAUSES' without first establishing what is wrong, for whom, and why it matters.
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not contain a 'DIAGNOSIS' section, and therefore does not identify a root cause or a pivotal obstacle.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not contain a 'DIAGNOSIS' section, and therefore does not identify a root cause or a pivotal obstacle.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel does not contain a 'DIAGNOSIS' section. It presents a list of 'causes' without identifying which, if any, is the pivotal obstacle to overcome.
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel does not contain a 'DIAGNOSIS' section. It presents a list of 'causes' without identifying which, if any, is the pivotal obstacle to overcome.
 
 **Tested as an argument** — 1
 
-**** — A LINK IN THE CHAIN IS MISSING — The kernel jumps from a diagnosis (the Bank is independent) to a set of actions (revoke that independence) without identifying the pivotal obstacle that independence creates or the guiding policy for overcoming it.
+A LINK IN THE CHAIN IS MISSING — The kernel jumps from a diagnosis (the Bank is independent) to a set of actions (revoke that independence) without identifying the pivotal obstacle that independence creates or the guiding policy for overcoming it.
 
 **Read as a hostile clerk** — 6
 
-**** — The proposal replaces the Monetary Policy Committee with an unspecified political body. It does not define the composition, voting mechanism, or decision-making process of this new body, nor how it would be insulated from short-term electoral pressures.
+The proposal replaces the Monetary Policy Committee with an unspecified political body. It does not define the composition, voting mechanism, or decision-making process of this new body, nor how it would be insulated from short-term electoral pressures.
 
-**** — The proposal fails to quantify the 'large distributional consequences' that it cites as the core problem. It presents no data on which specific monetary policy decisions have disproportionately harmed or benefited particular demographics.
+The proposal fails to quantify the 'large distributional consequences' that it cites as the core problem. It presents no data on which specific monetary policy decisions have disproportionately harmed or benefited particular demographics.
 
-**** — The proposal does not provide an analysis of why the existing Section 19 reserve power, which allows the Treasury to direct monetary policy in 'extreme economic circumstances', has never been used. Whether a new mechanism would be more viable cannot be assessed  without understanding why the current one is dormant.
+The proposal does not provide an analysis of why the existing Section 19 reserve power, which allows the Treasury to direct monetary policy in 'extreme economic circumstances', has never been used. Whether a new mechanism would be more viable cannot be assessed  without understanding why the current one is dormant.
 
+### Difficulties caused by the law today
 
-# Part 5.5 · Diversity and inclusion practice in the civil service
-## 5.5 · Diversity and inclusion practice in the civil service
-### The question examined
-**The problem, as stated:** A body of practice governing recruitment, promotion and internal conduct in the civil service was adopted without ever being put to Parliament or an electorate, and now shapes who is hired and what officials may say. The complaint is about the absence of an authorising decision.
+**10 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
 
-**What David proposes:** End the diversity, equity and inclusion agenda in the civil service.
+**Bank of England Act 1998, s.13** — Bank of England Act 1998 confers operational independence
+The Bank of England Act 1998, specifically section 13, establishes the Monetary Policy Committee (MPC) and confers upon it the responsibility for formulating monetary policy within the Bank of England.
 
-**What David has ruled out:** Not stated by the proposer.
+**Bank of England Act 1998, s.19** — Treasury has reserve powers to direct monetary policy
+Section 19(1) of the Bank of England Act 1998 grants the Treasury the power to give the Bank directions with respect to monetary policy by order.
+
+**Bank of England Act 1998, sch.1 para.1** — Appointment terms for Governor and Deputy Governor
+Appointment as Governor of the Bank is for a period of 8 years, and as Deputy Governor for 5 years. A person may not be appointed as Governor more than once, or as Deputy Governor more than twice. These roles require exclusive work for the Bank.
+
+**Bank of England Act 1998, sch.1 para.10** — Court of Directors' role in Bank governance
+The Bank of England Act 1998 establishes the court of directors, which consists of the Governor, Deputy Governors, and non-executive directors. The court may appoint sub-committees and delegate duties and powers, but not those expressly imposed or conferred on the court by enactment.
+
+**Bank of England Act 1998, sch.1 para.12A** — Publication of Court of Directors' meeting records
+The Bank must publish a record of each meeting of the court, specifying decisions and a summary of deliberations, within six weeks or two weeks of the next meeting if no meeting is held in the initial period. Information whose publication would be against the public interest can be excluded.
+
+**Bank of England and Financial Services Act 2016, s.6** — FPC status and membership
+The Bank of England and Financial Services Act 2016 made the Financial Policy Committee (FPC) a committee of the Bank instead of a sub-committee of the court of directors.
+
+**Bank of England Act 1998, s.30F** — FMI Committee established by Bank of England Act 1998
+Section 30F of the Bank of England Act 1998 establishes the Financial Market Infrastructure Committee (FMI Committee), consisting of a chair appointed by the Bank (Governor or Deputy Governor), at least three independent members appointed by the Bank, and other members appointed by the Bank.
+
+### What the courts have said
+
+**4 judgments were retrieved and read.**
+
+**Buddington, R (on the application of) v Secretary of State for the Home Department** — Statutory interpretation considers historical context
+The construction of controversial statutory provisions should consider the statute as a whole and the historical context that led to its enactment.
+
+**William Hill Organization Ltd, R (on the application of) v The Horserace Betting Levy Board & Ors** — Interpreting statutes for unforeseen facts
+When interpreting an Act of Parliament, it is necessary to consider the state of affairs existing and known by Parliament at the time of enactment.
+
+**Gamesa Energy UK Ltd., R (on the application of) v The National Assembly for Wales** — Judicial review of administrative acts
+Courts may intervene to correct a public wrong when there are grounds to allege the unlawfulness of an administrative act.
+
+**ZN & Anor, R (On the Application Of) v Bromley Youth Court** — Human Rights Act's interpretative provision
+Section 3 of the Human Rights Act 1998 requires domestic legislation to be read compatibly with convention rights.
+
+### Evidence that runs the other way
+
+**17 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Existing power to direct monetary policy in extreme circumstances**
+The proposal states a need to 're-establish direct political control over monetary policy decisions' through new primary legislation. However, the Bank of England Act 1998, section 19, already provides a reserve power for the Treasury to give directions on monetary policy in 'extreme economic circumstances', and this order can modify MPC provisions.
+*Source: Bank of England Act 1998, s.19*
+
+**Chancellor's influence on MPC composition**
+Of the nine members of the Monetary Policy Committee, seven are chosen directly by or on the advice of the Chancellor. Even the other two are appointed by the Governor after consultation with the Chancellor. This raises questions about the true independence of the MPC, as the Chancellor can claim credit when things go well due to his influence over the committee, but stand back if things go wrong.
+*Source: Lords: Monetary Policy Committee: Select Committee Report*
+
+**Monetary and fiscal policy interdependencies**
+It is fanciful to suggest that monetary policy can operate completely independently of government fiscal policy, because, in the short term, the two economic policy levers impact on the same economic variables, either stimulating or contracting the real economy. If the two are not co-ordinated, the optimal outcome will not be achieved.
+*Source: Bank of England (Economic Affairs Committee Report) - Motion to Take Note*
+
+**Independence not universally seen as cause of low inflation**
+While independence is widely seen as the best way to achieve price stability, some evidence suggests that the years of low and stable inflation were not solely due to central bank independence, with globalisation playing a significant role.
+*Source: Bank of England (Economic Affairs Committee Report) - Motion to Take Note*
+
+**Independence led to lower inflation and interest rates**
+The effect of independence for the Bank of England and accompanying monetary and fiscal policy is that inflation, interest rates, and mortgage rates have been half what they were in the previous 18 years.
+*Source: TREASURY — Monetary Policy Committee*
 
 ### The evidence base
-**110 pieces of evidence, 97 with a full citation and 91 with a working link.**
+
+**119 pieces of evidence, 105 with a full citation and 95 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
-| Parliamentary debate | 31 |
-| Official guidance | 24 |
-| Court judgments | 17 |
-| Not attributed to a type | 13 |
-| Acts of Parliament | 12 |
-| Select committee material | 12 |
-| Impact assessments | 1 |
+| Parliamentary debate | 45 |
+| Select committee material | 27 |
+| Acts of Parliament | 21 |
+| Not attributed to a type | 14 |
+| Court judgments | 6 |
+| Official guidance | 5 |
+| EXPLANATORY_NOTE | 1 |
 
-**Understanding the terrain:** 313 retrieved, 40 read; 5 cited · 1 of 1 queries written
-**Evidence base:** 6 questions asked; reviewed 500 sources; 69 findings, 1 running the other way; 16 stated gaps · 6 of 6 queries written
+**How this was searched:** 7 research questions asked; 600 sources reviewed; 87 findings recorded, of which 10 run against the measure; 10 gaps stated. ⚠ an existing power may remove the need for a Bill
 
-### What is wrong, and why it persists
+# Part 7.5 · Diversity and inclusion practice in the civil service
+## 7.5 · Diversity and inclusion practice in the civil service
+
+### Diagnosis
+
+**The problem, as stated:** A body of practice governing recruitment, promotion and internal conduct in the civil service was adopted without ever being put to Parliament or an electorate, and now shapes who is hired and what officials may say. The complaint is about the absence of an authorising decision.
+
 A body of DEI practice governing civil service recruitment and conduct has been created without specific democratic authorisation. This practice is justified by an expansive interpretation of the vague 'due regard' duty in the Public Sector Equality Duty (PSED). While the PSED is the root cause, the problem persists because this interpretation has created an internal culture with institutional inertia, where officials and HR departments benefit from a system that rewards visible compliance.
 
 **3 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -829,10 +872,16 @@ A body of DEI practice governing civil service recruitment and conduct has been 
 **Cause 2 — MATERIAL.** The statutory Public Sector Equality Duty (PSED) under Section 149 of the Equality Act 2010 mandates public authorities to 'have due regard' to eliminating discrimination, advancing equality of opportunity, and fostering good relations.
 *Why it persists:* The PSED provides a legal basis for public bodies to consider equality, and courts have affirmed that 'due regard' requires a substantive and rigorous approach, not just 'ticking boxes' (R (on the application of Marouf) v Secretary of State for the Home Department; London Borough of Hackney v Haque). This judicial interpretation encourages a broader application than a minimal reading.
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** End the diversity, equity and inclusion agenda in the civil service.
+
+**What David has ruled out:** Not stated by the proposer.
+
 Re-establish democratic accountability by using existing central government powers to impose a narrower, legally authoritative interpretation of the Public Sector Equality Duty. The approach is to force a distinction between mandatory legal compliance and discretionary policy, making the latter an explicit choice for which ministers are accountable.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** The Cabinet Office, in consultation with the Government Legal Department, should issue revised, legally authoritative guidance on the interpretation and application of Section 149 of the Equality Act 2010 for the Civil Service. This guidance must explicitly state that 'due regard' primarily means avoiding unlawful discrimination and promoting genuine equality of opportunity, rather than mandating specific diversity quotas, targets, or extensive proactive DEI initiatives beyond those necessary to meet the core duty.
@@ -847,69 +896,17 @@ Re-establish democratic accountability by using existing central government powe
 **4.** The Public Administration and Constitutional Affairs Committee (PACAC) should conduct regular reviews of Civil Service compliance with the revised PSED guidance, scrutinising recruitment outcomes, promotion data, and internal conduct policies to ensure adherence to the merit principle and the focused interpretation of equality duties.
 *Who does it:* Public Administration and Constitutional Affairs Committee (PACAC)
 
-### The law as it stands
-**7 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Equality Act 2010, s.149** — Public Sector Equality Duty (PSED) in Equality Act 2010
-The Public Sector Equality Duty (PSED) is established in Section 149 of the Equality Act 2010.
+### Consequential decisions
 
-**Equality Act 2006, s.32** — Enforcement of PSED
-The Equality and Human Rights Commission (EHRC) may assess compliance with the PSED (Equality Act 2006, s.31) and can issue compliance notices if it believes a person has failed to comply with the duty (Equality Act 2006, s.32).
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Equality Act 2010, sch.26 para.10** — PSED and Non-Commercial Considerations in Contracts
-Section 17 of the Equality Act 2010, concerning local and other public authority contracts and the exclusion of non-commercial considerations, does not prevent a public authority from exercising functions with reference to a non-commercial matter to the extent that the authority considers it necessary or expedient to do so to.
-
-**Equality Act 2010, s.1** — Socio-economic Duty
-Section 1 of the Equality Act 2010 imposes a public sector duty regarding socio-economic inequalities, requiring authorities to have due regard to the desirability of reducing inequalities of outcome resulting from socio-economic disadvantage when making strategic decisions.
-
-**Equality Act 2010, sch.18 para.3** — Judicial Functions Exemption
-Section 149 of the Equality Act 2010 does not apply to the exercise of a judicial function or a function exercised on behalf of, or on the instructions of, a person exercising a judicial function. This includes judicial functions conferred on a person other than a court or tribunal.
-
-**Equality Act 2010, s.153** — Ministers can impose specific duties to aid PSED performance
-Section 153 of the Equality Act 2010 grants Ministers of the Crown the power to impose specific duties on public authorities through regulations. This power is intended to enable the better performance of the general duty imposed by Section 149(1).
-
-**Equality Act 2006, s.31** — PSED compliance and enforcement by the Commission
-The Equality and Human Rights Commission (referred to as 'the Commission' in the Equality Act 2006) may assess the extent to which a person has complied with the PSED. It can also issue compliance notices requiring a person to comply with the duty and provide information on steps taken.
-
-### What the courts have said
-**14 judgments were retrieved and read.**
-
-**R (on the application of Marouf) v Secretary of State for the Home Department** — Judicial Interpretation of 'Due Regard'
-Court cases have affirmed that 'due regard' requires a substantive and rigorous approach, not just 'ticking boxes,' and is a continuing duty as policy evolves.
-
-**Police Superintendents' Association, R (on the application of) v The Police Remuneration Review Body & Anor** — PSED requires 'due regard' to three needs
-Section 149(1) of the Equality Act 2010 mandates public authorities, in the exercise of their functions, to have 'due regard' to the need to (a) eliminate discrimination, harassment, victimisation and any other prohibited conduct; (b) advance equality of.
-
-**National Council for Civil Liberties v Equality and Human Rights Commission** — Advancing equality includes removing disadvantages and encouraging participation
-Section 149(3) of the Equality Act 2010 clarifies that having due regard to the need to advance equality of opportunity involves having due regard to removing disadvantages suffered by persons sharing a protected characteristic and encouraging persons sharing.
-
-**London Borough of Hackney v Haque** — Judicial construction of 'due regard' requires substantive and rigorous approach
-The courts have consistently held that the duty to have 'due regard' is a matter of substance rather than form, requiring rigorous consideration and an open mind. It is not merely a 'ticking boxes' exercise.
-
-**Taylor v Slough Borough Council** — 'Due regard' must be fulfilled before and at the time of policy consideration
-The duty to have 'due regard' must be fulfilled before and at the time a particular policy is being considered. It is a continuing duty and is non-delegable.
-
-### Evidence that runs the other way
-**8 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**Expansive EDI practices criticised in Parliament**
-In a House of Lords debate, the public sector equality duty was cited as obliging public bodies to focus on staff action plans around protected characteristics, leading to 'expansive and monolithic HR departments' and an internal culture dominated by EDI priorities, including 'an ever-growing plethora of diversity training courses, identity-based staff networks and allyship schemes'.
-*Source: Civil Service: Politicisation - Motion to Take Note*
-
-**The research changed my mind about summaryDiagnosis**
-I first concluded: The Civil Service's expansive Diversity, Equity, and Inclusion (DEI) agenda is rooted in the statutory Public Sector Equality Duty (PSED) under Section 149 of the Equality Act 2010. While the PSED mandates 'due regard' for equality, the Civil Service has adopted an interpretation and set of practices that go beyond a minimal reading, aiming to be a leading inclusive employer.
-
-**The research changed my mind about pivotalObstacle**
-I first concluded: The pivotal obstacle is the institutional inertia and cultural benefits derived from the current expansive interpretation of the Public Sector Equality Duty, coupled with the lack of explicit parliamentary oversight or challenge to the specific DEI practices adopted by the Civil Service.
-
-**The critique rewrote summaryDiagnosis**
-It was saying: The kernel presented three separate 'material causes' as a list. It now says: A single paragraph that synthesises the causes into a narrative: a vague law (root cause) has been interpreted expansively, creating a body of practice sustained by institutional inertia and cultural benefits (pivotal obstacle).
-
-**The critique rewrote pivotalObstacle**
-It was saying: The pivotal obstacle is the institutional inertia and cultural benefits derived from the current expansive interpretation of the Public Sector Equality Duty, coupled with the lack of explicit parliamentary oversight or challenge to the specific DEI practices adopted by the Civil Service.
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**48 open challenges. Every one is a question the proposal has not yet answered.**
+
+**48 open challenges. Each one is a question the proposal has not yet answered.**
 
 **What the law says now** — 4
 
@@ -959,7 +956,7 @@ It was saying: The pivotal obstacle is the institutional inertia and cultural be
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are highly concentrated on redefining and enforcing a narrower interpretation of the PSED. The sequencing is logical, starting with revised guidance from the Cabinet Office, followed by updates to recruitment  principles, funding reviews, and parliamentary oversight. There are no obvious missing implementers, as key bodies like the Cabinet Office, Civil Service Commission, Treasury, and PACAC are assigned roles.
+On the coherence of the actions: The actions are highly concentrated on redefining and enforcing a narrower interpretation of the PSED. The sequencing is logical, starting with revised guidance from the Cabinet Office, followed by updates to recruitment  principles, funding reviews, and parliamentary oversight. There are no obvious missing implementers, as key bodies like the Cabinet Office, Civil Service Commission, Treasury, and PACAC are assigned roles.
 
 **Read back by other models** — 10
 
@@ -971,47 +968,113 @@ It was saying: The pivotal obstacle is the institutional inertia and cultural be
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state the problem. A strategy must begin with a clear statement of what is wrong, for whom, and why it matters.
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state the problem. A strategy must begin with a clear statement of what is wrong, for whom, and why it matters.
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not distinguish between the root cause (why the problem happens) and the pivotal obstacle (why it persists unsolved).
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not distinguish between the root cause (why the problem happens) and the pivotal obstacle (why it persists unsolved).
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The diagnosis is a list of three material causes, not a simplification that names the single pivotal obstacle.
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The diagnosis is a list of three material causes, not a simplification that names the single pivotal obstacle.
 
 **Read as a hostile clerk** — 6
 
-**** — The central mechanism is 'legally authoritative guidance' from the Cabinet Office, but the proposal does not explain how this guidance can override decades of judicial precedent that have established a broad, substantive interpretation of the statutory duty  to have 'due regard'.
+The central mechanism is 'legally authoritative guidance' from the Cabinet Office, but the proposal does not explain how this guidance can override decades of judicial precedent that have established a broad, substantive interpretation of the statutory duty  to have 'due regard'.
 
-**** — The proposal relies on the Treasury revising funding and performance metrics, but provides no detail on the specific mechanisms. What precise metric will be changed, and what is the direct financial consequence for a department found to be pursuing an  'expansive' DEI programme?
+The proposal relies on the Treasury revising funding and performance metrics, but provides no detail on the specific mechanisms. What precise metric will be changed, and what is the direct financial consequence for a department found to be pursuing an  'expansive' DEI programme?
 
-**** — The proposal aims to narrow the interpretation of the Public Sector Equality Duty, but does not address the Civil Service's explicit strategic ambition to 'go further than the current Equality Act provisions', as stated in its 2022-2025 Diversity and  Inclusion Strategy. How will new guidance on the Act's minimum requirements compel an organisation that has explicitly committed to exceeding them?
+The proposal aims to narrow the interpretation of the Public Sector Equality Duty, but does not address the Civil Service's explicit strategic ambition to 'go further than the current Equality Act provisions', as stated in its 2022-2025 Diversity and  Inclusion Strategy. How will new guidance on the Act's minimum requirements compel an organisation that has explicitly committed to exceeding them?
 
-# Part 5.6 · Gender self-identification
-## 5.6 · Gender self-identification
-### The question examined
-**The problem, as stated:** A change in how legal sex is determined was brought about incrementally through administrative practice and litigation rather than by a decision of Parliament, with consequences for single-sex provision that were never voted on.
+### The critique revisions
 
-**What David proposes:** Reverse gender self-identification.
+**The critique is an adversarial review by a different AI model**, given the measure and asked to attack its logic rather than its politics. Where it found a defect that could be fixed, the measure was rewritten and the change is recorded here — what it said before, what it says now, and why. Where nothing was weighed against a change, that is said rather than hidden.
 
-**What David has ruled out:** Not stated by the proposer.
+**On the diagnosis**
+**Was:** The kernel presented three separate 'material causes' as a list. 
+
+**Now:** A single paragraph that synthesises the causes into a narrative: a vague law (root cause) has been interpreted expansively, creating a body of practice sustained by institutional inertia and cultural benefits (pivotal obstacle).
+
+**On the pivotal obstacle**
+**Was:** The pivotal obstacle is the institutional inertia and cultural benefits derived from the current expansive interpretation of the Public Sector Equality Duty, coupled with the lack of explicit parliamentary oversight or challenge to the specific DEI practices adopted by the Civil Service.
+
+### Difficulties caused by the law today
+
+**7 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+
+**Equality Act 2010, s.149** — Public Sector Equality Duty (PSED) in Equality Act 2010
+The Public Sector Equality Duty (PSED) is established in Section 149 of the Equality Act 2010.
+
+**Equality Act 2006, s.32** — Enforcement of PSED
+The Equality and Human Rights Commission (EHRC) may assess compliance with the PSED (Equality Act 2006, s.31) and can issue compliance notices if it believes a person has failed to comply with the duty (Equality Act 2006, s.32).
+
+**Equality Act 2010, sch.26 para.10** — PSED and Non-Commercial Considerations in Contracts
+Section 17 of the Equality Act 2010, concerning local and other public authority contracts and the exclusion of non-commercial considerations, does not prevent a public authority from exercising functions with reference to a non-commercial matter to the extent that the authority considers it necessary or expedient to do so to.
+
+**Equality Act 2010, s.1** — Socio-economic Duty
+Section 1 of the Equality Act 2010 imposes a public sector duty regarding socio-economic inequalities, requiring authorities to have due regard to the desirability of reducing inequalities of outcome resulting from socio-economic disadvantage when making strategic decisions.
+
+**Equality Act 2010, sch.18 para.3** — Judicial Functions Exemption
+Section 149 of the Equality Act 2010 does not apply to the exercise of a judicial function or a function exercised on behalf of, or on the instructions of, a person exercising a judicial function. This includes judicial functions conferred on a person other than a court or tribunal.
+
+**Equality Act 2010, s.153** — Ministers can impose specific duties to aid PSED performance
+Section 153 of the Equality Act 2010 grants Ministers of the Crown the power to impose specific duties on public authorities through regulations. This power is intended to enable the better performance of the general duty imposed by Section 149(1).
+
+**Equality Act 2006, s.31** — PSED compliance and enforcement by the Commission
+The Equality and Human Rights Commission (referred to as 'the Commission' in the Equality Act 2006) may assess the extent to which a person has complied with the PSED. It can also issue compliance notices requiring a person to comply with the duty and provide information on steps taken.
+
+### What the courts have said
+
+**14 judgments were retrieved and read.**
+
+**R (on the application of Marouf) v Secretary of State for the Home Department** — Judicial Interpretation of 'Due Regard'
+Court cases have affirmed that 'due regard' requires a substantive and rigorous approach, not just 'ticking boxes,' and is a continuing duty as policy evolves.
+
+**Police Superintendents' Association, R (on the application of) v The Police Remuneration Review Body & Anor** — PSED requires 'due regard' to three needs
+Section 149(1) of the Equality Act 2010 mandates public authorities, in the exercise of their functions, to have 'due regard' to the need to (a) eliminate discrimination, harassment, victimisation and any other prohibited conduct; (b) advance equality of.
+
+**National Council for Civil Liberties v Equality and Human Rights Commission** — Advancing equality includes removing disadvantages and encouraging participation
+Section 149(3) of the Equality Act 2010 clarifies that having due regard to the need to advance equality of opportunity involves having due regard to removing disadvantages suffered by persons sharing a protected characteristic and encouraging persons sharing.
+
+**London Borough of Hackney v Haque** — Judicial construction of 'due regard' requires substantive and rigorous approach
+The courts have consistently held that the duty to have 'due regard' is a matter of substance rather than form, requiring rigorous consideration and an open mind. It is not merely a 'ticking boxes' exercise.
+
+**Taylor v Slough Borough Council** — 'Due regard' must be fulfilled before and at the time of policy consideration
+The duty to have 'due regard' must be fulfilled before and at the time a particular policy is being considered. It is a continuing duty and is non-delegable.
+
+### Evidence that runs the other way
+
+**8 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Expansive EDI practices criticised in Parliament**
+In a House of Lords debate, the public sector equality duty was cited as obliging public bodies to focus on staff action plans around protected characteristics, leading to 'expansive and monolithic HR departments' and an internal culture dominated by EDI priorities, including 'an ever-growing plethora of diversity training courses, identity-based staff networks and allyship schemes'.
+*Source: Civil Service: Politicisation - Motion to Take Note*
+
+**The position taken on the diagnosis**
+The Civil Service's expansive Diversity, Equity, and Inclusion (DEI) agenda is rooted in the statutory Public Sector Equality Duty (PSED) under Section 149 of the Equality Act 2010. While the PSED mandates 'due regard' for equality, the Civil Service has adopted an interpretation and set of practices that go beyond a minimal reading, aiming to be a leading inclusive employer.
+
+**The position taken on the pivotal obstacle**
+The pivotal obstacle is the institutional inertia and cultural benefits derived from the current expansive interpretation of the Public Sector Equality Duty, coupled with the lack of explicit parliamentary oversight or challenge to the specific DEI practices adopted by the Civil Service.
 
 ### The evidence base
-**83 pieces of evidence, 68 with a full citation and 62 with a working link.**
+
+**110 pieces of evidence, 97 with a full citation and 91 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
-| Parliamentary debate | 22 |
-| Not attributed to a type | 15 |
+| Parliamentary debate | 31 |
+| Official guidance | 24 |
+| Court judgments | 17 |
+| Not attributed to a type | 13 |
 | Acts of Parliament | 12 |
-| Court judgments | 10 |
-| Official guidance | 8 |
-| Select committee material | 8 |
-| Statutory instruments | 5 |
-| Impact assessments | 3 |
+| Select committee material | 12 |
+| Impact assessments | 1 |
 
-**Understanding the terrain:** 240 retrieved, 40 read; 10 cited · 1 of 1 queries written
-**Evidence base:** 7 questions asked; reviewed 600 sources; 55 findings, 1 running the other way; 12 stated gaps — ⚠ an existing power may remove the need for a Bill · 7 of 7 queries written
+**How this was searched:** 6 research questions asked; 500 sources reviewed; 69 findings recorded, of which 1 run against the measure; 16 gaps stated.
 
-### What is wrong, and why it persists
+# Part 7.6 · Gender self-identification
+## 7.6 · Gender self-identification
+
+### Diagnosis
+
+**The problem, as stated:** A change in how legal sex is determined was brought about incrementally through administrative practice and litigation rather than by a decision of Parliament, with consequences for single-sex provision that were never voted on.
+
 The Supreme Court's ruling in *For Women Scotland Ltd v The Scottish Ministers* [2025] has resolved the legal ambiguity, confirming 'sex' in the Equality Act 2010 means biological sex. The problem is therefore not the law itself, but the persistent gap between this definitive legal interpretation and the widespread administrative practices, policies, and guidance within public bodies which continue to reflect the previous, incorrect understanding based on self-identification.
 
 **2 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -1022,10 +1085,16 @@ The Supreme Court's ruling in *For Women Scotland Ltd v The Scottish Ministers* 
 **Cause 2 — MATERIAL.** Conflicting interpretations of the interaction between the Gender Recognition Act 2004 and the Equality Act 2010.
 *Why it persists:* The 'for all purposes' clause in the GRA 2004 (s.9) created a tension with the Equality Act's definition of sex, leading to different legal and administrative interpretations that persisted until a definitive Supreme Court ruling.
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Reverse gender self-identification.
+
+**What David has ruled out:** Not stated by the proposer.
+
 Use existing statutory and regulatory powers to enforce compliance with the law as clarified by the Supreme Court, rather than seeking new primary legislation. This approach concentrates effort on closing the implementation gap, not re-fighting a settled legal question in Parliament.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Draft an amendment to the Equality Act 2010 to define 'sex' explicitly as biological sex at birth, and to clarify that single-sex provisions are based on this definition, subject to specific, tightly defined exceptions for holders of Gender Recognition Certificates where appropriate and explicitly stated.
@@ -1040,66 +1109,17 @@ Use existing statutory and regulatory powers to enforce compliance with the law 
 **4.** All government departments and public bodies must review and update their internal policies, guidance, and training materials to align with the amended Equality Act 2010 and the EHRC's updated statutory guidance.
 *Who does it:* Cabinet Office (for cross-government coordination) and individual government departments/public bodies
 
-### The law as it stands
-**6 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Equality Act 2010, s.11** — Equality Act 2010 defines 'sex' as man or woman
-Section 11 of the Equality Act 2010 states that 'in relation to the protected characteristic of sex— a a reference to a person who has a particular protected characteristic is a reference to a man or to a woman; b a reference to persons who share a protected characteristic is a reference to persons of the same sex.'
+### Consequential decisions
 
-**Gender Recognition Act 2004, s.9** — Gender Recognition Certificates change legal sex for all purposes
-The Gender Recognition Act 2004, section 9(1), states that 'Where a full gender recognition certificate is issued to a person, the person’s gender becomes for all purposes the acquired gender (so that, if the acquired gender is the male gender, the person’s sex becomes that of a man and, if it is the female gender, the person’s.
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Equality Act 2010, sch.1 para.13** — Minister has power to issue statutory guidance under Equality Act 2010
-The Equality Act 2010 outlines a procedure for the Minister to issue guidance. Before issuing, the Minister must publish a draft, consider representations, and make modifications. A draft must then be laid before Parliament, and if neither House resolves not to approve it within 40 days, the Minister must issue the guidance  . The guidance comes into force on a day appointed by order by the Minister., which appears to cover this outright. Before anything else, decide whether you need a new Act at all.
-
-**Equality Act 2010, sch.1 para.14** — Parliamentary approval required for statutory guidance
-If the Minister decides to proceed with proposed guidance, a draft must be laid before Parliament. If either House resolves not to approve the draft within 40 days, the Minister must take no further steps. If no such resolution is made, the Minister must issue the guidance.
-
-**Equality Act 2010, sch.1 para.15** — Statutory guidance comes into force by Minister's order
-Guidance issued under the Equality Act 2010 comes into force on the day appointed by order by the Minister.
-
-**Equality Act 2010, s.7** — Equality Act 2010 includes gender reassignment as a protected characteristic
-Section 7 of the Equality Act 2010 defines gender reassignment as a protected characteristic. A person has this characteristic if they are proposing to undergo, are undergoing, or have undergone a process for the purpose of reassigning their sex by changing physiological or other attributes of sex. A transsexual person is  referred to as someone with the protected characteristic of gender reassignment.
-
-### What the courts have said
-**5 judgments were retrieved and read.**
-
-**For Women Scotland Ltd v The Scottish Ministers** — Supreme Court ruled 'sex' in EA 2010 means biological sex
-The UK Supreme Court, in For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16, ruled that 'sex' in the Equality Act 2010 means biological sex.
-
-**Good Law Project Limited & Ors, R (on the application of) v Commissioner for Equality and Human Rights** — Judicial construction narrows 'sex' to biological sex
-The Supreme Court's conclusion in For Women Scotland Ltd v The Scottish Ministers was that the assumption made in the Scottish Ministers’ guidance was wrong; that the effect of section 9(1) of the GRA 2004 was displaced by section 9(3) of that Act; and that.
-
-**M Forstater v CGD Europe and others: 2200909/2019 - Judgment** — Forstater v CGD Europe established gender-critical beliefs as protected
-The Employment Appeal Tribunal in Forstater v CGD Europe upheld an appeal, deciding that the belief that biological sex is real, important, immutable, and not to be conflated with gender identity is a philosophical belief protected under the Equality Act  2010. This overturned an initial Employment Tribunal judgment that had found the belief not protected.
-
-**Allison Bailey v Stonewall Equality Limited & Ors** — Both sex-based and gender identity beliefs are protected under Equality Act 2010
-The Employment Appeal Tribunal noted in Allison Bailey v Stonewall Equality Limited & Ors that both the belief that women are defined by sex and the belief that gender is a matter of self-identity are protected under the Equality Act 2010, referencing the  Forstater v CGD Europe decision.
-
-**In the matter of an application by JR111 for Judicial Review (Ruling on Remedy)** — GEO faced judicial review regarding GRA 2004 requirements
-The Government Equalities Office (GEO) was subject to a judicial review (JR111) concerning the Gender Recognition Act 2004. The court concluded that the GRA's requirement for an applicant to prove suffering from a 'disorder' to secure a GRC was incompatible  with Article 8 ECHR rights.
-
-### Evidence that runs the other way
-**10 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**Self-identification not enacted in Great Britain**
-The proposer states that 'gender self-identification' was brought about incrementally. However, the Gender Recognition Act 2004 requires a certificate on evidence, not self-identification. Furthermore, For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16 has since held that 'sex' in the Equality Act 2010 means biological sex, substantially resolving the position complained of without new legislation.
-*Source: For Women Scotland Ltd v The Scottish Ministers*
-
-**The research changed my mind about summaryDiagnosis**
-I first concluded: The incremental reinterpretation of 'sex' in law, particularly concerning Gender Recognition Certificates, has led to confusion and unintended consequences for single-sex provisions, without explicit parliamentary approval. The evidence says: The proposer states that 'gender self-identification' was brought about incrementally.
-
-**The research changed my mind about chosenApproach**
-I first concluded: Amend the Equality Act 2010 to include a clear, unambiguous statutory definition of 'sex' that explicitly states whether it refers to biological sex at birth or includes legal sex as modified by a Gender Recognition Certificate, and to clarify the scope of single-sex exceptions.
-
-**The research changed my mind about summaryGuidingPolicy**
-I first concluded: This approach leverages the definitive power of primary legislation to directly resolve the ambiguity in the statutory definition of 'sex' in the Equality Act 2010.
-
-**The research changed my mind about summaryCoherentActions**
-I first concluded: - Draft an amendment to the Equality Act 2010 to define 'sex' explicitly as biological sex at birth, and to clarify that single-sex provisions are based on this definition, subject to specific, tightly defined exceptions for holders of Gender Recognition Certificates where appropriate and explicitly stated.
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**39 open challenges. Every one is a question the proposal has not yet answered.**
+
+**39 open challenges. Each one is a question the proposal has not yet answered.**
 
 **Does a power to do this already exist?** — 2
 
@@ -1151,62 +1171,121 @@ I first concluded: - Draft an amendment to the Equality Act 2010 to define 'sex'
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are concentrated on updating statutory guidance and subsequent policy alignment, all pulling in the direction of implementing the Supreme Court's clarification. The sequencing is logical: drafting, parliamentary  approval, issuance, and then departmental updates. Implementers are clearly named for each step.
+On the coherence of the actions: The actions are concentrated on updating statutory guidance and subsequent policy alignment, all pulling in the direction of implementing the Supreme Court's clarification. The sequencing is logical: drafting, parliamentary  approval, issuance, and then departmental updates. Implementers are clearly named for each step.
 
 **Read back by other models** — 5
 
 **Impact Beyond Single-Sex Spaces** — A statutory definition of sex would provide clarity not only for single-sex services but also for data collection, sports, and healthcare. Your proposal focuses on single-sex services, but clarifying the definition of 'sex' will have significant consequences  for other policy areas like data collection, sports, and healthcare that are not yet accounted for in your plan.
 
-**** — THE KERNEL FAILS A RUMELT TEST — Failure to face the problem. The diagnosis identifies 'ambiguity' as the material cause, but the evidence, including the proposer's own account, states this ambiguity has been resolved by a Supreme Court ruling.
+THE KERNEL FAILS A RUMELT TEST — Failure to face the problem. The diagnosis identifies 'ambiguity' as the material cause, but the evidence, including the proposer's own account, states this ambiguity has been resolved by a Supreme Court ruling.
 
-**** — THE KERNEL FAILS A RUMELT TEST — The actions do not address the pivotal obstacle. The actions propose new primary legislation to define 'sex', a task the Supreme Court has already accomplished.
+THE KERNEL FAILS A RUMELT TEST — The actions do not address the pivotal obstacle. The actions propose new primary legislation to define 'sex', a task the Supreme Court has already accomplished.
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state a problem. The title is a topic, and the 'causes' describe a legal situation, not what is wrong, for whom, and why it matters.
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state a problem. The title is a topic, and the 'causes' describe a legal situation, not what is wrong, for whom, and why it matters.
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not identify a root cause or a pivotal obstacle.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not identify a root cause or a pivotal obstacle.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel contains no diagnosis. It lists two legal issues but does not simplify the situation into a single, pivotal challenge that must be overcome. The text that  fails it: "CAUSES: - (MATERIAL) Ambiguity in the statutory definition of 'sex' in the Equality Act 2010. - (MATERIAL) Conflicting interpretations of the interaction between the Gender Recognition Act 2004 and the Equality Act 2010."
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel contains no diagnosis. It lists two legal issues but does not simplify the situation into a single, pivotal challenge that must be overcome. The text that  fails it: "CAUSES: - (MATERIAL) Ambiguity in the statutory definition of 'sex' in the Equality Act 2010. - (MATERIAL) Conflicting interpretations of the interaction between the Gender Recognition Act 2004 and the Equality Act 2010."
 
 **Tested as an argument** — 1
 
-**** — A LINK IN THE CHAIN IS MISSING — The kernel jumps from the diagnosed causes directly to a set of actions without identifying a pivotal obstacle or articulating a guiding policy.
+A LINK IN THE CHAIN IS MISSING — The kernel jumps from the diagnosed causes directly to a set of actions without identifying a pivotal obstacle or articulating a guiding policy.
 
 **Read as a hostile clerk** — 6
 
-**** — The proposal proceeds as if the Supreme Court ruling on the Equality Act 2010 has nullified Section 9 of the Gender Recognition Act 2004, which states a GRC changes a person's sex 'for all purposes'. It does not. The proposal provides no mechanism for  resolving this direct statutory conflict, which will be the certain grounds for the inevitable judicial review.
+The proposal proceeds as if the Supreme Court ruling on the Equality Act 2010 has nullified Section 9 of the Gender Recognition Act 2004, which states a GRC changes a person's sex 'for all purposes'. It does not. The proposal provides no mechanism for  resolving this direct statutory conflict, which will be the certain grounds for the inevitable judicial review.
 
-**** — The proposal requires 'specific, tightly defined exceptions' for GRC holders but provides no examples of what these might be, who would define them, or on what principles. This outsources the most contentious part of the policy to the drafting stage without  any guiding framework.
+The proposal requires 'specific, tightly defined exceptions' for GRC holders but provides no examples of what these might be, who would define them, or on what principles. This outsources the most contentious part of the policy to the drafting stage without  any guiding framework.
 
-**** — The entire revised strategy rests on the diagnosis of widespread non-compliance with the Supreme Court's ruling. There is no quantification of this non-compliance: how many public bodies are non-compliant, in what specific ways, and what is the source for  this data? Without a baseline, the effect of the intervention cannot be measured.
+The entire revised strategy rests on the diagnosis of widespread non-compliance with the Supreme Court's ruling. There is no quantification of this non-compliance: how many public bodies are non-compliant, in what specific ways, and what is the source for  this data? Without a baseline, the effect of the intervention cannot be measured.
 
-# Part 5.7 · Publicly funded charities
-## 5.7 · Publicly funded charities
-### The question examined
-**The problem, as stated:** Organisations funded from public money campaign to change the policy of the body funding them, so that public spending underwrites one side of a political argument without anyone having decided that it should.
+### Difficulties caused by the law today
 
-**What David proposes:** Prevent publicly funded charities from campaigning against government policy.
+**6 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
 
-**What David has ruled out:** Not stated by the proposer.
+**Equality Act 2010, s.11** — Equality Act 2010 defines 'sex' as man or woman
+Section 11 of the Equality Act 2010 states that 'in relation to the protected characteristic of sex— a a reference to a person who has a particular protected characteristic is a reference to a man or to a woman; b a reference to persons who share a protected characteristic is a reference to persons of the same sex.'
+
+**Gender Recognition Act 2004, s.9** — Gender Recognition Certificates change legal sex for all purposes
+The Gender Recognition Act 2004, section 9(1), states that 'Where a full gender recognition certificate is issued to a person, the person’s gender becomes for all purposes the acquired gender (so that, if the acquired gender is the male gender, the person’s sex becomes that of a man and, if it is the female gender, the person’s.
+
+**Equality Act 2010, sch.1 para.13** — Minister has power to issue statutory guidance under Equality Act 2010
+The Equality Act 2010 outlines a procedure for the Minister to issue guidance. Before issuing, the Minister must publish a draft, consider representations, and make modifications. A draft must then be laid before Parliament, and if neither House resolves not to approve it within 40 days, the Minister must issue the guidance  . The guidance comes into force on a day appointed by order by the Minister., which appears to cover this outright. Before anything else, decide whether you need a new Act at all.
+
+**Equality Act 2010, sch.1 para.14** — Parliamentary approval required for statutory guidance
+If the Minister decides to proceed with proposed guidance, a draft must be laid before Parliament. If either House resolves not to approve the draft within 40 days, the Minister must take no further steps. If no such resolution is made, the Minister must issue the guidance.
+
+**Equality Act 2010, sch.1 para.15** — Statutory guidance comes into force by Minister's order
+Guidance issued under the Equality Act 2010 comes into force on the day appointed by order by the Minister.
+
+**Equality Act 2010, s.7** — Equality Act 2010 includes gender reassignment as a protected characteristic
+Section 7 of the Equality Act 2010 defines gender reassignment as a protected characteristic. A person has this characteristic if they are proposing to undergo, are undergoing, or have undergone a process for the purpose of reassigning their sex by changing physiological or other attributes of sex. A transsexual person is  referred to as someone with the protected characteristic of gender reassignment.
+
+### What the courts have said
+
+**5 judgments were retrieved and read.**
+
+**For Women Scotland Ltd v The Scottish Ministers** — Supreme Court ruled 'sex' in EA 2010 means biological sex
+The UK Supreme Court, in For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16, ruled that 'sex' in the Equality Act 2010 means biological sex.
+
+**Good Law Project Limited & Ors, R (on the application of) v Commissioner for Equality and Human Rights** — Judicial construction narrows 'sex' to biological sex
+The Supreme Court's conclusion in For Women Scotland Ltd v The Scottish Ministers was that the assumption made in the Scottish Ministers’ guidance was wrong; that the effect of section 9(1) of the GRA 2004 was displaced by section 9(3) of that Act; and that.
+
+**M Forstater v CGD Europe and others: 2200909/2019 - Judgment** — Forstater v CGD Europe established gender-critical beliefs as protected
+The Employment Appeal Tribunal in Forstater v CGD Europe upheld an appeal, deciding that the belief that biological sex is real, important, immutable, and not to be conflated with gender identity is a philosophical belief protected under the Equality Act  2010. This overturned an initial Employment Tribunal judgment that had found the belief not protected.
+
+**Allison Bailey v Stonewall Equality Limited & Ors** — Both sex-based and gender identity beliefs are protected under Equality Act 2010
+The Employment Appeal Tribunal noted in Allison Bailey v Stonewall Equality Limited & Ors that both the belief that women are defined by sex and the belief that gender is a matter of self-identity are protected under the Equality Act 2010, referencing the  Forstater v CGD Europe decision.
+
+**In the matter of an application by JR111 for Judicial Review (Ruling on Remedy)** — GEO faced judicial review regarding GRA 2004 requirements
+The Government Equalities Office (GEO) was subject to a judicial review (JR111) concerning the Gender Recognition Act 2004. The court concluded that the GRA's requirement for an applicant to prove suffering from a 'disorder' to secure a GRC was incompatible  with Article 8 ECHR rights.
+
+### Evidence that runs the other way
+
+**10 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Self-identification not enacted in Great Britain**
+The proposer states that 'gender self-identification' was brought about incrementally. However, the Gender Recognition Act 2004 requires a certificate on evidence, not self-identification. Furthermore, For Women Scotland Ltd v The Scottish Ministers [2025] UKSC 16 has since held that 'sex' in the Equality Act 2010 means biological sex, substantially resolving the position complained of without new legislation.
+*Source: For Women Scotland Ltd v The Scottish Ministers*
+
+**Where the evidence settled the diagnosis**
+The proposer states that 'gender self-identification' was brought about incrementally.
+
+**The position taken on the approach chosen**
+Amend the Equality Act 2010 to include a clear, unambiguous statutory definition of 'sex' that explicitly states whether it refers to biological sex at birth or includes legal sex as modified by a Gender Recognition Certificate, and to clarify the scope of single-sex exceptions.
+
+**The position taken on the guiding policy**
+This approach leverages the definitive power of primary legislation to directly resolve the ambiguity in the statutory definition of 'sex' in the Equality Act 2010.
+
+**The position taken on the actions**
+- Draft an amendment to the Equality Act 2010 to define 'sex' explicitly as biological sex at birth, and to clarify that single-sex provisions are based on this definition, subject to specific, tightly defined exceptions for holders of Gender Recognition Certificates where appropriate and explicitly stated.
 
 ### The evidence base
-**75 pieces of evidence, 60 with a full citation and 60 with a working link.**
+
+**83 pieces of evidence, 68 with a full citation and 62 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
 | Parliamentary debate | 22 |
-| Select committee material | 17 |
 | Not attributed to a type | 15 |
-| Official guidance | 9 |
-| Court judgments | 6 |
-| Acts of Parliament | 5 |
-| Statutory instruments | 1 |
+| Acts of Parliament | 12 |
+| Court judgments | 10 |
+| Official guidance | 8 |
+| Select committee material | 8 |
+| Statutory instruments | 5 |
+| Impact assessments | 3 |
 
-**Understanding the terrain:** 240 retrieved, 40 read; 6 cited · 1 of 1 queries written
-**Evidence base:** 6 questions asked; reviewed 500 sources; 48 findings, 1 running the other way; 13 stated gaps · 6 of 6 queries written
+**How this was searched:** 7 research questions asked; 600 sources reviewed; 55 findings recorded, of which 1 run against the measure; 12 gaps stated. ⚠ an existing power may remove the need for a Bill
 
-### What is wrong, and why it persists
+# Part 7.7 · Publicly funded charities
+## 7.7 · Publicly funded charities
+
+### Diagnosis
+
+**The problem, as stated:** Organisations funded from public money campaign to change the policy of the body funding them, so that public spending underwrites one side of a political argument without anyone having decided that it should.
+
 Public money underwrites campaigning against the policy of the funding body not because rules are absent, but because they are not enforced. The problem persists because the bodies issuing grants have no incentive to police the boundary between service delivery and lobbying; they often benefit from the political cover that 'independent' third-sector voices provide. The proposer's term 'sock puppets' captures this dynamic.
 
 **2 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -1217,10 +1296,16 @@ Public money underwrites campaigning against the policy of the funding body not 
 **Cause 2 — CONTRIBUTORY.** The existing legal framework and Charity Commission guidance distinguish between legitimate policy advocacy and prohibited party-political activity, but this distinction is often blurred in practice regarding public funds.
 *Why it persists:* While charities cannot have a political purpose or promote a political party, they can focus significant resources on political activity for a period to achieve their charitable purposes. This creates ambiguity when public funds are involved, as the line between 'furthering charitable purpose' and 'campaigning against government policy' can be subjective, as seen in the 'sock puppets' debate.
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Prevent publicly funded charities from campaigning against government policy.
+
+**What David has ruled out:** Not stated by the proposer.
+
 Fix accountability for the funding decision with the grantor, not by creating a new blanket ban on charity campaigning. The approach is to make the departmental Accounting Officer—who is already personally responsible for the proper use of public money—explicitly answerable for ensuring grant conditions prevent public funds being used to lobby the grantor.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Develop a template for explicit grant conditions, stipulating that public funds (defined as funds originating from a government department, agency, or local authority) cannot be used for campaigning activities that directly oppose the stated policies of the funding body. This template should include clear definitions of 'campaigning activities' and 'directly oppose'.
@@ -1235,60 +1320,17 @@ Fix accountability for the funding decision with the grantor, not by creating a 
 **4.** Provide training and guidance to public sector grant managers on how to interpret, apply, and enforce the new grant conditions, ensuring consistent application across different funding bodies.
 *Who does it:* Civil Service Learning, in collaboration with the Cabinet Office
 
-### The law as it stands
-**4 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Charities Act 2011, s.2** — Charities Act 2011 defines 'charitable purpose'
-The Charities Act 2011, section 2, defines a 'charitable purpose' for the law of England and Wales as a purpose that falls within section 3(1) and is for the public benefit (section 4).
+### Consequential decisions
 
-**Charities Act 2011, s.74** — Restriction on expenditure for promoting Bills
-Section 74 of the Charities Act 2011 restricts expenditure incurred in preparing or promoting a Bill in Parliament without the consent of the court or the Commission, regardless of the charity's trusts.
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Charities Act 2011, s.3** — Charities Act 2011 defines charitable purposes
-The Charities Act 2011 outlines descriptions of purposes that fall within its scope for charitable status, such as the prevention or relief of poverty, advancement of education, religion, health, citizenship, arts, culture, heritage, science, amateur sport, human rights, conflict resolution, or reconciliation.
-
-**Charities Act 2011, s.4** — Charities Act 2011 and public benefit
-The Charities Act 2011 includes 'the public benefit requirement' for a purpose to be considered charitable. It specifies that in determining if this requirement is met, it should not be presumed that a purpose of a particular description is for the public benefit.
-
-### What the courts have said
-**5 judgments were retrieved and read.**
-
-**The International Foundation for Therapeutic and Counselling Choice v The Charity Commission for England and Wales** — Definition of 'political purposes' in charity law
-In charity law, 'political purposes' is defined broadly to mean seeking to change the policy of government, change the law, or change the policy of a public authority. A political purpose is not regarded as being for the public benefit.
-
-**Ukraine Development Charity v The Charity Commissioner for England and Wales** — Charities Act 2011 s.74 restricts expenditure on promoting Bills without consent
-The Charities Act 2011, s.74, restricts expenditure on promoting Bills without consent. This provision narrows the scope of political activity charities can undertake, requiring specific consent for legislative advocacy.
-
-**Watch Tower Bible & Tract Society of Britain v Charity Commission** — Judicial review of Charity Commission decisions
-There is a presumption that the bespoke statutory regime will be deployed unless there are clear and powerful reasons which exceptionally justify judicial review being permitted for decisions made by the Charity Commission.
-
-**Kennedy v The Charity Commission** — Use of appeal monies for political campaigning
-Inquiries have found that appeal monies were used by Mr Galloway on travel and political campaigning to end sanctions against Iraq.
-
-**Mermaids v The Charity Commission for England & Wales & Anor** — Standing for judicial review of Charity Commission decisions
-The question of whether a person is or may be affected by a decision of the Commission is highly fact-sensitive, dependent on the nature of the decision made and the person's relationship to the decision.
-
-### Evidence that runs the other way
-**9 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**Opposition to using funding to 'gag legitimate debate'**
-During a debate on overseas aid, a Lord argued that if charities, especially those using government money, identify how an issue can be better resolved, they have an obligation to speak out. They stated that whether charities receive government funding should be irrelevant, and governments should not use funding to 'gag legitimate debate'.
-*Source: Overseas Aid: Charities and Faith-based Organisations - Motion to Take Note*
-
-**The research changed my mind about causes**
-I first concluded: Existing Charity Commission guidance that broadly permits charities to campaign for their purposes, even when this involves policy advocacy. The evidence says: A Lord argued that if charities, especially those using government money, identify how an issue can be better resolved, they have an obligation to speak out, and governments should not use funding to 'gag legitimate debate'. Why I changed my mind  : The evidence highlights a significant counter-argument to the initial assumption that Charity Commission guidance is the sole driver. It reveals a strong normative position that charities have a right, and even an obligation, to campaign, which complicates the idea of simply restricting their activities through guidance. This indicates that the persistence of campaigning is not just a matter of permissive guidance, but also a deeply held belief in the value of charity advocacy, which needs to be acknowledged as a contributory cause.
-
-**The research changed my mind about pivotalObstacle**
-I first concluded: The pivotal obstacle is the absence of explicit, widely adopted grant conditions or other mechanisms that would specifically restrict publicly funded entities from using those funds to campaign against the policies of the funding body, allowing the current situation to persist.
-
-**The research changed my mind about chosenApproach**
-I first concluded: Implement explicit grant conditions that prohibit the use of public funds for campaigning against the funding body's policies. The evidence says: The 2016 Cabinet Office policy already implemented a clause for all government grant agreements prohibiting the use of grant funding for political campaigning and lobbying unless expressly authorised.
-
-**The critique rewrote summaryDiagnosis**
-It was saying: The kernel had no summary diagnosis, only a list of 'causes' describing the legal background (e.g., that Charity Commission guidance permits campaigning). It now says: The diagnosis now asserts that the problem is a failure of enforcement driven by perverse incentives within grant-making bodies. Why that changed: A diagnosis must explain what is pivotal. The original 'causes' were just context.
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**48 open challenges. Every one is a question the proposal has not yet answered.**
+
+**48 open challenges. Each one is a question the proposal has not yet answered.**
 
 **What the law says now** — 4
 
@@ -1336,7 +1378,7 @@ It was saying: The kernel had no summary diagnosis, only a list of 'causes' desc
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are coherent and concentrated on the chosen approach. They are sequenced logically, starting with template development, then mandating adoption, establishing enforcement, and finally providing training. There are  no obvious missing implementers, as responsibilities are assigned to relevant government bodies. The focus is clearly on the grant conditions as the primary instrument.
+On the coherence of the actions: The actions are coherent and concentrated on the chosen approach. They are sequenced logically, starting with template development, then mandating adoption, establishing enforcement, and finally providing training. There are  no obvious missing implementers, as responsibilities are assigned to relevant government bodies. The focus is clearly on the grant conditions as the primary instrument.
 
 **Read back by other models** — 11
 
@@ -1348,53 +1390,114 @@ It was saying: The kernel had no summary diagnosis, only a list of 'causes' desc
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state the problem. It begins with a title and a list of causes, but never articulates what is wrong, for whom, and why it matters. The text  that fails it: "TITLE: Publicly funded charities campaigning on government policy"
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state the problem. It begins with a title and a list of causes, but never articulates what is wrong, for whom, and why it matters. The text  that fails it: "TITLE: Publicly funded charities campaigning on government policy"
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not distinguish between a root cause and a pivotal obstacle.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not distinguish between a root cause and a pivotal obstacle.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The diagnosis is an inventory of two causes, not a simplification that names the single pivotal thing that must be defeated for anything else to matter. The text that  fails it: "The kernel has no section for DIAGNOSIS."
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The diagnosis is an inventory of two causes, not a simplification that names the single pivotal thing that must be defeated for anything else to matter. The text that  fails it: "The kernel has no section for DIAGNOSIS."
 
 **Tested as an argument** — 2
 
-**** — A LINK IN THE CHAIN IS MISSING — The kernel is missing the Pivotal Obstacle and the Guiding Policy.
+A LINK IN THE CHAIN IS MISSING — The kernel is missing the Pivotal Obstacle and the Guiding Policy.
 
-**** — NOTHING SUPPORTS THIS CLAIM — This assertion that the rules are 'often blurred in practice' is presented without any supporting evidence, such as case studies, audit findings, or research.
+NOTHING SUPPORTS THIS CLAIM — This assertion that the rules are 'often blurred in practice' is presented without any supporting evidence, such as case studies, audit findings, or research.
 
 **Read as a hostile clerk** — 6
 
-**** — The definition of 'directly oppose' is the proposal's single point of failure. What prevents a charity from arguing its campaign for a more ambitious target is not opposition, but an attempt to improve the stated policy? The proposal provides no guidance on  how to draw this line, on which the entire enforcement mechanism depends.
+The definition of 'directly oppose' is the proposal's single point of failure. What prevents a charity from arguing its campaign for a more ambitious target is not opposition, but an attempt to improve the stated policy? The proposal provides no guidance on  how to draw this line, on which the entire enforcement mechanism depends.
 
-**** — The proposal does not specify the authoritative source for a 'stated policy'. Are these found in manifestos, white papers, ministerial speeches, or departmental business plans? Policy is often fluid; a grant manager cannot enforce a condition based on an  ambiguous or unwritten rule.
+The proposal does not specify the authoritative source for a 'stated policy'. Are these found in manifestos, white papers, ministerial speeches, or departmental business plans? Policy is often fluid; a grant manager cannot enforce a condition based on an  ambiguous or unwritten rule.
 
-**** — The mandate includes local authorities, but ignores that they are distinct political bodies who may oppose central government policy. How will this be enforced upon a local authority that is actively encouraging a funded charity to campaign against a national  policy it disagrees with? The mechanism assumes a unified 'government' that does not exist.
+The mandate includes local authorities, but ignores that they are distinct political bodies who may oppose central government policy. How will this be enforced upon a local authority that is actively encouraging a funded charity to campaign against a national  policy it disagrees with? The mechanism assumes a unified 'government' that does not exist.
 
-# Part 5.8 · The Sentencing Council
-## 5.8 · The Sentencing Council
-### The question examined
-**The problem, as stated:** The framework within which sentences are set is issued by a body that no one elected and that no minister directs, so that a question with obvious political content is settled administratively.
+### The critique revisions
 
-**What David proposes:** Remove sentencing guidance from an independent council and return it to Parliament or to ministers.
+**The critique is an adversarial review by a different AI model**, given the measure and asked to attack its logic rather than its politics. Where it found a defect that could be fixed, the measure was rewritten and the change is recorded here — what it said before, what it says now, and why. Where nothing was weighed against a change, that is said rather than hidden.
 
-**What David has ruled out:** Not stated by the proposer.
+**On the diagnosis**
+**Was:** The kernel had no summary diagnosis, only a list of 'causes' describing the legal background (e.g., that Charity Commission guidance permits campaigning). 
+
+**Now:** The diagnosis now asserts that the problem is a failure of enforcement driven by perverse incentives within grant-making bodies. 
+
+**Why:** A diagnosis must explain what is pivotal. The original 'causes' were just context.
+
+### Difficulties caused by the law today
+
+**4 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+
+**Charities Act 2011, s.2** — Charities Act 2011 defines 'charitable purpose'
+The Charities Act 2011, section 2, defines a 'charitable purpose' for the law of England and Wales as a purpose that falls within section 3(1) and is for the public benefit (section 4).
+
+**Charities Act 2011, s.74** — Restriction on expenditure for promoting Bills
+Section 74 of the Charities Act 2011 restricts expenditure incurred in preparing or promoting a Bill in Parliament without the consent of the court or the Commission, regardless of the charity's trusts.
+
+**Charities Act 2011, s.3** — Charities Act 2011 defines charitable purposes
+The Charities Act 2011 outlines descriptions of purposes that fall within its scope for charitable status, such as the prevention or relief of poverty, advancement of education, religion, health, citizenship, arts, culture, heritage, science, amateur sport, human rights, conflict resolution, or reconciliation.
+
+**Charities Act 2011, s.4** — Charities Act 2011 and public benefit
+The Charities Act 2011 includes 'the public benefit requirement' for a purpose to be considered charitable. It specifies that in determining if this requirement is met, it should not be presumed that a purpose of a particular description is for the public benefit.
+
+### What the courts have said
+
+**5 judgments were retrieved and read.**
+
+**The International Foundation for Therapeutic and Counselling Choice v The Charity Commission for England and Wales** — Definition of 'political purposes' in charity law
+In charity law, 'political purposes' is defined broadly to mean seeking to change the policy of government, change the law, or change the policy of a public authority. A political purpose is not regarded as being for the public benefit.
+
+**Ukraine Development Charity v The Charity Commissioner for England and Wales** — Charities Act 2011 s.74 restricts expenditure on promoting Bills without consent
+The Charities Act 2011, s.74, restricts expenditure on promoting Bills without consent. This provision narrows the scope of political activity charities can undertake, requiring specific consent for legislative advocacy.
+
+**Watch Tower Bible & Tract Society of Britain v Charity Commission** — Judicial review of Charity Commission decisions
+There is a presumption that the bespoke statutory regime will be deployed unless there are clear and powerful reasons which exceptionally justify judicial review being permitted for decisions made by the Charity Commission.
+
+**Kennedy v The Charity Commission** — Use of appeal monies for political campaigning
+Inquiries have found that appeal monies were used by Mr Galloway on travel and political campaigning to end sanctions against Iraq.
+
+**Mermaids v The Charity Commission for England & Wales & Anor** — Standing for judicial review of Charity Commission decisions
+The question of whether a person is or may be affected by a decision of the Commission is highly fact-sensitive, dependent on the nature of the decision made and the person's relationship to the decision.
+
+### Evidence that runs the other way
+
+**9 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Opposition to using funding to 'gag legitimate debate'**
+During a debate on overseas aid, a Lord argued that if charities, especially those using government money, identify how an issue can be better resolved, they have an obligation to speak out. They stated that whether charities receive government funding should be irrelevant, and governments should not use funding to 'gag legitimate debate'.
+*Source: Overseas Aid: Charities and Faith-based Organisations - Motion to Take Note*
+
+**Where the evidence settled the causes**
+A Lord argued that if charities, especially those using government money, identify how an issue can be better resolved, they have an obligation to speak out, and governments should not use funding to 'gag legitimate debate'.
+
+**What that means:** The evidence highlights a significant counter-argument to the initial assumption that Charity Commission guidance is the sole driver. It reveals a strong normative position that charities have a right, and even an obligation, to campaign, which complicates the idea of simply restricting their activities through guidance. This indicates that the persistence of campaigning is not just a matter of permissive guidance, but also a deeply held belief in the value of charity advocacy, which needs to be acknowledged as a contributory cause.
+
+**The position taken on the pivotal obstacle**
+The pivotal obstacle is the absence of explicit, widely adopted grant conditions or other mechanisms that would specifically restrict publicly funded entities from using those funds to campaign against the policies of the funding body, allowing the current situation to persist.
+
+**Where the evidence settled the approach chosen**
+The 2016 Cabinet Office policy already implemented a clause for all government grant agreements prohibiting the use of grant funding for political campaigning and lobbying unless expressly authorised.
 
 ### The evidence base
-**96 pieces of evidence, 78 with a full citation and 76 with a working link.**
+
+**75 pieces of evidence, 60 with a full citation and 60 with a working link.**
 
 | Kind of source | Pieces |
 |---|---|
-| Parliamentary debate | 36 |
-| Not attributed to a type | 18 |
-| Select committee material | 12 |
-| Court judgments | 10 |
-| EXPLANATORY_NOTE | 10 |
-| Acts of Parliament | 8 |
+| Parliamentary debate | 22 |
+| Select committee material | 17 |
+| Not attributed to a type | 15 |
+| Official guidance | 9 |
+| Court judgments | 6 |
+| Acts of Parliament | 5 |
 | Statutory instruments | 1 |
-| Official guidance | 1 |
 
-**Understanding the terrain:** 331 retrieved, 40 read; 10 cited · 1 of 1 queries written
-**Evidence base:** 7 questions asked; reviewed 600 sources; 60 findings, 7 running the other way; 16 stated gaps · 7 of 7 queries written
+**How this was searched:** 6 research questions asked; 500 sources reviewed; 48 findings recorded, of which 1 run against the measure; 13 gaps stated.
 
-### What is wrong, and why it persists
+# Part 7.8 · The Sentencing Council
+## 7.8 · The Sentencing Council
+
+### Diagnosis
+
+**The problem, as stated:** The framework within which sentences are set is issued by a body that no one elected and that no minister directs, so that a question with obvious political content is settled administratively.
+
 Sentencing guidelines, which have significant political content, are set by the statutorily independent Sentencing Council. This was a deliberate design choice in the Coroners and Justice Act 2009 to insulate sentencing from direct political control and promote consistency. However, this has created a democratic deficit where a body that is unelected and not directed by ministers determines policy for which those ministers are held publicly accountable.
 
 **2 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
@@ -1405,10 +1508,16 @@ Sentencing guidelines, which have significant political content, are set by the 
 **Cause 2 — MATERIAL.** The current consultation process for sentencing guidelines is advisory, not binding, on the Sentencing Council.
 *Why it persists:* This advisory nature is a deliberate design choice, intended to balance democratic scrutiny with judicial independence, as confirmed by the Justice Select Committee's role being non-binding (Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge).
 
-### The approach proposed
+### Guiding policy
+
+**What David proposes:** Remove sentencing guidance from an independent council and return it to Parliament or to ministers.
+
+**What David has ruled out:** Not stated by the proposer.
+
 Re-assert democratic accountability by giving ministers a decisive control point over the final content of sentencing guidelines. The approach is to amend the existing structure to require explicit approval from the Lord Chancellor (representing the executive) and the Lady Chief Justice (representing the judiciary) before any guideline can take effect, making a political actor directly answerable for the outcome.
 
-### What would actually have to be done
+### Coherent actions
+
 **Each step, and who would have to do it.**
 
 **1.** Draft and introduce a Bill to amend the Coroners and Justice Act 2009, specifically sections 120-125, to require that any sentencing guideline issued by the Sentencing Council must be approved by the Lord Chancellor and the Lady Chief Justice before coming into effect.
@@ -1420,61 +1529,17 @@ Re-assert democratic accountability by giving ministers a decisive control point
 **3.** Develop clear criteria and a public statement of reasons for the Lord Chancellor's approval or rejection of guidelines, ensuring transparency and accountability in the new approval process.
 *Who does it:* Ministry of Justice, with input from the Sentencing Council and the Judiciary.
 
-### The law as it stands
-**3 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+### Decisions, challenges and research
 
-**Coroners and Justice Act 2009, s.120** — Sentencing guidelines definition
-In Chapter 1 of the Coroners and Justice Act 2009, 'sentencing guidelines' means guidelines relating to the sentencing of offenders. These guidelines can be general or limited to a particular offence, category of offence, or category of offender.
+### Consequential decisions
 
-**Sentencing Act 2026, s.20** — Sentencing Bill proposes Lord Chancellor's veto
-The Sentencing Act 2026, section 20, amends the Coroners and Justice Act 2009 to require the Sentencing Council to seek the consent of the Lord Chief Justice and the Lord Chancellor to issue definitive guidelines.
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
 
-**Sentencing Act 2026, s.19** — Sentencing Act 2026 mandates business plan approval
-The Sentencing Act 2026 inserts a new section 118A into the Coroners and Justice Act 2009, requiring the Sentencing Council to submit a business plan for the year to the Lord Chancellor for approval as soon as practicable after the beginning of each financial year. The Lord Chancellor must then consider and decide whether to  approve the plan.
-
-### What the courts have said
-**8 judgments were retrieved and read.**
-
-**Blackshaw, R. v (Rev 1)** — Court of Appeal's jurisdiction on sentencing principles
-The legislation relating to sentencing guidelines cannot impose a more rigid system than that for murder cases, and the 2009 Act has not diminished the Court of Appeal's jurisdiction to promulgate judgments on sentencing principles, which bind sentencing.
-
-**R v John Edward Butterworth & Anor** — Sentencing Council guidelines replace case law research
-The Sentencing Council's guidelines are intended to replace the need for judges to extensively search through case law for sentencing guidance, assisting transparency by being publicly available digitally.
-
-**Dyer & Ors, R. v** — Guidelines are not rigid or ring-fenced
-The legislation for Sentencing Council guidelines does not impose a more rigid system than the statutory framework for murder cases.
-
-**Valentas & Anor, R. v** — Sentencing Council issues definitive guidelines after consultation
-After a consultation process, the Sentencing Council decides whether to issue a definitive guideline and its form.
-
-**Price v Cheshire East Borough Council** — Guidelines for similar offences can inform sentencing
-In the absence of a specific sentencing guideline for an offence, it is appropriate to refer to guidelines for offences of a similar level of seriousness or analogous nature to inform sentencing decisions.
-
-### Evidence that runs the other way
-**19 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
-
-**No existing delegated power for ministerial approval**
-The current law requires the Sentencing Council to consult the Lord Chancellor and the Justice Committee, but this is not the same as requiring ministerial approval to publish guidelines. The Secretary of State's approval or capacity to rewrite guidelines is considered incompatible with the independence of the Sentencing Council under the law as it stands.
-*Source: Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports*
-
-**Judiciary's view on independence of guidelines**
-Lord Justice Davis implied that the judiciary accepts and follows sentencing guidelines only because 'they emanate from an independent body on which judicial members are in the majority'.
-*Source: Sentencing Guidelines (Pre-sentence Reports) Bill - Second Reading*
-
-**Parliamentary Sovereignty and Policy Determination**
-The Lord Chancellor has welcomed the principle of parliamentary sovereignty and the fact that policy must be determined by Parliament. This suggests a view that the current independence of the Sentencing Council, particularly when its decisions are seen as 'policy decisions of real significance', may conflict with the proper role of Parliament.
-*Source: Sentencing Guidelines (Pre-sentence Reports) Bill*
-
-**Proposal for joint non-consent rejected**
-Amendments proposing that the Sentencing Council should be free to issue definitive guidance unless both the Lord Chancellor and the Lady Chief Justice indicate they do not consent were rejected by the government. The government believes this would not best secure public confidence in sentencing guidelines.
-*Source: Sentencing Bill - Committee (2nd Day) (Continued) — Amendment 80*
-
-**Concerns about political veto and judicial independence**
-Concerns have been raised that requiring individual approval from the Lord Chancellor and Lady Chief Justice for guidelines gives the Lord Chancellor an 'absolute veto' and could be seen as a 'political veto' that undermines the fundamental concept of the Sentencing Council's independence and freedom from political control.
-*Source: Sentencing Bill - Second Reading*
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
 
 ### Challenges to the proposal
-**39 open challenges. Every one is a question the proposal has not yet answered.**
+
+**39 open challenges. Each one is a question the proposal has not yet answered.**
 
 **Does a power to do this already exist?** — 3
 
@@ -1522,7 +1587,7 @@ Concerns have been raised that requiring individual approval from the Lord Chanc
 
 **On revision** — 1
 
-**** — On the coherence of the actions: The actions are concentrated on supporting the implementation of the Sentencing Bill's proposed approval mechanism. The sequencing is logical, with legislative changes preceding the establishment of new consultation processes  and criteria. No implementers are missing, as the Ministry of Justice and relevant parliamentary bodies are identified.
+On the coherence of the actions: The actions are concentrated on supporting the implementation of the Sentencing Bill's proposed approval mechanism. The sequencing is logical, with legislative changes preceding the establishment of new consultation processes  and criteria. No implementers are missing, as the Ministry of Justice and relevant parliamentary bodies are identified.
 
 **Read back by other models** — 5
 
@@ -1534,21 +1599,305 @@ Concerns have been raised that requiring individual approval from the Lord Chanc
 
 **Tested as a strategy** — 7
 
-**** — The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state the problem. It begins with a list of causes, but never defines what is wrong, for whom, and why it matters.
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state the problem. It begins with a list of causes, but never defines what is wrong, for whom, and why it matters.
 
-**** — The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not contain a diagnosis. It does not identify a root cause or a pivotal obstacle, so it is impossible to assess if they are distinct.
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel does not contain a diagnosis. It does not identify a root cause or a pivotal obstacle, so it is impossible to assess if they are distinct.
 
-**** — The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel does not contain a diagnosis. It provides a list of two material causes but does not simplify them to name what is pivotal.
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel does not contain a diagnosis. It provides a list of two material causes but does not simplify them to name what is pivotal.
 
 **Tested as an argument** — 1
 
-**** — A LINK IN THE CHAIN IS MISSING — The kernel is missing the central components of a strategy: the pivotal obstacle and the guiding policy.
+A LINK IN THE CHAIN IS MISSING — The kernel is missing the central components of a strategy: the pivotal obstacle and the guiding policy.
 
 **Read as a hostile clerk** — 6
 
-**** — The proposal creates a dual-key approval system involving the Lord Chancellor and the Lady Chief Justice but provides no mechanism for resolving deadlock if they disagree, giving each an absolute, individual veto over the other.
+The proposal creates a dual-key approval system involving the Lord Chancellor and the Lady Chief Justice but provides no mechanism for resolving deadlock if they disagree, giving each an absolute, individual veto over the other.
 
-**** — The proposal does not address the consequences if the Lord Chancellor refuses to approve the Sentencing Council's annual business plan, a separate power in the Sentencing Bill which could paralyze the Council's entire work programme without the public  scrutiny attached to vetoing a specific guideline.
+The proposal does not address the consequences if the Lord Chancellor refuses to approve the Sentencing Council's annual business plan, a separate power in the Sentencing Bill which could paralyze the Council's entire work programme without the public  scrutiny attached to vetoing a specific guideline.
 
-**** — The justification for the veto rests on distinguishing technical judicial matters from 'policy decisions of real significance', but the proposal provides no definition of this distinction, leaving the scope of the Lord Chancellor's political veto entirely  unspecified.
+The justification for the veto rests on distinguishing technical judicial matters from 'policy decisions of real significance', but the proposal provides no definition of this distinction, leaving the scope of the Lord Chancellor's political veto entirely  unspecified.
 
+### Difficulties caused by the law today
+
+**3 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+
+**Coroners and Justice Act 2009, s.120** — Sentencing guidelines definition
+In Chapter 1 of the Coroners and Justice Act 2009, 'sentencing guidelines' means guidelines relating to the sentencing of offenders. These guidelines can be general or limited to a particular offence, category of offence, or category of offender.
+
+**Sentencing Act 2026, s.20** — Sentencing Bill proposes Lord Chancellor's veto
+The Sentencing Act 2026, section 20, amends the Coroners and Justice Act 2009 to require the Sentencing Council to seek the consent of the Lord Chief Justice and the Lord Chancellor to issue definitive guidelines.
+
+**Sentencing Act 2026, s.19** — Sentencing Act 2026 mandates business plan approval
+The Sentencing Act 2026 inserts a new section 118A into the Coroners and Justice Act 2009, requiring the Sentencing Council to submit a business plan for the year to the Lord Chancellor for approval as soon as practicable after the beginning of each financial year. The Lord Chancellor must then consider and decide whether to  approve the plan.
+
+### What the courts have said
+
+**8 judgments were retrieved and read.**
+
+**Blackshaw, R. v (Rev 1)** — Court of Appeal's jurisdiction on sentencing principles
+The legislation relating to sentencing guidelines cannot impose a more rigid system than that for murder cases, and the 2009 Act has not diminished the Court of Appeal's jurisdiction to promulgate judgments on sentencing principles, which bind sentencing.
+
+**R v John Edward Butterworth & Anor** — Sentencing Council guidelines replace case law research
+The Sentencing Council's guidelines are intended to replace the need for judges to extensively search through case law for sentencing guidance, assisting transparency by being publicly available digitally.
+
+**Dyer & Ors, R. v** — Guidelines are not rigid or ring-fenced
+The legislation for Sentencing Council guidelines does not impose a more rigid system than the statutory framework for murder cases.
+
+**Valentas & Anor, R. v** — Sentencing Council issues definitive guidelines after consultation
+After a consultation process, the Sentencing Council decides whether to issue a definitive guideline and its form.
+
+**Price v Cheshire East Borough Council** — Guidelines for similar offences can inform sentencing
+In the absence of a specific sentencing guideline for an offence, it is appropriate to refer to guidelines for offences of a similar level of seriousness or analogous nature to inform sentencing decisions.
+
+### Evidence that runs the other way
+
+**19 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**No existing delegated power for ministerial approval**
+The current law requires the Sentencing Council to consult the Lord Chancellor and the Justice Committee, but this is not the same as requiring ministerial approval to publish guidelines. The Secretary of State's approval or capacity to rewrite guidelines is considered incompatible with the independence of the Sentencing Council under the law as it stands.
+*Source: Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports*
+
+**Judiciary's view on independence of guidelines**
+Lord Justice Davis implied that the judiciary accepts and follows sentencing guidelines only because 'they emanate from an independent body on which judicial members are in the majority'.
+*Source: Sentencing Guidelines (Pre-sentence Reports) Bill - Second Reading*
+
+**Parliamentary Sovereignty and Policy Determination**
+The Lord Chancellor has welcomed the principle of parliamentary sovereignty and the fact that policy must be determined by Parliament. This suggests a view that the current independence of the Sentencing Council, particularly when its decisions are seen as 'policy decisions of real significance', may conflict with the proper role of Parliament.
+*Source: Sentencing Guidelines (Pre-sentence Reports) Bill*
+
+**Proposal for joint non-consent rejected**
+Amendments proposing that the Sentencing Council should be free to issue definitive guidance unless both the Lord Chancellor and the Lady Chief Justice indicate they do not consent were rejected by the government. The government believes this would not best secure public confidence in sentencing guidelines.
+*Source: Sentencing Bill - Committee (2nd Day) (Continued) — Amendment 80*
+
+**Concerns about political veto and judicial independence**
+Concerns have been raised that requiring individual approval from the Lord Chancellor and Lady Chief Justice for guidelines gives the Lord Chancellor an 'absolute veto' and could be seen as a 'political veto' that undermines the fundamental concept of the Sentencing Council's independence and freedom from political control.
+*Source: Sentencing Bill - Second Reading*
+
+### The evidence base
+
+**96 pieces of evidence, 78 with a full citation and 76 with a working link.**
+
+| Kind of source | Pieces |
+|---|---|
+| Parliamentary debate | 36 |
+| Not attributed to a type | 18 |
+| Select committee material | 12 |
+| Court judgments | 10 |
+| EXPLANATORY_NOTE | 10 |
+| Acts of Parliament | 8 |
+| Statutory instruments | 1 |
+| Official guidance | 1 |
+
+**How this was searched:** 7 research questions asked; 600 sources reviewed; 60 findings recorded, of which 7 run against the measure; 16 gaps stated.
+
+# Part 7.9 · The Great Repeal
+
+## 7.9 · The Great Repeal: David's Programme as a single instrument
+
+### Diagnosis
+
+**The problem, as stated:** The constitutional changes made between 1997 and 2010 interlock, so that undoing any one of them leaves the others in place to reproduce the effect complained of. A government that proceeds measure by measure will be defeated by whatever it has not yet reached, and will run out of time and political capital before it finishes.
+
+The constitutional reforms of 1997-2010 are not merely an interlocked set of statutes but have created a new, self-defending constitutional order. This order is entrenched through a vast body of case law, new political conventions (e.g., the Sewel Convention), and international treaty obligations (the Belfast/Good Friday Agreement), which reproduce the effects of the reforms even if the parent Acts are repealed. As Lord Wolfson KC's advice, cited by the proposer, indicates, a simple repeal would not achieve a 'factory reset'.
+
+**3 causes were identified. Each is given with the reason recorded for why it has not already been fixed.**
+
+**Cause 1 — MATERIAL.** Constitutional reforms between 1997 and 2010 were enacted as distinct, yet interconnected, pieces of primary legislation.
+*Why it persists:* These reforms, including devolution and the HRA, were considered 'remarkably successful' and their constitutional importance was recognized, leading to a lack of impetus for a coherent repeal strategy. The lack of a coherent process for constitutional change at the time meant interdependencies were not fully addressed for future reversal.
+
+**Cause 2 — MATERIAL.** Key constitutional acts, such as the Human Rights Act 1998, contain explicit protections or are considered to have particular constitutional importance, making their amendment or repeal complex.
+*Why it persists:* The HRA is explicitly protected from amendment or repeal by orders under the Legislative and Regulatory Reform Act 2006, and is considered a 'constitutional backbone' of devolution, requiring consent from devolved administrations for reform. This makes any attempt at comprehensive repeal highly contentious and legally challenging.
+
+**Cause 3 — CONTRIBUTORY.** The legal and political system has historically lacked a coherent process or consensus for comprehensive constitutional change, making a 'factory reset' appear daunting.
+*Why it persists:* In 2009, there was a recognized 'lack of coherence and shape' to the process of constitutional reform and 'no real process by which to engage with citizens to ensure that there is some consensus on constitutional change'. This systemic issue means that even with parliamentary sovereignty, the political and procedural pathway for a single, comprehensive repeal act is undeveloped.
+
+### Guiding policy
+
+**What David proposes:** One Act repealing the constitutional legislation passed between 1997 and 2010, drafted to be, in the proposer's words, legally watertight, and passed at once rather than in sequence.
+
+**What David has ruled out:** Sequential repeal. Reform of individual institutions. Any approach that depends on the cooperation of the bodies being reformed.
+
+The approach is to use a single, omnibus Act of Parliament as a political and procedural vehicle to ensure the programme is passed 'at once', preventing death by a thousand cuts. However, the Act itself must be internally differentiated, with specific legal mechanisms tailored to dismantle each distinct component of the 1997-2010 settlement—domestic statutes, devolved powers, international treaty obligations, and derivative case law. This asserts Parliamentary sovereignty while acknowledging and navigating, rather than ignoring, the different sources of legal and political resistance.
+
+### Coherent actions
+
+**Each step, and who would have to do it.**
+
+**1.** Identify all primary legislation enacted between 1997 and 2010 that significantly altered the UK's constitutional arrangements, cross-referencing with the proposer's understanding of the target date range and any explicit statutory protections (e.g., for the Human Rights Act 1998).
+*Who does it:* Cabinet Office Legal Advisers, working with an independent panel of constitutional law experts.
+
+**2.** Draft a single 'Constitutional Reform Act' that explicitly repeals, amends, or re-enacts with modifications, all identified legislation and relevant statutory provisions. The drafting must be 'legally watertight' to withstand anticipated legal challenges, as highlighted by the proposer and Lord Wolfson KC's advice regarding a 'factory reset'.
+*Who does it:* Office of the Parliamentary Counsel, under direct instruction from the Attorney General's Office, with external constitutional law counsel review.
+
+**3.** Develop a comprehensive parliamentary strategy for the passage of the 'Constitutional Reform Act', anticipating significant opposition and leveraging the government's mandate for comprehensive reform. This includes preparing detailed explanatory notes and impact assessments.
+*Who does it:* Leader of the House of Commons, Chief Whip, and the relevant policy department (e.g., Ministry of Justice or Cabinet Office).
+
+**4.** Establish a dedicated implementation task force immediately following the Act's passage to manage the transition and address any unforeseen legal or administrative complexities arising from the comprehensive repeal, ensuring a coordinated unwinding of the previous framework.
+*Who does it:* Cabinet Office, reporting directly to the Prime Minister, with representatives from all affected government departments and devolved administrations.
+
+### Decisions, challenges and research
+
+### Consequential decisions
+
+*The pass that identifies questions requiring their own analysis has been run in full on the three measures worked in Part 6 only. For this measure the questions listed under Challenges to the proposal are the starting point, and have not yet been sorted into those that can be settled inside the measure and those that cannot.*
+
+⚠ **That sorting is itself a task, not a formality**, and it is listed in Part 5 of Volume 1 as outstanding.
+
+### Challenges to the proposal
+
+**48 open challenges. Each one is a question the proposal has not yet answered.**
+
+**Does a power to do this already exist?** — 3
+
+**HRA repeal exceeds LRR Act power** — The proposal aims to repeal or amend the Human Rights Act 1998 as part of a single 'Constitutional Reform Act'. However, the Legislative and Regulatory Reform Act 2006, which provides a power for Ministers to make orders to remove burdens, explicitly  prohibits such orders from amending or repealing the Human Rights Act 1998. This means that if the 'Constitutional Reform Act' were intended to be an order under the 2006 Act, it would exceed the limits of that power regarding the HRA.
+
+**Devolved matters exceed LRR Act power** — The proposal seeks to repeal or amend all targeted legislation from 1997-2010. Given that the period includes significant constitutional reforms related to devolution (e.g., Scotland Act 1998), any order made under the Legislative and Regulatory Reform Act  2006 would be prohibited from making provision within the legislative competence of the Scottish Parliament or amending/repealing Northern Ireland legislation. This suggests that a single order under this Act would not be able to achieve the comprehensive repeal across all identified legislation if it touches on devolved matters.
+
+**Constitutional reform as 'burden reduction'** — The Legislative and Regulatory Reform Act 2006 grants power to a Minister of the Crown to make orders to remove or reduce 'burdens'. The proposal's objective is a 'Constitutional Reform Act' to repeal or amend constitutional legislation. It is unclear whether  the comprehensive repeal of constitutional legislation, as envisioned by the proposal, would fall within the definition of 'removing or reducing any burden' as defined in section 1(3) of the 2006 Act, which focuses on financial cost, administrative inconvenience, obstacles to efficiency, or sanctions.
+
+**What the law says now** — 4
+
+**Undefined scope of target legislation** — The proposal defines the target legislation by a date range (1997-2010) rather than a specific schedule of Acts. A comprehensive list of primary legislation enacted within this period that significantly altered UK constitutional arrangements needs to be  identified to define the scope of the 'Constitutional Reform Act'.
+
+**Overriding HRA's statutory protection** — The proposal aims to repeal or amend all targeted legislation. Given the explicit protection of the Human Rights Act 1998 by the Legislative and Regulatory Reform Act 2006, Section 8, the 'Constitutional Reform Act' would need to explicitly address and  override this protection, potentially requiring specific drafting to ensure legal efficacy.
+
+**Clarity on 'amend' vs 'repeal' for HRA** — The Human Rights Act 1998 defines 'amend' to include 'repeal and apply (with or without modifications)'. The proposed 'Constitutional Reform Act' should clarify whether it intends a full repeal, or amendment with modifications, for the HRA and other targeted  Acts, and how this definition interacts with its objectives.
+
+**How the courts have read it** — 2
+
+**Clarity on HRA's 'explicit protection'** — The proposal states that the Human Rights Act 1998 is 'explicitly protected from amendment or repeal by orders made under the Legislative and Regulatory Reform Act 2006'. While Section 8 of the 2006 Act outlines restrictions on the use of regulatory reform  orders, it does not explicitly protect the HRA from repeal by primary legislation. The proposal should clarify the nature of this 'explicit protection' and how it would be addressed by a new comprehensive Act, given the principle of parliamentary sovereignty.
+
+**Strategy for rolling back case law** — The proposal refers to Lord Wolfson KC's advice regarding a 'factory reset' and a 'complicated legislative programme aimed at rolling back case law and relevant legislative provisions'. While this corroborates the diagnosis, the proposal does not detail how  the 'Constitutional Reform Act' would specifically address the rolling back of case law, which is a distinct challenge from repealing statutory provisions.
+
+**Where this came from** — 2
+
+**Original perceived success of reforms** — The proposal aims to repeal or amend all targeted legislation from 1997-2010. However, the sources indicate that some of these reforms, such as devolution and the Human Rights Act, were considered 'remarkably successful' at the time of their enactment and  were seen as having 'particular strength'. The proposal does not explicitly address the original perceived success or constitutional importance of these specific acts, which could be a point of contention during the 'anticipated significant opposition'.
+
+**Intent behind distinct enactments** — The proposal states that the 'interlocking nature' of the reforms is a pivotal obstacle. While the proposer describes this interlock, the sources do not explicitly detail how this interdependency was deliberately designed or if it was an unforeseen  consequence of enacting distinct pieces of legislation. Understanding the original intent behind the distinct enactment of these reforms could inform the strategy for a comprehensive repeal.
+
+**Evidence for the causes** — 2
+
+**Unquantified cultural and strategic causes** — The proposal states that the 'culture within the civil service and political establishment rewards maintaining the status quo and avoiding direct responsibility for radical constitutional change' and that there is a 'lack of a clear, comprehensive legislative  strategy'. While plausible, these causal claims are not supported by evidence from the provided sources. The diagnosis would be strengthened by evidence that quantifies or demonstrates these cultural and strategic deficiencies.
+
+**Unquantified 'interlocking nature' of reforms** — The proposal asserts that the 'interlocking nature of constitutional changes enacted between 1997 and 2010 prevents effective reversal through piecemeal legislation'. While the protection of the HRA by the LRR Act 2006 and the requirement for primary  legislation for constitutional changes are evidenced, the specific 'interlocking nature' that makes piecemeal repeal ineffective is described but not explicitly demonstrated or quantified in the provided sources beyond the general statement. The recent disapplication of HRA Section 3 in specific contexts by the Victims and Prisoners Act 2024 suggests that some 'piecemeal' legislative changes are indeed possible, which might contradict the absolute claim of ineffectiveness for all piecemeal approaches.
+
+**Causes the record suggests** — 4
+
+**Missing comprehensive list of targeted legislation** — The proposal defines the target by a date range (1997-2010) but does not explicitly list all primary legislation enacted within this period that significantly altered the UK's constitutional arrangements, beyond the examples given. A comprehensive list is  needed to ensure all relevant acts are considered for repeal, amendment, or re-enactment.
+
+**Unclear legal mechanism for overriding HRA protections** — The proposal mentions that the HRA is explicitly protected from amendment or repeal by orders under the Legislative and Regulatory Reform Act 2006, and that recent legislation has begun to disapply Section 3 of the HRA. However, it does not detail how the  proposed 'Constitutional Reform Act' would legally navigate or override these explicit protections and existing disapplications to achieve a comprehensive repeal or amendment of the HRA and other protected acts.
+
+**Parliamentary strategy lacks detail on specific challenges** — The proposal aims for a 'legally watertight' Act to withstand challenges, but the sources indicate significant opposition to HRA reform, including concerns about constitutional crises in devolved administrations and an 'overwhelming body of support for  retaining the HRA'. The proposal needs to detail how the 'parliamentary strategy' will specifically address and mitigate these documented constitutional and political challenges, beyond simply anticipating them.
+
+**question:DOMAIN_TRANSFER** — 4
+
+**No definitive list of target legislation** — The proposal identifies a target date range (1997-2010) for constitutional legislation to be repealed or amended but does not provide a definitive list of all primary legislation enacted within this period that significantly altered the UK's constitutional  arrangements, beyond the examples given. A comprehensive list is needed to ensure all relevant acts are considered for repeal, amendment, or re-enactment.
+
+**Unspecified 'legally watertight' criteria** — The proposal states the Act must be 'legally watertight' but does not specify the legal tests or criteria that will be used to assess this, nor does it detail the specific types of legal challenges anticipated beyond general opposition. Defining these would  strengthen the drafting mandate.
+
+**Parliamentary strategy details undefined** — The proposal mentions developing a 'comprehensive parliamentary strategy' and preparing 'detailed explanatory notes and impact assessments' but does not outline the specific components or content of these, nor does it address how potential legal challenges to  the principle of parliamentary sovereignty (e.g., regarding the repeal of 'protected' acts) would be specifically addressed within these documents.
+
+**On revision** — 1
+
+On the coherence of the actions: The actions are concentrated on drafting and passing a single, comprehensive Act, with a clear sequence from identification to drafting, parliamentary strategy, and implementation. The key implementers are identified, though  the process of securing devolved consent will require significant inter-governmental coordination.
+
+**Read back by other models** — 10
+
+**The Nature of the Obstacle** — The principal obstacle is not the statutes themselves, but the political, judicial, and administrative reality that has been constructed on them over a quarter of a century. Your strategy focuses on changing the law, but it overlooks that the real challenge  may be the deep-rooted practices and expectations of the institutions that have grown up around those laws.
+
+**Parliament vs. The Courts** — Such an Act would represent a direct and unprecedented confrontation between the principles of Parliamentary Sovereignty and the Rule of Law as currently interpreted by the judiciary. Your plan anticipates legal challenges, but it doesn't prepare you for the  fundamental nature of the conflict: you would be pitting the power of Parliament directly against the authority of the courts.
+
+**Use of Ouster Clauses** — The success of this strategy hinges on Parliament's ability to draft ouster clauses that the courts, particularly the Supreme Court, would be unwilling or unable to strike down or interpret away. Achieving a 'legally watertight' bill may require using  specific and highly controversial 'ouster clauses' to prevent judicial review, a specific legal tool your current strategy doesn't mention.
+
+**Tested as a strategy** — 8
+
+The strategy does not yet meet this test — The problem is stated as a problem, not as a solution. The kernel does not state a problem; it states a solution.
+
+The strategy does not yet meet this test — The pivotal obstacle is distinct from the root cause. The kernel has no diagnosis, so it cannot distinguish a root cause from a pivotal obstacle.
+
+The strategy does not yet meet this test — The diagnosis simplifies rather than inventories. The kernel has no diagnosis.
+
+**Tested as an argument** — 2
+
+A LINK IN THE CHAIN IS MISSING — The kernel jumps from a description of the situation directly to a set of actions, without first diagnosing the single most critical obstacle to overcome or articulating the chosen approach to overcoming it.
+
+NOTHING SUPPORTS THIS CLAIM — This is a broad assertion about legal and political history presented as a fact without supporting evidence or reasoning. The text: "The legal and political system has historically lacked a coherent process or consensus for  comprehensive constitutional change, making a 'factory reset' appear daunting.
+
+**Read as a hostile clerk** — 6
+
+The proposal defines its scope by a date range, 1997-2010, but fails to provide a definitive schedule of the Acts of Parliament to be repealed. The political and legal battles over which Acts are deemed 'constitutional' and fall within scope would predate and  potentially derail the drafting of the main Bill.
+
+The proposer cites Lord Wolfson KC's advice that a 'complicated legislative programme' is needed to roll back case law, but the proposal contains no detail on how the single Act would achieve this. It is unstated whether the Act would attempt to legislatively  overturn specific, named judgments or create a broad interpretive principle, and the implications of either choice are not explored.
+
+The proposal assumes the 'transition' can be managed by a task force, but provides no mechanism for enforcing compliance across the public sector. It is silent on what happens to a public body that, through inertia or conviction, continues to operate under  procedures derived from the repealed legislation, such as the Human Rights Act.
+
+### Difficulties caused by the law today
+
+**11 distinct provisions were retrieved and read. Each is quoted from the statute itself.**
+
+**Legislative and Regulatory Reform Act 2006, s.1** — Power to remove or reduce burdens
+A Minister of the Crown may, by order under section 1 of the Legislative and Regulatory Reform Act 2006, make any provision considered to serve the purpose of removing or reducing any burden, or overall burdens, resulting directly or indirectly for any person from any legislation.
+
+**Legislative and Regulatory Reform Act 2006, s.8** — Explicit protection of Human Rights Act 1998
+An order made under Part 1 of the Legislative and Regulatory Reform Act 2006 cannot make provision amending or repealing any provision of the Human Rights Act 1998. This directly contradicts the proposal's aim to repeal or amend the HRA via a single act, if that act were to be an order under this power.
+
+**Legislative and Regulatory Reform Act 2006, s.12** — Parliamentary procedure for orders
+Orders made under Part 1 of the Legislative and Regulatory Reform Act 2006 must be made by statutory instrument.
+
+**Legislative and Regulatory Reform Act 2006, s.18** — Super-affirmative resolution procedure
+The super-affirmative resolution procedure for orders under the Legislative and Regulatory Reform Act 2006 requires the Minister to have regard to representations, resolutions of either House, and recommendations of parliamentary committees during a 60-day period.
+
+**Legislative and Regulatory Reform Act 2006, s.14** — Explanatory document requirements
+When a Minister lays a draft order under the Legislative and Regulatory Reform Act 2006, an accompanying explanatory document must explain the powers used, introduce and give reasons for the provision, and explain why the Minister considers certain conditions are met.
+
+**Legislative and Regulatory Reform Act 2006, s.10** — Restriction on amending/repealing Northern Ireland legislation
+An order under Part 1 of the Legislative and Regulatory Reform Act 2006 may not make provision to amend or repeal any Northern Ireland legislation, except by virtue of section 1(8) or 2(7).
+
+**Human Rights Act 1998, s.21** — HRA definition of 'amend'
+In the Human Rights Act 1998, 'amend' is defined to include 'repeal and apply (with or without modifications)'.
+
+### What the courts have said
+
+**1 judgments were retrieved and read.**
+
+**R (on the application of Miller and another) v Secretary of State for Exiting the European Union** — Prerogative powers cannot alter domestic constitutional law
+The Supreme Court, in R (on the application of Miller and another) v Secretary of State for Exiting the European Union (Miller I), established that changes to domestic law, particularly those affecting constitutional arrangements, cannot be made through.
+
+### Evidence that runs the other way
+
+**14 findings cut against the proposal as drafted. They are listed because they are the most useful part of the run.**
+
+**Explicit protection of Human Rights Act 1998**
+An order made under Part 1 of the Legislative and Regulatory Reform Act 2006 cannot make provision amending or repealing any provision of the Human Rights Act 1998. This directly contradicts the proposal's aim to repeal or amend the HRA via a single act, if that act were to be an order under this power.
+*Source: Legislative and Regulatory Reform Act 2006, s.8*
+
+**Restriction on amending/repealing Scottish Parliament legislation**
+An order under Part 1 of the Legislative and Regulatory Reform Act 2006 cannot make provision that would be within the legislative competence of the Scottish Parliament if contained in an Act of that Parliament. This prevents the amendment or repeal of Acts of the Scottish Parliament, instruments made under them, or Westminster Acts concerning devolved matters.
+*Source: Explanatory Notes to Legislative and Regulatory Reform Act 2006*
+
+**Restriction on amending/repealing Northern Ireland legislation**
+An order under Part 1 of the Legislative and Regulatory Reform Act 2006 may not make provision to amend or repeal any Northern Ireland legislation, except by virtue of section 1(8) or 2(7).
+*Source: Legislative and Regulatory Reform Act 2006, s.10*
+
+**No compelling case for HRA reform**
+The Joint Committee on Human Rights concluded in 2021 that, based on the evidence heard, there was 'no compelling case for reform or amendment of the HRA'. This was reiterated in 2022, stating 'a case has not been made for replacing the Human Rights Act with the British Bill of Rights in the form proposed'.
+*Source: Report: Third Report - The Government’s Independent Review of the Human Rights Act — Human Rights (Joint Committee)*
+
+**Opposition to HRA repeal without devolved consent**
+The Joint Committee on Human Rights recommended that the Government should not pursue reform of the HRA without the consent of the Scottish Parliament, the Welsh Senedd, and the Northern Ireland Assembly.
+*Source: Report: Third Report - The Government’s Independent Review of the Human Rights Act — ¶36 — Human Rights (Joint Committee)*
+
+### The evidence base
+
+**52 pieces of evidence, 39 with a full citation and 35 with a working link.**
+
+| Kind of source | Pieces |
+|---|---|
+| Acts of Parliament | 17 |
+| Not attributed to a type | 13 |
+| Parliamentary debate | 10 |
+| Select committee material | 8 |
+| EXPLANATORY_NOTE | 2 |
+| Court judgments | 2 |
+
+**How this was searched:** 7 research questions asked; 600 sources reviewed; 39 findings recorded, of which 7 run against the measure; 8 gaps stated. ⚠ an existing power may remove the need for a Bill

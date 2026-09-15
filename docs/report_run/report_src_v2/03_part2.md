@@ -44,6 +44,8 @@ Wolfson says the Convention's influence on English law is so widespread that **i
 
 Read that carefully. It confirms the diagnosis and simultaneously limits the cure: **if no complete list can be made, no programme can claim to have rolled all of it back.** Any list — including one this platform could produce — is necessarily partial and must say so. A declared partial list is useful. An undeclared one would be exactly the defect this document exists to avoid.
 
+**It is essential, at the level of the individual measure, to lay out precisely what the problem is, not just the solution.** Until we know what problem a piece of legislation is causing, we can have no confidence that repeal is an effective remedy, and no principle by which to judge which elements of absorption need to be included in David's Programme.
+
 # Part 2.2 · Annulment
 
 ## 2.2 "Annulment" — does the Henry VIII device do what it promises?
@@ -87,9 +89,7 @@ Section 2 of the Judicial Review and Courts Act 2022 removed judicial review of 
 
 ## 2.3 Four plans for the same problem — and two of them contradict
 
-Within about a year, four documents on the same side of this argument have proposed **four different ways** of doing it. They agree on the diagnosis to a striking degree and disagree completely on the remedy.
-
-**On the published record, nobody has put that in front of David or PopCon.**
+Within about a year, four documents on the same side of this argument have proposed **four different ways** of doing it. They agree on the diagnosis and disagree on the remedy.
 
 | | Who | What they propose | Timing |
 |---|---|---|---|
@@ -116,9 +116,9 @@ And then this:
 
 > "We do not need the Human Rights Convention in order to protect human rights."
 
-**That is section 2.1's proposition, stated by a man who sat on the court the programme proposes to abolish.**
+**That is section 2.1's proposition, stated by a man who sat on the court David's Programme proposes to abolish.**
 
-⚠ **But note what he does with it, because it is the opposite of what the programme does.** For Sumption the conclusion is that the rights can safely be brought home — the protection does not depend on Strasbourg. For the programme, the conclusion is that the rights have taken root and must be pulled up. **Same premise, opposite remedy.** The premise is not in dispute. What to do about it entirely is.
+⚠ **But note what he does with it, because it is the opposite of what David's Programme does.** For Sumption the conclusion is that the rights can safely be brought home — the protection does not depend on Strasbourg. For David's Programme, the conclusion is that the rights have taken root and must be pulled up. **Same premise, opposite remedy.** The premise is not in dispute. What to do about it entirely is.
 
 ### The strongest case against, stated fairly
 
@@ -142,17 +142,23 @@ His objection is that domestic protection was never the point. The Convention wa
 - **Wolfson told the House of Lords in 2023 that he supported UK membership of the Convention.** His advice of October 2025 reaches a different conclusion. ⚠ *To be checked against Hansard, not against anyone's characterisation, before this is relied on.*
 - **There is an internal Conservative counter-position** from the Conservative European Forum, whose president is Sir David Lidington. The Forum reports that Wolfson said his advice should be reconsidered if meaningful reform of the Convention system were achieved. ⚠ *That is the Forum's account. It must be checked against the advice itself. If it holds, it is a significant qualification the other three documents do not carry.*
 
+### What the technical discussion leaves out
+
+What is missing from a purely technical discussion of repeal is the purpose driving it. The central problem is that the rights of criminals, illegal immigrants and terrorists are being protected without any consideration for the costs to, and the rights of, the victims, the existing citizens of the country, and the soldiers on whom our security depends.
+
+**Solving that problem is not about shuffling rights between jurisdictions.** It means removing the existing structures entirely, so that they can be rebuilt around the proper and rightful set of priorities.
+
 # Part 2.4 · Scotland, Wales, Northern Ireland
 
 ## 2.4 What repeal does to Scotland, Wales and Northern Ireland
 
-**A Westminster repeal programme does not stop at Westminster**, and this is the part of the programme with the least published work behind it.
+**A Westminster repeal programme does not stop at Westminster**, and this is the part of David's Programme with the least published work behind it.
 
 ### The convention that gets in the way
 
 Under what is called the **Sewel convention**, Westminster does not normally legislate on matters devolved to Scotland, Wales or Northern Ireland without the consent of the relevant parliament or assembly. It is a convention, not a law — the Supreme Court confirmed in the first *Miller* case that the courts will not enforce it.
 
-**So consent can be refused and Westminster can proceed anyway.** What that costs is political, not legal, and it is a cost the programme has to be willing to pay knowingly.
+**So consent can be refused and Westminster can proceed anyway.** What that costs is political, not legal, and it is a cost David's Programme has to be willing to pay knowingly.
 
 ⚠ **The most authoritative legal analysis of ECHR withdrawal does not address this at all.** The word "Sewel" does not appear in Lord Wolfson's advice, and neither does the Government of Wales Act. The nearest thing to an answer is a drafting instruction at his paragraph 374: that a manifesto should specify the UK would leave and repeal the Act **irrespective of the stance of devolved administrations.**
 
@@ -175,11 +181,11 @@ The Human Rights Act is written into the founding legislation of all three devol
 - **Policy Exchange** (Conor Casey, Richard Ekins and Sir Stephen Laws, 2025) argue that withdrawal would not itself breach the Belfast Agreement, though some domestic rights protection would still be needed in Northern Ireland.
 - **Northern Ireland public lawyers** including Aoife O'Donoghue and Colin Murray, with the Committee on the Administration of Justice, argue that Convention incorporation is deeply embedded in the Agreement's architecture and that withdrawal creates significant treaty consequences.
 
-⚠ **And the two documents on the programme's own side contradict each other on this.** Wolfson relies on the Northern Ireland Court of Appeal in *Re Dillon* holding that the Convention falls outside Article 2 of the Windsor Framework, so there is no obstacle. The Prosperity Institute treats Article 2 as a live obstacle requiring primary legislation. **Incompatible readings of the same case law, published a month apart, on the same side.** An appeal to the Supreme Court is pending.
+⚠ **And the two documents on the Programme's own side contradict each other on this.** Wolfson relies on the Northern Ireland Court of Appeal in *Re Dillon* holding that the Convention falls outside Article 2 of the Windsor Framework, so there is no obstacle. The Prosperity Institute treats Article 2 as a live obstacle requiring primary legislation. **Incompatible readings of the same case law, published a month apart, on the same side.** An appeal to the Supreme Court is pending.
 
-### And the Equality Act does not apply there at all
+### The Equality Act does not apply in Northern Ireland
 
-This is the clearest example of why the register's entries matter.
+This is the clearest example of why the register's entries matter: a Bill repealing a duty that was never in force there changes nothing.
 
 **The Equality Act 2010 does not extend to Northern Ireland**, apart from three specified provisions — section 82 (offshore work), section 105(3) and (4), and section 199. Equal opportunities and discrimination are devolved matters.
 
@@ -194,11 +200,11 @@ The nearest equivalent is **section 75 of the Northern Ireland Act 1998**, which
 
 **One more thing falls out of the same section.** The Equality Act does not apply uniformly even across Great Britain: section 190 and Part 15 do not extend to Scotland. **The Act is already a patchwork, and a repeal Bill has to be drafted against the patchwork rather than against the Act's title.**
 
+Once again, it is critical that the problem the repeal is meant to solve is stated with clarity. Only with a clear expression of the problem can the fine judgements and choices about the solution be made. **This is the central task of the proposer.**
+
 # Part 2.5 · Who else has said what
 
 ## 2.5 Who else has published on this, and what they say
-
-⚠ **A note on method.**** This section did not exist in the first plan. It was added after David's own reading turned up two senior figures — Lord Sumption and Dominic Grieve KC — that the research had missed entirely, because it had covered *the law* and never asked *who else has published on this*. Every item below was found in a handful of ordinary searches. **The lesson: this kind of sweep is cheap and high-yield.**
 
 This is not a literature review and does not claim to be complete. It is what a competent searcher finds quickly, set out so David can say what has been missed.
 
@@ -211,11 +217,11 @@ This is not a literature review and does not claim to be complete. It is what a 
 | **Prosperity Institute** (Braverman and Dampier) | Withdrawal plus a Case Law Review Commission under a deadline |
 | **Dominic Grieve KC**, former Attorney General | Against withdrawal — but concedes domestic protection would survive it |
 
-**Still unworked and worth having:** Sumption's 2019 Reith Lectures and *Trials of the State* argue at length that law has expanded into territory belonging to politics. ⚠ **That is the programme's own diagnosis, made from the bench, six years before the programme.** It is the single most useful piece of corroboration nobody has used.
+**Still unworked and worth having:** Sumption's 2019 Reith Lectures and *Trials of the State* argue at length that law has expanded into territory belonging to politics. ⚠ **That is the Programme's own diagnosis, made from the bench, six years before David's Programme.** It is the single most useful piece of corroboration available.
 
-### On the Equality Act — two findings that change what the register means
+### On the Equality Act — two findings that change what the register has to say
 
-**The repeal of section 149 is already announced Conservative policy.** Kemi Badenoch, in a speech at the Institute for Government on 9 June 2026, said:
+**The repeal of section 149 is already announced Conservative policy.** Badenoch, in a speech at the Institute for Government on 9 June 2026, said:
 
 > "That's why I can announce today that a Conservative government will repeal the Public Sector Equality Duty in its entirety. We do not need to replace the duty."
 
@@ -225,7 +231,7 @@ And she drew the distinction herself, naming the alternative:
 
 > "The Equality Act protects a white man as much as a black woman. But the Public Sector Equality Duty does not. That's why we are going to overhaul the Act, starting by removing this Duty."
 
-⚠⚠ **That puts three positions on one line, and the programme is at the far end of it:**
+⚠⚠ **That puts three positions on one line, and David's Programme is at the far end of it:**
 
 | Position | Whose |
 |---|---|
@@ -237,25 +243,25 @@ And she drew the distinction herself, naming the alternative:
 
 **The strongest published rebuttal came two days later:** the Institute for Government (Stuart Hoddinott and Cassia Rowland, 11 June 2026) argue the duty does not require equality of outcomes or positive action, that frontline staff do not name it as a barrier, and that repeal misdiagnoses the problem.
 
-**Second finding: part of what the programme objects to has already been decided by the courts.** See register entry 9 and Part 4.2.
+**Second finding: part of what David's Programme objects to has already been decided by the courts.** See register entry 9 and Part 6.2.
 
 ### On the civil service — the measure that looked thinnest, and is not
 
-**Lord Maude of Horsham's Independent Review of Governance and Accountability in the Civil Service, published 13 November 2023**, examines exactly the question the programme raises.
+**Lord Maude of Horsham's Independent Review of Governance and Accountability in the Civil Service, published 13 November 2023**, examines exactly the question David's Programme raises.
 
-⚠⚠ **And it does not reach the programme's conclusion.** The review states that it proceeds "on the basis that the UK's current system of a permanent and politically impartial Civil Service will be maintained." It proposes major changes to governance and appointments and **stops short of the remedy.**
+⚠⚠ **And it does not reach the Programme's conclusion.** The review states that it proceeds "on the basis that the UK's current system of a permanent and politically impartial Civil Service will be maintained." It proposes major changes to governance and appointments and **stops short of the remedy.**
 
 **That makes it the hardest document in this report for that measure, and hard in a more useful way than opposition would be.** Maude is a former Cabinet Office minister and one of Whitehall's most persistent critics. He reaches the same diagnosis and stops. **The question it puts is not "are you right?" but "what does Maude know that makes him stop where he stops?"**
 
 Responses to it exist across the spectrum and are all findable: the Institute for Government, the UCL Constitution Unit ("institutional fixes for political problems"), and Re:State.
 
-⚠ **The UCL framing is the one the programme most needs to answer**, because it is the strongest available objection to its whole method: that changing institutions does not fix problems that are political in origin.
+⚠ **The UCL framing is the one David's Programme most needs to answer**, because it is the strongest available objection to its whole method: that changing institutions does not fix problems that are political in origin.
 
-### And a slip in David's own words, flagged rather than corrected
+### Note
 
-In one recorded talk the transcript has David referring to *"the secretary of the First Division Civil Servants Association, Mark Sirota"*. **Mark Serwotka led the PCS union, not the FDA**, whose general secretary is Dave Penman. Two different unions.
+In one recorded talk the transcript has David referring to *"the secretary of the First Division Civil Servants Association, Mark Sirota"*. Mark Serwotka led the PCS union, not the FDA, whose general secretary is Dave Penman.
 
-⚠ **This may be the transcription mishearing rather than the speaker mis-speaking, and a machine transcript cannot settle which.** It is flagged because a report quoting it uncorrected would put an error into David's mouth in print — and because if it is David's error rather than the machine's, David would rather know.
+This may be the transcription mishearing rather than the speaker mis-speaking. It is flagged because a report quoting it uncorrected would put an error into David's mouth — and because if it is David's error rather than the machine's, David would rather know.
 
 # Part 2.6 · Already before Parliament
 
@@ -263,7 +269,7 @@ In one recorded talk the transcript has David referring to *"the secretary of th
 
 ⚠⚠ 
 
-The report treated "what was tried before" as a historical question. It is not. **Two Bills are before the House of Commons now which do, in narrower form, two of the twelve things the programme proposes. Both are sponsored by Conservative MPs.**
+The report treated "what was tried before" as a historical question. It is not. **Two Bills are before the House of Commons now which do, in narrower form, two of the twelve things David's Programme proposes. Both are sponsored by Conservative MPs.**
 
 | Bill | Sponsor | What it does | Where it is |
 |---|---|---|---|
@@ -274,17 +280,19 @@ The report treated "what was tried before" as a historical question. It is not. 
 
 **Both are Presentation Bills.** A backbencher can present a Bill without a debate, and it goes into a queue. Bills of this kind rarely reach a substantive second reading and almost never become law without government time. Parliament's own website marks forward dates as provisional.
 
-**So this is not a prediction that either will pass.** What it is, is this: **the drafting question the programme has not yet answered has already been answered twice, by other people, in the form of actual long titles.**
+**Neither is a drafted Bill.** Each is a long title granting a power, with no text behind it — a skeleton to be filled in if it ever progresses.
 
-⚠⚠ **And neither Bill has any published text at all.** Parliament's page for each records: *"There are no publications for this Bill yet."* They state an intention and no mechanism. **That is why the work in Part 4.2 is not duplicating anyone — the consequential detail has not been written by anybody.**
+**So this is not a prediction that either will pass.** What it is, is this: **the drafting question David's Programme has not yet answered has already been answered twice, by other people, in the form of actual long titles.**
+
+⚠⚠ **And neither Bill has any published text.** Parliament's page for each records: *"There are no publications for this Bill yet."* They state an intention and no mechanism. **That is why the work in Part 6.2 is not duplicating anyone — the consequential detail has not been written by anybody.**
 
 ### The three long titles answer the question differently
 
 - **Wood's Bill takes withdrawal only.** It does not repeal the Human Rights Act. That is the "change of forum" option.
 - **Morrissey's Bill takes section 149 and Schedule 18 only.** It does not touch the Act's substantive anti-discrimination provisions.
-- **On this reading the programme takes the whole Act in each case.**
+- **On this reading David's Programme takes the whole Act in each case.**
 
-**These are the narrowest available versions of two of the programme's measures, and they are the ones that have reached the Order Paper.** That is information David should have, whether they agree with the narrowing or not.
+**These are the narrowest available versions of two of the Programme's measures, and they are the ones that have reached the Order Paper.**
 
 ### The counter-movement, also live, and with government time behind it
 
@@ -292,14 +300,14 @@ The report treated "what was tried before" as a historical question. It is not. 
 |---|---|---|
 | **Public Office (Accountability) Bill** — a Government Bill, from a Labour manifesto commitment | Creates a statutory **duty of candour** on public authorities and officials, new criminal offences, and codes of ethical conduct; replaces the common-law offence of misconduct in public office | Commons third reading 14 July 2026; Lords second reading 1 September 2026 |
 
-⚠ **This runs in precisely the opposite direction to the programme, and it is the one with government time.** Where the programme would take civil service management back to the Crown's own powers, this Bill adds statutory duties to officials. **A programme that repeals the 2010 Act while this is on the statute book has to say how the two fit together** — and if it becomes law first, it is a thirteenth thing to unwind rather than a twelfth.
+⚠ **This runs in precisely the opposite direction to David's Programme, and it is the one with government time.** Where the Programme would take civil service management back to the Crown's own powers, this Bill adds statutory duties to officials. **A programme that repeals the 2010 Act while this is on the statute book has to say how the two fit together** — and if it becomes law first, it is a thirteenth thing to unwind rather than a twelfth.
 
 ### Earlier attempts, verified
 
 | Attempt | What happened |
 |---|---|
 | **Bill of Rights Bill 2022** (Dominic Raab) — would have repealed the Human Rights Act and replaced it, **staying in the Convention** | Introduced 22 June 2022; paused; abandoned 27 June 2023. **Never reached a second reading** |
-| **Peter Bone MP, British Bill of Rights and Withdrawal from the ECHR Bill 2022–23** — withdrawal *plus* a domestic Bill of Rights, the closest earlier match to the programme | First reading 20 June 2022. **No further stage recorded** |
+| **Peter Bone MP, British Bill of Rights and Withdrawal from the ECHR Bill 2022–23** — withdrawal *plus* a domestic Bill of Rights, the closest earlier match to David's Programme | First reading 20 June 2022. **No further stage recorded** |
 | **Nigel Farage MP**, ten-minute-rule motion on withdrawal, **29 October 2025** | **Ayes 96, Noes 154.** Rejected; no Bill resulted |
 
 ⚠ **That division is the only hard number in this report on how the present House of Commons votes on withdrawal.** 96 for, 154 against, on a thinly attended vote. It is not a forecast. It is the only sounding taken.

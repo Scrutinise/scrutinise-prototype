@@ -1,10 +1,8 @@
-# Part 6 · The questions
+# Part 4.2 · Strategic choices
 
-## 6 · The questions only David can answer
+## 4.2 · Strategic choices — the questions only David can answer
 
-**This is what the document is for.** Everything before it exists to make these questions precise. None can be answered from the record; all of them change what gets drafted.
-
-**They are ordered by what they block.** The first five stop other work until they are answered.
+None of these questions can be answered from the record, and all of them change what gets drafted. The first five stop other work until they are answered.
 
 ---
 
@@ -16,7 +14,7 @@ Annulment, the Case Law Review Commission, structured withdrawal, or leave-and-r
 
 **2. Is the replacement Convention-shaped, or deliberately not?**
 
-Lord Wolfson warns against a Bill of Rights modelled on the Convention. Lord Sumption proposes exactly that. **The two most senior legal voices on the same side disagree about the single most consequential drafting decision in the programme.**
+Lord Wolfson warns against a Bill of Rights modelled on the Convention. Lord Sumption proposes exactly that. **The two most senior legal voices on the same side disagree about the single most consequential drafting decision in David's Programme.**
 
 **3. Is the target the statute, or the case law decided under it?**
 
@@ -32,7 +30,7 @@ The list does not say. **If the objective is UK-wide, it must be** — because t
 
 ---
 
-### On the programme's structure
+### On the Programme's structure
 
 **6. Are the Equality Act, DEI and gender self-identification accepted as one workstream?** *Recommendation: yes. It removes two Bills and loses nothing.*
 
@@ -50,7 +48,7 @@ The list does not say. **If the objective is UK-wide, it must be** — because t
 
 **11. What does Lord Maude know that makes him stop short of repeal?** He is not a defender of the machine, and he reached the same diagnosis.
 
-**12. What is the answer to the objection that institutional change cannot fix problems that are political in origin?** This is the strongest available criticism of the programme's whole method and it deserves an answer at its strongest.
+**12. What is the answer to the objection that institutional change cannot fix problems that are political in origin?** This is the strongest available criticism of the Programme's whole method.
 
 **13. On the Bank of England: is the objective repeal, or legitimacy?** The evidence reads the complaint as being about a political question reclassified as technical. If that is right, repeal is not obviously the mechanism.
 
@@ -60,7 +58,15 @@ The list does not say. **If the objective is UK-wide, it must be** — because t
 
 **16. Given *For Women Scotland*, how much of the gender self-identification objection survives — and is legislation still the mechanism for what remains?**
 
-**17. Does the programme accept or reject the Maude Review's diagnosis of civil service accountability?**
+**17. Does David's Programme accept or reject the Maude Review's diagnosis of civil service accountability?**
+
+⚠⚠ **The three below are the largest open questions in the whole report.** Volume 2 works the Equality Act measure on one reading of it. If the other reading is right, that section is worked against a proposal David is not making.
+
+**17a. On the Equality Act: does the measure keep the Act's substantive anti-discrimination protections, or remove them too?** Volume 2 works the first — repeal section 149, keep the rest. Reform UK's published position is the second. **No statement by David on the scope of an Equality Act repeal was found in the 285 recordings**, so the document does not attribute either reading to him. The two produce different Bills, different challenges and different consequential work. *Recommendation: answer this before anything else on this measure.*
+
+**17b. If the substantive protections go, does "protected characteristics" go with them?** The alternative is a single instruction — appoint, procure and promote on demonstrated track record alone, with no obligation to advance one group over another. That is a materially larger Bill than the one now drafted, and nobody on any side of the public debate has yet published such a rule.
+
+**17c. Repeal, or prohibition?** Does David's Programme stop *requiring* positive discrimination by devolved bodies, arm's-length bodies and public authorities, or actively *forbid* it? **A prohibition reaches section 75 of the Northern Ireland Act 1998 and the devolution settlements. A repeal does not.**
 
 ---
 
@@ -68,7 +74,7 @@ The list does not say. **If the objective is UK-wide, it must be** — because t
 
 **18. Wood's Bill takes withdrawal without repealing the Human Rights Act. Morrissey's takes section 149 without the rest of the Act. Are these acceptable narrower versions, or do they miss the point?** *Recommendation: answer this one early. It is the difference between joining a live legislative effort and starting a separate one.*
 
-**19. The Public Office (Accountability) Bill is moving in the opposite direction with government time behind it. Does the programme oppose it, ignore it, or absorb it?**
+**19. The Public Office (Accountability) Bill is moving in the opposite direction with government time behind it. Does David's Programme oppose it, ignore it, or absorb it?**
 
 **20. Does the Chișinău Declaration disturb the premise that the Convention system cannot be reformed?** In May 2026 all 46 Council of Europe states adopted a political declaration on the Convention and migration. It is not binding and does not bind the Strasbourg court — but 46 states have just done, by declaration, something the premise says cannot be done.
 
@@ -76,13 +82,13 @@ The list does not say. **If the objective is UK-wide, it must be** — because t
 
 ### On the four unsourced measures
 
-**21. Are the Lord Chancellor, the Climate Change Act, the Judicial Appointments Commission and the removal of judges part of the programme?** They were not found in 287 transcripts. **They are being attributed to David in public.** *Recommendation: confirm or disown each one explicitly — silence lets the attribution stand.*
+**21. Are the Lord Chancellor, the Climate Change Act, the Judicial Appointments Commission and the removal of judges part of David's Programme?** They were not found in the 285 recordings. Three of the four come from Douglas Carswell's *Restore the State* (Part 3), 7 September 2025, which does not mention David; the fourth comes from the Conservative Party's Alternative King's Speech. **All four are being attributed to David in public.** *Recommendation: confirm or disown each one explicitly — silence lets the attribution stand.*
 
 ---
 
 ### On delivery
 
-**22. Is the mass creation of peers still necessary?** The European Union (Notification of Withdrawal) Act 2017 went from introduction to Royal Assent in **seven weeks, through a hostile House of Lords, without a single peer being created** — on the strength of a manifesto commitment and the Salisbury convention. **This is evidence that makes the programme easier.**
+**22. Is the mass creation of peers still necessary?** The European Union (Notification of Withdrawal) Act 2017 went from introduction to Royal Assent in **seven weeks, through a hostile House of Lords, without a single peer being created** — on the strength of a manifesto commitment and the Salisbury convention. **This is evidence that makes David's Programme easier.**
 
 **23. What delay would the Parliament Acts impose if the Salisbury convention did not hold?** Not yet established.
 

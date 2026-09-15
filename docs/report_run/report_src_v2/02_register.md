@@ -1,6 +1,6 @@
 # Part 1 · What David said, and what the law would have to do
 
-## The register: what David said, and what the law would have to do
+## What David said, and what the law would have to do
 
 **This is the heart of the document.** The left of each entry is what David said, in David's own words wherever the record allows. The right is a reading of what would have to change in the law to deliver it, and why.
 
@@ -15,8 +15,6 @@ Each measure has five parts:
 - **The law that would have to change** — the specific Acts and sections, taken from a search of the statute book.
 - **What stands in the way** — the single biggest obstacle identified.
 - **Status** — whether anyone has ever tried this.
-
-**A note on the twelve.** A widely circulated list of "twelve points" is in general use. It has been checked against 287 transcripts of David speaking. **Four items on that list cannot be traced to anything David is recorded as saying, and two things David says repeatedly are not on it.** David's words are used throughout, and the four unsourced items are set out separately so David can confirm or delete them.
 
 ---
 
@@ -42,7 +40,7 @@ Each measure has five parts:
 
 **The law that would have to change:** Equality Act 2010, and in particular section 149 (the duty), Schedule 18 (the exceptions to it), Schedule 19 (the list of public bodies it binds), and sections 150 to 157, which exist only to make section 149 work. Also the Equality Act 2006, sections 31, 32 and 34, which govern the Equality and Human Rights Commission.
 
-**What stands in the way:** Three things, and all are in Part 4.2. The duty has never applied in Northern Ireland. Most of the working machinery built on it is Scottish and Welsh. And the official Opposition has publicly taken a narrower position than this one.
+**What stands in the way:** Three things, and all are in Part 6.2. The duty has never applied in Northern Ireland. Most of the working machinery built on it is Scottish and Welsh. And the official Opposition has publicly taken a narrower position than this one.
 
 **Status:** **A Bill to repeal section 149 is before the Commons now.** No government review in fifteen years has recommended repealing the whole Act.
 
@@ -72,7 +70,7 @@ Each measure has five parts:
 
 **What stands in the way:** ⚠ **The 2011 Act already gives ministers much of this power, and it has been used sparingly.** That is worth knowing before drafting a new one: the obstacle may not be the absence of a power.
 
-**Status:** Attempted before, in the Public Bodies Act 2011. What happened to that attempt is the most useful precedent available and has not been examined.
+**Status:** Attempted before, in the Public Bodies Act 2011. What happened to that attempt is the most useful precedent available and has not been examined. It should be.
 
 ---
 
@@ -102,7 +100,7 @@ Each measure has five parts:
 
 **The target David names and the law that exists are not the same thing.** David objects to the Northcote-Trevelyan reforms, which date from 1854. The 2010 Act is the modern written-down version of that settlement. **Repealing the 2010 Act would return civil service management to the Crown's own powers, but would leave the 170-year-old convention entirely intact** — and the convention, not the statute, is what actually determines how Whitehall behaves.
 
-The analysis reached the same conclusion independently, and put it in the first line of the diagnosis: *"David misidentifies the target."*
+The analysis reached the same conclusion independently: the 1854 settlement, which David identifies as the source of the problem, is not what the 2010 Act contains. **That points to where the drafting effort has to go** — at the convention, not only at the statute.
 
 **Status:** ⚠⚠ **No Bill has ever been introduced to repeal Part 1. No government or independent review has recommended it. No developed legal case for it exists.** Three independent research passes each searched and found nothing. And the most senior sympathetic review — Lord Maude's, of November 2023 — reaches the same diagnosis about civil service accountability and expressly keeps the permanent impartial service, on the basis that the alternative brings "delay and discontinuity".
 
@@ -150,7 +148,7 @@ The analysis reached the same conclusion independently, and put it in the first 
 
 **Self-identification was never enacted in Great Britain.** The Gender Recognition Act 2004 has always required a certificate granted on evidence. And in April 2025 the Supreme Court held, in *For Women Scotland Ltd v The Scottish Ministers*, that "sex" in the Equality Act means biological sex.
 
-**The position objected to has been substantially resolved by litigation, in the direction the programme wants, without any legislation at all.** What remains is a gap between what the law now says and what public bodies are still doing — which is an enforcement problem, not a legislative one.
+**The position objected to has been substantially resolved by litigation, in the direction David's Programme wants, without any legislation at all.** What remains is a gap between what the law now says and what public bodies are still doing — which is an enforcement problem, not a legislative one.
 
 **Status:** Resolved by the courts. ⚠ **This is a finding David and PopCon should welcome and should also find uncomfortable.** It supports the diagnosis — the courts did move. It complicates the remedy — because if the objectionable reading has gone, what is left to repeal?
 
@@ -194,8 +192,18 @@ The analysis reached the same conclusion independently, and put it in the first 
 
 **What stands in the way:** The Supreme Court's decision in the first *Miller* case closes the shortcut. Ministers cannot do this with the Crown's own powers; it has to be an Act of Parliament, which means the House of Lords.
 
-**And the largest obstacle is stated by the programme's own side.** Lord Wolfson KC, the Shadow Attorney General, wrote in October 2025 that leaving the Convention and repealing the Human Rights Act *"would not amount to a 'factory reset' of UK law"* and that achieving anything like that *"would involve a complicated legislative programme aimed at rolling back case law and relevant legislative provisions."* **That is a description of a document nobody has yet written.** Part 2.1 is a first attempt at what it would contain.
+**And the largest obstacle is stated by the Programme's own side.** Lord Wolfson KC, the Shadow Attorney General, wrote in October 2025 that leaving the Convention and repealing the Human Rights Act *"would not amount to a 'factory reset' of UK law"* and that achieving anything like that *"would involve a complicated legislative programme aimed at rolling back case law and relevant legislative provisions."* **That is a description of a document nobody has yet written.** Part 2.1 is a first attempt at what it would contain.
 
-**Status:** Never attempted at this scale. **Part 3 tests the claim that the measures must move together, and finds it is not supported in the way the programme assumes.**
+**Status:** Never attempted at this scale. **Part 3 tests the claim that the measures must move together, and finds it is not supported in the way David's Programme assumes.**
+
+---
+
+### The problem underneath all twelve
+
+At the heart of the Starkey Thesis is one core problem: **Parliament is not sovereign, and should be.** That is the problem to which the Thesis is the solution.
+
+If that correctly states the problem — and it aligns David firmly on the political-constitution side of the political/legal constitution debate — then the solution goes further than simple repeal of legislation. It suggests the entire machinery of government needs to be modified, so that accountability and responsibility for all government action flows through the elected representatives, in a way that allows the voting public to reward success and punish failure.
+
+**This paper is focused solely on David's programme of repeal and its implications.**
 
 ---

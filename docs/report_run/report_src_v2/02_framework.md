@@ -1,13 +1,11 @@
-# Part 1 · The argument underneath all twelve
+# Part 1 · The Common Thread
 
 
-## The argument underneath all twelve: the political constitution and the legal constitution
+## The Common Thread: the political constitution and the legal constitution
 
-** They said the serious literature is not organised around "British law versus European law". It is organised around a different distinction, and getting it right changes who the programme's allies are.
+There has been a tendency, because of Brexit, to see things in terms of British law versus EU law. However, the serious literature suggests these ideas sit within a wider and stronger narrative framework — the political constitution against the legal constitution — and positioning David's Programme on that axis changes who its allies are.
 
 ---
-
-### The distinction that actually runs through the literature
 
 **Political constitutionalism versus legal constitutionalism.** It traces to a 1979 lecture by J. A. G. Griffith called *The Political Constitution* [corroborated, unchecked].
 
@@ -18,23 +16,19 @@
 | What judges do | Interpret what Parliament meant; develop the common law step by step | Test executive decisions against rights and equality standards |
 | What democracy means | **Procedural** — what the majority chooses through elected representatives is legitimate | **Substantive** — a real democracy requires legal constraints protecting rights and minorities |
 
-⚠⚠ **Why this matters more than it looks.** On the "British versus European" framing, the programme is making a nationalist argument, and it is vulnerable to a single book — see below. **On the political-versus-legal framing, it joins a serious argument with serious people on both sides, including people who are not on its political side at all.**
+⚠⚠ **Why this matters more than it looks.** On the "British versus European" framing, David's Programme is making a nationalist argument, and it is vulnerable to attacks that portray it as small-minded, petty and parochial, or xenophobic — as well as to Sir John Laws' legal arguments, set out below. **On the political-versus-legal framing, it joins a serious argument with serious people on both sides, including people who are not on its political side at all.**
 
 ---
 
-### ⚠⚠ The book that breaks the "British versus foreign" framing
+**Sir John Laws, *The Common Law Constitution* (2014) [corroborated, unchecked]** — one of the most important British public-law judges of his generation — argues in his book that **the common law itself supplies constitutional principle** and itself polices the boundary between political power and legal constraint. **If accepted, strong judicial constraint is not an import. It grew here.**
 
-**Sir John Laws, *The Common Law Constitution* (2014) [corroborated, unchecked]** — one of the most important British public-law judges of his generation.
-
-**His argument is that the common law itself supplies constitutional principle** and itself polices the boundary between political power and legal constraint. **Strong judicial constraint is not an import. It grew here.**
-
-⚠ **This is the single most awkward item in the literature for the programme's stronger version**, because it destroys the binary:
+⚠ **This destroys the binary:**
 
 > **British common law = parliamentary government · European rights law = judicial government**
 
 **If Laws is right, repealing the Human Rights Act and leaving the Convention removes the imported layer and leaves the domestic one standing** — which is precisely what Part 2.1 finds from the case law, arrived at independently.
 
-**The programme needs an answer to this, and the answer cannot be that judicial power is foreign.**
+**David's Programme needs an answer to this, and the more powerful argument looks to be the political-constitution body of argument** — which seems to encapsulate the case the Starkey Thesis is making, whether the judicial power in question sits at home or abroad.
 
 ---
 
@@ -73,15 +67,15 @@
 
 ---
 
-### ⚠⚠ The ally the programme has not noticed
+### ⚠⚠ The ally David's Programme has not noticed
 
-**Griffith, Tomkins, Loughlin and — if it exists — Bellamy make substantially the same diagnosis as the programme, from the left.** Their argument is that political choices have migrated to legal and expert bodies, and that this insulates decisions from electorates.
+**Griffith, Tomkins, Loughlin and — if it exists — Bellamy make substantially the same diagnosis as David's Programme, from the left.** Their argument is that political choices have migrated to legal and expert bodies, and that this insulates decisions from electorates.
 
 **They disagree about the remedy, not the diagnosis.**
 
 One named example: **Peter Ramsay, writing in April 2025** [single mention, unchecked], accepts the diagnosis and rejects the remedy — arguing that much of this legislation must go for government to be democratically accountable, while treating the Great Repeal as the dead end of the Thatcherite right.
 
-⚠ **That is a more useful opponent than a defender of the status quo**, and it is the strongest available evidence that the programme's diagnosis is not a partisan position. **Proponents rarely read this literature. It is their best argument that the case is not party-political.**
+⚠ **That is a more useful opponent than a defender of the status quo**, and it is the strongest available evidence that the Programme's diagnosis is not a partisan position. **Proponents rarely read this literature. It is their best argument that the case is not party-political.** Working alongside them may bring left-wing support for the measures, which is critical in getting them passed in Parliament and supported across the population.
 
 ---
 
@@ -104,10 +98,10 @@ One named example: **Peter Ramsay, writing in April 2025** [single mention, unch
 
 ### And the development that cuts against the central premise
 
-**A load-bearing premise of the programme is that the Convention system cannot be reformed, so only leaving works.**
+**A load-bearing premise of David's Programme is that the Convention system cannot be reformed, so only leaving works.**
 
 **In May 2026 all 46 Council of Europe member states adopted a political declaration at Chișinău on the Convention and migration** [verified] — subsidiarity, the margin of appreciation, Articles 3 and 8 in expulsion cases, and mass arrivals.
 
-⚠ **Both halves of this must print.** It is not binding, does not amend the Convention, and does not bind the Strasbourg court — so whether it changes any outcome is an open empirical question. **But 46 states have just done, by declaration, the thing the premise says cannot be done, on precisely the ground where the pressure is greatest.**
+⚠ **Both sides of this have to be stated.** It is not binding, does not amend the Convention, and does not bind the Strasbourg court — so whether it changes any outcome is an open empirical question. **But 46 states have just done, by declaration, the thing the premise says cannot be done, on precisely the ground where the pressure is greatest.**
 
-**That is a contested development, not a refutation. It is also the question the programme is most likely to be asked in public and least prepared for.**
+**That is a contested development, not a refutation. It is also the question David's Programme is most likely to be asked in public and least prepared for.**

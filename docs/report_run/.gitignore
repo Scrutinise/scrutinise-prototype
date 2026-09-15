@@ -25,6 +25,14 @@
 # Charlie: if these should be backed up, R2 is the right home, not git.
 *.docx
 
+# *.docx above keeps the private lecture transcripts off GitHub and must stay.
+# The three built report volumes are public deliverables with fixed filenames,
+# so they are named individually rather than un-ignoring a directory: a
+# directory-wide negation would also expose any transcript later moved into it.
+!report_src_v2/RESTORATION_1_The_programme_and_the_argument.docx
+!report_src_v2/RESTORATION_2_The_measures_worked.docx
+!report_src_v2/RESTORATION_3_The_evidence.docx
+
 # Corpus search exports (CCW-B9) — derived from the same private corpus.
 starkey_hits.json
 register_candidates.json
