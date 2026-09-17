@@ -222,8 +222,10 @@ async function main() {
   const caveatAt = builder.indexOf('FIRST_PASS_CAVEAT.slice(0, dot)')
   const betaAt = builder.indexOf('blocks.push(...betaBlocks())')
   ok('the caveat is pushed before the beta disclosure, i.e. first', caveatAt > 0 && betaAt > caveatAt)
-  ok('the caveat is Charlie\'s copy, verbatim',
-    FIRST_PASS_CAVEAT === 'A first pass, and a limited one. This is an early list of legislation that may be relevant, based on what you have told us so far. The more you tell us, the better it gets — as you work through the questions and decisions Lex has laid out, this list is refined into something more accurate and more specific to your proposal.')
+  ok('the caveat does not promise refinement without a re-run (the list is refreshed only by a build)',
+    !/work through the questions/.test(FIRST_PASS_CAVEAT) && /re-run/.test(FIRST_PASS_CAVEAT))
+  ok('the caveat is Charlie\'s copy, verbatim (second wording, 17 Sep 2026)',
+    FIRST_PASS_CAVEAT === 'A first pass, and a limited one. This is an early list of legislation that may be relevant, based on what you have told us so far. The more you tell us, the better it gets — add what you know, then re-run, and the next pass searches on everything you have given us since.')
   ok('the name is what Charlie asked for', INITIAL_BACKGROUND_NAME === 'Initial Background Briefing')
   ok('files made before the caveat existed read as out of date (layout token in the fingerprint)',
     /layout: LAYOUT_VERSION/.test(builder))

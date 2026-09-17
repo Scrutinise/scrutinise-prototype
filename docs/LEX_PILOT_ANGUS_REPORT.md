@@ -344,7 +344,11 @@ sentence of the caveat promises something that happens only on a rebuild, in wha
   and the proposal documents, not in this list."* Truer, and it needs a definition of "worked through",
   which is the rule the brief says not to build. If chosen, that definition is the one sentence to settle.
 
-In either case the second sentence (*"as you work through the questions and decisions … this list is
-refined"*) is only true if the list is regenerated from the evidence layer rather than from the ORIENT
+**Resolved 2026-09-17 09:23 UTC — Charlie replaced the second sentence before it shipped.** The caveat now
+reads *"… add what you know, then re-run, and the next pass searches on everything you have given us
+since"*, which is what happens. Options A and B above concern only the dating of the first sentence.
+
+The old second sentence (*"as you work through the questions and decisions … this list is
+refined"*) was only true if the list were regenerated from the evidence layer rather than from the ORIENT
 search. That is a larger change and a separate decision: **should this document stay the first-pass
 search, or become the current reading list?**

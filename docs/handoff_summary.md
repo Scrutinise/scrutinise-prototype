@@ -773,7 +773,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-17 01:41 UTC — ▼ **THE BRIEFING IS A NAMED DOCUMENT.** Pilot feedback item 2 (Angus: the most
+*Last updated: 2026-09-17 09:23 UTC — ▼ **CAVEAT WORDING CORRECTED BEFORE IT SHIPPED.** Charlie replaced the second
+sentence: it promised the list refines *"as you work through the questions and decisions"*, and it does not — only a
+build refreshes it. Now, verbatim: *"… add what you know, then re-run, and the next pass searches on everything you
+have given us since."* Everything else stands (first block, body text, bold first sentence, above the beta
+disclosure, provenance leading). `check:documents` asserts the new wording and refuses the old promise.
+Earlier: 2026-09-17 01:41 UTC — ▼ **THE BRIEFING IS A NAMED DOCUMENT.** Pilot feedback item 2 (Angus: the most
 valuable thing in the product, and he could not find it — it was small print under a card headed "Downloads").
 ▶ Built: the Documents-tab card and the panel card are headed **Initial Background Briefing**, from one constant
 (`lib/documents/initial-background-name.ts`) that is also the file's own title; a one-line description stays on the
