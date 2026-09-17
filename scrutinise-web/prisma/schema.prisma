@@ -2514,11 +2514,22 @@ model Document {
   /// apart is the difference between "your draft" and "what the recipient holds".
   proposalVersionId String?
   proposalVersion   ProposalVersion? @relation(fields: [proposalVersionId], references: [id], onDelete: SetNull)
+  /// LEX, 17 Sep 2026 (pilot feedback, Angus Barry) — WHICH BUILD WROTE THIS DOCUMENT. The
+  /// Initial Background Briefing is a frozen snapshot of one build's first pass and Initial
+  /// Questions is what that same build needs from the user; both carry the build so the pair
+  /// reads as one thing. Null on rows written before the column existed and on the legacy
+  /// Page-1 search path, which runs outside a build — the reader labels those as inferred.
+  /// `buildVersion` is denormalised on purpose: SET NULL keeps the document when the build
+  /// row goes; the version keeps the stamp. SQL: prisma/lex_document_build_binding.sql.
+  buildId           String?
+  build             IdeaBuild? @relation(fields: [buildId], references: [id], onDelete: SetNull)
+  buildVersion      Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([ideaId, kind])
   @@index([ideaId])
+  @@index([buildId])
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
@@ -4090,6 +4101,7 @@ model IdeaBuild {
   updatedAt       DateTime     @updatedAt
 
   forks           BuildFork[]
+  documents       Document[]
 
   @@unique([ideaId, version])
   @@index([ideaId, status])
