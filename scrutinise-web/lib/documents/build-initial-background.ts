@@ -19,6 +19,17 @@ import { prisma } from '@/lib/prisma'
 import type { Block, DocumentModel, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
+import { INITIAL_BACKGROUND_NAME, FIRST_PASS_CAVEAT } from './initial-background-name'
+
+/**
+ * Pilot feedback (Angus Barry, 16 Sep 2026) — rendered layout, in the fingerprint.
+ *
+ * The fingerprint covers the STORED VALUES that were rendered; it cannot see that the
+ * renderer now puts a caveat and a name on the page that the stored file does not carry.
+ * Without this token every file generated before the change reads as current and is served
+ * without the caveat. Bump it when what the file says changes for a reason the rows cannot show.
+ */
+const LAYOUT_VERSION = 'v2-named-with-first-pass-caveat'
 
 // ⚠ `Record<string, string>`, not `Record<SearchResultType, string>` — so tsc does NOT force a
 // new display type to be added here, and TYPE_ORDER below is a plain array for the same reason.
@@ -109,7 +120,16 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
     .filter((g) => g.items.length > 0)
 
   const blocks: Block[] = []
-  // ⚠ 25-V §11a/§11b — first block on every generated document. See `betaBlocks`.
+  // ⚠ THE CAVEAT SITS AT THE TOP, BEFORE ANYTHING ELSE — Charlie's placement, pilot feedback
+  // of 16 Sep 2026. A paragraph, not a `note`: the beta disclosure below renders as small
+  // muted italics, and small print is exactly what this must not be. First sentence bold.
+  const dot = FIRST_PASS_CAVEAT.indexOf('. ') + 1
+  blocks.push({ kind: 'paragraph', runs: [
+    { text: FIRST_PASS_CAVEAT.slice(0, dot), bold: true },
+    { text: FIRST_PASS_CAVEAT.slice(dot) },
+  ] })
+  // ⚠ 25-V §11a/§11b — the disclosure, on every generated document. See `betaBlocks`.
+  // Second here, because the caveat above is Charlie's later and more specific placement.
   blocks.push(...betaBlocks())
 
   if (doc.summary && doc.summary.trim()) {
@@ -153,6 +173,7 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
   // file stale, and the UI says so rather than serving it.
   const fingerprint = createHash('sha256')
     .update(JSON.stringify({
+      layout: LAYOUT_VERSION,
       title: idea.title,
       summary: doc.summary ?? '',
       body: doc.body,
@@ -162,8 +183,10 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
 
   return {
     model: {
-      title: idea.title || 'Initial Background',
-      subtitle: `Initial Background briefing · ${BETA_MARKER}`,
+      // The document's own name is the title; the idea is the subtitle. What the tab calls
+      // it, the file calls itself.
+      title: INITIAL_BACKGROUND_NAME,
+      subtitle: `${idea.title || 'Untitled idea'} · ${BETA_MARKER}`,
       sourceLabel,
       generatedAt: new Date(),
       blocks,

@@ -12,6 +12,8 @@ import { markdownToBlocks, parseInline } from '../lib/documents/markdown'
 import { renderDocx } from '../lib/documents/render-docx'
 import { renderPdf, toWinAnsi } from '../lib/documents/render-pdf'
 import type { DocumentModel } from '../lib/documents/model'
+import { readFileSync } from 'fs'
+import { INITIAL_BACKGROUND_NAME, FIRST_PASS_CAVEAT } from '../lib/documents/initial-background-name'
 
 const outDir = process.argv[2] ?? join(process.cwd(), '.tmp-export-check')
 mkdirSync(outDir, { recursive: true })
@@ -204,6 +206,29 @@ async function main() {
   ok('pdf text keeps the numbered list', pdfText.includes('1.') && pdfText.includes('Transport Committee raised this in 2019'))
   ok('pdf text carries the provenance line', pdfText.includes('Generated 2026-08-05 12:00 UTC from'))
   ok('pdf text keeps £ and § intact', pdfText.includes('£100') && pdfText.includes('§'))
+
+  // ── Pilot feedback (Angus Barry, 16 Sep 2026) — the briefing is a NAMED document with the
+  // caveat at the top. Source-level, comments stripped first: a "must not appear" grep that
+  // reads its own explanatory comment fails on correct code (docs/CLAUDE.md §26 family).
+  const src = (rel: string) => readFileSync(join(process.cwd(), rel), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+  const card = src('components/documents/DocumentExports.tsx')
+  const builder = src('lib/documents/build-initial-background.ts')
+  ok('the Documents-tab card is headed by the document\'s own name, from the shared constant',
+    /className=\{title\}>\{INITIAL_BACKGROUND_NAME\}/.test(card))
+  ok('the card no longer says "Downloads" anywhere a user reads', !/>Downloads</.test(card))
+  ok('the card describes the document in every state (blurb rendered)', /INITIAL_BACKGROUND_BLURB\}/.test(card))
+  ok('the file\'s own title is the same name', /title: INITIAL_BACKGROUND_NAME/.test(builder))
+  const caveatAt = builder.indexOf('FIRST_PASS_CAVEAT.slice(0, dot)')
+  const betaAt = builder.indexOf('blocks.push(...betaBlocks())')
+  ok('the caveat is pushed before the beta disclosure, i.e. first', caveatAt > 0 && betaAt > caveatAt)
+  ok('the caveat is Charlie\'s copy, verbatim',
+    FIRST_PASS_CAVEAT === 'A first pass, and a limited one. This is an early list of legislation that may be relevant, based on what you have told us so far. The more you tell us, the better it gets — as you work through the questions and decisions Lex has laid out, this list is refined into something more accurate and more specific to your proposal.')
+  ok('the name is what Charlie asked for', INITIAL_BACKGROUND_NAME === 'Initial Background Briefing')
+  ok('files made before the caveat existed read as out of date (layout token in the fingerprint)',
+    /layout: LAYOUT_VERSION/.test(builder))
+  ok('the provenance line (date, source count, search time) survives in both renderers',
+    src('lib/documents/render-docx.ts').includes('from ${model.sourceLabel}') && src('lib/documents/render-pdf.ts').includes('from ${model.sourceLabel}'))
 
   console.log(`\nWritten: ${docxPath}\n         ${pdfPath}`)
   if (fail) { console.error(`\n${fail} check(s) failed.`); process.exit(1) }

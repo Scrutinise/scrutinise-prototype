@@ -9,9 +9,17 @@
 // the state it was rendered from, and in that case the buttons say so, offer
 // regeneration first, and only give the old file when the user asks for it in
 // full knowledge. What it was generated FROM and WHEN is always on screen.
+//
+// ⚠ PILOT FEEDBACK (Angus Barry, 16 Sep 2026) — THE CARD IS THE DOCUMENT, NAMED. It was
+// headed "Downloads", and the only word saying WHAT could be downloaded was in the small
+// print, which disappeared once the file existed. He said the briefing was the most valuable
+// thing in the product and could not find it. The heading is now the document's own name, from
+// the same constant the file's title uses, and the one-line description stays on the card in
+// every state.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useState } from 'react'
+import { INITIAL_BACKGROUND_NAME, INITIAL_BACKGROUND_BLURB } from '@/lib/documents/initial-background-name'
 
 export interface ExportStatus {
   documentId: string | null
@@ -90,14 +98,14 @@ export default function DocumentExports({
     : 'text-sm font-medium px-3 py-2 rounded-lg'
 
   if (loading) {
-    return <p className={body}>Checking for downloads…</p>
+    return <p className={body}>Checking for {INITIAL_BACKGROUND_NAME}…</p>
   }
 
   // Nothing to export yet — say which of the two reasons it is, never an empty box.
   if (!status || !status.available) {
     return (
       <div className={compact ? 'rounded-xl border border-zinc-200 p-3' : 'rounded-xl border border-zinc-200 p-4'}>
-        <div className={title}>Downloads</div>
+        <div className={title}>{INITIAL_BACKGROUND_NAME}</div>
         <p className={`${body} mt-1.5`}>
           {status?.unavailableReason ?? 'There is no briefing on this idea yet, so there is nothing to download.'}
         </p>
@@ -109,7 +117,8 @@ export default function DocumentExports({
 
   return (
     <div className={compact ? 'rounded-xl border border-zinc-200 p-3' : 'rounded-xl border border-zinc-200 p-4'}>
-      <div className={title}>Downloads</div>
+      <div className={title}>{INITIAL_BACKGROUND_NAME}</div>
+      <p className={`${body} mt-1`}>{INITIAL_BACKGROUND_BLURB}</p>
 
       {error && (
         <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">{error}</p>
@@ -118,8 +127,7 @@ export default function DocumentExports({
       {!status.generated ? (
         <>
           <p className={`${body} mt-1.5`}>
-            The Initial Background can be prepared as a Word document and a PDF, with its sources and
-            citations.
+            Not prepared yet — it takes a moment, and comes with its sources and citations.
           </p>
           <button onClick={generate} disabled={busy}
             className={`${btn} mt-2.5 bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40`}>
