@@ -215,9 +215,11 @@ async function main() {
   const card = src('components/documents/DocumentExports.tsx')
   const builder = src('lib/documents/build-initial-background.ts')
   ok('the Documents-tab card is headed by the document\'s own name, from the shared constant',
-    /className=\{title\}>\{INITIAL_BACKGROUND_NAME\}/.test(card))
+    /className=\{title\}>\{card\.name\}/.test(card) && /INITIAL_BACKGROUND: \{ name: INITIAL_BACKGROUND_NAME/.test(card))
+  ok('the companion card is headed by ITS name, from the same constants file',
+    /INITIAL_QUESTIONS: \{ name: INITIAL_QUESTIONS_NAME/.test(card))
   ok('the card no longer says "Downloads" anywhere a user reads', !/>Downloads</.test(card))
-  ok('the card describes the document in every state (blurb rendered)', /INITIAL_BACKGROUND_BLURB\}/.test(card))
+  ok('the card describes the document in every state (blurb rendered)', /\{card\.blurb\}/.test(card))
   ok('the file\'s own title is the same name', /title: INITIAL_BACKGROUND_NAME/.test(builder))
   const caveatAt = builder.indexOf('FIRST_PASS_CAVEAT.slice(0, dot)')
   const betaAt = builder.indexOf('blocks.push(...betaBlocks())')

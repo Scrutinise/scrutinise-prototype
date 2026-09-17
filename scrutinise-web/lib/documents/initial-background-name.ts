@@ -37,3 +37,28 @@ export const FIRST_PASS_CAVEAT =
   'A first pass, and a limited one. This is an early list of legislation that may be relevant, based on '
   + 'what you have told us so far. The more you tell us, the better it gets — add what you know, then re-run, '
   + 'and the next pass searches on everything you have given us since.'
+
+/**
+ * The briefing is FROZEN (item 1, 17 Sep 2026): a snapshot of one build's first pass, never
+ * re-searched by regeneration. The live view is the research panel. Printed under the caveat.
+ * `{build}` is replaced by the build stamp at render time.
+ */
+export const BRIEFING_STATIC_LABEL =
+  'This is a record of what Lex found in the first pass of {build}, frozen at that point. '
+  + 'Regenerating this document re-renders the same material; it does not search again. The live '
+  + 'view of the research is the research panel on the idea, and a re-run replaces this with the '
+  + 'next build’s first pass.'
+
+/** The companion document — everything the same build needs from the user. */
+export const INITIAL_QUESTIONS_NAME = 'Initial Questions'
+
+export const INITIAL_QUESTIONS_BLURB =
+  'Everything the first pass needs from you — decisions waiting, choices between causes and '
+  + 'approaches, what the record could not answer, what only you know, and challenges to answer. '
+  + 'Each says what would settle it. A Word document and a PDF.'
+
+/** First block of the Initial Questions document; first sentence bold. */
+export const INITIAL_QUESTIONS_OPENING =
+  'Here is what we need from you. The briefing beside this is what Lex found; this is what the '
+  + 'same pass could not settle without you — grouped, with what would settle each one. Work '
+  + 'through it in the panel, and re-run when you have added what you know.'

@@ -19,7 +19,7 @@ import { prisma } from '@/lib/prisma'
 import type { Block, DocumentModel, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
-import { INITIAL_BACKGROUND_NAME, FIRST_PASS_CAVEAT } from './initial-background-name'
+import { INITIAL_BACKGROUND_NAME, FIRST_PASS_CAVEAT, BRIEFING_STATIC_LABEL } from './initial-background-name'
 
 /**
  * Pilot feedback (Angus Barry, 16 Sep 2026) — rendered layout, in the fingerprint.
@@ -29,7 +29,7 @@ import { INITIAL_BACKGROUND_NAME, FIRST_PASS_CAVEAT } from './initial-background
  * Without this token every file generated before the change reads as current and is served
  * without the caveat. Bump it when what the file says changes for a reason the rows cannot show.
  */
-const LAYOUT_VERSION = 'v2-named-with-first-pass-caveat'
+const LAYOUT_VERSION = 'v3-build-stamped-frozen-label'
 
 // ⚠ `Record<string, string>`, not `Record<SearchResultType, string>` — so tsc does NOT force a
 // new display type to be added here, and TYPE_ORDER below is a plain array for the same reason.
@@ -71,6 +71,10 @@ export interface BuildResult {
   /** sha-256 over exactly the stored values that were rendered. */
   fingerprint: string
   sourceLabel: string
+  /** 17 Sep 2026 — which build wrote the briefing. `inferred` when the row predates the column. */
+  build: { id: string | null; version: number | null; inferred: boolean; label: string }
+  /** The ORIENT search time the briefing was drawn from, as stored. */
+  searchRanAt: string | null
 }
 
 /** Why an export could not be built — stated, never papered over. */
@@ -89,7 +93,7 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
   const [doc, idea] = await Promise.all([
     prisma.document.findUnique({
       where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },
-      select: { status: true, summary: true, body: true, updatedAt: true },
+      select: { status: true, summary: true, body: true, updatedAt: true, buildId: true, buildVersion: true },
     }),
     prisma.idea.findUnique({
       where: { id: ideaId },
@@ -115,6 +119,11 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
   }
 
   const refs = refsFrom(idea.legislationRefs)
+
+  // ══ 17 Sep 2026 — WHICH BUILD WROTE THIS. Stored on the row since the binding column; a row
+  // older than that is INFERRED from timing (the latest build started on or before the row was
+  // written) and the label says so. A briefing written by the legacy Page-1 search has no build.
+  const build = await resolveBuild(ideaId, doc.buildId, doc.buildVersion, doc.updatedAt)
   const grouped = TYPE_ORDER
     .map((t) => ({ type: t, items: refs.filter((r) => r.type === t) }))
     .filter((g) => g.items.length > 0)
@@ -128,6 +137,8 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
     { text: FIRST_PASS_CAVEAT.slice(0, dot), bold: true },
     { text: FIRST_PASS_CAVEAT.slice(dot) },
   ] })
+  // Item 1 — FROZEN, and labelled plainly as such, right under the caveat.
+  blocks.push({ kind: 'paragraph', runs: [{ text: BRIEFING_STATIC_LABEL.replace('{build}', build.label), italic: true }] })
   // ⚠ 25-V §11a/§11b — the disclosure, on every generated document. See `betaBlocks`.
   // Second here, because the caveat above is Charlie's later and more specific placement.
   blocks.push(...betaBlocks())
@@ -163,7 +174,7 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
     return typeof ranAt === 'string' ? ranAt : null
   })()
   const sourceLabel = [
-    'the stored Initial Background briefing',
+    `${build.label}, the stored Initial Background briefing`,
     `${refs.length} source${refs.length === 1 ? '' : 's'}`,
     searchRanAt ? `corpus search of ${new Date(searchRanAt).toISOString().slice(0, 16).replace('T', ' ')} UTC` : null,
   ].filter(Boolean).join(', ')
@@ -175,6 +186,8 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
     .update(JSON.stringify({
       layout: LAYOUT_VERSION,
       title: idea.title,
+      build: [build.id, build.version],
+      searchRanAt,
       summary: doc.summary ?? '',
       body: doc.body,
       refs: refs.map((r) => [r.id ?? '', r.type ?? '', r.title ?? '', r.citation ?? '', repairRefUrl(r.type, r.id, r.url)]),
@@ -193,7 +206,29 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
     },
     fingerprint,
     sourceLabel,
+    build,
+    searchRanAt,
   }
+}
+
+/**
+ * The build a briefing row belongs to. Stored → exact. Not stored → the latest build that had
+ * started when the row was last written, marked inferred; none → the legacy search path.
+ */
+async function resolveBuild(ideaId: string, buildId: string | null, buildVersion: number | null, rowUpdatedAt: Date): Promise<BuildResult['build']> {
+  const stamp = (v: number, at: Date | null) =>
+    `build ${v} of this idea${at ? ` (${at.toISOString().slice(0, 16).replace('T', ' ')} UTC)` : ''}`
+  if (buildId && buildVersion != null) {
+    const b = await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { startedAt: true } })
+    return { id: buildId, version: buildVersion, inferred: false, label: stamp(buildVersion, b?.startedAt ?? null) }
+  }
+  const inferred = await prisma.ideaBuild.findFirst({
+    where: { ideaId, startedAt: { lte: rowUpdatedAt } }, orderBy: { version: 'desc' }, select: { id: true, version: true, startedAt: true },
+  })
+  if (inferred) {
+    return { id: inferred.id, version: inferred.version, inferred: true, label: `${stamp(inferred.version, inferred.startedAt)}, inferred from timing` }
+  }
+  return { id: null, version: null, inferred: true, label: 'the first corpus search on this idea (no build)' }
 }
 
 /** The fingerprint of the CURRENT stored state, without building the document. */

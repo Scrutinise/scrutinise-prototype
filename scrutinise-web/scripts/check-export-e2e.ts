@@ -15,6 +15,9 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { generateExport, readExportStatus, signedDownload, exportFilename } from '../lib/documents/export'
 import { buildInitialBackground, ExportUnavailableError } from '../lib/documents/build-initial-background'
 import { r2Delete } from '../lib/r2'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+import { buildInitialQuestions, itemsWithoutRoute, INITIAL_QUESTIONS_KIND } from '../lib/documents/build-initial-questions'
 
 const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL
 if (!url) throw new Error('DIRECT_URL/DATABASE_URL not set')
@@ -82,6 +85,7 @@ async function main() {
     })
     ideaId = idea.id
     keysWritten.push(`_exports/${ideaId}/initial_background.docx`, `_exports/${ideaId}/initial_background.pdf`)
+    keysWritten.push(`_exports/${ideaId}/initial_questions.docx`, `_exports/${ideaId}/initial_questions.pdf`)
 
     // ── 1. no briefing yet → refused with a reason, not a broken file ────────
     const before = await readExportStatus(ideaId)
@@ -160,12 +164,126 @@ async function main() {
     // ── 6. idempotence: generating again without changes re-renders nothing ──
     const noop = await generateExport(ideaId)
     ok('generate with no change → timestamp unchanged', noop.generatedAt === row2?.generatedAt?.toISOString())
+
+    // ══ 7. 17 Sep 2026, item 2 — REGENERATION RE-RENDERS, IT DOES NOT RE-RUN ═══════════════
+    //
+    // A user regenerating an old file gets the same first-pass material in the current layout,
+    // with the same build stamp. Asserted on the thing itself: force a regeneration and confirm
+    // the source list, the corpus-search time and the build stamp did not move, and that no row
+    // the briefing is built from was written.
+    const rowsBefore = await prisma.idea.findUnique({ where: { id: ideaId }, select: { legislationRefs: true, stageSearches: true } })
+    const docBefore = await prisma.document.findUnique({
+      where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } }, select: { body: true, summary: true, buildId: true, buildVersion: true },
+    })
+    const modelBefore = await buildInitialBackground(ideaId)
+    const regen2 = await generateExport(ideaId, { force: true })
+    ok('regenerate (old file) → a fresh file was rendered', regen2.generatedAt !== row2?.generatedAt?.toISOString())
+    const rowsAfter = await prisma.idea.findUnique({ where: { id: ideaId }, select: { legislationRefs: true, stageSearches: true } })
+    const docAfter = await prisma.document.findUnique({
+      where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } }, select: { body: true, summary: true, buildId: true, buildVersion: true },
+    })
+    const modelAfter = await buildInitialBackground(ideaId)
+    const refIds = (m: typeof modelBefore) => JSON.stringify(m.model.blocks.filter((b) => b.kind === 'sources'))
+    ok('regenerate → the source list is unchanged', refIds(modelBefore) === refIds(modelAfter))
+    ok('regenerate → the corpus-search time is unchanged',
+      modelBefore.searchRanAt === modelAfter.searchRanAt && modelAfter.searchRanAt === '2026-08-05T09:12:00.000Z', String(modelAfter.searchRanAt))
+    ok('regenerate → the build stamp is unchanged', modelBefore.build.label === modelAfter.build.label, modelAfter.build.label)
+    ok('regenerate → legislationRefs were not written', JSON.stringify(rowsBefore?.legislationRefs) === JSON.stringify(rowsAfter?.legislationRefs))
+    ok('regenerate → stageSearches were not written', JSON.stringify(rowsBefore?.stageSearches) === JSON.stringify(rowsAfter?.stageSearches))
+    ok('regenerate → the stored briefing body was not written', docBefore?.body === docAfter?.body && docBefore?.summary === docAfter?.summary)
+    ok('regenerate → the fingerprint did not move (same content, same layout)', regen2.stale === false)
+    // The export path cannot search: source-level, comments stripped.
+    const src = (rel: string) => readFileSync(join(process.cwd(), rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+    const exportPath = ['lib/documents/export.ts', 'lib/documents/build-initial-background.ts', 'lib/documents/build-initial-questions.ts', 'lib/documents/render-docx.ts', 'lib/documents/render-pdf.ts']
+    ok('the export path imports no search (search-gateway / runSearch / fts-search / vector-search)',
+      exportPath.every((f) => !/search-gateway|runSearch|fts-search|vector-search|runOrientation/.test(src(f))))
+    // A control for that grep: a file that DOES import the gateway is caught by it.
+    ok('control: the grep would catch a file that searches', /search-gateway/.test(src('lib/lex/build.ts')))
+
+    // ══ 8. 17 Sep 2026, items 4–5 — INITIAL QUESTIONS, THE COMPANION, SAME BUILD, STATIC ═══
+    ok('no build → the questions document is unavailable, with the reason',
+      !(await readExportStatus(ideaId, INITIAL_QUESTIONS_KIND)).available)
+    const build = await prisma.ideaBuild.create({
+      data: { ideaId, version: 1, status: 'DONE', framing: 'B_CONTEXTUALISED', completedAt: new Date(),
+        uncertainties: { pivotalObstacle: 'I am least sure whether the obstacle is the duty itself or how it is read.' } },
+      select: { id: true },
+    })
+    // Bind the briefing to the same build, as ORIENT does.
+    await prisma.document.update({ where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } }, data: { buildId: build.id, buildVersion: 1 } })
+    await prisma.buildFork.create({ data: {
+      ideaId, buildId: build.id, forkKey: 'guidingPolicy:instrument', fieldKey: 'summaryGuidingPolicy', alternativeIndex: 0,
+      chosen: 'Primary legislation', alternative: 'Use the existing power: s.36 direction', caseForAlternative: 'It may already reach this.',
+      recommendationReason: 'The draft assumed a new Act.', resolved: false,
+    } })
+    await prisma.deepeningIssue.create({ data: {
+      ideaId, passKey: 'ADVERSARIAL', runVersion: 1, status: 'OPEN', title: 'The uprating has no index',
+      text: 'The proposal names no index for the uprating, so a clerk will ask which one and why.', sourceModel: 'gemini-2.5-pro',
+    } })
+    await prisma.deepeningPass.create({ data: {
+      ideaId, passKey: 'question:CAUSAL_EVIDENCE', status: 'RUN', runVersion: 1,
+      knownUnknowns: [
+        { question: 'How many fixed-penalty notices go unpaid each year?', why: 'Nothing retrieved answered this.' },
+        { question: 'Did the 2013 freeze have a stated rationale?', why: 'At least one of this question’s searches failed to run.' },
+      ],
+    } })
+    await prisma.ideaElicitation.create({ data: { ideaId, problem: 'Penalties have decayed.', goalKind: 'LAW_CHANGE', goalDetail: 'Uprate them.', ownKnowledge: null, ruledOut: null } })
+    await prisma.ideaFieldState.create({ data: {
+      ideaId, fieldKey: 'pivotalObstacle', status: 'AWAITING_CONFIRMATION',
+      proposal: { value: 'The duty is read as a process test, so compliance is paperwork.', rationale: null },
+    } })
+
+    const q1 = await readExportStatus(ideaId, INITIAL_QUESTIONS_KIND)
+    ok('build done → the questions document is available', q1.available, q1.unavailableReason ?? '')
+    const qgen = await generateExport(ideaId, { kind: INITIAL_QUESTIONS_KIND })
+    ok('questions → generated, both formats', qgen.generated && Boolean(qgen.docxUrl && qgen.pdfUrl))
+    ok('questions → stamped with build 1', qgen.buildVersion === 1, String(qgen.buildVersion))
+    const b1 = await readExportStatus(ideaId, 'INITIAL_BACKGROUND')
+    ok('the pair carries the SAME build stamp', b1.buildVersion === qgen.buildVersion && b1.buildVersion === 1, `${b1.buildVersion} vs ${qgen.buildVersion}`)
+    const qrow = await prisma.document.findUnique({ where: { ideaId_kind: { ideaId, kind: INITIAL_QUESTIONS_KIND } }, select: { body: true, buildId: true } })
+    const body = qrow?.body ?? ''
+    ok('questions → bound to the build row', qrow?.buildId === build.id)
+    for (const h of ['## Decisions waiting on you', '## Choices between causes, and between approaches', '## What the corpus could not answer', '## What you know that we do not', '## Challenges that need a response']) {
+      ok(`questions → section "${h.slice(3)}"`, body.includes(h))
+    }
+    ok('questions → the open fork is listed with what it rules out', body.includes('Primary legislation') && body.includes('rules out: Use the existing power'))
+    ok('questions → the drafted-but-unsettled field is listed with its proposal', body.includes('Kernel fields drafted and not yet settled') && body.includes('The duty is read as a process test'))
+    ok('questions → a corpus gap says what KIND of gap it is', body.includes('nothing retrieved answered it') && body.includes('our limitation'))
+    ok('questions → the testimony gap is named', body.includes('You gave no first-hand account'))
+    ok('questions → the field Lex is unsure of is named', body.includes('I am least sure whether the obstacle'))
+    ok('questions → the open challenge is listed with its source', body.includes('The uprating has no index') && body.includes('raised by gemini-2.5-pro'))
+    const missing = itemsWithoutRoute(body)
+    ok('⚠ 25-V §8 — EVERY item states what would settle it', missing.length === 0, missing.join(' | '))
+    // control: the route detector fires on an item with no route
+    ok('control: an item with no route is caught', itemsWithoutRoute('## X\n\n- a bare complaint\n\n## Y').length === 1)
+    const qmodel = await buildInitialQuestions(ideaId)
+    ok('questions → the file opens on the pair sentence', JSON.stringify(qmodel.model.blocks[0]).includes('Here is what we need from you'))
+    ok('questions → the file says it is a record of build 1 and points at the worklist',
+      JSON.stringify(qmodel.model.blocks[1]).includes('build 1 of this idea') && JSON.stringify(qmodel.model.blocks[1]).includes('worklist'))
+
+    // STATIC: resolve the fork and answer the challenge, regenerate, and the document still
+    // lists them — it is the record of what the build asked for, not a live view.
+    await prisma.buildFork.updateMany({ where: { buildId: build.id }, data: { resolved: true, resolvedChoice: 'chosen', resolvedAt: new Date() } })
+    await prisma.deepeningIssue.updateMany({ where: { ideaId }, data: { status: 'ADDRESSED' } })
+    const qregen = await generateExport(ideaId, { kind: INITIAL_QUESTIONS_KIND, force: true })
+    const qrow2 = await prisma.document.findUnique({ where: { ideaId_kind: { ideaId, kind: INITIAL_QUESTIONS_KIND } }, select: { body: true } })
+    ok('questions → static: the stored body did not change when the rows moved', qrow2?.body === body)
+    ok('questions → static: the regenerated file is not reported stale', qregen.stale === false)
+    ok('questions → static: the resolved fork is still listed as it was at the build', (qrow2?.body ?? '').includes('rules out: Use the existing power'))
+    // control: the live agenda WOULD show it resolved — the two surfaces are meant to differ
+    const liveFork = await prisma.buildFork.findFirst({ where: { buildId: build.id }, select: { resolved: true } })
+    ok('control: the live row is resolved (so the document and the worklist now differ, by design)', liveFork?.resolved === true)
   } finally {
     for (const key of keysWritten) {
       await r2Delete(key).catch((e) => console.error(`R2 cleanup failed for ${key}:`, e?.name ?? e))
     }
     if (ideaId) {
       await prisma.document.deleteMany({ where: { ideaId } })
+      await prisma.ideaFieldState.deleteMany({ where: { ideaId } }).catch(() => {})
+      await prisma.deepeningIssue.deleteMany({ where: { ideaId } }).catch(() => {})
+      await prisma.deepeningPass.deleteMany({ where: { ideaId } }).catch(() => {})
+      await prisma.ideaElicitation.deleteMany({ where: { ideaId } }).catch(() => {})
+      await prisma.buildFork.deleteMany({ where: { ideaId } }).catch(() => {})
+      await prisma.ideaBuild.deleteMany({ where: { ideaId } }).catch(() => {})
       await prisma.idea.delete({ where: { id: ideaId } }).catch((e) => console.error('cleanup failed:', e))
       console.log(`\ncleaned up test idea ${ideaId} and ${keysWritten.length} R2 objects`)
     }

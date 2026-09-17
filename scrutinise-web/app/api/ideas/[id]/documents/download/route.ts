@@ -10,7 +10,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
-import { signedDownload, exportFilename, type ExportFormat } from '@/lib/documents/export'
+import { signedDownload, exportFilename, isExportKind, type ExportFormat } from '@/lib/documents/export'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -26,9 +26,12 @@ export async function GET(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'format must be docx or pdf' }, { status: 422 })
   }
   const allowStale = url.searchParams.get('allowStale') === '1'
+  // 17 Sep 2026 — which of the pair; absent means the briefing, as every earlier link assumed.
+  const kindParam = url.searchParams.get('kind') ?? 'INITIAL_BACKGROUND'
+  if (!isExportKind(kindParam)) return NextResponse.json({ error: 'unknown_kind' }, { status: 422 })
 
-  const filename = exportFilename(idea.title, format as ExportFormat)
-  const result = await signedDownload(id, format as ExportFormat, filename)
+  const filename = exportFilename(idea.title, format as ExportFormat, kindParam)
+  const result = await signedDownload(id, format as ExportFormat, filename, kindParam)
   if (!result) {
     return NextResponse.json(
       { error: 'not_generated', message: 'That file has not been generated yet.' },
@@ -38,13 +41,13 @@ export async function GET(req: Request, { params }: Params) {
 
   if (result.stale && !allowStale) {
     const doc = await prisma.document.findUnique({
-      where: { ideaId_kind: { ideaId: id, kind: 'INITIAL_BACKGROUND' } },
+      where: { ideaId_kind: { ideaId: id, kind: kindParam } },
       select: { generatedAt: true, sourceLabel: true },
     })
     return NextResponse.json(
       {
         error: 'stale',
-        message: 'The briefing has changed since this file was made, so it is out of date. Regenerate it, or ask for it again with allowStale=1 to take the older version knowingly.',
+        message: 'The stored document has changed since this file was made, so it is out of date. Regenerate it, or ask for it again with allowStale=1 to take the older version knowingly.',
         generatedAt: doc?.generatedAt?.toISOString() ?? null,
         sourceLabel: doc?.sourceLabel ?? null,
       },

@@ -66,6 +66,7 @@ import {
   type PassRecord, type PassStatus, type PassCarry,
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
+import { snapshotInitialQuestions } from '@/lib/documents/build-initial-questions'
 import { buildEstimate, formatDuration, type BuildEstimate } from './build-estimate'
 import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
@@ -1925,17 +1926,24 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
   const terrainForBriefing = readings.length > 1
     ? readings.map((r) => `**${r.label}**\n\n${r.value.terrain}`).join('\n\n')
     : o.terrain
+  // ⚠ BOUND TO THIS BUILD (17 Sep 2026, pilot feedback). The briefing is a frozen snapshot of
+  // THIS build's first pass; the row says which build wrote it, and the export prints it. The
+  // stored export pair made from an earlier build is left in place — its fingerprint no longer
+  // matches, so the card reports it out of date rather than serving the old build's material.
+  const briefingBody_ = briefingBody(terrainForBriefing, o.domainTransfer, merged, searchFailed)
   await prisma.document.upsert({
     where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },
     create: {
       ideaId, kind: 'INITIAL_BACKGROUND', status: 'ready',
       summary: o.terrain.slice(0, 400),
-      body: briefingBody(terrainForBriefing, o.domainTransfer, merged, searchFailed),
+      body: briefingBody_,
+      buildId, buildVersion: c.buildVersion,
     },
     update: {
       status: 'ready',
       summary: o.terrain.slice(0, 400),
-      body: briefingBody(terrainForBriefing, o.domainTransfer, merged, searchFailed),
+      body: briefingBody_,
+      buildId, buildVersion: c.buildVersion,
     },
   })
 
@@ -3618,7 +3626,27 @@ async function finishBuild(ideaId: string, buildId: string): Promise<BuildView> 
   const settledLog = readPassLog((await prisma.ideaBuild.findUnique({
     where: { id: buildId }, select: { passes: true },
   }))?.passes)
-  return settleBuild(buildId, 'DONE', null, allUsages(settledLog), message)
+  const view = await settleBuild(buildId, 'DONE', null, allUsages(settledLog), message)
+
+  // ══ 17 Sep 2026 (pilot feedback) — INITIAL QUESTIONS, FROZEN AT THE END OF THE BUILD ═══
+  //
+  // The briefing's companion: everything this build needs from the user, composed from the
+  // build's own rows the moment it settles and stored as a Document stamped with the same
+  // build — so the pair reads as one thing ("here is what we found, here is what we need
+  // from you") and neither moves as the user works. The live view of the same material is
+  // the worklist; this is the record.
+  //
+  // ⚠ AFTER `settleBuild`, and it never fails the build. A build that is DONE and lacks its
+  // questions snapshot is composed lazily on first read (`ensureInitialQuestions`), which is
+  // also how builds that finished before this existed get theirs.
+  try {
+    await snapshotInitialQuestions(ideaId, buildId, row.version)
+  } catch (err) {
+    console.warn('[lex-diag] initial questions snapshot did not write; will compose on first read', {
+      ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
+    })
+  }
+  return view
 }
 
 /** Read the current row and render it, without changing anything. */

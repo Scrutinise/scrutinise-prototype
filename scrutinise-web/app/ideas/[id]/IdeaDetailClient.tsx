@@ -2634,7 +2634,11 @@ export default function IdeaDetailClient({
                   when — re-run a search and the file is marked out of date rather than quietly served.
                 </p>
               </div>
-              <DocumentExports ideaId={idea.id} variant="page" />
+              {/* 17 Sep 2026 — THE PAIR, from one build: here is what we found, here is what we
+                  need from you. Both are frozen records of that build; the live view is the
+                  research panel and the worklist in the working area. */}
+              <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_BACKGROUND" />
+              <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_QUESTIONS" />
               {/* Sprint 20-B/D — the proposal itself, and who can read it. Owner
                   only, because publishing is the owner's act (§20.3). */}
               {isOwner && (

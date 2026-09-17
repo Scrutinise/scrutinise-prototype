@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
-import { generateExport, readExportStatus } from '@/lib/documents/export'
+import { generateExport, readExportStatus, EXPORT_KINDS, isExportKind } from '@/lib/documents/export'
 import { ExportUnavailableError } from '@/lib/documents/build-initial-background'
 
 type Params = { params: Promise<{ id: string }> }
@@ -22,6 +22,8 @@ export const maxDuration = 60
 const BodySchema = z.object({
   action: z.literal('generate'),
   force: z.boolean().default(false),
+  // 17 Sep 2026 — which of the pair. Absent means the briefing, as every earlier caller assumed.
+  kind: z.string().optional(),
 })
 
 export async function GET(_req: Request, { params }: Params) {
@@ -29,7 +31,11 @@ export async function GET(_req: Request, { params }: Params) {
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
 
-  return NextResponse.json({ documents: [await readExportStatus(id)] })
+  // ⚠ ORDER IS THE PAIR'S ORDER: what we found, then what we need from you. The card on the
+  // Documents tab reads `documents[0]` for the briefing, as it always has.
+  const documents = []
+  for (const kind of EXPORT_KINDS) documents.push(await readExportStatus(id, kind))
+  return NextResponse.json({ documents })
 }
 
 export async function POST(req: Request, { params }: Params) {
@@ -48,7 +54,9 @@ export async function POST(req: Request, { params }: Params) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
 
   try {
-    const status = await generateExport(id, { force: parsed.data.force })
+    const kind = parsed.data.kind ?? 'INITIAL_BACKGROUND'
+    if (!isExportKind(kind)) return NextResponse.json({ error: 'unknown_kind', message: `No document of kind ${kind}.` }, { status: 422 })
+    const status = await generateExport(id, { force: parsed.data.force, kind })
     return NextResponse.json({ document: status })
   } catch (err) {
     // "There is nothing to export yet" is a 409 with the reason, not a 500 with a
