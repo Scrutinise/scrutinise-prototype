@@ -352,3 +352,93 @@ The old second sentence (*"as you work through the questions and decisions … t
 refined"*) was only true if the list were regenerated from the evidence layer rather than from the ORIENT
 search. That is a larger change and a separate decision: **should this document stay the first-pass
 search, or become the current reading list?**
+
+---
+
+## §9 — The briefing is static and gets a companion (built, 2026-09-17 10:48 UTC)
+
+**Schema first, alone:** `Document.buildId` (FK → `IdeaBuild`, ON DELETE SET NULL) and
+`Document.buildVersion`, nullable, additive — applied to Neon and read back off the catalogue
+(`confdeltype = n`, index present) before any code read them (`22ee2e3e`).
+
+**1. Frozen, and labelled.** Under the caveat the briefing now prints: *"This is a record of what Lex
+found in the first pass of build N of this idea (date), frozen at that point. Regenerating this document
+re-renders the same material; it does not search again. The live view of the research is the research
+panel on the idea, and a re-run replaces this with the next build's first pass."* The card says the same
+in one line. ⚠ "Never re-searches" is read as: never on regeneration. A rebuild is the user's act and it
+writes the rebuild's first pass over this one, stamped with the new build — item 3 depends on exactly that.
+
+**2. Regeneration re-renders, it does not re-run — asserted.** `check:export` now forces a regeneration
+of an old file and confirms: the rendered source list is byte-identical, the corpus-search time is the
+stored one (`2026-08-05T09:12`), the build stamp is unchanged, `legislationRefs`, `stageSearches` and the
+stored body were not written, and the fingerprint did not move (content unchanged + layout unchanged ⇒ not
+stale). Source-level, comments stripped: `export.ts`, both builders and both renderers import nothing from
+`search-gateway` / `runSearch` / `fts-search` / `vector-search`, with a control proving the grep catches
+`build.ts`. The layout token is now separate from the content fields in the fingerprint: bumping it marks
+every earlier file out of date and regeneration gives the same material in the new layout.
+
+**3. How a briefing is bound to a build, and what it takes to point Angus's at the rebuild.**
+- **Binding.** The `Document` row is one per idea per kind (`@@unique([ideaId, kind])`), overwritten by
+  each build's ORIENT pass (`build.ts`, the upsert after `briefingBody`) and by the legacy Page-1 search
+  trigger (`field-machine.ts`). ORIENT now writes `buildId`/`buildVersion` on that upsert; `finishBuild`
+  writes the Initial Questions row with the same stamp. A row written before the column existed is
+  **inferred** — the latest build started on or before the row's `updatedAt` — and the label says so:
+  Angus's briefing reads *"build 1 of this idea (2026-09-16 16:35 UTC), inferred from timing"*. No
+  backfill was written; the inference is reported rather than promoted to a fact.
+- **What it takes.** Three things, in order, and only the third is a button:
+  1. **Restore his account.** `IdeaElicitation.problem` holds his reply to the press; his original —
+     *"Create a system to identify, detain and deport people who entered the UK unlawfully, including new
+     large detention centres, limits on appeals, and powers for the Home Secretary to override local
+     authority planning objections"* — survives only in `aiChatHistory[1]`. Either the §6 E1 fix (keep the
+     first answer, append replies) or a one-off repair of his row. A rebuild on the row as it stands
+     rebuilds on the press reply.
+  2. **Take the four quotations out of the prompts** (§5a / §6 D). A rebuild before that reproduces
+     Charlie's diagnosis on Angus's idea for the same reason build 1 did.
+  3. **Run the rebuild** — the build page's re-run, by Angus or by Charlie on his behalf. ORIENT
+     overwrites the briefing with `buildVersion = 2`, `finishBuild` writes the questions snapshot for
+     build 2, and both of his build-1 exports go stale by fingerprint (the build stamp is in it) and the
+     cards offer *"Generate the current version"*. Nothing else moves; nothing needs deleting.
+  ⚠ His Reform policy URL was captured and not read (`readingStatus = NOT_READ`), and the document says
+  so. If it is meant to inform the rebuild it has to be attached as material.
+
+**4–5. Initial Questions, static, same build.** `lib/documents/build-initial-questions.ts`. Five
+sections from the build's own rows: *Decisions waiting on you* (unresolved forks — chosen, why, and each
+alternative as *"Taking this rules out: …"* — plus kernel fields at `AWAITING_CONFIRMATION` with their
+proposal); *Choices between causes, and between approaches* (`DiagnosisCause` with classification and
+provenance, `PolicyOption` with for/against/status); *What the corpus could not answer* (known unknowns,
+each with its KIND read off the producer's own `why` sentence — nothing-answered / named-absent / search
+did not complete / only you — and failed passes); *What you know that we do not* (no first-hand account,
+no ruled-outs, a named-and-unread document, and the build's per-field `uncertainties`); *Challenges that
+need a response* (open `DeepeningIssue` rows with title and source). **Every item ends with "What would
+settle it: …"** from one `RESOLVES` table — honest routes (a fork is settled by the proposer choosing,
+never by more searching; a failed search is ours to re-run), and `itemsWithoutRoute()` asserts it in the
+check with a control. Composed at `finishBuild` and stored as a `Document` with the build's stamp;
+rendered from the stored body only; regeneration never recomposes. A build that finished before this
+gets its snapshot on first read, from its rows as they stand then, and the document says *"composed on
+<date> from that build's rows as they stood then"* rather than claiming it was frozen at the build.
+Proved static in the check: resolve the fork, answer the challenge, regenerate — the stored body is
+unchanged and the fork is still listed as it was, while a control shows the live row resolved.
+On Angus's build 1, composed without writing: 18 decisions, 3 causes, 3 approaches, 8 gaps, 10 testimony
+items, 28 challenges, 0 without a route — all of it build 1's, which is item 3 again.
+
+Documents tab: the two cards, in the pair's order, each named and described; one card component, one
+constants file, one export service (`kind` on GET/POST/download, absent ⇒ the briefing as before).
+`check:documents` +1, `check:export` +36 (2 controls; the route and static assertions watched failing
+on a stripped route line and a forced recompose).
+
+**6. The live equivalent — report, not built.** The worklist in the working area (`lib/lex/agenda.ts`
+→ `WorkList.tsx`) already assembles contradictions, decisions, challenges, reading, gaps and the user's
+contribution from the same rows, refreshed after every decision, with counts and tick-boxes. **It is
+enough as the live surface; a live version of this document would be a second copy of it.** Three
+differences, for the decision:
+- The worklist row is a count and a jump; the document's item carries *what would settle it*. Adding the
+  `RESOLVES` sentence to the worklist's expanded rows is the cheap way to close that, if wanted.
+- The worklist does not list the cause/approach choices or the kernel fields awaiting confirmation as
+  items — those are the cards in the middle panel — so the document's sections 1b and 2 have no worklist
+  row. Deliberate in 25-K; worth confirming it still is.
+- ⚠ A live defect found on the way, code-read not measured: `readKnownUnknowns()` (`deepening.ts:178`)
+  returns `{question, why}` and drops `kind`, so `classifyGap()` in `agenda.ts` never sees a kind and
+  files **every** corpus gap as `research` — a failed search is shown to the user as their research to do.
+  The document classifies from the producer's `why` sentence instead. Fixing the reader is one line.
+Recommendation: no second live surface; fix the kind loss; add the route line to the worklist if Charlie
+wants the two to say the same thing.

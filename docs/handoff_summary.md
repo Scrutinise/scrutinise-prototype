@@ -773,7 +773,28 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-17 09:23 UTC — ▼ **CAVEAT WORDING CORRECTED BEFORE IT SHIPPED.** Charlie replaced the second
+*Last updated: 2026-09-17 10:48 UTC — ▼▼ **THE BRIEFING IS STATIC AND HAS A COMPANION — INITIAL QUESTIONS — STAMPED WITH
+THE SAME BUILD.** Report §9 of `docs/LEX_PILOT_ANGUS_REPORT.md`. ▶ **Schema first, alone (`22ee2e3e`)**: `Document.buildId`
+(FK, SET NULL) + `buildVersion`, applied and read back before any reader. ▶ **1** The briefing prints, under the caveat,
+that it is a frozen record of build N's first pass, never re-searched on regeneration, with the research panel as the
+live view; ORIENT now stamps the row with its build. ▶ ⚠ **2 asserted in `check:export`**: force-regenerate an old file →
+source list identical, corpus-search time identical, build stamp identical, `legislationRefs`/`stageSearches`/body not
+written, fingerprint unmoved; source-level, the export path imports no search (control on `build.ts`). ▶ ⚠ **3** Binding =
+the singleton `Document` row per idea per kind, overwritten by each build's ORIENT and now stamped; older rows INFERRED
+from timing and labelled (Angus's reads "build 1 … inferred from timing"). **To point his at the rebuild: restore his
+account (the row holds the press reply; the original is in `aiChatHistory[1]`), take the four quotations out of the
+prompts, then re-run** — ORIENT overwrites with build 2, `finishBuild` snapshots the questions, both build-1 exports go
+stale by fingerprint. ▶ **4–5** `lib/documents/build-initial-questions.ts`: five sections from the build's rows, every
+item ending "What would settle it: …" from one `RESOLVES` table (`itemsWithoutRoute` asserts it, with a control);
+composed at `finishBuild`, stored with the build stamp, rendered from the stored body only — proved static (resolve the
+fork, regenerate, still listed; control shows the live row resolved). Older builds compose on first read and SAY so.
+Angus's build 1, composed without writing: 18 decisions · 3 causes · 3 approaches · 8 gaps · 10 testimony · 28
+challenges · 0 without a route. Documents tab shows the pair; one card component, one export service with `kind`.
+✅ `check:documents` +1, `check:export` +36 (route and static watched failing), web `tsc`, `check:scripts`, fast
+clean-build all clean. ▶ ⚠ **6 REPORTED, NOT BUILT**: the worklist IS the live equivalent and is enough; differences
+named (no per-row route sentence; no cause/approach rows), and ⚠ **a live defect: `readKnownUnknowns` drops `kind`, so
+the agenda files every corpus gap as `research` — a failed search reads as the user's research to do.** Charlie's call.
+Earlier: 2026-09-17 09:23 UTC — ▼ **CAVEAT WORDING CORRECTED BEFORE IT SHIPPED.** Charlie replaced the second
 sentence: it promised the list refines *"as you work through the questions and decisions"*, and it does not — only a
 build refreshes it. Now, verbatim: *"… add what you know, then re-run, and the next pass searches on everything you
 have given us since."* Everything else stands (first block, body text, bold first sentence, above the beta
