@@ -773,7 +773,15 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-17 12:37 UTC — ▼▼ **26-B SHIPPED — THE INSTRUMENT COMES OUT OF THE KERNEL, NOT IN BEFORE IT.**
+*Last updated: 2026-09-17 16:42 UTC — ▼ **26-B ADDENDUM — REPAIR AND RETEST ON THE FIRST PASS.** Charlie: *"even on the
+first pass, if it fails the coherence test it should correct this problem and retest."* A twelfth pass, `REPAIR`, after
+KERNEL_CHECK/LOGIC_CHECK and before ADVERSARIAL (`lib/lex/build-repair.ts`): no-op on a clean kernel; otherwise rewrites the
+fields the failures name (via `setProposal`, so accepted text is offered not overwritten), records each rewrite and what it
+could not fix honestly, then RE-RUNS BOTH CHECKS ONCE — the retest marks original failures ADDRESSED, leaves the rest OPEN,
+adds new ones under REPAIR; the clerk reads the retest's verdict. ⚠ Once, not a loop (LOGIC_CHECK is not deterministic).
+Exercised on the scratch idea in REUSE mode: **Scratch idea v2 (REUSE, 22.1p):** KERNEL_CHECK 9/9, chain holds → REPAIR *"nothing to repair"*, no call — the no-op branch, live. **Angus v3 (REUSE, 31.5p):** KERNEL_CHECK 9/9 but LOGIC_CHECK *"does NOT hold; 1 defect"* → REPAIR ran the real branch: *"1 failure → rewrote 1 field (summaryCoherentAc `check:lex-26b` +6 with a control;
+`check:build-25b` pass count 11 → 12. ⚠ The Railway worker was confirmed on `f840d0ef` by `meta.commitHash` before this;
+this push moves it again — read the sha. Earlier: 2026-09-17 12:37 UTC — ▼▼ **26-B SHIPPED — THE INSTRUMENT COMES OUT OF THE KERNEL, NOT IN BEFORE IT.**
 Report: `docs/LEX_26B_REPORT.md`. Supersedes decision 78; nothing of that design built. ⚠ **§1 first:** the product did
 NOT already work this way — five elicitation steps with four `goalKind` buttons (read in six places, branched on in
 none); ONE instrument named by APPROACH (median 718 chars) against alternatives of 372, the financial route offered on

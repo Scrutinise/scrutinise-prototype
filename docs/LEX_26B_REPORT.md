@@ -215,6 +215,28 @@ only on the avenue with a debate (a control counts it on all three and fires). O
 builds the states were scratch: three DRAFTED (rows written before §10 shipped, so the state is inferred and labelled so); Angus v2: LEGISLATIVE DRAFTED · ORGANISATIONAL DRAFTED · FINANCIAL INSUFFICIENT — no FROM_DEBATE on either, so §11's paragraph appeared on neither, which is the rule working rather than the feature unproven; the fixture in `check:lex-26b` exercises it; the ACTIONS pass now receives the orientation and the ORIENT
 sources so FROM_DEBATE rests on the record rather than a guess.
 
+## Addendum (Charlie, 17 Sep) — correct and retest, on the first pass (built)
+
+*"Even on the first pass, if it fails the coherence test it should correct this problem and
+retest."* Both live 26-B builds had ended on failures left on the list (*6 of 9 / 7 of 9 kernel
+tests; the chain does NOT hold*). A twelfth pass, **REPAIR**, now runs after KERNEL_CHECK and
+LOGIC_CHECK and before the hostile clerk (`lib/lex/build-repair.ts`, `repairPass` in `build.ts`):
+- **runs only where something failed** — a clean kernel gets *"nothing to repair"* and no call;
+- **rewrites the fields the failures name** (the smart critique's seven, through `setProposal`, so an
+  ACCEPTED field gets an offer, never an overwrite), recording each as an evidence row *was saying /
+  now says / why / which failure it fixes*, and listing what it **could not fix honestly** as an
+  issue rather than papering it;
+- **re-runs both checks once** on the rewritten kernel, and it is the retest that decides: original
+  failures the retest passes are marked ADDRESSED with the note; ones that still fail stay OPEN; new
+  ones the retest finds are added under REPAIR; the carry the clerk reads is the retest's verdict.
+Once, not a loop: B21a measured LOGIC_CHECK flipping on unchanged kernels, so a second cycle would
+pay until the marker relented. Rules that do not bend inside the rewrite: no invented citation, the
+three avenues are not its to drop, testimony is support. `check:lex-26b` asserts the order, the
+no-op on a clean kernel, the retest of both checks, and that ADDRESSED follows the retest (with a
+control); `check:build-25b`'s pass count moves 11 → 12 with the reason beside it.
+
+**Exercised on the scratch idea, re-run in REUSE mode on this tree:** **Scratch idea v2 (REUSE, 22.1p):** KERNEL_CHECK 9/9, chain holds → REPAIR *"nothing to repair"*, no call — the no-op branch, live. **Angus v3 (REUSE, 31.5p):** KERNEL_CHECK 9/9 but LOGIC_CHECK *"does NOT hold; 1 defect"* → REPAIR ran the real branch: *"1 failure → rewrote 1 field (summaryCoherentActions) → retest: 7 of 9 kernel tests pass, the chain still does NOT hold"* — the retest got WORSE, and reading why exposed a defect older than this sprint. **The defect the retest found:** `createActions` APPENDS and nothing ever removed a previous build's LEX actions, so Angus's idea carried **twelve** actions after three builds — v1's *named outcome owner* and *dashboard* steps still under ACTIONS in `kernelText` for every marker, every document and the repair itself; the LOGIC_CHECK defect quoted *"the subsequent three actions regarding dashboards"* on a kernel whose plan opened with primary legislation, and the repair could not fix what it was not shown as stale. Across the corpus: `452c5ade` carries **40**, `72a29705` 16, five others 8. **Fixed at the source** (the actions pass deletes the idea's LEX actions before writing its own; the user's are never touched), **Angus's row repaired by hand** (8 stale rows removed, re-read: the 4 from v3 remain, kernel free of *outcome owner / dashboard*), **and re-marked with the product's own two checks on the cleaned kernel: 9 of 9, the chain holds, 0 defects** — the three open v3 issues marked ADDRESSED with the reason. The six other ideas are Charlie's to sweep: `scripts/sweep-stale-lex-actions.ts` (dry run by default, keeps each latest build's own block, re-reads after `--write`; proved on the scratch idea, 8 → 4). `check:lex-26b` now asserts the supersede at source, cold-reads the count on every idea built after the fix, and LISTS the six as NOT CHECKED rather than passing over them.
+
 ## §12 — Web-sourced options: told Search, not built
 
 `docs/FINDING_FOR_SEARCH_26b-web-sourced-options.md`. The boundary as Charlie set it — the web
