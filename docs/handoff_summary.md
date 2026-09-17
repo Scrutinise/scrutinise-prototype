@@ -773,7 +773,24 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-17 00:09 UTC — ▼▼ **PILOT FEEDBACK (ANGUS BARRY, 16 SEP) — HE ASKED FOR LEGISLATION AND GOT
+*Last updated: 2026-09-17 01:41 UTC — ▼ **THE BRIEFING IS A NAMED DOCUMENT.** Pilot feedback item 2 (Angus: the most
+valuable thing in the product, and he could not find it — it was small print under a card headed "Downloads").
+▶ Built: the Documents-tab card and the panel card are headed **Initial Background Briefing**, from one constant
+(`lib/documents/initial-background-name.ts`) that is also the file's own title; a one-line description stays on the
+card in every state. ▶ Charlie's caveat (*"A first pass, and a limited one…"*) is the FIRST block of the document,
+verbatim, above the beta disclosure, as body text with the first sentence bold — not `note` small print. ▶ The
+provenance line (generated date, source count, corpus-search time) is kept, ahead of it. ▶ A layout token in the
+fingerprint makes every file generated before this read as out of date (Angus's own 17:19 export now does), so the
+card offers "Generate the current version" rather than serving a caveat-less file. ✅ `check:documents` +9
+assertions, 3 watched failing; web `tsc` and `check:scripts` clean; rendered end-to-end on Angus's stored briefing.
+⚠ **ITEM 3 IS CHARLIE'S CHOICE, NOTHING DECIDED IN CODE** — `docs/LEX_PILOT_ANGUS_REPORT.md` §8: the caveat is wrong
+for a tenth build. **A (recommended): stamp the build it came from** (*"From build 3 of this idea, 17 September
+2026"*, off the `IdeaBuild` row) and leave the wording fixed. **B: change the opening once a research pass has
+run**, which needs a definition of "worked through". ⚠ Either way, a fact under both: **this list is refreshed
+ONLY when a build runs** — working through Lex's questions and decisions does not touch it (the refinement lands
+in the evidence layer and the proposal documents), so the caveat's second sentence is only true on a rebuild.
+Whether this document should become the current reading list is the larger, separate decision.
+Earlier: 2026-09-17 00:09 UTC — ▼▼ **PILOT FEEDBACK (ANGUS BARRY, 16 SEP) — HE ASKED FOR LEGISLATION AND GOT
 SROs AND DASHBOARDS, AND NONE OF THE FOUR SUSPECTS DID IT.** Report: `docs/LEX_PILOT_ANGUS_REPORT.md`.
 Diagnosis only, nothing fixed, as briefed. ▶▶ ⚠⚠ **THE CAUSE: THE BUILD PROMPTS CARRY CHARLIE'S OWN TESTIMONY AS
 WORKED EXAMPLES** (`build-client.ts:383-389` *"civil servants like cushy jobs… endless excuses"*, `testimony.ts:43-44`

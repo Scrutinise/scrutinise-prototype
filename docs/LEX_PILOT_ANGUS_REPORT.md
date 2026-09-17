@@ -306,3 +306,45 @@ question) with the bill count as its measure.
   question, once it fires on stated method, will be the seventh in the queue and leads by `leads: true`.
 - The Reform policy URL was captured and not read (25-D's rule, said plainly in the transcript). Angus's
   "limits on appeals" and "override planning objections" are in that document; the build never saw them.
+
+---
+
+## §8 — The briefing as a named document (built, 2026-09-17 01:41 UTC) — and the caveat question
+
+**Built, all four items.** (1) The Documents-tab card (and the one under the panel) is headed
+**Initial Background Briefing** — one constant, `lib/documents/initial-background-name.ts`, used by the
+card, and as the file's own title (the idea's title is now the subtitle). A one-line description stays on
+the card in every state; the word "Downloads" is gone. (2) Charlie's caveat, verbatim, is the first block
+of the document — above the beta disclosure, first sentence in bold, set as body text rather than the
+small-print `note` style. (4) The provenance line (generated date, source count, corpus-search time) is
+untouched and still precedes it. A layout token now sits in the fingerprint, so every file generated
+before this reads as out of date and the card offers *"Generate the current version"* — Angus's own
+export of 16 Sep 17:19 UTC now does. `check:documents` carries nine new assertions, three watched failing
+(caveat below the beta note; "Downloads" restored; token removed). Rendered end-to-end on Angus's stored
+briefing: name · idea · provenance · caveat · beta · briefing, in that order, in both formats.
+
+**(3) The caveat is honest for a first build and wrong for a tenth. Two ways to handle it — Charlie's
+choice, nothing decided in code.**
+
+First, a fact the choice depends on: **the list this document carries is refreshed only when a build
+runs** (the ORIENT pass writes `legislationRefs` and the `Document` row; the legacy Page-1 search trigger
+is the only other writer). Working through Lex's questions and decisions does not touch it — the
+refinement those produce lands in the evidence layer and the proposal documents, not here. So the second
+sentence of the caveat promises something that happens only on a rebuild, in whatever form it is kept.
+
+- **Option A — it states which build it came from.** One line under the caveat, from the row:
+  *"From build 3 of this idea, 17 September 2026."* (the highest-version `IdeaBuild` started on or before
+  the `Document` row's `updatedAt`; where none exists — a legacy Page-1 search — *"from the first corpus
+  search"*). The caveat's wording stays fixed and the reader dates it themselves; on build 1 it is
+  literally true, on build 10 it reads as "the first pass of build 10", which is still true of this list.
+  Cheapest, no rule, nothing to get wrong. My recommendation.
+- **Option B — it changes once the idea has been worked through.** After the first build whose research
+  pass completed (a `DeepeningPass` row for the idea), the opening becomes *"A refreshed pass, still a
+  limited one — from build N. The questions you have worked through since are reflected in the evidence
+  and the proposal documents, not in this list."* Truer, and it needs a definition of "worked through",
+  which is the rule the brief says not to build. If chosen, that definition is the one sentence to settle.
+
+In either case the second sentence (*"as you work through the questions and decisions … this list is
+refined"*) is only true if the list is regenerated from the evidence layer rather than from the ORIENT
+search. That is a larger change and a separate decision: **should this document stay the first-pass
+search, or become the current reading list?**
