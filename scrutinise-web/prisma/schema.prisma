@@ -931,6 +931,7 @@ model Idea {
   elicitation               IdeaElicitation?
   builds                    IdeaBuild[]
   buildForks                BuildFork[]
+  buildAvenues              BuildAvenue[]
   // Sprint 25-D. Two more per-idea records, both additive: what the user decided about
   // each corpus source (§2a), and the user's own documents and links (§25.6).
   sourceDecisions           IdeaSourceDecision[]
@@ -4102,6 +4103,7 @@ model IdeaBuild {
 
   forks           BuildFork[]
   documents       Document[]
+  avenues         BuildAvenue[]
 
   @@unique([ideaId, version])
   @@index([ideaId, status])
@@ -4146,6 +4148,45 @@ model BuildFork {
   @@index([ideaId, fieldKey])
   /// 25-C §3a — the agenda reads a build's decisions, outstanding ones first.
   @@index([ideaId, resolved], name: "BuildFork_ideaId_resolved_idx")
+}
+
+/// LEX 26-B §3 (17 Sep 2026) — THE THREE AVENUES A KERNEL EVALUATES.
+///
+/// The instrument comes OUT of the strategy, never in before it (this supersedes decision 78 and
+/// the `guidingPolicy:instrument` fork). Every build's coherent-actions pass evaluates a
+/// LEGISLATIVE, an ORGANISATIONAL and a FINANCIAL route — each drafted, costed for difficulty
+/// and given its trade-offs to comparable depth — and an avenue that does not apply says so and
+/// why (`applies = false`, `whyNotApplicable`) rather than being omitted. The choice between them
+/// is the user's, put in Initial Questions with what each rules in and out and what would settle it.
+///
+/// `chars` is the length of the treatment as written, stored at write time so §3a's "worked to
+/// the same depth" is a column compared across builds, not a reading of prose. `existingPower*`
+/// carry the research pass's finding on the legislative avenue (§3c) — beside the route, never
+/// over it. SQL: prisma/lex_26b_build_avenues.sql.
+model BuildAvenue {
+  id                 String    @id @default(uuid())
+  buildId            String
+  build              IdeaBuild @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  ideaId             String
+  idea               Idea      @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  /// LEGISLATIVE | ORGANISATIONAL | FINANCIAL
+  avenue             String
+  applies            Boolean   @default(true)
+  whyNotApplicable   String?
+  draft              String
+  difficulty         String
+  tradeoffs          String
+  rulesIn            String
+  rulesOut           String
+  whatWouldSettleIt  String
+  existingPower      String?
+  existingPowerReach String?
+  chars              Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now())
+
+  @@unique([buildId, avenue])
+  @@index([ideaId])
 }
 
 enum ElicitationStatus {
