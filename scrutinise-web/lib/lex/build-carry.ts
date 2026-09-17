@@ -58,6 +58,10 @@ export interface PassCarry {
   smart?: string
   /** 25-F §3 — what the two verification passes found, for the hostile clerk to press on. */
   verification?: string
+  /** 26-B repair — KERNEL_CHECK's failed tests, as JSON (`KernelTestResult[]`), for the repair pass. */
+  kernelFailures?: string
+  /** 26-B repair — LOGIC_CHECK's result, as JSON (`{ chainHolds, chainAsRead, defects }`). */
+  logicResult?: string
 }
 
 export interface PassRecord {

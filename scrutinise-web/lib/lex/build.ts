@@ -68,6 +68,8 @@ import {
 import { runResearch, draftFactsFor } from './build-research'
 import { snapshotInitialQuestions } from '@/lib/documents/build-initial-questions'
 import { normaliseAvenues, missingAvenues, writeAvenues, avenuesCarry, AVENUES } from './build-avenues'
+import { runRepair, REPAIR_PASS_KEY, REPAIRABLE_FIELDS } from './build-repair'
+import { strategyTestHeading } from './reader-language'
 import { buildEstimate, formatDuration, type BuildEstimate } from './build-estimate'
 import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
@@ -1731,6 +1733,7 @@ async function runOnePass(key: BuildPassKey, c: PassContext): Promise<PassOutcom
     case 'SMART': return smartPass(c)
     case 'KERNEL_CHECK': return kernelCheckPass(c)
     case 'LOGIC_CHECK': return logicCheckPass(c)
+    case 'REPAIR': return repairPass(c)
     case 'ADVERSARIAL': return adversarialPass(c)
     case 'CAUSES_COMMENTARY': return causesCommentaryPass(c)
   }
@@ -2246,6 +2249,18 @@ async function actionsPass(c: PassContext): Promise<PassOutcome> {
 
   const actions = (v.actions ?? []).filter((x) => x?.practicalStep?.trim())
   if (actions.length) {
+    // ══ ⚠⚠ 26-B — A BUILD REPLACES ITS OWN ACTIONS; IT DOES NOT APPEND TO THEM ═══════════════
+    //
+    // `createActions` appends. Nothing ever removed a previous build's LEX-written actions, so
+    // Angus's idea carried TWELVE after three builds — v1's 'named outcome owner' and dashboard
+    // steps (the contaminated build) still sat under ACTIONS in `kernelText` for every marker,
+    // every document and the repair pass of v3, which is why LOGIC_CHECK on v3 reported *"the
+    // subsequent three actions regarding dashboards"* on a kernel whose plan opened with primary
+    // legislation. The revise pass already deletes LEX causes before recreating them; actions get
+    // the same rule here. The USER's own actions are never touched; cost lines cascade with the
+    // superseded rows, which is right — they costed steps that no longer exist.
+    const superseded = await prisma.lexCoherentAction.deleteMany({ where: { ideaId, source: 'LEX' } })
+    if (superseded.count) console.log('[lex-diag] 26b actions — superseded the previous build\'s LEX actions', { buildId, removed: superseded.count })
     await createActions(ideaId, actions.map((x) => ({
       practicalStep: x.practicalStep.trim(),
       whoImplements: x.whoImplements?.trim() || null,
@@ -3010,6 +3025,8 @@ async function kernelCheckPass(c: PassContext): Promise<PassOutcome> {
         `KERNEL COMPLIANCE (${model}): ${result.verdict}`,
         ...failed.map((r) => `- FAILS "${KERNEL_TESTS.find((t) => t.id === r.id)?.test ?? r.id}": ${r.whatFails}`),
       ].join('\n'),
+      // 26-B repair — the failures as data, so the repair pass fixes what was named, not a paraphrase.
+      kernelFailures: JSON.stringify(failed),
     },
   }
 }
@@ -3054,6 +3071,156 @@ async function logicCheckPass(c: PassContext): Promise<PassOutcome> {
         `LOGIC (${model}): the chain ${result.chainHolds ? 'holds' : 'DOES NOT HOLD'}.`,
         result.chainAsRead ? `Read as: ${result.chainAsRead}` : '',
         ...result.defects.map((d) => `- ${d.kind}: ${d.problem}`),
+      ].filter(Boolean).join('\n'),
+      logicResult: JSON.stringify(result),
+    },
+  }
+}
+
+/**
+ * 26-B addendum — REPAIR AND RETEST. See build-repair.ts for the rules; this is the sequence.
+ *
+ * ⚠ RUNS ONLY WHERE SOMETHING FAILED. A kernel that passed nine of nine with the chain holding
+ * gets "nothing to repair" and no model call — a repair that always runs would rewrite good
+ * text for the sake of it, which is the smart critique's own warning against rewriting.
+ *
+ * ⚠ THE RETEST DECIDES. Original failures that now pass are marked ADDRESSED on the user's list,
+ * with the note saying so; ones that still fail stay OPEN; new ones the retest finds are added
+ * under this pass's key. The carry's verification is REPLACED by the retest's verdict, so the
+ * hostile clerk reads the kernel as it now stands.
+ */
+async function repairPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId } = c
+  type KF = { id: string; passes: boolean; whatFails: string; theTextThatFails: string }
+  type LR = { chainHolds: boolean; chainAsRead: string; defects: Array<{ kind: 'NON_SEQUITUR' | 'CIRCULAR' | 'UNSUPPORTED' | 'BROKEN_LINK'; theText: string; problem: string }> }
+  const parse = <T,>(raw: string | undefined, fallback: T): T => { try { return raw ? (JSON.parse(raw) as T) : fallback } catch { return fallback } }
+  const kernelFailures = parse<KF[]>(c.carry.kernelFailures, [])
+  const logic = parse<LR | null>(c.carry.logicResult, null)
+  const defects = logic?.defects ?? []
+  const chainHeld = logic ? logic.chainHolds : true
+
+  if (!kernelFailures.length && chainHeld) {
+    console.log('[lex-diag] 26b repair — nothing to repair', { buildId })
+    return { ok: true, output: 'nothing to repair — every kernel test passed and the argument held' }
+  }
+
+  await c.activity(`Correcting ${kernelFailures.length + defects.length} thing${kernelFailures.length + defects.length === 1 ? '' : 's'} the checks found`)
+  const kernelBefore = await kernelText(ideaId)
+  const repair = await runRepair({
+    kernel: kernelBefore,
+    kernelFailures,
+    logicDefects: defects,
+    chainAsRead: logic?.chainAsRead ?? '',
+    research: c.carry.research ?? '',
+    onUsage: (u) => c.usages.push(u),
+  })
+  if (!repair) {
+    return { ok: false, reason: 'the repair did not complete, so the failures stand as the checks left them' }
+  }
+
+  // ── Apply. Only the named fields; an ACCEPTED field gets an offer through setProposal. ──
+  let rewritten = 0
+  for (const key of REPAIRABLE_FIELDS) {
+    const value = repair.rewrite[key]
+    if (!value?.trim()) continue
+    await setProposal(ideaId, key, { value: value.trim() })
+    rewritten++
+  }
+  for (const ch of repair.changed) {
+    await prisma.evidenceItem.create({
+      data: {
+        ideaId, passKey: REPAIR_PASS_KEY, runVersion: c.buildVersion,
+        headingKey: null, fieldRef: ch.fieldKey.trim(), kind: 'CONTRADICTS',
+        title: `The repair rewrote ${ch.fieldKey.trim()}`,
+        body: [
+          `It was saying: ${ch.wasSaying?.trim() || '(not stated)'}`,
+          `It now says: ${ch.nowSays.trim()}`,
+          `Why that changed: ${ch.whyChanged?.trim() || '(not stated)'}`,
+          `It fixes: ${ch.fixes?.trim() || '(not stated)'}`,
+        ].join('\n\n'),
+        sourceType: null, sourceId: null, citation: null, url: null,
+        ...sourceDateFields(null),
+        status: 'PROPOSED',
+      },
+    })
+  }
+  for (const cnf of repair.couldNotFix) {
+    await prisma.deepeningIssue.create({
+      data: {
+        ideaId, passKey: REPAIR_PASS_KEY, runVersion: c.buildVersion, status: 'OPEN',
+        text: `THE REPAIR COULD NOT FIX THIS WITHOUT INVENTING SOMETHING — ${cnf.failure.trim()}. ${cnf.why?.trim() ?? ''}`.trim(),
+      },
+    })
+  }
+
+  // ── Retest. Both checks, once, on the kernel as it now stands. ──
+  await c.activity('Re-testing the corrected kernel')
+  const kernelAfter = await kernelText(ideaId)
+  const kModel = verifyModel('KERNEL_CHECK')
+  const lModel = verifyModel('LOGIC_CHECK')
+  const [k2, l2] = await Promise.all([
+    runKernelCompliance({ kernel: kernelAfter, model: kModel, onUsage: (u) => c.usages.push(u) }),
+    runLogicCheck({ kernel: kernelAfter, model: lModel, onUsage: (u) => c.usages.push(u) }),
+  ])
+  if (!k2 || !l2) {
+    return {
+      ok: false,
+      reason: `the repair rewrote ${rewritten} field${rewritten === 1 ? '' : 's'} but the retest did not complete, so the original failures stand`,
+    }
+  }
+  const stillFailing = k2.results.filter((r) => !r.passes)
+  const stillIds = new Set(stillFailing.map((r) => r.id))
+  const originalIds = new Set(kernelFailures.map((r) => r.id))
+
+  // Original failures the retest now passes → ADDRESSED, with the note. Match by the test's own
+  // heading, which is how the issue text opens (`complianceIssueText`).
+  let addressed = 0
+  for (const r of kernelFailures) {
+    if (stillIds.has(r.id)) continue
+    const t = KERNEL_TESTS.find((x) => x.id === r.id)
+    if (!t) continue
+    const res = await prisma.deepeningIssue.updateMany({
+      where: { ideaId, runVersion: c.buildVersion, passKey: 'KERNEL_CHECK', status: 'OPEN', text: { startsWith: strategyTestHeading(t.test) } },
+      data: { status: 'ADDRESSED', resolvedAt: new Date(), resolutionNote: 'Corrected by the build\'s repair pass; the retest marked this test as passed.' },
+    })
+    addressed += res.count
+  }
+  if (!chainHeld && l2.chainHolds) {
+    const res = await prisma.deepeningIssue.updateMany({
+      where: { ideaId, runVersion: c.buildVersion, passKey: 'LOGIC_CHECK', status: 'OPEN' },
+      data: { status: 'ADDRESSED', resolvedAt: new Date(), resolutionNote: 'Corrected by the build\'s repair pass; the retest found the chain holds.' },
+    })
+    addressed += res.count
+  }
+  // New failures the retest found → on the list under this pass's key. Ones that still fail
+  // are already there from the first check and are not duplicated.
+  const newlyFailing = stillFailing.filter((r) => !originalIds.has(r.id))
+  const written = await recordVerificationIssues({
+    ideaId, buildVersion: c.buildVersion, passKey: REPAIR_PASS_KEY,
+    issues: newlyFailing.map((r) => ({ text: complianceIssueText(KERNEL_TESTS.find((t) => t.id === r.id)!, r) })),
+  })
+
+  console.log('[lex-diag] 26b repair done', {
+    buildId, rewritten, changed: repair.changed.length, couldNotFix: repair.couldNotFix.length,
+    kernelBefore: `${KERNEL_TESTS.length - kernelFailures.length}/${KERNEL_TESTS.length}`,
+    kernelAfter: `${k2.results.length - stillFailing.length}/${KERNEL_TESTS.length}`,
+    chainBefore: chainHeld, chainAfter: l2.chainHolds, addressed, newIssues: written,
+  })
+
+  return {
+    ok: true,
+    output:
+      `${kernelFailures.length + defects.length} failure${kernelFailures.length + defects.length === 1 ? '' : 's'} → rewrote ${rewritten} field${rewritten === 1 ? '' : 's'} → retest: `
+      + `${k2.results.length - stillFailing.length} of ${KERNEL_TESTS.length} kernel tests pass, the chain ${l2.chainHolds ? 'holds' : 'still does NOT hold'}`
+      + `${addressed ? ` — ${addressed} issue${addressed === 1 ? '' : 's'} marked addressed` : ''}`
+      + `${repair.couldNotFix.length ? `; ${repair.couldNotFix.length} could not be fixed honestly` : ''}`,
+    carry: {
+      verification: [
+        `KERNEL COMPLIANCE, AFTER REPAIR (${kModel}): ${k2.verdict}`,
+        ...stillFailing.map((r) => `- STILL FAILS "${KERNEL_TESTS.find((t) => t.id === r.id)?.test ?? r.id}": ${r.whatFails}`),
+        `LOGIC, AFTER REPAIR (${lModel}): the chain ${l2.chainHolds ? 'holds' : 'DOES NOT HOLD'}.`,
+        l2.chainAsRead ? `Read as: ${l2.chainAsRead}` : '',
+        ...l2.defects.map((d) => `- ${d.kind}: ${d.problem}`),
       ].filter(Boolean).join('\n'),
     },
   }

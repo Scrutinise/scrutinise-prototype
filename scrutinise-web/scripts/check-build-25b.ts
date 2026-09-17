@@ -931,7 +931,10 @@ const CHECKS: Check[] = [
       // that likelier. `CAUSES_COMMENTARY` does no retrieval and is `continueOnFailure`, and
       // 25-N's resume is what makes a ceiling survivable — but somebody adding a twelfth should
       // read this line first.
-      return BUILD_PASSES.length === 11 ? null : `${BUILD_PASSES.length} passes configured, expected 11`
+      // 26-B addendum — the twelfth is REPAIR (correct what the checks found, retest once). It is
+      // `continueOnFailure`, runs no retrieval, and does NOTHING (no model call) when both checks
+      // passed; when they did not it is one repair call and two re-marks, ~3 pro turns.
+      return BUILD_PASSES.length === 12 ? null : `${BUILD_PASSES.length} passes configured, expected 12`
     },
   },
   {

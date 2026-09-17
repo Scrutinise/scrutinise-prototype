@@ -28,6 +28,8 @@ export type BuildPassKey =
   | 'SMART' | 'KERNEL_CHECK' | 'LOGIC_CHECK'
   // ── 25-O §5: the only pass that reads the causes as a SET ──
   | 'CAUSES_COMMENTARY'
+  // ── 26-B addendum: correct what the two checks found, and retest — once ──
+  | 'REPAIR'
 
 export interface BuildPassDef {
   key: BuildPassKey
@@ -164,6 +166,16 @@ export const BUILD_PASSES: BuildPassDef[] = [
     key: 'LOGIC_CHECK',
     label: 'Checking the argument holds',
     detail: 'Causes → obstacle → approach → actions, link by link: non-sequiturs, circularity, claims with nothing behind them.',
+    model: 'gemini-2.5-pro',
+    continueOnFailure: true,
+  },
+  {
+    // 26-B addendum (Charlie, 17 Sep) — *"even on the first pass, if it fails the coherence test it
+    // should correct this problem and retest."* Runs only where a check failed; rewrites the
+    // failing fields against the named failures; re-runs BOTH checks once. See build-repair.ts.
+    key: 'REPAIR',
+    label: 'Correcting what the checks found, and re-testing',
+    detail: 'Where a kernel test failed or the argument did not hold: fix the fields the failures name, then mark the kernel and trace the argument again.',
     model: 'gemini-2.5-pro',
     continueOnFailure: true,
   },

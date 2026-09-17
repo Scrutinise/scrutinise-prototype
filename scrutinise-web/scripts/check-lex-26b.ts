@@ -25,6 +25,7 @@ import { kindOf } from '../lib/lex/known-unknowns'
 import { readKnownUnknowns } from '../lib/lex/deepening'
 import { INTERROGATION_LIBRARY } from '../lib/lex/interrogation-library'
 import { ELICITATION_STEPS } from '../lib/lex/elicitation-config'
+import { BUILD_PASSES } from '../lib/lex/build-config'
 import { buildRerunChecklist } from '../lib/lex/rerun-checklist'
 
 let pass = 0, fail = 0
@@ -82,6 +83,48 @@ async function main() {
   ok('the finding lands on the legislative avenue row, not on a fork', /recordExistingPowerOnLegislativeAvenue/.test(src('lib/lex/build.ts')) && !/recordInstrumentRetirement\(/.test(src('lib/lex/build.ts')))
   ok('the smart pass is told the avenues are not its to choose between', /THE THREE AVENUES ARE NOT YOURS TO CHOOSE BETWEEN/.test(src('lib/lex/build-smart.ts')))
   ok('the outside panel is no longer told "if the obvious answer (a new Act) is wrong"', !/If the obvious answer \(a new Act\) is wrong/.test(src('lib/lex/build-smart.ts')))
+
+  console.log('\n26-B addendum — repair and retest on the first pass (source, then the pass log of real builds)')
+  const passKeys = BUILD_PASSES.map((p) => p.key)
+  ok('REPAIR runs after both checks and before the hostile clerk', passKeys.indexOf('REPAIR') === passKeys.indexOf('LOGIC_CHECK') + 1 && passKeys.indexOf('ADVERSARIAL') === passKeys.indexOf('REPAIR') + 1)
+  const bt = src('lib/lex/build.ts')
+  ok('the repair does nothing when nothing failed (no model call on a clean kernel)', /if \(!kernelFailures\.length && chainHeld\) \{[\s\S]{0,300}nothing to repair/.test(bt))
+  ok('the repair re-runs BOTH checks on the rewritten kernel', /runKernelCompliance\(\{ kernel: kernelAfter/.test(bt) && /runLogicCheck\(\{ kernel: kernelAfter/.test(bt))
+  ok('an original failure is marked addressed only when the RETEST passes it', /if \(stillIds\.has\(r\.id\)\) continue[\s\S]{0,600}status: 'ADDRESSED'/.test(bt))
+  control('a repair that marked failures addressed without a retest would be caught', () => /status: 'ADDRESSED'/.test("await setProposal(x); await prisma.deepeningIssue.updateMany({ data: { status: 'ADDRESSED' } })") && /runKernelCompliance\(\{ kernel: kernelAfter/.test("await setProposal(x); await prisma.deepeningIssue.updateMany({ data: { status: 'ADDRESSED' } })"))
+  ok('the repair prompt keeps the three avenues and forbids invented citations', /THE THREE AVENUES ARE THE PROPOSER\\?'S TO CHOOSE BETWEEN/.test(src('lib/lex/build-repair.ts')) && /may NOT invent a citation/.test(src('lib/lex/build-repair.ts')))
+  const repaired = await prisma.ideaBuild.findMany({ where: { status: 'DONE' }, orderBy: { completedAt: 'desc' }, take: 8, select: { ideaId: true, version: true, passes: true } })
+  let sawRepair = 0
+  for (const b of repaired) {
+    const log = Array.isArray(b.passes) ? (b.passes as Array<{ key: string; status: string; output?: string }>) : []
+    const rp = log.find((x) => x.key === 'REPAIR')
+    if (!rp) continue
+    sawRepair++
+    ok(`${b.ideaId.slice(0, 8)} v${b.version} — REPAIR ran and its output says what it did`, rp.status === 'DONE' && /nothing to repair|retest:/.test(rp.output ?? ''), (rp.output ?? '').slice(0, 120))
+  }
+  if (!sawRepair) unverified.push('repair — no completed build carries a REPAIR pass yet; its behaviour on a real kernel was not checked')
+
+  // ⚠ Found by the repair's first real retest: a build APPENDED its LEX actions to the previous
+  // build's, so Angus's idea carried twelve after three builds and every marker read v1's
+  // contaminated steps under ACTIONS. Source: the actions pass supersedes LEX actions first.
+  // Cold read: no idea with a DONE build carries more LEX actions than one actions pass writes.
+  ok('a build supersedes the previous build\'s LEX actions before writing its own (source)',
+    /lexCoherentAction\.deleteMany\(\{ where: \{ ideaId, source: 'LEX' \} \}\)[\s\S]{0,600}await createActions\(ideaId, actions/.test(bt))
+  // The property holds for builds AFTER the fix. Ideas whose latest build predates it still carry
+  // the accumulation and are LISTED, not asserted — a sweep is a production delete across many
+  // ideas (the CCW measures among them) and is Charlie's to run: `scripts/sweep-stale-lex-actions.ts`.
+  const SUPERSEDE_SINCE = new Date('2026-09-17T16:40:00Z')
+  const latestPerIdea = await prisma.ideaBuild.findMany({ where: { status: 'DONE' }, orderBy: [{ ideaId: 'asc' }, { version: 'desc' }], distinct: ['ideaId'], select: { ideaId: true, completedAt: true } })
+  const perIdea = await prisma.lexCoherentAction.groupBy({ by: ['ideaId'], where: { ideaId: { in: latestPerIdea.map((b) => b.ideaId) }, source: 'LEX' }, _count: { _all: true } })
+  const countOf = (id: string) => perIdea.find((r) => r.ideaId === id)?._count._all ?? 0
+  const afterFix = latestPerIdea.filter((b) => (b.completedAt ?? new Date(0)) >= SUPERSEDE_SINCE)
+  const beforeFix = latestPerIdea.filter((b) => (b.completedAt ?? new Date(0)) < SUPERSEDE_SINCE)
+  const bloatedAfter = afterFix.filter((b) => countOf(b.ideaId) > 6)
+  if (afterFix.length) ok(`cold read — no idea built since the fix carries more LEX actions than one pass writes (≤ 6) [${afterFix.length} idea(s)]`, bloatedAfter.length === 0, bloatedAfter.map((b) => `${b.ideaId.slice(0, 8)} ${countOf(b.ideaId)}`).join(', ') || 'none')
+  else unverified.push('actions supersede — no idea has been built since the fix landed')
+  const bloatedBefore = beforeFix.filter((b) => countOf(b.ideaId) > 6)
+  if (bloatedBefore.length) unverified.push(`actions accumulated on ${bloatedBefore.length} idea(s) built before the fix — ${bloatedBefore.map((b) => `${b.ideaId.slice(0, 8)} ${countOf(b.ideaId)}`).join(', ')} — needs the staged sweep`)
+  control('an idea with twelve would be caught', () => [{ n: 12 }].filter((r) => r.n > 6).length === 0)
 
   console.log('\n§7b — the four quotations are out of the prompts (source, comments stripped)')
   const promptFiles = ['lib/lex/build-client.ts', 'lib/lex/testimony.ts', 'lib/lex/build-query.ts', 'lib/lex/build-smart.ts', 'lib/lex/method.ts', 'lib/lex/deepening-client.ts', 'lib/lex/build-avenues.ts']
