@@ -773,7 +773,36 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-11 16:30 UTC — ▼▼ **CCW-B23 — THE FINISH LINE — "CLOSES: 0" HOLDS ACROSS THREE RUNS, TWO
+*Last updated: 2026-09-17 00:09 UTC — ▼▼ **PILOT FEEDBACK (ANGUS BARRY, 16 SEP) — HE ASKED FOR LEGISLATION AND GOT
+SROs AND DASHBOARDS, AND NONE OF THE FOUR SUSPECTS DID IT.** Report: `docs/LEX_PILOT_ANGUS_REPORT.md`.
+Diagnosis only, nothing fixed, as briefed. ▶▶ ⚠⚠ **THE CAUSE: THE BUILD PROMPTS CARRY CHARLIE'S OWN TESTIMONY AS
+WORKED EXAMPLES** (`build-client.ts:383-389` *"civil servants like cushy jobs… endless excuses"*, `testimony.ts:43-44`
+*"four years to do what a private solicitor did in an afternoon"*, `build-client.ts:572` *"publish outcome owners"*),
+and on a thin account the model took them for the proposer's. Angus's pivotal obstacle became *"the pervasive
+culture within the civil service… finding excuses"*, his `whoAffectedImpactCost` says *"The proposer reports… 'four
+years to do what a private solicitor did in an afternoon'"*, and his chosen approach is a *"named outcome owner"*
+system — Charlie's idea, on Angus's. **Measured: the solicitor line is attributed to three proposers who never said
+it** (`2ef5358b`, `9209fd61`, `452c5ade`), "cushy jobs" reached the DEI idea's fork. ▶ ⚠⚠ **AND THE PROBLEM GATE
+OVERWRITES THE ACCOUNT** (`elicitation.ts:401`, `:425`): Angus's original statement (detention centres, appeal limits,
+planning override) was replaced by his reply to the press, and that reply is what every pass, the confirmation and
+`yourAccount` were built from. ▶ **The four, answered:** (1) `intent` still decorative, re-verified; `goalKind` reaches
+four prompts as one label line and NO code branches on it (`testimony.ts:77` drops it entirely when `goalDetail` is
+empty). (2) EXISTING_POWER fires on the DRAFTED instrument only (`firesWhen: d.instrumentIsPrimary`) — on Angus's idea
+**it did not run**; on the 10 other LAW_CHANGE ideas it ran and wrote the power as a fork ALTERNATIVE, not a
+substitution — but the research carry tells REVISE *"This must be reconsidered before anything else"*. (3) SMART
+ratified, did not originate: it wrote `whatItRulesOut` = *"rules out seeking a legislative solution"* with the stated
+method in its prompt; across 31 action rewrites it softened/deferred the legislative step on 7 (4 of 15 LAW_CHANGE
+builds) — a tendency, a minority, and `build-smart.ts:154` *"If the obvious answer (a new Act) is wrong, say so"*
+explains it. (4) **0 bills and 14 ENs in 1,249 retrieved**, the build's own five queries re-run with production's
+flags; 2 bills of 68 kept, both from SMART's entity search. **There is no amendments corpus.** `bills-api` is an
+`extraCorpora` leg that loses the score merge (the divisions note at `stream-scopes.ts:136` already says so), while
+corpus-scoped it returns the Illegal Migration Act 2023 and the Border Security, Asylum and Immigration Act 2025 bill
+papers at rank 1 — Angus's `legalLandscape` stops at 2003. ▶ **Decision-78 design in §6**: method as a `DraftFacts`
+field; instrument bound at APPROACH with a deterministic guard; EXISTING_POWER fires on stated method too and its
+finding is a card beside the route, never a rewrite; SMART/REVISE get a method clause plus a post-rewrite guard that
+files a doubt instead of applying it; the four quotations out of the prompts with an attribution check; the account
+kept through the press; a corpus-scoped `LEGISLATIVE_VEHICLE` question for LAW_CHANGE ideas.
+Earlier: 2026-09-11 16:30 UTC — ▼▼ **CCW-B23 — THE FINISH LINE — "CLOSES: 0" HOLDS ACROSS THREE RUNS, TWO
 REPORT COUNTS ARE BUILD REVISIONS, ALL FOUR QUOTATIONS VERBATIM, ALL TWELVE ON THE SCHEDULE.** Report:
 `docs/report_run/B23_REPORT.md` (yesterday's B22-continued report moved to `B22_CONTINUED_REPORT.md`).
 ▶▶ ⚠⚠ **§1: 49 / 47 / 47 routes across three unhinted runs, CLOSES 0 / 0 / 0**, partly 5 / 4 / 3, does not
