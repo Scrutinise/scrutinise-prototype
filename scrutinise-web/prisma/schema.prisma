@@ -4181,6 +4181,14 @@ model BuildAvenue {
   whatWouldSettleIt  String
   existingPower      String?
   existingPowerReach String?
+  /// 26-B §10 — DRAFTED | FROM_DEBATE | NOT_NEEDED | INSUFFICIENT. Null on rows before the
+  /// addendum (read from `applies`, labelled inferred). NOT_NEEDED is a finding; INSUFFICIENT is
+  /// an absence; they are never the same state. SQL: prisma/lex_26b_avenue_state.sql.
+  state              String?
+  /// 26-B §10 state 1 — what the draft rests on, in the model's words.
+  restsOn            String?
+  /// 26-B §11 state 2 — { tried[], recommendedNeverImplemented[], stillUnsolved, offListNote }.
+  debate             Json?
   chars              Int       @default(0)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @default(now())
