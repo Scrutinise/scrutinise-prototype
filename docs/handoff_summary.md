@@ -773,7 +773,39 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-17 10:48 UTC — ▼▼ **THE BRIEFING IS STATIC AND HAS A COMPANION — INITIAL QUESTIONS — STAMPED WITH
+*Last updated: 2026-09-17 12:37 UTC — ▼▼ **26-B SHIPPED — THE INSTRUMENT COMES OUT OF THE KERNEL, NOT IN BEFORE IT.**
+Report: `docs/LEX_26B_REPORT.md`. Supersedes decision 78; nothing of that design built. ⚠ **§1 first:** the product did
+NOT already work this way — five elicitation steps with four `goalKind` buttons (read in six places, branched on in
+none); ONE instrument named by APPROACH (median 718 chars) against alternatives of 372, the financial route offered on
+3 of 77 rows; `costSummary`/`coherenceCheck` drafted on 0 of 17 ideas; no next-steps message; no checklist. ▶ **§2 (DECIDED
+version, 17 Sep)**: four steps — problem · "What do you want to be different?" (outcome, not method; required) ·
+"Do you have any other information about the problem you would like to add?" (free text + the **+** upload, with
+the encouragement constant on the card) · confirm; *About you* kept pending Charlie. **Reported first**: old step 2
+was method buttons + outcome text; Angus answered BOTH ("A change in the law" + "Illegal immigrants deported."), so
+the outcome half survives and the method half is removed; the ruled-out box goes (14 of 37 texts: 5 "Not stated",
+8 CCW measure notes, 1 Charlie's); the `reading` step goes (1 URL ever, Angus's, NOT_READ; 0 files — the + is what
+reads). `GOAL_KINDS` deleted, `goalKind` unwritten. ⚠ `intent` NOT removed — the search gateway's parameter and the
+Search contract's; reported. ▶ **§3** `BuildAvenue` (schema first,
+`b9f4ee5e`): ACTIONS evaluates LEGISLATIVE / ORGANISATIONAL / FINANCIAL to comparable depth, `chars` stored per row;
+APPROACH names no instrument; EXISTING_POWER fires on every build and its finding lands on the legislative row —
+**the "reconsidered before anything else" line is gone**; SMART told the avenues are not its to choose. **Measured on
+two live builds: depth ratio 0.84 (scratch) and 0.93 (Angus).** ▶ **§4** Initial Questions leads with the
+route as the user's choice, each avenue with rules in/out and an evidence-shaped "what would settle it"; worklist
+gains a *Choose the route* row. ▶ **§5b** `NEXT_STEPS_NOTE` is the last bubble of every build and the first line of
+the re-run box; **§5a reported**: two fields never drafted. ▶ **§6** checklist inside the re-run box, derived rows
+(n of m, ticked by the work) and recorded rows (user ticks), nothing always-unticked; **6b: informs only**, decided.
+▶ **§7a** `kind` kept by the reader, set by every producer, shared `kindOf()` for old rows — a failed search is OUR
+limitation again. ▶ **§7b in order**: Angus's account restored from `aiChatHistory[1]` (re-read), four quotations out
+of the prompts (asserted), THEN his rebuild in-process on this tree: DONE 11/11, 29.9p, three avenues at 0.93 (LEG/ORG DRAFTED, FIN INSUFFICIENT), the diagnosis about appeal routes and his three measures, the legislative avenue an amendment to the 2025 Act, the plan opening on primary legislation, 0 bleed phrases in any v2 field. ▶ **§10–§11 (addendum)**: every
+avenue carries a state — DRAFTED / FROM_DEBATE (with tried · recommended-never-implemented · still-unsolved ·
+off-list) / NOT_NEEDED / INSUFFICIENT — Charlie's two sentences verbatim, one renderer, 3 and 4 asserted distinct
+with controls; schema first `9b61f010`. ▶ **§12**: `docs/FINDING_FOR_SEARCH_26b-web-sourced-options.md` written to
+Search BEFORE anything; not built — `LEX_WEB_ORIENTATION` is off on production. ✅ `check:lex-26b` 49/0, 9 controls;
+`check:export`, `check:documents`, `verify:lex-25e-ui`, `check:client-boundary`, web `tsc`, `check:scripts` clean.
+⚠ Pre-existing reds, not this sprint's: `check:lex-25r` §1 regex stale since 25-Z (`FieldsPanel` call signature);
+`check:prompt-examples` flags a deepening rule's own `text:`. ⚠ The Railway worker runs pre-26-B code until this push
+deploys; both live builds ran in-process. **§9: on the rebuild a user asking for legislation gets a legislative avenue drafted to the same depth as the other two, with the existing power beside it as partial — recognisable as legislation; whether Angus reads it so is the walkthrough only Charlie can run.**
+Earlier: 2026-09-17 10:48 UTC — ▼▼ **THE BRIEFING IS STATIC AND HAS A COMPANION — INITIAL QUESTIONS — STAMPED WITH
 THE SAME BUILD.** Report §9 of `docs/LEX_PILOT_ANGUS_REPORT.md`. ▶ **Schema first, alone (`22ee2e3e`)**: `Document.buildId`
 (FK, SET NULL) + `buildVersion`, applied and read back before any reader. ▶ **1** The briefing prints, under the caveat,
 that it is a frozen record of build N's first pass, never re-searched on regeneration, with the research panel as the
