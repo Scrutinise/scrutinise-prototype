@@ -128,7 +128,7 @@ const PER_QUESTION_LIMIT = () =>
  * has already edited would be researching something nobody is proposing.
  */
 export async function draftFactsFor(ideaId: string, carry: {
-  orientation?: string; diagnosis?: string; approach?: string; instrument?: string
+  orientation?: string; diagnosis?: string; approach?: string; instrument?: string; avenues?: string
 }): Promise<DraftFacts> {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
@@ -159,16 +159,19 @@ export async function draftFactsFor(ideaId: string, carry: {
     carry.orientation, carry.diagnosis, carry.approach,
   ].filter(Boolean).join('\n')
 
-  const instrument = (carry.instrument ?? '').trim()
+  // ══ 26-B §3 — THE LEGISLATIVE AVENUE IS ALWAYS EVALUATED, SO THE EXISTING-POWER QUESTION
+  // ALWAYS FIRES. `instrument` here is the legislative avenue's own text (the actions pass
+  // drafts one on every build), and `instrumentIsPrimary` is TRUE by construction: the
+  // question belongs to that avenue's evaluation (§3c) and is asked whether or not the draft
+  // leans that way. Builds before 26-B carry `carry.instrument` instead and are read as before.
+  const legislative = (() => {
+    const av = carry.avenues ?? ''
+    const m = /LEGISLATIVE[^\n]*:\n([\s\S]*?)(?=\n\n[A-Z]+(?: \(does not apply[^\n]*\))?:\n|$)/.exec(av)
+    return m ? `LEGISLATIVE:\n${m[1]}`.trim() : ''
+  })()
+  const instrument = legislative || (carry.instrument ?? '').trim()
   const lower = instrument.toLowerCase()
-
-  // ⚠ AN UNNAMED INSTRUMENT COUNTS AS PRIMARY. §3: EXISTING_POWER "should fire on every
-  // idea whose drafted instrument is primary legislation" — and a build that never named
-  // one is the case where a user is MOST likely to end up drafting a Bill by default, so
-  // treating silence as "not primary" would switch the highest-value question off
-  // precisely where it is most needed.
-  const instrumentIsPrimary =
-    !instrument || lower.includes('not named') ||
+  const instrumentIsPrimary = !!legislative || !instrument || lower.includes('not named') ||
     (lower.includes('primary') && !lower.includes('secondary'))
 
   const devolution: DraftFacts['devolution'] =
@@ -391,14 +394,17 @@ async function askQuestion(input: {
   const answered = new Set(merged.answered)
   const gaps: KnownUnknown[] = q.mustAnswer
     .filter((m) => !answered.has(m))
-    .map((m) => ({ question: m, why: 'Nothing retrieved answered this.' }))
+    // 26-B §7a — TAGGED AT THE PRODUCER, as deepening.ts already does. Without `kind` the agenda
+    // could not tell a failed search from an unanswered question and filed both as the user's work.
+    .map((m) => ({ question: m, why: 'Nothing retrieved answered this.', kind: 'unanswered' as const }))
   for (const g of merged.gaps) {
-    gaps.push({ question: g, why: 'Named by the question as unfindable in what was retrieved.' })
+    gaps.push({ question: g, why: 'Named by the question as unfindable in what was retrieved.', kind: 'named-gap' })
   }
   if (searchBroke) {
     gaps.push({
       question: `Everything a working ${q.intents.join('/')} search would have covered`,
       why: 'At least one of this question’s searches failed to run.',
+      kind: 'search-failed', subjects: q.intents,
     })
   }
 
@@ -421,7 +427,10 @@ function gapsFor(q: InterrogationQuestion, failure: Exclude<QuestionFailure, nul
         : failure === 'nothing-bore-on-it'
           ? `${reviewed} sources were retrieved and reviewed, and none of them bore on this proposal.`
           : 'Retrieval succeeded and the analysis step failed, so the sources are stored but nothing was concluded from them.'
-  return q.mustAnswer.map((m) => ({ question: m, why }))
+  // 26-B §7a — the kind travels with the reason. A broken search or a failed analysis is OURS
+  // (`search-failed`); a corpus that returned nothing or nothing that bore is `unanswered`.
+  const kind: KnownUnknown['kind'] = failure === 'search-broke' || failure === 'gather-failed' ? 'search-failed' : 'unanswered'
+  return q.mustAnswer.map((m) => ({ question: m, why, kind }))
 }
 
 /**
@@ -754,10 +763,15 @@ function researchSummary(
 
   // ⚠ THE INSTRUMENT VERDICT LEADS EVERYTHING (§4). A live power changes what the whole
   // proposal is, so it cannot be one bullet among nine.
+  // 26-B §3c — A FINDING BESIDE THE LEGISLATIVE AVENUE, NOT AN OVERRIDE. The sentence that stood
+  // here — "This must be reconsidered before anything else in the revision" — is what turned a
+  // finding into a rewrite of the route. It is gone; the finding is reported and the choice stays
+  // the proposer's.
   if (instrument?.powerFound) {
     lines.push(
-      `⚠ AN EXISTING POWER MAY REMOVE THE NEED FOR PRIMARY LEGISLATION. ${instrument.provision} — ` +
-      `${instrument.reachNote} This must be reconsidered before anything else in the revision.`,
+      `⚠ FINDING ON THE LEGISLATIVE AVENUE: an existing power may remove the need for a Bill. ${instrument.provision} — ` +
+      `${instrument.reachNote} Report it beside the legislative avenue. It does not change the approach, the actions ` +
+      'or the choice between avenues, which is the proposer\'s to make with this in front of them.',
       '',
     )
   }

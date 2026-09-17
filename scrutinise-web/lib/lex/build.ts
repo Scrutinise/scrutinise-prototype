@@ -39,7 +39,7 @@ import { storeStageSearch, type StageSearchRecord } from './stage-search'
 import { setProposal, setLoopProposal, createCauses, createPolicyOptions, createActions, currentFieldValues } from './field-machine'
 import { appendTranscript, lexBubble } from './transcript'
 import { elicitationContext, isConfirmed, type ElicitationContext } from './elicitation'
-import { CREDIBILITY_NOTE, DIRECT_EDITING_NOTE } from './elicitation-config'
+import { CREDIBILITY_NOTE, DIRECT_EDITING_NOTE, NEXT_STEPS_NOTE } from './elicitation-config'
 import { priceBuild, formatSpend, type BuildPrice } from './build-cost'
 import { plainFailure, llmFailed, llmOk, type LlmUsage } from './build-llm'
 import { settleAbandonedBuilds } from './build-settle'
@@ -67,6 +67,7 @@ import {
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
 import { snapshotInitialQuestions } from '@/lib/documents/build-initial-questions'
+import { normaliseAvenues, missingAvenues, writeAvenues, avenuesCarry, AVENUES } from './build-avenues'
 import { buildEstimate, formatDuration, type BuildEstimate } from './build-estimate'
 import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
@@ -2208,62 +2209,33 @@ async function approachPass(c: PassContext): Promise<PassOutcome> {
     console.warn('[lex-diag] 25f APPROACH returned no conditions for success', { buildId })
   }
 
-  // §4 — THE INSTRUMENT QUESTION. Named, recorded as a fork of its own, and folded into
-  // the guiding-policy summary so it is visible without opening the fork list.
-  const inst = a.instrument
-  const instrument = inst?.chosen?.trim()
-    ? `${inst.chosen.trim()} · ${inst.scope ?? 'scope not stated'} · ${inst.devolution ?? 'devolution not stated'}`
-    : 'not named'
-  const instrumentForks: RawFork[] = inst?.chosen?.trim()
-    ? [{
-        forkKey: INSTRUMENT_FORK_KEY,
-        fieldKey: 'summaryGuidingPolicy',
-        chosen: instrument,
-        // The approach pass argues the instrument inside `summaryGuidingPolicy`; that
-        // paragraph IS the case for it, so the fork carries it rather than leaving the
-        // platform's own fork the only one with no reasoning shown (25-C §3a).
-        whyChosen: a.summaryGuidingPolicy?.trim() || a.leverage?.trim() || undefined,
-        alternatives: (inst.alternatives ?? []).map((x) => ({
-          alternative: x.alternative, caseForAlternative: x.caseForAlternative,
-        })),
-      }]
-    : []
-  if (!instrumentForks.length) {
-    // ⚠ Reported, not papered over. The instrument question is the one §4 adds, so a
-    // build that skipped it must be visible rather than looking like a build that
-    // answered it. It is not a pass failure — the rest of the approach is still useful.
-    console.warn('[lex-diag] 25b APPROACH named no instrument', { buildId })
-    await mergeUncertainties(buildId, [{
-      fieldKey: 'summaryGuidingPolicy',
-      sentence:
-        'I did not manage to name what KIND of instrument this would be (a Bill, a regulation, a ' +
-        'regulator rule, funding, an organisational change) — that question is still open and it matters.',
-    }])
-  }
-
+  // ══ 26-B §3 — NO INSTRUMENT IS NAMED HERE ANY MORE. The approach pass used to name one
+  // instrument out of six and record it as the `guidingPolicy:instrument` fork, and the actions
+  // pass drafted "through the instrument named". That is the instrument going IN before the
+  // kernel. It now comes OUT: the actions pass evaluates three avenues to the same depth and
+  // the proposer chooses (§4). Builds before 26-B still carry the old fork in their rows.
   // Duplicate instrument forks are dropped inside persistForks — see the note there.
-  const { written, trimmed } = await persistForks(buildId, ideaId, [...instrumentForks, ...(a.forks ?? [])])
+  const { written, trimmed } = await persistForks(buildId, ideaId, a.forks ?? [])
   await mergeUncertainties(buildId, a.uncertainties ?? [])
   const approach = [a.chosenApproach, a.leverage, a.whatItRulesOut].filter(Boolean).join('\n')
 
-  console.log('[lex-diag] 25b approach done', {
-    buildId, options: options.length, instrument, forks: written, trimmed,
-  })
+  console.log('[lex-diag] 25b approach done', { buildId, options: options.length, forks: written, trimmed })
   return {
     ok: true,
-    output: `${options.length} approaches; instrument: ${instrument}`,
-    carry: { approach, instrument },
+    output: `${options.length} approaches`,
+    carry: { approach },
   }
 }
 
 async function actionsPass(c: PassContext): Promise<PassOutcome> {
   const { ideaId, buildId, framed } = c
-  await c.activity('Drafting the coordinated actions')
+  await c.activity('Drafting the coordinated actions, and the three avenues')
   const result = await runActionsPass({
     promptBlock: framed.promptBlock,
     diagnosis: c.carry.diagnosis ?? '',
     approach: c.carry.approach ?? '',
-    instrument: c.carry.instrument ?? '',
+    orientation: c.carry.orientation ?? '',
+    results: await storedResults(ideaId),
   })
   c.usages.push(result.usage)
   if (llmFailed(result)) {
@@ -2288,11 +2260,33 @@ async function actionsPass(c: PassContext): Promise<PassOutcome> {
     await setProposal(ideaId, 'summaryCoherentActions', { value: v.summaryCoherentActions.trim() })
   }
 
+  // ══ 26-B §3 — THE THREE AVENUES, PERSISTED AND MEASURED ═══════════════════════════════
+  //
+  // One row per avenue with the length of its treatment, so "worked to the same depth" is a
+  // column (§3a). An avenue the model left out entirely is REPORTED as an uncertainty on the
+  // actions — never quietly filled in by us, never silently absent (§3b).
+  const avenues = normaliseAvenues(v.avenues)
+  const missing = missingAvenues(avenues)
+  const av = avenues.length ? await writeAvenues(ideaId, buildId, avenues) : { written: 0, chars: {} }
+  if (missing.length) {
+    console.warn('[lex-diag] 26b ACTIONS left an avenue out', { buildId, missing })
+    await mergeUncertainties(buildId, [{
+      fieldKey: 'summaryCoherentActions',
+      sentence: `I did not evaluate the ${missing.map((m) => m.toLowerCase()).join(' and ')} route${missing.length === 1 ? '' : 's'} at all on this pass — every kernel is meant to weigh all three, so that is a gap in this draft, not a judgement that ${missing.length === 1 ? 'it does' : 'they do'} not apply.`,
+    }])
+  }
+  const charsList = Object.values(av.chars)
+  const depthRatio = charsList.length >= 2 && Math.max(...charsList) > 0 ? Math.min(...charsList) / Math.max(...charsList) : null
+
   const { written, trimmed } = await persistForks(buildId, ideaId, v.forks ?? [])
   await mergeUncertainties(buildId, v.uncertainties ?? [])
 
-  console.log('[lex-diag] 25b actions done', { buildId, actions: actions.length, forks: written, trimmed })
-  return { ok: true, output: `${actions.length} actions drafted` }
+  console.log('[lex-diag] 25b actions done', { buildId, actions: actions.length, forks: written, trimmed, avenues: av.written, avenueChars: av.chars, depthRatio, states: Object.fromEntries(avenues.map((a) => [a.avenue, a.state])) })
+  return {
+    ok: true,
+    output: `${actions.length} actions drafted; ${av.written} of ${AVENUES.length} avenues evaluated${missing.length ? ` (missing: ${missing.join(', ')})` : ''}${depthRatio != null ? ` · depth ratio ${depthRatio.toFixed(2)}` : ''}`,
+    carry: { avenues: avenues.length ? avenuesCarry(avenues) : undefined },
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2341,10 +2335,10 @@ async function researchPass(c: PassContext): Promise<PassOutcome> {
   const gaps = outcome.outcomes.reduce((n, o) => n + o.gaps.length, 0)
   const contradictions = outcome.outcomes.reduce((n, o) => n + o.contradictions, 0)
 
-  // §4 — a live power leads everything, and the fork is UPDATED so the change is visible
-  // where the user makes the decision rather than only in a paragraph.
+  // 26-B §3c — a live power is a FINDING ON THE LEGISLATIVE AVENUE, beside the route, never
+  // over it. It no longer rewrites a fork and no longer tells the revision to reconsider first.
   if (outcome.instrument?.powerFound) {
-    await recordInstrumentRetirement(c, outcome.instrument)
+    await recordExistingPowerOnLegislativeAvenue(c, outcome.instrument)
   }
 
   const summary = [
@@ -2364,7 +2358,7 @@ async function researchPass(c: PassContext): Promise<PassOutcome> {
       `${findings} finding${findings === 1 ? '' : 's'}` +
       `${contradictions ? `, ${contradictions} contradicting the draft` : ''}; ` +
       `${gaps} stated gap${gaps === 1 ? '' : 's'}` +
-      `${outcome.instrument?.powerFound ? ' — ⚠ an existing power may remove the need for a Bill' : ''}` +
+      `${outcome.instrument?.powerFound ? ' — ⚠ an existing power may remove the need for a Bill (a finding on the legislative avenue)' : ''}` +
       `${outcome.stoppedEarly ? ' (stopped at its own spend ceiling)' : ''}` +
       ` · ${queryProvenanceLine(outcome.queries)}`,
     carry: { research: summary },
@@ -2372,142 +2366,46 @@ async function researchPass(c: PassContext): Promise<PassOutcome> {
 }
 
 /**
- * §4/§9 — "a positive finding visibly changes the instrument fork."
+ * 26-B §3c — THE EXISTING-POWER FINDING, ON THE LEGISLATIVE AVENUE.
  *
- * Two writes, and both are needed for that sentence to be true. The FORK is where the
- * user makes the decision, so a finding that changes the answer has to land there; and
- * an UNCERTAINTY is what they read first, so it has to say the route may have changed.
- * A paragraph in a summary is not "visibly".
+ * *"Is there an existing power that removes the need for a Bill?"* stays the best question the
+ * platform asks. It used to rewrite the `guidingPolicy:instrument` fork and tell the revise pass
+ * *"This must be reconsidered before anything else"* — which is what turned a finding into an
+ * override. Now: the provision and its reach are written onto the LEGISLATIVE avenue row, an
+ * uncertainty says so in one sentence, and nothing else moves. The choice between avenues is
+ * the proposer's (§4) and this finding is one of the things that would settle it.
+ *
+ * ⚠ Builds before 26-B have no avenue rows; the finding then lands only as the uncertainty and
+ * the research carry, and says so in the log rather than inventing a row to hang it on.
  */
-async function recordInstrumentRetirement(c: PassContext, assessment: InstrumentAssessment): Promise<void> {
+async function recordExistingPowerOnLegislativeAvenue(c: PassContext, assessment: InstrumentAssessment): Promise<void> {
   const reachWord =
     assessment.reach === 'covers' ? 'appears to cover this outright'
       : assessment.reach === 'partial' ? 'reaches part of this and not the rest'
         : assessment.reach === 'unclear' ? 'exists, and what was retrieved does not settle whether it reaches this'
           : 'exists in this area but does not appear usable for this'
 
-  const alternative = `Use the existing power: ${assessment.provision}`
-  const caseFor =
-    `⚠ THE RESEARCH FOUND AN EXISTING POWER. ${assessment.provision} — it ${reachWord}. ` +
-    `${assessment.reachNote}`
-
-  // ⚠⚠ 25-F §6c — THIS `updateMany` USED TO CARRY NO `alternativeIndex`, AND THAT IS THE
-  // DUPLICATE FORK.
-  //
-  // The instrument fork has one ROW PER ALTERNATIVE (the unique key is
-  // buildId+forkKey+alternativeIndex). An unfiltered `updateMany` therefore wrote the
-  // SAME alternative and the SAME case onto every row of the group — which is exactly
-  // what the first real build shows: `guidingPolicy:instrument` offering
-  // "Use the existing power: CRaG 2010 s.3(1)" twice, verbatim, as alternatives 0 and 1.
-  //
-  // ⚠ THE BRIEF READS THIS AS "the duplicate-fork bug `persistForks` de-duplicated in
-  // 25-A, returned". IT IS NOT THE SAME BUG. 25-A's was a model emitting two instrument
-  // forks under different keys; this one is our own write clobbering a row it was never
-  // meant to touch, and no de-duplication rule in `persistForks` could have caught it
-  // because `persistForks` never ran on it.
-  //
-  // So the finding is now APPENDED as its own alternative rather than overwriting any: the
-  // approach pass's two alternatives are the model's reasoning and are not ours to
-  // destroy, and the research alternative is the most important of the three. Idempotent —
-  // a re-run updates the row already carrying it rather than adding a fourth.
-  const existingRows = await prisma.buildFork.findMany({
-    where: { buildId: c.buildId, forkKey: INSTRUMENT_FORK_KEY },
-    select: { id: true, alternativeIndex: true, alternative: true, chosen: true },
-    orderBy: { alternativeIndex: 'asc' },
-  })
-  const alreadyCarrying = existingRows.find((r) => r.alternative.trim() === alternative.trim())
-  let moved = { count: 0 }
-  if (alreadyCarrying) {
-    // A re-run. Refresh the text in place rather than adding a fourth alternative.
-    //
-    // ⚠ NOT `resolved: true`. The evidence has REOPENED this decision, not settled it —
-    // marking it resolved would hide the very fork the finding makes urgent. 25-C turns
-    // a fork into a decision, and this is the decision it most needs to offer.
-    moved = await prisma.buildFork.updateMany({
-      where: { id: alreadyCarrying.id },
-      data: { alternative, caseForAlternative: caseFor, resolved: false },
-    })
-  } else if (existingRows.length) {
-    const nextIndex = Math.max(...existingRows.map((r) => r.alternativeIndex)) + 1
-    try {
-      await prisma.buildFork.create({
-        data: {
-          buildId: c.buildId,
-          ideaId: c.ideaId,
-          forkKey: INSTRUMENT_FORK_KEY,
-          fieldKey: 'summaryGuidingPolicy',
-          // ⚠ COPIED FROM THE ROWS ALREADY IN THE GROUP, not re-derived from the carry.
-          // Every row of a fork carries the same `chosen`, and the panel renders
-          // `group[0].chosen`; a row whose `chosen` disagreed with its siblings would make
-          // the displayed decision depend on which row sorted first.
-          chosen: existingRows[0].chosen,
-          alternativeIndex: nextIndex,
-          alternative,
-          caseForAlternative: caseFor,
-        },
-      })
-    } catch (err) {
-      // A duplicate means a concurrent write already put this alternative on the fork.
-      // The finding IS recorded either way, which is what `moved` is about to report.
-      if ((err as { code?: string })?.code !== 'P2002') throw err
-    }
-    // ⚠ The fork EXISTS and now carries the finding — by the create above or by whatever
-    // raced it. Reporting `moved: 0` here would send the code below on to create a second
-    // instrument fork, which is the duplicate this whole block exists to remove.
-    moved = { count: 1 }
-  }
-
-  await mergeUncertainties(c.buildId, [{
-    fieldKey: 'summaryGuidingPolicy',
-    sentence:
-      `I drafted this as ${c.carry.instrument || 'primary legislation'}, and then the research found ` +
-      `${assessment.provision}, which ${reachWord}. Before anything else, decide whether you need a new Act at all.`,
-  }])
-
-  // ⚠⚠ 25-C §3a — THE COUNT IS READ, BECAUSE THIS LINE USED TO LIE.
-  //
-  // It logged "instrument fork changed by research" unconditionally after the `updateMany`,
-  // without looking at how many rows it had touched. On the 20 Aug run the assessment correctly
-  // returned `powerFound: true`, this line duly announced the fork had changed, and the
-  // verification found no such fork in the database — because there was no instrument fork to
-  // update. **A claim whose result is not checked is not a claim**, and this one was reporting
-  // the sprint's headline acceptance criterion as met while it was not.
-  if (moved.count > 0) {
-    console.warn('[lex-diag] 25b instrument fork MOVED by the research', {
-      buildId: c.buildId, rows: moved.count,
-      provision: assessment.provision, reach: assessment.reach,
-    })
-    return
-  }
-
-  // ⚠ THE POWER IS REAL AND THERE IS NO FORK TO PUT IT ON. That happens when the approach pass
-  // named no instrument, so no `guidingPolicy:instrument` fork was ever written. Losing the
-  // finding here would be the worst outcome available: the research established that a Minister
-  // may already be able to act, and the user would never be told.
-  //
-  // So the fork is CREATED. The build had an implicit instrument — an unnamed one is treated as
-  // primary legislation everywhere else in this engine — and the research has just produced the
-  // alternative to it, with the case for that alternative.
-  console.warn('[lex-diag] 25b instrument fork ABSENT — creating one to carry the finding', {
-    buildId: c.buildId, provision: assessment.provision,
-  })
-  await prisma.buildFork.create({
+  const updated = await prisma.buildAvenue.updateMany({
+    where: { buildId: c.buildId, avenue: 'LEGISLATIVE' },
     data: {
-      buildId: c.buildId,
-      ideaId: c.ideaId,
-      forkKey: INSTRUMENT_FORK_KEY,
-      fieldKey: 'summaryGuidingPolicy',
-      chosen: c.carry.instrument || 'primary legislation (assumed — the draft never named one)',
-      recommendationReason:
-        'The draft assumed a new Act. It did not say why, which is itself worth questioning.',
-      alternativeIndex: 0,
-      alternative,
-      caseForAlternative: caseFor,
+      existingPower: assessment.provision,
+      existingPowerReach: `${assessment.reach}: it ${reachWord}. ${assessment.reachNote}`.trim(),
+      updatedAt: new Date(),
     },
-  }).catch((err) => {
-    // A duplicate means a fork appeared between the update and the create; the finding is already
-    // recorded, so this is not an error to fail a pass over.
-    if ((err as { code?: string })?.code !== 'P2002') throw err
+  })
+  if (updated.count === 0) {
+    console.warn('[lex-diag] 26b existing power found but this build has no legislative avenue row to carry it', {
+      buildId: c.buildId, provision: assessment.provision,
+    })
+  }
+  await mergeUncertainties(c.buildId, [{
+    fieldKey: 'summaryCoherentActions',
+    sentence:
+      `The research found ${assessment.provision}, which ${reachWord} — a power that may remove the need for a Bill. ` +
+      'That is a finding on the legislative avenue, beside it; which avenue to take is your choice.',
+  }])
+  console.log('[lex-diag] 26b existing power recorded on the legislative avenue', {
+    buildId: c.buildId, provision: assessment.provision, reach: assessment.reach, rows: updated.count,
   })
 }
 
@@ -2551,7 +2449,7 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
     diagnosis: c.carry.diagnosis ?? '',
     approach: c.carry.approach ?? '',
     actions: actions.map((a) => `- ${a.practicalStep}${a.whoImplements ? ` (${a.whoImplements})` : ''}`).join('\n'),
-    instrument: c.carry.instrument ?? '',
+    instrument: c.carry.avenues ?? '',
     research: c.carry.research,
     forks: [...forksByKey.values()],
   })
@@ -3408,6 +3306,13 @@ export async function kernelText(ideaId: string): Promise<string> {
     },
   })
   if (!idea) return ''
+  // 26-B §3 — the three avenues of the LATEST build travel with the kernel, so every marker and
+  // critique that reads the kernel sees all three treated to depth, and the choice is visible as
+  // the proposer's. Absent on builds before 26-B.
+  const latestBuild = await prisma.ideaBuild.findFirst({ where: { ideaId }, orderBy: { version: 'desc' }, select: { id: true } })
+  const avenueRows = latestBuild
+    ? await prisma.buildAvenue.findMany({ where: { buildId: latestBuild.id }, orderBy: { avenue: 'asc' } })
+    : []
   const asText = (v: unknown): string => {
     if (typeof v === 'string') return v
     if (v && typeof v === 'object') {
@@ -3492,6 +3397,12 @@ export async function kernelText(ideaId: string): Promise<string> {
     v.policy && `THE GUIDING POLICY: ${v.policy}`,
     idea.lexActions.length && `ACTIONS:\n${idea.lexActions.map((a) => `- ${a.practicalStep}${a.whoImplements ? ` — ${a.whoImplements}` : ''}`).join('\n')}`,
     v.plan && `THE PLAN: ${v.plan}`,
+    avenueRows.length && `THE THREE AVENUES (each evaluated to the same depth; the choice between them is the proposer's, not a decision this kernel makes):\n${avenueRows.map((a) => [
+      `${a.avenue}${a.applies ? '' : ` — does not apply: ${a.whyNotApplicable ?? 'reason not stated'}`}`,
+      a.draft, `difficulty: ${a.difficulty}`, `trade-offs: ${a.tradeoffs}`,
+      `rules in: ${a.rulesIn} · rules out: ${a.rulesOut}`, `what would settle it: ${a.whatWouldSettleIt}`,
+      a.existingPower ? `⚠ finding: an existing power — ${a.existingPower} (${a.existingPowerReach ?? ''})` : '',
+    ].filter(Boolean).join('\n')).join('\n\n')}`,
   ].filter(Boolean).join('\n\n')
 
   if (!body.trim()) return ''
@@ -3725,6 +3636,8 @@ async function composeSummary(
     lexBubble(message, BUILD_STAGE, 'build:summary'),
     lexBubble(CREDIBILITY_NOTE, BUILD_STAGE, 'build:credibility'),
     lexBubble(DIRECT_EDITING_NOTE, BUILD_STAGE, 'build:editing'),
+    // 26-B §5b — LAST, so it is the thing left on screen: go through the questions, answer, re-run.
+    lexBubble(NEXT_STEPS_NOTE, BUILD_STAGE, 'build:next-steps'),
   ])
   return { message, usage: result.usage }
 }

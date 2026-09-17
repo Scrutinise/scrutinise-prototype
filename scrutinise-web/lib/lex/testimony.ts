@@ -40,10 +40,12 @@ import type { ElicitationContext } from './elicitation'
 export const TESTIMONY_INSTRUCTION = [
   'THE USER\'S OWN ACCOUNT IS FIRST-HAND EVIDENCE, AND IT IS THE ONE KIND OF EVIDENCE THE RECORD DOES',
   'NOT CONTAIN. Where it is given to you below, it is there to be USED:',
-  '  · A CONCRETE INSTANCE BEATS AN ABSTRACTION WHEREVER IT FITS. "Four years to do what a private',
-  '    solicitor did in an afternoon" is a better cause than "processes are inefficient", and a',
-  '    diagnosis that can cite what actually happened to someone is a better diagnosis than one that',
-  '    restates the problem in more general words.',
+  '  · A CONCRETE INSTANCE BEATS AN ABSTRACTION WHEREVER IT FITS. A specific thing that happened to',
+  '    this proposer — how long it took, what it cost them, who refused what — is a better cause than',
+  '    "processes are inefficient", and a diagnosis that can cite what actually happened to someone is',
+  '    a better diagnosis than one that restates the problem in more general words. Only THEIR',
+  '    instances: never carry an example, a figure or a subject in from these instructions or from',
+  '    any other proposal, and never attribute to the proposer anything not in their account below.',
   '  · LET IT SHAPE THE DIAGNOSIS, not just decorate it. If their account points at a different cause',
   '    from the one the documents suggest, that is a finding, and it belongs in the draft.',
   '  · ATTRIBUTE IT. Say "the proposer reports…", "on their account…", "they describe…". The reader has',
@@ -75,7 +77,7 @@ export function testimonyBlock(ctx: ElicitationContext, cap = 6000): string {
     )
   }
   if (ctx.goalDetail?.trim()) {
-    parts.push(`WHAT THEY WANT TO HAPPEN (${ctx.goalKindLabel}):\n${ctx.goalDetail.trim().slice(0, 2500)}`)
+    parts.push(`WHAT THEY WANT TO BE DIFFERENT — the outcome, in their own words (testimony, not a setting; how it is achieved is yours to work out):\n${ctx.goalDetail.trim().slice(0, 2500)}`)
   }
   if (ctx.ruledOut?.trim()) {
     parts.push(`WHAT THEY HAVE ALREADY RULED OUT (do not propose these):\n${ctx.ruledOut.trim().slice(0, 2500)}`)

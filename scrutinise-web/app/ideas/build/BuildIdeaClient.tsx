@@ -15,6 +15,7 @@
 // elicitation wrote into the same transcript.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import RerunChecklist from '@/components/lex/RerunChecklist'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import PublicNav from '@/components/PublicNav'
 import BuildProgress from '@/components/lex/BuildProgress'
@@ -87,7 +88,6 @@ export interface ElicitationState {
   understanding: string | null
   problemGate: { fired: boolean; presses: number; spent: boolean }
   reading: { url: string | null; fileName: string | null; note: string | null; status: string }
-  goalKinds: ReadonlyArray<{ key: string; label: string }>
   corrections: number
   messages: Msg[]
   hasBuild: boolean
@@ -299,9 +299,6 @@ export default function BuildIdeaClient(
 
   // Local form state for the current step.
   const [text, setText] = useState('')
-  const [goalKind, setGoalKind] = useState('')
-  const [ruledOut, setRuledOut] = useState('')
-  const [readingUrl, setReadingUrl] = useState('')
   const [correction, setCorrection] = useState('')
   /** AMENDMENT_25B §C4 — the checkbox, seeded from the user's remembered default. */
   const [emailWhenDone, setEmailWhenDone] = useState(false)
@@ -728,14 +725,13 @@ export default function BuildIdeaClient(
     // finishes. Display only; nothing is captured either way.
     setFeedbackOffer(CRITIQUE_INTENT.test(text))
     const data = await post('/elicitation', {
-      action: 'answer', step, text, goalKind: goalKind || undefined,
-      ruledOut: ruledOut || undefined, readingUrl: readingUrl || undefined, ...extra,
+      action: 'answer', step, text, ...extra,
     })
     if (data?.state) {
       applyMutation(data)
-      setText(''); setGoalKind(''); setRuledOut(''); setReadingUrl('')
+      setText('')
     }
-  }, [elicit?.currentStep, post, text, goalKind, ruledOut, readingUrl, applyMutation])
+  }, [elicit?.currentStep, post, text, applyMutation])
 
   /**
    * 25-H §3 — send an edited answer. Same route, same step handling; `editing: true` is
@@ -744,15 +740,14 @@ export default function BuildIdeaClient(
   const saveEdit = useCallback(async (stepKey: string) => {
     const data = await post('/elicitation', {
       action: 'answer', step: stepKey, editing: true,
-      text, goalKind: goalKind || undefined,
-      ruledOut: ruledOut || undefined, readingUrl: readingUrl || undefined,
+      text,
     })
     if (data?.state) {
       applyMutation(data)
       setEditingStep(null)
-      setText(''); setGoalKind(''); setRuledOut(''); setReadingUrl('')
+      setText('')
     }
-  }, [post, text, goalKind, ruledOut, readingUrl, applyMutation])
+  }, [post, text, applyMutation])
 
   /** Open a pill, seeded with what the user actually wrote. */
   const openStep = useCallback((stepKey: string) => {
@@ -760,9 +755,6 @@ export default function BuildIdeaClient(
     // ⚠ SEEDED FROM THE ANSWER, NOT BLANK. A pill that opens an empty box is a pill that
     // loses the answer it was supposed to show — which is the complaint, one step along.
     setText(s?.answer ?? '')
-    setGoalKind('')
-    setRuledOut('')
-    setReadingUrl('')
     setEditingStep(stepKey)
   }, [elicit?.steps])
 
@@ -892,8 +884,8 @@ export default function BuildIdeaClient(
    */
   const blockedSend: string | null = !step ? null
     : step.key === 'problem' && !text.trim() ? 'Write something first — anything at all.'
-      : step.key === 'goal' && !goalKind ? 'Pick one of the four above to carry on.'
-        : null
+      // 26-B §2 — the goal step is optional free text; nothing blocks it.
+      : null
 
   /**
    * ⚠⚠ 25-E §1 — THE BACKSTOP, AND IT IS THE POINT OF THE WHOLE SECTION.
@@ -930,7 +922,7 @@ export default function BuildIdeaClient(
           <button
             onClick={() => {
               // A6 — a half-typed answer is work. Ask before throwing it away.
-              if (text.trim() || correction.trim() || ruledOut.trim()) setExitPrompt(true)
+              if (text.trim() || correction.trim()) setExitPrompt(true)
               else window.location.href = '/dashboard'
             }}
             className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
@@ -1231,6 +1223,9 @@ export default function BuildIdeaClient(
               {latest && ideaId && (
                 <div className="mt-4 rounded-xl border-2 border-zinc-300 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Re-run</p>
+                  {/* 26-B §5b/§6 — what to do next, then the checklist drawn from the idea's own
+                      state, THEN the control. Informs, never blocks (§6b). */}
+                  {!running && <RerunChecklist ideaId={ideaId} refreshKey={latest?.id ?? null} />}
 
                   {running ? (
                     <p className="text-sm text-zinc-700 mt-1.5">
@@ -1431,11 +1426,7 @@ export default function BuildIdeaClient(
             {elicit.phase === 'QUESTION' && step && (
               <QuestionCard
                 step={step}
-                goalKinds={elicit.goalKinds}
                 text={text} onText={setText}
-                goalKind={goalKind} onGoalKind={setGoalKind}
-                ruledOut={ruledOut} onRuledOut={setRuledOut}
-                readingUrl={readingUrl} onReadingUrl={setReadingUrl}
                 blockedSend={blockedSend}
                 busy={busy}
                 onSend={() => void answer()}

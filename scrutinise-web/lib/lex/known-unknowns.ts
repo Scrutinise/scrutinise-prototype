@@ -59,6 +59,24 @@ export type KnownUnknownKind =
  * ⚠ THE ORDER OF FIRST APPEARANCE IS KEPT. Sorting would move a gap the user has already read past
  * up or down the list between two polls of the same page, which reads as new information.
  */
+/**
+ * 26-B §7a — THE KIND OF A STORED GAP, for rows written before producers tagged them.
+ *
+ * `kind` is authoritative when present. When it is absent (every research-pass row before
+ * 17 Sep 2026, and every row read back through the reader that used to drop it), the producers'
+ * own `why` sentences are the surviving tag — these are their literal strings, matched as such,
+ * not a reading of the prose. ONE function, imported by the agenda and by the Initial Questions
+ * document, so the two surfaces cannot classify the same gap differently.
+ */
+export function kindOf(g: Pick<KnownUnknown, 'kind' | 'why'>): KnownUnknownKind {
+  if (g.kind) return g.kind
+  const why = g.why || ''
+  if (/failed to run|did not complete|failed after retrieval|analysis step failed/i.test(why)) return 'search-failed'
+  if (/could not run|no instrument|holds nothing/i.test(why)) return 'job-unmet'
+  if (/named by the (question|pass) as unfindable/i.test(why)) return 'named-gap'
+  return 'unanswered'
+}
+
 export function collapseKnownUnknowns(items: KnownUnknown[]): KnownUnknown[] {
   const groups = new Map<string, KnownUnknown & { subjects: string[] }>()
   const order: string[] = []

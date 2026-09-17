@@ -41,7 +41,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { GOAL_KINDS } from './elicitation-config'
 
 /**
  * The page-one fields DERIVED from the elicitation.
@@ -76,13 +75,12 @@ export function projectedValues(row: {
   readingUrl: string | null
   readingFileName: string | null
 }): Record<DerivedPageOneField, string> {
-  const goalLabel = GOAL_KINDS.find((g) => g.key === row.goalKind)?.label
   return {
     // ⚠ VERBATIM. No trimming beyond whitespace, no summary, no prefix. The moment this
     // renders anything but the user's own words it stops being testimony.
     yourAccount: (row.problem ?? '').trim(),
     yourGoal: [
-      goalLabel ? `What I want to happen: ${goalLabel}` : '',
+      // 26-B §2 — no label line: the card is their words and nothing else.
       (row.goalDetail ?? '').trim(),
       (row.ruledOut ?? '').trim() ? `Already ruled out: ${(row.ruledOut ?? '').trim()}` : '',
     ].filter(Boolean).join('\n\n'),

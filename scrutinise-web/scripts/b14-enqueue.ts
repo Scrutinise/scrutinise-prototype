@@ -28,7 +28,8 @@ import { claimBuild } from '../lib/lex/build'
 // rather than treating "the title exists" as "the work is done".
 import { buildDriver, DEFAULT_FRAMING } from '../lib/lex/build-config'
 import { looksLikeASolution } from '../lib/lex/method'
-import { GOAL_KINDS } from '../lib/lex/elicitation-config'
+// 26-B §2 — `GOAL_KINDS` no longer exists; the four keys are listed here for the historical map only.
+const GOAL_KIND_KEYS = ['LAW_CHANGE', 'APPLICATION_CHANGE', 'INSTITUTIONAL_PRESSURE', 'UNSURE']
 
 const INPUTS = join(__dirname, '../../docs/report_run/lex_build_inputs.json')
 const OWNER_EMAIL = 'cl@scrutinise.org'
@@ -100,7 +101,7 @@ async function main() {
   if (!owner) { console.error(`owner ${OWNER_EMAIL} not found`); process.exit(2) }
 
   const mappedKind = GOAL_KIND_MAP[REF]
-  const validKey = GOAL_KINDS.some(g => g.key === mappedKind)
+  const validKey = GOAL_KIND_KEYS.includes(mappedKind)
   const gateFires = looksLikeASolution(m.elicitation.problem)
 
   console.log(`── ${REF} ─────────────────────────────────────────────`)

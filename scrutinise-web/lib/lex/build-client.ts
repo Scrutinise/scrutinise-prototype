@@ -31,10 +31,11 @@ import type { SearchResult } from './page1-config'
 import { callJson, type LlmResult } from './build-llm'
 import { M_GENERAL, M_ANSWER, M_DIAGNOSIS, M_GUIDING_POLICY, M_COHERENT_ACTIONS } from './method'
 import {
-  modelForPass, DOMAIN_TRANSFER_QUESTION, INSTRUMENTS, INSTRUMENT_DIMENSIONS,
+  modelForPass, DOMAIN_TRANSFER_QUESTION,
   ALTERNATIVES_PER_FORK, type BuildPassKey,
 } from './build-config'
 import { TESTIMONY_INSTRUCTION } from './testimony'
+import { AVENUE_SCHEMA, AVENUES_INSTRUCTION, type RawAvenue } from './build-avenues'
 
 const MAX_TOKENS = (key: BuildPassKey) =>
   parseInt(process.env[`LEX_BUILD_MAX_TOKENS_${key}`] ?? process.env.LEX_BUILD_MAX_TOKENS ?? '8000', 10)
@@ -100,7 +101,7 @@ const UNCERTAINTY_SCHEMA = {
 
 const FORK_INSTRUCTION = [
   'RECORD YOUR FORKS. Wherever you had to CHOOSE — which cause is pivotal, which approach, which',
-  `instrument — emit a \`forks\` entry naming what you chose and EXACTLY ${ALTERNATIVES_PER_FORK} alternatives you set`,
+  `mechanism — emit a \`forks\` entry naming what you chose and EXACTLY ${ALTERNATIVES_PER_FORK} alternatives you set`,
   'aside, each with the genuine case FOR it. Two strong alternatives beat three with filler, so do not',
   'pad; if you can only make one honest case, give one. The case for an alternative must be the case a',
   'competent advocate would make, not a straw man — these become the user\'s decisions later, and an',
@@ -167,9 +168,10 @@ const ANSWER_QUALITY = [
   '     accountability to Parliament rests with Ministers, not officials" is a finding. "See the Lords',
   '     Constitution Committee (2012)" is a footnote pretending to be one. Name the result, whose it',
   '     is, and what it implies for THIS proposal.',
-  '  4. REFRAME THE INSTRUMENT IF IT IS WRONG. If what the proposal actually needs is a funding',
-  '     decision, a regulator rule or an organisational change rather than the instrument assumed, say',
-  '     so plainly and say what the right one is.',
+  '  4. SAY WHICH AVENUE A FINDING BEARS ON. The kernel evaluates a legislative, an organisational and',
+  '     a financial route and the proposer chooses between them; a finding that one route already',
+  '     exists, is blocked, or is cheaper belongs beside THAT route, stated plainly — it is a finding,',
+  '     not a decision.',
   '  5. GIVE A TEST THE USER CAN APPLY — one question that operationalises the analysis and that they',
   '     could put to a civil servant or a committee and get a real answer to.',
   '  6. PROPOSE THE NEXT ACTION, concretely. Not "further research is needed": who to ask, what to ask',
@@ -383,11 +385,10 @@ export async function runDiagnosisPass(input: {
     '                 ⚠⚠ INCLUDE THE PLAIN HUMAN READING, NOT ONLY THE INSTITUTIONAL ONE. Measured on',
     '                 a real build: every drafted cause was structural — constitutional doctrine,',
     '                 coordination gaps, statutory limits — and the most obvious cause was missing',
-    '                 entirely. The user put it like this: *"because civil servants like cushy jobs',
-    '                 with power but no responsibility, and there are no mechanisms to put',
-    '                 responsibility on them, and the entire culture is designed to provide endless',
-    '                 excuses."*',
-    '                 That is an INCENTIVE-AND-CULTURE cause and it belongs in the list. Ask, every',
+    '                 entirely: the one a person affected would say out loud, about who gains from',
+    '                 things staying as they are and what the culture lets them get away with.',
+    '                 That is an INCENTIVE-AND-CULTURE cause and it belongs in the list — drawn from',
+    '                 THIS proposer\'s account and THIS problem, never from anywhere else. Ask, every',
     '                 time: who benefits from this continuing, what does the current arrangement make',
     '                 it rational for them to do, and what does the culture reward? Say it in the',
     '                 register a person would use, not in the register of a select committee report —',
@@ -426,13 +427,6 @@ export async function runDiagnosisPass(input: {
 export interface ApproachOutput {
   policyOptions: Array<{ approach: string; mechanismTypes: string[]; caseFor: string; caseAgainst: string }>
   chosenApproach: string
-  /** §4 — the instrument Lex has ASSUMED, named rather than left implicit. */
-  instrument: {
-    chosen: string
-    scope: string
-    devolution: string
-    alternatives: Array<{ alternative: string; caseForAlternative: string }>
-  }
   leverage: string
   whatItRulesOut: string
   /**
@@ -485,23 +479,6 @@ const APPROACH_SCHEMA = {
       },
     },
     chosenApproach: { type: 'string' },
-    instrument: {
-      type: 'object',
-      properties: {
-        chosen: { type: 'string' },
-        scope: { type: 'string' },
-        devolution: { type: 'string' },
-        alternatives: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: { alternative: { type: 'string' }, caseForAlternative: { type: 'string' } },
-            required: ['alternative', 'caseForAlternative'],
-          },
-        },
-      },
-      required: ['chosen', 'scope', 'devolution', 'alternatives'],
-    },
     leverage: { type: 'string' },
     whatItRulesOut: { type: 'string' },
     anticipatedResponses: {
@@ -520,7 +497,7 @@ const APPROACH_SCHEMA = {
     forks: FORK_SCHEMA,
     uncertainties: UNCERTAINTY_SCHEMA,
   },
-  required: ['policyOptions', 'chosenApproach', 'instrument', 'leverage', 'whatItRulesOut',
+  required: ['policyOptions', 'chosenApproach', 'leverage', 'whatItRulesOut',
     'anticipatedResponses', 'conditionsForSuccess', 'summaryGuidingPolicy', 'forks', 'uncertainties'],
 }
 
@@ -540,18 +517,10 @@ export async function runApproachPass(input: {
     '                    list. `mechanismTypes` from: incentives · rules · transparency · market-design',
     '                    · institutional.',
     '  `chosenApproach` — the one you would commit to. Copy its `approach` text verbatim.',
-    '  `instrument`    — ⚠ THE QUESTION THIS SPRINT ADDS, AND IT IS NOT OPTIONAL. What KIND of tool is',
-    `                    this? One of: ${INSTRUMENTS.join(' · ')}. ${INSTRUMENT_DIMENSIONS}`,
-    '                    An idea that needs a funding decision and gets drafted as a Bill is wrong in a',
-    '                    way no amount of good drafting fixes — so NAME the instrument you have assumed',
-    `                    and give ${ALTERNATIVES_PER_FORK} alternative instruments with the case for each.`,
-    '                    `scope`: "local" or "national". `devolution`: "reserved", "devolved", or say',
-    '                    plainly that you cannot tell.',
-    '                    ⚠ PUT THE INSTRUMENT HERE AND NOWHERE ELSE. Do NOT also add a fork about',
-    '                    the instrument to `forks` — the platform records this field AS a fork',
-    '                    under its own key. Measured on 2026-08-17: every one of six builds emitted',
-    '                    a second, differently-named instrument fork alongside it, so the same',
-    '                    decision reached the user twice under two names.',
+    '  ⚠ 26-B — DO NOT NAME AN INSTRUMENT HERE. Whether this is done by a Bill, by how a body works,',
+    '                    or by money is an OUTPUT of the strategy: the actions pass evaluates all three',
+    '                    routes and the proposer chooses. An approach is a way at the obstacle, and it',
+    '                    must be stated so that any of the three routes could carry it.',
     '  `leverage`      — why this approach hits the pivotal obstacle SPECIFICALLY: the asymmetry or',
     '                    pivot point it exploits.',
     '  `whatItRulesOut` — what choosing this puts off the table, and what is given up by not doing it.',
@@ -568,9 +537,9 @@ export async function runApproachPass(input: {
     '                    avoidance route, which is itself worth testing") rather than leaving it empty.',
     '  `conditionsForSuccess` — ⚠ THE SECOND OF THE THREE TESTS. Three to five TESTABLE BETS, as a',
     '                    LIST — each one something a person could actually go and check. "Sufficient',
-    '                    political will" is not a testable bet; "the Cabinet Office can compel',
-    '                    departments to publish outcome owners, which s.3(1) CRaG may or may not',
-    '                    reach" is.',
+    '                    political will" is not a testable bet; a bet that names WHICH body must be',
+    '                    able to do WHAT under WHICH provision of THIS proposal\'s own law, and says',
+    '                    whether that provision reaches it, is.',
     '                    ⚠ DO NOT START THEM ALL THE SAME WAY. The last build returned five entries',
     '                    every one of which began "For this to work" — a template showing through,',
     '                    and the reader stops reading at the third. State each condition directly:',
@@ -605,6 +574,8 @@ export async function runApproachPass(input: {
 
 export interface ActionsOutput {
   actions: Array<{ practicalStep: string; whoImplements: string; mechanismType: string }>
+  /** 26-B §3 — the three avenues, each worked to the same depth. */
+  avenues: RawAvenue[]
   summaryCoherentActions: string
   forks: RawFork[]
   uncertainties: RawUncertainty[]
@@ -625,30 +596,35 @@ const ACTIONS_SCHEMA = {
         required: ['practicalStep', 'whoImplements', 'mechanismType'],
       },
     },
+    avenues: AVENUE_SCHEMA,
     summaryCoherentActions: { type: 'string' },
     forks: FORK_SCHEMA,
     uncertainties: UNCERTAINTY_SCHEMA,
   },
-  required: ['actions', 'summaryCoherentActions', 'forks', 'uncertainties'],
+  required: ['actions', 'avenues', 'summaryCoherentActions', 'forks', 'uncertainties'],
 }
 
 export async function runActionsPass(input: {
   promptBlock: string
   diagnosis: string
   approach: string
-  instrument: string
+  /** 26-B §10/§11 — the orientation and the sources it read, so an avenue can say whether a
+   *  prior debate exists in the record (FROM_DEBATE) rather than guessing. */
+  orientation: string
+  results: SearchResult[]
 }): Promise<LlmResult<ActionsOutput>> {
   const system = [
     M_GENERAL, '', M_COHERENT_ACTIONS, '', GROUNDING, '', ANSWER_QUALITY, '', ROUGHNESS, '', FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
     '',
     'DRAFT THE ACTIONS. Fields:',
-    '  `actions` — 3–6 COORDINATED steps that execute the approach through the instrument named below.',
-    '              Each names WHO IMPLEMENTS IT — a department, a regulator, a named body. "The',
+    AVENUES_INSTRUCTION,
+    '  `actions` — 3–6 COORDINATED steps that execute the approach, drawing on WHICHEVER of the three',
+    '              avenues the strategy needs — a combination is normal and the proposer will choose the',
+    '              emphasis. Each names WHO IMPLEMENTS IT — a department, a regulator, a named body. "The',
     '              government" is not an implementer. Each carries a `mechanismType` from: incentives ·',
     '              rules · transparency · market-design · institutional.',
-    '              ⚠ THE STEPS MUST FIT THE INSTRUMENT. If the instrument is funding, do not draft',
-    '              clauses; if it is a regulator rule, do not draft a Bill. This is the single mistake',
-    '              this sprint exists to make visible.',
+    '              ⚠ Do not let the plan quietly settle the avenue question: where a step is legislative,',
+    '              say so; where it is organisational or financial, say so.',
     '              Do NOT invent costs. Costing is the user\'s work with Lex later, and a fabricated',
     '              range here would be carried into a cost-benefit case as though it had a source.',
     '  `summaryCoherentActions` — the plan in a short paragraph: what happens, in what order, and why',
@@ -662,7 +638,8 @@ export async function runActionsPass(input: {
       input.promptBlock,
       `\nYOUR DIAGNOSIS:\n${input.diagnosis}`,
       `\nYOUR CHOSEN APPROACH:\n${input.approach}`,
-      `\nTHE INSTRUMENT YOU ASSUMED: ${input.instrument}`,
+      `\nYOUR ORIENTATION (what the record holds on this — the basis for saying whether a debate already exists):\n${input.orientation || '(none)'}`,
+      `\nSOURCES — the only material you may cite, and the only basis for FROM_DEBATE:\n${sourcesBlock(input.results)}`,
     ].join('\n'),
     schema: ACTIONS_SCHEMA,
     maxOutputTokens: MAX_TOKENS('ACTIONS'),
@@ -748,7 +725,7 @@ export async function assessInstrumentRetirement(input: {
     system,
     user: [
       `THE QUESTION: ${input.question}`,
-      `\nTHE INSTRUMENT THE DRAFT ASSUMED: ${input.instrument || '(none was named)'}`,
+      `\nTHE LEGISLATIVE AVENUE THE DRAFT EVALUATED (the question is whether a power already exists that removes the need for a Bill on it):\n${input.instrument || '(not drafted)'}`,
       '\nTHE FINDINGS — the only material you may draw a provision from:',
       ...(input.findings.length
         ? input.findings.map((f, i) => `[${i + 1}] (${f.kind}) ${f.title}\n     ${f.body}`)
@@ -920,7 +897,7 @@ export async function runRevisePass(input: {
       `\nYOUR FIRST DIAGNOSIS (written with no research behind it):\n${input.diagnosis}`,
       `\nYOUR FIRST APPROACH:\n${input.approach}`,
       `\nYOUR FIRST ACTIONS:\n${input.actions}`,
-      `\nTHE INSTRUMENT YOU ASSUMED: ${input.instrument || '(none was named)'}`,
+      `\nTHE THREE AVENUES YOU EVALUATED — legislative, organisational, financial. ⚠ The choice between them is the PROPOSER'S, not yours: do not drop or demote one in the revision; a finding about one (an existing power, say) is reported beside it:\n${input.instrument || '(not drafted)'}`,
       `\n═══ WHAT THE RESEARCH FOUND ═══\n${input.research}`,
       input.forks.length
         ? `\nTHE DECISIONS YOU RECORDED AN ALTERNATIVE FOR:\n${input.forks

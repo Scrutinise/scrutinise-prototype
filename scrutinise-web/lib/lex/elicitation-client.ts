@@ -120,7 +120,6 @@ const UNDERSTANDING_SYSTEM = [
 
 export async function writeUnderstanding(input: {
   problem: string
-  goalKindLabel: string
   goalDetail: string
   ruledOut: string
   ownKnowledge: string
@@ -130,7 +129,7 @@ export async function writeUnderstanding(input: {
 }): Promise<LlmResult<Understanding>> {
   const parts = [
     `THE PROBLEM, IN THEIR WORDS:\n${input.problem.slice(0, 6000) || '(not given)'}`,
-    `\nWHAT THEY WANT TO HAPPEN: ${input.goalKindLabel}${input.goalDetail ? ` — ${input.goalDetail.slice(0, 2000)}` : ''}`,
+    input.goalDetail ? `\nWHAT THEY WANT TO BE DIFFERENT — the outcome, in their own words (testimony, not a setting):\n${input.goalDetail.slice(0, 2000)}` : '\nWHAT THEY WANT TO BE DIFFERENT: (not given)',
     input.ruledOut ? `\nALREADY RULED OUT: ${input.ruledOut.slice(0, 2000)}` : '\nALREADY RULED OUT: (nothing stated)',
     // ⚠ LABELLED, ALWAYS. This is the user's own testimony, not retrieved material, and
     // the label travels with it into every prompt that reads it.

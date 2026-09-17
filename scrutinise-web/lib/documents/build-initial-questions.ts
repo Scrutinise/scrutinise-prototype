@@ -35,8 +35,9 @@ import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { ALL_FIELDS, PAGE_SEQUENCE } from '@/lib/lex/page1-config'
 import { readKnownUnknowns } from '@/lib/lex/deepening'
-import { collapseKnownUnknowns, type KnownUnknown } from '@/lib/lex/known-unknowns'
+import { collapseKnownUnknowns, kindOf, type KnownUnknown } from '@/lib/lex/known-unknowns'
 import { readableForkKey } from '@/lib/lex/reader-language'
+import { AVENUES, AVENUE_LABEL, avenueStateLine, readDebate } from '@/lib/lex/build-avenues'
 import { BETA_MARKER } from '@/lib/lex/beta-disclosure'
 import { betaBlocks } from './build-proposal'
 import { markdownToBlocks } from './markdown'
@@ -87,7 +88,7 @@ interface Snapshot {
   /** TRUE when composed after the build, from rows that may have moved since. */
   composedLate: boolean
   body: string
-  counts: { decisions: number; causes: number; approaches: number; gaps: number; testimony: number; challenges: number }
+  counts: { avenues: number; decisions: number; causes: number; approaches: number; gaps: number; testimony: number; challenges: number }
 }
 
 const KERNEL_PAGE_KEYS = new Set(PAGE_SEQUENCE.filter((p) => p.key !== 'ORIENTATION').map((p) => p.key))
@@ -121,22 +122,19 @@ function proposalText(proposal: unknown): string {
  * the surviving tag. These are the producers' literal strings, not a reading of the prose.
  */
 function gapRoute(g: KnownUnknown): { kind: string; resolves: string } {
-  const why = g.why || ''
-  if (/failed to run|did not complete|failed after retrieval/i.test(why)) {
-    return { kind: 'the search did not complete (our limitation)', resolves: RESOLVES.gapLimitation }
+  // 26-B §7a — the SHARED classifier (`kindOf`), never a copy of it: the agenda and this document
+  // must file the same gap the same way.
+  switch (kindOf(g)) {
+    case 'search-failed': return { kind: 'the search did not complete (our limitation)', resolves: RESOLVES.gapLimitation }
+    case 'job-unmet': return { kind: 'a structured check could not run (our limitation)', resolves: RESOLVES.gapLimitation }
+    case 'named-gap': return { kind: 'the pass looked and named this as absent from what it retrieved', resolves: RESOLVES.gapResearch }
+    default: return { kind: 'nothing retrieved answered it', resolves: RESOLVES.gapResearch }
   }
-  if (/only you|the person holding|could not be read/i.test(why)) {
-    return { kind: 'only you can supply this', resolves: RESOLVES.gapOnlyYou }
-  }
-  if (/named by the (question|pass) as unfindable/i.test(why)) {
-    return { kind: 'the pass looked and named this as absent from what it retrieved', resolves: RESOLVES.gapResearch }
-  }
-  return { kind: 'nothing retrieved answered it', resolves: RESOLVES.gapResearch }
 }
 
 /** Compose the markdown body from the build's rows. Pure read; writes nothing. */
 export async function composeInitialQuestions(ideaId: string, buildId: string, buildVersion: number, opts: { late: boolean }): Promise<Snapshot> {
-  const [build, forks, fields, causes, options, passes, issues, elicitation] = await Promise.all([
+  const [build, forks, fields, causes, options, passes, issues, elicitation, avenueRows] = await Promise.all([
     prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { uncertainties: true, completedAt: true, startedAt: true } }),
     prisma.buildFork.findMany({ where: { buildId }, orderBy: [{ forkKey: 'asc' }, { alternativeIndex: 'asc' }] }),
     prisma.ideaFieldState.findMany({ where: { ideaId, status: 'AWAITING_CONFIRMATION' }, select: { fieldKey: true, proposal: true } }),
@@ -145,14 +143,60 @@ export async function composeInitialQuestions(ideaId: string, buildId: string, b
     prisma.deepeningPass.findMany({ where: { ideaId, runVersion: buildVersion }, select: { passKey: true, status: true, failureReason: true, knownUnknowns: true } }),
     prisma.deepeningIssue.findMany({ where: { ideaId, runVersion: buildVersion }, orderBy: { createdAt: 'asc' }, select: { title: true, text: true, status: true, passKey: true, sourceModel: true, dismissReason: true } }),
     prisma.ideaElicitation.findUnique({ where: { ideaId }, select: { ownKnowledge: true, ruledOut: true, readingUrl: true, readingFileName: true, readingStatus: true, goalDetail: true } }),
+    prisma.buildAvenue.findMany({ where: { buildId }, orderBy: { avenue: 'asc' } }),
   ])
   if (!build) throw new ExportUnavailableError('That build no longer exists.')
 
   const md: string[] = []
-  const counts = { decisions: 0, causes: 0, approaches: 0, gaps: 0, testimony: 0, challenges: 0 }
+  const counts = { avenues: 0, decisions: 0, causes: 0, approaches: 0, gaps: 0, testimony: 0, challenges: 0 }
+
+  // ── 0. 26-B §4 — THE ROUTE: A QUESTION, NOT A DECISION LEX MAKES ──────────────
+  //
+  // The kernel evaluated three avenues to the same depth (§3); which to take is the proposer's,
+  // with what each rules in and out, and what would settle it — which for this one is usually
+  // EVIDENCE: what would have to be true for the harder route to be worth its difficulty. The
+  // route sentence is the actions pass's own `whatWouldSettleIt`, prefixed with the mark.
+  md.push('## Which route: legislative, organisational, or financial — your choice')
+  if (avenueRows.length) {
+    md.push('', 'Lex worked all three to the same depth and did not choose. Each is drafted below with its difficulty, '
+      + 'its trade-offs, what taking it commits you to and what it gives up. A combination is normal; the emphasis is yours.')
+    for (const key of AVENUES) {
+      const a = avenueRows.find((r) => r.avenue === key)
+      counts.avenues++
+      if (!a) {
+        md.push('', `- **${AVENUE_LABEL[key]}** — *not evaluated on this build.* That is a gap in the draft, not a judgement that it does not apply.`,
+          `  ${RESOLVE_MARK} a re-run; every kernel is meant to weigh all three.`)
+        continue
+      }
+      // 26-B §10 — which of the four states, in plain words, from ONE renderer. States 3 and 4
+      // (not needed / not enough evidence) are distinct constants and never swap.
+      const st = avenueStateLine(a)
+      md.push('', `- **${AVENUE_LABEL[key]}** — *${st.state === 'DRAFTED' ? 'drafted' : st.state === 'FROM_DEBATE' ? 'drawn from an existing debate' : st.state === 'NOT_NEEDED' ? 'not needed, on the evidence' : 'not enough evidence to say'}.*`)
+      md.push(`  ${st.line}`)
+      if (st.state === 'FROM_DEBATE') {
+        // §11 — the backward-looking weakness, named as a finding. Only where a debate exists.
+        const d = readDebate(a.debate)
+        if (d) {
+          if (d.tried.length) md.push(`  What was tried, and what happened to it: ${d.tried.map((t) => `${oneLine(t.what, 200)} — ${oneLine(t.whatHappened, 200)}`).join('; ')}`)
+          if (d.recommendedNeverImplemented.length) md.push(`  What was recommended and never implemented (a different thing from what was tried): ${d.recommendedNeverImplemented.map((t) => `${oneLine(t.what, 200)} (${oneLine(t.byWhom, 100)})`).join('; ')}`)
+          if (d.stillUnsolved.trim()) md.push(`  What the record shows still unsolved: ${oneLine(d.stillUnsolved, 400)}`)
+          md.push(`  ${d.offListNote.trim() ? oneLine(d.offListNote, 300) : 'An approach not on this list may be what is needed: these are options that have already been proposed and have not solved the problem.'}`)
+        }
+      }
+      if (st.state !== 'NOT_NEEDED' && a.draft.trim()) md.push(`  The steps: ${oneLine(a.draft, 700)}`)
+      if (a.difficulty.trim()) md.push(`  How hard: ${oneLine(a.difficulty, 500)}`)
+      if (a.tradeoffs.trim()) md.push(`  Trade-offs: ${oneLine(a.tradeoffs, 500)}`)
+      md.push(`  Taking it rules in: ${oneLine(a.rulesIn, 300) || '(not stated)'} · rules out: ${oneLine(a.rulesOut, 300) || '(not stated)'}`)
+      if (a.existingPower) md.push(`  ⚠ Finding from the research: an existing power — ${oneLine(a.existingPower, 200)}. ${oneLine(a.existingPowerReach ?? '', 300)}`)
+      md.push(`  ${RESOLVE_MARK} ${oneLine(a.whatWouldSettleIt, 400) || 'evidence that this route is worth its difficulty — say what would have to be true.'}`)
+    }
+  } else {
+    md.push('', 'This build did not evaluate the three routes separately (it predates that step), so the route question is not drafted here.',
+      `${RESOLVE_MARK} a re-run — every kernel now weighs a legislative, an organisational and a financial route to the same depth.`)
+  }
 
   // ── 1. Decisions awaiting them ────────────────────────────────────────────
-  md.push('## Decisions waiting on you')
+  md.push('', '## Decisions waiting on you')
   const byFork = new Map<string, typeof forks>()
   for (const f of forks) byFork.set(f.forkKey, [...(byFork.get(f.forkKey) ?? []), f])
   const openForks = [...byFork.entries()].filter(([, rows]) => !rows[0].resolved)
@@ -292,7 +336,7 @@ export async function composeInitialQuestions(ideaId: string, buildId: string, b
 
 function summaryLine(s: Snapshot): string {
   const c = s.counts
-  return `${c.decisions} decision${c.decisions === 1 ? '' : 's'} waiting · ${c.causes} cause${c.causes === 1 ? '' : 's'} and ${c.approaches} approach${c.approaches === 1 ? '' : 'es'} to choose between · ${c.gaps} gap${c.gaps === 1 ? '' : 's'} · ${c.testimony} thing${c.testimony === 1 ? '' : 's'} only you can supply · ${c.challenges} challenge${c.challenges === 1 ? '' : 's'} to answer`
+  return `the route (${c.avenues} avenue${c.avenues === 1 ? '' : 's'} weighed) · ${c.decisions} decision${c.decisions === 1 ? '' : 's'} waiting · ${c.causes} cause${c.causes === 1 ? '' : 's'} and ${c.approaches} approach${c.approaches === 1 ? '' : 'es'} to choose between · ${c.gaps} gap${c.gaps === 1 ? '' : 's'} · ${c.testimony} thing${c.testimony === 1 ? '' : 's'} only you can supply · ${c.challenges} challenge${c.challenges === 1 ? '' : 's'} to answer`
 }
 
 /**

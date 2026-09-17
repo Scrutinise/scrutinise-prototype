@@ -24,6 +24,7 @@ import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { buildAgenda } from '@/lib/lex/agenda'
 import { buildQuestionPanel } from '@/lib/lex/question-panel'
+import { buildRerunChecklist, type RerunChecklist } from '@/lib/lex/rerun-checklist'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -75,11 +76,13 @@ export const WORKLIST_PARTS: Array<{ key: WorklistPart['key']; title: string; bl
   },
 ]
 
-async function assemble(ideaId: string, userId: string): Promise<{ parts: WorklistPart[] }> {
-  const [agenda, panel, ticks] = await Promise.all([
+async function assemble(ideaId: string, userId: string): Promise<{ parts: WorklistPart[]; rerunChecklist: RerunChecklist }> {
+  const [agenda, panel, ticks, rerunChecklist] = await Promise.all([
     buildAgenda(ideaId),
     buildQuestionPanel(ideaId),
     prisma.ideaWorklistTick.findMany({ where: { ideaId, userId }, select: { itemKey: true } }),
+    // 26-B §6 — the checklist the re-run sits beneath, from the same state and the same ticks.
+    buildRerunChecklist(ideaId, userId),
   ])
   const ticked = new Set(ticks.map((t) => t.itemKey))
   const on = (key: string) => ticked.has(key)
@@ -153,6 +156,22 @@ async function assemble(ideaId: string, userId: string): Promise<{ parts: Workli
     href: null,
     ticked: on('decision:approve-drafts'),
   }]
+  // 26-B §4 — THE ROUTE IS A DECISION FOR THE USER, so it is on the list. Present only when the
+  // latest build evaluated the avenues (builds before 26-B have none); ticked by the user, because
+  // the choice is recorded in their own words for the next run rather than as a switch.
+  if (agenda.buildVersion != null) {
+    const latestBuild = await prisma.ideaBuild.findFirst({ where: { ideaId, status: 'DONE' }, orderBy: { version: 'desc' }, select: { id: true } })
+    const avenues = latestBuild ? await prisma.buildAvenue.count({ where: { buildId: latestBuild.id } }) : 0
+    if (avenues > 0) {
+      decideItems.push({
+        key: 'decision:avenue',
+        text: 'Choose the route — legislative, organisational or financial, or a combination. Lex worked all three to the same depth and did not choose; the Initial Questions document sets them out.',
+        anchor: null,
+        href: `/ideas/${ideaId}?tab=exports`,
+        ticked: on('decision:avenue'),
+      })
+    }
+  }
   for (const d of agenda.decisions) {
     decideItems.push({
       key: `decision:${d.forkKey}`,
@@ -166,6 +185,7 @@ async function assemble(ideaId: string, userId: string): Promise<{ parts: Workli
   }
 
   return {
+    rerunChecklist,
     parts: WORKLIST_PARTS.map((p) => ({
       ...p,
       items:

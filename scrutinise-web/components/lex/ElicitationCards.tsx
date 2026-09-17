@@ -20,7 +20,7 @@
 // them renderable — and the discipline that keeps them so.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { CONFIRM_YES_LABEL, CONFIRM_NO_LABEL, CORRECTION_PROMPT } from '@/lib/lex/elicitation-config'
+import { CONFIRM_YES_LABEL, CONFIRM_NO_LABEL, CORRECTION_PROMPT, UPLOAD_ENCOURAGEMENT } from '@/lib/lex/elicitation-config'
 
 export interface StepView {
   key: string; label: string; question: string; hints: string[]
@@ -43,11 +43,7 @@ export function Spinner({ className = 'w-4 h-4' }: { className?: string }) {
 
 export interface QuestionCardProps {
   step: StepView
-  goalKinds: ReadonlyArray<{ key: string; label: string }>
   text: string; onText: (v: string) => void
-  goalKind: string; onGoalKind: (v: string) => void
-  ruledOut: string; onRuledOut: (v: string) => void
-  readingUrl: string; onReadingUrl: (v: string) => void
   /**
    * 25-E §4b — WHY SEND IS DISABLED, IN WORDS, OR NULL WHEN IT IS NOT.
    *
@@ -95,72 +91,28 @@ export function QuestionCard(p: QuestionCardProps) {
         </ul>
       )}
 
-      {step.key === 'goal' && (
-        <div className="mt-3">
-          {/* §4b — the requirement is visible BEFORE the control is pressed. */}
-          <p className="text-xs font-medium text-zinc-700">
-            Pick the one that fits best — you can add anything else underneath.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {p.goalKinds.map((g) => (
-              <button
-                key={g.key}
-                onClick={() => p.onGoalKind(g.key)}
-                aria-pressed={p.goalKind === g.key}
-                className={`text-xs font-medium px-3 py-1.5 rounded-full border ${
-                  p.goalKind === g.key
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-300 hover:bg-zinc-50'
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {step.key === 'reading' && (
-        <input
-          value={p.readingUrl}
-          onChange={(e) => p.onReadingUrl(e.target.value)}
-          placeholder="https://…"
-          className="mt-3 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2"
-        />
-      )}
+      {/* 26-B §2 — the four goal buttons stood here ("A change in the law" · "A change in how a
+          rule is applied" · "Pressure on an institution" · "Not sure yet"). Removed: the method
+          comes out of the kernel, not in before it. The box below is the whole question. */}
 
       <textarea
         value={p.text}
         onChange={(e) => p.onText(e.target.value)}
         rows={step.key === 'problem' ? 8 : 4}
         placeholder={
-          step.key === 'goal' ? 'Anything more about what you want? (optional)'
-            : step.key === 'reading' ? 'Or tell me what it is (optional)'
+          step.key === 'goal' ? 'What would be different afterwards — the outcome, in your own words.'
+            : step.key === 'ownKnowledge' ? 'Anything else you know — and use the + for anything I should read. (optional)'
               : 'In your own words…'
         }
         className="mt-3 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
       />
 
-      {step.key === 'goal' && (
-        <textarea
-          value={p.ruledOut}
-          onChange={(e) => p.onRuledOut(e.target.value)}
-          rows={2}
-          placeholder="Anything you’ve already ruled out, and why (optional)"
-          className="mt-2 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2"
-        />
-      )}
-
-      {/* ⚠⚠ 25-K §2 — THIS SAID THE OPPOSITE OF THE TRUTH, AND HAD DONE SINCE 25-H.
-          It read: *"I can't read documents yet — nothing I draft will come from it."* That
-          was honest when it was written and became a lie the day 25-H wired `YourMaterial`
-          into this screen and 25-I got the pipeline running: documents ARE read, extracted
-          and filed as findings under the questions they answer. A never-claim rule cuts both
-          ways — a stale disclaimer talks a user out of using a feature that works. */}
-      {step.key === 'reading' && (
-        <p className="mt-2 text-xs text-zinc-500">
-          Add it with the <span className="font-semibold">+</span> below and I’ll read it now —
-          what I find is filed under the questions it answers. We keep the text, never the file.
+      {/* 26-B §2 DECIDED — the "already ruled out" box stood here and is gone: it asked for a view
+          of the remedy before the analysis. The `reading` URL box is gone with its step: it captured
+          an address and read nothing. Reading is the "+", and the merged step says so. */}
+      {step.key === 'ownKnowledge' && (
+        <p className="mt-2 text-sm text-zinc-800 rounded-lg border-2 border-zinc-900 px-3 py-2">
+          <span className="font-semibold">Have something I could read?</span> {UPLOAD_ENCOURAGEMENT}
         </p>
       )}
 
@@ -179,7 +131,7 @@ export function QuestionCard(p: QuestionCardProps) {
             type="button"
             onClick={p.onToggleAttach}
             aria-expanded={!!p.attachOpen}
-            title="Add a document or a link for me to read"
+            title="Add a document or a link for me to read — a report, a letter, an article, a web page"
             className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
               p.attachOpen
                 ? 'bg-zinc-900 border-zinc-900 text-white'

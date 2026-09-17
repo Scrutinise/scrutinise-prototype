@@ -224,8 +224,10 @@ function main() {
     cards.includes('disabled={p.busy || !!p.blockedSend}'))
   expectBreak('break: a disabled condition written separately from the explanation',
     () => "disabled={p.busy || !p.goalKind}".includes('!!p.blockedSend'))
+  // 26-B §2 (decided) — the four-button pick is gone; the requirement that survives is the
+  // question itself, printed on the card before the box.
   ok('§4b — the requirement is stated before the control is pressed',
-    cards.includes('Pick the one that fits best'))
+    code('lib/lex/elicitation-config.ts').includes("cardPrompt: 'What do you want to be different?'") && cards.includes('cardPrompt'))
 
   // ⚠ §4c — the estimate answered a question the user did not ask, at the moment they were
   // deciding whether to commit.

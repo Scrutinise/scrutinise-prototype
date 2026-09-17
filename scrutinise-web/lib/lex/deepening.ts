@@ -180,7 +180,14 @@ export function readKnownUnknowns(raw: unknown): KnownUnknown[] {
   return raw
     .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
     .filter((x) => typeof x.question === 'string')
-    .map((x) => ({ question: String(x.question), why: typeof x.why === 'string' ? x.why : '' }))
+    // 26-B §7a — `kind` was DROPPED here, so `classifyGap()` in agenda.ts never saw one and filed
+    // every corpus gap as research for the user to do. A search that found nothing was homework.
+    .map((x) => ({
+      question: String(x.question),
+      why: typeof x.why === 'string' ? x.why : '',
+      ...(typeof x.kind === 'string' ? { kind: x.kind as KnownUnknown['kind'] } : {}),
+      ...(Array.isArray(x.subjects) ? { subjects: x.subjects.filter((s): s is string => typeof s === 'string') } : {}),
+    }))
 }
 
 /**

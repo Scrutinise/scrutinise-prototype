@@ -26,7 +26,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { collapseKnownUnknowns, type KnownUnknown } from './known-unknowns'
+import { collapseKnownUnknowns, type KnownUnknown, kindOf } from './known-unknowns'
 // 25-L §2 — material we were given and could not read is a gap on the idea, and it is one
 // only the user can close. See `rejectionsAsGaps`.
 import { readRejections, rejectionsAsGaps } from './material-rejection'
@@ -144,7 +144,9 @@ export interface Agenda {
  * work.
  */
 function classifyGap(g: KnownUnknown): AgendaGap['task'] {
-  switch (g.kind) {
+  // 26-B §7a — `kindOf` reads the tag, and for untagged rows the producer's own sentence; the
+  // reader used to drop the tag, so this switch fell through to `research` on every gap.
+  switch (kindOf(g)) {
     // The search did not run, or a retrieval mode does not exist. Ours to fix, not theirs.
     case 'search-failed': return 'limitation'
     // A job could not run for want of an instrument, or the corpus holds nothing.

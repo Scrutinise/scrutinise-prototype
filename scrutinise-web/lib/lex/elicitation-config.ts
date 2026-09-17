@@ -16,7 +16,18 @@
 // untouched. An idea built the current way never reaches this file.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The steps, in order. `profile` is conditional (§1a — skipped for a returning user). */
+/**
+ * The steps, in order. 26-B §2 as DECIDED (Charlie, 17 Sep): four questions —
+ *   1. What is the problem you want solved?
+ *   2. What do you want to be different? — the OUTCOME, not the method.
+ *   3. Do you have any other information about the problem you would like to add? — free text
+ *      AND file/link upload, merging the old `ownKnowledge` and `reading` steps.
+ *   4. Confirm.
+ * The governing line: *collect facts about the problem, not the user's view of the remedy.*
+ * `profile` (About you) is conditional and User-scoped and was not named either way; it stays
+ * pending Charlie's word. `reading` is REMOVED from the sequence: it captured a URL string onto
+ * the row and never read it (1 URL ever, 0 files); the "+" pipeline is what reads.
+ */
 export type ElicitationStepKey = 'problem' | 'goal' | 'ownKnowledge' | 'reading' | 'profile' | 'confirm'
 
 export interface ElicitationStep {
@@ -58,19 +69,17 @@ export const OPENING_ASK =
   'you know that isn’t written down anywhere, and what you think is really going on. The outlying ' +
   'details are often what change the whole approach, so nothing is too small to mention.'
 
-/** §1a item 2 — what the user wants to happen. Stored as `goalKind`. */
-export const GOAL_KINDS = [
-  { key: 'LAW_CHANGE', label: 'A change in the law' },
-  { key: 'APPLICATION_CHANGE', label: 'A change in how a rule is applied' },
-  { key: 'INSTITUTIONAL_PRESSURE', label: 'Pressure on an institution' },
-  { key: 'UNSURE', label: 'Not sure yet' },
-] as const
-
-export type GoalKind = (typeof GOAL_KINDS)[number]['key']
-
-export function isGoalKind(v: unknown): v is GoalKind {
-  return typeof v === 'string' && GOAL_KINDS.some((g) => g.key === v)
-}
+// ══ 26-B §2 (17 Sep 2026) — `GOAL_KINDS` IS GONE, AND SO IS THE SWITCH IT WAS ════════════════
+//
+// The goal step used to offer four buttons ("A change in the law" · "A change in how a rule is
+// applied" · "Pressure on an institution" · "Not sure yet") and store the pick as `goalKind`.
+// Measured twice as decorative — read as one label line in four prompts, branched on nowhere —
+// and then, under decision 78, briefly meant to become binding. Charlie's decision of 17 Sep
+// supersedes that: *"Decisions about whether the coherent action should be legislative or
+// operational should come out of the strategy kernel, not be a pre-condition."* So the
+// question is not asked. What the user says they are looking for is free text, kept verbatim
+// and carried into every pass AS TESTIMONY. It is not a flag, it gates nothing, nothing
+// branches on it. The `goalKind` column stays in the schema, unwritten and unread.
 
 export const ELICITATION_STEPS: ElicitationStep[] = [
   {
@@ -91,43 +100,44 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   },
   {
     key: 'goal',
-    label: 'What you want',
-    cardPrompt: 'What do you want to happen?',
-    question: 'What do you want to happen — and is there anything you’ve already ruled out?',
+    label: 'What you want to be different',
+    // 26-B §2 DECIDED — the outcome, ⚠ not the method. What they want to be different is a fact
+    // about their intent and stays; how it should be achieved is an opinion formed before they
+    // have seen the analysis, and goes. No instrument, no legislative-or-operational choice,
+    // no "already ruled out" box (that was a view of the remedy). Their words, as testimony.
+    cardPrompt: 'What do you want to be different?',
+    question: 'What do you want to be different? Describe the outcome — what you would see if this were fixed — not how it should be done. Working out the how is what the next passes are for.',
     hints: [
-      'the kind of change you are after',
-      'what that would look like in practice',
-      'anything you have already decided against, and why',
+      'what would be true afterwards that is not true now',
+      'who would notice the difference, and how',
+      'the outcome, not the instrument — no Bill, no policy, no plan yet',
     ],
   },
   {
     key: 'ownKnowledge',
-    label: 'What you know',
-    cardPrompt: 'What won’t we find in the record?',
+    label: 'Other information',
+    // 26-B §2 DECIDED — ONE question with BOTH ways of answering: free text here, and a file or
+    // link through the composer's "+" (the `IdeaUserMaterial` pipeline, which reads, extracts
+    // and files findings — Charlie's four documents produced 38 findings). The old `reading`
+    // step is gone; its text box captured a URL and read nothing.
+    cardPrompt: 'Do you have any other information about the problem you would like to add?',
     // ⚠ This is the exchange the whole build leans on, and the one the record cannot
     // supply. It is stored with its provenance (USER_TESTIMONY) because every later
     // citation depends on telling it apart from retrieved material.
     question:
-      'What do you know about this that we won’t find in the record — your own experience, what you’ve ' +
-      'been told, what the paperwork doesn’t show?',
+      'Do you have any other information about the problem you would like to add? Anything you have seen ' +
+      'or been told, what the paperwork doesn’t show — and any report, letter, article or web page: add it ' +
+      'with the + and I will read it and file what it says under the questions it answers.',
     hints: [
       'what you have seen or been told directly',
       'what the official record gets wrong or leaves out',
-      'who actually decides things here',
+      'a document, a report, a letter, a link — attach it with the +',
     ],
     optional: true,
   },
-  {
-    key: 'reading',
-    label: 'Anything to read',
-    cardPrompt: 'A link, a report, a letter — anything you’d like me to have.',
-    // ⚠ NEVER-CLAIM AT THE FIRST EXCHANGE. Ingestion is 25-D. We capture what they give
-    // us and say plainly that Lex will read it in a later sprint. Pretending to have
-    // read it is the cheapest possible lie and the most damaging one.
-    question: 'Is there anything you’d like me to read — a link, a report, a letter?',
-    hints: ['a link', 'a document you already have'],
-    optional: true,
-  },
+  // 26-B §2 DECIDED — the `reading` step stood here. Removed: it captured a URL string onto the
+  // row and read nothing (1 URL ever, Angus's, NOT_READ; 0 files). Reading is the "+" on every
+  // question, and the merged step above asks for it in words.
   {
     key: 'profile',
     label: 'About you',
@@ -156,6 +166,16 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
 export function stepDef(key: string): ElicitationStep | undefined {
   return ELICITATION_STEPS.find((s) => s.key === key)
 }
+
+/**
+ * 26-B §2 DECIDED — THE ENCOURAGEMENT TO UPLOAD, printed on the merged step and beside the "+".
+ * Charlie: *"find a way to highlight encouragement to the user to upload files or add URLs with
+ * relevant information to consider."* One constant, so the card and the composer say the same thing.
+ */
+export const UPLOAD_ENCOURAGEMENT =
+  'Anything you can give me to read makes the next pass better: a report, a letter, an article, a '
+  + 'web page, a document you already have. Add it with the + and I read it now — what it says is '
+  + 'filed under the questions it answers and cited as yours. We keep the text, never the file.'
 
 /** What we say about a document we have taken and have NOT read. Said once, plainly. */
 export const READING_CAPTURED_NOTE =
@@ -192,6 +212,15 @@ export const CREDIBILITY_NOTE =
   'Everything above is mine until you’ve been through it. If this goes to an MP or a committee, ' +
   'you’ll be asked to defend it — so where you disagree, or where I’ve put words in your mouth, ' +
   'change it. Where I’m wrong, that’s the most useful thing you can tell me.'
+
+/**
+ * 26-B §5b — WHAT TO DO NEXT, IN ONE MESSAGE THEY CANNOT MISS. The last bubble of every build,
+ * and the line above the re-run control. Three verbs, in order, and the reason for the third.
+ */
+export const NEXT_STEPS_NOTE =
+  'What to do next: go through the questions in the Initial Questions document and the panel, answer '
+  + 'the ones you can and add what you know — then re-run. The next pass searches on everything you '
+  + 'have given me since this one, and the draft gets better exactly as much as you tell it.'
 
 /** §5 — direct editing is essential and encouraged, and the copy has to SAY so. */
 export const DIRECT_EDITING_NOTE =

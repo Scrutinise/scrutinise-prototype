@@ -555,7 +555,9 @@ export function frameQuery(framing: Framing, ctx: ElicitationContext): FramedQue
   // B — the problem plus goal, ruled-outs, their own knowledge and the profile.
   const block = [
     `THE PROBLEM, IN THE USER'S WORDS:\n${ctx.problem.trim().slice(0, 4000) || '(not given)'}`,
-    `\nWHAT THEY WANT TO HAPPEN: ${ctx.goalKindLabel}${ctx.goalDetail ? ` — ${ctx.goalDetail.slice(0, 2000)}` : ''}`,
+    // 26-B §2 — their words about what they are looking for, as testimony. No label, no kind,
+    // and nothing downstream branches on it.
+    ctx.goalDetail ? `\nWHAT THEY WANT TO BE DIFFERENT — the outcome, in their own words (testimony, not a setting; how it is achieved is yours to work out):\n${ctx.goalDetail.slice(0, 2000)}` : '',
     ctx.ruledOut ? `\nALREADY RULED OUT (do not propose these): ${ctx.ruledOut.slice(0, 2000)}` : '',
     // ⚠ LABELLED, ALWAYS, IN EVERY PROMPT THAT CARRIES IT. This is the user telling you
     // what they know from experience. It is NOT a retrieved source and may never be

@@ -26,7 +26,7 @@ import { prisma } from '@/lib/prisma'
 import { submitBox } from './field-machine'
 import { looksLikeASolution, MAX_PROBLEM_PRESSES } from './method'
 import {
-  ELICITATION_STEPS, GOAL_KINDS, isGoalKind, stepDef,
+  ELICITATION_STEPS, stepDef,
   CONFIRM_PREFIX, CONFIRM_SUFFIX, CORRECTION_PROMPT, OPENING_ASK, READING_CAPTURED_NOTE,
   type ElicitationStepKey,
 } from './elicitation-config'
@@ -94,7 +94,6 @@ export interface ElicitationState {
   /** Exchange 4, captured and NOT read. */
   reading: { url: string | null; fileName: string | null; note: string | null; status: string }
   /** The goal options, so the client never hard-codes them. */
-  goalKinds: ReadonlyArray<{ key: string; label: string }>
   corrections: number
   /** The transcript so far, for the chat column. */
   messages: TranscriptMessage[]
@@ -128,8 +127,8 @@ function answerOf(row: Row, key: ElicitationStepKey, aboutYou: string | null): s
   switch (key) {
     case 'problem': return row.problem
     case 'goal': {
-      const label = GOAL_KINDS.find((g) => g.key === row.goalKind)?.label ?? row.goalKind
-      const bits = [label, row.goalDetail, row.ruledOut ? `Ruled out: ${row.ruledOut}` : ''].filter(Boolean)
+      // 26-B §2 — their words, and nothing else. No label, no kind.
+      const bits = [row.goalDetail, row.ruledOut ? `Ruled out: ${row.ruledOut}` : ''].filter(Boolean)
       return bits.length ? bits.join(' — ') : null
     }
     case 'ownKnowledge': return row.ownKnowledge
@@ -151,7 +150,9 @@ function stepDone(row: Hydrated, key: ElicitationStepKey, aboutYou: string | nul
       // step is not finished, or a solution-shaped answer would walk straight through
       // the gate that exists to catch it.
       return !!row.problem?.trim() && !gateOutstanding(row)
-    case 'goal': return !!row.goalKind
+    // 26-B §2 DECIDED — the outcome is required text. A row from before 26-B with a `goalKind`
+    // and no text still reads as done, so an old idea is not sent back to a question it answered.
+    case 'goal': return !!row.goalDetail?.trim() || (!!row.goalKind && row.goalSeen)
     case 'ownKnowledge': return row.ownKnowledgeSeen
     case 'reading': return row.readingSeen
     case 'profile': return row.profileSkipped || !!aboutYou?.trim()
@@ -167,7 +168,7 @@ function gateOutstanding(row: Hydrated): boolean {
 // The two "seen" flags and the answers-after-press counter are derived from the
 // transcript rather than stored, so that no column can drift out of step with what was
 // actually said. See `hydrate`.
-type Hydrated = Row & { ownKnowledgeSeen: boolean; readingSeen: boolean; problemAnswersAfterPress: number }
+type Hydrated = Row & { goalSeen: boolean; ownKnowledgeSeen: boolean; readingSeen: boolean; problemAnswersAfterPress: number }
 
 function hydrate(row: Row, messages: TranscriptMessage[]): Hydrated {
   const userTurns = messages.filter((m) => m.role === 'user')
@@ -175,6 +176,9 @@ function hydrate(row: Row, messages: TranscriptMessage[]): Hydrated {
   const problemAnswers = userTurns.filter((m) => m.field === 'elicitation:problem').length
   return {
     ...row,
+    // 26-B §2 — the goal step is optional free text now; "seen" is the transcript, as for the
+    // others. ⚠ A row from before 26-B has a `goalKind` and a bubble, so it reads as seen too.
+    goalSeen: answered('elicitation:goal') || !!row.goalKind,
     ownKnowledgeSeen: answered('elicitation:ownKnowledge'),
     readingSeen: answered('elicitation:reading'),
     // Presses are interleaved with answers: press 1 comes after answer 1. So the number
@@ -316,7 +320,6 @@ function projectState(
       note: row.readingNote,
       status: row.readingStatus,
     },
-    goalKinds: GOAL_KINDS.map((g) => ({ key: g.key, label: g.label })),
     corrections: row.corrections,
     messages,
     hasBuild,
@@ -433,21 +436,12 @@ export async function answerStep(
     }
 
     case 'goal': {
-      if (!isGoalKind(input.goalKind)) throw new Error('Choose what you want to happen.')
-      await prisma.ideaElicitation.update({
-        where: { ideaId },
-        data: {
-          goalKind: input.goalKind,
-          goalDetail: text || null,
-          ruledOut: (input.ruledOut ?? '').trim() || null,
-        },
-      })
-      const label = GOAL_KINDS.find((g) => g.key === input.goalKind)!.label
-      const ruled = (input.ruledOut ?? '').trim()
-      said.push(userBubble(
-        [label, text, ruled ? `Ruled out: ${ruled}` : ''].filter(Boolean).join(' — '),
-        ELICITATION_STAGE, 'elicitation:goal',
-      ))
+      // 26-B §2 DECIDED — the outcome, in their words, required. `goalKind` is never written
+      // again and `ruledOut` is no longer asked (a view of the remedy); the column keeps what
+      // older rows hold.
+      if (!text) throw new Error('Say what you want to be different — one line is enough.')
+      await prisma.ideaElicitation.update({ where: { ideaId }, data: { goalDetail: text } })
+      said.push(userBubble(text, ELICITATION_STAGE, 'elicitation:goal'))
       break
     }
 
@@ -543,7 +537,6 @@ async function runUnderstanding(
 
   const result = await writeUnderstanding({
     problem: row.problem ?? '',
-    goalKindLabel: GOAL_KINDS.find((g) => g.key === row.goalKind)?.label ?? 'not stated',
     goalDetail: row.goalDetail ?? '',
     ruledOut: row.ruledOut ?? '',
     ownKnowledge: row.ownKnowledge ?? '',
@@ -686,8 +679,7 @@ export async function isConfirmed(ideaId: string): Promise<boolean> {
 /** Everything the build passes need, read once. */
 export interface ElicitationContext {
   problem: string
-  goalKind: string | null
-  goalKindLabel: string
+  /** 26-B §2 — what they said they are looking for. Their words, testimony; never a switch. */
   goalDetail: string
   ruledOut: string
   /** ⚠ USER TESTIMONY. Never a citable source. */
@@ -741,8 +733,6 @@ export async function elicitationContext(ideaId: string, userId: string): Promis
   })
   return {
     problem: row.problem ?? '',
-    goalKind: row.goalKind,
-    goalKindLabel: GOAL_KINDS.find((g) => g.key === row.goalKind)?.label ?? 'not stated',
     goalDetail: row.goalDetail ?? '',
     ruledOut: row.ruledOut ?? '',
     ownKnowledge: row.ownKnowledge ?? '',

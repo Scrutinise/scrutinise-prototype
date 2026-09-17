@@ -43,7 +43,10 @@ export interface PassCarry {
   diagnosis?: string
   /** APPROACH — chosen approach, leverage, what it rules out. */
   approach?: string
-  /** APPROACH — the instrument, as one line. Pass 3's EXISTING_POWER question reads it. */
+  /** 26-B §3 — ACTIONS: the three avenues as prose. Pass 3's EXISTING_POWER question and the
+   *  revision read it. Builds before 26-B carried `instrument` here instead; it is kept so a
+   *  resumed old build still types, and is never written again. */
+  avenues?: string
   instrument?: string
   /** ORIENT — TRUE when a corpus search did not complete. Never conflated with silence. */
   searchFailed?: boolean

@@ -37,7 +37,7 @@ import {
   QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
   type StepView,
 } from '../components/lex/ElicitationCards'
-import { ELICITATION_STEPS, GOAL_KINDS } from '../lib/lex/elicitation-config'
+import { ELICITATION_STEPS } from '../lib/lex/elicitation-config'
 
 let pass = 0
 let fail = 0
@@ -102,9 +102,8 @@ function main() {
   // ── PHASE: QUESTION ───────────────────────────────────────────────────────
   const q1 = renderToStaticMarkup(
     <QuestionCard
-      step={stepFor('problem')} goalKinds={GOAL_KINDS.map((g) => ({ key: g.key, label: g.label }))}
-      text="" onText={noop} goalKind="" onGoalKind={noop}
-      ruledOut="" onRuledOut={noop} readingUrl="" onReadingUrl={noop}
+      step={stepFor('problem')}
+      text="" onText={noop}
       blockedSend="Write something first — anything at all."
       busy={false} onSend={noop} onSkip={noop}
     />,
@@ -118,8 +117,7 @@ function main() {
     () => !text(renderToStaticMarkup(
       <QuestionCard
         step={{ ...stepFor('problem'), cardPrompt: stepFor('problem').question }}
-        goalKinds={[]} text="" onText={noop} goalKind="" onGoalKind={noop}
-        ruledOut="" onRuledOut={noop} readingUrl="" onReadingUrl={noop}
+        text="" onText={noop}
         blockedSend={null} busy={false} onSend={noop} onSkip={noop}
       />,
     )).includes('The outlying details are often what change the whole approach'))
@@ -129,25 +127,25 @@ function main() {
   expectBreak('break: a disabled Send with no reason rendered',
     () => text(renderToStaticMarkup(
       <QuestionCard
-        step={stepFor('problem')} goalKinds={[]} text="" onText={noop} goalKind="" onGoalKind={noop}
-        ruledOut="" onRuledOut={noop} readingUrl="" onReadingUrl={noop}
+        step={stepFor('problem')} text="" onText={noop}
         blockedSend={null} busy={false} onSend={noop} onSkip={noop}
       />,
     )).includes('Write something first'))
 
   const q2 = renderToStaticMarkup(
     <QuestionCard
-      step={stepFor('goal')} goalKinds={GOAL_KINDS.map((g) => ({ key: g.key, label: g.label }))}
-      text="" onText={noop} goalKind="" onGoalKind={noop}
-      ruledOut="" onRuledOut={noop} readingUrl="" onReadingUrl={noop}
-      blockedSend="Pick one of the four above to carry on."
+      step={stepFor('goal')}
+      text="" onText={noop}
+      blockedSend={null}
       busy={false} onSend={noop} onSkip={noop}
     />,
   )
-  ok('§4b — question 2 states its requirement BEFORE the button is pressed',
-    text(q2).includes('Pick the one that fits best') && text(q2).includes('Pick one of the four above'))
-  ok('§4b — and all four categories are pressable', enabledButtons(q2).length >= 4,
-    `${enabledButtons(q2).length} enabled buttons`)
+  // 26-B §2 — the four goal buttons are gone: question 2 is optional free text, and nothing
+  // blocks it. The old assertions (four pressable categories, a "pick one" requirement) are
+  // REPLACED, not kept: they asserted the switch this sprint removed.
+  ok('26-B §2 — question 2 offers no category buttons', !text(q2).includes('A change in the law') && !text(q2).includes('Not sure yet'))
+  ok('26-B §2 (decided) — question 2 asks what should be different, not how', text(q2).includes('What do you want to be different') && !text(q2).includes('ruled out'))
+  ok('26-B §2 — question 2 can be sent or skipped without a pick', enabledButtons(q2).length >= 1, `${enabledButtons(q2).length} enabled buttons`)
 
   // ── PHASE: UNDERSTANDING_FAILED ───────────────────────────────────────────
   //
