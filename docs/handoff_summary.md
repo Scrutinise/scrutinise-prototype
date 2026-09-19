@@ -773,7 +773,13 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-17 16:42 UTC — ▼ **26-B ADDENDUM — REPAIR AND RETEST ON THE FIRST PASS.** Charlie: *"even on the
+*Last updated: 2026-09-19 01:54 UTC — ▼ **SWEEP RUN; WORKER ON `55cbbecd`.** `sweep-stale-lex-actions.ts --write`: 6 ideas,
+63 rows removed, every idea re-read to its latest DONE build's own block (452c5ade 40 → 5, 72a29705 16 → 4, four at 8 → 4).
+⚠ The sweep's first rule ("keep the last N rows") was WRONG for `9910c16e` — a CANCELLED v2 had written four rows after
+the DONE v1 — so it now attributes every row to the build that wrote it from the pass logs and REFUSES an idea it cannot
+reconcile (the two hand-cleaned ideas are skipped for exactly that reason). `check:lex-26b` 69/0, 2 NOT CHECKED (no build
+since the supersede fix; Angus v1 predates avenues). `build-worker` deployment `d81a55cf` SUCCESS at 16:42, `meta.commitHash
+= 55cbbecd568e` = tip of Main = `/api/health`. Earlier: 2026-09-17 16:42 UTC — ▼ **26-B ADDENDUM — REPAIR AND RETEST ON THE FIRST PASS.** Charlie: *"even on the
 first pass, if it fails the coherence test it should correct this problem and retest."* A twelfth pass, `REPAIR`, after
 KERNEL_CHECK/LOGIC_CHECK and before ADVERSARIAL (`lib/lex/build-repair.ts`): no-op on a clean kernel; otherwise rewrites the
 fields the failures name (via `setProposal`, so accepted text is offered not overwritten), records each rewrite and what it

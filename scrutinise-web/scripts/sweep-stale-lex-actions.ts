@@ -33,24 +33,31 @@ function actionsWrittenBy(passes: unknown): number | null {
 
 async function main() {
   console.log(`── sweep-stale-lex-actions — ${WRITE ? '⚠ WRITE' : 'dry run'} ──`)
-  const latest = await prisma.ideaBuild.findMany({
+  const ideas = await prisma.ideaBuild.findMany({
     where: { status: 'DONE', ...(ONLY && process.argv.includes('--idea') ? { ideaId: ONLY } : {}) },
-    orderBy: [{ ideaId: 'asc' }, { version: 'desc' }], distinct: ['ideaId'],
-    select: { ideaId: true, version: true, passes: true, idea: { select: { title: true } } },
+    distinct: ['ideaId'], select: { ideaId: true, idea: { select: { title: true } } },
   })
   let totalRemove = 0
   const plan: Array<{ ideaId: string; remove: string[]; keep: number; title: string; version: number }> = []
-  for (const b of latest) {
-    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: b.ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, source: true, practicalStep: true } })
-    const lex = rows.filter((r) => r.source === 'LEX')
-    const n = actionsWrittenBy(b.passes)
-    if (n == null) { console.log(`  ${b.ideaId.slice(0, 8)} v${b.version} — SKIPPED: the latest build's pass log names no action count (${lex.length} LEX rows left as they are)`); continue }
-    if (lex.length <= n) continue
-    const keep = new Set(lex.slice(-n).map((r) => r.id))
-    const remove = lex.filter((r) => !keep.has(r.id))
-    plan.push({ ideaId: b.ideaId, remove: remove.map((r) => r.id), keep: n, title: b.idea.title, version: b.version })
+  for (const it of ideas) {
+    // ⚠ EVERY build that wrote actions, DONE or not, in version order — a CANCELLED or FAILED
+    // build's ACTIONS pass appends rows too, so "the last N rows" is NOT always the latest DONE
+    // build's block (9910c16e: v1 DONE then v2 CANCELLED, both wrote four). Walk the blocks.
+    const builds = await prisma.ideaBuild.findMany({ where: { ideaId: it.ideaId }, orderBy: { version: 'asc' }, select: { version: true, status: true, passes: true } })
+    const writers = builds.map((b) => ({ version: b.version, status: b.status, n: actionsWrittenBy(b.passes) })).filter((w) => w.n != null) as Array<{ version: number; status: string; n: number }>
+    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: it.ideaId, source: 'LEX' }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, practicalStep: true } })
+    const expected = writers.reduce((s, w) => s + w.n, 0)
+    if (rows.length !== expected) { console.log(`  ${it.ideaId.slice(0, 8)} — SKIPPED: ${rows.length} LEX rows but the pass logs account for ${expected}; not touching what cannot be attributed`); continue }
+    const latestDone = [...writers].reverse().find((w) => w.status === 'DONE')
+    if (!latestDone) { console.log(`  ${it.ideaId.slice(0, 8)} — SKIPPED: no DONE build wrote actions`); continue }
+    let start = 0
+    for (const w of writers) { if (w.version === latestDone.version) break; start += w.n }
+    const keep = new Set(rows.slice(start, start + latestDone.n).map((r) => r.id))
+    const remove = rows.filter((r) => !keep.has(r.id))
+    if (!remove.length) continue
+    plan.push({ ideaId: it.ideaId, remove: remove.map((r) => r.id), keep: latestDone.n, title: it.idea.title, version: latestDone.version })
     totalRemove += remove.length
-    console.log(`  ${b.ideaId.slice(0, 8)} v${b.version} "${b.idea.title.slice(0, 50)}" — ${lex.length} LEX rows, keep the latest build's ${n}, remove ${remove.length}`)
+    console.log(`  ${it.ideaId.slice(0, 8)} v${latestDone.version} "${it.idea.title.slice(0, 50)}" — ${rows.length} LEX rows across ${writers.length} writing builds (${writers.map((w) => `v${w.version}${w.status === 'DONE' ? '' : ':' + w.status}`).join(' ')}); keep v${latestDone.version}'s ${latestDone.n} (rows ${start}–${start + latestDone.n - 1}), remove ${remove.length}`)
     for (const r of remove.slice(0, 3)) console.log(`      − ${r.practicalStep.slice(0, 100)}`)
     if (remove.length > 3) console.log(`      … and ${remove.length - 3} more`)
   }
