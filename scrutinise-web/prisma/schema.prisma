@@ -723,6 +723,20 @@ model Idea {
   /// act `buildAllowanceNote` exists to prevent, one table over.
   archivedReason            String?
 
+  /// ══ 26-C §7b — THE OWNER'S OWN ARCHIVE, A SEPARATE COLUMN FROM `archivedAt` ═══════
+  ///
+  /// §7b: "On every card, in every list including the dashboard: archive and delete —
+  /// they are different and must look different. Archive hides; delete removes."
+  ///
+  /// ⚠⚠ IT IS NOT `archivedAt`. That column is 25-O §4b's ADMIN act on somebody ELSE'S
+  /// idea, and its own comment says why reusing it is exactly the mistake to avoid: two
+  /// different actors hiding an idea for two different reasons must not collapse onto one
+  /// timestamp, or an admin's hide and an owner's own archive become indistinguishable —
+  /// the identical failure this column's neighbour was created to prevent, one row down.
+  /// A DROP+CREATE-if-the-predicate-changes rule (CLAUDE.md §21) applies here in spirit:
+  /// this is a different predicate from day one, so it is a different column from day one.
+  ownerArchivedAt           DateTime?
+
   /// ══ CCW-B22 §7 — THE QUESTIONS THIS PROPOSAL COULD NOT SETTLE, AS THEIR OWN IDEAS ═══
   ///
   /// Charlie: *"Identifying things that need their own idea-project is a valid output from an
