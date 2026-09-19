@@ -773,7 +773,56 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-19 01:54 UTC — ▼ **SWEEP RUN; WORKER ON `55cbbecd`.** `sweep-stale-lex-actions.ts --write`: 6 ideas,
+*Last updated: 2026-09-19 03:19 UTC (LEX 26-C)* — ▼▼ **26-C BUILT — ONE BOX, THE LIBRARY, AND THE
+FREEZE IS FIXED AT ITS ROOT.** Brief: `docs/BRIEF_26C_v2.md`. Report: `docs/LEX_26C_REPORT.md`.
+Full detail in `docs/CHANGE_LOG.md`'s 03:19 entry; summary here.
+▶▶ ⚠⚠ **§1 — THE FREEZE, DIAGNOSED AGAINST THE ACTUAL PRODUCTION ROW, NOT A HYPOTHESIS.** Idea
+`a1a08ff4` (MiFID II): the DB proves the server fully processed Charlie's second answer and
+silently advanced 'problem'→'goal' with ZERO transcript acknowledgement — every non-'problem'
+step's question was a static card, never a chat bubble. Third hypothesis (reply produced, never
+rendered) confirmed; root cause fixed in the rebuilt engine — every turn now either appends a Lex
+bubble or reaches the confirmation paragraph in the same request, never neither.
+▶ **§2/§3 — the engine is now one intake (`problem`+`background`, together) then AT MOST TWO Lex
+replies**, reusing `MAX_PROBLEM_PRESSES = 2` (already exactly "at most twice, not three times").
+New cards `IntakeCard`/`ReplyCard` replace the four-step `QuestionCard` sequence. Build-offer
+copy names no figure (`PILOT_ALLOWANCE_THIRDS` is 12 THIRDS ≈ 4 full builds, not "twelve builds" as
+drafted) — the live `balanceSentence` beside the button is the one place a number appears. §3d's
+email sentence NOT added, pending Charlie's confirmation.
+▶ **§4 — built.** `/ideas/create/page.tsx` had NO gate for a direct link to an unbuilt idea
+(`/ideas/build/page.tsx` only redirected FORWARD once a build existed) — exactly how Charlie
+reached "nothing built yet" on idea `a1a08ff4`. Now redirects BACK on the same terminal-build
+criterion the forward redirect uses.
+▶ **§5 — built.** `proposeTitle()` names the idea from the intake, guarded on the title still
+being the placeholder.
+▶ **§6 — built.** Two-column front screen (3/4 create, 1/4 library, local draggable divider),
+`StageBar` removed from this screen, Exit/How-this-works relocated per §6d.
+▶▶ ⚠⚠ **§7a MEASURED: Charlie saw 16 of ~50 because the list was joined through
+`IdeaElicitation`** — an idea made at the older `/ideas/create` door has no such row and could
+never appear. Not a limit, not a page size. Fixed by querying `Idea` directly (cap 100).
+▶ **§7b — built.** Schema + migration together and FIRST (`Idea.ownerArchivedAt`, additive,
+applied and read back) — a SEPARATE column from the admin's `archivedAt` (25-O §4b), reusing which
+would have repeated that column's own documented mistake one row over. Archive (reversible, no
+dialogue) + delete (existing dialogue) on every card.
+▶ **§7c/§7d NOT BUILT**, per §7e's own permission: drag-reorder needs a persisted order, grouping
+needs a whole new model — both "a sprint on its own," reported rather than half-built.
+▶ **§8 — built, measured not eyeballed.** New `headingBg`/`onHeadingBg` (not a repaint of the
+existing `bg`, which two other surfaces depend on staying a pale wash). ⚠⚠ Caught the same trap
+CLAUDE.md §21 already names once: `amber-600`/`emerald-600` with white text are 3.19:1/3.77:1 —
+fail AA — so the heavy backgrounds are `amber-700`/`emerald-700` (5.02/5.48:1); `blue-600`/
+`violet-600` already passed (5.18/5.70:1). Every figure is computed by hand in the code comment.
+✅ `tsc` clean, `check:client-boundary` clean, `check:scripts` clean, `check:lex-25e` 28/0,
+`verify:lex-25e-ui` 20/0 (extended with INTAKE/REPLY per §23.1 — the old assertions render
+`QuestionCard`, which the live client no longer calls), `check:lex-25j` 12/0 (one rule rewritten
+for the persistent library), `verify:my-ideas-ui` 15/0 (one control's substring rewritten —
+the new archive glyph's `aria-hidden="true"` collided with a check matching bare "hidden"),
+`check:lex-26b` 69/0. `check:lex-25h` 19/1 — the one red (§7e, `build-client.ts`) is **pre-existing
+and unrelated**, that file untouched this sprint.
+⚠ **§10 — say what only Charlie's browser can confirm**: the intake/reply turn-taking end to end
+in a real browser; the draggable divider's feel; the two-column layout at his actual widths; the
+auto-title's quality on real accounts; the contrast fix looked at directly (and with colour
+removed, §8b — not re-testable here without a browser).
+⚠ Nothing committed mid-sprint; `commit-all.sh` produced, not yet run (Charlie's approval needed).
+Earlier: 2026-09-19 01:54 UTC — ▼ **SWEEP RUN; WORKER ON `55cbbecd`.** `sweep-stale-lex-actions.ts --write`: 6 ideas,
 63 rows removed, every idea re-read to its latest DONE build's own block (452c5ade 40 → 5, 72a29705 16 → 4, four at 8 → 4).
 ⚠ The sweep's first rule ("keep the last N rows") was WRONG for `9910c16e` — a CANCELLED v2 had written four rows after
 the DONE v1 — so it now attributes every row to the build that wrote it from the pass logs and REFUSES an idea it cannot
