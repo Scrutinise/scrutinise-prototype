@@ -1783,7 +1783,11 @@ export default function FieldsPanel({
           <div key={page.key}>
             <div
               ref={isActive ? stageHeaderRef : undefined}
-              className={`flex items-center gap-2 mb-2 rounded-lg px-2 py-1.5 ${isActive ? accent.bg : ''} ${collapsible ? 'cursor-pointer' : ''}`}
+              // ⚠⚠ 26-C §8a — THE CONTAINER TAKES THE SAME COLOUR AS THE HEADING, HEAVY AND
+              // STRONGLY SATURATED. `accent.bg` (a pale wash) stayed the OFF-state affordance
+              // it always was; `accent.headingBg`/`accent.onHeadingBg` are new and measured
+              // for exactly this box — see `stage-accents.ts`.
+              className={`flex items-center gap-2 mb-2 rounded-lg px-2 py-1.5 ${isActive ? accent.headingBg : ''} ${collapsible ? 'cursor-pointer' : ''}`}
               onClick={collapsible ? toggle : undefined}
               // 25-N §1c — a heading that toggles is a control, so it announces itself as
               // one and works from the keyboard. It was a bare div with an onClick.
@@ -1798,11 +1802,15 @@ export default function FieldsPanel({
                   }
                 : {})}
             >
+              {/* ⚠ THE DOT IS WHITE, NOT `accent.dot`, WHEN ACTIVE. `accent.dot` is the SAME
+                  saturated hue as `accent.headingBg` now is, so it would sit invisibly on its
+                  own background — a status marker that vanishes exactly when it is meant to
+                  be seen. */}
               <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
-                page.status === 'complete' ? 'bg-green-500' : isActive ? accent.dot : 'bg-zinc-200'
+                page.status === 'complete' ? 'bg-green-500' : isActive ? 'bg-white' : 'bg-zinc-200'
               }`} />
               <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
-                isLocked ? 'text-zinc-300' : isActive ? accent.text : 'text-zinc-700'
+                isLocked ? 'text-zinc-300' : isActive ? accent.onHeadingBg : 'text-zinc-700'
               }`}>
                 {page.label}
               </span>
@@ -1810,9 +1818,13 @@ export default function FieldsPanel({
                   heading is a count of something the reader has to guess at, and the two
                   plausible guesses — how much Lex has drafted, how much you have signed off —
                   point in opposite directions. `done` counts ACCEPTED and SKIPPED, so the word
-                  that fits it is "approved". */}
+                  that fits it is "approved".
+                  ⚠ `text-zinc-400` ON A HEAVY SATURATED BOX FAILS CONTRAST — this is the same
+                  measured `onHeadingBg` the label uses, not a second colour to check. */}
               {!isLocked && total > 0 && (
-                <span className="text-[11px] text-zinc-400 whitespace-nowrap">{done} of {total} approved</span>
+                <span className={`text-[11px] whitespace-nowrap ${isActive ? accent.onHeadingBg : 'text-zinc-400'}`}>
+                  {done} of {total} approved
+                </span>
               )}
               {isLocked && <span className="text-[11px] text-zinc-300">soon</span>}
               {/* ══ ⚠⚠ 25-Z §2b — ALL FOUR SECTIONS CARRY THE SAME CONTROL ══════════════════
@@ -1847,7 +1859,7 @@ export default function FieldsPanel({
               {/* ⚠ TWO DIFFERENT CHARACTERS, never one recoloured (docs/CLAUDE.md §21), and
                   a word beside them so "this opens" is not left to be inferred from a glyph. */}
               {collapsible && (
-                <span className="text-[11px] text-zinc-400 whitespace-nowrap">
+                <span className={`text-[11px] whitespace-nowrap ${isActive ? accent.onHeadingBg : 'text-zinc-400'}`}>
                   {collapsed ? 'show +' : 'hide −'}
                 </span>
               )}

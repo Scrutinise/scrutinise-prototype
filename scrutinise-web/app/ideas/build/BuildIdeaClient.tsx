@@ -22,13 +22,12 @@ import BuildProgress from '@/components/lex/BuildProgress'
 import BuildFindings from '@/components/lex/BuildFindings'
 import type { BuildHighlights } from '@/lib/lex/build-highlights'
 import {
-  QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
+  IntakeCard, ReplyCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
   Spinner, type StepView,
 } from '@/components/lex/ElicitationCards'
 // TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
 // keeps importing its prop type from the component it renders.
 import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
-import StageBar from '@/components/lex/StageBar'
 import RerunDialogue from '@/components/lex/RerunDialogue'
 import RerunBanner from '@/components/lex/RerunBanner'
 import YourMaterial from '@/components/lex/YourMaterial'
@@ -299,7 +298,11 @@ export default function BuildIdeaClient(
 
   // Local form state for the current step.
   const [text, setText] = useState('')
+  /** 26-C §2d — the second box, submitted alongside `text` on the intake only. */
+  const [background, setBackground] = useState('')
   const [correction, setCorrection] = useState('')
+  /** 26-C §6a — the front screen's own layout: 3/4 create, 1/4 library, draggable. */
+  const [leftPct, setLeftPct] = useState(75)
   /** AMENDMENT_25B §C4 — the checkbox, seeded from the user's remembered default. */
   const [emailWhenDone, setEmailWhenDone] = useState(false)
   const emailSeededRef = useRef(false)
@@ -313,17 +316,8 @@ export default function BuildIdeaClient(
   const [feedbackOffer, setFeedbackOffer] = useState(false)
   // A6: Exit, and the prompt that stops a half-typed answer being thrown away.
   const [exitPrompt, setExitPrompt] = useState(false)
-  /**
-   * ⚠ 25-H §3 — WHICH PILL IS OPEN.
-   *
-   * The step rail was five inert `<li>`s. Charlie: *"None of these pill buttons work. They
-   * should show up the initial data I wrote in so I can edit that before I do a rebuild."*
-   *
-   * The data was already on the wire — `steps[].answer` has carried each answer since 25-A
-   * — so nothing needed fetching. What was missing was somewhere to put it and a way back
-   * to the server with it.
-   */
-  const [editingStep, setEditingStep] = useState<string | null>(null)
+  // ⚠ 25-H §3's `editingStep` (which pill is open) stood here and is retired with the
+  // rail itself — see the note beside `confirm` below.
 
   /**
    * ⚠⚠ 25-K §2 — THE COMPOSER'S "+", AND ITS COUNT.
@@ -724,39 +718,25 @@ export default function BuildIdeaClient(
     // A1 — did they just criticise something Lex produced? The offer renders once the turn
     // finishes. Display only; nothing is captured either way.
     setFeedbackOffer(CRITIQUE_INTENT.test(text))
+    // 26-C §2a/§2d — the second box rides along on the intake only; the server ignores it
+    // on every later reply (`AnswerInput.background`), so sending it unconditionally is safe.
     const data = await post('/elicitation', {
-      action: 'answer', step, text, ...extra,
+      action: 'answer', step, text, background, ...extra,
     })
     if (data?.state) {
       applyMutation(data)
       setText('')
+      setBackground('')
     }
-  }, [elicit?.currentStep, post, text, applyMutation])
+  }, [elicit?.currentStep, post, text, background, applyMutation])
 
-  /**
-   * 25-H §3 — send an edited answer. Same route, same step handling; `editing: true` is
-   * the only difference, and all it unlocks is re-answering a CONFIRMED elicitation.
-   */
-  const saveEdit = useCallback(async (stepKey: string) => {
-    const data = await post('/elicitation', {
-      action: 'answer', step: stepKey, editing: true,
-      text,
-    })
-    if (data?.state) {
-      applyMutation(data)
-      setEditingStep(null)
-      setText('')
-    }
-  }, [post, text, applyMutation])
-
-  /** Open a pill, seeded with what the user actually wrote. */
-  const openStep = useCallback((stepKey: string) => {
-    const s = elicit?.steps.find((x) => x.key === stepKey)
-    // ⚠ SEEDED FROM THE ANSWER, NOT BLANK. A pill that opens an empty box is a pill that
-    // loses the answer it was supposed to show — which is the complaint, one step along.
-    setText(s?.answer ?? '')
-    setEditingStep(stepKey)
-  }, [elicit?.steps])
+  // ⚠⚠ 25-H §3's `saveEdit`/`openStep`/the pill rail stood here and are RETIRED by
+  // 26-C §2a. There is no longer a discrete "goal" or "profile" answer to reopen and no
+  // rail to click between — one intake, then at most two replies. `editing: true` on
+  // `/elicitation`'s `answer` action still works server-side (elicitation.ts keeps the
+  // guard), so a future editing surface can still use it; this screen just does not offer
+  // one yet. See the note at the top of the phase-switch block and `check-lex-25h.ts`'s
+  // §3 assertion, updated rather than left red.
 
   const confirm = useCallback(async () => {
     applyMutation(await post('/elicitation', { action: 'confirm' }))
@@ -912,32 +892,39 @@ export default function BuildIdeaClient(
     <div className="flex flex-col min-h-screen bg-white">
       <PublicNav />
 
-      {/* ══ 25-G §3 — THE PERSISTENT AFFORDANCES, ON EVERY SCREEN OF THIS SURFACE ══
-          Exit to the left, "How this works" to the right — the same arrangement and the
-          same prominence as the old door (§19-C Task 7 put Exit beside the help pill so
-          leaving is always in reach). Above the error banner because they must be usable
-          when something has gone wrong, which is when a user most wants both. */}
-      <div className="border-b border-zinc-100 px-4 py-2">
-        <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
-          <button
-            onClick={() => {
-              // A6 — a half-typed answer is work. Ask before throwing it away.
-              if (text.trim() || correction.trim()) setExitPrompt(true)
-              else window.location.href = '/dashboard'
-            }}
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
-          >
-            Exit
-          </button>
-          <button
-            onClick={() => setShowHelp(true)}
-            className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-5 py-2 shadow-sm transition-colors"
-          >
-            <span aria-hidden className="w-4 h-4 rounded-full border border-white/80 flex items-center justify-center text-[10px] font-bold">?</span>
-            How this works
-          </button>
+      {/*
+        ══ 26-C §6d — EXIT AND "HOW THIS WORKS" MOVE. ══════════════════════════════════
+        §6d: "Exit moves to the far right, below the header line. How this works moves to
+        the left, below the left-hand column heading." Both used to sit centred in their
+        own bar above everything else (25-G §3); on the pre-build front screen they now
+        live inside the two-column layout itself — Exit above the library column, "How
+        this works" under "Create a new idea" — so the buttons themselves are rendered
+        further down, inside the two-column layout. Once a build exists this is no longer
+        "the front screen" (§6 is scoped to it) and the old centred bar is kept, so the
+        affordance is not lost once a build is running or done.
+      */}
+      {elicit?.hasBuild && (
+        <div className="border-b border-zinc-100 px-4 py-2">
+          <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
+            <button
+              onClick={() => {
+                if (text.trim() || correction.trim()) setExitPrompt(true)
+                else window.location.href = '/dashboard'
+              }}
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
+            >
+              Exit
+            </button>
+            <button
+              onClick={() => setShowHelp(true)}
+              className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-5 py-2 shadow-sm transition-colors"
+            >
+              <span aria-hidden className="w-4 h-4 rounded-full border border-white/80 flex items-center justify-center text-[10px] font-bold">?</span>
+              How this works
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* A2/A4 — the tour and the FAQ, in the build door's own words. */}
       {showHelp && <HowItWorksModal variant="build" onClose={() => setShowHelp(false)} />}
@@ -1016,33 +1003,59 @@ export default function BuildIdeaClient(
           the FINISH: the panel changes a badge, which nobody sees unless they are watching. */}
       {ideaId && <RerunBanner ideaId={ideaId} surface="build" />}
 
-      <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
-        {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════
-            Above the phase switch, so it is present during the elicitation, during the
-            build and after it. It replaces 25-G's build/proposal switch — those were
-            implementation words; see `lib/lex/stages.ts`. */}
-        <div className="mb-4">
-          <StageBar context={stageCtx} />
-        </div>
+      {/* ⚠⚠ 26-C §2g — THE STAGE 1-2-3 HEADER IS REMOVED FROM THIS SCREEN.
+          §2g: "it belongs on the next page." `StageBar`/`stageCtx` stayed threaded through
+          as props (harmless, unused here) rather than ripped out of `page.tsx` — CLAUDE.md
+          §11 asks for Charlie's explicit word before a prop that feeds another surface is
+          deleted outright, and this screen simply stops rendering it. */}
+      <div className={`flex-1 w-full mx-auto px-4 py-6 ${elicit?.hasBuild ? 'max-w-3xl' : 'max-w-6xl'}`}>
+        {/*
+          ══ 26-C §6a/§6d — THE FRONT SCREEN: THREE-QUARTERS CREATE, ONE-QUARTER LIBRARY ══
+          Only while there is no build yet — once one exists this reverts to the single,
+          narrower column the build/progress/findings UI already used (§6 is scoped to
+          "the front screen", and a running or finished build is a different screen).
+        */}
+        <div className={elicit?.hasBuild ? '' : 'lg:flex lg:items-start'}>
+          <div
+            className={elicit?.hasBuild ? 'w-full' : 'min-w-0 lg:pr-6'}
+            style={!elicit?.hasBuild ? { flexBasis: `${leftPct}%` } : undefined}
+          >
+            {/* §6c — "Create a new idea" on the left; §6d — "How this works" below it. */}
+            {!elicit?.hasBuild && (
+              <div className="mb-5">
+                <h1 className="text-lg font-semibold text-zinc-900">Create a new idea</h1>
+                <div className="flex items-baseline gap-2 mt-1">
+                  {displayName && (
+                    <p className="text-sm text-zinc-600">Good {timeOfDay()} {displayName}.</p>
+                  )}
+                  <button
+                    onClick={() => setShowHelp(true)}
+                    className="text-xs font-semibold text-blue-700 hover:text-blue-900 underline"
+                  >
+                    How this works
+                  </button>
+                </div>
+              </div>
+            )}
 
-        {/* ⚠⚠ A WAKE IS NOT A SLOW SEARCH AND NOT A FAILURE, AND THIS SAYS WHICH.
-            The two search services sleep on inactivity to cut the standing cost; the first
-            request after a quiet period waits ~13 s (measured) for a container and an index.
-            Thirteen unexplained seconds read as "this is broken"; the same thirteen with a
-            sentence read as "this is starting up".
+            {/* ⚠⚠ A WAKE IS NOT A SLOW SEARCH AND NOT A FAILURE, AND THIS SAYS WHICH.
+                The two search services sleep on inactivity to cut the standing cost; the first
+                request after a quiet period waits ~13 s (measured) for a container and an index.
+                Thirteen unexplained seconds read as "this is broken"; the same thirteen with a
+                sentence read as "this is starting up".
 
-            ⚠ IT IS SHOWN ONLY WHEN A SERVICE REALLY WAS ASLEEP — the warm probe reports it
-            per service. Inferring a wake from a slow response would label every heavy query
-            a wake, and the message would then mean nothing on the day it was true. */}
-        {waking && (
-          <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50/70 px-3 py-2">
-            <p className="text-sm text-sky-900">{WAIT_MESSAGE.waking}</p>
-            <p className="mt-0.5 text-[11px] text-sky-700">
-              Nothing is wrong — it sleeps when nobody is using it, which is what keeps it cheap
-              to run. Carry on writing; it will be ready before you are.
-            </p>
-          </div>
-        )}
+                ⚠ IT IS SHOWN ONLY WHEN A SERVICE REALLY WAS ASLEEP — the warm probe reports it
+                per service. Inferring a wake from a slow response would label every heavy query
+                a wake, and the message would then mean nothing on the day it was true. */}
+            {waking && (
+              <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50/70 px-3 py-2">
+                <p className="text-sm text-sky-900">{WAIT_MESSAGE.waking}</p>
+                <p className="mt-0.5 text-[11px] text-sky-700">
+                  Nothing is wrong — it sleeps when nobody is using it, which is what keeps it cheap
+                  to run. Carry on writing; it will be ready before you are.
+                </p>
+              </div>
+            )}
 
         {booting || !elicit ? (
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>
@@ -1064,81 +1077,18 @@ export default function BuildIdeaClient(
               </div>
             )}
 
-            {/* ⚠ A3 — THE GREETING AND THE FIRST-IDEA INTRO.
-                The old door opens with "Good morning Charlie. What's the problem you want
-                to fix?" and, on a first idea, a paragraph explaining what the platform is.
-                This door opened with a bare question and no name — `elicitation-config`'s
-                `OPENING_ASK` and nothing else.
-
-                ⚠ RENDERED, NOT WRITTEN TO THE TRANSCRIPT. The create page seeds these as
-                chat bubbles because its transcript IS the conversation. Here the transcript
-                is the elicitation's own record of question-and-answer, and injecting a
-                greeting into it would put a message in the stored history that Lex never
-                said in a turn — and it would be re-sent to every drafting pass as context.
-                It belongs on the screen, not in the record. */}
-            {!elicit.messages.length && elicit.phase === 'QUESTION' && (
-              <div className="mb-5">
-                {displayName && (
-                  <p className="text-sm text-zinc-800">
-                    Good {timeOfDay()} {displayName}.
-                  </p>
-                )}
-                {isFirstIdea && (
-                  <p className="text-sm text-zinc-600 leading-relaxed mt-1.5">
-                    I’m here to help you turn an idea into a proposal a Member of Parliament could
-                    actually read. It’s four questions, then I go away and build a first version —
-                    the law as it stands, what’s been tried, where it’s weakest — and bring it back
-                    for you to argue with. Nothing I write is yours until you say it is. If you’d
-                    like the longer version, press{' '}
-                    <button onClick={() => setShowHelp(true)} className="underline text-blue-700 hover:text-blue-900">
-                      How this works
-                    </button>{' '}
-                    above.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* The step rail — four questions, then a confirmation. Shows how short this is. */}
-            {/* ⚠ 25-H §3 — THE RAIL IS NOW THE EDIT CONTROL, NOT A PROGRESS INDICATOR.
-                Each pill reopens its own answer, populated. A pill the user has not
-                reached yet stays inert — offering to edit an answer that does not exist
-                would be a control that does nothing, which is the complaint restated. */}
-            {/* ⚠ 25-Q §3d — SAY THAT THEY ARE BUTTONS. The pills were already clickable and
-                already carried a per-pill 'Open "X" and edit what you wrote' title, and a title
-                is a thing you find by hovering something you already suspect is a control. A
-                user who does not suspect it never hovers. One line costs nothing and removes
-                the whole guess. */}
-            <p className="text-[11px] text-zinc-500 mb-1.5">
-              Click below to change any of the answers you’ve given for that section.
-            </p>
-            <ol className="flex flex-wrap gap-2 mb-4 text-[11px] font-medium">
-              {elicit.steps.map((s) => {
-                const openable = s.done || s.key === elicit.currentStep
-                const open = editingStep === s.key
-                return (
-                  <li key={s.key}>
-                    <button
-                      onClick={() => (open ? setEditingStep(null) : openStep(s.key))}
-                      disabled={!openable || busy}
-                      title={openable ? `Open “${s.label}” and edit what you wrote` : 'You haven’t reached this yet'}
-                      className={`px-2.5 py-1 rounded-full border transition-colors ${
-                        open
-                          ? 'bg-zinc-900 border-zinc-900 text-white'
-                          : s.done
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 cursor-pointer'
-                            : s.key === elicit.currentStep
-                              ? 'bg-blue-600 border-blue-600 text-white'
-                              : 'bg-white border-zinc-200 text-zinc-400 cursor-default'
-                      }`}
-                    >
-                      {s.label}
-                      {s.done && <span aria-hidden className="ml-1.5 opacity-60">✎</span>}
-                    </button>
-                  </li>
-                )
-              })}
-            </ol>
+            {/* ⚠⚠ 26-C §2g — NO GREETING BUBBLE, NO STAGE HEADER, NO STEP RAIL HERE.
+                The three belonged to a screen with a chat opener and four sequential
+                steps to navigate between. §2 replaces both with one screen: the heading
+                and "How this works" now live in the two-column header below, `StageBar`
+                is removed from this page entirely ("it belongs on the next page"), and
+                there is no rail because there is nothing sequential left to click between
+                — one intake, then at most two replies (§3a), then the confirmation.
+                ⚠ WHAT THIS LOSES, reported per §2f: the per-answer pill (25-H §3) that
+                let a user reopen and edit any earlier answer directly no longer has a
+                control here — there is no longer a discrete "goal" or "profile" answer to
+                reopen, and the problem/background boxes are not yet re-editable once sent.
+                Flagged for Charlie rather than silently dropped. */}
             {/* ══════════ 25-Q §3b/§3c — CHANGE SOMETHING AND RUN IT AGAIN, AT THE TOP ══════════
                 §3b: *"The re-run block sits at the foot of a long page. Move re-run, add-a-file and
                 add-further-information to the top, where a user arriving to change something will
@@ -1309,8 +1259,13 @@ export default function BuildIdeaClient(
 
                 ⚠ IT ANSWERS AND CHANGES NOTHING. See `AskLexPanel` — the elicitation owns this
                 page's state machine and two conductors would disagree about which question is
-                live. */}
-            {ideaId && <div className="mb-5"><AskLexPanel ideaId={ideaId} /></div>}
+                live.
+
+                ⚠⚠ 26-C §2h — SUPPRESSED UNTIL THE FIRST BUILD HAS RUN. "Ask Lex" answering
+                questions about a re-run that cannot exist yet is a control with nothing to
+                do; it appears from the first build onward, alongside the re-run block above
+                that it was written to sit under. */}
+            {ideaId && elicit.hasBuild && <div className="mb-5"><AskLexPanel ideaId={ideaId} /></div>}
 
             {/* ⚠ 25-H §3 — AND WHAT THE EDIT WILL COST, SAID WITH THE EDIT.
                 25-G's reuse rule refuses to reuse the research once the elicitation has
@@ -1349,40 +1304,6 @@ export default function BuildIdeaClient(
                 </button>
               </div>
             )}
-
-            {/* The open pill's answer, editable. */}
-            {editingStep && (() => {
-              const s = elicit.steps.find((x) => x.key === editingStep)
-              if (!s) return null
-              return (
-                <div className="mb-5 rounded-xl border border-zinc-300 bg-white p-3">
-                  <p className="text-sm font-semibold text-zinc-900">{s.label}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{s.cardPrompt ?? s.question}</p>
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    rows={Math.min(18, Math.max(4, Math.ceil((text.length || 1) / 80)))}
-                    className="mt-2 w-full rounded-lg border border-zinc-300 p-2 text-sm leading-relaxed"
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <button
-                      onClick={() => void saveEdit(s.key)}
-                      disabled={busy || !text.trim()}
-                      className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
-                    >
-                      Save this answer
-                    </button>
-                    <button
-                      onClick={() => { setEditingStep(null); setText('') }}
-                      disabled={busy}
-                      className="text-sm font-medium px-4 py-2 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )
-            })()}
 
             {/* The transcript. Lex's questions and the user's answers, in the same store
                 the create page reads — so none of this is lost at the handover. */}
@@ -1423,14 +1344,18 @@ export default function BuildIdeaClient(
                 Charlie could not find it from question one and why it disappeared again
                 once he had moved past it. It is now the composer's "+", on every question
                 and after the elicitation — same component, same pipeline, findable place. */}
-            {elicit.phase === 'QUESTION' && step && (
-              <QuestionCard
-                step={step}
-                text={text} onText={setText}
-                blockedSend={blockedSend}
+            {/* ══ 26-C §2 — THE INTAKE, ONCE, THEN AT MOST TWO REPLIES (§3a) ══════════
+                `step.answer` (the 'problem' field, per `answerOf`) tells the two apart:
+                empty means nothing has been sent yet — the two-box intake; set means the
+                user is answering one of Lex's own follow-up questions — a single reply
+                box, with the question itself already the last bubble in the transcript
+                above. */}
+            {elicit.phase === 'QUESTION' && step && !step.answer && (
+              <IntakeCard
+                problem={text} onProblem={setText}
+                background={background} onBackground={setBackground}
                 busy={busy}
                 onSend={() => void answer()}
-                onSkip={() => void answer({ skip: true })}
                 attachCount={attached}
                 attachOpen={attachOpen}
                 // ⚠ THE "+" IS OFFERED ONLY ONCE THERE IS AN IDEA TO ATTACH TO. Before the
@@ -1448,21 +1373,27 @@ export default function BuildIdeaClient(
               />
             )}
 
-            {/* ══ 25-J §2 — MY IDEAS, BENEATH THE FIRST QUESTION ══════════════════
-                §2: the first question is "dominant on the page. Not a button that leads to
-                a form; the form itself" — with the user's ideas listed beneath it.
-
-                ⚠ ONLY BEFORE AN IDEA EXISTS, which is what makes the transition a
-                transition. Once the first answer is given, `ideaId` is set and this list
-                gives way to the working view. A hub list that persisted alongside the
-                three-column view would be a permanent invitation to abandon what you are
-                doing.
-
-                ⚠ AND ONLY ON THE FIRST STEP. A user part-way through the four questions is
-                working, not choosing — they arrived here with an idea resumed and their
-                own list underneath it would be noise. */}
-            {!ideaId && elicit.phase === 'QUESTION' && (
-              <MyIdeasList ideas={recent} hiddenEmpty={hiddenEmpty} />
+            {elicit.phase === 'QUESTION' && step && !!step.answer && (
+              <ReplyCard
+                question={
+                  [...elicit.messages].reverse().find((m) => m.role === 'lex' && m.field === 'elicitation:problem')
+                    ?.content ?? step.question
+                }
+                text={text} onText={setText}
+                busy={busy}
+                onSend={() => void answer()}
+                onSkip={() => void answer({ skip: true })}
+                attachCount={attached}
+                attachOpen={attachOpen}
+                onToggleAttach={ideaId ? () => setAttachOpen((v) => !v) : undefined}
+                attachPanel={ideaId && (
+                  <YourMaterial
+                    ideaId={ideaId}
+                    onChanged={() => void refresh()}
+                    onCount={setAttached}
+                  />
+                )}
+              />
             )}
 
             {elicit.phase === 'UNDERSTANDING_FAILED' && (
@@ -1624,6 +1555,70 @@ export default function BuildIdeaClient(
 
           </>
         )}
+          </div>
+
+          {/* ══ 26-C §6b — THE DIVIDER IS DRAGGABLE, like the ones in the workspace ══
+              A small local drag handle rather than `PanelDivider` — that component is
+              typed to the 3-panel workspace's own `PanelKey` set (`lib/lex/panel-layout`),
+              and widening it to cover this screen's two columns would mix an unrelated
+              layout's keys into it for one caller. Same mechanism (pointer capture,
+              keyboard steps, a visible grip), copied rather than shared for that reason. */}
+          {!elicit?.hasBuild && (
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize the new-idea column and the library column"
+              tabIndex={0}
+              onPointerDown={(e) => {
+                const startX = e.clientX
+                const row = e.currentTarget.parentElement?.getBoundingClientRect().width || 1
+                const onMove = (ev: PointerEvent) => {
+                  const pct = ((ev.clientX - startX) / row) * 100
+                  setLeftPct((p) => Math.min(85, Math.max(50, p + pct)))
+                }
+                const onUp = () => {
+                  window.removeEventListener('pointermove', onMove)
+                  window.removeEventListener('pointerup', onUp)
+                }
+                window.addEventListener('pointermove', onMove)
+                window.addEventListener('pointerup', onUp)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') { e.preventDefault(); setLeftPct((p) => Math.max(50, p - 2)) }
+                if (e.key === 'ArrowRight') { e.preventDefault(); setLeftPct((p) => Math.min(85, p + 2)) }
+              }}
+              title="Drag to resize — or use the arrow keys"
+              className="group hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center bg-zinc-100 hover:bg-blue-100 focus:bg-blue-200 focus:outline-none touch-none rounded-full"
+            >
+              <span aria-hidden className="flex flex-col gap-[3px] rounded-full bg-zinc-300 px-[1px] py-1.5 group-hover:bg-blue-500 group-focus:bg-blue-600">
+                <span className="block w-[3px] h-[3px] rounded-full bg-white" />
+                <span className="block w-[3px] h-[3px] rounded-full bg-white" />
+                <span className="block w-[3px] h-[3px] rounded-full bg-white" />
+              </span>
+            </div>
+          )}
+
+          {/* §6c — the library. Charlie offered "My Previous Ideas" and "Idea History"
+              and invited better; kept as "My ideas" for now, matching the heading the
+              rest of the product already uses, pending his choice. */}
+          {!elicit?.hasBuild && (
+            <div className="min-w-0 lg:pl-6" style={{ flexBasis: `${100 - leftPct}%` }}>
+              {/* §6d — Exit, far right, below the header line. */}
+              <div className="flex justify-end mb-3">
+                <button
+                  onClick={() => {
+                    if (text.trim() || correction.trim()) setExitPrompt(true)
+                    else window.location.href = '/dashboard'
+                  }}
+                  className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
+                >
+                  Exit
+                </button>
+              </div>
+              <MyIdeasList ideas={recent} hiddenEmpty={hiddenEmpty} />
+            </div>
+          )}
+        </div>
 
         {/* ⚠ A1 — AND A PERMANENT ROUTE, not only the offer.
             The offer fires on a phrase; this is always there. The whole purpose of the

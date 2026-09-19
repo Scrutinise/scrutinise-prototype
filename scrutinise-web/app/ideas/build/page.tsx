@@ -159,66 +159,60 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEMPORARY (Charlie, 24 Aug 2026) — A WAY TO SEE IDEAS MADE ON THIS PATH.
+  // 26-C §7a — EVERY IDEA IS LISTED, NOT ONLY THE ONES MADE THROUGH THIS DOOR.
   //
-  // There is no UI anywhere that lists ideas created through `/ideas/build`, so a
-  // finished build is reachable only by someone pasting its id into a URL. This is a
-  // stopgap list, not a feature: no paging, no search, no delete, owner-only, and it
-  // reads rows that already exist rather than storing anything new.
+  // ⚠⚠ THE OLD QUERY WAS JOINED THROUGH `IdeaElicitation`, so an idea made at the OLDER
+  // `/ideas/create` door — which never writes that row — could never appear here at all.
+  // That is why Charlie, with roughly 50 ideas, saw 16: not a limit, not a page size, a
+  // filter that silently excluded every idea not made on this specific path. §7a asks
+  // "a limit, a page size, or a filter" — it was the third, and the fix is to query the
+  // idea itself and treat the elicitation row (when one exists) as an optional excerpt
+  // source, not the thing being listed.
   //
-  // ⚠ IT CANNOT BE A LIST OF TITLES. Every idea on this path is called "Untitled idea"
-  // until the user accepts the title Lex proposed — 11 of 11 in production right now —
-  // so a title list would render eleven identical rows. The excerpt below is what makes
-  // the entries tellable apart, and it comes from the problem the USER wrote.
-  //
-  // ⚠ THE EMPTY SHELLS ARE HIDDEN, AND THE COUNT OF THEM IS SHOWN. 10 of the 11
-  // elicitation rows in production are blank shells minted by the pre-25-E bug. Dropping
-  // them silently would make this list lie about what is in the database, so the client
-  // prints how many were hidden.
+  // ⚠ IT CANNOT BE A LIST OF TITLES ALONE. Every idea made through the one-box door is
+  // "Untitled idea" until §5's titling runs, so an untitled row still needs the user's own
+  // words as a fallback label — the excerpt logic below is kept for exactly that case.
   // ═══════════════════════════════════════════════════════════════════════════
   let recent: MyIdea[] = []
-  let hiddenEmpty = 0
   if (dbUser) {
-    const rows = await prisma.ideaElicitation.findMany({
-      where: { idea: { creatorId: dbUser.id, deletedAt: null } },
+    const rows = await prisma.idea.findMany({
+      where: { creatorId: dbUser.id, deletedAt: null },
       orderBy: { updatedAt: 'desc' },
-      take: 40,
+      take: 100,
       select: {
-        ideaId: true, status: true, problem: true, goalDetail: true, ownKnowledge: true,
-        updatedAt: true,
-        idea: {
-          select: {
-            title: true,
-            // 25-J §2 — the hub lists the stage, so it is selected rather than derived.
-            stage: true,
-            builds: {
-              orderBy: { createdAt: 'desc' },
-              take: 1,
-              select: { status: true, passesComplete: true, completedAt: true },
-            },
-          },
+        id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true,
+        elicitation: { select: { status: true, problem: true, goalDetail: true, ownKnowledge: true } },
+        builds: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { status: true, passesComplete: true, completedAt: true },
         },
       },
     })
     for (const r of rows) {
-      const excerpt = (r.problem || r.goalDetail || r.ownKnowledge || '').trim()
-      if (!excerpt) { hiddenEmpty++; continue }
-      const b = r.idea.builds[0]
+      const b = r.builds[0]
+      const excerpt = (r.elicitation?.problem || r.elicitation?.goalDetail || r.elicitation?.ownKnowledge || '').trim()
       recent.push({
-        ideaId: r.ideaId,
-        title: r.idea.title,
+        ideaId: r.id,
+        title: r.title,
         // ⚠ 25-J §2 — SHORTER THAN THE STOPGAP'S 180. This is a list row now, not a
         // diagnostic paragraph: a line the eye can scan is what makes an untitled idea
         // recognisable, and 180 characters wraps to four lines and stops being scannable.
         excerpt: excerpt.length > 110 ? excerpt.slice(0, 110).trimEnd() + '…' : excerpt,
-        stage: r.idea.stage,
-        elicitationStatus: r.status,
+        stage: r.stage,
+        archived: !!r.ownerArchivedAt,
+        elicitationStatus: r.elicitation?.status ?? 'CONFIRMED',
         buildStatus: b?.status ?? null,
         passesComplete: b?.passesComplete ?? null,
         updatedAt: r.updatedAt.toISOString(),
       })
     }
   }
+  // ⚠ §7a — NOTHING IS HIDDEN AS "EMPTY" ANY MORE. Every idea has at least its (possibly
+  // placeholder) title to show, so the old silent-drop of excerpt-less rows is gone along
+  // with the query that made it necessary. `hiddenEmpty` stays at 0 and is reported as
+  // such rather than removing the prop, which `MyIdeasList` still reads.
+  const hiddenEmpty = 0
 
   // 25-K §1 — the three stages, which one this is, and what is on the other two.
   //

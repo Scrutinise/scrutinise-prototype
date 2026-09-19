@@ -70,6 +70,33 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     if (door !== '/ideas/create') redirect(door)
   }
 
+  // ══ 26-C §4 — NOTHING LEAVES THE SIMPLE SCREEN UNTIL A BUILD HAS RUN ═══════════
+  //
+  // Charlie: *"we stay on this super-simple UI, even if we exit and edit."* §4c asked how
+  // this page currently decides to move a user on — and the answer, measured, was that it
+  // does not decide at all: `/ideas/build/page.tsx` redirects FORWARD to here once a
+  // build has finished, but nothing stopped a link straight to `/ideas/create?ideaId=…`
+  // reaching this workspace for an idea with NO build. That is exactly how idea
+  // `a1a08ff4` — frozen mid-elicitation, zero builds — put Charlie on "nothing built yet"
+  // and a research panel reading 0 in all: this page had no gate of its own, only the
+  // other page's forward redirect, which a direct link bypasses entirely.
+  //
+  // ⚠ THE SAME CRITERION AS THE FORWARD REDIRECT, so the two pages cannot disagree about
+  // which side of the line an idea is on: a build must have reached a TERMINAL status
+  // (DONE/FAILED/CANCELLED). A build still QUEUED or RUNNING has nothing on this screen
+  // to show yet either — the running build's own progress lives on `/ideas/build`.
+  if (params.ideaId && dbUser) {
+    const built = await prisma.ideaBuild.findFirst({
+      where: {
+        ideaId: params.ideaId,
+        idea: { creatorId: dbUser.id, deletedAt: null },
+        status: { in: ['DONE', 'FAILED', 'CANCELLED'] },
+      },
+      select: { id: true },
+    })
+    if (!built) redirect(`/ideas/build?ideaId=${params.ideaId}`)
+  }
+
   // Resume an existing idea session if ideaId param provided
   let initialIdeaId: string | undefined
   let initialMessages: unknown[] | undefined
