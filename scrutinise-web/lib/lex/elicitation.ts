@@ -27,10 +27,10 @@ import { submitBox } from './field-machine'
 import { looksLikeASolution, MAX_PROBLEM_PRESSES } from './method'
 import {
   ELICITATION_STEPS, stepDef,
-  CONFIRM_PREFIX, CONFIRM_SUFFIX, CORRECTION_PROMPT, OPENING_ASK, READING_CAPTURED_NOTE,
+  CONFIRM_PREFIX, CONFIRM_SUFFIX, CORRECTION_PROMPT, CLOSING_QUESTION, READING_CAPTURED_NOTE,
   type ElicitationStepKey,
 } from './elicitation-config'
-import { pressOnProblem, fallbackPress, writeUnderstanding } from './elicitation-client'
+import { pressOnProblem, fallbackPress, writeUnderstanding, proposeTitle } from './elicitation-client'
 import { llmFailed, llmOk } from './build-llm'
 import { appendTranscript, lexBubble, readTranscript, userBubble, type TranscriptMessage } from './transcript'
 
@@ -111,11 +111,12 @@ async function ensureRow(ideaId: string, userId: string): Promise<Row> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { aboutYouNarrative: true } })
   const profileSkipped = !!user?.aboutYouNarrative?.trim()
   try {
-    const created = await prisma.ideaElicitation.create({ data: { ideaId, profileSkipped } })
-    // The opening ask is said ONCE, when the row is created, so it survives a reload
-    // without being repeated on every poll.
-    await appendTranscript(ideaId, [lexBubble(OPENING_ASK, ELICITATION_STAGE, 'elicitation:problem')])
-    return created
+    // ⚠⚠ 26-C §2c/§2g — THE OPENING ASK IS NO LONGER WRITTEN TO THE TRANSCRIPT.
+    // It used to be said here, once, so it survived a reload without repeating. §2's one-box
+    // screen replaces it with static page copy (`PROBLEM_INTRO`) above the box — there is no
+    // chat turn to open with any more, and writing one here would be Lex "replying" before
+    // the user has said anything, one of the (at most two) replies §3a caps spent on nothing.
+    return await prisma.ideaElicitation.create({ data: { ideaId, profileSkipped } })
   } catch {
     const again = await prisma.ideaElicitation.findUnique({ where: { ideaId } })
     if (again) return again
@@ -146,10 +147,14 @@ function answerOf(row: Row, key: ElicitationStepKey, aboutYou: string | null): s
 function stepDone(row: Hydrated, key: ElicitationStepKey, aboutYou: string | null): boolean {
   switch (key) {
     case 'problem':
-      // ⚠ NOT just "text present". While the gate has an unspent press outstanding the
-      // step is not finished, or a solution-shaped answer would walk straight through
-      // the gate that exists to catch it.
-      return !!row.problem?.trim() && !gateOutstanding(row)
+      // ⚠⚠ 26-C §3a — NOT JUST "TEXT PRESENT, AND NO GATE OUTSTANDING" ANY MORE.
+      // The problem "step" is now the whole one-box conversation: the intake, then at
+      // most two Lex-initiated replies (see `decideNextReply`). It is not done merely
+      // because the gate has nothing outstanding right now — a fresh intake with no
+      // reply asked yet is also "not outstanding" and is very much not done. It is done
+      // once the CLOSING question (§3a) has been asked and answered, or the two-reply
+      // ceiling is reached, whichever comes first.
+      return !!row.problem?.trim() && !gateOutstanding(row) && (row.closingAsked || row.problemPresses >= MAX_PROBLEM_PRESSES)
     // 26-B §2 DECIDED — the outcome is required text. A row from before 26-B with a `goalKind`
     // and no text still reads as done, so an old idea is not sent back to a question it answered.
     case 'goal': return !!row.goalDetail?.trim() || (!!row.goalKind && row.goalSeen)
@@ -168,12 +173,21 @@ function gateOutstanding(row: Hydrated): boolean {
 // The two "seen" flags and the answers-after-press counter are derived from the
 // transcript rather than stored, so that no column can drift out of step with what was
 // actually said. See `hydrate`.
-type Hydrated = Row & { goalSeen: boolean; ownKnowledgeSeen: boolean; readingSeen: boolean; problemAnswersAfterPress: number }
+type Hydrated = Row & {
+  goalSeen: boolean; ownKnowledgeSeen: boolean; readingSeen: boolean; problemAnswersAfterPress: number
+  /** 26-C §3a — has Lex's SECOND, closing reply already been sent? Derived from the
+   *  transcript rather than a new column, the same way `goalSeen` etc. are — see
+   *  `decideNextReply` for why this can't just be "presses === MAX". */
+  closingAsked: boolean
+}
 
 function hydrate(row: Row, messages: TranscriptMessage[]): Hydrated {
   const userTurns = messages.filter((m) => m.role === 'user')
   const answered = (field: string) => userTurns.some((m) => m.field === field)
   const problemAnswers = userTurns.filter((m) => m.field === 'elicitation:problem').length
+  const closingAsked = messages.some(
+    (m) => m.role === 'lex' && m.field === 'elicitation:problem' && m.content.includes(CLOSING_QUESTION),
+  )
   return {
     ...row,
     // 26-B §2 — the goal step is optional free text now; "seen" is the transcript, as for the
@@ -184,11 +198,20 @@ function hydrate(row: Row, messages: TranscriptMessage[]): Hydrated {
     // Presses are interleaved with answers: press 1 comes after answer 1. So the number
     // of answers GIVEN AFTER the last press is (answers - presses).
     problemAnswersAfterPress: Math.max(0, problemAnswers - row.problemPresses),
+    closingAsked,
   }
 }
 
-function activeSteps(row: { profileSkipped: boolean }) {
-  return ELICITATION_STEPS.filter((s) => s.key !== 'profile' || !row.profileSkipped)
+/**
+ * 26-C §2a — ONE SCREEN, ONE BOX. `goal` and `profile` are no longer asked here: Charlie's
+ * decision of 19 Sep is "one big dump of whatever they can give us, and Lex will need to
+ * sift through it" — there is no separate outcome question and no separate About You
+ * question on this door any more. Their keys and columns stay (CLAUDE.md §11 — nothing is
+ * deleted), simply unreached: `goalDetail`/`goalKind` stay null from this door, exactly as
+ * 26-B already left `goalKind` unwritten, and `aboutYou` is collected elsewhere.
+ */
+function activeSteps(_row: { profileSkipped: boolean }) {
+  return ELICITATION_STEPS.filter((s) => s.key === 'problem' || s.key === 'confirm')
 }
 
 export async function elicitationState(ideaId: string, userId: string): Promise<ElicitationState> {
@@ -242,9 +265,10 @@ export async function blankElicitationState(userId: string): Promise<Elicitation
     understanding: null, corrections: 0, status: 'IN_PROGRESS', confirmedAt: null,
     createdAt: now, updatedAt: now,
   }
-  // The opening ask is what `ensureRow` writes to the transcript on creation. Showing it
-  // here — unsaved — is what lets the user read the question before anything is stored.
-  return projectState('', blank, [lexBubble(OPENING_ASK, ELICITATION_STAGE, 'elicitation:problem')], aboutYou, false)
+  // 26-C §2c — nothing to seed: the opening ask is now the screen's own static copy
+  // (`PROBLEM_INTRO`), not a chat turn, so there is no transcript message before the
+  // user's first answer.
+  return projectState('', blank, [], aboutYou, false)
 }
 
 function projectState(
@@ -339,6 +363,14 @@ export interface AnswerInput {
   step: ElicitationStepKey
   /** Free text for problem / ownKnowledge / profile / goalDetail. */
   text?: string
+  /**
+   * 26-C §2a/§2d — THE SECOND BOX, submitted TOGETHER with `text` on the very first
+   * 'problem' answer only. One combined intake, not two turns: `text` is kept verbatim as
+   * testimony (`yourAccount`); this goes into `ownKnowledge` alongside anything added in
+   * a later reply. Ignored on every call after the first (there is no second box once the
+   * conversation has started — a reply answers Lex's question, in one box).
+   */
+  background?: string
   goalKind?: string
   ruledOut?: string
   readingUrl?: string
@@ -384,54 +416,121 @@ export async function answerStep(
 
   switch (input.step) {
     case 'problem': {
-      if (!text) throw new Error('The problem step needs an answer.')
-      said.push(userBubble(text, ELICITATION_STAGE, 'elicitation:problem'))
+      // §3a — the closing question ("is there anything more…") is the one place on this
+      // door a "no, nothing more" is a real answer, not an empty box. The intake itself
+      // still requires text (`isIntake` below): the FIRST answer cannot be skipped.
+      if (!text && !(input.skip && base.problem?.trim())) {
+        throw new Error('The problem step needs an answer.')
+      }
+      said.push(userBubble(text || '(nothing more to add)', ELICITATION_STAGE, 'elicitation:problem'))
 
-      // §19-D — THE PROBLEM GATE, unchanged in substance and reused rather than
-      // reimplemented. `looksLikeASolution` is the deterministic reading that makes the
-      // decision OBSERVABLE; the model still makes the judgement.
-      const presses = base.problemPresses
-      const shaped = looksLikeASolution(text)
-      const willPress = shaped && presses < MAX_PROBLEM_PRESSES
-      console.log('[lex-diag] 25a problem gate', {
-        ideaId, press: presses + 1, solutionShaped: shaped, willPress,
-        sourceLen: text.length, sample: text.slice(0, 80),
-      })
+      // ══ 26-C §2a/§3a — ONE COMBINED INTAKE, THEN AT MOST TWO REPLIES, NEVER SILENT ══
+      //
+      // ⚠⚠ §1's fix lives here. The old code let a step complete with NOTHING said back —
+      // exactly what froze idea a1a08ff4 on 19 Sep: the server correctly moved the user on
+      // to the next question and the transcript recorded no acknowledgement of it at all,
+      // so any client hiccup at that instant looked identical to a dead page. Every branch
+      // below now either appends a Lex bubble to `said`, or takes the LAST allowed reply —
+      // in which case `maybeAskForConfirmation` below writes the understanding paragraph
+      // within this same turn. No path leaves the transcript exactly as it found it.
+      const priorMessages = await readTranscript(ideaId)
+      const priorClosingAsked = priorMessages.some(
+        (m) => m.role === 'lex' && m.field === 'elicitation:problem' && m.content.includes(CLOSING_QUESTION),
+      )
+      const isIntake = !base.problem?.trim()
 
-      if (!willPress) {
+      if (isIntake) {
+        // The problem box, verbatim (testimony — never rewritten after this: see the
+        // provenance rule in page-one.ts), and the second box alongside it (§2d).
+        const background = (input.background ?? '').trim()
         await prisma.ideaElicitation.update({
           where: { ideaId },
-          data: { problem: text, problemGateFired: base.problemGateFired || shaped },
+          data: {
+            problem: text,
+            ...(background ? { ownKnowledge: background, ownKnowledgeProvenance: 'USER_TESTIMONY' as const } : {}),
+          },
         })
-        if (shaped) {
-          // The gate is spent. Take what they have given, say so once, without reproach.
-          const line =
-            'Understood — I’ve recorded it as you’ve put it. I’d still like to sharpen what’s going ' +
-            'wrong once the causes are on the table, but that can wait; let’s get on.'
-          said.push(lexBubble(line, ELICITATION_STAGE, 'elicitation:problem'))
-          lexSaid.push(line)
+
+        // ══ 26-C §5 — NAMED IN LEX'S FIRST RESPONSE, NOT LEFT "UNTITLED IDEA" ══════
+        //
+        // ⚠ ONLY WHEN THE TITLE IS STILL THE PLACEHOLDER `ensureIdea` wrote it as. A
+        // failure here must never overwrite a title the user has since typed themselves.
+        const PLACEHOLDER_TITLE = 'Untitled idea'
+        const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { title: true } })
+        if (idea?.title === PLACEHOLDER_TITLE) {
+          const titled = await proposeTitle(text)
+          if (llmOk(titled) && titled.value.title.trim()) {
+            await prisma.idea.update({
+              where: { id: ideaId },
+              data: { title: titled.value.title.trim().slice(0, 200) },
+            })
+          } else if (llmFailed(titled)) {
+            console.warn('[lex-diag] 26c title proposal failed — left as "Untitled idea"', {
+              reason: titled.reason, detail: titled.detail,
+            })
+          }
         }
+      } else {
+        // A REPLY to one of Lex's own questions. `problem` is never rewritten here —
+        // everything past the intake is additional testimony, appended.
+        const existingBackground = base.ownKnowledge?.trim()
+        await prisma.ideaElicitation.update({
+          where: { ideaId },
+          data: {
+            ownKnowledge: [existingBackground, text].filter(Boolean).join('\n\n'),
+            ownKnowledgeProvenance: 'USER_TESTIMONY',
+          },
+        })
+      }
+
+      const presses = base.problemPresses
+      console.log('[lex-diag] 26c problem/reply turn', {
+        ideaId, isIntake, presses, priorClosingAsked, textLen: text.length,
+      })
+
+      if (presses >= MAX_PROBLEM_PRESSES || priorClosingAsked) {
+        // §3b — the ceiling is reached, or the closing question has already been put and
+        // answered. Lex stops asking; nothing more is said here, and the paragraph below
+        // is what the user sees next.
         break
       }
 
-      // Press. The proposal is offered so agreeing is one click, and the press says
-      // openly that it is Lex's reading.
-      const result = await pressOnProblem({ text, pressesAlready: presses })
-      const press = llmOk(result) ? result.value : fallbackPress()
-      if (llmFailed(result)) {
-        console.warn('[lex-diag] 25a problem press fell back to the deterministic form', {
-          reason: result.reason, detail: result.detail,
+      // §19-D — THE PROBLEM GATE, unchanged in substance and reused rather than
+      // reimplemented, and only a candidate ON THE INTAKE: a press asking "are you sure
+      // that's not a solution" makes no sense as a reply to a question Lex itself asked.
+      const shaped = isIntake && looksLikeASolution(text)
+      if (shaped) {
+        // Press. The proposal is offered so agreeing is one click, and the press says
+        // openly that it is Lex's reading. This is reply ONE of the (at most) two — the
+        // closing question (§3a) still follows once this is answered.
+        const result = await pressOnProblem({ text, pressesAlready: presses })
+        const press = llmOk(result) ? result.value : fallbackPress()
+        if (llmFailed(result)) {
+          console.warn('[lex-diag] 25a problem press fell back to the deterministic form', {
+            reason: result.reason, detail: result.detail,
+          })
+        }
+        await prisma.ideaElicitation.update({
+          where: { ideaId },
+          data: { problemGateFired: true, problemPresses: { increment: 1 } },
         })
+        const bubble = press.reading
+          ? `${press.press}\n\nMy reading of it, so you only have to agree or correct me: ${press.reading}`
+          : press.press
+        said.push(lexBubble(bubble, ELICITATION_STAGE, 'elicitation:problem'))
+        lexSaid.push(bubble)
+        break
       }
+
+      // Not solution-shaped (or this answers Lex's own question already) — the closing
+      // question, verbatim (§3a). Whichever reply this is, it is always the LAST Lex may
+      // ask: "at most twice, not three times."
       await prisma.ideaElicitation.update({
         where: { ideaId },
-        data: { problem: text, problemGateFired: true, problemPresses: { increment: 1 } },
+        data: { problemGateFired: true, problemPresses: { increment: 1 } },
       })
-      const bubble = press.reading
-        ? `${press.press}\n\nMy reading of it, so you only have to agree or correct me: ${press.reading}`
-        : press.press
-      said.push(lexBubble(bubble, ELICITATION_STAGE, 'elicitation:problem'))
-      lexSaid.push(bubble)
+      said.push(lexBubble(CLOSING_QUESTION, ELICITATION_STAGE, 'elicitation:problem'))
+      lexSaid.push(CLOSING_QUESTION)
       break
     }
 

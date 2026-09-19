@@ -63,11 +63,57 @@ export interface ElicitationStep {
  * The whole premise of §25 is that the outlying detail the user has and we do not is
  * worth more than another round of structured questions, so the first thing said asks
  * for exactly that.
+ *
+ * ⚠⚠ 26-C §2c — NO LONGER WRITTEN TO THE TRANSCRIPT. It used to be `ensureRow`'s first
+ * chat bubble AND the reason the 'problem' card's own `cardPrompt` was nulled out ("Lex
+ * has already said this above"). §2a-§2g collapse the door to one screen with one box:
+ * there is no chat opener to say this any more, so it is now static page copy
+ * (`PROBLEM_INTRO`) above the box, and this constant is kept only for the fallback
+ * question a Lex-turn failure would show (§13 Task 3's rule) and for old transcripts
+ * that already contain it.
  */
 export const OPENING_ASK =
   'Tell me as much as you can about this issue and why you want it solved — what you’ve seen, what ' +
   'you know that isn’t written down anywhere, and what you think is really going on. The outlying ' +
   'details are often what change the whole approach, so nothing is too small to mention.'
+
+/**
+ * 26-C §2c — THE PARAGRAPH ABOVE THE BOX, VERBATIM. Replaces the old chat-opener
+ * (`OPENING_ASK`) as the screen's own instructional copy, not a turn Lex takes.
+ */
+export const PROBLEM_INTRO = 'The first step is to describe the problem you want to solve, in as much detail as possible.'
+
+/**
+ * 26-C §2d — THE SECOND BOX, TO THE RIGHT OF THE BULLETS, VERBATIM.
+ */
+export const BACKGROUND_INTRO =
+  'Any background information you can add — including attaching reports — will improve the quality '
+  + 'of what you get back.'
+
+/**
+ * 26-C §3a — LEX'S SECOND AND LAST PROMPT, VERBATIM. Whichever of the two allowed replies
+ * is the last one (see `decideNextReply` in elicitation.ts), it closes with this rather
+ * than a third question.
+ */
+export const CLOSING_QUESTION =
+  'Is there anything more you can tell me, or anything you can add, to give focus to this before I '
+  + 'build the first draft?'
+
+/**
+ * 26-C §3b — THE OFFER TO BUILD, once Lex has stopped asking.
+ *
+ * ⚠⚠ §3c — NO NUMBER IS HARDCODED HERE, deliberately, where the brief's own draft said
+ * "twelve". `PILOT_ALLOWANCE_THIRDS` (lib/lex/allowance.ts) is 12 THIRDS, not twelve full
+ * builds — Charlie's recollection was the unit, not the figure — and `StartBuildCard`
+ * already prints the accurate, live sentence (`balanceSentence`) beside the button this
+ * message sits above. A second, hardcoded figure here would be a second copy of a number
+ * that drifts (CLAUDE.md §24.1's family: two writers of one fact disagree eventually).
+ */
+export const BUILD_OFFER_MESSAGE =
+  'Thank you — I’m ready to run the initial build whenever you are. As a new user your first builds '
+  + 'are on us — the exact balance is below. It’s worth including as much as you can before you press '
+  + 'the button. Once it starts it runs for ten to fifteen minutes, and you can close this tab and go '
+  + 'and do something else.'
 
 // ══ 26-B §2 (17 Sep 2026) — `GOAL_KINDS` IS GONE, AND SO IS THE SWITCH IT WAS ════════════════
 //

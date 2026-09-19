@@ -20,7 +20,10 @@
 // them renderable — and the discipline that keeps them so.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { CONFIRM_YES_LABEL, CONFIRM_NO_LABEL, CORRECTION_PROMPT, UPLOAD_ENCOURAGEMENT } from '@/lib/lex/elicitation-config'
+import {
+  CONFIRM_YES_LABEL, CONFIRM_NO_LABEL, CORRECTION_PROMPT, UPLOAD_ENCOURAGEMENT,
+  PROBLEM_INTRO, BACKGROUND_INTRO, BUILD_OFFER_MESSAGE,
+} from '@/lib/lex/elicitation-config'
 
 export interface StepView {
   key: string; label: string; question: string; hints: string[]
@@ -176,6 +179,187 @@ export function QuestionCard(p: QuestionCardProps) {
   )
 }
 
+// ── PHASE: INTAKE — 26-C §2, one screen, one box (and a second, smaller one) ──
+
+export interface IntakeCardProps {
+  problem: string; onProblem: (v: string) => void
+  background: string; onBackground: (v: string) => void
+  busy: boolean
+  onSend: () => void
+  attachPanel?: React.ReactNode
+  attachCount?: number
+  attachOpen?: boolean
+  onToggleAttach?: () => void
+}
+
+const PROBLEM_HINTS = [
+  'what is going wrong, and for whom',
+  'what you have seen yourself',
+  'why it matters',
+  'what you think is really going on',
+]
+
+/**
+ * 26-C §2 — THE WHOLE OF THE NEW-IDEA SCREEN'S FIRST TURN. Replaces the sequential
+ * problem/goal/other-information cards with one combined form: §2a's "no separate steps
+ * for the problem, the outcome and other information" — Lex sorts what it is given.
+ *
+ * Layout is left-to-right, per §2b–§2d: the problem box, then the four bullets (with
+ * §2c's paragraph above them), then the second, background box — stacking on narrow
+ * viewports rather than three columns nobody can read at phone width.
+ */
+export function IntakeCard(p: IntakeCardProps) {
+  return (
+    <div className="border border-zinc-200 rounded-2xl p-4">
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
+        <div>
+          <textarea
+            value={p.problem}
+            onChange={(e) => p.onProblem(e.target.value)}
+            rows={10}
+            placeholder="Describe the problem you want to solve, in as much detail as possible."
+            className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
+          />
+        </div>
+        <div>
+          <p className="text-sm text-zinc-700 leading-relaxed">{PROBLEM_INTRO}</p>
+          <ul className="mt-2 text-xs text-zinc-500 list-disc list-inside space-y-1">
+            {PROBLEM_HINTS.map((h) => <li key={h}>{h}</li>)}
+          </ul>
+        </div>
+        <div>
+          <p className="text-xs text-zinc-600 leading-relaxed">{BACKGROUND_INTRO}</p>
+          <textarea
+            value={p.background}
+            onChange={(e) => p.onBackground(e.target.value)}
+            rows={7}
+            placeholder="Anything else you know — reports, letters, a link, what you've seen yourself. (optional)"
+            className="mt-2 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
+          />
+          {/* §2e — the file and link control stays WITH the box: every document ever
+              read came in through it, and background material is exactly what a report
+              or a letter is. */}
+          {p.onToggleAttach && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={p.onToggleAttach}
+                aria-expanded={!!p.attachOpen}
+                title="Add a document or a link for me to read — a report, a letter, an article, a web page"
+                className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
+                  p.attachOpen
+                    ? 'bg-zinc-900 border-zinc-900 text-white'
+                    : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+                }`}
+              >
+                <span aria-hidden className="text-base leading-none">{p.attachOpen ? '−' : '+'}</span>
+                <span>
+                  {p.attachOpen ? 'Close' : 'Add a file or link'}
+                  {p.attachCount ? ` (${p.attachCount})` : ''}
+                </span>
+              </button>
+              {p.attachOpen && p.attachPanel && (
+                <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">{p.attachPanel}</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mt-4">
+        <button
+          onClick={p.onSend}
+          disabled={p.busy || !p.problem.trim()}
+          className="text-sm font-semibold px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 inline-flex items-center gap-2"
+        >
+          {p.busy && <Spinner className="w-3.5 h-3.5" />}
+          Send
+        </button>
+        {!p.problem.trim() && <span className="text-xs text-zinc-500">Write something in the first box.</span>}
+      </div>
+    </div>
+  )
+}
+
+// ── PHASE: REPLY — Lex's (at most two) follow-up turns, one box each time ─────
+
+export interface ReplyCardProps {
+  /** Lex's own words for this turn — already in the transcript above; shown here too
+   *  as the label, so the box is never mysterious out of context. */
+  question: string
+  text: string; onText: (v: string) => void
+  busy: boolean
+  onSend: () => void
+  onSkip: () => void
+  attachPanel?: React.ReactNode
+  attachCount?: number
+  attachOpen?: boolean
+  onToggleAttach?: () => void
+}
+
+/**
+ * 26-C §3a — ONE OF LEX'S (AT MOST TWO) REPLIES. The old per-step cards are gone; this is
+ * the single shape every follow-up question uses, whether it is the problem-gate press or
+ * the closing "anything more?" question — the difference is in what Lex said, which is
+ * already the bubble above this card, not in the control.
+ */
+export function ReplyCard(p: ReplyCardProps) {
+  return (
+    <div className="border border-zinc-200 rounded-2xl p-4">
+      {/* Restated here, not only in the transcript above — a card must stand on its own
+          if a reader ever lands on it without the scroll history (§25 of CLAUDE.md: a
+          value a screen depends on must be read where the screen reads it). */}
+      <p className="text-sm text-zinc-600 mb-2">{p.question}</p>
+      <textarea
+        value={p.text}
+        onChange={(e) => p.onText(e.target.value)}
+        rows={5}
+        placeholder="In your own words…"
+        className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
+      />
+      <div className="flex items-center gap-2 mt-3">
+        {p.onToggleAttach && (
+          <button
+            type="button"
+            onClick={p.onToggleAttach}
+            aria-expanded={!!p.attachOpen}
+            title="Add a document or a link for me to read — a report, a letter, an article, a web page"
+            className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
+              p.attachOpen
+                ? 'bg-zinc-900 border-zinc-900 text-white'
+                : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+            }`}
+          >
+            <span aria-hidden className="text-base leading-none">{p.attachOpen ? '−' : '+'}</span>
+            <span>
+              {p.attachOpen ? 'Close' : 'Add a file or link'}
+              {p.attachCount ? ` (${p.attachCount})` : ''}
+            </span>
+          </button>
+        )}
+        <button
+          onClick={p.onSend}
+          disabled={p.busy || !p.text.trim()}
+          className="text-sm font-semibold px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 inline-flex items-center gap-2"
+        >
+          {p.busy && <Spinner className="w-3.5 h-3.5" />}
+          Send
+        </button>
+        <button
+          onClick={p.onSkip}
+          disabled={p.busy}
+          className="text-sm font-medium px-3 py-2 rounded-full border border-zinc-300 text-zinc-600 hover:bg-zinc-50 disabled:opacity-40"
+        >
+          Nothing more to add
+        </button>
+      </div>
+      {p.attachOpen && p.attachPanel && (
+        <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">{p.attachPanel}</div>
+      )}
+    </div>
+  )
+}
+
 // ── PHASE: UNDERSTANDING_FAILED ──────────────────────────────────────────────
 
 /**
@@ -314,11 +498,10 @@ export function StartBuildCard(p: StartBuildCardProps) {
   const showReason = !!p.blockedReason && !p.canStart && !p.buildStale
   return (
     <div className="border border-zinc-200 rounded-2xl p-4">
-      <p className="text-sm text-zinc-700">
-        That’s everything I need. I’ll go and draft the whole thing — the diagnosis, the approach and
-        the actions — and show you what I’ve got. It usually takes a few minutes, and you can stop it
-        at any point.
-      </p>
+      {/* 26-C §3b/§3c — verbatim, and no number is hardcoded (see `BUILD_OFFER_MESSAGE`'s
+          own comment): the allowance sentence right below this, from the same `readAllowance`
+          the re-run dialogue quotes, is the one place a figure is ever printed. */}
+      <p className="text-sm text-zinc-700">{BUILD_OFFER_MESSAGE}</p>
       <button
         onClick={p.onStart}
         disabled={p.busy || !p.canStart}

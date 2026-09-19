@@ -32,6 +32,9 @@ const BodySchema = z.discriminatedUnion('action', [
     /** 25-H §3 — reopening a pill on a CONFIRMED elicitation. See `answerStep`. */
     editing: z.boolean().optional(),
     text: z.string().max(20_000).optional(),
+    /** 26-C §2a/§2d — the second box, submitted together with `text` on the first
+     *  'problem' answer only. See `AnswerInput.background`. */
+    background: z.string().max(20_000).optional(),
     goalKind: z.string().max(64).optional(),
     ruledOut: z.string().max(5_000).optional(),
     readingUrl: z.string().max(2_000).optional(),
@@ -109,6 +112,7 @@ export async function POST(req: Request, { params }: Params) {
     const { state, messages } = await answerStep(id, userId, {
       step: parsed.data.step as never,
       text: parsed.data.text,
+      background: parsed.data.background,
       goalKind: parsed.data.goalKind,
       ruledOut: parsed.data.ruledOut,
       readingUrl: parsed.data.readingUrl,

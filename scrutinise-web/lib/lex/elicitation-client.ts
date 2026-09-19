@@ -1,9 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SPRINT 25-A §1 — the two model calls the elicitation makes. Both are small, both
-// have a deterministic fallback, and neither is allowed to stall the flow.
+// SPRINT 25-A §1 — the model calls the elicitation makes. All are small, all
+// have a deterministic fallback, and none is allowed to stall the flow.
 //
-//   1. pressOnProblem   — the §19-D problem gate, applied to exchange 1.
+//   1. pressOnProblem     — the §19-D problem gate, applied to exchange 1.
 //   2. writeUnderstanding — §1c, the paragraph Lex says back before it builds.
+//   3. proposeTitle       — 26-C §5, named in Lex's first response, not left "Untitled idea".
 //
 // ⚠ THE UNDERSTANDING PARAGRAPH IS THE ONLY THING STANDING BETWEEN A MISREADING AND A
 // TEN-MINUTE BUILD ON TOP OF IT. So it is told, in the prompt, to say what it has
@@ -157,5 +158,48 @@ export async function writeUnderstanding(input: {
     timeoutMs: TIMEOUT_MS,
     temperature: 0.4,
     label: 'elicitation-understanding',
+  })
+}
+
+// ── 3. The title (26-C §5) ────────────────────────────────────────────────────
+
+export interface ProposedTitle {
+  /** Six words or fewer. What an MP's office, or the user's own idea list, would call this. */
+  title: string
+}
+
+const TITLE_SCHEMA = {
+  type: 'object',
+  properties: { title: { type: 'string' } },
+  required: ['title'],
+}
+
+const TITLE_SYSTEM = [
+  M_GENERAL,
+  '',
+  'Name this idea. Six words or fewer, no full stop, no quotation marks, title case. It is how the',
+  'user finds this among their other ideas, so it must say what the idea IS ABOUT, in their own',
+  'terms — not a slogan, not "Untitled idea", not a restatement of the word "problem".',
+  'Example shape (do not reuse the subject): "Business Rates Relief for High Streets".',
+].join('\n')
+
+/**
+ * ⚠⚠ 26-C §5 — NAMED IN LEX'S FIRST RESPONSE, NOT LEFT "UNTITLED IDEA".
+ *
+ * Charlie already has two ideas called "Untitled idea" and could not tell them apart on
+ * his own list. This runs once, on the very first answer (`answerStep`'s intake branch),
+ * from the problem text alone — there is no build yet to draw a title from, and the whole
+ * point is that the idea is findable before one exists.
+ */
+export async function proposeTitle(problem: string): Promise<LlmResult<ProposedTitle>> {
+  return callJson<ProposedTitle>({
+    model: MODEL(),
+    system: TITLE_SYSTEM,
+    user: `THE PROBLEM, IN THEIR WORDS:\n${problem.slice(0, 4000)}`,
+    schema: TITLE_SCHEMA,
+    maxOutputTokens: 200,
+    timeoutMs: TIMEOUT_MS,
+    temperature: 0.4,
+    label: 'elicitation-title',
   })
 }
