@@ -181,7 +181,7 @@ const CHECKS: Check[] = [
       const base: MyIdea = {
         ideaId: 'abc', title: PLACEHOLDER_TITLE, excerpt: 'x', stage: 'STAGE_1',
         elicitationStatus: 'IN_PROGRESS', buildStatus: null, passesComplete: null,
-        updatedAt: '2026-08-27T00:00:00.000Z',
+        updatedAt: '2026-08-27T00:00:00.000Z', archived: false,
       }
       if (hrefFor(base) !== '/ideas/build?ideaId=abc') return 'an unbuilt idea does not open the build'
       // 25-G §2: "the build is how it was made, the proposal is the work."
@@ -191,22 +191,30 @@ const CHECKS: Check[] = [
     },
   },
   {
-    name: '§2 the hub list shows ONLY before an idea exists — the transition is a transition',
+    // ⚠⚠ 26-C §6a SUPERSEDES THIS RULE, DELIBERATELY. The old door showed the hub list
+    // only before `ideaId` existed — "a list that persisted into the working view would
+    // be a permanent invitation to abandon what you are doing." Charlie's 19 Sep brief
+    // asks for the opposite on the front screen: a persistent library column beside the
+    // create flow, one-quarter of the width, gone only once a build exists (`hasBuild`) —
+    // at which point the screen is no longer "the front screen" in the brief's own terms.
+    name: '§2/26-C §6a the library shows on the front screen and stops once a build exists',
     run: (src) => {
       const c = src['app/ideas/build/BuildIdeaClient.tsx']
       if (!/<MyIdeasList ideas=\{recent\} hiddenEmpty=\{hiddenEmpty\} \/>/.test(c)) {
         return 'the hub list is not rendered'
       }
-      // ⚠ GATED ON `!ideaId`. A list that persisted into the working view would be a
-      // permanent invitation to abandon what you are doing.
-      return /\{!ideaId && elicit\.phase === 'QUESTION' && \(/.test(c)
+      // ⚠ GATED ON `!elicit?.hasBuild`. A list that persisted once a build is running or
+      // done is a different screen (§6's own scope), not the invitation-to-abandon this
+      // rule used to guard against — that risk applied to the OLD door's single column,
+      // where the list and the in-progress conversation shared the same space.
+      return /\{!elicit\?\.hasBuild && \(/.test(c)
         ? null
-        : 'the list is not gated on there being no idea yet'
+        : 'the library is not gated on hasBuild'
     },
     break: (src) => ({
       ...src,
       'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
-        .replace("{!ideaId && elicit.phase === 'QUESTION' && (", '{true && ('),
+        .replace('{!elicit?.hasBuild && (\n            <div className="min-w-0 lg:pl-6"', '{true && (\n            <div className="min-w-0 lg:pl-6"'),
     }),
   },
   {

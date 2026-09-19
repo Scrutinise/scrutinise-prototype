@@ -192,23 +192,27 @@ const CHECKS: Check[] = [
   },
 
   // ═══ §3 — THE PILLS ══════════════════════════════════════════════════════
+  //
+  // ⚠⚠ RETIRED BY 26-C §2a (19 Sep 2026), DELIBERATELY, AND REPORTED RATHER THAN LEFT
+  // SILENTLY RED. The pill rail assumed the four-step door: a discrete "goal" or
+  // "profile" answer to reopen, and a rail to click between. §2a collapses the door to
+  // one box (an intake) plus at most two Lex-initiated replies (§3a) — there is no
+  // longer a set of discrete prior answers with their own pill, and no rail. §2f of the
+  // brief asked that whatever this loses be reported rather than silently dropped: it is
+  // reported in `BuildIdeaClient.tsx` beside where `saveEdit`/`openStep` used to live, and
+  // here. `editing: true` on `POST .../elicitation` (`answerStep`) still works server-side,
+  // so a future editing surface has something to call — this screen does not offer one yet.
   {
-    name: '§3 every pill opens its own answer, populated from what the user wrote',
+    name: '§3 (RETIRED 26-C §2a) the pill rail — no discrete prior answer exists to reopen',
     run: (src) => {
       const c = src['app/ideas/build/BuildIdeaClient.tsx']
-      if (!/const openStep = useCallback/.test(c)) return 'the pills do not open anything'
-      // ⚠ SEEDED, NOT BLANK. A pill that opens an empty box loses the answer it was
-      // supposed to show — the complaint, one step along.
-      if (!/setText\(s\?\.answer \?\? ''\)/.test(c)) return 'the editor opens blank rather than populated'
-      return /onClick=\{\(\) => \(open \? setEditingStep\(null\) : openStep\(s\.key\)\)\}/.test(c)
-        ? null
-        : 'the rail is still inert'
+      // The property that survives: a CONFIRMED elicitation is still editable server-side
+      // (the next assertion covers that). This one only confirms the rail is GONE, not
+      // silently half-present.
+      return /const openStep = useCallback|const saveEdit = useCallback/.test(c)
+        ? 'the retired pill functions are still defined — dead code, or a half-removal'
+        : null
     },
-    break: (src) => ({
-      ...src,
-      'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
-        .replace("setText(s?.answer ?? '')", "setText('')"),
-    }),
   },
   {
     name: '§3 a CONFIRMED elicitation is editable — but only by an explicit edit',

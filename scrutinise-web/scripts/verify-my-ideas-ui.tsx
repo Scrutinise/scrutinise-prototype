@@ -30,6 +30,7 @@ const base: MyIdea = {
   buildStatus: null,
   passesComplete: null,
   updatedAt: '2026-08-26T09:15:00.000Z',
+  archived: false,
 }
 const titled: MyIdea = {
   ...base,
@@ -76,7 +77,10 @@ ok('“Untitled idea” is the only string treated as a placeholder',
 const empty = renderToStaticMarkup(<MyIdeasList ideas={[]} hiddenEmpty={0} />)
 ok('CONTROL — nothing renders when there is nothing to list', !empty.includes('My ideas'))
 const noHidden = renderToStaticMarkup(<MyIdeasList ideas={[base]} hiddenEmpty={0} />)
-ok('CONTROL — no omission note when nothing was omitted', !noHidden.includes('hidden'))
+// 26-C §7b — matched on the omission sentence itself, not the bare word "hidden": the
+// archive control's own `aria-hidden="true"` now puts that substring in every render,
+// which made this control fire on unrelated markup rather than on the omission note.
+ok('CONTROL — no omission note when nothing was omitted', !noHidden.includes('hidden — nothing was written'))
 const allTitled = renderToStaticMarkup(<MyIdeasList ideas={[titled]} hiddenEmpty={0} />)
 ok('CONTROL — no “in your words” when every idea has a real title',
   !allTitled.includes('In your words:'))

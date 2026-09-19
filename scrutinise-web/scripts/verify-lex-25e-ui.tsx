@@ -34,8 +34,8 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
-  QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
-  type StepView,
+  QuestionCard, IntakeCard, ReplyCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard,
+  NothingToShowCard, type StepView,
 } from '../components/lex/ElicitationCards'
 import { ELICITATION_STEPS } from '../lib/lex/elicitation-config'
 
@@ -237,6 +237,39 @@ function main() {
         busy={false} onStart={noop} onRetryState={noop}
       />,
     )).includes('Confirm what I’ve understood first'))
+
+  // ══ 26-C §2/§3 — THE INTAKE AND REPLY CARDS, THE SAME KIND OF CHECK. ═══════════
+  //
+  // ⚠⚠ §23.1 (CLAUDE.md) — A CHECK MUST PROVE ITS SUBJECT IS REACHABLE. Everything above
+  // this block renders `QuestionCard`, which 26-C's rebuild stopped calling from
+  // `BuildIdeaClient` — it still compiles and still passes, and it no longer proves
+  // anything about what a user sees. These two render the cards the live client now
+  // uses instead, so the harness covers the screen that ships.
+  const intake = renderToStaticMarkup(
+    <IntakeCard
+      problem="" onProblem={noop} background="" onBackground={noop}
+      busy={false} onSend={noop}
+    />,
+  )
+  ok('INTAKE — both boxes are present and Send is disabled on an empty problem box',
+    text(intake).includes('background information')
+    && !enabledButtons(intake).some((b) => b === 'Send'))
+  const intakeFilled = renderToStaticMarkup(
+    <IntakeCard
+      problem="something" onProblem={noop} background="" onBackground={noop}
+      busy={false} onSend={noop}
+    />,
+  )
+  ok('INTAKE — Send enables once the problem box has text', usableControls(intakeFilled) > 0)
+
+  const reply = renderToStaticMarkup(
+    <ReplyCard
+      question="Is there anything more you can tell me?"
+      text="" onText={noop} busy={false} onSend={noop} onSkip={noop}
+    />,
+  )
+  ok('REPLY — the question is restated on the card, and there is a way to say "nothing more"',
+    text(reply).includes('Is there anything more') && usableControls(reply) > 0)
 
   // ── the backstop ──────────────────────────────────────────────────────────
   const backstop = renderToStaticMarkup(<NothingToShowCard busy={false} onReload={noop} />)
