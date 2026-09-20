@@ -178,12 +178,22 @@ function main() {
 
   // §11/§21 — an EXPLICIT resume (a real `?ideaId=`) still works, and now says WHICH idea
   // it opened rather than 25-E's generic "picking up where you left off" — see `openedIdea`
-  // in page.tsx and the "Continuing:" block in BuildIdeaClient.tsx.
-  ok('§11/§21 — an explicit resume names the idea, and offers a way to start fresh instead',
-    client.includes('openedIdea') && client.includes('Continuing:')
+  // in page.tsx and the banner in BuildIdeaClient.tsx.
+  //
+  // ⚠⚠ 26-C ADDENDUM 4 §26a — THE LITERAL "Continuing:" LABEL IS GONE. The banner used to
+  // just name the idea; Charlie read that alone as evidence the workspace had been lost.
+  // It now explains WHY (never built), WHAT is true (nothing lost, the conversation is
+  // where it left off) and WHAT happens next (build once ready; the workspace after that)
+  // — so this asserts those properties rather than a specific label string.
+  ok('§11/§21/§26a — an explicit resume names the idea and explains why it is here',
+    client.includes('openedIdea')
+    && client.includes('has never been built')
     && client.includes('Start a new idea instead'))
   expectBreak('break: resume with no identity confirmation',
     () => 'client.includes(\'openedIdea\')'.includes('nonsense-string-that-cannot-match'))
+  // §26b — the way forward is a control on this screen, not only a promise in prose.
+  ok('§26b — a build-ready return offers the build control IN the banner, not only below',
+    client.includes('Build it now') && /elicit\.phase === 'CONFIRMED' && !latest && build\?\.canStart/.test(client))
 
   // ══ §4 — the three smaller defects ════════════════════════════════════════
   console.log('\n§4 — the smaller defects')

@@ -115,6 +115,42 @@ async function main() {
     ok('CONTROL — the §4 gate DOES refuse the unbuilt idea (proves the gate can fail)', !gateBuilt)
   }
 
+  // ══ 26-C ADDENDUM 4 §26c — THE "CONTINUING:" BANNER NAMES THE RIGHT IDEA, COLD ══════
+  //
+  // Charlie asked this to be confirmed, not assumed, after §21's identity mismatch scare
+  // two addenda ago. Reproduces app/ideas/build/page.tsx's `openedIdea` resolution
+  // verbatim against a REAL idea, and — the part that actually tests something — against
+  // a SECOND real idea too, to prove the query is scoped by the id in the URL and not,
+  // say, "whichever idea is most recently updated" (which would happen to look right on
+  // an account with only one candidate).
+  console.log('')
+  async function resolveOpenedIdea(ideaId: string): Promise<{ title: string } | null> {
+    const existing = await prisma.idea.findUnique({
+      where: { id: ideaId, creatorId: charlie!.id },
+      select: { id: true, title: true, deletedAt: true },
+    })
+    return existing && !existing.deletedAt ? { title: existing.title } : null
+  }
+  const secondUnbuilt = await prisma.idea.findFirst({
+    where: {
+      creatorId: charlie.id, deletedAt: null, builds: { none: {} },
+      id: { not: unbuiltIdea?.id },
+    },
+    select: { id: true, title: true },
+    orderBy: { updatedAt: 'desc' },
+  })
+  if (unbuiltIdea && secondUnbuilt) {
+    const resolvedA = await resolveOpenedIdea(unbuiltIdea.id)
+    const resolvedB = await resolveOpenedIdea(secondUnbuilt.id)
+    ok('§26c — idea A\'s own id resolves to idea A\'s own title',
+      resolvedA?.title === unbuiltIdea.title, `got ${JSON.stringify(resolvedA?.title)}`)
+    ok('§26c — idea B\'s own id resolves to idea B\'s own title, NOT idea A\'s',
+      resolvedB?.title === secondUnbuilt.title && resolvedB?.title !== unbuiltIdea.title,
+      `got ${JSON.stringify(resolvedB?.title)}`)
+  } else {
+    console.log('  · NOT CHECKED §26c — need two distinct unbuilt ideas on the account to prove scoping')
+  }
+
   console.log(`\n${pass} passed, ${fail} failed`)
   process.exit(fail ? 1 : 0)
 }
