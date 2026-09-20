@@ -1,10 +1,15 @@
-// 26-C addendum §21c — assert the two destinations COLD, on real ideas, not fixtures.
+// 26-C addendum §21c / addendum 3 §23d — assert the routing COLD, on real ideas.
 //
-// This does not click a browser. It reproduces, verbatim, the same queries
-// `app/ideas/build/page.tsx` and `app/ideas/create/page.tsx` run to decide where an idea
-// opens, against a REAL built idea and a REAL unbuilt idea already in the database — the
-// property under test ("does the routing logic resolve to the right screen") is asserted
-// on data this script did not create and cannot have biased.
+// This does not click a browser. It reproduces, verbatim, the same decisions
+// `MyIdeasList.hrefFor`, `IdeaDetailClient`'s "Edit" link and `/ideas/create/page.tsx`'s
+// §4 gate make, against a REAL built idea and a REAL unbuilt idea already in the
+// database — the property under test ("does the routing logic resolve to the right
+// screen") is asserted on data this script did not create and cannot have biased.
+//
+// ⚠⚠ REWRITTEN FOR ADDENDUM 3 §23c/§23d: a card no longer decides built-vs-unbuilt
+// itself — every card opens the Idea overview, and the overview's own "Edit" link is
+// where that decision now lives (`hasBuild`, computed the same way `page.tsx` computes
+// it for real). The property is the same one §21c asserted; it now has one more hop.
 //
 // Usage: npx tsx --env-file=.env scripts/check-lex-26c-addendum.ts
 
@@ -18,8 +23,17 @@ function ok(label: string, cond: boolean, detail = '') {
   else { fail++; console.log(`  ✗ ${label}${detail ? ` — ${detail}` : ''}`) }
 }
 
+/** Reproduces IdeaDetailClient's `hasBuild` prop, exactly as app/ideas/[id]/page.tsx computes it. */
+async function hasBuildFor(ideaId: string): Promise<boolean> {
+  const build = await prisma.ideaBuild.findFirst({
+    where: { ideaId, status: { in: ['DONE', 'FAILED', 'CANCELLED'] } },
+    select: { id: true },
+  })
+  return !!build
+}
+
 async function main() {
-  console.log('── check:lex-26c-addendum §21c ──\n')
+  console.log('── check:lex-26c-addendum §21c/§23d ──\n')
 
   const charlie = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' }, select: { id: true } })
   if (!charlie) { console.log('charlie not found — cannot run a cold read on his account'); process.exit(1) }
@@ -40,40 +54,40 @@ async function main() {
   console.log('unbuilt idea:', unbuiltIdea?.id, JSON.stringify(unbuiltIdea?.title))
   console.log('')
 
-  // ── §21b: an idea with no build returns to its conversation on the simple screen ──
+  // ── §23c: EVERY card opens the Idea overview, whether built or not ──
   if (unbuiltIdea) {
     const fakeMyIdea: MyIdea = {
       ideaId: unbuiltIdea.id, title: unbuiltIdea.title, excerpt: '', stage: 'STAGE_1',
       elicitationStatus: 'IN_PROGRESS', buildStatus: null, passesComplete: null,
       updatedAt: new Date().toISOString(), archived: false, deleted: false,
     }
-    const href = hrefFor(fakeMyIdea)
-    ok('an UNBUILT idea\'s card links to /ideas/build', href === `/ideas/build?ideaId=${unbuiltIdea.id}`, href)
+    ok('§23c — an UNBUILT idea\'s card opens the Idea overview',
+      hrefFor(fakeMyIdea) === `/ideas/${unbuiltIdea.id}`, hrefFor(fakeMyIdea))
 
-    // Reproduce app/ideas/build/page.tsx's resolution of `?ideaId=` verbatim.
-    const existing = await prisma.idea.findUnique({
-      where: { id: unbuiltIdea.id, creatorId: charlie.id },
-      select: { id: true, deletedAt: true },
-    })
-    const resolvedInitialIdeaId = existing && !existing.deletedAt ? existing.id : undefined
-    ok('…and /ideas/build/page.tsx resolves initialIdeaId to THAT idea, cold',
-      resolvedInitialIdeaId === unbuiltIdea.id, String(resolvedInitialIdeaId))
+    // ── §23d: the overview's "Edit" link returns to the New idea conversation ──
+    const hasBuild = await hasBuildFor(unbuiltIdea.id)
+    ok('§23d — …and its "Edit" link (hasBuild, computed cold) returns to /ideas/build',
+      hasBuild === false, `hasBuild=${hasBuild}`)
   } else {
     console.log('  · NOT CHECKED — Charlie has no unbuilt idea to test against right now')
   }
 
-  // ── §21b: an idea with a build opens the three-panel workspace ──
   if (builtIdea) {
     const fakeMyIdea: MyIdea = {
       ideaId: builtIdea.id, title: builtIdea.title, excerpt: '', stage: 'STAGE_2',
       elicitationStatus: 'CONFIRMED', buildStatus: 'DONE', passesComplete: null,
       updatedAt: new Date().toISOString(), archived: false, deleted: false,
     }
-    const href = hrefFor(fakeMyIdea)
-    ok('a BUILT idea\'s card links to /ideas/create', href === `/ideas/create?ideaId=${builtIdea.id}`, href)
+    ok('§23c — a BUILT idea\'s card ALSO opens the Idea overview (not straight to the workspace)',
+      hrefFor(fakeMyIdea) === `/ideas/${builtIdea.id}`, hrefFor(fakeMyIdea))
 
-    // Reproduce app/ideas/create/page.tsx's §4 gate verbatim: does it find a terminal
-    // build and therefore NOT redirect back to /ideas/build?
+    // ── §23d: the overview's "Edit" link opens the three-panel workspace ──
+    const hasBuild = await hasBuildFor(builtIdea.id)
+    ok('§23d — …and its "Edit" link (hasBuild, computed cold) opens /ideas/create',
+      hasBuild === true, `hasBuild=${hasBuild}`)
+
+    // §4's own gate still matters one hop further in — Edit's own link must not be
+    // bounced straight back by it.
     const gateBuilt = await prisma.ideaBuild.findFirst({
       where: {
         ideaId: builtIdea.id,
@@ -88,7 +102,7 @@ async function main() {
     console.log('  · NOT CHECKED — Charlie has no built idea to test against right now')
   }
 
-  // ── CONTROL — the §4 gate DOES redirect an idea that genuinely has no terminal build ──
+  // ── CONTROL — hasBuildFor DOES read false for a genuinely unbuilt idea ──
   if (unbuiltIdea) {
     const gateBuilt = await prisma.ideaBuild.findFirst({
       where: {

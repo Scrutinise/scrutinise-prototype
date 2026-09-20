@@ -53,9 +53,17 @@ function secondPersonHeadings(files: Array<[string, string]>): string[] {
     /(?:>|['"`])\s*Your\s+(?:previous\s+)?(?:ideas|communities|teams|listings|matches)\s*(?:\(|<|['"`])/i
   const out: string[] = []
   for (const [path, content] of files) {
-    for (const line of content.split('\n')) {
-      // Skip comments — including the ones that document this very rule.
-      if (line.trimStart().startsWith('//') || line.trimStart().startsWith('*')) continue
+    // ⚠⚠ 26-C ADDENDUM 3 — LINE-PREFIX SKIPPING (`//`, a continuation `*`) MISSED TWO REAL
+    // SHAPES: a `/**`/`/*` block's OWN OPENING line (starts with `/`, not `*` or `//`), and
+    // a `{/* … */}` JSX comment whose continuation lines are plain indented prose with no
+    // per-line marker at all — exactly the style this file's own longer comments use.
+    // Both are still comments, not a screen's heading text, so the more reliable fix is to
+    // strip every `/* … */` block (JSX's `{/* … */}` included — `{` is not part of the
+    // comment delimiter) from the source BEFORE scanning, rather than guess at every prefix
+    // a comment's continuation line might start with.
+    const withoutBlockComments = content.replace(/\/\*[\s\S]*?\*\//g, '')
+    for (const line of withoutBlockComments.split('\n')) {
+      if (line.trimStart().startsWith('//')) continue
       if (banned.test(line)) out.push(`${relative('.', path)}: ${line.trim().slice(0, 80)}`)
     }
   }
@@ -75,6 +83,7 @@ const FILES = [
   'components/lex/MyIdeasList.tsx',
   'app/ideas/build/BuildIdeaClient.tsx',
   'app/ideas/build/page.tsx',
+  'app/ideas/mine/YourIdeasClient.tsx',
   'app/ideas/create/CreateIdeaClient.tsx',
   'lib/lex/question-headings.ts',
   'lib/lex/deepening-config.ts',
@@ -176,47 +185,44 @@ const CHECKS: Check[] = [
     },
   },
   {
-    name: '§2 a built idea opens on the proposal; an unbuilt one opens the build',
+    // ⚠⚠ RETIRED BY 26-C ADDENDUM 3 §23c, DELIBERATELY. `hrefFor` used to decide between
+    // the workspace and the build screen — the decision §23 moves to the Idea overview's
+    // own "Edit" link (see `IdeaDetailClient.tsx`, gated on the new `hasBuild` prop),
+    // because a card that already made that call was exactly how an unbuilt idea's card
+    // could reach the three-panel workspace before §4 existed to catch it one page late.
+    name: '§2 (RETIRED 26-C addendum 3 §23c) every card opens the Idea overview, built or not',
     run: () => {
       const base: MyIdea = {
         ideaId: 'abc', title: PLACEHOLDER_TITLE, excerpt: 'x', stage: 'STAGE_1',
         elicitationStatus: 'IN_PROGRESS', buildStatus: null, passesComplete: null,
         updatedAt: '2026-08-27T00:00:00.000Z', archived: false, deleted: false,
       }
-      if (hrefFor(base) !== '/ideas/build?ideaId=abc') return 'an unbuilt idea does not open the build'
-      // 25-G §2: "the build is how it was made, the proposal is the work."
-      return hrefFor({ ...base, buildStatus: 'DONE' }) === '/ideas/create?ideaId=abc'
+      if (hrefFor(base) !== '/ideas/abc') return 'an unbuilt idea does not open the overview'
+      return hrefFor({ ...base, buildStatus: 'DONE' }) === '/ideas/abc'
         ? null
-        : 'a built idea does not land on the proposal'
+        : 'a built idea opens somewhere other than the overview'
     },
   },
   {
-    // ⚠⚠ 26-C §6a SUPERSEDES THIS RULE, DELIBERATELY. The old door showed the hub list
-    // only before `ideaId` existed — "a list that persisted into the working view would
-    // be a permanent invitation to abandon what you are doing." Charlie's 19 Sep brief
-    // asks for the opposite on the front screen: a persistent library column beside the
-    // create flow, one-quarter of the width, gone only once a build exists (`hasBuild`) —
-    // at which point the screen is no longer "the front screen" in the brief's own terms.
-    name: '§2/26-C §6a the library shows on the front screen and stops once a build exists',
+    // ⚠⚠ RETIRED AGAIN, BY 26-C ADDENDUM 3 §23, ONE SPRINT AFTER IT WAS WRITTEN. §6a put
+    // the library beside the create flow, one page, one-quarter of the width. §23 removes
+    // that "mixed page" entirely: the library is its own page (`/ideas/mine`) and
+    // `/ideas/build` is "New idea", alone. This rule now asserts the opposite of what it
+    // asserted a sprint ago — the library does NOT render on the build screen, and DOES
+    // render on its own page — which is the point: a page that shows two things at once
+    // is exactly what Charlie's 20 Sep walkthrough named as confusing.
+    name: '§2/26-C addendum 3 §23 the library lives on its own page, not beside "New idea"',
     run: (src) => {
-      const c = src['app/ideas/build/BuildIdeaClient.tsx']
-      // 26-C addendum §20 — widened to allow `deletedIdeas={deleted}` between the two
-      // props it already asserted; still requires the same two, in the same order.
-      if (!/<MyIdeasList ideas=\{recent\}[^>]*hiddenEmpty=\{hiddenEmpty\} \/>/.test(c)) {
-        return 'the hub list is not rendered'
-      }
-      // ⚠ GATED ON `!elicit?.hasBuild`. A list that persisted once a build is running or
-      // done is a different screen (§6's own scope), not the invitation-to-abandon this
-      // rule used to guard against — that risk applied to the OLD door's single column,
-      // where the list and the in-progress conversation shared the same space.
-      return /\{!elicit\?\.hasBuild && \(/.test(c)
-        ? null
-        : 'the library is not gated on hasBuild'
+      const build = src['app/ideas/build/BuildIdeaClient.tsx']
+      const mine = src['app/ideas/mine/YourIdeasClient.tsx']
+      if (/<MyIdeasList\b/.test(build)) return 'the "New idea" screen still renders the library'
+      if (!mine) return 'app/ideas/mine/YourIdeasClient.tsx does not exist'
+      return /<MyIdeasList\b/.test(mine) ? null : 'the "Your ideas" page does not render the library'
     },
     break: (src) => ({
       ...src,
-      'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
-        .replace('{!elicit?.hasBuild && (\n            <div className="min-w-0 lg:pl-6"', '{true && (\n            <div className="min-w-0 lg:pl-6"'),
+      'app/ideas/build/BuildIdeaClient.tsx':
+        src['app/ideas/build/BuildIdeaClient.tsx'] + '\n// <MyIdeasList ideas={x} hiddenEmpty={0} />',
     }),
   },
   {

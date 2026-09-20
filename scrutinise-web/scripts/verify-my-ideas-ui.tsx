@@ -75,9 +75,10 @@ ok('a build that finished says so', html.includes('built'))
 ok('last worked on is shown, in a fixed locale', html.includes('26 Aug') && html.includes('UTC'))
 ok('the omission is stated', html.includes('3 empty ideas are hidden'))
 
-// ⚠ 25-G §2 / 25-F §9b — a BUILT idea opens on the proposal; an unbuilt one opens the build.
-ok('a built idea opens on the proposal', hrefFor(titled) === `/ideas/create?ideaId=${titled.ideaId}`)
-ok('an unbuilt idea opens on the build', hrefFor(base) === `/ideas/build?ideaId=${base.ideaId}`)
+// ⚠⚠ RETIRED BY 26-C ADDENDUM 3 §23c: every card opens the Idea overview now, built or
+// not — the workspace-vs-build decision moved to the overview's own "Edit" link.
+ok('a built idea opens the Idea overview', hrefFor(titled) === `/ideas/${titled.ideaId}`)
+ok('an unbuilt idea ALSO opens the Idea overview', hrefFor(base) === `/ideas/${base.ideaId}`)
 
 // The placeholder test is exact, not heuristic.
 ok('“Untitled idea” is the only string treated as a placeholder',
