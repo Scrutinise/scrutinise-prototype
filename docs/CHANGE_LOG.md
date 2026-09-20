@@ -1,5 +1,31 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-20 16:37 UTC — LEX 26-C ADDENDUM 4 — the intake screen must explain itself
+
+▼ **§26 BUILT.** The banner shown when Edit returns an unbuilt idea to its own conversation
+(§23d) used to just name the idea ("Continuing: {title}") — Charlie read that alone as
+evidence the workspace had been lost, since it said WHO but never WHY he was looking at this
+screen. Rewritten to say: this idea has never been built, nothing has been lost, the
+conversation is exactly where it was left, and the full workspace opens once the first build
+has run — phrased differently depending on whether the elicitation is confirmed-and-ready or
+still mid-conversation (§26a).
+▶ **§26b built** — where a build is actually within reach (`elicit.phase === 'CONFIRMED' &&
+!latest && build?.canStart`), a "Build it now" button renders directly inside the banner,
+calling the same `startBuild` handler `StartBuildCard` already uses further down the page —
+one function, two places it can be triggered from, not a duplicated implementation. A user
+sent back here now has the way forward in front of them immediately, not several screens of
+transcript below a plain text box.
+▶ **§26c verified, not assumed.** Reproduced `openedIdea`'s resolution cold, against two
+distinct real unbuilt ideas on the account: each one's own id resolves to its own title, and
+critically, idea B's id does NOT resolve to idea A's title — proving the query is scoped by
+the id in the URL, not defaulting to "whichever idea was most recently touched" (a mistake
+that would have looked correct on an account with only one obvious candidate). New assertions
+in `check-lex-26c-addendum.ts`, 8/0 overall.
+✅ `tsc` clean, `check:scripts` clean, `check:client-boundary` clean, `check:lex-25e` 26/0 (one
+assertion rewritten for the removed "Continuing:" label, one new assertion added for §26b),
+`verify:lex-25e-ui` 20/0, `verify:my-ideas-ui` 17/0, `check:lex-25j` 12/0.
+
+
 ## 2026-09-20 14:28 UTC — LEX 26-C ADDENDUM 3 — the page model
 
 Report: `docs/LEX_26C_ADDENDUM3_REPORT.md`.

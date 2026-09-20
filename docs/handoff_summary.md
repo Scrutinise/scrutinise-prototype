@@ -773,7 +773,20 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-20 14:28 UTC (LEX 26-C ADDENDUM 3)* — ▼▼ **§22 ANSWERED FIRST: ALL 22
+*Last updated: 2026-09-20 16:37 UTC (LEX 26-C ADDENDUM 4)* — ▼ **§26 BUILT — THE RETURN-TO-
+CONVERSATION BANNER EXPLAINS ITSELF.** The "Continuing: {title}" banner (shown when Edit
+returns an unbuilt idea here, §23d) named the idea but never said why the user was looking at
+this screen — Charlie read that as the workspace being lost. Rewritten to say: never built,
+nothing lost, conversation picked up exactly where it was, workspace opens after the first
+build (§26a). Where a build is actually ready (`CONFIRMED && !latest && build?.canStart`), a
+"Build it now" button renders IN the banner, sharing `startBuild` with `StartBuildCard` rather
+than duplicating it (§26b). §26c verified cold — two distinct real unbuilt ideas each resolve
+to their OWN title, never each other's, proving the resolution is scoped by URL id and not
+"most recently touched."
+✅ `tsc`/`check:scripts`/`check:client-boundary` clean; `check:lex-25e` 26/0; `verify:lex-25e-ui`
+20/0; `verify:my-ideas-ui` 17/0; `check:lex-25j` 12/0; `check:lex-26c-addendum` 8/0.
+⚠ Nothing committed; commit-all.sh produced, pending approval.
+Earlier: 2026-09-20 14:28 UTC (LEX 26-C ADDENDUM 3) — ▼▼ **§22 ANSWERED FIRST: ALL 22
 "DELETED" IDEAS STILL EXIST.** Report: `docs/LEX_26C_ADDENDUM3_REPORT.md`. Read off production —
 every row carries `deletedAt` (soft-deleted, not purged); recoverable via "Your ideas" → "N
 deleted" → Restore, already built.
