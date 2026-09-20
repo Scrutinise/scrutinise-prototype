@@ -773,7 +773,30 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-20 05:10 UTC (LEX 26-C ADDENDUM)* — ▼▼ **§17/§21 DIAGNOSED AS ONE
+*Last updated: 2026-09-20 14:28 UTC (LEX 26-C ADDENDUM 3)* — ▼▼ **§22 ANSWERED FIRST: ALL 22
+"DELETED" IDEAS STILL EXIST.** Report: `docs/LEX_26C_ADDENDUM3_REPORT.md`. Read off production —
+every row carries `deletedAt` (soft-deleted, not purged); recoverable via "Your ideas" → "N
+deleted" → Restore, already built.
+▶▶ **§23 BUILT — FIVE PAGES, THE MIXED PAGE REMOVED.** New route `/ideas/mine` ("Your ideas"),
+which redirects to the New-idea door on zero ideas, else renders the library — the nav's "My
+ideas" points here now. `/ideas/build` ("New idea") no longer renders the library at all.
+`hrefFor()` always opens the Idea overview; the built/unbuilt decision moved to the overview's
+own new "Edit" link (`hasBuild` prop, same terminal-build criterion every other gate uses).
+▶ **§23e — the cause, as asked.** Two mechanisms: (1) an unbuilt idea's Edit already redirected
+correctly via the existing §4 gate but landed on the still-"mixed" page, reading as "wrong page"
+— fixed by the split plus deciding the destination directly, removing the hop; (2) the anchor-
+nested-dialog bug from the previous addendum, confirmed still holding by this addendum's own
+§22 evidence.
+▶ **§24 built** — five-tile stage stepper removed; grey stats box removed and moved to a new
+Stats tab (bullets); "Facts, not a score" kept verbatim per explicit instruction.
+▶ **§25 reaffirmed, not started** — grouping remains a sprint (or two) of its own.
+✅ `tsc`/`check:client-boundary`/`check:scripts` clean; `check:lex-25j` 12/0 (a real
+comment-detection gap fixed, one real "Your ideas"→"My ideas" copy violation fixed);
+`verify:my-ideas-ui` 17/0; `verify:lex-25e-ui` 20/0; `check:lex-25e` 25/0;
+`check:lex-26c-addendum` 6/0; `check:deepening` — all §24 assertions pass, one pre-existing
+unrelated failure carried over.
+⚠ Nothing committed; commit-all.sh produced, pending approval.
+Earlier: 2026-09-20 05:10 UTC (LEX 26-C ADDENDUM) — ▼▼ **§17/§21 DIAGNOSED AS ONE
 MECHANISM AND FIXED.** Report: `docs/LEX_26C_ADDENDUM_REPORT.md`. Both "Delete resets the page"
 and "clicking a card doesn't open it" were `DeleteIdeaDialog`'s Delete button living INSIDE the
 card's `<a href>` — `stopPropagation()` doesn't stop an anchor's native navigation, only

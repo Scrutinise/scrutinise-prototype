@@ -1,5 +1,50 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-20 14:28 UTC — LEX 26-C ADDENDUM 3 — the page model
+
+Report: `docs/LEX_26C_ADDENDUM3_REPORT.md`.
+
+▼▼ **§22 ANSWERED FIRST: ALL 22 "DELETED" IDEAS STILL EXIST, NONE PURGED.** Read directly off
+production — every row carries `deletedAt` (soft-deleted), including 19 from a single-second
+batch on 26 Aug (an old litter sweep), one real idea from 3 Sep, and the two from testing
+Delete last addendum. Recoverable exactly as §20 already built: "Your ideas" → "22 deleted" →
+Restore.
+
+▼▼ **§23 BUILT — FIVE PAGES, THE MIXED PAGE REMOVED.** New route `/ideas/mine` ("Your ideas",
+alone) — `page.tsx` redirects to the New-idea door when the user has zero ideas, else renders
+the library; the "My ideas" nav link now points here. `/ideas/build` ("New idea") no longer
+renders the library at all — no column, no divider, no `leftPct` state. `MyIdeasList.hrefFor()`
+now always opens the Idea overview (`/ideas/{id}`), never the workspace or the build screen
+directly; that decision moved to the overview's own new "Edit" link, gated on a `hasBuild` prop
+computed the same terminal-build way every other gate already does.
+▶ **§23e — the cause, reported as asked, not just hidden by removing the page.** Two
+mechanisms, not one: (1) an unbuilt idea's Edit already correctly redirected via the existing
+§4 gate, but landed on the still-"mixed" `/ideas/build`, which read as "the wrong page" — fixed
+by the split itself plus deciding the destination directly on the overview, removing the hop;
+(2) Delete/card-click was the anchor-nested-dialog bug already found and fixed last addendum,
+confirmed still holding by this addendum's own §22 evidence (both test deletes show `deletedAt`
+set exactly when tested, with no leftover navigation).
+
+▼ **§24 BUILT — the Idea overview tidied.** Five-tile stage stepper removed (§24a); the grey
+statistics box removed from the header (§24b) and its contents moved to a new **Stats** tab
+between Research and Contributions, as bullets (§24c) — new `app/ideas/[id]/StatsTab.tsx`,
+`components/lex/EvidenceFactsStrip.tsx` deleted (fully superseded). "Facts, not a score — only
+you can see these for now" kept verbatim on the tab per explicit instruction (§24d).
+
+▶ **§25 — reaffirmed, not started.** Grouping (checkboxes + Group control + drag-to-reorder +
+drag-onto-another) remains a sprint (realistically two) of its own; Charlie's fuller spec
+confirms rather than changes that conclusion. Proposed data model unchanged from the last
+addendum's report.
+
+✅ `tsc` clean, `check:client-boundary` clean, `check:scripts` clean, `check:lex-25j` 12/0 (two
+rules rewritten for §23; a real comment-detection gap in the second-person-heading check fixed
+along the way, and one real violation found and fixed in actual UI copy — "Your ideas" → "My
+ideas" on the new page, matching 25-J §1), `verify:my-ideas-ui` 17/0, `verify:lex-25e-ui` 20/0,
+`check:lex-25e` 25/0, `check:lex-26c-addendum` 6/0 (rewritten for the overview-first routing),
+`check:deepening` — every §24 assertion passes; one pre-existing, unrelated failure carried
+over (confirmed by inspection, not touched this pass).
+
+
 ## 2026-09-20 05:10 UTC — LEX 26-C ADDENDUM — Charlie's walkthrough
 
 Report: `docs/LEX_26C_ADDENDUM_REPORT.md`.
