@@ -77,11 +77,18 @@ function buildLine(i: MyIdea): string | null {
   return 'the build was cancelled'
 }
 
-/** Where this idea should open. A built idea opens on the proposal (25-G §2). */
+/**
+ * ⚠⚠ 26-C ADDENDUM 3 §23c — A CARD ALWAYS OPENS THE IDEA OVERVIEW NOW, never the
+ * workspace or the conversation directly. §23's five-page model gives every idea one
+ * summary page; from there, "Edit" (on the overview) is what decides between the
+ * three-panel workspace and the New idea screen (§23d), on whether a build exists —
+ * see the Edit link in `IdeaDetailClient.tsx`. Superseded: the old rule here
+ * (`buildStatus === 'DONE'` → `/ideas/create`, else → `/ideas/build`) IS that same
+ * decision, just made one page too early, which is what let an unbuilt idea's card
+ * reach the three-panel workspace at all before §4 existed to catch it.
+ */
 export function hrefFor(i: MyIdea): string {
-  return i.buildStatus === 'DONE'
-    ? `/ideas/create?ideaId=${i.ideaId}`
-    : `/ideas/build?ideaId=${i.ideaId}`
+  return `/ideas/${i.ideaId}`
 }
 
 import { useState } from 'react'

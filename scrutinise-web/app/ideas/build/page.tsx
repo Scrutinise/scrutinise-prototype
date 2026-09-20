@@ -15,7 +15,6 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import BuildIdeaClient from './BuildIdeaClient'
-import type { MyIdea } from '@/components/lex/MyIdeasList'
 import { stageContext } from '@/lib/lex/stage-context'
 import { blankElicitationState } from '@/lib/lex/elicitation'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
@@ -128,78 +127,10 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   // retired too — a bare landing IS "fresh" now, unconditionally.
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 26-C §7a — EVERY IDEA IS LISTED, NOT ONLY THE ONES MADE THROUGH THIS DOOR.
-  //
-  // ⚠⚠ THE OLD QUERY WAS JOINED THROUGH `IdeaElicitation`, so an idea made at the OLDER
-  // `/ideas/create` door — which never writes that row — could never appear here at all.
-  // That is why Charlie, with roughly 50 ideas, saw 16: not a limit, not a page size, a
-  // filter that silently excluded every idea not made on this specific path. §7a asks
-  // "a limit, a page size, or a filter" — it was the third, and the fix is to query the
-  // idea itself and treat the elicitation row (when one exists) as an optional excerpt
-  // source, not the thing being listed.
-  //
-  // ⚠ IT CANNOT BE A LIST OF TITLES ALONE. Every idea made through the one-box door is
-  // "Untitled idea" until §5's titling runs, so an untitled row still needs the user's own
-  // words as a fallback label — the excerpt logic below is kept for exactly that case.
-  // ═══════════════════════════════════════════════════════════════════════════
-  let recent: MyIdea[] = []
-  // ══ 26-C ADDENDUM §20 — A REACHABLE "DELETED" VIEW, NOT A TIME-BOXED UNDO ══════════
-  //
-  // §20: Archive is gone (§18b), so Delete is now the only removal act and it must stay
-  // recoverable, per the standing "archive, never hard-delete" principle. Symmetrical
-  // with the "N archived" toggle: a separate query, no purge job (deliberately not built
-  // this pass — see the addendum report) so nothing here silently expires.
-  let deleted: MyIdea[] = []
-  if (dbUser) {
-    const select = {
-      id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true,
-      elicitation: { select: { status: true, problem: true, goalDetail: true, ownKnowledge: true } },
-      builds: {
-        orderBy: { createdAt: 'desc' as const },
-        take: 1,
-        select: { status: true, passesComplete: true, completedAt: true },
-      },
-    }
-    const toMyIdea = (r: {
-      id: string; title: string; stage: string; updatedAt: Date; ownerArchivedAt: Date | null
-      elicitation: { status: string; problem: string | null; goalDetail: string | null; ownKnowledge: string | null } | null
-      builds: { status: string; passesComplete: number | null; completedAt: Date | null }[]
-    }, isDeleted: boolean): MyIdea => {
-      const b = r.builds[0]
-      const excerpt = (r.elicitation?.problem || r.elicitation?.goalDetail || r.elicitation?.ownKnowledge || '').trim()
-      return {
-        ideaId: r.id,
-        title: r.title,
-        // ⚠ 25-J §2 — SHORTER THAN THE STOPGAP'S 180. This is a list row now, not a
-        // diagnostic paragraph: a line the eye can scan is what makes an untitled idea
-        // recognisable, and 180 characters wraps to four lines and stops being scannable.
-        excerpt: excerpt.length > 110 ? excerpt.slice(0, 110).trimEnd() + '…' : excerpt,
-        stage: r.stage,
-        archived: !!r.ownerArchivedAt,
-        deleted: isDeleted,
-        elicitationStatus: (r.elicitation?.status as MyIdea['elicitationStatus']) ?? 'CONFIRMED',
-        buildStatus: (b?.status as MyIdea['buildStatus']) ?? null,
-        passesComplete: b?.passesComplete ?? null,
-        updatedAt: r.updatedAt.toISOString(),
-      }
-    }
-    const [activeRows, deletedRows] = await Promise.all([
-      prisma.idea.findMany({
-        where: { creatorId: dbUser.id, deletedAt: null }, orderBy: { updatedAt: 'desc' }, take: 100, select,
-      }),
-      prisma.idea.findMany({
-        where: { creatorId: dbUser.id, deletedAt: { not: null } }, orderBy: { updatedAt: 'desc' }, take: 100, select,
-      }),
-    ])
-    recent = activeRows.map((r) => toMyIdea(r, false))
-    deleted = deletedRows.map((r) => toMyIdea(r, true))
-  }
-  // ⚠ §7a — NOTHING IS HIDDEN AS "EMPTY" ANY MORE. Every idea has at least its (possibly
-  // placeholder) title to show, so the old silent-drop of excerpt-less rows is gone along
-  // with the query that made it necessary. `hiddenEmpty` stays at 0 and is reported as
-  // such rather than removing the prop, which `MyIdeasList` still reads.
-  const hiddenEmpty = 0
+  // ⚠⚠ 26-C ADDENDUM 3 §23 — THE LIBRARY NO LONGER LIVES ON THIS PAGE.
+  // §23 removes "the mixed page": this screen is "New idea", alone. The library ("Your
+  // ideas") moved to its own route, `/ideas/mine` — see that page for the query this used
+  // to run (§7a's fix, and §20's deleted-ideas view), unchanged in substance, only moved.
 
   // 25-K §1 — the three stages, which one this is, and what is on the other two.
   //
@@ -244,9 +175,9 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
     <BuildIdeaClient
       initialIdeaId={initialIdeaId}
       openedIdea={openedIdea}
-      recent={recent}
-      deleted={deleted}
-      hiddenEmpty={hiddenEmpty}
+      // §23b — the prominent button to "Your ideas" is greyed out when there is nothing
+      // there yet, which "ideaCount === 0" already answers precisely.
+      hasOtherIdeas={ideaCount > 0}
       stageCtx={stageCtx}
       materialCount={materialCount}
       isFirstIdea={ideaCount === 0}

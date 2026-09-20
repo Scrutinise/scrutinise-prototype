@@ -27,7 +27,7 @@ import {
 } from '@/components/lex/ElicitationCards'
 // TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
 // keeps importing its prop type from the component it renders.
-import MyIdeasList, { type MyIdea, hasRealTitle } from '@/components/lex/MyIdeasList'
+import { hasRealTitle } from '@/components/lex/MyIdeasList'
 import RerunDialogue from '@/components/lex/RerunDialogue'
 import RerunBanner from '@/components/lex/RerunBanner'
 import YourMaterial from '@/components/lex/YourMaterial'
@@ -71,7 +71,6 @@ const HELP_INTENT =
  */
 const CRITIQUE_INTENT =
   /\b(?:that(?:'s| is)|this(?:'s| is)|it(?:'s| is))\s+(?:not\s+right|wrong|incorrect|inaccurate|nonsense|rubbish|way off|miles off|misleading|too (?:low|high|vague|generic))\b|\b(?:you(?:'ve| have)?\s+(?:got|gotten)\s+(?:that|this|it)\s+wrong|you(?:'re| are)\s+wrong|that(?:'s| is)\s+made\s+up|you\s+made\s+that\s+up)\b|\bdoesn(?:'|\u2019)?t\s+(?:make\s+sense|reflect|match)\b|\bi\s+don(?:'|\u2019)?t\s+(?:agree|think\s+that(?:'s| is)\s+right)\b/i
-export type { MyIdea }
 
 // The server's shapes, restated for the client. Kept structural rather than imported
 // wholesale so this file cannot accidentally pull server-only code into the bundle.
@@ -234,18 +233,16 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
 
 
 export default function BuildIdeaClient(
-  { initialIdeaId, openedIdea = null, recent = [], deleted = [], hiddenEmpty = 0, stageCtx = null,
+  { initialIdeaId, openedIdea = null, hasOtherIdeas = false, stageCtx = null,
     isFirstIdea = false, displayName = null, blankState = null, materialCount = 0 }: {
     initialIdeaId?: string
     /** 26-C addendum §21 — which idea this is, when one was opened explicitly (from the
      *  library) rather than started fresh. Replaces 25-E's "resumed" banner (retired by
      *  §11's auto-resume removal) with an identity confirmation instead of a status note. */
     openedIdea?: { title: string; excerpt: string } | null
-    /** 25-J §2 — the user's own ideas, listed on the hub. See `MyIdea`. */
-    recent?: MyIdea[]
-    /** 26-C addendum §20 — soft-deleted ideas, reachable and restorable. */
-    deleted?: MyIdea[]
-    hiddenEmpty?: number
+    /** 26-C addendum 3 §23b — whether the "Your ideas" button is live or greyed out. The
+     *  library itself moved to `/ideas/mine`; this screen no longer fetches or renders it. */
+    hasOtherIdeas?: boolean
     /** 25-K §1 — the three stages, which one this is, and what is on the other two. */
     stageCtx?: StageContext | null
     /** A3 — this user's very first idea: the tour opens unprompted, as it does at the old door. */
@@ -304,8 +301,6 @@ export default function BuildIdeaClient(
   // Local form state for the current step.
   const [text, setText] = useState('')
   const [correction, setCorrection] = useState('')
-  /** 26-C §6a — the front screen's own layout: 3/4 create, 1/4 library, draggable. */
-  const [leftPct, setLeftPct] = useState(75)
   /** AMENDMENT_25B §C4 — the checkbox, seeded from the user's remembered default. */
   const [emailWhenDone, setEmailWhenDone] = useState(false)
   const emailSeededRef = useRef(false)
@@ -903,7 +898,7 @@ export default function BuildIdeaClient(
         own heading line, not this control.
       */}
       <div className="border-b border-zinc-100 px-4 py-2">
-        <div className="max-w-6xl mx-auto flex items-center justify-end gap-3">
+        <div className="max-w-3xl mx-auto flex items-center justify-end gap-3">
           <button
             onClick={() => {
               if (text.trim() || correction.trim()) setExitPrompt(true)
@@ -1005,27 +1000,36 @@ export default function BuildIdeaClient(
           as props (harmless, unused here) rather than ripped out of `page.tsx` — CLAUDE.md
           §11 asks for Charlie's explicit word before a prop that feeds another surface is
           deleted outright, and this screen simply stops rendering it. */}
-      <div className={`flex-1 w-full mx-auto px-4 py-6 ${elicit?.hasBuild ? 'max-w-3xl' : 'max-w-6xl'}`}>
-        {/*
-          ══ 26-C §6a/§6d — THE FRONT SCREEN: THREE-QUARTERS CREATE, ONE-QUARTER LIBRARY ══
-          Only while there is no build yet — once one exists this reverts to the single,
-          narrower column the build/progress/findings UI already used (§6 is scoped to
-          "the front screen", and a running or finished build is a different screen).
-        */}
-        <div className={elicit?.hasBuild ? '' : 'lg:flex lg:items-start'}>
-          <div
-            className={elicit?.hasBuild ? 'w-full' : 'min-w-0 lg:pr-6'}
-            style={!elicit?.hasBuild ? { flexBasis: `${leftPct}%` } : undefined}
-          >
-            {/* §6c/addendum §15b — "Create a new idea", the same heading level, size and
-                weight "My ideas" (MyIdeasList's own `<h2>`) is styled to match. "How this
-                works" no longer lives here — addendum §15a puts it back beside Exit, top
-                right, on every screen. */}
+      {/* ⚠⚠ 26-C ADDENDUM 3 §23 — "THE MIXED PAGE" IS REMOVED. This screen is "New idea",
+          alone (§23's page model) — the two-column layout with the library beside it
+          (§6a/§6b of 26-C's first pass) is gone; the library is `/ideas/mine` now. */}
+      <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
+        <div>
+            {/* §23b — "Create a new idea" and a prominent button to the other page,
+                "Your ideas" — greyed out when there is nothing there yet. */}
             {!elicit?.hasBuild && (
-              <div className="mb-5">
-                <h1 className="text-lg font-semibold text-zinc-900">Create a new idea</h1>
-                {displayName && (
-                  <p className="text-sm text-zinc-600 mt-1">Good {timeOfDay()} {displayName}.</p>
+              <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                  <h1 className="text-lg font-semibold text-zinc-900">Create a new idea</h1>
+                  {displayName && (
+                    <p className="text-sm text-zinc-600 mt-1">Good {timeOfDay()} {displayName}.</p>
+                  )}
+                </div>
+                {hasOtherIdeas ? (
+                  <a
+                    href="/ideas/mine"
+                    className="shrink-0 text-sm font-semibold px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors"
+                  >
+                    My ideas
+                  </a>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    title="Nothing to show yet — send your first idea to start your list"
+                    className="shrink-0 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-100 text-zinc-400 cursor-not-allowed"
+                  >
+                    My ideas
+                  </span>
                 )}
               </div>
             )}
@@ -1562,59 +1566,6 @@ export default function BuildIdeaClient(
 
           </>
         )}
-          </div>
-
-          {/* ══ 26-C §6b — THE DIVIDER IS DRAGGABLE, like the ones in the workspace ══
-              A small local drag handle rather than `PanelDivider` — that component is
-              typed to the 3-panel workspace's own `PanelKey` set (`lib/lex/panel-layout`),
-              and widening it to cover this screen's two columns would mix an unrelated
-              layout's keys into it for one caller. Same mechanism (pointer capture,
-              keyboard steps, a visible grip), copied rather than shared for that reason. */}
-          {!elicit?.hasBuild && (
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="Resize the new-idea column and the library column"
-              tabIndex={0}
-              onPointerDown={(e) => {
-                const startX = e.clientX
-                const row = e.currentTarget.parentElement?.getBoundingClientRect().width || 1
-                const onMove = (ev: PointerEvent) => {
-                  const pct = ((ev.clientX - startX) / row) * 100
-                  setLeftPct((p) => Math.min(85, Math.max(50, p + pct)))
-                }
-                const onUp = () => {
-                  window.removeEventListener('pointermove', onMove)
-                  window.removeEventListener('pointerup', onUp)
-                }
-                window.addEventListener('pointermove', onMove)
-                window.addEventListener('pointerup', onUp)
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowLeft') { e.preventDefault(); setLeftPct((p) => Math.max(50, p - 2)) }
-                if (e.key === 'ArrowRight') { e.preventDefault(); setLeftPct((p) => Math.min(85, p + 2)) }
-              }}
-              title="Drag to resize — or use the arrow keys"
-              className="group hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center bg-zinc-100 hover:bg-blue-100 focus:bg-blue-200 focus:outline-none touch-none rounded-full"
-            >
-              <span aria-hidden className="flex flex-col gap-[3px] rounded-full bg-zinc-300 px-[1px] py-1.5 group-hover:bg-blue-500 group-focus:bg-blue-600">
-                <span className="block w-[3px] h-[3px] rounded-full bg-white" />
-                <span className="block w-[3px] h-[3px] rounded-full bg-white" />
-                <span className="block w-[3px] h-[3px] rounded-full bg-white" />
-              </span>
-            </div>
-          )}
-
-          {/* §6c — the library. Charlie offered "My Previous Ideas" and "Idea History"
-              and invited better; kept as "My ideas" for now, matching the heading the
-              rest of the product already uses, pending his choice. Addendum §15a moved
-              Exit back to the top-right bar beside "How this works" — it no longer has
-              its own row here. */}
-          {!elicit?.hasBuild && (
-            <div className="min-w-0 lg:pl-6" style={{ flexBasis: `${100 - leftPct}%` }}>
-              <MyIdeasList ideas={recent} deletedIdeas={deleted} hiddenEmpty={hiddenEmpty} />
-            </div>
-          )}
         </div>
 
         {/* ⚠ A1 — AND A PERMANENT ROUTE, not only the offer.

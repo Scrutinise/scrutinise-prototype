@@ -198,9 +198,16 @@ export default function PublicNav() {
             is unchanged and only the first label moves. The STAGE is still called Create
             (docs/CLAUDE.md §4, use exactly, never substitute) — this is a nav label. */}
         <div className="hidden items-center gap-6 md:flex">
-          {/* 25-F §9 — creation entry. A CLIENT component, which is why the switch is a
-              redirect route rather than a prop: it cannot read the database. */}
-          <Link href="/ideas/new" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          {/* ⚠⚠ 26-C ADDENDUM 3 §23a — POINTS AT /ideas/mine, NOT /ideas/new.
+              §23a: "the 'My ideas' nav entry goes to New idea when the user has no ideas,
+              and to Your ideas when they have some." `/ideas/mine` is where that decision
+              lives now — it redirects to the New-idea door itself on zero ideas, and
+              renders "Your ideas" otherwise — so the nav always points at one URL and the
+              branch is server-side, not duplicated here (a CLIENT component, which is why
+              this could never read the database to decide it directly). `/ideas/new`
+              remains the one URL every OTHER "start a new idea" control points at (25-F
+              §9) — unconditional, and deliberately not this link's target any more. */}
+          <Link href="/ideas/mine" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             My ideas
           </Link>
           <Link href="/ideas" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -256,7 +263,7 @@ export default function PublicNav() {
         <div className="border-t border-border px-4 py-4 md:hidden">
           <div className="flex flex-col gap-3">
             <Link
-              href="/ideas/new"
+              href="/ideas/mine"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
