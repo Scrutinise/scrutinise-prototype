@@ -81,82 +81,52 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   }
 
   let initialIdeaId: string | undefined
-  let resumed = false
+  // ⚠⚠ 26-C ADDENDUM §21 — WHICH IDEA THIS IS, SAID ON THE SCREEN ITSELF.
+  //
+  // §21: a click that opens the right idea still reads as "nothing happened" if the
+  // destination gives no sign of which idea it is — exactly true of an idea with no
+  // title (§5's gap on anything made before it shipped) and little or no text yet. This
+  // is not a substitute for §5's real fix; it is what makes an EXPLICIT resume (§11)
+  // legible even before a title exists.
+  let openedIdea: { title: string; excerpt: string } | null = null
   if (params.ideaId && dbUser) {
     const existing = await prisma.idea.findUnique({
       where: { id: params.ideaId, creatorId: dbUser.id },
-      select: { id: true, deletedAt: true },
+      select: {
+        id: true, title: true, deletedAt: true,
+        elicitation: { select: { problem: true, goalDetail: true, ownKnowledge: true } },
+      },
     })
-    if (existing && !existing.deletedAt) initialIdeaId = existing.id
+    if (existing && !existing.deletedAt) {
+      initialIdeaId = existing.id
+      const excerpt = (existing.elicitation?.problem || existing.elicitation?.goalDetail
+        || existing.elicitation?.ownKnowledge || '').trim()
+      openedIdea = { title: existing.title, excerpt: excerpt.slice(0, 140) }
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 25-E §2 — RESUME, RATHER THAN MINTING A NEW IDEA ON EVERY VISIT.
+  // ⚠⚠ 26-C ADDENDUM §11 — RETIRES 25-E §2's AUTO-RESUME, DELIBERATELY.
   //
-  // ⚠⚠ THIS IS THE DEFECT CHARLIE HIT, AND THE BRIEF'S DESCRIPTION OF IT IS KIND.
-  // He reported that refreshing "lost everything he had entered". It did not: every
-  // answer was in the database the whole time and is there now — idea
-  // 452c5ade…, 2,934 characters of problem, 690 of his own knowledge, CONFIRMED at
-  // 01:56:52 on 22 Aug. `answerStep` has always persisted each answer on the turn it
-  // was given.
+  // 25-E §2 used to find the most recent unfinished, unbuilt elicitation and resume it
+  // when the user landed here with NO `?ideaId=`, because at the time that was the only
+  // way back to an idea whose page had been lost (before the id lived in the URL) or
+  // whose litter shell had swallowed it. Both of those are now handled differently: the
+  // id has lived in the URL since 25-E, and 26-C §7a's library lists EVERY idea, so a
+  // returning user finds their unfinished work by looking at it and clicking it.
   //
-  // What was lost was the PAGE. Landing here without `?ideaId=` made the client POST
-  // `/api/ideas` and mint a BRAND NEW idea, and the id was never written to the URL —
-  // so a refresh minted another one and orphaned the first. The user sees an empty
-  // form and correctly concludes their writing is gone.
+  // Charlie, 19–20 Sep: *"we stay on this super-simple UI... the left column is always
+  // empty and ready for a new idea; resuming is an explicit act — the user clicks the
+  // idea in the right-hand list."* Auto-resuming a guess at "the" unfinished idea is
+  // also the wrong choice when there are several — 25-E's rule cannot express which one
+  // Charlie actually wants next, only which one was touched most recently.
   //
-  // The litter proves it: 10 of the 11 elicitation rows in production are empty
-  // "Untitled idea" shells, three of them created within EIGHT SECONDS of each other.
-  //
-  // So: an unfinished elicitation is RESUMED. Which also stops the litter at source —
-  // a returning user reopens their row instead of adding to the pile.
-  //
-  // ⚠⚠ "UNFINISHED" MEANS *NO BUILD HAS BEEN STARTED*, NOT "NOT CONFIRMED". This
-  // distinction is not pedantic — it is the difference between Charlie getting his work
-  // back and not. His idea is CONFIRMED with no build: he answered all four questions,
-  // agreed to the reading, and was then stopped by the greyed-out button. A rule that
-  // resumed only IN_PROGRESS rows would hand him a blank page and leave 2,934 characters
-  // stranded, having just fixed the bug that stranded them.
-  //
-  // A CONFIRMED elicitation with a build is finished work and is NOT resumed: reopening it
-  // would trap someone who came back to start something new.
+  // §11 is a refinement of §4b, not a reversal of it: EXIT-AND-RETURN from within a
+  // specific idea's own page still returns to that idea (its `?ideaId=` is already in
+  // the URL — see `BuildIdeaClient`'s own history-replace). Only a BARE landing on
+  // `/ideas/build`, with no id at all, now always starts blank. `fresh=1` is therefore
+  // retired too — a bare landing IS "fresh" now, unconditionally.
   // ═══════════════════════════════════════════════════════════════════════════
-  // ⚠ `fresh=1` IS THE WAY OUT, AND IT HAS TO EXIST. Resuming by default is right — it is
-  // what the user almost always wants — but a default with no override is a trap for the
-  // person who came here to start something else, and they would have no way to say so.
-  if (!initialIdeaId && dbUser && params.fresh !== '1') {
-    // ⚠⚠ THE "HAS SOMETHING IN IT" TEST IS IN THE QUERY, NOT AFTER IT, AND THE FIRST VERSION
-    // OF THIS CODE GOT IT WRONG IN A WAY THAT WOULD HAVE SHIPPED.
-    //
-    // `findFirst` is `ORDER BY … LIMIT 1`. Filtering for content AFTER it means the newest row
-    // wins the ordering and is then thrown away for being empty — so ONE empty shell hides
-    // every real row behind it. Measured against production: the query landed on a blank row
-    // created at 00:29 today, and Charlie's own CONFIRMED idea — 2,934 characters, last
-    // touched 22 Aug — never came back at all, because it is older. The fix for losing his
-    // work would have failed to find it.
-    //
-    // Same shape as GRAPH 3B: a property asserted over a RANKED, TRUNCATED result set is only
-    // a property of the top of the ranking. If the condition decides which row you want, it
-    // belongs in the WHERE clause.
-    const unfinished = await prisma.ideaElicitation.findFirst({
-      where: {
-        idea: { creatorId: dbUser.id, deletedAt: null, builds: { none: {} } },
-        OR: [
-          { problem: { not: null } },
-          { goalKind: { not: null } },
-          { ownKnowledge: { not: null } },
-        ],
-      },
-      orderBy: { updatedAt: 'desc' },
-      select: { ideaId: true, status: true, problem: true, goalKind: true, ownKnowledge: true },
-    })
-    // Belt and braces: a row storing an EMPTY STRING rather than null would satisfy the SQL
-    // and still be nothing to resume. Announcing a resumption of nothing is its own defect.
-    if (unfinished && (unfinished.problem?.trim() || unfinished.goalKind || unfinished.ownKnowledge?.trim())) {
-      initialIdeaId = unfinished.ideaId
-      resumed = true
-    }
-  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 26-C §7a — EVERY IDEA IS LISTED, NOT ONLY THE ONES MADE THROUGH THIS DOOR.
@@ -174,25 +144,31 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   // words as a fallback label — the excerpt logic below is kept for exactly that case.
   // ═══════════════════════════════════════════════════════════════════════════
   let recent: MyIdea[] = []
+  // ══ 26-C ADDENDUM §20 — A REACHABLE "DELETED" VIEW, NOT A TIME-BOXED UNDO ══════════
+  //
+  // §20: Archive is gone (§18b), so Delete is now the only removal act and it must stay
+  // recoverable, per the standing "archive, never hard-delete" principle. Symmetrical
+  // with the "N archived" toggle: a separate query, no purge job (deliberately not built
+  // this pass — see the addendum report) so nothing here silently expires.
+  let deleted: MyIdea[] = []
   if (dbUser) {
-    const rows = await prisma.idea.findMany({
-      where: { creatorId: dbUser.id, deletedAt: null },
-      orderBy: { updatedAt: 'desc' },
-      take: 100,
-      select: {
-        id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true,
-        elicitation: { select: { status: true, problem: true, goalDetail: true, ownKnowledge: true } },
-        builds: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { status: true, passesComplete: true, completedAt: true },
-        },
+    const select = {
+      id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true,
+      elicitation: { select: { status: true, problem: true, goalDetail: true, ownKnowledge: true } },
+      builds: {
+        orderBy: { createdAt: 'desc' as const },
+        take: 1,
+        select: { status: true, passesComplete: true, completedAt: true },
       },
-    })
-    for (const r of rows) {
+    }
+    const toMyIdea = (r: {
+      id: string; title: string; stage: string; updatedAt: Date; ownerArchivedAt: Date | null
+      elicitation: { status: string; problem: string | null; goalDetail: string | null; ownKnowledge: string | null } | null
+      builds: { status: string; passesComplete: number | null; completedAt: Date | null }[]
+    }, isDeleted: boolean): MyIdea => {
       const b = r.builds[0]
       const excerpt = (r.elicitation?.problem || r.elicitation?.goalDetail || r.elicitation?.ownKnowledge || '').trim()
-      recent.push({
+      return {
         ideaId: r.id,
         title: r.title,
         // ⚠ 25-J §2 — SHORTER THAN THE STOPGAP'S 180. This is a list row now, not a
@@ -201,12 +177,23 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
         excerpt: excerpt.length > 110 ? excerpt.slice(0, 110).trimEnd() + '…' : excerpt,
         stage: r.stage,
         archived: !!r.ownerArchivedAt,
-        elicitationStatus: r.elicitation?.status ?? 'CONFIRMED',
-        buildStatus: b?.status ?? null,
+        deleted: isDeleted,
+        elicitationStatus: (r.elicitation?.status as MyIdea['elicitationStatus']) ?? 'CONFIRMED',
+        buildStatus: (b?.status as MyIdea['buildStatus']) ?? null,
         passesComplete: b?.passesComplete ?? null,
         updatedAt: r.updatedAt.toISOString(),
-      })
+      }
     }
+    const [activeRows, deletedRows] = await Promise.all([
+      prisma.idea.findMany({
+        where: { creatorId: dbUser.id, deletedAt: null }, orderBy: { updatedAt: 'desc' }, take: 100, select,
+      }),
+      prisma.idea.findMany({
+        where: { creatorId: dbUser.id, deletedAt: { not: null } }, orderBy: { updatedAt: 'desc' }, take: 100, select,
+      }),
+    ])
+    recent = activeRows.map((r) => toMyIdea(r, false))
+    deleted = deletedRows.map((r) => toMyIdea(r, true))
   }
   // ⚠ §7a — NOTHING IS HIDDEN AS "EMPTY" ANY MORE. Every idea has at least its (possibly
   // placeholder) title to show, so the old silent-drop of excerpt-less rows is gone along
@@ -256,8 +243,9 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   return (
     <BuildIdeaClient
       initialIdeaId={initialIdeaId}
-      resumed={resumed}
+      openedIdea={openedIdea}
       recent={recent}
+      deleted={deleted}
       hiddenEmpty={hiddenEmpty}
       stageCtx={stageCtx}
       materialCount={materialCount}
