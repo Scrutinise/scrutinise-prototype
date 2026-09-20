@@ -181,7 +181,7 @@ const CHECKS: Check[] = [
       const base: MyIdea = {
         ideaId: 'abc', title: PLACEHOLDER_TITLE, excerpt: 'x', stage: 'STAGE_1',
         elicitationStatus: 'IN_PROGRESS', buildStatus: null, passesComplete: null,
-        updatedAt: '2026-08-27T00:00:00.000Z', archived: false,
+        updatedAt: '2026-08-27T00:00:00.000Z', archived: false, deleted: false,
       }
       if (hrefFor(base) !== '/ideas/build?ideaId=abc') return 'an unbuilt idea does not open the build'
       // 25-G §2: "the build is how it was made, the proposal is the work."
@@ -200,7 +200,9 @@ const CHECKS: Check[] = [
     name: '§2/26-C §6a the library shows on the front screen and stops once a build exists',
     run: (src) => {
       const c = src['app/ideas/build/BuildIdeaClient.tsx']
-      if (!/<MyIdeasList ideas=\{recent\} hiddenEmpty=\{hiddenEmpty\} \/>/.test(c)) {
+      // 26-C addendum §20 — widened to allow `deletedIdeas={deleted}` between the two
+      // props it already asserted; still requires the same two, in the same order.
+      if (!/<MyIdeasList ideas=\{recent\}[^>]*hiddenEmpty=\{hiddenEmpty\} \/>/.test(c)) {
         return 'the hub list is not rendered'
       }
       // ⚠ GATED ON `!elicit?.hasBuild`. A list that persisted once a build is running or

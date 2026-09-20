@@ -31,6 +31,7 @@ const base: MyIdea = {
   passesComplete: null,
   updatedAt: '2026-08-26T09:15:00.000Z',
   archived: false,
+  deleted: false,
 }
 const titled: MyIdea = {
   ...base,
@@ -47,6 +48,15 @@ console.log('── verify:my-ideas-ui ──')
 const html = renderToStaticMarkup(<MyIdeasList ideas={[base, titled]} hiddenEmpty={3} />)
 
 ok('the list renders, open, with a count', html.includes('My ideas (2)'))
+
+// 26-C addendum §20 — the reachable "Deleted" view. A render assertion cannot simulate the
+// click that switches `view` to 'deleted', so this covers the property a static render CAN
+// prove: the toggle appears when there is something to reach, and does not when there isn't.
+const deletedOne: MyIdea = { ...base, ideaId: 'cccccccc-1111-2222-3333-444444444444', deleted: true }
+const withDeleted = renderToStaticMarkup(<MyIdeasList ideas={[base]} deletedIdeas={[deletedOne]} hiddenEmpty={0} />)
+ok('§20 — "N deleted" is offered when a deleted idea exists', withDeleted.includes('1 deleted'))
+const noDeleted = renderToStaticMarkup(<MyIdeasList ideas={[base]} deletedIdeas={[]} hiddenEmpty={0} />)
+ok('CONTROL — no "deleted" toggle when there is nothing deleted', !noDeleted.includes('deleted'))
 
 // ⚠ §2's headline requirement, asserted on rendered markup.
 ok('an UNTITLED idea is identified by the user\'s own words',

@@ -245,20 +245,15 @@ function main() {
   // `BuildIdeaClient` — it still compiles and still passes, and it no longer proves
   // anything about what a user sees. These two render the cards the live client now
   // uses instead, so the harness covers the screen that ships.
+  // 26-C addendum §14a — one box, not two. `background` is retired from this card.
   const intake = renderToStaticMarkup(
-    <IntakeCard
-      problem="" onProblem={noop} background="" onBackground={noop}
-      busy={false} onSend={noop}
-    />,
+    <IntakeCard problem="" onProblem={noop} busy={false} onSend={noop} />,
   )
-  ok('INTAKE — both boxes are present and Send is disabled on an empty problem box',
+  ok('INTAKE — the background bullet is present and Send is disabled on an empty problem box',
     text(intake).includes('background information')
     && !enabledButtons(intake).some((b) => b === 'Send'))
   const intakeFilled = renderToStaticMarkup(
-    <IntakeCard
-      problem="something" onProblem={noop} background="" onBackground={noop}
-      busy={false} onSend={noop}
-    />,
+    <IntakeCard problem="something" onProblem={noop} busy={false} onSend={noop} />,
   )
   ok('INTAKE — Send enables once the problem box has text', usableControls(intakeFilled) > 0)
 

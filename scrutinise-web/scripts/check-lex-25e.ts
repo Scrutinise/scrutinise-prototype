@@ -165,38 +165,25 @@ function main() {
   ok('§2 — and by replaceState, so it does not litter the Back history',
     !client.includes('history.pushState'))
 
-  ok('§2 — a bare visit RESUMES unfinished work instead of minting a new idea',
-    page.includes('ideaElicitation.findFirst') && page.includes('builds: { none: {} }'))
-  expectBreak('break: a page that always mints',
-    () => 'const initialIdeaId = undefined'.includes('ideaElicitation.findFirst'))
+  // ⚠⚠ RETIRED BY 26-C ADDENDUM §11 (20 Sep 2026), DELIBERATELY. 25-E §2's auto-resume
+  // guessed which unfinished idea a bare visit meant; Charlie's walkthrough asked for a
+  // bare landing to always be blank, and for resuming to be an explicit click in the
+  // library instead (26-C §7a's fix — which did not exist when 25-E was written — makes
+  // that click always possible). The four assertions this replaces guarded the auto-
+  // resume QUERY specifically; there is no longer a query to guard.
+  ok('§2 (RETIRED 26-C §11) a bare visit never auto-resumes — the query is gone, not half-removed',
+    !page.includes('ideaElicitation.findFirst') && !/params\.fresh/.test(page))
+  expectBreak('break: the auto-resume query is still present',
+    () => !"const unfinished = await prisma.ideaElicitation.findFirst({".includes('ideaElicitation.findFirst'))
 
-  // ⚠ "UNFINISHED" MUST MEAN "NO BUILD STARTED", NOT "NOT CONFIRMED" — Charlie's own idea is
-  // CONFIRMED with no build, which is exactly the state the dead end created, and a
-  // status-based rule would leave his 2,934 characters stranded.
-  ok('§2 — unfinished means NO BUILD STARTED, so a blocked-at-the-button idea is reachable',
-    !/status:\s*\{\s*not:\s*'CONFIRMED'\s*\}/.test(page))
-  expectBreak('break: resume only IN_PROGRESS rows',
-    () => !/status:\s*\{\s*not:\s*'CONFIRMED'\s*\}/.test("where: { status: { not: 'CONFIRMED' } }"))
-
-  // ⚠⚠ THE `LIMIT 1` TRAP, GUARDED — it was live in this sprint's own first fix.
-  //
-  // `findFirst` is `ORDER BY … LIMIT 1`. Filtering for "has content" AFTER it means the newest
-  // row wins the ordering and is then discarded for being empty, so ONE blank shell hides
-  // every real row behind it. Measured against production, that version landed on a row
-  // created hours earlier with nothing in it, and Charlie's own 2,934-character idea never
-  // came back — the fix for losing his work would have failed to find it.
-  const resumeQuery = /ideaElicitation\.findFirst\(\{([\s\S]*?)\}\)/.exec(page)?.[1] ?? ''
-  ok('§2 — the "has something in it" test is in the QUERY, not applied after LIMIT 1',
-    /OR:\s*\[/.test(resumeQuery) && /problem:\s*\{\s*not:\s*null/.test(resumeQuery))
-  expectBreak('break: filter for content after the query, so one empty row hides the rest',
-    () => /OR:\s*\[/.test("where: { idea: { creatorId } }, orderBy: { updatedAt: 'desc' }"))
-
-  ok('§2 — the resumption is ANNOUNCED, not silent',
-    client.includes('Picking up where you left off'))
-  ok('§2 — and there is a way to start something else instead',
-    client.includes('fresh=1') && page.includes("params.fresh !== '1'"))
-  expectBreak('break: resume with no opt-out',
-    () => 'if (!initialIdeaId && dbUser) {'.includes("params.fresh !== '1'"))
+  // §11/§21 — an EXPLICIT resume (a real `?ideaId=`) still works, and now says WHICH idea
+  // it opened rather than 25-E's generic "picking up where you left off" — see `openedIdea`
+  // in page.tsx and the "Continuing:" block in BuildIdeaClient.tsx.
+  ok('§11/§21 — an explicit resume names the idea, and offers a way to start fresh instead',
+    client.includes('openedIdea') && client.includes('Continuing:')
+    && client.includes('Start a new idea instead'))
+  expectBreak('break: resume with no identity confirmation',
+    () => 'client.includes(\'openedIdea\')'.includes('nonsense-string-that-cannot-match'))
 
   // ══ §4 — the three smaller defects ════════════════════════════════════════
   console.log('\n§4 — the smaller defects')
