@@ -1057,25 +1057,45 @@ export default function BuildIdeaClient(
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>
         ) : (
           <>
-            {/* ⚠⚠ 26-C ADDENDUM §11/§21 — REPLACES 25-E §2's "PICKING UP WHERE YOU LEFT
-                OFF" BANNER, WHICH HAD NOTHING TO DO ONCE AUTO-RESUME WAS RETIRED (§11):
-                every idea shown here now got here by an EXPLICIT click, so "picking up"
-                is simply what opening an idea means and does not need announcing.
-                What still needs saying is WHICH idea this is (§21) — a click that lands
-                you on an idea with no title and no visible text yet is a click that looks
-                like it failed, which is the library's whole "cannot be identified, cannot
-                be opened" complaint. */}
+            {/* ⚠⚠ 26-C ADDENDUM 4 §26 — THE BANNER MUST EXPLAIN ITSELF, NOT JUST NAME
+                THE IDEA. §26: Charlie clicked Edit on an idea that has never been built —
+                exactly §23d's designed behaviour (an unbuilt idea's Edit returns to its
+                own conversation here, never to an empty workspace) — and read the old
+                "Continuing: {name}" banner as evidence the workspace had been LOST,
+                because it named the idea without saying WHY he was looking at this
+                screen or WHAT happens next. §26a: say the reason. §26b: if a build is
+                actually within reach, put the control here — not several screens of
+                transcript below, behind a plain text box that gives no sense of where
+                it leads. */}
             {openedIdea && (
-              <div className="mb-4 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2">
-                <p className="text-sm text-zinc-700">
-                  <span className="font-semibold text-zinc-900">Continuing: </span>
-                  {hasRealTitle(openedIdea.title)
-                    ? openedIdea.title
-                    : openedIdea.excerpt
-                      ? <>In your words: {openedIdea.excerpt}</>
-                      : 'a new, empty idea — nothing written yet.'}
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-3">
+                <p className="text-sm text-zinc-800">
+                  <span className="font-semibold text-zinc-900">
+                    {hasRealTitle(openedIdea.title)
+                      ? openedIdea.title
+                      : openedIdea.excerpt
+                        ? <>In your words: {openedIdea.excerpt}</>
+                        : 'This idea'}
+                  </span>
+                  {' '}has never been built — nothing has been lost. You're picking up the
+                  conversation exactly where you left it.{' '}
+                  {elicit.phase === 'CONFIRMED'
+                    ? 'You’re ready to run the first build now.'
+                    : 'Answer below to carry on, and once I’ve confirmed what you’re after you’ll be able to run the first build.'}
+                  {' '}The full three-panel workspace opens once that build has finished — not before.
                 </p>
-                <a href="/ideas/build" className="text-xs text-zinc-500 underline">
+                {/* §26b — the way forward, in front of them, not several screens down. */}
+                {elicit.phase === 'CONFIRMED' && !latest && build?.canStart && (
+                  <button
+                    onClick={() => startBuild('FULL')}
+                    disabled={busy}
+                    className="mt-2.5 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40 inline-flex items-center gap-2"
+                  >
+                    {busy && <Spinner className="w-3.5 h-3.5" />}
+                    Build it now
+                  </button>
+                )}
+                <a href="/ideas/build" className="block mt-2 text-xs text-zinc-600 underline">
                   Start a new idea instead
                 </a>
               </div>
