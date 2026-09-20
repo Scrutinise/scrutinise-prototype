@@ -1,5 +1,53 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-20 05:10 UTC — LEX 26-C ADDENDUM — Charlie's walkthrough
+
+Report: `docs/LEX_26C_ADDENDUM_REPORT.md`.
+
+▼▼ **§17/§21 DIAGNOSED AS ONE MECHANISM, AS ASKED, AND FIXED STRUCTURALLY.** Both "Delete
+resets the page" and "clicking a card doesn't open it" trace to the same anti-pattern:
+`DeleteIdeaDialog`'s "Delete" button lived INSIDE the card's `<a href>` (via `CardControls`,
+nested in the link). `stopPropagation()` on an ancestor does not stop an anchor's native
+default action — only `preventDefault()` does, and that dialog (built for a page with no
+enclosing link) never calls it. The delete succeeded every time; the SAME click's leftover
+navigation then fired anyway, landing on the now-deleted idea and falling back to blank —
+"resets to default." **Confirmed live**: two shells on Charlie's account show `deletedAt` set
+at 04:45/04:51 on 20 Sep. Fixed by making the link and the controls SIBLINGS, never one
+nested in the other, in `MyIdeasList.tsx`. §21c asserted cold on real ideas: new
+`check:lex-26c-addendum`, 5/0, against idea `a1a08ff4` (unbuilt) and `31055aef…` (built).
+▶ **§11 BUILT — 25-E §2's auto-resume retired.** A bare `/ideas/build` landing is always
+blank now; resuming is only via an explicit `?ideaId=` click in the library (§7a makes that
+always possible, which 25-E's own fix could not assume). Refines §4b, not a reversal: exit-
+and-return from WITHIN an idea's own URL still returns to it. The old "picking up where you
+left off" banner is replaced with "Continuing: {title/excerpt}" — feeds §21's fix directly.
+▶ **§12 — already built by 26-C's own §5**, restated rather than new. Not independently
+verified: no idea has been started since deploy to exercise it (the frozen MiFID idea predates
+the fix by design and is not evidence against it).
+▶ **§13/§14/§15 BUILT** — right-hand list: text full width, controls stack above on narrow,
+`min-w-[220px]` floor under the divider. Left panel: one box (not two), the second box's
+copy folded into a fifth bullet, placeholder de-duplicated ("In your words…"), "The first
+step" bold, the redundant Send-adjacent sentence removed, 2/3–1/3 split, the "+" control
+restored and now creates the idea on click (a deliberate act, not 25-I's silent arrival-mint).
+Header: "How this works" back to the blue pill beside Exit, top right, on every screen;
+"Create a new idea" / "My ideas" same heading level, size and weight.
+▶ **§18 — Archive removed (§18b), after answering §18a first**: anything archived stays
+reachable via the existing "N archived" toggle + Unarchive; nothing is stranded.
+▶ **§19 — grouping data model proposed, NOT built, per §19e's own instruction not to
+half-build a sprint's worth of state.** `IdeaGroup` (name, hidden, float `orderIndex`) +
+`Idea.groupId`/`Idea.orderIndex` (float, for drag-drop without renumbering). Recommended as
+two follow-up sprints: checkbox-grouping first, cross-group drag second (the larger half).
+▶ **§20 — BUILT: Charlie chose the reachable "Deleted" view** (option B) over a time-boxed
+undo toast. New `PATCH /api/ideas/[id]/restore` (exact inverse of the existing delete route —
+clears the same `deletedAt`); library gets a third view alongside active/archived, "N deleted"
+→ Restore, no time limit and deliberately no purge job (nothing ages a soft-deleted row out;
+a data-retention decision if it's ever wanted, not a screen change).
+✅ `tsc` clean, `check:client-boundary` clean, `check:scripts` clean, `check:lex-25e` 25/0
+(four stale §2 assertions retired for §11, matching the pattern from 26-C's own first pass),
+`verify:lex-25e-ui` 20/0, `verify:my-ideas-ui` 17/0 (+2 for §20), `check:lex-25j` 12/0,
+`check:lex-26c-addendum` (new) 5/0.
+⚠ Nothing committed mid-sprint; commit-all.sh produced, execution pending Charlie's approval.
+
+
 ## 2026-09-19 03:19 UTC — LEX 26-C — ONE BOX, AND THE LIBRARY
 
 Brief: `docs/BRIEF_26C_v2.md`. Report: `docs/LEX_26C_REPORT.md`.

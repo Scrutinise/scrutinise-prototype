@@ -773,7 +773,36 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-19 03:19 UTC (LEX 26-C)* — ▼▼ **26-C BUILT — ONE BOX, THE LIBRARY, AND THE
+*Last updated: 2026-09-20 05:10 UTC (LEX 26-C ADDENDUM)* — ▼▼ **§17/§21 DIAGNOSED AS ONE
+MECHANISM AND FIXED.** Report: `docs/LEX_26C_ADDENDUM_REPORT.md`. Both "Delete resets the page"
+and "clicking a card doesn't open it" were `DeleteIdeaDialog`'s Delete button living INSIDE the
+card's `<a href>` — `stopPropagation()` doesn't stop an anchor's native navigation, only
+`preventDefault()` does, and that dialog never called it. Delete succeeded every time (confirmed:
+two shells show `deletedAt` set at 04:45/04:51 on 20 Sep); the same click's leftover navigation
+then landed on the deleted idea and fell back to blank. Fixed structurally in `MyIdeasList.tsx` —
+the link and the controls are siblings now, never nested. Asserted cold on real ideas: new
+`check:lex-26c-addendum`, 5/0.
+▶ **§11 built** — 25-E's auto-resume retired; a bare `/ideas/build` landing is always blank,
+resuming is an explicit library click, refining (not reversing) §4b. Old banner replaced with
+"Continuing: {title/excerpt}", feeding §21's fix directly.
+▶ **§12** — already built by 26-C's own §5, restated; unverified against a live build (no idea
+started since deploy).
+▶ **§13/§14/§15 built** — right-hand list stacks on narrow with a `min-w-[220px]` floor; left
+panel is one box (not two, background folded into a 5th bullet), placeholder de-duplicated, "+"
+now creates the idea on click; header returns "How this works" to the blue pill beside Exit,
+top right, with "Create a new idea"/"My ideas" as matched headings below.
+▶ **§18 — Archive removed**, after confirming existing archived ideas stay reachable
+(the "N archived" toggle + Unarchive, unchanged).
+▶ **§19 — grouping data model proposed** (`IdeaGroup` + float `orderIndex` on both sides), **not
+built** per §19e — recommended as two follow-up sprints, checkbox-grouping then cross-group drag.
+▶ **§20 built — Charlie chose the reachable "Deleted" view.** New restore route (exact
+inverse of delete's `deletedAt`); library's third view, no time limit, no purge job
+(deliberately — a retention decision if ever wanted, not built this pass).
+✅ `tsc`/`check:client-boundary`/`check:scripts` clean; `check:lex-25e` 25/0 (four stale §2
+assertions retired for §11); `verify:lex-25e-ui` 20/0; `verify:my-ideas-ui` 17/0;
+`check:lex-25j` 12/0; `check:lex-26c-addendum` (new) 5/0.
+⚠ Nothing committed; commit-all.sh produced, pending approval.
+Earlier: 2026-09-19 03:19 UTC (LEX 26-C) — ▼▼ **26-C BUILT — ONE BOX, THE LIBRARY, AND THE
 FREEZE IS FIXED AT ITS ROOT.** Brief: `docs/BRIEF_26C_v2.md`. Report: `docs/LEX_26C_REPORT.md`.
 Full detail in `docs/CHANGE_LOG.md`'s 03:19 entry; summary here.
 ▶▶ ⚠⚠ **§1 — THE FREEZE, DIAGNOSED AGAINST THE ACTUAL PRODUCTION ROW, NOT A HYPOTHESIS.** Idea
