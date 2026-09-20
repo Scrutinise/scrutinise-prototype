@@ -15,7 +15,7 @@ import AmendmentsTab from './AmendmentsTab'
 import CampaignTab from './CampaignTab'
 import DocumentExports from '@/components/documents/DocumentExports'
 import WhatNextPanel from '@/components/WhatNextPanel'
-import EvidenceFactsStrip from '@/components/lex/EvidenceFactsStrip'
+import StatsTab from './StatsTab'
 import DeleteIdeaDialog from '@/components/lex/DeleteIdeaDialog'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -141,6 +141,9 @@ interface Stage4Gate {
 
 interface Props {
   idea: Idea
+  /** 26-C addendum 3 §23d — whether a terminal build exists (DONE/FAILED/CANCELLED),
+   *  the same criterion /ideas/build and /ideas/create's own gates use. */
+  hasBuild: boolean
   isOwner: boolean
   isCollaborator: boolean
   currentUserId: string | null
@@ -174,55 +177,10 @@ const STAGE_BADGE: Record<string, string> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Stage stepper
+// ⚠⚠ 26-C ADDENDUM 3 §24a — THE FIVE-TILE STAGE STEPPER STOOD HERE AND IS REMOVED.
+// "It does not belong on this page." `STAGES` (above) is kept — the single-stage badge
+// in the header and the metadata column both still read from it.
 // ─────────────────────────────────────────────────────────────────────────────
-
-function StageStepper({ currentStage }: { currentStage: string }) {
-  const currentIndex = STAGES.findIndex(s => s.key === currentStage)
-
-  return (
-    <nav aria-label="Idea progress" className="flex items-center gap-0">
-      {STAGES.map((stage, i) => {
-        const isPast = i < currentIndex
-        const isCurrent = i === currentIndex
-        const isFuture = i > currentIndex
-
-        return (
-          <div key={stage.key} className="flex items-center">
-            <div className="flex flex-col items-center">
-              <div
-                className={[
-                  'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
-                  isPast ? 'bg-foreground text-background' : '',
-                  isCurrent ? 'bg-foreground text-background ring-2 ring-foreground ring-offset-2' : '',
-                  isFuture ? 'border-2 border-muted-foreground/30 text-muted-foreground/50' : '',
-                ].join(' ')}
-              >
-                {isPast ? <CheckCircle2 className="size-4" /> : i + 1}
-              </div>
-              <span
-                className={[
-                  'mt-1 text-[10px] font-medium sm:text-xs',
-                  isCurrent ? 'text-foreground' : 'text-muted-foreground',
-                ].join(' ')}
-              >
-                {stage.label}
-              </span>
-            </div>
-            {i < STAGES.length - 1 && (
-              <div
-                className={[
-                  'mx-1 mb-4 h-[2px] w-8 sm:w-12',
-                  i < currentIndex ? 'bg-foreground' : 'bg-muted-foreground/20',
-                ].join(' ')}
-              />
-            )}
-          </div>
-        )
-      })}
-    </nav>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IdeaOrigin banner
@@ -2216,14 +2174,17 @@ function PrivacyLogTab({ ideaId }: { ideaId: string }) {
 // Main client component
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'idea' | 'contributions' | 'research' | 'amendments' | 'team' | 'campaign' | 'privacy-log' | 'exports'
+// 26-C addendum 3 §24c — 'stats' sits between 'research' and 'contributions', matching
+// the tab bar's own visual order (the array below, not this type's declaration order).
+type Tab = 'idea' | 'research' | 'stats' | 'contributions' | 'amendments' | 'team' | 'campaign' | 'privacy-log' | 'exports'
 
 function isValidTab(t: string | null): t is Tab {
-  return ['idea', 'overview', 'contributions', 'research', 'amendments', 'team', 'campaign', 'privacy-log', 'exports'].includes(t ?? '')
+  return ['idea', 'overview', 'research', 'stats', 'contributions', 'amendments', 'team', 'campaign', 'privacy-log', 'exports'].includes(t ?? '')
 }
 
 export default function IdeaDetailClient({
   idea: initialIdea,
+  hasBuild,
   isOwner,
   isCollaborator,
   currentUserId,
@@ -2315,6 +2276,9 @@ export default function IdeaDetailClient({
   const tabs: { key: Tab; label: string }[] = [
     { key: 'idea', label: 'Idea' },
     { key: 'research', label: `Research${idea.research.length > 0 ? ` (${idea.research.length})` : ''}` },
+    // 26-C addendum 3 §24c — between Research and Contributions, as specified.
+    // Owner-only, matching the removed strip's own rule ("⚠ OWNER-VISIBLE ONLY FOR NOW").
+    ...(isOwner ? [{ key: 'stats' as Tab, label: 'Stats' }] : []),
     { key: 'contributions', label: `Contributions${commentCount > 0 ? ` (${commentCount})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
     // §8.2 — generated documents live outside the three Lex panels.
@@ -2358,10 +2322,11 @@ export default function IdeaDetailClient({
       )}
 
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-        {/* Stage stepper */}
-        <div className="mb-8 overflow-x-auto pb-1">
-          <StageStepper currentStage={idea.stage} />
-        </div>
+        {/* ⚠⚠ 26-C ADDENDUM 3 §24a — THE STAGE STEPPER IS REMOVED FROM THIS PAGE.
+            "It does not belong on this page." The single-stage badge in the header
+            (`stageLabel`/`badgeClass`, a few lines down) and in the right-hand metadata
+            column still say which stage the idea is at — this removes the five-tile
+            bar, not the fact of which stage it's in. */}
 
         {/* IdeaOrigin banner */}
         <IdeaOriginBanner idea={idea} />
@@ -2374,12 +2339,10 @@ export default function IdeaDetailClient({
             </span>
           </div>
 
-          {/* §24.1 + §24.2 — the progress label and the evidence facts, owner-visible.
-              Deliberately BELOW the five-stage badge and visually quieter than it: this
-              is a second, parallel track (Skeleton → Deepened), and two things both
-              called "stage" competing at the same weight is how a reader ends up
-              believing an idea is further along than it is. */}
-          <EvidenceFactsStrip ideaId={idea.id} isOwner={isOwner} />
+          {/* ⚠⚠ 26-C ADDENDUM 3 §24b/§24c — THE GREY STATISTICS BOX STOOD HERE AND IS
+              REMOVED FROM THE HEADER. Its contents (the progress label and the evidence
+              facts §24.1/§24.2 originally put here) move to their own "Stats" tab,
+              between Research and Contributions — see `activeTab === 'stats'` below. */}
 
           <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
             {idea.title || 'Untitled idea'}
@@ -2418,9 +2381,20 @@ export default function IdeaDetailClient({
 
           {/* Edit + What Next? + Campaign in a Box — below author/date line */}
           <div className="mt-3 flex items-center gap-2">
+            {/* ⚠⚠ 26-C ADDENDUM 3 §23d — AN UNBUILT IDEA MUST NEVER OPEN AN EMPTY
+                WORKSPACE. This unconditional `/ideas/create?ideaId=…` link was the
+                mechanism §23e asked to be found: it always pointed at the three-panel
+                workspace, and only got redirected back to the simple screen by the §4
+                gate ONE HOP LATER — which, before the page split, landed on the still-
+                "mixed" /ideas/build, reading as "Edit returns to the wrong page" rather
+                than "Edit resumed the conversation." Deciding the destination HERE,
+                rather than relying on the gate to catch it downstream, removes that hop
+                entirely: the link is right the first time. */}
             {isOwner && ['STAGE_1', 'STAGE_2'].includes(idea.stage) && (
               <Button asChild size="sm">
-                <Link href={`/ideas/create?ideaId=${idea.id}`}>Edit</Link>
+                <Link href={hasBuild ? `/ideas/create?ideaId=${idea.id}` : `/ideas/build?ideaId=${idea.id}`}>
+                  Edit
+                </Link>
               </Button>
             )}
             <Button
@@ -2617,6 +2591,9 @@ export default function IdeaDetailClient({
               }
             />
           )}
+          {/* 26-C addendum 3 §24c — the progress label and evidence facts, moved here
+              from the header's now-removed grey box. */}
+          {activeTab === 'stats' && <StatsTab ideaId={idea.id} isOwner={isOwner} />}
           {activeTab === 'amendments' && (
             <AmendmentsTab
               ideaId={idea.id}

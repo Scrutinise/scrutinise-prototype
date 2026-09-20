@@ -185,21 +185,29 @@ ok('the facts type carries counts and a date, and nothing that sums them',
 // already deepening the idea, i.e. the person who least needs telling), and the progress
 // label did not exist at all.
 console.log('\n§24.1/§24.2 — the progress label and the facts live on the idea')
-const STRIP = 'components/lex/EvidenceFactsStrip.tsx'
+// ⚠⚠ 26-C ADDENDUM 3 §24 — MOVED FROM A HEADER STRIP TO ITS OWN TAB.
+// `components/lex/EvidenceFactsStrip.tsx` (the header box) is retired; the same facts
+// and progress label now render on `app/ideas/[id]/StatsTab.tsx`, between Research and
+// Contributions. The property under test — a progress label, triage logic, owner-gating,
+// no score vocabulary, no unreachable rungs — is unchanged; only the file and the render
+// site moved.
+const STRIP = 'app/ideas/[id]/StatsTab.tsx'
 const DETAIL = 'app/ideas/[id]/IdeaDetailClient.tsx'
 const strip = code(STRIP)
 ok('there is a progress label deriving Skeleton → Deepened',
   /deepeningProgressLabel/.test(strip) && /'Skeleton'/.test(strip) && /'Deepened'/.test(strip))
 ok('...and Deepened requires a RUN pass whose issues are TRIAGED, not merely a run',
   /status === 'RUN'/.test(strip) && /i\.status !== 'OPEN'/.test(strip))
-ok('the idea header renders the strip', /<EvidenceFactsStrip/.test(code(DETAIL)))
+ok('the idea overview renders the Stats tab', /<StatsTab\b/.test(code(DETAIL)))
 ok('...owner-gated, because §24.7 needs versioning and reviews before it faces a stranger',
   /isOwner=\{isOwner\}/.test(code(DETAIL)) && /if \(!isOwner\)/.test(strip))
-ok('the strip carries no score vocabulary either', !SCORE_WORDS.test(strip),
+ok('the tab carries no score vocabulary either', !SCORE_WORDS.test(strip),
   strip.match(SCORE_WORDS)?.[0])
 // The unreachable rungs must not be displayed as if they were reachable.
 ok('Team-reviewed / Published are NOT offered as labels yet (§22.4 and §20.3 unbuilt)',
   !/'Team-reviewed'|'Published'/.test(strip))
+ok('§24d — "Facts, not a score" survives the move to the tab',
+  /Facts, not a score/.test(strip))
 
 // ── 9. a fifth pass is configuration ─────────────────────────────────────────
 console.log('\n§4 — adding a fifth pass is configuration, not construction')

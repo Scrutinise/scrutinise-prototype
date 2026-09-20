@@ -108,6 +108,10 @@ export default async function IdeaDetailPage({ params }: Props) {
       rootCauses: { orderBy: { createdAt: 'asc' } },
       guidingPolicies: true,
       evidence: { orderBy: { createdAt: 'asc' } },
+      // 26-C addendum 3 §23d — "Edit" needs to know whether a build exists, on the same
+      // terminal-status criterion /ideas/build and /ideas/create's own gates already use,
+      // so all three cannot disagree about which side of the line this idea is on.
+      builds: { where: { status: { in: ['DONE', 'FAILED', 'CANCELLED'] } }, take: 1, select: { id: true } },
     },
   })
 
@@ -247,6 +251,9 @@ export default async function IdeaDetailPage({ params }: Props) {
       <PublicNav />
       <IdeaDetailClient
         idea={serialised}
+        // 26-C addendum 3 §23d — whether "Edit" opens the three-panel workspace or
+        // returns to the idea's own conversation on the New idea screen.
+        hasBuild={idea.builds.length > 0}
         isOwner={isOwner}
         isCollaborator={isCollaborator}
         currentUserId={currentUserId}
