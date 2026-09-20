@@ -179,11 +179,10 @@ export function QuestionCard(p: QuestionCardProps) {
   )
 }
 
-// ── PHASE: INTAKE — 26-C §2, one screen, one box (and a second, smaller one) ──
+// ── PHASE: INTAKE — 26-C §2, ONE box (addendum §14: one, not two) ────────────
 
 export interface IntakeCardProps {
   problem: string; onProblem: (v: string) => void
-  background: string; onBackground: (v: string) => void
   busy: boolean
   onSend: () => void
   attachPanel?: React.ReactNode
@@ -192,53 +191,45 @@ export interface IntakeCardProps {
   onToggleAttach?: () => void
 }
 
+/**
+ * 26-C addendum §14b — the second box's own encouragement folded in as a fifth bullet,
+ * rather than a second field. `background` (the second textarea) is retired: everything
+ * goes in the one box, and Lex sorts it (§2a's own principle, applied one field further).
+ */
 const PROBLEM_HINTS = [
   'what is going wrong, and for whom',
   'what you have seen yourself',
   'why it matters',
   'what you think is really going on',
+  BACKGROUND_INTRO,
 ]
 
 /**
- * 26-C §2 — THE WHOLE OF THE NEW-IDEA SCREEN'S FIRST TURN. Replaces the sequential
- * problem/goal/other-information cards with one combined form: §2a's "no separate steps
- * for the problem, the outcome and other information" — Lex sorts what it is given.
+ * 26-C §2 (addendum §14) — THE WHOLE OF THE NEW-IDEA SCREEN'S FIRST TURN. One box, two
+ * thirds of the width; the instruction and five bullets beside it, one third (§14f).
  *
- * Layout is left-to-right, per §2b–§2d: the problem box, then the four bullets (with
- * §2c's paragraph above them), then the second, background box — stacking on narrow
- * viewports rather than three columns nobody can read at phone width.
+ * ⚠ §14c — the placeholder and the instruction used to say the same sentence twice. The
+ * instruction (`PROBLEM_INTRO`) stays where it always was, above the bullets; the
+ * placeholder is now just "In your words…", which is not a second copy of anything.
  */
 export function IntakeCard(p: IntakeCardProps) {
+  // §14d — bold the opening words only. Split rather than a second hand-typed string,
+  // so the two constants cannot drift apart.
+  const [introLead, ...introRestParts] = PROBLEM_INTRO.split('The first step')
+  const introRest = introRestParts.join('The first step')
   return (
     <div className="border border-zinc-200 rounded-2xl p-4">
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div>
           <textarea
             value={p.problem}
             onChange={(e) => p.onProblem(e.target.value)}
-            rows={10}
-            placeholder="Describe the problem you want to solve, in as much detail as possible."
+            rows={12}
+            placeholder="In your own words…"
             className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
           />
-        </div>
-        <div>
-          <p className="text-sm text-zinc-700 leading-relaxed">{PROBLEM_INTRO}</p>
-          <ul className="mt-2 text-xs text-zinc-500 list-disc list-inside space-y-1">
-            {PROBLEM_HINTS.map((h) => <li key={h}>{h}</li>)}
-          </ul>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-600 leading-relaxed">{BACKGROUND_INTRO}</p>
-          <textarea
-            value={p.background}
-            onChange={(e) => p.onBackground(e.target.value)}
-            rows={7}
-            placeholder="Anything else you know — reports, letters, a link, what you've seen yourself. (optional)"
-            className="mt-2 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
-          />
-          {/* §2e — the file and link control stays WITH the box: every document ever
-              read came in through it, and background material is exactly what a report
-              or a letter is. */}
+          {/* §14g — the file/link control, on the one box that is left. Every document
+              the platform has ever read came in through this control. */}
           {p.onToggleAttach && (
             <div className="mt-2">
               <button
@@ -264,8 +255,21 @@ export function IntakeCard(p: IntakeCardProps) {
             </div>
           )}
         </div>
+        <div>
+          <p className="text-sm text-zinc-700 leading-relaxed">
+            {introLead}
+            <span className="font-semibold">The first step</span>
+            {introRest}
+          </p>
+          <ul className="mt-2 text-xs text-zinc-500 list-disc list-inside space-y-1">
+            {PROBLEM_HINTS.map((h) => <li key={h}>{h}</li>)}
+          </ul>
+        </div>
       </div>
 
+      {/* §14e — "Write something in the first box." removed: the disabled state of
+          Send already says this, and a sentence repeating a disabled button is a
+          sentence nobody needed. */}
       <div className="flex items-center gap-2 mt-4">
         <button
           onClick={p.onSend}
@@ -275,7 +279,6 @@ export function IntakeCard(p: IntakeCardProps) {
           {p.busy && <Spinner className="w-3.5 h-3.5" />}
           Send
         </button>
-        {!p.problem.trim() && <span className="text-xs text-zinc-500">Write something in the first box.</span>}
       </div>
     </div>
   )

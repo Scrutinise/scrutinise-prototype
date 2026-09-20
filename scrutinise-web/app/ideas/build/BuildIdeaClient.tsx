@@ -27,7 +27,7 @@ import {
 } from '@/components/lex/ElicitationCards'
 // TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
 // keeps importing its prop type from the component it renders.
-import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
+import MyIdeasList, { type MyIdea, hasRealTitle } from '@/components/lex/MyIdeasList'
 import RerunDialogue from '@/components/lex/RerunDialogue'
 import RerunBanner from '@/components/lex/RerunBanner'
 import YourMaterial from '@/components/lex/YourMaterial'
@@ -234,12 +234,17 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
 
 
 export default function BuildIdeaClient(
-  { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0, stageCtx = null,
+  { initialIdeaId, openedIdea = null, recent = [], deleted = [], hiddenEmpty = 0, stageCtx = null,
     isFirstIdea = false, displayName = null, blankState = null, materialCount = 0 }: {
     initialIdeaId?: string
-    resumed?: boolean
+    /** 26-C addendum §21 — which idea this is, when one was opened explicitly (from the
+     *  library) rather than started fresh. Replaces 25-E's "resumed" banner (retired by
+     *  §11's auto-resume removal) with an identity confirmation instead of a status note. */
+    openedIdea?: { title: string; excerpt: string } | null
     /** 25-J §2 — the user's own ideas, listed on the hub. See `MyIdea`. */
     recent?: MyIdea[]
+    /** 26-C addendum §20 — soft-deleted ideas, reachable and restorable. */
+    deleted?: MyIdea[]
     hiddenEmpty?: number
     /** 25-K §1 — the three stages, which one this is, and what is on the other two. */
     stageCtx?: StageContext | null
@@ -298,8 +303,6 @@ export default function BuildIdeaClient(
 
   // Local form state for the current step.
   const [text, setText] = useState('')
-  /** 26-C §2d — the second box, submitted alongside `text` on the intake only. */
-  const [background, setBackground] = useState('')
   const [correction, setCorrection] = useState('')
   /** 26-C §6a — the front screen's own layout: 3/4 create, 1/4 library, draggable. */
   const [leftPct, setLeftPct] = useState(75)
@@ -718,17 +721,16 @@ export default function BuildIdeaClient(
     // A1 — did they just criticise something Lex produced? The offer renders once the turn
     // finishes. Display only; nothing is captured either way.
     setFeedbackOffer(CRITIQUE_INTENT.test(text))
-    // 26-C §2a/§2d — the second box rides along on the intake only; the server ignores it
-    // on every later reply (`AnswerInput.background`), so sending it unconditionally is safe.
+    // 26-C addendum §14a — the second box is gone; everything goes in `text` and Lex sorts
+    // it. `AnswerInput.background` still exists server-side (harmless, unsent from here).
     const data = await post('/elicitation', {
-      action: 'answer', step, text, background, ...extra,
+      action: 'answer', step, text, ...extra,
     })
     if (data?.state) {
       applyMutation(data)
       setText('')
-      setBackground('')
     }
-  }, [elicit?.currentStep, post, text, background, applyMutation])
+  }, [elicit?.currentStep, post, text, applyMutation])
 
   // ⚠⚠ 25-H §3's `saveEdit`/`openStep`/the pill rail stood here and are RETIRED by
   // 26-C §2a. There is no longer a discrete "goal" or "profile" answer to reopen and no
@@ -893,38 +895,33 @@ export default function BuildIdeaClient(
       <PublicNav />
 
       {/*
-        ══ 26-C §6d — EXIT AND "HOW THIS WORKS" MOVE. ══════════════════════════════════
-        §6d: "Exit moves to the far right, below the header line. How this works moves to
-        the left, below the left-hand column heading." Both used to sit centred in their
-        own bar above everything else (25-G §3); on the pre-build front screen they now
-        live inside the two-column layout itself — Exit above the library column, "How
-        this works" under "Create a new idea" — so the buttons themselves are rendered
-        further down, inside the two-column layout. Once a build exists this is no longer
-        "the front screen" (§6 is scoped to it) and the old centred bar is kept, so the
-        affordance is not lost once a build is running or done.
+        ══ 26-C ADDENDUM §15a — "HOW THIS WORKS" RETURNS TO THE BLUE PILL, TOP RIGHT,
+        BESIDE EXIT. Supersedes §6d's placement (Exit in the library column, "How this
+        works" under the left heading) — Charlie's walkthrough asked for both back on
+        one line at the top, on every screen this component renders, not only once a
+        build exists. §15b's headings (below) are what now sits under the left column's
+        own heading line, not this control.
       */}
-      {elicit?.hasBuild && (
-        <div className="border-b border-zinc-100 px-4 py-2">
-          <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
-            <button
-              onClick={() => {
-                if (text.trim() || correction.trim()) setExitPrompt(true)
-                else window.location.href = '/dashboard'
-              }}
-              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
-            >
-              Exit
-            </button>
-            <button
-              onClick={() => setShowHelp(true)}
-              className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-5 py-2 shadow-sm transition-colors"
-            >
-              <span aria-hidden className="w-4 h-4 rounded-full border border-white/80 flex items-center justify-center text-[10px] font-bold">?</span>
-              How this works
-            </button>
-          </div>
+      <div className="border-b border-zinc-100 px-4 py-2">
+        <div className="max-w-6xl mx-auto flex items-center justify-end gap-3">
+          <button
+            onClick={() => {
+              if (text.trim() || correction.trim()) setExitPrompt(true)
+              else window.location.href = '/dashboard'
+            }}
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
+          >
+            Exit
+          </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-5 py-2 shadow-sm transition-colors"
+          >
+            <span aria-hidden className="w-4 h-4 rounded-full border border-white/80 flex items-center justify-center text-[10px] font-bold">?</span>
+            How this works
+          </button>
         </div>
-      )}
+      </div>
 
       {/* A2/A4 — the tour and the FAQ, in the build door's own words. */}
       {showHelp && <HowItWorksModal variant="build" onClose={() => setShowHelp(false)} />}
@@ -1020,21 +1017,16 @@ export default function BuildIdeaClient(
             className={elicit?.hasBuild ? 'w-full' : 'min-w-0 lg:pr-6'}
             style={!elicit?.hasBuild ? { flexBasis: `${leftPct}%` } : undefined}
           >
-            {/* §6c — "Create a new idea" on the left; §6d — "How this works" below it. */}
+            {/* §6c/addendum §15b — "Create a new idea", the same heading level, size and
+                weight "My ideas" (MyIdeasList's own `<h2>`) is styled to match. "How this
+                works" no longer lives here — addendum §15a puts it back beside Exit, top
+                right, on every screen. */}
             {!elicit?.hasBuild && (
               <div className="mb-5">
                 <h1 className="text-lg font-semibold text-zinc-900">Create a new idea</h1>
-                <div className="flex items-baseline gap-2 mt-1">
-                  {displayName && (
-                    <p className="text-sm text-zinc-600">Good {timeOfDay()} {displayName}.</p>
-                  )}
-                  <button
-                    onClick={() => setShowHelp(true)}
-                    className="text-xs font-semibold text-blue-700 hover:text-blue-900 underline"
-                  >
-                    How this works
-                  </button>
-                </div>
+                {displayName && (
+                  <p className="text-sm text-zinc-600 mt-1">Good {timeOfDay()} {displayName}.</p>
+                )}
               </div>
             )}
 
@@ -1061,18 +1053,26 @@ export default function BuildIdeaClient(
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>
         ) : (
           <>
-            {/* ⚠ 25-E §2 — THE RESUMPTION IS ANNOUNCED. "Never silently discard" cuts both
-                ways: silently RESTORING is nearly as disorienting, because the user cannot
-                tell whether what they are looking at is theirs or a fresh start. Charlie's
-                refresh gave him a blank form and he concluded — correctly, from what he could
-                see — that four questions of writing were gone. */}
-            {resumed && (
-              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
-                <p className="text-sm text-emerald-900">
-                  Picking up where you left off — everything you told me is still here.
+            {/* ⚠⚠ 26-C ADDENDUM §11/§21 — REPLACES 25-E §2's "PICKING UP WHERE YOU LEFT
+                OFF" BANNER, WHICH HAD NOTHING TO DO ONCE AUTO-RESUME WAS RETIRED (§11):
+                every idea shown here now got here by an EXPLICIT click, so "picking up"
+                is simply what opening an idea means and does not need announcing.
+                What still needs saying is WHICH idea this is (§21) — a click that lands
+                you on an idea with no title and no visible text yet is a click that looks
+                like it failed, which is the library's whole "cannot be identified, cannot
+                be opened" complaint. */}
+            {openedIdea && (
+              <div className="mb-4 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2">
+                <p className="text-sm text-zinc-700">
+                  <span className="font-semibold text-zinc-900">Continuing: </span>
+                  {hasRealTitle(openedIdea.title)
+                    ? openedIdea.title
+                    : openedIdea.excerpt
+                      ? <>In your words: {openedIdea.excerpt}</>
+                      : 'a new, empty idea — nothing written yet.'}
                 </p>
-                <a href="/ideas/build?fresh=1" className="text-xs text-emerald-800 underline">
-                  Start a different idea instead
+                <a href="/ideas/build" className="text-xs text-zinc-500 underline">
+                  Start a new idea instead
                 </a>
               </div>
             )}
@@ -1353,16 +1353,23 @@ export default function BuildIdeaClient(
             {elicit.phase === 'QUESTION' && step && !step.answer && (
               <IntakeCard
                 problem={text} onProblem={setText}
-                background={background} onBackground={setBackground}
                 busy={busy}
                 onSend={() => void answer()}
                 attachCount={attached}
                 attachOpen={attachOpen}
-                // ⚠ THE "+" IS OFFERED ONLY ONCE THERE IS AN IDEA TO ATTACH TO. Before the
-                // first answer there is no row (25-I §1: nothing is created by arriving), so
-                // a "+" here would have to mint one to accept a file — which is the defect
-                // 25-I removed, wearing a paperclip.
-                onToggleAttach={ideaId ? () => setAttachOpen((v) => !v) : undefined}
+                // ⚠⚠ 26-C ADDENDUM §14g — THE "+" IS ON THIS SCREEN NOW, BEFORE THE FIRST
+                // SEND. 25-I §1 refused to mint an idea just from ARRIVING at the page; a
+                // deliberate click on "+" is the same kind of act as pressing Send, not the
+                // silent auto-creation 25-I removed — so it may create the row too.
+                onToggleAttach={() => {
+                  void (async () => {
+                    if (!attachOpen && !ideaIdRef.current) {
+                      const id = await ensureIdea()
+                      if (!id) return
+                    }
+                    setAttachOpen((v) => !v)
+                  })()
+                }}
                 attachPanel={ideaId && (
                   <YourMaterial
                     ideaId={ideaId}
@@ -1600,22 +1607,12 @@ export default function BuildIdeaClient(
 
           {/* §6c — the library. Charlie offered "My Previous Ideas" and "Idea History"
               and invited better; kept as "My ideas" for now, matching the heading the
-              rest of the product already uses, pending his choice. */}
+              rest of the product already uses, pending his choice. Addendum §15a moved
+              Exit back to the top-right bar beside "How this works" — it no longer has
+              its own row here. */}
           {!elicit?.hasBuild && (
             <div className="min-w-0 lg:pl-6" style={{ flexBasis: `${100 - leftPct}%` }}>
-              {/* §6d — Exit, far right, below the header line. */}
-              <div className="flex justify-end mb-3">
-                <button
-                  onClick={() => {
-                    if (text.trim() || correction.trim()) setExitPrompt(true)
-                    else window.location.href = '/dashboard'
-                  }}
-                  className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
-                >
-                  Exit
-                </button>
-              </div>
-              <MyIdeasList ideas={recent} hiddenEmpty={hiddenEmpty} />
+              <MyIdeasList ideas={recent} deletedIdeas={deleted} hiddenEmpty={hiddenEmpty} />
             </div>
           )}
         </div>
