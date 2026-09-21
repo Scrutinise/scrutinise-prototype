@@ -111,8 +111,12 @@ async function main() {
   console.log('  ⚠ READ-ONLY. It creates nothing and calls nothing with a side effect.\n')
 
   const src = code('components/lex/FieldsPanel.tsx')
+  // ⚠ 25-Z §2a added a second argument (`{ freshlyOpened }`) to this call, and this assertion
+  // was not updated with it — found stale on this sprint's full-suite sweep, unrelated to 26-D.
+  // The property (the panel calls the shared function, not a local copy) still holds; only the
+  // call's arity changed.
   ok('the panel calls the shared collapse rule rather than writing its own',
-    /pageCollapsedByDefault\(page\.status\)/.test(src))
+    /pageCollapsedByDefault\(page\.status/.test(src))
   ok('and a collapsed page still unmounts its fields rather than hiding them',
     /\{!isLocked && !collapsed && \(/.test(src))
   // ⚠⚠ THE RULE ITSELF — AND ADDENDUM A1 REVERSED IT, so this assertion is reversed with it.
@@ -328,6 +332,37 @@ async function main() {
     /never tell the user to go and do|cannot write it yourself|do NOT send them to another stage/i.test(lexClientSrc))
   control('an unchanged prompt must fail that',
     () => /never tell the user to go and do/i.test('Discuss it conversationally.'))
+
+  // ── 26-D §2 — DRAG-TO-REORDER: OWNER SCOPING, AND WHETHER ANYONE HAS DRAGGED YET ──
+  //
+  // ⚠ THE FEATURE JUST SHIPPED, SO THE HONEST COLD READ ON PRODUCTION MAY WELL FIND NOTHING HAS
+  // USED IT — that is not a failure of the check, and reporting it as a pass would be exactly the
+  // fabricated-condition mistake §4c exists to catch. What CAN be asserted cold: the owner-scoping
+  // is a property of the route's own code (a source assertion is legitimate here, per §3a above,
+  // because the property genuinely IS about the code refusing a foreign id — proving it needs an
+  // authenticated cross-account request, which this script does not have); and whether production
+  // has any row actually carrying a value is read, not assumed, and printed either way.
+  console.log('\n── 26-D §2 — drag-to-reorder ──')
+  const reorderSrc = code('app/api/ideas/reorder/route.ts')
+  ok('the route scopes the write to the caller\'s own, non-deleted ideas',
+    /creatorId: user\.id, deletedAt: null/.test(reorderSrc))
+  ok('and an id not owned by the caller is filtered out, not the whole request rejected',
+    /ownedIds\.has\(id\)/.test(reorderSrc) && !/if \(!ownedIds/.test(reorderSrc))
+  control('a route that trusted the submitted ids outright would fail that',
+    () => /ownedIds\.has\(id\)/.test('const toWrite = parsed.data.order'))
+
+  const minePageSrc = code('app/ideas/mine/page.tsx')
+  ok('the library actually sorts by the owner\'s order, nulls last, before recency',
+    /ownerOrderIndex: \{ sort: 'asc', nulls: 'last' \}/.test(minePageSrc))
+
+  const orderedCount = await prisma.idea.count({ where: { ownerOrderIndex: { not: null } } })
+  if (orderedCount === 0) {
+    unverified.push('26-D §2: no idea in production carries a ownerOrderIndex yet — '
+      + 'the feature has not been exercised by a real drag since it shipped')
+    console.log('  · 26-D §2: NOT CHECKED — nobody has dragged yet; 0 rows carry an order')
+  } else {
+    ok('26-D §2: at least one real drag has persisted', orderedCount > 0, `${orderedCount} rows ordered`)
+  }
 
   console.log('\n── negative controls (each must FIRE) ──')
   let dead = 0

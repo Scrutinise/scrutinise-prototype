@@ -32,6 +32,7 @@ const base: MyIdea = {
   updatedAt: '2026-08-26T09:15:00.000Z',
   archived: false,
   deleted: false,
+  orderIndex: null,
 }
 const titled: MyIdea = {
   ...base,
