@@ -51,6 +51,9 @@ export interface MyIdea {
    *  kept on the row because `IdeaRow` renders deleted rows differently (no link, Restore
    *  instead of Delete/Unarchive). */
   deleted: boolean
+  /** 26-D §1/§2 — `Idea.ownerOrderIndex`. Null means never explicitly dragged; such rows
+   *  sort after every explicitly-ordered one, by `updatedAt`, exactly as before §2 shipped. */
+  orderIndex: number | null
 }
 
 /**
@@ -91,7 +94,7 @@ export function hrefFor(i: MyIdea): string {
   return `/ideas/${i.ideaId}`
 }
 
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import DeleteIdeaDialog from './DeleteIdeaDialog'
 
 /**
@@ -191,11 +194,51 @@ function CardControls({
   )
 }
 
-function IdeaRow({ i, onUnarchived, onDeleted, onRestored }: {
+/**
+ * 26-D §2 — the drag handle. Pointer events, not native HTML5 drag-and-drop: §2b asked
+ * how this behaves on a touch screen (Charlie walks the product on an iPad), and native
+ * `draggable` fires no events at all on touch without a polyfill — pointer events are
+ * the same mechanism `PanelDivider.tsx` already uses for exactly this reason, and behave
+ * identically for a mouse and a finger.
+ */
+function DragHandle({
+  disabled, onPointerDownDrag, onNudge,
+}: {
+  disabled: boolean
+  onPointerDownDrag: (e: React.PointerEvent) => void
+  /** Keyboard alternative to dragging — a discrete move, one position at a time. */
+  onNudge: (dir: -1 | 1) => void
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onPointerDown={onPointerDownDrag}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowUp') { e.preventDefault(); onNudge(-1) }
+        if (e.key === 'ArrowDown') { e.preventDefault(); onNudge(1) }
+      }}
+      title="Drag to reorder — or use the arrow keys"
+      aria-label="Reorder this idea"
+      // touch-action: none stops the browser treating a drag on this handle as a page
+      // scroll gesture, which is what makes it usable with a thumb, not only a mouse.
+      className="shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed touch-none px-1 -mx-1"
+      style={{ touchAction: 'none' }}
+    >
+      <span aria-hidden className="text-base leading-none tracking-tighter">⠿</span>
+    </button>
+  )
+}
+
+function IdeaRow({ i, onUnarchived, onDeleted, onRestored, onPointerDownDrag, onNudge, dragging }: {
   i: MyIdea
   onUnarchived: (ideaId: string) => void
   onDeleted: (ideaId: string) => void
   onRestored: (ideaId: string) => void
+  /** Undefined in the archived/deleted views — reordering only applies to the active list. */
+  onPointerDownDrag?: (e: React.PointerEvent) => void
+  onNudge?: (dir: -1 | 1) => void
+  dragging?: boolean
 }) {
   const titled = hasRealTitle(i.title)
   const build = buildLine(i)
@@ -244,8 +287,19 @@ function IdeaRow({ i, onUnarchived, onDeleted, onRestored }: {
     // The fix is structural, not a `preventDefault()` patched onto someone else's dialog:
     // the link and the controls are now SIBLINGS in one flex row, so nothing interactive
     // is ever a descendant of the `<a>` again, in this file or the next one added to it.
-    <li className="px-4 py-3 hover:bg-zinc-50 transition-colors">
+    <li
+      data-idea-id={i.ideaId}
+      className={`px-4 py-3 hover:bg-zinc-50 transition-colors ${dragging ? 'opacity-40' : ''}`}
+    >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        {/* 26-D §2 — the drag handle, first in the row, on every width. Absent in the
+            archived/deleted views (`onPointerDownDrag` undefined there) — reordering
+            only applies to the active list. */}
+        <div className="order-0 flex items-start pt-0.5 sm:pt-1">
+          {onPointerDownDrag && onNudge && (
+            <DragHandle disabled={false} onPointerDownDrag={onPointerDownDrag} onNudge={onNudge} />
+          )}
+        </div>
         {/* §13b — the controls first, on their own line, when the column is narrow. */}
         <div className="order-1 sm:order-2 flex justify-end sm:justify-start">
           <CardControls idea={i} onUnarchived={onUnarchived} onDeleted={onDeleted} onRestored={onRestored} />
@@ -274,6 +328,13 @@ export default function MyIdeasList(
   const [trash, setTrash] = useState(deletedIdeas)
   // §18a — anything archived BEFORE §18b removed the Archive action stays reachable here.
   const [view, setView] = useState<View>('active')
+  // 26-D §2 — which row (if any) is being dragged, for the opacity cue on that row.
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  // The active order as it stands DURING a drag, kept outside React state so the
+  // pointermove handler's reads/writes stay synchronous and a fetch is never called
+  // from inside a setState updater (updaters must stay pure — React may invoke one
+  // more than once).
+  const liveOrderRef = useRef<string[]>([])
 
   if (rows.length === 0 && trash.length === 0) return null
 
@@ -292,6 +353,84 @@ export default function MyIdeasList(
       return ts.filter((r) => r.ideaId !== ideaId)
     })
   }
+
+  // 26-D §2 — persists the FULL active order in one request (see the route's own
+  // comment for why sequential integers beat fractional insertion here), then reflects
+  // the same sequence into `orderIndex` locally so a second drag before any refetch
+  // still computes from correct data.
+  const persistOrder = useCallback((orderedIds: string[]) => {
+    setRows((rs) => {
+      const at = new Map(orderedIds.map((id, idx) => [id, idx]))
+      return rs.map((r) => (at.has(r.ideaId) ? { ...r, orderIndex: at.get(r.ideaId)! } : r))
+    })
+    void fetch('/api/ideas/reorder', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order: orderedIds }),
+    }).catch(() => {
+      // A failed write leaves the order the user just set showing locally; the next full
+      // page load re-reads the server's own order, which is the honest recovery — no
+      // silent retry loop for a reorder nobody is watching finish.
+    })
+  }, [])
+
+  // Reorders the ACTIVE subset only; archived rows keep their own relative order and
+  // are simply carried along, since they never appear in this same list.
+  const reorderActiveTo = useCallback((ideaId: string, targetIdeaId: string) => {
+    setRows((rs) => {
+      const activeIds = rs.filter((r) => !r.archived).map((r) => r.ideaId)
+      const from = activeIds.indexOf(ideaId)
+      const to = activeIds.indexOf(targetIdeaId)
+      if (from === -1 || to === -1 || from === to) return rs
+      const reordered = [...activeIds]
+      reordered.splice(from, 1)
+      reordered.splice(to, 0, ideaId)
+      liveOrderRef.current = reordered
+      const byId = new Map(rs.map((r) => [r.ideaId, r]))
+      return [...reordered.map((id) => byId.get(id)!), ...rs.filter((r) => r.archived)]
+    })
+  }, [])
+
+  const onPointerDownDrag = useCallback((ideaId: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    const handle = e.currentTarget
+    handle.setPointerCapture(e.pointerId)
+    liveOrderRef.current = active.map((r) => r.ideaId)
+    setDraggingId(ideaId)
+
+    const onMove = (ev: PointerEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY)
+      const rowEl = (el as HTMLElement | null)?.closest('[data-idea-id]') as HTMLElement | null
+      const targetId = rowEl?.dataset.ideaId
+      if (targetId && targetId !== ideaId) reorderActiveTo(ideaId, targetId)
+    }
+    const onUp = () => {
+      handle.removeEventListener('pointermove', onMove)
+      handle.removeEventListener('pointerup', onUp)
+      handle.removeEventListener('pointercancel', onUp)
+      setDraggingId(null)
+      persistOrder(liveOrderRef.current)
+    }
+    handle.addEventListener('pointermove', onMove)
+    handle.addEventListener('pointerup', onUp)
+    handle.addEventListener('pointercancel', onUp)
+  }, [active, reorderActiveTo, persistOrder])
+
+  // The keyboard alternative — a discrete, one-position move, persisted immediately.
+  const onNudge = useCallback((ideaId: string, dir: -1 | 1) => {
+    const activeIds = active.map((r) => r.ideaId)
+    const from = activeIds.indexOf(ideaId)
+    const to = from + dir
+    if (from === -1 || to < 0 || to >= activeIds.length) return
+    const reordered = [...activeIds]
+    const [item] = reordered.splice(from, 1)
+    reordered.splice(to, 0, item)
+    setRows((rs) => {
+      const byId = new Map(rs.map((r) => [r.ideaId, r]))
+      return [...reordered.map((id) => byId.get(id)!), ...rs.filter((r) => r.archived)]
+    })
+    persistOrder(reordered)
+  }, [active, persistOrder])
 
   const shown = view === 'archived' ? archived : view === 'deleted' ? trash : active
 
@@ -331,7 +470,18 @@ export default function MyIdeasList(
           being paged or truncated. */}
       <ul className="rounded-xl border border-zinc-200 divide-y divide-zinc-200 bg-white max-h-[70vh] overflow-y-auto">
         {shown.map((i) => (
-          <IdeaRow key={i.ideaId} i={i} onUnarchived={onUnarchived} onDeleted={onDeleted} onRestored={onRestored} />
+          <IdeaRow
+            key={i.ideaId}
+            i={i}
+            onUnarchived={onUnarchived}
+            onDeleted={onDeleted}
+            onRestored={onRestored}
+            // 26-D §2 — reordering only applies to the active list; the archived and
+            // deleted views render the same row without a handle at all.
+            onPointerDownDrag={view === 'active' ? onPointerDownDrag(i.ideaId) : undefined}
+            onNudge={view === 'active' ? (dir: -1 | 1) => onNudge(i.ideaId, dir) : undefined}
+            dragging={draggingId === i.ideaId}
+          />
         ))}
       </ul>
       {hiddenEmpty > 0 && (

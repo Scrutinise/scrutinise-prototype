@@ -40,7 +40,7 @@ export default async function YourIdeasPage() {
   // unchanged in substance, only moved.
   // ═══════════════════════════════════════════════════════════════════════════
   const select = {
-    id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true,
+    id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true, ownerOrderIndex: true,
     elicitation: { select: { status: true, problem: true, goalDetail: true, ownKnowledge: true } },
     builds: {
       orderBy: { createdAt: 'desc' as const },
@@ -49,7 +49,8 @@ export default async function YourIdeasPage() {
     },
   }
   const toMyIdea = (r: {
-    id: string; title: string; stage: string; updatedAt: Date; ownerArchivedAt: Date | null
+    id: string; title: string; stage: string; updatedAt: Date
+    ownerArchivedAt: Date | null; ownerOrderIndex: number | null
     elicitation: { status: string; problem: string | null; goalDetail: string | null; ownKnowledge: string | null } | null
     builds: { status: string; passesComplete: number | null; completedAt: Date | null }[]
   }, isDeleted: boolean): MyIdea => {
@@ -62,15 +63,21 @@ export default async function YourIdeasPage() {
       stage: r.stage,
       archived: !!r.ownerArchivedAt,
       deleted: isDeleted,
+      orderIndex: r.ownerOrderIndex,
       elicitationStatus: (r.elicitation?.status as MyIdea['elicitationStatus']) ?? 'CONFIRMED',
       buildStatus: (b?.status as MyIdea['buildStatus']) ?? null,
       passesComplete: b?.passesComplete ?? null,
       updatedAt: r.updatedAt.toISOString(),
     }
   }
+  // 26-D §2 — explicitly ordered rows first (in the order the owner dragged them into),
+  // then everything never touched, in the order the list has always used. NULL sorts
+  // last so today's order is exactly preserved until the first drag ever happens.
   const [activeRows, deletedRows] = await Promise.all([
     prisma.idea.findMany({
-      where: { creatorId: dbUser.id, deletedAt: null }, orderBy: { updatedAt: 'desc' }, take: 100, select,
+      where: { creatorId: dbUser.id, deletedAt: null },
+      orderBy: [{ ownerOrderIndex: { sort: 'asc', nulls: 'last' } }, { updatedAt: 'desc' }],
+      take: 100, select,
     }),
     prisma.idea.findMany({
       where: { creatorId: dbUser.id, deletedAt: { not: null } }, orderBy: { updatedAt: 'desc' }, take: 100, select,
