@@ -737,6 +737,27 @@ model Idea {
   /// this is a different predicate from day one, so it is a different column from day one.
   ownerArchivedAt           DateTime?
 
+  /// ══ 26-D §1/§2 — THE OWNER'S OWN DRAG ORDER FOR "MY IDEAS" ═══════════════════════
+  ///
+  /// §1: "where a per-user ordering of ideas would live, and what it costs to read on
+  /// every list render." No new table: an idea already belongs to exactly one creator,
+  /// so the order IS per-user by construction — a join table would only be needed if
+  /// one idea could be ordered differently for two different viewers of it, which is
+  /// not a thing this product does. Cost to read: one extra column in the query the
+  /// library page already runs; no extra join, no extra round trip.
+  ///
+  /// ⚠ FLOAT, NOT INT, but the API (app/api/ideas/reorder/route.ts) does NOT use fractional
+  /// midpoint insertion — it rewrites the whole visible list as sequential 0..N-1 on every
+  /// drop, in one transaction. A fractional scheme was considered and rejected: it has to
+  /// reason about a mix of real and NULL-valued neighbours at every drop, and the list this
+  /// applies to is capped at 100 rows, so a full rewrite is cheap. FLOAT is kept anyway so a
+  /// fractional scheme remains available later without a migration.
+  ///
+  /// NULL means "never explicitly ordered" — sorts after every explicitly-ordered row,
+  /// by updatedAt as today, so nothing about the existing list changes until the first
+  /// drag actually happens.
+  ownerOrderIndex           Float?
+
   /// ══ CCW-B22 §7 — THE QUESTIONS THIS PROPOSAL COULD NOT SETTLE, AS THEIR OWN IDEAS ═══
   ///
   /// Charlie: *"Identifying things that need their own idea-project is a valid output from an
