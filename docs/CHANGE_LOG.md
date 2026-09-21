@@ -1,5 +1,50 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-20 17:05 UTC — LEX 26-D — managing 49 ideas (§1/§2 only, per the brief's own stop rule)
+
+Report: `docs/LEX_26D_REPORT.md`.
+
+▼▼ **§1 REPORTED FIRST, AS INSTRUCTED: ORDERING AND GROUPING ARE TWO PIECES OF WORK, NOT ONE.**
+Ordering needs one nullable column on `Idea` (per-user by construction — an idea has exactly one
+creator, no join table). Grouping needs a new table, a relation, bulk-select UI, a delete/group
+action bar, and show/hide/rename semantics — matching the 26-C addendum 3 report's own earlier
+scoping of grouping as its own 1–2 sprints. **Per the brief's explicit instruction ("if it is two,
+build the ordering and stop"), only §2 was built this sprint. §3–§6 (Manage mode, bulk delete,
+bulk group, group display) are NOT built.**
+▶ **§2 BUILT — drag-to-reorder, "My ideas".** New column `Idea.ownerOrderIndex Float?`
+(`prisma/lex_26d_owner_order.sql`, applied to production before the schema commit). New
+`PATCH /api/ideas/reorder` — owner-scoped, silently excludes any id not belonging to the caller
+rather than failing the whole drop, rewrites the dropped order as sequential integers in one
+transaction (fractional midpoint insertion was considered and rejected — the list caps at 100
+rows, so a full rewrite is cheap and avoids reasoning about NULL/real-value neighbour mixing).
+`/ideas/mine/page.tsx` sorts by `ownerOrderIndex` (nulls last) then `updatedAt`. `MyIdeasList.tsx`
+gained a Pointer-Events drag handle (this codebase's established cross-device drag mechanism,
+first used in `PanelDivider.tsx` — chosen over native HTML5 `draggable`, which does not fire on
+touch without a polyfill) plus an arrow-key nudge fallback for anyone who cannot perform a pointer
+drag at all.
+▶ **§2b REPORTED, NOT ASSUMED: untested on a real touchscreen.** Pointer Events are the correct
+API and `touch-action: none` is set to stop the browser's own scroll gesture competing with the
+drag, but whether it actually feels right on an iPad, whether the handle is thumb-sized, and
+whether `elementFromPoint` resolves correctly under a touch point are all unverified from here.
+▶ **§7 ANSWERED, BY QUERYING PRODUCTION DIRECTLY, NOT BY REASONING FROM THE SCHEMA:** no existing
+field distinguishes "whose idea is this" — `ideaOrigin` is `USER` on every row, `collaborators`
+records access not authorship, `spawnedFromIdeaId` is an unrelated parent-idea link, and a search
+for "Starkey" or a user named David returns nothing. **No label shortcut exists; grouping is
+genuinely needed**, and remains scoped as its own sprint.
+▶ **Incidental fix, found by the full regression sweep, not part of 26-D's own scope:**
+`check:lex-25r`'s assertion on `FieldsPanel.tsx` was stale — a prior sprint (25-Z §2a) added a
+second argument to `pageCollapsedByDefault()` and no 26-C addendum re-ran `check:lex-25r` to catch
+the drift. The underlying property still held; the regex's arity was fixed.
+▶ **A case added to the standing cold-read instrument** (`check:lex-25r`, per CLAUDE.md §26):
+asserts the reorder route's owner-scoping and the page's sort order as source properties, then
+reads production read-only for any row actually carrying an order — found none (nobody has
+dragged since shipping) and reports that honestly as NOT CHECKED rather than a fixture-backed pass.
+✅ `tsc` clean, `check:scripts` clean, `check:client-boundary` clean (592 files, 139 client, no
+edge), `verify:my-ideas-ui` 17/0, `check:lex-25j` 12/0, `check:lex-26c-addendum` 8/0, `check:lex-25e`
+26/0, `verify:lex-25e-ui` 20/0, `check:lex-25r` 43/0/1-not-checked/8-controls-fired, 0 dead.
+▶ **Nothing in the three-panel workspace was touched**, per the brief's explicit instruction.
+
+
 ## 2026-09-20 16:37 UTC — LEX 26-C ADDENDUM 4 — the intake screen must explain itself
 
 ▼ **§26 BUILT.** The banner shown when Edit returns an unbuilt idea to its own conversation

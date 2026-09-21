@@ -773,7 +773,37 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-20 16:37 UTC (LEX 26-C ADDENDUM 4)* — ▼ **§26 BUILT — THE RETURN-TO-
+*Last updated: 2026-09-20 17:05 UTC (LEX 26-D)* — ▼▼ **§1 REPORTED FIRST: ORDERING AND GROUPING
+ARE TWO PIECES OF WORK, NOT ONE.** Report: `docs/LEX_26D_REPORT.md`. Ordering needs one nullable
+column (per-user by construction, no join table); grouping needs a new table, a relation,
+bulk-select UI and show/hide/rename semantics — matching 26-C addendum 3's own earlier scoping of
+grouping as its own 1–2 sprints. **Per the brief's explicit instruction, only §2 was built. §3–§6
+(Manage mode, bulk delete, bulk group, group display) are NOT built — next session's work.**
+▶ **§2 BUILT — drag-to-reorder, "My ideas."** New column `Idea.ownerOrderIndex Float?`, applied
+to production before the schema commit. New owner-scoped `PATCH /api/ideas/reorder` — rewrites the
+dropped order as sequential integers in one transaction (fractional insertion considered,
+rejected — the list caps at 100 rows, a full rewrite is cheap). `MyIdeasList.tsx` gained a
+Pointer-Events drag handle (this codebase's established cross-device mechanism, from
+`PanelDivider.tsx`) plus an arrow-key nudge fallback.
+▶ **§2b reported, not assumed: untested on a real touchscreen.** Pointer Events are the right API
+and `touch-action: none` stops the browser's own scroll competing with the drag, but feel, handle
+size and `elementFromPoint` behaviour under a real touch point are all unverified from here.
+▶ **§7 answered by querying production directly**: no field distinguishes "whose idea is this" —
+`ideaOrigin` is `USER` on every row, `collaborators` records access not authorship,
+`spawnedFromIdeaId` is unrelated, and a search for "Starkey" or a user named David returns
+nothing. No label shortcut exists; grouping is genuinely needed.
+▶ **Incidental fix, found by the full regression sweep, not 26-D's own scope**: `check:lex-25r`'s
+assertion on `FieldsPanel.tsx` was stale since 25-Z §2a added a second argument to
+`pageCollapsedByDefault()`; no 26-C addendum this session re-ran `check:lex-25r` to catch it. The
+property still held; the regex was fixed.
+▶ **A case added to `check:lex-25r`** (the standing cold-read instrument, per CLAUDE.md §26) for
+the reorder feature — found 0 rows carrying an order yet (nobody has dragged since shipping) and
+reports that honestly as NOT CHECKED.
+✅ `tsc`/`check:scripts`/`check:client-boundary` clean; `verify:my-ideas-ui` 17/0; `check:lex-25j`
+12/0; `check:lex-26c-addendum` 8/0; `check:lex-25e` 26/0; `verify:lex-25e-ui` 20/0; `check:lex-25r`
+43/0/1-not-checked/8-controls-fired, 0 dead.
+⚠ Nothing committed; commit-all.sh produced, pending approval.
+Earlier: 2026-09-20 16:37 UTC (LEX 26-C ADDENDUM 4) — ▼ **§26 BUILT — THE RETURN-TO-
 CONVERSATION BANNER EXPLAINS ITSELF.** The "Continuing: {title}" banner (shown when Edit
 returns an unbuilt idea here, §23d) named the idea but never said why the user was looking at
 this screen — Charlie read that as the workspace being lost. Rewritten to say: never built,
@@ -785,7 +815,6 @@ to their OWN title, never each other's, proving the resolution is scoped by URL 
 "most recently touched."
 ✅ `tsc`/`check:scripts`/`check:client-boundary` clean; `check:lex-25e` 26/0; `verify:lex-25e-ui`
 20/0; `verify:my-ideas-ui` 17/0; `check:lex-25j` 12/0; `check:lex-26c-addendum` 8/0.
-⚠ Nothing committed; commit-all.sh produced, pending approval.
 Earlier: 2026-09-20 14:28 UTC (LEX 26-C ADDENDUM 3) — ▼▼ **§22 ANSWERED FIRST: ALL 22
 "DELETED" IDEAS STILL EXIST.** Report: `docs/LEX_26C_ADDENDUM3_REPORT.md`. Read off production —
 every row carries `deletedAt` (soft-deleted, not purged); recoverable via "Your ideas" → "N
