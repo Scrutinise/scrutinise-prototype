@@ -1,5 +1,70 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-22 07:06 UTC — LEX 26-D §3-§6 (grouping) + Decision 92 (Lex files material from chat)
+
+Report: `docs/LEX_26D_PART2_REPORT.md`.
+
+▼▼ **26-D §3-§6 BUILT — MANAGE MODE, BULK DELETE, GROUPING.** New table `IdeaGroup` (id, ownerId,
+name, hidden) + `Idea.groupId` (single nullable FK — one group at a time, per §1's own earlier
+report), applied to production and committed ahead of the rest of the sprint. **Manage** puts a
+checkbox on every card (replacing the drag handle in that slot) and reveals **Delete selected**/
+**Group selected**, both disabled until ≥1 ticked. ▶ **§4b CONFIRMED, NOT ASSUMED: bulk delete
+uses the identical mechanism as the single delete** — `deleteIdeaForOwner` (owner check, idempotent,
+refuses a public STAGE_4/5 idea) lifted into `lib/lex/idea-lifecycle.ts` and imported by both the
+single `DELETE` route and the new `PATCH /api/ideas/bulk`; asserted in `check:lex-25r` that the
+bulk route contains no `deletedAt: new Date()` literal of its own. Bulk delete names the count and
+lists every title in one dialog (`BulkDeleteDialog`), recoverable through the existing "N deleted"
+route, and reports partial refusal (e.g. one selected idea is public) rather than swallowing it.
+▶ **§5/§6 grouping**: new heading or existing one (existing route absent, not an empty dropdown,
+when none exist yet); an idea moved into a group leaves its old one; **an empty group is removed
+silently** (`cleanupGroupIfEmpty`, called after every mutation that could empty one — bulk-group
+reassignment, ungroup, delete); groups render as named sections above which ungrouped ideas sit;
+Rename/Hide/Ungroup per group; hidden groups stay reachable via a "N hidden groups" toggle,
+symmetrical with "N archived"/"N deleted"; the header count (`active.length`) is computed BEFORE
+group-visibility filtering, so it includes ideas inside hidden groups (§6d).
+▶ **§7 reaffirmed, no new work** — already answered in the §1/§2 report: no field distinguishes
+an idea's owner/project; grouping is the only existing mechanism for it.
+
+▼▼ **DECISION 92 BUILT — LEX FILES MATERIAL FROM CHAT, DETERMINISTICALLY, NOT AS A MODEL CHOICE.**
+`lib/lex/chat-material.ts`: a URL in the user's message (up to 2 per turn) is fetched and filed by
+the PLATFORM, before Lex is called, through the identical `extractUrl` → `createLinkMaterial` →
+`runMaterialFindings` pipeline the upload panel uses — `createLinkMaterial` was lifted out of the
+upload route into `lib/lex/user-material.ts` specifically so both paths share one function. The
+outcome (filed + N findings / filed, nothing useful / refused + why) is handed to Lex as a new
+`materialFiledBlock` instructing it to report plainly, never invent, never send the user to do it
+themselves for something already filed or refused this turn. A named-but-unlinked source is
+answered honestly too: Lex has no general web search and is told to say so.
+▶ **§4 VERIFIED, NOT ASSUMED, AS INSTRUCTED: the runVersion-stranding bug IS fixed** (25-Y §1c,
+before this sprint) — re-ran `check:lex-25y` fresh (18/0) rather than trusting the historical
+record; this had apparently never been reported to Charlie despite being fixed, and is reported
+now with the evidence. ▶ **§5 TESTED LIVE, NOT ASSUMED**: fetched 5 real government URLs from this
+environment just now — `gov.uk` and `legislation.gov.uk` both 200; `parliament.uk`,
+`bills.parliament.uk`, `hansard.parliament.uk` all **403**, confirming the brief's own claim
+exactly. `extractUrl` already classifies a 403 as `'paywalled'` with an honest sentence (built
+25-D/25-L, unchanged) — the chat path inherits this for free by calling the same function.
+▶ **§6 — two layers**: structurally, a fetched page's raw text never reaches the main
+conversational turn, only the isolated findings-extraction pass, which returns small quoted
+findings only; and explicitly, that pass's own `SYSTEM` prompt now states plainly that document
+text is data, never instruction, naming the shape of an injected command and telling the model to
+report on such content rather than obey it (defence in depth, added this sprint).
+✅ `tsc`/`check:scripts`/`check:client-boundary` clean; `verify:my-ideas-ui` 17/0; `check:lex-25j`
+12/0; `check:lex-26c-addendum` 8/0; `check:lex-25e` 26/0; `verify:lex-25e-ui` 20/0; `check:lex-25y`
+18/0; **`check:lex-25r` 51/0, 10/10 controls fired**, with new cases for both features (the
+IdeaGroup empty-invariant cold read and Decision 92's material-filing case are both honestly NOT
+CHECKED — no group and no chat-filed link exist in production yet, and the latter is permanently
+uncheckable this way by design: a chat-filed row is identical in shape to an uploaded one).
+⚠ **Found, not caused, not fixed**: `check:prompt-examples` fails on one pre-existing leak in
+`lib/lex/deepening-config.ts:182` (last touched 31 Aug) — out of scope for this brief, surfaced
+only because running the sweep against this sprint's own new prompt text caught it in passing. That
+same sweep is why an early draft of the new prompt block (naming "the Grenfell Inquiry report" as
+an example) was rewritten to name no specific example at all, per CLAUDE.md §27.
+⚠ **A tooling finding**: a discriminated-union return type did not narrow under this project's
+`strict: false` tsconfig (confirmed empirically on both `if (x.ok)` and `if (!x.ok)`); rewritten
+as a flat interface with every field always present. Worth knowing before the next one.
+⚠ Nothing committed yet; commit-all.sh pending approval. Nothing in the three-panel workspace
+touched, per the brief's explicit instruction.
+
+
 ## 2026-09-20 17:05 UTC — LEX 26-D — managing 49 ideas (§1/§2 only, per the brief's own stop rule)
 
 Report: `docs/LEX_26D_REPORT.md`.

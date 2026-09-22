@@ -773,7 +773,37 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-20 17:05 UTC (LEX 26-D)* — ▼▼ **§1 REPORTED FIRST: ORDERING AND GROUPING
+*Last updated: 2026-09-22 07:06 UTC (LEX 26-D §3-§6 + Decision 92)* — ▼▼ **GROUPING BUILT.**
+Report: `docs/LEX_26D_PART2_REPORT.md`. New `IdeaGroup` table + `Idea.groupId` (one group at a
+time, per §1's earlier report). **Manage** puts a checkbox on every card and reveals **Delete
+selected**/**Group selected**, both disabled until ≥1 ticked. Bulk delete uses the IDENTICAL
+mechanism as the single delete (`deleteIdeaForOwner`, lifted to `lib/lex/idea-lifecycle.ts` and
+imported by both routes — confirmed by `check:lex-25r`, not assumed), names the count and lists
+titles in one dialog, and reports partial refusal rather than swallowing it. Grouping: new heading
+or existing (existing option absent when none exist yet); empty groups removed silently
+(`cleanupGroupIfEmpty`); Rename/Hide/Ungroup per group; hidden groups reachable via a "N hidden
+groups" toggle; header count includes ideas inside hidden groups. §7 reaffirmed, no new work.
+▼▼ **DECISION 92 BUILT — LEX FILES MATERIAL FROM CHAT, DETERMINISTICALLY.** A URL in the user's
+message is filed by the PLATFORM before Lex is called, through the identical pipeline the upload
+panel uses (`createLinkMaterial` lifted into `lib/lex/user-material.ts` so both paths share it).
+Lex is told the outcome and instructed to report it plainly, never invent, never send the user to
+do it themselves. **§4 VERIFIED FRESH (not assumed): the runVersion-stranding bug IS fixed**
+(25-Y §1c, pre-dates this sprint) — `check:lex-25y` re-run, 18/0; this had apparently never
+reached Charlie despite being fixed. **§5 TESTED LIVE**: gov.uk/legislation.gov.uk fetch fine
+(200); every parliament.uk subdomain tried returns 403 — confirmed exactly as the brief said;
+`extractUrl` already handles this honestly (built earlier, unchanged). **§6**: fetched content
+never reaches the main chat turn (only the isolated findings pass does), and that pass's own
+prompt now explicitly warns document text is data, never instruction (defence in depth).
+✅ `tsc`/`check:scripts`/`check:client-boundary` clean; full check suite green; **`check:lex-25r`
+51/0, 10/10 controls fired** with new cases for both features (two honestly NOT CHECKED: no group
+and no chat-filed link exist in production yet — the latter permanently uncheckable this way by
+design, since a chat-filed row is identical in shape to an uploaded one).
+⚠ Found in passing, not caused, not fixed: `check:prompt-examples` has one pre-existing leak in
+`lib/lex/deepening-config.ts` (31 Aug, untouched this sprint) — out of scope, flagged for whoever
+picks it up. ⚠ Tooling finding: a discriminated union did not narrow under this project's
+`strict: false` tsconfig — rewritten flat; worth knowing before the next one.
+⚠ Nothing committed yet; commit-all.sh pending approval. Three-panel workspace untouched.
+Earlier: 2026-09-20 17:05 UTC (LEX 26-D §1/§2) — ▼▼ **§1 REPORTED FIRST: ORDERING AND GROUPING
 ARE TWO PIECES OF WORK, NOT ONE.** Report: `docs/LEX_26D_REPORT.md`. Ordering needs one nullable
 column (per-user by construction, no join table); grouping needs a new table, a relation,
 bulk-select UI and show/hide/rename semantics — matching 26-C addendum 3's own earlier scoping of
