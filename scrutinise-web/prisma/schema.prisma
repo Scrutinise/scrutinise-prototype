@@ -566,6 +566,8 @@ model User {
 
   // Relations
   ideas                     Idea[]              @relation("IdeaCreator")
+  /// 26-D §3–§6 — the groups this user has made to organise their own "My ideas" list.
+  ideaGroups                IdeaGroup[]
   votes                     Vote[]
   comments                  Comment[]
   commentRatings            CommentRating[]
@@ -757,6 +759,21 @@ model Idea {
   /// by updatedAt as today, so nothing about the existing list changes until the first
   /// drag actually happens.
   ownerOrderIndex           Float?
+
+  /// ══ 26-D §3–§6 — GROUPING: ONE GROUP AT A TIME, A SINGLE NULLABLE FK ═══════════════
+  ///
+  /// §1's own report (this same sprint) recommended this shape before anything was built:
+  /// a group is one row with a name and an owner, and membership is a single nullable FK —
+  /// **one group at a time, moving between groups rather than belonging to several** — because
+  /// Charlie's stated problem ("which ideas are David's and which are mine", §7) is a
+  /// partition, not an overlapping tag set, and a single FK is the simplest structure that
+  /// answers it.
+  ///
+  /// ⚠ `SetNull`, NOT `Cascade`. Deleting a group must return its ideas to the ungrouped
+  /// list, never delete the ideas themselves — §6c: "a group can be renamed, and ungrouped —
+  /// its ideas returning to the ungrouped list, not deleted."
+  groupId                   String?
+  group                     IdeaGroup?      @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
   /// ══ CCW-B22 §7 — THE QUESTIONS THIS PROPOSAL COULD NOT SETTLE, AS THEIR OWN IDEAS ═══
   ///
@@ -983,6 +1000,7 @@ model Idea {
   @@index([status])
   @@index([communityId])
   @@index([proposalVisibility])
+  @@index([groupId])
 }
 
 model WordingHistory {
@@ -4686,6 +4704,29 @@ model IdeaUserMaterial {
 enum UserMaterialKind {
   FILE
   LINK
+}
+
+/// ══ 26-D §3–§6 — A GROUP: ONE ROW, OWNED, NAMED, SHOWABLE OR HIDEABLE ═══════════════
+///
+/// §1's report: no join table — an idea belongs to at most one group (`Idea.groupId`), which
+/// answers "does an idea belong to more than one" directly rather than needing an `@@unique`
+/// to enforce it. §5d: an empty group (its last idea moved out) is removed silently — the
+/// application layer does this on every mutation that could leave one empty, so a group row
+/// existing at all is itself evidence it still has a member; nothing here enforces that as a
+/// DB constraint, because "recommend removing it silently" is a UX decision the app makes,
+/// not an invariant the schema should refuse to let lapse for a moment mid-transaction.
+model IdeaGroup {
+  id        String   @id @default(uuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  /// §6a — "Hiding a group is what archiving used to be for... named, visible and reversible."
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ideas     Idea[]
+
+  @@index([ownerId])
 }
 
 enum UserMaterialStatus {
