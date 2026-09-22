@@ -195,7 +195,7 @@ const CHECKS: Check[] = [
       const base: MyIdea = {
         ideaId: 'abc', title: PLACEHOLDER_TITLE, excerpt: 'x', stage: 'STAGE_1',
         elicitationStatus: 'IN_PROGRESS', buildStatus: null, passesComplete: null,
-        updatedAt: '2026-08-27T00:00:00.000Z', archived: false, deleted: false, orderIndex: null,
+        updatedAt: '2026-08-27T00:00:00.000Z', archived: false, deleted: false, orderIndex: null, group: null,
       }
       if (hrefFor(base) !== '/ideas/abc') return 'an unbuilt idea does not open the overview'
       return hrefFor({ ...base, buildStatus: 'DONE' }) === '/ideas/abc'

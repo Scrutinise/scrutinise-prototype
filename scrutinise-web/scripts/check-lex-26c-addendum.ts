@@ -59,7 +59,7 @@ async function main() {
     const fakeMyIdea: MyIdea = {
       ideaId: unbuiltIdea.id, title: unbuiltIdea.title, excerpt: '', stage: 'STAGE_1',
       elicitationStatus: 'IN_PROGRESS', buildStatus: null, passesComplete: null,
-      updatedAt: new Date().toISOString(), archived: false, deleted: false, orderIndex: null,
+      updatedAt: new Date().toISOString(), archived: false, deleted: false, orderIndex: null, group: null,
     }
     ok('§23c — an UNBUILT idea\'s card opens the Idea overview',
       hrefFor(fakeMyIdea) === `/ideas/${unbuiltIdea.id}`, hrefFor(fakeMyIdea))
@@ -76,7 +76,7 @@ async function main() {
     const fakeMyIdea: MyIdea = {
       ideaId: builtIdea.id, title: builtIdea.title, excerpt: '', stage: 'STAGE_2',
       elicitationStatus: 'CONFIRMED', buildStatus: 'DONE', passesComplete: null,
-      updatedAt: new Date().toISOString(), archived: false, deleted: false, orderIndex: null,
+      updatedAt: new Date().toISOString(), archived: false, deleted: false, orderIndex: null, group: null,
     }
     ok('§23c — a BUILT idea\'s card ALSO opens the Idea overview (not straight to the workspace)',
       hrefFor(fakeMyIdea) === `/ideas/${builtIdea.id}`, hrefFor(fakeMyIdea))

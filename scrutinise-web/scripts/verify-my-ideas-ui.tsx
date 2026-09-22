@@ -33,6 +33,7 @@ const base: MyIdea = {
   archived: false,
   deleted: false,
   orderIndex: null,
+  group: null,
 }
 const titled: MyIdea = {
   ...base,
