@@ -5,6 +5,7 @@ import { auth } from '@clerk/nextjs/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { awardPoints } from '@/lib/points'
+import { deleteIdeaForOwner } from '@/lib/lex/idea-lifecycle'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -204,39 +205,17 @@ export async function PATCH(req: Request, { params }: Params) {
 //     may retry; a second press should not produce an error dialogue about an idea the
 //     user has already successfully removed.
 // ─────────────────────────────────────────────────────────────────────────────
+// ⚠ 26-D §4b — LIFTED INTO `lib/lex/idea-lifecycle.ts` AND IMPORTED, NOT RESTATED. The
+// bulk-delete route (app/api/ideas/bulk/route.ts) calls the exact same function, so a
+// bulk delete cannot silently diverge from what a single delete refuses or allows.
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params
   const { error, user } = await getAuthenticatedUser()
   if (error || !user) return error ?? NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const idea = await prisma.idea.findUnique({
-    where: { id },
-    select: { id: true, creatorId: true, title: true, stage: true, deletedAt: true },
-  })
-  if (!idea) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  if (idea.creatorId !== user.id) {
-    // 403, not 404: the caller reached an idea they can legitimately see (they may be a
-    // collaborator). Pretending it does not exist would be a lie they can disprove.
-    return NextResponse.json({ error: 'Only the owner can delete an idea' }, { status: 403 })
+  const outcome = await deleteIdeaForOwner(id, user.id)
+  if (outcome.ok) {
+    return NextResponse.json({ ok: true, id: outcome.id, title: outcome.title, alreadyDeleted: outcome.alreadyDeleted })
   }
-
-  if (idea.deletedAt) {
-    return NextResponse.json({ ok: true, alreadyDeleted: true, id, title: idea.title })
-  }
-
-  const PUBLIC_STAGES = ['STAGE_4', 'STAGE_5']
-  if (PUBLIC_STAGES.includes(idea.stage)) {
-    return NextResponse.json({
-      error:
-        'This idea is public and carries other people’s votes and contributions. ' +
-        'Withdraw it instead — deleting it would take their work with it.',
-      code: 'PUBLIC_IDEA',
-    }, { status: 409 })
-  }
-
-  await prisma.idea.update({ where: { id }, data: { deletedAt: new Date() } })
-  console.log('[idea] deleted', { id, stage: idea.stage, by: user.id })
-
-  return NextResponse.json({ ok: true, id, title: idea.title })
+  return NextResponse.json({ error: outcome.error, code: outcome.code }, { status: outcome.status })
 }

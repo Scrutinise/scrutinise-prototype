@@ -47,12 +47,17 @@ export default async function YourIdeasPage() {
       take: 1,
       select: { status: true, passesComplete: true, completedAt: true },
     },
+    // 26-D §3-§6 — grouping. A group is derived entirely from what each idea carries
+    // (no separate query): every group that exists has at least one active idea in it,
+    // guaranteed by `cleanupGroupIfEmpty` running on every mutation that could empty one.
+    group: { select: { id: true, name: true, hidden: true } },
   }
   const toMyIdea = (r: {
     id: string; title: string; stage: string; updatedAt: Date
     ownerArchivedAt: Date | null; ownerOrderIndex: number | null
     elicitation: { status: string; problem: string | null; goalDetail: string | null; ownKnowledge: string | null } | null
     builds: { status: string; passesComplete: number | null; completedAt: Date | null }[]
+    group: { id: string; name: string; hidden: boolean } | null
   }, isDeleted: boolean): MyIdea => {
     const b = r.builds[0]
     const excerpt = (r.elicitation?.problem || r.elicitation?.goalDetail || r.elicitation?.ownKnowledge || '').trim()
@@ -64,6 +69,7 @@ export default async function YourIdeasPage() {
       archived: !!r.ownerArchivedAt,
       deleted: isDeleted,
       orderIndex: r.ownerOrderIndex,
+      group: r.group,
       elicitationStatus: (r.elicitation?.status as MyIdea['elicitationStatus']) ?? 'CONFIRMED',
       buildStatus: (b?.status as MyIdea['buildStatus']) ?? null,
       passesComplete: b?.passesComplete ?? null,
