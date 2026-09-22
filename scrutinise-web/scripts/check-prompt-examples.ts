@@ -36,6 +36,36 @@ const ROOTS = ['lib/lex', 'lib/documents']
 const NOT_EXAMPLES = ['interrogation-library.ts']
 
 /**
+ * ══ THE SECOND KNOWN CLASS — A BARE `text:` FIELD IS DETERMINISTIC, CODE-EMITTED COPY ══
+ *
+ * Investigated 22 Sep after this sweep flagged `deepening-config.ts:182` (an
+ * `issueTemplates[].text` sentence) as "LEAKED into 2 stored rows". It is not a leak: the
+ * two rows are `raiseTemplateIssues` (lib/lex/deepening.ts) writing `t.text` VERBATIM,
+ * unconditionally, whenever the template's `when()` predicate fires — no model call sits
+ * anywhere near that path. Confirmed both rows equal the source string byte-for-byte, and
+ * `git log -L` shows the sentence was authored whole-cloth on 12 Aug when the Deepening
+ * engine was built, never derived from a real idea. It cannot be "reproduced onto the
+ * wrong proposal" the way an illustrative prompt example can, because it is not shown to a
+ * model as a specimen to fill — it IS the content, identically, everywhere its condition
+ * holds. CLAUDE.md §27 already documents this class as a deliberate exclusion; this is
+ * what actually implements it (the filename-based `NOT_EXAMPLES` above never covered it).
+ *
+ * ⚠ SCOPED TO THE FIELD, NOT THE FILE. `deepening-config.ts` also carries `method:` and
+ * `training:` blocks that ARE real model prompts and must stay swept. A bare `text:` key
+ * (own line, no value beside it) is the distinguishing shape — confirmed the ONLY use of
+ * it anywhere in `lib/lex` or `lib/documents` is this deterministic kind: `issueTemplates`
+ * entries here, and static document-block notes in `lib/documents/build-evidence-pack.ts`
+ * / `build-proposal.ts` (`{ kind: 'note', text: '...' }`, also code-emitted, never a model
+ * prompt). See `isDeterministicTextField` below.
+ */
+const TEXT_FIELD_START = /^text:\s*$/
+/** A field's value ends at the next sibling key, or the object/array closing it. */
+const TEXT_FIELD_END = /^[A-Za-z][A-Za-z0-9]*:\s*\S|^[}\]]/
+/** Defensive cap — if a `text:` value somehow runs this long, stop trusting the tracker
+ *  and resume normal scanning rather than silently swallowing unrelated later lines. */
+const MAX_TEXT_FIELD_LINES = 20
+
+/**
  * A quoted phrase is an ILLUSTRATION only where the line around it says so. This is the
  * difference between "here is a question to ask" (content, by design) and "a good answer looks
  * like this" (a template the model may lift).
@@ -48,9 +78,22 @@ const QUOTED = /"([^"\n]{28,140})"|'([^'\n]{28,140})'|“([^”\n]{28,140})”/g
 /** Lines that are plainly instructions to a model rather than code. */
 function promptLines(src: string): Array<{ line: number; text: string }> {
   const out: Array<{ line: number; text: string }> = []
+  let inTextField = false
+  let textFieldLines = 0
   src.split('\n').forEach((l, i) => {
     const t = l.trim()
     if (t.startsWith('//') || t.startsWith('*')) return          // comments are not prompts
+
+    if (inTextField) {
+      textFieldLines++
+      if (TEXT_FIELD_END.test(t) || textFieldLines > MAX_TEXT_FIELD_LINES) {
+        inTextField = false                                      // falls through — this
+      } else {                                                    // line itself may be the
+        return                                                     // next real field; re-test below
+      }
+    }
+    if (TEXT_FIELD_START.test(t)) { inTextField = true; textFieldLines = 0; return }
+
     if (!/^['"`]/.test(t) && !/:\s*['"`]/.test(t)) return
     if (!/[a-z]{4}\s+[a-z]{3}/i.test(t)) return                   // must read as a sentence
     out.push({ line: i + 1, text: t })
@@ -68,7 +111,48 @@ function walk(dir: string): string[] {
   return out
 }
 
+/**
+ * ⚠ A CONTROL THAT CANNOT FAIL IS WORTHLESS. Proves two things about `promptLines`'
+ * `text:`-field tracker on synthetic fixtures, so the exclusion added 22 Sep is verified
+ * rather than trusted: (1) it suppresses the EXACT shape that caused the false positive —
+ * an `issueTemplates` entry's `text:` field, even though its prose contains "looks like";
+ * (2) it does NOT suppress an illustrative line sitting in an ordinary prompt field
+ * (`method:`) outside a `text:` key — proving the exclusion is scoped to the field, not a
+ * blanket pass on anything nearby.
+ */
+function selfTestTextFieldExclusion(): boolean {
+  const templateShape = [
+    "      {",
+    "        id: 'x',",
+    "        text:",
+    "          'Every finding supports the diagnosis and none contradicts it. That is possible, but it' +",
+    "          ' is also what a one-sided search looks like — worth a deliberate look for the case against.',",
+    "        when: (c) => true,",
+    "      },",
+  ].join('\n')
+  const suppressed = !promptLines(templateShape).some((l) => ILLUSTRATIVE.test(l.text))
+
+  const ordinaryPrompt = [
+    "    method: [",
+    "      'Give a concrete finding, e.g. \"no source quantifies the annual caseload\" is the kind of",
+    "      thing that works.',",
+    "    ],",
+  ].join('\n')
+  const stillFound = promptLines(ordinaryPrompt).some((l) => ILLUSTRATIVE.test(l.text))
+
+  console.log(`  ${suppressed ? '✓' : '✗ FAILED'} the false-positive shape (issueTemplates text:) is now excluded`)
+  console.log(`  ${stillFound ? '✓' : '✗ FAILED'} an illustrative line OUTSIDE a text: field is still found (control)`)
+  return suppressed && stillFound
+}
+
 async function main() {
+  console.log('── self-test: the text: field exclusion, on synthetic fixtures ──')
+  if (!selfTestTextFieldExclusion()) {
+    console.error('\nself-test FAILED — the exclusion is not doing what it claims. Fix before trusting the sweep below.')
+    process.exit(1)
+  }
+  console.log('')
+
   const files = ROOTS.flatMap((r) => walk(r))
   const candidates: Array<{ file: string; line: number; phrase: string }> = []
 

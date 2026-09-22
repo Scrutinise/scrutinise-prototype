@@ -1,5 +1,32 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-22 08:05 UTC — the "leaked" prompt example was not real user words, and not a leak
+
+Charlie asked whether the `check:prompt-examples` finding flagged in the previous entry
+(`deepening-config.ts:182`, "LEAKED into 2 stored rows") was the Charlie/Angus defect class —
+real user testimony reproduced by a model onto an unrelated proposal. **Report first: it is
+not.** Verified three ways before touching anything: both stored `DeepeningIssue` rows are
+byte-for-byte identical to the static template string (not a paraphrase a model could have
+produced); the write path (`raiseTemplateIssues`, `lib/lex/deepening.ts`) is deterministic
+code with no model call anywhere near it — `t.text` is written verbatim whenever `when(ctx)`
+holds; and `git log -L` shows the sentence was authored whole-cloth on 12 Aug 2026 when the
+Deepening engine was first built, never derived from any real idea. **No audit of ideas built
+since is needed** — the precondition for that class of defect (real testimony entering a
+model's improvised output) does not hold here.
+
+▶ **The actual defect was in the check itself.** `docs/CLAUDE.md` §27 already documents a
+second deliberate exclusion — "a rule's own `text:` field in `deepening-config.ts` is written
+to be emitted" — that `scripts/check-prompt-examples.ts`'s `NOT_EXAMPLES` list never actually
+implemented (it only ever excluded `interrogation-library.ts` by filename). Fixed: `promptLines()`
+now tracks a bare `text:` key and skips its value, verified as the ONLY shape used for
+deterministic, code-emitted copy anywhere in `lib/lex` or `lib/documents` (issueTemplates
+entries here; static document-block notes in `build-evidence-pack.ts`/`build-proposal.ts`).
+Added a self-test with two controls — the false-positive shape is suppressed, and an
+illustrative line outside a `text:` field is still caught — both pass.
+✅ `tsc --noEmit` clean (app + scripts); `check:prompt-examples` now exits 0 (0 leaked, 16
+illustrations swept, was 17), self-test 2/2.
+
+
 ## 2026-09-22 07:06 UTC — LEX 26-D §3-§6 (grouping) + Decision 92 (Lex files material from chat)
 
 Report: `docs/LEX_26D_PART2_REPORT.md`.

@@ -773,7 +773,14 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-22 07:06 UTC (LEX 26-D §3-§6 + Decision 92)* — ▼▼ **GROUPING BUILT.**
+*Last updated: 2026-09-22 08:05 UTC* — ▶ **The "leaked" prompt example flagged in the previous
+entry is NOT real user words and NOT the Charlie/Angus defect class** — verified (byte-identical
+stored rows, a deterministic non-model write path, and `git log -L` showing the sentence was
+authored whole-cloth on 12 Aug). No audit of built ideas needed. The real defect was
+`check:prompt-examples`'s own exclusion list being incomplete relative to what CLAUDE.md §27
+already documents; fixed with a self-tested structural exclusion. `check:prompt-examples` now
+0 leaked (was 1). ⚠ Nothing committed yet.
+Earlier: 2026-09-22 07:06 UTC (LEX 26-D §3-§6 + Decision 92) — ▼▼ **GROUPING BUILT.**
 Report: `docs/LEX_26D_PART2_REPORT.md`. New `IdeaGroup` table + `Idea.groupId` (one group at a
 time, per §1's earlier report). **Manage** puts a checkbox on every card and reveals **Delete
 selected**/**Group selected**, both disabled until ≥1 ticked. Bulk delete uses the IDENTICAL
