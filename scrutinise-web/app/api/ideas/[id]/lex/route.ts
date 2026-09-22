@@ -15,6 +15,7 @@ import { matchCause, AMBIGUOUS } from '@/lib/lex/match-cause'
 import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
+import { fileUrlsFromChat, materialFiledBlock } from '@/lib/lex/chat-material'
 import { buildFactsBlock } from '@/lib/lex/facts'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 import { productFactsBlock } from '@/lib/lex/product-facts'
@@ -92,6 +93,19 @@ export async function POST(req: Request, { params }: Params) {
     const query = researchQueryFrom(message) || message
     research = await runAdHocResearch(id, query)
     console.log('[lex-diag] ad-hoc research from chat', { query: query.slice(0, 80), ok: research.ok, results: research.results.length })
+  }
+
+  // ══ DECISION 92 — A URL IN THE MESSAGE IS FILED BEFORE LEX EVER SPEAKS ══════════════
+  //
+  // Deterministic, not a model tool call: see lib/lex/chat-material.ts's own header for
+  // why. Runs through the identical pipeline an upload uses, including its cap and its
+  // rejection logging — a link filed from chat is not a lesser or different kind of
+  // material.
+  const materialResults = await fileUrlsFromChat(id, user.id, message)
+  if (materialResults.length) {
+    console.log('[lex-diag] chat-filed material', {
+      urls: materialResults.map((r) => ({ url: r.url, outcome: r.outcome })),
+    })
   }
 
   const current = pre.currentField ? fieldDef(pre.currentField.key) ?? null : null
@@ -202,6 +216,8 @@ export async function POST(req: Request, { params }: Params) {
     // 25-Q §6 — the same array "How this works" renders. See lib/lex/product-facts.ts.
     productFactsBlock: productFactsBlock(),
     askOnly,
+    // Decision 92 — what the platform just filed on this idea, before this turn.
+    materialFiledBlock: materialFiledBlock(materialResults),
   })
 
   let lex

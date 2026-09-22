@@ -19,7 +19,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import {
-  extractFile, extractUrl, runMaterialFindings, MaterialRejected,
+  extractFile, extractUrl, runMaterialFindings, MaterialRejected, createLinkMaterial,
   MAX_MATERIALS_PER_IDEA, MAX_UPLOAD_BYTES,
 } from '@/lib/lex/user-material'
 import { USER_MATERIAL_PASS_PREFIX } from '@/lib/lex/heading-map'
@@ -184,23 +184,12 @@ export async function POST(req: Request, { params }: Params) {
     }
     pendingTarget = parsed.data.url
     const extracted = await extractUrl(parsed.data.url)
-    const created = await prisma.ideaUserMaterial.create({
-      data: {
-        ideaId: id,
-        kind: 'LINK',
-        status: 'READY',
-        label: (parsed.data.label?.trim() || extracted.title || extracted.finalUrl).slice(0, 300),
-        // ⚠ THE LINK IS RETAINED (§25.6). A quotation whose source cannot be reopened is not
-        // evidence — and this is the RESOLVED url, so a redirect chain does not leave the
-        // user with an address that no longer reaches what we read.
-        url: extracted.finalUrl,
-        text: extracted.text,
-        charCount: extracted.text.length,
-        sourceBytes: extracted.text.length,
-        rightsConfirmed: parsed.data.rightsConfirmed === true,
-        addedBy: authz.user.id,
-      },
-      select: { id: true },
+    const created = await createLinkMaterial({
+      ideaId: id,
+      extracted,
+      addedBy: authz.user.id,
+      label: parsed.data.label,
+      rightsConfirmed: parsed.data.rightsConfirmed === true,
     })
     return finish(id, created.id, extracted.truncated)
   } catch (err) {

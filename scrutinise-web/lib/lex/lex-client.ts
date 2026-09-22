@@ -86,6 +86,17 @@ export interface LexTurnContext {
    * state machine; this turn answers a question and proposes nothing. See the route.
    */
   askOnly?: boolean
+  /**
+   * ══ DECISION 92 — WHAT THE PLATFORM JUST FILED, BEFORE LEX SPEAKS ══════════════════
+   *
+   * A URL in the user's message is fetched and filed into the idea's material
+   * DETERMINISTICALLY, by the route, before this prompt is built — see
+   * lib/lex/chat-material.ts. This block is the report of what happened; Lex's only job
+   * is to relay it truthfully. It is never asked to decide whether to file something,
+   * so "Lex either files it or says plainly why it cannot" (§1) does not depend on the
+   * model choosing correctly.
+   */
+  materialFiledBlock?: string | null
 }
 
 /**
@@ -416,7 +427,7 @@ ${method}
 
 ${PLATFORM_CONTROLS}
 
-${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
+${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
   user:            ${ctx.preferredName}
   experience:      ${ctx.experienceLevel ?? 'unknown — establish it gently early on'}
   mode:            ${ctx.lexMode}
