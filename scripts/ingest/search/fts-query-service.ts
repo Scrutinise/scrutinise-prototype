@@ -297,14 +297,17 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         // `corpora` / `excludeCorpora` scope a search to ONE stream within a shared tier —
         // debates and committees both live on `parliamentary`, and separating them after
         // retrieval is lossy (the result is truncated to `limit` before the caller can filter).
-        const { query, tier, limit, corpora, excludeCorpora } = JSON.parse(raw || '{}')
+        const { query, tier, limit, corpora, excludeCorpora, ids } = JSON.parse(raw || '{}')
         if (!query || typeof query !== 'string') return send(res, 400, { error: 'query (string) required' })
         if (tier !== undefined && typeof tier !== 'string') return send(res, 400, { error: 'tier must be a string when given' })
         const okList = (v: unknown) => v === undefined || (Array.isArray(v) && v.every((x) => typeof x === 'string'))
         if (!okList(corpora) || !okList(excludeCorpora)) return send(res, 400, { error: 'corpora/excludeCorpora must be string arrays when given' })
+        // S20b — the within-document filter. A bare array check only, same as corpora/excludeCorpora
+        // above; `rankedSearch` is where an empty list and an absent one are told apart.
+        if (!okList(ids)) return send(res, 400, { error: 'ids must be a string array when given' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
         const t0 = Date.now()
-        const results = await rankedSearch(table, query, { tier, limit: lim, actIndex, corpora, excludeCorpora })
+        const results = await rankedSearch(table, query, { tier, limit: lim, actIndex, corpora, excludeCorpora, ids })
         const serviceMs = Date.now() - t0
         const c = process.cpuUsage(cpu0)
         cpuMsArr.push(Math.round((c.user + c.system) / 1000))
@@ -322,7 +325,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         // body omitted from the wire payload; snippet is enough for inspection
         send(res, 200, {
           query, tier: tier ?? null,
-          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null,
+          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null, ids: ids ?? null,
           // `ms` is now TOTAL (queue + service), matching vector-query-service.ts. It used to be
           // service time alone; no caller read it, so the change is safe as well as necessary.
           ms, queueMs, serviceMs, count: results.length, results: results.map(({ body, ...r }) => r),

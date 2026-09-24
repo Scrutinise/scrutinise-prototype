@@ -56,6 +56,13 @@ export interface SearchScope {
   corpora?: string[]
   /** Exclude these corpora (server-side prefilter). The complement form, for debates. */
   excludeCorpora?: string[]
+  /**
+   * S20b — restrict to exactly these ids (server-side prefilter). The within-document search's
+   * whole mechanism: a document's section ids, so BM25 ranks against tens of rows instead of the
+   * collection's millions. Combines with `tier`/`corpora` via AND, same as every other predicate
+   * here — a caller that also knows the tier may pass it, but `ids` alone is a complete scope.
+   */
+  ids?: string[]
 }
 
 const sqlStr = (s: string) => `'${s.replace(/'/g, "''")}'`
@@ -74,6 +81,7 @@ export function scopePredicate(scope: SearchScope): string | null {
   if (scope.tier) parts.push(`tier = ${sqlStr(scope.tier)}`)
   if (scope.corpora?.length) parts.push(`corpus IN (${scope.corpora.map(sqlStr).join(', ')})`)
   if (scope.excludeCorpora?.length) parts.push(`corpus NOT IN (${scope.excludeCorpora.map(sqlStr).join(', ')})`)
+  if (scope.ids?.length) parts.push(`id IN (${scope.ids.map(sqlStr).join(', ')})`)
   return parts.length ? parts.join(' AND ') : null
 }
 
@@ -161,11 +169,14 @@ async function resolveInjections(table: lancedb.Table, query: string, actIndex?:
 export async function rankedSearch(
   table: lancedb.Table,
   query: string,
-  opts: { tier?: string; limit?: number; actIndex?: ActIndex; corpora?: string[]; excludeCorpora?: string[] } = {},
+  opts: { tier?: string; limit?: number; actIndex?: ActIndex; corpora?: string[]; excludeCorpora?: string[]; ids?: string[] } = {},
 ): Promise<Hit[]> {
   const limit = opts.limit ?? 20
-  const k = Math.max(limit * OVERSCAN, 100)
-  const scope: SearchScope = { tier: opts.tier, corpora: opts.corpora, excludeCorpora: opts.excludeCorpora }
+  // ⚠ S20b — an `ids`-scoped call is a document, not a tier: tens of rows, never the 100-row
+  // overscan floor this line exists for. `Math.max` still applies so a caller that also passes a
+  // tier keeps today's behaviour exactly.
+  const k = opts.ids?.length ? Math.max(limit * OVERSCAN, opts.ids.length) : Math.max(limit * OVERSCAN, 100)
+  const scope: SearchScope = { tier: opts.tier, corpora: opts.corpora, excludeCorpora: opts.excludeCorpora, ids: opts.ids }
   const scoped = scopePredicate(scope)
   // queryType MUST be 'fts' (+ the indexed column) — a string query with the wrong
   // type falls through to vector search ("No embedding functions are defined").

@@ -210,6 +210,24 @@ export const CAPABILITY_FLAGS = [
   // that decides whether this flag should ever be turned on for the parliamentary collections.
   'LEX_SEARCH_GRAIN',
   //
+  // S20b — the step `LEX_SEARCH_GRAIN` above cannot take on its own: that flag REGROUPS an
+  // already-computed ranking (one result per document, that document's best RETRIEVED section),
+  // which S19 §3 measured recovers only 22 of 65 gold questions — worse than section grain's own
+  // 23 — because for 11 of the 18 questions the document grain rescues, the answer section was
+  // never in the top 500 of its own collection at all. No regroup of an existing list can reach a
+  // row that was never on it. This flag runs a SECOND retrieval, scoped to just the top-ranked
+  // document's own section ids, so that section competes against the tens of rows actually in its
+  // document instead of the collection's millions. Predictions, the control, and the measurement:
+  // `docs/SEARCH_S20B_REPORT.md`.
+  //
+  // ⚠ DEFAULT OFF. Bounded to the single top-ranked result per search (`lib/lex/search-gateway.ts`)
+  // — one extra document, one extra look, never a call per result. `lib/lex/within-document-search.ts`
+  // is the retrieval; `meta.withinDocument` reports what it did, including `promoted: false` for
+  // the (expected to be common) case where it ran and confirmed the outer ranking already had the
+  // right section, so a caller can tell "ran, agreed" from "did not run" — CLAUDE.md §18's
+  // corollary again, one mechanism along.
+  'LEX_SEARCH_WITHIN_DOC',
+  //
   // ⚠⚠ `LEX_MERGE_COVERAGE` WAS HERE AND WAS RETIRED ON 2026-08-26 (S14 §2). It was S13's minimal
   // experiment — reallocate the post-floor slots by query-term coverage. Measured: **+2 of 65**
   // (23% → 26%) while moving **24 of 34 rankings**, and its two regressions took documents their

@@ -88,7 +88,16 @@ const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? String(FTS_COLD_ST
 
 /** Server-side stream scope. `corpora` restricts, `excludeCorpora` removes; both are
  *  PREfilters applied at the query, not filters applied to the response. */
-export interface FtsScope { tier?: string; corpora?: string[]; excludeCorpora?: string[] }
+export interface FtsScope {
+  tier?: string; corpora?: string[]; excludeCorpora?: string[]
+  /** S20b — an exact id-list prefilter. Used here only to HYDRATE a within-document search's
+   *  winner into a full, properly-mapped SearchResult (title/citation/url/date, the same mapping
+   *  every other result gets) via the normal one-hit-limit path, rather than a second, partial
+   *  mapper. `within-document-search.ts` itself calls `fts-query-service` directly (it needs raw
+   *  ranks from a small pool, not this file's title/citation mapping) — this field is for the
+   *  gateway's hydration step afterward, not for the inner search itself. */
+  ids?: string[]
+}
 
 async function callFts(query: string, limit: number, scope: FtsScope = {}): Promise<FtsHit[]> {
   if (!FTS_URL) throw new Error('FTS_SEARCH_URL not set')
@@ -103,6 +112,7 @@ async function callFts(query: string, limit: number, scope: FtsScope = {}): Prom
         ...(scope.tier ? { tier: scope.tier } : {}),
         ...(scope.corpora?.length ? { corpora: scope.corpora } : {}),
         ...(scope.excludeCorpora?.length ? { excludeCorpora: scope.excludeCorpora } : {}),
+        ...(scope.ids?.length ? { ids: scope.ids } : {}),
       }),
       signal: ctrl.signal,
     })

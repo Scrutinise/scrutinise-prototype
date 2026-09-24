@@ -82,6 +82,11 @@ export class QueryCache<V> {
     limit: number
     corpora?: string[] | null
     excludeCorpora?: string[] | null
+    /** S20b — the within-document filter. WITHOUT this in the key, two different documents
+     *  searched with the same query text would collide on one cache entry and one document's
+     *  result would be served for the other's — silently, since a cache hit looks identical to a
+     *  correct answer. */
+    sectionIds?: string[] | null
   }): string {
     // Normalise the query the way a user's repeat would differ: surrounding whitespace and
     // case. Nothing more aggressive — stemming or token reordering here would merge queries
@@ -89,7 +94,7 @@ export class QueryCache<V> {
     // answers rather than just remembering them.
     const q = parts.query.trim().replace(/\s+/g, ' ').toLowerCase()
     const sorted = (a?: string[] | null) => (a?.length ? [...a].sort() : [])
-    return JSON.stringify([q, parts.tier ?? null, parts.limit, sorted(parts.corpora), sorted(parts.excludeCorpora)])
+    return JSON.stringify([q, parts.tier ?? null, parts.limit, sorted(parts.corpora), sorted(parts.excludeCorpora), sorted(parts.sectionIds)])
   }
 
   /**

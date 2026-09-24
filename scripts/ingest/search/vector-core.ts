@@ -94,18 +94,26 @@ export async function vectorSearchSections(
    *  cannot separate debates from committees, and an unscoped dense half fused against a
    *  scoped BM25 half is worse than scoping neither — committee content is 1.17% of the
    *  parliamentary tier, so ~99% of the dense contribution would be out-of-stream. */
-  scope?: { corpora?: string[]; excludeCorpora?: string[] },
+  scope?: { corpora?: string[]; excludeCorpora?: string[]; sectionIds?: string[] },
 ): Promise<VecSectionHit[]> {
+  // ⚠ S20b — `corpus_vec` carries no document-key COLUMN at all (chunkId/sectionId/corpus/tier/
+  // vector only; see SEARCH_S20B_REPORT.md §3). `sectionIds` is a filter over the existing
+  // `sectionId` column, not a new indexed field — correct for the tens-of-rows case a
+  // within-document search needs, and NOT a substitute for a real document-key column at
+  // corpus_vec's full scale (22.6M+ vectors — that is a Heavy Job Runner rebuild, CLAUDE.md §17,
+  // and this is deliberately not that).
+  const sectionIdScope = scope?.sectionIds?.length ? Math.max(limit * CHUNK_OVERSCAN, scope.sectionIds.length) : Math.max(limit * CHUNK_OVERSCAN, 60)
   let q = table.vectorSearch(Float32Array.from(qvec))
     .distanceType('cosine')
     .nprobes(NPROBES)
     .refineFactor(REFINE)
-    .limit(Math.max(limit * CHUNK_OVERSCAN, 60))
+    .limit(sectionIdScope)
   const sql = (s: string) => `'${s.replace(/'/g, "''")}'`
   const preds: string[] = []
   if (tier) preds.push(`tier = ${sql(tier)}`)
   if (scope?.corpora?.length) preds.push(`corpus IN (${scope.corpora.map(sql).join(', ')})`)
   if (scope?.excludeCorpora?.length) preds.push(`corpus NOT IN (${scope.excludeCorpora.map(sql).join(', ')})`)
+  if (scope?.sectionIds?.length) preds.push(`sectionId IN (${scope.sectionIds.map(sql).join(', ')})`)
   if (preds.length) q = q.where(preds.join(' AND '))
   const rows = await q.toArray() as any[]
   // cosine distance → similarity; keep best per section.

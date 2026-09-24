@@ -266,6 +266,15 @@ export interface GatewayResult {
      * half rather than disown the results. See SEARCH_CONTRACT.md §6 and S15 D-2.
      */
     denseDegraded?: import('./query-router').DenseDegradation[]
+    /**
+     * S20b — present only when `LEX_SEARCH_WITHIN_DOC` is on and a top result carried a
+     * `parentDocId` (undefined otherwise, e.g. the flag is off, or `results` was empty). `promoted`
+     * is what a caller actually cares about: false means the inner search ran and confirmed the
+     * outer ranking, or found nothing better, or could not hydrate its winner — the top result
+     * shown is unchanged either way, and only `promoted: true` means it differs from what the
+     * outer ranking alone would have shown.
+     */
+    withinDocument?: { documentKey: string; winnerId: string | null; promoted: boolean; tookMs: number }
   }
 }
 
@@ -596,6 +605,49 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   const repealedCount = annotatedResults.filter((r) => r.repeal && r.repeal.state !== 'no-record').length
   const partialCount = annotatedResults.filter((r) => r.repeal?.state === 'partially-repealed').length
 
+  // ── S20b — WITHIN-DOCUMENT SEARCH, default OFF (LEX_SEARCH_WITHIN_DOC) ──────────────────────
+  //
+  // S19 §2/§3: the right DOCUMENT comes back for 41 of 65 gold questions, but showing that
+  // document's best RETRIEVED section only answers 22 — because for 11 of the 18 questions the
+  // document grain rescues, the answer section was never in the top 500 of its own collection, so
+  // no re-ranking of the outer list can ever reach it. This runs a SECOND retrieval, scoped to
+  // just the top-ranked document's own sections, so that section can win a contest against the
+  // tens of sections actually in its document rather than the collection's millions.
+  //
+  // ⚠ BOUNDED TO THE TOP RESULT ONLY. A caller asking for 20 results does not get 20 extra
+  // retrieval calls — one document, the one already leading, gets one more look. Predictions and
+  // methodology: SEARCH_S20B_REPORT.md §1.
+  let withinDocument: { documentKey: string; winnerId: string | null; promoted: boolean; tookMs: number } | undefined
+  if (flagEnabled('LEX_SEARCH_WITHIN_DOC') && annotatedResults.length) {
+    const top = annotatedResults[0]
+    if (top.parentDocId !== undefined) {
+      const { documentKeyOf } = await import('./grain')
+      const { searchWithinDocument } = await import('./within-document-search')
+      const documentKey = documentKeyOf(top.id, top.parentDocId ?? null)
+      const inner = await searchWithinDocument(keywords.join(' '), documentKey, { limit: 20 })
+      let promoted = false
+      // Only act when the inner search found something OTHER than what is already shown — a
+      // winner equal to the current top result means the outer ranking already had it right, and
+      // re-fetching it would just spend a call to learn that.
+      if (inner.winnerId && inner.winnerId !== top.id) {
+        try {
+          const { results: hydrated } = await runFtsSearch(keywords, 1, { ids: [inner.winnerId] })
+          const winnerResult = hydrated.find((r) => r.id === inner.winnerId)
+          if (winnerResult) {
+            annotatedResults[0] = winnerResult
+            const groupedIdx = annotatedGrouped.findIndex((r) => r.id === top.id)
+            if (groupedIdx >= 0) annotatedGrouped[groupedIdx] = winnerResult
+            promoted = true
+          }
+        } catch (e) {
+          console.warn('[search-gateway] within-document hydration failed — keeping the outer result', (e as Error).message)
+        }
+      }
+      withinDocument = { documentKey, winnerId: inner.winnerId, promoted, tookMs: inner.tookMs }
+      console.log('[search-gateway] within-document search', { intent: q.intent, ...withinDocument, legsRun: inner.legsRun })
+    }
+  }
+
   // S11 §5.1 — the fan-out, stated. Derived from what actually happened rather than recomputed
   // from the scope table: `perStream` is present only on the routed path, and the tier-scoped and
   // unrouted paths really do dispatch one stream, so `?? 1` is the fact and not a fallback.
@@ -616,7 +668,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   })
   return {
     intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics,
-    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested, denseDegraded },
+    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested, denseDegraded, withinDocument },
   }
 }
 

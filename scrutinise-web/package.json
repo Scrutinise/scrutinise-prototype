@@ -74,6 +74,8 @@
     "check:s19-grain": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s19-grain.ts",
     "audit:s19-reach": "tsx --env-file=.env --tsconfig tsconfig.json scripts/audit-s19-reach.ts",
     "measure:s19-grain": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s19-grain.ts",
+    "check:s20b-control": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s20b-control.ts",
+    "measure:s20b-within-doc": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s20b-within-doc.ts",
     "gen:s18-questions": "tsx --env-file=.env --tsconfig tsconfig.json scripts/s18-costing-questions.ts",
     "check:panel-claims": "tsx scripts/check-panel-claims.ts",
     "check:deepening": "tsx scripts/check-deepening.ts",

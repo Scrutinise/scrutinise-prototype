@@ -490,11 +490,15 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         // both halves of a fusion. Optional — omitted means search everything, as before.
         // `noCache` is for the scoring harnesses: a measurement served from cache would be
         // measuring the cache, not retrieval.
-        const { query, limit, tier, corpora, excludeCorpora, noCache } = JSON.parse(raw || '{}')
+        const { query, limit, tier, corpora, excludeCorpora, sectionIds, noCache } = JSON.parse(raw || '{}')
         if (!query || typeof query !== 'string') return send(res, 400, { error: 'query (string) required' })
         if (tier !== undefined && typeof tier !== 'string') return send(res, 400, { error: 'tier must be a string when given' })
         const okList = (v: unknown) => v === undefined || (Array.isArray(v) && v.every((x) => typeof x === 'string'))
         if (!okList(corpora) || !okList(excludeCorpora)) return send(res, 400, { error: 'corpora/excludeCorpora must be string arrays when given' })
+        // S20b — the within-document filter. `corpus_vec` has no document-key column
+        // (SEARCH_S20B_REPORT.md §3), so this filters the existing `sectionId` column instead of a
+        // corpus/tier prefilter — correct for a document's tens of rows, not a general prefilter.
+        if (!okList(sectionIds)) return send(res, 400, { error: 'sectionIds must be a string array when given' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
 
         const t0 = Date.now()
@@ -536,7 +540,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
           release = slot.release
 
           const tAnn = Date.now()
-          const hits = await vectorSearchSections(vecTbl, qv, lim, tier, { corpora, excludeCorpora })
+          const hits = await vectorSearchSections(vecTbl, qv, lim, tier, { corpora, excludeCorpora, sectionIds })
           thisAnnMs = Date.now() - tAnn
           annMs.push(thisAnnMs)
 
@@ -577,7 +581,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         // be masked by an unrelated live client — or worse, mask a real one.
         const key = noCache === true
           ? `nocache:${++noCacheSeq}`
-          : QueryCache.key({ query, tier, limit: lim, corpora, excludeCorpora })
+          : QueryCache.key({ query, tier, limit: lim, corpora, excludeCorpora, sectionIds })
         liveKey = key
         addLive(key)
         // The socket may already have closed while the body was being read; `res.on('close')`
@@ -598,7 +602,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         // symptom (a fusion quietly mixing streams) is exactly what this sprint exists to prevent.
         send(res, 200, {
           query, tier: tier ?? null,
-          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null,
+          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null, sectionIds: sectionIds ?? null,
           ms, embedMs: thisEmbedMs, cached: noCache === true ? 'bypass' : outcome, count: results.length,
           // S15 §1.2 — the same breakdown /stats aggregates, per response, so a harness can
           // attribute a slow call without having to correlate it against a since-boot counter.
