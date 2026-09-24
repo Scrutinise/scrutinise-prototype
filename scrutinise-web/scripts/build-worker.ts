@@ -41,6 +41,7 @@ import {
 } from '../lib/lex/build'
 import { WORKER_CONCURRENCY, WORKER_IDLE_MS, buildDriver } from '../lib/lex/build-config'
 import { assertRetrievalConfig, resolvedConfigLine } from '../lib/lex/harness-preflight'
+import { capabilityLine } from '../lib/env-flags'
 
 const ONCE = process.argv.includes('--once')
 
@@ -192,6 +193,15 @@ async function main() {
   // ⚠ Which is why the test is not "the settings look right". It is a push to a watched path
   // followed by a deployment appearing that nobody triggered. This edit is that push.
   console.log(`[build-worker ${WORKER_ID}] ${resolvedConfigLine()}`)
+  // S20a — `resolvedConfigLine()` only ever covered the retrieval-degradation flags it was
+  // built for (fts/vector URL, streams, router). This worker's own builds also read
+  // LEX_SEARCH_RERANKER, LEX_SEARCH_JUDGED_MERGE, LEX_TIER_FUSION, LEX_STATS_STREAM and
+  // LEX_QUERY_EXPANSION through search-gateway — none of which appeared in this boot log,
+  // so the worker's resolution of them could never be compared against /api/health's, which
+  // has reported the FULL set since S17 §3. Same flag, two services, two different
+  // resolutions is exactly what CLAUDE.md's env-flags.ts header already warns is invisible
+  // without a reading on both sides — `capabilityLine()` is that reading's other half.
+  console.log(`[build-worker ${WORKER_ID}] ${capabilityLine()}`)
   try {
     assertRetrievalConfig(`build-worker ${WORKER_ID}`, { allowDegraded: ALLOW_DEGRADED })
     if (ALLOW_DEGRADED) {
