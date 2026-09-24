@@ -773,7 +773,44 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-24 02:28 UTC (SEARCH S21)* — ▼▼ **xAI STRUCTURED CLIENT BUILT; WEB
+*Last updated: 2026-09-24 02:36 UTC (LEX 26-E)* — ▼▼ **THE ROOT-CAUSE LOCK WAS THE PANEL, NEVER
+THE SERVER — §1/§2 FIXED, §3 SIZED NOT BUILT.** Brief: `docs/BRIEF_26E.md`. Full detail in
+`docs/CHANGE_LOG.md`'s 02:36 entry; summary here.
+▼▼ **§1 — every write path checked BEFORE touching a component, and none of them guard against
+an already-ACCEPTED field**: `setRootCause`, `choosePolicyApproach`, `addCause`/`updateCause`/
+`removeCause`, `ActionsApi.update`/`.remove` all already worked post-acceptance — the lock was
+`FieldsPanel.tsx` choosing not to render a control once `terminal`. `RootCauseField` and
+`ChosenApproachField` get a `changing` toggle that reopens the same picker; `StructuredField`
+gets the "Change" button `OutputField` already had (never wired up); `OutputField`'s one
+deliberate exclusion (`summaryDiagnosis`) is removed — §1 draws no exception; `CausesField`/
+`ActionsField` keep their add-form and per-row edit/remove available once confirmed.
+▼ **§2 — TWO WRITERS FOR "RULE OUT", MEASURED: `PolicyOptionsField`'s own button skipped the
+cascade to parked actions that the guiding-policy screen's button applied**, so the same act
+diverged by which button was pressed. Collapsed to one (`rejectPolicyOption` in
+`guiding-policy-state.ts`), both callers use it. A ruled-out candidate now leaves
+`PolicyOptionsField`'s list and surfaces under `GuidingPolicyScreen`'s existing "Ruled out"
+section, renamed **"Candidate policies ruled out"**, now `CollapsedSection`-hidden by default.
+⚠⚠ **§3 sized, not built, per the brief's own instruction** — a user-owned numbered `Source`
+entity, `[Ref: n]` insertion across nine distinct editors on four pages, a new DB table, a
+numbering policy: recommended as its own sprint, matching how grouping was scoped in 26-C
+addendum 3.
+▶ §4 "Build credits" bold headline (new `grantedBuilds` on `readAllowance()`). ▶ §5 Re-run block
+now collapses with the SAME control the kernel headings use. ▶ §6 dictation paragraph deleted,
+moved onto the chat placeholder ("Chat to Lex or dictate"); the one check asserting the old copy
+updated, not left red. ▶ §7 Diagnosis warning renders verbatim, on every open (not active-only).
+▶ §8 commentary rebuilt: "Summary of the evidence on causation", each part its own collapsing
+section, disagreements first / pieces-fit last, no boxes or coloured indents. ▶ §9 List/Map tabs
+removed — one section, map first, list showing the same hierarchy ("Drives / leads to Cause N"),
+add-cause last; "Confirm these causes". ▶ §10 achromatic focus ring (white-on-near-black,
+global `:focus-visible`), so "with colour removed" is true by construction.
+✅ `tsc --noEmit` clean; ✅ `check:scripts` (separate program) clean; ✅ `check:client-boundary`
+clean, control fired. ⚠⚠ **NOT RUN: every DB-touching check**, including `check:lex-25r` (the
+cold-read instrument the brief named by name) — reported as not run, not omitted (§23.2); none
+of this session's edits are exercised against a real idea yet.
+⚠ **§12 — asked, not guessed: Charlie's cut-off note ("The map needs a r") — he'd lost the
+thought; nothing to act on.**
+⚠ Nothing committed; `commit-all.sh` pending Charlie's approval.
+Earlier: 2026-09-24 02:28 UTC (SEARCH S21) — ▼▼ **xAI STRUCTURED CLIENT BUILT; WEB
 ORIENTATION NO LONGER HAS A SINGLE POINT OF FAILURE.** Report: `docs/SEARCH_S21_REPORT.md`.
 `model-call.ts`'s hard xAI `unroutable` stub is gone (`callXai()`, Responses API, unverified live —
 no `GROK_API_KEY` here). New provider-neutral `orientation/web-search.ts` (xAI + Google adapters,

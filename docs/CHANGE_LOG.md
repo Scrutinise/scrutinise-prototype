@@ -1,5 +1,96 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-24 02:36 UTC — LEX 26-E — the kernel walkthrough: two locks removed, §3 sized not built
+
+Brief: `docs/BRIEF_26E.md`. Per §0 (continuous; §3 is a feature, report before building; §4–§10
+any order). Not yet committed — `commit-all.sh` pending Charlie's approval.
+
+▼▼ **§1 — THE LOCK WAS THE PANEL, NEVER THE SERVER.** Charlie: *"I can't change the root cause
+after picking one."* Read every write path involved (`field-machine.ts`, `/api/ideas/[id]/causes`,
+`/policy-options`) before touching a component: `setRootCause`, `choosePolicyApproach`, `addCause`,
+`updateCause`, `removeCause`, `ActionsApi.update/.remove` all have **no guard at all** against being
+called on an already-ACCEPTED field — the lock was FieldsPanel.tsx choosing not to render a
+control once `terminal`. Fixed by reusing what already worked rather than building a second
+mechanism:
+- `RootCauseField` and `ChosenApproachField` — a `changing` toggle reopens the exact same
+  picker; resets itself the moment the chosen id changes.
+- `StructuredField` — gained the "Change" button `OutputField` already had, wired to the
+  existing generic `reopenField()` (was simply never passed the prop).
+- `OutputField` — the one deliberate exclusion (`summaryDiagnosis`, "regenerated, not
+  hand-edited") is removed; §1 draws no exception.
+- `CausesField` / `ActionsField` — "Add a cause"/"Add an action" and per-row edit/remove no
+  longer disappear once the loop is confirmed; only the one-time Confirm/Skip stay gated.
+⚠ Not touched: `PolicyOptionsField`'s own per-option Edit (already worked regardless of
+terminal, via `OptionCard`'s own `editing` state — same shape as `CauseCard`, already correct).
+
+▼ **§2 — TWO WRITERS FOR "RULE OUT", MEASURED AND COLLAPSED TO ONE.** §2b asked to confirm the
+25-P mechanism was reused rather than a second one built — it was NOT reused: `PolicyOptionsField`'s
+own "Rule out" (pre-sort candidate list) posted `/api/ideas/[id]/policy-options` → a second,
+thinner `ruleOutPolicyOption()` in field-machine.ts that wrote the same two columns but **skipped
+the cascade to actions parked with the policy** — the guiding-policy screen's own "Rule out" cascades
+them (`applyPolicyOp('reject', …)`), so the same act diverged depending which button was pressed.
+Extracted the cascade into one exported `rejectPolicyOption()` (`guiding-policy-state.ts`); both
+routes call it now; the thinner duplicate is deleted. §2a: a ruled-out candidate now **leaves**
+`PolicyOptionsField`'s list (filtered on `status !== 'RULED_OUT'`) and surfaces in
+`GuidingPolicyScreen`'s existing "Ruled out" section, renamed **"Candidate policies ruled out"**
+and wrapped in `CollapsedSection` (hidden by default) — same restore-by-number mechanism, no new one.
+
+⚠⚠ **§3 — SIZED, NOT BUILT, PER THE BRIEF'S OWN INSTRUCTION.** This is a sprint on its own — see
+"§3 sizing" below. §4–§10 (and the §1/§2 fixes above) came first as instructed.
+
+▶ **§4 — "Build credits" is a bold headline now**, not a number buried inside a sentence about
+thirds and re-runs. `readAllowance()` gained `grantedBuilds` (whole builds of the grant, the same
+`buildsFrom()` the existing `remainingBuilds` already used — one function, two readings, not two
+sources that can disagree). Renders in `RerunOptions.tsx`, always visible, above the collapse.
+▶ **§5 — the Re-run block collapses now**, wrapped in the SAME `CollapsedSection` control the
+kernel headings use (its own header comment already says it copies their vocabulary exactly) —
+open by default while a build is actually running, shut otherwise, "Re-run this idea, or check
+on a run in progress." visible as the hint while shut.
+▶ **§6 — the dictation paragraph is deleted** from the Diagnosis stage (`STAGE_HINT` emptied,
+mechanism kept for a future stage); the same idea now lives on the chat input's own placeholder,
+**"Chat to Lex or dictate."** `scripts/check-sprint3e-ui.ts` asserted the OLD copy — updated to
+assert it is gone and that the placeholder carries it instead, rather than left red.
+▶ **§7 — the Diagnosis warning, verbatim**, renders under the heading whenever the section is
+open (not only while active — §1 makes reopening Diagnosis normal, and the sentence is exactly
+as true on a revisit).
+▶ **§8 — the commentary rebuilt**: "Before you choose" → **"Summary of the evidence on
+causation"**; each part (disagreements / the verdict / how the pieces fit) is its own
+`CollapsedSection`, order **disagreements first, pieces-fit last**; the bordered verdict box and
+the amber-bordered conflict rows are gone — bold headings, plain paragraphs.
+▶ **§9 — one Causes section, no tabs.** The List/Map toggle is gone: the diagram draws first
+(when there is a chain to draw), the list — now showing the SAME hierarchy, each child block
+headed **"Drives / leads to Cause N"** — sits below it, "Add a new cause" last. "These are my
+causes" → **"Confirm these causes."**
+▶ **§10 — a focus a user can see, whatever the control's colour.** Global `:focus-visible` rule
+(`app/globals.css`) on buttons/links/inputs: a white inner ring against a near-black outer ring —
+achromatic by construction, so "test with colour removed" is trivially satisfied, and one of the
+two rings contrasts against any background the control or the page happens to be.
+
+**§3 sizing (not built).** The research panel's "Key sources" heading (`question-headings.ts`,
+`KEY_SOURCES`) is a model-GENERATED 2–3-item highlight list — a different thing from what §3
+asks for: a user-owned, numbered `Source` entity (title, URL-or-document, snippet, "Create
+snippet" via the URL-fetch path Decision 92 already built and proved honest on 403s), an
+"Add source" control, `[Ref: n]` insertion available in **every editable box in the middle
+panel** — measured at nine distinct editors across four pages (`BoxField`, `OutputField`,
+`StructuredField`, `CauseCard`'s add/edit forms, `OptionCard`'s add/edit forms, `ActionCard`'s
+add/edit forms) — plus a new DB table, a numbering policy that never reuses a number even past
+a delete, and reference-rendering wherever `[Ref: n]` appears in accepted text or a generated
+document. **Recommend: its own sprint** (or two — sources-and-references, then reference-render
+in generated documents), matching how grouping was scoped in 26-C addendum 3. §1, §2 and §4–§10
+above are unaffected by deferring it.
+
+**§12 — asked directly rather than guessed.** Charlie's note *"The map needs a r"* was cut off in
+the brief. Asked; answer: he'd lost the thought — nothing to act on.
+
+✅ `tsc --noEmit` (web) clean. ✅ `check:scripts` (the separate `scripts/` tsc program) clean.
+✅ `check:client-boundary` — 597 files, 139 client components, no boundary crossing, control fired.
+⚠ **NOT RUN this session: every DB-touching check** (`check:central`, `check:lex-25p/25s/25t/26a`,
+`check:lex-25r` the cold-read instrument the brief asked for by name, `check-sprint3e-ui.ts` itself
+— it also does more than the two lines edited). None of this session's edits are exercised against
+a real idea. **Reported as not run, not omitted** (CLAUDE.md §23.2) — the brief's own instrument
+for this class of change, `check:lex-25r`, still needs a session with DB access to run it.
+⚠ Nothing committed; `commit-all.sh` will be produced and needs Charlie's approval to run.
+
 ## 2026-09-24 02:28 UTC — SEARCH S21 — web orientation, provider-agnostic, xAI client built
 
 Report: `docs/SEARCH_S21_REPORT.md`. Brief given inline; no `SEARCH_S21` brief file was filed.
