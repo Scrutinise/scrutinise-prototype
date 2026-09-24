@@ -294,6 +294,8 @@ export interface BuildState {
   allowance: {
     remainingThirds: number
     remainingBuilds: number
+    /** BRIEF_26E §4 — "Build credits", legible without arithmetic. */
+    grantedBuilds: number
     canStartFull: boolean
     canStartReuse: boolean
     line: string
@@ -533,6 +535,8 @@ export async function buildState(ideaId: string): Promise<BuildState> {
     allowance: {
       remainingThirds: allowance?.remainingThirds ?? 0,
       remainingBuilds: allowance?.remainingBuilds ?? 0,
+      // ⚠ BRIEF_26E §4 — "Build credits", legible without arithmetic.
+      grantedBuilds: allowance?.grantedBuilds ?? 0,
       // ⚠ AN IDEA WHOSE OWNER CANNOT BE READ IS NOT A FREE BUILD. Defaulting these to true
       // would make an unreadable owner an unlimited one.
       canStartFull: allowance?.canStartFull ?? false,

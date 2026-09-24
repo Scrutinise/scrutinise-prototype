@@ -108,6 +108,12 @@ export interface Allowance {
   remainingThirds: number
   /** Whole builds' worth remaining, for the sentence a user reads. */
   remainingBuilds: number
+  /**
+   * ⚠ BRIEF_26E §4 — "Build credits" is a number Charlie can read without doing arithmetic.
+   * Whole builds' worth of the GRANT, on the same `buildsFrom` the remaining figure already
+   * uses — so "3 of 4" is two readings of one function, not two sources that can disagree.
+   */
+  grantedBuilds: number
   /** How many DONE builds they have. The evidence for `spentThirds`. */
   doneBuilds: number
   /** TRUE when a FULL build can still be started. */
@@ -289,7 +295,7 @@ export async function readAllowance(userId: string): Promise<Allowance> {
   return {
     grantedThirds, grantedExplicitly, spentThirds, reservedThirds,
     inFlightBuilds: inFlight.length,
-    remainingThirds, remainingBuilds,
+    remainingThirds, remainingBuilds, grantedBuilds: buildsFrom(grantedThirds),
     doneBuilds: done.length, canStartFull, canStartReuse, line, blockedReason,
   }
 }

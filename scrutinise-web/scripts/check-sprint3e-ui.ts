@@ -154,10 +154,14 @@ ok('...and the route selects nothing when the match is ambiguous',
   /const resolved = match && match !== AMBIGUOUS \? match : null/.test(LEXROUTE))
 
 console.log('\n§7 — the dictation hint')
-ok('there is a stage hint, keyed by page', /const STAGE_HINT: Record<string, string>/.test(panel))
-ok('...carrying the brief\'s wording for Diagnosis',
-  /Dictating is a faster way to get your ideas down — Lex will tidy up your thoughts\./.test(read(PANEL)))
-ok('...saying chat and the panel both work', /You can answer in the chat or write straight into the boxes/.test(read(PANEL)))
+// ⚠ BRIEF_26E §6a — Charlie asked for this deleted from the middle panel; §6b moved the same
+// idea onto the chat input's own placeholder instead. The mechanism (keyed-by-page hint) stays
+// for a future stage; asserting its OLD content would now be asserting against the brief.
+ok('there is a stage hint mechanism, keyed by page', /const STAGE_HINT: Record<string, string>/.test(panel))
+ok('...the Diagnosis dictation copy is GONE from the middle panel (BRIEF_26E §6a)',
+  !/Dictating is a faster way to get your ideas down/.test(read(PANEL)))
+ok('...and says the same thing on the chat input placeholder instead (BRIEF_26E §6b)',
+  /Chat to Lex or dictate/.test(read('components/lex/ChatPanel.tsx')))
 ok('...rendered at the top of the ACTIVE stage only', /isActive && !isLocked && !collapsed && STAGE_HINT\[page\.key\]/.test(panel))
 ok('...and a stage with no hint renders nothing rather than a generic line',
   Object.keys({ DIAGNOSIS: 1 }).length === 1 && !/STAGE_HINT\[page\.key\] \?\? /.test(panel))

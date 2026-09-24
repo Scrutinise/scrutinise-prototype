@@ -114,6 +114,21 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* ⚠ BRIEF_26E §10 — "Tabbing to a black button gives no visible sign it is selected." Charlie
+     is colour blind (docs/CLAUDE.md §21), so this is drawn achromatic rather than in the brand
+     blue: a white inner ring against a near-black outer ring means one of the two contrasts
+     with the control AND the page behind it, whatever colour the control itself is. Survives
+     colour removed by construction — it never had colour to remove. */
+  button:focus-visible,
+  a:focus-visible,
+  [role='button']:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px #18181b;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

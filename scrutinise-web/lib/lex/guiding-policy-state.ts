@@ -71,6 +71,40 @@ export async function syncPolicyField(ideaId: string): Promise<void> {
 }
 
 /**
+ * ══ BRIEF_26E §2b — THE ONE WRITER FOR "RULE OUT A POLICY" ══════════════════════════════
+ *
+ * §2b: *"Recommend a number never being reused... confirm this uses [the 25-P mechanism]
+ * rather than a second one."* It did not: `PolicyOptionsField`'s own "Rule out" button (the
+ * candidate-editing list, before a policy is sorted) posted to `/api/ideas/[id]/policy-options`,
+ * which called a second, thinner implementation — `ruleOutPolicyOption` in field-machine.ts —
+ * that wrote the same two columns but skipped the cascade below: an action parked with a
+ * policy ruled out from THAT list stayed in the kernel implementing something thrown away,
+ * while the identical rule-out from this screen correctly took it with it.
+ *
+ * This is now the only implementation. `applyPolicyOp('reject', …)` and the policy-options
+ * route both call it; there is nowhere left for the two to diverge.
+ */
+export async function rejectPolicyOption(ideaId: string, policyId: string, reason: string): Promise<boolean> {
+  const row = await prisma.policyOption.findFirst({ where: { id: policyId, ideaId } })
+  if (!row) return false
+  await prisma.policyOption.update({
+    where: { id: row.id },
+    data: { status: 'RULED_OUT', ruleOutReason: reason || 'No reason recorded.' },
+  })
+  // ⚠ §1.3 — AN ACTION PARKED WITH A REJECTED POLICY GOES WITH IT. That is the whole point of
+  // parking: it must not turn up in the kernel implementing something thrown away.
+  await prisma.policyOption.updateMany({
+    where: { ideaId, parkedWithId: row.id, movedToActionId: null },
+    data: {
+      status: 'RULED_OUT',
+      ruleOutReason: `The policy it implements (${row.number}) was rejected: ${reason || 'no reason recorded'}`,
+    },
+  })
+  await syncPolicyField(ideaId)
+  return true
+}
+
+/**
  * ══ §1.4 — ACCEPTING A CAUSE MARKS THE CAUSES SECTION CHANGED ══════════════════════
  *
  * §6's acceptance criterion is two things, not one: *"accepting adds it and marks the causes
@@ -392,21 +426,7 @@ export async function applyPolicyOp(input: {
       break
 
     case 'reject':
-      if (row) {
-        await prisma.policyOption.update({
-          where: { id: row.id },
-          data: { status: 'RULED_OUT', ruleOutReason: reason || 'No reason recorded.' },
-        })
-        // ⚠ §1.3 — AN ACTION PARKED WITH A REJECTED POLICY GOES WITH IT. That is the whole
-        // point of parking: it must not turn up in the kernel implementing something thrown away.
-        await prisma.policyOption.updateMany({
-          where: { ideaId: id, parkedWithId: row.id, movedToActionId: null },
-          data: {
-            status: 'RULED_OUT',
-            ruleOutReason: `The policy it implements (${row.number}) was rejected: ${reason || 'no reason recorded'}`,
-          },
-        })
-      }
+      if (row) await rejectPolicyOption(id, row.id, reason || '')
       break
 
     case 'restore':

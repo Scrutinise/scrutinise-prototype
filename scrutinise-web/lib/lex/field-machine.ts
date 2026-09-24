@@ -883,14 +883,10 @@ export async function removePolicyOption(ideaId: string, optionId: string) {
 }
 
 /** Mark one option RULED_OUT with a reason (without committing to a chosen one). */
-export async function ruleOutPolicyOption(ideaId: string, optionId: string, reason: string) {
-  const row = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true } })
-  if (!row) return null
-  return prisma.policyOption.update({
-    where: { id: optionId },
-    data: { status: 'RULED_OUT' as never, ruleOutReason: reason.trim() || null },
-  })
-}
+// ⚠ BRIEF_26E §2b — the thin "rule a policy out" writer that used to live here is gone.
+// `rejectPolicyOption` in `lib/lex/guiding-policy-state.ts` is now the only implementation —
+// it does what this one did AND cascades to actions parked with the rejected policy, which
+// this one silently skipped. See that file's doc comment for the measured divergence.
 
 /** Commit to one approach (§17 field 2): CHOSEN for it, RULED_OUT for the rest,
  *  accept the chosenApproach field, and mirror the approach text onto the Idea. */

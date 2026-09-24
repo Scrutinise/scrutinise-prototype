@@ -6,12 +6,15 @@ import {
   addPolicyOption,
   updatePolicyOption,
   removePolicyOption,
-  ruleOutPolicyOption,
   choosePolicyApproach,
   listPolicyOptions,
   acceptField,
   skipField,
 } from '@/lib/lex/field-machine'
+// ⚠ BRIEF_26E §2b — ruling out a policy from THIS list now shares the one implementation with
+// the guiding-policy screen's own "Rule out" (`applyPolicyOp('reject', …)`), rather than a
+// second, thinner write that skipped the cascade to parked actions. See guiding-policy-state.ts.
+import { rejectPolicyOption } from '@/lib/lex/guiding-policy-state'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 import { assertWritableField } from '@/lib/lex/stage'
 
@@ -78,9 +81,11 @@ export async function POST(req: Request, { params }: Params) {
       case 'remove':
         await removePolicyOption(id, body.optionId)
         break
-      case 'ruleOut':
-        await ruleOutPolicyOption(id, body.optionId, body.reason)
+      case 'ruleOut': {
+        const ok = await rejectPolicyOption(id, body.optionId, body.reason)
+        if (!ok) return NextResponse.json({ error: 'That policy was not found.' }, { status: 422 })
         break
+      }
       case 'confirm': {
         const options = await listPolicyOptions(id)
         if (!options.length) {

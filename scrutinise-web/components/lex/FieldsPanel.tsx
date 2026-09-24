@@ -113,14 +113,13 @@ function hintsFor(key: string): string[] {
   return fieldDef(key)?.hints ?? []
 }
 
-// §19-E Task 7 — the stage-level hint, VERBATIM from the brief for Diagnosis. Keyed by
-// page so a later stage can have its own; a stage with no entry shows nothing rather
-// than a generic line, because a hint that applies everywhere teaches nothing.
-const STAGE_HINT: Record<string, string> = {
-  DIAGNOSIS:
-    'Dictating is a faster way to get your ideas down — Lex will tidy up your thoughts. ' +
-    'You can answer in the chat or write straight into the boxes here; either works.',
-}
+// §19-E Task 7 — the stage-level hint. Keyed by page so a later stage can have its own; a
+// stage with no entry shows nothing rather than a generic line, because a hint that applies
+// everywhere teaches nothing.
+// ⚠ BRIEF_26E §6a — the Diagnosis entry (dictation copy) is deleted verbatim per the brief;
+// the input placeholder says the same thing now (ChatPanel.tsx, §6b). The mechanism stays for
+// a future stage that genuinely needs its own hint.
+const STAGE_HINT: Record<string, string> = {}
 
 // ─── §19-E Task 5 — the editing surface ──────────────────────────────────────
 //
@@ -403,7 +402,10 @@ function OutputField({
   const [draft, setDraft] = useState(baseline)
   useEffect(() => { setDraft(baseline) }, [field.status, baseline]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canReopen = accepted && field.key !== 'summaryDiagnosis' // summary is regenerated, not hand-edited here
+  // ⚠ BRIEF_26E §1 — "Every field... editable after they are set", no exceptions. This used to
+  // exclude `summaryDiagnosis` ("regenerated, not hand-edited here"), which was exactly the kind
+  // of lock §1 rules out: a decision the user cannot revisit is not a decision, it is a trap.
+  const canReopen = accepted
 
   if (terminal) {
     return (
@@ -506,12 +508,17 @@ function QueuedField({ field, waitingOn }: { field: CanonicalField; waitingOn?: 
 // A structured field with labelled slots (whoAffectedImpactCost / legalLandscape).
 // The box IS the accept surface: pre-filled from the seed/proposal, Save accepts the object.
 function StructuredField({
-  field, busy, onAccept, onSkip, onUseLexVersion, onKeepMine,
+  field, busy, onAccept, onSkip, onReopen, onUseLexVersion, onKeepMine,
 }: {
   field: CanonicalField
   busy: boolean
   onAccept: (key: string, value: Record<string, string>) => void
   onSkip: (key: string) => void
+  // ⚠ BRIEF_26E §1 — the same "Change" reopen OutputField already had. A structured field
+  // (whoAffectedImpactCost, legalLandscape…) had none at all: once ACCEPTED it rendered a
+  // read-out and nothing else could be pressed. `reopenField` is the existing, generic
+  // mechanism (lib/lex/field-machine.ts) — this wires it up rather than building a second one.
+  onReopen: (key: string) => void
   onUseLexVersion: (key: string, value: unknown) => void
   onKeepMine: (key: string) => void
 }) {
@@ -550,7 +557,12 @@ function StructuredField({
     <div className={`rounded-lg border p-3 ${hasProposedContent ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
       <FieldHeader
         field={field}
-        right={hasProposedContent ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex — refine</span> : undefined}
+        right={
+          terminal
+            ? <button onClick={() => onReopen(field.key)} disabled={busy}
+                className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">Change</button>
+            : hasProposedContent ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex — refine</span> : undefined
+        }
       />
       {terminal ? (
         <div className="ml-6 space-y-1">
@@ -821,6 +833,12 @@ function CauseTreeView({ nodes, busy, api }: { nodes: CauseTreeNode[]; busy: boo
           <CauseCard cause={n} depth={n.depth} busy={busy} api={api} />
           {n.kids.length > 0 && (
             <div className="ml-3 mt-1.5 pl-2 border-l-2 border-zinc-200 space-y-1.5">
+              {/* ⚠ BRIEF_26E §9b — Charlie: "It's not clear in the list view what is
+                  subsidiary to what." The indentation already existed; the words naming what
+                  it means did not. */}
+              <p className="text-[11px] font-semibold text-zinc-500">
+                Drives / leads to Cause {n.number ?? '—'}
+              </p>
               <CauseTreeView nodes={n.kids} busy={busy} api={api} />
             </div>
           )}
@@ -834,23 +852,15 @@ function CauseTreeView({ nodes, busy, api }: { nodes: CauseTreeNode[]; busy: boo
 function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalField; causes: CanonicalCause[]; busy: boolean; api: CausesApi; ideaId: string }) {
   const [c, setC] = useState('')
   const [why, setWhy] = useState('')
-  const [view, setView] = useState<'list' | 'map'>('list')
   const terminal = isTerminal(field)
   const tree = buildCauseTree(causes)
+  // ⚠ BRIEF_26E §9a — "Remove the List/Map tabs." One section now: the map first (where there
+  // is a chain to draw), the list below it, "Add a new cause" last. No toggle to lose track of.
+  const hasHierarchy = tree.some((n) => n.kids.length > 0)
 
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
-      <FieldHeader
-        field={field}
-        right={causes.length > 0 ? (
-          <div className="flex rounded-lg border border-zinc-200 overflow-hidden text-[11px]">
-            {(['list', 'map'] as const).map((v) => (
-              <button key={v} onClick={() => setView(v)}
-                className={`px-2 py-0.5 capitalize ${view === v ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:bg-zinc-50'}`}>{v}</button>
-            ))}
-          </div>
-        ) : undefined}
-      />
+      <FieldHeader field={field} />
       {causes.length === 0 && (
         <p className="text-[11px] text-zinc-400 mb-2">
           {terminal ? 'No causes recorded.' : 'I’ll seed a few candidates from past debates; add your own too. Mark each material or contributory, and build causes beneath a cause where one drives another.'}
@@ -870,53 +880,48 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
           `nestByDrivenBy`), so there is usually a chain to draw. When there genuinely is
           not — every cause independent, which is a real answer — the map SAYS so instead of
           impersonating the list. */}
-      {view === 'map' ? (
-        tree.some((n) => n.kids.length > 0) ? (
-          /* ══ 25-S §3 — THE MAP IS A DIAGRAM NOW ══════════════════════════════════
-             Charlie: *"'map' just indents some a bit."* `CauseTreeView` was a second
-             indented list; `CauseMap` draws the chain. ⚠ §3e — the LIST view keeps the
-             indentation, which is where it belongs: it is the view whose job is to show
-             nesting inside a linear read. */
-          <CauseMap nodes={tree} />
-        ) : (
-          <div className="space-y-1.5">
-            <p className="text-[11px] text-amber-700 bg-amber-50/60 border border-amber-200 rounded-lg px-2 py-1.5">
-              Nothing here drives anything else yet, so the map is the same as the list. Use
-              “beneath” on a cause to say which one it follows from — that chain is the most useful
-              thing a diagnosis can say.
-            </p>
-            {causes.map((cause) => (
-              <CauseCard key={cause.id} cause={cause} depth={0} busy={busy} api={api} />
-            ))}
+      {/* ══ §9a — THE MAP FIRST, WHEN THERE IS A CHAIN TO DRAW ══════════════════════
+          25-S §3: *"'map' just indents some a bit."* `CauseMap` draws the chain; a flat set of
+          causes has no chain, so the diagram is skipped rather than drawing an empty tree of
+          disconnected boxes. Either way the LIST always follows, immediately below. */}
+      {causes.length > 0 && (
+        hasHierarchy ? (
+          <div className="mb-2">
+            <CauseMap nodes={tree} />
           </div>
+        ) : (
+          <p className="text-[11px] text-amber-700 bg-amber-50/60 border border-amber-200 rounded-lg px-2 py-1.5 mb-2">
+            Nothing here drives anything else yet, so there is no chain to draw. Use “+ cause
+            beneath” on a cause to say which one it follows from — that chain is the most useful
+            thing a diagnosis can say.
+          </p>
         )
-      ) : (
-        <div className="space-y-1.5">
-          {causes.map((cause) => (
-            <CauseCard key={cause.id} cause={cause} depth={0} busy={busy} api={api} />
-          ))}
-        </div>
       )}
+      {/* ══ §9b — THE LIST, SHOWING THE SAME HIERARCHY THE MAP SHOWS ════════════════ */}
+      <CauseTreeView nodes={tree} busy={busy} api={api} />
 
-      {!terminal && (
-        <div className="mt-2 rounded-lg border border-dashed border-zinc-300 p-2 space-y-1.5">
-          {/* ⚠ 25-Q §8b — THE SAME CHANGE ON THE ADD FORM. Fixing the edit form alone would
-              leave the two doors into one record behaving differently, which is the same
-              complaint one step earlier. */}
-          <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Add a cause…"
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
-            className="w-full text-sm p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-          <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted? (optional)"
-            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-          <button disabled={busy || !c.trim()} onClick={() => { api.add({ cause: c.trim(), whyPersisted: why.trim() || undefined }); setC(''); setWhy('') }}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add cause</button>
-        </div>
-      )}
+      {/* ⚠ BRIEF_26E §1 — no longer gated on `!terminal`. Confirming the causes loop used to
+          remove the add-cause form along with it, so a cause you thought of afterwards had
+          nowhere to go — the server side (`addCause`) was never guarded on the field's status,
+          only the panel was hiding a control that already worked. */}
+      <div className="mt-2 rounded-lg border border-dashed border-zinc-300 p-2 space-y-1.5">
+        {/* ⚠ 25-Q §8b — THE SAME CHANGE ON THE ADD FORM. Fixing the edit form alone would
+            leave the two doors into one record behaving differently, which is the same
+            complaint one step earlier. */}
+        <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Add a cause…"
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
+          className="w-full text-sm p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+        <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted? (optional)"
+          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+        <button disabled={busy || !c.trim()} onClick={() => { api.add({ cause: c.trim(), whyPersisted: why.trim() || undefined }); setC(''); setWhy('') }}
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">{terminal ? 'Add another cause' : 'Add cause'}</button>
+      </div>
 
       {!terminal && (
         <div className="flex gap-2 mt-2">
+          {/* §9c — "These are my causes" → "Confirm these causes". */}
           <button disabled={busy || causes.length === 0} onClick={api.confirm}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40">These are my causes</button>
+            className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40">Confirm these causes</button>
           <button disabled={busy} onClick={api.skip}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
         </div>
@@ -933,16 +938,29 @@ function RootCauseField({ field, causes, busy, api }: { field: CanonicalField; c
   const chosen = causes.find((c) => c.isRootCause) ?? null
   const material = causes.filter((c) => c.classification === 'MATERIAL')
   const options = material.length ? material : causes
+  // ⚠ BRIEF_26E §1 — "I can't change the root cause after picking one." `terminal` used to be
+  // the whole story here: once ACCEPTED the card had no control left on it at all. `changing`
+  // reopens the same picker below, without touching the field's status until a new choice is
+  // actually made — it resets itself the moment the chosen cause changes.
+  const [changing, setChanging] = useState(false)
+  useEffect(() => { setChanging(false) }, [chosen?.id])
+  const locked = terminal && !changing
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
-      <FieldHeader field={field} />
-      {terminal ? (
+      <FieldHeader
+        field={field}
+        right={locked ? (
+          <button onClick={() => setChanging(true)} disabled={busy}
+            className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">Change</button>
+        ) : undefined}
+      />
+      {locked ? (
         <p className="text-xs ml-6 text-zinc-600">{chosen ? chosen.cause : (field.value as string) ?? 'Skipped'}</p>
       ) : causes.length === 0 ? (
         <div>
           <p className="text-[11px] text-zinc-400 mb-1.5">Add causes first, then choose the main driver.</p>
-          <button disabled={busy} onClick={api.skipRoot}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipRoot())}
+            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
         </div>
       ) : options.length === 1 ? (
         // A5: a single cause — propose it as root with one-click confirm, don't ask "which".
@@ -952,8 +970,8 @@ function RootCauseField({ field, causes, busy, api }: { field: CanonicalField; c
             className="w-full text-left text-sm px-2.5 py-1.5 rounded-lg border border-green-300 bg-green-50/40 hover:border-green-400 disabled:opacity-40">
             Confirm “{options[0].cause}” as the root cause
           </button>
-          <button disabled={busy} onClick={api.skipRoot}
-            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipRoot())}
+            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
         </>
       ) : (
         <>
@@ -969,8 +987,8 @@ function RootCauseField({ field, causes, busy, api }: { field: CanonicalField; c
               </button>
             ))}
           </div>
-          <button disabled={busy} onClick={api.skipRoot}
-            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipRoot())}
+            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
         </>
       )}
     </div>
@@ -1101,11 +1119,16 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
 }
 
 // The policy-options loop (§17 field 1).
-function PolicyOptionsField({ field, options, busy, api, ideaId }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi; ideaId?: string | null }) {
+function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi; ideaId?: string | null }) {
   const [approach, setApproach] = useState('')
   const [caseFor, setCaseFor] = useState('')
   const [caseAgainst, setCaseAgainst] = useState('')
   const terminal = isTerminal(field)
+  // ⚠ BRIEF_26E §2a — "Ruling out a candidate leaves it exactly where it was, with no sign
+  // anything happened." A ruled-out option used to stay in this exact list, re-badged in place.
+  // It now leaves the list — the same guiding-policy screen right below (`GuidingPolicyScreen`)
+  // already shows it under a collapsed "Candidate policies ruled out" heading, restorable.
+  const options = allOptions.filter((o) => o.status !== 'RULED_OUT')
 
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
@@ -1159,15 +1182,28 @@ function ChosenApproachField({ field, options, busy, api }: { field: CanonicalFi
   const terminal = isTerminal(field)
   const chosen = options.find((o) => o.status === 'CHOSEN') ?? null
   const selectable = options.filter((o) => o.status !== 'RULED_OUT')
+  // ⚠ BRIEF_26E §1 — the same lock RootCauseField had: once ACCEPTED there was no way to
+  // change the chosen approach at all. `choosePolicyApproach` (field-machine.ts) was never
+  // guarded against being called again — only the panel was hiding the picker.
+  const [changing, setChanging] = useState(false)
+  useEffect(() => { setChanging(false) }, [chosen?.id])
+  const locked = terminal && !changing
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
-      <FieldHeader field={field} />
-      {terminal ? (
+      <FieldHeader
+        field={field}
+        right={locked ? (
+          <button onClick={() => setChanging(true)} disabled={busy}
+            className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">Change</button>
+        ) : undefined}
+      />
+      {locked ? (
         <p className="text-xs ml-6 text-zinc-600">{chosen ? chosen.approach : (field.value as string) ?? 'Skipped'}</p>
       ) : options.length === 0 ? (
         <div>
           <p className="text-[11px] text-zinc-400 mb-1.5">Add candidate approaches first, then commit to one.</p>
-          <button disabled={busy} onClick={api.skipChoose} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipChoose())}
+            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
         </div>
       ) : (
         <>
@@ -1180,8 +1216,8 @@ function ChosenApproachField({ field, options, busy, api }: { field: CanonicalFi
               </button>
             ))}
           </div>
-          <button disabled={busy} onClick={api.skipChoose}
-            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipChoose())}
+            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
         </>
       )}
     </div>
@@ -1504,26 +1540,21 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
           {terminal ? 'No actions recorded.' : 'Add the coordinated steps. Edit each to cost it — with sourced ranges you can override.'}
         </p>
       )}
+      {/* ⚠ BRIEF_26E §1 — no longer read-only once confirmed. `ActionCard` already carries its
+          own Edit/Save/Delete regardless of any notion of "terminal" — this used to bypass it
+          for a compact summary once the loop was confirmed, which is exactly the lock §1 rules
+          out. `ActionsApi.update`/`.remove` were never guarded on the field's status either. */}
       <div className="space-y-1.5">
-        {actions.map((a) => terminal ? (
-          <div key={a.id} className="rounded-lg border border-zinc-200 bg-white p-2">
-            <p className="text-sm text-zinc-800">{a.practicalStep}</p>
-            <div className="flex flex-wrap gap-x-3 mt-1 text-[11px] text-zinc-500">
-              <span>Impl: {costLabel(a.implementationCost)}</span>
-              <span>Enforce: {costLabel(a.enforcementCost)}</span>
-              <span>Friction: {costLabel(a.regulatoryFriction)}</span>
-            </div>
-          </div>
-        ) : <ActionCard key={a.id} action={a} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />)}
+        {actions.map((a) => (
+          <ActionCard key={a.id} action={a} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />
+        ))}
       </div>
-      {!terminal && (
-        <div className="mt-2 flex gap-1.5">
-          <input value={step} onChange={(e) => setStep(e.target.value)} placeholder="Add an action…"
-            className="flex-1 text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-          <button disabled={busy || !step.trim()} onClick={() => { api.add({ practicalStep: step.trim() }); setStep('') }}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add</button>
-        </div>
-      )}
+      <div className="mt-2 flex gap-1.5">
+        <input value={step} onChange={(e) => setStep(e.target.value)} placeholder="Add an action…"
+          className="flex-1 text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+        <button disabled={busy || !step.trim()} onClick={() => { api.add({ practicalStep: step.trim() }); setStep('') }}
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add</button>
+      </div>
       {!terminal && (
         <div className="flex gap-2 mt-2">
           <button disabled={busy || actions.length === 0} onClick={api.confirm}
@@ -1658,7 +1689,7 @@ export default function FieldsPanel({
     // Guarding on slots rather than special-casing the key means the next slotless structured
     // field cannot reintroduce the empty claim either.
     if (f.type === 'structured' && (fieldDef(f.key)?.slots?.length ?? 0) > 0) {
-      return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
+      return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} onReopen={onReopen} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
     }
     if (f.type === 'loop') {
       if (f.key === 'policyOptions') {
@@ -1865,13 +1896,19 @@ export default function FieldsPanel({
               )}
             </div>
 
+            {/* ══ BRIEF_26E §7 — THE DIAGNOSIS WARNING, VERBATIM, UNDER THE HEADING ══════
+                Shown whenever Diagnosis is open — not only while it is the active stage, since
+                §1 of this same brief makes reopening a settled Diagnosis a normal act, and the
+                warning is exactly as true on a revisit as on a first pass. */}
+            {page.key === 'DIAGNOSIS' && !isLocked && !collapsed && (
+              <p className="text-sm font-bold text-zinc-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 mb-2 leading-snug">
+                Identifying the right cause is the most important element in this process. If we
+                don’t identify and solve the right cause, all our work will be wasted. We need to
+                be brutally realistic. If we solve this cause, will it solve the problem?
+              </p>
+            )}
+
             {/* §19-E Task 7 — THE DICTATION HINT, at the top of the stage.
-                Diagnosis is where the writing gets long — a problem statement, causes
-                with why each persisted, the legal landscape — and it is the stage where
-                Charlie found the interaction had quietly become panel-only. The hint
-                does two jobs: it tells the user dictation exists (the mic is already
-                built, per docs/CLAUDE.md §6), and it says Lex will tidy up what they
-                say, which is the thing that makes talking rather than typing safe.
                 Shown on the ACTIVE stage only: a hint repeated over four collapsed
                 stages is furniture. */}
             {isActive && !isLocked && !collapsed && STAGE_HINT[page.key] && (

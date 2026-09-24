@@ -23,6 +23,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { MergeAnswer, Rating, Relationship } from '@/lib/lex/guiding-policy'
 import { historyLine, clusterLine, GROUP_HEADINGS } from '@/lib/lex/policy-history'
+import CollapsedSection from './CollapsedSection'
 
 interface Policy {
   id: string
@@ -666,28 +667,30 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
         </div>
       )}
 
-      {/* ══ §1.10 — REJECTED, SEARCHABLE AND RESTORABLE ════════════════════════ */}
+      {/* ══ §1.10 / BRIEF_26E §2a — REJECTED, HIDDEN BY DEFAULT, RESTORABLE ═══════
+          §2a: "leaves the list and appears under a collapsed heading at the foot... hidden by
+          default." §2b: the mechanism is the SAME ONE — number kept, reason kept, restore by
+          number — not a second one; this is the one 25-P built, just no longer open by default. */}
       {rejected.length > 0 && (
-        <div className="px-4 py-3 border-t border-zinc-100">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Ruled out ({rejected.length})
-          </h4>
-          <ul className="mt-2 space-y-1.5">
-            {rejected.map((r) => (
-              <li key={r.id} className="text-xs text-zinc-600 flex items-start gap-2">
-                <span className="font-semibold tabular-nums text-zinc-500">{r.number}</span>
-                <span className="flex-1">
-                  {r.approach}
-                  {r.ruleOutReason && <span className="block text-[11px] text-zinc-500">Why: {r.ruleOutReason}</span>}
-                </span>
-                {/* ⚠ §1.10 — A RESTORE RETURNS THE ORIGINAL NUMBER, because it never left. */}
-                <button onClick={() => void patch({ op: 'restore', policyId: r.id })} disabled={busy}
-                  className="text-[11px] text-blue-700 hover:text-blue-900 disabled:opacity-40 shrink-0">
-                  Restore as {r.number}
-                </button>
-              </li>
-            ))}
-          </ul>
+        <div className="border-t border-zinc-100">
+          <CollapsedSection title="Candidate policies ruled out" count={rejected.length}>
+            <ul className="px-4 py-3 space-y-1.5">
+              {rejected.map((r) => (
+                <li key={r.id} className="text-xs text-zinc-600 flex items-start gap-2">
+                  <span className="font-semibold tabular-nums text-zinc-500">{r.number}</span>
+                  <span className="flex-1">
+                    {r.approach}
+                    {r.ruleOutReason && <span className="block text-[11px] text-zinc-500">Why: {r.ruleOutReason}</span>}
+                  </span>
+                  {/* ⚠ §1.10 — A RESTORE RETURNS THE ORIGINAL NUMBER, because it never left. */}
+                  <button onClick={() => void patch({ op: 'restore', policyId: r.id })} disabled={busy}
+                    className="text-[11px] text-blue-700 hover:text-blue-900 disabled:opacity-40 shrink-0">
+                    Restore as {r.number}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </CollapsedSection>
         </div>
       )}
 

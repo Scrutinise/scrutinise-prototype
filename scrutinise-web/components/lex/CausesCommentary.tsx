@@ -29,6 +29,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { CausesCommentary as Commentary } from '@/lib/lex/build-commentary'
+import CollapsedSection from './CollapsedSection'
 
 /** The three verdicts, as a user reads them. §5: it names the level of complexity. */
 const COMPLEXITY: Record<string, { label: string; blurb: string }> = {
@@ -68,13 +69,20 @@ export default function CausesCommentaryPanel({ ideaId }: { ideaId: string }) {
   const c = data.commentary
   const verdict = COMPLEXITY[c.complexity] ?? COMPLEXITY.UNCLEAR
 
+  // ⚠ BRIEF_26E §8d — "Where the sources disagree" first, "How the pieces fit" last. The
+  // verdict sits between them: it is the thing the terrain sentence and the conflicts are
+  // both evidence FOR, so it reads better after the disagreement than before it.
+  const hasConflicts = c.conflicts.length > 0
+  const hasNoConflictNote = !hasConflicts && !!c.noConflictFound
+
   return (
     <section
-      aria-label="Before you choose"
+      aria-label="Summary of the evidence on causation"
       className="rounded-xl border-2 border-zinc-300 bg-zinc-50/70 p-3 mb-3 space-y-2.5"
     >
       <div className="flex items-baseline gap-2">
-        <h3 className="text-sm font-semibold text-zinc-900 flex-1">Before you choose</h3>
+        {/* §8a — "Before you choose" → "Summary of the evidence on causation". */}
+        <h3 className="text-sm font-semibold text-zinc-900 flex-1">Summary of the evidence on causation</h3>
         {data.buildVersion != null && (
           <span className="text-[11px] text-zinc-500">from build {data.buildVersion}</span>
         )}
@@ -82,52 +90,48 @@ export default function CausesCommentaryPanel({ ideaId }: { ideaId: string }) {
 
       <p className="text-sm text-zinc-800 leading-relaxed">{c.terrain}</p>
 
-      {/* ⚠ THE VERDICT IS A SENTENCE, NOT A BADGE. "SEVERAL_BIND" is our word; the thing the
-          user needs is what follows from it. */}
-      <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2">
-        <p className="text-xs font-semibold text-zinc-900">{verdict.label}</p>
-        <p className="text-xs text-zinc-600 mt-0.5">{verdict.blurb}</p>
-        <p className="text-xs text-zinc-700 mt-1.5">{c.complexityWhy}</p>
-      </div>
-
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-          How the pieces fit
-        </p>
-        <p className="text-sm text-zinc-700 leading-relaxed mt-0.5">{c.howPiecesFit}</p>
-      </div>
-
-      {/* ══ §5 — CONTRARY EVIDENCE, NAMED AS CONTRARY, OPEN BY DEFAULT ══════════ */}
-      {c.conflicts.length > 0 ? (
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-            Where the sources disagree ({c.conflicts.length})
-          </p>
-          <ul className="mt-1 space-y-2">
-            {c.conflicts.map((x, i) => (
-              <li key={i} className="border-l-2 border-amber-400 pl-2.5">
+      {/* ══ §8b/§8d — WHERE THE SOURCES DISAGREE, FIRST ═══════════════════════════
+          ⚠ Kept open by default (the header comment above is explicit that this is the part
+          that must not be folded away) — §8b asks only that it CAN collapse, not that it does. */}
+      {(hasConflicts || hasNoConflictNote) && (
+        <CollapsedSection
+          title={`Where the sources disagree${hasConflicts ? ` (${c.conflicts.length})` : ''}`}
+          defaultOpen
+        >
+          {/* §8c — plain paragraphs with bold headings; no boxes, no coloured indents. */}
+          <div className="p-3 space-y-2.5">
+            {hasConflicts ? c.conflicts.map((x, i) => (
+              <div key={i}>
                 <p className="text-sm text-zinc-800">{x.claim}</p>
                 <p className="text-sm text-zinc-700 mt-0.5">
-                  <span className="font-medium">⚠ Against this:</span> {x.against}
+                  <span className="font-semibold">⚠ Against this:</span> {x.against}
                 </p>
                 <p className="text-xs text-zinc-600 mt-0.5">{x.whyItMatters}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        // ⚠ AN HONEST "NOTHING CONFLICTED", WITH WHAT WAS LOOKED AT. The alternative — saying
-        // nothing — is indistinguishable from not having looked, which is exactly the failure
-        // §5 exists to fix.
-        c.noConflictFound && (
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-              Where the sources disagree
-            </p>
-            <p className="text-sm text-zinc-700 mt-0.5">{c.noConflictFound}</p>
+              </div>
+            )) : (
+              // ⚠ AN HONEST "NOTHING CONFLICTED", WITH WHAT WAS LOOKED AT. Saying nothing is
+              // indistinguishable from not having looked, which is the failure §5 exists to fix.
+              <p className="text-sm text-zinc-700">{c.noConflictFound}</p>
+            )}
           </div>
-        )
+        </CollapsedSection>
       )}
+
+      {/* ══ §8b — THE VERDICT, ITS OWN COLLAPSING HEADING ══════════════════════════ */}
+      <CollapsedSection title="How complex the causation is" defaultOpen>
+        <div className="p-3 space-y-1">
+          {/* §8c — a bold heading, not a bordered box. "SEVERAL_BIND" is our word; the thing
+              the user needs is what follows from it. */}
+          <p className="text-sm font-bold text-zinc-900">{verdict.label}</p>
+          <p className="text-xs text-zinc-600">{verdict.blurb}</p>
+          <p className="text-xs text-zinc-700 mt-1">{c.complexityWhy}</p>
+        </div>
+      </CollapsedSection>
+
+      {/* ══ §8b/§8d — HOW THE PIECES FIT, LAST ═════════════════════════════════════ */}
+      <CollapsedSection title="How the pieces fit">
+        <p className="text-sm text-zinc-700 leading-relaxed p-3">{c.howPiecesFit}</p>
+      </CollapsedSection>
 
       {/* ⚠ §0/§5 — SAID OUT LOUD, because a well-written briefing reads like a recommendation
           whether or not it is one, and the choice mechanics are not built yet. */}

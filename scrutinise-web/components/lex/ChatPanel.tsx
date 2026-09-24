@@ -318,7 +318,7 @@ export default function ChatPanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
             }}
-            placeholder="Chat to Lex"
+            placeholder="Chat to Lex or dictate"
             // ⚠ 25-R A3 — "with a large chat box". It was one row and grew on typing, so an
             // empty panel offered a single line and read as a search field rather than a place
             // to think out loud. It still grows to the same 160px ceiling.
