@@ -98,6 +98,16 @@ export interface CallOutcome {
   /** Items kept after the noise filter, and how many it discarded. */
   kept?: number
   discarded?: number
+  /**
+   * S21 §1a/§5 — which vendor actually answered. Present only when `ok`. Absent on the
+   * 'web' call means the primary (Gemini) answered; `'xai'` means the fallback did — see
+   * `web-orientation.ts`'s header. Always present and meaningful on 'x-recency'/
+   * 'x-arguments', which have exactly one provider.
+   */
+  provider?: 'google' | 'xai'
+  /** S21 §3 — items an X search tool fetched, per the provider's OWN usage figure
+   *  (never a client-side tally). Present on 'x-recency'/'x-arguments' when known. */
+  postsFetched?: number
 }
 
 /** Comparative practice — what other jurisdictions did. Tier B only. */

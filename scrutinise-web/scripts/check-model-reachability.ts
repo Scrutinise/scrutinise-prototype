@@ -132,9 +132,12 @@ async function probe(model: string, provider: Provider): Promise<Result> {
     }
   }
 
-  // ⚠ xAI — `callModelJson` refuses it by design ('unroutable'), so there is no production call
-  // to imitate. Probed for reachability ONLY, and labelled as such: see the header.
-  if (provider === 'xai') return probeXaiReachabilityOnly(model)
+  // S21 — xAI now HAS a structured-output client (model-call.ts's callXai), so it is probed
+  // the same representative way as every other vendor below. The old ping-only path
+  // (`probeXaiReachabilityOnly`) is kept only as dead code's opposite — deleted — because a
+  // probe that still pretended xAI could only be pinged would UNDERSTATE what this check now
+  // certifies, which is the exact "tested the door, not whether you can walk through it" defect
+  // this file's own header exists to prevent, one vendor later.
 
   const res = await callModelJson<ProbeAnswer>({
     model,
@@ -186,47 +189,33 @@ async function probe(model: string, provider: Provider): Promise<Result> {
 }
 
 /**
- * xAI: a plain chat call, and the result is labelled `representative: false`.
- *
- * ⚠ REPORTED AS UNUSABLE WHEN A PASS USES IT. `orientation.x` names `grok-4.3` today and goes
- * through its own client, not through `callModelJson` — so reachability is the right claim for
- * it. A pass pointed at an xAI model through the build's `callJson` would fail on its first
- * call, and this check must say so rather than showing a green tick.
+ * S21 — LIVE, AGAINST /v1/models. The test the brief asks for by name: "a test that fails if
+ * the registry names a model xAI no longer lists — the grok-3-fast-beta failure was a model
+ * disappearing unannounced." A list read is not a callability test (this file's own header,
+ * and model-registry.ts's), so this is reported SEPARATELY from the representative probes
+ * above, never merged into their verdict — an id absent from the list but still callable (like
+ * `claude-haiku-4-5-20251001` before it) is a different fact from one that is genuinely gone.
  */
-async function probeXaiReachabilityOnly(model: string): Promise<Result> {
+interface XaiListDrift { model: string; onList: boolean }
+async function checkXaiModelList(models: string[]): Promise<{ ran: boolean; drift: XaiListDrift[]; detail: string }> {
+  if (!hasKeyFor('xai')) return { ran: false, drift: [], detail: `${KEY_ENV.xai} is not set on this deployment` }
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
   try {
-    const res = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST', signal: ctrl.signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROK_API_KEY}` },
-      body: JSON.stringify({ model, max_tokens: 16, messages: [{ role: 'user', content: 'Reply with the single word: ok' }] }),
+    const res = await fetch('https://api.x.ai/v1/models', {
+      signal: ctrl.signal, headers: { Authorization: `Bearer ${process.env.GROK_API_KEY}` },
     })
     if (!res.ok) {
       const body = await res.text().catch(() => '')
-      return {
-        model, provider: 'xai', verdict: 'REJECTED', echoed: null, representative: false,
-        detail: `HTTP ${res.status} ${body.replace(/\s+/g, ' ').slice(0, 160)}`,
-      }
+      return { ran: false, drift: [], detail: `GET /v1/models HTTP ${res.status} ${body.slice(0, 200)}` }
     }
-    const data = await res.json() as { model?: string }
-    const echoed = data.model ?? null
-    if (echoed && echoed !== model) {
-      return {
-        model, provider: 'xai', verdict: 'SUBSTITUTED', echoed, representative: false,
-        detail: `asked for ${model}, ${echoed} answered`,
-      }
-    }
-    return {
-      model, provider: 'xai', verdict: 'OK', echoed, representative: false,
-      detail: 'reachable — NOT a structured call; there is no xAI structured-output client',
-    }
+    const data = await res.json() as { data?: Array<{ id?: string }> }
+    const listed = new Set((data.data ?? []).map((m) => m.id).filter((id): id is string => !!id))
+    const drift = models.map((model) => ({ model, onList: listed.has(model) }))
+    return { ran: true, drift, detail: `${listed.size} models on xAI's own /v1/models` }
   } catch (err) {
     const aborted = err instanceof Error && err.name === 'AbortError'
-    return {
-      model, provider: 'xai', verdict: 'REJECTED', echoed: null, representative: false,
-      detail: aborted ? `no answer within ${TIMEOUT_MS}ms` : err instanceof Error ? err.message : String(err),
-    }
+    return { ran: false, drift: [], detail: aborted ? `no answer within ${TIMEOUT_MS}ms` : err instanceof Error ? err.message : String(err) }
   } finally { clearTimeout(timer) }
 }
 
@@ -317,17 +306,16 @@ async function main() {
     results.push(await probe(model, provider))
   }
 
-  // ⚠ An xAI model a PASS uses through the build's entry point cannot work — no structured
-  // client. `orientation.x` uses its own client and is excluded by name below.
-  const XAI_OWN_CLIENT: string[] = [PASS_DEFAULTS['orientation.x']]
-  for (const r of results) {
-    if (r.provider === 'xai' && r.verdict === 'OK' && fromPasses.has(r.model) && !XAI_OWN_CLIENT.includes(r.model)) {
-      r.verdict = 'UNUSABLE'
-      r.detail = 'a pass names this model, and callModelJson has no xAI structured-output client'
-    }
-  }
+  // S21 — the live /v1/models diff, checked against every xAI id in config (not just the ones
+  // in use — same reasoning as REACHABLE below: a model nobody uses today may be pointed at
+  // tomorrow with one env var).
+  const xaiModels = models.filter((m) => providerFor(m) === 'xai')
+  const xaiList = await checkXaiModelList(xaiModels)
 
-  if (asJson) { console.log(JSON.stringify(results, null, 2)); process.exit(0) }
+  if (asJson) {
+    console.log(JSON.stringify({ results, xaiModelList: xaiList }, null, 2))
+    process.exit(0)
+  }
 
   const ICON: Record<Verdict, string> = { OK: '✓', SUBSTITUTED: '✗', REJECTED: '✗', UNUSABLE: '✗', 'NO KEY': '–' }
   for (const r of results) {
@@ -402,6 +390,28 @@ async function main() {
     }
   }
 
+  // S21 — the live xAI model-list diff, named by the brief: "a test that fails if the registry
+  // names a model xAI no longer lists".
+  console.log('\n  S21 — xAI /v1/models diff')
+  let xaiDrift = 0
+  if (!xaiList.ran) {
+    console.log(`    – NOT RUN: ${xaiList.detail}`)
+  } else {
+    console.log(`    ${xaiList.detail}`)
+    for (const d of xaiList.drift) {
+      console.log(`    ${d.onList ? '✓' : '✗'} ${d.model}${d.onList ? '' : ' — NOT on xAI\'s own /v1/models'}`)
+      if (!d.onList) xaiDrift++
+    }
+    if (xaiDrift) {
+      console.log(`  ⚠⚠ ${xaiDrift} configured xAI model(s) are absent from xAI's own listing. Per this file's`)
+      console.log('  own rule, absence from a list is not itself proof the model is uncallable (the')
+      console.log('  representative probe above is the stronger claim) — but a registry drifting from what')
+      console.log('  the vendor publishes, unannounced, is exactly the grok-3-fast-beta shape one step')
+      console.log('  earlier. Verify with a live call before removing the id; do not restore it on a list')
+      console.log('  read alone either.')
+    }
+  }
+
   let controlsOk = true
   if (withControls) {
     console.log('')
@@ -409,8 +419,9 @@ async function main() {
   }
 
   // ⚠ NO KEY does not fail. Rejected, unusable and substituted do — and so does a control that
-  // did not fire, because that means the probe has stopped proving anything.
-  const failed = rejected.length + substituted.length + unusable.length
+  // did not fire, because that means the probe has stopped proving anything. A model-list drift
+  // is reported and NOT run does not fail (no key here); a genuine drift does.
+  const failed = rejected.length + substituted.length + unusable.length + xaiDrift
   process.exit(failed || !controlsOk ? 1 : 0)
 }
 

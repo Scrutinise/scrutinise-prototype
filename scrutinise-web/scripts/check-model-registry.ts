@@ -21,6 +21,7 @@ import {
   PASS_DEFAULTS, REACHABLE, KNOWN_STALE, resolveModel, providerFor, envVarFor, registrySnapshot,
   type PassName,
 } from '../lib/lex/model-registry'
+import { hasStructuredClientFor } from '../lib/lex/model-call'
 
 export {}
 
@@ -131,6 +132,13 @@ function main() {
       `${rel} does not name the silently-substituted xAI id`)
   }
 
+  // ── S21 — the xAI structured client exists, and the hard refusal it replaced is GONE ────────
+  console.log('\n  S21 — the xAI client')
+  check(hasStructuredClientFor('xai'), '⚠⚠ callModelJson has an xAI structured-output client (was hard-refused before S21)')
+  const modelCallSrc = fs.readFileSync(path.join(root, 'lib/lex/model-call.ts'), 'utf8')
+  check(!/xAI has no structured-output client in this codebase yet/.test(modelCallSrc),
+    'the old hard `unroutable` stub text for xai is gone from model-call.ts')
+
   // ── 5. the S6 §3 ADDENDUM — the metering is visible, and it still controls nothing ──────────
   console.log('\n  the spend addendum (S6 §3 addendum)')
 
@@ -188,8 +196,14 @@ function main() {
   // would have shown a platform that costs almost nothing — the most flattering possible bug,
   // and one nobody would think to question. Every file that reads Gemini's own usage numbers
   // must also record them, or be named here with a reason.
-  const UNMETERED_BY_DESIGN: Record<string, string> = {}
+  const UNMETERED_BY_DESIGN: Record<string, string> = {
+    // model-call.ts and web-search.ts CONTAIN the calls to api.x.ai but record through
+    // recordXaiUsage inside their own functions — the regex below sees the recording
+    // calls fine in both, so nothing needs listing here today. Kept as the place to add
+    // a genuine exception if one is ever needed, same as the Gemini sweep beside it.
+  }
   const unmetered: string[] = []
+  const xaiUnmetered: string[] = []
   const walkUsage = (dir: string) => {
     for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
       if (e.name === 'node_modules' || e.name.startsWith('.')) continue
@@ -197,19 +211,29 @@ function main() {
       if (e.isDirectory()) { walkUsage(rel); continue }
       if (!/\.ts$/.test(e.name)) continue
       const src = fs.readFileSync(path.join(root, rel), 'utf8')
+      if (rel in UNMETERED_BY_DESIGN) continue
       // ⚠ WIDENED FROM usageMetadata TO 'calls Gemini at all'. The first version only caught files
       // that READ the usage numbers — a file that calls the API and ignores them entirely was
       // invisible to it, which is the worse case: it spends and reports nothing.
-      if (!/generativelanguage\.googleapis\.com/.test(src)) continue
-      if (/recordGeminiUsage|recordSpend|recordUsage/.test(src)) continue
-      if (rel in UNMETERED_BY_DESIGN) continue
-      unmetered.push(rel)
+      if (/generativelanguage\.googleapis\.com/.test(src) && !/recordGeminiUsage|recordSpend|recordUsage/.test(src)) {
+        unmetered.push(rel)
+      }
+      // ⚠⚠ S21 — THE SAME SWEEP, WIDENED TO api.x.ai. This is the check that would have caught
+      // `orientation/x-orientation.ts` computing its own costUsd from `cost_in_usd_ticks` and
+      // writing it to LlmSpend for NOTHING — the same "most flattering possible bug" this file's
+      // Gemini sweep already exists to catch, one vendor over. See recordXaiUsage's header.
+      if (/api\.x\.ai/.test(src) && !/recordXaiUsage|recordSpend/.test(src)) {
+        xaiUnmetered.push(rel)
+      }
     }
   }
   walkUsage('lib')
   check(unmetered.length === 0,
     '⚠⚠ every file that CALLS Gemini also records the spend — the ledger is not inert',
     unmetered.join(', '))
+  check(xaiUnmetered.length === 0,
+    '⚠⚠ S21 — every file that CALLS xAI also records the spend',
+    xaiUnmetered.join(', '))
 
   console.log('\n  snapshot')
   for (const s of registrySnapshot()) {

@@ -68,6 +68,27 @@ export interface SpendEntry {
   ref?: string | null
   /** TRUE when the call failed. ⚠ A failed call still costs money. */
   failed?: boolean
+  /**
+   * S21 §6 — server-side tool invocations the provider itself billed for (xAI's
+   * `web_search`/`x_search`, Gemini's `google_search`). NULL where the vendor
+   * does not report this or the call made none.
+   */
+  toolCalls?: number | null
+  /**
+   * S21 §3/§6 — items an X/web search tool actually fetched, read off the
+   * provider's own usage block (xAI: `usage.server_side_tool_usage_details.
+   * x_posts_fetched`), never counted client-side. This is what the per-briefing
+   * post cap (§3) is enforced and logged against.
+   */
+  postsFetched?: number | null
+  /**
+   * S21 §6 — the provider's OWN reported USD cost for this call (xAI's
+   * `cost_in_usd_ticks`), where the vendor bills tool invocations as well as
+   * tokens and a token-rate estimate would understate it. When present this
+   * REPLACES the rate-card estimate rather than supplementing it — see
+   * `priceEntry`.
+   */
+  actualUsd?: number | null
 }
 
 export interface PricedSpend {
@@ -80,7 +101,18 @@ export interface PricedSpend {
 const USD_TO_GBP = Number(process.env.LEX_BUILD_USD_GBP ?? '0.79')
 
 /** Price one entry. Thinking tokens bill at the output rate — the only honest total. */
-export function priceEntry(e: Pick<SpendEntry, 'model' | 'tokensIn' | 'tokensOut' | 'tokensThinking'>): PricedSpend {
+export function priceEntry(
+  e: Pick<SpendEntry, 'model' | 'tokensIn' | 'tokensOut' | 'tokensThinking' | 'actualUsd'>,
+): PricedSpend {
+  // ⚠ S21 §6 — A PROVIDER-REPORTED ACTUAL COST WINS OVER THE RATE CARD. xAI bills
+  // tool invocations (web_search/x_search) as well as tokens, so a token-rate
+  // estimate would silently exclude the tool charge — the exact "flattering bug"
+  // the S6 §3 header warns about, one layer up. `actualUsd` is what the vendor's
+  // own `usage` block says this call cost; when the vendor states it, that is
+  // the number, not an estimate built on top of it.
+  if (e.actualUsd != null && Number.isFinite(e.actualUsd)) {
+    return { pence: e.actualUsd * USD_TO_GBP * 100, usd: e.actualUsd, unpriced: false }
+  }
   const rate: ModelRate | undefined = rates()[e.model]
   if (!rate) return { pence: null, usd: null, unpriced: true }
   const out = e.tokensOut + (e.tokensThinking ?? 0)
@@ -97,10 +129,12 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   try {
     await prisma.$executeRaw`
       INSERT INTO "LlmSpend" ("stream", "pass", "model", "tokensIn", "tokensOut", "tokensThinking",
-                              "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed")
+                              "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed",
+                              "toolCalls", "postsFetched")
       VALUES (${e.stream}, ${e.pass}, ${e.model}, ${e.tokensIn}, ${e.tokensOut}, ${e.tokensThinking ?? 0},
               ${priced.pence}, ${priced.unpriced}, ${e.userId ?? null}, ${e.ideaId ?? null},
-              ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false})`
+              ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false},
+              ${e.toolCalls ?? null}, ${e.postsFetched ?? null})`
   } catch (err) {
     console.warn('[spend-ledger] could not record spend', {
       stream: e.stream, pass: e.pass, model: e.model,
@@ -138,6 +172,53 @@ export function recordGeminiUsage(
     tokensIn: num(u.promptTokenCount),
     tokensOut: num(u.candidatesTokenCount),
     tokensThinking: num(u.thoughtsTokenCount),
+  })
+}
+
+/** xAI reports actual billed spend as ticks; 1 USD = 1e10 ticks (docs, cost tracking,
+ *  the same constant probed live and used in orientation/x-orientation.ts). */
+const XAI_TICKS_PER_USD = 1e10
+
+/**
+ * Record straight from an xAI Responses-API body — the one-liner every xAI call site
+ * needs, matching `recordGeminiUsage`'s shape and purpose.
+ *
+ * ⚠ S21 §6 — THIS EXISTS BECAUSE THE LEDGER WAS INERT FOR THIS VENDOR TOO. Every xAI
+ * call in `orientation/x-orientation.ts` already computed its own `costUsd` from
+ * `usage.cost_in_usd_ticks` and returned it up to the caller — and nothing wrote it to
+ * `LlmSpend`. The S6 §3 ledger measured Gemini and ingest spend only; a platform total
+ * read off the Admin tab was missing the whole X/Tier-C stream without saying so, which
+ * is the identical "most flattering possible bug" `recordGeminiUsage`'s own header
+ * describes for the web side. `check:model-registry`'s unmetered-caller sweep is widened
+ * to `api.x.ai` alongside `generativelanguage.googleapis.com` so this cannot recur silently.
+ *
+ * `postsFetched` reads `usage.server_side_tool_usage_details.x_posts_fetched` — the
+ * provider's own count, never a client-side tally — because that is the number the §3
+ * per-briefing cap is enforced and logged against.
+ */
+export function recordXaiUsage(
+  body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd' | 'toolCalls' | 'postsFetched'>,
+): Promise<PricedSpend> {
+  const b = body as {
+    usage?: {
+      input_tokens?: number
+      output_tokens?: number
+      cost_in_usd_ticks?: number
+      server_side_tool_usage_details?: { x_posts_fetched?: number; x_users_fetched?: number; web_search_calls?: number }
+    }
+  } | null
+  const u = b?.usage ?? {}
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+  const tools = u.server_side_tool_usage_details
+  const postsFetched = tools ? num(tools.x_posts_fetched) + num(tools.x_users_fetched) : null
+  const toolCalls = tools ? num(tools.web_search_calls) || null : null
+  return recordSpend({
+    ...ctx,
+    tokensIn: num(u.input_tokens),
+    tokensOut: num(u.output_tokens),
+    actualUsd: typeof u.cost_in_usd_ticks === 'number' ? u.cost_in_usd_ticks / XAI_TICKS_PER_USD : null,
+    postsFetched: postsFetched || null,
+    toolCalls,
   })
 }
 

@@ -52,7 +52,14 @@ export const REACHABLE: Record<Provider, string[]> = {
   // is exactly the shape that produced this vendor's worst failure — `grok-3-fast-beta`
   // returning HTTP 200 for months while a different model answered. xAI stays a vendor here
   // because its standard models are reachable; the endpoint we do not call is not listed.
-  xai: ['grok-4.6', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning',
+  // ⚠ S21 — `grok-4.7` added 2026-09-24, read live off docs.x.ai's models and pricing pages
+  // (not a `/v1/models` call — no GROK_API_KEY on this machine; see docs/SEARCH_S21_REPORT.md
+  // §2). It is documented as xAI's current flagship ("most capable model we've built") and
+  // priced alongside 4.3/4.5/4.6 with no deprecation notice against any of them. Listed here
+  // on the strength of the docs read alone — per this file's own rule, that is weaker than a
+  // live call, so it is NOT made any pass's default until `check:model-reachability` has run
+  // against it with a key.
+  xai: ['grok-4.7', 'grok-4.6', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning',
     'grok-4.20-0309-non-reasoning', 'grok-build-0.1'],
   // ⚠ No key on this machine (probe-model-access.ts, 17 Aug 2026). Listed so that pointing
   // a pass at OpenAI fails with "no key" rather than "unknown model".
@@ -150,6 +157,12 @@ export const PASS_DEFAULTS = {
   // ── orientation ──
   'orientation.web': 'gemini-2.5-flash',
   'orientation.x': 'grok-4.3',
+  // S21 §1/§5 — the provider-neutral web-search fallback structuring pass. Used ONLY when the
+  // primary (Gemini) web pass fails outright, so Tier B degrades to a second provider instead of
+  // going dark — see lib/lex/orientation/web-search.ts. Deliberately a DIFFERENT vendor from
+  // 'orientation.web': if Gemini is the one that failed, structuring the fallback with Gemini too
+  // would make the fallback fail for the same reason as the primary.
+  'orientation.web-fallback': 'grok-4.3',
   // ── the graph ──
   'graph.position-extract': 'gemini-2.5-flash',
   'graph.proposition-derive': 'gemini-2.5-flash',

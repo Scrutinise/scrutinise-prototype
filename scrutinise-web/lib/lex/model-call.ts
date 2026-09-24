@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// 25-C §4c — ONE INTERFACE, THREE VENDORS. A pass may name any model in config.
+// 25-C §4c — ONE INTERFACE, FOUR VENDORS (S21 added xAI — see the `callXai` section below).
+// A pass may name any model in config.
 //
 // ⚠⚠ WHY THIS EXISTS. Until now every structured model call in the build spoke Gemini and only
 // Gemini. `model-registry.ts` listed Anthropic and xAI models as REACHABLE, `MODEL_CONTRACT.md` §5
@@ -36,7 +37,7 @@ import { providerFor, type Provider } from './model-registry'
 import { thinkingConfigFor, outputBudgetFor } from './model-thinking'
 import { samplingFor, samplingOmissions } from './model-sampling'
 import { geminiFinishProblem } from './gemini-finish'
-import { recordGeminiUsage, type SpendStream } from './spend-ledger'
+import { recordGeminiUsage, recordXaiUsage, type SpendStream } from './spend-ledger'
 
 export interface LlmUsage {
   /** What we ASKED for. */
@@ -104,12 +105,7 @@ export async function callModelJson<T>(opts: ModelCallOptions): Promise<LlmResul
     case 'google': return callGoogle<T>(opts)
     case 'anthropic': return callAnthropic<T>(opts)
     case 'openai': return callOpenAI<T>(opts)
-    case 'xai': return {
-      // xAI's chat API is OpenAI-shaped but its structured-output support is not verified here,
-      // and an unverified claim is what this module exists to prevent.
-      ok: false, reason: 'unroutable', usage: ZERO(opts.model),
-      detail: `[${opts.label}] xAI has no structured-output client in this codebase yet`,
-    }
+    case 'xai': return callXai<T>(opts)
   }
 }
 
@@ -139,18 +135,16 @@ export function hasKeyFor(provider: Provider): boolean {
  * indistinguishable from the standing one.
  *
  * ⚠ IT IS DERIVED FROM THE SAME SWITCH THAT REFUSES THE CALL, not maintained beside it.
- * The day an xAI structured client is written, `callModelJson` gains a case and this
- * returns true — there is no second list to remember to update.
+ * S21 — the day an xAI structured client was written, `callModelJson` gained a case and
+ * this returns true. There is no second list to remember to update.
  */
 export function hasStructuredClientFor(provider: Provider): boolean {
   switch (provider) {
     case 'google':
     case 'anthropic':
     case 'openai':
-      return true
     case 'xai':
-      // The `unroutable` branch in callModelJson. Change both together or neither.
-      return false
+      return true
   }
 }
 
@@ -421,6 +415,90 @@ export function closeSchema(schema: Record<string, unknown>): Record<string, unk
     return o
   }
   return walk(schema) as Record<string, unknown>
+}
+
+// ── xAI ──────────────────────────────────────────────────────────────────────
+
+/**
+ * S21 — THE CLIENT THIS MODULE'S OWN COMMENT SAID DID NOT EXIST.
+ *
+ * Against the Responses API (POST /v1/responses), not the OpenAI-shaped chat-completions
+ * endpoint the two Lex fallback routes use — the Responses API is what carries structured
+ * output (`text.format.json_schema`) and the server-side tools (`web_search`/`x_search`)
+ * this sprint's orientation work needs, verified against docs.x.ai on 2026-09-24 (field
+ * names `max_output_tokens`, `instructions`, `input`, `status`, `incomplete_details`,
+ * `usage.input_tokens`/`output_tokens`/`cost_in_usd_ticks` — see
+ * docs/SEARCH_S21_REPORT.md §2 for the exact pages read). This call sends NO tools: it is
+ * the same tool-free structured-JSON contract every other vendor branch here answers, for
+ * a pass that just wants a validated object back. Tool use lives in
+ * `orientation/web-search.ts` and `orientation/x-orientation.ts`, which have their own
+ * prompts and cannot be squeezed into this generic shape.
+ *
+ * ⚠ UNVERIFIED LIVE FROM THIS MACHINE — no GROK_API_KEY in this environment (S21 report
+ * §0). Built to the documented contract and to the shape `orientation/x-orientation.ts`
+ * already proved live on 2026-08-06 for the same base URL and auth header. `no-key` is the
+ * one path this machine COULD exercise, and it does.
+ */
+async function callXai<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
+  const apiKey = process.env.GROK_API_KEY
+  if (!apiKey) return { ok: false, reason: 'no-key', detail: `[${o.label}] GROK_API_KEY not set`, usage: ZERO(o.model) }
+
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), o.timeoutMs)
+  try {
+    const res = await fetch('https://api.x.ai/v1/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: o.model,
+        instructions: o.system,
+        input: [{ role: 'user', content: o.user }],
+        max_output_tokens: o.maxOutputTokens,
+        ...sampling(o, 0.2),
+        text: { format: { type: 'json_schema', name: 'result', schema: o.schema } },
+      }),
+      signal: ctrl.signal,
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      return { ok: false, reason: 'http', detail: `[${o.label}] HTTP ${res.status} ${body.slice(0, 300)}`, usage: ZERO(o.model) }
+    }
+    type Resp = {
+      status?: string
+      model?: string
+      incomplete_details?: { reason?: string } | null
+      output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>
+      usage?: { input_tokens?: number; output_tokens?: number; cost_in_usd_ticks?: number }
+    }
+    const data = await res.json() as Resp
+    void recordXaiUsage(data, { stream: o.stream ?? 'lex', pass: o.pass ?? o.label, model: o.model })
+    const usage: LlmUsage = {
+      model: o.model,
+      tokensIn: n(data?.usage?.input_tokens),
+      tokensOut: n(data?.usage?.output_tokens),
+      echoedModel: data?.model ?? null,
+    }
+
+    // Rule 1 — before reading the body. xAI's Responses API reports completion via
+    // `status`, not a Gemini/OpenAI-style per-choice finish reason (CLAUDE.md §18).
+    if (data.status === 'incomplete') {
+      const raw = data.incomplete_details?.reason ?? ''
+      const blocked = /filter|safety|refus/i.test(raw)
+      return {
+        ok: false, reason: blocked ? 'blocked' : 'truncated', usage,
+        detail: `[${o.label}] incomplete (${raw || 'no reason given'}) — max_output_tokens=${o.maxOutputTokens}`,
+      }
+    }
+
+    const message = (data.output ?? []).find((it) => it.type === 'message')
+    const text = (message?.content ?? [])
+      .filter((c) => !c.type || c.type === 'output_text')
+      .map((c) => c.text ?? '')
+      .join('')
+    return parseJson<T>(text, usage, o.label)
+  } catch (err) {
+    return abortOrHttp(err, o)
+  } finally { clearTimeout(timer) }
 }
 
 // ── Shared ───────────────────────────────────────────────────────────────────

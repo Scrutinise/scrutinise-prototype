@@ -4319,6 +4319,12 @@ model LlmSpend {
   ref            String?
   /// ⚠ A failed call still costs money.
   failed         Boolean  @default(false)
+  /// S21 §6 — server-side tool invocations the provider itself billed for
+  /// (xAI web_search/x_search, Gemini google_search). NULL where not applicable.
+  toolCalls      Int?
+  /// S21 §3/§6 — items an X/web search tool fetched, per the provider's OWN
+  /// usage block — what the per-briefing X post cap is enforced and logged against.
+  postsFetched   Int?
   createdAt      DateTime @default(now())
 
   @@index([ideaId])

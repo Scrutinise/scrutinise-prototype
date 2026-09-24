@@ -119,6 +119,21 @@ CREATE INDEX IF NOT EXISTS "LlmSpend_group_idx" ON "LlmSpend" ("groupId", "creat
 -- ⚠⚠ AND A PASS THAT MATCHES NEITHER RULE IS 'unclassified', NOT 'other'. When a new pass is added
 -- and nobody updates this view, it must appear as something a reader can see is unaccounted for,
 -- rather than being silently folded into "everything else" and quietly inflating it.
+-- ════════════════════════════════════════════════════════════════════════════════════════════════
+-- ADDENDUM (S21 §6) — TOOL CALLS AND POSTS FETCHED, ADDED BEFORE THE LEDGER WAS EVER WRITTEN FOR THEM
+-- ════════════════════════════════════════════════════════════════════════════════════════════════
+-- Same reasoning as the groupId addendum above, one column pair later: xAI's web_search/x_search
+-- tools bill PER TOOL CALL and per item fetched, not only per token, and `estCostPence` alone
+-- cannot show a reader why one orientation run cost more than another with near-identical token
+-- counts. Both nullable — most rows (every non-tool-using call) will never carry either.
+--
+-- `postsFetched` is the number this sprint's per-briefing X cap (§3) is enforced and logged
+-- against, and it MUST be read from the provider's own usage block
+-- (`usage.server_side_tool_usage_details.x_posts_fetched`), never tallied client-side — see
+-- `recordXaiUsage` in lib/lex/spend-ledger.ts.
+ALTER TABLE "LlmSpend" ADD COLUMN IF NOT EXISTS "toolCalls" INTEGER;
+ALTER TABLE "LlmSpend" ADD COLUMN IF NOT EXISTS "postsFetched" INTEGER;
+
 CREATE OR REPLACE VIEW "LlmSpendKind" AS
 SELECT date_trunc('day', "createdAt")::date AS day,
        CASE

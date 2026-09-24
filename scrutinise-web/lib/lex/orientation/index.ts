@@ -44,7 +44,7 @@ import { flagEnabled } from '@/lib/env-flags'
 import type { ArgumentItem, CallOutcome, OrientationResult, RecencyScan } from './types'
 import { emptyOrientation } from './types'
 import { runWebOrientation } from './web-orientation'
-import { runXArgumentMining, runXRecencyScan, xOrientationEnabled } from './x-orientation'
+import { runXOrientationSequential, xOrientationEnabled } from './x-orientation'
 import { filterArguments, noiseFilterEnabled } from './noise-filter'
 
 export * from './types'
@@ -152,11 +152,16 @@ export async function runOrientation(opts: {
   }
 
   const skipped = { ms: 0, value: null, overran: false }
-  const [web, xRecency, xArgs] = await Promise.all([
+  // ⚠ S21 §3 — THE TWO X CALLS RUN SEQUENTIALLY WITH EACH OTHER, not concurrently, so the
+  // per-briefing post cap can be enforced BEFORE the second one fires rather than merely
+  // logged after both have already run — see `runXOrientationSequential`'s own header.
+  // They remain concurrent WITH the Gemini web pass (still one Promise.all, one budget).
+  const [web, xBoth] = await Promise.all([
     timed('web', () => runWebOrientation(opts.topic, context, days)),
-    xOn ? timed('x-recency', () => runXRecencyScan(opts.topic, context, days)) : Promise.resolve({ call: 'x-recency', ...skipped }),
-    xOn ? timed('x-arguments', () => runXArgumentMining(opts.topic, context, filterOn)) : Promise.resolve({ call: 'x-arguments', ...skipped }),
+    xOn ? timed('x', () => runXOrientationSequential(opts.topic, context, days, filterOn)) : Promise.resolve({ call: 'x', ...skipped }),
   ])
+  const xRecency = xBoth.value?.recency ?? { value: null, ms: 0 }
+  const xArgs = xBoth.value?.args ?? { value: null, ms: 0 }
 
   const calls: CallOutcome[] = []
   const attempted: string[] = ['web', ...(xOn ? ['x-recency', 'x-arguments'] : [])]
@@ -166,12 +171,16 @@ export async function runOrientation(opts: {
 
   calls.push({
     call: 'web', ok: web.value !== null, ms: web.ms,
-    ...(web.value ? { costUsd: web.value.costUsd } : { reason: why(web) }),
+    // S21 §1a — name the vendor that actually answered. Absent `provider` on the
+    // result means Gemini (the primary) answered; the fallback sets it explicitly.
+    ...(web.value ? { costUsd: web.value.costUsd, provider: web.value.provider ?? 'google' } : { reason: why(web) }),
   })
   if (xOn) {
     calls.push({
-      call: 'x-recency', ok: xRecency.value !== null, ms: xRecency.ms,
-      ...(xRecency.value ? { costUsd: xRecency.value.costUsd } : { reason: why(xRecency) }),
+      call: 'x-recency', ok: xRecency.value !== null, ms: xRecency.ms, provider: 'xai',
+      ...(xRecency.value
+        ? { costUsd: xRecency.value.costUsd, postsFetched: xRecency.value.postsFetched }
+        : { reason: xBoth.overran ? why(xBoth) : 'did not complete' }),
     })
   }
 
@@ -187,11 +196,14 @@ export async function runOrientation(opts: {
   const { items: argumentsMined, counts } = filterArguments(rawArguments, { enabled: filterOn, cap: maxArguments })
 
   if (xOn) {
+    // §3 — a call the cap SKIPPED before it fired is a third, distinct fact from "did not
+    // complete" and from "found nothing": it never ran, on purpose, and must read as such
+    // rather than as a provider failure.
     calls.push({
-      call: 'x-arguments', ok: xArgs.value !== null, ms: xArgs.ms,
+      call: 'x-arguments', ok: xArgs.value !== null, ms: xArgs.ms, provider: 'xai',
       ...(xArgs.value
-        ? { costUsd: xArgs.value.costUsd, kept: counts.kept, discarded: counts.discarded }
-        : { reason: why(xArgs) }),
+        ? { costUsd: xArgs.value.costUsd, postsFetched: xArgs.value.postsFetched, kept: counts.kept, discarded: counts.discarded }
+        : { reason: xArgs.skippedReason ?? (xBoth.overran ? why(xBoth) : 'did not complete') }),
     })
   }
 
