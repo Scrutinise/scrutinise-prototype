@@ -1,5 +1,63 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-24 02:28 UTC — SEARCH S21 — web orientation, provider-agnostic, xAI client built
+
+Report: `docs/SEARCH_S21_REPORT.md`. Brief given inline; no `SEARCH_S21` brief file was filed.
+
+▼▼ **THE xAI STRUCTURED CLIENT NOW EXISTS.** `model-call.ts`'s hard `unroutable` stub for xAI is
+gone — `callXai()` calls the Responses API (`max_output_tokens`/`instructions`/`input`/
+`text.format.json_schema`, `status`/`incomplete_details` checked before parsing, per CLAUDE.md
+§18), verified against docs.x.ai live 2026-09-24 (not against a key — none on this machine).
+`hasStructuredClientFor('xai')` is `true`; `check:model-registry` asserts the old stub text cannot
+return. **New: `grok-4.7`** is xAI's current flagship (docs read, not yet a pass default — a docs
+read is weaker than a live call, per this codebase's own rule).
+▼▼ **A NEW PROVIDER-NEUTRAL WEB-SEARCH LAYER** (`orientation/web-search.ts`) — one function,
+xAI (`web_search` tool) and Google (grounding) adapters, `provider`/`exclude` params (§1a), and a
+fallback order that only advances on a FAILED call, never a thin one. **Wired into something real**:
+`web-orientation.ts`'s primary (Gemini) Tier-B pass now falls back to this layer via xAI + a
+third-vendor structuring model when Gemini fails outright — the concrete fix for "dark since 6
+August because it depended on one vendor". Not exercised live this session (Gemini didn't fail
+during testing); built to contract and flagged as such.
+▶ **§3 — the X post cap (20/briefing, Charlie's number, asked this session) is now enforced BEFORE
+the second call, not after** — this needed `x-orientation.ts`'s two X calls to go from concurrent to
+sequential (`runXOrientationSequential`), since a pre-call gate has no meaning under concurrency.
+▶ **§4 — the injection test, live, 4/4**: `check:orientation-injection.ts` (new, permanent) feeds a
+real "ignore all previous instructions" attempt through the actual production structuring prompt —
+the canary string never appears in the output, the schema still validates.
+⚠⚠ **§6 — THE LEDGER WAS INERT FOR XAI, PROVEN BY QUERYING PRODUCTION DIRECTLY**: the `orientation`
+stream in `LlmSpend` had exactly 12 rows before this session, all Gemini, zero xAI, ever. Fixed —
+`recordXaiUsage()`, wired into every `api.x.ai` caller; `check:model-registry`'s Gemini-only
+unmetered-caller sweep now also covers xAI. Two new nullable columns (`toolCalls`, `postsFetched`)
+**applied to production** this session (`whichdb` confirmed `ep-old-dust-aboxi69a`, Charlie
+approved) — additive, same pattern as the existing `groupId` addendum. ⚠ Found, not fixed: Gemini's
+OWN grounding tool bills $35/1,000 requests past a free quota and neither the old code nor the new
+adapter prices it — token-rate-only accounting silently understates cost above the quota.
+▶ **§8 — the brief's premise on the Lex fallback is stale, verified not assumed**: both
+`app/api/ai/*` routes already name `grok-4.3`, not `grok-3-fast-beta` (fixed in S8). The real
+residual risk — both hardcode the string outside `model-registry.ts` — is reported with the exact
+five-line fix; not edited, per the brief's own instruction (Lex's files).
+▶ **§9 — zero finished production orientation runs exist to measure** (queried directly: all four
+`Idea.orientation` rows are the flag-off placeholder — `LEX_WEB_ORIENTATION` has been `false`
+throughout, confirmed live via `/api/health`, commit `c456fcc9`). Measured the `check:orientation`
+gold set instead (WX1–WX5, the same instrument this layer originally shipped on): **30/30 pass,
+mean 33.5s / $0.0133 per briefing**, matching or bettering the 6 Aug baseline. Exact variable for
+Charlie: `LEX_WEB_ORIENTATION=true`, Production. Open question for Charlie, not answered here: is
+`GROK_API_KEY` set in Vercel at all — `/api/health` has no line for it and the dashboard is still
+SAML-blocked.
+▶ **§7 — chat search costing report is INCOMPLETE, said plainly**: Google's leg is real (the WX
+gold-set numbers above); Anthropic's live benchmark was blocked by this sandbox's TLS interception
+on `api.anthropic.com` (`SELF_SIGNED_CERT_IN_CHAIN` — not a code problem); OpenAI has no key here.
+Pricing for all three read live from vendor pages. Recommendation (Google, cheapest measured)
+held provisionally pending a re-run with real access to the other two.
+✅ `tsc --noEmit` (app + scripts) clean; `check:model-registry` 28/28; `check:model-reachability` 8
+usable/1 rejected (pre-existing `claude-fable-5` `fetch failed`, found in passing, not this
+sprint's, not investigated further)/7 no-key; `check:orientation` 30/30 with the flag forced on;
+`check:orientation-injection` 4/4 (new); `check:client-boundary` 597 files, 139 client, no edge.
+⚠ Nothing committed yet; commit-all.sh produced, pending approval. The `LlmSpend` schema change was
+applied to production directly and ahead of the commit, per CLAUDE.md's own "schema + migration
+together, as early as possible" rule.
+
+
 ## 2026-09-22 08:05 UTC — the "leaked" prompt example was not real user words, and not a leak
 
 Charlie asked whether the `check:prompt-examples` finding flagged in the previous entry

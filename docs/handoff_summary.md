@@ -773,7 +773,27 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-22 08:05 UTC* — ▶ **The "leaked" prompt example flagged in the previous
+*Last updated: 2026-09-24 02:28 UTC (SEARCH S21)* — ▼▼ **xAI STRUCTURED CLIENT BUILT; WEB
+ORIENTATION NO LONGER HAS A SINGLE POINT OF FAILURE.** Report: `docs/SEARCH_S21_REPORT.md`.
+`model-call.ts`'s hard xAI `unroutable` stub is gone (`callXai()`, Responses API, unverified live —
+no `GROK_API_KEY` here). New provider-neutral `orientation/web-search.ts` (xAI + Google adapters,
+`provider`/`exclude`, fallback-on-failure-only); `web-orientation.ts`'s Gemini pass now falls back
+to it when Gemini fails outright (untested live — Gemini didn't fail during this session's runs).
+⚠⚠ **The ledger was inert for xAI — proven by querying production directly** (12 `orientation` rows
+before this session, all Gemini, zero xAI, ever): fixed (`recordXaiUsage`, two new `LlmSpend`
+columns **applied to production**). §3's 20-post X cap is now enforced BEFORE the second call
+(X's two calls went concurrent→sequential to make that possible). §4's injection test is live and
+permanent, 4/4. §8: the brief's "grok-3-fast-beta hardcoded" premise is STALE — already fixed to
+`grok-4.3` in S8; real residual risk (hardcoded outside the registry) reported, not edited (Lex's
+files). §9: **zero finished production orientation runs exist** — `LEX_WEB_ORIENTATION` has been
+`false` throughout (confirmed live, commit `c456fcc9`); measured the WX1–WX5 gold set instead,
+30/30, 33.5s/$0.0133 per briefing. Exact Vercel var for Charlie: `LEX_WEB_ORIENTATION=true`
+Production — open question whether `GROK_API_KEY` is set there at all. §7's costing report is
+incomplete (Anthropic blocked by a sandbox TLS issue, OpenAI no key here) — Google's leg is real.
+✅ `tsc` (app+scripts) clean; `check:model-registry` 28/28; `check:orientation` 30/30 (flag forced
+on); `check:orientation-injection` 4/4 (new); `check:client-boundary` clean.
+⚠ Nothing committed yet; commit-all.sh produced, pending approval.
+Earlier: 2026-09-22 08:05 UTC — ▶ **The "leaked" prompt example flagged in the previous
 entry is NOT real user words and NOT the Charlie/Angus defect class** — verified (byte-identical
 stored rows, a deterministic non-model write path, and `git log -L` showing the sentence was
 authored whole-cloth on 12 Aug). No audit of built ideas needed. The real defect was
