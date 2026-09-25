@@ -209,6 +209,17 @@ export const CAPABILITY_FLAGS = [
   // §2 measured that fourth number too — see `docs/SEARCH_S19_REPORT.md` §2 — and it is the one
   // that decides whether this flag should ever be turned on for the parliamentary collections.
   'LEX_SEARCH_GRAIN',
+  // S21 §7 amendment. CHAT WEB SEARCH — the general-corpus-chat surface (admin-only,
+  // lib/lex/general-chat.ts) may ask the model whether a web search would help THIS
+  // question, and if so run up to two, via the provider-neutral `webSearch()` built this
+  // sprint. The DECISION is the model's; the search itself, the two-per-turn cap, and the
+  // ledger stamping (`userId` on every resulting LlmSpend row) are deterministic code, not
+  // a model choice — the same discipline Decision 92 (chat-material.ts) applies to filing.
+  //
+  // ⚠ DEFAULT OFF, same reasoning as every other flag in this list added un-measured: this
+  // is a brand-new capability with no gold set run against it yet. Flip it to test; do not
+  // treat "it is built" as "it is validated".
+  'LEX_CHAT_WEB_SEARCH',
   //
   // S20b — the step `LEX_SEARCH_GRAIN` above cannot take on its own: that flag REGROUPS an
   // already-computed ranking (one result per document, that document's best RETRIEVED section),

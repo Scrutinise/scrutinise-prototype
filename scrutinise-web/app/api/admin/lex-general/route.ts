@@ -55,6 +55,8 @@ export async function POST(req: Request) {
   }
 
   const { question, history, limit } = parsed.data
-  const out = await runGeneralCorpusChat({ question, history, limit })
+  // S21 §7 amendment — "each ledger row stamped with userId". Threaded through so any web
+  // search this turn triggers is attributed to the admin who asked, not left anonymous.
+  const out = await runGeneralCorpusChat({ question, history, limit, userId: user.id })
   return NextResponse.json(out)
 }

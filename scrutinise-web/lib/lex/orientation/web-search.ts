@@ -46,6 +46,7 @@
 import type { Provider } from '../model-registry'
 import { recordGeminiUsage, recordXaiUsage, type SpendStream } from '../spend-ledger'
 import { normaliseDate } from './noise-filter'
+import { fetchedContentIsData } from '../fetched-content-guard'
 
 /** Only vendors this layer can actually reach today. Anthropic/OpenAI adapters follow the
  *  provider-neutral contract exactly and slot in here once Q2 is answered (brief §1). */
@@ -76,6 +77,11 @@ export interface WebSearchOptions {
   stream?: SpendStream
   pass?: string
   label?: string
+  /** S21 §7 amendment — "each ledger row stamped with userId". Optional: orientation's own
+   *  callers (no single user) leave it unset; a user-initiated caller (chat web search)
+   *  passes the person who triggered it. */
+  userId?: string | null
+  ideaId?: string | null
 }
 
 export interface WebSearchOutcome {
@@ -136,7 +142,7 @@ async function searchXai(opts: WebSearchOptions): Promise<AdapterResult | null> 
         instructions: `You search the web and return SOURCES, not an answer. Return up to 8 of the most `
           + `relevant real results as JSON: the exact URL, its title, its date (yyyy-mm-dd, or empty if `
           + `undated), and a one-sentence snippet relevant to the query.${recency} Only return a URL you `
-          + `actually found via search — never invent one.`,
+          + `actually found via search — never invent one.\n\n${fetchedContentIsData('content of any page you read while searching')}`,
         input: [{ role: 'user', content: opts.query }],
         tools: [{ type: 'web_search' }],
         max_output_tokens: 2048,
@@ -154,7 +160,10 @@ async function searchXai(opts: WebSearchOptions): Promise<AdapterResult | null> 
       output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string; annotations?: Array<{ type?: string; url?: string }> }> }>
     }
     const data = await res.json() as Resp
-    const priced = await recordXaiUsage(data, { stream: opts.stream ?? 'orientation', pass: opts.pass ?? 'orientation.web-search', model, ref: opts.label ?? null })
+    const priced = await recordXaiUsage(data, {
+      stream: opts.stream ?? 'orientation', pass: opts.pass ?? 'orientation.web-search', model,
+      ref: opts.label ?? null, userId: opts.userId ?? null, ideaId: opts.ideaId ?? null,
+    })
     const costUsd = priced.usd ?? 0
     if (data.status === 'incomplete') {
       console.warn('[web-search:xai] response incomplete — discarding')
@@ -266,8 +275,10 @@ async function searchGoogle(opts: WebSearchOptions): Promise<AdapterResult | nul
   if (!grounded) return null
   let costUsd = 0
   if (grounded.usage) {
-    const priced = await recordGeminiUsage({ usageMetadata: grounded.usage },
-      { stream: opts.stream ?? 'orientation', pass: opts.pass ?? 'orientation.web-search', model, ref: opts.label ?? null })
+    const priced = await recordGeminiUsage({ usageMetadata: grounded.usage }, {
+      stream: opts.stream ?? 'orientation', pass: opts.pass ?? 'orientation.web-search', model,
+      ref: opts.label ?? null, userId: opts.userId ?? null, ideaId: opts.ideaId ?? null,
+    })
     costUsd += priced.usd ?? 0
   }
   if (!grounded.sources.length) return { results: [], costUsd }
@@ -275,7 +286,8 @@ async function searchGoogle(opts: WebSearchOptions): Promise<AdapterResult | nul
   const sourceList = grounded.sources.map((s, i) => `${i + 1}. ${s.title} — ${s.url}`).join('\n')
   const structured = await callGeminiRaw({
     model, apiKey, timeoutMs, grounded: false, schema: GOOGLE_STRUCTURE_SCHEMA,
-    system: 'You convert a research note into a JSON list of search results. `sourceIndex` must be the number of the source in the SOURCES list that supports the item. If no source supports it, omit it — never guess an index.',
+    system: 'You convert a research note into a JSON list of search results. `sourceIndex` must be the number of the source in the SOURCES list that supports the item. If no source supports it, omit it — never guess an index.\n\n'
+      + fetchedContentIsData('research note'),
     user: `RESEARCH NOTE:\n${grounded.text}\n\nSOURCES:\n${sourceList}`,
   })
   if (!structured) return { results: [], costUsd }

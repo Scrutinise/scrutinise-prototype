@@ -98,6 +98,10 @@ export const PASS_DEFAULTS = {
   'lex.chat': 'gemini-2.5-flash',
   'lex.field': 'gemini-2.5-flash',
   'lex.general-chat': 'gemini-2.5-flash',
+  // S21 §7 amendment — chat web search. The model DECIDES whether a search would help
+  // (structured JSON, not a live function-calling loop — see general-chat.ts's own header
+  // on why); the search itself, the cap and the ledger stamping are deterministic code.
+  'lex.chat-web-search-decide': 'gemini-2.5-flash',
   'lex.feedback': 'gemini-2.5-flash',
   // ── retrieval support ──
   'search.query-expansion': 'gemini-2.5-flash',

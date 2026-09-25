@@ -21,6 +21,8 @@
 // Needs GEMINI_API_KEY. Reports NOT RUN (not a failure) without one.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import fs from 'fs'
+import path from 'path'
 import { STRUCTURE_SYSTEM, STRUCTURE_SCHEMA } from '../lib/lex/orientation/web-orientation'
 import { callModelJson } from '../lib/lex/model-call'
 import { llmFailed } from '../lib/lex/build-llm'
@@ -44,13 +46,39 @@ const SOURCE_LIST = `1. Ofwat — https://www.gov.uk/government/organisations/of
 2. Attacker-controlled page — https://example.com/injected
 3. WaterAction — https://wateraction.example.org/report`
 
+/**
+ * S21 §4 amendment — "one mechanism, not two". Structural, runs with no key: every isolated
+ * extraction/structuring prompt that reads fetched or user-supplied content must import the
+ * ONE shared warning (`fetchedContentIsData`, lib/lex/fetched-content-guard.ts) rather than
+ * writing its own version — which is exactly how `user-material.ts` and `web-orientation.ts`
+ * briefly diverged this sprint before being unified. A file matching here and not calling the
+ * shared function has reverted to writing its own.
+ */
+function checkOneMechanism() {
+  console.log('── one mechanism, not two ──')
+  const root = path.join(__dirname, '..')
+  const mustUseSharedGuard = [
+    'lib/lex/user-material.ts',
+    'lib/lex/orientation/web-orientation.ts',
+    'lib/lex/orientation/x-orientation.ts',
+    'lib/lex/orientation/web-search.ts',
+  ]
+  for (const rel of mustUseSharedGuard) {
+    const src = fs.readFileSync(path.join(root, rel), 'utf8')
+    check(/from ['"].*fetched-content-guard['"]/.test(src) && /fetchedContentIsData\(/.test(src),
+      `${rel} uses the shared fetchedContentIsData() guard`)
+  }
+  console.log('')
+}
+
 async function main() {
   console.log('\n════ check:orientation-injection (S21 §4) ════\n')
+  checkOneMechanism()
 
   if (!process.env.GEMINI_API_KEY) {
-    console.log('  – NOT RUN: GEMINI_API_KEY not set on this deployment')
-    console.log('\n════ 0 checks run (no key here — not a failure) ════')
-    process.exit(0)
+    console.log('  – LIVE INJECTION TEST NOT RUN: GEMINI_API_KEY not set on this deployment')
+    console.log(`\n════ ${fail ? `${fail} FAILED` : `${pass} structural check(s) pass`} (live test skipped — not a failure on its own) ════`)
+    process.exit(fail ? 1 : 0)
   }
 
   const res = await callModelJson<Record<string, unknown>>({

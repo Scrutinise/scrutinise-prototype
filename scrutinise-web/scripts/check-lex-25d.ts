@@ -210,16 +210,18 @@ function main() {
     REJECTS_TEMPERATURE.has('claude-opus-4-8') && acceptsTemperature('claude-haiku-4-5'))
 
   const modelCall = read('lib/lex/model-call.ts')
-  // ⚠ ASSERTED ON ALL THREE VENDOR PATHS. 25-C's fix lived inside the Anthropic branch only,
-  // and the next model to deprecate a knob will not be Anthropic's.
+  // ⚠ ASSERTED ON EVERY VENDOR PATH. 25-C's fix lived inside the Anthropic branch only, and
+  // the next model to deprecate a knob will not be Anthropic's. S21 added callXai() as the
+  // fourth — three became four here, not by raising a number blindly but because the fourth
+  // path now genuinely exists and genuinely goes through the same gate.
   // ⚠ THE PRECISE FORM MATTERS. "No `temperature:` anywhere" would be wrong — the gate helper
   // has to name the parameter to pass it. What must be true is that the CALLER's temperature
-  // is read in exactly ONE place (that helper) and reaches all three request bodies only
+  // is read in exactly ONE place (that helper) and reaches all four request bodies only
   // through it. A blunter regex fails on its own helper and teaches everyone to delete it.
   const rawReads = (modelCall.match(/o\.temperature/g) ?? []).length
   const gated = (modelCall.match(/\.\.\.sampling\(o/g) ?? []).length
-  ok('§1b — the caller\'s temperature is read in exactly one place, and all three vendors go through it',
-    rawReads === 1 && gated === 3, `${rawReads} raw read, ${gated} gated vendor paths`)
+  ok('§1b — the caller\'s temperature is read in exactly one place, and all four vendors go through it',
+    rawReads === 1 && gated === 4, `${rawReads} raw read, ${gated} gated vendor paths`)
   expectBreak('§1b — break: pretend a vendor path reads it raw as well',
     () => ((`${modelCall}\n temperature: o.temperature ?? 0.4,`).match(/o\.temperature/g) ?? []).length === 1)
   ok('§1b — the build\'s own Gemini path goes through the gate too',
@@ -490,8 +492,15 @@ function main() {
     /finding DROPPED/.test(material) && /continue/.test(material))
   ok('§4 — no binary is stored: only the extracted text and the original\'s size',
     !/bytes: bytes/.test(materialRoute) && /sourceBytes: bytes\.byteLength/.test(materialRoute))
+  // ⚠ STALE, FOUND IN PASSING (S21 §4 amendment session): this used to read `materialRoute`
+  // (app/api/ideas/[id]/material/route.ts), which is where the check was true when it was
+  // written. Decision 92 (2026-09-22) lifted `createLinkMaterial` OUT of that route and into
+  // `lib/lex/user-material.ts` specifically so the upload route and the chat-material path
+  // share one function — CHANGE_LOG says so in as many words — and nobody re-pointed this
+  // assertion at the file the code actually moved to. It was failing on an absence the move
+  // itself caused, not on a regression.
   ok('§4 — a link keeps its URL, resolved through redirects',
-    /url: extracted\.finalUrl/.test(materialRoute))
+    /url: params\.extracted\.finalUrl/.test(material))
   ok('§4 — an unreadable file is refused, not stored empty',
     /Nothing readable came out of/.test(material))
   ok('§4 — deleting a document deletes the findings that quote it',
