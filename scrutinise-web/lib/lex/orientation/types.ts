@@ -24,7 +24,13 @@ export type Tier = 'A' | 'B' | 'C'
 export interface OrientationSource {
   /** Publisher/domain (Tier B) or handle (Tier C). */
   label: string
+  /** S24 — the RESOLVED final address, for Tier B sources that came through Google's grounding
+   *  redirect. Equal to the redirect URL when resolution failed. This is what is shown/cited. */
   url: string
+  /** S24 — Google's own `vertexaisearch.cloud.google.com/grounding-api-redirect/…` wrapper URL,
+   *  kept for provenance. Present only on Tier B sources from Gemini grounding; absent on Tier C
+   *  (X posts already carry a direct URL, nothing to resolve). */
+  redirectUrl?: string
   /** ISO yyyy-mm-dd. Undated items never get this far. */
   date: string
   tier: Tier

@@ -47,13 +47,20 @@ import type { Provider } from '../model-registry'
 import { recordGeminiUsage, recordXaiUsage, type SpendStream } from '../spend-ledger'
 import { normaliseDate } from './noise-filter'
 import { fetchedContentIsData } from '../fetched-content-guard'
+import { resolveGroundingUrls } from './resolve-redirect'
 
 /** Only vendors this layer can actually reach today. Anthropic/OpenAI adapters follow the
  *  provider-neutral contract exactly and slot in here once Q2 is answered (brief §1). */
 export type WebSearchProvider = Extract<Provider, 'xai' | 'google'>
 
 export interface WebSearchResult {
+  /** S24 — the RESOLVED final address for Google results (Gemini grounding never hands back
+   *  the real page — see resolve-redirect.ts). Already the real URL for xAI results, which
+   *  cites directly. */
   url: string
+  /** S24 — present only for Google results: Gemini's own grounding-redirect wrapper URL,
+   *  kept for provenance. Absent for xAI, which has no such indirection. */
+  redirectUrl?: string
   title: string
   /** ISO yyyy-mm-dd, or null when neither the provider nor the model could date it. */
   date: string | null
@@ -207,7 +214,7 @@ async function searchXai(opts: WebSearchOptions): Promise<AdapterResult | null> 
 async function callGeminiRaw(opts: {
   model: string; apiKey: string; timeoutMs: number; system?: string; user: string
   grounded: boolean; schema?: object
-}): Promise<{ text: string; sources: Array<{ url: string; title: string }>; usage: unknown } | null> {
+}): Promise<{ text: string; sources: Array<{ url: string; redirectUrl: string; title: string }>; usage: unknown } | null> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs)
   try {
@@ -235,10 +242,23 @@ async function callGeminiRaw(opts: {
     const data = await res.json() as Resp
     const cand = data.candidates?.[0]
     const text = (cand?.content?.parts ?? []).map((p) => p.text ?? '').join('')
-    const sources = (cand?.groundingMetadata?.groundingChunks ?? [])
+    const rawSources = (cand?.groundingMetadata?.groundingChunks ?? [])
       .map((c) => c.web).filter((w): w is { uri?: string; title?: string } => !!w)
-      .map((w) => ({ url: (w.uri ?? '').trim(), title: (w.title ?? '').trim() || 'web source' }))
-      .filter((s) => s.url.length > 0)
+      .map((w) => ({ redirectUrl: (w.uri ?? '').trim(), title: (w.title ?? '').trim() || 'web source' }))
+      .filter((s) => s.redirectUrl.length > 0)
+    // S24 — resolved before storage/display, same rule and same function as web-orientation.ts.
+    const resolved = await resolveGroundingUrls(rawSources.map((s) => s.redirectUrl))
+    if (resolved.size) {
+      const vals = [...resolved.values()]
+      const dead = vals.filter((r) => r.dead).length
+      const blocked = vals.filter((r) => !r.dead && r.status != null && r.status >= 400).length
+      console.log(`[web-search:google] redirect resolution: ${resolved.size - dead}/${resolved.size} resolved`
+        + `, ${dead} dead, ${blocked} resolved-but-blocked (non-2xx)`)
+    }
+    const sources = rawSources.map((s) => {
+      const r = resolved.get(s.redirectUrl)
+      return { url: r?.url ?? s.redirectUrl, redirectUrl: s.redirectUrl, title: s.title }
+    })
     return { text, sources, usage: data.usageMetadata }
   } catch (err) {
     console.warn('[web-search:google] failed:', err instanceof Error ? err.message : err)
@@ -311,7 +331,7 @@ async function searchGoogle(opts: WebSearchOptions): Promise<AdapterResult | nul
       if (!source) return null
       const date = normaliseDate(e.date)
       const snippet = typeof e.snippet === 'string' ? e.snippet.trim() : ''
-      return { url: source.url, title: source.title, date, snippet, provider: 'google' }
+      return { url: source.url, redirectUrl: source.redirectUrl, title: source.title, date, snippet, provider: 'google' }
     })
     .filter((r): r is WebSearchResult => r !== null)
   return { results, costUsd }

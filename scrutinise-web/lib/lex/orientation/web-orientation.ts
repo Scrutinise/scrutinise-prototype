@@ -44,6 +44,7 @@ import { dedupeRecency, normaliseDate, withinWindow } from './noise-filter'
 import { recordGeminiUsage } from '../spend-ledger'
 import { fetchedContentIsData } from '../fetched-content-guard'
 import { webSearch } from './web-search'
+import { resolveGroundingUrls } from './resolve-redirect'
 import { callModelJson } from '../model-call'
 import { llmFailed } from '../build-llm'
 import { modelFor } from '../model-registry'
@@ -229,11 +230,30 @@ async function callGemini(opts: {
     const cand = data.candidates?.[0]
     const text = (cand?.content?.parts ?? []).map((p) => p.text ?? '').join('')
     const chunks = cand?.groundingMetadata?.groundingChunks ?? []
-    const sources: OrientationSource[] = chunks
+    const rawSources = chunks
       .map((c) => c.web)
       .filter((w): w is { uri?: string; title?: string } => !!w)
-      .map((w) => ({ label: (w.title ?? '').trim() || 'web source', url: (w.uri ?? '').trim(), date: '', tier: 'B' as const }))
-      .filter((s) => s.url.length > 0)
+      .map((w) => ({ label: (w.title ?? '').trim() || 'web source', redirectUrl: (w.uri ?? '').trim() }))
+      .filter((s) => s.redirectUrl.length > 0)
+    // S24 — RESOLVED BEFORE STORAGE, per the brief. Every grounding chunk is Google's own
+    // redirect wrapper, never the underlying page — see resolve-redirect.ts's header.
+    const resolved = await resolveGroundingUrls(rawSources.map((s) => s.redirectUrl))
+    const sources: OrientationSource[] = rawSources.map((s) => {
+      const r = resolved.get(s.redirectUrl)
+      return { label: s.label, url: r?.url ?? s.redirectUrl, redirectUrl: s.redirectUrl, date: '', tier: 'B' as const }
+    })
+    // S24 — "report how many resolve and how many are dead", per the brief. ⚠ "dead" means the
+    // redirect itself could not be followed — a resolved address that answers with a non-2xx
+    // (a government/news host's own bot-blocking, e.g. ofwat.gov.uk 403) is NOT dead, it is a
+    // real page our fetch was refused — see resolve-redirect.ts's own header on why these are
+    // kept distinct.
+    if (resolved.size) {
+      const vals = [...resolved.values()]
+      const dead = vals.filter((r) => r.dead).length
+      const blocked = vals.filter((r) => !r.dead && r.status != null && r.status >= 400).length
+      console.log(`[orientation:web] redirect resolution: ${resolved.size - dead}/${resolved.size} resolved`
+        + `, ${dead} dead, ${blocked} resolved-but-blocked (non-2xx)`)
+    }
     // BRIEF_SEARCH_S6 §3 addendum — this call already computes its own cost; the ledger needs
     // the same numbers so the platform total is not missing a whole stream.
     void recordGeminiUsage(data, { stream: 'orientation', pass: 'orientation.web', model: opts.model })
