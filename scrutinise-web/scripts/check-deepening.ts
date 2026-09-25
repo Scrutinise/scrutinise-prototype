@@ -315,8 +315,12 @@ for (const p of PASSES) {
 console.log('\n§19-E Task 3 — sift, don\'t rank-and-dump')
 const SIFT = 'lib/lex/deepening-sift.ts'
 const sift = code(SIFT)
+// ⚠ S24 "orphans in builds" added a `.filter((r) => !r.orphaned)` between `res.results` and the
+// push — widened rather than tightened, so an orphan-exclusion filter (or any other filter
+// still reading FROM `res.results`) does not fail this on a technicality, while a switch to
+// the panel-grouped `res.grouped` still fails it exactly as before.
 ok('the pass reads the UNGROUPED results, not the panel-grouped ~20',
-  /retrieved\.push\(\.\.\.res\.results\)/.test(engine) && !/retrieved\.push\(\.\.\.res\.grouped\)/.test(engine),
+  /retrieved\.push\(\.\.\.res\.results/.test(engine) && !/retrieved\.push\(\.\.\.res\.grouped/.test(engine),
   'groupForPanel caps at 3 per display type — a presentation rule, not a candidate set')
 ok('the candidate target is ~100, not the old 14',
   /SIFT_CANDIDATE_TARGET/.test(engine) && SIFT_CANDIDATE_TARGET >= 60, `${SIFT_CANDIDATE_TARGET}`)
@@ -362,8 +366,12 @@ const adv = code(ADV)
 ok('there is a SEPARATE call for the issues', /export async function generateAdversarialIssues/.test(adv))
 ok('...with an adversarial brief', /COMMITTEE CLERK/.test(read(ADV)) && /where is this proposal weakest/i.test(read(ADV)))
 ok('...that is given the findings to read critically', /findings: RawFinding\[\]/.test(adv))
+// ⚠ STALE, FOUND IN PASSING (S24 session, unrelated to this session's own work): 25-V §7
+// reshaped this from a plain `??` into a ternary that normalises both producers to one
+// shape (`{title, text}`) — the property (adversarial used in place of the gather's own
+// issues when the call succeeded) is unchanged; only the expression's syntax moved.
 ok('the engine uses it in place of the gather\'s own issues',
-  /const issueTexts = adversarial \?\? gathered\.issues/.test(engine))
+  /issueTexts[^=]*=\s*adversarial\s*\?\s*adversarial\.map/.test(engine) && /:\s*gathered\.issues/.test(engine))
 ok('...and says so when it fell back, rather than degrading silently',
   /adversarial issues call failed/.test(read(ENGINE)) && /adversarialIssues/.test(engine))
 ok('the DETERMINISTIC templates still run — they fired correctly and a model is the wrong instrument',

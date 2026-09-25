@@ -223,10 +223,28 @@ async function retrieveFor(
       })
       ran = true
       if (out.failed) { broke = true; continue }
+      // S24 "orphans in builds" — a hit present in the search index and absent from the
+      // database (S19 §1.1, search-gateway.ts's own `orphaned` field) was reaching
+      // EvidenceItem rows and CitedFinding output through this exact loop: `askQuestion`
+      // below writes `src.citation`/`src.url` straight from whatever is in `candidates` with
+      // no check, and an orphaned hit's citation/url are the index's stale, empty or
+      // collection-name-only placeholder (S19 §1.1's own description) — presented as a real,
+      // citable finding backing a build's evidence. Excluded here, at the ONE place
+      // `SearchResult[]` enters this file, before sift or gather ever see it — the gateway
+      // itself never filters (it counts and logs orphans instead, deliberately, per S22 §3),
+      // so each caller that can cite a result is responsible for this, same as
+      // general-chat.ts's identical filter.
+      let orphaned = 0
       for (const r of out.results) {
         if (seen.has(r.id)) continue
         seen.add(r.id)
+        if (r.orphaned) { orphaned++; continue }
         candidates.push(r)
+      }
+      if (orphaned) {
+        console.warn('[25b:research] excluded orphaned hit(s) — in the search index, not in the database', {
+          question: q.id, intent, orphaned,
+        })
       }
     } catch (err) {
       broke = true

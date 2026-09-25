@@ -394,7 +394,18 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
         limit: perIntent,
       })
       if (res.failed) { failedIntents.push(intent); continue }
-      retrieved.push(...res.results)
+      // S24 "orphans in builds" — same exposure build-research.ts had, same table
+      // (`EvidenceItem`, line ~591 below writes `citation: src.citation`/`url: src.url`
+      // straight from whatever survives to `candidates`, no check). A hit present in the
+      // search index and absent from the database (S19 §1.1) carries the index's stale,
+      // empty or collection-name-only citation — excluded here, before sift ever sees it.
+      const orphaned = res.results.filter((r) => r.orphaned)
+      if (orphaned.length) {
+        console.warn('[deepening] excluded orphaned hit(s) — in the search index, not in the database', {
+          intent, orphaned: orphaned.length,
+        })
+      }
+      retrieved.push(...res.results.filter((r) => !r.orphaned))
     }
     const deduped = dedupeById(retrieved)
 
