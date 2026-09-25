@@ -27,6 +27,12 @@ const REDEPLOY = process.argv.includes('--redeploy')
 const FLAGS = [
   'LEX_QUERY_EXPANSION', 'LEX_SEARCH_RERANKER', 'LEX_SEARCH_JUDGED_MERGE',
   'LEX_TIER_FUSION', 'LEX_STATS_STREAM',
+  // ⚠⚠ FOUND, NOT ASKED FOR — by the boot-line extension this same close-out built. Once
+  // `capabilityLine()` shipped in the worker's log, the first real deployment showed
+  // `SEARCH_VECTOR=off` beside four just-fixed `=ON` flags, while /api/health has reported
+  // LEX_SEARCH_VECTOR=true on Vercel the whole time. Exactly the divergence this task's own
+  // "why" names — added to the set it corrects, same convention, same session.
+  'LEX_SEARCH_VECTOR',
 ] as const
 
 async function gql<T = Record<string, unknown>>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
