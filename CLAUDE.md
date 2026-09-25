@@ -62,6 +62,22 @@ already existed; breaking it once is how the schema shipped early. Two sessions 
 CENTRAL) share this repository at the same time, and `git add .` in one of them stages the
 other's half-finished work.
 
+⚠⚠ **Explicit-path commits protect a file only while one stream owns it.** `git add <path>`
+stages *every* change currently sitting in that file, not just the one you made — so when two
+streams have both edited the same file, the naming of the path is no protection at all. On 25
+September, a SEARCH-stream session `git add`ed `lib/lex/build.ts` by its exact path for one line
+of its own (an attribution fix) — and staged, in the same commit, two LEX-stream imports and a
+try/catch block that were already sitting uncommitted in that file, for a document-snapshot
+feature whose own files had never been committed. The commit built, deployed, and crash-looped
+`build-worker` in production (`MODULE_NOT_FOUND`) until a second session caught it, reverted only
+the swept-in lines, and pushed a fix. **Where two streams have edited the same file, the commit is
+agreed between them first, and names all of it** — every piece of work the file carries and every
+stream that contributed, in one message, made by whichever side is ready to commit once both have
+said so. Do not attempt to split the file's hunks between two live sessions to commit separately —
+that is how one side's half gets lost or shipped without its dependencies. In a shared tree,
+uncommitted work is not protected work — and neither is a commit script that adds a path without
+first diffing what is actually in it.
+
 ## Railway Operations
 
 ### Worker restart procedure
