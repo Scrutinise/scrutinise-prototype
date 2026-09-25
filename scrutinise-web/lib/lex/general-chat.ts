@@ -38,6 +38,9 @@ import type { SearchResult } from './page1-config'
 import { runSearch, type CapabilityFlags } from './search-gateway'
 import { modelFor } from './model-registry'
 import { recordGeminiUsage } from './spend-ledger'
+import { flagEnabled } from '../env-flags'
+import { webSearch } from './orientation/web-search'
+import { markPublicSources, publicSourcesBlock, type PublicSource } from './public-sources'
 
 export interface GeneralChatTurn {
   role: 'user' | 'lex'
@@ -66,6 +69,10 @@ export interface GeneralChatDiagnostics {
    *  retrieved and are shown, but the answer could not have used them — a distinction
    *  the debugging view has to make or the source list overstates what was read. */
   contextCount: number
+  /** S22 "Orphan marker" — how many retrieved results were `orphaned: true` (in the search
+   *  index, absent from the database — S19 §1.1) and were therefore excluded from `context`
+   *  before the answer call, never assigned a [n] number, and so cannot appear in `cited`. */
+  orphanCount: number
   /** Per routed stream: how many hits it returned, and how many of them are inside the answer
    *  context. A stream with `retrieved > 0 && inContext === 0` is the §1 failure — retrieved,
    *  counted, panel-displayed, and invisible to the answer. Absent on the tier-scoped path,
@@ -83,6 +90,10 @@ export interface GeneralChatDiagnostics {
   /** Citations the model returned that match nothing retrieved. Should always be
    *  empty; if it is not, the answer is citing something it was never shown. */
   droppedCitations: string[]
+  /** S21 §7 amendment — present only when LEX_CHAT_WEB_SEARCH is on. `attempted: false` with
+   *  a `reason` covers both "the model decided not to" and "the flag is off" — the reason
+   *  text always says which. */
+  webSearch?: ChatWebSearchOutcome
 }
 
 export interface GeneralChatResult {
@@ -172,10 +183,140 @@ function renderSources(results: SearchResult[]): string {
     .join('\n\n')
 }
 
+// ── S21 §7 amendment — chat web search ──────────────────────────────────────
+//
+// Flag: LEX_CHAT_WEB_SEARCH (default OFF — brand new, unmeasured).
+//
+// ⚠ THE MODEL DECIDES WHETHER TO SEARCH; NOTHING ELSE ABOUT THIS IS A MODEL CHOICE. A
+// structured JSON decision (0–2 short queries), never a live function-calling loop — Gemini's
+// grounding tool cannot combine with JSON mode (web-orientation.ts's own header), and every
+// other agentic-shaped decision in this codebase (the query router, the tool decider,
+// Decision 92's chat-material filing) already uses "ask for a structured decision, act on it
+// deterministically in code" rather than a live tool loop. This is the same shape, one level
+// up: the SEARCH, the CAP and the LEDGER STAMPING are code, not something the model can skip,
+// double, or forget to attribute.
+export const CHAT_WEB_SEARCH_MAX_PER_TURN = 2
+
+const SEARCH_DECISION_SCHEMA = {
+  type: 'object',
+  properties: {
+    queries: { type: 'array', items: { type: 'string' }, maxItems: CHAT_WEB_SEARCH_MAX_PER_TURN },
+    reason: { type: 'string' },
+  },
+  required: ['queries', 'reason'],
+}
+
+const SEARCH_DECISION_SYSTEM = `You are deciding, before answering a corpus research question, whether a WEB search would help — never whether to answer from memory instead of the corpus.
+
+Say yes ONLY when the question needs something the corpus cannot hold: today's news, a very recent event, or something genuinely outside a UK legislative/parliamentary corpus (comparative foreign practice, a live political row, current prices or figures). Do NOT search for anything the corpus retrieval already shown to you might answer.
+
+Return 0, 1 or 2 short search queries in "queries" — never more than 2 — and say why (or why not) in "reason". An empty array is the normal, correct answer for most questions; do not invent a reason to search.`
+
+interface SearchDecision { queries: string[]; reason: string }
+
+async function decideWebSearch(question: string, corpusSummary: string): Promise<SearchDecision | null> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return null
+  const model = modelFor('lex.chat-web-search-decide')
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 15000)
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SEARCH_DECISION_SYSTEM }] },
+          contents: [{ role: 'user', parts: [{ text: `QUESTION: ${question}\n\nCORPUS RETRIEVAL: ${corpusSummary}` }] }],
+          generationConfig: {
+            temperature: 0.2, maxOutputTokens: 512,
+            responseMimeType: 'application/json', responseSchema: SEARCH_DECISION_SCHEMA,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
+      },
+    )
+    if (!res.ok) {
+      console.warn('[lex-general:web-search] decision call HTTP', res.status)
+      return null
+    }
+    const data = await res.json() as {
+      candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
+    }
+    void recordGeminiUsage(data, { stream: 'admin', pass: 'lex.chat-web-search-decide', model })
+    const candidate = data.candidates?.[0]
+    if (candidate?.finishReason && candidate.finishReason !== 'STOP') return null // truncated/blocked — decline rather than guess
+    const text = candidate?.content?.parts?.[0]?.text
+    if (typeof text !== 'string') return null
+    const parsed = JSON.parse(text) as { queries?: unknown; reason?: unknown }
+    const queries = (Array.isArray(parsed.queries) ? parsed.queries : [])
+      .filter((q): q is string => typeof q === 'string' && q.trim().length > 0)
+      // ⚠ THE CAP IS ENFORCED HERE, NOT TRUSTED FROM THE SCHEMA. `maxItems` is a hint some
+      // vendors ignore; slicing in code is what makes "at most two" actually true.
+      .slice(0, CHAT_WEB_SEARCH_MAX_PER_TURN)
+    return { queries, reason: typeof parsed.reason === 'string' ? parsed.reason : '' }
+  } catch (err) {
+    console.warn('[lex-general:web-search] decision call failed:', err instanceof Error ? err.message : err)
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+export interface ChatWebSearchOutcome {
+  attempted: boolean
+  reason: string
+  queries: string[]
+  providers: string[]
+  resultCount: number
+  costUsd: number
+}
+
+/**
+ * Run up to `CHAT_WEB_SEARCH_MAX_PER_TURN` searches and turn the results into a `[W]`-numbered
+ * public-sources block — the SAME mechanism `public-sources.ts` already built for comparative
+ * foreign-practice answers (decision 85: a web result is a source, never a corpus citation, and
+ * the two numbering sequences never merge). Every search is stamped with `userId`.
+ */
+async function runChatWebSearches(
+  queries: string[], userId: string | null,
+): Promise<{ block: string | null; outcome: Omit<ChatWebSearchOutcome, 'attempted' | 'reason'> }> {
+  const raw: Array<Omit<PublicSource, 'marker'>> = []
+  const providers: string[] = []
+  let costUsd = 0
+  for (const query of queries.slice(0, CHAT_WEB_SEARCH_MAX_PER_TURN)) {
+    const out = await webSearch({
+      query, stream: 'admin', pass: 'lex.chat-web-search', label: 'general-chat', userId,
+    })
+    costUsd += out.costUsd
+    if (out.provider) providers.push(out.provider)
+    if (!out.ok) {
+      console.warn(`[lex-general:web-search] "${query}" — no provider could answer: ${out.reason}`)
+      continue
+    }
+    for (const r of out.results.slice(0, 3)) {
+      raw.push({
+        title: r.title,
+        publisher: r.provider === 'xai' ? 'web search (xAI)' : 'web search (Google)',
+        url: r.url,
+        why: r.snippet || `found searching "${query}"`,
+      })
+    }
+  }
+  const marked = markPublicSources(raw)
+  return {
+    block: marked.length ? publicSourcesBlock(marked) : null,
+    outcome: { queries, providers, resultCount: marked.length, costUsd },
+  }
+}
+
 async function callGeminiForAnswer(
   question: string,
   history: GeneralChatTurn[],
   results: SearchResult[],
+  webSourcesBlock?: string | null,
 ): Promise<AnswerOutput> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set in this environment')
@@ -194,9 +335,12 @@ async function callGeminiForAnswer(
     results.length
       ? `SOURCES retrieved for this question:\n\n${renderSources(results)}`
       : 'SOURCES: none. The search ran and returned nothing usable.',
-    '',
-    `QUESTION: ${question}`,
-  ].join('\n')
+    // S21 §7 amendment — decision 85's boundary, unchanged: a web result is cited [W1],
+    // [W2]… and is NEVER renumbered into the corpus [n] sequence above. `publicSourcesBlock()`
+    // already carries its own instruction saying so.
+    webSourcesBlock ? `\n${webSourcesBlock}` : '',
+    `\nQUESTION: ${question}`,
+  ].filter(Boolean).join('\n')
 
   const contents = [
     ...history.slice(-8).map((t) => ({
@@ -308,10 +452,14 @@ export async function runGeneralCorpusChat(input: {
   history?: GeneralChatTurn[]
   /** Canonical results requested from the gateway before grouping. */
   limit?: number
+  /** S21 §7 amendment — "each ledger row stamped with userId". The caller (the admin route)
+   *  already has the authenticated user; this is what carries it onto the web-search rows. */
+  userId?: string | null
 }): Promise<GeneralChatResult> {
   const question = input.question.trim()
   const history = input.history ?? []
   const query = toQueryTerms(question)
+  const userId = input.userId ?? null
 
   // ── retrieve. UNTIERED: no `tier`, so the gateway takes the routed path.
   const t0 = Date.now()
@@ -365,6 +513,7 @@ export async function runGeneralCorpusChat(input: {
         retrieved: 0,
         grouped: 0,
         contextCount: 0,
+        orphanCount: 0,
         searchMs,
         droppedCitations: [],
       },
@@ -381,6 +530,7 @@ export async function runGeneralCorpusChat(input: {
     retrieved: search.results.length,
     grouped: search.grouped.length,
     contextCount: 0,
+    orphanCount: search.meta.orphanCount,
     searchMs,
     droppedCitations: [],
   }
@@ -392,7 +542,14 @@ export async function runGeneralCorpusChat(input: {
     return { answer: null, results: [], cited: [], diagnostics }
   }
 
-  const context = search.results.slice(0, answerContextLimit())
+  // S22 "Orphan marker" — excluded from `context` (what the model is shown) BEFORE the
+  // top-N slice, so an orphaned hit never occupies a context slot a real source could have
+  // used, and — the load-bearing consequence — never receives a [n] number, so it cannot
+  // appear in `cited`. It stays in `search.results` (returned to the caller, panel-visible)
+  // and its count is already in `diagnostics.orphanCount`, logged once already in
+  // search-gateway.ts. Kept, labelled (ORPHAN_LABEL, page1-config.ts, for a caller that
+  // renders `results` directly), never cited.
+  const context = search.results.filter((r) => !r.orphaned).slice(0, answerContextLimit())
   diagnostics.contextCount = context.length
   // What the answer call can actually see, per stream. The counted thing, not the assumed one:
   // "committees was routed" and "committees reached the model" are different claims, and the
@@ -413,10 +570,29 @@ export async function runGeneralCorpusChat(input: {
       })
     }
   }
+  // ── S21 §7 amendment — chat web search, gated, off by default ──────────────────────────
+  let webSourcesBlock: string | null = null
+  if (flagEnabled('LEX_CHAT_WEB_SEARCH')) {
+    const corpusSummary = context.length
+      ? `${context.length} corpus source(s) retrieved (streams: ${diagnostics.routedStreams?.join(', ') ?? 'untiered'}).`
+      : 'The corpus search ran and returned nothing usable.'
+    const decision = await decideWebSearch(question, corpusSummary)
+    if (!decision) {
+      diagnostics.webSearch = { attempted: false, reason: 'decision call unavailable (no key, or the call failed)', queries: [], providers: [], resultCount: 0, costUsd: 0 }
+    } else if (!decision.queries.length) {
+      diagnostics.webSearch = { attempted: false, reason: decision.reason || 'the model judged the corpus sufficient', queries: [], providers: [], resultCount: 0, costUsd: 0 }
+    } else {
+      const { block, outcome } = await runChatWebSearches(decision.queries, userId)
+      webSourcesBlock = block
+      diagnostics.webSearch = { attempted: true, reason: decision.reason, ...outcome }
+      console.log('[lex-general:web-search]', { queries: decision.queries, providers: outcome.providers, results: outcome.resultCount, userId })
+    }
+  }
+
   const t1 = Date.now()
   let out: AnswerOutput
   try {
-    out = await callGeminiForAnswer(question, history, context)
+    out = await callGeminiForAnswer(question, history, context, webSourcesBlock)
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err)
     diagnostics.answerMs = Date.now() - t1

@@ -275,6 +275,10 @@ export interface GatewayResult {
      * outer ranking alone would have shown.
      */
     withinDocument?: { documentKey: string; winnerId: string | null; promoted: boolean; tookMs: number }
+    /** S22 "Orphan marker" — how many of `results` are `orphaned: true` (present in the served
+     *  search index, absent from `corpus_sections` — S19 §1.1). 0 on a clean search; present on
+     *  every non-empty one, so a caller can log/surface it without re-filtering `results` itself. */
+    orphanCount: number
   }
 }
 
@@ -289,7 +293,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   const limit = q.limit ?? 12
 
   if (!keywords.length) {
-    return { intent: q.intent, results: [], grouped: [], failed: false, meta: { flags, expansionAdded: [] } }
+    return { intent: q.intent, results: [], grouped: [], failed: false, meta: { flags, expansionAdded: [], orphanCount: 0 } }
   }
 
   // 2. Query routing (capability flag) generalises Stage-3 expansion into
@@ -658,17 +662,30 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     fanout: limit > 0 ? Math.round((annotatedResults.length / limit) * 10) / 10 : 0,
   }
 
+  // S22 "Orphan marker" — counted here, the one place every caller's results pass through,
+  // rather than per-caller. `orphaned` is set at the hydrate step in fts-search.ts /
+  // vector-search.ts; this is only the tally + the log line, never a filter — the hit STAYS
+  // in `results`/`grouped` (page1-config.ts's SearchResult.orphaned explains why: dropping it
+  // here would repeat S19 §1.1's silent failure one layer further out).
+  const orphanCount = annotatedResults.filter((r) => r.orphaned).length
+
   console.log('[search-gateway] result', {
     intent: q.intent, results: results.length, failed, reason: failureReason ?? null,
     repealed: repealedCount, partiallyRepealed: partialCount,
     hollowSuppressed: hollowResults.length, repealLookup: repealOk ? 'ok' : 'FAILED',
+    orphaned: orphanCount,
     // ⚠ Logged as `asked → got` rather than as a bare count, because a bare count is what every
     // log line already had while the fan-out went unnoticed for six weeks (§5.1).
     limit: `asked ${requested.limit} → got ${requested.returned} across ${requested.streams} stream(s) (${requested.fanout}×)`,
   })
+  if (orphanCount) {
+    console.warn(`[search-gateway] ${orphanCount} of ${annotatedResults.length} result(s) are ORPHANED-IN-INDEX `
+      + `(S19 §1.1 — present in the served search index, absent from corpus_sections) — kept, `
+      + 'labelled, and must not be cited as a source.')
+  }
   return {
     intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics,
-    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested, denseDegraded, withinDocument },
+    meta: { flags, expansionAdded, routedStreams, perStream, merge, requested, denseDegraded, withinDocument, orphanCount },
   }
 }
 

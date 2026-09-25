@@ -35,6 +35,7 @@
 import { prisma } from '@/lib/prisma'
 import { rates, type ModelRate } from './build-cost'
 import type { LlmUsage } from './build-llm'
+import { currentBuildContext } from './build-context'
 
 /** Which part of the platform spent this. Ingest's cost is not a user's, but it is Charlie's. */
 export type SpendStream = 'lex' | 'build' | 'deepening' | 'orientation' | 'graph' | 'ingest' | 'admin'
@@ -98,7 +99,10 @@ export interface PricedSpend {
   unpriced: boolean
 }
 
-const USD_TO_GBP = Number(process.env.LEX_BUILD_USD_GBP ?? '0.79')
+// Exported so a reader converting stored GBP pence back to USD (scripts/cost-alert.ts — the
+// thresholds in S22 "Alerts" are USD, and only pence is persisted) uses the SAME rate this
+// file priced the row at, rather than a second hardcoded 0.79 that could drift from it.
+export const USD_TO_GBP = Number(process.env.LEX_BUILD_USD_GBP ?? '0.79')
 
 /** Price one entry. Thinking tokens bill at the output rate — the only honest total. */
 export function priceEntry(
@@ -126,13 +130,21 @@ export function priceEntry(
  */
 export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   const priced = priceEntry(e)
+  // S22 — ATTRIBUTION. An explicit userId/ideaId always wins; the ambient build context
+  // (build-context.ts) is read ONLY as the fallback, so a call that runs outside a build (or
+  // that already knows better, like chat web search stamping the chatting admin) is never
+  // overridden by context it is not even inside. This is the ONE place the fallback applies —
+  // every caller of recordSpend, recordGeminiUsage and recordXaiUsage gets it for free.
+  const ctx = currentBuildContext()
+  const userId = e.userId ?? ctx?.userId ?? null
+  const ideaId = e.ideaId ?? ctx?.ideaId ?? null
   try {
     await prisma.$executeRaw`
       INSERT INTO "LlmSpend" ("stream", "pass", "model", "tokensIn", "tokensOut", "tokensThinking",
                               "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed",
                               "toolCalls", "postsFetched")
       VALUES (${e.stream}, ${e.pass}, ${e.model}, ${e.tokensIn}, ${e.tokensOut}, ${e.tokensThinking ?? 0},
-              ${priced.pence}, ${priced.unpriced}, ${e.userId ?? null}, ${e.ideaId ?? null},
+              ${priced.pence}, ${priced.unpriced}, ${userId}, ${ideaId},
               ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false},
               ${e.toolCalls ?? null}, ${e.postsFetched ?? null})`
   } catch (err) {

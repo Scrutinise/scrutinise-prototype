@@ -354,6 +354,10 @@ export async function runFtsSearch(
         // those differently: it refuses to regroup the first and falls back to the id for the
         // second. Writing `?? null` here would destroy that distinction on this line.
         parentDocId: meta?.parentDocId, wordCount: meta?.wordCount,
+        // S22 "Orphan marker" — `meta` is `hydrate.get(h.id)`: undefined means this exact id,
+        // present in the FTS index, had NO row in the batched `corpus_sections` lookup above.
+        // See page1-config.ts's SearchResult.orphaned for the full reasoning (S19 §1.1).
+        orphaned: !meta,
       }
     })
 

@@ -31,6 +31,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { forkDoubtHeading } from './reader-language'
+import { enterBuildContext } from './build-context'
 // 25-M §4 — the pilot allowance. Counted over IdeaBuild, not LlmSpend; see that file.
 import { readAllowance, allowanceBlock, FULL_BUILD_THIRDS, REUSE_BUILD_THIRDS } from './allowance'
 import type { SearchResult } from './page1-config'
@@ -67,6 +68,8 @@ import {
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
 import { snapshotInitialQuestions } from '@/lib/documents/build-initial-questions'
+import { snapshotCommitteeEvidence } from '@/lib/documents/build-committee-evidence'
+import { snapshotOnePageSummary } from '@/lib/documents/build-one-page-summary'
 import { normaliseAvenues, missingAvenues, writeAvenues, avenuesCarry, AVENUES } from './build-avenues'
 import { runRepair, REPAIR_PASS_KEY, REPAIRABLE_FIELDS } from './build-repair'
 import { strategyTestHeading } from './reader-language'
@@ -1342,6 +1345,11 @@ async function mergeUncertainties(buildId: string, list: RawUncertainty[]): Prom
  * how work gets silently killed when the response ends.
  */
 export async function runNextPass(ideaId: string, userId: string, buildId: string): Promise<BuildView> {
+  // S22 — ATTRIBUTION. Every LlmSpend row this pass's model calls write (search.reranker,
+  // search.query-router, build.draft, deepening.* — anything reached through callModelJson
+  // or recordGeminiUsage/recordXaiUsage, however many layers down) now carries this build's
+  // userId/ideaId, WITHOUT those layers' function signatures changing — see build-context.ts.
+  enterBuildContext({ userId, ideaId })
   const row = await prisma.ideaBuild.findUnique({ where: { id: buildId } })
   if (!row) throw new Error('Build row missing')
   if (row.status !== 'RUNNING' && row.status !== 'QUEUED') return buildViewOf(buildId)
@@ -3725,6 +3733,24 @@ async function finishBuild(ideaId: string, buildId: string): Promise<BuildView> 
     await snapshotInitialQuestions(ideaId, buildId, row.version)
   } catch (err) {
     console.warn('[lex-diag] initial questions snapshot did not write; will compose on first read', {
+      ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
+    })
+  }
+
+  // ══ BRIEF_26G §4a/§4b — THE TWO DOCUMENTS THAT LEAVE THE BUILDING, FROZEN THE SAME WAY ═══
+  // Same placement, same never-fails-the-build guard, same lazy-compose-on-first-read fallback
+  // as Initial Questions above — see build-committee-evidence.ts / build-one-page-summary.ts.
+  try {
+    await snapshotCommitteeEvidence(ideaId, buildId, row.version)
+  } catch (err) {
+    console.warn('[lex-diag] 26g committee evidence snapshot did not write; will compose on first read', {
+      ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
+    })
+  }
+  try {
+    await snapshotOnePageSummary(ideaId, buildId, row.version)
+  } catch (err) {
+    console.warn('[lex-diag] 26g one-page summary snapshot did not write; will compose on first read', {
       ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
     })
   }

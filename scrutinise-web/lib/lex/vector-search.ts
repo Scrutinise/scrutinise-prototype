@@ -275,6 +275,9 @@ async function hydrateVecHits(hits: VecHit[], limit: number): Promise<SearchResu
         // carry them or `applyGrain` would regroup a stream's BM25 half and leave its dense half
         // alone, which is a ranking neither arm produced.
         parentDocId: meta?.parentDocId, wordCount: meta?.wordCount,
+        // S22 "Orphan marker" — the dense twin of fts-search.ts's same line. See
+        // page1-config.ts's SearchResult.orphaned.
+        orphaned: !meta,
       }
     })
     return results.slice(0, limit * 3)

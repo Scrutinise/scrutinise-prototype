@@ -608,4 +608,32 @@ export interface SearchResult {
   /** S19 §3 — the section's length, for the retrieval-side length floor. Same round-trip.
    *  ⚠ Undefined means not measured, never "short"; the floor keeps an unmeasured row. */
   wordCount?: number | null
+  /**
+   * S22 "Orphan marker" — TRUE when this hit's own hydrate query (the batched
+   * `WHERE id IN (...)` against `corpus_sections` that fts-search.ts / vector-search.ts run
+   * on every hit, for url/date/title) found NO row for this id. The hit is IN the served
+   * search index and ABSENT from the database — S19 §1.1 measured this as the live condition
+   * of seven whole collections (36,919+ sections, 0 in Neon: `lda-commonsdivisions`,
+   * `lda-commonswrittenquestions`, `lda-lordsdivisions`, `lda-lordswrittenquestions`,
+   * `oecd`, `written-answers`, `written-statements`) plus `et-decisions` partially — not a
+   * rare edge case.
+   *
+   * ⚠⚠ UNDEFINED IS NOT "NOT ORPHANED". It means the hydrate did not run at all for this
+   * result (a constructor outside fts-search.ts/vector-search.ts, e.g. search-stub.ts) —
+   * a THIRD state, same discipline as `parentDocId` and `snippetMatched` above. Only `false`
+   * means "hydrated, and the row is there."
+   *
+   * ⚠ KEPT IN THE RESULT LIST ON PURPOSE — never filtered out at the point this is set.
+   * Before S19, an orphaned hit was returned exactly like a real one (`title="oecd"`,
+   * `citation=""`, `url=""`, `date=""`, using only the index's own stale copy) — S19 §1.1
+   * found this live: "the product returns a result card titled with the name of the
+   * collection, with no citation, no date and nothing to click… and Lex may cite them."
+   * Dropping the hit here would repeat that silently; this field is what stops it — see
+   * `ORPHAN_LABEL` and `search-gateway.ts`'s per-search orphan count/log.
+   */
+  orphaned?: boolean
 }
+
+/** S22 "Orphan marker" — the exact label, verbatim, everywhere an orphaned hit is shown or
+ *  described. One string, not a phrase rewritten per caller. */
+export const ORPHAN_LABEL = 'in search index, not in database — cannot be opened'

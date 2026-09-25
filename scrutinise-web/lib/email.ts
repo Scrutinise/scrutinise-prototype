@@ -810,3 +810,52 @@ export async function sendBuildCompleteEmail({
   // "sent" unless this says so.
   return sendEmail({ to: toEmail, subject, html, text })
 }
+
+/**
+ * S22 "Alerts" — the daily cost-alert job's email, once per (month, threshold). See
+ * scripts/cost-alert.ts, which is the only caller and which records the send in
+ * `CostAlertSent` — this function has no memory of what it has sent before, on purpose,
+ * so the "once" guarantee lives in exactly one place rather than being re-derived here.
+ *
+ * Returns SendResult, not void — 25-W §A's own reasoning: the caller must be able to tell
+ * a real send from "no key here" before it writes the dedupe row, or a silent skip on a
+ * broken deployment would be recorded as done and never retried.
+ */
+export async function sendCostAlertEmail({
+  toEmail,
+  thresholdUsd,
+  spentUsd,
+  month,
+  unpricedCalls,
+}: {
+  toEmail: string
+  thresholdUsd: number
+  spentUsd: number
+  month: string
+  unpricedCalls: number
+}): Promise<SendResult> {
+  const subject = `Scrutinise: platform spend has passed $${thresholdUsd.toFixed(2)} this month`
+
+  const text = `
+Month-to-date platform LLM spend (${month}) has passed $${thresholdUsd.toFixed(2)}.
+
+Spent so far: $${spentUsd.toFixed(2)}
+${unpricedCalls > 0 ? `\n⚠ ${unpricedCalls} call(s) this month have no rate on file and are NOT included in that figure — the true total is at least this much.\n` : ''}
+This is a one-time notice for this threshold this month; you will not be emailed again for it until next month.
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">Platform spend has passed $${thresholdUsd.toFixed(2)}</h2>
+  <p>Month-to-date LLM spend for <strong>${month}</strong>:</p>
+  <p style="font-size: 22px; font-weight: 700; padding: 12px; background: #f4f4f5; border-radius: 6px;">$${spentUsd.toFixed(2)}</p>
+  ${unpricedCalls > 0 ? `<p style="color: #b45309;">⚠ ${unpricedCalls} call(s) this month have no rate on file and are NOT included in that figure — the true total is at least this much.</p>` : ''}
+  <p style="color: #71717a; font-size: 13px;">One-time notice for this threshold this month.</p>
+</body>
+</html>
+`.trim()
+
+  return sendEmail({ to: toEmail, subject, html, text })
+}

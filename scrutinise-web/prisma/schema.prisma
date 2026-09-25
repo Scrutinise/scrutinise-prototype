@@ -4333,6 +4333,20 @@ model LlmSpend {
   @@index([stream, createdAt])
 }
 
+/// S22 "Alerts" — dedupe table for the daily cost-alert job. One row per (month, threshold)
+/// actually emailed; the UNIQUE constraint is what stops a re-run or a race double-sending.
+/// Present here so `prisma migrate diff` does not propose dropping it — nothing reads it
+/// through the typed client, scripts/cost-alert.ts uses $queryRaw/$executeRaw (prisma/cost_alert.sql).
+model CostAlertSent {
+  id            BigInt   @id @default(autoincrement())
+  month         String
+  thresholdUsd  Decimal  @db.Decimal(10, 2)
+  sentAt        DateTime @default(now())
+  providerId    String?
+
+  @@unique([month, thresholdUsd])
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SPRINT 25-D / 20-E — source exclusion (§2a) and the user's own material (§25.6).
 // Hand-written additive schema, applied via prisma/lex_25d.sql. That file carries the
