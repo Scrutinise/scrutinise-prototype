@@ -176,4 +176,147 @@ returns a section the outer ranking didn't already have at that position, that s
 document's placeholder entry. **Flag ships OFF. Nothing changes for any caller until Charlie sets
 it.**
 
-<!-- S20B-IMPLEMENTATION-AND-MEASUREMENT-PLACEHOLDER -->
+---
+
+## §6 — Measured through the real product
+
+Deployment confirmed by behaviour, not status, before measuring: the control (`npm run
+check:s20b-control`, 11/11) failed its dense-leg assertion once (`vector-serve did not echo
+sectionIds — refusing to trust an unscoped result`) on the first try — proof `vector-serve` was
+still serving the pre-change build — then passed clean once a direct `curl` confirmed
+`vector-serve` was echoing `sectionIds`. `/api/health` read `ba990fd…`, matching the pushed commit
+exactly, with `LEX_SEARCH_WITHIN_DOC: false` correctly present and off.
+
+Off/off/on, same 65-question set as `measure-s19-grain.ts`, production's live flag string forced
+into every pass, fresh module re-import between passes:
+
+| | doc-in-top-20 | section-shown@20 |
+|---|---:|---:|
+| OFF (1) | 34/65 | 29/65 |
+| OFF (2) — noise floor | 32/65 | 27/65 |
+| **ON** | 32/65 | **25/65** |
+
+**Noise floor: 53/65 section ranks identical between the two OFF runs** (12/65 churn with the flag
+untouched — in line with S19's own observation that individual rankings move between identical
+runs while the aggregate holds). Measured against that floor, **ON is not noise — it is a real
+regression**: 25 against an OFF band of 27–29.
+
+### Per-collection
+
+| collection | n | OFF(1) | OFF(2) | ON |
+|---|---:|---:|---:|---:|
+| committees | 10 | 2 | 2 | 1 |
+| caselaw | 6 | 5 | 5 | 5 |
+| guidance | 10 | 5 | 5 | 6 |
+| impact-assessments | 9 | 1 | 1 | 1 |
+| consultations | 9 | 7 | 6 | 7 |
+| debates | 11 | 4 | 3 | **2** |
+| legislation | 10 | 5 | 5 | **3** |
+
+Legislation and debates — the two collections §1 explicitly predicted would underperform because
+their documents can themselves be large (a 2,029-section Act, a 300-speech sitting day) — are
+exactly where the regression concentrates. Caselaw, guidance, consultations, impact-assessments
+are flat or noise-sized, as predicted (caselaw is the collapsing-collection control: one document
+is one section, so the flag has nothing to search "inside" and correctly moved nothing).
+
+### Why: not noise, a mechanism, found by tracing every promoted result
+
+**64 of 65 questions triggered the inner search — the trigger condition is not selective.** It
+fires whenever the top result carries a `parentDocId` at all, which is true of almost every
+non-empty search, not only when the outer ranking looks weak. §1's prediction assumed the trigger
+would be self-limiting; it is not, and that is the first miss.
+
+**Of the 21 questions where the inner search changed the top result, exactly ZERO gained an answer
+that was previously missing, and 5 lost one that was already correct:**
+
+| question | collection | OFF(1) rank | OFF(2) rank | ON rank |
+|---|---|---:|---:|---:|
+| S10-Q1 | committees | 1 | 1 | NOT FOUND |
+| V2-Q4 | debates | 13 | 21 | 44 |
+| V2-Q9 | debates | 13 | 6 | 49 |
+| V2-Q12 | legislation | 1 | 1 | NOT FOUND |
+| V2-Q20 | legislation | 1 | 1 | NOT FOUND |
+
+**Three of the five losses were already rank 1 — a perfect answer — and the inner search replaced
+it with something outside the top-500-equivalent retrieval depth entirely.** The remaining 16
+promotions were neutral: 11 stayed missed either way, 5 stayed found but at a different section of
+the same document.
+
+**The mechanism: the inner RRF fusion has no way to know the outer ranking's top pick was already
+strong.** A rank-1 hit off the outer ranking is very often there because of the citation resolver
+(`resolveInjections` in `fts-core.ts`) or a strong whole-corpus BM25/dense score for a specific
+phrase — signals the small within-document contest cannot see or reproduce, because it re-ranks
+using only the document's own tens of sections against the bare query. Re-running that contest
+unconditionally is, on average, a coin a document doesn't need to be asked to flip.
+
+### Latency
+
+| | p50 | p95 |
+|---|---:|---:|
+| OFF (both passes pooled, n=130) | 8,257ms | 14,088ms |
+| ON (n=65) | 12,043ms | 18,139ms |
+| ON, triggered only (n=64/65) | 12,096ms | 18,139ms |
+| **DELTA** | **+3,786ms (+46%)** | **+4,051ms (+29%)** |
+
+**§1 predicted 200–550ms added latency where triggered, averaged to well under 100ms overall
+because most queries would not trigger it.** Both halves of that prediction were wrong for the
+same reason: the trigger fired on 64 of 65 queries, so "where triggered" and "overall" are almost
+the same population, and the actual per-triggered cost (one extra keyword call plus one extra
+embed-and-ANN dense call, sequentially awaited inside the gateway after the outer search has
+already completed) is several seconds, not several hundred milliseconds — dominated by the dense
+leg's embed call plus `vector-serve`'s ANN traversal, neither of which is free just because the
+candidate pool is small.
+
+### Predictions scored against what happened
+
+| # | predicted | measured | verdict |
+|---|---|---|---|
+| 1 | most (not all) of the document-grain gain recovered, on the four movable collections | **negative** — no gain recovered anywhere, quality fell | **wrong** |
+| 2 | no change on caselaw/guidance/consultations (the control) | caselaw exactly flat (5/5/5); guidance/consultations within noise | **held** |
+| 3 | debates 2–4 of 11 | **2 of 11** — inside the predicted range, but the OFF baseline itself was 3–4, so this is a fall, not the rise the prediction implied | **half right, wrongly framed** |
+| 4 | impact-assessments 5–6 of 9 | 1 of 9, unchanged from OFF | **wrong** — this collection was flat, not high-converting |
+| 5 | legislation 3–5 of 10 | **3 of 10** — inside the predicted range, but again a fall from an OFF baseline of 5 | **half right, wrongly framed** |
+| 6 | committees 1–2 of 10 | **1 of 10** — inside range, again a fall from OFF's 2 | **half right, wrongly framed** |
+| 7 | overall 32–38 of 65 | **25 of 65** | **wrong, and below the OFF band, not just below the predicted range** |
+| 8 | added latency 200–550ms where triggered, <100ms overall | **+3,786ms p50 overall** | **wrong by roughly an order of magnitude** |
+
+**The pattern across every miss is the same one**: §1 predicted the trigger would fire selectively
+(only where the outer ranking looked weak) and cost little when it did not. It fires almost
+unconditionally, and every number that assumed selectivity — the latency average, the "most of the
+gain, not all of it" framing for legislation/debates/committees — was wrong in the same direction
+for the same reason.
+
+---
+
+## §7 — Recommendation
+
+**Do not flip `LEX_SEARCH_WITHIN_DOC`.** As built, it makes both the answer quality (25/65 against
+an OFF band of 27–29) and the latency (+46% p50, +29% p95) worse, and it rescues nothing: zero of
+21 promotions recovered a previously-missing answer, while 5 broke an already-correct one.
+
+**The mechanism S19 identified is still real and still unaddressed** — a document rescued at the
+document grain whose answer section was never in its collection's top 500 is a genuine, measured
+gap (11 of 18 in S19's own figures). This experiment does not close it; it demonstrates that
+**an unconditional second search is the wrong shape for closing it.**
+
+**What would have to change before this is worth measuring again:**
+
+1. **Gate the trigger on evidence the outer ranking is weak**, not on "a document key exists".
+   Candidates: only run when the top result arrived via a low-confidence path (no citation-resolver
+   injection, a BM25 score below some measured floor), or only run when the document-level
+   aggregation (`aggregateToDocuments`, already built, S19) would pick a *different* document than
+   the one currently on top — i.e., only intervene where the outer and document views actually
+   disagree, which is the situation S19's own gap describes, rather than on every search.
+2. **Let the inner fusion see the outer ranking's evidence**, not just the within-document contest.
+   A rank-1 hit driven by an exact citation match should not be up for a re-vote it cannot win by
+   construction; the inner search needs a way to defer to that signal rather than overriding it
+   blind.
+3. **Re-measure with the same off/off/on discipline** used here, on the same 65-question set, so a
+   second attempt is comparable to this one rather than a fresh, unanchored number.
+
+**The engagement proof, ready for if this is revisited:** `[search-gateway] within-document
+search` logs `documentKey`, `winnerId`, `promoted`, `tookMs` and `legsRun` on every call when the
+flag is on — a log line or a counter on that line is the evidence a future flip actually reached
+production, per the brief's own requirement.
+
+Full per-question data: `docs/census/s20b-within-doc.json`.

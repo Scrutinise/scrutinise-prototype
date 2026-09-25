@@ -1,0 +1,3061 @@
+{
+  "takenAt": "2026-09-25T00:21:21.091Z",
+  "setVersion": "same set as measure-s19-grain.ts: S10 GOLD_CANDIDATES_S8 + GOLD_CANDIDATES_V2, pre-re-key",
+  "production": {
+    "status": "ok",
+    "commit": "ba990fd6d7d3780acca798385dfa0e4d024b8fb7",
+    "env": "production",
+    "mail": true,
+    "capabilities": {
+      "LEX_QUERY_EXPANSION": true,
+      "LEX_QUERY_ROUTER": true,
+      "LEX_WEB_ORIENTATION": false,
+      "LEX_SEARCH_VECTOR": true,
+      "LEX_SEARCH_RERANKER": true,
+      "LEX_SEARCH_GRAPH": false,
+      "LEX_COHERENCE_CORPUS": false,
+      "LEX_SEARCH_STUB": false,
+      "LEX_TIER_FUSION": true,
+      "LEX_BUILD_PERSPECTIVES": false,
+      "LEX_ROUTER_STREAMS_V2": false,
+      "LEX_STATS_STREAM": true,
+      "LEX_FUSION_WEIGHTS": false,
+      "LEX_SEARCH_JUDGED_MERGE": true,
+      "LEX_ROUTER_CONFIDENCE": false,
+      "LEX_ROUTER_APPRAISAL": false,
+      "LEX_SEARCH_GRAIN": false,
+      "LEX_SEARCH_WITHIN_DOC": false
+    },
+    "retrieval": {
+      "vectorSearchUrl": true,
+      "ftsSearchUrl": true,
+      "geminiKey": true,
+      "vectorStreams": [
+        "caselaw",
+        "committees",
+        "debates",
+        "guidance",
+        "legislation"
+      ]
+    },
+    "build": {
+      "driver": "worker"
+    }
+  },
+  "noiseFloor": {
+    "identicalRankings": 53,
+    "of": 65
+  },
+  "off1": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 1,
+        "latencyMs": 14101,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 8290,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 92,
+        "latencyMs": 9557,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 33,
+        "latencyMs": 8980,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9561,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 8281,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 2,
+        "latencyMs": 8567,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9380,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 26,
+        "latencyMs": 7459,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 13431,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "question": "What did the Supreme Court decide about prorogation of Parliament?",
+      "keys": [
+        "tna-caselaw:[2019] UKSC 41:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 10268,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "question": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "keys": [
+        "tna-caselaw:[2021] UKSC 5:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 11702,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "question": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "keys": [
+        "tna-caselaw:[2014] UKSC 19:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7157,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "question": "Is there a Supreme Court case about employment tribunal fees?",
+      "keys": [
+        "tna-caselaw:[2017] UKSC 51:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 4,
+        "latencyMs": 8257,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "keys": [
+        "tna-caselaw:[2011] UKSC 20:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 25,
+        "latencyMs": 7053,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "question": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "keys": [
+        "tna-caselaw:[2003] EWCA Civ 1769:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7083,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "question": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 6763,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "question": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/domestic-abuse:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 100,
+        "latencyMs": 12733,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "question": "What happens when someone is accused of making a false allegation of rape?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 12037,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "question": "What are the rules police have to follow when stopping and searching someone?",
+      "keys": [
+        "college-of-policing:app-content/stop-and-search:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 16,
+        "latencyMs": 12753,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/abuse-process:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 5416,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 122,
+        "latencyMs": 12091,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/appeals-administrative-court:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 70,
+        "latencyMs": 14182,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 5064,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "question": "When can HMRC depart from the strict letter of the law?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 12041,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9958,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "question": "What did the government think banning plastic straws would cost?",
+      "keys": [
+        "impact-assessments:2020-57:1",
+        "impact-assessments:2020-57:2"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 8630,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "keys": [
+        "impact-assessments:2023-77:1",
+        "impact-assessments:2023-77:2",
+        "impact-assessments:2023-77:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7668,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "keys": [
+        "impact-assessments:2023-14:1",
+        "impact-assessments:2023-14:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 480,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "keys": [
+        "impact-assessments:2017-78:2"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7778,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "keys": [
+        "impact-assessments:2017-78:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9307,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "keys": [
+        "impact-assessments:2018-21:1",
+        "impact-assessments:2018-21:2",
+        "impact-assessments:2018-21:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 117,
+        "latencyMs": 11408,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "keys": [
+        "impact-assessments:2022-92:1",
+        "impact-assessments:2022-92:2"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 69,
+        "latencyMs": 10741,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "keys": [
+        "impact-assessments:2017-92:4",
+        "impact-assessments:2017-92:3"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 5,
+        "latencyMs": 9518,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "keys": [
+        "impact-assessments:2017-92:6",
+        "impact-assessments:2017-92:7"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9191,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "question": "What did the government consult on about reducing sewage discharges?",
+      "keys": [
+        "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+        "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 8611,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "question": "Was there a consultation on the smoking age ban?",
+      "keys": [
+        "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 5,
+        "latencyMs": 8118,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "question": "What did the government propose to change about building safety regulation?",
+      "keys": [
+        "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 84,
+        "latencyMs": 11871,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "question": "Has the government consulted on gambling sponsorship?",
+      "keys": [
+        "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 105,
+        "latencyMs": 8537,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "question": "What has the government asked about AI and copyright?",
+      "keys": [
+        "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+        "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7478,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "question": "What was consulted on for leasehold reform?",
+      "keys": [
+        "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 6275,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "question": "Is there guidance being consulted on for storm overflows?",
+      "keys": [
+        "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 5806,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "question": "What did the government consult on for net zero aviation?",
+      "keys": [
+        "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 7519,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "question": "Was there a consultation about electrical safety in building regulations?",
+      "keys": [
+        "consultations:government_consultations_building-regulations-electrical-safety:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7102,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "question": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "keys": [
+        "pwdata-debates:debates2024-11-29d:3",
+        "pwdata-debates:debates2024-11-29d:78"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 7561,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "question": "Did peers back the assisted dying bill when it reached the Lords?",
+      "keys": [
+        "pwdata-lords:daylord2025-09-12c:4"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 6447,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "question": "What did ministers at Stormont say about the botched green energy scheme?",
+      "keys": [
+        "niassembly-hansard:286438:151"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 7440,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "question": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "keys": [
+        "pwdata-westminster:westminster2022-04-21a:27",
+        "pwdata-westminster:westminster2018-11-27c:55"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 13,
+        "latencyMs": 8110,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "question": "What did peers say about overturning the subpostmasters' convictions?",
+      "keys": [
+        "pwdata-lords:daylord2024-05-13a:113"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 7,
+        "latencyMs": 6465,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "question": "When did Parliament last seriously debate bringing back the death penalty?",
+      "keys": [
+        "historic-hansard:S5LV0198P0:1798",
+        "historic-hansard:S5LV0306P0:1905"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7003,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "question": "What happened to the plan to make the House of Lords elected?",
+      "keys": [
+        "pwdata-lords:daylord2012-04-30a:76"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 8495,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "keys": [
+        "scottish-parliament-or:14066:193"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 8967,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "question": "Why were energy companies forcing people onto prepayment meters?",
+      "keys": [
+        "pwdata-debates:debates2022-12-15b:298"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 13,
+        "latencyMs": 12808,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "question": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "keys": [
+        "pwdata-debates:debates2024-12-02c:452"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7361,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "question": "What did the Chancellor announce in the Spring Statement?",
+      "keys": [
+        "pwdata-debates:debates2025-03-26b:130"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 11198,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "question": "Can my landlord evict me without giving a reason?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/50:section-21"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 14536,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "question": "Has the law on no-fault evictions actually changed?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2025/26:section-146",
+        "primary-acts-2000plus:ukpga/2025/26:section-147"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 11073,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "question": "My employer won't make changes for my disability — what does the law require?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2010/15:section-20"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 14620,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q15",
+      "collection": "legislation",
+      "question": "Is the old law banning schools from promoting homosexuality still in force?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/9:section-28"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 11843,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "question": "What exactly did the government ban when it banned plastic straws?",
+      "keys": [
+        "si-2010plus:uksi/2020/971:regulation-2",
+        "si-2010plus:uksi/2020/971:regulation-20"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 142,
+        "latencyMs": 10287,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "question": "Does Scotland have a minimum price for alcohol?",
+      "keys": [
+        "regional:ssi/2024/127:article-2"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 10898,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "question": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1985/70:section-11"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 96,
+        "latencyMs": 12381,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "question": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2006/28:section-2",
+        "primary-acts-2000plus:ukpga/2006/28:section-3"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 12069,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "question": "What does the law make social media companies do to protect children?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2023/50:section-12"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 10146,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "question": "How do I find out what a company holds about me?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2018/12:section-45"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 3,
+        "latencyMs": 9572,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    }
+  ],
+  "off2": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 1,
+        "latencyMs": 7010,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 5398,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 92,
+        "latencyMs": 8207,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 33,
+        "latencyMs": 6342,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7439,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7395,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 2,
+        "latencyMs": 5926,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7084,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 54,
+        "latencyMs": 6312,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 6503,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "question": "What did the Supreme Court decide about prorogation of Parliament?",
+      "keys": [
+        "tna-caselaw:[2019] UKSC 41:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 4855,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "question": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "keys": [
+        "tna-caselaw:[2021] UKSC 5:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 5400,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "question": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "keys": [
+        "tna-caselaw:[2014] UKSC 19:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 6279,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "question": "Is there a Supreme Court case about employment tribunal fees?",
+      "keys": [
+        "tna-caselaw:[2017] UKSC 51:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 4,
+        "latencyMs": 7647,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "keys": [
+        "tna-caselaw:[2011] UKSC 20:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 46,
+        "latencyMs": 7385,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "question": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "keys": [
+        "tna-caselaw:[2003] EWCA Civ 1769:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7082,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "question": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 5935,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "question": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/domestic-abuse:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 6122,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "question": "What happens when someone is accused of making a false allegation of rape?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 11216,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "question": "What are the rules police have to follow when stopping and searching someone?",
+      "keys": [
+        "college-of-policing:app-content/stop-and-search:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 16,
+        "latencyMs": 22541,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/abuse-process:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 5339,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 113,
+        "latencyMs": 13976,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/appeals-administrative-court:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 70,
+        "latencyMs": 11539,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 11721,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "question": "When can HMRC depart from the strict letter of the law?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 13664,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 14088,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "question": "What did the government think banning plastic straws would cost?",
+      "keys": [
+        "impact-assessments:2020-57:1",
+        "impact-assessments:2020-57:2"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 8248,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "keys": [
+        "impact-assessments:2023-77:1",
+        "impact-assessments:2023-77:2",
+        "impact-assessments:2023-77:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7457,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "keys": [
+        "impact-assessments:2023-14:1",
+        "impact-assessments:2023-14:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 3720,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "keys": [
+        "impact-assessments:2017-78:2"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7086,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "keys": [
+        "impact-assessments:2017-78:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 8693,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "keys": [
+        "impact-assessments:2018-21:1",
+        "impact-assessments:2018-21:2",
+        "impact-assessments:2018-21:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 117,
+        "latencyMs": 10115,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "keys": [
+        "impact-assessments:2022-92:1",
+        "impact-assessments:2022-92:2"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 69,
+        "latencyMs": 10800,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "keys": [
+        "impact-assessments:2017-92:4",
+        "impact-assessments:2017-92:3"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 11548,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "keys": [
+        "impact-assessments:2017-92:6",
+        "impact-assessments:2017-92:7"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7126,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "question": "What did the government consult on about reducing sewage discharges?",
+      "keys": [
+        "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+        "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 6731,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "question": "Was there a consultation on the smoking age ban?",
+      "keys": [
+        "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 84,
+        "latencyMs": 7041,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "question": "What did the government propose to change about building safety regulation?",
+      "keys": [
+        "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 84,
+        "latencyMs": 9989,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "question": "Has the government consulted on gambling sponsorship?",
+      "keys": [
+        "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 105,
+        "latencyMs": 7608,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "question": "What has the government asked about AI and copyright?",
+      "keys": [
+        "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+        "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 5,
+        "latencyMs": 6439,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "question": "What was consulted on for leasehold reform?",
+      "keys": [
+        "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 3,
+        "latencyMs": 6439,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "question": "Is there guidance being consulted on for storm overflows?",
+      "keys": [
+        "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 5241,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "question": "What did the government consult on for net zero aviation?",
+      "keys": [
+        "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 6679,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "question": "Was there a consultation about electrical safety in building regulations?",
+      "keys": [
+        "consultations:government_consultations_building-regulations-electrical-safety:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 6158,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "question": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "keys": [
+        "pwdata-debates:debates2024-11-29d:3",
+        "pwdata-debates:debates2024-11-29d:78"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 6447,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "question": "Did peers back the assisted dying bill when it reached the Lords?",
+      "keys": [
+        "pwdata-lords:daylord2025-09-12c:4"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7091,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "question": "What did ministers at Stormont say about the botched green energy scheme?",
+      "keys": [
+        "niassembly-hansard:286438:151"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 7004,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "question": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "keys": [
+        "pwdata-westminster:westminster2022-04-21a:27",
+        "pwdata-westminster:westminster2018-11-27c:55"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 21,
+        "latencyMs": 6626,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "question": "What did peers say about overturning the subpostmasters' convictions?",
+      "keys": [
+        "pwdata-lords:daylord2024-05-13a:113"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 7,
+        "latencyMs": 6738,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "question": "When did Parliament last seriously debate bringing back the death penalty?",
+      "keys": [
+        "historic-hansard:S5LV0198P0:1798",
+        "historic-hansard:S5LV0306P0:1905"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10428,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "question": "What happened to the plan to make the House of Lords elected?",
+      "keys": [
+        "pwdata-lords:daylord2012-04-30a:76"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 7891,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "keys": [
+        "scottish-parliament-or:14066:193"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 5883,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "question": "Why were energy companies forcing people onto prepayment meters?",
+      "keys": [
+        "pwdata-debates:debates2022-12-15b:298"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 6,
+        "latencyMs": 35884,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "question": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "keys": [
+        "pwdata-debates:debates2024-12-02c:452"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 7624,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "question": "What did the Chancellor announce in the Spring Statement?",
+      "keys": [
+        "pwdata-debates:debates2025-03-26b:130"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 6319,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "question": "Can my landlord evict me without giving a reason?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/50:section-21"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 10004,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "question": "Has the law on no-fault evictions actually changed?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2025/26:section-146",
+        "primary-acts-2000plus:ukpga/2025/26:section-147"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 6622,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "question": "My employer won't make changes for my disability — what does the law require?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2010/15:section-20"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 11147,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q15",
+      "collection": "legislation",
+      "question": "Is the old law banning schools from promoting homosexuality still in force?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/9:section-28"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 12127,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "question": "What exactly did the government ban when it banned plastic straws?",
+      "keys": [
+        "si-2010plus:uksi/2020/971:regulation-2",
+        "si-2010plus:uksi/2020/971:regulation-20"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 142,
+        "latencyMs": 11137,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "question": "Does Scotland have a minimum price for alcohol?",
+      "keys": [
+        "regional:ssi/2024/127:article-2"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 11371,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "question": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1985/70:section-11"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 96,
+        "latencyMs": 11766,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "question": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2006/28:section-2",
+        "primary-acts-2000plus:ukpga/2006/28:section-3"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 9982,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "question": "What does the law make social media companies do to protect children?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2023/50:section-12"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 11122,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "question": "How do I find out what a company holds about me?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2018/12:section-45"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 10954,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    }
+  ],
+  "on": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 14222,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 12147,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 62,
+        "latencyMs": 11849,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 22,
+        "latencyMs": 13464,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10699,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 12043,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 2,
+        "latencyMs": 9661,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10637,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10331,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 13373,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "question": "What did the Supreme Court decide about prorogation of Parliament?",
+      "keys": [
+        "tna-caselaw:[2019] UKSC 41:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 8996,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "question": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "keys": [
+        "tna-caselaw:[2021] UKSC 5:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 9086,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "question": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "keys": [
+        "tna-caselaw:[2014] UKSC 19:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 10023,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "question": "Is there a Supreme Court case about employment tribunal fees?",
+      "keys": [
+        "tna-caselaw:[2017] UKSC 51:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 4,
+        "latencyMs": 9535,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "question": "What did the court decide about the duty to investigate deaths in custody?",
+      "keys": [
+        "tna-caselaw:[2011] UKSC 20:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 25,
+        "latencyMs": 9853,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "question": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "keys": [
+        "tna-caselaw:[2003] EWCA Civ 1769:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7461,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "question": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 7723,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "question": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/domestic-abuse:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 8349,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "question": "What happens when someone is accused of making a false allegation of rape?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 13185,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "question": "What are the rules police have to follow when stopping and searching someone?",
+      "keys": [
+        "college-of-policing:app-content/stop-and-search:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 19,
+        "latencyMs": 17874,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "question": "What is the CPS guidance on abuse of process?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/abuse-process:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 9467,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "question": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 113,
+        "latencyMs": 16533,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "question": "How do I appeal a decision to the Administrative Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/appeals-administrative-court:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 70,
+        "latencyMs": 15418,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "question": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9463,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "question": "When can HMRC depart from the strict letter of the law?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 18139,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "question": "What happens if HMRC gives a taxpayer wrong advice?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 15889,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "question": "What did the government think banning plastic straws would cost?",
+      "keys": [
+        "impact-assessments:2020-57:1",
+        "impact-assessments:2020-57:2"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10888,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "question": "What did the government predict the building safety levy scheme would do?",
+      "keys": [
+        "impact-assessments:2023-77:1",
+        "impact-assessments:2023-77:2",
+        "impact-assessments:2023-77:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9195,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "question": "What was the predicted cost of the residual waste reduction target?",
+      "keys": [
+        "impact-assessments:2023-14:1",
+        "impact-assessments:2023-14:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 500,
+        "withinDocRan": false,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "question": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "keys": [
+        "impact-assessments:2017-78:2"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9992,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "question": "What did the government say the tobacco fee changes would cost business?",
+      "keys": [
+        "impact-assessments:2017-78:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 8911,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "question": "What was the impact assessment for the environmental permitting changes?",
+      "keys": [
+        "impact-assessments:2018-21:1",
+        "impact-assessments:2018-21:2",
+        "impact-assessments:2018-21:3"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 117,
+        "latencyMs": 11858,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "question": "What did the government expect from the data adequacy decision for South Korea?",
+      "keys": [
+        "impact-assessments:2022-92:1",
+        "impact-assessments:2022-92:2"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 69,
+        "latencyMs": 14973,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "question": "What was the justification for raising the Public Guardian's fees?",
+      "keys": [
+        "impact-assessments:2017-92:4",
+        "impact-assessments:2017-92:3"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 4,
+        "latencyMs": 12096,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "question": "What options did the government consider before setting the Public Guardian fee?",
+      "keys": [
+        "impact-assessments:2017-92:6",
+        "impact-assessments:2017-92:7"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10253,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "question": "What did the government consult on about reducing sewage discharges?",
+      "keys": [
+        "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+        "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 10082,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "question": "Was there a consultation on the smoking age ban?",
+      "keys": [
+        "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 5,
+        "latencyMs": 11209,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "question": "What did the government propose to change about building safety regulation?",
+      "keys": [
+        "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 84,
+        "latencyMs": 16917,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "question": "Has the government consulted on gambling sponsorship?",
+      "keys": [
+        "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 105,
+        "latencyMs": 12392,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "question": "What has the government asked about AI and copyright?",
+      "keys": [
+        "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+        "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 9975,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "question": "What was consulted on for leasehold reform?",
+      "keys": [
+        "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 3,
+        "latencyMs": 9303,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "question": "Is there guidance being consulted on for storm overflows?",
+      "keys": [
+        "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 12451,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "question": "What did the government consult on for net zero aviation?",
+      "keys": [
+        "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 9705,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "question": "Was there a consultation about electrical safety in building regulations?",
+      "keys": [
+        "consultations:government_consultations_building-regulations-electrical-safety:1"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 9188,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "question": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "keys": [
+        "pwdata-debates:debates2024-11-29d:3",
+        "pwdata-debates:debates2024-11-29d:78"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 13651,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "question": "Did peers back the assisted dying bill when it reached the Lords?",
+      "keys": [
+        "pwdata-lords:daylord2025-09-12c:4"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 9463,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "question": "What did ministers at Stormont say about the botched green energy scheme?",
+      "keys": [
+        "niassembly-hansard:286438:151"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 4,
+        "latencyMs": 13406,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "question": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "keys": [
+        "pwdata-westminster:westminster2022-04-21a:27",
+        "pwdata-westminster:westminster2018-11-27c:55"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 44,
+        "latencyMs": 12243,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "question": "What did peers say about overturning the subpostmasters' convictions?",
+      "keys": [
+        "pwdata-lords:daylord2024-05-13a:113"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 7,
+        "latencyMs": 12287,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "question": "When did Parliament last seriously debate bringing back the death penalty?",
+      "keys": [
+        "historic-hansard:S5LV0198P0:1798",
+        "historic-hansard:S5LV0306P0:1905"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 11089,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "question": "What happened to the plan to make the House of Lords elected?",
+      "keys": [
+        "pwdata-lords:daylord2012-04-30a:76"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 13168,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "question": "What did MSPs say about making it easier to change your legal gender?",
+      "keys": [
+        "scottish-parliament-or:14066:193"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 12740,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "question": "Why were energy companies forcing people onto prepayment meters?",
+      "keys": [
+        "pwdata-debates:debates2022-12-15b:298"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 49,
+        "latencyMs": 18637,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "question": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "keys": [
+        "pwdata-debates:debates2024-12-02c:452"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 10115,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "question": "What did the Chancellor announce in the Spring Statement?",
+      "keys": [
+        "pwdata-debates:debates2025-03-26b:130"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 11836,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "question": "Can my landlord evict me without giving a reason?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/50:section-21"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 16486,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "question": "Has the law on no-fault evictions actually changed?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2025/26:section-146",
+        "primary-acts-2000plus:ukpga/2025/26:section-147"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 15540,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "question": "My employer won't make changes for my disability — what does the law require?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2010/15:section-20"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 15170,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q15",
+      "collection": "legislation",
+      "question": "Is the old law banning schools from promoting homosexuality still in force?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/9:section-28"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": -1,
+        "latencyMs": 20521,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "question": "What exactly did the government ban when it banned plastic straws?",
+      "keys": [
+        "si-2010plus:uksi/2020/971:regulation-2",
+        "si-2010plus:uksi/2020/971:regulation-20"
+      ],
+      "run": {
+        "docIn20": false,
+        "sectionRank": 142,
+        "latencyMs": 13505,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "question": "Does Scotland have a minimum price for alcohol?",
+      "keys": [
+        "regional:ssi/2024/127:article-2"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 1,
+        "latencyMs": 14249,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "question": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1985/70:section-11"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 96,
+        "latencyMs": 14682,
+        "withinDocRan": true,
+        "withinDocPromoted": false
+      }
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "question": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2006/28:section-2",
+        "primary-acts-2000plus:ukpga/2006/28:section-3"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 10,
+        "latencyMs": 19757,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "question": "What does the law make social media companies do to protect children?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2023/50:section-12"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": -1,
+        "latencyMs": 15514,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "question": "How do I find out what a company holds about me?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2018/12:section-45"
+      ],
+      "run": {
+        "docIn20": true,
+        "sectionRank": 2,
+        "latencyMs": 15608,
+        "withinDocRan": true,
+        "withinDocPromoted": true
+      }
+    }
+  ]
+}
