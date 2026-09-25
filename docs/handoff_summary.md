@@ -810,7 +810,29 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-25 00:07 UTC (SEARCH S20a close-out + S21 amendments + S22)* — ▼▼ **A
+*Last updated: 2026-09-25 10:29 UTC (LEX — collision resolved, deploy verified, Decisions
+99/100)* — ▼▼ **26-G IS COMMITTED, PUSHED, AND LIVE — AFTER A CROSS-STREAM COLLISION THAT
+CRASH-LOOPED PRODUCTION.** Full detail in `docs/CHANGE_LOG.md`'s 10:29 entry; summary here.
+⚠⚠ **The collision, briefly: SEARCH's explicit-path commit of `lib/lex/build.ts` (for its own
+S22 attribution fix) swept in two uncommitted LEX 26-G import lines whose target files had never
+been committed — deployed, `MODULE_NOT_FOUND`, `build-worker` crash-looped until SEARCH caught it
+and fixed it (`cb53e67`).** Charlie's standing rule from this, now in root `CLAUDE.md`:
+**explicit-path commits protect a file only while one stream owns it — where two streams have
+both edited it, the commit is agreed between the sessions first and names all of it.** Resolved
+by direct cross-session coordination; `build.ts` committed jointly (`d8a7a48`) naming both
+streams, everything else committed separately by explicit path (`431c493`), both pushed.
+✅ **Deploy verified per CLAUDE.md §20 — `meta.commitHash` read directly off Railway, proof not
+inference: `build-worker`'s live deployment is `d8a7a48`, status SUCCESS.** The next push
+(docs-only) correctly SKIPPED. ⚠ Vercel not independently verified — `VERCEL_TOKEN` still
+SAML-blocked, pre-existing, not new.
+▶ **Decision 99 (Evidence Pack) reported, not exposed**: not mere duplication — two sections
+("Considered and set aside", itemised cost-basis-by-figure) and one flag (unsupported fields)
+exist nowhere else, and its overlapping sections carry more provenance than the Meeting Pack or
+Proposal. Reads as exactly what a sceptical reader wants; Charlie's call whether to expose it.
+▶ **Decision 100 (open inquiries): closed, no further Lex work** — already stated on the
+committee-evidence document itself (§2c).
+✅ **Git clean at this point: HEAD == origin/Main, 0/0 divergence, nothing uncommitted.**
+Earlier: 2026-09-25 00:07 UTC (SEARCH S20a close-out + S21 amendments + S22)* — ▼▼ **A
 DEGRADED-RETRIEVAL WORKER, A DEAD LEDGER FIELD, AND A FIVE-WEEK-OLD DEFECT — ALL LIVE, ALL FIXED.**
 Reports: `docs/SEARCH_S21_REPORT.md` (AMENDMENTS §), `docs/SEARCH_S22_REPORT.md` (new). Full detail
 in `docs/CHANGE_LOG.md`'s 00:07 entry; summary here — this is a SEARCH-stream update, kept separate

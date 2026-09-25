@@ -1,5 +1,49 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-25 10:29 UTC — LEX — build.ts collision resolved, deploy verified, Decisions 99/100
+
+No brief; closing out loose ends from the BRIEF_26G session before a context clear.
+
+⚠⚠ **THE COLLISION, FOR THE RECORD.** SEARCH's explicit-path commit of `lib/lex/build.ts` (for
+an unrelated S22 attribution fix) staged, in the same commit, two LEX 26-G import lines and a
+try/catch that were already sitting uncommitted in that file — their target files
+(`build-committee-evidence.ts`, `build-one-page-summary.ts`) had never been committed. Deployed,
+crashed `build-worker` in production (`MODULE_NOT_FOUND`), crash-looping until SEARCH caught it
+and pushed `cb53e67`, which removed only the swept-in lines. Charlie then set the standing rule,
+now in root `CLAUDE.md`: **explicit-path commits protect a file only while one stream owns it —
+where two streams have edited the same file, the commit is agreed between them first and names
+all of it.** Resolved: coordinated with the SEARCH session directly (cross-session message),
+confirmed no further uncommitted S22 work in the file, re-added the two imports + try/catch,
+committed `build.ts` jointly (`d8a7a48`, message naming both streams) after committing everything
+else of mine separately by explicit path (`431c493`). Both pushed.
+
+✅ **DEPLOY VERIFIED, PER CLAUDE.md §20 — proof, not inference.** Read `meta.commitHash` directly
+off Railway's deployment records for `build-worker` (`backboard.railway.com/graphql/v2`):
+deployment `1a9768c9`, status **SUCCESS**, `commitHash = d8a7a48…` — the exact joint commit.
+The next push (`1417350`, CLAUDE.md-only) shows **SKIPPED**, correctly — nothing in it touches a
+watched path. The four crash-loop-era commits all show **REMOVED**, consistent with rapid
+supersession during the incident. ⚠ Vercel/web deploy NOT independently verified —
+`VERCEL_TOKEN` still 403s (`invalidToken`) on every project-scoped endpoint, the same
+pre-existing SAML block, not a new finding.
+
+▶ **Decision 99 — the Evidence Pack, reported, not exposed.** Read `build-evidence-pack.ts` in
+full. **Not mere duplication of the Meeting Pack or the Proposal**: two whole sections exist
+nowhere else — "Considered and set aside" (sources looked at and rejected, with reason) and "The
+cost basis, figure by figure" (every cost line with its basis, flagged where none is stated) —
+plus a unique flag, "Settled, with nothing in the record behind it" (unsupported fields). Even
+its overlapping sections (sources by question, alternatives ruled out) carry materially more
+provenance (staleness labels, sift reasons, resolved-fork alternatives) than either other
+document. Reported to Charlie as reading like exactly "the sources in full with their
+provenance" — his call to expose it or not, per his own framing of the decision.
+
+▶ **Decision 100 — open inquiries: closed, no further Lex work.** The committee evidence
+document already states on itself that nothing tracks open inquiries (§2c, BRIEF_26G). Recorded;
+nothing to build.
+
+**State at this point: git clean, HEAD == origin/Main (0/0 divergence), nothing uncommitted,
+nothing unpushed.** Ready for a context clear once this entry and the `handoff_summary.md`
+pointer below are written — which they now are.
+
 ## 2026-09-25 10:25 UTC — S24 — bill-vocab router flag, redirect resolution, orphan filter in builds, cost-alert cron live
 
 Brief: S20b close + S24 (given after the joint `build.ts` commit). Full write-up:
