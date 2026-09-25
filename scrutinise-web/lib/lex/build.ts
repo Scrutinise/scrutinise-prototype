@@ -68,6 +68,8 @@ import {
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
 import { snapshotInitialQuestions } from '@/lib/documents/build-initial-questions'
+import { snapshotCommitteeEvidence } from '@/lib/documents/build-committee-evidence'
+import { snapshotOnePageSummary } from '@/lib/documents/build-one-page-summary'
 import { normaliseAvenues, missingAvenues, writeAvenues, avenuesCarry, AVENUES } from './build-avenues'
 import { runRepair, REPAIR_PASS_KEY, REPAIRABLE_FIELDS } from './build-repair'
 import { strategyTestHeading } from './reader-language'
@@ -3731,6 +3733,24 @@ async function finishBuild(ideaId: string, buildId: string): Promise<BuildView> 
     await snapshotInitialQuestions(ideaId, buildId, row.version)
   } catch (err) {
     console.warn('[lex-diag] initial questions snapshot did not write; will compose on first read', {
+      ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
+    })
+  }
+
+  // ══ BRIEF_26G §4a/§4b — THE TWO DOCUMENTS THAT LEAVE THE BUILDING, FROZEN THE SAME WAY ═══
+  // Same placement, same never-fails-the-build guard, same lazy-compose-on-first-read fallback
+  // as Initial Questions above — see build-committee-evidence.ts / build-one-page-summary.ts.
+  try {
+    await snapshotCommitteeEvidence(ideaId, buildId, row.version)
+  } catch (err) {
+    console.warn('[lex-diag] 26g committee evidence snapshot did not write; will compose on first read', {
+      ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
+    })
+  }
+  try {
+    await snapshotOnePageSummary(ideaId, buildId, row.version)
+  } catch (err) {
+    console.warn('[lex-diag] 26g one-page summary snapshot did not write; will compose on first read', {
       ideaId, buildId, reason: err instanceof Error ? err.message : String(err),
     })
   }
