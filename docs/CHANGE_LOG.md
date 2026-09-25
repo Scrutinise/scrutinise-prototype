@@ -1,5 +1,42 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-25 00:24 UTC — INCIDENT — build-worker crash loop, caused and fixed same session
+
+**Caused by, and fixed by, this (SEARCH-stream) session — recorded in full rather than folded into
+the entry it came from.** The S22 commit below (`d51a116`) staged `lib/lex/build.ts` by full file
+path for one legitimate line (`enterBuildContext`, S22 attribution). Another session's uncommitted
+BRIEF_26G work — two imports (`snapshotCommitteeEvidence`, `snapshotOnePageSummary`) and a
+try/catch block calling them — was already present in that same working-tree file at the time.
+`git add` on a whole file stages everything currently in it, not just the intended edit, so both
+went into the commit together. `build-committee-evidence.ts`/`build-one-page-summary.ts` (the
+files those imports need) were never committed at that point, so a clean checkout — exactly what
+`build-worker` deploys from — threw `MODULE_NOT_FOUND` on every start. Deployment `b4e5ce5` read
+`SUCCESS` (the BUILD succeeded) and then **crash-looped at runtime**, caught only because this
+session polled the deployment status again after the fact rather than trusting the first green
+reading — the exact "status, not the string" trap CLAUDE.md's Railway section already names,
+arriving from a new direction.
+
+**Fixed within minutes**, as a build-breaking fix per CLAUDE.md's own carve-out: `cb53e67` removed
+only the two import lines and the one BRIEF_26G try/catch block, left this session's own
+`enterBuildContext` line and everything else in the file untouched, and did not touch the other
+session's new files at all — they remained on disk, uncommitted, exactly as that session left
+them. Verified live: the worker's boot log showed a clean start on `cb53e67`, no
+`MODULE_NOT_FOUND`, stable after a 45-second wait (not just a transient green). Both peer sessions
+running in this repository were messaged directly with what happened and what they needed to
+re-add — `scrutinise-prototype-c4` confirmed it wasn't theirs; `scrutinise-prototype-e3` is the
+presumed owner, unconfirmed as of this entry. ⚠ **`git log -- lib/lex/build.ts` shows no commit
+re-adding the wiring as of this entry** — the CHANGE_LOG entry below this one, timestamped 00:08
+UTC (before this fix), describes the BRIEF_26G work but its own build.ts commit has not landed yet.
+Do not read that entry as confirmation the wiring is back; check `git log -- lib/lex/build.ts`
+directly before assuming so.
+
+**The rule this confirms, not a new one:** CLAUDE.md's "commit by explicit file path, never
+`git add -A`" already exists for exactly this reason — and staging one KNOWN file by its exact path
+is not sufficient on its own when the tree is shared; the file's FULL CURRENT CONTENT needs
+diffing against HEAD before staging, not assumed to contain only the edit just made. Three other
+commits landed the same session without incident because their files had no concurrent uncommitted
+change sitting in them; this one did, and it was missed.
+
 ## 2026-09-25 00:08 UTC — LEX 26-G — two documents that leave the building
 
 Brief: `docs/BRIEF_26G.md`. §1's report first, as instructed; §2/§3 built on it.
