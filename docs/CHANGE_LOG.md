@@ -1,5 +1,292 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-25 00:08 UTC — LEX 26-G — two documents that leave the building
+
+Brief: `docs/BRIEF_26G.md`. §1's report first, as instructed; §2/§3 built on it.
+
+▼▼ **§1 — THE DOCUMENT MACHINERY, ONE TABLE.**
+
+| Document | Produces it | Contains | Storage | Build-stamped |
+|---|---|---|---|---|
+| Initial Background Briefing | `build-initial-background.ts`, written from the ORIENT pass | First list of legislation/debates/reports/cases | `Document` row (`kind=INITIAL_BACKGROUND`), frozen at build-write | Yes |
+| Initial Questions | `build-initial-questions.ts`, `snapshotInitialQuestions` at `finishBuild` | Every decision/fork/gap/challenge the build needs from the user, with what resolves each | `Document` row (`kind=INITIAL_QUESTIONS`), frozen at build-finish, lazy-composed on first read for older builds | Yes |
+| The Proposal / The Summary | `build-proposal.ts` via `proposal-export.ts` | Full kernel write-up / ~1-page kernel digest | `Document` row, but composed live from a `ProposalSnapshot` each render ("Working Render") unless explicitly PUBLISHED as an immutable versioned snapshot | No (working render) / Yes (published version) |
+| Meeting Pack | `build-meeting-pack.ts` via `proposal-export.ts` | 5 sections: decisions / unanswered / challenges (OPEN only) / kernel / evidence | Same live-snapshot mechanism as the Proposal | No / Yes if published |
+| Evidence Pack | `build-evidence-pack.ts` | Every source, what was considered and set aside | Built, in `PROPOSAL_KINDS`, but **deliberately not exposed** in `OutputsPanel.tsx` — "scaffolded rather than built" | No |
+
+⚠⚠ **Two genuinely different architectures exist**, not one: the briefing/questions pair is
+FROZEN AT A BUILD (never recomposed, only re-rendered) via the generic `lib/documents/export.ts`
+service; the proposal family is COMPOSED LIVE from current state via `proposal-export.ts`'s
+`ProposalSnapshot`, with an optional immutable "published version" on top. **The two new
+documents need the FIRST architecture** (§4a/§4b require build-stamping and re-render-not-
+re-search) — so they extend `export.ts`'s `EXPORT_KINDS`, not `proposal-export.ts`'s
+`PROPOSAL_KINDS`. Confirmed by building them this way; both reuse the OUTPUT primitives
+(`DocumentModel`/`Block`/`renderDocx`/`renderPdf`/`markdownToBlocks`) either family already uses.
+
+▼▼ **§2a — the shape, read off 8 metadata rows + 4 full-text samples of real
+`committees-evidence` submissions (142,315 sections; full text lives in R2, not Postgres).**
+Consistent pattern: a header naming the submitter (org or individual) with a reference code
+assigned by the committee; interests declared INLINE in prose, never in a separate formal
+disclosure block; length 374–2,678 words in the sample; several submissions restate the
+inquiry's own questions or terms-of-reference points as sub-headings and answer each in turn; no
+consistent paragraph numbering; citations mostly informal ("see below", named reports) rather
+than a fixed convention; appendices sometimes attached as a distinct trailing section.
+⚠ **§2b could not be checked live.** Every `parliament.uk` URL tried from this session returned
+403 — the identical wall the product's own fetcher already documents (Decision 92). Not
+fabricated as verified; the document says to check the specific committee's current requirements.
+⚠⚠ **§2c — checked structurally, not assumed: nothing anywhere in the ingest pipeline tracks
+open/current inquiries.** `committees-evidence` is by construction PUBLISHED (therefore past)
+evidence. The document says so on itself, per the brief's own instruction, rather than pretending
+to address a specific inquiry.
+
+▼▼ **§2/§3 BUILT.** Two new `Document` kinds (`COMMITTEE_EVIDENCE`, `ONE_PAGE_SUMMARY`),
+composed and frozen at `finishBuild` (same placement, same never-fails-the-build try/catch, same
+lazy-compose-on-first-read fallback as Initial Questions) — `lib/documents/build-committee-
+evidence.ts`, `lib/documents/build-one-page-summary.ts`. Both extend `export.ts`'s
+`EXPORT_KINDS`/`buildFor`/`exportFilename`, so the existing generate/download/stale-detection
+routes and `DocumentExports.tsx` card component work unmodified — two new `kind` entries, no new
+plumbing. Both appear on the Documents tab (§4d).
+▶ **§3a — the one-page rule reuses `buildSummaryDocument`'s own proven clip-budget technique**
+(25-N §5b: character-capped sections, word-boundary truncation with "…") rather than inventing a
+new one. Eight short items instead of four longer ones; total budget calibrated to be no larger
+than the proven one-page total — ⚠ not independently verified by rendering a PDF, reported as
+such. A stated drop order (`unresolved` first, `evidenceLine`, `instrument`, `difference`, `for`,
+`approach`) governs what's cut if it still doesn't fit; `against` and `problem` are never
+droppable — the code enforces this structurally, not by convention.
+▶ **§3d — the strongest argument against is sourced from `DeepeningIssue`, preferring the
+`ADVERSARIAL` pass** ("read back as a hostile clerk", `DeepeningPanel.tsx`'s own words) and
+falling back to any OPEN challenge; never omitted for space (see the drop order above).
+▶ **§4c — "First Scrutiny" applied to both new documents.** `isFirstScrutiny(stage)` =
+`STAGE_1`/`STAGE_2`; the platform's own existing stage fact, not a new column. Dropped
+automatically once the idea reaches STAGE_3 (DEVELOP — "public scrutiny" in the Five Stages
+architecture). Not yet applied to the other four documents — Charlie's Q8 asked for consistency
+across all of them; scoped here to what §4c explicitly asked for ("apply it to both").
+
+✅ `tsc --noEmit` clean. ✅ `check:client-boundary` clean (603 files, up from 597), control fired.
+⚠ **NOT RUN: `check:lex-25r`**, named by §0. No cold read of a real submitted-and-scrutinised
+idea exists yet to test the First Scrutiny drop against — reported as not run, not omitted.
+⚠ Nothing committed; pending Charlie's approval, alongside 26-F's still-unrun `commit-all.sh`.
+
+**§6 — what only Charlie can confirm.** Whether either new document is good enough to SEND is a
+judgement no check makes. Read the actual rendered output on a real idea before trusting either
+for anything real: the One-Page Summary's clip budget is calibrated by character count, not by
+rendering and measuring a page, and the Written Evidence template has never been checked against
+current committee guidance (§2b, blocked). **I would not send either without reading the
+generated file first** — the machinery is sound and reuses proven patterns, but neither has been
+seen rendered.
+
+## 2026-09-25 00:07 UTC — SEARCH — S20a close-out, S21 amendments, S22 (alerts/attribution/orphans)
+
+Reports: `docs/SEARCH_S21_REPORT.md` (AMENDMENTS section), `docs/SEARCH_S22_REPORT.md` (new). Same
+session as the S21 base pass (`850218e`/`84c9611`), continued.
+
+▼▼ **S20a — `build-worker` HAD ALL FIVE NAMED FLAGS ABSENT, PLUS A SIXTH NOBODY ASKED ABOUT.**
+`LEX_QUERY_EXPANSION`, `LEX_SEARCH_RERANKER`, `LEX_SEARCH_JUDGED_MERGE`, `LEX_TIER_FUSION`,
+`LEX_STATS_STREAM` were all unset on the worker while `/api/health` showed all five `true` on
+Vercel — every build the platform has produced went through degraded retrieval. Set (recording
+prior state as absent, B17 convention), redeployed, **read back live from the worker's own boot
+log**: `build-worker.ts` now also prints `capabilityLine()` (already built in S17 §3), so the
+worker and `/api/health` are directly comparable for the first time. That same new line printed a
+sixth divergence — `LEX_SEARCH_VECTOR` absent too — fixed the same way. Proof of engagement:
+`search.reranker` LlmSpend rows now arrive with today's date, in the rhythm of a real build.
+▶ **S21 1a** — no change; the base pass already built `provider`/`exclude`.
+▶ **S21 step 3 corrected: X post cap 20 → 30.** Shipped at 20 on a direct answer this session gave
+before finding the actual brief's number; corrected before the 20 had ever been live for a real
+briefing.
+▶▼ **S21 step 4 — "one mechanism, not two."** Three independently-written copies of "fetched
+content is data, never instruction" (one pre-existing in `user-material.ts`, two written earlier
+this session for orientation) collapsed into one shared `fetchedContentIsData()`
+(`lib/lex/fetched-content-guard.ts`, new), imported by all four call sites. A structural check
+(`check-orientation-injection.ts`, extended) asserts the import; live re-run 8/8.
+▶▼ **S21 step 7 — chat web search, built and gated OFF (`LEX_CHAT_WEB_SEARCH`).**
+`general-chat.ts`: the model decides (structured JSON, not a tool-calling loop — Gemini can't
+combine grounding with JSON mode) whether to search; at most 2 per turn, enforced in code; results
+render as a `[W]`-numbered public-sources block (decision 85's own mechanism, `public-sources.ts`);
+every resulting `LlmSpend` row carries the asking admin's `userId`. Live-verified: a real
+`webSearch()` call with a real `userId` wrote a real, correctly-stamped ledger row (test row
+deleted after). Provider domain test: **Google returns content for `parliament.uk` (12) and
+`bills.parliament.uk` (10), zero for `hansard.parliament.uk`; xAI untestable (no key here)**.
+⚠⚠ **S22 §2 attribution — the real gap was one layer below where the brief pointed.**
+`runNextPass` has always carried `userId`/`ideaId` (resolved from `idea.creatorId`); `callModelJson`,
+the ONE entry point every pass (reranker, build.draft, deepening.*) goes through, simply has no
+`userId`/`ideaId` parameter — so every build's `LlmSpend` rows were null for both, confirmed on 27
+real rows from a real build in production. Fixed with `lib/lex/build-context.ts` (new,
+`AsyncLocalStorage`) rather than threading attribution through every function signature between the
+build engine and the ledger — `runNextPass` enters the context once; `recordSpend` reads it as a
+fallback, never overriding an explicit value. Live before/after proof on the real `rerankCandidates`
+code path (synthetic test row, deleted after): before `userId=null ideaId=null`, after both populated.
+▶ **S22 §1 alerts — built, live-proven except the actual send.** `scripts/cost-alert.ts` (new) +
+`CostAlertSent` table (new, applied to production) + `lib/email.ts`'s `sendCostAlertEmail()`.
+Dry-run against real data: MTD $20.49, correctly flags $20 passed/$50 not yet. Proof step
+(`LEX_COST_ALERT_THRESHOLDS=0.01`, for real): correctly detects the threshold passed, attempts the
+send, and — no `RESEND_API_KEY` on this machine — correctly reports the skip and does NOT record a
+dedupe row (confirmed: 0 rows in `CostAlertSent` after). The query/threshold/dedupe logic is fully
+proven; an actual Resend send needs re-running from where the key exists.
+⚠⚠ **S22 §3 orphan marker — real and currently live**, not hypothetical: `docs/SEARCH_S19_REPORT.md`
+§1.1 measured seven whole collections (36,919+ sections) with zero rows in the database while live
+in the served search index, five weeks ago, unfixed. **Re-verified independently against production
+just now: still zero rows today**, five of the five spot-checked. Fixed (implemented via a forked
+agent, reviewed and independently re-verified before merging): `SearchResult.orphaned` (tri-state —
+undefined/false/true, `page1-config.ts`), set at the one hydrate site each in `fts-search.ts`/
+`vector-search.ts`, counted and logged (never filtered) in `search-gateway.ts` — the brief's own
+"why": hiding it would conceal the defect from the only check that can see it — and excluded from
+`general-chat.ts`'s citable context before numbering, so an orphaned hit structurally cannot receive
+a `[n]` marker. Open, not chased further: `build-research.ts`'s findings pipeline is a different
+shape (citation-per-finding, not a raw numbered list) and its own orphan exposure is unconfirmed.
+✅ `tsc --noEmit` (app + scripts) clean throughout · `check:model-registry` 28/28 ·
+`check:lex-25d` 77/77 (two pre-existing stale assertions also fixed in passing) ·
+`check:orientation-injection` 8/8 · `check:client-boundary` clean · `check:flags` 54/54.
+⚠ Nothing committed yet; commit-all.sh produced, pending approval. Two schema changes applied to
+production ahead of the commit, per CLAUDE.md's own rule (`CostAlertSent`; the S21 pass's
+`LlmSpend` columns were already applied and committed in `850218e`).
+
+
+## 2026-09-25 23:55 UTC — LEX — Charlie's eight questions of 24 September. Report only, nothing built.
+
+No brief file; Charlie's questions inline. All read-only (production DB + Railway API); nothing
+shipped, nothing committed.
+
+▶ **Q1 full list** — 10 of 27 field rows non-terminal on `452c5ade…`: Guiding Policy —
+`chosenApproach`, `whatItRulesOut`, `leverage`, `anticipatedResponses`, `conditionsForSuccess`,
+`summaryGuidingPolicy` (all `AWAITING_CONFIRMATION` since the 4 Sept build); Coherent Actions —
+`actions`, `summaryCoherentActions` (`AWAITING_CONFIRMATION`, same build), `coherenceCheck`,
+`costSummary` (`EMPTY` since the 24 Aug build, never touched since).
+▶ **Decision 97 recorded, not built**: complete = every field ACCEPTED or SKIPPED; a field the
+platform cannot draft auto-skips with its reason recorded, so it never blocks. Implementing the
+auto-skip is follow-up work — flagged, not started.
+▼▼ **Q3 — the relationship, measured, not the one hypothesised.** `coherenceCheck` and
+`KERNEL_CHECK`/`LOGIC_CHECK` are NOT the same mechanism and share no code: `seedCoherenceCheck()`
+(orchestrator.ts) calls its own model function `generateCoherenceReview()` (lex-client.ts) — a
+distinct prompt (gaps/flaws/missingImplementers/sequence), reading `chosenApproach` etc. by their
+ACCEPTED value. It is NOT "pass output that never reaches the field" — **it is a chat-seeded field
+gated behind reaching it in the sequential field order**, exactly like every other proposed field.
+Checked all 18 ideas with `coherenceCheck` EMPTY: **18 of 18 are blocked upstream** — `chosenApproach`
+and/or `actions` not yet terminal on every one, zero exceptions. There is no small fix here; the
+field genuinely has not been reached on any of them.
+▼▼ **Q4 — costing.ts has ZERO production callers**, confirmed by grep across the whole repo: its
+only importer is its own check script. Charlie's premise holds exactly. `costSummary` itself IS
+wired (`computeCostSummary` in field-machine.ts, sophisticated: sums `CostLine` + legacy per-action
+ranges, uprates via `DeflatorSeries`, flags oneSided/noPriceYear/noBasis) — separate from `costing.ts`
+entirely, and blocked by the same Q3 upstream gate on this idea. ⚠ **Measured count differs from
+Charlie's: 80 actions exist platform-wide, not 119 — 0 of 80 carry any cost range** (implementation/
+enforcement/friction all null); 1 `CostLine` row total. 53 hand-seeded `CostBenchmark` rows exist and
+are reachable from every action's cost editor, unused. Flagging the count mismatch rather than
+silently adopting his number.
+▼▼ **Q5 — Railway, read via `backboard.railway.com/graphql/v2`, Project-Access-Token, this month
+(1 Sept – today).** Per-service (CPU_USAGE / MEM_USAGE_GB / NET_TX+RX_GB are Railway's own units —
+`MEMORY_USAGE_GB` etc. are **sums of per-minute samples, not GB-hours**, per the project's own prior
+calibration note; divide by 60 for GB-hours): Ops, vector-serve, build-worker, fts-serve, Ingest,
+scrutinise-db (only these 6 of 8 services show any usage this month; fts-build/fts-pilot show none).
+No $ figure obtained — the calibrated `cost-estimate.ts` this exact question needs **no longer exists
+in the repo** (neither does `docs/OPS_SLEEP_AND_DECOMMISSION.md`) — flagged as missing rather than
+silently re-estimated without its calibration anchor.
+⚠⚠ **"Whether app-sleeping still has no effect" — it does have effect, measured on the last 3 days'
+hourly CPU_USAGE**: both `vector-serve` and `fts-serve` show a real, clean **~26-hour stretch of
+exactly zero CPU** (2026-09-23T19:00 → 2026-09-24T21:00 UTC), then a cold-start spike as they woke.
+`sleepApplication=true` confirmed current on both via live query.
+▶ **Q6/Q7 read directly from the render code**, not summarised from memory — full section content
+for `DeepeningPanel.tsx` and `build-meeting-pack.ts` given verbatim to Charlie in chat.
+▶ **Q8 — "First Scrutiny" (Charlie's new definition) does not exist as a concept anywhere in code.**
+The only existing per-document marker is `BETA_MARKER`/`betaBlocks()` — a static, platform-wide pilot
+disclosure, unrelated to any single idea's scrutiny history. Applying it consistently would need a
+per-idea "has this ever left Stage 1/2" fact — `idea.stage` reaching STAGE_3 (DEVELOP, "public
+scrutiny" per the Five Stages architecture) is the natural trigger; not built, reported only.
+
+## 2026-09-24 02:52 UTC — LEX 26-F — the end of the kernel: a stated moment, a range of options
+
+Brief: `docs/BRIEF_26F.md`. Per §0 (continuous; §4 report-only — Deepening not built this sprint;
+run the cold-read instrument). Not yet committed — pending Charlie's approval to push.
+
+▼▼ **§1a — MEASURED AGAINST PRODUCTION, NOT ASSUMED.** Identified Charlie's own idea by the exact
+match on his brief's number: **"Enhancing Individual Accountability in the Civil Service"**
+(`452c5ade…`) carries **176 OPEN `DeepeningIssue` rows** — the same 176 named in both §1b ("176
+challenges unanswered") and §4b ("176 issues open"), which is the same table: `agenda.ts`'s
+`challenges` field IS `deepeningIssue`. ⚠⚠ **`KERNEL_CHECK`/`LOGIC_CHECK` ("the coherence check")
+are entries in the STANDARD build pass sequence** (`build-config.ts`) — they run automatically on
+every full build, first draft included, and write their failures into the same `DeepeningIssue`
+rows. Across **32 DONE builds database-wide, 31 carry a completed `KERNEL_CHECK`; the ONE exception
+is this idea's own v1** — built 24 Aug, three days before the pass was added to the sequence.
+**There is no separate, cheaper trigger for "just the coherence check" today** — re-running the
+whole build is what re-runs it. So §2's "Run the coherence check" option is NOT built as a
+standalone action (said plainly, on the card) and reads the last build's own KERNEL_CHECK/
+LOGIC_CHECK output instead of offering a button that would lie about doing something new.
+⚠⚠ **A second, more consequential finding, found in passing: `kernelComplete` reads FALSE on this
+idea right now.** Ten builds, and `chosenApproach`, `actions`, `summaryGuidingPolicy`,
+`summaryCoherentActions`, `coherenceCheck`, `costSummary` and four more fields are still
+`AWAITING_CONFIRMATION` or `EMPTY` — never `ACCEPTED`, never `SKIPPED`. `setProposal`'s own logic
+(25-X Decision 59) explains why: an ACCEPTED field survives a rebuild untouched, but a field that
+was SKIPPED or never engaged gets moved back to AWAITING_CONFIRMATION by the next build's proposal
+— so ten rebuilds without ever pressing "Save & accept" or "Skip" on page 3/4's own fields
+reproduces exactly this. **This is not the same defect §1 was asked to fix** (the gate is correctly
+wired — `DeepeningPanel`'s `unlocked={kernelComplete}` is a real, live read, not static — §4a) but
+it is very possibly why Charlie experienced "I finished the kernel" and the product disagreed. Said
+to him directly, not silently built around — see §6 below.
+
+▼ **§1/§2 BUILT.** `RerunOptions.tsx` (the box §2 names) now takes a `kernelComplete` prop — the
+SAME value `CreateIdeaClient.tsx` already computes to gate `DeepeningPanel`, not a second reading of
+it. When true:
+- **A stated moment**, not silence: "The kernel is settled," with the three counts from
+  `/api/ideas/[id]/agenda` — the identical endpoint `WorkList.tsx` reads, so the numbers cannot
+  drift from the left panel (§5's acceptance criterion, satisfied by construction).
+- **"What next"** replaces the plain "Re-run" collapsed section: five options, each with a reason
+  line — Run the coherence check (not built standalone, said so, with the real last-build result);
+  Answer the outstanding challenges (linked to `#deepening-passes`, the same anchor `WorkList`
+  uses); Re-run (unchanged, plus §1c's new sentence on WHY — "it searches afresh against every
+  decision you have settled since the last build ran, which the last run could not have known
+  about"); Take the working document away (linked to the idea's own Documents tab, `?tab=exports`);
+  Go deeper (linked to the Deepening stage — shown only in this branch, which IS "only when it
+  does something," since that is the same condition that unlocks the panel it points to).
+- Below the kernel-complete state, the plain "Re-run" box is byte-identical to 26-E — nothing
+  regresses for an idea still mid-kernel.
+
+⚠⚠ **§3 — REPORTED FIRST, NOT BUILT (as instructed by §0/§3's own "report first whether this
+already exists").** Read all four named documents' own headers before writing anything:
+- **The Evidence Pack** (`build-evidence-pack.ts`) is fully built as a renderer but **deliberately
+  not exposed** — `OutputsPanel.tsx`'s own comment: *"it is scaffolded rather than built... it
+  appears here the day it produces a document."*
+- **The Proposal** (`build-proposal.ts`) is built and live — the full kernel write-up.
+- **"First Scrutiny" is not a distinct document.** It is 25-V §2b's descriptive phrase for how
+  THE PROPOSAL should read before anything is committed ("here are the N approaches under
+  consideration and why," never a blank page) — no separate builder exists under that name.
+- **Initial Questions** (`build-initial-questions.ts`) exists, is generated once per build
+  ("here is what we need from you," including item 5, "challenges that need a response"), and is
+  linked from the worklist route — but is not offered as a take-away document card.
+- **The Meeting Pack** (`build-meeting-pack.ts`, 25-N §5e) already has almost exactly §3's shape:
+  five sections in this order — decisions, unanswered questions, **challenges**, the settled
+  kernel, the evidence — for a reader who has not joined the team.
+- **Recommendation: extend the Meeting Pack**, not build a fifth document. Its "challenges" section
+  would need to distinguish answered from unanswered (checked: not yet reported whether it already
+  does — that is the one open question a build of this feature would need to start from), and it
+  would need a "what there is still to read" section added, which is currently in none of the four.
+  Sized at roughly the same order as the 25-N §5e work that built the Meeting Pack itself — a
+  section or two of rendering logic reusing exactly the model already proven safe for this
+  directory (§20-B's rules: render stored state only, no Prisma, no model call).
+
+⚠⚠ **§4 — REPORTED, NOT BUILT (§4d).**
+**4a.** The gate is wired, not static: `DeepeningPanel`'s `unlocked={kernelComplete}` is a live prop
+reading real field-state, confirmed by the same investigation as §1a above. It shows the greyed
+sentence on Charlie's idea because `kernelComplete` is genuinely false there right now (see §1a).
+**4b.** *"7 passes run, 176 issues open"* is real: `DeepeningPass` rows show real research passes
+(`question:LEGAL_LANDSCAPE`, `CASE_INTERPRETATION`, `EXISTING_POWER`, etc.) that ran and wrote
+`DeepeningIssue` findings — and `DeepeningPanel.tsx` is a fully built judging surface for exactly
+this (accept/reject findings, address/defer/dismiss issues) that already reads it correctly; it is
+simply never REACHED because `unlocked` is false. The 176 count is real and matches the left panel.
+**4c.** Given 4a/4b, "what it would take to make Stage 3 do what the sentence promises" may be
+**nothing new to build** — the gate and the panel both already work; the open question is whether
+`kernelComplete`'s strict all-fields-terminal definition is too strict for what Charlie means by
+"my four sections are done" (see the §1a finding above). That is a product decision, not an
+engineering one, and is exactly the kind of thing §6 says to ask him rather than assume.
+
+✅ `tsc --noEmit` (web) clean. ✅ `check:client-boundary` clean, control fired (the new
+`stageHref` import from `lib/lex/stages.ts` is pure data/functions, already proven client-safe by
+`WorkList.tsx`'s existing import of it).
+⚠ **NOT RUN: every DB-touching CHECK SCRIPT** (only read-only, throwaway diagnostic scripts were
+run directly against production for §1a/§4b's measurements, then deleted — see above). `check:lex-25r`,
+the cold-read instrument §0 asked for by name, still needs a session that can safely write and tear
+down a scratch fixture; not attempted this session given the live-production caution already
+exercised. Reported as not run, not omitted.
+⚠ Nothing committed; `commit-all.sh` pending Charlie's approval.
+
 ## 2026-09-24 02:36 UTC — LEX 26-E — the kernel walkthrough: two locks removed, §3 sized not built
 
 Brief: `docs/BRIEF_26E.md`. Per §0 (continuous; §3 is a feature, report before building; §4–§10

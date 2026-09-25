@@ -773,7 +773,73 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-24 02:36 UTC (LEX 26-E)* — ▼▼ **THE ROOT-CAUSE LOCK WAS THE PANEL, NEVER
+*Last updated: 2026-09-25 00:07 UTC (SEARCH S20a close-out + S21 amendments + S22)* — ▼▼ **A
+DEGRADED-RETRIEVAL WORKER, A DEAD LEDGER FIELD, AND A FIVE-WEEK-OLD DEFECT — ALL LIVE, ALL FIXED.**
+Reports: `docs/SEARCH_S21_REPORT.md` (AMENDMENTS §), `docs/SEARCH_S22_REPORT.md` (new). Full detail
+in `docs/CHANGE_LOG.md`'s 00:07 entry; summary here — this is a SEARCH-stream update, kept separate
+from the LEX-stream entries below it in this same section since both run in this repo concurrently.
+⚠⚠ **`build-worker` had ALL FIVE of S20a's named flags absent** (query expansion, reranker, judged
+merge, tier fusion, stats stream) — every build the platform has ever produced went through
+degraded retrieval. Fixed; **a sixth divergence (`LEX_SEARCH_VECTOR`) was found by the very fix
+itself** (the worker's boot line now prints the full capability set, matching `/api/health`) and
+fixed the same way. Live proof: `search.reranker` rows now arrive with today's date.
+⚠⚠ **S22 attribution: `callModelJson` — the ONE entry point every build pass goes through — had no
+`userId`/`ideaId` parameter at all**, so every build's `LlmSpend` rows were null for both, confirmed
+on 27 real rows from a real production build. Fixed with an `AsyncLocalStorage` context
+(`lib/lex/build-context.ts`) rather than threading attribution through a dozen function signatures.
+⚠⚠ **S22 orphan marker: real, not hypothetical — `docs/SEARCH_S19_REPORT.md` §1.1's finding (seven
+collections, 0 rows in the database, live in the search index) is UNCHANGED five weeks later**,
+re-verified against production just now. Fixed: hits stay visible, labelled, counted, and excluded
+from what Lex can cite — never silently dropped, per the brief's own "hiding it would conceal the
+defect from the only check that can see it."
+▶ S21 step 3 (X cap) corrected 20→30. ▶ S21 step 4: three independently-written injection-defence
+warnings unified into one (`lib/lex/fetched-content-guard.ts`). ▶ S21 step 7: chat web search built
+on `general-chat.ts`, gated OFF (`LEX_CHAT_WEB_SEARCH`). ▶ S22 cost alerts built and live-proven
+against production data except the actual Resend send (no key on this machine).
+✅ `tsc` (app+scripts) clean; `check:model-registry` 28/28; `check:lex-25d` 77/77; `check:client-boundary` clean; `check:flags` 54/54.
+⚠ Nothing committed yet; commit-all.sh produced, pending approval.
+Earlier: 2026-09-24 02:52 UTC (LEX 26-F) — ▼▼ **THE END OF THE KERNEL: A STATED MOMENT, A
+RANGE OF OPTIONS — §1/§2 BUILT, §3/§4 REPORTED NOT BUILT.** Brief: `docs/BRIEF_26F.md`. Full detail
+in `docs/CHANGE_LOG.md`'s 02:52 entry; summary here.
+▼▼ **§1a measured against production: identified Charlie's idea by the exact 176 match** ("Enhancing
+Individual Accountability in the Civil Service") — `KERNEL_CHECK`/`LOGIC_CHECK` are standard build
+passes, not a separate trigger; 31 of 32 DONE builds database-wide carry one, the one exception
+being this idea's own v1 (built before the pass existed). No cheap standalone "just check
+coherence" exists — re-running the whole build is what re-runs it, so §2's option says that
+plainly rather than faking a button.
+⚠⚠ **Found in passing, not what §1 was asked to fix, but likely the real cause of "I didn't
+realise there were challenges outstanding": `kernelComplete` reads FALSE on Charlie's idea right
+now** — ten builds, and `chosenApproach`/`actions`/`summaryGuidingPolicy`/`summaryCoherentActions`/
+`coherenceCheck`/`costSummary` and four more are still `AWAITING_CONFIRMATION` or `EMPTY`, never
+accepted or skipped. The gate (`DeepeningPanel`'s `unlocked={kernelComplete}`) is correctly wired,
+live, not static (§4a) — it is showing the truth. Whether "my four sections are done" should mean
+something less strict than "every field individually accepted" is a product question for Charlie,
+not assumed either way.
+▶ **§1/§2 built** — `RerunOptions.tsx` takes a `kernelComplete` prop (the same value that already
+gates the Deepening, not a second reading). When true: a stated "The kernel is settled" moment with
+the three left-panel counts (same `/api/ideas/[id]/agenda` endpoint `WorkList.tsx` reads, so they
+cannot drift); "What next" replaces the plain Re-run box with five reasoned options — coherence
+check (not built standalone, said so), answer challenges (linked, real count), re-run (plus §1c's
+new "why now" sentence), take the document away (linked to the Documents tab), go deeper (linked to
+the Deepening stage, shown only here since that IS "only when it does something"). Below
+kernel-complete, the plain Re-run box is unchanged from 26-E.
+⚠⚠ **§3 reported, not built: none of the four named documents already does what §3 asks, but the
+Meeting Pack (25-N §5e) already has almost exactly the shape — decisions, questions, challenges,
+kernel, evidence — recommend extending it** rather than a fifth document. "First Scrutiny" is not a
+separate document; it is 25-V §2b's phrase for how the Proposal reads pre-commitment. The Evidence
+Pack is built but deliberately unexposed (scaffolded). Initial Questions exists, generated per
+build, linked from the worklist, not offered as a takeaway card.
+▶ **§4 reported, not built: the gate is wired** (4a) — it shows Charlie the placeholder because
+his kernel genuinely isn't complete by the strict definition, not because the gate is broken. The
+Deepening's own passes and issues are real and DeepeningPanel already reads them correctly (4b) —
+it is simply never reached. What Stage 3 would need may be nothing (4c) if the completion
+definition changes; that is Charlie's call, asked rather than assumed.
+✅ `tsc --noEmit` clean; ✅ `check:client-boundary` clean, control fired.
+⚠⚠ **NOT RUN: `check:lex-25r`, the cold-read instrument named by §0** — only read-only, disposable
+diagnostic queries ran against production for §1a/§4b, then were deleted; no scratch-fixture check
+attempted this session given the live-DB caution already in force. Reported as not run, not omitted.
+⚠ Nothing committed; `commit-all.sh` pending Charlie's approval.
+Earlier: 2026-09-24 02:36 UTC (LEX 26-E) — ▼▼ **THE ROOT-CAUSE LOCK WAS THE PANEL, NEVER
 THE SERVER — §1/§2 FIXED, §3 SIZED NOT BUILT.** Brief: `docs/BRIEF_26E.md`. Full detail in
 `docs/CHANGE_LOG.md`'s 02:36 entry; summary here.
 ▼▼ **§1 — every write path checked BEFORE touching a component, and none of them guard against

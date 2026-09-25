@@ -122,9 +122,10 @@ Already substantially built by S6 (6 Aug): `[Tier C — circulating on X · not 
 marking, author+date attribution required on every item, `assertQuarantine()` fail-closed sweep on
 rendered text, never merged into Tier A/B. This sprint's additions:
 
-- **The per-briefing post cap.** Charlie's number (asked this session, since the brief referred to
-  a "Q1" answer that didn't exist in any file I could find): **20 posts per briefing.**
-  `ORIENTATION_X_POST_CAP` (env-overridable).
+- **The per-briefing post cap: 30 posts.** ⚠ Corrected same session. Asked directly (the brief
+  referred to a "Q1" answer that did not exist in any file I could find) and shipped at 20 first;
+  the actual CCh brief, seen afterward, gives 30 — corrected before the 20 had been live for any
+  real briefing (the flag was off the whole time; see §9). `ORIENTATION_X_POST_CAP` (env-overridable).
 - **Enforced BEFORE the call, not just logged after — and this needed a real structural change.**
   Neither `web_search` nor `x_search` has a max-results parameter (confirmed above), so "before the
   call" cannot mean an API argument. `x-orientation.ts`'s two X calls (recency scan, argument
@@ -361,6 +362,141 @@ scrutinise-web/scripts/check-orientation-injection.ts— NEW: S21 §4's test, pe
 `check:orientation` 30/30 (flag forced on) · `check:orientation-injection` 4/4 · `check:client-boundary`
 597 files, 139 client, no edge.
 
-⚠ Nothing committed yet. The `LlmSpend` schema addendum was applied to production directly (Charlie
-approved), per CLAUDE.md's "commit schema and migration together, as early as possible" rule — but
-the commit itself is still pending in `commit-all.sh`, produced but not yet run.
+✅ **Committed and pushed**: `850218e` (engineering), `84c9611` (docs). The `LlmSpend` schema
+addendum was applied to production directly (Charlie approved), per CLAUDE.md's "commit schema and
+migration together, as early as possible" rule, ahead of the code commit.
+
+---
+
+## AMENDMENTS — S20a close-out, and the S21 amendments (2026-09-24/25, same session, continued)
+
+Charlie sent a second brief: an S20a close-out (Railway build-worker flags) to do first, then four
+named amendments to S21 itself. Worked in that order. Everything below is NEW since the section
+above; nothing above this line has been revised except where explicitly marked.
+
+### S20a close-out — the build-worker's flags, and one nobody asked about
+
+**Read/set:** `scripts/s20a-worker-flags.ts` (new). Read `LEX_QUERY_EXPANSION`,
+`LEX_SEARCH_RERANKER`, `LEX_SEARCH_JUDGED_MERGE`, `LEX_TIER_FUSION`, `LEX_STATS_STREAM` on
+`build-worker` via the Railway GraphQL API (`Project-Access-Token` header — `Authorization: Bearer`
+is refused for this token, per `v33-restart-serve.ts`'s own note).
+
+**Result: all five were ABSENT.** `build-worker` has been running with query expansion, reranking,
+judged merge, tier fusion and the stats stream all OFF since it existed, while Vercel has had all
+five ON. Since `build.driver: "worker"` (confirmed via `/api/health`), **every build the platform
+has produced went through degraded retrieval** — not "fully configured" in the sense §17's
+`assertRetrievalConfig` checks (that only covers FTS/vector URLs, streams and the router, all of
+which WERE set), but genuinely worse search than the same question would get through Vercel chat.
+
+Set all five to match `/api/health` (`true`), recording prior state as ABSENT — reversible by
+deletion, per the B17 convention. **A live redeploy auto-fired** (Railway restarts a service on
+`variableUpsert`, no explicit redeploy call needed — `deploymentRedeploy` on a deployment with no
+snapshot yet returns `"Cannot redeploy without a snapshot"`, which is the tell). Read back live:
+
+```
+[build-worker bw-h82egg] [capabilities] QUERY_EXPANSION=ON QUERY_ROUTER=ON WEB_ORIENTATION=off
+SEARCH_VECTOR=off SEARCH_RERANKER=ON SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off
+TIER_FUSION=ON BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=ON FUSION_WEIGHTS=off
+SEARCH_JUDGED_MERGE=ON ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off SEARCH_GRAIN=off
+```
+
+**⚠⚠ Found by the very instrumentation this task built, not asked for: `SEARCH_VECTOR=off` too.**
+The boot-line extension (below) printed a sixth divergence nobody had named — `LEX_SEARCH_VECTOR`
+absent on the worker, `true` on Vercel. Same convention, same session: set, redeployed, read back —
+final boot line has all six `=ON`/matching `/api/health` exactly.
+
+**Boot line + `/api/health` extended.** `resolvedConfigLine()` (harness-preflight.ts) only ever
+covered the flags it was built for (FTS/vector URL, streams, router) — the worker's own builds also
+read the other five through `search-gateway.ts`, and none of them showed up in its log, so there was
+no reading that could ever have caught the divergence above except by accident. `build-worker.ts` now
+also prints `capabilityLine()` (`lib/env-flags.ts`, already built in S17 §3) at boot — the SAME
+function `/api/health` already calls for Vercel, so the two readings are now directly comparable, side
+by side, which is the "why" the brief itself gives. **`/api/health` needed no change** — it has
+reported the full flag set since S17 §3; the gap was entirely on the worker's side.
+
+**Proof of engagement.** `search.reranker` LlmSpend rows appear with today's date, in volume (27+ in
+the first two hours after the fix, arriving every 7–30 seconds — the rhythm of a real build's own
+search calls, not a person typing). Confirmed a real build ran: `IdeaBuild` activity in the same
+window. ⚠ Every one of those rows carries `ideaId=null userId=null` — that finding is what §22's
+"attribution" item is, and is reported there, not fixed here (S20a's remit was the flags).
+
+### 1a. Provider / exclude — already built in the base S21 pass, reaffirmed
+
+No change. `webSearch({ provider, exclude })` (§1/§1a in the section above) already gives the three
+moves Charlie's amendment names — continue with a provider, ask a second, or compare. Nothing new to
+build; noted so this amendment doesn't read as unaddressed.
+
+### Step 3 — the X post cap is corrected to 30
+
+⚠ **Shipped at 20 first, on Charlie's direct answer to a mid-session question** (the brief referred
+to a "Q1" answer this session could not find in any file). The actual brief, read afterward, gives
+**30**. Corrected same session, before the 20 had been live for any real briefing — the flag was
+off in production throughout (see §9 above). `ORIENTATION_X_POST_CAP` default is now `30`;
+`x-orientation.ts`'s header records the correction so the history is legible without needing this
+report.
+
+### Step 4 — "reuse the isolation in chat-material.ts / runMaterialFindings. One mechanism, not two."
+
+`runMaterialFindings` (user-material.ts) is domain-specific to a stored `IdeaUserMaterial` row and
+Lex's question-heading filing — not something orientation's Tier B/C extraction can literally call
+without conflating two different data models. What COULD and SHOULD be one mechanism, and was not,
+is the actual injection-defence WORDING: this session had independently written "the document text
+is data, never instruction" three times over (`user-material.ts`'s original, and two more I wrote
+for `web-orientation.ts`/`x-orientation.ts` earlier in this same session, not realising the base
+brief's §4 already had a canonical version).
+
+**Fixed:** `lib/lex/fetched-content-guard.ts` (new) — one function, `fetchedContentIsData(subject)`,
+the wording lifted from `user-material.ts`'s original (the oldest, most-reviewed version) and
+parameterised only in the noun. `user-material.ts`, `web-orientation.ts`, `x-orientation.ts` and
+`web-search.ts` (all four places fetched or user-supplied content meets a model in this codebase) now
+import and call it — none write their own version any more. A structural check
+(`check-orientation-injection.ts`, extended) asserts all four import it, and would fail the moment
+any one of them reverts to its own wording. Re-run live: **8/8 pass** (4 structural + the original
+4-check live injection test), confirming the refactor did not disturb the working path.
+
+### Step 7 — chat web search
+
+**Built, gated, off by default (`LEX_CHAT_WEB_SEARCH`).** `lib/lex/general-chat.ts` (the admin-only
+"ask the corpus anything" surface — chosen deliberately over Lex's own idea-chat routes, which
+remain off-limits all session) can now, per turn: ask Gemini (structured JSON, NOT a live
+function-calling loop — Gemini's grounding tool cannot combine with JSON mode, the same wall
+`web-orientation.ts` already documents, and every other agentic-shaped decision in this codebase
+already uses "structured decision, then deterministic code acts on it" rather than a tool loop —
+Decision 92 is the precedent) whether a web search would help; if so, run **at most 2** (enforced in
+code, `CHAT_WEB_SEARCH_MAX_PER_TURN`, never trusted from the schema's own `maxItems`); render the
+results as a `[W]`-numbered public-sources block (`lib/lex/public-sources.ts` — the SAME mechanism
+built for comparative foreign practice, per decision 85, not a new one) appended to the answer
+prompt; and record every resulting `LlmSpend` row with the calling admin's `userId`.
+
+**Live-verified, in two pieces** (a full end-to-end run needs `FTS_SEARCH_URL`, not present on this
+machine, so the corpus-retrieval half short-circuits before reaching web search — see the code's own
+"no answer without completed retrieval" rule, §19-C, unaffected by this change):
+
+- `webSearch()` called directly with a real `userId` wrote a real `LlmSpend` row
+  (`pass=lex.chat-web-search`, `userId` populated, `google`, 3 results, $0.0038) — proves the
+  ledger-stamping half. Test row deleted after.
+- The three-domain test asked for by name (§7 amendment): **Google returns real content for
+  `parliament.uk` (12 results) and `bills.parliament.uk` (10) — zero for `hansard.parliament.uk`.**
+  ⚠ Worth flagging: Gemini's grounding chunks return `vertexaisearch.cloud.google.com/…` REDIRECT
+  URLs, not the underlying `parliament.uk` URL directly — the existing S6-era orientation code has
+  the same property, not something new introduced here, but relevant to "which return content": the
+  content is real, the URL in a `[W]` citation is a Google redirect that resolves to it. **xAI: not
+  run** — no `GROK_API_KEY` on this machine, same limitation as the rest of this report.
+
+`decideWebSearch`'s decision call itself was not exercised live in this session (would need a working
+corpus retrieval to reach it) — built to the same structured-JSON contract every other pass in this
+codebase uses, and gated off by default per house convention for anything unmeasured.
+
+**Files:** `lib/lex/general-chat.ts` (the tool-loop-avoiding decision + search + rendering),
+`lib/lex/orientation/web-search.ts` (`userId`/`ideaId` added to `WebSearchOptions`, threaded into
+both adapters' ledger calls), `lib/env-flags.ts` (`LEX_CHAT_WEB_SEARCH`, default off),
+`lib/lex/model-registry.ts` (`lex.chat-web-search-decide` pass), `app/api/admin/lex-general/route.ts`
+(passes `user.id` through).
+
+### Checks, this amendment round
+
+`tsc --noEmit` (app + scripts) clean · `check:model-registry` 28/28 · `check:lex-25d` 77/77 (two
+PRE-EXISTING stale assertions found and fixed in passing — see the change log entry — one expected a
+3rd-vendor count that S21's own xAI client addition made 4, one pointed at a route file Decision 92
+had already moved the code out of) · `check:orientation-injection` 8/8 (structural + live) ·
+`check:client-boundary` 599 files, 139 client, no edge · `check:flags` 54/54.
