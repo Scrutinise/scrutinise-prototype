@@ -1,5 +1,43 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-25 10:25 UTC — S24 — bill-vocab router flag, redirect resolution, orphan filter in builds, cost-alert cron live
+
+Brief: S20b close + S24 (given after the joint `build.ts` commit). Full write-up:
+`docs/SEARCH_S24_REPORT.md`. Five items, all complete:
+
+1. **Open select committee inquiries** — report only, not built. `committees-api.parliament.uk`
+   (same host `verify-citations.ts` already uses to get past the 403/Cloudflare wall) is a real,
+   open, unauthenticated API with live inquiry data and terms of reference — a way forward, not
+   built this session.
+2. **S20b §6** — already complete (peer session `c4`), independently re-verified via deployment SHA
+   rather than re-run. `docs/SEARCH_S20B_REPORT.md` §6 stands.
+3. **Router vocabulary (S23 step 3)** — `ROUTER_PROMPT_BILL_VOCAB` behind `LEX_ROUTER_BILL_VOCAB`
+   (default OFF), teaches the router that `legislation` also holds a bill's amendment papers,
+   memoranda and impact assessments. Measured via `measure-s24-bill-vocab.ts` against the 10
+   reconstructed bill questions plus the accepted gold set; output at
+   `docs/census/s24-bill-vocab.json`.
+4. **Redirect links** — every Google grounding URL now resolved to its final address before
+   storage/display (`lib/lex/orientation/resolve-redirect.ts`), both kept (`url` resolved,
+   `redirectUrl` the original wrapper for provenance). "Dead" (redirect itself unfollowable) kept
+   distinct from "blocked" (a real, resolved page returning non-2xx, e.g. bot-detection) — the
+   first draft conflated them and miscounted live government pages as dead.
+5. **Orphans in builds** — `build-research.ts` and `deepening.ts` now filter `r.orphaned` before a
+   search hit can become a citable `EvidenceItem`, matching `general-chat.ts`'s existing filter.
+   Two incidental stale check-script assertions found and fixed in passing
+   (`check-deepening.ts`, pre-existing/unrelated to this session; `check-lex-25r.ts`, caused by
+   this session's own earlier S21 `fetchedContentIsData` refactor).
+6. **Cost alert schedule** — new Railway service `cost-alert-cron`
+   (`14c05090-c751-4cd9-8858-3df46b214e18`), native `cronSchedule: 0 8 * * *`, deployed and proven
+   with one real forced run: MTD spend $21.4462 crossed the $20 threshold, Resend id
+   `01a0d817-3845-76c3-9a22-749a07f4ecf8`, `CostAlertSent` row confirmed independently in the
+   database (providerId and timestamp both match the container log exactly).
+
+**Shared-tree discipline followed throughout**, per the STOP instruction earlier this session: local
+HEAD confirmed matching `origin/Main` before touching anything, every modified file's full diff
+read against HEAD before staging (none contained another stream's work), and only S24's own files
+staged — the many other untracked files in this tree (BRIEF_26E/F/G, scratch `_*-tmp.ts` files,
+etc.) belong to other work and were left alone.
+
 ## 2026-09-25 00:24 UTC — INCIDENT — build-worker crash loop, caused and fixed same session
 
 **Caused by, and fixed by, this (SEARCH-stream) session — recorded in full rather than folded into

@@ -447,6 +447,43 @@ to a pair; signals are dated — hence 1,505 edges / 1,723 signals, and 162,733 
 whether the Lex build should file positions (one line in `build.ts`), and the now-misleading
 `NO_PRODUCER_NOTE.POSITIONS`.
 
+## SEARCH THREAD — last updated 2026-09-25 10:25 UTC (S24)
+
+*This section belongs to the SEARCH stream. Reports: `docs/SEARCH_S21_REPORT.md`,
+`docs/SEARCH_S22_REPORT.md`, `docs/SEARCH_S24_REPORT.md`. S20b's close-out lives in its own report,
+`docs/SEARCH_S20B_REPORT.md` §6.*
+
+### SEARCH S24 — bill-vocab router flag, redirect resolution, orphan filter in builds, cost-alert cron live (2026-09-25 10:25)
+
+▼ **Five items, all complete, all reported in `docs/SEARCH_S24_REPORT.md`.** Open select-committee
+inquiries: `committees-api.parliament.uk` is real, open, unauthenticated — same host
+`verify-citations.ts` already uses to get past the 403 wall — report only, not built. S20b §6:
+already complete (peer session c4), independently re-verified via deployment SHA. Router
+vocabulary: `LEX_ROUTER_BILL_VOCAB` (default OFF) teaches the router `legislation` also holds a
+bill's amendment papers/memoranda/impact assessments — S23 §2 found the corpus wiring correct but
+the router never selecting it for 5 of 10 real bill questions; measured in
+`docs/census/s24-bill-vocab.json`. Redirect links: every Google grounding URL resolved to its final
+address before storage (`resolve-redirect.ts`), "dead" (unfollowable) kept distinct from "blocked"
+(a real page's own bot-detection, e.g. a 403 on a government host) — conflating them first
+miscounted live pages as dead. Orphans in builds: `build-research.ts`/`deepening.ts` now filter
+`r.orphaned` before a hit can become a citable `EvidenceItem`, matching `general-chat.ts`'s existing
+filter.
+
+▶ **Cost alert schedule — decision 6 resolved as a NEW Railway service, not the Ops service**
+(Ops cannot run `scrutinise-web` code). `cost-alert-cron` built, first deploy failed on a Clerk key
+because Nixpacks ran the full `next build` — fixed by mirroring build-worker's own
+`buildCommand: npx prisma generate` override, which was sitting there to copy from the start.
+⚠ **A `SUCCESS` build status on a cron service proves the image built, nothing about whether the
+job has ever run** — Railway does not execute a cron's start command on deploy, only on schedule.
+Forced one real run via `deploymentInstanceExecutionCreate` (the same mutation Railway's own
+dashboard Trigger button uses): MTD spend $21.4462 crossed $20, Resend id
+`01a0d817-3845-76c3-9a22-749a07f4ecf8`, independently confirmed against the `CostAlertSent` table
+(providerId and timestamp match the container log exactly).
+
+▶ **Shared-tree discipline** (per the STOP instruction earlier this session, now in root
+CLAUDE.md): every modified S24 file diffed in full against HEAD before staging, confirming none
+carried another stream's uncommitted work; local HEAD confirmed matching `origin/Main` first.
+
 ## SEARCH THREAD — last updated 2026-09-09 05:01 UTC (S19)
 
 *This section belongs to the SEARCH stream. Report: `docs/SEARCH_S19_REPORT.md`.
