@@ -238,6 +238,18 @@ export const CAPABILITY_FLAGS = [
   // right section, so a caller can tell "ran, agreed" from "did not run" — CLAUDE.md §18's
   // corollary again, one mechanism along.
   'LEX_SEARCH_WITHIN_DOC',
+  // S23 §2 / S24 step 2 — BILL-PUBLICATION VOCABULARY. `bills-api` is correctly wired into the
+  // `legislation` stream (S23 §2), and every one of its publications ranks 1st or 3rd there once
+  // that stream is actually searched — but the ROUTER never selects `legislation` for 5 of 10 real
+  // bill questions, because "what amendments were tabled" reads as a debates/committees question
+  // and "written evidence on [a bill]"/"impact assessment for [a bill]" read as committees/guidance
+  // questions. `ROUTER_PROMPT_BILL_VOCAB` (query-expansion.ts) tells the model legislation ALSO
+  // holds a bill's own amendment papers, memoranda and impact assessments — additive, never
+  // instead of whatever else the question already routes to.
+  //
+  // ⚠ DEFAULT OFF pending the S24 measurement (routing on the 10 bill questions, regression check
+  // against the accepted gold set) — see docs/SEARCH_S24_REPORT.md.
+  'LEX_ROUTER_BILL_VOCAB',
   //
   // ⚠⚠ `LEX_MERGE_COVERAGE` WAS HERE AND WAS RETIRED ON 2026-08-26 (S14 §2). It was S13's minimal
   // experiment — reallocate the post-floor slots by query-term coverage. Measured: **+2 of 65**

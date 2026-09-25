@@ -548,10 +548,44 @@ So route to legislation, IN ADDITION to whatever else you choose, when the quest
 
 ⚠ This does not make legislation relevant to everything. A question about what a measure DID, what a court decided, or what a committee concluded is not an appraisal question, and legislation should be omitted from it exactly as before.`
 
+/**
+ * S23 §2 / S24 step 2 — BILL-PUBLICATION VOCABULARY. `LEX_ROUTER_BILL_VOCAB`, default OFF.
+ *
+ * ⚠ THE GAP, MEASURED, NOT ASSUMED: S23 §2 found `bills-api` correctly wired into the
+ * `legislation` stream's `extraCorpora` leg — a bill's amendment papers, explanatory notes,
+ * memoranda and impact assessments all rank 1st or 3rd there, every time tested — and STILL
+ * unreachable through the full product on 5 of 10 real questions, because the ROUTER never
+ * selects `legislation` for them. All 3 amendment questions failed the same way: "what
+ * amendments were tabled…" reads to the router as a parliamentary-proceedings question
+ * (`debates`/`committees`), never as a legislation one, even though the amendment paper
+ * itself lives in `legislation`. "Written evidence submitted on [a bill]" and "impact
+ * assessment for [a bill]" fail identically — they route to `committees`/`guidance` alone and
+ * never touch `legislation` at all. `CORPUS_REACHABILITY.md` calling `bills-api` "reachable" on
+ * the wiring alone is the claim this measured against: structurally reachable and actually
+ * routed to are different facts, and for this vocabulary they diverged exactly half the time.
+ *
+ * ⚠ APPENDED, NOT WOVEN IN, same reasoning as every other block on this list: `ROUTER_PROMPT_BASE`
+ * reaches the model byte-identical with the flag off, so any change in the five existing streams'
+ * selection is attributable to this paragraph existing, not to a rewritten base prompt.
+ *
+ * ⚠ NAMES `legislation` EXPLICITLY, IN ADDITION TO WHATEVER ELSE THE QUESTION ALREADY ROUTES TO —
+ * an amendment or evidence question is very often ALSO a genuine debates/committees question (the
+ * chamber discussed the same amendments the paper records), so this is additive, never a
+ * replacement, matching how `ROUTER_PROMPT_APPRAISAL` treats `legislation` for impact assessments.
+ */
+const ROUTER_PROMPT_BILL_VOCAB = `
+
+One more thing the corpus descriptions above do not say: the legislation corpus ALSO holds a bill's own publications while it is going through Parliament — amendment papers (what amendments were tabled, and by whom), explanatory notes and memoranda, delegated powers memoranda, human rights memoranda, and impact assessments prepared for the bill.
+
+So route to legislation, IN ADDITION to whatever else you choose, when the question asks: what amendments were tabled to a bill (including a "marshalled list" of amendments); what a bill's explanatory notes, delegated powers memorandum or human rights memorandum say; what written evidence was submitted on a bill; or what a bill's impact assessment predicted. Tailor that query with the bill's own name plus the publication vocabulary it uses — for example "Illegal Migration Bill amendments tabled detention", "Border Security Asylum and Immigration Bill Human Rights Memorandum", "Pension Schemes Bill impact assessment".
+
+⚠ This is about a BILL specifically — a piece of legislation still going through Parliament, named as a Bill. General parliamentary evidence, debate or committee activity with no bill publication of its own is not this case, and legislation should be omitted from it exactly as before.`
+
 function routerSystemPrompt(): string {
   const base = ROUTER_PROMPT_BASE
     + (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_PROMPT_V2_STREAMS : '')
     + (flagEnabled('LEX_ROUTER_APPRAISAL') ? ROUTER_PROMPT_APPRAISAL : '')
+    + (flagEnabled('LEX_ROUTER_BILL_VOCAB') ? ROUTER_PROMPT_BILL_VOCAB : '')
     + (flagEnabled('LEX_STATS_STREAM') ? ROUTER_PROMPT_STATS_STREAM : '')
     + (flagEnabled('LEX_ROUTER_CONFIDENCE') ? ROUTER_PROMPT_CONFIDENCE : '')
   return base + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)
