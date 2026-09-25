@@ -22,13 +22,19 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   INITIAL_BACKGROUND_NAME, INITIAL_BACKGROUND_BLURB, INITIAL_QUESTIONS_NAME, INITIAL_QUESTIONS_BLURB,
 } from '@/lib/documents/initial-background-name'
+// ⚠ BRIEF_26G — the two documents that leave the building, same one-card-per-kind pattern.
+import {
+  COMMITTEE_EVIDENCE_NAME, COMMITTEE_EVIDENCE_BLURB, ONE_PAGE_SUMMARY_NAME, ONE_PAGE_SUMMARY_BLURB,
+} from '@/lib/documents/lex-26g-document-names'
 
-/** 17 Sep 2026 — the pair. One card component, two documents; the name and the one-line
- *  description come from the same constants the files' own titles use. */
-export type ExportCardKind = 'INITIAL_BACKGROUND' | 'INITIAL_QUESTIONS'
+/** 17 Sep 2026 — the pair; 26-G added two more. One card component, four documents; the name
+ *  and the one-line description come from the same constants the files' own titles use. */
+export type ExportCardKind = 'INITIAL_BACKGROUND' | 'INITIAL_QUESTIONS' | 'COMMITTEE_EVIDENCE' | 'ONE_PAGE_SUMMARY'
 const CARD: Record<ExportCardKind, { name: string; blurb: string; index: number }> = {
   INITIAL_BACKGROUND: { name: INITIAL_BACKGROUND_NAME, blurb: INITIAL_BACKGROUND_BLURB, index: 0 },
   INITIAL_QUESTIONS: { name: INITIAL_QUESTIONS_NAME, blurb: INITIAL_QUESTIONS_BLURB, index: 1 },
+  COMMITTEE_EVIDENCE: { name: COMMITTEE_EVIDENCE_NAME, blurb: COMMITTEE_EVIDENCE_BLURB, index: 2 },
+  ONE_PAGE_SUMMARY: { name: ONE_PAGE_SUMMARY_NAME, blurb: ONE_PAGE_SUMMARY_BLURB, index: 3 },
 }
 
 export interface ExportStatus {

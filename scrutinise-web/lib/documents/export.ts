@@ -15,6 +15,8 @@ import { prisma } from '@/lib/prisma'
 import { r2Put, r2SignedUrl } from '@/lib/r2'
 import { buildInitialBackground, ExportUnavailableError } from './build-initial-background'
 import { buildInitialQuestions, INITIAL_QUESTIONS_KIND } from './build-initial-questions'
+import { buildCommitteeEvidence, COMMITTEE_EVIDENCE_KIND } from './build-committee-evidence'
+import { buildOnePageSummary, ONE_PAGE_SUMMARY_KIND } from './build-one-page-summary'
 import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
 
@@ -29,7 +31,13 @@ export type ExportFormat = 'docx' | 'pdf'
  * NEVER searches: both builders read stored rows, and `check:export` asserts by regenerating
  * that the source list and the corpus-search time do not move.
  */
-export const EXPORT_KINDS = ['INITIAL_BACKGROUND', INITIAL_QUESTIONS_KIND] as const
+// ⚠ BRIEF_26G — TWO MORE KINDS, THE SAME SERVICE. Written Evidence and the One-Page Summary are
+// documents that LEAVE THE BUILDING (see the brief's own framing), which is exactly what this
+// service already guarantees for the briefing pair: frozen at a build, re-rendered on demand,
+// never served stale and silent.
+export const EXPORT_KINDS = [
+  'INITIAL_BACKGROUND', INITIAL_QUESTIONS_KIND, COMMITTEE_EVIDENCE_KIND, ONE_PAGE_SUMMARY_KIND,
+] as const
 export type ExportKind = (typeof EXPORT_KINDS)[number]
 export function isExportKind(v: unknown): v is ExportKind {
   return typeof v === 'string' && (EXPORT_KINDS as readonly string[]).includes(v)
@@ -38,6 +46,14 @@ export function isExportKind(v: unknown): v is ExportKind {
 async function buildFor(kind: ExportKind, ideaId: string) {
   if (kind === INITIAL_QUESTIONS_KIND) {
     const b = await buildInitialQuestions(ideaId)
+    return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+  }
+  if (kind === COMMITTEE_EVIDENCE_KIND) {
+    const b = await buildCommitteeEvidence(ideaId)
+    return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+  }
+  if (kind === ONE_PAGE_SUMMARY_KIND) {
+    const b = await buildOnePageSummary(ideaId)
     return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   const b = await buildInitialBackground(ideaId)
@@ -73,13 +89,20 @@ function downloadPath(ideaId: string, format: ExportFormat, kind: ExportKind): s
 }
 
 /** A filename a user can find again on their own disk. */
+const KIND_SLUG: Record<ExportKind, string> = {
+  INITIAL_BACKGROUND: 'initial-background',
+  [INITIAL_QUESTIONS_KIND]: 'initial-questions',
+  [COMMITTEE_EVIDENCE_KIND]: 'written-evidence',
+  [ONE_PAGE_SUMMARY_KIND]: 'one-page-summary',
+}
+
 export function exportFilename(ideaTitle: string, format: ExportFormat, kind: ExportKind = 'INITIAL_BACKGROUND'): string {
   const slug = (ideaTitle || 'idea')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 60) || 'idea'
-  return `${slug}-${kind === INITIAL_QUESTIONS_KIND ? 'initial-questions' : 'initial-background'}.${format}`
+  return `${slug}-${KIND_SLUG[kind]}.${format}`
 }
 
 /**

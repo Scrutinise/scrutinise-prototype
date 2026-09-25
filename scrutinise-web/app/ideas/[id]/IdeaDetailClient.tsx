@@ -2616,6 +2616,10 @@ export default function IdeaDetailClient({
                   research panel and the worklist in the working area. */}
               <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_BACKGROUND" />
               <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_QUESTIONS" />
+              {/* ⚠ BRIEF_26G §4d — the two documents that LEAVE the building, alongside the
+                  others, named. Same frozen-at-a-build record as the pair above. */}
+              <DocumentExports ideaId={idea.id} variant="page" kind="COMMITTEE_EVIDENCE" />
+              <DocumentExports ideaId={idea.id} variant="page" kind="ONE_PAGE_SUMMARY" />
               {/* Sprint 20-B/D — the proposal itself, and who can read it. Owner
                   only, because publishing is the owner's act (§20.3). */}
               {isOwner && (

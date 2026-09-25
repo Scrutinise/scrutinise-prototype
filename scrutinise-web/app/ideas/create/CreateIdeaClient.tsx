@@ -1212,7 +1212,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                         there to what it now actually contains.
                         ⚠ "What to do next" also still exists at the top of the WORKING AREA
                         (`WorkList`), which is where §2c said it belonged all along. */}
-                    <RerunOptions ideaId={state.ideaId} />
+                    <RerunOptions ideaId={state.ideaId} kernelComplete={kernelComplete} />
                   </>
                 }
               />
