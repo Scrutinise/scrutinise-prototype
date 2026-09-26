@@ -447,11 +447,118 @@ to a pair; signals are dated — hence 1,505 edges / 1,723 signals, and 162,733 
 whether the Lex build should file positions (one line in `build.ts`), and the now-misleading
 `NO_PRODUCER_NOTE.POSITIONS`.
 
-## SEARCH THREAD — last updated 2026-09-25 10:25 UTC (S24)
+## SEARCH THREAD — last updated 2026-09-25 19:30 UTC (S25)
 
 *This section belongs to the SEARCH stream. Reports: `docs/SEARCH_S21_REPORT.md`,
-`docs/SEARCH_S22_REPORT.md`, `docs/SEARCH_S24_REPORT.md`. S20b's close-out lives in its own report,
+`docs/SEARCH_S22_REPORT.md`, `docs/SEARCH_S24_REPORT.md`, `docs/SEARCH_S24B_REPORT.md`,
+`docs/SEARCH_S25_REPORT.md`. S20b's close-out lives in its own report,
 `docs/SEARCH_S20B_REPORT.md` §6.*
+
+### SEARCH S25 — the alert flood traced to the observer's own poll, restart classification, £ cost digest, corroboration fix (2026-09-25 19:30)
+
+▼▼ **THE OBSERVER WAS WAKING THE SERVICES IT WAS SUPPOSED TO BE QUIETLY WATCHING.** Railway's
+`environmentHistory` (reachable with the existing Project-Access-Token; `auditLogs` is not —
+it needs a `workspaceId` a project token cannot get) shows every single `resumed` event in a
+100-entry/~2.5h sample landing within 1–2 seconds of the observer's 15-minute tick marks, with
+each `slept` ~10-12 min later — a poll IS inbound traffic, and this project already knew that
+(`ops/who-is-knocking.ts`). A dashboard change at **2026-09-25T17:53:02.791Z** turned
+`sleepApplication` off on both services; zero restarts since, confirmed live. New script:
+`scripts/ingest/ops/who-changed-sleep.ts`.
+
+▶▶ **`serve-observer.ts` now classifies every restart as deploy/wake/crash/unknown** using
+those same `environmentHistory` events (`classifyRestart()`) — only `crash` can alert, only at
+3+/hour, proven with a forced 4-restart test (exactly 1 alert, on the 3rd). ⚠ A failed
+classification query reports `unknown`, never `crash` — a lookup failure is not evidence of a
+crash.
+
+▶▶ **The brief's four immediate-email rules are now the ONLY things that alert immediately** —
+memory/p95/rejections/Neon-storage all moved to a new pure `summarizeHealth()` (the digest's
+health line), which is a bigger change than "add classification" but follows directly from
+the brief's own "immediate email only for: [four rules]... everything else goes to the
+digest." Down->5min and crash-loop both now announce their own resolution and a reminder at
+6h if still open. **Spend threshold was already live** — `cost-alert-cron`, a Railway cron
+service, found not built. **Build failure is new** (`ops/build-failure-observer.ts`, wired
+into `ops.ts`'s existing 15-min cycle, proven live against production `build-worker`: 0
+events, correctly, on a healthy build).
+
+▶▶ **New daily £ cost digest replaces the old engineering-counters one** — confirmed to be the
+only daily digest email in this codebase (a separate ingest-progress email exists but reports
+corpus/section counts, out of scope). `scripts/cost-digest.ts` + `lib/lex/cost-digest-data.ts`
++ `/api/admin/cost-digest`: £ yesterday/MTD/projected month-end (verified against real data:
+£16.23 MTD, already past $20), purpose split (`PASS_PURPOSE` in `spend-ledger.ts`, keyed by
+the REAL pass names found in production, several of which a code-search alone would have
+missed), supplier split, Railway per-service, Neon storage (compute and Vercel both flagged
+UNCAPTURED, never hidden), top 5 ideas/users. ⚠⚠ **Top 5 ideas/users is measured to be a thin
+slice, not a representative one: only 18 of 7,823 `LlmSpend` rows (0.23%) carry a `userId`,**
+stated on the digest itself every time, not just in this report.
+
+▶ **False corroboration fixed and unit-tested against both real shapes**: identical snippet
+text across different URLs collapses to one (the defect, reproduced: 7 urls/1 sentence → 1);
+different text from the same url survives (the legitimate case, reproduced: 4 different Irish
+minimum-wage figures/1 url → all 4). Applied only to Google's adapter, where it was measured —
+not extended to xAI/OpenAI without evidence of the same defect there.
+
+▶ **OpenAI ("Luna") adapter built, code-complete, blocked on `OPENAI_API_KEY`** (in Vercel,
+not in this machine's `.env`): `searchOpenAI()`, `recordOpenaiUsage()` (composes token cost +
+OpenAI's own $10/1,000-calls tool fee), `gpt-6-luna` priced and registered — **on a docs read
+alone, same as `grok-4.7`'s entry, NOT a live call**. xAI's own fee confirmed from
+`docs.x.ai/docs/pricing`: $5/1k calls (web_search), $5/1k posts + $10/1k profiles (x_search).
+
+▶ Admin nav: "Corpus chat (test)" → `/admin/lex-general`, `app/admin/layout.tsx` had no
+ownership marker so edited directly.
+
+⚠⚠ **NEXT ACTION, CHARLIE'S: `OPENAI_API_KEY` locally (or run the proof from production once
+deployed) to finish the Luna live-reachability probe and the 10-question comparison's openai
+column.** §5's Grok/orientation production proofs are written up as pending on THIS sprint's
+own deploy, per the no-mid-sprint-git rule — same pattern S24b left them in.
+`docs/SEARCH_S25_REPORT.md` has the full detail, including every check run and its result.
+
+### SEARCH S24b — GROK_API_KEY live on build-worker, Anthropic web-search adapter built and measured, blocked on Charlie for Vercel (2026-09-25 11:02)
+
+▼ **`.env` confirmed git-ignored. `GROK_API_KEY` set on Railway `build-worker` and redeployed —
+confirmed by `meta.commitHash` matching HEAD, not status alone.** `xaiKey` added to
+`/api/health` beside `geminiKey` (uncommitted, ships end-of-sprint). ⚠⚠ **CORRECTION TO THE
+BRIEF (CLAUDE.md §0): "only CC's sandbox is blocked" from Anthropic was tested and found FALSE
+this session** — direct `curl`/live calls from this machine reached all three providers fine,
+including a real Anthropic `web_search` call. No temporary admin route was built or needed.
+
+▶ **Built the Anthropic adapter that did not exist** (`WebSearchProvider` was `xai|google`
+only): `searchAnthropic()` in `web-search.ts`, verified live — `web_search_20250305` +
+`emit_results` with `tool_choice: 'auto'` (forcing directly onto `emit_results` untested, may
+reject the server tool). New `recordAnthropicUsage()` (spend-ledger.ts) composes token cost +
+the $10/1,000-searches tool fee, `null` when no rate on file rather than a partial total.
+
+▶ **Ran the ten-question Google-vs-Anthropic comparison** (general-chat's own search-decision
+criteria). Google: 10/10, $0.0048/query avg, 11.8s avg. Anthropic: 6/10 completed (⚠ ~40%
+`fetch failed` under sustained calls from this sandbox specifically — a delayed retry is now in
+the adapter, measured to help but not close the gap; **unverified whether this reproduces on
+Vercel**), $0.0349/successful query, 12.9s. ⚠⚠ **Found a real quality defect in Google's
+structuring pass while scoring "sources a reviewer would accept": one question returned SEVEN
+different real URLs carrying the IDENTICAL sentence verbatim** — one grounded fact copy-pasted
+across every source slot, reading as seven citations when it is zero independent ones.
+Anthropic's six successful runs carried no instance of this. **Recommendation: Google stays the
+default** (cheaper, completes reliably) — Anthropic is the stronger per-source quality result
+and worth reconsidering once its completion rate is confirmed outside this sandbox.
+`DEFAULT_ORDER` left unchanged; this is a recommendation, not an applied change.
+
+▶ **Item 4 (real [W] addresses) already satisfied for chat web search — no new work needed**:
+it calls the same `webSearch()` orientation calls, so S24's redirect-resolution fix and the new
+Anthropic adapter's already-direct URLs both apply automatically, one code path not two.
+
+▶ **Handover written to `docs/HANDOVER_CHAT_WEB_SEARCH.md`** for the Lex conversation — what
+`general-chat.ts` built, the [W] boundary, the two-search cap, the provider comparison, and
+what idea-chat would need to decide itself (its own search-decision prompt, rate-limit
+counting, whether [W] sources persist).
+
+⚠⚠ **BLOCKED ON CHARLIE, TWO ITEMS, SAME ROOT CAUSE:** orientation's X-tier and the
+"prove `GROK_API_KEY` works from production" proof (item 1) both run in VERCEL functions, not on
+`build-worker` — and Vercel env vars are still SAML-blocked from every session (§19).
+**Charlie: add `GROK_API_KEY` to Vercel and redeploy** — once `/api/health`'s `xaiKey` reads
+`true` in production, both remaining proofs (one `callModelJson` xai call, one orientation
+Page-1 briefing producing a ledger row + [W] source) become completable.
+
+▶ Items 6 (amends/repeals — waits for the graphs conversation) and 7 (git worktrees — waits for
+a clean tree) correctly not started, per the brief. Earlier:
 
 ### SEARCH S24 — bill-vocab router flag, redirect resolution, orphan filter in builds, cost-alert cron live (2026-09-25 10:25)
 

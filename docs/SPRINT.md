@@ -1,64 +1,73 @@
-# SPRINT — vector wired into the LEGISLATION stream (re-issued 2026-08-06)
+# SPRINT — SEARCH S25 (2026-09-25)
 
-> **Provenance note.** This brief was handed over in conversation twice and did not reach disk
-> either time — the exact failure mode `SEARCH_STRATEGY v3` §1.8 names as a standing rule
-> ("a sprint brief handed over verbally is a sprint brief that can be lost"). CC has written it
-> here from Charlie's 6 Aug re-issue, cross-checked against `SEARCH_STRATEGY v3` §12
-> ("Immediate next steps", refreshed 6 Aug), which independently states items 1–4 below.
-> **Charlie: correct anything mis-stated — the bracketed original detail is summarised, not quoted.**
+> Handed over in chat, written to disk per the sprint-brief protocol (`docs/CLAUDE.md` §12).
+> Continues `docs/SEARCH_S24B_REPORT.md` / handoff_summary.md SEARCH THREAD (S24b, 2026-09-25).
+> S24b items 1–2 (Grok key proof, orientation engagement proof) were blocked purely on
+> Charlie's own Vercel action (`GROK_API_KEY` added, redeployed) — S25 finishes them as
+> Phase 5 below, alongside new work.
 
-## Goal
+## Why
 
-Wire vector search into the **legislation stream only** (`tier='legislation'`). Audit, build and
-scoping-confirmation land now. **The full gold-set measurement is deliberately HELD.**
+Charlie received ~80 false "RESTARTED" emails in one morning, and the daily digest reports
+engineering counters rather than cost. The owner needs one daily answer — what did
+yesterday cost in £, and on what — and immediate emails only when something needs him.
 
-## Why measurement is held (not forgotten)
+## Scope
 
-The index has changed **twice** since any prior baseline was drawn:
+1. **Confirm the cause.** From Railway's activity log: when Serverless (sleeping) was
+   enabled on `fts-serve` and `vector-serve`, and by whom. Confirm the restarts coincide
+   with the observer's 15-minute checks. After Charlie turns sleeping off, show the restart
+   emails stopped.
+2. **Restart classification.** The observer labels every restart as `deploy` (new commit),
+   `wake from sleep`, or `crash` (read Railway's deployment status and exit reason). Only
+   crashes alert, and only three or more in an hour.
+3. **Alert rules.** Immediate email only for: service down more than five minutes; crash
+   loop; spend threshold; build failure. One email per incident, one when resolved, a
+   reminder after six hours if still open. Everything else goes to the digest. Prove each
+   rule fires once on a forced test.
+4. **Daily digest, rewritten, replacing the current one** (`serve-observer.ts`'s
+   `renderDigest` — the only daily digest email in this codebase, and the one reporting
+   memory/concurrency/throughput/cache/Neon "engineering counters"):
+   - Yesterday's total in £, and month to date against the $20/$50 thresholds with a
+     projected month-end.
+   - Split by purpose: user builds, Lex chat, web orientation, search (router, reranker,
+     embeddings), ingest and maintenance, tests and measurement. Map each ledger pass name
+     to one purpose; list any pass not mapped rather than hiding it.
+   - Split by supplier: Gemini, Anthropic, xAI, OpenAI, Railway per service (from Railway's
+     usage API), Neon (storage and compute), Vercel if its API allows.
+   - Top five ideas and users by cost.
+   - Health in one line ("all services healthy") unless there is an exception.
+   - Report which costs cannot be captured automatically, so Charlie knows what the total
+     excludes.
+   - Raw counters move to a link, not the email body.
+5. **S24b finish (Grok key now in Vercel, redeployed).** Prove the key from production and
+   show a real orientation briefing with both web and X tiers, cost and time each.
+6. **OpenAI Luna adapter.** Add `gpt-6-luna` with OpenAI's web search as a third provider,
+   through the model registry. Run the same ten questions; report cost, time and
+   reviewer-acceptable sources against Google and Anthropic. Confirm xAI's web-search fee
+   from `docs.x.ai`.
+7. **False corroboration.** Google returning seven URLs with one identical sentence: fix
+   before orientation is relied on. A snippet must come from its own page; identical
+   snippets across different URLs are flagged and collapsed to one.
+8. **Admin link.** Add "Corpus chat (test)" to the admin panel navigation, pointing to
+   `/admin/lex-general`. If the admin navigation belongs to another stream, write the
+   one-line change for them instead — checked this session: `app/admin/layout.tsx` carries
+   no stream-ownership marker, so this is done directly.
 
-1. the coverage fix (4 Aug — 1,191,345 un-indexed rows merged, `unindexed=0`), and
-2. the dedup/orphan removal (5 Aug — 19,161 rows removed, which changed BM25 **document
-   frequencies** and therefore ranking for every query).
+## Out of scope this sprint (per the brief)
 
-So every number in `VECTOR_FULL_RECONFIRM.md` (fusion weight 0.7, vector-alone 70.5%, fused 71.2%)
-was measured against an index that no longer exists. Re-baselining now would only have to be done
-again once Charlie's answer-key validation pass lands. **Nothing measured before that pass is
-trustworthy** — `SEARCH_STRATEGY v3` §12.1 marks it "now genuinely urgent" for this reason.
+- S23 step 2 (amends/repeals into Lex chat) — waits for the graphs conversation's function.
+- Git worktree per stream — not started while any stream has uncommitted work.
 
-## Scope — in
+## Known blockers going in
 
-1. **Audit the router's per-stream dispatch.** How a query is routed to a stream today, and where a
-   per-stream retrieval strategy can be attached without disturbing the other streams.
-2. **Design the flag scope.** Config-driven, flag-gated, **default OFF** (§1.7). The flag must be
-   able to say "vector on, for legislation, only" — not "vector on".
-3. **Build BM25+vector fusion for legislation only.**
-4. **Confirm the scoping holds** — prove the other streams are byte-identical with the flag on and
-   off, so this cannot regress anything already serving users.
-5. **`corpus_vec` orphan drift — audit its scale and FIX IT, in this same piece of work.**
-   Confirmed by sampling on 5 Aug: ids deleted from `corpus_fts` still resolve in `corpus_vec` and
-   `corpus_chunks`, so vector search can surface superseded content that keyword search no longer
-   can. Audit it the way `fts-hygiene.ts` did for `corpus_fts` — exhaustiveness proof, full-row R2
-   backup before deletion, dry-run then apply. Explicitly **not** a separate sprint (§12.3).
-
-## Scope — out (this sprint)
-
-- **The full gold-set comparison.** Held until the answer-key validation pass lands.
-- **Re-sweeping the fusion weight.** Belongs with the measurement, not before it. Carry 0.7 forward
-  as an unvalidated placeholder and say so wherever it appears.
-- Any other stream. Legislation first, one at a time (§12.7).
-
-## Acceptance
-
-- Vector fusion serves the legislation stream behind a flag that is **OFF by default**.
-- With the flag OFF, every stream returns exactly what it returns today — demonstrated, not assumed.
-- With it ON, only the legislation stream's behaviour changes.
-- `corpus_vec` / `corpus_chunks` reconcile against `corpus_sections` with a stated, exhaustive audit;
-  drift removed, backed up first, index rebuilt if the deletion requires it.
-- The held measurement is recorded as an explicit, named follow-up — not left implied.
-
-## Standing constraints
-
-- `docs/CLAUDE.md` §12 — no git mid-sprint; single `commit-all.sh` at the end.
-- `docs/CLAUDE.md` §17 — index/embedding rebuilds are Heavy Job Runner work, never Railway.
-- `INGEST_PLAYBOOK` §20 — rebuild after append **or deletion**, then restart `fts-serve`.
-- Concurrent sessions are active on this repo (Lex/UX Sprint 2.5, stats). Touch search files only.
+- No script has ever queried a Railway activity/audit log — needs fresh GraphQL
+  introspection; may not exist on this API at all (Railway's audit log may be UI-only).
+- `VERCEL_TOKEN` is SAML-blocked on every project-scoped endpoint (docs/CLAUDE.md §19) —
+  Vercel's own usage cannot be pulled programmatically; will be reported as an uncaptured
+  cost, not silently omitted.
+- `OPENAI_API_KEY` is unset in the local `.env` (checked 2026-09-25) — the brief says the
+  key is in Vercel; needed locally too (or a production-only proof path) to build/verify
+  the Luna adapter.
+- No Neon compute-billing API exists anywhere in this repo or was found live — compute is
+  reported as uncaptured, same as Vercel.
