@@ -45,9 +45,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             <span aria-hidden>←</span> Scrutinise
           </Link>
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-            Admin
-          </span>
+          <nav className="flex items-center gap-4">
+            {/* S25 — admin panel navigation link to the corpus-chat test surface. */}
+            <Link
+              href="/admin/lex-general"
+              className="text-xs font-medium text-zinc-500 hover:text-zinc-900"
+            >
+              Corpus chat (test)
+            </Link>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+              Admin
+            </span>
+          </nav>
         </div>
       </header>
       {children}
