@@ -79,6 +79,15 @@ const DEFAULT_RATES: Record<string, ModelRate> = {
   'grok-4.20-0309-non-reasoning': { inPerM: 1.25, outPerM: 2.50 },
   'grok-4.20-multi-agent-0309': { inPerM: 1.25, outPerM: 2.50 },
   'grok-build-0.1': { inPerM: 1.00, outPerM: 2.00 },
+
+  // ── OpenAI ─────────────────────────────────────────────────────────────────────────────────
+  // S25 — Source: https://developers.openai.com/api/docs/pricing. Checked 2026-09-25.
+  // ⚠ SAME TIERING CAVEAT AS xAI, ABOVE: gpt-6-luna is priced in Standard/Batch/Flex/Fast-mode
+  // tiers, each with short- and long-context bands. This records the Standard, SHORT-context
+  // rate (the cheapest common case) — a long-context or Fast-mode call will be understated,
+  // same known-direction tradeoff the xAI comment above accepts rather than threading context
+  // length into `priceBuild`.
+  'gpt-6-luna': { inPerM: 0.10, outPerM: 0.50 },
 }
 
 /** USD → GBP. Overridable; a rate that moves is not worth a deploy. */

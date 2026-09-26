@@ -299,7 +299,7 @@ async function runChatWebSearches(
     for (const r of out.results.slice(0, 3)) {
       raw.push({
         title: r.title,
-        publisher: r.provider === 'xai' ? 'web search (xAI)' : 'web search (Google)',
+        publisher: r.provider === 'xai' ? 'web search (xAI)' : r.provider === 'anthropic' ? 'web search (Anthropic)' : r.provider === 'openai' ? 'web search (OpenAI)' : 'web search (Google)',
         url: r.url,
         why: r.snippet || `found searching "${query}"`,
       })

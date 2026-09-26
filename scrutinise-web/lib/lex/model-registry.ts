@@ -61,9 +61,13 @@ export const REACHABLE: Record<Provider, string[]> = {
   // against it with a key.
   xai: ['grok-4.7', 'grok-4.6', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning',
     'grok-4.20-0309-non-reasoning', 'grok-build-0.1'],
-  // ⚠ No key on this machine (probe-model-access.ts, 17 Aug 2026). Listed so that pointing
-  // a pass at OpenAI fails with "no key" rather than "unknown model".
-  openai: [],
+  // ⚠ No key on this machine as of 17 Aug 2026 (probe-model-access.ts). S25 — Charlie has
+  // since put `OPENAI_API_KEY` in Vercel (production), but this repo's local `.env` still
+  // has none (checked 25 Sep 2026), so `gpt-6-luna` below is listed on the strength of a
+  // docs read alone (developers.openai.com/api/docs/pricing, 25 Sep 2026), NOT a live call —
+  // per this file's own rule that is weaker evidence, exactly like `grok-4.7`'s entry above.
+  // Not made any pass's default until a live 1-token call has echoed this model id back.
+  openai: ['gpt-6-luna'],
 }
 
 /**
