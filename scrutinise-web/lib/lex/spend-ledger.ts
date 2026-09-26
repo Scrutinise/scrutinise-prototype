@@ -234,6 +234,74 @@ export function recordXaiUsage(
   })
 }
 
+/**
+ * S24b — Anthropic's web_search tool, verified live 2026-09-25 against a real call
+ * (docs.anthropic.com pricing: $10 per 1,000 `web_search_requests`, billed on top of tokens —
+ * unlike xAI, Anthropic's `usage` block reports NO single all-in cost, so it has to be
+ * composed here from the rate card plus the tool fee rather than read straight off the vendor.
+ *
+ * ⚠ ONLY COMPOSED WHEN A RATE IS ON FILE FOR THE MODEL. A tool fee added to a silently-missing
+ * token cost would look like a real total and understate it — the same "most flattering
+ * possible bug" `recordGeminiUsage`'s header warns about. No rate ⇒ `actualUsd` stays null and
+ * the row records as unpriced, same as any other unrated model, rather than a partial number
+ * dressed as a whole one.
+ */
+const ANTHROPIC_WEB_SEARCH_USD_PER_CALL = 0.01 // $10 / 1,000 requests
+
+export function recordAnthropicUsage(
+  body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd' | 'toolCalls'>,
+): Promise<PricedSpend> {
+  const b = body as {
+    usage?: { input_tokens?: number; output_tokens?: number; server_tool_use?: { web_search_requests?: number } }
+  } | null
+  const u = b?.usage ?? {}
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+  const tokensIn = num(u.input_tokens)
+  const tokensOut = num(u.output_tokens)
+  const toolCalls = num(u.server_tool_use?.web_search_requests) || null
+  const rate = rates()[ctx.model]
+  const actualUsd = toolCalls && rate
+    ? (tokensIn / 1_000_000) * rate.inPerM + (tokensOut / 1_000_000) * rate.outPerM + toolCalls * ANTHROPIC_WEB_SEARCH_USD_PER_CALL
+    : null
+  return recordSpend({ ...ctx, tokensIn, tokensOut, actualUsd, toolCalls })
+}
+
+/**
+ * S25 — OpenAI's `web_search` tool via the Responses API. Confirmed from
+ * developers.openai.com/api/docs/pricing (25 Sep 2026, not a live call — see
+ * model-registry.ts's REACHABLE.openai comment): **$10.00 per 1,000 calls**, "search content
+ * tokens billed at model rates" — i.e. unlike Anthropic's flat per-request fee, the tokens
+ * OpenAI's own search fetches ALSO count in `usage.output_tokens`, so only the per-call
+ * SURCHARGE is added on top of the ordinary rate-card token cost, not a second token cost.
+ *
+ * ⚠ SAME "ONLY COMPOSED WHEN A RATE IS ON FILE" RULE AS `recordAnthropicUsage`, for the
+ * identical reason: a tool fee stacked on a silently-missing token cost would look like a
+ * real total while understating it.
+ *
+ * `toolCalls` is not in OpenAI's `usage` block the way Anthropic's is — it is counted from
+ * the response's own `output` array (entries of `type: 'web_search_call'`), so the caller
+ * passes the full response body, same convention as `recordXaiUsage`.
+ */
+const OPENAI_WEB_SEARCH_USD_PER_CALL = 0.01 // $10 / 1,000 calls
+
+export function recordOpenaiUsage(
+  body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd' | 'toolCalls'>,
+): Promise<PricedSpend> {
+  const b = body as {
+    usage?: { input_tokens?: number; output_tokens?: number }
+    output?: Array<{ type?: string }>
+  } | null
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+  const tokensIn = num(b?.usage?.input_tokens)
+  const tokensOut = num(b?.usage?.output_tokens)
+  const toolCalls = (b?.output ?? []).filter((o) => o.type === 'web_search_call').length || null
+  const rate = rates()[ctx.model]
+  const actualUsd = toolCalls && rate
+    ? (tokensIn / 1_000_000) * rate.inPerM + (tokensOut / 1_000_000) * rate.outPerM + toolCalls * OPENAI_WEB_SEARCH_USD_PER_CALL
+    : null
+  return recordSpend({ ...ctx, tokensIn, tokensOut, actualUsd, toolCalls })
+}
+
 /** Convenience: record straight from 25-A's `LlmUsage`, so a build pass is one line. */
 export const recordUsage = (
   usage: LlmUsage, ctx: Omit<SpendEntry, 'model' | 'tokensIn' | 'tokensOut'>,
@@ -323,4 +391,81 @@ export function formatTotal(t: SpendTotal): string {
   const base = formatPence(t.pence)
   if (t.unpricedCalls === 0) return base
   return `${base} — ⚠ ${t.unpricedCalls} of ${t.calls} calls could not be priced`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// S25 — the cost digest's "purpose" split. Charlie's own six categories: user builds, Lex
+// chat, web orientation, search, ingest and maintenance, tests and measurement.
+//
+// ⚠ KEYED BY PASS NAME, NOT `stream` — the brief asks to "map each ledger PASS NAME to one
+// purpose," and `stream` is coarser (e.g. `'lex'` covers both idea-chat and idea-building
+// passes). A pass queried from `LlmSpend` that has no entry here is reported as UNMAPPED by
+// the digest, never folded into a purpose silently — same rule as `KNOWN_STALE` in
+// model-registry.ts and the `unclassifiedPasses` list in spend-admin.ts.
+//
+// ⚠ Deepening (`deepening.*`) is filed under 'user builds', not 'Lex chat': it gathers and
+// sifts evidence FOR an idea's build in the background, not a chat turn — closer in kind to
+// `build.draft`/`build.settle` than to `lex.chat`. This is a judgement call on a lookup
+// table, not an architectural claim; move an entry here if Charlie reads it differently.
+//
+// ⚠ EMBEDDINGS ARE NOT IN THIS MAP, AND CANNOT BE. Vector search's Gemini embedding calls
+// happen inside `vector-serve` (a separate Railway service) and are never stamped into
+// `LlmSpend` — there is no rate card entry for an embedding model in build-cost.ts either.
+// The digest reports vector-serve's own "embed calls/day" counter (from its live `/stats`,
+// the same figure the old serve-observer digest printed) as an UNPRICED count alongside this
+// purpose split, not folded into a £ total it cannot honestly produce.
+export type SpendPurpose = 'user builds' | 'Lex chat' | 'web orientation' | 'search' | 'ingest and maintenance' | 'tests and measurement'
+
+export const PASS_PURPOSE: Record<string, SpendPurpose> = {
+  // 'user builds' — producing/checking a user's idea build, including its research and
+  // adversarial passes and Deepening's evidence-gathering (see the header note above).
+  'build.draft': 'user builds',
+  'build.settle': 'user builds',
+  'build-research.gather': 'user builds',
+  'build-adversarial.adversarial': 'user builds',
+  'build-adversarial-strong.adversarial': 'user builds',
+  'b22-adversarial.adversarial': 'user builds',
+  'deepening.gather': 'user builds',
+  'deepening.sift': 'user builds',
+  'deepening.adversarial': 'user builds',
+  'deepening.consequences': 'user builds',
+
+  'lex.chat': 'Lex chat',
+  'lex.field': 'Lex chat',
+  'lex.material': 'Lex chat',
+  'lex.feedback': 'Lex chat',
+  'lex.general-chat': 'Lex chat',
+  'lex.chat-web-search-decide': 'Lex chat',
+  'lex.chat-web-search': 'Lex chat',
+
+  'orientation.web': 'web orientation',
+  'orientation.web-search': 'web orientation',
+  'orientation.web-fallback': 'web orientation',
+  'orientation.x': 'web orientation',
+
+  'search.reranker': 'search',
+  'search.query-expansion': 'search',
+  'search.query-router': 'search',
+  // LEX_ROUTER_BILL_VOCAB (S24) — the router's bill-publication vocabulary pass.
+  'smart-vocabulary.gather': 'search',
+
+  'graph.position-extract': 'ingest and maintenance',
+  'graph.proposition-derive': 'ingest and maintenance',
+
+  's24b.web-search-comparison': 'tests and measurement',
+  's24b.retry-probe': 'tests and measurement',
+  's24b.smoke': 'tests and measurement',
+  'BACKFILL_TITLE': 'tests and measurement',
+  'CLASSIFY_STALE': 'tests and measurement',
+  'CLASSIFY_STALE_V2': 'tests and measurement',
+  'MERGE_TIGHTENED': 'tests and measurement',
+  'reachability': 'tests and measurement',
+  // '-test' in its own name — a quality probe on the EDM extraction pass, not the pass itself.
+  'graph.edm-test': 'tests and measurement',
+}
+
+/** The purpose for a pass, or `null` if it is not in `PASS_PURPOSE` — callers must report an
+ *  unmapped pass, never silently fold it into a default bucket. */
+export function purposeFor(pass: string): SpendPurpose | null {
+  return PASS_PURPOSE[pass] ?? null
 }

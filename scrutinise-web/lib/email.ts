@@ -859,3 +859,115 @@ This is a one-time notice for this threshold this month; you will not be emailed
 
   return sendEmail({ to: toEmail, subject, html, text })
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// sendCostDigestEmail — S25. Replaces serve-observer.ts's old daily digest (engineering
+// counters: memory/concurrency/throughput/cache/Neon) with ONE daily answer in £: what did
+// yesterday cost, and on what. Same null-means-unpriced discipline as sendCostAlertEmail and
+// spend-admin.ts's fold() — a total is never a partial sum dressed as a complete one.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CostDigestLine { label: string; gbp: number | null; calls?: number }
+
+export interface CostDigestInput {
+  toEmail: string
+  dateUtc: string
+  rawLinkUrl: string
+  healthLine: string
+  yesterday: { gbp: number | null; unpricedCalls: number }
+  monthToDate: { gbp: number | null; usd: number | null; unpricedCalls: number; projectedUsd: number | null; thresholds: number[] }
+  byPurpose: CostDigestLine[]
+  unmappedPasses: string[]
+  bySupplier: CostDigestLine[]
+  railwayServices: Array<{ name: string; usd: number }>
+  neon: { storageUsd: number; computeCaptured: boolean }
+  vercelCaptured: boolean
+  topIdeas: CostDigestLine[]
+  topUsers: CostDigestLine[]
+}
+
+const fmtGbp = (v: number | null): string => (v == null ? 'not known' : `£${v.toFixed(2)}`)
+
+function costDigestLines(rows: CostDigestLine[]): { text: string; html: string } {
+  if (!rows.length) return { text: '  (none)', html: '<p style="color:#71717a;">(none)</p>' }
+  const text = rows.map((r) => `  ${r.label.padEnd(24)} ${fmtGbp(r.gbp)}${r.calls != null ? ` (${r.calls} calls)` : ''}`).join('\n')
+  const html = `<ul style="padding-left:20px;margin:4px 0;">${rows.map((r) =>
+    `<li>${r.label}: <strong>${fmtGbp(r.gbp)}</strong>${r.calls != null ? ` (${r.calls} calls)` : ''}</li>`).join('')}</ul>`
+  return { text, html }
+}
+
+export async function sendCostDigestEmail(input: CostDigestInput): Promise<SendResult> {
+  const { toEmail, dateUtc, rawLinkUrl, healthLine, yesterday, monthToDate, byPurpose, unmappedPasses, bySupplier, railwayServices, neon, vercelCaptured, topIdeas, topUsers } = input
+  const subject = `Scrutinise cost digest ${dateUtc} — ${fmtGbp(yesterday.gbp)} yesterday`
+
+  const purpose = costDigestLines(byPurpose)
+  const supplier = costDigestLines(bySupplier)
+  const ideas = costDigestLines(topIdeas)
+  const users = costDigestLines(topUsers)
+
+  const uncaptured: string[] = []
+  if (!neon.computeCaptured) uncaptured.push('Neon compute (no billing API — storage only, below)')
+  if (!vercelCaptured) uncaptured.push('Vercel (VERCEL_TOKEN is SAML-blocked on every project-scoped endpoint)')
+
+  const text = `
+Cost digest — ${dateUtc}
+
+Health: ${healthLine}
+
+Yesterday: ${fmtGbp(yesterday.gbp)}${yesterday.unpricedCalls > 0 ? ` (⚠ ${yesterday.unpricedCalls} unpriced call(s) not included — true total is at least this much)` : ''}
+Month to date: ${fmtGbp(monthToDate.gbp)} ($${monthToDate.usd?.toFixed(2) ?? '?'}) against $${monthToDate.thresholds.join('/$')} thresholds
+Projected month-end: ${monthToDate.projectedUsd != null ? `$${monthToDate.projectedUsd.toFixed(2)}` : 'not known'}
+
+By purpose:
+${purpose.text}
+${unmappedPasses.length ? `\n⚠ Not mapped to a purpose (shown, not hidden): ${unmappedPasses.join(', ')}\n` : ''}
+By supplier:
+${supplier.text}
+
+Railway, per service:
+${railwayServices.map((r) => `  ${r.name.padEnd(24)} $${r.usd.toFixed(2)}/month`).join('\n') || '  (none)'}
+
+Neon storage: $${neon.storageUsd.toFixed(2)}/month
+
+Top 5 ideas by cost:
+${ideas.text}
+
+Top 5 users by cost:
+${users.text}
+
+Costs NOT captured automatically: ${uncaptured.length ? uncaptured.join('; ') : '(none known)'}
+
+Raw counters: ${rawLinkUrl}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">Cost digest — ${dateUtc}</h2>
+  <p>${healthLine}</p>
+  <p style="font-size: 22px; font-weight: 700; padding: 12px; background: #f4f4f5; border-radius: 6px;">${fmtGbp(yesterday.gbp)} <span style="font-size:13px;font-weight:400;color:#71717a;">yesterday</span></p>
+  ${yesterday.unpricedCalls > 0 ? `<p style="color:#b45309;">⚠ ${yesterday.unpricedCalls} unpriced call(s) not included — true total is at least this much.</p>` : ''}
+  <p>Month to date: <strong>${fmtGbp(monthToDate.gbp)}</strong> ($${monthToDate.usd?.toFixed(2) ?? '?'}) against $${monthToDate.thresholds.join('/$')} thresholds.
+  Projected month-end: <strong>${monthToDate.projectedUsd != null ? `$${monthToDate.projectedUsd.toFixed(2)}` : 'not known'}</strong>.</p>
+  <h3 style="font-size:15px;">By purpose</h3>
+  ${purpose.html}
+  ${unmappedPasses.length ? `<p style="color:#b45309;">⚠ Not mapped to a purpose: ${unmappedPasses.join(', ')}</p>` : ''}
+  <h3 style="font-size:15px;">By supplier</h3>
+  ${supplier.html}
+  <h3 style="font-size:15px;">Railway, per service</h3>
+  <ul style="padding-left:20px;margin:4px 0;">${railwayServices.map((r) => `<li>${r.name}: $${r.usd.toFixed(2)}/month</li>`).join('') || '<li>(none)</li>'}</ul>
+  <h3 style="font-size:15px;">Neon storage</h3>
+  <p>$${neon.storageUsd.toFixed(2)}/month</p>
+  <h3 style="font-size:15px;">Top 5 ideas by cost</h3>
+  ${ideas.html}
+  <h3 style="font-size:15px;">Top 5 users by cost</h3>
+  ${users.html}
+  <p style="color:#b45309;">Costs NOT captured automatically: ${uncaptured.length ? uncaptured.join('; ') : '(none known)'}</p>
+  <p style="color: #71717a; font-size: 13px;"><a href="${rawLinkUrl}">Raw counters</a></p>
+</body>
+</html>
+`.trim()
+
+  return sendEmail({ to: toEmail, subject, html, text })
+}
