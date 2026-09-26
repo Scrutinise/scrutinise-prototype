@@ -18,6 +18,10 @@ export const SERVICES = {
   'scrutinise-db': '2f0ef638-332c-4ed6-b8da-13384d90b87f',
   Ingest: 'a7f4d75f-d844-4e1c-8edf-2569346b31c9',
   Ops: 'f3397bee-e588-4b95-921f-2e0f2f169cc5',
+  // S25 — confirmed live via `project(id){services{edges{node{id name}}}}`, 25 Sep 2026.
+  // Both were previously missing from this map (found by ids only, printed as raw UUIDs).
+  'build-worker': 'c0d9fd39-9226-4d85-a9c5-a616341a542f',
+  'cost-alert-cron': '14c05090-c751-4cd9-8858-3df46b214e18',
 } as const
 
 export interface InstanceState {

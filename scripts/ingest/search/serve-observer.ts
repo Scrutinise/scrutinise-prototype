@@ -11,13 +11,32 @@
  *   memory      current + PEAK RSS against the 8 GB per-replica cap, as a percentage
  *   concurrency inFlight, queued, queueHighWaterMark, rejections
  *   throughput  served count, p50, p95 — both uncached and all-requests where available
- *   errors      5xx count, and crashes/restarts since the last report
+ *   errors      5xx count, and CLASSIFIED crashes/restarts since the last report
  *   Neon        database size PRICED against a storage budget, and connection count
  *               (GRAPH 3C §5 — there is no plan ceiling; see the constants below)
  *   cost        Railway service-hours, and Gemini embed calls/day (vector's per-query cost)
  *
- * IMMEDIATE email on: memory >70% of cap, warm p95 >5s, any crash/restart, Neon storage past
- * its COST budget, rejections >0. Otherwise a daily digest.
+ * IMMEDIATE email on: memory >70% of cap, warm p95 >5s, a CRASH LOOP (3+ crashes/hour — see
+ * below), Neon storage past its COST budget, rejections >0. Otherwise a daily digest.
+ *
+ * ── S25 — RESTART CLASSIFICATION (deploy / wake-from-sleep / crash) ──────────────────────
+ *
+ * Before S25 this file emailed "RESTARTED" on every boot-time change, with no distinction
+ * between a deploy, a sleep/wake cycle, and an actual crash — measured to be the direct
+ * cause of ~80 false alerts in one morning (docs/SEARCH_S25_REPORT.md §1). Railway's own
+ * `environmentHistory` query (reachable with the SAME Project-Access-Token this file already
+ * has no use for elsewhere — `ops/audit-sleep.ts`'s `rail()`) records `resumed` and
+ * `deployed` events per service, timestamped to the millisecond. A restart is classified by
+ * looking for one of those events within `RESTART_EVIDENCE_WINDOW_MS` of the new boot time:
+ *
+ *   'wake'    a `resumed` event nearby         → never alerts, only counted
+ *   'deploy'  a `deployed` event nearby         → never alerts, only counted
+ *   'crash'   neither, AND the history query succeeded → alerts, but ONLY at 3+ in an hour
+ *   'unknown' the history query itself failed, or this service has no known Railway service
+ *             id → NEVER alerts (a failed classification lookup must not manufacture a
+ *             crash alert) but is reported, never silently dropped — same rule as an
+ *             unpriced LlmSpend row (spend-ledger.ts) or a truncated LLM response (§18):
+ *             "could not classify" is a different, honestly-labelled outcome from "crash".
  *
  * ── THREE THINGS THAT ARE DELIBERATE ─────────────────────────────────────────
  *
@@ -37,6 +56,8 @@
  *    reports nothing at all in precisely that case.
  */
 import { r2Get, r2Put } from '../shared/r2-client'
+import { rail } from '../ops/audit-sleep'
+import { SERVICES as RAILWAY_SERVICE_IDS, ENV_ID as RAILWAY_ENVIRONMENT_ID } from '../ops/sleep-state'
 
 const RESEND_API = 'https://api.resend.com/emails'
 const EMAIL_TO = process.env.SERVE_OBSERVER_TO ?? 'cl@scrutinise.org'
@@ -85,10 +106,24 @@ const P95_ALERT_MS = parseInt(process.env.SERVE_P95_ALERT_MS ?? '5000', 10)
 //      says otherwise, the console wins and this comment is the record of the discrepancy.
 const NEON_STORAGE_USD_PER_GB_MONTH = parseFloat(process.env.NEON_STORAGE_USD_PER_GB_MONTH ?? '0.35')
 const NEON_STORAGE_ALERT_USD = parseFloat(process.env.NEON_STORAGE_ALERT_USD ?? '15')
-const DIGEST_HOUR = parseInt(process.env.SERVE_DIGEST_HOUR ?? '8', 10)
-// Re-alert window: a breach that persists should not email every hour forever.
-const REALERT_HOURS = parseInt(process.env.SERVE_REALERT_HOURS ?? '12', 10)
+// S25: "a reminder after six hours if still open." The only two rules left that can ever
+// alert immediately (down, crash-loop) both go through `raise()`/`shouldAlert()`, so this one
+// window IS that reminder cadence — there is nothing else left for it to govern.
+const REALERT_HOURS = parseInt(process.env.SERVE_REALERT_HOURS ?? '6', 10)
 const FETCH_TIMEOUT_MS = parseInt(process.env.SERVE_FETCH_TIMEOUT_MS ?? '20000', 10)
+
+// ── S25 restart classification ──
+// Empirically, Railway's `resumed`/`deployed` environmentHistory events land within ~1s of
+// the new process's own `started_at` (who-changed-sleep.ts, 25 Sep 2026 — every match in a
+// 100-entry sample was <1.5s apart). 60s is generous headroom, not a tuned value.
+const RESTART_EVIDENCE_WINDOW_MS = parseInt(process.env.SERVE_RESTART_EVIDENCE_WINDOW_MS ?? '60000', 10)
+const CRASH_LOOP_THRESHOLD = parseInt(process.env.SERVE_CRASH_LOOP_THRESHOLD ?? '3', 10)
+const CRASH_LOOP_WINDOW_MS = parseInt(process.env.SERVE_CRASH_LOOP_WINDOW_MS ?? '3600000', 10)
+const RESTART_LOG_MAX_PER_SERVICE = 200 // ~a day of 15-min ticks, generously
+// Brief: "immediate email only for service down more than five minutes." At a 15-min tick
+// this means: never alert on the FIRST unreachable poll (could be transient), only once the
+// condition has persisted this long — which in practice is the second consecutive miss.
+const DOWN_ALERT_MS = parseInt(process.env.SERVE_DOWN_ALERT_MS ?? '300000', 10)
 
 export interface ServiceTarget { name: string; url: string }
 
@@ -129,20 +164,53 @@ export interface NeonObservation {
   pctOfBudget?: number
   connections?: number; maxConnections?: number
 }
+export type RestartKind = 'deploy' | 'wake' | 'crash' | 'unknown'
+/** One `resumed`/`deployed` event from Railway's `environmentHistory`, for one service. */
+export interface RestartEvidenceEvent { serviceId: string; action: string; createdAt: string }
+/** One classified restart, kept for the crash-loop count and for the digest. */
+export interface RestartLogEntry { at: string; kind: RestartKind }
+
 export interface ServeState {
   startedAt: Record<string, string>          // service → last seen boot time
   lastAlertAt: Record<string, string>        // alert key → ISO time last emailed
   lastDigestDay: string
   embedCallsBaseline: Record<string, { day: string; served: number }>
+  /** Every classified restart, most-recent-last, bounded per service. The crash-loop count
+   *  and the digest's deploy/wake/crash tally both read this — one source, not two. */
+  restartLog: Record<string, RestartLogEntry[]>
+  /** service → ISO time it was FIRST observed unreachable, this outage. Cleared on recovery. */
+  downSince: Record<string, string>
 }
 export interface ServeEvent { kind: 'alert' | 'digest'; severity: 'critical' | 'warning' | 'info'; key: string; subject: string; body: string }
 
-const FRESH_STATE: ServeState = { startedAt: {}, lastAlertAt: {}, lastDigestDay: '', embedCallsBaseline: {} }
+const FRESH_STATE: ServeState = { startedAt: {}, lastAlertAt: {}, lastDigestDay: '', embedCallsBaseline: {}, restartLog: {}, downSince: {} }
 
-function londonParts(nowMs: number): { day: string; hour: number } {
-  const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false })
-  const p = Object.fromEntries(fmt.formatToParts(new Date(nowMs)).map((x) => [x.type, x.value]))
-  return { day: `${p.year}-${p.month}-${p.day}`, hour: parseInt(p.hour, 10) }
+/**
+ * PURE. `serviceName` (e.g. 'fts-serve') → its Railway service id, from the same
+ * `SERVICES` map `sleep-state.ts`/`why-awake.ts`/`who-changed-sleep.ts` already use — one
+ * mapping, not a second one invented here to drift from it.
+ */
+function railwayServiceId(serviceName: string): string | undefined {
+  return (RAILWAY_SERVICE_IDS as Record<string, string>)[serviceName]
+}
+
+/**
+ * PURE. Classifies one restart from Railway's own recorded events — never from elimination
+ * alone. `evidenceOk: false` means the environmentHistory query itself failed, which must
+ * produce 'unknown', NOT 'crash' — a failed lookup is not evidence of a crash (§18's
+ * OFF-vs-FAILED corollary, one level up: a restart we could not check must not look like
+ * one we checked and could not explain).
+ */
+export function classifyRestart(
+  serviceName: string, bootIso: string, evidence: RestartEvidenceEvent[], evidenceOk: boolean,
+): RestartKind {
+  const serviceId = railwayServiceId(serviceName)
+  if (!serviceId || !evidenceOk) return 'unknown'
+  const bootMs = Date.parse(bootIso)
+  const nearby = evidence.filter((e) => e.serviceId === serviceId && Math.abs(Date.parse(e.createdAt) - bootMs) <= RESTART_EVIDENCE_WINDOW_MS)
+  if (nearby.some((e) => e.action === 'resumed')) return 'wake'
+  if (nearby.some((e) => e.action === 'deployed')) return 'deploy'
+  return 'crash'
 }
 
 function fmtMs(v: number | null | undefined): string { return v == null ? '—' : `${Math.round(v)}ms` }
@@ -157,15 +225,18 @@ export function evaluateServe(
   neon: NeonObservation,
   state: ServeState,
   nowMs: number,
+  restartEvidence: RestartEvidenceEvent[] = [],
+  restartEvidenceOk = true,
 ): { events: ServeEvent[]; nextState: ServeState } {
   const next: ServeState = {
     startedAt: { ...state.startedAt },
     lastAlertAt: { ...state.lastAlertAt },
     lastDigestDay: state.lastDigestDay,
     embedCallsBaseline: { ...state.embedCallsBaseline },
+    restartLog: Object.fromEntries(Object.entries(state.restartLog ?? {}).map(([k, v]) => [k, [...v]])),
+    downSince: { ...(state.downSince ?? {}) },
   }
   const events: ServeEvent[] = []
-  const { day, hour } = londonParts(nowMs)
 
   const shouldAlert = (key: string) => {
     const last = state.lastAlertAt[key]
@@ -179,94 +250,153 @@ export function evaluateServe(
   }
 
   for (const o of obs) {
-    // ── unreachable is the loudest case, not a skipped section ──
+    // ── unreachable is the loudest case, not a skipped section — but only alerts past
+    // DOWN_ALERT_MS (brief: "service down more than five minutes"), and announces its own
+    // resolution rather than just going quiet. ──
     if (!o.ok || !o.stats) {
-      raise('critical', `${o.name}:down`, `🔴 ${o.name} is NOT RESPONDING`,
-        `${o.name} (${o.url}) did not answer /stats.\n\nError: ${o.error ?? 'unknown'}\n\n` +
-        `This is the failure this observer exists to catch. Check:\n` +
-        `  npx tsx search/${o.name === 'fts-serve' ? 'fts' : 'vector'}-serve-run.ts logs`)
+      const since = state.downSince[o.name] ?? new Date(nowMs).toISOString()
+      next.downSince[o.name] = since
+      const downForMs = nowMs - Date.parse(since)
+      if (downForMs >= DOWN_ALERT_MS) {
+        raise('critical', `${o.name}:down`, `🔴 ${o.name} is NOT RESPONDING`,
+          `${o.name} (${o.url}) has not answered /stats since ${since} (${Math.round(downForMs / 60_000)} min).\n\n` +
+          `Error: ${o.error ?? 'unknown'}\n\n` +
+          `This is the failure this observer exists to catch. Check:\n` +
+          `  npx tsx search/${o.name === 'fts-serve' ? 'fts' : 'vector'}-serve-run.ts logs`)
+      }
       continue
+    }
+    if (state.downSince[o.name]) {
+      // Was down, now answering — a resolved event, but ONLY if it was ever loud enough to
+      // have alerted (a blip under 5 minutes needed no email, so needs no all-clear either).
+      const since = state.downSince[o.name]
+      const downForMs = nowMs - Date.parse(since)
+      delete next.downSince[o.name]
+      if (downForMs >= DOWN_ALERT_MS) {
+        delete next.lastAlertAt[`${o.name}:down`] // a FUTURE outage must alert fresh, not be swallowed by the re-alert window
+        events.push({
+          kind: 'alert', severity: 'info', key: `${o.name}:down-resolved`,
+          subject: `✅ ${o.name} back up`,
+          body: `${o.name} is responding again. Was down from ${since} to ${new Date(nowMs).toISOString()} (${Math.round(downForMs / 60_000)} min).`,
+        })
+      }
     }
     const s = o.stats
 
-    // ── crash / restart ──
+    // ── crash / restart — CLASSIFIED (S25). Only 'crash' can ever alert, and only at
+    // CRASH_LOOP_THRESHOLD+ within CRASH_LOOP_WINDOW_MS. 'deploy' and 'wake' are counted
+    // (for the digest) and never emailed — see this file's header for why. ──
     const boot = s.started_at
     if (boot) {
       const prev = state.startedAt[o.name]
       next.startedAt[o.name] = boot
       if (prev && prev !== boot) {
-        // A restart always emails, regardless of the re-alert window: two restarts are two
-        // events, and collapsing them would hide a crash loop — the exact shape that burnt
-        // ~25 minutes of container time on the FTS optimize job (docs/CLAUDE.md §17).
-        next.lastAlertAt[`${o.name}:restart`] = new Date(nowMs).toISOString()
-        events.push({
-          kind: 'alert', severity: 'critical', key: `${o.name}:restart`,
-          subject: `🔴 ${o.name} RESTARTED`,
-          body: `${o.name} restarted.\n  was up since: ${prev}\n  now up since: ${boot}\n  uptime now:   ${s.uptime_s}s\n\n` +
-            `Railway restarts on crash (restartPolicy ALWAYS), so an unexplained restart is usually a crash — ` +
-            `and a silent death with no error line is what an OOM SIGKILL looks like (docs/CLAUDE.md §17).\n` +
-            `Peak RSS before this report: ${s.memory?.peak_rss_mb ?? '?'} MB of ${s.memory?.cap_mb ?? '?'} MB.\n\n` +
-            `⚠ All /stats counters reset on restart — the numbers below are since ${boot}, not since the last digest.`,
-        })
+        const kind = classifyRestart(o.name, boot, restartEvidence, restartEvidenceOk)
+        const log = (next.restartLog[o.name] ??= [])
+        log.push({ at: new Date(nowMs).toISOString(), kind })
+        if (log.length > RESTART_LOG_MAX_PER_SERVICE) log.splice(0, log.length - RESTART_LOG_MAX_PER_SERVICE)
+
+        if (kind === 'crash') {
+          const oneWindowAgo = nowMs - CRASH_LOOP_WINDOW_MS
+          const crashesInWindow = log.filter((e) => e.kind === 'crash' && Date.parse(e.at) >= oneWindowAgo).length
+          if (crashesInWindow >= CRASH_LOOP_THRESHOLD) {
+            // Crash-loop dedup only — a single crash below the threshold never alerts at all,
+            // per the brief ("only three or more in an hour"), so there is nothing to dedup
+            // until the threshold is first crossed.
+            raise('critical', `${o.name}:crash-loop`,
+              `🔴 ${o.name} crash-looping (${crashesInWindow} crashes in the last hour)`,
+              `${o.name} has crashed ${crashesInWindow} times in the last ${Math.round(CRASH_LOOP_WINDOW_MS / 60_000)} minutes.\n` +
+              `  was up since: ${prev}\n  now up since: ${boot}\n  uptime now:   ${s.uptime_s}s\n\n` +
+              `Classified as a crash because Railway's environmentHistory records neither a "resumed" ` +
+              `nor a "deployed" event for this service within ${Math.round(RESTART_EVIDENCE_WINDOW_MS / 1000)}s of the new boot time — ` +
+              `i.e. this restart is unexplained by a deploy or a sleep/wake cycle, which is what an OOM ` +
+              `SIGKILL or an unhandled crash looks like (docs/CLAUDE.md §17).\n` +
+              `Peak RSS before this report: ${s.memory?.peak_rss_mb ?? '?'} MB of ${s.memory?.cap_mb ?? '?'} MB.\n\n` +
+              `⚠ All /stats counters reset on restart — the numbers below are since ${boot}, not since the last digest.`)
+          }
+        }
+        // 'deploy' and 'wake' — and 'unknown', which must not be silently dropped either —
+        // are logged above and read by the cost digest (docs/SEARCH_S25_REPORT.md §2/§4);
+        // nothing more happens here.
       }
     }
 
-    // ── memory ──
-    const peakPct = s.memory?.peak_pct_of_cap
-    if (peakPct != null && peakPct > MEM_ALERT_PCT) {
-      raise('critical', `${o.name}:memory`, `🔴 ${o.name} memory at ${peakPct}% of cap`,
-        `${o.name} peak RSS ${s.memory?.peak_rss_mb} MB of a ${s.memory?.cap_mb} MB cap (${peakPct}%), reached ${s.memory?.peak_rss_at}.\n` +
-        `Current ${s.memory?.rss_mb} MB (${s.memory?.pct_of_cap}%).\n\n` +
-        `Per docs/CLAUDE.md §17 the cap is real and exceeding it is a SILENT SIGKILL. ` +
-        `Do NOT raise a limit or shrink the work to fit — if it genuinely does not fit, it goes to the Heavy Job Runner.`)
+    // ── crash-loop resolve — checked EVERY tick, not only when a restart just happened,
+    // because resolving is the passage of time (old crashes aging out of the 1h window),
+    // not an event like the restart itself. Brief: "one email... one when resolved." ──
+    {
+      const crashLoopKey = `${o.name}:crash-loop`
+      if (state.lastAlertAt[crashLoopKey]) {
+        const log = next.restartLog[o.name] ?? []
+        const oneWindowAgo = nowMs - CRASH_LOOP_WINDOW_MS
+        const stillLooping = log.filter((e) => e.kind === 'crash' && Date.parse(e.at) >= oneWindowAgo).length >= CRASH_LOOP_THRESHOLD
+        if (!stillLooping) {
+          delete next.lastAlertAt[crashLoopKey]
+          events.push({
+            kind: 'alert', severity: 'info', key: `${crashLoopKey}-resolved`,
+            subject: `✅ ${o.name} crash loop resolved`,
+            body: `${o.name} has not crashed in the last ${Math.round(CRASH_LOOP_WINDOW_MS / 60_000)} minutes — no longer crash-looping.`,
+          })
+        }
+      }
     }
 
-    // ── latency ──
-    const p95 = s.warm_p95_ms
-    if (p95 != null && p95 > P95_ALERT_MS) {
-      raise('warning', `${o.name}:p95`, `🟠 ${o.name} p95 ${fmtMs(p95)} (>${P95_ALERT_MS}ms)`,
-        `${o.name} uncached p95 is ${fmtMs(p95)} over ${s.warm_n} requests (p50 ${fmtMs(s.warm_p50_ms)}).\n` +
-        (s.all_p95_ms != null ? `All requests incl. cache hits: p50 ${fmtMs(s.all_p50_ms)}, p95 ${fmtMs(s.all_p95_ms)}.\n` : '') +
-        `\nThis is the UNCACHED figure — what the database actually costs. ` +
-        `Under a 25-concurrent synthetic burst this service has measured p95 ~10s, so a p95 breach during a load test is expected; ` +
-        `a breach during ordinary traffic is not.`)
-    }
-
-    // ── load shedding ──
-    const rej = s.concurrency?.rejections
-    if (rej != null && rej > 0) {
-      raise('warning', `${o.name}:rejections`, `🟠 ${o.name} shed ${rej} request(s)`,
-        `${o.name} refused ${rej} request(s) with 503 — the bounded queue (max ${fmtNum(s.concurrency?.maxQueue)}) was full.\n` +
-        `Queue high-water ${fmtNum(s.concurrency?.queueHighWaterMark)}, concurrency cap ${fmtNum(s.concurrency?.max)}.\n\n` +
-        `Shedding is by design and better than an unbounded wait, but a non-zero count means demand exceeded capacity. ` +
-        `Consider raising the concurrency cap (measure first) or the result-cache TTL.`)
-    }
+    // ── memory / latency / load-shedding — S25: NO LONGER an immediate email. ──
+    // The brief names exactly four immediate-email rules (down>5min, crash loop, spend
+    // threshold, build failure) and says "everything else goes to the digest." These three
+    // used to `raise()` their own email; they now only feed `isHealthy()` below (so an
+    // ongoing breach still shows up in the digest's one-line health summary) and the
+    // digest's full per-service stats block (renderDigest already prints all three numbers
+    // unconditionally). MEM_ALERT_PCT/P95_ALERT_MS/etc. are kept as the thresholds
+    // `isHealthy()` uses to decide what is worth naming in that one line.
   }
 
-  // ── Neon ──
-  if (!neon.ok) {
-    raise('warning', 'neon:down', '🟠 Neon check failed', `Could not read Neon size/connections.\n\nError: ${neon.error ?? 'unknown'}`)
-  } else if (neon.pctOfBudget != null && neon.pctOfBudget > 100) {
-    // ⚠ A COST alert, not a capacity one — there is no capacity wall to hit (see the constants).
-    // `warning`, not `critical`: overspending a storage budget is a decision to take, not an
-    // outage. The old line raised CRITICAL against a number that could not be sourced, which is
-    // how a page of red became something to scroll past.
-    raise('warning', 'neon:storage', `🟠 Neon storage costing $${neon.storageUsdPerMonth?.toFixed(2)}/month`,
-      `Neon holds ${neon.sizeGb?.toFixed(2)} GB, which at $${NEON_STORAGE_USD_PER_GB_MONTH}/GB-month is ` +
-      `$${neon.storageUsdPerMonth?.toFixed(2)} a month — past the $${neon.budgetUsd} storage budget (${neon.pctOfBudget}%).\n` +
-      `Connections: ${neon.connections}/${neon.maxConnections ?? '?'}.\n\n` +
-      `⚠ There is NO storage ceiling to hit: neon.max_cluster_size is 16 TiB. This is a bill, not a wall.\n` +
-      `⚠ COMPUTE is the larger line (~8× storage at the last reading) and is NOT visible to this check. ` +
-      `The $50 spending notification in the Neon console is what watches total spend.`)
-  }
+  // ── Neon — S25: no immediate email either. `neon.ok`/`pctOfBudget` still feed
+  // `isHealthy()` below and the digest's Neon section; nothing is silently dropped, it just
+  // no longer emails on its own. ──
 
-  // ── daily digest ──
-  if (state.lastDigestDay !== day && hour >= DIGEST_HOUR) {
-    next.lastDigestDay = day
-    events.push({ kind: 'digest', severity: 'info', key: 'digest', subject: `Search serving — daily digest ${day}`, body: renderDigest(obs, neon, nowMs) })
-  }
+  // ── daily digest — RETIRED (S25). This used to auto-email `renderDigest()`'s output
+  // (engineering counters: memory/concurrency/throughput/cache/Neon) once a day — exactly
+  // what Charlie described being unhappy with. `scrutinise-web/scripts/cost-digest.ts` is
+  // now the one daily email, in £; `renderDigest()` itself stays (it is NOT deleted) as the
+  // source for that digest's "raw counters" link (`/admin/cost-digest`), just no longer
+  // wired to fire on its own. `lastDigestDay` stays on `ServeState` unused rather than
+  // removed — it is harmless persisted state and removing the field would be a schema
+  // change to a JSON blob for no gain; `DIGEST_HOUR`/`londonParts` (whose only caller this
+  // was) are removed below since they have no other use.
 
   return { events, nextState: next }
+}
+
+export interface HealthSummary { healthy: boolean; exceptions: string[] }
+
+/**
+ * PURE. The one line the S25 cost digest wants: "all services healthy" unless there is an
+ * exception, in which case name it. Same thresholds that used to fire their OWN immediate
+ * email before S25 moved memory/p95/rejections/Neon-storage to digest-only — the number is
+ * unchanged, only whether it interrupts Charlie is. Down and crash-loop are read from
+ * `ServeState` because those two DO still alert immediately; this just reflects the same
+ * fact for the digest's benefit rather than computing it twice.
+ */
+export function summarizeHealth(obs: Observation[], neon: NeonObservation, state: ServeState, nowMs: number): HealthSummary {
+  const exceptions: string[] = []
+  for (const o of obs) {
+    if (!o.ok || !o.stats) { exceptions.push(`${o.name} is not responding`); continue }
+    const s = o.stats
+    const peakPct = s.memory?.peak_pct_of_cap
+    if (peakPct != null && peakPct > MEM_ALERT_PCT) exceptions.push(`${o.name} memory at ${peakPct}% of cap`)
+    if (s.warm_p95_ms != null && s.warm_p95_ms > P95_ALERT_MS) exceptions.push(`${o.name} p95 ${fmtMs(s.warm_p95_ms)}`)
+    if (s.concurrency?.rejections != null && s.concurrency.rejections > 0) exceptions.push(`${o.name} shed ${s.concurrency.rejections} request(s)`)
+    const crashLog = state.restartLog[o.name] ?? []
+    const recentCrashes = crashLog.filter((e) => e.kind === 'crash' && nowMs - Date.parse(e.at) <= CRASH_LOOP_WINDOW_MS).length
+    if (recentCrashes >= CRASH_LOOP_THRESHOLD) exceptions.push(`${o.name} crash-looping (${recentCrashes} in the last hour)`)
+    if (state.downSince?.[o.name]) exceptions.push(`${o.name} down since ${state.downSince[o.name]}`)
+  }
+  if (!neon.ok) exceptions.push(`Neon check failed: ${neon.error ?? 'unknown'}`)
+  else if (neon.pctOfBudget != null && neon.pctOfBudget > 100) {
+    exceptions.push(`Neon storage costing $${neon.storageUsdPerMonth?.toFixed(2)}/month (${neon.pctOfBudget}% of the $${neon.budgetUsd} budget)`)
+  }
+  return { healthy: exceptions.length === 0, exceptions }
 }
 
 export function renderDigest(obs: Observation[], neon: NeonObservation, nowMs: number): string {
@@ -329,7 +459,9 @@ export function renderDigest(obs: Observation[], neon: NeonObservation, nowMs: n
 
 // ── I/O ──────────────────────────────────────────────────────────────────────
 
-async function fetchStats(t: ServiceTarget): Promise<Observation> {
+// Exported (S25): cost-digest.ts reuses these three rather than re-fetching the same
+// numbers a second, drifting way — one source for "is search serving healthy right now."
+export async function fetchStats(t: ServiceTarget): Promise<Observation> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS)
   try {
@@ -341,7 +473,7 @@ async function fetchStats(t: ServiceTarget): Promise<Observation> {
   } finally { clearTimeout(timer) }
 }
 
-async function checkNeon(): Promise<NeonObservation> {
+export async function checkNeon(): Promise<NeonObservation> {
   const url = process.env.NEON_DATABASE_URL
   if (!url) return { ok: false, error: 'NEON_DATABASE_URL not set' }
   const { Pool } = await import('pg')
@@ -366,6 +498,39 @@ async function checkNeon(): Promise<NeonObservation> {
   } finally { await pool.end().catch(() => {}) }
 }
 
+/**
+ * Railway's `environmentHistory` for this environment, filtered to the 'resumed'/'deployed'
+ * events `classifyRestart` looks for. One query per check cycle covers BOTH services — same
+ * shape as `who-changed-sleep.ts`, which found this reachable with a Project-Access-Token
+ * where `auditLogs` (needs a `workspaceId` this token cannot obtain) is not.
+ *
+ * Returns `ok: false` on any failure — never partial data mislabelled as complete, per this
+ * file's own `classifyRestart` contract (`evidenceOk: false` ⇒ 'unknown', never 'crash').
+ */
+async function fetchRestartEvidence(): Promise<{ ok: boolean; events: RestartEvidenceEvent[] }> {
+  try {
+    const r = await rail<{ environmentHistory: { edges: Array<{ node: {
+      action: string; object: string; createdAt: string; serviceIds: string[]
+    } }> } }>(`
+      query H($environmentId: String!, $first: Int!) {
+        environmentHistory(environmentId: $environmentId, first: $first) {
+          edges { node { action object createdAt serviceIds } }
+        }
+      }
+    `, { environmentId: RAILWAY_ENVIRONMENT_ID, first: 100 })
+    const events: RestartEvidenceEvent[] = []
+    for (const { node } of r.environmentHistory.edges) {
+      if (node.object !== 'Deployment') continue
+      if (node.action !== 'resumed' && node.action !== 'deployed') continue
+      for (const serviceId of node.serviceIds ?? []) events.push({ serviceId, action: node.action, createdAt: node.createdAt })
+    }
+    return { ok: true, events }
+  } catch (e) {
+    console.error(`[serve-observer] restart-evidence query failed (restarts this cycle will classify as 'unknown', not 'crash'): ${e instanceof Error ? e.message : String(e)}`)
+    return { ok: false, events: [] }
+  }
+}
+
 async function sendEmail(subject: string, body: string): Promise<void> {
   const key = process.env.RESEND_API_KEY
   if (!key) { console.warn(`[serve-observer] RESEND_API_KEY unset — would have sent: ${subject}`); return }
@@ -378,7 +543,7 @@ async function sendEmail(subject: string, body: string): Promise<void> {
   else console.log(`[serve-observer] emailed ${EMAIL_TO}: ${subject}`)
 }
 
-async function loadState(): Promise<ServeState> {
+export async function loadState(): Promise<ServeState> {
   try {
     const raw = await r2Get(STATE_KEY)
     if (!raw) return { ...FRESH_STATE }
@@ -390,8 +555,10 @@ async function loadState(): Promise<ServeState> {
 export async function checkServeHealth(opts: { dry?: boolean } = {}): Promise<ServeEvent[]> {
   const ts = targets()
   if (!ts.length) { console.warn('[serve-observer] no service URLs configured (FTS_SEARCH_URL / VECTOR_SERVE_URL) — nothing to watch'); return [] }
-  const [obs, neon, state] = await Promise.all([Promise.all(ts.map(fetchStats)), checkNeon(), loadState()])
-  const { events, nextState } = evaluateServe(obs, neon, state, Date.now())
+  const [obs, neon, state, restartEvidence] = await Promise.all([
+    Promise.all(ts.map(fetchStats)), checkNeon(), loadState(), fetchRestartEvidence(),
+  ])
+  const { events, nextState } = evaluateServe(obs, neon, state, Date.now(), restartEvidence.events, restartEvidence.ok)
 
   for (const ev of events) {
     if (opts.dry) console.log(`[serve-observer] (dry) ${ev.severity.toUpperCase()} ${ev.subject}\n${ev.body}\n`)
@@ -402,9 +569,37 @@ export async function checkServeHealth(opts: { dry?: boolean } = {}): Promise<Se
   return events
 }
 
+/**
+ * S25 Phase 3's "prove each rule fires once, forced" — constructed inputs, not a real
+ * outage. Simulates 4 consecutive restarts with NO 'resumed'/'deployed' evidence (so every
+ * one classifies 'crash'): the first two must produce no alert, the third crosses
+ * CRASH_LOOP_THRESHOLD (default 3) and must be the ONLY alert, and the fourth must be
+ * suppressed by the existing re-alert dedup (`shouldAlert`/`REALERT_HOURS`) rather than
+ * firing again immediately.
+ */
+function forceTestCrashLoop(): void {
+  const base = new Date('2026-01-01T00:00:00.000Z').getTime()
+  let state: ServeState = { ...FRESH_STATE, startedAt: { 'fts-serve': new Date(base).toISOString() } }
+  const alerts: string[] = []
+  for (let i = 1; i <= 4; i++) {
+    const nowMs = base + i * 5 * 60_000 // 5 minutes apart — all inside the 1-hour window
+    const boot = new Date(nowMs).toISOString()
+    const obs: Observation[] = [{ name: 'fts-serve', url: 'https://fake', ok: true, stats: { started_at: boot, uptime_s: 1 } }]
+    const neon: NeonObservation = { ok: true, sizeGb: 1, storageUsdPerMonth: 1, budgetUsd: 15, pctOfBudget: 10, connections: 1, maxConnections: 100 }
+    const { events, nextState } = evaluateServe(obs, neon, state, nowMs, [], true) // no evidence + ok:true ⇒ every restart is 'crash'
+    state = nextState
+    console.log(`  restart #${i} (${boot}): ${events.length} event(s)` + (events.length ? ` — ${events.map((e) => e.subject).join(', ')}` : ''))
+    for (const e of events) alerts.push(e.subject)
+  }
+  console.log(`\ntotal alerts fired: ${alerts.length} (expected 1, on restart #${CRASH_LOOP_THRESHOLD})`)
+  console.log(alerts.length === 1 && alerts[0].includes('crash-looping') ? 'PASS' : 'FAIL')
+}
+
 if (require.main === module) {
   const dry = process.argv.includes('--dry')
-  if (process.argv.includes('--digest')) {
+  if (process.argv.includes('--force-test') && process.argv.includes('crash-loop')) {
+    forceTestCrashLoop()
+  } else if (process.argv.includes('--digest')) {
     // Print the digest on demand, without waiting for the scheduled hour.
     (async () => {
       const ts = targets()

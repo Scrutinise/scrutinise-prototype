@@ -69,6 +69,7 @@ import {
 } from './shared/progress-reporter'
 import { checkEmbedProgress } from './search/embed-observer'
 import { checkServeHealth } from './search/serve-observer'
+import { checkBuildFailure } from './ops/build-failure-observer'
 import { runCensus, saveToR2 as saveCensusToR2 } from './census/live-census'
 import { clearExpiredSuspensions } from './shared/queue-client'
 import { getNeonPool } from './shared/neon-pool'
@@ -591,6 +592,9 @@ async function runQuarterHour(): Promise<void> {
   // same reason as the embed observer — a monitoring failure must not take down the
   // ingest-critical checks above it.
   await checkServeHealth().catch(err => console.error('[ops] serve observer failed:', err))
+  // S25 Phase 3's fourth immediate-email rule: build failure. Isolated for the same reason
+  // as the checks above it — a monitoring failure here must not take down ingest-critical work.
+  await checkBuildFailure().catch(err => console.error('[ops] build-failure observer failed:', err))
 }
 
 // ── Scheduler loop ────────────────────────────────────────────────────────────
