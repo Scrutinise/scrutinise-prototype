@@ -91,6 +91,10 @@ export async function GET() {
         vectorSearchUrl: Boolean(process.env.VECTOR_SEARCH_URL?.trim()),
         ftsSearchUrl: Boolean(process.env.FTS_SEARCH_URL?.trim()),
         geminiKey: Boolean(process.env.GEMINI_API_KEY?.trim()),
+        // S24b item 1 — GROK_API_KEY presence, same class as geminiKey above: whether
+        // xAI calls (build-smart panel, orientation's X/Tier-C half) CAN do anything,
+        // readable without the SAML-blocked Vercel dashboard (CLAUDE.md §19).
+        xaiKey: Boolean(process.env.GROK_API_KEY?.trim()),
         // ══════════════════════════════════════════════════════════════════════════════════
         // ⚠⚠ 25-W §F (decision 56) — AND THIS ONE REVISES THE RULE FOUR LINES ABOVE.
         // ══════════════════════════════════════════════════════════════════════════════════
