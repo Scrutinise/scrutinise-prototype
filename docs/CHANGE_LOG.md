@@ -1,5 +1,109 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-27 12:36 UTC — LEX 26-I §1-§9 + addenda — one guiding policy, properly arrived at
+
+Built §1-§9 in full plus both addenda (feedback filing on decision 92's pattern; model
+routing B1-B4). §10 deferred to 26-J per the brief's own instruction ("do it after"),
+which runs next.
+
+**Schema** (`prisma/lex_26i_consolidation.sql`, applied to Neon — host confirmed via
+`whichdb.ts` before running, additive only): `PolicyOption` gained `disposition`,
+`duplicateOfNumber`, `draftModel`, `rulesOut`, `likelihood`. New tables
+`PolicyFeedback` (A1), `GuidingPolicyConsolidation` and `GuidingPolicyDraft` (§3-§7).
+
+**§1 — add your own.** A box on `GuidingPolicyScreen` posts to a new `add` op
+(`guiding-policy-state.ts`); enters the sort numbered, source USER. §1c's compound test
+runs immediately (mechanical — see §4a) and is shown once in the UI, not stored on the row.
+
+**§2 — the five dispositions, as one read.** `effectiveDisposition()` in
+`guiding-policy-state.ts` is the single place all five resolve to one value: RULE_OUT/
+LATER_PHASE/REALLY_ACTION were already there (status/phase/kind, pre-26-I); PART_OF_SOLUTION
+and SAYS_SAME_AS are new (`disposition`/`duplicateOfNumber`). "Says roughly the same as"
+reuses 25-P's own `pairPolicies` ALTERNATIVES relation as the on-screen hint, not a second
+mechanism, per the brief's own instruction. New op `assertAction` lets the user assert
+"really an action" without waiting for Lex's automatic sort to offer it — mirrors
+`acceptMove`'s parking rule but needs no separate consent step, since the user asserting it
+already is the consent.
+
+**§3/§4 — Consolidate.** `lib/lex/guiding-policy-consolidate.ts` runs the four premium
+drafts in parallel (`Promise.all`, not `build-smart.ts`'s sequential two-vendor panel):
+`gemini-2.5-pro`, `claude-opus-5`, `grok-4.7`, `gpt-6-luna` — confirmed live via
+`check:model-reachability` except `gpt-6-luna` (no `OPENAI_API_KEY` on this machine;
+configured in Vercel production per the registry's own comment, so untested from here).
+A model that fails is named in the response, never silently dropped (same rule
+`build-smart.ts` already followed for its own panel).
+
+▶ **Addendum B2, followed exactly:** the judge (`lib/lex/rumelt-tests.ts`) is one premium
+call (`claude-opus-5`) batched over every draft at once, not one call per draft. The
+compound test and "rules out nothing" are mechanical (`testIsCompound`/
+`testRulesOutNothing` — pure functions, no model); only "does it answer the obstacle" and
+"which causes does it actually attack" are the model's job, and the causes-match test is a
+mechanical set comparison against what the draft itself claimed. Cost of one judge pass on
+four drafts, measured on this machine: reported per-run via `costPence` on
+`GuidingPolicyConsolidation`/`GuidingPolicyDraft` — no production consolidation has run
+yet to quote a real figure from (this is new code; see the note below on live testing).
+
+**§5/§6/§7 — favourite, redraft, accept.** PATCH ops on the new
+`/guiding-policy/consolidate/[consolidationId]` route: `favourite` (records the model AND
+the user's cross-draft feedback, §5c "every time, for ever"), `redraft` (the favourite's
+own model only — briefed with the user's feedback AND the judge's findings on all four,
+composed into one prompt block; never a merge, one author), `accept` (creates a new
+`PolicyOption` — source `LEX` unless edited, then `USER` — and reuses `applyPolicyOp`'s
+existing `settle` unchanged to set Chosen approach and open the four waiting fields — not a
+second unlock mechanism). An edited acceptance is tested again (§7a); an unedited one is
+not re-spent on confirming text nobody touched.
+
+**Addendum A1/A6 — one feedback record.** Every `reason` on any disposition op now also
+files a `PolicyFeedback` row (`CARD_REASON`) inside `applyPolicyOp` itself — one code path,
+so A6 ("the per-card box accepts any feedback, not only a rule-out reason") is true by
+construction rather than a second write path to keep in sync. A general (`GENERAL_BOX`) box
+posts to a new `/guiding-policy/feedback` route.
+
+**Addendum A2/A3/A4 — decision 92's pattern, extended.** `lib/lex/policy-feedback-chat.ts`
+mirrors `chat-material.ts` exactly: a candidate reference in the chat ("candidate 4",
+"#4" — the same grammar the merge instruction box already teaches) is resolved and filed
+BEFORE Lex is called, never as a model decision; Lex is handed only the outcome to report
+(`policyFeedbackBlock`, spliced into `buildLexSystemPrompt` beside `materialFiledBlock`).
+Standing rules for A3 ("never chat prose — say it's a candidate card") and A4 ("asked for
+'the' guiding policy, report the sort/feedback state and point at Consolidate") are always
+present while chat is on the Guiding Policy page, with real numbers from `readPolicyState`
+so Lex reports counts rather than inventing them (docs/CLAUDE.md §24).
+
+⚠ **Honest limitation on A3, addendum B1.** B1 settled that a chat-drafted candidate
+"enters the sort numbered" using whatever model the chat is already running on — no
+mechanism switch. This pass enforces A3 by PROMPT INSTRUCTION only; it does not extend
+`validateProposal`/`storeExtracted`'s structured-proposal schema to mechanically create a
+`PolicyOption` row from a chat draft the way the initial build seeds candidates. Auditing
+that schema safely was a larger, riskier change than fit this pass. A determined ignoring
+of the instruction could still produce chat prose; recommend a `check:` in the shape of
+§8a's below if this proves not to hold in practice.
+
+**§8 — the flattery goes.** `lib/lex/no-preamble.ts`: one shared instruction
+(`NO_EVALUATIVE_PREAMBLE`), imported — not copied — into the five live conversational
+prompt sites confirmed reachable (`lex-client.ts` main chat, `general-chat.ts`, all three
+Deepening passes). NOT touched: `lex-client.ts`'s four structured-list generators
+(causes/coherence/policy-options/anticipated-responses — no "opening" to have preamble in),
+and the legacy `app/api/ai/[ideaId]/route.ts`/`public/route.ts` — this sprint's own
+investigation could not confirm whether that surface is still live; flagged rather than
+assumed, per docs/CLAUDE.md §19.
+
+▶ **`check:lex-no-preamble` (§8a), run against production today:** 5/5 known sites wired;
+680 real stored Lex replies read from `Idea.aiChatHistory` across all ideas; **6 historical
+matches**, all pre-dating this fix, including the exact phrase from Charlie's own idea:
+*"That's a very astute observation, Charlie."* This is a cold read, not a fixture — proof
+the detector catches the real thing, not just a planted string. It is a report, not a CI
+gate yet (see the script's own header for why).
+
+**26-I §10 → 26-J.** The brief's own §10 (approve the 26-H commit; rebuild the Overview;
+fix the Research tab; Inbound/Outbound; move the sort preference off `localStorage`) is
+superseded by the more detailed `BRIEF_26J.md`, which runs next per Charlie's instruction.
+
+⚠ **Not yet live-tested end to end.** The Consolidate button has not been clicked against a
+real idea — that means real spend (four premium models + a judge call) and a real database
+write, which felt worth flagging explicitly rather than doing unprompted on a chosen idea.
+`tsc --noEmit` is clean throughout. Recommend Charlie try it on a real Guiding Policy screen
+with at least one candidate marked "part of the solution".
+
 ## 2026-09-27 11:20 UTC — LEX 26-H §3/§8 — dashboard/ideas ordering built, duplicate policy list removed, five items diagnosed and reported
 
 From CCh reply 106 (25 Sep walkthrough §1-§4) and BRIEF_26H §8. §0's run mode ("diagnose,
