@@ -66,7 +66,8 @@ async function strategyCounts(ideaId: string): Promise<{ fields: number; waiting
 /** Stage 1's counts — what the user has actually handed over. */
 async function ideaCounts(ideaId: string): Promise<{ material: number; runs: number }> {
   const [material, runs] = await Promise.all([
-    prisma.ideaUserMaterial.count({ where: { ideaId } }),
+    // 26-J §2b — an archived document is no longer "handed over".
+    prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } }),
     prisma.ideaBuild.count({ where: { ideaId } }),
   ])
   return { material, runs }

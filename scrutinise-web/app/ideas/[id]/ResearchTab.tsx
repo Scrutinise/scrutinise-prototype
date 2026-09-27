@@ -1,9 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ExternalLink } from 'lucide-react'
+
+// 26-J §2 — the sources AND documents gathered on this idea. "Sources" is `Research`
+// (manually-cited evidence, existing); "documents" is `IdeaUserMaterial` — the table
+// §2c confirms is where user uploads and links actually live (25-Y's own fix reads it),
+// distinct from `Document` (the system's own generated outputs, shown on the separate
+// Documents tab — see 26-J §3, which found this table boundary already IS the
+// Inbound/Outbound split and needed no new field).
+interface MaterialItem {
+  id: string
+  kind: 'FILE' | 'LINK'
+  status: 'PENDING' | 'READY' | 'FAILED'
+  label: string
+  filename: string | null
+  url: string | null
+  findingCount: number
+  failureReason: string | null
+  createdAt: string
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -66,7 +84,7 @@ const TYPE_BADGE: Record<string, string> = {
 // Research card
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ResearchCard({ item }: { item: ResearchItem }) {
+function ResearchCard({ item, canDelete, onDelete }: { item: ResearchItem; canDelete: boolean; onDelete: () => void }) {
   const [showRelevance, setShowRelevance] = useState(false)
 
   const typeLabel = RESEARCH_TYPES.find(t => t.value === item.researchType)?.label ?? item.researchType ?? 'Other'
@@ -141,6 +159,52 @@ function ResearchCard({ item }: { item: ResearchItem }) {
             Added by{' '}
             <span className="font-medium text-foreground">{item.contributor.name}</span>
           </p>
+        )}
+
+        {/* 26-J §2b — "delete archives; it does not destroy." */}
+        {canDelete && (
+          <button
+            onClick={onDelete}
+            className="mt-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-destructive"
+          >
+            Not relevant — remove
+          </button>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** 26-J §2 — one gathered document or link (`IdeaUserMaterial`). */
+function MaterialCard({ item, canDelete, onDelete }: { item: MaterialItem; canDelete: boolean; onDelete: () => void }) {
+  return (
+    <Card>
+      <CardContent className="pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium leading-snug">{item.label}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {item.kind === 'FILE' ? `File — ${item.filename ?? 'uploaded'}` : 'Link'}
+              {item.status === 'READY' && item.findingCount > 0 && ` · ${item.findingCount} finding${item.findingCount === 1 ? '' : 's'}`}
+              {item.status === 'READY' && item.findingCount === 0 && ' · read, nothing bore on the proposal'}
+              {item.status === 'PENDING' && ' · not yet read'}
+              {item.status === 'FAILED' && ` · could not be read${item.failureReason ? ` — ${item.failureReason}` : ''}`}
+            </p>
+          </div>
+          {item.url && (
+            <a href={item.url} target="_blank" rel="noopener noreferrer"
+              className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" aria-label="Open source">
+              <ExternalLink className="size-4" />
+            </a>
+          )}
+        </div>
+        {canDelete && (
+          <button
+            onClick={onDelete}
+            className="mt-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-destructive"
+          >
+            Not relevant — remove
+          </button>
         )}
       </CardContent>
     </Card>
@@ -381,56 +445,103 @@ export default function ResearchTab({
   onResearchAdded,
 }: Props) {
   const [research, setResearch] = useState<ResearchItem[]>(initialResearch)
+  const [material, setMaterial] = useState<MaterialItem[]>([])
   const [showForm, setShowForm] = useState(false)
 
-  // Owner/editors at Stage 2+; any authenticated user at Stage 3+
+  // 26-J §2a — "REMOVE THE GATE. Research exists from the first build." This tab used to
+  // return a placeholder for any stage outside STAGE_2/STAGE_3+, which hid a Stage 1 idea's
+  // own research and documents from the one page that should show them. Adding research is
+  // still stage-gated below (§2a only asked to remove the VIEWING gate); reading it is not.
   const publicStages = ['STAGE_3', 'STAGE_4', 'STAGE_5']
-  const ownerEditorStages = ['STAGE_2']
-
+  const ownerEditorStages = ['STAGE_1', 'STAGE_2']
   const canAdd =
     (ownerEditorStages.includes(stage) && (isOwner || isCollaborator)) ||
     (publicStages.includes(stage) && !!currentUserId)
+  const canDelete = isOwner || isCollaborator
 
-  if (!ownerEditorStages.includes(stage) && !publicStages.includes(stage)) {
-    return <p className="text-sm text-muted-foreground">Research is not yet available at this stage.</p>
-  }
+  const loadMaterial = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/material`)
+      if (res.ok) {
+        const data = await res.json()
+        setMaterial(data.material ?? [])
+      }
+    } catch { /* the tab still shows Research even if this fetch fails */ }
+  }, [ideaId])
+  useEffect(() => { void loadMaterial() }, [loadMaterial])
+
+  const deleteResearch = useCallback(async (researchId: string) => {
+    setResearch((prev) => prev.filter((r) => r.id !== researchId)) // optimistic — it's an archive, not a destructive act
+    try {
+      await fetch(`/api/ideas/${ideaId}/research?researchId=${researchId}`, { method: 'DELETE' })
+    } catch { void loadMaterial() /* on failure, a reload is the honest recovery */ }
+  }, [ideaId, loadMaterial])
+
+  const deleteMaterial = useCallback(async (materialId: string) => {
+    setMaterial((prev) => prev.filter((m) => m.id !== materialId))
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/material?materialId=${materialId}`, { method: 'DELETE' })
+      if (res.ok) { const data = await res.json(); setMaterial(data.material ?? []) }
+    } catch { /* optimistic removal stands; next load reconciles */ }
+  }, [ideaId])
 
   return (
-    <div className="space-y-4">
-      {canAdd && !showForm && (
-        <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
-          Add Research
-        </Button>
-      )}
+    <div className="space-y-6">
+      <div>
+        <h3 className="mb-3 text-sm font-semibold">Research</h3>
+        <div className="space-y-4">
+          {canAdd && !showForm && (
+            <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
+              Add Research
+            </Button>
+          )}
 
-      {!currentUserId && publicStages.includes(stage) && (
-        <p className="text-sm text-muted-foreground">
-          <a href="/sign-in" className="font-medium text-foreground underline underline-offset-2">
-            Sign in
-          </a>{' '}
-          to add research.
-        </p>
-      )}
+          {!currentUserId && publicStages.includes(stage) && (
+            <p className="text-sm text-muted-foreground">
+              <a href="/sign-in" className="font-medium text-foreground underline underline-offset-2">
+                Sign in
+              </a>{' '}
+              to add research.
+            </p>
+          )}
 
-      {showForm && (
-        <ResearchForm
-          ideaId={ideaId}
-          onSubmitted={item => {
-            setResearch(prev => [...prev, item])
-            onResearchAdded(item)
-            setShowForm(false)
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
+          {showForm && (
+            <ResearchForm
+              ideaId={ideaId}
+              onSubmitted={item => {
+                setResearch(prev => [...prev, item])
+                onResearchAdded(item)
+                setShowForm(false)
+              }}
+              onCancel={() => setShowForm(false)}
+            />
+          )}
 
-      {research.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground">No research items added yet.</p>
-      )}
+          {research.length === 0 && !showForm && (
+            <p className="text-sm text-muted-foreground">No research items added yet.</p>
+          )}
 
-      {research.map(r => (
-        <ResearchCard key={r.id} item={r} />
-      ))}
+          {research.map(r => (
+            <ResearchCard key={r.id} item={r} canDelete={canDelete} onDelete={() => void deleteResearch(r.id)} />
+          ))}
+        </div>
+      </div>
+
+      {/* 26-J §2b — every source and document gathered, from the table that actually holds
+          them (`IdeaUserMaterial`, confirmed by §2c) — links and files the user (or Lex,
+          filed from chat per decision 92) added. */}
+      <div>
+        <h3 className="mb-3 text-sm font-semibold">Documents and sources gathered</h3>
+        {material.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nothing gathered yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {material.map((m) => (
+              <MaterialCard key={m.id} item={m} canDelete={canDelete} onDelete={() => void deleteMaterial(m.id)} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

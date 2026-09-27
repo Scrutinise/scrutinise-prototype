@@ -14,9 +14,15 @@ import ResearchTab, { type ResearchItem } from './ResearchTab'
 import AmendmentsTab from './AmendmentsTab'
 import CampaignTab from './CampaignTab'
 import DocumentExports from '@/components/documents/DocumentExports'
+import CollapsedSection from '@/components/lex/CollapsedSection'
 import WhatNextPanel from '@/components/WhatNextPanel'
 import StatsTab from './StatsTab'
 import DeleteIdeaDialog from '@/components/lex/DeleteIdeaDialog'
+// 26-J §1 — the Overview reads the SAME live state the editor does. `type` imports are
+// erased at build time (docs/CLAUDE.md §28) — CanonicalState itself is assembled only in
+// lib/lex/state.ts (server-only); this component just types the already-fetched object.
+import type { CanonicalState, CanonicalField, CanonicalPage } from '@/lib/lex/page1-config'
+import { SLOT_LABELS } from '@/lib/lex/page2-config'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -152,6 +158,9 @@ interface Props {
   ideaReviewCount: number
   avgQualityRating: number
   stage4GateData: Stage4Gate | null
+  /** 26-J §1 — the live kernel state (`lib/lex/state.ts`'s `computeCanonicalState`), the
+   *  same object the editor's FieldsPanel renders. Null only if the read failed. */
+  canonicalState: CanonicalState | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1069,21 +1078,332 @@ function FieldDisplay({
 
 type IdeaSubTab = 'overview' | 'diagnosis' | 'policy' | 'actions'
 
+/** 26-J §1 — "N of M approved", the SAME arithmetic FieldsPanel.tsx uses on the editor
+ *  (status ACCEPTED or SKIPPED counts as done). Computed here, not stored, for the same
+ *  reason the editor never stores it: it can never go stale against the rows. */
+function pageProgress(page: CanonicalPage | undefined): { done: number; total: number } {
+  if (!page) return { done: 0, total: 0 }
+  const done = page.fields.filter((f) => f.status === 'ACCEPTED' || f.status === 'SKIPPED').length
+  return { done, total: page.fields.length }
+}
+
+/** A field whose content lives in a child table, not in the field's own `value` — the
+ *  same `CHILD_ENTITY_FIELDS` set page1-config.ts defines, restated read-only here since
+ *  each needs a different array off `canonicalState`. */
+function CanonicalFieldBlock({ field, canonicalState }: { field: CanonicalField; canonicalState: CanonicalState }) {
+  if (field.key === 'causes') {
+    if (!canonicalState.diagnosisCauses.length) {
+      return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+    }
+    return (
+      <ul className="space-y-1.5">
+        {canonicalState.diagnosisCauses.map((c) => (
+          <li key={c.id} className="text-sm text-zinc-800">
+            {c.isRootCause && <span className="mr-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Root —</span>}
+            {c.cause}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  if (field.key === 'rootCause') {
+    const root = canonicalState.diagnosisCauses.find((c) => c.isRootCause)
+    return root
+      ? <p className="text-sm text-zinc-800">{root.cause}</p>
+      : <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+  }
+  if (field.key === 'policyOptions') {
+    const live = canonicalState.policyOptions.filter((o) => o.status !== 'RULED_OUT')
+    if (!live.length) return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+    return (
+      <ul className="space-y-1.5">
+        {live.map((o) => (
+          <li key={o.id} className="text-sm text-zinc-800">
+            {o.approach}
+            {o.status === 'CHOSEN' && <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Chosen</span>}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  if (field.key === 'chosenApproach') {
+    const chosen = canonicalState.policyOptions.find((o) => o.status === 'CHOSEN')
+    return chosen
+      ? <p className="text-sm text-zinc-800">{chosen.approach}</p>
+      : <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+  }
+  if (field.key === 'actions') {
+    if (!canonicalState.actions.length) return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+    return (
+      <ul className="space-y-1.5">
+        {canonicalState.actions.map((a) => (
+          <li key={a.id} className="text-sm text-zinc-800">{a.practicalStep}</li>
+        ))}
+      </ul>
+    )
+  }
+
+  // Ordinary fields: text/narrative/inferred render the value as prose; structured
+  // fields render one line per named slot (page2/page3's own SLOT_LABELS).
+  if (field.status === 'EMPTY' || field.value == null || field.value === '') {
+    return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+  }
+  if (field.type === 'structured' && typeof field.value === 'object') {
+    const entries = Object.entries(field.value as Record<string, unknown>).filter(([, v]) => v != null && v !== '')
+    if (!entries.length) return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+    return (
+      <dl className="space-y-1">
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">{SLOT_LABELS[k] ?? k}</dt>
+            <dd className="text-sm text-zinc-800">{String(v)}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+  if (Array.isArray(field.value)) {
+    return (
+      <ul className="list-disc pl-5 space-y-1">
+        {field.value.map((v, i) => <li key={i} className="text-sm text-zinc-800">{typeof v === 'string' ? v : JSON.stringify(v)}</li>)}
+      </ul>
+    )
+  }
+  return <p className="text-sm text-zinc-800 leading-relaxed whitespace-pre-wrap">{String(field.value)}</p>
+}
+
+/**
+ * ⚠ 26-J §1c — SOME IDEAS' ONLY REAL CONTENT IS IN THE ABANDONED TABLES.
+ *
+ * A production check (`scripts/_check-legacy-kernel-tables.ts`) found 29 ideas — mostly
+ * the editorial/showcase kernels seeded by `scripts/seed/seed-historical-kernels.ts` and
+ * `seed-editorial-ideas.ts` — that have rich `Diagnosis`/`GuidingPolicy`/`RootCause`/
+ * `CoherentAction` rows and LITERALLY NOTHING in the live schema: no `challenge`, no
+ * `pivotalObstacle`, zero `DiagnosisCause`/`PolicyOption`/`LexCoherentAction` rows. They
+ * never went through the live Lex build pipeline at all. Rebuilding these tabs against
+ * `canonicalState` alone would make 29 real, populated ideas look empty — a new
+ * regression this sprint would have caused instead of fixed.
+ *
+ * So: render the live schema when it has anything approved; fall back to the legacy
+ * relation ONLY when the live page is entirely empty. Never both, never merged —
+ * whichever one actually has the idea's content.
+ */
+function LegacyFallbackNotice() {
+  return (
+    <p className="mb-3 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+      ⚠ Showing the original draft — this idea has not been through the current kernel builder.
+    </p>
+  )
+}
+
+/** One page's fields, read-only, with its progress line. Editing lives in the actual
+ *  editor (Lex tab) — this is the landing page, not a second write path onto the same
+ *  rows the editor already owns. */
+function CanonicalPageBlock({
+  page, canonicalState, canEdit, ideaId, legacyFallback,
+}: {
+  page: CanonicalPage | undefined
+  canonicalState: CanonicalState | null
+  canEdit: boolean
+  ideaId: string
+  /** 26-J §1c — rendered instead of "Not yet completed" when the live page is empty AND
+   *  this idea has legacy-table content (see the block comment above). */
+  legacyFallback?: React.ReactNode
+}) {
+  const { done, total } = pageProgress(page)
+  if (!page || !canonicalState || done === 0) {
+    if (legacyFallback) {
+      return <div><LegacyFallbackNotice />{legacyFallback}</div>
+    }
+    return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+  }
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
+          {done} of {total} approved
+        </p>
+        {canEdit && (
+          <Link href={`/ideas/${ideaId}?tab=lex`} className="text-xs text-zinc-500 hover:text-zinc-900 underline underline-offset-2">
+            Open in Lex to edit
+          </Link>
+        )}
+      </div>
+      <div className="space-y-5">
+        {page.fields.map((f) => (
+          <div key={f.key}>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">{f.label}</p>
+            <CanonicalFieldBlock field={f} canonicalState={canonicalState} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** The old Diagnosis/Policy/Coherent-Actions rendering, kept ONLY as the fallback above —
+ *  read-only (no inline editing: these rows predate the field machine and editing them
+ *  here would be a second write path CLAUDE.md's own "one implementation" rule warns
+ *  against). Compact by design; this is a fallback, not the primary surface. */
+function LegacyDiagnosisFallback({ idea }: { idea: Idea }) {
+  const d = idea.diagnoses[0]
+  const rows: Array<[string, string | null | undefined]> = [
+    ['What’s the Problem?', d?.text],
+    ['The Obstacle', d?.obstacleDefined],
+    ['Who Is Affected?', d?.whoAffected],
+    ['How Are They Affected?', d?.howAffected],
+    ['Why Has This Persisted?', d?.whyPersisted],
+    ['Impact', d?.impactDescription],
+    ['Impact Cost', d?.impactCost],
+  ]
+  return (
+    <div className="space-y-4">
+      {rows.map(([label, value]) => value && (
+        <div key={label}>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">{label}</p>
+          <p className="text-sm text-zinc-800 leading-relaxed whitespace-pre-wrap">{value}</p>
+        </div>
+      ))}
+      {idea.rootCauses.length > 0 && (
+        <div>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Root Causes</p>
+          <ul className="space-y-1.5">
+            {idea.rootCauses.map((rc) => (
+              <li key={rc.id} className="text-sm text-zinc-800">{rc.rootCauseTitle ?? rc.text}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function LegacyPolicyFallback({ idea }: { idea: Idea }) {
+  const g = idea.guidingPolicies[0]
+  const rows: Array<[string, string | null | undefined]> = [
+    ['How Will We Solve It?', g?.text],
+    ['Core Theory', g?.coreTheory],
+    ['Trade-offs', g?.tradeOffs],
+    ['What Else Has Been Tried?', g?.competitiveIdeaAnalysis],
+  ]
+  return (
+    <div className="space-y-4">
+      {rows.map(([label, value]) => value && (
+        <div key={label}>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">{label}</p>
+          <p className="text-sm text-zinc-800 leading-relaxed whitespace-pre-wrap">{value}</p>
+        </div>
+      ))}
+      {idea.evidence.length > 0 && (
+        <div>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Evidence</p>
+          <ul className="space-y-1.5">
+            {idea.evidence.map((ev) => <li key={ev.id} className="text-sm text-zinc-800">{ev.title}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * 26-J §3 — INBOUND: anything the user added. §3a: "depends on §2c — if the split is
+ * already a table boundary, build the tab on it and stop." `IdeaUserMaterial` IS that
+ * boundary (confirmed: 25-Y's own fix already reads uploads from it; `Document` is the
+ * system's own output, never a user's). No new provenance field was needed.
+ */
+interface InboundItem {
+  id: string
+  kind: 'FILE' | 'LINK'
+  status: 'PENDING' | 'READY' | 'FAILED'
+  label: string
+  filename: string | null
+  url: string | null
+  findingCount: number
+  createdAt: string
+}
+
+function InboundDocuments({ ideaId, canEdit }: { ideaId: string; canEdit: boolean }) {
+  const [items, setItems] = useState<InboundItem[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch(`/api/ideas/${ideaId}/material`)
+        if (res.ok && !cancelled) {
+          const data = await res.json()
+          setItems(data.material ?? [])
+        }
+      } catch { if (!cancelled) setItems([]) }
+    })()
+    return () => { cancelled = true }
+  }, [ideaId])
+
+  const remove = async (id: string) => {
+    setItems((prev) => (prev ?? []).filter((m) => m.id !== id))
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/material?materialId=${id}`, { method: 'DELETE' })
+      if (res.ok) { const data = await res.json(); setItems(data.material ?? []) }
+    } catch { /* optimistic removal stands */ }
+  }
+
+  if (items === null) return <p className="px-4 py-3 text-sm text-zinc-400">Loading…</p>
+  if (items.length === 0) return <p className="px-4 py-3 text-sm text-zinc-400 italic">Nothing added yet.</p>
+
+  return (
+    <ul className="divide-y divide-zinc-100">
+      {items.map((m) => (
+        <li key={m.id} className="px-4 py-3 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-zinc-800 truncate">{m.label}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {m.kind === 'FILE' ? `File — ${m.filename ?? 'uploaded'}` : 'Link'}
+              {m.status === 'READY' && ` · ${m.findingCount} finding${m.findingCount === 1 ? '' : 's'}`}
+              {m.status === 'PENDING' && ' · not yet read'}
+              {m.status === 'FAILED' && ' · could not be read'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {m.url && (
+              <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-500 hover:text-zinc-900 underline">
+                Open
+              </a>
+            )}
+            {canEdit && (
+              <button onClick={() => void remove(m.id)} className="text-xs text-zinc-400 hover:text-red-600 underline">
+                Not relevant — remove
+              </button>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function LegacyActionsFallback({ idea }: { idea: Idea }) {
+  if (!idea.coherentActions.length) return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
+  return (
+    <ul className="space-y-1.5">
+      {idea.coherentActions.map((a) => (
+        <li key={a.id} className="text-sm text-zinc-800">{a.title}</li>
+      ))}
+    </ul>
+  )
+}
+
 function IdeaTab({
   idea,
   canEdit,
+  canonicalState,
 }: {
   idea: Idea
   canEdit: boolean
+  canonicalState: CanonicalState | null
 }) {
   const [subTab, setSubTab] = useState<IdeaSubTab>('overview')
-  const [localDiagnosis, setLocalDiagnosis] = useState<DiagnosisRecord | null>(idea.diagnoses[0] ?? null)
-  const [localRootCauses, setLocalRootCauses] = useState<RootCauseRecord[]>(idea.rootCauses)
-  const [localGuidingPolicy, setLocalGuidingPolicy] = useState<GuidingPolicyRecord | null>(idea.guidingPolicies[0] ?? null)
-  const [localEvidence, setLocalEvidence] = useState<EvidenceRecord[]>(idea.evidence)
-  const [expandedRootCause, setExpandedRootCause] = useState<string | null>(null)
-  const [expandedEvidence, setExpandedEvidence] = useState<string | null>(null)
-  const [expandedAction, setExpandedAction] = useState<string | null>(null)
+  const pageByKey = (key: string) => canonicalState?.pages.find((p) => p.key === key)
 
   const subTabs: { key: IdeaSubTab; label: string }[] = [
     { key: 'overview', label: 'Overview' },
@@ -1098,20 +1418,6 @@ function IdeaTab({
   const IDEA_TYPE_LABELS: Record<string, string> = {
     LEGISLATION: 'Legislation',
     ORGANISATION: 'Organisational Change',
-  }
-
-  function updateDiagnosisField(field: keyof DiagnosisRecord, value: string) {
-    setLocalDiagnosis(prev => prev
-      ? { ...prev, [field]: value }
-      : { id: '', diagnosisTitle: null, text: null, obstacleDefined: null, whoAffected: null, howAffected: null, whyPersisted: null, impactDescription: null, impactCost: null, createdAt: '', updatedAt: '', [field]: value }
-    )
-  }
-
-  function updateGuidingPolicyField(field: keyof GuidingPolicyRecord, value: string) {
-    setLocalGuidingPolicy(prev => prev
-      ? { ...prev, [field]: value }
-      : { id: '', guidingPolicyTitle: null, text: null, coreTheory: null, mechanismTypes: null, tradeOffs: null, competitiveIdeaAnalysis: null, createdAt: '', [field]: value }
-    )
   }
 
   return (
@@ -1141,6 +1447,20 @@ function IdeaTab({
         <div className="flex flex-col gap-6 md:flex-row">
           {/* Left column: summary content (2/3) */}
           <div className="min-w-0 flex-1">
+            {/* 26-J §1d — the cold read: this reads the same "N of M approved" the editor
+                shows, off the same canonicalState, so the two can never disagree again. */}
+            {canonicalState && (
+              <div className="mb-5 flex flex-wrap gap-x-4 gap-y-1">
+                {canonicalState.pages.filter((p) => p.fields.length > 0).map((p) => {
+                  const { done, total } = pageProgress(p)
+                  return (
+                    <span key={p.key} className="text-[11px] text-zinc-500">
+                      <span className="font-medium text-zinc-700">{p.label}</span>: {done} of {total} approved
+                    </span>
+                  )
+                })}
+              </div>
+            )}
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Summary</p>
             {idea.summaryDescription ? (
               <p className="text-sm leading-relaxed text-zinc-800">{idea.summaryDescription}</p>
@@ -1207,150 +1527,40 @@ function IdeaTab({
         </div>
       )}
 
-      {/* Sub-tab: Diagnosis */}
+      {/* ══ 26-J §1 — DIAGNOSIS/POLICY/COHERENT ACTIONS, REBUILT AGAINST THE LIVE SCHEMA ══
+          These used to read Diagnosis/GuidingPolicy/RootCause/Evidence/CoherentAction —
+          tables the current build pipeline stopped writing to when the kernel was
+          rebuilt (26-H's diagnosis). They now read `canonicalState`, assembled by
+          `computeCanonicalState` — the SAME function the editor's own FieldsPanel calls —
+          so this page and the editor cannot read two different truths again. */}
       {subTab === 'diagnosis' && (
-        <div>
-          <FieldDisplay label="What's the Problem?" value={localDiagnosis?.text} placeholder="Not yet completed — describe the problem in 3–5 sentences" canEdit={canEdit} fieldKey="diagnosis.text" ideaId={idea.id} onSaved={v => updateDiagnosisField('text', v)} />
-          <FieldDisplay label="The Obstacle" value={localDiagnosis?.obstacleDefined} placeholder="Not yet completed — define the specific obstacle preventing resolution" canEdit={canEdit} fieldKey="diagnosis.obstacleDefined" ideaId={idea.id} onSaved={v => updateDiagnosisField('obstacleDefined', v)} />
-          <FieldDisplay label="Who Is Affected?" value={localDiagnosis?.whoAffected} placeholder="Not yet completed — name the groups, communities or institutions affected" canEdit={canEdit} fieldKey="diagnosis.whoAffected" ideaId={idea.id} onSaved={v => updateDiagnosisField('whoAffected', v)} />
-          <FieldDisplay label="How Are They Affected?" value={localDiagnosis?.howAffected} placeholder="Not yet completed — describe the practical impact on those affected" canEdit={canEdit} fieldKey="diagnosis.howAffected" ideaId={idea.id} onSaved={v => updateDiagnosisField('howAffected', v)} />
-          <FieldDisplay label="Why Has This Persisted?" value={localDiagnosis?.whyPersisted} placeholder="Not yet completed — explain why existing arrangements have failed" canEdit={canEdit} fieldKey="diagnosis.whyPersisted" ideaId={idea.id} onSaved={v => updateDiagnosisField('whyPersisted', v)} />
-          <FieldDisplay label="Impact" value={localDiagnosis?.impactDescription} placeholder="Not yet completed — summarise the harm or cost caused" canEdit={canEdit} fieldKey="diagnosis.impactDescription" ideaId={idea.id} onSaved={v => updateDiagnosisField('impactDescription', v)} />
-          <FieldDisplay label="Impact Cost" value={localDiagnosis?.impactCost} placeholder="Not yet completed — quantify the cost if known, or note 'To be researched'" canEdit={canEdit} fieldKey="diagnosis.impactCost" ideaId={idea.id} onSaved={v => updateDiagnosisField('impactCost', v)} />
-
-          {/* Root Cause records */}
-          {localRootCauses.length > 0 && (
-            <div className="mt-6">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Root Causes</p>
-              <div className="space-y-3">
-                {localRootCauses.map(rc => (
-                  <div key={rc.id} className="rounded-lg border overflow-hidden">
-                    <button
-                      onClick={() => setExpandedRootCause(expandedRootCause === rc.id ? null : rc.id)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
-                    >
-                      <span className="text-sm font-medium">{rc.rootCauseTitle ?? rc.text?.slice(0, 80) ?? 'Root Cause'}</span>
-                      <svg className={`w-4 h-4 text-zinc-400 transition-transform ${expandedRootCause === rc.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {expandedRootCause === rc.id && (
-                      <div className="px-4 pb-4 border-t bg-zinc-50/50">
-                        <FieldDisplay label="Root Cause" value={rc.text} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.text" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, text: v } : r))} />
-                        <FieldDisplay label="The Mechanism" value={rc.rootCauseMechanism} placeholder="Not yet completed — describe the mechanism that causes this" canEdit={canEdit} fieldKey="rootCause.rootCauseMechanism" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, rootCauseMechanism: v } : r))} />
-                        <FieldDisplay label="Why It Hasn't Been Solved" value={rc.whyNotSolved} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.whyNotSolved" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, whyNotSolved: v } : r))} />
-                        <FieldDisplay label="Incentive Drivers" value={rc.incentiveDrivers} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.incentiveDrivers" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, incentiveDrivers: v } : r))} />
-                        <FieldDisplay label="Structural Drivers" value={rc.structureDrivers} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.structureDrivers" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, structureDrivers: v } : r))} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {localRootCauses.length === 0 && (
-            <div className="mt-6">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Root Causes</p>
-              <p className="text-sm text-zinc-400 italic">Not yet completed — root cause analysis comes in Stage 2</p>
-            </div>
-          )}
-        </div>
+        <CanonicalPageBlock
+          page={pageByKey('DIAGNOSIS')}
+          canonicalState={canonicalState}
+          canEdit={canEdit}
+          ideaId={idea.id}
+          legacyFallback={idea.diagnoses[0] || idea.rootCauses.length ? <LegacyDiagnosisFallback idea={idea} /> : undefined}
+        />
       )}
 
-      {/* Sub-tab: Policy */}
       {subTab === 'policy' && (
-        <div>
-          <FieldDisplay label="How Will We Solve It?" value={localGuidingPolicy?.text} placeholder="Not yet completed — describe the strategic direction in 3–5 sentences" canEdit={canEdit} fieldKey="guidingPolicy.text" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('text', v)} />
-          <FieldDisplay label="Core Theory" value={localGuidingPolicy?.coreTheory} placeholder="Not yet completed — the causal theory linking the intervention to the outcome" canEdit={canEdit} fieldKey="guidingPolicy.coreTheory" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('coreTheory', v)} />
-          <FieldDisplay label="14. Mechanism Types" value={localGuidingPolicy?.mechanismTypes?.join(', ') ?? null} placeholder="Not yet completed — select mechanism types" canEdit={canEdit} fieldKey="guidingPolicy.mechanismTypes" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismTypes', v as never)} />
-          <FieldDisplay label="Trade-offs" value={localGuidingPolicy?.tradeOffs} placeholder="Not yet completed — what must be sacrificed or accepted to make this work?" canEdit={canEdit} fieldKey="guidingPolicy.tradeOffs" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('tradeOffs', v)} />
-          <FieldDisplay label="What Else Has Been Tried?" value={localGuidingPolicy?.competitiveIdeaAnalysis} placeholder="Not yet completed — analysis of competing or prior approaches" canEdit={canEdit} fieldKey="guidingPolicy.competitiveIdeaAnalysis" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('competitiveIdeaAnalysis', v)} />
-
-          {/* Evidence records */}
-          {localEvidence.length > 0 && (
-            <div className="mt-6">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Evidence</p>
-              <div className="space-y-3">
-                {localEvidence.map(ev => (
-                  <div key={ev.id} className="rounded-lg border overflow-hidden">
-                    <button
-                      onClick={() => setExpandedEvidence(expandedEvidence === ev.id ? null : ev.id)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
-                    >
-                      <div>
-                        <span className="text-sm font-medium">{ev.title}</span>
-                        {ev.successFailure && (
-                          <span className={`ml-2 text-xs rounded-full px-2 py-0.5 ${ev.successFailure === 'SUCCESS' ? 'bg-green-100 text-green-700' : ev.successFailure === 'FAILURE' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                            {ev.successFailure}
-                          </span>
-                        )}
-                      </div>
-                      <svg className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ${expandedEvidence === ev.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {expandedEvidence === ev.id && (
-                      <div className="px-4 pb-4 border-t bg-zinc-50/50 space-y-3">
-                        <p className="text-sm text-zinc-700 mt-3">{ev.description}</p>
-                        {ev.comparablePolicy && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Comparable Policy</p><p className="text-sm">{ev.comparablePolicy}</p></div>}
-                        {ev.whatWorked && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">What Worked</p><p className="text-sm">{ev.whatWorked}</p></div>}
-                        {ev.whatFailed && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">What Failed</p><p className="text-sm">{ev.whatFailed}</p></div>}
-                        {ev.sourceUrl && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Source</p><a href={ev.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline hover:text-blue-800 break-all">{ev.sourceUrl}</a></div>}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <CanonicalPageBlock
+          page={pageByKey('GUIDING_POLICY')}
+          canonicalState={canonicalState}
+          canEdit={canEdit}
+          ideaId={idea.id}
+          legacyFallback={idea.guidingPolicies[0] || idea.evidence.length ? <LegacyPolicyFallback idea={idea} /> : undefined}
+        />
       )}
 
-      {/* Sub-tab: Coherent Actions */}
       {subTab === 'actions' && (
-        <div>
-          {idea.coherentActions.length === 0 && (
-            <p className="text-sm text-zinc-400 italic">Not yet completed — coherent actions are built in Stage 2</p>
-          )}
-          <div className="space-y-3">
-            {idea.coherentActions.map((action) => (
-              <div key={action.id} className="rounded-lg border overflow-hidden">
-                <button
-                  onClick={() => setExpandedAction(expandedAction === action.id ? null : action.id)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium truncate">{action.title}</span>
-                    {action.actionType && (
-                      <span className="shrink-0 text-xs rounded-full px-2 py-0.5 bg-blue-100 text-blue-700">
-                        {action.actionType}
-                      </span>
-                    )}
-                  </div>
-                  <svg className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ml-2 ${expandedAction === action.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {expandedAction === action.id && (
-                  <div className="px-4 pb-4 border-t bg-zinc-50/50">
-                    {action.detailedDescription && <div className="mt-3 mb-3"><p className="text-sm text-zinc-700 leading-relaxed">{action.detailedDescription}</p></div>}
-                    {action.practicalExecution && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Practical Execution</p><p className="text-sm">{action.practicalExecution}</p></div>}
-                    {action.implementationPlan && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Implementation Plan</p><p className="text-sm">{action.implementationPlan}</p></div>}
-                    {action.keyRisks && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Key Risks</p><p className="text-sm">{action.keyRisks}</p></div>}
-                    {action.costBenefitAnalysis && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Cost–Benefit Analysis</p><p className="text-sm">{action.costBenefitAnalysis}</p></div>}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          {canEdit && (
-            <div className="mt-4">
-              <Link href={`/ideas/${idea.id}?tab=lex`} className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 border border-dashed rounded-lg px-4 py-2 hover:border-zinc-400 transition-colors">
-                + Add Action via Lex
-              </Link>
-            </div>
-          )}
-        </div>
+        <CanonicalPageBlock
+          page={pageByKey('COHERENT_ACTIONS')}
+          canonicalState={canonicalState}
+          canEdit={canEdit}
+          ideaId={idea.id}
+          legacyFallback={idea.coherentActions.length ? <LegacyActionsFallback idea={idea} /> : undefined}
+        />
       )}
     </div>
   )
@@ -2193,6 +2403,7 @@ export default function IdeaDetailClient({
   ideaReviewCount,
   avgQualityRating,
   stage4GateData,
+  canonicalState,
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -2566,7 +2777,7 @@ export default function IdeaDetailClient({
                   />
                 </div>
               )}
-              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} />
+              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} canonicalState={canonicalState} />
             </>
           )}
           {activeTab === 'contributions' && (
@@ -2607,35 +2818,49 @@ export default function IdeaDetailClient({
               <div>
                 <h2 className="text-lg font-semibold text-zinc-900">Documents</h2>
                 <p className="text-sm text-zinc-600 mt-1">
-                  Generated from what is stored on this idea. Each one says what it was made from and
-                  when — re-run a search and the file is marked out of date rather than quietly served.
+                  Everything added to this idea, and everything generated from it.
                 </p>
               </div>
-              {/* 17 Sep 2026 — THE PAIR, from one build: here is what we found, here is what we
-                  need from you. Both are frozen records of that build; the live view is the
-                  research panel and the worklist in the working area. */}
-              <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_BACKGROUND" />
-              <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_QUESTIONS" />
-              {/* ⚠ BRIEF_26G §4d — the two documents that LEAVE the building, alongside the
-                  others, named. Same frozen-at-a-build record as the pair above. */}
-              <DocumentExports ideaId={idea.id} variant="page" kind="COMMITTEE_EVIDENCE" />
-              <DocumentExports ideaId={idea.id} variant="page" kind="ONE_PAGE_SUMMARY" />
-              {/* Sprint 20-B/D — the proposal itself, and who can read it. Owner
-                  only, because publishing is the owner's act (§20.3). */}
-              {isOwner && (
-                <div className="border-t border-zinc-200 pt-4">
-                  <h3 className="text-sm font-semibold text-zinc-900">The proposal document</h3>
-                  <p className="text-sm text-zinc-600 mt-1">
-                    The Proposal and the Summary, and the version a recipient’s link is pinned to.
+
+              {/* 26-J §3 — INBOUND: anything the user added. */}
+              <CollapsedSection title="Inbound" hint="What you've added — links and files." defaultOpen>
+                <InboundDocuments ideaId={idea.id} canEdit={isOwner || isCollaborator} />
+              </CollapsedSection>
+
+              {/* 26-J §3 — OUTBOUND: anything the system produced. */}
+              <CollapsedSection title="Outbound" hint="Generated from what is stored on this idea." defaultOpen>
+                <div className="p-4 space-y-4">
+                  <p className="text-xs text-zinc-500 -mt-1">
+                    Each one says what it was made from and when — re-run a search and the file is
+                    marked out of date rather than quietly served.
                   </p>
-                  <a
-                    href={`/ideas/${idea.id}/publish`}
-                    className="inline-block mt-2 text-xs px-3 py-1.5 rounded border border-zinc-300 hover:bg-zinc-50"
-                  >
-                    Open publishing
-                  </a>
+                  {/* 17 Sep 2026 — THE PAIR, from one build: here is what we found, here is what we
+                      need from you. Both are frozen records of that build; the live view is the
+                      research panel and the worklist in the working area. */}
+                  <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_BACKGROUND" />
+                  <DocumentExports ideaId={idea.id} variant="page" kind="INITIAL_QUESTIONS" />
+                  {/* ⚠ BRIEF_26G §4d — the two documents that LEAVE the building, alongside the
+                      others, named. Same frozen-at-a-build record as the pair above. */}
+                  <DocumentExports ideaId={idea.id} variant="page" kind="COMMITTEE_EVIDENCE" />
+                  <DocumentExports ideaId={idea.id} variant="page" kind="ONE_PAGE_SUMMARY" />
+                  {/* Sprint 20-B/D — the proposal itself, and who can read it. Owner
+                      only, because publishing is the owner's act (§20.3). */}
+                  {isOwner && (
+                    <div className="border-t border-zinc-200 pt-4">
+                      <h3 className="text-sm font-semibold text-zinc-900">The proposal document</h3>
+                      <p className="text-sm text-zinc-600 mt-1">
+                        The Proposal and the Summary, and the version a recipient’s link is pinned to.
+                      </p>
+                      <a
+                        href={`/ideas/${idea.id}/publish`}
+                        className="inline-block mt-2 text-xs px-3 py-1.5 rounded border border-zinc-300 hover:bg-zinc-50"
+                      >
+                        Open publishing
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
+              </CollapsedSection>
             </div>
           )}
           {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} ownerReferralCode={currentUserReferralCode} />}

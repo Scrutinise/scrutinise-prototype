@@ -139,7 +139,8 @@ export async function projectElicitationOntoPageOne(ideaId: string): Promise<{
   // read and yielded nothing, could not be read at all. A document that failed says so
   // here too, because this field is what the drafting passes see.
   const materials = await prisma.ideaUserMaterial.findMany({
-    where: { ideaId },
+    // 26-J §2b — archived material is withdrawn; it must not still shape the build.
+    where: { ideaId, archivedAt: null },
     select: { label: true, kind: true, status: true, findingCount: true, failureReason: true },
     orderBy: { createdAt: 'asc' },
   })

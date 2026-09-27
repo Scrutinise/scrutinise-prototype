@@ -826,7 +826,8 @@ export async function elicitationContext(ideaId: string, userId: string): Promis
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { aboutYouNarrative: true } })
   // ⚠ 25-Y §1a — the user's own uploaded documents, read on every pass of every build.
   const materials = await prisma.ideaUserMaterial.findMany({
-    where: { ideaId },
+    // 26-J §2b — archived material is withdrawn; it must not still shape the build.
+    where: { ideaId, archivedAt: null },
     select: { label: true, kind: true, findingCount: true, findingsAt: true },
     orderBy: { createdAt: 'asc' },
   })

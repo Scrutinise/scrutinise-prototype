@@ -61,7 +61,8 @@ export async function GET(_req: Request, { params }: Params) {
   }
 
   const research = await prisma.research.findMany({
-    where: { ideaId },
+    // 26-J §2b — archived, not destroyed: hidden from this list, row kept.
+    where: { ideaId, archivedAt: null },
     orderBy: { createdAt: 'asc' },
     include: {
       contributor: { select: { id: true, name: true, username: true } },
@@ -69,6 +70,36 @@ export async function GET(_req: Request, { params }: Params) {
   })
 
   return NextResponse.json({ research })
+}
+
+// DELETE /api/ideas/[id]/research?researchId=X — 26-J §2b: archives, does not destroy.
+// Owner/editors only, at any stage — this is tidying a list they can already see, not the
+// stage-gated act of adding to it.
+export async function DELETE(req: Request, { params }: Params) {
+  const { error, user } = await getAuthenticatedUser()
+  if (error) return error
+
+  const { id: ideaId } = await params
+  const researchId = new URL(req.url).searchParams.get('researchId')?.trim()
+  if (!researchId) return NextResponse.json({ error: 'researchId is required.' }, { status: 422 })
+
+  const idea = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    include: { collaborators: { select: { userId: true, role: true } } },
+  })
+  if (!idea) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const isOwner = idea.creatorId === user.id
+  const isEditor = idea.collaborators.some((c) => c.userId === user.id && c.role === 'EDITOR')
+  if (!isOwner && !isEditor) {
+    return NextResponse.json({ error: 'Forbidden — only owner and editors can remove research.' }, { status: 403 })
+  }
+
+  const row = await prisma.research.findFirst({ where: { id: researchId, ideaId }, select: { id: true } })
+  if (!row) return NextResponse.json({ error: 'That is not on this idea.' }, { status: 404 })
+
+  await prisma.research.update({ where: { id: researchId }, data: { archivedAt: new Date() } })
+  return NextResponse.json({ archived: researchId })
 }
 
 // POST /api/ideas/[id]/research — owner+editors at Stage 2+; all at Stage 3+

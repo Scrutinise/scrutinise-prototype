@@ -70,7 +70,9 @@ export async function fileUrlsFromChat(ideaId: string, userId: string, message: 
     // Dedupe against what is already on the idea — the same link mentioned again in
     // conversation must not re-fetch and re-file a second copy.
     const existing = await prisma.ideaUserMaterial.findFirst({
-      where: { ideaId, url, kind: 'LINK' },
+      // 26-J §2b — an archived link is no longer "on the idea"; mentioning it again may add
+      // it afresh rather than reporting a dedupe against a row the user deliberately removed.
+      where: { ideaId, url, kind: 'LINK', archivedAt: null },
       select: { id: true, findingCount: true, label: true },
     })
     if (existing) {
@@ -78,7 +80,8 @@ export async function fileUrlsFromChat(ideaId: string, userId: string, message: 
       continue
     }
 
-    const count = await prisma.ideaUserMaterial.count({ where: { ideaId } })
+    // 26-J §2b — an archived slot is a freed slot, same as material.route.ts's own cap check.
+    const count = await prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } })
     if (count >= MAX_MATERIALS_PER_IDEA) {
       results.push({ url, outcome: 'cap-reached' })
       continue

@@ -486,6 +486,11 @@ model User {
   /// having failed to save. Validated by Zod on write; loose here so a fourth panel needs
   /// no migration.
   lexPanelLayout            Json?
+  /// 26-J §4 — the Dashboard/Ideas-list sort choice (26-H §3), moved off `localStorage` for
+  /// the same reason `lexPanelLayout` is a column above: a browser store persists per
+  /// DEVICE, so Charlie's iPad never knew what his desktop chose. 'recent' | 'name' |
+  /// 'created'; null (unset) reads as 'recent', the existing default.
+  ideaSortMode              String?
   // Identity
   firstName                 String
   lastName                  String
@@ -1124,6 +1129,8 @@ model Research {
   constructiveScore     Int?
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
+  /// 26-J §2b — "delete archives; it does not destroy." Hidden from every list; row kept.
+  archivedAt            DateTime?
 
   @@index([ideaId])
 }
@@ -4860,6 +4867,8 @@ model IdeaUserMaterial {
   addedBy       String
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
+  /// 26-J §2b — "delete archives; it does not destroy." Hidden from every list; row kept.
+  archivedAt    DateTime?
 
   @@index([ideaId])
   @@index([ideaId, status])

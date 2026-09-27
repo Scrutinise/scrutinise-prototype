@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import IdeaDetailClient from './IdeaDetailClient'
 import { getStage3GateData, getStage4GateData } from '@/lib/stage-gates'
+import { computeCanonicalState } from '@/lib/lex/state'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -191,6 +192,11 @@ export default async function IdeaDetailPage({ params }: Props) {
     stage4GateData = await getStage4GateData(id)
   }
 
+  // 26-J §1 — the Overview's Diagnosis/Policy/Coherent Actions tabs read this, the SAME
+  // function the editor's FieldsPanel calls, instead of the pre-rebuild relations below
+  // (kept in the query for §1c — reported, not dropped this sprint).
+  const canonicalState = await computeCanonicalState(id).catch(() => null)
+
   // Serialise for client (Prisma Decimal → string, Date → string)
   const serialised = {
     ...idea,
@@ -262,6 +268,7 @@ export default async function IdeaDetailPage({ params }: Props) {
         ideaReviewCount={ideaReviewCount}
         avgQualityRating={avgQualityRating}
         stage4GateData={stage4GateData}
+        canonicalState={canonicalState}
       />
     </div>
   )

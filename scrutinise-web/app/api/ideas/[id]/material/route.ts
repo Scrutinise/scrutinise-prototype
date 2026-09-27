@@ -38,7 +38,8 @@ const LIST_SELECT = {
 
 async function listMaterial(ideaId: string) {
   const rows = await prisma.ideaUserMaterial.findMany({
-    where: { ideaId }, orderBy: { createdAt: 'desc' }, select: LIST_SELECT,
+    // 26-J §2b — archived, not destroyed: hidden from this list, row kept.
+    where: { ideaId, archivedAt: null }, orderBy: { createdAt: 'desc' }, select: LIST_SELECT,
   })
   return {
     material: rows.map((r) => ({
@@ -128,7 +129,7 @@ export async function POST(req: Request, { params }: Params) {
   // ⚠ THE CAP IS CHECKED BEFORE ANYTHING IS FETCHED OR PARSED. Checking after would mean a
   // 10MB upload is read, extracted and then refused — work done on a request we always knew
   // we would reject.
-  const count = await prisma.ideaUserMaterial.count({ where: { ideaId: id } })
+  const count = await prisma.ideaUserMaterial.count({ where: { ideaId: id, archivedAt: null } })
   if (count >= MAX_MATERIALS_PER_IDEA) {
     const detail = `This idea already has ${count} documents attached, which is the limit. `
       + 'Remove one you no longer need and add this instead.'
@@ -261,14 +262,19 @@ export async function DELETE(req: Request, { params }: Params) {
   })
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // ⚠ THE FINDINGS GO WITH IT. A finding quoting a document the user has withdrawn is a
-  // quotation with no source — and if the reason for withdrawal was that they should never
-  // have shared it, leaving the quotes behind defeats the withdrawal entirely.
+  // ⚠⚠ 26-J §2b — "DELETE ARCHIVES; IT DOES NOT DESTROY." Was a hard `delete` until this
+  // sprint; now the same `archivedAt` pattern `Idea.archivedAt` already uses. The row is
+  // kept — only `listMaterial` (and everything that reads it) stops showing it.
+  //
+  // ⚠ THE FINDINGS STILL GO WITH IT. A finding quoting a document the user has withdrawn is
+  // a quotation with no source in the build's own context — and unlike the material row
+  // itself, a finding is a derived artefact, not "the document", so removing it is not the
+  // destruction the brief is about.
   await prisma.$transaction([
     prisma.evidenceItem.deleteMany({
       where: { ideaId: id, passKey: `${USER_MATERIAL_PASS_PREFIX}${materialId}` },
     }),
-    prisma.ideaUserMaterial.delete({ where: { id: materialId } }),
+    prisma.ideaUserMaterial.update({ where: { id: materialId }, data: { archivedAt: new Date() } }),
   ])
 
   return NextResponse.json(await listMaterial(id))

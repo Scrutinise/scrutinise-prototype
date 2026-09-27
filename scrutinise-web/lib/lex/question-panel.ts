@@ -180,7 +180,8 @@ export async function buildQuestionPanel(
     // ⚠ `text` IS NOT SELECTED. The panel never renders a document body, and putting fifty
     // pages on the wire for a heading that shows a filename is how a poll becomes expensive.
     prisma.ideaUserMaterial.findMany({
-      where: { ideaId },
+      // 26-J §2b — archived material is withdrawn; the panel must not still list it.
+      where: { ideaId, archivedAt: null },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true, kind: true, label: true, url: true, status: true,
