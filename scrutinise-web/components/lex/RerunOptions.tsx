@@ -111,6 +111,9 @@ export default function RerunOptions({ ideaId, kernelComplete }: {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // 26-K §5 — "the first option offered is 'Compare the new material with your kernel' —
+  // not 'Re-run'" when material has arrived since the last comparison.
+  const [pendingUpdateCount, setPendingUpdateCount] = useState(0)
 
   const load = useCallback(async () => {
     try {
@@ -129,10 +132,17 @@ export default function RerunOptions({ ideaId, kernelComplete }: {
     } catch { /* the counts are additive to the box; a failed read just omits them */ }
   }, [ideaId])
 
+  const loadPendingUpdate = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/update-pass`)
+      if (res.ok) { const j = await res.json(); setPendingUpdateCount(j.count ?? 0) }
+    } catch { /* additive to the box; a failed read just omits the option */ }
+  }, [ideaId])
+
   useEffect(() => { void load() }, [load])
   // ⚠ ONLY FETCHED ONCE THE KERNEL IS COMPLETE — the same "nothing until there is something to
   // show" rule the box already follows for the re-run block itself.
-  useEffect(() => { if (kernelComplete) void loadAgenda() }, [kernelComplete, loadAgenda])
+  useEffect(() => { if (kernelComplete) { void loadAgenda(); void loadPendingUpdate() } }, [kernelComplete, loadAgenda, loadPendingUpdate])
 
   const start = useCallback(async (mode: 'FULL' | 'REUSE', critique: string) => {
     setBusy(true)
@@ -337,6 +347,15 @@ export default function RerunOptions({ ideaId, kernelComplete }: {
               now the primary thing to do at the end of the kernel, not a rarely-used control. */}
           <CollapsedSection title="What next" defaultOpen hint="A range of options, and why you would choose each.">
             <div className="p-3 space-y-2.5">
+              {/* 26-K §5 — offered AHEAD of Re-run when new material exists: a full re-run
+                  answers less often than a targeted comparison does, and the box has to say so. */}
+              {pendingUpdateCount > 0 && (
+                <OptionRow
+                  title="Compare the new material with your kernel"
+                  reason={`${pendingUpdateCount} new item${pendingUpdateCount === 1 ? '' : 's'} since your last comparison — proposes changes only where the material actually bears on something, rather than re-running everything.`}
+                  href={`/ideas/${ideaId}?tab=research`}
+                />
+              )}
               <OptionRow
                 title="Run the coherence check"
                 reason="Does the policy answer the diagnosis, and do the actions implement the policy?"

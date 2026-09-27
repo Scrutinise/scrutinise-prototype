@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ExternalLink } from 'lucide-react'
+import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 
 // 26-J §2 — the sources AND documents gathered on this idea. "Sources" is `Research`
 // (manually-cited evidence, existing); "documents" is `IdeaUserMaterial` — the table
@@ -487,6 +488,10 @@ export default function ResearchTab({
 
   return (
     <div className="space-y-6">
+      {/* 26-K §4c — visible where the material is added, so a user who uploads a document
+          sees something happen rather than nothing. */}
+      <UpdatePassPanel ideaId={ideaId} canEdit={canDelete} />
+
       <div>
         <h3 className="mb-3 text-sm font-semibold">Research</h3>
         <div className="space-y-4">

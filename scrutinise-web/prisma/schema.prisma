@@ -706,6 +706,10 @@ model Idea {
   /// ⚠ WHAT IT TURNS ON. An unresolved choice with no reason tells a reader there is a gap and
   /// nothing whatever about it.
   guidingPolicyUnresolvedWhy String?
+  /// 26-K §4c — when the last update-pass comparison ran, so "N new items since your last
+  /// comparison" (the accumulating offer) can be computed as material created after this.
+  /// Null means never compared — every live, un-archived document counts as pending.
+  lastUpdatePassAt         DateTime?
 
   /// ══ 25-O §4b — ARCHIVED, WHICH IS NOT DELETED AND NOT SOFT-DELETED ═══════════════
   ///
@@ -2577,6 +2581,14 @@ model IdeaFieldState {
   status    FieldStatus @default(EMPTY)
   value     String?     // accepted value (plain text, or JSON-encoded for structured fields)
   proposal  Json?       // { value, rationale } — present only while AWAITING_CONFIRMATION
+  /// 26-K §4b — "accepting a change re-runs nothing; it marks what depends on it as stale."
+  /// Deliberately NOT a fifth `FieldStatus` value: `status` still says whether the field is
+  /// answered; `stale` says whether the answer might now need a second look. The two are
+  /// orthogonal — an ACCEPTED field can be stale, an EMPTY one cannot be (nothing to revisit).
+  stale       Boolean   @default(false)
+  /// ⚠ NEVER stale=true with a null reason — "this may need revisiting because cause 3 was
+  /// amended" is the whole point; a bare flag with no reason is the thing this exists to avoid.
+  staleReason String?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -2716,6 +2728,10 @@ model DiagnosisCause {
   /// ⚠ NULLABLE for rows written before 25-S; they are numbered by the backfill, oldest first.
   number         Int?
   orderIndex     Int                  @default(0) // display position — MOVES; see `number`
+  /// 26-K §4b — set when an accepted update-pass finding contradicts this cause. See
+  /// `IdeaFieldState.stale`'s comment for why this is a flag beside the row, not a status value.
+  stale          Boolean              @default(false)
+  staleReason    String?
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 
@@ -2743,6 +2759,11 @@ model PolicyOption {
   ruleOutReason  String?
   source         LexEntitySource    @default(USER)
   orderIndex     Int                @default(0)
+  /// 26-K §4b — set when an accepted update-pass finding contradicts this option, or when a
+  /// cause in `targetCauseIds` is itself marked stale. Same shape as `IdeaFieldState.stale`
+  /// above; see that field's comment for why it is a flag beside `status`, not a fifth status.
+  stale          Boolean            @default(false)
+  staleReason    String?
 
   // ══════════════ 25-P §1 — THE GUIDING POLICY BECOMES A DECISION ══════════════
 
@@ -4117,6 +4138,11 @@ enum EvidenceKind {
   SUPPORTS
   CONTRADICTS
   COMPARISON
+  /// 26-K §2 — two of the update pass's five categories with no existing kind: "suggests a
+  /// new cause" and "suggests a new policy option or coherent action". The other three
+  /// categories (supports/contradicts/changes nothing) reuse SUPPORTS/CONTRADICTS/FINDING.
+  NEW_CAUSE
+  NEW_POLICY_OPTION
 }
 
 enum EvidenceStatus {

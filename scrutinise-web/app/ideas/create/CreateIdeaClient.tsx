@@ -31,6 +31,7 @@ import { stageByKey, type LexStageKey } from '@/lib/lex/stages'
 import type { StageContext } from '@/lib/lex/stage-context'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
+import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import AgendaPanel from '@/components/lex/AgendaPanel'
 import ReportAdditions from '@/components/lex/ReportAdditions'
 import type { FeedbackSurfaceKey } from '@/lib/lex/feedback-types'
@@ -1128,6 +1129,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   everything else". At Stage 3 the middle column IS the deepening — its
                   passes, their findings and the issues to work through — with the same
                   worklist shape as Stage 2 in the column beside it. */}
+              {/* 26-K §4c — visible in the working area regardless of stage; new material can
+                  arrive well before the kernel (and DeepeningPanel, gated on kernelComplete)
+                  unlocks. One mount point above both branches, so neither's own JSX is touched. */}
+              <div className="px-3 pt-2">
+                <UpdatePassPanel ideaId={state.ideaId} canEdit />
+              </div>
               {lexStage === 'deepening' ? (
                 <div className="h-full min-h-0 overflow-y-auto px-3 pb-6">
                   <DeepeningPanel
