@@ -42,6 +42,10 @@ export default async function DashboardPage() {
         title: true,
         stage: true,
         updatedAt: true,
+        createdAt: true,
+        // 26-H §3b — the same grouping the Ideas page uses, so a group's arrangement is
+        // "one arrangement, two places" rather than something only visible over there.
+        group: { select: { id: true, name: true, hidden: true } },
         _count: {
           select: { comments: true, research: true },
         },
@@ -135,6 +139,7 @@ export default async function DashboardPage() {
         ideas={ideas.map((idea) => ({
           ...idea,
           updatedAt: idea.updatedAt.toISOString(),
+          createdAt: idea.createdAt.toISOString(),
         }))}
         notifications={notifications.map((n) => ({
           ...n,

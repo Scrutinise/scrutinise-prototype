@@ -44,6 +44,8 @@ export interface MyIdea {
   buildStatus: 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED' | 'CANCELLED' | null
   passesComplete: number | null
   updatedAt: string
+  /** 26-H §3a — needed for the "Date created" sort option. */
+  createdAt: string
   /** 26-C §7b — the owner's own archive (`Idea.ownerArchivedAt`), never the admin's. */
   archived: boolean
   /** 26-C addendum §20 — `Idea.deletedAt` is set. Arrives as its own list (`deletedIdeas`
@@ -101,6 +103,7 @@ export function hrefFor(i: MyIdea): string {
 
 import { useCallback, useRef, useState } from 'react'
 import DeleteIdeaDialog from './DeleteIdeaDialog'
+import { IDEA_SORT_LABEL, sortIdeasByMode, useIdeaSortMode, type IdeaSortMode } from '@/lib/idea-sort'
 
 /**
  * 26-C addendum §18b — ARCHIVE (THE ACTION) IS REMOVED. Grouping (§19) replaces it as
@@ -461,13 +464,14 @@ function GroupSelectedPanel({
 
 /** One group's ideas, with its own heading and the three controls §6c names. */
 function GroupSection({
-  group, ideas, busy, onRename, onHide, onUngroup, renderRow,
+  group, ideas, busy, onRename, onHide, onShow, onUngroup, renderRow,
 }: {
   group: { id: string; name: string; hidden: boolean }
   ideas: MyIdea[]
   busy: boolean
   onRename: (name: string) => void
   onHide: () => void
+  onShow: () => void
   onUngroup: () => void
   renderRow: (i: MyIdea) => React.ReactNode
 }) {
@@ -494,19 +498,30 @@ function GroupSection({
         ) : (
           <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-600">
             {group.name} <span className="font-normal normal-case text-zinc-400">({ideas.length})</span>
+            {/* 26-H §3c — the header stays exactly here, in the order, whether hidden or
+                not; only the ideas below it disappear. Previously a hidden group's whole
+                header was pulled out to a separate "N hidden groups" summary at the foot
+                of the list. */}
+            {group.hidden && <span className="ml-1.5 font-normal normal-case text-zinc-400">— hidden</span>}
           </h3>
         )}
         {!renaming && (
           <div className="flex items-center gap-2.5 text-[11px]">
-            <button onClick={() => setRenaming(true)} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Rename</button>
-            <button onClick={onHide} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Hide</button>
-            <button onClick={onUngroup} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Ungroup</button>
+            {!group.hidden && <button onClick={() => setRenaming(true)} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Rename</button>}
+            {group.hidden ? (
+              <button onClick={onShow} disabled={busy} className="font-medium text-blue-700 hover:text-blue-900">Show</button>
+            ) : (
+              <button onClick={onHide} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Hide</button>
+            )}
+            {!group.hidden && <button onClick={onUngroup} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Ungroup</button>}
           </div>
         )}
       </div>
-      <ul className="divide-y divide-zinc-200">
-        {ideas.map((i) => renderRow(i))}
-      </ul>
+      {!group.hidden && (
+        <ul className="divide-y divide-zinc-200">
+          {ideas.map((i) => renderRow(i))}
+        </ul>
+      )}
     </li>
   )
 }
@@ -538,11 +553,14 @@ export default function MyIdeasList(
   // 26-D §6 — which group is mid-rename/hide/ungroup, so its own controls disable
   // without freezing the rest of the page.
   const [groupBusy, setGroupBusy] = useState<string | null>(null)
-  const [hiddenGroupsOpen, setHiddenGroupsOpen] = useState(false)
+  // 26-H §3a/§3b — one sort preference, shared with the Dashboard via `useIdeaSortMode`
+  // (localStorage). 'recent' is a no-op here, so the existing manual drag order
+  // (`ownerOrderIndex`, falling back to `updatedAt`) is unaffected by default.
+  const [sortMode, setSortMode] = useIdeaSortMode()
 
   if (rows.length === 0 && trash.length === 0) return null
 
-  const active = rows.filter((r) => !r.archived)
+  const active = sortIdeasByMode(rows.filter((r) => !r.archived), sortMode)
   const archived = rows.filter((r) => r.archived)
 
   // §3c — turning Manage off clears the selection.
@@ -743,12 +761,12 @@ export default function MyIdeasList(
     groupBuckets.set(r.group.id, bucket)
   }
   const ungroupedActive = active.filter((r) => !r.group)
-  const visibleGroups = Array.from(groupBuckets.values()).filter((g) => !g.hidden)
-  // §6a — "hiding a group is what archiving used to be for... named, visible and
-  // reversible": the group's ideas leave the open list, and the group's own name and
-  // count stay reachable via the toggle below, exactly as "N archived" works.
-  const hiddenGroups = Array.from(groupBuckets.values()).filter((g) => g.hidden)
-  const hiddenGroupIdeaCount = hiddenGroups.reduce((n, g) => n + g.ideas.length, 0)
+  // 26-H §3c — every group renders in its position in the order, hidden or not; only
+  // whether its ideas render is conditional (inside `GroupSection`, on `group.hidden`).
+  // Previously hidden groups were filtered out here entirely and re-surfaced in a
+  // separate summary block below — that pulled the header out of its position, which
+  // is exactly what §3c asked to stop.
+  const allGroups = Array.from(groupBuckets.values())
 
   const shown = view === 'archived' ? archived : view === 'deleted' ? trash : active
 
@@ -761,8 +779,11 @@ export default function MyIdeasList(
       onRestored={onRestored}
       // 26-D §2 — reordering only applies to the active list; the archived and
       // deleted views render the same row without a handle at all.
-      onPointerDownDrag={view === 'active' ? onPointerDownDrag(i.ideaId) : undefined}
-      onNudge={view === 'active' ? (dir: -1 | 1) => onNudge(i.ideaId, dir) : undefined}
+      // 26-H §3a — a manual drag has no meaning once the list is sorted by name or
+      // date created (the next render would just re-sort it back), so the handle only
+      // appears in the default 'recent' sort.
+      onPointerDownDrag={view === 'active' && sortMode === 'recent' ? onPointerDownDrag(i.ideaId) : undefined}
+      onNudge={view === 'active' && sortMode === 'recent' ? (dir: -1 | 1) => onNudge(i.ideaId, dir) : undefined}
       dragging={draggingId === i.ideaId}
       managing={view === 'active' && managing}
       selected={selected.has(i.ideaId)}
@@ -787,6 +808,23 @@ export default function MyIdeasList(
           My ideas ({active.length})
         </h2>
         <div className="flex items-center gap-3">
+          {/* 26-H §3a/§3b — shared with the Dashboard: same three options, same
+              storage key, so whichever is picked here is what the Dashboard shows too. */}
+          {view === 'active' && active.length > 1 && (
+            <label className="flex items-center gap-1.5 text-xs text-zinc-500">
+              Sort
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as IdeaSortMode)}
+                className="text-xs rounded border border-zinc-300 px-1.5 py-0.5 text-zinc-700"
+                aria-label="Sort ideas by"
+              >
+                {(Object.keys(IDEA_SORT_LABEL) as IdeaSortMode[]).map((m) => (
+                  <option key={m} value={m}>{IDEA_SORT_LABEL[m]}</option>
+                ))}
+              </select>
+            </label>
+          )}
           {/* 26-D §3a — Manage puts a checkbox on every card and reveals the two bulk
               actions below. Only offered on the active list — bulk work on already-
               archived or already-deleted rows is out of this brief's scope. */}
@@ -864,7 +902,7 @@ export default function MyIdeasList(
         <ul className="rounded-xl border border-zinc-200 divide-y divide-zinc-200 bg-white max-h-[70vh] overflow-y-auto">
           {/* §6b — ungrouped ideas sit above the groups. */}
           {ungroupedActive.map((i) => renderRow(i))}
-          {visibleGroups.map((g) => (
+          {allGroups.map((g) => (
             <GroupSection
               key={g.id}
               group={g}
@@ -872,6 +910,7 @@ export default function MyIdeasList(
               busy={groupBusy === g.id}
               onRename={(name) => void renameGroup(g.id, name)}
               onHide={() => void toggleHideGroup(g.id, true)}
+              onShow={() => void toggleHideGroup(g.id, false)}
               onUngroup={() => void ungroupAll(g.id)}
               renderRow={renderRow}
             />
@@ -883,36 +922,6 @@ export default function MyIdeasList(
         <ul className="rounded-xl border border-zinc-200 divide-y divide-zinc-200 bg-white max-h-[70vh] overflow-y-auto">
           {shown.map((i) => renderRow(i))}
         </ul>
-      )}
-
-      {/* §6a — hidden groups stay reachable, named, exactly as "N archived" does. */}
-      {hiddenGroups.length > 0 && (
-        <div className="mt-2">
-          <button
-            type="button"
-            onClick={() => setHiddenGroupsOpen((o) => !o)}
-            className="text-xs font-medium text-zinc-500 hover:text-zinc-800 underline"
-          >
-            {hiddenGroupsOpen ? 'Hide' : `${hiddenGroups.length} hidden ${hiddenGroups.length === 1 ? 'group' : 'groups'} (${hiddenGroupIdeaCount} ${hiddenGroupIdeaCount === 1 ? 'idea' : 'ideas'})`}
-          </button>
-          {hiddenGroupsOpen && (
-            <ul className="mt-1.5 space-y-1">
-              {hiddenGroups.map((g) => (
-                <li key={g.id} className="flex items-center justify-between gap-2 text-xs text-zinc-600 rounded border border-zinc-200 px-2.5 py-1.5">
-                  <span>{g.name} <span className="text-zinc-400">({g.ideas.length})</span></span>
-                  <button
-                    type="button"
-                    onClick={() => void toggleHideGroup(g.id, false)}
-                    disabled={groupBusy === g.id}
-                    className="font-medium text-blue-700 hover:text-blue-900 disabled:opacity-40"
-                  >
-                    Show
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
       )}
 
       {hiddenEmpty > 0 && (

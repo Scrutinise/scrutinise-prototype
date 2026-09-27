@@ -40,7 +40,7 @@ export default async function YourIdeasPage() {
   // unchanged in substance, only moved.
   // ═══════════════════════════════════════════════════════════════════════════
   const select = {
-    id: true, title: true, stage: true, updatedAt: true, ownerArchivedAt: true, ownerOrderIndex: true,
+    id: true, title: true, stage: true, updatedAt: true, createdAt: true, ownerArchivedAt: true, ownerOrderIndex: true,
     elicitation: { select: { status: true, problem: true, goalDetail: true, ownKnowledge: true } },
     builds: {
       orderBy: { createdAt: 'desc' as const },
@@ -53,7 +53,7 @@ export default async function YourIdeasPage() {
     group: { select: { id: true, name: true, hidden: true } },
   }
   const toMyIdea = (r: {
-    id: string; title: string; stage: string; updatedAt: Date
+    id: string; title: string; stage: string; updatedAt: Date; createdAt: Date
     ownerArchivedAt: Date | null; ownerOrderIndex: number | null
     elicitation: { status: string; problem: string | null; goalDetail: string | null; ownKnowledge: string | null } | null
     builds: { status: string; passesComplete: number | null; completedAt: Date | null }[]
@@ -74,6 +74,7 @@ export default async function YourIdeasPage() {
       buildStatus: (b?.status as MyIdea['buildStatus']) ?? null,
       passesComplete: b?.passesComplete ?? null,
       updatedAt: r.updatedAt.toISOString(),
+      createdAt: r.createdAt.toISOString(),
     }
   }
   // 26-D §2 — explicitly ordered rows first (in the order the owner dragged them into),

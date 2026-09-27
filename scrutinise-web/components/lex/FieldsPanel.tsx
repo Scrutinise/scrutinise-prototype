@@ -1138,17 +1138,17 @@ function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId }: {
           {terminal ? 'No approaches recorded.' : 'I’ll seed a few candidate approaches per material cause with the case for and against — add and argue your own.'}
         </p>
       )}
+      {/* 26-H §8b — this used to render a second, plain-text rendering of every
+          terminal option (approach + status badge only) ABOVE `GuidingPolicyScreen`'s
+          full rendering of the same `PolicyOption` rows (reasoning, ratings, controls).
+          Charlie: delete the first, the second does everything it did and more — so once
+          terminal, this field shows nothing of its own but `PriorVersions` (prior wording
+          history), which `GuidingPolicyScreen` doesn't carry. `OptionCard` (Edit/Rule
+          out/Delete) stays for the non-terminal, still-being-built state, unchanged. */}
       <div className="space-y-1.5">
-        {options.map((o) => terminal ? (
-          <div key={o.id} className={`rounded-lg border p-2 ${o.status === 'CHOSEN' ? 'border-green-300 bg-green-50/40' : 'border-zinc-200 bg-white'}`}>
-            <p className="text-sm text-zinc-800">{o.approach}<span className={`ml-1.5 text-[9px] font-semibold uppercase ${OPTION_STATUS_BADGE[o.status].cls}`}>{OPTION_STATUS_BADGE[o.status].label}</span></p>
-            {/* ⚠ 25-Q §1d — kept on a TERMINAL card too. A finished proposal is exactly where
-                somebody asks what the wording used to be. */}
-            {ideaId && <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={o.id} />}
-          </div>
-        ) : (
+        {options.map((o) => (
           <div key={o.id}>
-            <OptionCard option={o} busy={busy} api={api} />
+            {!terminal && <OptionCard option={o} busy={busy} api={api} />}
             {ideaId && <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={o.id} />}
           </div>
         ))}
