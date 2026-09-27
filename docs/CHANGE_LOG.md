@@ -1,5 +1,115 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-27 17:37 UTC — LEX 26-K — the update pass: new material as a proposed amendment
+
+Session note: this build was interrupted once mid-way (during a routine `tsc` sanity check,
+a tool-level hiccup, not a code fault) and resumed. Verified before continuing: the schema
+migration had already applied cleanly (confirmed by querying Neon's `information_schema`
+directly, not just trusting the apply script's own "OK"), `tsc --noEmit` was clean, and
+nothing was mid-push. One stray debug file (`tsc_out.txt`) was deleted. Nothing else was
+affected.
+
+**Architecture decision, made before writing any code.** The existing Deepening-pass engine
+(`lib/lex/deepening-config.ts`, `lib/lex/deepening.ts`) is a closed, heavily-guarded 5-pass
+system — `scripts/check-deepening.ts` hard-asserts "exactly five passes" and requires every
+pass to declare issue templates that fire on some run-shape and stay silent on another.
+The update pass doesn't fit that shape (it compares against the live kernel and sorts into
+five categories; the existing engine gathers-sifts-and-raises-issues). Rather than force it
+in — bending real invariants or inventing issue-template busywork the pass doesn't need —
+this reuses the Deepening's DATA MODELS directly (`EvidenceItem`, `DeepeningPass` — both
+plain string-keyed columns, not tied to the closed `PassKey` TS union) from a new, separate
+module, `lib/lex/update-pass.ts`, with `passKey = 'MATERIAL_UPDATE'`. `deepening-config.ts`'s
+own header invites exactly this: *"if a future pass cannot be expressed here, the mechanism
+has not been built, and the honest response is to say so."* Ran `check:deepening` after —
+all existing assertions still pass; nothing in the guarded engine was touched.
+
+**Schema** (`prisma/lex_26k_update_pass.sql`, additive, applied to Neon — host and every new
+column/enum value confirmed live via a direct query, not just the apply script's own
+report): `Idea.lastUpdatePassAt` (the accumulation boundary); `EvidenceKind` gained
+`NEW_CAUSE`/`NEW_POLICY_OPTION` (the two of the five categories with no existing kind —
+supports/contradicts/nothing reuse `SUPPORTS`/`CONTRADICTS`/`FINDING`); `stale`/
+`staleReason` on `IdeaFieldState`, `PolicyOption` and `DiagnosisCause` (§4b — deliberately a
+flag beside the existing status, not a fifth `FieldStatus` value, since "answered" and
+"might need a second look" are orthogonal facts).
+
+**§2 — the four steps.** Step 1 (extract findings) is unchanged — `runMaterialFindings`
+already runs automatically on upload. Step 2 (corpus search on the material's vocabulary)
+calls `runSearch` directly, the same `keywords: string[]` contract `runAdHocResearch`
+already uses for a chat-typed query — confirmed via investigation that this contract already
+accepts an arbitrary term list, so there was no gap to build around. Step 3 (compare against
+the kernel) is one new `gemini-2.5-pro` call in `lib/lex/update-pass.ts`, given the problem,
+the pivotal obstacle, every numbered cause/policy/action, and the pooled evidence
+(material findings + search results) — classifying each into SUPPORTS/CONTRADICTS/
+NEW_CAUSE/NEW_POLICY_OPTION/NOTHING, referencing kernel items only by number/id supplied to
+it (never inventing one). Step 4 writes the classification as `EvidenceItem` rows.
+
+⚠⚠ **CONTRADICTS is rendered first, in its own un-collapsible block** in the new
+`components/lex/UpdatePassPanel.tsx` — never folded into a count, never behind a
+`CollapsedSection`, per §2's own instruction that it is "the most valuable category."
+
+**§4a — reused mechanisms, no third one built.** SUPPORTS/CONTRADICTS write `PROPOSED`
+`EvidenceItem` rows with `fieldRef` pointing at the existing thing (a scalar field, or
+`causes:<number>`/`policyOptions:<number>`/`actions:<id>`) — accepted or dismissed through a
+new, narrow route (`PATCH /api/ideas/[id]/update-pass/[evidenceId]`) rather than the generic
+Deepening evidence route, because the accept side-effect genuinely differs (see §4b). A new
+cause is likewise `PROPOSED` until accepted, at which point `addCause()` — the SAME function
+the guiding-policy screen's own cause-acceptance already calls — creates the real row.
+⚠ **A new policy option has "no separate path"**, exactly as instructed: `applyPolicyOp('add',
+...)` — 26-I's own function — runs immediately, so it enters the sort numbered like any
+other candidate; the `EvidenceItem` here is an already-`ACCEPTED` audit trail ("entered the
+sort as candidate 14"), not a gate.
+
+**§4b — stale, with a reason, never a re-run.** Accepting a CONTRADICTS finding marks the
+targeted field/cause/policy `stale` with a reason naming the finding. For a contradicted
+CAUSE specifically, it also walks the one real structural link the kernel has —
+`PolicyOption.targetCauseIds` (a bare string array, not a DB relation, per the investigation
+that went looking for a real dependency graph and found none) — and marks every policy
+targeting that cause stale too, with its own reason ("this may need revisiting because cause
+3 was amended"). Nothing here re-runs anything downstream — the separate-evidence-layer
+invariant was kept voluntarily throughout, matching the existing Deepening routes' own rule.
+
+**§4c — offered, not run, and it accumulates.** `pendingMaterialSince()` counts live,
+un-archived `IdeaUserMaterial` created since `Idea.lastUpdatePassAt`. The offer
+(`UpdatePassPanel`) is mounted twice — the Research tab (`ResearchTab.tsx`, where material
+is added) and the working area (`CreateIdeaClient.tsx`, above both the `FieldsPanel` and
+`DeepeningPanel` branches, so it is reachable regardless of stage or `kernelComplete` — new
+material can arrive well before the kernel, or the gated Deepening panel, unlocks).
+
+**§3 — research an angle.** `POST /api/ideas/[id]/update-pass/angle` runs the corpus-search-
+plus-comparison half against a typed angle instead of uploaded material, returning the same
+proposed-changes shape. ⚠ **Deliberately incomplete against the brief's own text**, and
+reported rather than guessed at: §3 asks for "corpus plus the four-model check." Investigated
+directly — "the four-model check" is Search's own in-flight S26 Stage 3 (confirmed in the
+current `docs/SPRINT.md`; `docs/HANDOVER_RESEARCH_SEQUENCE.md` does not exist yet), which
+names different models (Gemini/Haiku/Luna/xAI-with-X-search) and a different output shape
+(labelled arguments with sources) than anything live today. 26-I's `runFourDrafts` is the
+closest existing PATTERN (real parallel `Promise.all` over `callModelJson`) but is the wrong
+SHAPE (built for drafting one guiding-policy candidate). Building a stand-in now would very
+likely be thrown away once S26 lands — genuine, avoidable rework, which the brief's own §0
+asked to be reported rather than assumed. Shipped the corpus half; the four-model half
+waits for S26.
+
+**§5 — the end-of-kernel options.** `components/lex/RerunOptions.tsx` gained a new
+`OptionRow`, "Compare the new material with your kernel," shown BEFORE "Run the coherence
+check" and "Re-run" whenever `pendingMaterialSince()` is non-zero — fetched the same way the
+box already fetches its agenda counts (own read, gated on `kernelComplete`, so the cost is
+never paid before there is something to show).
+
+**§6 — measured against a real build, not assumed.** Queried production `LlmSpend` for
+Charlie's own idea's most recent finished build (v10, 4 Sep, `IdeaBuild.status = DONE`):
+**24 model calls across 4 passes, 27.6p (£0.28), 6.7 minutes.** ⚠ Note in passing: `ideaId`
+is not reliably stamped on build-stream `LlmSpend` rows (a documented gap — see
+`lib/lex/allowance.ts`'s own comment); fell back to the build's time window, which is a fair
+approximation with no concurrent build running on another idea in that window. The update
+pass is, by construction, one `gemini-2.5-pro` call plus one corpus search (no LLM cost) —
+an order of magnitude fewer calls than a full build's 24. **This is a structural estimate,
+not a live measurement** — no update pass has been triggered yet, matching how 26-I's
+Consolidate was left after its own build: real spend, not run unprompted. Recommend
+triggering one on a real idea with pending material to get the actual figure §6 asks for.
+
+`tsc --noEmit`, `check:client-boundary`, `check:deepening` (all existing assertions, plus
+the fifth-pass-is-configuration ones) and `check:llm-guards` all clean throughout.
+
 ## 2026-09-27 12:56 UTC — LEX 26-J §1-§4 — the Overview reads the wrong tables, fixed
 
 **§1a — the mapping, reported before anything was rebuilt.** Every Overview field, the
