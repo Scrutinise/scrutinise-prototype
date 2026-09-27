@@ -204,6 +204,10 @@ const PatchSchema = z.object({
     reasoning: z.string().trim().max(8000).optional(),
     chainLink: z.string().trim().max(4000).nullable().optional(),
   }).optional(),
+  /** 26-I §1 — `add` only: the user's own words. */
+  text: z.string().trim().min(1).max(2000).optional(),
+  /** 26-I §2 — `markSaysSameAs` only: the other candidate's stable number. */
+  duplicateOfNumber: z.number().int().positive().optional(),
 })
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -218,5 +222,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if ('notOnThisIdea' in result) {
     return NextResponse.json({ error: 'That policy is not on this idea.' }, { status: 404 })
   }
-  return NextResponse.json(result.state)
+  // 26-I §1c — the compound verdict on a freshly-added candidate travels back with the
+  // state, one-off, the way a chat reply would say it — not stored on the row.
+  return NextResponse.json({ ...result.state, addedNumber: result.addedNumber, compoundTest: result.compoundTest })
 }

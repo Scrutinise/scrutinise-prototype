@@ -41,6 +41,7 @@ import { recordGeminiUsage } from './spend-ledger'
 import { flagEnabled } from '../env-flags'
 import { webSearch } from './orientation/web-search'
 import { markPublicSources, publicSourcesBlock, type PublicSource } from './public-sources'
+import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
 
 export interface GeneralChatTurn {
   role: 'user' | 'lex'
@@ -145,6 +146,8 @@ const ANSWER_SCHEMA = {
 }
 
 const ANSWER_SYSTEM = `You are Lex, answering research questions against the Scrutinise corpus of UK primary legislation, statutory instruments, retained EU law, Hansard debates, select-committee reports and evidence, case law, and regulator guidance. British English, plain, FT op-ed register. No emojis. Never say you are an AI or name a model.
+
+${NO_EVALUATIVE_PREAMBLE}
 
 You are given SOURCES retrieved from the corpus for this question. They are the ONLY material you may draw factual claims from.
 

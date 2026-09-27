@@ -16,6 +16,7 @@ import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import { fileUrlsFromChat, materialFiledBlock } from '@/lib/lex/chat-material'
+import { fileChatPolicyFeedback, policyFeedbackFiledBlock, guidingPolicyChatRules } from '@/lib/lex/policy-feedback-chat'
 import { buildFactsBlock } from '@/lib/lex/facts'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 import { productFactsBlock } from '@/lib/lex/product-facts'
@@ -106,6 +107,15 @@ export async function POST(req: Request, { params }: Params) {
     console.log('[lex-diag] chat-filed material', {
       urls: materialResults.map((r) => ({ url: r.url, outcome: r.outcome })),
     })
+  }
+
+  // ══ 26-I ADDENDUM A1/A2 — GUIDING-POLICY FEEDBACK, FILED ON THE SAME PATTERN ══════
+  //
+  // Deterministic and scoped to the Guiding Policy page (see isGuidingPolicyContext) —
+  // never fires on an unrelated page's chat, and never asks Lex to decide what happened.
+  const policyFeedbackResult = await fileChatPolicyFeedback(id, pre.currentField?.key, message)
+  if (policyFeedbackResult.outcome !== 'not-guiding-policy') {
+    console.log('[lex-diag] chat-filed policy feedback', policyFeedbackResult)
   }
 
   const current = pre.currentField ? fieldDef(pre.currentField.key) ?? null : null
@@ -218,6 +228,12 @@ export async function POST(req: Request, { params }: Params) {
     askOnly,
     // Decision 92 — what the platform just filed on this idea, before this turn.
     materialFiledBlock: materialFiledBlock(materialResults),
+    // 26-I addendum A1-A4 — what was filed this turn, plus the standing Guiding Policy
+    // page rules (A3/A4), combined into one block; null off that page.
+    policyFeedbackBlock: [
+      policyFeedbackFiledBlock(policyFeedbackResult),
+      await guidingPolicyChatRules(id, pre.currentField?.key),
+    ].filter(Boolean).join('\n\n') || null,
   })
 
   let lex

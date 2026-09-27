@@ -18,6 +18,7 @@
 import { prisma } from '@/lib/prisma'
 import { setLoopProposal } from '@/lib/lex/field-machine'
 import { pairPolicies, nextNumber, type Pairing } from '@/lib/lex/guiding-policy'
+import { testIsCompound, type CompoundTest } from '@/lib/lex/rumelt-tests'
 
 /** Every operation on this screen that does not call a model. */
 export type PolicyOp =
@@ -33,12 +34,54 @@ export type PolicyOp =
    * list had already changed.
    */
   | 'acceptMerge'
+  /** 26-I §1 — the user's own candidate. Their words, verbatim and attributed (source USER),
+   *  numbered like any other. See `applyPolicyOp`'s `add` case for the compound test run on it
+   *  immediately (§1c: "tested like them"). */
+  | 'add'
+  /** 26-I §2 — the two dispositions with no existing home. `markSaysSameAs` takes `duplicateOfNumber`
+   *  in the input; `markPartOfSolution` takes none beyond `policyId`. */
+  | 'markPartOfSolution' | 'markSaysSameAs'
+  /** 26-I §2 — "really an action — the automatic sort exists; the user may also assert it." Unlike
+   *  `acceptMove` (consenting to Lex's OFFER), this is the user's own initiative — no separate
+   *  consent step, because asserting it themselves already is the consent. */
+  | 'assertAction'
+  /** 26-I §2 — undo of `markPartOfSolution`/`markSaysSameAs`, back to UNDISPOSITIONED. Symmetry with
+   *  every other move on this screen being reversible (25-S §1.3's own rule, extended). */
+  | 'clearDisposition'
 
 export const POLICY_OPS: PolicyOp[] = [
   'acceptMove', 'declineMove', 'acceptCause', 'declineCause',
   'settle', 'phase', 'reject', 'restore', 'proceedUnresolved', 'countRound',
   'undoSort', 'acceptMerge',
+  'add', 'markPartOfSolution', 'markSaysSameAs', 'assertAction', 'clearDisposition',
 ]
+
+/**
+ * 26-I §2 — THE FIVE DISPOSITIONS, READ AS ONE UNIFIED CHOICE.
+ *
+ * Three already had a home before 26-I (`status`, `phase`, `kind`); two are new
+ * (`disposition`/`duplicateOfNumber`). This is the one place that reads all five as a
+ * single value, so the sort UI and the "every candidate carries a disposition" gate
+ * (§2/A5) never have to re-derive the priority order themselves.
+ *
+ * Priority matters: a row can be RULED_OUT and still carry a stale `disposition` from
+ * before it was ruled out (nothing clears it, deliberately — see `rejectPolicyOption`,
+ * which never touches `disposition`), so the legacy fields are read FIRST.
+ */
+export type EffectiveDisposition =
+  | 'RULE_OUT' | 'LATER_PHASE' | 'REALLY_ACTION' | 'PART_OF_SOLUTION' | 'SAYS_SAME_AS' | 'UNDISPOSITIONED'
+
+export function effectiveDisposition(row: {
+  status: string; kind: string; phase: string | null
+  disposition: string; duplicateOfNumber: number | null
+}): EffectiveDisposition {
+  if (row.status === 'RULED_OUT') return 'RULE_OUT'
+  if (row.kind === 'COHERENT_ACTION') return 'REALLY_ACTION'
+  if (row.phase === 'LATER') return 'LATER_PHASE'
+  if (row.disposition === 'SAYS_SAME_AS' && row.duplicateOfNumber != null) return 'SAYS_SAME_AS'
+  if (row.disposition === 'PART_OF_SOLUTION') return 'PART_OF_SOLUTION'
+  return 'UNDISPOSITIONED'
+}
 
 export type PolicyState = Awaited<ReturnType<typeof readPolicyState>>
 
@@ -153,7 +196,7 @@ export async function ensureNumbered(ideaId: string): Promise<void> {
 export async function readPolicyState(ideaId: string) {
   await ensureNumbered(ideaId)
 
-  const [idea, rows, causes, actions] = await Promise.all([
+  const [idea, rows, causes, actions, feedbackCount] = await Promise.all([
     prisma.idea.findUnique({
       where: { id: ideaId },
       select: {
@@ -171,6 +214,8 @@ export async function readPolicyState(ideaId: string) {
     prisma.lexCoherentAction.findMany({
       where: { ideaId }, select: { id: true, practicalStep: true },
     }),
+    // 26-I addendum A5 — "shows what it will read: M items of feedback."
+    prisma.policyFeedback.count({ where: { ideaId } }),
   ])
 
   // Causes get their own display numbers, in the order the panel shows them.
@@ -191,6 +236,22 @@ export async function readPolicyState(ideaId: string) {
       causeNumbers: r.targetCauseIds.map((cid) => causeNumber.get(cid)).filter((n): n is number => !!n),
     })),
     drivenBy,
+  )
+
+  // 26-I §2/A5 — "Consolidate is disabled until every candidate carries a disposition."
+  // A candidate here means a live guiding-policy row that hasn't already been carried
+  // somewhere else (ruled out, later-phased, reclassified as an action, or superseded) —
+  // those already HAVE a disposition, by definition, and are excluded rather than forced
+  // to also be PART_OF_SOLUTION or SAYS_SAME_AS.
+  // `live` already excludes RULED_OUT/superseded/non-GUIDING_POLICY rows. CHOSEN is
+  // excluded here too — that row is the concluded outcome of a consolidation (created by
+  // Accept, §7), not a candidate still awaiting one.
+  const dispositionable = live.filter((r) => r.status !== 'CHOSEN')
+  const undispositioned = dispositionable.filter(
+    (r) => effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }) === 'UNDISPOSITIONED',
+  )
+  const partOfSolution = dispositionable.filter(
+    (r) => effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }) === 'PART_OF_SOLUTION',
   )
 
   return {
@@ -230,9 +291,24 @@ export async function readPolicyState(ideaId: string) {
       impliedCause: r.impliedCause,
       causeNumbers: r.targetCauseIds
         .map((cid) => causeNumber.get(cid)).filter((n): n is number => !!n),
+      // 26-I §2/§5c
+      disposition: r.disposition,
+      duplicateOfNumber: r.duplicateOfNumber,
+      draftModel: r.draftModel,
+      rulesOut: r.rulesOut,
+      likelihood: r.likelihood,
+      effectiveDisposition: effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }),
     })),
     pairings,
     actions: actions.map((a) => ({ id: a.id, step: a.practicalStep })),
+    // 26-I addendum A5 — everything the Consolidate button needs to show its own count
+    // and decide whether it is enabled, without the client re-deriving the gate.
+    consolidate: {
+      candidateCount: partOfSolution.length,
+      feedbackCount,
+      enabled: dispositionable.length > 0 && undispositioned.length === 0,
+      undispositionedCount: undispositioned.length,
+    },
   }
 }
 
@@ -260,13 +336,29 @@ export async function applyPolicyOp(input: {
     reasoning?: string
     chainLink?: string | null
   }
-}): Promise<{ state: PolicyState } | { notOnThisIdea: true }> {
-  const { ideaId: id, op, policyId, reason, phase, merge } = input
+  /** 26-I §1 — `add` only: the user's own words, verbatim. */
+  text?: string
+  /** 26-I §2 — `markSaysSameAs` only: the OTHER candidate's stable §1.1 number. */
+  duplicateOfNumber?: number
+}): Promise<{ state: PolicyState; addedNumber?: number; compoundTest?: CompoundTest } | { notOnThisIdea: true }> {
+  const { ideaId: id, op, policyId, reason, phase, merge, text, duplicateOfNumber } = input
 
   const row = policyId
     ? await prisma.policyOption.findFirst({ where: { id: policyId, ideaId: id } })
     : null
   if (policyId && !row) return { notOnThisIdea: true }
+
+  // 26-I addendum A6 — the per-card reason box accepts ANY feedback, not only a rule-out
+  // reason. Rather than a second write path, every op that carries a `reason` files it to
+  // the one feedback record (A1) here, regardless of which disposition it accompanied.
+  if (row && reason?.trim()) {
+    await prisma.policyFeedback.create({
+      data: { ideaId: id, policyOptionId: row.id, source: 'CARD_REASON', text: reason.trim() },
+    })
+  }
+
+  let addedNumber: number | undefined
+  let compoundTest: CompoundTest | undefined
 
   switch (op) {
     // ══════════ 25-T §2b — THE MERGE WRITES HERE, ON ACCEPTANCE, AND NOWHERE ELSE ══════════
@@ -513,10 +605,98 @@ export async function applyPolicyOp(input: {
         },
       })
       break
+
+    // ══ 26-I §1 — THE USER'S OWN CANDIDATE ══════════════════════════════════════
+    //
+    // §1a: their words, verbatim and attributed. §1b: enters the sort at the next stable
+    // number, alongside Lex's. §1c: tested like the four consolidation drafts are (§4) —
+    // the compound half of that test is mechanical, so it runs here, synchronously, and
+    // the caller (the route) hands the verdict straight back rather than storing it: this
+    // is the same one-off "Lex says so" a chat reply gives, not a persistent badge on the
+    // card.
+    case 'add': {
+      const approach = (text || '').trim()
+      if (!approach) break
+      const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
+      const number = nextNumber(all)
+      const created = await prisma.policyOption.create({
+        data: { ideaId: id, approach, number, kind: 'GUIDING_POLICY', source: 'USER' },
+      })
+      addedNumber = created.number ?? number
+      compoundTest = testIsCompound(approach)
+      break
+    }
+
+    // ══ 26-I §2 — THE TWO NEW DISPOSITIONS ══════════════════════════════════════
+    case 'markPartOfSolution':
+      if (row) {
+        await prisma.policyOption.update({
+          where: { id: row.id },
+          data: { disposition: 'PART_OF_SOLUTION', duplicateOfNumber: null },
+        })
+      }
+      break
+
+    case 'markSaysSameAs':
+      // ⚠ REUSES 25-P's ALTERNATIVES RELATION AS THE OFFER, NOT A SECOND MECHANISM (§2)
+      // — `pairPolicies` is what the screen shows the user as candidates to pick from; this
+      // just persists which one they picked, as their own disposition, by stable number.
+      if (row && duplicateOfNumber != null) {
+        await prisma.policyOption.update({
+          where: { id: row.id },
+          data: { disposition: 'SAYS_SAME_AS', duplicateOfNumber },
+        })
+      }
+      break
+
+    case 'clearDisposition':
+      if (row) {
+        await prisma.policyOption.update({
+          where: { id: row.id },
+          data: { disposition: 'UNDISPOSITIONED', duplicateOfNumber: null },
+        })
+      }
+      break
+
+    // ══ 26-I §2 — "REALLY AN ACTION", ASSERTED BY THE USER RATHER THAN OFFERED BY LEX ══
+    //
+    // Unlike `acceptMove` (consenting to Lex's own OFFER, `moveStatus: 'OFFERED'`), the
+    // user is the one proposing this, so there is nothing further to consent to. Mirrors
+    // `acceptMove`'s own "parent not yet settled → park it" rule: an action belongs to a
+    // policy, not to the kernel in general (§1.3), so this is parked exactly the same way
+    // when it names one, and only "moved" immediately when it doesn't.
+    case 'assertAction': {
+      if (!row) break
+      const parent = row.parkedWithId
+        ? await prisma.policyOption.findUnique({ where: { id: row.parkedWithId } })
+        : null
+      const parentSettled = parent ? parent.status === 'CHOSEN' : false
+      if (parent && !parentSettled) {
+        await prisma.policyOption.update({
+          where: { id: row.id },
+          data: {
+            kind: 'COHERENT_ACTION', kindReason: 'Asserted by the user.',
+            moveStatus: 'ACCEPTED', sortedAt: new Date(),
+          },
+        })
+        break
+      }
+      const action = await prisma.lexCoherentAction.create({
+        data: { ideaId: id, practicalStep: row.approach, source: 'USER' },
+      })
+      await prisma.policyOption.update({
+        where: { id: row.id },
+        data: {
+          kind: 'COHERENT_ACTION', kindReason: 'Asserted by the user.',
+          moveStatus: 'ACCEPTED', movedToActionId: action.id, sortedAt: new Date(),
+        },
+      })
+      break
+    }
   }
 
   await syncPolicyField(id)
-  return { state: await readPolicyState(id) }
+  return { state: await readPolicyState(id), addedNumber, compoundTest }
 }
 
 /**

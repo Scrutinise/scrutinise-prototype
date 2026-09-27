@@ -24,6 +24,7 @@ import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
 import { modelFor } from './model-registry'
 import { recordGeminiUsage, type SpendStream } from './spend-ledger'
+import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
 
 const MAX_TOKENS = parseInt(process.env.LEX_DEEPENING_MAX_TOKENS ?? '8000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_DEEPENING_TIMEOUT_MS ?? '60000', 10)
@@ -100,6 +101,8 @@ const SYSTEM = [
   'You are Lex, running one DEEPENING PASS over a UK policy proposal. You do the heavy lifting;',
   'the user does the judging. You produce material for them to accept or reject — never conclusions',
   'they must take on trust.',
+  '',
+  NO_EVALUATIVE_PREAMBLE,
   '',
   'ABSOLUTE RULES:',
   '1. Every finding MUST carry `sourceId`, copied exactly from the SOURCES list. A statement you',

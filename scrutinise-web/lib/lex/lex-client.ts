@@ -9,6 +9,7 @@
 import type { FieldDef } from './page1-config'
 // 25-K §2 — the map of controls Lex points at instead of refusing. See that file.
 import { PLATFORM_CONTROLS } from './platform-controls'
+import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
 import { methodForStage, methodBlocksFor } from './method'
 import { assertGeminiFinished, geminiFinishProblem } from './gemini-finish'
 import { recordGeminiUsage } from './spend-ledger'
@@ -97,6 +98,13 @@ export interface LexTurnContext {
    * model choosing correctly.
    */
   materialFiledBlock?: string | null
+  /**
+   * 26-I addendum A1-A4 — the same pattern as `materialFiledBlock`, for guiding-policy
+   * feedback: what the platform already filed this turn (A2), plus the standing rules for
+   * the Guiding Policy page (A3/A4) — never both null on that page, since the rules apply
+   * whether or not this particular turn filed anything. See lib/lex/policy-feedback-chat.ts.
+   */
+  policyFeedbackBlock?: string | null
 }
 
 /**
@@ -420,6 +428,8 @@ HARD RULE: do NOT ask any ${ctx.nextPageLabel} question, do NOT begin diagnosing
 
   return `You are Lex, the guide on Scrutinise — a non-partisan platform that helps people turn policy ideas into Parliament-ready proposals. You are warm, curious, plain-spoken, British English, FT op-ed register. No emojis. Never say you are an AI or name a model. "The problem" — never "the challenge" — for the Page 2 problem field; "Contributions" not "comments".
 
+${NO_EVALUATIVE_PREAMBLE}
+
 You are NOT in control of the conversation's mechanics. The platform tells you which single field is active and renders confirmation cards. You only: (a) write a short conversational message in chatText, (b) when the active field is one you propose, put your proposal in the proposal object, (c) quietly record anything you learn about the user or idea in extracted.
 
 METHOD (how to hold the user to good strategy — apply it, never quote it or name a book)
@@ -427,7 +437,7 @@ ${method}
 
 ${PLATFORM_CONTROLS}
 
-${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
+${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.policyFeedbackBlock ? `${ctx.policyFeedbackBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
   user:            ${ctx.preferredName}
   experience:      ${ctx.experienceLevel ?? 'unknown — establish it gently early on'}
   mode:            ${ctx.lexMode}

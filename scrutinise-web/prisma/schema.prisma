@@ -970,6 +970,10 @@ model Idea {
   documents                 Document[]
   diagnosisCauses           DiagnosisCause[]
   policyOptions             PolicyOption[]
+  // 26-I — the disposition sort, the feedback record (addendum A1) and the
+  // Consolidate audit trail (§3-§7).
+  policyFeedback            PolicyFeedback[]
+  guidingPolicyConsolidations GuidingPolicyConsolidation[]
   lexActions                LexCoherentAction[]
   ideaAssumptions           IdeaAssumption[]
   feedbackItems             FeedbackItem[]
@@ -2486,6 +2490,41 @@ enum PolicyOptionStatus {
   RULED_OUT
 }
 
+// 26-I §2 — the two dispositions that don't already have a home in PolicyOption's
+// existing fields. Rule out (status), Later phase (phase) and Really an action
+// (kind) already existed before this; see `effectiveDisposition()` in
+// lib/lex/guiding-policy-state.ts, which is the one place all five are read as
+// a single unified choice.
+enum PolicyDisposition {
+  UNDISPOSITIONED
+  PART_OF_SOLUTION
+  SAYS_SAME_AS
+}
+
+// 26-I addendum A1 — which box a piece of feedback about a guiding policy came
+// through: a card's own reason box, the general (not-about-one-candidate) box,
+// or filed from the Lex chat per decision 92's pattern (platform files, Lex
+// reports — see lib/lex/policy-feedback-chat.ts).
+enum PolicyFeedbackSource {
+  CARD_REASON
+  GENERAL_BOX
+  LEX_CHAT
+}
+
+// 26-I §3-§7 — one run of Consolidate: four premium models each draft one
+// guiding policy, each is judged (§4), the user picks a favourite and gives
+// feedback (§5), the favourite's model redrafts once (§6), and the redraft is
+// accepted or edited (§7). Kept as its own audit trail, not written over
+// PolicyOption in place — §5c wants "which model was chosen" recorded on every
+// run, for ever, as "the cheapest experiment the platform will run."
+enum ConsolidationStatus {
+  DRAFTING
+  JUDGED
+  FAVOURITE_CHOSEN
+  REDRAFTED
+  ACCEPTED
+}
+
 // Which piece of Lex's output the user is critiquing (design §20.5).
 enum FeedbackSurface {
   BRIEFING
@@ -2751,9 +2790,114 @@ model PolicyOption {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
+  /// 26-I §2 — the two new dispositions. Undispositioned by default, so an old
+  /// row and a freshly-seeded candidate both correctly block Consolidate (§2/A5)
+  /// until someone looks at them.
+  disposition       PolicyDisposition @default(UNDISPOSITIONED)
+  /// §2 — reuses `pairPolicies`'s ALTERNATIVES relation as the offer; this is the
+  /// user's own disposition choice, by the OTHER candidate's stable §1.1 number
+  /// (not a foreign key, on purpose — see `mergedFrom` above for the precedent:
+  /// a number survives being typed, an id does not).
+  duplicateOfNumber Int?
+  /// 26-I §5c/addendum B4 — which model actually drafted this candidate, when
+  /// `source` is LEX. Null for a user-added candidate and for anything predating
+  /// 26-I. This is the provenance B4's measurement depends on.
+  draftModel        String?
+  /// 26-I §3's fixed form — required on every guiding policy, candidate or
+  /// final. Populated when a consolidation is accepted (see `settle` in
+  /// guiding-policy-state.ts); null on an ordinary un-consolidated candidate.
+  rulesOut          String?
+  likelihood        String?
+
+  feedback       PolicyFeedback[]
+  /// The consolidation(s) this candidate's accepted draft became. Almost always
+  /// zero or one; kept as a list only because nothing stops a superseded CHOSEN
+  /// policy from having been the product of an earlier consolidation.
+  acceptedFor    GuidingPolicyConsolidation[] @relation("AcceptedPolicyOption")
+
   @@index([ideaId])
   /// §1.1 — looked up on every instruction the user types.
   @@index([ideaId, number])
+}
+
+// 26-I addendum A1 — one feedback record per idea. Every input about guiding
+// policies writes here, tagged with its source. `policyOptionId` null means
+// general feedback, not about one candidate.
+model PolicyFeedback {
+  id             String               @id @default(uuid())
+  ideaId         String
+  idea           Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  policyOptionId String?
+  policyOption   PolicyOption?        @relation(fields: [policyOptionId], references: [id], onDelete: SetNull)
+  source         PolicyFeedbackSource
+  text           String               @db.Text
+  createdAt      DateTime             @default(now())
+
+  @@index([ideaId])
+  @@index([policyOptionId])
+}
+
+// 26-I §3-§7 — one Consolidate run.
+model GuidingPolicyConsolidation {
+  id                 String               @id @default(uuid())
+  ideaId             String
+  idea               Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  status             ConsolidationStatus  @default(DRAFTING)
+  /// §3 — the exact context every model was handed: problem, causes, the
+  /// part-of-solution candidates, the user's own attempts, the Rumelt tests in
+  /// full. An audit record of what four models actually saw.
+  candidateSnapshot  Json
+  drafts             GuidingPolicyDraft[]
+  /// §5a/§5c — which draft's model the user favoured; that model does the
+  /// redraft in §6. Recorded on every run, per §5c, "for ever."
+  favouriteModel     String?
+  /// §5b — what worked and did not, across all four. Feedback, never a splice
+  /// request.
+  userFeedback       String?              @db.Text
+  redraftText        String?              @db.Text
+  redraftRulesOut    String?              @db.Text
+  redraftLikelihood  String?              @db.Text
+  redraftChainLink   String?              @db.Text
+  redraftFixesCauseNumbers Int[]          @default([])
+  /// §6a — the redraft is tested again by §4 before it is shown.
+  redraftJudge       Json?
+  /// §7 — accepted, possibly edited. `acceptedEdited` is set the moment the
+  /// user's own words replace any part of the redraft; an edited acceptance is
+  /// tested again (§7a) before `acceptedPolicyOptionId` is set.
+  acceptedText            String?  @db.Text
+  acceptedEdited          Boolean  @default(false)
+  acceptedPolicyOptionId  String?
+  acceptedPolicyOption    PolicyOption? @relation("AcceptedPolicyOption", fields: [acceptedPolicyOptionId], references: [id], onDelete: SetNull)
+  /// §3 — "report the cost per consolidation." Pence, across every model call
+  /// this run made.
+  costPence          Int?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([ideaId])
+}
+
+// 26-I §3/§4 — one premium model's draft within a consolidation, and the
+// judge's verdict on it (§4). `judge` is null until the batched judge call
+// (addendum B2) returns.
+model GuidingPolicyDraft {
+  id                String                     @id @default(uuid())
+  consolidationId   String
+  consolidation     GuidingPolicyConsolidation @relation(fields: [consolidationId], references: [id], onDelete: Cascade)
+  model             String
+  statement         String                     @db.Text
+  rulesOut          String                     @db.Text
+  fixesCauseNumbers Int[]                      @default([])
+  likelihood        String                     @db.Text
+  chainLink         String                     @db.Text
+  /// §4 — { isCompound, compoundWhy, rulesOutNothing, answersObstacle: {verdict,
+  /// why}, causesAttackedByJudge: number[], causesMatch: boolean }. See
+  /// lib/lex/rumelt-tests.ts for the exact shape.
+  judge             Json?
+  costPence         Int?
+  createdAt         DateTime                   @default(now())
+
+  @@index([consolidationId])
 }
 
 // Page 4 (Coherent Actions) action record (design §18.1). Kept as a NEW table,

@@ -48,6 +48,13 @@ interface Policy {
   phaseReason: string | null
   impliedCause: { cause?: string; why?: string; status?: string } | null
   causeNumbers: number[]
+  // 26-I §2/§5c
+  disposition: 'UNDISPOSITIONED' | 'PART_OF_SOLUTION' | 'SAYS_SAME_AS'
+  duplicateOfNumber: number | null
+  draftModel: string | null
+  rulesOut: string | null
+  likelihood: string | null
+  effectiveDisposition: 'RULE_OUT' | 'LATER_PHASE' | 'REALLY_ACTION' | 'PART_OF_SOLUTION' | 'SAYS_SAME_AS' | 'UNDISPOSITIONED'
 }
 
 interface State {
@@ -60,6 +67,71 @@ interface State {
   causes: Array<{ id: string; number: number; cause: string; isRoot: boolean }>
   policies: Policy[]
   pairings: Array<{ a: number; b: number; relationship: Relationship; why: string }>
+  // 26-I addendum A5
+  consolidate: { candidateCount: number; feedbackCount: number; enabled: boolean; undispositionedCount: number }
+}
+
+/** 26-I §4 — the judge's verdict on one draft. */
+interface JudgeVerdict {
+  index: number
+  isCompound: boolean
+  compoundWhy: string
+  rulesOutNothing: boolean
+  answersObstacle: { verdict: boolean; why: string }
+  causesAttackedByJudge: number[]
+  causesMatch: boolean
+}
+
+interface Draft {
+  id: string
+  model: string
+  statement: string
+  rulesOut: string
+  fixesCauseNumbers: number[]
+  likelihood: string
+  chainLink: string
+  judge: JudgeVerdict | null
+  costPence: number | null
+}
+
+interface Consolidation {
+  id: string
+  status: 'DRAFTING' | 'JUDGED' | 'FAVOURITE_CHOSEN' | 'REDRAFTED' | 'ACCEPTED'
+  drafts: Draft[]
+  favouriteModel: string | null
+  userFeedback: string | null
+  redraftText: string | null
+  redraftRulesOut: string | null
+  redraftLikelihood: string | null
+  redraftChainLink: string | null
+  redraftJudge: JudgeVerdict | null
+  acceptedText: string | null
+  acceptedEdited: boolean
+  costPence: number | null
+}
+
+/** §4 — one card's verdict, in words, no colour (docs/CLAUDE.md §21). */
+function JudgeCard({ v }: { v: JudgeVerdict | null }) {
+  if (!v) return <p className="text-[11px] text-zinc-400 mt-2">Not yet tested.</p>
+  return (
+    <div className="mt-2 pt-2 border-t border-zinc-100 space-y-1">
+      <p className={`text-[11px] ${v.isCompound ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
+        {v.isCompound ? `⚠ Compound — ${v.compoundWhy}` : 'Not a compound — one approach.'}
+      </p>
+      <p className={`text-[11px] ${v.rulesOutNothing ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
+        {v.rulesOutNothing ? '⚠ Rules out: nothing — this is a weakness.' : 'Rules something out.'}
+      </p>
+      <p className={`text-[11px] ${v.answersObstacle.verdict ? 'text-zinc-600' : 'font-semibold text-amber-800'}`}>
+        {v.answersObstacle.verdict ? '✓ Answers the pivotal obstacle' : '⚠ Does not answer the pivotal obstacle'}
+        {' — '}{v.answersObstacle.why}
+      </p>
+      <p className={`text-[11px] ${v.causesMatch ? 'text-zinc-600' : 'font-semibold text-amber-800'}`}>
+        {v.causesMatch
+          ? '✓ Attacks the causes it claims to.'
+          : `⚠ Claims causes it does not attack (the judge read: ${v.causesAttackedByJudge.join(', ') || 'none'}).`}
+      </p>
+    </div>
+  )
 }
 
 /** §1.2 — the three outcomes, as a user reads them. */
@@ -151,6 +223,242 @@ function CardHistory({
   )
 }
 
+/**
+ * ══ 26-I §3-§7 — CONSOLIDATE ═══════════════════════════════════════════════════
+ *
+ * A5: the button is always visible and shows what it will read (N candidates, M feedback)
+ * — never hidden, only disabled, so the gate (§2: every candidate needs a disposition) is
+ * something the screen tells you about rather than something you discover by its absence.
+ */
+function ConsolidatePanel({
+  ideaId, consolidateInfo, onSettled,
+}: {
+  ideaId: string
+  consolidateInfo: State['consolidate']
+  /** Re-reads the guiding-policy state, e.g. after Accept sets Chosen approach. */
+  onSettled: () => void
+}) {
+  const [consolidation, setConsolidation] = useState<Consolidation | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [failedModels, setFailedModels] = useState<Array<{ model: string; error: string }>>([])
+  const [favouriteFeedback, setFavouriteFeedback] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [edited, setEdited] = useState({ statement: '', rulesOut: '', likelihood: '', chainLink: '' })
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate`)
+        if (!res.ok) return
+        const j = await res.json()
+        const latest = (j.consolidations ?? [])[0] ?? null
+        if (latest && latest.status !== 'ACCEPTED') setConsolidation(latest)
+      } catch { /* no resumable consolidation — starting fresh is fine */ }
+    })()
+  }, [ideaId])
+
+  const start = useCallback(async () => {
+    setBusy(true); setError(null); setFailedModels([])
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate`, { method: 'POST' })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'Consolidate did not complete.'); return }
+      setConsolidation(j.consolidation)
+      setFailedModels(j.failed ?? [])
+    } finally { setBusy(false) }
+  }, [ideaId])
+
+  const patchConsolidation = useCallback(async (body: Record<string, unknown>) => {
+    if (!consolidation) return
+    setBusy(true); setError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate/${consolidation.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'That did not save.'); return }
+      setConsolidation(j.consolidation)
+      if (body.op === 'accept') onSettled()
+    } finally { setBusy(false) }
+  }, [consolidation, ideaId, onSettled])
+
+  const pence = (p: number | null | undefined) => p == null ? '(cost unknown)' : `£${(p / 100).toFixed(2)}`
+
+  return (
+    <div className="px-4 py-3 border-t border-zinc-100">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Consolidate</h4>
+          <p className="text-[11px] text-zinc-500 mt-0.5">
+            Reads {consolidateInfo.candidateCount} candidate{consolidateInfo.candidateCount === 1 ? '' : 's'} marked
+            part of the solution, sorted, and {consolidateInfo.feedbackCount} item{consolidateInfo.feedbackCount === 1 ? '' : 's'} of feedback.
+            {!consolidateInfo.enabled && consolidateInfo.undispositionedCount > 0 && (
+              <span className="font-medium text-amber-800">
+                {' '}{consolidateInfo.undispositionedCount} candidate{consolidateInfo.undispositionedCount === 1 ? '' : 's'} still need{consolidateInfo.undispositionedCount === 1 ? 's' : ''} a disposition.
+              </span>
+            )}
+          </p>
+        </div>
+        <button
+          onClick={() => void start()}
+          disabled={busy || !consolidateInfo.enabled}
+          className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
+        >
+          {busy ? 'Working…' : consolidation ? 'Consolidate again' : 'Consolidate'}
+        </button>
+      </div>
+
+      {error && <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5">{error}</p>}
+      {failedModels.length > 0 && (
+        <p className="mt-2 text-[11px] text-amber-800">
+          {failedModels.length} of four models did not draft: {failedModels.map((f) => `${f.model} (${f.error})`).join('; ')}.
+        </p>
+      )}
+
+      {consolidation && (
+        <div className="mt-3 space-y-3">
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {consolidation.drafts.map((d) => (
+              <div
+                key={d.id}
+                className={`rounded-lg border p-2.5 ${consolidation.favouriteModel === d.model ? 'border-2 border-zinc-900' : 'border-zinc-200'}`}
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                  {d.model} — {pence(d.costPence)}
+                  {consolidation.favouriteModel === d.model && <span className="ml-1 text-zinc-900">· favourite</span>}
+                </p>
+                <p className="text-sm text-zinc-900 mt-1">{d.statement}</p>
+                <p className="text-[11px] text-zinc-600 mt-1.5"><span className="font-medium">Rules out:</span> {d.rulesOut}</p>
+                <p className="text-[11px] text-zinc-600 mt-1"><span className="font-medium">Likelihood:</span> {d.likelihood}</p>
+                {d.chainLink && (
+                  <p className="text-[11px] text-zinc-900 border-l-2 border-zinc-900 pl-2 mt-1.5 font-medium">
+                    ⚠ If only part delivered: {d.chainLink}
+                  </p>
+                )}
+                <JudgeCard v={d.judge} />
+                {consolidation.status === 'DRAFTING' || consolidation.status === 'JUDGED' ? (
+                  <button
+                    onClick={() => void patchConsolidation({ op: 'favourite', model: d.model, feedback: favouriteFeedback || undefined })}
+                    disabled={busy}
+                    className="mt-2 text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+                  >
+                    Choose this one
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+
+          {(consolidation.status === 'DRAFTING' || consolidation.status === 'JUDGED') && (
+            <div>
+              <label className="text-[11px] font-medium text-zinc-600">
+                What worked, and what did not, across all four? (optional — goes to whichever you choose as your favourite)
+              </label>
+              <textarea
+                value={favouriteFeedback}
+                onChange={(e) => setFavouriteFeedback(e.target.value)}
+                rows={2}
+                className="w-full mt-1 text-xs rounded border border-zinc-300 p-1.5"
+                placeholder="e.g. Gemini's rules-out was the sharpest, but none of them dealt with enforcement burden."
+              />
+            </div>
+          )}
+
+          {consolidation.favouriteModel && consolidation.status === 'FAVOURITE_CHOSEN' && (
+            <button
+              onClick={() => void patchConsolidation({ op: 'redraft' })}
+              disabled={busy}
+              className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white disabled:opacity-40"
+            >
+              {busy ? 'Redrafting…' : `Ask ${consolidation.favouriteModel} for the redraft`}
+            </button>
+          )}
+
+          {consolidation.redraftText && (
+            <div className="rounded-lg border-2 border-zinc-900 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-900">
+                Redraft — {consolidation.favouriteModel} — {pence(consolidation.costPence)} total so far
+              </p>
+              {!editing ? (
+                <>
+                  <p className="text-sm text-zinc-900 mt-1">{consolidation.redraftText}</p>
+                  <p className="text-[11px] text-zinc-600 mt-1.5"><span className="font-medium">Rules out:</span> {consolidation.redraftRulesOut}</p>
+                  <p className="text-[11px] text-zinc-600 mt-1"><span className="font-medium">Likelihood:</span> {consolidation.redraftLikelihood}</p>
+                  {consolidation.redraftChainLink && (
+                    <p className="text-[11px] text-zinc-900 border-l-2 border-zinc-900 pl-2 mt-1.5 font-medium">
+                      ⚠ If only part delivered: {consolidation.redraftChainLink}
+                    </p>
+                  )}
+                  <JudgeCard v={consolidation.redraftJudge} />
+                  {consolidation.status !== 'ACCEPTED' && (
+                    <div className="flex flex-wrap gap-2 mt-2.5">
+                      <button
+                        onClick={() => void patchConsolidation({ op: 'accept' })}
+                        disabled={busy}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 text-white disabled:opacity-40"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEdited({
+                            statement: consolidation.redraftText ?? '',
+                            rulesOut: consolidation.redraftRulesOut ?? '',
+                            likelihood: consolidation.redraftLikelihood ?? '',
+                            chainLink: consolidation.redraftChainLink ?? '',
+                          })
+                          setEditing(true)
+                        }}
+                        disabled={busy}
+                        className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+                      >
+                        Edit before accepting
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-1.5 mt-1.5">
+                  <textarea value={edited.statement} onChange={(e) => setEdited((s) => ({ ...s, statement: e.target.value }))}
+                    rows={2} className="w-full text-sm rounded border border-zinc-300 p-1.5" placeholder="The statement" />
+                  <textarea value={edited.rulesOut} onChange={(e) => setEdited((s) => ({ ...s, rulesOut: e.target.value }))}
+                    rows={2} className="w-full text-xs rounded border border-zinc-300 p-1.5" placeholder="What it rules out" />
+                  <textarea value={edited.likelihood} onChange={(e) => setEdited((s) => ({ ...s, likelihood: e.target.value }))}
+                    rows={2} className="w-full text-xs rounded border border-zinc-300 p-1.5" placeholder="How likely it is to happen" />
+                  <textarea value={edited.chainLink} onChange={(e) => setEdited((s) => ({ ...s, chainLink: e.target.value }))}
+                    rows={2} className="w-full text-xs rounded border border-zinc-300 p-1.5" placeholder="The chain-link warning" />
+                  {/* ⚠ §7a — an edited version is tested again before it is accepted. */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { void patchConsolidation({ op: 'accept', edited }); setEditing(false) }}
+                      disabled={busy || !edited.statement.trim() || !edited.rulesOut.trim() || !edited.likelihood.trim() || !edited.chainLink.trim()}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 text-white disabled:opacity-40"
+                    >
+                      Accept my edit (tested again)
+                    </button>
+                    <button onClick={() => setEditing(false)} disabled={busy}
+                      className="text-xs text-zinc-500 underline disabled:opacity-40">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {consolidation.status === 'ACCEPTED' && (
+            <p className="text-xs text-zinc-800 rounded-lg border-2 border-zinc-300 bg-zinc-50/70 px-3 py-2">
+              ✓ Accepted{consolidation.acceptedEdited ? ', with your edits' : ''} — this is now the Chosen approach.
+              Leverage, Anticipated responses, Conditions for success and the Guiding-policy summary are open below.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
   const [s, setS] = useState<State | null>(null)
   const [busy, setBusy] = useState(false)
@@ -167,6 +475,14 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
   >(null)
   const [merged, setMerged] = useState<number | null>(null)
   const [reasons, setReasons] = useState<Record<string, string>>({})
+  // 26-I §1 — the user's own candidate.
+  const [addText, setAddText] = useState('')
+  const [addCompoundWarning, setAddCompoundWarning] = useState<string | null>(null)
+  // 26-I §2 — "says roughly the same as" needs a target number per card.
+  const [dupTarget, setDupTarget] = useState<Record<string, string>>({})
+  // 26-I addendum A1 — the general feedback box.
+  const [generalFeedback, setGeneralFeedback] = useState('')
+  const [generalFeedbackSent, setGeneralFeedbackSent] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -203,6 +519,38 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       setS(j); return j
     } finally { setBusy(false) }
   }, [ideaId])
+
+  /** 26-I §1 — the user's own candidate. §1c: tested like the consolidation drafts are —
+   *  the compound half of that test, run immediately and shown once, not stored on the card. */
+  const addPolicy = useCallback(async () => {
+    const text = addText.trim()
+    if (!text) return
+    setAddCompoundWarning(null)
+    const j = await patch({ op: 'add', text })
+    if (j) {
+      setAddText('')
+      if (j.compoundTest?.isCompound) {
+        setAddCompoundWarning(`Candidate ${j.addedNumber} — ${j.compoundTest.why}`)
+      }
+    }
+  }, [addText, patch])
+
+  /** 26-I addendum A1 — filed to the same feedback record every other source writes to. */
+  const submitGeneralFeedback = useCallback(async () => {
+    const text = generalFeedback.trim()
+    if (!text) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/feedback`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }),
+      })
+      if (res.ok) {
+        setGeneralFeedback('')
+        setGeneralFeedbackSent(true)
+        void load()
+      }
+    } finally { setBusy(false) }
+  }, [generalFeedback, ideaId, load])
 
   /** §1.7 — "merge 4 and 8". Two numbers is the whole grammar. */
   const runInstruction = useCallback(async () => {
@@ -271,6 +619,32 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       </div>
 
       {error && <p className="px-4 py-2 text-xs text-amber-800 bg-amber-50 border-b border-amber-200">{error}</p>}
+
+      {/* ══ 26-I §1 — THE USER CAN ADD A GUIDING POLICY OF THEIR OWN ═══════════════
+          §1a: their words, verbatim. §1b: enters the sort, numbered, alongside Lex's. §1c:
+          tested like the consolidation drafts are — the compound half of that test fires the
+          moment it's added, shown once, the way a chat reply would say it. */}
+      <div className="px-4 py-3 border-b border-zinc-100">
+        <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Add a guiding policy
+        </label>
+        <div className="flex gap-2 mt-1.5">
+          <input
+            value={addText}
+            onChange={(e) => setAddText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') void addPolicy() }}
+            placeholder="Your own approach to the obstacle…"
+            className="flex-1 text-sm rounded-lg border border-zinc-300 px-2.5 py-1.5"
+          />
+          <button onClick={() => void addPolicy()} disabled={busy || !addText.trim()}
+            className="text-sm font-semibold px-4 py-1.5 rounded-full bg-zinc-900 text-white disabled:opacity-40">
+            Add
+          </button>
+        </div>
+        {addCompoundWarning && (
+          <p className="mt-1.5 text-[11px] font-medium text-amber-800">⚠ {addCompoundWarning}</p>
+        )}
+      </div>
 
       {/* ══ §1.2 — SORT, AND SHOW THE SORTING ═══════════════════════════════════ */}
       {unsorted > 0 && (
@@ -417,12 +791,98 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
               <input
                 value={reasons[p.id] ?? ''}
                 onChange={(e) => setReasons((r) => ({ ...r, [p.id]: e.target.value }))}
-                placeholder="Why? (kept with it)"
+                placeholder="Feedback on this candidate (kept, whatever you're doing to it)"
                 className="flex-1 min-w-[10rem] text-[11px] rounded border border-zinc-300 px-2 py-1"
               />
             </div>
+
+            {/* ══ 26-I §2 — THE DISPOSITION, READ AS ONE OF FIVE ══════════════════
+                Rule out / Later phase are the buttons above; this row is the two new ones
+                plus asserting "really an action" yourself, rather than waiting for the sort. */}
+            <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-zinc-100">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                {p.effectiveDisposition === 'PART_OF_SOLUTION' ? '✓ Part of the solution'
+                  : p.effectiveDisposition === 'SAYS_SAME_AS' ? `✓ Says roughly the same as ${p.duplicateOfNumber}`
+                  : 'No disposition yet'}
+              </span>
+              {p.effectiveDisposition !== 'PART_OF_SOLUTION' && (
+                <button onClick={() => void patch({ op: 'markPartOfSolution', policyId: p.id })} disabled={busy}
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
+                  Part of the solution
+                </button>
+              )}
+              <select
+                value={dupTarget[p.id] ?? ''}
+                onChange={(e) => setDupTarget((d) => ({ ...d, [p.id]: e.target.value }))}
+                className="text-[11px] rounded border border-zinc-300 px-1.5 py-1"
+              >
+                <option value="">Says roughly the same as…</option>
+                {policies.filter((o) => o.id !== p.id && o.number != null).map((o) => (
+                  <option key={o.id} value={o.number!}>
+                    {o.number} — {o.approach.slice(0, 40)}{o.approach.length > 40 ? '…' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  const n = Number(dupTarget[p.id])
+                  if (n) void patch({ op: 'markSaysSameAs', policyId: p.id, duplicateOfNumber: n })
+                }}
+                disabled={busy || !dupTarget[p.id]}
+                className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+              >
+                Set
+              </button>
+              {p.effectiveDisposition !== 'UNDISPOSITIONED' && (
+                <button onClick={() => void patch({ op: 'clearDisposition', policyId: p.id })} disabled={busy}
+                  className="text-[11px] text-zinc-500 underline disabled:opacity-40">
+                  Clear
+                </button>
+              )}
+              {/* §2 — "really an action... the user may also assert it", unlike the automatic
+                  sort below (§1.3), which only OFFERS a reclassification for consent. */}
+              <button onClick={() => void patch({ op: 'assertAction', policyId: p.id })} disabled={busy}
+                className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
+                This is really an action
+              </button>
+            </div>
+
+            {/* 25-P's own ALTERNATIVES relation (§2 — "reuse the alternative relation 25-P
+                already computes"), offered as a hint rather than a second mechanism. */}
+            {s.pairings.some((x) => (x.a === p.number || x.b === p.number) && x.relationship === 'ALTERNATIVES') && (
+              <p className="text-[10px] text-zinc-400 mt-1">
+                Lex reads this as an alternative to{' '}
+                {s.pairings.filter((x) => (x.a === p.number || x.b === p.number) && x.relationship === 'ALTERNATIVES')
+                  .map((x) => (x.a === p.number ? x.b : x.a)).join(', ')} — same cause, different means.
+              </p>
+            )}
           </article>
         ))}
+      </div>
+
+      {/* ══ 26-I §3-§7 — CONSOLIDATE ═══════════════════════════════════════════ */}
+      <ConsolidatePanel ideaId={ideaId} consolidateInfo={s.consolidate} onSettled={load} />
+
+      {/* ══ 26-I addendum A1 — THE GENERAL FEEDBACK BOX ═════════════════════════
+          Not about one candidate — filed to the same feedback record regardless. */}
+      <div className="px-4 py-3 border-t border-zinc-100">
+        <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Feedback on the guiding policy in general
+        </label>
+        <div className="flex gap-2 mt-1.5">
+          <input
+            value={generalFeedback}
+            onChange={(e) => { setGeneralFeedback(e.target.value); setGeneralFeedbackSent(false) }}
+            onKeyDown={(e) => { if (e.key === 'Enter') void submitGeneralFeedback() }}
+            placeholder="Not about one candidate in particular…"
+            className="flex-1 text-sm rounded-lg border border-zinc-300 px-2.5 py-1.5"
+          />
+          <button onClick={() => void submitGeneralFeedback()} disabled={busy || !generalFeedback.trim()}
+            className="text-sm font-semibold px-4 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
+            Send
+          </button>
+        </div>
+        {generalFeedbackSent && <p className="text-[11px] text-zinc-500 mt-1">✓ Filed.</p>}
       </div>
 
       {/* ══ §1.5 — HOW THEY RELATE ═════════════════════════════════════════════ */}

@@ -429,6 +429,10 @@ export const PASS_PURPOSE: Record<string, SpendPurpose> = {
   'deepening.sift': 'user builds',
   'deepening.adversarial': 'user builds',
   'deepening.consequences': 'user builds',
+  // 26-I §3/§4/§6 — Consolidate's four premium drafts, the judge, and the redraft.
+  'guiding-policy.draft': 'user builds',
+  'guiding-policy.judge': 'user builds',
+  'guiding-policy.redraft': 'user builds',
 
   'lex.chat': 'Lex chat',
   'lex.field': 'Lex chat',

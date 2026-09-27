@@ -36,6 +36,7 @@ import type { RawFinding } from './deepening-client'
 import { modelFor } from './model-registry'
 import { thinkingConfigFor, requiresThinking, THINKING_HEADROOM } from './model-thinking'
 import { recordGeminiUsage, type SpendStream } from './spend-ledger'
+import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
 
 const MAX_TOKENS = parseInt(process.env.LEX_ADVERSARIAL_MAX_TOKENS ?? '4000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_ADVERSARIAL_TIMEOUT_MS ?? '45000', 10)
@@ -57,6 +58,8 @@ const SYSTEM = [
   'most useful thing anyone can be to them, and it is why this is a separate reading from the one',
   'that assembled the evidence. Do not repeat that reading. Look for what it did not think to look',
   'for.',
+  '',
+  NO_EVALUATIVE_PREAMBLE,
   '',
   'WHERE PROPOSALS ARE WEAKEST, and where to look first:',
   '  · THE UNQUANTIFIED CLAIM. Which assertion carries the argument and has no number behind it?',

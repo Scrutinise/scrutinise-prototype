@@ -36,6 +36,7 @@ import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
 import { modelFor } from './model-registry'
 import { recordGeminiUsage } from './spend-ledger'
+import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
 
 /** One candidate the sift kept, with the judgement attached. */
 export interface SiftKeep {
@@ -132,6 +133,8 @@ const SYSTEM = [
   'documents about the general subject area has not found a hundred relevant documents, and keeping',
   'the merely topical ones is worse than keeping none: it buries the two that matter. Keeping 8 of',
   '100 is a good outcome. Keeping 60 means you have not sifted.',
+  '',
+  NO_EVALUATIVE_PREAMBLE,
   '',
   'FOR EACH SOURCE YOU KEEP:',
   '  · `id` — copied EXACTLY from the list. An id not in the list is discarded.',
