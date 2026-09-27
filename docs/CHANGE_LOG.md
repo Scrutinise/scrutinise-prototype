@@ -1,5 +1,92 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-27 12:56 UTC — LEX 26-J §1-§4 — the Overview reads the wrong tables, fixed
+
+**§1a — the mapping, reported before anything was rebuilt.** Every Overview field, the
+table it read, and where the editor actually writes it:
+
+| Overview showed | Read from (dead) | Editor actually writes |
+|---|---|---|
+| Diagnosis: obstacle/who/how/why/impact | `Diagnosis` row | `Idea.challenge`/`pivotalObstacle`/`summaryDiagnosis` (scalars) + `DiagnosisCause[]` |
+| Root Causes | `RootCause[]` | `DiagnosisCause[]` (`isRootCause` flag) |
+| Policy: theory/trade-offs/etc | `GuidingPolicy` row | `PolicyOption[]` + `Idea.chosenApproach`/`summaryGuidingPolicy` |
+| Evidence | `Evidence[]` | nothing live carries this shape — see §1c |
+| Coherent Actions | `CoherentAction[]` (legacy) | `LexCoherentAction[]` |
+
+"Problem" worked by coincidence: `Idea.summaryDiagnosis`/`summaryGuidingPolicy`/
+`summaryCoherentActions` are scalars the editor genuinely writes, and that tab happened to
+read them; the other three tabs read the five relations in the left column, none of which
+the live build pipeline (`lib/lex/field-machine.ts`) has written to since the kernel rebuild.
+
+**§1b — rebuilt.** `app/ideas/[id]/page.tsx` now also calls `computeCanonicalState(id)` —
+the SAME function `app/api/ideas/[id]/lex/route.ts` calls for the editor's own FieldsPanel —
+and passes it to `IdeaDetailClient`. The Diagnosis/Policy/Coherent-Actions sub-tabs render
+off it (`CanonicalPageBlock`/`CanonicalFieldBlock`, new), with a live "N of M approved"
+line, matching the editor's own arithmetic exactly because it's the same fields array.
+
+⚠ **§1c — yes, the abandoned tables hold real content the live schema does not, and it
+would have been a silent loss to ignore.** A production check found **29 ideas** — the
+editorial/showcase kernels (`Hunting Act 2004`, `Gender Recognition Act 2004`, and 27
+others, seeded by `scripts/seed/seed-historical-kernels.ts`/`seed-editorial-ideas.ts`) —
+with rich `Diagnosis`/`GuidingPolicy`/`RootCause`/`CoherentAction` rows and **literally
+nothing** in the live schema: no `challenge`, no `pivotalObstacle`, zero `DiagnosisCause`/
+`PolicyOption`/`LexCoherentAction` rows. They never went through the live build pipeline.
+Rebuilding blind against `canonicalState` alone would have made 29 populated ideas look
+empty — a new regression this sprint would have caused. **Not dropped, and now handled**:
+`CanonicalPageBlock` falls back to the old relations (`LegacyDiagnosisFallback` etc.,
+read-only, with an on-screen "showing the original draft" notice) only when the live page
+has zero approved fields AND legacy content exists — whichever one actually has the idea's
+content is what renders, never both.
+
+✅ **§1d — cold read, on Charlie's own idea (`452c5ade…`), read directly off
+`computeCanonicalState`, not asserted:**
+```
+The Basic Idea: 8 of 8 approved (status=complete)
+Diagnosis: 7 of 7 approved (status=complete)
+```
+Matches the editor exactly, because it is now the same function.
+
+**§2 — the Research tab.** §2a: the stage-gate that returned "Research is not yet available
+at this stage" below Stage 2/3 is removed from `ResearchTab.tsx` — reading is now open at
+every stage (adding stays owner/editor-gated from Stage 1 onward, expanded from Stage 2, per
+"research exists from the first build"). §2b: the tab now also lists every source and
+document gathered — `IdeaUserMaterial` rows (links and files, including anything filed from
+chat per decision 92) alongside the existing `Research` citations — each with a
+"not relevant — remove" action.
+
+⚠⚠ **§2c — confirmed: `IdeaUserMaterial` is where user uploads actually live**, exactly as
+25-Y's own fix already reads them from. `Attachment` (found in 26-H) is a fully separate,
+orphaned model with zero callers anywhere in the codebase — dead code, not the uploads table.
+
+**§2b's "delete archives; it does not destroy"** — new: both `Research` and
+`IdeaUserMaterial` gained `archivedAt` (`prisma/lex_26j_research_archive.sql`, additive).
+`DELETE /api/ideas/[id]/research` (new) and `DELETE /api/ideas/[id]/material` (changed from
+a hard `prisma…delete` to setting `archivedAt`) both archive now. Every other read of
+`IdeaUserMaterial` that feeds a build (`elicitation.ts`, `page-one.ts`, `question-panel.ts`,
+`stage-context.ts`, `chat-material.ts`'s cap/dedupe checks) now excludes archived rows too —
+otherwise "remove" would have archived the row while Lex kept reading it into every pass.
+
+**§3 — Inbound and Outbound.** §3a applied directly: **the split was already a table
+boundary** (§2c), so no new field was added. The Documents tab now has two
+`CollapsedSection`s — Inbound (`IdeaUserMaterial`, new `InboundDocuments` component, with
+the same archive-not-destroy remove action) and Outbound (the existing `DocumentExports`
+cards + the proposal-document link, unchanged). §3b (provenance field, backfill) does not
+apply — stopped at §3a per the brief's own instruction.
+
+**§4 — the sort preference, off `localStorage`.** `User.ideaSortMode` (new column, same
+pattern `User.lexPanelLayout` already uses for the identical reason). New
+`GET`/`PATCH /api/user/idea-sort`. `lib/idea-sort.ts`'s hook now fetches/patches the server
+record as the source of truth, keeping `localStorage` only as an instant-paint cache so the
+UI doesn't flash back to "recent" for a frame before the fetch resolves. **Cost: small, as
+expected** — one nullable `TEXT` column, two tiny route handlers, no new table.
+
+**§5 — recorded, not built.** The Deepening's opening-re-read principle (§5 of this brief)
+is noted here for whoever builds Stage 3, per the brief's own instruction — no code change.
+
+All schema changes additive, applied to Neon with `whichdb.ts` confirmed first
+(`prisma/lex_26j_research_archive.sql`, `prisma/lex_26j_sort_preference.sql`). `tsc --noEmit`,
+`check:client-boundary` and `check:llm-guards` all clean throughout.
+
 ## 2026-09-27 12:36 UTC — LEX 26-I §1-§9 + addenda — one guiding policy, properly arrived at
 
 Built §1-§9 in full plus both addenda (feedback filing on decision 92's pattern; model
