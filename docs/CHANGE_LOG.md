@@ -1,5 +1,85 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-27 11:20 UTC — LEX 26-H §3/§8 — dashboard/ideas ordering built, duplicate policy list removed, five items diagnosed and reported
+
+From CCh reply 106 (25 Sep walkthrough §1-§4) and BRIEF_26H §8. §0's run mode ("diagnose,
+record in the CHANGE_LOG, proceed") applied. Not committed — sitting as working-tree changes
+pending Charlie's review, per §12 (no mid-sprint git beyond the build-break/schema carve-outs,
+neither of which applies here).
+
+**Implemented (authorised in the brief):**
+
+▶ **§3 — dashboard/ideas ordering and grouping.** New `lib/idea-sort.ts`: a client-side sort
+preference (`recent` default / `name` / `created`), shared between `MyIdeasList.tsx` (Ideas
+page) and `DashboardClient.tsx` (Dashboard) via one `localStorage` key — no schema change.
+`app/dashboard/page.tsx`'s query gained `createdAt` and the same `group` relation the Ideas
+page already fetches, so groups now render on the Dashboard too, in the same order (§3b).
+⚠ **§3c found a real regression while scoping it**, not just implementing a new ask: hiding a
+group (`MyIdeasList.tsx`) pulled its whole header out to a separate "N hidden groups" summary
+at the foot of the list — contradicting the hide route's own comment, which said the header
+should stay put. Fixed in both `GroupSection` (Ideas page) and the new Dashboard group block:
+a hidden group's header renders in its normal position in the order; only its ideas stop
+rendering, with a Show toggle in place of Hide. Manual drag-reorder (`ownerOrderIndex`) is
+unaffected in the default 'recent' sort; the drag handle is hidden under 'name'/'created' since
+a manual drag has no effect once the list re-sorts on every render.
+
+▶ **§8b — the duplicate Guiding Policy list.** `FieldsPanel.tsx`'s `PolicyOptionsField`
+rendered a plain terminal-state list (approach + status badge, no reasoning/controls)
+immediately above `GuidingPolicyScreen`'s full rendering of the same `PolicyOption` rows.
+Deleted the plain rendering. One real dependency found first: the plain card also mounted
+`PriorVersions` (prior-wording history), which `GuidingPolicyScreen` doesn't carry — kept that
+mounted on its own once terminal, rather than dropping it. Did **not** reuse `OptionCard`
+(the non-terminal rendering) for the terminal case, since it always exposes Edit/Rule
+out/Delete regardless of field state — that would have added editing controls to confirmed
+data, which is a bigger and different change than "delete the duplicate."
+
+**Diagnosed, reported only (§0/§4/§8a/§8c/§8d ask for a report, not a build):**
+
+▶ **§1/§8a — Overview vs editor kernel mismatch.** Root cause confirmed: the Overview page
+(`app/ideas/[id]/page.tsx:107-110`, rendered by `IdeaDetailClient.tsx`) still queries the
+pre-rebuild relational models (`Diagnosis`, `RootCause`, `GuidingPolicy`, `Evidence`,
+`CoherentAction`), which the live Lex build pipeline (`lib/lex/field-machine.ts`) stopped
+writing to after the kernel rebuild. The rebuild persists onto scalar `Idea` columns
+(`summaryDiagnosis`, `summaryGuidingPolicy`, `summaryCoherentActions`, …) plus three new
+tables (`DiagnosisCause`, `PolicyOption`, `LexCoherentAction`; the last one's own schema
+comment calls it "deliberately isolated from the large legacy `CoherentAction` model"). The
+Overview's "Problem" tab reads the scalar columns and is therefore the one tab that happens to
+work; Diagnosis/Policy/Coherent Actions read the abandoned relations and always read empty.
+Not fixed — repointing four tabs to the current schema is a real piece of work, reported for
+Charlie's sequencing decision.
+
+▶ **§2/§8c — empty Research tab.** Two stacked causes, both in `ResearchTab.tsx:386-396` /
+`app/api/ideas/[id]/research/route.ts`. (1) A genuine stage gate: the tab (and its API route)
+refuses anything below Stage 2, and a new idea defaults to Stage 1. (2) Even past the gate, the
+tab only ever queries the `Research` model (manually-submitted citations) — never `Document`
+or `IdeaBuild`, which is where "5 documents and 10 builds" actually live (`Idea.documents`,
+`Idea.builds` — three separate, unrelated relations on `Idea`). The tab was never built to read
+the latter two, so it would stay empty on a data-rich idea even with the gate passed.
+
+▶ **§4a — guiding-policy exclusion data.** Not lost. `PolicyOption.status = 'RULED_OUT'` and
+`PolicyOption.ruleOutReason` are intact in the schema (never dropped by any migration) and
+still read/written throughout `lib/lex/*`. They render today under `GuidingPolicyScreen.tsx`'s
+"Candidate policies ruled out" `CollapsedSection` — which the 26-E sprint (`542e624`) left
+collapsed by default. One click reveals it; no schema or API change needed.
+
+▶ **§4b — the causation commentary section.** Not missing, not orphaned, not unbuilt. It's
+`components/lex/CausesCommentary.tsx`, restyled exactly per BRIEF_26E §8 in the same `542e624`
+commit, imported through `FieldsPanel.tsx` → `CreateIdeaClient.tsx` → the live `/ideas/create`
+route. Confirmed against production data: 29 of 37 `IdeaBuild` rows carry substantive
+`causesCommentary`, including Charlie's own "Enhancing Individual Accountability" idea. It's
+invisible because the Diagnosis section it lives in collapses (unmounts, per
+`lib/panel-collapse.ts`'s own doc comment) once a build completes — a deliberate design
+decision (25-R Addendum A1), not a defect. Flagged as unverified by `check:lex-25r` before
+today; today's direct DB read is effectively that missing check, and it passed.
+
+▶ **§8d — Documents tab Inbound/Outbound.** No — not every document carries enough today.
+`Document.kind` is a bare `String` with no `USER_UPLOAD`-shaped value in current use, and no
+field on `Document` records who/what created a row. Every existing row happens to be
+classifiable as Outbound only because no user-upload path exists yet. `Attachment` — the model
+with real uploader provenance (`uploadedByUserId`) — has zero call sites anywhere in the
+codebase and no link to `Document`. Splitting the tab needs a real, always-populated
+provenance field first (schema change), not an inference from `kind` or `buildId`.
+
 ## 2026-09-25 10:29 UTC — LEX — build.ts collision resolved, deploy verified, Decisions 99/100
 
 No brief; closing out loose ends from the BRIEF_26G session before a context clear.
