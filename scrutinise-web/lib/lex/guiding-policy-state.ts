@@ -66,13 +66,33 @@ export type PolicyOp =
    * writers.
    */
   | 'edit'
+  /**
+   * 26-L addendum 2 §6 — "The chosen guiding policy can be un-chosen and changed." The button
+   * that used to set it directly (`settle`, from the card) was removed in the previous
+   * addendum, which correctly stopped a card from bypassing Consolidate — and left anything
+   * ALREADY chosen with no way back, since `settle` itself was never a toggle. This is that
+   * way back: demotes whichever row is CHOSEN to CANDIDATE and clears `chosenApproach`, so a
+   * new one can be chosen (through Consolidate → Accept, or — where nothing needs
+   * consolidating — a direct `settle`, which the backend still supports; only the
+   * bypass-Consolidate BUTTON was retired).
+   */
+  | 'unchoose'
+  /**
+   * 26-L addendum 2 §5 — "A Save button on feedback text." The feedback box on a card had no
+   * save of its own: `reason` only ever travelled bundled with another op (reject/phase/…),
+   * so typing feedback with no other action in mind had nothing to press. This op does nothing
+   * beyond what already runs for EVERY op at the top of `applyPolicyOp` — filing `reason` as
+   * `PolicyFeedback` when present — so feedback alone can be saved without also, say, rejecting
+   * the candidate to get the reason box to fire.
+   */
+  | 'fileFeedback'
 
 export const POLICY_OPS: PolicyOp[] = [
   'acceptMove', 'declineMove', 'acceptCause', 'declineCause',
   'settle', 'phase', 'reject', 'restore', 'proceedUnresolved', 'countRound',
   'undoSort', 'acceptMerge',
   'add', 'markPartOfSolution', 'markSaysSameAs', 'assertAction', 'clearDisposition',
-  'acceptEnhance', 'edit',
+  'acceptEnhance', 'edit', 'unchoose', 'fileFeedback',
 ]
 
 /**
@@ -614,6 +634,29 @@ export async function applyPolicyOp(input: {
           })
         }
       }
+      break
+
+    // ══ 26-L addendum 2 §6 — UN-CHOOSE, SO A CHOSEN POLICY CAN BE CHANGED ══════════════════
+    //
+    // ⚠ ACTS ON WHICHEVER ROW IS CHOSEN, NOT ON `policyId` — there is at most one, and the
+    // control that calls this (the "Settled" banner) has no single card to name; it is
+    // un-choosing the KERNEL's decision, not one candidate's.
+    case 'unchoose': {
+      const chosen = await prisma.policyOption.findFirst({ where: { ideaId: id, status: 'CHOSEN' } })
+      if (chosen) {
+        await prisma.$transaction([
+          prisma.policyOption.update({ where: { id: chosen.id }, data: { status: 'CANDIDATE' } }),
+          prisma.idea.update({ where: { id }, data: { chosenApproach: null } }),
+        ])
+      }
+      break
+    }
+
+    // ══ 26-L addendum 2 §5 — FEEDBACK, SAVED ON ITS OWN ═══════════════════════════════════
+    // The filing already happened above, unconditionally, for every op that carries a
+    // `reason` — this case exists only so the op is a real, named thing rather than an
+    // undocumented no-op a future reader has to work out from the switch having no `default`.
+    case 'fileFeedback':
       break
 
     case 'phase':

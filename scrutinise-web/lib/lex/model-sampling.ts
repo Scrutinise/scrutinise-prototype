@@ -49,6 +49,16 @@ export const REJECTS_TEMPERATURE: ReadonlySet<string> = new Set([
   'claude-fable-5',
   'claude-opus-4-8',
   'claude-opus-4-7',
+  // ⚠⚠ 26-L ADDENDUM 2 §1 — `gpt-6-luna` FAILED CONSOLIDATE'S FIRST REAL RUN. It is a
+  // reasoning-style model (`callOpenAI` already addresses it via `max_completion_tokens`, the
+  // reasoning-model field name, not `max_tokens`) — this codebase's own OpenAI branch comment
+  // predicted the exact shape: "Several OpenAI reasoning models reject `temperature` outright
+  // as well; this path has never been exercised end to end… hardcoding the parameter is
+  // precisely how it would 400 on its first live call." That is what happened. Added on
+  // Charlie's own diagnosis of the live failure rather than a fresh probe (no OPENAI_API_KEY on
+  // this machine to reproduce the 400 directly) — the standing instruction to measure live
+  // still applies to any FURTHER OpenAI reasoning model added here.
+  'gpt-6-luna',
 ])
 
 export function acceptsTemperature(model: string): boolean {

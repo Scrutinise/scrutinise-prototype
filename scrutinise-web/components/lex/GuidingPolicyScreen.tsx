@@ -121,13 +121,26 @@ interface Consolidation {
   costPence: number | null
 }
 
-/** §4 — one card's verdict, in words, no colour (docs/CLAUDE.md §21). */
+/**
+ * §4 — one card's verdict, in words, no colour (docs/CLAUDE.md §21).
+ *
+ * ⚠⚠ 26-L §6a / addendum 2 §7 — THE COMPOUND LINE IS A MECHANICAL FLAG, NEVER A VERDICT.
+ * `v.isCompound` is `testIsCompound`'s naive "split on and" heuristic (`rumelt-tests.ts`) —
+ * measured to false-positive on ordinary compound OBJECTS within one approach ("supporting
+ * infrastructure projects and public services" is one approach touching two things, not two
+ * approaches; it split "projects and services" and called it two). §6a: "the deterministic
+ * test flags for review only — the verdict comes from the judge, with its reasoning" — that
+ * verdict is `answersObstacle` below, the judge's own semantic reading. This line is worded to
+ * say so, on the card, every time — not only where a check happens to catch it.
+ */
 function JudgeCard({ v }: { v: JudgeVerdict | null }) {
   if (!v) return <p className="text-[11px] text-zinc-400 mt-2">Not yet tested.</p>
   return (
     <div className="mt-2 pt-2 border-t border-zinc-100 space-y-1">
       <p className={`text-[11px] ${v.isCompound ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
-        {v.isCompound ? `⚠ Compound — ${v.compoundWhy}` : 'Not a compound — one approach.'}
+        {v.isCompound
+          ? `⚠ Flagged for review (mechanical check, not a verdict) — ${v.compoundWhy}`
+          : 'Mechanical check: not flagged as a compound.'}
       </p>
       <p className={`text-[11px] ${v.rulesOutNothing ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
         {v.rulesOutNothing ? '⚠ Rules out: nothing — this is a weakness.' : 'Rules something out.'}
@@ -363,8 +376,19 @@ function ConsolidatePanel({
       if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'That did not save.'); return }
       setConsolidation(j.consolidation)
       if (body.op === 'accept') onSettled()
+      // 26-L addendum 2 §1 — retry may still leave some models failed; replace the list
+      // with whatever failed THIS time, not the original set (a model that just succeeded
+      // must stop being offered for retry).
+      if (body.op === 'retryFailed') setFailedModels(j.failed ?? [])
+      return j
     } finally { setBusy(false) }
   }, [consolidation, ideaId, onSettled])
+
+  /** 26-L addendum 2 §1 — "Retry reruns only the models that failed." */
+  const retryFailed = useCallback(() => {
+    if (!failedModels.length) return
+    void patchConsolidation({ op: 'retryFailed', models: failedModels.map((f) => f.model) })
+  }, [failedModels, patchConsolidation])
 
   const pence = (p: number | null | undefined) => p == null ? '(cost unknown)' : `£${(p / 100).toFixed(2)}`
 
@@ -393,20 +417,40 @@ function ConsolidatePanel({
             )}
           </p>
         </div>
-        <button
-          onClick={() => void start()}
-          disabled={busy || !consolidateInfo.enabled}
-          className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
-        >
-          {busy ? 'Working…' : consolidation ? 'Consolidate again' : 'Consolidate'}
-        </button>
+        {/* ══ 26-L addendum 2 §2 — TWO BUTTONS, AND A THIRD, SEPARATE AND LABELLED ═══════════
+            "Consolidate" produces four drafts (unchanged). Once a consolidation exists, this
+            same button is never reused for "again" — that is its own, explicitly labelled
+            control below, so nobody presses it thinking it does the small thing (retry) when
+            it does the big one (four fresh drafts, at four models' cost). */}
+        {!consolidation && (
+          <button
+            onClick={() => void start()}
+            disabled={busy || !consolidateInfo.enabled}
+            className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
+          >
+            {busy ? 'Working…' : 'Consolidate'}
+          </button>
+        )}
       </div>
 
       {error && <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5">{error}</p>}
       {failedModels.length > 0 && (
-        <p className="mt-2 text-[11px] text-amber-800">
-          {failedModels.length} of four models did not draft: {failedModels.map((f) => `${f.model} (${f.error})`).join('; ')}.
-        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="text-[11px] text-amber-800">
+            {failedModels.length} of four models did not draft: {failedModels.map((f) => `${f.model} (${f.error})`).join('; ')}.
+          </p>
+          {/* §1 — "Retry reruns only the models that failed." Only offered once there is a
+              consolidation to retry against (there always is, by the time this renders). */}
+          {consolidation && (
+            <button
+              onClick={retryFailed}
+              disabled={busy}
+              className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-amber-300 text-amber-800 disabled:opacity-40 whitespace-nowrap"
+            >
+              {busy ? 'Retrying…' : `Retry ${failedModels.length === 1 ? failedModels[0].model : 'the failed models'}`}
+            </button>
+          )}
+        </div>
       )}
 
       {consolidation && (
@@ -458,13 +502,30 @@ function ConsolidatePanel({
             </div>
           )}
 
+          {/* ══ 26-L addendum 2 §2 — "WRITE THE FINAL VERSION" ═══════════════════════════════
+              Enabled once a favourite is chosen (unchanged gate) — the SAME `redraft` op,
+              relabelled to say what it does for the user rather than which model does it. */}
           {consolidation.favouriteModel && consolidation.status === 'FAVOURITE_CHOSEN' && (
             <button
               onClick={() => void patchConsolidation({ op: 'redraft' })}
               disabled={busy}
               className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white disabled:opacity-40"
             >
-              {busy ? 'Redrafting…' : `Ask ${consolidation.favouriteModel} for the redraft`}
+              {busy ? 'Writing…' : 'Write the final version'}
+            </button>
+          )}
+
+          {/* ══ §2 — "START AGAIN WITH FOUR NEW DRAFTS", SEPARATE AND LABELLED ════════════════
+              Always available once a consolidation exists — the same `start()` POST as the
+              first "Consolidate" press, discarding nothing but beginning a fresh consolidation
+              record; never to be confused with Retry (above), which touches only what failed. */}
+          {consolidation.status !== 'ACCEPTED' && (
+            <button
+              onClick={() => void start()}
+              disabled={busy || !consolidateInfo.enabled}
+              className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+            >
+              {busy ? 'Working…' : 'Start again with four new drafts'}
             </button>
           )}
 
@@ -602,6 +663,14 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
     } finally { setBusy(false) }
   }, [ideaId])
 
+  // ══ 26-L addendum 2 §5 — "EVERY ACTION ON A CARD CONFIRMS IT SAVED." ══════════════════════
+  // #24 and #25 were set — `disposition: SAYS_SAME_AS`, both with a `duplicateOfNumber`,
+  // confirmed live in the database — and Charlie reported no record. The writes were never
+  // lost; there was nothing on screen distinguishing "just wrote" from "always was". This is
+  // a timestamp per card, set the moment ANY op naming that `policyId` succeeds, read by the
+  // disposition row and the feedback box below so a plain write becomes a visible one.
+  const [savedAt, setSavedAt] = useState<Record<string, number>>({})
+
   const patch = useCallback(async (body: Record<string, unknown>) => {
     setBusy(true); setError(null)
     try {
@@ -614,7 +683,11 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       // `setS` is a queued React update, so reading `s` here would read the list from BEFORE the
       // merge and confidently report the wrong number. Existing callers ignore the return.
       if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'That did not save.'); return null }
-      setS(j); return j
+      setS(j)
+      if (typeof body.policyId === 'string') {
+        setSavedAt((m) => ({ ...m, [body.policyId as string]: Date.now() }))
+      }
+      return j
     } finally { setBusy(false) }
   }, [ideaId])
 
@@ -766,28 +839,26 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
             How to write a Guiding Policy
           </button>
         </div>
-        {/* ══ 26-L §10a — THE INTRODUCTION, VERBATIM FROM CHARLIE'S DRAFT ═══════════════
-            ⚠⚠ DECISION 103 SETTLES THE WORDING QUESTION §10a LEFT OPEN. BRIEF_26L §10a had
-            proposed changing Charlie's own "commented on each option" to "sorted every
-            option", flagged "Charlie to confirm" since the actual gate waits on a
-            disposition, not `sorted`. Decision 103 item 2 restores his original wording AND
-            makes it true: the gate now also accepts written feedback as engagement (see
-            `readPolicyState`'s `stillWaiting` — a disposition OR a PolicyFeedback row against
-            the candidate satisfies it), so "commented on each option" is no longer merely
-            close to the mechanism, it names it. */}
+        {/* ══ 26-L addendum 2 §3 — THE INTRODUCTION, REPLACED VERBATIM ═══════════════════
+            Supersedes BRIEF_26L §10a / decision 103 item 2's wording. This version drops "the
+            success of your mission" framing for what a guiding policy actually IS — the
+            principle by which actions are judged, not the actions — and states the three-way
+            gate (sorted, allocated OR commented) explicitly rather than "commented" standing
+            in for all three, and names "Write the final version" as its own step. */}
         <p className="text-xs text-zinc-600 mt-2 leading-relaxed">
           After choosing the right cause, getting the guiding policy right is the next most
           important task, and it&rsquo;s not easy. A good guiding policy brings focus and
-          clarity — essential to the success of your mission — by ruling out anything that might
-          confuse your actions. Lex will help bring clarity.
+          clarity by providing the principle by which you can judge which actions to take. It
+          shouldn&rsquo;t describe the actions themselves — that&rsquo;s for the next stage.
         </p>
         <p className="text-xs font-semibold text-zinc-900 mt-2">Next steps.</p>
         <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
           First sort the candidate policies below with your comments (and add your own if you
           wish), then click the <span className="font-medium">Consolidate</span> button at the
-          end — greyed out until you&rsquo;ve commented on each option. This gives you
-          suggestions from four premium AI models. You then choose the best and give feedback
-          before the final version is chosen.
+          end — greyed out until you&rsquo;ve sorted, allocated or commented on each option.
+          Consolidation takes your feedback and gives you suggestions from four premium AI
+          models. You then choose the best of those, add final feedback and click{' '}
+          <span className="font-medium">Write the final version</span>.
         </p>
       </div>
 
@@ -869,7 +940,7 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                 onSubmit={() => void submitEdit(p.id)} onCancel={() => setEditingId(null)}
               />
               <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={p.id} nonce={editingId === p.id ? 1 : 0} />
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 <button onClick={() => void patch({ op: 'reject', policyId: p.id, reason: reasons[p.id] })} disabled={busy}
                   className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-600 disabled:opacity-40">
                   Rule out
@@ -877,25 +948,27 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                 <input
                   value={reasons[p.id] ?? ''}
                   onChange={(e) => setReasons((r) => ({ ...r, [p.id]: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && reasons[p.id]?.trim()) void patch({ op: 'fileFeedback', policyId: p.id, reason: reasons[p.id] }) }}
                   placeholder="Feedback on this candidate"
                   className="flex-1 min-w-[10rem] text-[11px] rounded border border-zinc-300 px-2 py-1"
                 />
+                {/* §5 — the same Save button, the same card everywhere it appears. */}
+                <button onClick={() => void patch({ op: 'fileFeedback', policyId: p.id, reason: reasons[p.id] })}
+                  disabled={busy || !reasons[p.id]?.trim()}
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
+                  Save
+                </button>
+                {savedAt[p.id] != null && (
+                  <span className="text-[10px] font-semibold text-emerald-700">✓ Saved</span>
+                )}
               </div>
             </article>
           ))}
         </div>
       )}
 
-      {/* ⚠⚠ §1.2 — "VISIBLE, NOT SILENT." If Lex removes four of twelve without saying so, the
-          user believes Lex lost them. This is that sentence, and it names where each has gone. */}
-      {(actions.length > 0 || goals.length > 0) && (
-        <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/70">
-          <p className="text-xs font-semibold text-zinc-900">
-            {actions.length + goals.length} of these were not guiding policies. Here is why, and
-            here is where each has gone.
-          </p>
-        </div>
-      )}
+      {/* ⚠⚠ §1.2 — "VISIBLE, NOT SILENT." 26-L addendum 2 §4 moved this line to the bottom,
+          just above Consolidate — see there for the templated wording and the links. */}
 
       {/* ══ THE POLICIES ═══════════════════════════════════════════════════════ */}
       <div className="px-4 py-3 space-y-3">
@@ -1036,9 +1109,18 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
               <input
                 value={reasons[p.id] ?? ''}
                 onChange={(e) => setReasons((r) => ({ ...r, [p.id]: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === 'Enter' && reasons[p.id]?.trim()) void patch({ op: 'fileFeedback', policyId: p.id, reason: reasons[p.id] }) }}
                 placeholder="Feedback on this candidate (kept, whatever you're doing to it)"
                 className="flex-1 min-w-[10rem] text-[11px] rounded border border-zinc-300 px-2 py-1"
               />
+              {/* ══ 26-L addendum 2 §5 — "A SAVE BUTTON ON FEEDBACK TEXT." ═══════════════
+                  It travelled bundled with Rule out/Later phase before; typing feedback with
+                  neither in mind had nothing to press. */}
+              <button onClick={() => void patch({ op: 'fileFeedback', policyId: p.id, reason: reasons[p.id] })}
+                disabled={busy || !reasons[p.id]?.trim()}
+                className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
+                Save
+              </button>
             </div>
 
             {/* ══ 26-I §2 — THE DISPOSITION, READ AS ONE OF FIVE ══════════════════
@@ -1050,6 +1132,13 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                   : p.effectiveDisposition === 'SAYS_SAME_AS' ? `✓ Says roughly the same as ${p.duplicateOfNumber}`
                   : 'No disposition yet'}
               </span>
+              {/* ══ §5 — "A VISIBLE 'SAVED' AFTER ANY DISPOSITION." #24 and #25 were set —
+                  confirmed in the database, `disposition: SAYS_SAME_AS`, both with a
+                  `duplicateOfNumber` — and Charlie reported no record, because nothing on
+                  screen distinguished a fresh write from the resting state. */}
+              {savedAt[p.id] != null && (
+                <span className="text-[10px] font-semibold text-emerald-700">✓ Saved</span>
+              )}
               {p.effectiveDisposition !== 'PART_OF_SOLUTION' && (
                 <button onClick={() => void patch({ op: 'markPartOfSolution', policyId: p.id })} disabled={busy}
                   className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
@@ -1104,6 +1193,36 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
           </article>
         ))}
       </div>
+
+      {/* ══ 26-L addendum 2 §4 — "VISIBLE, NOT SILENT", MOVED TO THE BOTTOM ═══════════════════
+          §1.2's original point stands (if Lex removes N of M without saying so, the user
+          believes Lex lost them) — it was just in the wrong place, ahead of the very list it
+          was summarising. Now generated from the actual counts, not a fixed template, and each
+          clause links to its group. */}
+      {(actions.length > 0 || goals.length > 0) && (
+        <div className="px-4 py-3 border-t border-zinc-100 bg-zinc-50/70">
+          <p className="text-xs font-semibold text-zinc-900">
+            {actions.length > 0 && (
+              <>
+                {actions.length} {actions.length === 1 ? 'was' : 'were'} considered to be{' '}
+                {actions.length === 1 ? 'an action' : 'actions'} rather than guiding principles
+              </>
+            )}
+            {actions.length > 0 && goals.length > 0 && ', and '}
+            {goals.length > 0 && (
+              <>
+                {goals.length === 1 ? 'one was' : `${goals.length} were`} considered to be the
+                goal restated
+              </>
+            )}
+            . You can review and re-allocate if you disagree —{' '}
+            {actions.length > 0 && <a href="#policy-group-actions" className="underline hover:text-zinc-700">see the actions</a>}
+            {actions.length > 0 && goals.length > 0 && ', '}
+            {goals.length > 0 && <a href="#policy-group-goals" className="underline hover:text-zinc-700">see the goal restatements</a>}
+            .
+          </p>
+        </div>
+      )}
 
       {/* ══ 26-I §3-§7 — CONSOLIDATE ═══════════════════════════════════════════ */}
       <ConsolidatePanel ideaId={ideaId} consolidateInfo={s.consolidate} onSettled={load} />
@@ -1364,7 +1483,7 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
 
       {/* ══ §1.3 — THE ITEMS THAT ARE REALLY ACTIONS ═══════════════════════════ */}
       {actions.length > 0 && (
-        <div className="px-4 py-3 border-t border-zinc-100">
+        <div id="policy-group-actions" className="px-4 py-3 border-t border-zinc-100 scroll-mt-4">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Really coherent actions ({actions.length})
           </h4>
@@ -1430,7 +1549,7 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
 
       {/* §1.2 — the goal restatements, set aside WITH THE REASON. */}
       {goals.length > 0 && (
-        <div className="px-4 py-3 border-t border-zinc-100">
+        <div id="policy-group-goals" className="px-4 py-3 border-t border-zinc-100 scroll-mt-4">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Really the goal restated ({goals.length})
           </h4>
@@ -1501,9 +1620,22 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       {/* ══ §1.9 — TWO ROUNDS, THEN LEX STOPS ASKING ═══════════════════════════ */}
       <div className="px-4 py-3 border-t border-zinc-100 bg-zinc-50/60">
         {s.settled ? (
-          <p className="text-xs text-zinc-800">
-            <span className="font-semibold">Settled:</span> {s.settled}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs text-zinc-800">
+              <span className="font-semibold">Settled:</span> {s.settled}
+            </p>
+            {/* ══ 26-L addendum 2 §6 — CAN BE UN-CHOSEN AND CHANGED ═══════════════════════
+                The button that set this directly was removed from the card (addendum 1 item
+                3); this is the way back — un-choosing here does not touch which candidate is
+                marked "part of the solution", only which one is Chosen. */}
+            <button
+              onClick={() => void patch({ op: 'unchoose' })}
+              disabled={busy}
+              className="text-[11px] font-medium text-zinc-500 underline hover:text-zinc-900 disabled:opacity-40 shrink-0 whitespace-nowrap"
+            >
+              Un-choose, and change it
+            </button>
+          </div>
         ) : s.unresolved ? (
           <p className="text-xs text-zinc-800">
             <span className="font-semibold">Recorded as unresolved.</span>{' '}

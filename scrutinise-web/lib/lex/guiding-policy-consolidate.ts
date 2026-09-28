@@ -18,6 +18,22 @@ import { recordUsage, type PricedSpend } from './spend-ledger'
 export const PREMIUM_DRAFT_MODELS = ['gemini-2.5-pro', 'claude-opus-5', 'grok-4.7', 'gpt-6-luna'] as const
 
 /**
+ * ══ 26-L ADDENDUM 2 §1 — THE THREE FAILURES, MEASURED FROM A REAL RUN ═══════════════════
+ *
+ * `maxOutputTokens: 1024` was too tight for Claude's own `tool_use` answer (Anthropic charges
+ * the whole structured call against `max_tokens`, unlike Gemini/OpenAI's separate JSON mode) —
+ * `callAnthropic` reported `stop_reason: 'max_tokens'`, cut off, every time. Raised well past
+ * what a two-or-three-sentence guiding-policy draft could ever need.
+ *
+ * `timeoutMs: 60_000` was tight for Grok specifically — `callXai`'s own header notes it was
+ * "UNVERIFIED LIVE FROM THIS MACHINE" (no `GROK_API_KEY` when that code was written); the first
+ * live exercise found x.ai's Responses API needs more room than 60s under real load. Raised for
+ * every model in this file, which only ever helps the other three.
+ */
+const DRAFT_MAX_OUTPUT_TOKENS = 4096
+const DRAFT_TIMEOUT_MS = 120_000
+
+/**
  * The product's own operationalisation of Rumelt's three tests for a guiding policy —
  * BRIEF_25F §6b names two of the three explicitly ("conditions for success and
  * anticipated responses are two of Rumelt's three tests"); the third is leverage, the
@@ -150,19 +166,22 @@ export interface DraftCallResult {
 export async function runFourDrafts(
   ctx: ConsolidateContext,
   spend: { ideaId: string; userId?: string | null },
+  /** 26-L addendum 2 §1 — "Retry reruns only the models that failed." Defaults to all four
+   *  (the original call site), so this is additive, not a second function to keep in step. */
+  models: readonly string[] = PREMIUM_DRAFT_MODELS,
 ): Promise<DraftCallResult[]> {
   const system = draftSystemPrompt()
   const user = draftUserPrompt(ctx)
 
   return Promise.all(
-    PREMIUM_DRAFT_MODELS.map(async (model): Promise<DraftCallResult> => {
+    models.map(async (model): Promise<DraftCallResult> => {
       const result = await callModelJson<DraftOutput>({
         model,
         system,
         user,
         schema: DRAFT_SCHEMA,
-        maxOutputTokens: 1024,
-        timeoutMs: 60_000,
+        maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS,
+        timeoutMs: DRAFT_TIMEOUT_MS,
         label: `guiding-policy-draft:${model}`,
         stream: 'lex',
         pass: 'guiding-policy.draft',
@@ -220,8 +239,8 @@ export async function runRedraft(
     system,
     user,
     schema: DRAFT_SCHEMA,
-    maxOutputTokens: 1024,
-    timeoutMs: 60_000,
+    maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS,
+    timeoutMs: DRAFT_TIMEOUT_MS,
     label: `guiding-policy-redraft:${input.favouriteModel}`,
     stream: 'lex',
     pass: 'guiding-policy.redraft',

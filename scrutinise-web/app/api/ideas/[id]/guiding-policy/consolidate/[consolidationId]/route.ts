@@ -14,7 +14,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
-import { runRedraft, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
+import { runFourDrafts, runRedraft, PREMIUM_DRAFT_MODELS, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, testIsCompound, testRulesOutNothing, type DraftForJudge, type JudgeVerdict } from '@/lib/lex/rumelt-tests'
 
 type Params = { params: Promise<{ id: string; consolidationId: string }> }
@@ -26,6 +26,8 @@ const PatchSchema = z.discriminatedUnion('op', [
     // §5b — what worked and did not, across all four. Feedback, never a splice request.
     feedback: z.string().trim().max(4000).optional(),
   }),
+  // 26-L addendum 2 §1 — "Retry reruns only the models that failed."
+  z.object({ op: z.literal('retryFailed'), models: z.array(z.string().min(1)).min(1).max(4) }),
   z.object({ op: z.literal('redraft') }),
   z.object({
     op: z.literal('accept'),
@@ -75,6 +77,77 @@ export async function PATCH(req: Request, { params }: Params) {
       include: { drafts: { orderBy: { createdAt: 'asc' } } },
     })
     return NextResponse.json({ consolidation: updated })
+  }
+
+  // ══════════ 26-L ADDENDUM 2 §1 — RETRY REACHES ONLY THE MODELS THAT FAILED ══════════════
+  //
+  // "Consolidate again" (the original button, unchanged) discards everything and starts a
+  // fresh consolidation. This does not: it re-runs exactly the named models against the SAME
+  // stored context (`candidateSnapshot`), adds their drafts to THIS consolidation, and judges
+  // only the new arrivals — the drafts that already succeeded, and anything already judged,
+  // are untouched.
+  if (body.op === 'retryFailed') {
+    // ⚠ NEVER RE-RUN A MODEL THAT ALREADY HAS A DRAFT HERE. Named-but-already-succeeded is a
+    // stale client (a second click after a slow success arrived) rather than a real retry.
+    const already = new Set(consolidation.drafts.map((d) => d.model))
+    const toRetry = body.models.filter((m) => (PREMIUM_DRAFT_MODELS as readonly string[]).includes(m) && !already.has(m))
+    if (!toRetry.length) {
+      return NextResponse.json({ error: 'Nothing to retry — every named model already has a draft here.' }, { status: 409 })
+    }
+    const context = consolidation.candidateSnapshot as unknown as ConsolidateContext
+    const retried = await runFourDrafts(context, { ideaId: id, userId: user?.id ?? null }, toRetry)
+    const succeeded = retried.filter((d) => d.ok && d.value)
+    const failed = retried.filter((d) => !d.ok)
+    let costPence = (consolidation.costPence ?? 0) + retried.reduce((sum, d) => sum + (d.priced.pence ?? 0), 0)
+
+    if (succeeded.length) {
+      await prisma.guidingPolicyDraft.createMany({
+        data: succeeded.map((d) => ({
+          consolidationId: consolidation.id,
+          model: d.model,
+          statement: d.value!.statement,
+          rulesOut: d.value!.rulesOut,
+          fixesCauseNumbers: d.value!.fixesCauseNumbers,
+          likelihood: d.value!.likelihood,
+          chainLink: d.value!.chainLink,
+          costPence: d.priced.pence,
+        })),
+      })
+      const freshDrafts = await prisma.guidingPolicyDraft.findMany({
+        where: { consolidationId: consolidation.id, model: { in: succeeded.map((d) => d.model) } },
+      })
+      // §4/B2 — judge only the drafts that just arrived; the rest already carry a verdict.
+      const forJudge: DraftForJudge[] = freshDrafts.map((d, i) => ({
+        index: i, model: d.model, statement: d.statement, rulesOut: d.rulesOut, fixesCauseNumbers: d.fixesCauseNumbers,
+      }))
+      const judged = await judgeDrafts(
+        { pivotalObstacle: context.pivotalObstacle, causes: context.causes },
+        forJudge,
+        { ideaId: id, userId: user?.id ?? null, pass: 'guiding-policy.judge' },
+      )
+      if (judged.ok) {
+        costPence += judged.priced.pence ?? 0
+        await Promise.all(
+          judged.verdicts.map((v, i) =>
+            prisma.guidingPolicyDraft.update({ where: { id: freshDrafts[i].id }, data: { judge: v as never } }),
+          ),
+        )
+      }
+    }
+
+    const totalDrafts = consolidation.drafts.length + succeeded.length
+    const updated = await prisma.guidingPolicyConsolidation.update({
+      where: { id: consolidation.id },
+      // A consolidation with at least one draft, before or after this retry, is judgeable
+      // material — DRAFTING only where literally nothing has ever succeeded.
+      data: { status: totalDrafts > 0 ? 'JUDGED' : 'DRAFTING', costPence },
+      include: { drafts: { orderBy: { createdAt: 'asc' } } },
+    })
+    return NextResponse.json({
+      consolidation: updated,
+      retried: succeeded.map((d) => d.model),
+      failed: failed.map((f) => ({ model: f.model, error: f.error })),
+    })
   }
 
   if (body.op === 'redraft') {
