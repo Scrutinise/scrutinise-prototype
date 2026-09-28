@@ -1,5 +1,159 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-28 02:14 UTC — LEX 26-L — the guiding-policy screen in use, and Lex telling the truth
+
+Brief: `docs/BRIEF_26L.md`. Continuous mode, per §0 — diagnosed, built, reported; batched here.
+
+**§1/§2 diagnosed against Charlie's own idea (452c5ade), by direct read of production, not
+guessed at.** Candidate #29 ("Make responsibility individually attributable and externally
+visible…") and the #3/#6 near-duplicate pair were read live. ⚠⚠ **§1's own hypothesis is
+WRONG**: a freshly-added candidate already has `kind: GUIDING_POLICY` from creation and the
+main list groups purely by `kind`, never by `sorted` — so it was never excluded from its
+group by the mechanism the brief suspected. **§2 is real and confirmed**: `writeMerge` refuses
+every verdict but MERGE by design (25-T §2e), and `ONE_CONTAINS_THE_OTHER` had no accept path
+at all — #3 and #6 sat there, live, un-merged, for ever. `check:lex-25t`'s own assertion "a
+ONE_CONTAINS_THE_OTHER verdict writes nothing" — unchanged, still green — is exactly that
+defect, previously asserted as correct behaviour.
+
+**§1a built anyway, because the acceptance criterion asks for it regardless of root cause.**
+`GuidingPolicyScreen.tsx` now renders a "Not yet sorted (N)" group at the very top, filtered on
+`!p.sorted` alone (kind-agnostic), with a full card — statement, edit, the compound flag, Rule
+out — so no future creation path can leave an item with nowhere to render, whatever bucket its
+`kind` happens to default to.
+
+**§2 built: `writeEnhance`, a new op (`acceptEnhance`).** Unlike `acceptMerge`, no new row: the
+containing policy keeps its own number and is edited in place (prior wording kept as a
+`FieldRevision`, same mechanism the chat-rewrite path already uses); the subordinate is
+archived (`mergedIntoId` + `RULED_OUT`, reason "Archived — absorbed into N"), never deleted.
+The merge judge's prompt (`guiding-policy.ts`) now asks for a `merged` restatement on
+`ONE_CONTAINS_THE_OTHER` too — reusing the existing field/shape rather than a second one — and
+widens the verdict's own definition to cover near-duplicate wording, not only an action-of-
+policy pair, since #3/#6 are the latter, not the former. Confirmation renders §2a's exact
+wording. §2b: the containing card's prior wording is one click away via `PriorVersions` (now
+mounted on every card); the subordinate's own wording is one click away in "Ruled out".
+
+**§3 built: every candidate card is now editable** (`EditableFields`, a new top-level
+component — statement, what it rules out, what it fixes, how likely — writing through the same
+`FieldRevision` history as §2's enhance). The compound flag from `testIsCompound` now persists
+on the card (written to `kindReason` at creation, since that column is otherwise unused before
+a real sort/judge verdict exists) instead of vanishing the moment the user does anything else —
+§3c: advisory only, never blocking, reworded to say so explicitly ("Flagged for review
+(mechanical check, not a verdict)").
+
+**§6 diagnosed and fixed.** `rumelt-tests.ts`'s `testIsCompound` is exactly the naive "split on
+and" heuristic named in the brief — confirmed against candidate #29's own text ("individually
+attributable and externally visible"), which is the brief's own example, verbatim, from the
+live row. §6a: it already only ever warned, never split the stored text (`add` stores the
+user's exact words) — the fix is labelling, done above. §6b confirmed true by code: no path
+anywhere writes a split fragment as a candidate's `approach`.
+
+**§7a confirmed already true, by reading the code, not asserted.** `CardHistory`
+(`historyLine`) already renders on every card, on the main list as well as the moved groups —
+"why it moved" is on the card, not only in the page-level summary line. §7b investigated:
+kindReasons for #1 ("Implement a statutory framework…", COHERENT_ACTION — "fails test 2, no
+multiple actions could be derived") and #25 ("Strengthen individual accountability…",
+GUIDING_POLICY — "multiple actions could be derived, e.g. creating new SRO-like roles")
+recorded verbatim. Both are similarly abstract (neither names an instrument, date or amount);
+the model's own stated reasoning for test 2 differs between them without an obvious textual
+basis beyond the brief's own suspicion (the opening verb). Plausible, not proven — an ablation
+(reword #1 to open with "Strengthen" and re-run the sort) would settle it and was not run here
+(costs a real model call). §7c: the sort's prompt (`guiding-policy.ts`) now states Charlie's
+exact test as the lead framing, ahead of the three mechanical sub-tests, so the model and the
+on-screen guide (§8) are provably reading the same words.
+
+**§8 built.** `GuidingPolicyGuideModal.tsx` — same colour/font/popup chrome as
+`HowItWorksModal.tsx`, opened by a button of the same style at the top of the Guiding Policy
+section. Content paraphrased throughout, Rumelt credited by name and title, never quoted.
+
+**§9 built.** `PolicyOption.duplicateOfNumbers` (`Int[]`, new column — see the schema commit
+below) persists what `sortPolicies` already computed and `writeSort` discarded. "How these
+relate" now leads with a "Near-duplicates" group sourced from that field, each pair carrying a
+"Merge?" button wired to the existing merge-judge flow. `pairPolicies` gained a third
+parameter, `excludeCauses`, and `universalCauses()` computes it: a cause attacked by ≥80% of
+the live candidate set (`UNIVERSAL_CAUSE_THRESHOLD`) is excluded from driving an ALTERNATIVES/
+CHAIN/DISPERSIVE verdict between any pair, and the excluded numbers are reported on-screen
+(§9d), not applied silently.
+
+**§10 built: 10a's exact wording is live**, with the one stated change (comment/sort → sorted)
+applied and flagged for Charlie's confirmation, since the actual Consolidate gate
+(`consolidate.enabled` in `guiding-policy-state.ts`) waits on every candidate carrying a
+*disposition*, not narrowly on `sorted` — the brief names only the wording, so the gate's own
+logic is unchanged pending that. **10b**: `UpdatePassPanel`'s top-of-middle-panel mount removed
+from the kernel-building stage (`CreateIdeaClient.tsx`) — it now lives inside `RerunOptions`'s
+renamed "New material and rebuilds" section; the Deepening stage keeps its own separate mount,
+since `RerunOptions` never renders there (26-K's "visible in the working area regardless of
+stage" guarantee would otherwise regress). **10c**: the "research an angle" box removed from
+both middle-panel mounts via a new `showResearchAngle` prop (default true), left in place on
+the Research tab's own mount (the right-hand panel, not named by the brief). ⚠ Could not
+reproduce "its Research button ran the material comparison instead" — current code has the
+button wired to `runAngle()` → `/update-pass/angle` → `runUpdatePass` branching correctly on
+`isAngle`; reported as unable to reproduce, not asserted fixed.
+
+**§4 — Charlie's exact quoted incident, traced to its source and fixed structurally.**
+`guidingPolicyChatRules` (`policy-feedback-chat.ts`) — a prompt block sent on every guiding-
+policy-page chat turn — literally instructed the model: *"say so in chatText and name it as a
+new numbered candidate for the sort ('I'd add this as a candidate — see the list')"*, with no
+tool call behind it. This is 26-I's A3 exactly as predicted. Fixed in
+`app/api/ideas/[id]/lex/route.ts`: a `policyOptions` proposal on the Guiding Policy page that
+is not a resolved edit of an existing numbered candidate now calls `applyPolicyOp('add', …)` —
+the same function the screen's own "Add" button calls — synchronously, in the turn, and
+`chatText` is rewritten to name the real, tool-confirmed number. The prompt was corrected to
+never state a number itself. §4c: `numberedOptionsBlock` now includes sorted/disposition/phase
+per candidate while on the Guiding Policy page (previously wording and number only) —
+reported, not fully built: `acceptedSummary`/`factsBlock` already carry a broader kernel
+summary elsewhere in this same prompt; a complete structural snapshot of every stage on every
+turn is sized, not attempted, here. ⚠ **A general, structural "every past-tense claim needs a
+tool result" guard across every action type was NOT built** — only this one, concretely
+reported and reproduced, family of claim. Named as remaining exposure, not silently left.
+
+**§5 — wired into code, at the two chokepoints that could be reached in the time available.**
+`hasEvaluativePreamble` (26-I §8) had exactly one caller before this: an offline audit script,
+never the path a reply travels before a user sees it — confirmed by grep, not assumed. New
+`enforceNoPreamble()` (`no-preamble.ts`) strips a matched opener (not a second model call —
+§18's family: a degradation should not risk producing a different failure). Wired into
+`runLexTurn` (`lex-client.ts`, the one implementation behind both the idea chat route and the
+orchestrator) and `runGeneralCorpusChat` (`general-chat.ts`, wrapped whole-function so every
+internal early return is covered). ⚠ NOT wired: the three Deepening passes
+(`deepening-sift.ts`/`deepening-adversarial.ts`/`deepening-client.ts`) still import
+`NO_EVALUATIVE_PREAMBLE` (prompt-only) — reported as remaining exposure.
+
+**§11 — report only, per the brief's own instruction; nothing built.** 11a: a tool per
+workspace action is buildable on the existing `applyPolicyOp`/`field-machine` functions
+(most already exist; the gap is a tool-calling harness around `runLexTurn`, not new mutation
+logic) — sized at a moderate rework of the chat route, not a small patch. 11b: corpus-first
+answering needs the general-chat retrieval path (`general-chat.ts`) merged into the idea-bound
+chat, which today uses `runLexTurn`'s own narrower, non-corpus-searching context — this is the
+mechanism behind Charlie's "answered from general knowledge" observation, confirmed by reading
+which function each surface calls, not assumed. 11c: site help already has one source
+(`PRODUCT_FACTS`/`productFactsBlock()`) both Lex and "How this works" read — extending it to
+guiding-policy-specific help is incremental. 11d: `LEX_CHAT_WEB_SEARCH` (S21 §7) exists in
+`general-chat.ts`, gated OFF by default, unmeasured — confirmed present, not guessed. 11e: not
+measured this session (would need a live comparison call); flagged as outstanding.
+
+**Found in passing, pre-existing, not touched this sprint** (all three confirmed unrelated to
+this session's edits by reading the code paths involved): `check:lex-25p` — an `acceptCause`
+transition leaves the causes field `ACCEPTED` rather than `AWAITING_CONFIRMATION`, and
+`components/lex/AgendaPanel.tsx` has drifted from a check assertion written against an earlier
+version (`const total = reading + a.gaps.length`, not `actionable + challenges`). `check:lex-
+25s` — one DiagnosisCause on production (60/61) carries no stable number, and a list-view
+indentation assertion against `CauseTree`-adjacent code. None of these touch `PolicyOption`,
+`guiding-policy*.ts`, or any file this sprint edited.
+
+**Schema**: `PolicyOption.duplicateOfNumbers` (`Int[]`, default `[]`) — see the standalone
+schema commit (`e012d54`), applied by scoped `ALTER TABLE` rather than `prisma db push`, which
+is currently blocked repo-wide by an unrelated pending `scheduler_lock` schema change from
+another stream (do not run `prisma db push` until that is resolved by whichever stream owns
+it).
+
+✅ `tsc --noEmit` clean. ✅ `check:client-boundary` clean, control fired. `check:lex-25p` 70/72
+(2 pre-existing, unrelated — see above). `check:lex-25s` 28/31 (3 pre-existing, unrelated).
+`check:lex-25t` 27/27 (1 not checked, pre-existing limitation, unrelated) — its own "a
+ONE_CONTAINS_THE_OTHER verdict writes nothing" assertion is against `writeMerge` specifically
+and is unaffected by the new, separate `writeEnhance`/`acceptEnhance` path.
+
+⚠ Nothing committed except the schema column (`e012d54`, pushed immediately per the shared-
+tree schema carve-out). `commit-all.sh` produced for the rest, pending Charlie's approval.
+
 ## 2026-09-27 17:37 UTC — LEX 26-K — the update pass: new material as a proposed amendment
 
 Session note: this build was interrupted once mid-way (during a routine `tsc` sanity check,

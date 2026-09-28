@@ -917,7 +917,48 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-28 00:39 UTC (LEX 26-H/26-I/26-J/26-K, all four sprints in one session)* —
+*Last updated: 2026-09-28 02:14 UTC (LEX 26-L)* — ▼▼ **26-L — THE GUIDING-POLICY SCREEN IN
+USE, AND LEX TELLING THE TRUTH.** Brief: `docs/BRIEF_26L.md`. Full detail in
+`docs/CHANGE_LOG.md`'s 02:14 entry; summary here.
+⚠⚠ **§1's own hypothesis was wrong, checked against Charlie's real idea (452c5ade) before
+building anything**: an added candidate's `kind` is `GUIDING_POLICY` from creation and the
+list groups by `kind`, not `sorted` — it was never excluded by the mechanism suspected. Built
+the "Not yet sorted" group anyway (kind-agnostic, full cards), since it satisfies the
+acceptance criterion regardless. **§2 WAS real**: `ONE_CONTAINS_THE_OTHER` had no accept path
+at all — confirmed live, #3 and #6 sat there un-merged. New `writeEnhance`/`acceptEnhance`:
+edits the containing row in place (prior wording kept via `FieldRevision`), archives the
+subordinate — never a new row. §3: every card now editable (statement/rules-out/fixes/
+likelihood), one shared history mechanism with §2. §6: `testIsCompound`'s naive "and"-split
+confirmed as the exact cause, via candidate #29's own text; now labelled a flag, not a verdict,
+and persists on the card. §7c: the sort's own prompt now states Charlie's exact test, so the
+model and the new "How to write a Guiding Policy" guide (§8, built) read the same words. §9:
+`sortPolicies`' own near-duplicate judgement was computed and discarded — now persisted
+(`PolicyOption.duplicateOfNumbers`, new column) and surfaced first in "How these relate", with
+a universal-cause exclusion (≥80% threshold, reported not silent). §10: wording/layout changes
+built, one flagged for Charlie's confirmation (the Consolidate gate itself waits on
+disposition, not `sorted` — only the wording changed here).
+⚠⚠ **§4 traced to source and fixed structurally — Charlie's exact quoted incident.** The
+guiding-policy chat prompt literally told the model to CLAIM it added a candidate with no tool
+call behind it (26-I's A3, exactly as predicted). Fixed: the chat route now calls the real
+`applyPolicyOp('add', …)` and rewrites the reply to name the tool-confirmed number. Not built:
+a fully general claim-verifier across every action type — this one family, concretely
+reproduced, is fixed; the rest is named as remaining exposure, not silently left.
+▶ §5: `enforceNoPreamble` wired into `runLexTurn` and `runGeneralCorpusChat` (previously the
+26-I detector had exactly one caller — an offline audit script, never the live reply path).
+Three Deepening passes remain prompt-only, reported. ▶ §11: report only, per the brief — no
+build; design and cost for a full tool-per-action Lex, corpus-first answering, and site help
+recorded in the CHANGE_LOG entry.
+⚠ **Found in passing, pre-existing, unrelated to this sprint's edits** (confirmed by reading
+the code paths, not assumed): two `check:lex-25p` failures (a causes-field status transition;
+`AgendaPanel.tsx` drift from an old assertion) and three `check:lex-25s` failures (one
+DiagnosisCause on production missing a number; a list-indentation assertion). None touch any
+file this sprint edited.
+✅ `tsc --noEmit` clean; `check:client-boundary` clean. Schema (`PolicyOption.duplicateOfNumbers`)
+committed and pushed immediately (`e012d54`), by the shared-tree carve-out — applied via a
+scoped `ALTER TABLE` rather than `prisma db push`, which is currently blocked repo-wide by an
+unrelated pending `scheduler_lock` change from another stream.
+⚠ Nothing else committed; `commit-all.sh` produced, pending Charlie's approval.
+Earlier: 2026-09-28 00:39 UTC (LEX 26-H/26-I/26-J/26-K, all four sprints in one session)* —
 ▼▼ **ALL FOUR COMMITTED, PUSHED, MAIN == origin/Main, NOTHING UNCOMMITTED** (re-verified by
 `git fetch` + `git status -sb` at the end of the session, not assumed). Full detail is each
 sprint's own `docs/CHANGE_LOG.md` entry (26-H 11:20 UTC, 26-I 12:36 UTC, 26-J 12:56 UTC, 26-K
