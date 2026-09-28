@@ -41,7 +41,7 @@ import { recordGeminiUsage } from './spend-ledger'
 import { flagEnabled } from '../env-flags'
 import { webSearch } from './orientation/web-search'
 import { markPublicSources, publicSourcesBlock, type PublicSource } from './public-sources'
-import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
+import { NO_EVALUATIVE_PREAMBLE, enforceNoPreamble } from './no-preamble'
 
 export interface GeneralChatTurn {
   role: 'user' | 'lex'
@@ -449,8 +449,21 @@ function answerContextLimit(): number {
  * Never throws — a failure on either half is reported in the diagnostics and the
  * other half's output still stands (retrieval is useful with no answer; an answer
  * is never produced with no retrieval).
+ *
+ * ⚠⚠ 26-L §5 — A THIN WRAPPER, SO EVERY EXIT FROM THE REAL FUNCTION IS COVERED. The inner
+ * function (below) has several early returns; wrapping the call once here, rather than editing
+ * each return site, is what makes "no evaluative preamble reaches the caller" true for all of
+ * them without relying on nobody adding a sixth return that forgets to enforce it.
  */
-export async function runGeneralCorpusChat(input: {
+export async function runGeneralCorpusChat(
+  input: Parameters<typeof runGeneralCorpusChatInner>[0],
+): Promise<GeneralChatResult> {
+  const result = await runGeneralCorpusChatInner(input)
+  if (result.answer) result.answer = enforceNoPreamble(result.answer)
+  return result
+}
+
+async function runGeneralCorpusChatInner(input: {
   question: string
   history?: GeneralChatTurn[]
   /** Canonical results requested from the gateway before grouping. */

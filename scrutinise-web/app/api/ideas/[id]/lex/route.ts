@@ -16,7 +16,8 @@ import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import { fileUrlsFromChat, materialFiledBlock } from '@/lib/lex/chat-material'
-import { fileChatPolicyFeedback, policyFeedbackFiledBlock, guidingPolicyChatRules } from '@/lib/lex/policy-feedback-chat'
+import { fileChatPolicyFeedback, policyFeedbackFiledBlock, guidingPolicyChatRules, isGuidingPolicyContext } from '@/lib/lex/policy-feedback-chat'
+import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
 import { buildFactsBlock } from '@/lib/lex/facts'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 import { productFactsBlock } from '@/lib/lex/product-facts'
@@ -191,14 +192,26 @@ export async function POST(req: Request, { params }: Params) {
   const policyRows = await prisma.policyOption.findMany({
     where: { ideaId: id },
     orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
-    select: { id: true, number: true, approach: true, status: true, mergedIntoId: true, kind: true },
+    select: {
+      id: true, number: true, approach: true, status: true, mergedIntoId: true, kind: true,
+      sortedAt: true, disposition: true, phase: true,
+    },
   })
   const livePolicies = policyRows.filter(
     (r) => r.status !== 'RULED_OUT' && !r.mergedIntoId && r.kind === 'GUIDING_POLICY' && r.number != null,
   )
+  // ⚠⚠ 26-L §4c — "LEX SEES THE MIDDLE PANEL." Before this, only wording and number. On the
+  // Guiding Policy page specifically, disposition/sort/phase are added — the same facts the
+  // screen itself shows — so a claim about the state of the list can be checked against
+  // something Lex was actually given, not invented. Report (26-L): elsewhere in the kernel,
+  // `acceptedSummary`/`factsBlock` below already carry a broad summary of accepted fields; a
+  // full structural snapshot of every stage's state on every turn is sized, not built, here.
+  const guidingPolicyPage = isGuidingPolicyContext(pre.currentField?.key)
   const numberedOptionsBlock = livePolicies.length
     ? ['THE CANDIDATE APPROACHES ON SCREEN, WITH THE NUMBERS THE USER CAN SEE',
-      ...livePolicies.map((r) => `[${r.number}] ${r.approach}`),
+      ...livePolicies.map((r) => guidingPolicyPage
+        ? `[${r.number}] ${r.approach} (sorted: ${r.sortedAt ? 'yes' : 'no'}; disposition: ${r.disposition}${r.phase ? `; phase: ${r.phase}` : ''})`
+        : `[${r.number}] ${r.approach}`),
       'Use these numbers when the user refers to one, and when you return a rewrite.',
     ].join('\n')
     : null
@@ -381,6 +394,31 @@ export async function POST(req: Request, { params }: Params) {
           currentText,
         }
       }
+    } else if (key === 'policyOptions' && isGuidingPolicyContext(pre.currentField?.key)) {
+      // ══════════ ⚠⚠ 26-L §4 — THIS IS 26-I's A3, BUILT STRUCTURALLY THIS TIME ══════════════
+      //
+      // Verbatim, Charlie's session: *"I've drafted a new candidate approach… You should see it
+      // added to the list of candidate approaches in the middle panel now."* Then, asked which
+      // number: *"No new candidate was actually added to the list."*
+      //
+      // ⚠⚠ THE PROMPT (guidingPolicyChatRules) TOLD LEX TO SAY EXACTLY THAT, WITH NOTHING BEHIND
+      // IT: *"say so in chatText and name it as a new numbered candidate for the sort"* — a
+      // sentence for the model to say, backed by no tool call. §4a: Lex acts only through tools.
+      // This branch IS that tool — the same `applyPolicyOp('add', …)` the screen's own "Add a
+      // guiding policy" button calls — run synchronously, in this turn, before `chatText` is
+      // shown. §4b: the reply may claim the add only because `addedNumber` below is the tool's
+      // own confirmed result, not a guess.
+      const result = await applyPolicyOp({ ideaId: id, op: 'add', text })
+      const addedNumber = 'addedNumber' in result ? result.addedNumber : undefined
+      if (addedNumber != null) {
+        console.log('[lex-diag] 26L chat-added guiding-policy candidate', { ideaId: id, addedNumber })
+        // ⚠ THE CLAIM IS REWRITTEN TO NAME THE CONFIRMED NUMBER, never left to the model's own
+        // (unconfirmed) phrasing of what it did. If the model already claimed to have added it,
+        // this replaces that claim with one a tool result actually backs; if it did not, this
+        // still tells the user the truth about what just happened.
+        lex.chatText = `${lex.chatText.trim()}\n\nAdded as candidate #${addedNumber} on the Guiding Policy screen.`
+      }
+      lex.proposal = null
     }
   }
 

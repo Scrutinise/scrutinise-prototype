@@ -129,7 +129,12 @@ const SORT_SYSTEM = [
   'choose, the list has to be told apart: some of these are guiding policies, some are actions',
   'wearing a policy’s clothes, and some are the goal restated.',
   '',
-  '⚠ APPLY THESE THREE TESTS TO EVERY ITEM, IN ORDER:',
+  '⚠⚠ 26-L §7c — THE TEST, IN CHARLIE’S OWN WORDS, AND IT IS THE ONE THE ON-SCREEN GUIDE ALSO',
+  'SHOWS THE USER — the two must never diverge:',
+  '  "If it is a single action, it is a coherent action. If it is a principle you can test an',
+  '   action against, to know whether the action fits, it is a guiding policy."',
+  '',
+  '⚠ APPLY THESE THREE TESTS TO EVERY ITEM, IN ORDER — THEY ARE THAT SAME TEST, MADE MECHANICAL:',
   '',
   '  1. DOES IT RULE THINGS OUT? A guiding policy closes doors. If it closes none, it is a GOAL',
   '     restated — "improve accountability" rules nothing out and is not a policy.',
@@ -240,6 +245,14 @@ export interface MergeAnswer {
    * ⚠ §1.7 verdict 1 — A MERGE PRODUCES A NEW POLICY WRITTEN AS ONE THING, NOT TWO PARAGRAPHS
    * JOINED. Rumelt's point that design work is strategy work: the obvious first answer — "do
    * both" — is rarely the best, and a merged policy that reads as a list is that answer.
+   *
+   * ⚠⚠ 26-L §2 — ALSO USED ON ONE_CONTAINS_THE_OTHER, for the containing policy's own text,
+   * restated to cover whatever the subordinate one added. Measured live: this verdict wrote
+   * NOTHING at all (26-L §2c) — the user got "Not a merge — one contains the other" and the two
+   * rows sat there, duplicated, for ever. Reusing this field rather than a second one means the
+   * accept path is the same write with a different label. Null is a legitimate answer where the
+   * containing policy already says everything the subordinate one did — nothing here forces
+   * prose that adds nothing.
    */
   merged: { approach: string; caseFor: string; caseAgainst: string } | null
   /**
@@ -248,7 +261,8 @@ export interface MergeAnswer {
    * sentence is the warning, and it is the first thing cut for length unless it is marked.
    */
   chainLink: string | null
-  /** On ONE_CONTAINS_THE_OTHER: which number is the action. On SEQUENCE: which goes later. */
+  /** On ONE_CONTAINS_THE_OTHER: which number is the action/subsumed one. On SEQUENCE: which
+   *  goes later. */
   subordinateNumber: number | null
 }
 
@@ -291,9 +305,15 @@ const MERGE_SYSTEM = [
   '      "it still mostly works", this was probably not a merge.',
   '',
   '  ONE_CONTAINS_THE_OTHER',
-  '      One of them is a COHERENT ACTION of the other — the thing you would DO to carry the',
-  '      other out. ⚠ EXPECT THIS TO BE THE MOST COMMON VERDICT. Put the action’s number in',
-  '      `subordinateNumber`.',
+  '      Either of two things: (a) one of them is a COHERENT ACTION of the other — the thing you',
+  '      would DO to carry the other out — or (b) they are NEAR-DUPLICATE STATEMENTS of the same',
+  '      policy and one already says everything the other does. ⚠ EXPECT THIS TO BE THE MOST',
+  '      COMMON VERDICT. Put the number to fold away — the action, or the thinner duplicate — in',
+  '      `subordinateNumber`. ⚠⚠ THIS VERDICT MUST STILL WRITE SOMETHING: if the subordinate one',
+  '      adds anything the containing policy does not already say, restate the CONTAINING policy',
+  '      in `merged` (same shape as MERGE) so that addition is not lost. Leave `merged` null ONLY',
+  '      where the containing policy genuinely already covers it word for word — null must not be',
+  '      the default answer to avoid doing the restating.',
   '',
   '  SEQUENCE',
   '      Both are real policies, on UNRELATED causes. Combining them widens the Bill and lowers',
@@ -379,12 +399,41 @@ export interface Pairing {
  * as complementary, which invites combining them; Rumelt's point is that spreading effort across
  * unrelated fronts is the failure, not the strategy. The word on screen has to carry that.
  */
+/**
+ * ⚠⚠ 26-L §9 — THE THRESHOLD FOR "A CAUSE EVERY CANDIDATE ATTACKS TELLS YOU NOTHING ABOUT ANY
+ * PAIR OF THEM." Charlie: *"all the GPs should and more or less do address this cause."*
+ * Measured: with the pivotal obstacle stated once and every candidate answering it by
+ * construction, a shared "attacks the pivotal cause" reads as ALTERNATIVES on nearly every pair
+ * — like a word that appears in every document, it carries no information. A cause attacked by
+ * 80% or more of the live candidate set is excluded from driving a relationship; the exact
+ * count excluded is reported alongside the pairings (§9d) rather than silently applied.
+ */
+export const UNIVERSAL_CAUSE_THRESHOLD = 0.8
+
+/** §9b — which causes are attacked by so many candidates that sharing one says nothing. */
+export function universalCauses(
+  policies: Array<{ causeNumbers: number[] }>,
+): Set<number> {
+  if (!policies.length) return new Set()
+  const counts = new Map<number, number>()
+  for (const p of policies) {
+    for (const c of new Set(p.causeNumbers)) counts.set(c, (counts.get(c) ?? 0) + 1)
+  }
+  const cutoff = policies.length * UNIVERSAL_CAUSE_THRESHOLD
+  return new Set([...counts.entries()].filter(([, n]) => n >= cutoff).map(([c]) => c))
+}
+
 export function pairPolicies(
   policies: Array<{ number: number; causeNumbers: number[] }>,
   /** cause number → the number of the cause that DRIVES it, from the causal chain. */
   drivenBy: Map<number, number | null>,
+  /** §9b — causes to ignore when relating candidates (see `universalCauses`). Defaults to none,
+   *  so existing callers (and the pure-function tests written against this signature) are
+   *  unaffected until they opt in. */
+  excludeCauses: Set<number> = new Set(),
 ): Pairing[] {
   const out: Pairing[] = []
+  const filtered = (ns: number[]) => ns.filter((c) => !excludeCauses.has(c))
   /** Walk up the chain from a cause to its roots. Bounded, so a cycle cannot hang it. */
   const ancestry = (c: number): Set<number> => {
     const seen = new Set<number>([c])
@@ -401,9 +450,14 @@ export function pairPolicies(
     for (let j = i + 1; j < policies.length; j++) {
       const A = policies[i]
       const B = policies[j]
-      if (!A.causeNumbers.length || !B.causeNumbers.length) continue
+      const aCauses = filtered(A.causeNumbers)
+      const bCauses = filtered(B.causeNumbers)
+      // ⚠ §9b — nothing INFORMATIVE left once the near-universal causes are set aside. Silence
+      // here, not a guess: the alternative is inventing a relationship from causes that were
+      // just excluded for carrying no information.
+      if (!aCauses.length || !bCauses.length) continue
 
-      const shared = A.causeNumbers.filter((c) => B.causeNumbers.includes(c))
+      const shared = aCauses.filter((c) => bCauses.includes(c))
       if (shared.length) {
         out.push({
           a: A.number, b: B.number, relationship: 'ALTERNATIVES',
@@ -414,9 +468,9 @@ export function pairPolicies(
       }
 
       // Different causes: are they on one chain, or on unrelated branches?
-      const onOneChain = A.causeNumbers.some((ca) => {
+      const onOneChain = aCauses.some((ca) => {
         const up = ancestry(ca)
-        return B.causeNumbers.some((cb) => up.has(cb) || ancestry(cb).has(ca))
+        return bCauses.some((cb) => up.has(cb) || ancestry(cb).has(ca))
       })
       out.push(onOneChain
         ? {
@@ -430,6 +484,41 @@ export function pairPolicies(
               + 'is dispersive: doing both widens the proposal and weakens each. Sequence them '
               + 'rather than combining them.',
           })
+    }
+  }
+  return out
+}
+
+/**
+ * ══ 26-L §9a/§9c — NEAR-DUPLICATES, FROM THE SORT'S OWN JUDGEMENT ═════════════════════
+ *
+ * §9a: "Relate candidates by the similarity of their APPROACH, not by overlap of causes
+ * attacked." `sortPolicies` already reads every candidate's wording and names near-duplicates
+ * (`SortedPolicy.duplicateOfNumbers`) — this is that signal, surfaced, rather than a second
+ * similarity computation invented on top of the cause-based `pairPolicies`.
+ *
+ * ⚠ SYMMETRIC AND DEDUPED. The model may name the relation from only one side of a pair (A says
+ * "duplicate of B" without B saying the reverse) — either direction is enough to surface the
+ * pair once.
+ */
+export interface DuplicatePair { a: number; b: number }
+
+export function nearDuplicatePairs(
+  policies: Array<{ number: number; duplicateOfNumbers: number[] }>,
+): DuplicatePair[] {
+  const seen = new Set<string>()
+  const out: DuplicatePair[] = []
+  for (const p of policies) {
+    for (const other of p.duplicateOfNumbers) {
+      if (other === p.number) continue
+      const a = Math.min(p.number, other)
+      const b = Math.max(p.number, other)
+      const key = `${a}:${b}`
+      if (seen.has(key)) continue
+      // Only surface a pair where BOTH numbers are still live candidates.
+      if (!policies.some((q) => q.number === b) || !policies.some((q) => q.number === a)) continue
+      seen.add(key)
+      out.push({ a, b })
     }
   }
   return out

@@ -24,6 +24,8 @@ import { useCallback, useEffect, useState } from 'react'
 import type { MergeAnswer, Rating, Relationship } from '@/lib/lex/guiding-policy'
 import { historyLine, clusterLine, GROUP_HEADINGS } from '@/lib/lex/policy-history'
 import CollapsedSection from './CollapsedSection'
+import PriorVersions from './PriorVersions'
+import GuidingPolicyGuideModal from './GuidingPolicyGuideModal'
 
 interface Policy {
   id: string
@@ -51,6 +53,8 @@ interface Policy {
   // 26-I §2/§5c
   disposition: 'UNDISPOSITIONED' | 'PART_OF_SOLUTION' | 'SAYS_SAME_AS'
   duplicateOfNumber: number | null
+  // 26-L §9 — the sort's own near-duplicate judgement (distinct from the user-asserted one above).
+  duplicateOfNumbers: number[]
   draftModel: string | null
   rulesOut: string | null
   likelihood: string | null
@@ -67,6 +71,9 @@ interface State {
   causes: Array<{ id: string; number: number; cause: string; isRoot: boolean }>
   policies: Policy[]
   pairings: Array<{ a: number; b: number; relationship: Relationship; why: string }>
+  // 26-L §9a/§9c/§9d
+  nearDuplicates: Array<{ a: number; b: number }>
+  excludedCauseNumbers: number[]
   // 26-I addendum A5
   consolidate: { candidateCount: number; feedbackCount: number; enabled: boolean; undispositionedCount: number }
 }
@@ -219,6 +226,78 @@ function CardHistory({
           Put this back as a guiding policy
         </button>
       )}
+    </div>
+  )
+}
+
+/**
+ * ══ 26-L §3b — EVERY CANDIDATE CARD CARRIES THE SAME EDITABLE FIELDS ═══════════════════
+ *
+ * §3b: *"Every candidate card — built, typed, drafted by Lex or by consolidation — carries the
+ * same editable fields: the statement · what it rules out · what it fixes · how likely it is to
+ * happen."* Before this there was no edit affordance anywhere on this screen for a card that was
+ * not mid-consolidation — a user-typed candidate got a number and nothing to change about it.
+ *
+ * ⚠ A TOP-LEVEL COMPONENT, NOT A CLOSURE DEFINED INSIDE THE SCREEN'S RENDER. A component
+ * declared inside another component's body is a new identity every render, which would drop
+ * focus out of the textarea on the first keystroke.
+ */
+function EditableFields({
+  p, editing, draft, busy, onStart, onChange, onSubmit, onCancel,
+}: {
+  p: Policy
+  editing: boolean
+  draft: { approach: string; rulesOut: string; caseFor: string; likelihood: string }
+  busy: boolean
+  onStart: () => void
+  onChange: (d: { approach: string; rulesOut: string; caseFor: string; likelihood: string }) => void
+  onSubmit: () => void
+  onCancel: () => void
+}) {
+  if (!editing) {
+    return (
+      <button
+        type="button" onClick={onStart} disabled={busy}
+        className="text-[11px] text-zinc-500 underline hover:text-zinc-800 disabled:opacity-40 mt-1.5"
+      >
+        Edit
+      </button>
+    )
+  }
+  return (
+    <div className="mt-1.5 space-y-1.5 rounded-lg border border-dashed border-zinc-300 p-2">
+      <div>
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The statement</label>
+        <textarea value={draft.approach} onChange={(e) => onChange({ ...draft, approach: e.target.value })}
+          rows={2} className="w-full mt-0.5 text-sm rounded border border-zinc-300 p-1.5" />
+      </div>
+      <div>
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">What it rules out</label>
+        <textarea value={draft.rulesOut} onChange={(e) => onChange({ ...draft, rulesOut: e.target.value })}
+          rows={2} className="w-full mt-0.5 text-xs rounded border border-zinc-300 p-1.5"
+          placeholder="What does choosing this close off?" />
+      </div>
+      <div>
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">What it fixes</label>
+        <textarea value={draft.caseFor} onChange={(e) => onChange({ ...draft, caseFor: e.target.value })}
+          rows={2} className="w-full mt-0.5 text-xs rounded border border-zinc-300 p-1.5"
+          placeholder="The case for it" />
+      </div>
+      <div>
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">How likely it is to happen</label>
+        <textarea value={draft.likelihood} onChange={(e) => onChange({ ...draft, likelihood: e.target.value })}
+          rows={2} className="w-full mt-0.5 text-xs rounded border border-zinc-300 p-1.5" />
+      </div>
+      <div className="flex gap-2">
+        <button type="button" onClick={onSubmit} disabled={busy || !draft.approach.trim()}
+          className="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 text-white disabled:opacity-40">
+          Save
+        </button>
+        <button type="button" onClick={onCancel} disabled={busy}
+          className="text-xs text-zinc-500 underline disabled:opacity-40">
+          Cancel
+        </button>
+      </div>
     </div>
   )
 }
@@ -471,7 +550,7 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
    * second guess at it. Before 25-T this state described a merge that had ALREADY happened.
    */
   const [answer, setAnswer] = useState<
-    { answer: MergeAnswer; wouldBeNumber: number | null; na: number; nb: number } | null
+    { answer: MergeAnswer; wouldBeNumber: number | null; containingNumber: number | null; na: number; nb: number } | null
   >(null)
   const [merged, setMerged] = useState<number | null>(null)
   const [reasons, setReasons] = useState<Record<string, string>>({})
@@ -483,6 +562,11 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
   // 26-I addendum A1 — the general feedback box.
   const [generalFeedback, setGeneralFeedback] = useState('')
   const [generalFeedbackSent, setGeneralFeedbackSent] = useState(false)
+  // 26-L §3b — every candidate card carries the same editable fields. One editor open at a
+  // time, on the same pattern as ConsolidatePanel's own edit-before-accept.
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState({ approach: '', rulesOut: '', caseFor: '', likelihood: '' })
+  const [showGuide, setShowGuide] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -562,10 +646,23 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
     const j = await post({ action: 'merge', numbers: [nums[0], nums[1]] })
     if (j?.answer) {
       setMerged(null)
-      setAnswer({ answer: j.answer, wouldBeNumber: j.wouldBeNumber ?? null, na: nums[0], nb: nums[1] })
+      setAnswer({
+        answer: j.answer, wouldBeNumber: j.wouldBeNumber ?? null,
+        containingNumber: j.containingNumber ?? null, na: nums[0], nb: nums[1],
+      })
       setInstruction('')
     }
   }, [instruction, post])
+
+  /** 26-L §9c — "Merge?" beside a near-duplicate pair asks the same question `runInstruction`
+   *  does, without making the user type the numbers they can already see. */
+  const quickMerge = useCallback(async (a: number, b: number) => {
+    const j = await post({ action: 'merge', numbers: [a, b] })
+    if (j?.answer) {
+      setMerged(null)
+      setAnswer({ answer: j.answer, wouldBeNumber: j.wouldBeNumber ?? null, containingNumber: j.containingNumber ?? null, na: a, nb: b })
+    }
+  }, [post])
 
   /**
    * ⚠⚠ 25-T §2b — THE ACCEPTANCE. This, and nothing before it, is what merges two policies.
@@ -591,32 +688,94 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
     setAnswer(null)
   }, [patch, s])
 
+  /**
+   * ══ 26-L §2 — "ONE CONTAINS THE OTHER", ACCEPTED. §2a's exact wording is the confirmation. ══
+   * ⚠ Unlike `acceptMerge`, no new number is created — the containing policy keeps its own, so
+   * there is nothing to read back off the write; the confirmation names the numbers the user
+   * already saw on the card.
+   */
+  const [enhanced, setEnhanced] = useState<{ containing: number; subordinate: number } | null>(null)
+  const acceptEnhance = useCallback(async (a: {
+    answer: MergeAnswer; containingNumber: number; na: number; nb: number
+  }) => {
+    if (!a.answer.merged || a.answer.subordinateNumber == null) return
+    const j = await patch({
+      op: 'acceptEnhance',
+      enhance: {
+        containingNumber: a.containingNumber,
+        subordinateNumber: a.answer.subordinateNumber,
+        merged: a.answer.merged,
+        reasoning: a.answer.reasoning,
+      },
+    })
+    if (j) setEnhanced({ containing: a.containingNumber, subordinate: a.answer.subordinateNumber })
+    setAnswer(null)
+  }, [patch])
+
+  /** 26-L §3b — every candidate card carries the same editable fields, whoever drafted it. */
+  const startEdit = useCallback((p: Policy) => {
+    setEditingId(p.id)
+    setEditDraft({
+      approach: p.approach, rulesOut: p.rulesOut ?? '', caseFor: p.caseFor ?? '', likelihood: p.likelihood ?? '',
+    })
+  }, [])
+  const submitEdit = useCallback(async (policyId: string) => {
+    const j = await patch({ op: 'edit', policyId, edit: editDraft })
+    if (j) setEditingId(null)
+  }, [patch, editDraft])
+
   if (!s) return null
 
   const live = s.policies.filter((p) => p.status !== 'RULED_OUT' && !p.superseded)
-  const policies = live.filter((p) => p.kind === 'GUIDING_POLICY')
-  const actions = live.filter((p) => p.kind === 'COHERENT_ACTION')
-  const goals = live.filter((p) => p.kind === 'GOAL_RESTATEMENT')
+  const unsorted = live.filter((p) => !p.sorted)
+  const unsortedIds = new Set(unsorted.map((p) => p.id))
+  const policies = live.filter((p) => p.kind === 'GUIDING_POLICY' && !unsortedIds.has(p.id))
+  const actions = live.filter((p) => p.kind === 'COHERENT_ACTION' && !unsortedIds.has(p.id))
+  const goals = live.filter((p) => p.kind === 'GOAL_RESTATEMENT' && !unsortedIds.has(p.id))
   const rejected = s.policies.filter((p) => p.status === 'RULED_OUT')
   const later = policies.filter((p) => p.phase === 'LATER')
-  const unsorted = live.filter((p) => !p.sorted).length
 
   return (
     <section className="rounded-2xl border border-zinc-200 mt-3" aria-label="Choosing a guiding policy">
       <div className="px-4 py-3 border-b border-zinc-100">
-        <h3 className="text-sm font-semibold text-zinc-900">Choosing a guiding policy</h3>
-        {/* ⚠ THE INSTRUCTIONS AT THE TOP, which 25-N §7 asked for and nothing ever built. A user
-            who does not know they may combine will not ask. */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-sm font-semibold text-zinc-900">Choosing a guiding policy</h3>
+          {/* ══ 26-L §8 — "HOW TO WRITE A GUIDING POLICY", SAME COLOUR/FONT/STYLE AS "HOW THIS
+              WORKS" (see components/lex/HowItWorksModal.tsx and its callers). */}
+          <button
+            onClick={() => setShowGuide(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-3 py-1.5 shadow-sm transition-colors shrink-0"
+          >
+            <span aria-hidden className="w-3.5 h-3.5 rounded-full border border-white/80 flex items-center justify-center text-[9px] font-bold">?</span>
+            How to write a Guiding Policy
+          </button>
+        </div>
+        {/* ══ 26-L §10a — THE INTRODUCTION, VERBATIM FROM CHARLIE'S DRAFT ═══════════════
+            ⚠ One wording change from the draft, per the brief: "greyed out until you've
+            commented on each option" → "until you have sorted every option" — the button
+            waits on a disposition, not a comment. ⚠ Charlie to confirm: the Consolidate gate
+            itself (§9c/A5 in 26-I) actually waits on every candidate carrying a DISPOSITION
+            (part of the solution / says the same as / ruled out / etc.), not narrowly on
+            `sorted`. This text is placed as the brief specifies; the gate's own logic in
+            `guiding-policy-state.ts` (`consolidate.enabled`) is unchanged pending that
+            confirmation, since the brief names only the wording, not the mechanism. */}
+        <p className="text-xs text-zinc-600 mt-2 leading-relaxed">
+          After choosing the right cause, getting the guiding policy right is the next most
+          important task, and it&rsquo;s not easy. A good guiding policy brings focus and
+          clarity — essential to the success of your mission — by ruling out anything that might
+          confuse your actions. Lex will help bring clarity.
+        </p>
+        <p className="text-xs font-semibold text-zinc-900 mt-2">Next steps.</p>
         <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
-          A guiding policy is the <span className="font-medium">approach</span> to the obstacle in
-          your diagnosis — it rules some things out as well as ruling others in. You are choosing
-          one, but you do not have to choose blind: some of these can be{' '}
-          <span className="font-medium">merged</span>, some are really{' '}
-          <span className="font-medium">actions</span> that belong under another, and some can wait
-          for a <span className="font-medium">later phase</span>. You can also stop here and come
-          back — nothing is lost.
+          First sort the candidate policies below with your comments (and add your own if you
+          wish), then click the <span className="font-medium">Consolidate</span> button at the
+          end — greyed out until you have sorted every option. This gives you suggestions from
+          four premium AI models. You then choose the best and give feedback before the final
+          version is chosen.
         </p>
       </div>
+
+      {showGuide && <GuidingPolicyGuideModal onClose={() => setShowGuide(false)} />}
 
       {error && <p className="px-4 py-2 text-xs text-amber-800 bg-amber-50 border-b border-amber-200">{error}</p>}
 
@@ -646,21 +805,62 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
         )}
       </div>
 
-      {/* ══ §1.2 — SORT, AND SHOW THE SORTING ═══════════════════════════════════ */}
-      {unsorted > 0 && (
-        <div className="px-4 py-3 border-b border-zinc-100">
-          <p className="text-xs text-zinc-700">
-            {unsorted} of these {unsorted === 1 ? 'has' : 'have'} not been sorted yet. Lex will say
-            which are guiding policies, which are really coherent actions, and which are the goal
-            restated — <span className="font-medium">with its reasoning for each</span>.
-          </p>
-          <button
-            onClick={() => void post({ action: 'sort' })}
-            disabled={busy}
-            className="mt-2 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
-          >
-            {busy ? 'Sorting…' : 'Sort these for me'}
-          </button>
+      {/* ══ 26-L §1a — "NOT YET SORTED": EVERY UNSORTED CANDIDATE, AS A REAL CARD, AT THE TOP ══
+          §1: Charlie added candidate 29 by hand, the screen said "1 of these has not been sorted
+          yet", and it rendered nowhere. Whatever the exact mechanism, no candidate should ever
+          again depend on the sort having run to be visible at all — this group renders by
+          `!p.sorted` alone, independent of `kind`, so it cannot be left with nowhere to render. */}
+      {unsorted.length > 0 && (
+        <div className="px-4 py-3 border-b border-zinc-100 space-y-3">
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Not yet sorted ({unsorted.length})
+            </h4>
+            <p className="text-xs text-zinc-700 mt-1">
+              Lex will say which are guiding policies, which are really coherent actions, and
+              which are the goal restated — <span className="font-medium">with its reasoning for
+              each</span>. Until then, they are here — full candidates, not placeholders.
+            </p>
+            <button
+              onClick={() => void post({ action: 'sort' })}
+              disabled={busy}
+              className="mt-2 text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+            >
+              {busy ? 'Sorting…' : 'Sort these for me'}
+            </button>
+          </div>
+          {unsorted.map((p) => (
+            <article key={p.id} className="rounded-lg border border-zinc-300 bg-zinc-50/50 p-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-bold text-zinc-900 tabular-nums">{p.number}</span>
+                <p className="text-sm text-zinc-900 flex-1">{p.approach}</p>
+              </div>
+              {/* ⚠⚠ §3c — THE COMPOUND FLAG, ON THE CARD, AS ADVICE. Never a verdict (§6a — the
+                  verdict comes from the judge/sort, with reasoning); never blocking (the card
+                  exists and is fully usable regardless of whether this fired). */}
+              {p.kindReason && (
+                <p className="mt-1.5 text-[11px] font-medium text-amber-800">{p.kindReason}</p>
+              )}
+              <EditableFields
+                p={p} editing={editingId === p.id} draft={editDraft} busy={busy}
+                onStart={() => startEdit(p)} onChange={setEditDraft}
+                onSubmit={() => void submitEdit(p.id)} onCancel={() => setEditingId(null)}
+              />
+              <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={p.id} nonce={editingId === p.id ? 1 : 0} />
+              <div className="flex flex-wrap gap-2 mt-2">
+                <button onClick={() => void patch({ op: 'reject', policyId: p.id, reason: reasons[p.id] })} disabled={busy}
+                  className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-600 disabled:opacity-40">
+                  Rule out
+                </button>
+                <input
+                  value={reasons[p.id] ?? ''}
+                  onChange={(e) => setReasons((r) => ({ ...r, [p.id]: e.target.value }))}
+                  placeholder="Feedback on this candidate"
+                  className="flex-1 min-w-[10rem] text-[11px] rounded border border-zinc-300 px-2 py-1"
+                />
+              </div>
+            </article>
+          ))}
         </div>
       )}
 
@@ -727,6 +927,18 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                 a merged one and one held for a later phase all say what happened to them in the
                 same voice and the same place. */}
             <CardHistory p={p} pairings={s.pairings} busy={busy} />
+
+            {/* ══ 26-L §2b/§3b — EDIT, AND ITS OWN HISTORY, CLICKABLE ═══════════════
+                §2b: an enhanced card shows its wording before the enhancement, both clickable.
+                §3b: every candidate card carries the same editable fields. One mechanism does
+                both — an edit here and an accepted "one contains the other" both write through
+                the same `FieldRevision` history this renders. */}
+            <EditableFields
+              p={p} editing={editingId === p.id} draft={editDraft} busy={busy}
+              onStart={() => startEdit(p)} onChange={setEditDraft}
+              onSubmit={() => void submitEdit(p.id)} onCancel={() => setEditingId(null)}
+            />
+            <PriorVersions ideaId={ideaId} fieldKey="policyOptions" targetId={p.id} nonce={editingId === p.id ? 1 : 0} />
 
             {/* ══ §1.4 — THE CAUSE THIS POLICY IMPLIES ═══════════════════════════ */}
             {p.impliedCause?.cause && p.impliedCause.status === 'OFFERED' && (
@@ -885,24 +1097,72 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
         {generalFeedbackSent && <p className="text-[11px] text-zinc-500 mt-1">✓ Filed.</p>}
       </div>
 
-      {/* ══ §1.5 — HOW THEY RELATE ═════════════════════════════════════════════ */}
-      {s.pairings.length > 0 && (
+      {/* ══ 26-L §9 — HOW THEY RELATE, NEAR-DUPLICATES FIRST ═══════════════════════
+          §9: "It declares nearly every pair 'alternatives — one of these wins' because they
+          share [the pivotal] cause. Meanwhile #3 and #6, which are near-identical, appear last."
+          §9a: relate by similarity of APPROACH, not overlap of causes. §9c: near-duplicates
+          first, each with a Merge? action. §9b: a cause every candidate attacks is excluded —
+          reported below, not applied silently. */}
+      {(s.nearDuplicates.length > 0 || s.pairings.length > 0) && (
         <div className="px-4 py-3 border-t border-zinc-100">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             How these relate
           </h4>
-          <ul className="mt-1.5 space-y-1.5">
-            {s.pairings.slice(0, 12).map((x, i) => (
-              <li key={i} className="text-xs text-zinc-700">
-                <span className="font-semibold tabular-nums">{x.a} &amp; {x.b}</span>{' '}
-                — <span className="font-medium">{RELATIONSHIP_LABEL[x.relationship]}.</span>{' '}
-                <span className="text-zinc-600">{x.why}</span>
-              </li>
-            ))}
-          </ul>
-          {s.pairings.length > 12 && (
-            <p className="text-[11px] text-zinc-500 mt-1">
-              {s.pairings.length - 12} further pairs not listed.
+
+          {s.nearDuplicates.length > 0 && (
+            <div className="mt-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                Near-duplicates ({s.nearDuplicates.length})
+              </p>
+              <ul className="mt-1 space-y-1.5">
+                {s.nearDuplicates.map((d, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-zinc-700">
+                    <span className="font-semibold tabular-nums">{d.a} &amp; {d.b}</span>
+                    <span className="text-zinc-600">— Lex reads these as saying substantially the same thing.</span>
+                    <button
+                      onClick={() => void quickMerge(d.a, d.b)}
+                      disabled={busy}
+                      className="text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40 shrink-0"
+                    >
+                      Merge?
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {s.pairings.length > 0 && (
+            <div className="mt-2.5">
+              {s.nearDuplicates.length > 0 && (
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                  By shared cause
+                </p>
+              )}
+              <ul className="mt-1 space-y-1.5">
+                {s.pairings.slice(0, 12).map((x, i) => (
+                  <li key={i} className="text-xs text-zinc-700">
+                    <span className="font-semibold tabular-nums">{x.a} &amp; {x.b}</span>{' '}
+                    — <span className="font-medium">{RELATIONSHIP_LABEL[x.relationship]}.</span>{' '}
+                    <span className="text-zinc-600">{x.why}</span>
+                  </li>
+                ))}
+              </ul>
+              {s.pairings.length > 12 && (
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  {s.pairings.length - 12} further pairs not listed.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ⚠ §9b/§9d — REPORTED, NOT SILENT. A cause this many candidates attack carries no
+              information about any one pair of them, so it never drives a relationship above. */}
+          {s.excludedCauseNumbers.length > 0 && (
+            <p className="text-[11px] text-zinc-400 mt-2">
+              Cause{s.excludedCauseNumbers.length === 1 ? '' : 's'} {s.excludedCauseNumbers.join(', ')} attacked
+              by most or all live candidates — excluded from the relations above; sharing it says
+              nothing about any one pair.
             </p>
           )}
         </div>
@@ -940,6 +1200,15 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
           </p>
         )}
 
+        {/* ⚠⚠ 26-L §2a — THE CONFIRMATION "ONE CONTAINS THE OTHER" NEVER HAD, VERBATIM. */}
+        {enhanced && (
+          <p className="mt-2.5 text-xs text-zinc-900 font-medium rounded-lg border-2 border-zinc-300 bg-zinc-50/70 px-3 py-2">
+            #{enhanced.containing} has been enhanced to include #{enhanced.subordinate}. #{enhanced.subordinate} has
+            been archived — see its own wording under “Ruled out” below, and {enhanced.containing}’s wording before
+            this change under “Edit” on its card. Restore #{enhanced.subordinate} to undo the archiving.
+          </p>
+        )}
+
         {answer && (
           <div className="mt-2.5 rounded-lg border-2 border-zinc-300 bg-zinc-50/70 p-3">
             {/* ══════════ 25-T §2b — A PROPOSAL, NOT A REPORT ════════════════════════════════
@@ -953,6 +1222,8 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                 with two buttons, and nothing has been written when it renders. */}
             <p className="text-xs font-semibold text-zinc-900">
               {answer.answer.verdict === 'MERGE' ? `These two can merge — nothing has changed yet.`
+                : answer.answer.verdict === 'ONE_CONTAINS_THE_OTHER' && answer.answer.merged && answer.containingNumber
+                ? `#${answer.containingNumber} covers #${answer.answer.subordinateNumber} — nothing has changed yet.`
                 : answer.answer.verdict === 'ONE_CONTAINS_THE_OTHER' ? 'Not a merge — one contains the other.'
                 : answer.answer.verdict === 'SEQUENCE' ? 'Not a merge — sequence them.'
                 : 'Refused — they contradict.'}
@@ -983,15 +1254,38 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
               </div>
             )}
 
+            {/* ══ 26-L §2a/§2b — "ONE CONTAINS THE OTHER", AS A PROPOSAL, THE SAME SHAPE AS MERGE ══
+                #{containing} keeps its own number; #{subordinate} would be archived into it, not
+                superseded by a new row. */}
+            {answer.answer.verdict === 'ONE_CONTAINS_THE_OTHER' && answer.answer.merged && answer.containingNumber && (
+              <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-zinc-300 bg-white p-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                    #{answer.answer.subordinateNumber} — would be archived
+                  </p>
+                  <p className="text-xs text-zinc-800 mt-1">
+                    {s.policies.find((p) => p.number === answer.answer.subordinateNumber)?.approach ?? '(not found)'}
+                  </p>
+                </div>
+                <div className="rounded-lg border-2 border-zinc-900 bg-white p-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-900">
+                    #{answer.containingNumber} — would keep its number, wording enhanced
+                  </p>
+                  <p className="text-xs text-zinc-900 mt-1">{answer.answer.merged.approach}</p>
+                </div>
+              </div>
+            )}
+
             {answer.answer.chainLink && (
               <p className="mt-1.5 text-xs text-zinc-900 border-l-2 border-zinc-900 pl-2.5 font-medium">
                 ⚠ If only part of this is delivered: {answer.answer.chainLink}
               </p>
             )}
 
-            {/* ⚠ 25-T §2e — ONLY A MERGE VERDICT OFFERS A BUTTON. The other three say what the
-                relationship is and leave the act to the user; there is nothing here to accept,
-                and offering an inert button would imply otherwise. */}
+            {/* ⚠ 25-T §2e — A VERDICT OFFERS A BUTTON ONLY WHERE THERE IS SOMETHING TO ACCEPT.
+                MERGE always does; ONE_CONTAINS_THE_OTHER does only where the judge wrote a
+                restated text (26-L §2) — SEQUENCE/CONTRADICTORY remain advice with nothing to
+                accept, and offering an inert button would imply otherwise. */}
             {answer.answer.verdict === 'MERGE' && answer.answer.merged ? (
               <div className="flex flex-wrap items-center gap-2 mt-3">
                 <button
@@ -1000,6 +1294,23 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
                   className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
                 >
                   Merge them into one policy
+                </button>
+                <button
+                  onClick={() => setAnswer(null)}
+                  disabled={busy}
+                  className="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-zinc-400 text-zinc-800 bg-white hover:bg-zinc-50 disabled:opacity-40"
+                >
+                  Leave them as they are
+                </button>
+              </div>
+            ) : answer.answer.verdict === 'ONE_CONTAINS_THE_OTHER' && answer.answer.merged && answer.containingNumber ? (
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <button
+                  onClick={() => void acceptEnhance({ answer: answer.answer, containingNumber: answer.containingNumber!, na: answer.na, nb: answer.nb })}
+                  disabled={busy}
+                  className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+                >
+                  Enhance {answer.containingNumber} and archive {answer.answer.subordinateNumber}
                 </button>
                 <button
                   onClick={() => setAnswer(null)}

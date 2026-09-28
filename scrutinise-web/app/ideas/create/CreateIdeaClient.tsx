@@ -1129,14 +1129,20 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   everything else". At Stage 3 the middle column IS the deepening — its
                   passes, their findings and the issues to work through — with the same
                   worklist shape as Stage 2 in the column beside it. */}
-              {/* 26-K §4c — visible in the working area regardless of stage; new material can
-                  arrive well before the kernel (and DeepeningPanel, gated on kernelComplete)
-                  unlocks. One mount point above both branches, so neither's own JSX is touched. */}
-              <div className="px-3 pt-2">
-                <UpdatePassPanel ideaId={state.ideaId} canEdit />
-              </div>
+              {/* ⚠⚠ 26-L §10b — MOVED OUT OF THE TOP OF THE MIDDLE PANEL. 26-K §4c's reasoning
+                  (visible before the kernel completes, since new material can arrive from Stage 1
+                  onward) still holds during the Deepening stage below, where `UpdatePassPanel`
+                  keeps its own second mount (see that branch). Once the kernel is NOT yet in the
+                  Deepening stage, `RerunOptions`'s "New material and rebuilds" section (rendered
+                  inside `FieldsPanel` below) now carries it instead — see RerunOptions.tsx. */}
               {lexStage === 'deepening' ? (
                 <div className="h-full min-h-0 overflow-y-auto px-3 pb-6">
+                  {/* 26-K §4c's mount stays here: the Deepening stage renders `DeepeningPanel`
+                      instead of `FieldsPanel`, so `RerunOptions`'s "New material and rebuilds"
+                      section (nested inside `FieldsPanel`, see §10b above) never mounts here. */}
+                  <div className="pt-2">
+                    <UpdatePassPanel ideaId={state.ideaId} canEdit showResearchAngle={false} />
+                  </div>
                   <DeepeningPanel
                     ideaId={state.ideaId}
                     unlocked={kernelComplete}

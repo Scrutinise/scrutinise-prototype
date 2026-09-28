@@ -134,10 +134,14 @@ export async function guidingPolicyChatRules(ideaId: string, fieldKey: string | 
     'GUIDING POLICY — STANDING RULES ON THIS PAGE:',
     '- Addendum B1: draft with whatever model you are already running — never switch models for',
     '  a chat draft. If asked for a guiding policy, or you judge one is due, your draft is a',
-    '  CANDIDATE, not chat prose: say so in chatText and name it as a new numbered candidate for',
-    '  the sort ("I\'d add this as a candidate — see the list") rather than writing the guiding',
-    '  policy itself out in your reply. It will be tested like any other candidate; its test',
-    '  result on the card is the signal, not your own chat commentary on its quality.',
+    '  CANDIDATE, not chat prose: propose it as the policyOptions field with your drafted text as',
+    '  the value, rather than writing the guiding policy itself out as chat prose. ⚠⚠ 26-L §4 — THE',
+    '  PLATFORM ADDS IT FOR REAL, THIS TURN, AND NAMES THE ACTUAL NUMBER AFTER YOUR REPLY. Never',
+    '  state a candidate number yourself, and never say "you should see it" or "it has been',
+    '  added" — you do not know whether it was, and a claim with nothing behind it is the exact',
+    '  failure this rule exists to stop. Say only that you are proposing it as a candidate; the',
+    '  platform confirms the rest. It will be tested like any other candidate; its test result on',
+    '  the card is the signal, not your own chat commentary on its quality.',
     '- If asked for "the" guiding policy directly: do not synthesise one in chat. Report the',
     `  state instead — ${live.length} live candidate(s), ${state.consolidate.candidateCount} `
       + `marked part of the solution, ${state.consolidate.feedbackCount} item(s) of feedback on `

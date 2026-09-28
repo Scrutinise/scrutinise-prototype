@@ -53,3 +53,34 @@ export function hasEvaluativePreamble(text: string): PreambleCheck {
   }
   return { matched: false }
 }
+
+/**
+ * ══ 26-L §5 — STRUCTURAL, NOT PROMPT-ONLY ══════════════════════════════════════════════
+ *
+ * §5: two real examples survived AFTER the no-preamble prompt rule shipped in 26-I — *"That's
+ * excellent feedback, Charlie"* and *"That's a very pertinent question, Charlie."* ⚠⚠ Until
+ * this, `hasEvaluativePreamble` was called ONLY by `scripts/check-lex-no-preamble.ts` — an
+ * offline audit against stored output, never in the path a reply travels before a user sees it.
+ * A detector nobody calls before display is a detector that can only ever report a failure
+ * after the fact, which is exactly the shape this brief is about.
+ *
+ * ⚠ STRIP, NOT REGENERATE. The brief allows either; stripping is deterministic, free, and does
+ * not risk a second model call producing a different failure (§18's family: a degradation must
+ * announce itself, not hide behind a retry that might not fix anything). Removing the matched
+ * opening clause and its trailing punctuation/space leaves the substantive answer intact — the
+ * preamble was never the content, by definition of what "preamble" means here.
+ */
+export function enforceNoPreamble(text: string): string {
+  const t = (text || '')
+  const check = hasEvaluativePreamble(t)
+  if (!check.matched || !check.phrase) return t
+  const trimmed = t.trim()
+  // Cut the matched phrase off the front, then any immediately-following punctuation/space
+  // ("That's a great question. " / "That's a great question — ") so the sentence that follows
+  // reads as an opening line, not a fragment.
+  const rest = trimmed.slice(check.phrase.length).replace(/^[\s,.:;—–-]+/, '')
+  const stripped = rest || trimmed
+  console.warn('[no-preamble] evaluative opener stripped before display', { phrase: check.phrase })
+  // Capitalise the new first letter so the remainder still reads as a sentence.
+  return stripped.length > 1 ? stripped[0].toUpperCase() + stripped.slice(1) : stripped.toUpperCase()
+}

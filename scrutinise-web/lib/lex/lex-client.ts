@@ -9,7 +9,7 @@
 import type { FieldDef } from './page1-config'
 // 25-K §2 — the map of controls Lex points at instead of refusing. See that file.
 import { PLATFORM_CONTROLS } from './platform-controls'
-import { NO_EVALUATIVE_PREAMBLE } from './no-preamble'
+import { NO_EVALUATIVE_PREAMBLE, enforceNoPreamble } from './no-preamble'
 import { methodForStage, methodBlocksFor } from './method'
 import { assertGeminiFinished, geminiFinishProblem } from './gemini-finish'
 import { recordGeminiUsage } from './spend-ledger'
@@ -601,7 +601,12 @@ export async function runLexTurn(
     try {
       const raw = await callGemini(systemPrompt, userMessage, history, spend)
       const parsed = parseLexOutput(raw)
-      if (parsed) return parsed
+      // ⚠⚠ 26-L §5 — ENFORCED HERE, NOT IN THE PROMPT. Two real violations survived the 26-I
+      // prompt rule ("That's excellent feedback, Charlie", "That's a very pertinent question,
+      // Charlie"). This is the one place every caller of `runLexTurn` gets its `chatText` from
+      // (the route, and the orchestrator), so wrapping it here reaches both without either
+      // caller having to remember to.
+      if (parsed) return { ...parsed, chatText: enforceNoPreamble(parsed.chatText) }
       // Structured output returned but failed our shape/schema check. Log the raw
       // bytes — bytes before hypotheses; don't tune until the cause is visible.
       console.error('[lex] structured-output validation failed', {

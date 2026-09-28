@@ -27,6 +27,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import RerunDialogue, { type RerunReuse } from './RerunDialogue'
 import CollapsedSection from './CollapsedSection'
+import UpdatePassPanel from './UpdatePassPanel'
 import { stageHref } from '@/lib/lex/stages'
 
 interface PassSummary {
@@ -396,12 +397,21 @@ export default function RerunOptions({ ideaId, kernelComplete }: {
         // exists at all (see the file header). `CollapsedSection` IS that control — its own
         // header comment says it copies the kernel headings' vocabulary exactly. Open by
         // default while a build is actually running, so a live status is never hidden.
+        //
+        // ══ 26-L §10b — RETITLED, AND "COMPARE NEW MATERIAL" MOVES IN ═══════════════════════
+        // §10b: move "Compare new material with your kernel" out of the top of the middle panel
+        // into this section, retitled "New material and rebuilds". It used to be its own mount
+        // at the very top of the middle panel (`CreateIdeaClient.tsx`, above the fields), which
+        // is also §10c's "two entry points on one page doing the same thing" — a rebuild and a
+        // targeted comparison are the same family of act ("what do I do with what's changed"),
+        // so they now live in the one place that already answers "what next".
         <CollapsedSection
-          title="Re-run"
+          title="New material and rebuilds"
           defaultOpen={running}
-          hint={running ? 'Running now.' : 'Re-run this idea, or check on a run in progress.'}
+          hint={running ? 'Running now.' : 'New material to compare, or re-run this idea.'}
         >
-          <div className="p-3">
+          <div className="p-3 space-y-3">
+            <UpdatePassPanel ideaId={ideaId} canEdit showResearchAngle={false} />
             {reRunBody}
           </div>
         </CollapsedSection>

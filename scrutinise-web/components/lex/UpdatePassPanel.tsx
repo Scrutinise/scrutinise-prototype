@@ -81,7 +81,19 @@ function ChangeCard({ item, onJudge, busy }: { item: ProposedChange; onJudge: (d
   )
 }
 
-export default function UpdatePassPanel({ ideaId, canEdit }: { ideaId: string; canEdit: boolean }) {
+export default function UpdatePassPanel({ ideaId, canEdit, showResearchAngle = true }: {
+  ideaId: string
+  canEdit: boolean
+  /**
+   * ⚠⚠ 26-L §10c — REMOVED FROM THE MIDDLE PANEL. "Two entry points on one page doing the same
+   * thing": asking Lex to research an angle here duplicates asking Lex the same question in the
+   * left-panel chat. §11 (report-only) sizes making the left-panel Lex do this for real, so
+   * removing the box here is not a loss of the capability, only of the duplicate entry point.
+   * Defaults true so the Research tab mount (`ResearchTab.tsx`, the right-hand RESEARCH panel,
+   * not the middle DRAFT STRATEGY one the brief names) is unaffected.
+   */
+  showResearchAngle?: boolean
+}) {
   const [state, setState] = useState<UpdatePassState | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -181,8 +193,10 @@ export default function UpdatePassPanel({ ideaId, canEdit }: { ideaId: string; c
         </div>
       )}
 
-      {/* §3 — research an angle, instead of researching elsewhere and uploading the result. */}
-      {canEdit && (
+      {/* §3 — research an angle, instead of researching elsewhere and uploading the result.
+          ⚠ 26-L §10c — gone from the middle panel (`showResearchAngle=false` there); kept on
+          the Research tab's own mount, the right-hand panel this box has always belonged to. */}
+      {canEdit && showResearchAngle && (
         <div className="px-4 py-3 border-b border-zinc-100">
           <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Or ask Lex to research an angle

@@ -170,11 +170,17 @@ export async function POST(req: Request, { params }: Params) {
   // — the same function the write will call, rather than a second guess at it.
   const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
   const wouldBeNumber = answer.verdict === 'MERGE' && answer.merged ? nextNumber(all) : null
+  // ⚠⚠ 26-L §2 — THE NUMBER "ONE CONTAINS THE OTHER" NEEDS TO WRITE ANYTHING AT ALL.
+  // `subordinateNumber` is the one the model names; the containing one is simply the other of
+  // the two the user typed — no guess, no second model field needed.
+  const containingNumber = answer.verdict === 'ONE_CONTAINS_THE_OTHER' && answer.subordinateNumber != null
+    ? (answer.subordinateNumber === na ? nb : na)
+    : null
 
   console.log('[25p:policy] merge judged', {
-    ideaId: id, model, a: na, b: nb, verdict: answer.verdict, wouldBeNumber, wrote: false,
+    ideaId: id, model, a: na, b: nb, verdict: answer.verdict, wouldBeNumber, containingNumber, wrote: false,
   })
-  return NextResponse.json({ answer, wouldBeNumber, ...(await readState(id)), usages })
+  return NextResponse.json({ answer, wouldBeNumber, containingNumber, ...(await readState(id)), usages })
 }
 
 // ══ EVERY OPERATION THAT DOES NOT CALL A MODEL ═════════════════════════════════
@@ -208,6 +214,24 @@ const PatchSchema = z.object({
   text: z.string().trim().min(1).max(2000).optional(),
   /** 26-I §2 — `markSaysSameAs` only: the other candidate's stable number. */
   duplicateOfNumber: z.number().int().positive().optional(),
+  /** 26-L §2 — `acceptEnhance` only: the "one contains the other" write, as shown on the card. */
+  enhance: z.object({
+    containingNumber: z.number().int().positive(),
+    subordinateNumber: z.number().int().positive(),
+    merged: z.object({
+      approach: z.string().trim().min(1).max(8000),
+      caseFor: z.string().trim().max(8000).nullable().optional(),
+      caseAgainst: z.string().trim().max(8000).nullable().optional(),
+    }),
+    reasoning: z.string().trim().max(8000).optional(),
+  }).optional(),
+  /** 26-L §3b — `edit` only: any subset of the four fields every card carries. */
+  edit: z.object({
+    approach: z.string().trim().min(1).max(8000).optional(),
+    rulesOut: z.string().trim().max(4000).optional(),
+    caseFor: z.string().trim().max(4000).optional(),
+    likelihood: z.string().trim().max(2000).optional(),
+  }).optional(),
 })
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -218,7 +242,9 @@ export async function PATCH(req: Request, { params }: Params) {
   const parsed = PatchSchema.safeParse(await req.json().catch(() => ({})))
   if (!parsed.success) return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 422 })
 
-  const result = await applyPolicyOp({ ideaId: id, ...parsed.data })
+  // 26-L §2/§3b — `acceptEnhance` and `edit` write a `FieldRevision`, which records who accepted
+  // the replacement; every other op ignores this.
+  const result = await applyPolicyOp({ ideaId: id, userId: authz.user.id, ...parsed.data })
   if ('notOnThisIdea' in result) {
     return NextResponse.json({ error: 'That policy is not on this idea.' }, { status: 404 })
   }

@@ -17,7 +17,10 @@
 
 import { prisma } from '@/lib/prisma'
 import { setLoopProposal } from '@/lib/lex/field-machine'
-import { pairPolicies, nextNumber, type Pairing } from '@/lib/lex/guiding-policy'
+import {
+  pairPolicies, nextNumber, universalCauses, nearDuplicatePairs,
+  type Pairing, type DuplicatePair,
+} from '@/lib/lex/guiding-policy'
 import { testIsCompound, type CompoundTest } from '@/lib/lex/rumelt-tests'
 
 /** Every operation on this screen that does not call a model. */
@@ -48,12 +51,28 @@ export type PolicyOp =
   /** 26-I §2 — undo of `markPartOfSolution`/`markSaysSameAs`, back to UNDISPOSITIONED. Symmetry with
    *  every other move on this screen being reversible (25-S §1.3's own rule, extended). */
   | 'clearDisposition'
+  /**
+   * 26-L §2 — the write "one contains the other" never had. See `writeEnhance`: the containing
+   * row is edited in place (with its prior wording kept as a `FieldRevision`, exactly like a
+   * chat-accepted rewrite) and the subordinate row is archived — never a new row, unlike
+   * `acceptMerge`.
+   */
+  | 'acceptEnhance'
+  /**
+   * 26-L §3b — every candidate card carries the same editable fields regardless of how it
+   * arrived: the statement, what it rules out, what it fixes, how likely it is to happen. The
+   * prior wording of an edited statement is kept via `FieldRevision`, same mechanism as
+   * `acceptEnhance` and the chat rewrite path (`field-edit-write.ts`) — one history, three
+   * writers.
+   */
+  | 'edit'
 
 export const POLICY_OPS: PolicyOp[] = [
   'acceptMove', 'declineMove', 'acceptCause', 'declineCause',
   'settle', 'phase', 'reject', 'restore', 'proceedUnresolved', 'countRound',
   'undoSort', 'acceptMerge',
   'add', 'markPartOfSolution', 'markSaysSameAs', 'assertAction', 'clearDisposition',
+  'acceptEnhance', 'edit',
 ]
 
 /**
@@ -230,12 +249,23 @@ export async function readPolicyState(ideaId: string) {
   const live = rows.filter(
     (r) => r.kind === 'GUIDING_POLICY' && r.status !== 'RULED_OUT' && !r.mergedIntoId,
   )
-  const pairings: Pairing[] = pairPolicies(
+  const liveWithCauses = live.map((r) => ({
+    number: r.number ?? 0,
+    causeNumbers: r.targetCauseIds.map((cid) => causeNumber.get(cid)).filter((n): n is number => !!n),
+  }))
+  // ⚠⚠ 26-L §9b — A CAUSE EVERY CANDIDATE ATTACKS TELLS YOU NOTHING ABOUT ANY PAIR OF THEM.
+  // Computed here, from the live set, and reported alongside the pairings rather than applied
+  // silently (§9d).
+  const excludedCauses = universalCauses(liveWithCauses)
+  const pairings: Pairing[] = pairPolicies(liveWithCauses, drivenBy, excludedCauses)
+  // §9a/§9c — near-duplicates, from the sort's own judgement of wording, not cause overlap.
+  // Filtered to numbers still live, so a duplicate-of-a-rejected-row never surfaces a dead pair.
+  const liveNumbers = new Set(live.map((r) => r.number).filter((n): n is number => n != null))
+  const nearDuplicates: DuplicatePair[] = nearDuplicatePairs(
     live.map((r) => ({
       number: r.number ?? 0,
-      causeNumbers: r.targetCauseIds.map((cid) => causeNumber.get(cid)).filter((n): n is number => !!n),
+      duplicateOfNumbers: r.duplicateOfNumbers.filter((n) => liveNumbers.has(n)),
     })),
-    drivenBy,
   )
 
   // 26-I §2/A5 — "Consolidate is disabled until every candidate carries a disposition."
@@ -294,12 +324,17 @@ export async function readPolicyState(ideaId: string) {
       // 26-I §2/§5c
       disposition: r.disposition,
       duplicateOfNumber: r.duplicateOfNumber,
+      // 26-L §9 — the sort's own near-duplicate judgement, filtered to numbers still live.
+      duplicateOfNumbers: r.duplicateOfNumbers.filter((n) => liveNumbers.has(n)),
       draftModel: r.draftModel,
       rulesOut: r.rulesOut,
       likelihood: r.likelihood,
       effectiveDisposition: effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }),
     })),
     pairings,
+    // 26-L §9a/§9c/§9d
+    nearDuplicates,
+    excludedCauseNumbers: [...excludedCauses].sort((a, b) => a - b),
     actions: actions.map((a) => ({ id: a.id, step: a.practicalStep })),
     // 26-I addendum A5 — everything the Consolidate button needs to show its own count
     // and decide whether it is enabled, without the client re-deriving the gate.
@@ -340,8 +375,23 @@ export async function applyPolicyOp(input: {
   text?: string
   /** 26-I §2 — `markSaysSameAs` only: the OTHER candidate's stable §1.1 number. */
   duplicateOfNumber?: number
+  /**
+   * 26-L §2 — `acceptEnhance` only. `containingNumber` keeps its own id and number; the
+   * subordinate is archived, never deleted. `merged` is the containing policy's restated text —
+   * the same shape `acceptMerge` takes, reused rather than duplicated.
+   */
+  enhance?: {
+    containingNumber: number
+    subordinateNumber: number
+    merged: { approach: string; caseFor?: string | null; caseAgainst?: string | null }
+    reasoning?: string
+  }
+  /** 26-L §3b — `edit` only: any subset of the four fields every card now carries. */
+  edit?: { approach?: string; rulesOut?: string; caseFor?: string; likelihood?: string }
+  /** `acceptEnhance`/`edit` only — whose prior wording `FieldRevision` records as superseded. */
+  userId?: string
 }): Promise<{ state: PolicyState; addedNumber?: number; compoundTest?: CompoundTest } | { notOnThisIdea: true }> {
-  const { ideaId: id, op, policyId, reason, phase, merge, text, duplicateOfNumber } = input
+  const { ideaId: id, op, policyId, reason, phase, merge, text, duplicateOfNumber, enhance, edit, userId } = input
 
   const row = policyId
     ? await prisma.policyOption.findFirst({ where: { id: policyId, ideaId: id } })
@@ -388,6 +438,46 @@ export async function applyPolicyOp(input: {
           merged: merge.merged,
         },
       })
+      break
+    }
+
+    // ══════════ 26-L §2 — "ONE CONTAINS THE OTHER" NOW WRITES SOMETHING ══════════════════════
+    //
+    // §2c measured it live: this verdict wrote NOTHING at all. #3 and #6 sat there, near-
+    // identical, both live, for ever. §2a's wording — "#3 has been enhanced to include #6. #6
+    // has been archived." — is what this performs: unlike `acceptMerge`, no new row, no new
+    // number; the containing row keeps its own identity and the subordinate is archived into it.
+    case 'acceptEnhance': {
+      if (!enhance || !userId) break
+      await writeEnhance({ ideaId: id, userId, ...enhance })
+      break
+    }
+
+    // ══ 26-L §3b — EVERY CANDIDATE CARD CARRIES THE SAME EDITABLE FIELDS ═════════════════════
+    case 'edit': {
+      if (!row || !edit || !userId) break
+      const approach = edit.approach?.trim()
+      // ⚠ THE PRIOR STATEMENT IS KEPT, EXACTLY LIKE A CHAT-ACCEPTED REWRITE
+      // (`field-edit-write.ts`) — one history for the field, however the edit arrived.
+      if (approach && approach !== row.approach) {
+        await prisma.$transaction([
+          prisma.fieldRevision.create({
+            data: {
+              ideaId: id, fieldKey: 'policyOptions', targetId: row.id, targetNumber: row.number,
+              previousText: row.approach, previousSource: row.source,
+              newText: approach, acceptedById: userId, origin: 'GUIDING_POLICY_CARD_EDIT',
+            },
+          }),
+          prisma.policyOption.update({ where: { id: row.id }, data: { approach } }),
+        ])
+      }
+      const rest: Record<string, unknown> = {}
+      if (edit.rulesOut !== undefined) rest.rulesOut = edit.rulesOut.trim() || null
+      if (edit.caseFor !== undefined) rest.caseFor = edit.caseFor.trim() || null
+      if (edit.likelihood !== undefined) rest.likelihood = edit.likelihood.trim() || null
+      if (Object.keys(rest).length) {
+        await prisma.policyOption.update({ where: { id: row.id }, data: rest })
+      }
       break
     }
 
@@ -619,11 +709,21 @@ export async function applyPolicyOp(input: {
       if (!approach) break
       const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
       const number = nextNumber(all)
+      compoundTest = testIsCompound(approach)
+      // ⚠⚠ 26-L §3c/§6a — THE FLAG SURVIVES A RELOAD, ON THE CARD, AND IT NEVER BLOCKS.
+      // Before this it was returned once in the API response and shown as a banner near the
+      // "Add" box — gone the moment the user did anything else, including reloading. `kindReason`
+      // is unused for an unsorted row (historyLine only reads it once something has judged the
+      // card — see policy-history.ts), so it is a safe, already-rendered home for the mechanical
+      // flag until the real sort (or the judge, on a merge) gives its own verdict, with reasoning.
       const created = await prisma.policyOption.create({
-        data: { ideaId: id, approach, number, kind: 'GUIDING_POLICY', source: 'USER' },
+        data: {
+          ideaId: id, approach, number, kind: 'GUIDING_POLICY', source: 'USER',
+          kindReason: compoundTest.isCompound
+            ? `⚠ Flagged for review (mechanical check, not a verdict): ${compoundTest.why}` : null,
+        },
       })
       addedNumber = created.number ?? number
-      compoundTest = testIsCompound(approach)
       break
     }
 
@@ -773,6 +873,88 @@ export async function writeMerge(input: {
 }
 
 /**
+ * ══ 26-L §2 — THE ENHANCE WRITE. "ONE CONTAINS THE OTHER", ACCEPTED. ══════════════════════
+ *
+ * ⚠⚠ WHAT THIS REPLACES: NOTHING. §2c measured it directly against Charlie's own idea — the
+ * verdict rendered as advice ("Not a merge — one contains the other.") and no write of any kind
+ * followed it, ever. #3 and #6 stayed live, near-identical, indefinitely.
+ *
+ * ⚠ UNLIKE `writeMerge`, NO NEW ROW. The containing policy keeps its own id and number — it is
+ * not superseded, it is edited — so a card the user has already discussed, feedback'd or rated
+ * does not vanish behind a new number the moment it absorbs a duplicate. The subordinate is
+ * archived exactly as a merge parent is: `mergedIntoId` set (so `superseded` excludes it from
+ * `live`) and `status: RULED_OUT` with a reason naming what it went into — the SAME dual write
+ * `writeMerge` already uses, pointed at an existing row instead of a freshly created one.
+ *
+ * ⚠ THE CONTAINING ROW'S PRIOR WORDING IS KEPT AS A `FieldRevision`, in the same transaction as
+ * the edit — §2b's *"its originals beneath it, both clickable"*: the containing card renders
+ * `PriorVersions` (its own history) and the subordinate renders in "Ruled out" (its own
+ * wording, restorable) — one mechanism each, both already built for other reasons.
+ */
+export async function writeEnhance(input: {
+  ideaId: string
+  userId: string
+  containingNumber: number
+  subordinateNumber: number
+  merged: { approach: string; caseFor?: string | null; caseAgainst?: string | null }
+  reasoning?: string
+}): Promise<boolean> {
+  const { ideaId: id, userId, containingNumber, subordinateNumber, merged, reasoning } = input
+  const rows = await prisma.policyOption.findMany({
+    where: { ideaId: id, number: { in: [containingNumber, subordinateNumber] } },
+  })
+  const keep = rows.find((r) => r.number === containingNumber)
+  const drop = rows.find((r) => r.number === subordinateNumber)
+  if (!keep || !drop) return false
+
+  const approach = merged.approach.trim()
+  const writes = []
+  // ⚠ NO-OP TEXT IS NOT AN ERROR. The judge is explicitly allowed to say the containing policy
+  // already covers everything (26-L §2 prompt change) — only write a revision where the text
+  // actually changes.
+  if (approach && approach !== keep.approach) {
+    writes.push(
+      prisma.fieldRevision.create({
+        data: {
+          ideaId: id, fieldKey: 'policyOptions', targetId: keep.id, targetNumber: keep.number,
+          previousText: keep.approach, previousSource: keep.source,
+          newText: approach, acceptedById: userId, origin: 'GUIDING_POLICY_ENHANCE',
+        },
+      }),
+      prisma.policyOption.update({
+        where: { id: keep.id },
+        data: {
+          approach,
+          caseFor: merged.caseFor || keep.caseFor,
+          caseAgainst: merged.caseAgainst || keep.caseAgainst,
+          mergedFrom: [...new Set([...keep.mergedFrom, subordinateNumber])],
+        },
+      }),
+    )
+  } else {
+    writes.push(
+      prisma.policyOption.update({
+        where: { id: keep.id },
+        data: { mergedFrom: [...new Set([...keep.mergedFrom, subordinateNumber])] },
+      }),
+    )
+  }
+  writes.push(
+    prisma.policyOption.update({
+      where: { id: drop.id },
+      data: {
+        mergedIntoId: keep.id,
+        status: 'RULED_OUT',
+        ruleOutReason: `Archived — absorbed into ${containingNumber}.${reasoning ? ` ${reasoning}` : ''}`,
+      },
+    }),
+  )
+  await prisma.$transaction(writes)
+  await syncPolicyField(id)
+  return true
+}
+
+/**
  * ══ §1.2/§1.4/§1.5/§1.6 — THE SORT WRITE. THE JUDGEMENT IS THE ROUTE'S. ══════════════
  *
  * ⚠ EXTRACTED FOR §1.12'S SAKE, LIKE `writeMerge`. "A moved action renders in coherent actions
@@ -795,6 +977,8 @@ export async function writeSort(input: {
     importance?: unknown
     addressability?: unknown
     impliedCause?: Record<string, unknown> | null
+    /** 26-L §9 — the model's own near-duplicate reading, discarded until now. */
+    duplicateOfNumbers?: number[]
   }>
 }): Promise<number> {
   const { ideaId: id, state, sorted } = input
@@ -817,6 +1001,10 @@ export async function writeSort(input: {
         // it — and the screen labels it as Lex's judgement, not as a structural fact.
         targetCauseIds: (s.targetCauseNumbers ?? [])
           .map((n) => causeIdOf.get(n)).filter((x): x is string => !!x),
+        // 26-L §9 — persisted rather than discarded. Kept as the numbers the model gave, not
+        // filtered to "still live" here — `readPolicyState` filters at read time, so a later
+        // rejection removes a pair from view without the sort having to re-run.
+        duplicateOfNumbers: (s.duplicateOfNumbers ?? []).filter((n) => n !== s.number),
         importance: (s.importance ?? null) as never,
         addressability: (s.addressability ?? null) as never,
         impliedCause: (s.impliedCause
