@@ -917,7 +917,86 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-25 10:29 UTC (LEX — collision resolved, deploy verified, Decisions
+*Last updated: 2026-09-28 00:39 UTC (LEX 26-H/26-I/26-J/26-K, all four sprints in one session)* —
+▼▼ **ALL FOUR COMMITTED, PUSHED, MAIN == origin/Main, NOTHING UNCOMMITTED** (re-verified by
+`git fetch` + `git status -sb` at the end of the session, not assumed). Full detail is each
+sprint's own `docs/CHANGE_LOG.md` entry (26-H 11:20 UTC, 26-I 12:36 UTC, 26-J 12:56 UTC, 26-K
+17:37 UTC, all 27 Sep) — summary here, most recent first.
+
+▼▼ **26-K — THE UPDATE PASS** (`4f2fcd3`, `d300783`): new material compared against the live
+kernel, sorted into five categories (supports/contradicts/new-cause/new-policy-option/
+nothing), nothing changes until accepted. ⚠⚠ **Architecture call made explicit rather than
+forced**: `check-deepening.ts` hard-asserts exactly five Deepening passes plus per-pass
+issue-template fire/silence probes — this pass doesn't fit that shape, so it reuses
+`EvidenceItem`/`DeepeningPass` directly from a NEW module (`lib/lex/update-pass.ts`,
+`passKey='MATERIAL_UPDATE'`) rather than registering a sixth pass in the closed engine.
+`check:deepening` still 100% green after. New policy options enter the guiding-policy sort
+immediately (26-I's `applyPolicyOp`, no separate accept path, per the brief); a new cause is
+created via `addCause` only on acceptance; accepting a CONTRADICTS finding marks the target
+AND its dependants stale (walking `PolicyOption.targetCauseIds`) with a reason, never
+re-running anything. CONTRADICTS always renders first, un-collapsed. ⚠ **§3's "research an
+angle" ships corpus-search only** — the brief's own "four-model check" turned out to be
+SEARCH's in-flight S26 Stage 3 (confirmed via `docs/SPRINT.md`; different models, different
+output shape than anything live) — building a stand-in now was assessed as genuine, avoidable
+rework and deferred, reported rather than guessed at. ▶ **§6 measured against a real
+build**: Charlie's own idea's v10 = 24 model calls, £0.28, 6.7 min; the update pass is
+structurally ~1 model call + 1 search, an order of magnitude fewer — reported as a structural
+estimate, NOT a live measurement (no update pass has been triggered yet — same restraint as
+26-I's Consolidate, below). ⚠ Session note: this build was interrupted once mid-way (a
+`tsc` tool hiccup, not a code fault) and resumed — re-verified the schema migration had
+actually applied by querying Neon's `information_schema` directly before continuing, not by
+trusting the apply script's own report.
+
+▼▼ **26-J — THE OVERVIEW REBUILT AGAINST THE LIVE SCHEMA** (`2741af1`, `6fae809`): the
+Overview's Diagnosis/Policy/Coherent-Actions tabs were reading pre-rebuild relations
+(`Diagnosis`/`GuidingPolicy`/`RootCause`/`Evidence`/legacy `CoherentAction`) the live build
+pipeline stopped writing to — now read `computeCanonicalState`, the SAME function the
+editor's own FieldsPanel calls. ✅ **Cold-read verified on Charlie's real idea**: "8 of 8" /
+"7 of 7", matching the editor exactly, read directly off production. ⚠⚠ **Found in
+passing: 29 editorial/showcase ideas** (`Hunting Act 2004`, `Gender Recognition Act 2004`,
+etc. — seeded by `scripts/seed/seed-historical-kernels.ts`/`seed-editorial-ideas.ts`) **have
+real content ONLY in the abandoned tables** — zero live-schema equivalent. Rebuilding blind
+would have emptied 29 populated ideas; built a read-only legacy fallback instead (shown only
+when the live page has nothing). ▶ Research tab viewing gate removed (research exists from
+the first build); now lists `Research` citations AND `IdeaUserMaterial` (confirmed as the
+real uploads table — `Attachment` is dead code, zero callers). ▶ Documents tab split
+Inbound/Outbound on the EXISTING table boundary (`IdeaUserMaterial` vs `Document`) — no new
+field needed, stopped there per the brief's own instruction. ▶ "Delete archives, does not
+destroy" — `archivedAt` added to `Research`/`IdeaUserMaterial`; every build-context read of
+material now excludes archived rows. ▶ Sort preference moved off `localStorage` onto
+`User.ideaSortMode` (same pattern `lexPanelLayout` already uses).
+
+▼▼ **26-I — ONE GUIDING POLICY, PROPERLY ARRIVED AT** (`a11440f`, `28ac32b`): Consolidate —
+four premium models (`gemini-2.5-pro`, `claude-opus-5`, `grok-4.7`, `gpt-6-luna`) draft a
+guiding policy in parallel, one premium model (`claude-opus-5`) judges all four in one
+batched call (compound/rules-out-nothing tests made properly mechanical, no model), the
+user's favourite redrafts once with both the user's and the judge's feedback (never a
+merge), accept/edit reuses the EXISTING `settle` mechanism to open the four waiting fields —
+no second unlock path. Disposition sort (5 states, 2 new: Part of the solution, Says
+roughly the same as — reusing 25-P's own `pairPolicies` relation, not a second mechanism).
+Chat feedback filed against named candidates before Lex replies, on decision 92's exact
+pattern. ▶ **No-evaluative-preamble check run against production: 6 real historical
+violations found**, including the literal phrase from Charlie's own idea ("That's a very
+astute observation, Charlie") — proof the detector catches the real thing. ⚠ **Neither
+Consolidate (26-I) nor the update pass (26-K) has ever been triggered live** — both cost
+real money per run and were deliberately left for Charlie to trigger rather than run
+unprompted.
+
+▼▼ **26-H — DASHBOARD/IDEAS ORDERING + A DUPLICATE LIST REMOVED** (`a337354`, `98c2398`):
+sort (recent/name/created) shared between Dashboard and Ideas-list via one preference
+(later moved to `User.ideaSortMode` in 26-J, above). ⚠⚠ **Found and fixed while scoping
+this: hiding a group was pulling its whole header out of position** to a separate "N hidden
+groups" summary, contradicting the hide route's own comment — now the header stays exactly
+where it was, only its ideas stop rendering. Deleted a genuine duplicate: `FieldsPanel.tsx`
+rendered a second, plain-text-only list of terminal guiding-policy candidates directly above
+`GuidingPolicyScreen`'s full rendering of the same rows — kept `PriorVersions` (the one thing
+the deleted list carried the fuller screen didn't). ▶ Diagnosed, report-only per the brief:
+the Overview/editor mismatch (root cause: reads dead tables — fixed properly in 26-J,
+above), the empty Research tab (stage-gated AND wrong model — fixed in 26-J), Documents
+provenance (no field existed — resolved as "not needed, table boundary already does it" in
+26-J).
+
+Earlier: 2026-09-25 10:29 UTC (LEX — collision resolved, deploy verified, Decisions
 99/100)* — ▼▼ **26-G IS COMMITTED, PUSHED, AND LIVE — AFTER A CROSS-STREAM COLLISION THAT
 CRASH-LOOPED PRODUCTION.** Full detail in `docs/CHANGE_LOG.md`'s 10:29 entry; summary here.
 ⚠⚠ **The collision, briefly: SEARCH's explicit-path commit of `lib/lex/build.ts` (for its own
