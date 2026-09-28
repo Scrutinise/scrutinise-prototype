@@ -1,5 +1,74 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-28 12:58 UTC — LEX 26-L addendum — the Consolidate gate, decision 103
+
+Five items, Charlie's own decision. Items 4/5 diagnosed against production (idea 452c5ade)
+before anything was built.
+
+**Item 5 — CONFIRMED, ROOT CAUSE FOUND AND FIXED, LIVE DATA REPAIRED.** #5 carried
+`disposition: SAYS_SAME_AS, duplicateOfNumber: 2` — the write had succeeded — and still read
+as "Kept for a later phase" on the card and in every count, because `effectiveDisposition`
+checks `phase === 'LATER'` before disposition, and #5 also carried a stale `phase: 'LATER'`
+from an earlier, unrelated action. **Not "isn't saving" — saved correctly, masked by a fact
+that predated it.** #7 and #22 (also named) were fine: `SAYS_SAME_AS` read straight through,
+no stale phase. #24, #25, #29 (also named) are genuinely `UNDISPOSITIONED` — no evidence in
+the data that "says roughly the same as" was ever set on them. Fixed going forward:
+`markPartOfSolution`/`markSaysSameAs` now clear `phase` (the two are exclusive decisions about
+one card; the more recent, more deliberate one wins) — `effectiveDisposition`'s own priority
+order is untouched, so nothing that depends on it elsewhere moves. Fixed live: #5's `phase`
+cleared directly (`ALTER`-equivalent `prisma.policyOption.update`), re-read and confirmed
+`SAYS_SAME_AS` before and after the code fix landed.
+
+**Item 4 — reported, not resolved; no bug found in the code that could explain it either
+way.** Current value: `Idea.chosenApproach` = #2's exact text, and #2 is the only row with
+`status: CHOSEN`. No `GuidingPolicyConsolidation` record exists for this idea (checked
+directly — zero rows), so Accept did not overwrite it; `choosePolicyApproach`
+(`field-machine.ts`, the OLDER Page-3 "commit to one approach" mechanism) was not used either
+— it rules out every OTHER candidate, and #5/#7/#8/#9/#22/#24/#25/#29 are all still
+`CANDIDATE`, none `RULED_OUT`. `case 'settle'` itself (`guiding-policy-state.ts`) is a single
+transaction — demote whichever row is currently `CHOSEN`, promote the named row, set
+`chosenApproach` to its text — unconditional and order-independent; reading it fresh found no
+guard that would make a second press on a different candidate silently no-op. Two
+explanations are consistent with everything checked: the true click order was #29 then #2
+(settle behaving exactly as designed, last press wins, no bug), or the #29 press did not
+complete server-side for a reason no available evidence can show (no audit trail exists for
+`settle`, unlike an edit or an enhance — see item 3's fix, which makes the question moot for
+every future disposition: the button that used to settle directly is gone). Not touched:
+#2's existing `CHOSEN` status and `chosenApproach` are left as they are — a reset was not
+asked for and would discard Charlie's own most recent deliberate choice on unproven grounds.
+
+**Item 3 — built.** "Make this the guiding policy" removed from the card's main action row.
+It bypassed Consolidate entirely (a direct `settle`, uncounted by the gate) — this is very
+likely the actual mechanism behind item 4, whichever click order occurred. The existing
+"Part of the solution" button (disposition row, already built in 26-I) is now the only way to
+record a yes from this screen; it is counted by the gate and by Consolidate's own candidate
+set. The real, final choice comes from Consolidate → Accept, unchanged.
+
+**Item 1 — built.** `readPolicyState`'s `consolidate` object gained `waitingOnNumbers: number[]`
+(replacing a bare count everywhere it is read). The gate's own 409 names them
+("Waiting on #8, #9, #24, #25, #29 — mark each part of the solution, ruled out, later phase, a
+duplicate, or leave feedback on it."). On screen: each number is an `<a href="#policy-N">` that
+scrolls to the card (`id="policy-N"` added to every card, sorted and unsorted); the waited-on
+card itself carries its own marker, not only the summary line.
+
+**Item 2 — built.** A candidate with at least one `PolicyFeedback` row against it (any source
+— chat, the per-card reason box) now satisfies the gate exactly as a disposition would — one
+extra grouped query in `readPolicyState`, no per-row lookups. Charlie's original intro wording
+restored verbatim ("greyed out until you've commented on each option"), which BRIEF_26L §10a
+had changed to "sorted" pending his confirmation — this decision settles it, and now makes the
+sentence literally true rather than approximately true. **"Consolidation reads the feedback
+text"**: `ConsolidateContext.partOfSolution` gained a `feedback: string[]` field
+(`app/api/.../consolidate/route.ts` fetches `PolicyFeedback` for every part-of-solution
+candidate in one query); the four models' own prompt (`guiding-policy-consolidate.ts`) now
+prints "User feedback on this candidate: …" under each candidate it drafts from. Before this,
+feedback was filed and stored but read by nothing.
+
+✅ `tsc --noEmit` clean. ✅ `check:client-boundary` clean. `check:lex-25p` 70/72 (same 2
+pre-existing, unrelated failures as the main 26-L entry below — re-confirmed unchanged by this
+addendum). `check:lex-25t` 27/27 (1 not-checked, pre-existing, unrelated).
+
+⚠ Nothing committed yet; `commit-all.sh` produced, pending Charlie's approval.
+
 ## 2026-09-28 02:14 UTC — LEX 26-L — the guiding-policy screen in use, and Lex telling the truth
 
 Brief: `docs/BRIEF_26L.md`. Continuous mode, per §0 — diagnosed, built, reported; batched here.

@@ -917,7 +917,34 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-28 02:14 UTC (LEX 26-L)* — ▼▼ **26-L — THE GUIDING-POLICY SCREEN IN
+*Last updated: 2026-09-28 12:58 UTC (LEX 26-L addendum — decision 103, the Consolidate gate)*
+— ▼▼ **THE MASKING BUG: #5's disposition had saved correctly and was invisible anyway.**
+Full detail in `docs/CHANGE_LOG.md`'s 12:58 entry. Diagnosed against production before
+building: #5 carried `disposition: SAYS_SAME_AS, duplicateOfNumber: 2` — a genuine, successful
+write — and still read as "later phase" everywhere, because `effectiveDisposition` checks a
+stale `phase: 'LATER'` (left over from an earlier, unrelated action) before it checks
+disposition. Fixed going forward (`markPartOfSolution`/`markSaysSameAs` now clear `phase`) and
+live (#5's stale phase cleared directly, re-confirmed). #24/#25/#29 (also named by Charlie) are
+genuinely undispositioned — no evidence either was ever set. ▶ Item 4 (two "Make this the
+guiding policy" presses, #2 then #29, only #2 ended up Chosen) — investigated, not resolved:
+no consolidation record exists, the older `choosePolicyApproach` mechanism wasn't used (it
+would have ruled out every other candidate, and none are), and `settle` itself is a correct,
+order-independent transaction on inspection. Two explanations remain consistent with the
+evidence (true order was #29-then-#2 and this is correct behaviour; or the #29 press did not
+complete, unprovable with no audit trail for `settle`) — reported as unresolved rather than
+guessed at. ▶ **Item 3 built: "Make this the guiding policy" is GONE from the card**, replaced
+by the existing "Part of the solution" button (which the gate and Consolidate already count) —
+this is very likely the actual mechanism behind item 4's mystery, whichever click order
+occurred, since the retired button bypassed Consolidate and the gate entirely. ▶ Item 1 built:
+the gate names which candidates it's waiting on (`waitingOnNumbers`), each a link that scrolls
+to the card, each waiting card marked in place. ▶ Item 2 built: written feedback now satisfies
+the gate the same as a disposition; Consolidate's own model prompt now reads each candidate's
+feedback text (previously filed, stored, and read by nothing); Charlie's original intro wording
+("commented on each option") restored and now literally true.
+✅ `tsc --noEmit` clean; `check:client-boundary` clean; `check:lex-25p`/`25t` re-run, same
+pre-existing unrelated failures as the main 26-L entry, unchanged.
+⚠ Nothing committed yet; `commit-all.sh` produced, pending Charlie's approval.
+Earlier: 2026-09-28 02:14 UTC (LEX 26-L)* — ▼▼ **26-L — THE GUIDING-POLICY SCREEN IN
 USE, AND LEX TELLING THE TRUTH.** Brief: `docs/BRIEF_26L.md`. Full detail in
 `docs/CHANGE_LOG.md`'s 02:14 entry; summary here.
 ⚠⚠ **§1's own hypothesis was wrong, checked against Charlie's real idea (452c5ade) before
