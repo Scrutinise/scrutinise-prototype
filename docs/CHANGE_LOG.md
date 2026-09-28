@@ -1,5 +1,95 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-28 14:10 UTC — LEX 26-L addendum 2 — model fixes, two buttons, Consolidate run for real
+
+Seven items, Charlie's own decisions, 28 September. Live-verified where the run could reach
+the vendor; reported honestly where this environment couldn't.
+
+**§1 — the three model failures, fixed, and Consolidate run for real.** `maxOutputTokens`
+raised 1024 → 4096 and `timeoutMs` raised 60s → 120s for every draft/redraft call
+(`guiding-policy-consolidate.ts`) — both were shared across all four models, so the raise
+helps all of them, not only Claude/Grok. `gpt-6-luna` added to `REJECTS_TEMPERATURE`
+(`model-sampling.ts`) — this codebase's own OpenAI branch comment predicted exactly this
+shape before it happened ("Several OpenAI reasoning models reject `temperature` outright…
+hardcoding the parameter is precisely how it would 400 on its first live call"); added on
+Charlie's diagnosis rather than a fresh probe, since there is no `OPENAI_API_KEY` on this
+machine to reproduce the 400 directly. **Then ran Consolidate for real**, against Charlie's
+idea (452c5ade), part-of-solution set #8/#9/#29: `gemini-2.5-pro` succeeded (statement:
+"Establish a statutory framework of Single Point Accountability…", ~1.71p); `grok-4.7`
+succeeded (statement: "A senior delivery post may be held only on a published personal
+record of outcomes owned, falsifiable by the parliamentary scrutiny that already names an
+Accounting Officer…", cost unpriced — xAI usage recording gap, separate from this addendum);
+`claude-opus-5` failed with a network-level `fetch failed`, not the original truncation
+symptom — `ANTHROPIC_API_KEY` is present and correctly formatted in this environment, so this
+reads as this sandbox's own network egress, not the bug Charlie reported (unverifiable from
+here; recommend re-testing through the deployed app, which has no such restriction);
+`gpt-6-luna` failed on `no-key` — `OPENAI_API_KEY` is simply absent from this machine, a
+pre-existing, documented gap, not the temperature bug (which the fix addresses regardless,
+verifiable once a key exists to test with). **Total cost: £0.03** (two drafts + one judge
+call), judged (`answersObstacle` true for both, gemini flagged compound by the mechanical
+check — see §7), persisted as a real `GuidingPolicyConsolidation` on the idea, visible in the
+Consolidate panel. Retry-only-failed built (`op: 'retryFailed'` on the `[consolidationId]`
+route, `runFourDrafts` now takes an explicit model subset) but not exercised here — retrying
+claude/gpt would fail for the same two environmental reasons, not because the retry mechanism
+is unproven.
+
+**§2 — two buttons, and a third, separate and labelled.** "Consolidate" (unchanged) only
+renders before a consolidation exists. "Write the final version" replaces "Ask {model} for
+the redraft" — same `redraft` op, same gate (enabled once a favourite is chosen) — relabelled
+to say what it does. "Start again with four new drafts" is now its own control, visually
+distinct (outline, not filled) from both, so it is never confused with Retry (§1, amber,
+appears only beside a failure) or with the first Consolidate press.
+
+**§3 — the introduction, replaced verbatim.** Drops "essential to the success of your
+mission" for what a guiding policy actually IS — the principle actions are judged against,
+not the actions themselves, which "belong to the next stage." The gate sentence now names all
+three ways to satisfy it ("sorted, allocated or commented"), matching §2 (below) exactly
+rather than "commented" standing in for all three. Supersedes the wording BRIEF_26L §10a and
+decision 103 item 2 had settled on.
+
+**§4 — "N of these were not guiding policies" moved to the bottom, just above Consolidate,
+generated from the real counts.** Was a fixed two-clause template reading oddly at 0/1
+either side; now built from `actions.length`/`goals.length` with correct singular/plural
+("one was… actions… were…"), and each clause links to its group (`#policy-group-actions`,
+`#policy-group-goals`, ids added to both section headings — reusing the same `id="policy-N"`
++ `scroll-mt-4` pattern the gate's own links (decision 103 item 1) already established).
+
+**§5 — investigated: #24/#25 have a real record; the record just wasn't visible.** Read
+directly off production: both carry `disposition: SAYS_SAME_AS` with a `duplicateOfNumber`
+(#24 → 9, #25 → 2), `updatedAt` timestamps from shortly before this session — the writes
+succeeded. Nothing was lost; nothing on screen distinguished "just wrote" from "always was".
+Built: a `savedAt` timestamp per card (`GuidingPolicyScreen.tsx`), set the moment any op
+naming that `policyId` returns 200, read by a "✓ Saved" chip on the disposition row (both card
+types) and a dedicated **Save** button on the feedback input (new `fileFeedback` op —
+`applyPolicyOp`'s reason-filing already ran unconditionally for every op that carried one;
+this names the "no other action, just the feedback" case as a real, listed op instead of an
+implicit side effect of other buttons).
+
+**§6 — built: the chosen policy can be un-chosen and changed.** New `unchoose` op — acts on
+whichever row is `CHOSEN` for the idea (there is at most one), demotes it to `CANDIDATE`,
+clears `Idea.chosenApproach`. A new "Un-choose, and change it" control sits beside the
+"Settled:" banner. This is the way back the previous addendum's item 3 removed without
+replacing: retiring the card's direct-settle button correctly stopped bypassing Consolidate,
+and also left anything already Chosen with no path back, since `settle` was never built as a
+toggle. #2 (this idea's own currently-Chosen policy, set by the retired button) is left as it
+is — un-choosing it is now Charlie's to do from the screen, not assumed here.
+
+**§7 — the compound test on consolidation drafts, relabelled the same way §6a already
+settled for the Add box.** Confirmed live in this very run: the judge flagged
+`gemini-2.5-pro`'s draft compound for splitting "…officials are publicly" / "personally
+accountable for…" — the identical false-positive shape ("projects and services") Charlie
+named, on a genuinely single approach. `JudgeCard`'s compound line (`GuidingPolicyScreen.tsx`)
+now reads "⚠ Flagged for review (mechanical check, not a verdict)" instead of "⚠ Compound" —
+the judge's own `answersObstacle` verdict, with its reasoning, remains the actual verdict on
+the card, exactly as §6a specifies; not a new judge call, since the mechanical/semantic split
+this file's own header already documents was designed for exactly this reason.
+
+✅ `tsc --noEmit` clean. ✅ `check:client-boundary` clean. `check:lex-25p` 70/72, `check:lex-25t`
+27/27 (1 not-checked) — both re-confirmed against the same two pre-existing, unrelated
+failures as every 26-L entry above.
+
+⚠ Nothing committed yet; `commit-all.sh` produced, pending Charlie's approval.
+
 ## 2026-09-28 12:58 UTC — LEX 26-L addendum — the Consolidate gate, decision 103
 
 Five items, Charlie's own decision. Items 4/5 diagnosed against production (idea 452c5ade)

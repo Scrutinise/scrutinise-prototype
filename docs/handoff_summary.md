@@ -917,8 +917,33 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-28 12:58 UTC (LEX 26-L addendum — decision 103, the Consolidate gate)*
-— ▼▼ **THE MASKING BUG: #5's disposition had saved correctly and was invisible anyway.**
+*Last updated: 2026-09-28 14:10 UTC (LEX 26-L addendum 2 — model fixes, two buttons,
+Consolidate run for real)* — ▼▼ **CONSOLIDATE ACTUALLY RAN, FOR THE FIRST TIME EVER, ON
+CHARLIE'S OWN IDEA.** Full detail in `docs/CHANGE_LOG.md`'s 14:10 entry. §1's three model
+fixes shipped (Claude's `maxOutputTokens` 1024→4096, the shared timeout 60s→120s, `gpt-6-luna`
+added to `REJECTS_TEMPERATURE`) and the run itself got **2 of 4 drafts** — `gemini-2.5-pro` and
+`grok-4.7` both succeeded, judged, persisted, £0.03 total. ⚠ **`claude-opus-5` and
+`gpt-6-luna` could not be verified from this environment** — Claude failed with a
+network-level `fetch failed` (its API key is present and well-formed; reads as this sandbox's
+own egress, not the truncation bug originally reported) and GPT failed on a simply-absent
+`OPENAI_API_KEY` on this machine, a pre-existing gap. **Recommend re-testing both through the
+deployed app**, which has neither restriction. ▶ §2: "Write the final version" (was "Ask
+{model} for the redraft") and "Start again with four new drafts" are now two visually distinct
+controls, never confused with each other or with Retry. ▶ §3: intro replaced verbatim — a
+guiding policy is now stated as the principle actions are judged against, not "essential to
+your mission". ▶ §4: the "N were not guiding policies" line moved to the bottom, generated
+from real counts, linked to each group. ▶ §5 investigated: #24/#25 DID save correctly
+(`disposition: SAYS_SAME_AS`, confirmed live) — nothing was lost, there was just no on-screen
+confirmation; built a "✓ Saved" chip plus a dedicated Save button on every card's feedback box.
+▶ §6 built: "Un-choose, and change it" — the way back the previous addendum's button removal
+had not replaced; #2 (this idea's currently-Chosen policy) left as-is, Charlie's to un-choose.
+▶ §7: the JudgeCard's compound line relabelled "flagged for review, not a verdict" — confirmed
+live in this very run (gemini's own draft got flagged on the identical false-positive shape
+Charlie named).
+✅ `tsc --noEmit` clean; `check:client-boundary` clean; `check:lex-25p`/`25t` unchanged, same
+two pre-existing unrelated failures as every 26-L entry.
+⚠ Nothing committed yet; `commit-all.sh` produced, pending Charlie's approval.
+Earlier: 2026-09-28 12:58 UTC (LEX 26-L addendum — decision 103, the Consolidate gate)* — ▼▼ **THE MASKING BUG: #5's disposition had saved correctly and was invisible anyway.**
 Full detail in `docs/CHANGE_LOG.md`'s 12:58 entry. Diagnosed against production before
 building: #5 carried `disposition: SAYS_SAME_AS, duplicateOfNumber: 2` — a genuine, successful
 write — and still read as "later phase" everywhere, because `effectiveDisposition` checks a
