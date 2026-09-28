@@ -215,7 +215,7 @@ export async function ensureNumbered(ideaId: string): Promise<void> {
 export async function readPolicyState(ideaId: string) {
   await ensureNumbered(ideaId)
 
-  const [idea, rows, causes, actions, feedbackCount] = await Promise.all([
+  const [idea, rows, causes, actions, feedbackCount, feedbackByPolicyRows] = await Promise.all([
     prisma.idea.findUnique({
       where: { id: ideaId },
       select: {
@@ -235,6 +235,14 @@ export async function readPolicyState(ideaId: string) {
     }),
     // 26-I addendum A5 — "shows what it will read: M items of feedback."
     prisma.policyFeedback.count({ where: { ideaId } }),
+    // ⚠⚠ 26-L addendum, decision 103 item 2 — "a candidate with feedback on it has been
+    // engaged with, and the gate accepts it." Read once, grouped by candidate, rather than
+    // per-row: distinct policyOptionIds carrying at least one feedback row.
+    prisma.policyFeedback.findMany({
+      where: { ideaId, policyOptionId: { not: null } },
+      select: { policyOptionId: true },
+      distinct: ['policyOptionId'],
+    }),
   ])
 
   // Causes get their own display numbers, in the order the panel shows them.
@@ -277,8 +285,15 @@ export async function readPolicyState(ideaId: string) {
   // excluded here too — that row is the concluded outcome of a consolidation (created by
   // Accept, §7), not a candidate still awaiting one.
   const dispositionable = live.filter((r) => r.status !== 'CHOSEN')
-  const undispositioned = dispositionable.filter(
-    (r) => effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }) === 'UNDISPOSITIONED',
+  // ⚠⚠ 26-L addendum, decision 103 item 2 — "a candidate with feedback on it has been engaged
+  // with, and the gate accepts it." A row with no disposition but at least one PolicyFeedback
+  // row against it no longer blocks Consolidate — restoring Charlie's own original wording,
+  // "greyed out until you've commented on each option" (§10a of BRIEF_26L had this as "sorted",
+  // pending confirmation; decision 103 settles it as feedback/disposition, either satisfies).
+  const feedbackGiven = new Set(feedbackByPolicyRows.map((f) => f.policyOptionId).filter((x): x is string => !!x))
+  const stillWaiting = dispositionable.filter(
+    (r) => effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }) === 'UNDISPOSITIONED'
+      && !feedbackGiven.has(r.id),
   )
   const partOfSolution = dispositionable.filter(
     (r) => effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }) === 'PART_OF_SOLUTION',
@@ -341,8 +356,11 @@ export async function readPolicyState(ideaId: string) {
     consolidate: {
       candidateCount: partOfSolution.length,
       feedbackCount,
-      enabled: dispositionable.length > 0 && undispositioned.length === 0,
-      undispositionedCount: undispositioned.length,
+      enabled: dispositionable.length > 0 && stillWaiting.length === 0,
+      undispositionedCount: stillWaiting.length,
+      // ⚠⚠ 26-L addendum, decision 103 item 1 — "The gate names what it is waiting for."
+      // A count that doesn't say which is a gap that hides itself.
+      waitingOnNumbers: stillWaiting.map((r) => r.number).filter((n): n is number => n != null).sort((a, b) => a - b),
     },
   }
 }
@@ -728,11 +746,21 @@ export async function applyPolicyOp(input: {
     }
 
     // ══ 26-I §2 — THE TWO NEW DISPOSITIONS ══════════════════════════════════════
+    //
+    // ⚠⚠ 26-L ADDENDUM, DECISION 103 ITEM 5 — THE MASKING BUG, FOUND LIVE. #5 carried
+    // `disposition: SAYS_SAME_AS, duplicateOfNumber: 2` — the write succeeded — and still
+    // read as LATER_PHASE, because `effectiveDisposition` checks `phase === 'LATER'` BEFORE
+    // disposition, and #5 also carried a stale `phase: 'LATER'` from an earlier, unrelated
+    // action. The disposition was never lost; it was masked by a fact that predated it and
+    // that the user, in choosing a disposition, had implicitly superseded. Rather than
+    // reorder `effectiveDisposition`'s priority (risking every existing assertion that
+    // depends on it), an explicit disposition now clears `phase` — the two are exclusive
+    // decisions about the same card, and the more recent, more deliberate one wins.
     case 'markPartOfSolution':
       if (row) {
         await prisma.policyOption.update({
           where: { id: row.id },
-          data: { disposition: 'PART_OF_SOLUTION', duplicateOfNumber: null },
+          data: { disposition: 'PART_OF_SOLUTION', duplicateOfNumber: null, phase: null },
         })
       }
       break
@@ -744,7 +772,7 @@ export async function applyPolicyOp(input: {
       if (row && duplicateOfNumber != null) {
         await prisma.policyOption.update({
           where: { id: row.id },
-          data: { disposition: 'SAYS_SAME_AS', duplicateOfNumber },
+          data: { disposition: 'SAYS_SAME_AS', duplicateOfNumber, phase: null },
         })
       }
       break

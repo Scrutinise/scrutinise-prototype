@@ -44,8 +44,19 @@ export interface ConsolidateContext {
   problem: string
   pivotalObstacle: string
   causes: Array<{ number: number; cause: string }>
-  /** §3 — candidates marked part of the solution. */
-  partOfSolution: Array<{ number: number; approach: string; caseFor: string | null; caseAgainst: string | null }>
+  /**
+   * §3 — candidates marked part of the solution.
+   *
+   * ⚠⚠ 26-L ADDENDUM, DECISION 103 ITEM 2 — "CONSOLIDATION READS THE FEEDBACK TEXT."
+   * `feedback` is every `PolicyFeedback` row filed against this candidate (chat, card reason
+   * box, general box scoped to it), in the user's own words. Before this, feedback was filed
+   * and stored but never read by anything — a user could write "don't lose the enforcement
+   * point from #7" against a candidate and it would never reach the models drafting from it.
+   */
+  partOfSolution: Array<{
+    number: number; approach: string; caseFor: string | null; caseAgainst: string | null
+    feedback: string[]
+  }>
   /** §3 — the user's own attempts, distinct from the candidates above: every guiding-policy
    *  candidate the USER personally wrote, whatever its current disposition, so a model does
    *  not propose back something already tried and set aside without knowing it. */
@@ -99,7 +110,8 @@ function draftSystemPrompt(): string {
 function draftUserPrompt(ctx: ConsolidateContext): string {
   const causesBlock = ctx.causes.map((c) => `[${c.number}] ${c.cause}`).join('\n') || '(none recorded)'
   const candidatesBlock = ctx.partOfSolution
-    .map((p) => `[${p.number}] ${p.approach}${p.caseFor ? `\n    For: ${p.caseFor}` : ''}${p.caseAgainst ? `\n    Against: ${p.caseAgainst}` : ''}`)
+    .map((p) => `[${p.number}] ${p.approach}${p.caseFor ? `\n    For: ${p.caseFor}` : ''}${p.caseAgainst ? `\n    Against: ${p.caseAgainst}` : ''}`
+      + (p.feedback.length ? `\n    User feedback on this candidate: ${p.feedback.join(' / ')}` : ''))
     .join('\n') || '(none marked part of the solution)'
   const attemptsBlock = ctx.userAttempts.map((a) => `[${a.number}] ${a.approach}`).join('\n') || '(none yet)'
 

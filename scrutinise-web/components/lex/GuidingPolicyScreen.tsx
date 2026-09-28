@@ -75,7 +75,11 @@ interface State {
   nearDuplicates: Array<{ a: number; b: number }>
   excludedCauseNumbers: number[]
   // 26-I addendum A5
-  consolidate: { candidateCount: number; feedbackCount: number; enabled: boolean; undispositionedCount: number }
+  consolidate: {
+    candidateCount: number; feedbackCount: number; enabled: boolean; undispositionedCount: number
+    // 26-L addendum, decision 103 item 1 — the gate names what it is waiting for.
+    waitingOnNumbers: number[]
+  }
 }
 
 /** 26-I §4 — the judge's verdict on one draft. */
@@ -372,9 +376,19 @@ function ConsolidatePanel({
           <p className="text-[11px] text-zinc-500 mt-0.5">
             Reads {consolidateInfo.candidateCount} candidate{consolidateInfo.candidateCount === 1 ? '' : 's'} marked
             part of the solution, sorted, and {consolidateInfo.feedbackCount} item{consolidateInfo.feedbackCount === 1 ? '' : 's'} of feedback.
-            {!consolidateInfo.enabled && consolidateInfo.undispositionedCount > 0 && (
+            {/* ══ 26-L addendum, decision 103 item 1 — NAMES WHAT IT IS WAITING FOR ══════
+                A count that doesn't say which is a gap that hides itself. Each number is a
+                link that scrolls to the card (`#policy-N`, set on every card in the main
+                list and the "Not yet sorted" group). */}
+            {!consolidateInfo.enabled && consolidateInfo.waitingOnNumbers.length > 0 && (
               <span className="font-medium text-amber-800">
-                {' '}{consolidateInfo.undispositionedCount} candidate{consolidateInfo.undispositionedCount === 1 ? '' : 's'} still need{consolidateInfo.undispositionedCount === 1 ? 's' : ''} a disposition.
+                {' '}Waiting on{' '}
+                {consolidateInfo.waitingOnNumbers.map((n, i) => (
+                  <span key={n}>
+                    {i > 0 ? (i === consolidateInfo.waitingOnNumbers.length - 1 ? ' and ' : ', ') : ''}
+                    <a href={`#policy-${n}`} className="underline hover:text-amber-900">#{n}</a>
+                  </span>
+                ))}.
               </span>
             )}
           </p>
@@ -734,6 +748,8 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
   const goals = live.filter((p) => p.kind === 'GOAL_RESTATEMENT' && !unsortedIds.has(p.id))
   const rejected = s.policies.filter((p) => p.status === 'RULED_OUT')
   const later = policies.filter((p) => p.phase === 'LATER')
+  // 26-L addendum, decision 103 item 1 — which cards the gate is waiting on, marked in place.
+  const waitingOn = new Set(s.consolidate.waitingOnNumbers)
 
   return (
     <section className="rounded-2xl border border-zinc-200 mt-3" aria-label="Choosing a guiding policy">
@@ -751,14 +767,14 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
           </button>
         </div>
         {/* ══ 26-L §10a — THE INTRODUCTION, VERBATIM FROM CHARLIE'S DRAFT ═══════════════
-            ⚠ One wording change from the draft, per the brief: "greyed out until you've
-            commented on each option" → "until you have sorted every option" — the button
-            waits on a disposition, not a comment. ⚠ Charlie to confirm: the Consolidate gate
-            itself (§9c/A5 in 26-I) actually waits on every candidate carrying a DISPOSITION
-            (part of the solution / says the same as / ruled out / etc.), not narrowly on
-            `sorted`. This text is placed as the brief specifies; the gate's own logic in
-            `guiding-policy-state.ts` (`consolidate.enabled`) is unchanged pending that
-            confirmation, since the brief names only the wording, not the mechanism. */}
+            ⚠⚠ DECISION 103 SETTLES THE WORDING QUESTION §10a LEFT OPEN. BRIEF_26L §10a had
+            proposed changing Charlie's own "commented on each option" to "sorted every
+            option", flagged "Charlie to confirm" since the actual gate waits on a
+            disposition, not `sorted`. Decision 103 item 2 restores his original wording AND
+            makes it true: the gate now also accepts written feedback as engagement (see
+            `readPolicyState`'s `stillWaiting` — a disposition OR a PolicyFeedback row against
+            the candidate satisfies it), so "commented on each option" is no longer merely
+            close to the mechanism, it names it. */}
         <p className="text-xs text-zinc-600 mt-2 leading-relaxed">
           After choosing the right cause, getting the guiding policy right is the next most
           important task, and it&rsquo;s not easy. A good guiding policy brings focus and
@@ -769,9 +785,9 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
         <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
           First sort the candidate policies below with your comments (and add your own if you
           wish), then click the <span className="font-medium">Consolidate</span> button at the
-          end — greyed out until you have sorted every option. This gives you suggestions from
-          four premium AI models. You then choose the best and give feedback before the final
-          version is chosen.
+          end — greyed out until you&rsquo;ve commented on each option. This gives you
+          suggestions from four premium AI models. You then choose the best and give feedback
+          before the final version is chosen.
         </p>
       </div>
 
@@ -830,11 +846,17 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
             </button>
           </div>
           {unsorted.map((p) => (
-            <article key={p.id} className="rounded-lg border border-zinc-300 bg-zinc-50/50 p-3">
+            <article key={p.id} id={`policy-${p.number}`} className="rounded-lg border border-zinc-300 bg-zinc-50/50 p-3 scroll-mt-4">
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-bold text-zinc-900 tabular-nums">{p.number}</span>
                 <p className="text-sm text-zinc-900 flex-1">{p.approach}</p>
               </div>
+              {/* ══ 26-L addendum, decision 103 item 1 — MARKED ON THE CARD ═══════════════ */}
+              {p.number != null && waitingOn.has(p.number) && (
+                <p className="mt-1.5 text-[11px] font-semibold text-amber-800">
+                  ⚠ Consolidate is waiting on this one — mark it, or leave feedback below.
+                </p>
+              )}
               {/* ⚠⚠ §3c — THE COMPOUND FLAG, ON THE CARD, AS ADVICE. Never a verdict (§6a — the
                   verdict comes from the judge/sort, with reasoning); never blocking (the card
                   exists and is fully usable regardless of whether this fired). */}
@@ -890,13 +912,20 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
           {GROUP_HEADINGS.GUIDING_POLICY(policies.length)}
         </h4>
         {policies.map((p) => (
-          <article key={p.id} className="rounded-lg border border-zinc-200 p-3">
+          <article key={p.id} id={`policy-${p.number}`} className="rounded-lg border border-zinc-200 p-3 scroll-mt-4">
             <div className="flex items-baseline gap-2">
               {/* §1.1 — THE STABLE NUMBER, prominent, because the user types it. */}
               <span className="text-sm font-bold text-zinc-900 tabular-nums">{p.number}</span>
               <p className="text-sm text-zinc-900 flex-1">{p.approach}</p>
             </div>
 
+            {/* ══ 26-L addendum, decision 103 item 1 — MARKED ON THE CARD ═══════════════════
+                §1: "each waiting card marked on the card itself." */}
+            {p.number != null && waitingOn.has(p.number) && (
+              <p className="mt-2 text-[11px] font-semibold text-amber-800">
+                ⚠ Consolidate is waiting on this one — mark it below, or leave feedback.
+              </p>
+            )}
 
             {/* ⚠⚠ §1.8 — THE CHAIN-LINK CONSEQUENCE, FLAGGED AS IMPORTANT. It is the first thing
                 cut for length unless it is marked, and a legislature takes the easy half. */}
@@ -987,11 +1016,15 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
               </p>
             )}
 
+            {/* ══ 26-L addendum, decision 103 item 3 — "MAKE THIS THE GUIDING POLICY" BECOMES
+                "PART OF THE SOLUTION" ═══════════════════════════════════════════════════════
+                It used to settle this candidate directly (`op: 'settle'`) — bypassing
+                Consolidate entirely, uncounted by its gate, and the reason #2 could become
+                CHOSEN and stay that way through a second press elsewhere. There is no separate
+                button any more: the disposition row below already has "Part of the solution",
+                doing the same job and counted by the gate. The final choice comes from
+                Consolidate and Accept, never from this row. */}
             <div className="flex flex-wrap gap-2 mt-2.5">
-              <button onClick={() => void patch({ op: 'settle', policyId: p.id })} disabled={busy}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 text-white disabled:opacity-40">
-                Make this the guiding policy
-              </button>
               <button onClick={() => void patch({ op: 'phase', policyId: p.id, phase: 'LATER', reason: reasons[p.id] })} disabled={busy}
                 className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
                 Later phase

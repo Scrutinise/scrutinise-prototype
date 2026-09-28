@@ -43,8 +43,9 @@ export async function POST(_req: Request, { params }: Params) {
   // because a disabled button is a UI courtesy, not a guarantee.
   const policyState = await readPolicyState(id)
   if (!policyState.consolidate.enabled) {
+    // 26-L addendum, decision 103 item 1 — names the numbers, not only the count.
     return NextResponse.json(
-      { error: `${policyState.consolidate.undispositionedCount} candidate(s) still have no disposition — Consolidate needs every candidate sorted first.` },
+      { error: `Waiting on #${policyState.consolidate.waitingOnNumbers.join(', #')} — mark each part of the solution, ruled out, later phase, a duplicate, or leave feedback on it.` },
       { status: 409 },
     )
   }
@@ -68,11 +69,30 @@ export async function POST(_req: Request, { params }: Params) {
 
   const allPolicies = await prisma.policyOption.findMany({
     where: { ideaId: id },
-    select: { number: true, approach: true, caseFor: true, caseAgainst: true, source: true, disposition: true },
+    select: { id: true, number: true, approach: true, caseFor: true, caseAgainst: true, source: true, disposition: true },
   })
-  const partOfSolution = allPolicies
-    .filter((p) => p.disposition === 'PART_OF_SOLUTION' && p.number != null)
-    .map((p) => ({ number: p.number!, approach: p.approach, caseFor: p.caseFor, caseAgainst: p.caseAgainst }))
+  // ⚠⚠ 26-L addendum, decision 103 item 2 — "Consolidation reads the feedback text." Fetched
+  // once for every part-of-solution candidate, keyed by policyOptionId, rather than N queries.
+  const partOfSolutionRows = allPolicies.filter((p) => p.disposition === 'PART_OF_SOLUTION' && p.number != null)
+  const feedbackRows = partOfSolutionRows.length
+    ? await prisma.policyFeedback.findMany({
+        where: { ideaId: id, policyOptionId: { in: partOfSolutionRows.map((p) => p.id) } },
+        select: { policyOptionId: true, text: true },
+        orderBy: { createdAt: 'asc' },
+      })
+    : []
+  const feedbackByPolicyId = new Map<string, string[]>()
+  for (const f of feedbackRows) {
+    if (!f.policyOptionId) continue
+    const arr = feedbackByPolicyId.get(f.policyOptionId) ?? []
+    arr.push(f.text)
+    feedbackByPolicyId.set(f.policyOptionId, arr)
+  }
+  const partOfSolution = partOfSolutionRows
+    .map((p) => ({
+      number: p.number!, approach: p.approach, caseFor: p.caseFor, caseAgainst: p.caseAgainst,
+      feedback: feedbackByPolicyId.get(p.id) ?? [],
+    }))
   // §3 — "the user's own attempts", distinct from the part-of-solution set: every
   // guiding-policy candidate the user personally typed in, whatever happened to it since.
   const userAttempts = allPolicies
