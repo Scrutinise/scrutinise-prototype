@@ -2827,6 +2827,13 @@ model PolicyOption {
   /// (not a foreign key, on purpose — see `mergedFrom` above for the precedent:
   /// a number survives being typed, an id does not).
   duplicateOfNumber Int?
+  /// 26-L §9 — THE SORT'S OWN near-duplicate judgement, persisted. Distinct from
+  /// `duplicateOfNumber` above (singular, the USER's own "says roughly the same
+  /// as" disposition): `sortPolicies` already computes this per candidate
+  /// (`SortedPolicy.duplicateOfNumbers`) and `writeSort` discarded it — measured,
+  /// 26-L §9. "How these relate" now leads with these pairs rather than deriving
+  /// a weaker signal from shared causes.
+  duplicateOfNumbers Int[]             @default([])
   /// 26-I §5c/addendum B4 — which model actually drafted this candidate, when
   /// `source` is LEX. Null for a user-added candidate and for anything predating
   /// 26-I. This is the provenance B4's measurement depends on.
