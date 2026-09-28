@@ -1,5 +1,49 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-28 21:33 UTC — LEX 26-L addendum 2 follow-up — all four drafts, Anthropic diagnosed
+
+No code changed this entry — Charlie added `OPENAI_API_KEY` to `.env` (and Vercel) after
+reorganising the file, which is what item 1's earlier report was missing; this is the
+diagnosis of the Anthropic failure and the result of retrying both once the key existed.
+
+**Anthropic, diagnosed with the raw bytes, not guessed at.** A probe straight at
+`api.anthropic.com` (bypassing `model-call.ts` entirely, so nothing app-side could swallow
+the real error) returned:
+
+```
+TypeError: fetch failed
+cause: Error: self-signed certificate in certificate chain
+code: 'SELF_SIGNED_CERT_IN_CHAIN'
+```
+
+— a TLS interception signature, not a key problem: `ANTHROPIC_API_KEY` was present and
+correctly formatted throughout. In the same probe, `api.openai.com` and a generic
+`https://example.com` both connected cleanly, so it was not a wholesale network block from
+this environment. ⚠ **It then did not recur.** A retry through the app's own
+`runFourDrafts`/`callAnthropic` path minutes later connected without error and returned a
+real draft. Reported as what it is — a genuine, evidenced TLS failure on one connection
+attempt that did not repeat — rather than a firm cause for the blip itself, which was not
+established. The earlier report's language ("sandbox restriction") overstated this: the
+retry is the evidence that it was not a standing block on Anthropic's domain from here.
+
+**The retry (`op: 'retryFailed'`, built in the addendum 2 commit) added the other two
+models to the SAME consolidation** rather than starting a fresh one — `gpt-6-luna` (0.05p)
+and `claude-opus-5` (3.31p) both joined `gemini-2.5-pro` (1.71p) and `grok-4.7` (unpriced —
+xAI's own usage-reporting gap, unrelated to this fix) already on record. All four judged:
+`answersObstacle` true for every one; `gemini-2.5-pro` and `claude-opus-5` were both flagged
+compound by the mechanical check (the "flagged for review, not a verdict" wording from §7
+applies to both), `grok-4.7` and `gpt-6-luna` were not. **Total cost for the complete run:
+£0.08.** Sitting in the Consolidate panel on Charlie's idea (452c5ade), consolidation
+`6c489066-de5b-4da8-a840-e936c085004f`, ready for him to choose a favourite and write the
+final version.
+
+**Item 1 is now fully closed, live-verified, on all four vendors** — the previous entry's
+"could not be verified from this environment" for Claude and GPT no longer holds; both have
+now produced a real draft through the actual code path this feature runs in production.
+
+⚠ Nothing to commit in code — this is documentation only, added so the record is complete
+before the session restarts.
+
 ## 2026-09-28 14:10 UTC — LEX 26-L addendum 2 — model fixes, two buttons, Consolidate run for real
 
 Seven items, Charlie's own decisions, 28 September. Live-verified where the run could reach

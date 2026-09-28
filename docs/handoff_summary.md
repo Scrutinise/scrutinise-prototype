@@ -917,7 +917,22 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 ## LEX THREAD
 
 
-*Last updated: 2026-09-28 14:10 UTC (LEX 26-L addendum 2 — model fixes, two buttons,
+*Last updated: 2026-09-28 21:33 UTC (LEX 26-L addendum 2 follow-up — all four drafts, no code
+change)* — ▼▼ **ALL FOUR MODELS NOW PRODUCE A DRAFT, LIVE, ON CHARLIE'S OWN IDEA.** Full
+detail in `docs/CHANGE_LOG.md`'s 21:33 entry. Charlie added `OPENAI_API_KEY` (`.env` + Vercel)
+after reorganising the file. ⚠⚠ **Anthropic's earlier failure diagnosed with a raw probe,
+not guessed at**: `SELF_SIGNED_CERT_IN_CHAIN` on one connection attempt to
+`api.anthropic.com` specifically (OpenAI and a generic host connected cleanly in the same
+probe) — a real TLS interception, but **it did not recur**: a retry through the app's own
+code path minutes later connected cleanly and returned a draft. The previous entry's
+"sandbox restriction" language overstated this — the retry is the evidence it was not a
+standing block. Retried both failed models via the addendum 2 `retryFailed` mechanism
+(built, not yet exercised, in the previous entry) into the SAME consolidation rather than
+starting fresh: `gpt-6-luna` and `claude-opus-5` both joined `gemini-2.5-pro`/`grok-4.7`
+already on record. **Total cost for the complete four-draft run: £0.08.** Item 1 (BRIEF_26L
+addendum 2) is now fully closed and live-verified on every vendor.
+⚠ No code changed this entry — documentation only.
+Earlier: 2026-09-28 14:10 UTC (LEX 26-L addendum 2 — model fixes, two buttons,
 Consolidate run for real)* — ▼▼ **CONSOLIDATE ACTUALLY RAN, FOR THE FIRST TIME EVER, ON
 CHARLIE'S OWN IDEA.** Full detail in `docs/CHANGE_LOG.md`'s 14:10 entry. §1's three model
 fixes shipped (Claude's `maxOutputTokens` 1024→4096, the shared timeout 60s→120s, `gpt-6-luna`
