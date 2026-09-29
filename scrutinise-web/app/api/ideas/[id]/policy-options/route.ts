@@ -7,6 +7,7 @@ import {
   updatePolicyOption,
   removePolicyOption,
   choosePolicyApproach,
+  unchoosePolicyApproach,
   listPolicyOptions,
   acceptField,
   skipField,
@@ -44,6 +45,7 @@ const BodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('skip') }),
   z.object({ action: z.literal('choose'), optionId: z.string().min(1) }), // commit to one approach
   z.object({ action: z.literal('skipChoose') }),
+  z.object({ action: z.literal('unchoose') }), // 26-L addendum 3 §3 — "Un-choose, and change it"
 ])
 
 export async function POST(req: Request, { params }: Params) {
@@ -105,6 +107,9 @@ export async function POST(req: Request, { params }: Params) {
         messages = (await orchestrateAfterWrite(id, idea.creatorId)).messages
         break
       }
+      case 'unchoose':
+        await unchoosePolicyApproach(id)
+        break
       case 'skipChoose':
         await skipField(id, 'chosenApproach')
         messages = (await orchestrateAfterWrite(id, idea.creatorId)).messages

@@ -79,6 +79,13 @@ const DEFAULT_RATES: Record<string, ModelRate> = {
   'grok-4.20-0309-non-reasoning': { inPerM: 1.25, outPerM: 2.50 },
   'grok-4.20-multi-agent-0309': { inPerM: 1.25, outPerM: 2.50 },
   'grok-build-0.1': { inPerM: 1.00, outPerM: 2.00 },
+  // 26-L addendum 3 §5 — `grok-4.7` WAS MISSING, so every Consolidate read "cost unknown" and
+  // (worse) every consolidation total silently excluded it. Source: https://docs.x.ai/docs/models,
+  // read 2026-09-29: $2.00 in / $6.00 out below a 200k-token prompt, $4.00/$12.00 at or above it,
+  // the higher band applying to ALL tokens of that request. Consolidate prompts are ~2.5k tokens,
+  // so the LOW band is the right one here; same known-direction caveat as the rows above.
+  // Not verified against an invoice. (Cached-input $0.50/M is not modelled — no caching is used.)
+  'grok-4.7': { inPerM: 2.00, outPerM: 6.00 },
 
   // ── OpenAI ─────────────────────────────────────────────────────────────────────────────────
   // S25 — Source: https://developers.openai.com/api/docs/pricing. Checked 2026-09-25.

@@ -518,6 +518,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     skip: () => post('/policy-options', { action: 'skip' }),
     choose: (optionId) => post('/policy-options', { action: 'choose', optionId }),
     skipChoose: () => post('/policy-options', { action: 'skipChoose' }),
+    unchoose: () => post('/policy-options', { action: 'unchoose' }),
   }
 
   // Page 4 actions loop + costing handlers (→ /actions).

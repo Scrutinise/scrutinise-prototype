@@ -26,6 +26,8 @@ const PatchSchema = z.discriminatedUnion('op', [
     // §5b — what worked and did not, across all four. Feedback, never a splice request.
     feedback: z.string().trim().max(4000).optional(),
   }),
+  // 26-L addendum 3 §4 — the "what worked across all four" box saves on its own, favourite or not.
+  z.object({ op: z.literal('saveFeedback'), feedback: z.string().trim().max(4000) }),
   // 26-L addendum 2 §1 — "Retry reruns only the models that failed."
   z.object({ op: z.literal('retryFailed'), models: z.array(z.string().min(1)).min(1).max(4) }),
   z.object({ op: z.literal('redraft') }),
@@ -67,13 +69,22 @@ export async function PATCH(req: Request, { params }: Params) {
   if (!parsed.success) return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 422 })
   const body = parsed.data
 
+  if (body.op === 'saveFeedback') {
+    const updated = await prisma.guidingPolicyConsolidation.update({
+      where: { id: consolidation.id },
+      data: { userFeedback: body.feedback || null },
+      include: { drafts: { orderBy: { createdAt: 'asc' } } },
+    })
+    return NextResponse.json({ consolidation: updated })
+  }
+
   if (body.op === 'favourite') {
     const draft = consolidation.drafts.find((d) => d.model === body.model)
     if (!draft) return NextResponse.json({ error: `No draft from ${body.model} on this consolidation.` }, { status: 422 })
     // §5c — recorded on every run, for ever: "the cheapest experiment the platform will run."
     const updated = await prisma.guidingPolicyConsolidation.update({
       where: { id: consolidation.id },
-      data: { favouriteModel: body.model, userFeedback: body.feedback ?? null, status: 'FAVOURITE_CHOSEN' },
+      data: { favouriteModel: body.model, userFeedback: body.feedback ?? consolidation.userFeedback, status: 'FAVOURITE_CHOSEN' },
       include: { drafts: { orderBy: { createdAt: 'asc' } } },
     })
     return NextResponse.json({ consolidation: updated })
@@ -140,7 +151,9 @@ export async function PATCH(req: Request, { params }: Params) {
       where: { id: consolidation.id },
       // A consolidation with at least one draft, before or after this retry, is judgeable
       // material — DRAFTING only where literally nothing has ever succeeded.
-      data: { status: totalDrafts > 0 ? 'JUDGED' : 'DRAFTING', costPence },
+      // ⚠ 26-L addendum 3 §1 — a retry must not demote a consolidation that already has a favourite
+      // back to JUDGED: the panel keyed "Write the final version" on FAVOURITE_CHOSEN, so it vanished.
+      data: { status: consolidation.favouriteModel ? consolidation.status : totalDrafts > 0 ? 'JUDGED' : 'DRAFTING', costPence },
       include: { drafts: { orderBy: { createdAt: 'asc' } } },
     })
     return NextResponse.json({

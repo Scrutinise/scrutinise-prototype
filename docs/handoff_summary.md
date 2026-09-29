@@ -916,6 +916,20 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-09-29 06:55 UTC (LEX 26-L addendum 3 — Charlie's live test, six items)* —
+▼▼ **THE COST COLUMNS WERE INTEGER PENCE: EVERY CONSOLIDATION WAS UNDERCOUNTED.** Full detail in
+`docs/CHANGE_LOG.md`'s 06:55 entry. ⚠ Charlie's "two models missing from the price table" was
+half right: `grok-4.7` was missing (now added, $2/$6), `gpt-6-luna` was priced — it read £0.00
+because `GuidingPolicyDraft/Consolidation.costPence` were `Int` (migration `lex_26l_cost_precision.sql`,
+applied to Neon, schema committed with it). **True cost of the four-draft consolidation: 10.57p
+(£0.106).** ▶ §1 "Write the final version" always visible, greyed with "Choose a favourite first"
+(and a retry no longer hides it). ▶ §2 "Start again" DID work server-side (a fresh consolidation
+exists at 21:46 UTC) — the screen gave no evidence; now progress/confirmation/error. ▶ §3 Chosen
+approach showed a candidate picker that `settle` never cleared — now only the chosen policy +
+"Un-choose, and change it". ▶ §4 feedback box has Save + "✓ Saved". ▶ §6 compound flag prints no
+fragments. ✅ tsc, client-boundary clean; 25p 70/72, 25t 27/27 (same two pre-existing failures).
+⚠ Not browser-verified.
+Earlier:
 
 *Last updated: 2026-09-28 21:33 UTC (LEX 26-L addendum 2 follow-up — all four drafts, no code
 change)* — ▼▼ **ALL FOUR MODELS NOW PRODUCE A DRAFT, LIVE, ON CHARLIE'S OWN IDEA.** Full

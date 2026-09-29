@@ -51,6 +51,7 @@ export interface PolicyApi {
   skip: () => void
   choose: (optionId: string) => void
   skipChoose: () => void
+  unchoose: () => void
 }
 
 // Page 4 actions loop + costing handlers.
@@ -1177,48 +1178,38 @@ function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId }: {
   )
 }
 
-// The chosen-approach selector (§17 field 2) — commit to one; the rest are ruled out.
+// The chosen approach (§17 field 2).
+//
+// ⚠ 26-L addendum 3 §3 — THIS USED TO REPEAT THE WHOLE CANDIDATE LIST. Until the field was
+// ACCEPTED it rendered a "commit to one" picker: every live candidate again, as a button — the
+// same list the guiding-policy screen directly above already shows and acts on. And the screen's
+// own `settle` (what Consolidate's Accept calls) never accepts this field, so after a successful
+// Accept the picker STAYED, under a chosen policy. The choosing is done on the screen; this
+// section shows the RESULT — the one chosen policy, with the way back — and nothing else.
+// `choose` remains on the API for the chat's own use; this panel no longer offers it.
 function ChosenApproachField({ field, options, busy, api }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi }) {
-  const terminal = isTerminal(field)
   const chosen = options.find((o) => o.status === 'CHOSEN') ?? null
-  const selectable = options.filter((o) => o.status !== 'RULED_OUT')
-  // ⚠ BRIEF_26E §1 — the same lock RootCauseField had: once ACCEPTED there was no way to
-  // change the chosen approach at all. `choosePolicyApproach` (field-machine.ts) was never
-  // guarded against being called again — only the panel was hiding the picker.
-  const [changing, setChanging] = useState(false)
-  useEffect(() => { setChanging(false) }, [chosen?.id])
-  const locked = terminal && !changing
+  const text = chosen ? chosen.approach : typeof field.value === 'string' && field.value.trim() ? field.value : null
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
-      <FieldHeader
-        field={field}
-        right={locked ? (
-          <button onClick={() => setChanging(true)} disabled={busy}
-            className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">Change</button>
-        ) : undefined}
-      />
-      {locked ? (
-        <p className="text-xs ml-6 text-zinc-600">{chosen ? chosen.approach : (field.value as string) ?? 'Skipped'}</p>
-      ) : options.length === 0 ? (
-        <div>
-          <p className="text-[11px] text-zinc-400 mb-1.5">Add candidate approaches first, then commit to one.</p>
-          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipChoose())}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
+      <FieldHeader field={field} />
+      {text ? (
+        <div className="ml-6 flex items-start justify-between gap-2">
+          <p className="text-xs text-zinc-700">{text}</p>
+          <button onClick={() => api.unchoose()} disabled={busy}
+            className="text-[11px] font-medium text-zinc-500 underline hover:text-zinc-900 disabled:opacity-40 shrink-0 whitespace-nowrap">
+            Un-choose, and change it
+          </button>
         </div>
       ) : (
-        <>
-          <p className="text-[11px] text-zinc-400 mb-1.5">Commit to one — the rest are ruled out (that’s the point).</p>
-          <div className="space-y-1">
-            {selectable.map((o) => (
-              <button key={o.id} disabled={busy} onClick={() => api.choose(o.id)}
-                className="w-full text-left text-sm px-2.5 py-1.5 rounded-lg border border-zinc-200 hover:border-green-400 hover:bg-green-50/40 disabled:opacity-40">
-                {o.approach}
-              </button>
-            ))}
-          </div>
-          <button disabled={busy} onClick={() => (changing ? setChanging(false) : api.skipChoose())}
-            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">{changing ? 'Cancel' : 'Skip'}</button>
-        </>
+        <div className="ml-6">
+          <p className="text-[11px] text-zinc-500">
+            Nothing chosen yet. Mark candidates part of the solution above and press Consolidate — the
+            policy you accept is what appears here.
+          </p>
+          <button disabled={busy} onClick={() => api.skipChoose()}
+            className="mt-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+        </div>
       )}
     </div>
   )

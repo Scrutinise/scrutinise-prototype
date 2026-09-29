@@ -52,8 +52,12 @@ export function testIsCompound(statement: string): CompoundTest {
   if (substantial.length >= 2) {
     return {
       isCompound: true,
-      why: `This reads as ${substantial.length} things joined by "and": `
-        + substantial.map((s) => `"${s}"`).join(' — ') + '.',
+      // ⚠ 26-L addendum 3 §6 — NEVER PRINT THE PIECES. 26-L §6b: a sentence split on "and" is not
+      // to be presented as fragments; the split cannot tell two approaches from one approach with
+      // a compound object ("project and service"), so quoting the pieces asserts a division the
+      // check has not established. The reason is one line, and it says what was and was not found.
+      why: `The wording joins ${substantial.length} substantial clauses with "and"/";" — worth re-reading `
+        + 'to check it is one approach and not two (a check on wording only; it may be a single approach with a compound object).',
     }
   }
   return { isCompound: false, why: '' }

@@ -1,5 +1,62 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-29 06:55 UTC — LEX 26-L addendum 3 — Charlie's live test of Consolidate, six items
+
+**§1 — "Write the final version" is always there.** It rendered only when `status ===
+'FAVOURITE_CHOSEN'`; before a favourite it did not exist. Now always rendered until Accept,
+greyed out with "Choose a favourite first." Keyed on `favouriteModel`, not `status` — and that
+found a real second defect: `retryFailed` reset the status to `JUDGED`, which would have taken
+the button (and only the button) away from a consolidation that still had its favourite. Fixed
+server-side too. Labelled "…again" once a redraft exists.
+
+**§2 — "Start again" "does nothing": diagnosed against production, not guessed.** The click
+DID work: consolidation `3ab6a889` (all four drafts, judged) was written at 21:46 UTC — after
+the last retry, so it can only have been that button. The run takes ~1 minute; the only sign
+was a small label change, the new cards looked like the old, and a request that died ended
+silently in `finally`. Now: a progress line while it runs, a stated reason when greyed out
+(names the candidates it is waiting on), "✓ Four new drafts arrived at HH:MM" when it lands,
+an error if the connection drops, and the favourite/feedback state cleared with the set they
+belonged to. ⚠ The browser click itself could not be reproduced from here — the finding is
+"the server-side action ran; the screen gave no evidence".
+
+**§3 — "Chosen approach" no longer repeats the candidate list.** Cause: `ChosenApproachField`
+rendered a "commit to one" picker of every live candidate until its field was ACCEPTED — and
+the screen's `settle` (what Consolidate's Accept uses) never accepts that field, so the picker
+stayed under a chosen policy. Now it shows only the chosen policy with "Un-choose, and change
+it" (new `unchoose` action on `/policy-options`, also reopens the field), or a one-line pointer
+if nothing is chosen. The picker is gone from the panel; `choose` remains on the API.
+
+**§4 — the "what worked across all four" box saves.** New `saveFeedback` op, a Save button, a
+visible "Not saved yet" / "✓ Saved", reloaded from the server on refresh, and shown at every
+stage before Accept (it used to vanish once a favourite was chosen). `favourite` no longer nulls
+saved feedback when the box is empty.
+
+**§5 — costs. Charlie's diagnosis was half right; the true picture is worse.** `grok-4.7` WAS
+missing from the rate table (now $2.00/$6.00, docs.x.ai read 2026-09-29, low prompt band).
+`gpt-6-luna` was NOT missing ($0.10/$0.50, in the table since 25 Sep) — it read £0.00 because
+**`GuidingPolicyDraft.costPence` and `GuidingPolicyConsolidation.costPence` were `Int`**: 0.07p
+stored as 0, 1.73p as 1, 3.14p as 3, the total a sum of rounded pieces. Every consolidation has
+been undercounted, not only for Grok. Migration `prisma/lex_26l_cost_precision.sql` (both →
+DOUBLE PRECISION; whichdb confirmed Neon production first; applied before the schema commit)
++ schema. Display now shows sub-penny in pence ("0.07p"). Backfilled: the 2 unpriced Grok ledger
+rows, and the latest consolidation's own draft/total figures from its exact ledger rows.
+**True cost of consolidation `3ab6a889` (all four drafts + judge): 10.57p = £0.106** — gemini
+1.73p, claude-opus-5 3.14p, gpt-6-luna 0.07p, grok-4.7 2.88p, judge 2.75p. (Previously shown: £0.07
+stored, Grok unknown.) All four Consolidate runs on this idea so far: ≈28.7p. ⚠ Older
+consolidations' stored draft figures are still the rounded ones; their ledger rows are exact.
+⚠ Rates are list prices, not reconciled to an invoice; Grok's higher band (≥200k-token prompts)
+is not modelled — irrelevant at ~2.5k tokens.
+
+**§6 — the compound flag prints no fragments.** `testIsCompound` no longer quotes the pieces
+("…things joined by "and": "x" — "y""); its reason is one line saying what was and was not
+found. The card shows a fixed one-line reason and never reads the stored `compoundWhy` (stored
+verdicts still carry fragments). Wording is "flagged for review — wording check, not a verdict".
+
+✅ `tsc --noEmit` clean; `check:client-boundary` clean; `check:lex-25p` 70/72 and `check:lex-25t`
+27/27 (1 not checked) — the same two pre-existing unrelated failures as every 26-L entry.
+⚠ Not verified in a browser (no way to drive one from here); §2's and §1's screen behaviour is
+by construction plus the production evidence above.
+
 ## 2026-09-28 21:33 UTC — LEX 26-L addendum 2 follow-up — all four drafts, Anthropic diagnosed
 
 No code changed this entry — Charlie added `OPENAI_API_KEY` to `.env` (and Vercel) after

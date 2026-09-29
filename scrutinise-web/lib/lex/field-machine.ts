@@ -902,6 +902,18 @@ export async function choosePolicyApproach(ideaId: string, userId: string, optio
   return true
 }
 
+/**
+ * 26-L addendum 3 §3 — the Chosen approach field's own way back. Same effect as the guiding-policy
+ * screen's `unchoose` op (CHOSEN → CANDIDATE, `Idea.chosenApproach` cleared) PLUS reopening the
+ * field, which the screen's op does not touch: `removePolicyOption` already reopens it the same way.
+ * Nothing is ruled out or deleted — every candidate keeps its disposition.
+ */
+export async function unchoosePolicyApproach(ideaId: string): Promise<void> {
+  await prisma.policyOption.updateMany({ where: { ideaId, status: 'CHOSEN' as never }, data: { status: 'CANDIDATE' as never } })
+  await setStatus(ideaId, 'chosenApproach', 'EMPTY', { value: null, proposal: null })
+  await prisma.idea.update({ where: { id: ideaId }, data: { chosenApproach: null } })
+}
+
 // ── Page 4 (Coherent Actions) — LexCoherentAction records + costing (§18) ─────
 type CostRangeInput = {
   low?: number | null; high?: number | null; unit?: string | null; basis?: string | null

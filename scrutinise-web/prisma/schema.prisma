@@ -2904,8 +2904,8 @@ model GuidingPolicyConsolidation {
   acceptedPolicyOptionId  String?
   acceptedPolicyOption    PolicyOption? @relation("AcceptedPolicyOption", fields: [acceptedPolicyOptionId], references: [id], onDelete: SetNull)
   /// §3 — "report the cost per consolidation." Pence, across every model call
-  /// this run made.
-  costPence          Int?
+  /// this run made. 26-L addendum 3 §5 — Float: the Int total was a sum of rounded pieces.
+  costPence          Float?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
@@ -2929,7 +2929,8 @@ model GuidingPolicyDraft {
   /// why}, causesAttackedByJudge: number[], causesMatch: boolean }. See
   /// lib/lex/rumelt-tests.ts for the exact shape.
   judge             Json?
-  costPence         Int?
+  /// 26-L addendum 3 §5 — Float, not Int: a 0.07p draft was stored as 0.
+  costPence         Float?
   createdAt         DateTime                   @default(now())
 
   @@index([consolidationId])

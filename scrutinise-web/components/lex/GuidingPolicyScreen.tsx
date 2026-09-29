@@ -139,7 +139,10 @@ function JudgeCard({ v }: { v: JudgeVerdict | null }) {
     <div className="mt-2 pt-2 border-t border-zinc-100 space-y-1">
       <p className={`text-[11px] ${v.isCompound ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
         {v.isCompound
-          ? `⚠ Flagged for review (mechanical check, not a verdict) — ${v.compoundWhy}`
+          ? // ⚠ 26-L addendum 3 §6 — a FIXED one-line reason, never `v.compoundWhy`: verdicts stored
+            // before this fix carry the chopped fragments in that field, and printing it would
+            // show them. The judge's own verdict below is the actual finding.
+            '⚠ Flagged for review (wording check, not a verdict) — two clauses are joined by “and”; the judge’s reading below says whether it is really two approaches.'
           : 'Mechanical check: not flagged as a compound.'}
       </p>
       <p className={`text-[11px] ${v.rulesOutNothing ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
@@ -339,6 +342,11 @@ function ConsolidatePanel({
   const [error, setError] = useState<string | null>(null)
   const [failedModels, setFailedModels] = useState<Array<{ model: string; error: string }>>([])
   const [favouriteFeedback, setFavouriteFeedback] = useState('')
+  // 26-L addendum 3 §4 — what is on the server, so the box can say "saved" or "not saved yet".
+  const [savedFeedback, setSavedFeedback] = useState('')
+  const [feedbackSavedAt, setFeedbackSavedAt] = useState<number | null>(null)
+  // 26-L addendum 3 §2 — the outcome of "Start again", so a fresh set of drafts is announced.
+  const [startedAgain, setStartedAgain] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [edited, setEdited] = useState({ statement: '', rulesOut: '', likelihood: '', chainLink: '' })
 
@@ -349,21 +357,35 @@ function ConsolidatePanel({
         if (!res.ok) return
         const j = await res.json()
         const latest = (j.consolidations ?? [])[0] ?? null
-        if (latest && latest.status !== 'ACCEPTED') setConsolidation(latest)
+        if (latest && latest.status !== 'ACCEPTED') {
+          setConsolidation(latest)
+          setFavouriteFeedback(latest.userFeedback ?? '')
+          setSavedFeedback(latest.userFeedback ?? '')
+        }
       } catch { /* no resumable consolidation — starting fresh is fine */ }
     })()
   }, [ideaId])
 
   const start = useCallback(async () => {
-    setBusy(true); setError(null); setFailedModels([])
+    setBusy(true); setError(null); setFailedModels([]); setStartedAgain(null)
     try {
       const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate`, { method: 'POST' })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'Consolidate did not complete.'); return }
       setConsolidation(j.consolidation)
       setFailedModels(j.failed ?? [])
+      // A fresh consolidation starts with no favourite and no feedback — the box must not keep
+      // showing text that belongs to the set of drafts that was just replaced.
+      setFavouriteFeedback(''); setSavedFeedback(''); setFeedbackSavedAt(null); setEditing(false)
+      setStartedAgain(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+    } catch {
+      // ⚠ 26-L addendum 3 §2 — a request that dies (a dropped connection on a ~1-minute call)
+      // used to end in `finally` and nothing else: the button went back to normal and NOTHING said
+      // it had failed. Say so.
+      setError('Starting again did not finish — the connection dropped before the four drafts came back. Nothing was lost; press it again, or reload to see whether they arrived.')
     } finally { setBusy(false) }
   }, [ideaId])
+
 
   const patchConsolidation = useCallback(async (body: Record<string, unknown>) => {
     if (!consolidation) return
@@ -390,7 +412,17 @@ function ConsolidatePanel({
     void patchConsolidation({ op: 'retryFailed', models: failedModels.map((f) => f.model) })
   }, [failedModels, patchConsolidation])
 
-  const pence = (p: number | null | undefined) => p == null ? '(cost unknown)' : `£${(p / 100).toFixed(2)}`
+  /** 26-L addendum 3 §4 — saves the "what worked across all four" box on its own. */
+  const saveFeedback = useCallback(async () => {
+    const j = await patchConsolidation({ op: 'saveFeedback', feedback: favouriteFeedback })
+    if (j) { setSavedFeedback(favouriteFeedback.trim()); setFeedbackSavedAt(Date.now()) }
+  }, [favouriteFeedback, patchConsolidation])
+
+  // ⚠ 26-L addendum 3 §5 — UNDER A PENNY IS SHOWN IN PENCE. `£0.00` for a 0.07p draft told the
+  // reader it was free; it was 0.07p, and every one of these sums into a margin calculation.
+  const pence = (p: number | null | undefined) =>
+    p == null ? '(cost unknown)' : p < 1 ? `${p.toFixed(2)}p` : `£${(p / 100).toFixed(2)}`
+  const feedbackDirty = favouriteFeedback.trim() !== savedFeedback.trim()
 
   return (
     <div className="px-4 py-3 border-t border-zinc-100">
@@ -487,7 +519,13 @@ function ConsolidatePanel({
             ))}
           </div>
 
-          {(consolidation.status === 'DRAFTING' || consolidation.status === 'JUDGED') && (
+          {/* ══ 26-L addendum 3 §4 — THE FEEDBACK BOX SAVES, AND SAYS SO ═════════════════════
+              It used to be a bare textarea whose text travelled only if a favourite was then chosen
+              — so it could be typed, lost, and never known to be lost. Now: a Save button, a visible
+              confirmation on the same pattern as the cards' "✓ Saved", an honest "not saved yet"
+              while the box differs from the server, and it reloads from the server on refresh.
+              Shown at every stage before Accept, not only before a favourite is picked. */}
+          {consolidation.status !== 'ACCEPTED' && (
             <div>
               <label className="text-[11px] font-medium text-zinc-600">
                 What worked, and what did not, across all four? (optional — goes to whichever you choose as your favourite)
@@ -495,38 +533,87 @@ function ConsolidatePanel({
               <textarea
                 value={favouriteFeedback}
                 onChange={(e) => setFavouriteFeedback(e.target.value)}
-                rows={2}
+                rows={3}
                 className="w-full mt-1 text-xs rounded border border-zinc-300 p-1.5"
                 placeholder="e.g. Gemini's rules-out was the sharpest, but none of them dealt with enforcement burden."
               />
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <button
+                  onClick={() => void saveFeedback()}
+                  disabled={busy || !feedbackDirty}
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+                >
+                  Save
+                </button>
+                {feedbackDirty ? (
+                  <span className="text-[10px] font-semibold text-amber-800">Not saved yet</span>
+                ) : (feedbackSavedAt != null || savedFeedback) ? (
+                  <span className="text-[10px] font-semibold text-emerald-700">✓ Saved</span>
+                ) : null}
+              </div>
             </div>
           )}
 
-          {/* ══ 26-L addendum 2 §2 — "WRITE THE FINAL VERSION" ═══════════════════════════════
-              Enabled once a favourite is chosen (unchanged gate) — the SAME `redraft` op,
-              relabelled to say what it does for the user rather than which model does it. */}
-          {consolidation.favouriteModel && consolidation.status === 'FAVOURITE_CHOSEN' && (
-            <button
-              onClick={() => void patchConsolidation({ op: 'redraft' })}
-              disabled={busy}
-              className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white disabled:opacity-40"
-            >
-              {busy ? 'Writing…' : 'Write the final version'}
-            </button>
+          {/* ══ 26-L addendum 3 §1 — "WRITE THE FINAL VERSION" IS ALWAYS THERE ═════════════════
+              It used to render only once a favourite had been chosen: a button that does not exist
+              until you guess the step is a gate that hides itself (26-I A5 — never hidden, only
+              disabled, with the reason). Greyed out, with the reason, until a favourite is chosen.
+              Keyed on `favouriteModel`, not on `status`: a retry used to reset the status to JUDGED
+              and take the button away from a consolidation that still had its favourite. */}
+          {consolidation.status !== 'ACCEPTED' && (
+            <div>
+              <button
+                onClick={() => void patchConsolidation({ op: 'redraft' })}
+                disabled={busy || !consolidation.favouriteModel}
+                aria-describedby="write-final-reason"
+                className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white disabled:opacity-40"
+              >
+                {busy ? 'Working…' : consolidation.redraftText ? 'Write the final version again' : 'Write the final version'}
+              </button>
+              {!consolidation.favouriteModel && (
+                <p id="write-final-reason" className="text-[11px] text-zinc-600 mt-1">Choose a favourite first.</p>
+              )}
+            </div>
           )}
 
           {/* ══ §2 — "START AGAIN WITH FOUR NEW DRAFTS", SEPARATE AND LABELLED ════════════════
-              Always available once a consolidation exists — the same `start()` POST as the
-              first "Consolidate" press, discarding nothing but beginning a fresh consolidation
-              record; never to be confused with Retry (above), which touches only what failed. */}
+              The same `start()` POST as the first "Consolidate" press; never to be confused with
+              Retry (above), which touches only what failed.
+
+              ⚠ 26-L addendum 3 §2 — "DOES NOTHING WHEN CLICKED." Diagnosed against production: the
+              click DID work — a fresh consolidation with all four drafts was written at 21:46 UTC —
+              but the run takes about a minute, the only sign was a small label change, the four
+              new cards looked like the four old ones, and a failed request ended silently. So:
+              a progress line while it runs, a stated reason when it is greyed out, a confirmation
+              naming the time when it lands, and an error if the connection dies. */}
           {consolidation.status !== 'ACCEPTED' && (
-            <button
-              onClick={() => void start()}
-              disabled={busy || !consolidateInfo.enabled}
-              className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
-            >
-              {busy ? 'Working…' : 'Start again with four new drafts'}
-            </button>
+            <div>
+              <button
+                onClick={() => void start()}
+                disabled={busy || !consolidateInfo.enabled}
+                className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+              >
+                {busy ? 'Working…' : 'Start again with four new drafts'}
+              </button>
+              {busy && (
+                <p className="text-[11px] text-zinc-600 mt-1" role="status">
+                  Working — four models are drafting and one is judging. This takes about a minute; the new drafts replace the ones above when they arrive.
+                </p>
+              )}
+              {!busy && !consolidateInfo.enabled && (
+                <p className="text-[11px] text-amber-800 mt-1">
+                  Greyed out: waiting on{' '}
+                  {consolidateInfo.waitingOnNumbers.length
+                    ? consolidateInfo.waitingOnNumbers.map((n) => `#${n}`).join(', ')
+                    : 'a candidate to be sorted'}.
+                </p>
+              )}
+              {!busy && startedAgain && (
+                <p className="text-[11px] font-semibold text-emerald-700 mt-1" role="status">
+                  ✓ Four new drafts arrived at {startedAgain} — they replace the earlier set.
+                </p>
+              )}
+            </div>
           )}
 
           {consolidation.redraftText && (
