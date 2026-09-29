@@ -377,6 +377,12 @@ export interface CanonicalPolicyOption {
   status: 'CANDIDATE' | 'CHOSEN' | 'RULED_OUT'
   ruleOutReason: string | null
   source: 'USER' | 'LEX'
+  /** 26-L addendum 4 §4 — what the SUMMARY needs to show what the editor shows: the sort's
+   *  verdict (GUIDING_POLICY / COHERENT_ACTION / GOAL_RESTATEMENT), whether it has been
+   *  sorted at all, and whether a merge superseded it. Optional: older callers omit them. */
+  kind?: string
+  sorted?: boolean
+  superseded?: boolean
 }
 
 /** A §18.2 cost range-with-basis. `priceYear` (COSTING_SCOPE §3) lets the estimator

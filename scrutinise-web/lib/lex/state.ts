@@ -199,6 +199,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     select: {
       id: true, approach: true, mechanismTypes: true, targetCauseIds: true,
       caseFor: true, caseAgainst: true, status: true, ruleOutReason: true, source: true,
+      kind: true, sortedAt: true, mergedIntoId: true,
     },
   })
   const policyOptions: CanonicalPolicyOption[] = optionRows.map((o) => ({
@@ -211,6 +212,9 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     status: o.status as CanonicalPolicyOption['status'],
     ruleOutReason: o.ruleOutReason,
     source: o.source as 'USER' | 'LEX',
+    kind: o.kind,
+    sorted: !!o.sortedAt,
+    superseded: !!o.mergedIntoId,
   }))
 
   // Page 4 actions.

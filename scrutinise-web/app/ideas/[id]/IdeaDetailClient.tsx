@@ -1113,10 +1113,18 @@ function CanonicalFieldBlock({ field, canonicalState }: { field: CanonicalField;
       : <p className="text-sm text-zinc-400 italic">Not yet completed</p>
   }
   if (field.key === 'policyOptions') {
-    const live = canonicalState.policyOptions.filter((o) => o.status !== 'RULED_OUT')
+    // ⚠⚠ 26-L addendum 4 §4 — SHOW WHAT THE EDITOR SHOWS. This listed every non-ruled-out row: on
+    // Charlie's idea, twenty — seventeen already moved to Coherent Actions and one set aside as
+    // the goal restated. The editor's guiding-policy list is: live (not ruled out, not merged
+    // away), sorted as a guiding policy (or not yet sorted, which the editor shows too). Chosen
+    // policy first, whatever its kind, then the rest in the editor's own order.
+    const eligible = canonicalState.policyOptions.filter((o) =>
+      o.status !== 'RULED_OUT' && !o.superseded
+      && (o.status === 'CHOSEN' || o.kind === 'GUIDING_POLICY' || o.sorted === false))
+    const live = [...eligible.filter((o) => o.status === 'CHOSEN'), ...eligible.filter((o) => o.status !== 'CHOSEN')]
     if (!live.length) return <p className="text-sm text-zinc-400 italic">Not yet completed</p>
     return (
-      <ul className="space-y-1.5">
+      <ul className="list-disc space-y-1.5 pl-5">
         {live.map((o) => (
           <li key={o.id} className="text-sm text-zinc-800">
             {o.approach}
@@ -1200,12 +1208,15 @@ function LegacyFallbackNotice() {
  *  editor (Lex tab) — this is the landing page, not a second write path onto the same
  *  rows the editor already owns. */
 function CanonicalPageBlock({
-  page, canonicalState, canEdit, ideaId, legacyFallback,
+  page, canonicalState, canEdit, ideaId, editHref, legacyFallback,
 }: {
   page: CanonicalPage | undefined
   canonicalState: CanonicalState | null
   canEdit: boolean
   ideaId: string
+  /** 26-L addendum 4 §5 — where the page's main "Edit" button goes; "Open in Lex to edit" must go
+   *  to the same place (it used to link to `?tab=lex` on THIS page, which only reloaded it). */
+  editHref: string
   /** 26-J §1c — rendered instead of "Not yet completed" when the live page is empty AND
    *  this idea has legacy-table content (see the block comment above). */
   legacyFallback?: React.ReactNode
@@ -1224,7 +1235,7 @@ function CanonicalPageBlock({
           {done} of {total} approved
         </p>
         {canEdit && (
-          <Link href={`/ideas/${ideaId}?tab=lex`} className="text-xs text-zinc-500 hover:text-zinc-900 underline underline-offset-2">
+          <Link href={editHref} className="text-xs text-zinc-500 hover:text-zinc-900 underline underline-offset-2">
             Open in Lex to edit
           </Link>
         )}
@@ -1397,10 +1408,12 @@ function IdeaTab({
   idea,
   canEdit,
   canonicalState,
+  editHref,
 }: {
   idea: Idea
   canEdit: boolean
   canonicalState: CanonicalState | null
+  editHref: string
 }) {
   const [subTab, setSubTab] = useState<IdeaSubTab>('overview')
   const pageByKey = (key: string) => canonicalState?.pages.find((p) => p.key === key)
@@ -1539,6 +1552,7 @@ function IdeaTab({
           canonicalState={canonicalState}
           canEdit={canEdit}
           ideaId={idea.id}
+          editHref={editHref}
           legacyFallback={idea.diagnoses[0] || idea.rootCauses.length ? <LegacyDiagnosisFallback idea={idea} /> : undefined}
         />
       )}
@@ -1549,6 +1563,7 @@ function IdeaTab({
           canonicalState={canonicalState}
           canEdit={canEdit}
           ideaId={idea.id}
+          editHref={editHref}
           legacyFallback={idea.guidingPolicies[0] || idea.evidence.length ? <LegacyPolicyFallback idea={idea} /> : undefined}
         />
       )}
@@ -1559,6 +1574,7 @@ function IdeaTab({
           canonicalState={canonicalState}
           canEdit={canEdit}
           ideaId={idea.id}
+          editHref={editHref}
           legacyFallback={idea.coherentActions.length ? <LegacyActionsFallback idea={idea} /> : undefined}
         />
       )}
@@ -2777,7 +2793,7 @@ export default function IdeaDetailClient({
                   />
                 </div>
               )}
-              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} canonicalState={canonicalState} />
+              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} canonicalState={canonicalState} editHref={hasBuild ? `/ideas/create?ideaId=${idea.id}` : `/ideas/build?ideaId=${idea.id}`} />
             </>
           )}
           {activeTab === 'contributions' && (

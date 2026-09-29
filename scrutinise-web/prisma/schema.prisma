@@ -2931,6 +2931,9 @@ model GuidingPolicyDraft {
   judge             Json?
   /// 26-L addendum 3 §5 — Float, not Int: a 0.07p draft was stored as 0.
   costPence         Float?
+  /// 26-L addendum 4 §2 — the user's comments on THIS draft; read by both "Write the final
+  /// version" and "Start again" alongside the consolidation's general `userFeedback`.
+  userFeedback      String?                    @db.Text
   createdAt         DateTime                   @default(now())
 
   @@index([consolidationId])

@@ -77,6 +77,16 @@ export interface ConsolidateContext {
    *  candidate the USER personally wrote, whatever its current disposition, so a model does
    *  not propose back something already tried and set aside without knowing it. */
   userAttempts: Array<{ number: number; approach: string }>
+  /**
+   * ⚠ 26-L ADDENDUM 4 §2 — "START AGAIN" READS THE FEEDBACK TOO. Set only when a consolidation
+   * is started FROM a previous one: the user's general comment and their comment on each earlier
+   * draft (only drafts they commented on are listed). Stored with the snapshot, so the audit
+   * record shows what the four new models were told about the four before them.
+   */
+  priorRound?: {
+    generalFeedback: string | null
+    drafts: Array<{ model: string; statement: string; feedback: string }>
+  }
 }
 
 const DRAFT_SCHEMA = {
@@ -145,6 +155,14 @@ function draftUserPrompt(ctx: ConsolidateContext): string {
     "THE USER'S OWN ATTEMPTS AT A GUIDING POLICY (do not simply repeat one of these back;",
     'improve on them, or explain in the statement why a different approach is stronger):',
     attemptsBlock,
+    ...(ctx.priorRound && (ctx.priorRound.generalFeedback || ctx.priorRound.drafts.length) ? [
+      '',
+      'A PREVIOUS ROUND OF DRAFTS WAS WRITTEN AND THE USER COMMENTED ON IT. Write a NEW draft that',
+      'takes these comments into account — do not simply repeat an earlier draft. This is feedback on',
+      'direction, not an instruction to splice text together:',
+      ctx.priorRound.generalFeedback ? `GENERAL COMMENT ON THE ROUND: ${ctx.priorRound.generalFeedback}` : '',
+      ...ctx.priorRound.drafts.map((d) => `COMMENT ON THE EARLIER DRAFT BY ${d.model} ("${d.statement}"): ${d.feedback}`),
+    ].filter((l) => l !== '') : []),
   ].join('\n')
 }
 
@@ -209,6 +227,8 @@ export async function runRedraft(
     favouriteModel: string
     favouriteStatement: string
     userFeedback: string | null
+    /** 26-L addendum 4 §2 — the user's comments on individual drafts (only those with one). */
+    draftFeedback?: Array<{ model: string; statement: string; feedback: string }>
     judgeFeedback: string
   },
   spend: { ideaId: string; userId?: string | null },
@@ -226,9 +246,14 @@ export async function runRedraft(
     'YOUR OWN EARLIER DRAFT (you are redrafting this, not starting over):',
     input.favouriteStatement,
     '',
-    'WHAT THE USER SAID — what worked and did not, across all four drafts (this is feedback on',
+    'WHAT THE USER SAID — their general comment on the four drafts (this is feedback on',
     'direction, not an instruction to splice text together):',
-    input.userFeedback?.trim() || '(no feedback given)',
+    input.userFeedback?.trim() || '(no general comment given)',
+    '',
+    "WHAT THE USER SAID ABOUT INDIVIDUAL DRAFTS (each comment is about that draft only):",
+    ...((input.draftFeedback?.length)
+      ? input.draftFeedback.map((d) => `On ${d.model}'s draft ("${d.statement}"): ${d.feedback}`)
+      : ['(no comments on individual drafts)']),
     '',
     "LEX'S OWN JUDGEMENT — which Rumelt tests each of the four drafts failed, and why:",
     input.judgeFeedback,

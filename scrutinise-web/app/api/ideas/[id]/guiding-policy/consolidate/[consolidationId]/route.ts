@@ -28,6 +28,8 @@ const PatchSchema = z.discriminatedUnion('op', [
   }),
   // 26-L addendum 3 §4 — the "what worked across all four" box saves on its own, favourite or not.
   z.object({ op: z.literal('saveFeedback'), feedback: z.string().trim().max(4000) }),
+  // 26-L addendum 4 §2 — a comment on ONE draft, saved as typed.
+  z.object({ op: z.literal('saveDraftFeedback'), model: z.string().min(1), feedback: z.string().trim().max(4000) }),
   // 26-L addendum 2 §1 — "Retry reruns only the models that failed."
   z.object({ op: z.literal('retryFailed'), models: z.array(z.string().min(1)).min(1).max(4) }),
   z.object({ op: z.literal('redraft') }),
@@ -74,6 +76,16 @@ export async function PATCH(req: Request, { params }: Params) {
       where: { id: consolidation.id },
       data: { userFeedback: body.feedback || null },
       include: { drafts: { orderBy: { createdAt: 'asc' } } },
+    })
+    return NextResponse.json({ consolidation: updated })
+  }
+
+  if (body.op === 'saveDraftFeedback') {
+    const draft = consolidation.drafts.find((d) => d.model === body.model)
+    if (!draft) return NextResponse.json({ error: `No draft from ${body.model} on this consolidation.` }, { status: 422 })
+    await prisma.guidingPolicyDraft.update({ where: { id: draft.id }, data: { userFeedback: body.feedback || null } })
+    const updated = await prisma.guidingPolicyConsolidation.findUniqueOrThrow({
+      where: { id: consolidation.id }, include: { drafts: { orderBy: { createdAt: 'asc' } } },
     })
     return NextResponse.json({ consolidation: updated })
   }
@@ -184,6 +196,9 @@ export async function PATCH(req: Request, { params }: Params) {
         favouriteModel: consolidation.favouriteModel,
         favouriteStatement: favourite.statement,
         userFeedback: consolidation.userFeedback,
+        draftFeedback: consolidation.drafts
+          .filter((d) => d.userFeedback?.trim())
+          .map((d) => ({ model: d.model, statement: d.statement, feedback: d.userFeedback!.trim() })),
         judgeFeedback,
       },
       { ideaId: id, userId: user?.id ?? null },

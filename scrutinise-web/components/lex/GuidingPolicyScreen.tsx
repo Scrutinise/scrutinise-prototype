@@ -20,7 +20,7 @@
 // ratings are words in two labelled columns; the verdicts are words; the kinds are words.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MergeAnswer, Rating, Relationship } from '@/lib/lex/guiding-policy'
 import { historyLine, clusterLine, GROUP_HEADINGS } from '@/lib/lex/policy-history'
 import CollapsedSection from './CollapsedSection'
@@ -103,6 +103,7 @@ interface Draft {
   chainLink: string
   judge: JudgeVerdict | null
   costPence: number | null
+  userFeedback: string | null
 }
 
 interface Consolidation {
@@ -323,6 +324,80 @@ function EditableFields({
 }
 
 /**
+ * ══ 26-L addendum 4 §2 — A FEEDBACK BOX THAT SAVES AS YOU TYPE ═════════════════════════════
+ * "Every box saves as typed, with visible 'Saved' confirmation — no Send anywhere." Debounced
+ * (700ms after the last keystroke) and flushed on blur; the status is always one of four words
+ * so the box can never be in a state the user has to guess: Saving…, ✓ Saved, Not saved yet,
+ * or a failure that names itself. `onPending` lets the panel hold its buttons until nothing is
+ * in flight — a button must never read feedback the server has not yet got.
+ * Local text is the truth while typing; a server response never overwrites it.
+ */
+function AutosaveBox({
+  label, initial, resetKey, rows, placeholder, save, onSaved, onPending,
+}: {
+  label: string
+  initial: string
+  /** Changes when the box belongs to a different draft/consolidation — the only time `initial` is re-read. */
+  resetKey: string
+  rows: number
+  placeholder?: string
+  save: (text: string) => Promise<boolean>
+  onSaved: (text: string) => void
+  onPending: (pending: boolean) => void
+}) {
+  const [text, setText] = useState(initial)
+  const [status, setStatus] = useState<'clean' | 'dirty' | 'saving' | 'saved' | 'failed'>(initial.trim() ? 'saved' : 'clean')
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latest = useRef(text)
+  const lastSaved = useRef(initial.trim())
+
+  useEffect(() => {
+    setText(initial); latest.current = initial; lastSaved.current = initial.trim()
+    setStatus(initial.trim() ? 'saved' : 'clean'); onPending(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey])
+
+  const flush = useCallback(async () => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null }
+    const value = latest.current.trim()
+    if (value === lastSaved.current) { setStatus(value ? 'saved' : 'clean'); onPending(false); return }
+    setStatus('saving'); onPending(true)
+    const ok = await save(value)
+    if (latest.current.trim() !== value) return // typed more while saving — the newer flush owns the status
+    if (ok) { lastSaved.current = value; onSaved(value); setStatus(value ? 'saved' : 'clean') }
+    else setStatus('failed')
+    onPending(false)
+  }, [save, onSaved, onPending])
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+
+  return (
+    <div>
+      <label className="text-[11px] font-medium text-zinc-600">{label}</label>
+      <textarea
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value); latest.current = e.target.value
+          setStatus('dirty'); onPending(true)
+          if (timer.current) clearTimeout(timer.current)
+          timer.current = setTimeout(() => void flush(), 700)
+        }}
+        onBlur={() => void flush()}
+        rows={rows}
+        className="w-full mt-1 text-xs rounded border border-zinc-300 p-1.5"
+        placeholder={placeholder}
+      />
+      <p className="text-[10px] font-semibold min-h-[0.875rem]" role="status">
+        {status === 'saving' && <span className="text-zinc-500">Saving…</span>}
+        {status === 'saved' && <span className="text-emerald-700">✓ Saved</span>}
+        {status === 'dirty' && <span className="text-amber-800">Not saved yet</span>}
+        {status === 'failed' && <span className="text-red-700">Could not save — your text is still here; it will retry when you edit or leave the box.</span>}
+      </p>
+    </div>
+  )
+}
+
+/**
  * ══ 26-I §3-§7 — CONSOLIDATE ═══════════════════════════════════════════════════
  *
  * A5: the button is always visible and shows what it will read (N candidates, M feedback)
@@ -341,14 +416,28 @@ function ConsolidatePanel({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [failedModels, setFailedModels] = useState<Array<{ model: string; error: string }>>([])
-  const [favouriteFeedback, setFavouriteFeedback] = useState('')
-  // 26-L addendum 3 §4 — what is on the server, so the box can say "saved" or "not saved yet".
-  const [savedFeedback, setSavedFeedback] = useState('')
-  const [feedbackSavedAt, setFeedbackSavedAt] = useState<number | null>(null)
+  // 26-L addendum 4 §2 — what the SERVER holds, per box (general + one per draft model), kept from
+  // each box's own successful save rather than from a response, so two saves in flight cannot
+  // overwrite each other. These, not the box text, are what the two buttons say they will use.
+  const [savedGeneral, setSavedGeneral] = useState('')
+  const [savedDraft, setSavedDraft] = useState<Record<string, string>>({})
+  const [pendingBoxes, setPendingBoxes] = useState<Record<string, boolean>>({})
+  const [generalOpen, setGeneralOpen] = useState(false)
+  const setPending = useCallback((key: string, v: boolean) => {
+    setPendingBoxes((m) => (m[key] === v ? m : { ...m, [key]: v }))
+  }, [])
+  const anyPending = Object.values(pendingBoxes).some(Boolean)
   // 26-L addendum 3 §2 — the outcome of "Start again", so a fresh set of drafts is announced.
   const [startedAgain, setStartedAgain] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [edited, setEdited] = useState({ statement: '', rulesOut: '', likelihood: '', chainLink: '' })
+
+  /** Take what the server holds for a consolidation as the saved baseline for every box. */
+  const adoptSaved = useCallback((c: Consolidation) => {
+    setSavedGeneral((c.userFeedback ?? '').trim())
+    setSavedDraft(Object.fromEntries(c.drafts.map((d) => [d.model, (d.userFeedback ?? '').trim()])))
+    setGeneralOpen(!!(c.userFeedback ?? '').trim())
+  }, [])
 
   useEffect(() => {
     void (async () => {
@@ -359,24 +448,27 @@ function ConsolidatePanel({
         const latest = (j.consolidations ?? [])[0] ?? null
         if (latest && latest.status !== 'ACCEPTED') {
           setConsolidation(latest)
-          setFavouriteFeedback(latest.userFeedback ?? '')
-          setSavedFeedback(latest.userFeedback ?? '')
+          adoptSaved(latest)
         }
       } catch { /* no resumable consolidation — starting fresh is fine */ }
     })()
   }, [ideaId])
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (fromId?: string) => {
     setBusy(true); setError(null); setFailedModels([]); setStartedAgain(null)
     try {
-      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate`, { method: 'POST' })
+      // 26-L addendum 4 §2 — names the consolidation being started again FROM, so the server can
+      // hand its feedback (general + per-draft) to the four new drafters.
+      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from: fromId }),
+      })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'Consolidate did not complete.'); return }
       setConsolidation(j.consolidation)
       setFailedModels(j.failed ?? [])
-      // A fresh consolidation starts with no favourite and no feedback — the box must not keep
-      // showing text that belongs to the set of drafts that was just replaced.
-      setFavouriteFeedback(''); setSavedFeedback(''); setFeedbackSavedAt(null); setEditing(false)
+      // The new consolidation carries the general comment over (server-side); per-draft boxes
+      // start empty because these are new drafts.
+      adoptSaved(j.consolidation); setEditing(false)
       setStartedAgain(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
     } catch {
       // ⚠ 26-L addendum 3 §2 — a request that dies (a dropped connection on a ~1-minute call)
@@ -412,17 +504,36 @@ function ConsolidatePanel({
     void patchConsolidation({ op: 'retryFailed', models: failedModels.map((f) => f.model) })
   }, [failedModels, patchConsolidation])
 
-  /** 26-L addendum 3 §4 — saves the "what worked across all four" box on its own. */
-  const saveFeedback = useCallback(async () => {
-    const j = await patchConsolidation({ op: 'saveFeedback', feedback: favouriteFeedback })
-    if (j) { setSavedFeedback(favouriteFeedback.trim()); setFeedbackSavedAt(Date.now()) }
-  }, [favouriteFeedback, patchConsolidation])
+  /** Autosave for the general box and each draft's box: a plain PATCH that touches no shared
+   *  state (no `busy`, no `setConsolidation`), so typing never disables a button or is overwritten. */
+  const saveBox = useCallback(async (body: Record<string, unknown>): Promise<boolean> => {
+    if (!consolidation) return false
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/consolidate/${consolidation.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      })
+      return res.ok
+    } catch { return false }
+  }, [consolidation, ideaId])
+
+  /** What each button will read, in words — from what is SAVED, never from unsaved box text. */
+  const draftsCommented = (consolidation?.drafts ?? []).filter((d) => (savedDraft[d.model] ?? '').trim())
+  const usesLine = (action: 'write' | 'again') => {
+    const parts: string[] = []
+    if (savedGeneral) parts.push('your general feedback')
+    if (draftsCommented.length) {
+      parts.push(`your comments on ${draftsCommented.length} of the ${consolidation?.drafts.length ?? 4} drafts (${draftsCommented.map((d) => d.model).join(', ')})`)
+    }
+    const yours = parts.length ? parts.join(' and ') : 'no comments from you yet'
+    return action === 'write'
+      ? `Will use: ${yours}, and the judge's findings on all four. ${consolidation?.favouriteModel ? `${consolidation.favouriteModel} writes it.` : ''}`.trim()
+      : `Will use: ${yours} — to write four new drafts. The drafts above are replaced (your comments on them stay on record).`
+  }
 
   // ⚠ 26-L addendum 3 §5 — UNDER A PENNY IS SHOWN IN PENCE. `£0.00` for a 0.07p draft told the
   // reader it was free; it was 0.07p, and every one of these sums into a margin calculation.
   const pence = (p: number | null | undefined) =>
     p == null ? '(cost unknown)' : p < 1 ? `${p.toFixed(2)}p` : `£${(p / 100).toFixed(2)}`
-  const feedbackDirty = favouriteFeedback.trim() !== savedFeedback.trim()
 
   return (
     <div className="px-4 py-3 border-t border-zinc-100">
@@ -506,9 +617,24 @@ function ConsolidatePanel({
                   </p>
                 )}
                 <JudgeCard v={d.judge} />
+                {/* ══ 26-L addendum 4 §2 — A BOX ON EACH DRAFT, FOR COMMENTS ON THAT DRAFT ═════ */}
+                {consolidation.status !== 'ACCEPTED' && (
+                  <div className="mt-2">
+                    <AutosaveBox
+                      label={`Your comments on ${d.model}'s draft`}
+                      initial={d.userFeedback ?? ''}
+                      resetKey={d.id}
+                      rows={2}
+                      placeholder="What is right or wrong about this one?"
+                      save={(t) => saveBox({ op: 'saveDraftFeedback', model: d.model, feedback: t })}
+                      onSaved={(t) => setSavedDraft((m) => ({ ...m, [d.model]: t }))}
+                      onPending={(v) => setPending(`draft:${d.id}`, v)}
+                    />
+                  </div>
+                )}
                 {consolidation.status === 'DRAFTING' || consolidation.status === 'JUDGED' ? (
                   <button
-                    onClick={() => void patchConsolidation({ op: 'favourite', model: d.model, feedback: favouriteFeedback || undefined })}
+                    onClick={() => void patchConsolidation({ op: 'favourite', model: d.model })}
                     disabled={busy}
                     className="mt-2 text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
                   >
@@ -519,101 +645,101 @@ function ConsolidatePanel({
             ))}
           </div>
 
-          {/* ══ 26-L addendum 3 §4 — THE FEEDBACK BOX SAVES, AND SAYS SO ═════════════════════
-              It used to be a bare textarea whose text travelled only if a favourite was then chosen
-              — so it could be typed, lost, and never known to be lost. Now: a Save button, a visible
-              confirmation on the same pattern as the cards' "✓ Saved", an honest "not saved yet"
-              while the box differs from the server, and it reloads from the server on refresh.
-              Shown at every stage before Accept, not only before a favourite is picked. */}
           {consolidation.status !== 'ACCEPTED' && (
-            <div>
-              <label className="text-[11px] font-medium text-zinc-600">
-                What worked, and what did not, across all four? (optional — goes to whichever you choose as your favourite)
-              </label>
-              <textarea
-                value={favouriteFeedback}
-                onChange={(e) => setFavouriteFeedback(e.target.value)}
-                rows={3}
-                className="w-full mt-1 text-xs rounded border border-zinc-300 p-1.5"
-                placeholder="e.g. Gemini's rules-out was the sharpest, but none of them dealt with enforcement burden."
-              />
-              <div className="flex flex-wrap items-center gap-2 mt-1">
+            <>
+              {/* ══ 26-L addendum 4 §2 — ONE GENERAL BOX, EXPANDABLE, DIRECTLY ABOVE BOTH BUTTONS ═══
+                  Replaces the "across all four" box AND the screen's separate "Feedback on the
+                  guiding policy in general" box + Send. It is the consolidation's own
+                  `userFeedback`: what Charlie had typed into "across all four" is exactly this
+                  field, so it carries straight over. Saves as typed; both buttons read it. */}
+              <div className="rounded-lg border border-zinc-200 p-2.5">
                 <button
-                  onClick={() => void saveFeedback()}
-                  disabled={busy || !feedbackDirty}
-                  className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
+                  type="button"
+                  onClick={() => setGeneralOpen((o) => !o)}
+                  aria-expanded={generalOpen}
+                  className="text-[11px] font-semibold text-zinc-700 flex items-center gap-1"
                 >
-                  Save
+                  <span aria-hidden>{generalOpen ? '▾' : '▸'}</span>
+                  General feedback — what worked and what did not, across all four
+                  {!generalOpen && savedGeneral && <span className="ml-1 text-emerald-700">· ✓ Saved</span>}
                 </button>
-                {feedbackDirty ? (
-                  <span className="text-[10px] font-semibold text-amber-800">Not saved yet</span>
-                ) : (feedbackSavedAt != null || savedFeedback) ? (
-                  <span className="text-[10px] font-semibold text-emerald-700">✓ Saved</span>
-                ) : null}
+                {/* Kept mounted (hidden, not unmounted) so text and save state survive a collapse. */}
+                <div className={generalOpen ? 'mt-1.5' : 'hidden'}>
+                  <AutosaveBox
+                    label="Goes to both “Write the final version” and “Start again”"
+                    initial={consolidation.userFeedback ?? ''}
+                    resetKey={consolidation.id}
+                    rows={4}
+                    placeholder="e.g. Gemini's rules-out was the sharpest, but none of them dealt with enforcement burden."
+                    save={(t) => saveBox({ op: 'saveFeedback', feedback: t })}
+                    onSaved={(t) => setSavedGeneral(t)}
+                    onPending={(v) => setPending('general', v)}
+                  />
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* ══ 26-L addendum 3 §1 — "WRITE THE FINAL VERSION" IS ALWAYS THERE ═════════════════
-              It used to render only once a favourite had been chosen: a button that does not exist
-              until you guess the step is a gate that hides itself (26-I A5 — never hidden, only
-              disabled, with the reason). Greyed out, with the reason, until a favourite is chosen.
-              Keyed on `favouriteModel`, not on `status`: a retry used to reset the status to JUDGED
-              and take the button away from a consolidation that still had its favourite. */}
-          {consolidation.status !== 'ACCEPTED' && (
-            <div>
-              <button
-                onClick={() => void patchConsolidation({ op: 'redraft' })}
-                disabled={busy || !consolidation.favouriteModel}
-                aria-describedby="write-final-reason"
-                className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white disabled:opacity-40"
-              >
-                {busy ? 'Working…' : consolidation.redraftText ? 'Write the final version again' : 'Write the final version'}
-              </button>
-              {!consolidation.favouriteModel && (
-                <p id="write-final-reason" className="text-[11px] text-zinc-600 mt-1">Choose a favourite first.</p>
-              )}
-            </div>
-          )}
+              {/* ══ 26-L addendum 3 §1 / addendum 4 §1 — "WRITE THE FINAL VERSION" IS ALWAYS THERE ══
+                  Greyed out until a favourite is chosen, with the instruction beside it. Keyed on
+                  `favouriteModel`, not `status`. Says what it will use (addendum 4 §2). */}
+              <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                <button
+                  onClick={() => void patchConsolidation({ op: 'redraft' })}
+                  disabled={busy || anyPending || !consolidation.favouriteModel}
+                  aria-describedby="write-final-reason"
+                  className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white disabled:opacity-40 shrink-0"
+                >
+                  {busy ? 'Working…' : consolidation.redraftText ? 'Write the final version again' : 'Write the final version'}
+                </button>
+                <div className="flex-1 min-w-[14rem]" id="write-final-reason">
+                  {!consolidation.favouriteModel && (
+                    <p className="text-[11px] text-zinc-700 mt-1">
+                      Choose your favourite of the four. That model then writes the final version — one
+                      policy, drawing on all your feedback below.
+                    </p>
+                  )}
+                  <p className="text-[11px] text-zinc-600 mt-1">
+                    {anyPending ? 'Saving your feedback…' : usesLine('write')}
+                  </p>
+                </div>
+              </div>
 
-          {/* ══ §2 — "START AGAIN WITH FOUR NEW DRAFTS", SEPARATE AND LABELLED ════════════════
-              The same `start()` POST as the first "Consolidate" press; never to be confused with
-              Retry (above), which touches only what failed.
-
-              ⚠ 26-L addendum 3 §2 — "DOES NOTHING WHEN CLICKED." Diagnosed against production: the
-              click DID work — a fresh consolidation with all four drafts was written at 21:46 UTC —
-              but the run takes about a minute, the only sign was a small label change, the four
-              new cards looked like the four old ones, and a failed request ended silently. So:
-              a progress line while it runs, a stated reason when it is greyed out, a confirmation
-              naming the time when it lands, and an error if the connection dies. */}
-          {consolidation.status !== 'ACCEPTED' && (
-            <div>
-              <button
-                onClick={() => void start()}
-                disabled={busy || !consolidateInfo.enabled}
-                className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40"
-              >
-                {busy ? 'Working…' : 'Start again with four new drafts'}
-              </button>
-              {busy && (
-                <p className="text-[11px] text-zinc-600 mt-1" role="status">
-                  Working — four models are drafting and one is judging. This takes about a minute; the new drafts replace the ones above when they arrive.
-                </p>
-              )}
-              {!busy && !consolidateInfo.enabled && (
-                <p className="text-[11px] text-amber-800 mt-1">
-                  Greyed out: waiting on{' '}
-                  {consolidateInfo.waitingOnNumbers.length
-                    ? consolidateInfo.waitingOnNumbers.map((n) => `#${n}`).join(', ')
-                    : 'a candidate to be sorted'}.
-                </p>
-              )}
-              {!busy && startedAgain && (
-                <p className="text-[11px] font-semibold text-emerald-700 mt-1" role="status">
-                  ✓ Four new drafts arrived at {startedAgain} — they replace the earlier set.
-                </p>
-              )}
-            </div>
+              {/* ══ §2 — "START AGAIN WITH FOUR NEW DRAFTS", SEPARATE AND LABELLED ═════════════════
+                  ⚠ 26-L addendum 3 §2 — the click DID work (a fresh consolidation was written); the
+                  screen gave no evidence. Progress, reason-when-greyed, arrival confirmation, error.
+                  ⚠ 26-L addendum 4 §2 — reads the same feedback as the button above, and says so. */}
+              <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                <button
+                  onClick={() => void start(consolidation.id)}
+                  disabled={busy || anyPending || !consolidateInfo.enabled}
+                  className="text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40 shrink-0"
+                >
+                  {busy ? 'Working…' : 'Start again with four new drafts'}
+                </button>
+                <div className="flex-1 min-w-[14rem]">
+                  <p className="text-[11px] text-zinc-600 mt-1">
+                    {anyPending ? 'Saving your feedback…' : usesLine('again')}
+                  </p>
+                  {busy && (
+                    <p className="text-[11px] text-zinc-600 mt-1" role="status">
+                      Working — this takes about a minute; the result replaces the drafts above when it arrives.
+                    </p>
+                  )}
+                  {!busy && !consolidateInfo.enabled && (
+                    <p className="text-[11px] text-amber-800 mt-1">
+                      Greyed out: waiting on{' '}
+                      {consolidateInfo.waitingOnNumbers.length
+                        ? consolidateInfo.waitingOnNumbers.map((n) => `#${n}`).join(', ')
+                        : 'a candidate to be sorted'}.
+                    </p>
+                  )}
+                  {!busy && startedAgain && (
+                    <p className="text-[11px] font-semibold text-emerald-700 mt-1" role="status">
+                      ✓ Four new drafts arrived at {startedAgain} — they replace the earlier set.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
           )}
 
           {consolidation.redraftText && (
@@ -722,8 +848,6 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
   // 26-I §2 — "says roughly the same as" needs a target number per card.
   const [dupTarget, setDupTarget] = useState<Record<string, string>>({})
   // 26-I addendum A1 — the general feedback box.
-  const [generalFeedback, setGeneralFeedback] = useState('')
-  const [generalFeedbackSent, setGeneralFeedbackSent] = useState(false)
   // 26-L §3b — every candidate card carries the same editable fields. One editor open at a
   // time, on the same pattern as ConsolidatePanel's own edit-before-accept.
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -792,23 +916,6 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       }
     }
   }, [addText, patch])
-
-  /** 26-I addendum A1 — filed to the same feedback record every other source writes to. */
-  const submitGeneralFeedback = useCallback(async () => {
-    const text = generalFeedback.trim()
-    if (!text) return
-    setBusy(true)
-    try {
-      const res = await fetch(`/api/ideas/${ideaId}/guiding-policy/feedback`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }),
-      })
-      if (res.ok) {
-        setGeneralFeedback('')
-        setGeneralFeedbackSent(true)
-        void load()
-      }
-    } finally { setBusy(false) }
-  }, [generalFeedback, ideaId, load])
 
   /** §1.7 — "merge 4 and 8". Two numbers is the whole grammar. */
   const runInstruction = useCallback(async () => {
@@ -1314,27 +1421,10 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       {/* ══ 26-I §3-§7 — CONSOLIDATE ═══════════════════════════════════════════ */}
       <ConsolidatePanel ideaId={ideaId} consolidateInfo={s.consolidate} onSettled={load} />
 
-      {/* ══ 26-I addendum A1 — THE GENERAL FEEDBACK BOX ═════════════════════════
-          Not about one candidate — filed to the same feedback record regardless. */}
-      <div className="px-4 py-3 border-t border-zinc-100">
-        <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Feedback on the guiding policy in general
-        </label>
-        <div className="flex gap-2 mt-1.5">
-          <input
-            value={generalFeedback}
-            onChange={(e) => { setGeneralFeedback(e.target.value); setGeneralFeedbackSent(false) }}
-            onKeyDown={(e) => { if (e.key === 'Enter') void submitGeneralFeedback() }}
-            placeholder="Not about one candidate in particular…"
-            className="flex-1 text-sm rounded-lg border border-zinc-300 px-2.5 py-1.5"
-          />
-          <button onClick={() => void submitGeneralFeedback()} disabled={busy || !generalFeedback.trim()}
-            className="text-sm font-semibold px-4 py-1.5 rounded-full border border-zinc-300 text-zinc-700 disabled:opacity-40">
-            Send
-          </button>
-        </div>
-        {generalFeedbackSent && <p className="text-[11px] text-zinc-500 mt-1">✓ Filed.</p>}
-      </div>
+      {/* ══ 26-L addendum 4 §2 — THE "FEEDBACK ON THE GUIDING POLICY IN GENERAL" BOX AND ITS SEND
+          BUTTON ARE GONE from this screen. Its job is done by the one general box inside the
+          Consolidate panel above, which saves as typed and is read by both buttons. (The
+          `/guiding-policy/feedback` route and any GENERAL_BOX rows already filed are untouched.) */}
 
       {/* ══ 26-L §9 — HOW THEY RELATE, NEAR-DUPLICATES FIRST ═══════════════════════
           §9: "It declares nearly every pair 'alternatives — one of these wins' because they

@@ -916,6 +916,15 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-09-29 07:12 UTC (LEX 26-L addendum 4)* — ▼▼ **FEEDBACK REDESIGNED: A BOX PER
+DRAFT + ONE GENERAL BOX, ALL AUTOSAVING, BOTH BUTTONS READ ALL OF IT.** Detail in CHANGE_LOG's 07:12
+entry. ⚠⚠ **Charlie's "in general" box text is NOT in the database** — zero `GENERAL_BOX` rows; it
+was never Sent. His "across all four" text IS saved (consolidation `3ab6a889`) and is now the
+general box. ▶ Policy tab lists what the editor lists (chosen first, guiding policies only,
+bullets). ▶ "Open in Lex to edit" goes where Edit goes. New column `GuidingPolicyDraft.userFeedback`
+(applied to Neon). ⚠ Redraft/Start-again feedback wiring not run against a live model; not
+browser-verified.
+Earlier:
 *Last updated: 2026-09-29 06:55 UTC (LEX 26-L addendum 3 — Charlie's live test, six items)* —
 ▼▼ **THE COST COLUMNS WERE INTEGER PENCE: EVERY CONSOLIDATION WAS UNDERCOUNTED.** Full detail in
 `docs/CHANGE_LOG.md`'s 06:55 entry. ⚠ Charlie's "two models missing from the price table" was

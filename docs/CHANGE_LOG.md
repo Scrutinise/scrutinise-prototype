@@ -1,5 +1,48 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-29 07:12 UTC — LEX 26-L addendum 4 — feedback redesign, Policy tab, "Open in Lex to edit"
+
+**§1 — the instruction beside the greyed button:** "Choose your favourite of the four. That model
+then writes the final version — one policy, drawing on all your feedback below." (Charlie's
+alternative wording is a one-line swap in `GuidingPolicyScreen.tsx`.)
+
+**§2 — feedback redesigned.** A box on each draft (new `GuidingPolicyDraft.userFeedback`,
+migration `lex_26l_draft_feedback.sql`, applied to Neon after `whichdb`, committed with the
+schema). ONE general box, expandable, directly above both buttons — it IS the consolidation's
+`userFeedback`, so the old "across all four" text is already in it. The screen's separate
+"Feedback on the guiding policy in general" box and its Send are removed (route and any filed
+rows untouched). Every box autosaves (700 ms debounce + on blur) with Saving… / ✓ Saved / Not
+saved yet / a failure that names itself; no Send anywhere. Both buttons are held while anything is
+unsaved ("Saving your feedback…") so a button can never read feedback the server has not got.
+**Both buttons read all of it, and each says what it will use**, from what is SAVED:
+"Write the final version" → general + per-draft comments + judge findings (`runRedraft` now takes
+`draftFeedback`); "Start again" → POST now carries `from` (the consolidation being replaced), the
+server hands its general + per-draft comments to the four new drafters (`ConsolidateContext.priorRound`,
+kept in the audit snapshot) and copies the general comment into the new consolidation's box.
+⚠ Not exercised with a live model call (a real redraft costs money and would write to Charlie's
+consolidation) — the wiring is type-checked and the prompts read by eye, not run.
+
+**§3 — where Charlie's feedback sits (read off production, 29 Sep):** consolidation `3ab6a889`
+(the current one) holds the "across all four" text in `userFeedback` ("State the principle, not
+the mechanism…") — SAVED, survives, and is now the general box and reaches the final version.
+Older consolidations `6c489066`/`32120272`: none. **`PolicyFeedback` holds NO `GENERAL_BOX` row at
+all** — whatever was typed into the "in general" box was never Sent, so it is not in the database
+(only in that page's browser input, if still open). Three unattached `LEX_CHAT` rows (27 Sep) exist;
+they are chat messages, not consolidation feedback, and were left alone.
+
+**§4 — Policy tab.** Listed every non-ruled-out row (20 on Charlie's idea). Now the editor's own
+list: live (not ruled out, not merged away), sorted as a guiding policy or not yet sorted; chosen
+policy first; as bullets. Needed `kind`/`sorted`/`superseded` on the canonical option (optional
+fields; `state.ts`, `page1-config.ts`).
+
+**§5 — "Open in Lex to edit"** linked to `?tab=lex` on the same page (a reload). It now uses the
+same destination as the main Edit button (`/ideas/create?ideaId=` or `/ideas/build?ideaId=`).
+⚠ The main Edit button is owner-and-Stage-1/2 only; this link shows for owners and collaborators
+as before and now goes to the editor for both.
+
+✅ `tsc --noEmit`, `check:client-boundary` clean; `check:lex-25p` 70/72, `check:lex-25t` 27/27 (same
+two pre-existing failures). ⚠ Not browser-verified.
+
 ## 2026-09-29 06:55 UTC — LEX 26-L addendum 3 — Charlie's live test of Consolidate, six items
 
 **§1 — "Write the final version" is always there.** It rendered only when `status ===

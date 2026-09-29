@@ -33,7 +33,7 @@ export async function GET(_req: Request, { params }: Params) {
   return NextResponse.json({ consolidations })
 }
 
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
@@ -66,6 +66,22 @@ export async function POST(_req: Request, { params }: Params) {
       { status: 409 },
     )
   }
+
+  // ⚠ 26-L addendum 4 §2 — "START AGAIN" READS THE FEEDBACK. When the client names the
+  // consolidation it is starting again from, its general comment and per-draft comments go to the
+  // four new drafters, and the general comment carries over into the new consolidation's own box.
+  const fromId = ((await req.json().catch(() => ({}))) as { from?: unknown })?.from
+  const previous = typeof fromId === 'string'
+    ? await prisma.guidingPolicyConsolidation.findFirst({
+        where: { id: fromId, ideaId: id }, include: { drafts: { orderBy: { createdAt: 'asc' } } },
+      })
+    : null
+  const priorRound = previous ? {
+    generalFeedback: previous.userFeedback?.trim() || null,
+    drafts: previous.drafts
+      .filter((d) => d.userFeedback?.trim())
+      .map((d) => ({ model: d.model, statement: d.statement, feedback: d.userFeedback!.trim() })),
+  } : undefined
 
   const allPolicies = await prisma.policyOption.findMany({
     where: { ideaId: id },
@@ -105,6 +121,7 @@ export async function POST(_req: Request, { params }: Params) {
     causes: policyState.causes.map((c) => ({ number: c.number, cause: c.cause })),
     partOfSolution,
     userAttempts,
+    ...(priorRound ? { priorRound } : {}),
   }
 
   const draftResults = await runFourDrafts(context, { ideaId: id, userId: user?.id ?? null })
@@ -127,6 +144,7 @@ export async function POST(_req: Request, { params }: Params) {
     data: {
       ideaId: id,
       status: 'DRAFTING',
+      userFeedback: priorRound?.generalFeedback ?? null,
       candidateSnapshot: context as never,
       drafts: {
         create: succeeded.map((d) => ({
