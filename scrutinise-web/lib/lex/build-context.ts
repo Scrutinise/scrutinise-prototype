@@ -30,6 +30,9 @@ import { AsyncLocalStorage } from 'async_hooks'
 export interface BuildContext {
   userId: string | null
   ideaId: string | null
+  /** COST DASHBOARD — the build (IdeaBuild.id) and the step (pass key) being run. */
+  buildId?: string | null
+  step?: string | null
 }
 
 const storage = new AsyncLocalStorage<BuildContext>()
@@ -45,8 +48,39 @@ export function enterBuildContext(ctx: BuildContext): void {
   storage.enterWith(ctx)
 }
 
+/**
+ * Run `fn` with `ctx` as the ambient attribution, and RESTORE the previous one afterwards.
+ * ⚠ Use this, not `enterBuildContext`, wherever a long-lived process calls the same function again and
+ * again (the build worker's loop): `enterWith` set at the top of a function leaks to the CALLER, so build
+ * 1's attribution would still be ambient for whatever the worker spends next. `run` cannot leak.
+ */
+export function runWithSpendContext<T>(ctx: BuildContext, fn: () => Promise<T>): Promise<T> {
+  return storage.run(ctx, fn)
+}
+
 /** Read the ambient attribution, or null when nothing set it (most call chains — this is
  *  a fallback source, not something every caller is expected to populate). */
 export function currentBuildContext(): BuildContext | null {
   return storage.getStore() ?? null
+}
+
+/**
+ * COST DASHBOARD — attribute everything the REST OF THIS REQUEST spends to the signed-in user and the
+ * idea. One line, right after the route's own auth check:
+ *
+ *     if (authz.error) return authz.error
+ *     enterSpendFor(authz.user, authz.idea)
+ *
+ * ⚠ IT MUST BE CALLED IN THE HANDLER'S OWN BODY, NOT INSIDE `authorizeIdea`. `enterWith` scopes to the
+ * async resource that calls it; `authorizeIdea` does its own `await` before it knows the user, so a call
+ * from in there would set the store on a resource the handler's continuation never runs in. (That is
+ * also why `runNextPass` calls `enterBuildContext` as its FIRST statement.)
+ */
+export function enterSpendFor(
+  user: { id: string } | null | undefined,
+  idea: { id: string } | null | undefined,
+  extra?: { buildId?: string | null; step?: string | null },
+): void {
+  if (!user && !idea) return
+  storage.enterWith({ userId: user?.id ?? null, ideaId: idea?.id ?? null, buildId: extra?.buildId ?? null, step: extra?.step ?? null })
 }

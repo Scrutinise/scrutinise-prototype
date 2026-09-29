@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { deepeningState, acceptedEvidenceFor } from '@/lib/lex/deepening'
 import { settleAbandonedRuns } from '@/lib/lex/deepening-settle'
 
@@ -15,6 +16,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   // A serverless function that is killed mid-gather leaves the row at RUNNING with nobody
   // coming back to finish it. Settling it HERE — on the read, and by WRITING the status,

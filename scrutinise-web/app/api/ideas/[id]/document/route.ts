@@ -16,6 +16,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import {
   readProposalExportStatus,
   generateProposalExport,
@@ -50,6 +51,7 @@ export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   // ⚠ 25-N §5d — `?quick=1` SKIPS THE SNAPSHOT, which is the whole cost of this route. See the
   // note on `readProposalExportStatus`: the panel painted nothing for ~5 seconds while a
@@ -78,6 +80,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user } = authz
 
   if (!checkRateLimit(`proposal-export:${user.id}`, 20, 60 * 60 * 1000)) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { fieldDef, CHILD_ENTITY_FIELDS } from '@/lib/lex/page1-config'
 import { validateFieldValue } from '@/lib/lex/proposal-schema'
@@ -43,6 +44,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { idea } = authz
 
   let body: unknown

@@ -24,6 +24,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -93,6 +94,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   await seedOriginalIdea(id, authz.user.id, authz.idea.creatorId)
   return NextResponse.json(await listNotes(id, authz.user.id))
 }
@@ -109,6 +111,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   let body: unknown = {}
   try { body = await req.json() } catch { /* an empty body is a valid blank note */ }
   const parsed = CreateSchema.safeParse(body ?? {})
@@ -153,6 +156,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   let body: unknown = {}
   try { body = await req.json() } catch { /* falls to the 422 */ }
   const parsed = PatchSchema.safeParse(body ?? {})
@@ -188,6 +192,7 @@ export async function DELETE(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const noteId = new URL(req.url).searchParams.get('noteId')
   if (!noteId) return NextResponse.json({ error: 'Which note?' }, { status: 422 })
 

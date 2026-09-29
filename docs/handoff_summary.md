@@ -916,6 +916,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-09-29 08:20 UTC (LEX cost dashboard)* — ▼▼ **ATTRIBUTION FIXED AT THE CALL POINT; DASHBOARD BUILT;
+FORWARD COVERAGE UNPROVEN.** Detail in CHANGE_LOG's 08:20 entry. ▶ Ledger rows now carry idea, user, build, step,
+attrSource (migration `lex_26m`, applied). Ambient context entered in all 37 `authorizeIdea` routes + `runNextPass`
+(scoped with `run`). ▶ ⚠⚠ **The two legacy `/api/ai/*` routes were UNMETERED** — now recorded (anonymous one under a
+hashed visitor ref). ▶ xAI chat-completions reports reasoning OUTSIDE `completion_tokens`. ▶ Backfill: user
+coverage 46→1,595 rows, £0.39→£11.02 of £32.16; £21.14 is history. ▶ Admin → Spend → Cost explorer (not
+browser-verified). ▶ Reconciliation table + job; 0 of 4 providers readable; keys only where the job runs
+(`check:spend-keys`); ⚠ Charlie to confirm no admin key in Vercel. ▶ `check-spend-attribution` = NOT CHECKED until
+someone uses the product.
+Earlier:
 *Last updated: 2026-09-29 08:05 UTC (LEX cost metering — report + fix)* — ▼▼ **PER-USER BILLING IS NOT
 BUILDABLE YET: 43 of 7,873 ledger rows carry a user; no build, deepening or search row does.** Detail in
 CHANGE_LOG's 08:05 entry. ▶ Reasoning tokens counted for all four (raw probe). ▶ ⚠ **Gemini/Grok were

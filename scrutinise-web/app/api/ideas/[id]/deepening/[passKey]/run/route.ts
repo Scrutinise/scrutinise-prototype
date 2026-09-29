@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { claimPass, runPass, PassAlreadyRunning } from '@/lib/lex/deepening'
 import { settleAbandonedRuns } from '@/lib/lex/deepening-settle'
 import { isPassKey } from '@/lib/lex/deepening-config'
@@ -22,6 +23,7 @@ export async function POST(_req: Request, { params }: Params) {
   const { id, passKey } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   if (!isPassKey(passKey)) {
     return NextResponse.json({ error: `Unknown pass: ${passKey}` }, { status: 404 })

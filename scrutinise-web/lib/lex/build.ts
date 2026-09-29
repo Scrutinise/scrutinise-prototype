@@ -31,7 +31,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { forkDoubtHeading } from './reader-language'
-import { enterBuildContext } from './build-context'
+import { enterBuildContext, runWithSpendContext } from './build-context'
 // 25-M §4 — the pilot allowance. Counted over IdeaBuild, not LlmSpend; see that file.
 import { readAllowance, allowanceBlock, FULL_BUILD_THIRDS, REUSE_BUILD_THIRDS } from './allowance'
 import type { SearchResult } from './page1-config'
@@ -1344,18 +1344,27 @@ async function mergeUncertainties(buildId: string, list: RawUncertainty[]): Prom
  * Awaited by its route ON PURPOSE — returning early and letting the promise run on is
  * how work gets silently killed when the response ends.
  */
-export async function runNextPass(ideaId: string, userId: string, buildId: string): Promise<BuildView> {
+export function runNextPass(ideaId: string, userId: string, buildId: string): Promise<BuildView> {
+  // COST DASHBOARD — scoped with `run`, not left as a bare `enterWith`: the worker calls this in a loop in
+  // one process, and an `enterWith` here leaked build N's attribution into whatever ran next.
+  return runWithSpendContext({ userId, ideaId, buildId }, () => runNextPassScoped(ideaId, userId, buildId))
+}
+
+async function runNextPassScoped(ideaId: string, userId: string, buildId: string): Promise<BuildView> {
   // S22 — ATTRIBUTION. Every LlmSpend row this pass's model calls write (search.reranker,
   // search.query-router, build.draft, deepening.* — anything reached through callModelJson
   // or recordGeminiUsage/recordXaiUsage, however many layers down) now carries this build's
   // userId/ideaId, WITHOUT those layers' function signatures changing — see build-context.ts.
-  enterBuildContext({ userId, ideaId })
+  enterBuildContext({ userId, ideaId, buildId })
   const row = await prisma.ideaBuild.findUnique({ where: { id: buildId } })
   if (!row) throw new Error('Build row missing')
   if (row.status !== 'RUNNING' && row.status !== 'QUEUED') return buildViewOf(buildId)
 
   const log = readPassLog(row.passes)
   const key = nextPassKey(log)
+  // COST DASHBOARD — the STEP. Re-entered now the pass is known, so every ledger row this pass writes
+  // says which step of which build it was.
+  if (key) enterBuildContext({ userId, ideaId, buildId, step: String(key) })
 
   // Nothing left to run. Finish the build — and note that this is reached by a POLL, so
   // a build whose last pass completed in a request that then died still finishes.

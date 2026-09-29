@@ -10,6 +10,7 @@
 
 import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { pendingMaterialSince, runUpdatePass, listProposedChanges, recentNewPolicyOptions } from '@/lib/lex/update-pass'
 
 export const maxDuration = 120
@@ -20,6 +21,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const [pending, proposedChanges, newPolicyOptions] = await Promise.all([
     pendingMaterialSince(id),
@@ -33,6 +35,7 @@ export async function POST(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user } = authz
 
   const pending = await pendingMaterialSince(id)

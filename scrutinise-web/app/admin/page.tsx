@@ -1,6 +1,7 @@
 'use client'
 
 import { SpendSection } from '@/components/admin/SpendSection'
+import { CostExplorer } from '@/components/admin/CostExplorer'
 import { SIGN_IN_STATE_LABEL, type SignInState } from '@/lib/admin-users-labels'
 
 import { useState, useEffect } from 'react'
@@ -998,6 +999,7 @@ export default function AdminPage() {
               Every model call the platform makes, from every stream. Measurement only — nothing here
               caps, throttles or charges anyone.
             </p>
+            <CostExplorer />
             <SpendSection />
           </div>
         )}

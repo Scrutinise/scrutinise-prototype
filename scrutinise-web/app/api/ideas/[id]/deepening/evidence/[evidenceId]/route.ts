@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { setEvidenceStatus } from '@/lib/lex/deepening'
 
 type Params = { params: Promise<{ id: string; evidenceId: string }> }
@@ -23,6 +24,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id, evidenceId } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   let body: unknown
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }

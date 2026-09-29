@@ -1,5 +1,53 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-29 08:20 UTC — LEX cost dashboard — attribution at the call point, explorer, reconciliation store
+
+**1. Attribution, at the point each call is made.** Migration `lex_26m_spend_attribution.sql` (applied to Neon
+after `whichdb`, committed with the schema): `LlmSpend.buildId`, `.step`, `.attrSource` (HOW it was learned:
+explicit / ambient / owner-of-idea / inferred-idea / inferred-window / none) + `SpendReconciliation`.
+`recordSpend` — the one funnel every `record*` helper ends in — now reads the ambient context for user, idea,
+BUILD and STEP, and where an idea is known but no user, derives the user as the idea's creator (cached).
+Ambient context is entered: in **all 37 `authorizeIdea` routes** (`enterSpendFor(authz.user, authz.idea)` — in
+the handler body, not in `authorizeIdea`, because `enterWith` scopes to the resource that calls it); in
+`runNextPass` with the build id and the step (pass key), now scoped with `AsyncLocalStorage.run` because the
+worker loops in one process and a bare `enterWith` leaked build N's attribution to whatever ran next; and
+explicitly in the legacy `/api/ai/[ideaId]` route. Verified: a real Gemini call through a route-shaped handler
+lands with `attrSource='owner-of-idea'`, buildId and step; concurrent chains do not leak (an ALS test — my
+first version of it DID show a leak, an artefact of starting three handlers in one tick, which is what led to
+the `run` scoping).
+**⚠⚠ FOUND: the two legacy Lex routes were UNMETERED, not merely unattributed.** `/api/ai/[ideaId]`
+(Gemini stream + Grok fallback) and `/api/ai/public` (anonymous; Gemini SDK + Grok fallback) called the models
+directly and wrote no ledger row at all. Both now record (`lex.legacy-chat`, `lex.public-chat`). The
+anonymous route has no user, so its rows carry `ref = anon:<12 hex of SHA-256(IP)>` (raw IP never stored, §7.6)
+— a visitor grouping, not an identity. New `recordChatCompletionsUsage`: **xAI's chat-completions endpoint
+reports reasoning tokens OUTSIDE `completion_tokens`** (probe: 4 completion, 280 reasoning, 504 total) — output
+is taken as total − prompt, and the vendor's `cost_in_usd_ticks` is used when present. (The Responses API and
+OpenAI fold reasoning into output; this endpoint does not.)
+**Backfill** (`scripts/backfill-spend-attribution.ts`, idempotent, every touched row marked; amounts never
+changed): 24 rows user←idea creator; 1,525 rows attributed by "exactly one build was running at that instant".
+**Coverage: rows with a user 46 → 1,595 of 7,882 (20%); money attributed to a user £0.39 → £11.02 of £32.16
+(34%); rows with a build 2 → 1,527.** £21.14 remains unattributed and is HISTORY: e.g. 26 Aug reranker £8.03 in
+one day and 25 Sep router 1,550 rows (benchmarks), build.draft before 24 Aug / concurrent windows, s24b probes.
+It cannot be improved further without guessing. **Forward coverage is UNPROVEN**: no person-caused row has been
+written since the change (`npm run check:spend-attribution` says NOT CHECKED, by design — an empty window is
+not a pass). It proves itself the first time anyone uses build/chat/deepening after deploy.
+
+**2. Dashboard** — Admin → Spend → "Cost explorer" (`CostExplorer.tsx`, `/api/admin/spend/explore`,
+`lib/lex/spend-explore.ts`). Any date range; group by provider / model / feature / idea / user / build; every
+grouping drills into the next by filtering on the clicked row. **Unattributed is a row** (⚠ glyph + amber rule,
+drillable, expandable into "what it is made of", each line labelled a person's own spend that lost attribution
+vs a benchmark/probe vs platform work), and an attribution panel states £ and % attributed to user / idea /
+build and how much is INFERRED. The unpriced rule travels (priced part + count not priced). Read-only.
+**3. Reconciliation** store `SpendReconciliation`, one row per provider per day, read by the dashboard; xAI is
+written NOT_RECONCILABLE, OpenAI/Anthropic/Google NOT_READ with the exact reason (0 of 4 reconciled today; 30
+days written). **4. Admin keys** live only where `scripts/reconcile-spend.ts` runs: it refuses to run on Vercel;
+`check:spend-keys` asserts no code under app/, lib/ or components/ names them (control fires). ⚠ It cannot see
+the Vercel environment (SAML-blocked, §19) — Charlie must confirm none is set there.
+
+✅ tsc, check:client-boundary, check:model-registry 28/28, check:spend-keys, lex-25p 70/72, lex-25t 27/27
+(same two pre-existing failures). ⚠ The dashboard UI is NOT browser-verified; its queries were run against
+production (all six groupings, the unattributed breakdown, a two-filter drill).
+
 ## 2026-09-29 08:05 UTC — LEX cost metering — report + double-recording fix + reconcile script
 
 **§20 first.** ✅ Deployment is Production and green: GitHub deployment records show `a8fe5a5`

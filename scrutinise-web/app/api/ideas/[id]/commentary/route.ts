@@ -12,6 +12,7 @@
 
 import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { commentaryIsSubstantive, type CausesCommentary } from '@/lib/lex/build-commentary'
@@ -22,6 +23,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const row = await prisma.ideaBuild.findFirst({
     where: { ideaId: id, causesCommentary: { not: Prisma.DbNull } },

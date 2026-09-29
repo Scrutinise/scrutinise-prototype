@@ -12,6 +12,7 @@
 
 import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { buildState, requestCancel } from '@/lib/lex/build'
 import { prisma } from '@/lib/prisma'
 
@@ -21,6 +22,7 @@ export async function POST(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const active = await prisma.ideaBuild.findFirst({
     where: { ideaId: id, status: { in: ['QUEUED', 'RUNNING'] } },

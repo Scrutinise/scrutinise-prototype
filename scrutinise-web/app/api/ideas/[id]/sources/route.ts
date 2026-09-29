@@ -15,6 +15,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { decideSource, readSourceDecisions, MissingExclusionReason } from '@/lib/lex/sources'
 
 type Params = { params: Promise<{ id: string }> }
@@ -23,6 +24,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   return NextResponse.json({ decisions: await readSourceDecisions(id) })
 }
 
@@ -56,6 +58,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const parsed = PatchSchema.safeParse(await req.json().catch(() => ({})))
   if (!parsed.success) {

@@ -4513,12 +4513,38 @@ model LlmSpend {
   /// S21 §3/§6 — items an X/web search tool fetched, per the provider's OWN
   /// usage block — what the per-briefing X post cap is enforced and logged against.
   postsFetched   Int?
+  /// COST DASHBOARD 29 Sep — the build (IdeaBuild.id) and the step within it this call was made for.
+  buildId        String?
+  step           String?
+  /// HOW the attribution was learned — explicit | ambient | owner-of-idea | inferred-idea |
+  /// inferred-window | NULL (unattributed). An inference must never pass for a fact.
+  attrSource     String?
   createdAt      DateTime @default(now())
 
+  @@index([buildId])
+  @@index([createdAt])
   @@index([ideaId])
   @@index([userId, createdAt])
   @@index([pass, createdAt])
   @@index([stream, createdAt])
+}
+
+/// COST DASHBOARD — daily ledger-vs-provider reconciliation, written ONLY by the reconciliation job
+/// (the one place the provider admin keys live) and read by the admin dashboard. prisma/lex_26m_spend_attribution.sql.
+model SpendReconciliation {
+  id          BigInt   @id @default(autoincrement())
+  provider    String
+  day         DateTime @db.Date
+  ledgerPence Decimal  @db.Decimal(14, 4)
+  ledgerRows  Int      @default(0)
+  providerUsd Decimal? @db.Decimal(14, 6)
+  gapPence    Decimal? @db.Decimal(14, 4)
+  /// RECONCILED | NOT_READ | NOT_RECONCILABLE
+  status      String
+  reason      String?
+  checkedAt   DateTime @default(now())
+
+  @@unique([provider, day])
 }
 
 /// S22 "Alerts" — dedupe table for the daily cost-alert job. One row per (month, threshold)

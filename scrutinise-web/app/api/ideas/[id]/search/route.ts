@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { fireSearchTrigger } from '@/lib/lex/field-machine'
 import { runStageSearch, runAdHocResearch, displayStageFor, STAGE_INTENT } from '@/lib/lex/stage-search'
@@ -24,6 +25,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user, idea } = authz
 
   // Searches are cheap for us but not free; the same ceiling as the AI routes.

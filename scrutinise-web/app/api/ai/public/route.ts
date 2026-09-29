@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createHash } from 'node:crypto'
+import { recordGeminiUsage, recordChatCompletionsUsage } from '@/lib/lex/spend-ledger'
 
 // Basic in-memory rate limiting — 20 requests per hour per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -86,6 +88,10 @@ export async function POST(req: Request) {
   if (!checkRateLimit(ip)) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
   }
+  // COST DASHBOARD — an anonymous visitor has no user, so their spend is grouped by a HASHED visitor key
+  // (SHA-256 of the IP, truncated; the raw IP is never stored — docs/CLAUDE.md §7.6). It is a reference for
+  // "how much did anonymous chat cost, and how concentrated is it", NOT an identity.
+  const visitorRef = `anon:${createHash('sha256').update(ip).digest('hex').slice(0, 12)}`
 
   let body: unknown
   try {
@@ -123,6 +129,8 @@ export async function POST(req: Request) {
       })
 
       const result = await chat.sendMessage(message)
+      // COST DASHBOARD — THIS CALL WAS UNMETERED.
+      void recordGeminiUsage({ usageMetadata: result.response.usageMetadata }, { stream: 'lex', pass: 'lex.public-chat', model: 'gemini-2.5-flash', ref: visitorRef })
       lexResponse = result.response.text()
       geminiSucceeded = true
     } catch (geminiError) {
@@ -166,6 +174,7 @@ export async function POST(req: Request) {
       }
 
       const grokData = await grokRes.json()
+      void recordChatCompletionsUsage(grokData, { stream: 'lex', pass: 'lex.public-chat', model: 'grok-4.3', ref: visitorRef })
       const content = grokData.choices?.[0]?.message?.content
       if (!content) {
         console.error('[/api/ai/public] Grok response missing choices:', JSON.stringify(grokData))

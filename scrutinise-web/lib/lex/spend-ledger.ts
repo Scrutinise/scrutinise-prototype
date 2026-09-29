@@ -90,6 +90,9 @@ export interface SpendEntry {
    * `priceEntry`.
    */
   actualUsd?: number | null
+  /** COST DASHBOARD — the build and step this call was made for. Ambient context fills them when absent. */
+  buildId?: string | null
+  step?: string | null
 }
 
 export interface PricedSpend {
@@ -128,6 +131,19 @@ export function priceEntry(
  * Record one call. Never throws into the caller's path — a ledger failure must not take
  * down the work it was measuring, and a silent one is worse than a logged one.
  */
+// Idea → creator, cached: the owner of an idea is who pays for its spend, and asking the database once per
+// idea per process is far cheaper than once per call. A creator never changes; a miss is not cached.
+const ownerCache = new Map<string, string>()
+async function ownerOfIdea(ideaId: string): Promise<string | null> {
+  const hit = ownerCache.get(ideaId)
+  if (hit) return hit
+  try {
+    const row = await prisma.idea.findUnique({ where: { id: ideaId }, select: { creatorId: true } })
+    if (row?.creatorId) { ownerCache.set(ideaId, row.creatorId); return row.creatorId }
+  } catch { /* attribution must never take down the call it is measuring */ }
+  return null
+}
+
 export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   const priced = priceEntry(e)
   // S22 — ATTRIBUTION. An explicit userId/ideaId always wins; the ambient build context
@@ -136,17 +152,25 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   // overridden by context it is not even inside. This is the ONE place the fallback applies —
   // every caller of recordSpend, recordGeminiUsage and recordXaiUsage gets it for free.
   const ctx = currentBuildContext()
-  const userId = e.userId ?? ctx?.userId ?? null
+  let userId = e.userId ?? ctx?.userId ?? null
   const ideaId = e.ideaId ?? ctx?.ideaId ?? null
+  const buildId = e.buildId ?? ctx?.buildId ?? null
+  const step = e.step ?? ctx?.step ?? null
+  // COST DASHBOARD — HOW we know. An idea with no user: the idea's creator pays for it, derived here.
+  let attrSource: string | null = e.userId || e.ideaId ? 'explicit' : (ctx?.userId || ctx?.ideaId ? 'ambient' : null)
+  if (!userId && ideaId) {
+    userId = await ownerOfIdea(ideaId)
+    if (userId) attrSource = 'owner-of-idea'
+  }
   try {
     await prisma.$executeRaw`
       INSERT INTO "LlmSpend" ("stream", "pass", "model", "tokensIn", "tokensOut", "tokensThinking",
                               "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed",
-                              "toolCalls", "postsFetched")
+                              "toolCalls", "postsFetched", "buildId", "step", "attrSource")
       VALUES (${e.stream}, ${e.pass}, ${e.model}, ${e.tokensIn}, ${e.tokensOut}, ${e.tokensThinking ?? 0},
               ${priced.pence}, ${priced.unpriced}, ${userId}, ${ideaId},
               ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false},
-              ${e.toolCalls ?? null}, ${e.postsFetched ?? null})`
+              ${e.toolCalls ?? null}, ${e.postsFetched ?? null}, ${buildId}, ${step}, ${attrSource})`
   } catch (err) {
     console.warn('[spend-ledger] could not record spend', {
       stream: e.stream, pass: e.pass, model: e.model,
@@ -302,6 +326,26 @@ export function recordOpenaiUsage(
   return recordSpend({ ...ctx, tokensIn, tokensOut, actualUsd, toolCalls })
 }
 
+/**
+ * COST DASHBOARD — record straight from an OpenAI/xAI CHAT-COMPLETIONS body (`usage.prompt_tokens`,
+ * `completion_tokens`, `total_tokens`), which is what the two legacy Lex routes call. Output is taken as
+ * `total_tokens - prompt_tokens` where the vendor gives a total, NOT `completion_tokens` alone: xAI's
+ * chat-completions endpoint can report reasoning tokens outside `completion_tokens`, and they are billed.
+ * `cost_in_usd_ticks`, when present, is the vendor's own figure and replaces the estimate.
+ */
+export function recordChatCompletionsUsage(
+  body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd'>,
+): Promise<PricedSpend> {
+  const u = (body as { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost_in_usd_ticks?: number } } | null)?.usage ?? {}
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+  const tokensIn = num(u.prompt_tokens)
+  const tokensOut = u.total_tokens != null ? Math.max(0, num(u.total_tokens) - tokensIn) : num(u.completion_tokens)
+  return recordSpend({
+    ...ctx, tokensIn, tokensOut,
+    actualUsd: typeof u.cost_in_usd_ticks === 'number' ? u.cost_in_usd_ticks / XAI_TICKS_PER_USD : null,
+  })
+}
+
 /** Convenience: record straight from 25-A's `LlmUsage`, so a build pass is one line. */
 export const recordUsage = (
   usage: LlmUsage, ctx: Omit<SpendEntry, 'model' | 'tokensIn' | 'tokensOut'>,
@@ -435,6 +479,8 @@ export const PASS_PURPOSE: Record<string, SpendPurpose> = {
   'guiding-policy.redraft': 'user builds',
 
   'lex.chat': 'Lex chat',
+  'lex.legacy-chat': 'Lex chat',
+  'lex.public-chat': 'Lex chat',
   'lex.field': 'Lex chat',
   'lex.material': 'Lex chat',
   'lex.feedback': 'Lex chat',

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
@@ -46,6 +47,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user, idea } = authz
 
   if (!checkRateLimit(`ai:${user.id}`, 50, 60 * 60 * 1000)) {

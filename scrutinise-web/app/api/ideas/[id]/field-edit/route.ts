@@ -29,6 +29,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { applyFieldEdit, fieldEditFailed } from '@/lib/lex/field-edit-write'
 
@@ -51,6 +52,7 @@ export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const url = new URL(req.url)
   const fieldKey = url.searchParams.get('fieldKey')
@@ -73,6 +75,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user } = authz
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => ({})))

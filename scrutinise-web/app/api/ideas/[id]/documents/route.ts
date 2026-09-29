@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { generateExport, readExportStatus, EXPORT_KINDS, isExportKind } from '@/lib/documents/export'
 import { ExportUnavailableError } from '@/lib/documents/build-initial-background'
 
@@ -30,6 +31,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   // ⚠ ORDER IS THE PAIR'S ORDER: what we found, then what we need from you. The card on the
   // Documents tab reads `documents[0]` for the briefing, as it always has.
@@ -42,6 +44,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user } = authz
 
   if (!checkRateLimit(`export:${user.id}`, 20, 60 * 60 * 1000)) {

@@ -19,6 +19,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import {
   publishProposal,
   unpublishProposal,
@@ -52,6 +53,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user, idea } = authz
   if (idea.creatorId !== user.id) return forbidden()
 
@@ -82,6 +84,7 @@ export async function PUT(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user, idea } = authz
   if (idea.creatorId !== user.id) return forbidden()
 
@@ -112,6 +115,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user, idea } = authz
   if (idea.creatorId !== user.id) return forbidden()
 

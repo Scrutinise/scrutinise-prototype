@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
 import { runFourDrafts, runRedraft, PREMIUM_DRAFT_MODELS, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, testIsCompound, testRulesOutNothing, type DraftForJudge, type JudgeVerdict } from '@/lib/lex/rumelt-tests'
@@ -59,6 +60,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id, consolidationId } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { user } = authz
 
   const consolidation = await prisma.guidingPolicyConsolidation.findFirst({

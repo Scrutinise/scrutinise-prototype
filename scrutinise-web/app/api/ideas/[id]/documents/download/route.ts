@@ -10,6 +10,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { signedDownload, exportFilename, isExportKind, type ExportFormat } from '@/lib/documents/export'
 
 type Params = { params: Promise<{ id: string }> }
@@ -18,6 +19,7 @@ export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { idea } = authz
 
   const url = new URL(req.url)

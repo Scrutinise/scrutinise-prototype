@@ -11,6 +11,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { readPolicyState } from '@/lib/lex/guiding-policy-state'
 import { runFourDrafts, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, type DraftForJudge } from '@/lib/lex/rumelt-tests'
@@ -23,6 +24,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const consolidations = await prisma.guidingPolicyConsolidation.findMany({
     where: { ideaId: id },
@@ -37,6 +39,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   const { idea, user } = authz
 
   // §2/A5 — the same gate the button's own `enabled` reads; enforced again server-side,

@@ -7,6 +7,8 @@ import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { FIELD_SEQUENCE } from '@/lib/field-labels'
 import { searchLegislation, type SearchResult } from '@/lib/search'
+import { recordGeminiUsage, recordChatCompletionsUsage } from '@/lib/lex/spend-ledger'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import { searchLegislationViaGateway } from '@/lib/lex/gateway-legacy'
 // BRIEF_SEARCH_S5 §2 — the second context channel.
 import {
@@ -540,7 +542,7 @@ const STAGE_LABELS: Record<string, string> = {
 }
 
 // Streaming Gemini call
-async function* callGeminiStream(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>) {
+async function* callGeminiStream(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>, onUsage?: (u: Record<string, unknown>) => void) {
   const apiKey = process.env.GEMINI_API_KEY!
   const model = 'gemini-2.5-flash'
 
@@ -584,6 +586,8 @@ async function* callGeminiStream(systemPrompt: string, userMessage: string, hist
         try {
           const json = JSON.parse(line.slice(6))
           const text = json.candidates?.[0]?.content?.parts?.[0]?.text
+          // COST DASHBOARD — the running usage figure arrives on the streamed events; the last one wins.
+          if (json.usageMetadata && onUsage) onUsage(json.usageMetadata)
           if (text) yield text
         } catch {}
       }
@@ -592,7 +596,7 @@ async function* callGeminiStream(systemPrompt: string, userMessage: string, hist
 }
 
 // Grok fallback (non-streaming)
-async function callGrok(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>): Promise<string> {
+async function callGrok(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>, spend?: { ideaId: string; userId: string }): Promise<string> {
   const grokKey = process.env.GROK_API_KEY
   if (!grokKey) throw new Error('GROK_API_KEY not set')
 
@@ -624,6 +628,9 @@ async function callGrok(systemPrompt: string, userMessage: string, history: Arra
   }
 
   const grokData = await grokRes.json()
+  // COST DASHBOARD — THIS CALL WAS UNMETERED. Recorded before the content check: a call that returned
+  // nothing usable still cost money.
+  void recordChatCompletionsUsage(grokData, { stream: 'lex', pass: 'lex.legacy-chat', model: 'grok-4.3', ideaId: spend?.ideaId, userId: spend?.userId })
   const content = grokData.choices?.[0]?.message?.content
   if (!content) throw new Error('Grok response missing content')
   return content
@@ -668,6 +675,7 @@ export async function POST(req: Request, { params }: Params) {
   if (!isOwner && !isCollaborator) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  enterSpendFor(user, idea) // cost dashboard: attribute this request's spend
 
   let body: unknown
   try {
@@ -1149,10 +1157,13 @@ export async function POST(req: Request, { params }: Params) {
       if (geminiKey) {
         try {
           await logAICall({ provider: 'gemini', success: true, durationMs: 0, ideaId })
-          for await (const token of callGeminiStream(systemPrompt, message, recentHistory)) {
+          let gemUsage: Record<string, unknown> | undefined
+          for await (const token of callGeminiStream(systemPrompt, message, recentHistory, (u) => { gemUsage = u })) {
             fullText += token
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'token', text: token })}\n\n`))
           }
+          // COST DASHBOARD — THIS STREAM WAS UNMETERED. Explicit ids: this runs inside a ReadableStream callback.
+          if (gemUsage) void recordGeminiUsage({ usageMetadata: gemUsage }, { stream: 'lex', pass: 'lex.legacy-chat', model: 'gemini-2.5-flash', ideaId, userId: user.id })
           await logAICall({ provider: 'gemini', success: true, durationMs: Date.now() - startTime, ideaId })
         } catch (geminiError) {
           const geminiErrorType = classifyError(geminiError)
@@ -1168,7 +1179,7 @@ export async function POST(req: Request, { params }: Params) {
       if (usedGrok || !fullText) {
         const grokStart = Date.now()
         try {
-          const grokResult = await callGrok(systemPrompt, message, recentHistory)
+          const grokResult = await callGrok(systemPrompt, message, recentHistory, { ideaId, userId: user.id })
           fullText = grokResult
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'token', text: fullText })}\n\n`))
           await logAICall({ provider: 'grok', success: true, durationMs: Date.now() - grokStart, fallbackUsed: true, ideaId })

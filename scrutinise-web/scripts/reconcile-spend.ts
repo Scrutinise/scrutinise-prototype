@@ -14,6 +14,12 @@
 // xAI has no usage-report endpoint we can reach with the inference key; Gemini's AI Studio key has
 // none either (Google Cloud Billing / BigQuery export is the source) — both reported as NOT READ.
 //
+// ⚠⚠ THIS IS THE ONLY PLACE THE PROVIDER ADMIN KEYS LIVE. They are set in the environment of whichever
+// service runs this job (recommended: the Railway Ops service, as a daily cron) and NOWHERE the web app
+// runs — not Vercel, not any file under app/, lib/ or components/. The dashboard reads the results this
+// job writes to `SpendReconciliation` (`--write`) and never sees a key. `check:spend-keys` asserts the
+// web code never names them, and this job REFUSES to run on Vercel.
+//
 // ⚠ The OpenAI and Anthropic readers below are UNTESTED against a live report (no credential with the
 // scope exists on this machine when this was written). They fail loudly on an unexpected shape.
 
@@ -21,6 +27,8 @@ import { prisma } from '../lib/prisma'
 
 const USD_TO_GBP = Number(process.env.LEX_BUILD_USD_GBP ?? '0.79')
 const days = Number(process.argv[process.argv.indexOf('--days') + 1]) || 7
+const WRITE = process.argv.includes('--write')
+if (process.env.VERCEL) { console.error('Refusing to run on Vercel: the provider admin keys must never be held there.'); process.exit(2) }
 
 const providerOf = (m: string) =>
   m.startsWith('gemini') ? 'google' : m.startsWith('claude') ? 'anthropic' : m.startsWith('grok') ? 'xai' : m.startsWith('gpt') ? 'openai' : 'other'
@@ -89,6 +97,19 @@ async function main() {
     ['google', async () => ({ ok: false, reason: 'AI Studio keys expose no usage report; needs Google Cloud Billing export (BigQuery) or the Cloud console' })],
   ]
   let reconciled = 0
+  // Persist one row per provider per day (--write) so the dashboard can show the line, including the
+  // honest "not read / not reconcilable" ones. `day` set = every day with ledger rows OR provider spend.
+  const persist = async (provider: string, day: string, ledgerPence: number, ledgerRows: number,
+    status: 'RECONCILED' | 'NOT_READ' | 'NOT_RECONCILABLE', reason: string | null, providerUsd: number | null) => {
+    if (!WRITE) return
+    const gap = providerUsd == null ? null : ledgerPence - providerUsd * USD_TO_GBP * 100
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "SpendReconciliation" (provider, "day", "ledgerPence", "ledgerRows", "providerUsd", "gapPence", status, reason, "checkedAt")
+       VALUES ($1, $2::date, $3, $4, $5, $6, $7, $8, now())
+       ON CONFLICT (provider, "day") DO UPDATE SET "ledgerPence" = EXCLUDED."ledgerPence", "ledgerRows" = EXCLUDED."ledgerRows",
+         "providerUsd" = EXCLUDED."providerUsd", "gapPence" = EXCLUDED."gapPence", status = EXCLUDED.status, reason = EXCLUDED.reason, "checkedAt" = now()`,
+      provider, day, ledgerPence, ledgerRows, providerUsd, gap, status, reason)
+  }
   for (const [name, read] of readers) {
     console.log(`\n== ${name}`)
     const mine = L[name] ?? {}
@@ -96,7 +117,12 @@ async function main() {
     try { report = await read() } catch (e) { report = { ok: false, reason: `request failed: ${String(e)}` } }
     const daysSeen = [...new Set([...Object.keys(mine), ...(report.ok ? Object.keys(report.usdByDay) : [])])].sort()
     if (!report.ok) {
-      console.log(`PROVIDER REPORT NOT READ — ${(report as { reason: string }).reason}`)
+      const why = (report as { reason: string }).reason
+      // xAI is NOT RECONCILABLE by design (no usage-report API exists for our key class); the others are
+      // merely NOT READ until their admin key / billing export exists.
+      const status = name === 'xai' ? 'NOT_RECONCILABLE' : 'NOT_READ'
+      for (const d of Object.keys(mine)) await persist(name, d, mine[d].pence, mine[d].rows, status, why, null)
+      console.log(`PROVIDER REPORT NOT READ — ${why}`)
       for (const d of Object.keys(mine).sort()) {
         const v = mine[d]; console.log(`  ${d}  ledger ${v.pence.toFixed(2)}p (£${(v.pence / 100).toFixed(4)})  rows ${v.rows}${v.unpriced ? `  ⚠ ${v.unpriced} unpriced` : ''}`)
       }
@@ -104,6 +130,7 @@ async function main() {
       continue
     }
     reconciled++
+    for (const d of daysSeen) await persist(name, d, mine[d]?.pence ?? 0, mine[d]?.rows ?? 0, 'RECONCILED', null, report.usdByDay[d] ?? 0)
     for (const d of daysSeen) {
       const ledgerGbp = (mine[d]?.pence ?? 0) / 100
       const provGbp = (report.usdByDay[d] ?? 0) * USD_TO_GBP
@@ -111,6 +138,7 @@ async function main() {
       console.log(`  ${d}  ledger £${ledgerGbp.toFixed(4)}  provider £${provGbp.toFixed(4)}  gap £${gap.toFixed(4)} (${provGbp ? ((gap / provGbp) * 100).toFixed(1) : 'n/a'}%)`)
     }
   }
+  console.log(`\n${WRITE ? 'Wrote SpendReconciliation rows.' : '(dry run: pass --write to store the result for the dashboard)'}`)
   console.log(`\nRECONCILED ${reconciled} of 4 providers over ${days} days.${reconciled < 4 ? ' The rest were NOT read — their gap is unknown, not zero.' : ''}`)
 }
 main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1) })

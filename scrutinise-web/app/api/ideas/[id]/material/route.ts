@@ -18,6 +18,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { enterSpendFor } from '@/lib/lex/build-context'
 import {
   extractFile, extractUrl, runMaterialFindings, MaterialRejected, createLinkMaterial,
   MAX_MATERIALS_PER_IDEA, MAX_UPLOAD_BYTES,
@@ -62,6 +63,7 @@ export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   // ══ 25-N §1f — THE USER MAY OPEN WHAT THEY GAVE US ═══════════════════════════
   //
@@ -125,6 +127,7 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   // ⚠ THE CAP IS CHECKED BEFORE ANYTHING IS FETCHED OR PARSED. Checking after would mean a
   // 10MB upload is read, extracted and then refused — work done on a request we always knew
@@ -253,6 +256,7 @@ export async function DELETE(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const materialId = new URL(req.url).searchParams.get('materialId')?.trim()
   if (!materialId) return NextResponse.json({ error: 'materialId is required.' }, { status: 422 })
