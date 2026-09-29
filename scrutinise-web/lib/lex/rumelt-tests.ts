@@ -193,9 +193,10 @@ export async function judgeDrafts(
     label: 'guiding-policy-judge',
     stream: 'lex',
     pass: spend.pass,
+    ideaId: spend.ideaId, userId: spend.userId ?? null,
   })
 
-  const priced = await recordUsage(result.usage, {
+  const priced = result.usage.recorded ?? await recordUsage(result.usage, {
     stream: 'lex', pass: spend.pass, ideaId: spend.ideaId, userId: spend.userId ?? null,
   })
 

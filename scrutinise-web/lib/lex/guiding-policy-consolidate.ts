@@ -203,8 +203,11 @@ export async function runFourDrafts(
         label: `guiding-policy-draft:${model}`,
         stream: 'lex',
         pass: 'guiding-policy.draft',
+        ideaId: spend.ideaId, userId: spend.userId ?? null,
       })
-      const priced = await recordUsage(result.usage, {
+      // Gemini/xAI already recorded inside callModelJson (with this attribution); recording again
+      // wrote every such draft twice. Claude/GPT do not, so they are recorded here.
+      const priced = result.usage.recorded ?? await recordUsage(result.usage, {
         stream: 'lex', pass: 'guiding-policy.draft', ideaId: spend.ideaId, userId: spend.userId ?? null,
       })
       if (!result.ok) {
@@ -269,8 +272,9 @@ export async function runRedraft(
     label: `guiding-policy-redraft:${input.favouriteModel}`,
     stream: 'lex',
     pass: 'guiding-policy.redraft',
+    ideaId: spend.ideaId, userId: spend.userId ?? null,
   })
-  const priced = await recordUsage(result.usage, {
+  const priced = result.usage.recorded ?? await recordUsage(result.usage, {
     stream: 'lex', pass: 'guiding-policy.redraft', ideaId: spend.ideaId, userId: spend.userId ?? null,
   })
   if (!result.ok) {

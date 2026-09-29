@@ -37,7 +37,7 @@ import { providerFor, type Provider } from './model-registry'
 import { thinkingConfigFor, outputBudgetFor } from './model-thinking'
 import { samplingFor, samplingOmissions } from './model-sampling'
 import { geminiFinishProblem } from './gemini-finish'
-import { recordGeminiUsage, recordXaiUsage, type SpendStream } from './spend-ledger'
+import { recordGeminiUsage, recordXaiUsage, type SpendStream, type PricedSpend } from './spend-ledger'
 
 export interface LlmUsage {
   /** What we ASKED for. */
@@ -55,6 +55,14 @@ export interface LlmUsage {
    * the echoed id back on every call is what lets a caller notice at the moment it happens.
    */
   echoedModel?: string | null
+  /**
+   * ⚠ 26-L COST METERING — SET WHEN THIS FILE HAS ALREADY WRITTEN THE LEDGER ROW FOR THE CALL.
+   * The Gemini and xAI paths below record inside `callModelJson`; Claude and GPT do not, so their
+   * callers record. Callers that ALSO recorded for a Gemini/xAI model wrote every such call TWICE
+   * (one row attributed to the idea, one to nobody) — measured on production: 6 pairs, 13.4p, in
+   * Consolidate and the update pass. A caller now does `usage.recorded ?? await recordUsage(...)`.
+   */
+  recorded?: PricedSpend
 }
 
 export type LlmFailureReason =
@@ -80,6 +88,9 @@ export interface ModelCallOptions {
   /** Ledger attribution. */
   stream?: SpendStream
   pass?: string
+  /** Who/what the spend is for — written on the row this file records (Gemini, xAI). */
+  ideaId?: string | null
+  userId?: string | null
 }
 
 const ZERO = (model: string): LlmUsage => ({ model, tokensIn: 0, tokensOut: 0 })
@@ -223,12 +234,21 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       modelVersion?: string
       candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
     }
-    void recordGeminiUsage(data, { stream: o.stream ?? 'lex', pass: o.pass ?? o.label, model: o.model })
+    // `thoughtsTokenCount` is reported SEPARATELY from `candidatesTokenCount` by Gemini (verified
+    // live 29 Sep: prompt 39 + candidates 252 + thoughts 1157 = total 1448), so both are summed here
+    // and the ledger row bills thoughts at the output rate. Claude, GPT and Grok fold reasoning INTO
+    // their output count (Anthropic `output_tokens_details.thinking_tokens`, OpenAI
+    // `completion_tokens_details.reasoning_tokens`, xAI `output_tokens_details.reasoning_tokens` are
+    // all SUBSETS of the output figure) — adding them again would double-bill.
+    const recorded = await recordGeminiUsage(data, {
+      stream: o.stream ?? 'lex', pass: o.pass ?? o.label, model: o.model, ideaId: o.ideaId ?? null, userId: o.userId ?? null,
+    })
     const usage: LlmUsage = {
       model: o.model,
       tokensIn: n(data?.usageMetadata?.promptTokenCount),
       tokensOut: n(data?.usageMetadata?.candidatesTokenCount) + n(data?.usageMetadata?.thoughtsTokenCount),
       echoedModel: data?.modelVersion ?? null,
+      recorded,
     }
 
     // Rule 1 — before parsing.
@@ -471,12 +491,19 @@ async function callXai<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       usage?: { input_tokens?: number; output_tokens?: number; cost_in_usd_ticks?: number }
     }
     const data = await res.json() as Resp
-    void recordXaiUsage(data, { stream: o.stream ?? 'lex', pass: o.pass ?? o.label, model: o.model })
+    // xAI reports its own billed cost (`cost_in_usd_ticks`) — the ledger row uses THAT rather than a
+    // token estimate, which matters: a probe on 29 Sep had 1,152 of 1,328 input tokens served from
+    // cache, and the vendor's figure was 36% below the list-rate estimate. Reasoning tokens are
+    // already inside `output_tokens`.
+    const recorded = await recordXaiUsage(data, {
+      stream: o.stream ?? 'lex', pass: o.pass ?? o.label, model: o.model, ideaId: o.ideaId ?? null, userId: o.userId ?? null,
+    })
     const usage: LlmUsage = {
       model: o.model,
       tokensIn: n(data?.usage?.input_tokens),
       tokensOut: n(data?.usage?.output_tokens),
       echoedModel: data?.model ?? null,
+      recorded,
     }
 
     // Rule 1 — before reading the body. xAI's Responses API reports completion via

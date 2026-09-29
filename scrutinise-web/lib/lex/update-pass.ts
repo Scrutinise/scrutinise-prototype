@@ -383,9 +383,10 @@ export async function runUpdatePass(
     label: 'update-pass-compare',
     stream: 'lex',
     pass: 'update-pass.compare',
+    ideaId, userId: userId ?? null,
   })
 
-  const priced = await recordUsage(result.usage, {
+  const priced = result.usage.recorded ?? await recordUsage(result.usage, {
     stream: 'lex', pass: 'update-pass.compare', ideaId, userId: userId ?? null,
   })
 

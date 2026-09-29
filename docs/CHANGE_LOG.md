@@ -1,5 +1,71 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-29 08:05 UTC — LEX cost metering — report + double-recording fix + reconcile script
+
+**§20 first.** ✅ Deployment is Production and green: GitHub deployment records show `a8fe5a5`
+(06:56 UTC) and `b2c7d6a` (07:13 UTC) both environment **Production**, Vercel status "Deployment
+has completed". ⚠ **Check 4 (live site serves the string) NOT done** — every string I introduced
+sits in the signed-in Lex bundle; an 18-chunk crawl from the signed-out homepage cannot reach it.
+Needs a signed-in read by Charlie or a Vercel token with SAML authorised (§19).
+
+**1. Reasoning tokens — counted for all four, verified with a raw probe (29 Sep), not assumed.**
+Gemini reports `thoughtsTokenCount` SEPARATELY (39+252+1157=1448) → we sum it (model-call.ts, and the
+ledger bills it at the output rate). Claude (`output_tokens_details.thinking_tokens`), GPT
+(`completion_tokens_details.reasoning_tokens`) and Grok (`output_tokens_details.reasoning_tokens`) fold
+reasoning INTO the output count — a subset, so adding it again would double-bill; left as is. **GPT's
+0.07p is real**: 1,271 in / 1,528 out (mostly reasoning) at gpt-6-luna's $0.10/$0.50 — rate re-confirmed
+against OpenAI's pricing page today (short-context; long-context $0.20/$0.75 not modelled). It is ~50×
+below Claude's $5/$25, which is the whole gap. ⚠ **Cache discounts are NOT modelled**, so the list-rate
+estimate OVERSTATES cost: on the Grok probe 1,152 of 1,328 input tokens were cached and xAI's own
+billed cost was 36% below the estimate. Safe direction; Grok rows already use the vendor's own
+`cost_in_usd_ticks`. GPT/Claude/Gemini have cache fields we ignore.
+
+**⚠⚠ FOUND WHILE CHECKING: EVERY GEMINI AND GROK CALL THROUGH `callModelJson` WITH A RECORDING CALLER
+WAS WRITTEN TO THE LEDGER TWICE** — once inside `model-call.ts` (unattributed) and once by the caller
+(attributed to the idea). Measured on production: 6 duplicate pairs = **13.4p over-counted**
+(guiding-policy drafts gemini ×3 / grok ×2, update-pass.compare ×1). Claude and GPT were recorded once.
+FIXED: `LlmUsage.recorded` marks a call the file already recorded; the four caller sites do
+`usage.recorded ?? recordUsage(...)`, and `callModelJson` now takes `ideaId`/`userId` so the single
+row carries attribution. **Verified live: one row per call for gemini-2.5-flash and grok-4.7** (Claude
+still recorded by its caller). The old duplicate rows are left in place (the ledger is append-only) —
+subtract 13.4p. ⚠ It also means my "10.57p" for consolidation `3ab6a889` used the estimate row for
+Grok (2.878p); xAI's own figure is 2.7415p → **10.44p**. ⚠ 3,578 "same model/pass/tokensIn within 3s"
+pairs on `search.query-router` are NOT shown to be duplicates (the 25 Sep benchmark sent repeated
+identical queries) — not counted, not cleared.
+
+**2. Reconciliation — gap for the last seven days: UNKNOWN, NOT ZERO, and here is why.** No provider's
+usage report is readable with the keys on this machine: OpenAI 403 (`api.usage.read` scope missing),
+Anthropic 401 (needs an Admin key), xAI no reachable endpoint, Gemini none on an AI Studio key (needs
+Cloud Billing/BigQuery). Built `scripts/reconcile-spend.ts`: ledger per provider per day, provider side
+attempted, and it prints **"RECONCILED 0 of 4"** rather than a gap it cannot compute (§23). Ledger side,
+7 days (£): google 1.57 (25 Sep alone 0.91 — the benchmark), anthropic 0.97, xai 0.13, openai 0.001.
+To make it work Charlie adds `OPENAI_ADMIN_KEY` and `ANTHROPIC_ADMIN_KEY` (readers written, UNTESTED —
+the Anthropic `amount` unit is assumed cents) and, for Gemini, a billing export.
+
+**3. Attribution today: 43 of 7,873 rows carry a user (0.55%), 67 carry an idea.** At handover 2 of 2,702.
+The 43 are all Lex chat (24) and Consolidate (19). **Every build/deepening/search row is unattributed: 0 of
+1,244 build, 0 of 275 deepening, 0 of ~6,100 search.** S22 (25 Sep) built ambient attribution for builds
+(`enterBuildContext`) — since then 6 build rows exist and none carries a user, so it is UNPROVEN, not
+working. Search (£9.78 reranker + £1.75 router of the £32.16 ledger) has no per-request user at all.
+Per-user billing cannot be built on this yet.
+
+**4. Whole-pence storage elsewhere: no.** The only two were the Consolidate columns (fixed 28 Sep). Every
+other cost column is `Decimal(12,4)` (Build.estCostPence, LlmSpend.estCostPence — 0.0001p). `build-estimate.ts`
+rounds only a DISPLAYED mean. Past BUILD costs are therefore not undercounted by rounding. What was
+undercounted: the two older consolidations (stored 8p/5p vs 12.2p/5.9p from the ledger: −34%/−16%),
+and Grok in the ledger before 28 Sep (2 rows, back-priced 3.56p + 2.88p). Ledger total £32.16 over 7,873
+rows, 1 unpriced (a zero-token row).
+
+**5. Proposal — Railway/Vercel/Neon cost, so the price covers the whole cost** (for Charlie's decision;
+nothing built): see the reply. Railway per-service CPU/network is READABLE via the project token; Vercel
+is not (SAML).
+
+✅ `tsc`, `check:client-boundary`, `check:model-registry` (28/28), `check:lex-25p` 70/72, `check:lex-25t`
+27/27 (same two pre-existing failures). `check:scripts` has 3 errors, all pre-existing (`MyIdea.createdAt`
+in 26c scripts), none in files touched here.
+⚠ I ran `git stash` by mistake mid-session in the shared tree and popped it seconds later, cleanly; all
+other streams' uncommitted files were restored and re-checked.
+
 ## 2026-09-29 07:12 UTC — LEX 26-L addendum 4 — feedback redesign, Policy tab, "Open in Lex to edit"
 
 **§1 — the instruction beside the greyed button:** "Choose your favourite of the four. That model

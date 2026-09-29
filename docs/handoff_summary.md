@@ -916,6 +916,15 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-09-29 08:05 UTC (LEX cost metering — report + fix)* — ▼▼ **PER-USER BILLING IS NOT
+BUILDABLE YET: 43 of 7,873 ledger rows carry a user; no build, deepening or search row does.** Detail in
+CHANGE_LOG's 08:05 entry. ▶ Reasoning tokens counted for all four (raw probe). ▶ ⚠ **Gemini/Grok were
+recorded twice** wherever a caller also recorded (13.4p over-counted) — FIXED (`LlmUsage.recorded`),
+verified live one-row-per-call. ▶ Reconciliation gap UNKNOWN (0 of 4 providers readable; needs admin
+keys) — `scripts/reconcile-spend.ts`. ▶ No other whole-pence columns. ▶ §20 check 3 ✅ Production;
+**check 4 NOT done** (signed-in bundle). ▶ Railway/Vercel allocation proposal is in the reply, awaiting
+Charlie.
+Earlier:
 *Last updated: 2026-09-29 07:12 UTC (LEX 26-L addendum 4)* — ▼▼ **FEEDBACK REDESIGNED: A BOX PER
 DRAFT + ONE GENERAL BOX, ALL AUTOSAVING, BOTH BUTTONS READ ALL OF IT.** Detail in CHANGE_LOG's 07:12
 entry. ⚠⚠ **Charlie's "in general" box text is NOT in the database** — zero `GENERAL_BOX` rows; it
