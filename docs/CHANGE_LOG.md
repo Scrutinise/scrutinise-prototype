@@ -1,5 +1,19 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-09-30 00:35 UTC — LEX model review — REPORT ONLY, no product code changed
+
+Full report: `docs/MODEL_REVIEW_2026-09-30.md`. Measured on the real context of idea 452c5ade (≈£2 of test spend; ledger rows
+relabelled `model-review.*`; direct probes not ledgered). Headlines: (1) top per provider — Fable 5.1 $10/$50, gpt-6-astra $10/$50,
+gemini-3.1-pro-preview $2/$12, grok-4.7 $2/$6; one Consolidate press on the top panel ≈ 22.4p vs 10.4p today, on a price-matched premium panel
+(Opus 5.5 / gpt-6.1-sol / 3.1 Pro / Grok 4.7) ≈ 11.0p; Opus 5.5, Sonnet 5.5 and Fable 5.1 all 400 on our forced `tool_choice`.
+(2) Builds are NOT all Flash: gemini-2.5-pro is 60% of build spend; 29.8p/build today; 59.4p/build on gemini-3.8-flash at the Jan-2027 rate at
+equal tokens (quality not measured). The current judge flipped a verdict between two runs of the same model on the same input; Opus 5.5 costs
+more than Opus 5 in practice (writes more). (3) Gemini 3.6–3.8 Flash $0.75/$3.75 → $1.50/$7.50 on 1 Jan 2027 — confirmed; the rate table has no
+effective date. (4) No caching anywhere in `lib/`/`app/`; measured: OpenAI 99.8% automatic, Gemini implicit caching NOT observed on 2.5 or 3.8 Flash,
+Anthropic explicit −31%; modelled build saving −14% today, −24% on 3.8 Flash; ledger cache fields proposed, not built. (5) Chat turn: current
+0.238p replayed (0.345p real mean + ~0.09p decider); Sonnet 5.5 1.61–3.36p (6.8×–14×), tokenizer +47–61%, and it cannot honour our JSON contract
+(0 of 6 replies in the envelope; schema has 30 optional fields vs Anthropic's 24 limit). Decisions needed listed at the foot of the report.
+
 ## 2026-09-29 08:20 UTC — LEX cost dashboard — attribution at the call point, explorer, reconciliation store
 
 **1. Attribution, at the point each call is made.** Migration `lex_26m_spend_attribution.sql` (applied to Neon

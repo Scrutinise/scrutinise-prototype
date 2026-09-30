@@ -916,6 +916,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-09-30 00:35 UTC (LEX model review — report only)* — ▼▼ **NOTHING CHANGED; THREE DECISIONS WAITING.**
+`docs/MODEL_REVIEW_2026-09-30.md`. ▶ Fair panel: price-matched (~11p/press) or capability-top (~22p) — either needs the Anthropic client to
+stop forcing a tool (Opus 5.5 / Sonnet 5.5 / Fable 5.1 400 on it). ▶ Builds are 60% gemini-2.5-pro by spend; Jan-2027 Flash rate doubles the
+per-build cost at equal tokens. ▶ No prompt caching anywhere; ledger cache fields + rate effective-dates proposed (migration). ▶ Sonnet 5.5 for
+chat: 7–14× cost and breaks the JSON contract. ▶ The judge is unstable run to run (one verdict flipped on identical input).
+Earlier:
 *Last updated: 2026-09-29 08:20 UTC (LEX cost dashboard)* — ▼▼ **ATTRIBUTION FIXED AT THE CALL POINT; DASHBOARD BUILT;
 FORWARD COVERAGE UNPROVEN.** Detail in CHANGE_LOG's 08:20 entry. ▶ Ledger rows now carry idea, user, build, step,
 attrSource (migration `lex_26m`, applied). Ambient context entered in all 37 `authorizeIdea` routes + `runNextPass`
