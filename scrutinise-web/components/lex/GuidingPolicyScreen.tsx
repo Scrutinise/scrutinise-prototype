@@ -120,6 +120,9 @@ interface Consolidation {
   acceptedText: string | null
   acceptedEdited: boolean
   costPence: number | null
+  /** 26-L addendum 5 — models that did not draft, with the reason. Sent by the GET (derived for
+   *  older rows); the POST/PATCH responses carry the same list as `failed`. */
+  failedModels?: Array<{ model: string; error: string }>
 }
 
 /**
@@ -449,6 +452,8 @@ function ConsolidatePanel({
         if (latest && latest.status !== 'ACCEPTED') {
           setConsolidation(latest)
           adoptSaved(latest)
+          // 26-L addendum 5 — a reload used to lose the "did not draft" banner and its Retry button.
+          setFailedModels(latest.failedModels ?? [])
         }
       } catch { /* no resumable consolidation — starting fresh is fine */ }
     })()

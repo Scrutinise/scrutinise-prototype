@@ -34,6 +34,39 @@ const DRAFT_MAX_OUTPUT_TOKENS = 4096
 const DRAFT_TIMEOUT_MS = 120_000
 
 /**
+ * ══ 26-L ADDENDUM 5 — GROK TIMED OUT AT 120s, TWICE, ON 1 OCT ═══════════════════════════
+ *
+ * Two runs 30s apart each produced three drafts and no Grok; Grok's ledger rows were 0 tokens,
+ * written ~120.0s after the others finished — the timeout. Its drafts on 28 Sep (when it did
+ * answer) were 5–7k output tokens, mostly reasoning, landing at ~110s+: 120s was never real
+ * headroom. So Grok gets its own, longer limit. The other three keep 120s — they answer in
+ * under 40s, and a longer limit would only slow the page down when one of them hangs.
+ */
+const MODEL_TIMEOUT_MS: Record<string, number> = { 'grok-4.7': 150_000 }
+const timeoutFor = (model: string) => MODEL_TIMEOUT_MS[model] ?? DRAFT_TIMEOUT_MS
+/**
+ * ⚠ THE TIMEOUT WAS THE SYMPTOM; UNBOUNDED REASONING WAS THE CAUSE. Re-running Grok on the stored
+ * 1 Oct inputs: 200s timeout again; then 211s and 15,058 output tokens with no limit, versus 5,798
+ * on 30 Sep (MODEL_REVIEW_2026-09-30). `reasoning.effort` is accepted by the Responses API and cuts
+ * it: `medium` 93s / 6.7k tokens, `low` 16s / 1.1k. `medium` — a considered draft that finishes
+ * well inside 150s, leaving the retry budget intact. Other providers ignore the option.
+ */
+const reasoningEffortFor = (model: string): 'medium' | undefined => (model.startsWith('grok-') ? 'medium' : undefined)
+
+/** The routes that call this run under `maxDuration = 300`; the judge (~15s) and the DB writes
+ *  come after the drafts, so the drafts — retry included — must be finished well inside that. */
+const DRAFT_BUDGET_MS = 255_000
+/** A retry that cannot be given at least this long is not worth starting. */
+const MIN_RETRY_MS = 60_000
+
+/** Worth one more go: a timeout, or a 5xx/429 from the vendor. Not a 4xx (a bad request will
+ *  be just as bad again), not truncation/blocked/bad-json (a deterministic answer, not a blip). */
+function isTransient(reason: string, detail: string): boolean {
+  if (reason === 'timeout') return true
+  return reason === 'http' && !/HTTP 4(?!29)\d\d/.test(detail)
+}
+
+/**
  * The product's own operationalisation of Rumelt's three tests for a guiding policy —
  * BRIEF_25F §6b names two of the three explicitly ("conditions for success and
  * anticipated responses are two of Rumelt's three tests"); the third is leverage, the
@@ -109,7 +142,7 @@ export interface DraftOutput {
   chainLink: string
 }
 
-function draftSystemPrompt(): string {
+export function draftSystemPrompt(): string {
   return [
     'You are drafting ONE guiding policy for a Scrutinise idea — the approach that answers the',
     "diagnosed pivotal obstacle. This is Richard Rumelt's sense of the term: not a goal, not a",
@@ -133,7 +166,7 @@ function draftSystemPrompt(): string {
   ].join('\n')
 }
 
-function draftUserPrompt(ctx: ConsolidateContext): string {
+export function draftUserPrompt(ctx: ConsolidateContext): string {
   const causesBlock = ctx.causes.map((c) => `[${c.number}] ${c.cause}`).join('\n') || '(none recorded)'
   const candidatesBlock = ctx.partOfSolution
     .map((p) => `[${p.number}] ${p.approach}${p.caseFor ? `\n    For: ${p.caseFor}` : ''}${p.caseAgainst ? `\n    Against: ${p.caseAgainst}` : ''}`
@@ -190,36 +223,77 @@ export async function runFourDrafts(
 ): Promise<DraftCallResult[]> {
   const system = draftSystemPrompt()
   const user = draftUserPrompt(ctx)
+  const deadline = Date.now() + DRAFT_BUDGET_MS
+
+  const attempt = async (model: string, timeoutMs: number) => {
+    const result = await callModelJson<DraftOutput>({
+      model,
+      system,
+      user,
+      schema: DRAFT_SCHEMA,
+      maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS,
+      timeoutMs,
+      reasoningEffort: reasoningEffortFor(model),
+      label: `guiding-policy-draft:${model}`,
+      stream: 'lex',
+      pass: 'guiding-policy.draft',
+      ideaId: spend.ideaId, userId: spend.userId ?? null,
+    })
+    // Gemini/xAI already recorded inside callModelJson (with this attribution); recording again
+    // wrote every such draft twice. Claude/GPT do not, so they are recorded here. A call that
+    // failed with nothing recorded (a timeout) is written as `failed`, so the cost dashboard
+    // shows it rather than a 0-token row that reads as a success.
+    const priced = result.usage.recorded ?? await recordUsage(result.usage, {
+      stream: 'lex', pass: 'guiding-policy.draft', ideaId: spend.ideaId, userId: spend.userId ?? null,
+      failed: !result.ok,
+    })
+    return { result, priced }
+  }
 
   return Promise.all(
     models.map(async (model): Promise<DraftCallResult> => {
-      const result = await callModelJson<DraftOutput>({
-        model,
-        system,
-        user,
-        schema: DRAFT_SCHEMA,
-        maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS,
-        timeoutMs: DRAFT_TIMEOUT_MS,
-        label: `guiding-policy-draft:${model}`,
-        stream: 'lex',
-        pass: 'guiding-policy.draft',
-        ideaId: spend.ideaId, userId: spend.userId ?? null,
-      })
-      // Gemini/xAI already recorded inside callModelJson (with this attribution); recording again
-      // wrote every such draft twice. Claude/GPT do not, so they are recorded here.
-      const priced = result.usage.recorded ?? await recordUsage(result.usage, {
-        stream: 'lex', pass: 'guiding-policy.draft', ideaId: spend.ideaId, userId: spend.userId ?? null,
-      })
+      const { result, priced } = await attempt(model, Math.min(timeoutFor(model), deadline - Date.now()))
       if (!result.ok) {
         // ⚠ `strict: false` — TS will not narrow a union on a boolean discriminant, per the
-        // established idiom in reranker.ts/query-expansion.ts. `result.ok === false` is
-        // already established on this line.
-        const fail = result as import('./model-call').LlmFail
-        return { model, ok: false, error: `${fail.reason}: ${fail.detail}`, usage: fail.usage, priced }
+        // established idiom in reranker.ts/query-expansion.ts.
+        const first = result as import('./model-call').LlmFail
+        const remaining = deadline - Date.now()
+        // One automatic retry on a transient failure, only while it can still finish inside the
+        // route's limit. Both attempts are on the ledger; a model that fails twice reports the
+        // SECOND failure, with the first noted so the cause is not lost.
+        if (isTransient(first.reason, first.detail) && remaining >= MIN_RETRY_MS) {
+          console.warn(`[guiding-policy-draft:${model}] ${first.reason} — retrying once (${Math.round(remaining / 1000)}s left in budget)`)
+          const second = await attempt(model, Math.min(timeoutFor(model), remaining))
+          if (second.result.ok) return { model, ok: true, value: second.result.value, usage: second.result.usage, priced: second.priced }
+          const fail2 = second.result as import('./model-call').LlmFail
+          return {
+            model, ok: false, usage: fail2.usage, priced: second.priced,
+            error: `${fail2.reason}: ${fail2.detail} (first attempt also failed: ${first.reason})`,
+          }
+        }
+        return { model, ok: false, error: `${first.reason}: ${first.detail}`, usage: first.usage, priced }
       }
       return { model, ok: true, value: result.value, usage: result.usage, priced }
     }),
   )
+}
+
+/**
+ * 26-L addendum 5 — the models that did not draft, for the page. Uses what was recorded; for a
+ * consolidation from before `failedModels` existed (NULL) it names every model with no draft,
+ * saying the reason was not kept, so the Retry button is offered rather than the gap going unseen.
+ */
+export function effectiveFailedModels(
+  stored: unknown, draftModels: readonly string[],
+): Array<{ model: string; error: string }> {
+  if (Array.isArray(stored)) {
+    return (stored as Array<{ model?: unknown; error?: unknown }>)
+      .filter((f) => typeof f?.model === 'string' && !draftModels.includes(f.model as string))
+      .map((f) => ({ model: f.model as string, error: typeof f.error === 'string' ? f.error : 'no reason recorded' }))
+  }
+  return PREMIUM_DRAFT_MODELS
+    .filter((m) => !draftModels.includes(m))
+    .map((m) => ({ model: m, error: 'no draft, and the reason was not recorded' }))
 }
 
 /** §6 — the one redraft, by the favourite's model. Same fixed form, briefed with both

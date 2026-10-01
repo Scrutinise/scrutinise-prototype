@@ -2906,6 +2906,14 @@ model GuidingPolicyConsolidation {
   /// §3 — "report the cost per consolidation." Pence, across every model call
   /// this run made. 26-L addendum 3 §5 — Float: the Int total was a sum of rounded pieces.
   costPence          Float?
+  /// 26-L addendum 5 — which of the four models did NOT draft, and why: [{ model, error }].
+  /// Before this the list lived only in the POST response and React state, so a reload
+  /// (or a second run) made a timed-out Grok vanish without trace. NULL = rows from before
+  /// this column; the GET derives "missing" from the drafts present.
+  failedModels       Json?
+  /// 26-L addendum 5 — set while the four drafts are being written, cleared when they land.
+  /// An in-flight marker, so a second "Start again" is refused rather than run alongside.
+  draftingStartedAt  DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 

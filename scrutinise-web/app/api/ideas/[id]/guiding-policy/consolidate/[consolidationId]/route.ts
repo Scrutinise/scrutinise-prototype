@@ -15,8 +15,13 @@ import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
-import { runFourDrafts, runRedraft, PREMIUM_DRAFT_MODELS, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
+import { runFourDrafts, runRedraft, effectiveFailedModels, PREMIUM_DRAFT_MODELS, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, testIsCompound, testRulesOutNothing, type DraftForJudge, type JudgeVerdict } from '@/lib/lex/rumelt-tests'
+
+// ⚠ 26-L addendum 5 — "retry" re-runs model calls (Grok alone is allowed 200s) and a judge call, so
+// this route needs the same ceiling as the POST beside it; it had none, and a platform default
+// shorter than Grok's own limit would have cut a retry off mid-answer.
+export const maxDuration = 300
 
 type Params = { params: Promise<{ id: string; consolidationId: string }> }
 
@@ -161,19 +166,29 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const totalDrafts = consolidation.drafts.length + succeeded.length
+    // Keep the failure record true: whatever was recorded and was not part of this retry stays;
+    // what failed again is replaced by its newest reason; what just succeeded drops out.
+    const retriedSet = new Set(toRetry)
+    const failedNow = failed.map((f) => ({ model: f.model, error: f.error }))
+    const keptFailures = effectiveFailedModels(consolidation.failedModels, consolidation.drafts.map((d) => d.model))
+      .filter((f) => !retriedSet.has(f.model))
+    const failedModels = [...keptFailures, ...failedNow]
     const updated = await prisma.guidingPolicyConsolidation.update({
       where: { id: consolidation.id },
       // A consolidation with at least one draft, before or after this retry, is judgeable
       // material — DRAFTING only where literally nothing has ever succeeded.
       // ⚠ 26-L addendum 3 §1 — a retry must not demote a consolidation that already has a favourite
       // back to JUDGED: the panel keyed "Write the final version" on FAVOURITE_CHOSEN, so it vanished.
-      data: { status: consolidation.favouriteModel ? consolidation.status : totalDrafts > 0 ? 'JUDGED' : 'DRAFTING', costPence },
+      data: {
+        status: consolidation.favouriteModel ? consolidation.status : totalDrafts > 0 ? 'JUDGED' : 'DRAFTING',
+        costPence, failedModels: failedModels as never,
+      },
       include: { drafts: { orderBy: { createdAt: 'asc' } } },
     })
     return NextResponse.json({
       consolidation: updated,
       retried: succeeded.map((d) => d.model),
-      failed: failed.map((f) => ({ model: f.model, error: f.error })),
+      failed: failedModels,
     })
   }
 

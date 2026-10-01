@@ -13,10 +13,12 @@ import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { readPolicyState } from '@/lib/lex/guiding-policy-state'
-import { runFourDrafts, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
+import { runFourDrafts, effectiveFailedModels, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, type DraftForJudge } from '@/lib/lex/rumelt-tests'
 
 export const maxDuration = 300
+/** Longer than `maxDuration`, so a marker this old can only be an orphan from a dead request. */
+const IN_FLIGHT_MS = 6 * 60_000
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -26,12 +28,18 @@ export async function GET(_req: Request, { params }: Params) {
   if (authz.error) return authz.error
   enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
-  const consolidations = await prisma.guidingPolicyConsolidation.findMany({
+  const rows = await prisma.guidingPolicyConsolidation.findMany({
     where: { ideaId: id },
     orderBy: { createdAt: 'desc' },
-    take: 5,
+    take: 6,
     include: { drafts: { orderBy: { createdAt: 'asc' } } },
   })
+  // A row still in flight has no drafts and is not a consolidation yet — the request that is
+  // writing it will deliver it. (26-L addendum 5.)
+  const consolidations = rows
+    .filter((c) => !(c.draftingStartedAt && c.drafts.length === 0))
+    .slice(0, 5)
+    .map((c) => ({ ...c, failedModels: effectiveFailedModels(c.failedModels, c.drafts.map((d) => d.model)) }))
   return NextResponse.json({ consolidations })
 }
 
@@ -127,15 +135,56 @@ export async function POST(req: Request, { params }: Params) {
     ...(priorRound ? { priorRound } : {}),
   }
 
-  const draftResults = await runFourDrafts(context, { ideaId: id, userId: user?.id ?? null })
+  // ══ 26-L ADDENDUM 5 — ONE RUN AT A TIME PER IDEA ═══════════════════════════════════════
+  // On 1 Oct two runs started 30s apart, each paid for four premium calls, and the second left a
+  // confusing extra consolidation. The row is created BEFORE the models are called, carrying
+  // `draftingStartedAt`, so a second request can see one is already in flight. A marker older
+  // than the route's own limit is an orphan from a request that died, and is swept.
+  const staleBefore = new Date(Date.now() - IN_FLIGHT_MS)
+  await prisma.guidingPolicyConsolidation.deleteMany({
+    where: { ideaId: id, draftingStartedAt: { lt: staleBefore }, drafts: { none: {} } },
+  })
+  const placeholder = await prisma.guidingPolicyConsolidation.create({
+    data: {
+      ideaId: id,
+      status: 'DRAFTING',
+      userFeedback: priorRound?.generalFeedback ?? null,
+      candidateSnapshot: context as never,
+      draftingStartedAt: new Date(),
+    },
+  })
+  // Create-then-check, so two requests landing together cannot both pass: the LATER one yields.
+  const rival = await prisma.guidingPolicyConsolidation.findFirst({
+    where: { ideaId: id, id: { not: placeholder.id }, draftingStartedAt: { gte: staleBefore }, drafts: { none: {} } },
+    orderBy: { createdAt: 'asc' },
+  })
+  if (rival && (rival.createdAt < placeholder.createdAt
+    || (rival.createdAt.getTime() === placeholder.createdAt.getTime() && rival.id < placeholder.id))) {
+    await prisma.guidingPolicyConsolidation.delete({ where: { id: placeholder.id } }).catch(() => {})
+    const since = rival.draftingStartedAt!.toISOString().slice(11, 16)
+    return NextResponse.json(
+      { error: `Four drafts are already being written for this idea (started ${since} UTC). Wait for them — they can take up to four minutes — then reload this page to see them.` },
+      { status: 409 },
+    )
+  }
+
+  let draftResults: Awaited<ReturnType<typeof runFourDrafts>>
+  try {
+    draftResults = await runFourDrafts(context, { ideaId: id, userId: user?.id ?? null })
+  } catch (err) {
+    await prisma.guidingPolicyConsolidation.delete({ where: { id: placeholder.id } }).catch(() => {})
+    throw err
+  }
   const succeeded = draftResults.filter((d) => d.ok && d.value)
   const failed = draftResults.filter((d) => !d.ok)
+  const failedModels = failed.map((f) => ({ model: f.model, error: f.error }))
 
   // ⚠ A PANEL THAT SILENTLY SHRANK MUST NOT READ LIKE A FULL ONE (build-smart.ts's own
   // rule, carried here) — every failure is named in the response, never dropped.
   if (succeeded.length === 0) {
+    await prisma.guidingPolicyConsolidation.delete({ where: { id: placeholder.id } }).catch(() => {})
     return NextResponse.json(
-      { error: 'None of the four models produced a draft.', failed: failed.map((f) => ({ model: f.model, error: f.error })) },
+      { error: `None of the four models produced a draft: ${failedModels.map((f) => `${f.model} (${f.error})`).join('; ')}`, failed: failedModels },
       { status: 502 },
     )
   }
@@ -143,12 +192,13 @@ export async function POST(req: Request, { params }: Params) {
   let costPence = draftResults.reduce((sum, d) => sum + (d.priced.pence ?? 0), 0)
   const anyUnpriced = draftResults.some((d) => d.priced.unpriced)
 
-  const consolidation = await prisma.guidingPolicyConsolidation.create({
+  // Drafts, the failure record, and the cleared in-flight marker land in ONE write — a row that
+  // has drafts never still reads as in flight.
+  const consolidation = await prisma.guidingPolicyConsolidation.update({
+    where: { id: placeholder.id },
     data: {
-      ideaId: id,
-      status: 'DRAFTING',
-      userFeedback: priorRound?.generalFeedback ?? null,
-      candidateSnapshot: context as never,
+      draftingStartedAt: null,
+      failedModels: failedModels as never,
       drafts: {
         create: succeeded.map((d) => ({
           model: d.model,
@@ -202,7 +252,7 @@ export async function POST(req: Request, { params }: Params) {
 
   return NextResponse.json({
     consolidation: finalConsolidation,
-    failed: failed.map((f) => ({ model: f.model, error: f.error })),
+    failed: failedModels,
     judgeError,
     unpriced: anyUnpriced || judgeUnpriced,
     judgeModel: judged.model,

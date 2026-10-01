@@ -83,6 +83,12 @@ export interface ModelCallOptions {
   maxOutputTokens: number
   timeoutMs: number
   temperature?: number
+  /**
+   * xAI only (ignored by every other provider). Left unset, grok-4.7 reasons without a ceiling:
+   * measured 1 Oct on the guiding-policy draft prompt — default 211s / 15,058 output tokens,
+   * `medium` 93s / 6,699, `low` 16s / 1,082. `max_output_tokens` does not bound it.
+   */
+  reasoningEffort?: 'low' | 'medium' | 'high'
   /** Diagnostic label — appears in every log line and in the failure detail. */
   label: string
   /** Ledger attribution. */
@@ -475,6 +481,7 @@ async function callXai<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
         input: [{ role: 'user', content: o.user }],
         max_output_tokens: o.maxOutputTokens,
         ...sampling(o, 0.2),
+        ...(o.reasoningEffort ? { reasoning: { effort: o.reasoningEffort } } : {}),
         text: { format: { type: 'json_schema', name: 'result', schema: o.schema } },
       }),
       signal: ctrl.signal,
