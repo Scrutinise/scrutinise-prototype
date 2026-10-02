@@ -480,6 +480,11 @@ export const PASS_PURPOSE: Record<string, SpendPurpose> = {
   // 26-M addendum — lifting action ideas out of drafts, and testing them against the final policy.
   'guiding-policy.actions-extract': 'user builds',
   'guiding-policy.actions-test': 'user builds',
+  // 26-N — the fields redrafted against an accepted guiding policy.
+  'guiding-policy.fields-redraft': 'user builds',
+  // 26-N section 8 - Check for gaps: four models propose, one call tests and merges.
+  'guiding-policy.gaps-check': 'user builds',
+  'guiding-policy.gaps-test': 'user builds',
 
   'lex.chat': 'Lex chat',
   'lex.legacy-chat': 'Lex chat',

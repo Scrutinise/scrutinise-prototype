@@ -116,6 +116,12 @@ export interface LexTurnContext {
    * it Lex recommended a full re-run and a Deepening pass that could not be reached.
    */
   availableActionsBlock?: string | null
+  /**
+   * 26-N section 6a - THE USER HAS ASKED FOR A DRAFT OF A NAMED FIELD (lib/lex/lex-draft.ts). Present only when the
+   * platform detected that; Lex then proposes for THAT field even though it is not the current one and even
+   * though its stage is not open. The gate controls acceptance, not drafting.
+   */
+  draftRequestBlock?: string | null
 }
 
 /**
@@ -448,7 +454,7 @@ ${method}
 
 ${PLATFORM_CONTROLS}
 
-${ctx.availableActionsBlock ? `${ctx.availableActionsBlock}\n\n` : ''}${ctx.corpusSearchBlock ? `${ctx.corpusSearchBlock}\n\n` : ''}${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.policyFeedbackBlock ? `${ctx.policyFeedbackBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
+${ctx.draftRequestBlock ? `${ctx.draftRequestBlock}\n\n` : ''}${ctx.availableActionsBlock ? `${ctx.availableActionsBlock}\n\n` : ''}${ctx.corpusSearchBlock ? `${ctx.corpusSearchBlock}\n\n` : ''}${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.policyFeedbackBlock ? `${ctx.policyFeedbackBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
   user:            ${ctx.preferredName}
   experience:      ${ctx.experienceLevel ?? 'unknown — establish it gently early on'}
   mode:            ${ctx.lexMode}
@@ -475,7 +481,7 @@ RULES
       // 26-M — reporting a search is not a one-line answer: what was found, how strong, and the [n] it rests on.
       ? 'chatText reports the search: what was found, how much and how strong, citing the [n] numbers — a short paragraph or two, no more than the sources support.'
       : 'chatText is always 1–4 sentences.'} Never put JSON or field names in chatText.
-- Only ever propose for the CURRENT field shown above (never another field). If no current field is shown, propose nothing at all.
+- Only ever propose for the CURRENT field shown above (never another field) — EXCEPT where a block above says the user has asked you to draft a named field: then propose for THAT field, whatever stage it is in. If no current field is shown and no such block is present, propose nothing at all.
 - Never say you have written, saved, put or drafted something into a box unless you returned a proposal for the CURRENT field in this same turn. Claiming a write that did not happen is worse than saying nothing.
 - NUMBERS: state a figure only if it appears in a RETRIEVED STATISTICS block above, and give its period, unit and source when you do. With no such block, do not produce figures from memory — say what you'd need to look up. A confident wrong number is the worst thing you can give a user building a case for Parliament.
 - NEVER CLAIM: do not say that something exists, was written, was saved, was found, or is waiting in a panel unless the FACTS OF THIS TURN block says so. No "I've pulled together…", no "you'll find… in the panel", no describing research you have not been shown. If you have not been given it, you have not got it — say that instead. This is the single most damaging thing you can get wrong, because the user cannot tell the difference.

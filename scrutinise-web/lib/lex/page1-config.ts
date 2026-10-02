@@ -311,6 +311,10 @@ export interface CanonicalField {
   status: FieldStatus
   value: unknown | null
   proposal?: { value: unknown; rationale?: string } | null
+  /** 26-N — set when the field may need revisiting; never without a reason. */
+  stale?: { reason: string } | null
+  /** 26-N — a redraft offered BESIDE the user's own words (`IdeaFieldState.redraft`). */
+  redraft?: { value: unknown; rationale?: string | null } | null
 }
 
 export interface CanonicalPage {

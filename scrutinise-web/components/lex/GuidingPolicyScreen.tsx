@@ -832,6 +832,50 @@ function ConsolidatePanel({
   )
 }
 
+/**
+ * ══ 26-N §4 — ONCE A GUIDING POLICY IS ACCEPTED, EVERYTHING ELSE IS "NOT CHOSEN" ═══════════════
+ *
+ * Only the accepted policy stays on show. Every candidate, the alternatives, the rejected ones, the sort groups,
+ * the sort summary and the consolidation drafts that were not chosen sit under this ONE header, closed by
+ * default. Nothing is deleted: opening the header shows exactly what was there. Before a policy is settled this
+ * renders its children untouched (`tidy` false), so the working screen is unchanged.
+ *
+ * ⚠ THE HEADER CARRIES A WORD, A SHAPE AND A COUNT — never colour alone (docs/CLAUDE.md §21): "Not chosen", ▸ / ▾,
+ * and how many things are in it.
+ */
+function NotChosenGroup({ tidy, count, moved, children }: {
+  tidy: boolean
+  count: number
+  /** Candidates already carried into Coherent Actions (§4a): not listed here, only counted. */
+  moved: number
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  if (!tidy) return <>{children}</>
+  return (
+    <div className="border-t border-zinc-100">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+      >
+        <span aria-hidden className="w-4 text-zinc-600">{open ? '▾' : '▸'}</span>
+        <span>Not chosen</span>
+        <span className="text-xs font-normal text-zinc-500">
+          ({count} — the other candidates, the sort, and the drafts that were not chosen; {open ? 'press to close' : 'press to open'})
+        </span>
+      </button>
+      {moved > 0 && (
+        <p className="px-4 pb-2 -mt-1 text-[11px] text-zinc-600">
+          {moved} {moved === 1 ? 'candidate was' : 'candidates were'} moved to Coherent Actions and no longer {moved === 1 ? 'appears' : 'appear'} here.
+        </p>
+      )}
+      {open && <div>{children}</div>}
+    </div>
+  )
+}
+
 /** What the settle event did with the held coherent-action ideas (lib/lex/action-ideas.ts `TestSummary`). */
 interface ActionIdeasResult {
   ok: boolean
@@ -1032,13 +1076,20 @@ export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActi
   const live = s.policies.filter((p) => p.status !== 'RULED_OUT' && !p.superseded)
   const unsorted = live.filter((p) => !p.sorted)
   const unsortedIds = new Set(unsorted.map((p) => p.id))
-  const policies = live.filter((p) => p.kind === 'GUIDING_POLICY' && !unsortedIds.has(p.id))
-  const actions = live.filter((p) => p.kind === 'COHERENT_ACTION' && !unsortedIds.has(p.id))
+  // 26-N §4 — a guiding policy has been accepted: only it stays on show; the rest goes under "Not chosen".
+  const tidy = !!s.settled
+  const chosen = tidy ? s.policies.find((p) => p.status === 'CHOSEN' && p.kind === 'GUIDING_POLICY') ?? null : null
+  // §4a — candidates already moved into Coherent Actions LEAVE this section; they are counted, not listed.
+  const isMoved = (p: Policy) => p.kind === 'COHERENT_ACTION' && !!p.movedToActionId
+  const movedCount = tidy ? s.policies.filter((p) => isMoved(p) && p.status !== 'RULED_OUT').length : 0
+  const policies = live.filter((p) => p.kind === 'GUIDING_POLICY' && !unsortedIds.has(p.id) && !(tidy && p.status === 'CHOSEN'))
+  const actions = live.filter((p) => p.kind === 'COHERENT_ACTION' && !unsortedIds.has(p.id) && !(tidy && isMoved(p)))
   const goals = live.filter((p) => p.kind === 'GOAL_RESTATEMENT' && !unsortedIds.has(p.id))
   const rejected = s.policies.filter((p) => p.status === 'RULED_OUT')
   const later = policies.filter((p) => p.phase === 'LATER')
   // 26-L addendum, decision 103 item 1 — which cards the gate is waiting on, marked in place.
-  const waitingOn = new Set(s.consolidate.waitingOnNumbers)
+  const waitingOn = new Set(tidy ? [] : s.consolidate.waitingOnNumbers)
+  const notChosenCount = policies.length + unsorted.length + actions.length + goals.length + rejected.length
 
   return (
     <section className="rounded-2xl border border-zinc-200 mt-3" aria-label="Choosing a guiding policy">
@@ -1061,6 +1112,7 @@ export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActi
             principle by which actions are judged, not the actions — and states the three-way
             gate (sorted, allocated OR commented) explicitly rather than "commented" standing
             in for all three, and names "Write the final version" as its own step. */}
+        {!tidy && (<>
         <p className="text-xs text-zinc-600 mt-2 leading-relaxed">
           After choosing the right cause, getting the guiding policy right is the next most
           important task, and it&rsquo;s not easy. A good guiding policy brings focus and
@@ -1076,11 +1128,54 @@ export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActi
           models. You then choose the best of those, add final feedback and click{' '}
           <span className="font-medium">Write the final version</span>.
         </p>
+        </>)}
       </div>
 
       {showGuide && <GuidingPolicyGuideModal onClose={() => setShowGuide(false)} />}
 
       {error && <p className="px-4 py-2 text-xs text-amber-800 bg-amber-50 border-b border-amber-200">{error}</p>}
+
+      {/* ══ 26-N §4 — THE ACCEPTED POLICY: THE ONLY THING THAT STAYS ON SHOW ═══════════════════════
+          Outside "Not chosen", always visible. The text is the settled wording; the sections the final version
+          carried (what it rules out, how likely, what fails if only part is delivered) sit beneath it. */}
+      {tidy && (
+        <div className="px-4 py-3 border-b border-zinc-100" id="accepted-guiding-policy">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Your guiding policy{chosen?.number != null ? ` (#${chosen.number})` : ''}
+          </h4>
+          <p className="text-sm text-zinc-900 mt-1.5 leading-relaxed">{chosen?.approach ?? s.settled}</p>
+          {chosen?.rulesOut && <p className="text-xs text-zinc-700 mt-2"><span className="font-semibold">What it rules out:</span> {chosen.rulesOut}</p>}
+          {chosen?.likelihood && <p className="text-xs text-zinc-700 mt-1"><span className="font-semibold">How likely:</span> {chosen.likelihood}</p>}
+          {chosen?.chainLink && <p className="text-xs text-zinc-900 mt-1 border-l-2 border-zinc-900 pl-2.5 font-medium">⚠ If only part of this is delivered: {chosen.chainLink}</p>}
+        </div>
+      )}
+
+      {/* The "what the settle added to Coherent Actions" banner is the user's confirmation; it is not tidied away. */}
+      {addedNote && (
+        <div className="mx-4 my-2 rounded-lg border-2 border-zinc-900 p-3 text-sm text-zinc-900">
+          {addedNote.ok ? (
+            <>
+              <span className="font-semibold">{addedNote.written} action{addedNote.written === 1 ? '' : 's'} added to Coherent Actions</span>
+              {' '}as candidates — from the four drafts, your comments on them
+              {addedNote.parkedRetested > 0 ? ` and ${addedNote.parkedRetested} that were waiting with other policies` : ''}
+              , each tested against your final guiding policy. Nothing is confirmed.
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">The actions were not added.</span>{' '}
+              {addedNote.error ?? 'The test did not complete.'} Nothing was lost — they are held, and Coherent Actions will offer to add them.
+            </>
+          )}
+          {onGoToActions && (
+            <button type="button" onClick={onGoToActions}
+              className="ml-2 text-xs font-semibold px-3 py-1 rounded-full bg-zinc-900 text-white">
+              Go to Coherent Actions
+            </button>
+          )}
+        </div>
+      )}
+
+      <NotChosenGroup tidy={tidy} count={notChosenCount} moved={movedCount}>
 
       {/* ══ 26-I §1 — THE USER CAN ADD A GUIDING POLICY OF THEIR OWN ═══════════════
           §1a: their words, verbatim. §1b: enters the sort, numbered, alongside Lex's. §1c:
@@ -1446,29 +1541,6 @@ export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActi
           screen, so the workspace's own list stayed as it was and the Coherent Actions section — a different,
           collapsed section — showed nothing new until a reload. Charlie reported "no coherent actions were
           written"; the rows were there (18 of them, a minute after he pressed Accept). */}
-      {addedNote && (
-        <div className="mx-4 my-2 rounded-lg border-2 border-zinc-900 p-3 text-sm text-zinc-900">
-          {addedNote.ok ? (
-            <>
-              <span className="font-semibold">{addedNote.written} action{addedNote.written === 1 ? '' : 's'} added to Coherent Actions</span>
-              {' '}as candidates — from the four drafts, your comments on them
-              {addedNote.parkedRetested > 0 ? ` and ${addedNote.parkedRetested} that were waiting with other policies` : ''}
-              , each tested against your final guiding policy. Nothing is confirmed.
-            </>
-          ) : (
-            <>
-              <span className="font-semibold">The actions were not added.</span>{' '}
-              {addedNote.error ?? 'The test did not complete.'} Nothing was lost — they are held, and Coherent Actions will offer to add them.
-            </>
-          )}
-          {onGoToActions && (
-            <button type="button" onClick={onGoToActions}
-              className="ml-2 text-xs font-semibold px-3 py-1 rounded-full bg-zinc-900 text-white">
-              Go to Coherent Actions
-            </button>
-          )}
-        </div>
-      )}
       <ConsolidatePanel
         ideaId={ideaId}
         consolidateInfo={s.consolidate}
@@ -1851,6 +1923,8 @@ export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActi
           </CollapsedSection>
         </div>
       )}
+
+      </NotChosenGroup>
 
       {/* ══ §1.9 — TWO ROUNDS, THEN LEX STOPS ASKING ═══════════════════════════ */}
       <div className="px-4 py-3 border-t border-zinc-100 bg-zinc-50/60">

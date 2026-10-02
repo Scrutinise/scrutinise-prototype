@@ -12,6 +12,7 @@ import { validateProposal } from '@/lib/lex/proposal-schema'
 import { isContinueIntent, isPlainAssent, performStageAdvance, isCorpusSearchRequest, researchQueryFrom } from '@/lib/lex/stage'
 import { runLexCorpusSearch } from '@/lib/lex/chat-corpus-search'
 import { availableActionsBlock } from '@/lib/lex/available-actions'
+import { requestedDraftField, draftRequestBlock, draftFiledSentence, fileLexDraft } from '@/lib/lex/lex-draft'
 import { countProblemPresses } from '@/lib/lex/orchestrator'
 import { acceptedSummary as buildAcceptedSummary, sourceValuesFor } from '@/lib/lex/accepted-context'
 import { matchCause, AMBIGUOUS } from '@/lib/lex/match-cause'
@@ -267,6 +268,8 @@ export async function POST(req: Request, { params }: Params) {
   // §19-E Task 2 — is this turn a QUESTION, and are there sources in hand to press the
   // user to read? Both are logged, so "the answer-first block never fired" and "it fired
   // and Lex still dodged" are distinguishable from outside — the §18 corollary.
+  // 26-N 6a - did the user ask for a draft of a NAMED field? (deterministic; Ask mode changes nothing)
+  const draftReq = askOnly ? null : requestedDraftField(message, pre.pages)
   const questionTurn = looksLikeAQuestion(message)
   const sourcesInHand = !!stageRecord?.ok && (stageRecord.results?.length ?? 0) > 0
   console.log('[lex-diag] turn shape', {
@@ -350,6 +353,7 @@ export async function POST(req: Request, { params }: Params) {
     askOnly,
     // 26-M — the search the platform ran this turn, and what may be suggested on THIS screen right now.
     corpusSearchBlock: corpusSearch?.block ?? null,
+    draftRequestBlock: draftReq ? draftRequestBlock(draftReq) : null,
     availableActionsBlock: availableActionsBlock({
       state: pre,
       pendingNewMaterial: (await pendingMaterialSince(id)).count,
@@ -402,11 +406,24 @@ export async function POST(req: Request, { params }: Params) {
   // not to emit one; this makes it true regardless, because the platform owns state and
   // "I've drafted a summary" is not an answer to "is a Charter the right instrument?".
   // Nothing is lost: the field stays current, unchanged, and the next turn picks it up.
-  if (questionTurn && lex.proposal) {
+  if (questionTurn && lex.proposal && !draftReq) {
     console.log('[lex-diag] proposal discarded — question turn', {
       currentField: current?.key ?? null, proposedFor: lex.proposal.fieldKey,
     })
     lex.proposal = null
+  }
+
+  // ══ 26-N section 6a - A DRAFT OF A NAMED FIELD IS FILED WHETHER OR NOT ITS STAGE IS OPEN ═════════
+  // Asked to fill "What it rules out" while it was waiting on Chosen approach, Lex refused. The gate controls
+  // ACCEPTANCE, not drafting: the draft is filed as a pending proposal (beside the user's words if they have
+  // any), and the platform says where it is. See lib/lex/lex-draft.ts.
+  let draftSentence: string | null = null
+  if (draftReq && lex.proposal) {
+    if (await fileLexDraft(id, draftReq, lex.proposal)) {
+      draftSentence = draftFiledSentence(draftReq)
+      lex.proposal = null
+      console.log('[lex-diag] 26n draft filed into a field that is not current', { field: draftReq.key, gated: draftReq.gated })
+    }
   }
 
   // §19-E Task 7 — A CHAT ANSWER SELECTS THE ROOT CAUSE.
@@ -572,6 +589,8 @@ export async function POST(req: Request, { params }: Params) {
 
   // Persist chat history, each message tagged with the stage it was said in (§19-B
   // Task 3 — the chat's stage dividers must survive a reload).
+  // 26-N 6a - the platform's own sentence about where the draft is, after whatever Lex wrote.
+  if (draftSentence) lex.chatText = `${lex.chatText.trim()}\n\n${draftSentence}`
   const now = new Date().toISOString()
   const updatedHistory: ChatMsg[] = [
     ...(Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),

@@ -73,7 +73,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
 
   const rows = await prisma.ideaFieldState.findMany({
     where: { ideaId },
-    select: { fieldKey: true, status: true, value: true, proposal: true },
+    select: { fieldKey: true, status: true, value: true, proposal: true, stale: true, staleReason: true, redraft: true },
   })
   const byKey = new Map(rows.map((r) => [r.fieldKey, r]))
 
@@ -97,6 +97,9 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       status,
       value: decodeValue(def.key, row?.value ?? null),
       proposal: proposal ? { value: proposal.value, rationale: proposal.rationale ?? undefined } : null,
+      // 26-N — "may need revisiting" (with its reason) and a redraft offered beside the user's own words.
+      stale: row?.stale && row.staleReason ? { reason: row.staleReason } : null,
+      redraft: row?.redraft ? (row.redraft as { value: unknown; rationale?: string | null }) : null,
     }
   }
 

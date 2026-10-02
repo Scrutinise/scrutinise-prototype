@@ -483,7 +483,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   )
 
   const transition = useCallback(
-    (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen' | 'keepMine', value?: string | string[] | Record<string, string>) =>
+    (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen' | 'keepMine' | 'editRedraft', value?: string | string[] | Record<string, string>) =>
       post('/fields', { fieldKey, action, value }),
     [post],
   )
@@ -1180,6 +1180,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onUseLexVersion={(key, value) =>
                   transition(key, 'accept', value as string | string[] | Record<string, string>)}
                 onKeepMine={(key) => transition(key, 'keepMine')}
+                onEditRedraft={(key) => transition(key, 'editRedraft')}
                 onGoToPage={goToPage}
                 causesApi={causesApi}
                 policyApi={policyApi}

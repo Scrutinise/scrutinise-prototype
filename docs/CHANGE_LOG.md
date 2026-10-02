@@ -1,5 +1,24 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-02 08:49 UTC — LEX 26-N (BRIEF_26N, `§3` HELD) — the guiding policy that never settled; kernel fields follow the settled policy
+
+**§1 — diagnosis corrected.** Charlie's policy WAS settled: `PolicyOption #30` is `CHOSEN` and `Idea.chosenApproach` is set. #30 is not a duplicate (nothing to archive) — it is the settled policy. What never happened:
+the Chosen approach **field** (`IdeaFieldState`) stayed `AWAITING_CONFIRMATION` with the build's 4 Sep text, because `applyPolicyOp('settle')` never wrote it (only the older `choosePolicyApproach` did). Every document and Lex's
+context read the field, so they printed "Not settled yet"/the old text while the screen said "Settled"; "Waiting on Chosen approach" and the orange circle followed. Edited and unedited acceptance share one route: not the cause.
+**Fixed:** `lib/lex/policy-fields.ts` — one handler, `onGuidingPolicySettled`, called from `applyPolicyOp('settle')` AND `choosePolicyApproach`: (1) accepts the Chosen approach field with the policy's statement
+(+ `Idea.chosenApproach`); (2) fills What it rules out from the final version's *Rules out* (§2a); (3) marks Leverage, Anticipated responses and the Guiding-policy summary STALE with a reason naming the replaced policy (§2c);
+(4) redrafts Leverage, Anticipated responses and Conditions for success against the accepted policy (statement + likelihood + "if only part is delivered") — ALL AS PROPOSALS. The coherent-action step runs from the same handler.
+**His edits stand (items 3–4):** `offerRedraft` (`field-machine.ts`) puts a redraft in the NEW `IdeaFieldState.redraft` slot BESIDE any field holding his words (accepted OR reopened — value non-empty); `value`/`status`/`proposal` are
+not in that write. Only where there are none of his words does the redraft become the pending proposal. A SKIPPED field is left alone. Accept (“Use this version”) / `Edit it` / `Keep mine` on every field (`FieldNotes`); accepting
+or keeping clears the redraft and the stale mark. Un-choose now resets the field too; editing the settled policy's card re-accepts it. Schema: `IdeaFieldState.redraft` — `prisma/lex_26n_field_redraft.sql` (additive) applied to production first.
+**§4:** once a policy is settled only it is visible; everything else (candidates, the four drafts, sort groups) is under one collapsed "Not chosen"; actions moved to Coherent Actions leave the section; **§4b** the Consolidate gate no longer
+reads "Waiting on #…" once settled (`readPolicyState`: `alreadySettled`). **§6a:** Lex drafts into any NAMED field on request, gated or not (`lib/lex/lex-draft.ts`; filed by the platform via `offerRedraft`; sentence verbatim:
+"I've put that in as a draft waiting for you — you'll need to complete this stage before you can edit it."). **§6b/§6c** shipped in 26-M (corpus search; stage-aware suggestions). **§7** the Coherent Actions introduction is verbatim
+(`COHERENT_ACTIONS_INTRO`, asserted against the brief character for character). **§8** "Check for gaps" (`lib/lex/gap-check.ts`, `ActionGapCheck`): free check, then four models, every suggestion must say what fails without it,
+combined/de-duplicated with models named, tested against the policy, into the list as suggestions (status `SUGGESTED`) with Accept/Dismiss; cost reported (scratch run: 5 calls, ~14p, ~164s).
+**Verified:** one full run INCLUDING the writes on a scratch idea (deleted): settle → Chosen approach ACCEPTED, his Leverage and reopened What-it-rules-out untouched with the redraft beside, stale reasons set, Conditions proposed;
+second settle → 0 extra model calls; keep-mine / edit-it / use-this-version / un-choose behave; the same step then run on Charlie's idea (his Leverage edit verified byte-identical). Report: `docs/REPORT_26N_FIELDS.md`.
+Checks: `check-lex-26n` 46, `-gaps` 40, `-tidy` 17; 26m checks repointed. NOT changed: any label (§3 held).
 ## 2026-10-02 04:09 UTC — LEX 26-M — TWO 2 OCT REGRESSIONS: actions invisible after Accept; Lex could not search
 
 **1. "No coherent actions were written."** Diagnosed from production before any change: the hypothesis (an edited acceptance settles through an older route) is WRONG —

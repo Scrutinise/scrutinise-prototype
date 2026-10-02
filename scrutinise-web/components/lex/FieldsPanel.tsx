@@ -9,6 +9,7 @@ import {
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
 import ActionSuggestions from './ActionSuggestions'
+import ActionGapCheck from './ActionGapCheck'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
@@ -280,6 +281,91 @@ function RefinementOffer({
     </div>
   )
 }
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// 26-N — "MAY NEED REVISITING", AND A REDRAFT BESIDE THE USER'S OWN WORDS
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// When a guiding policy is settled, the fields written for the policy it replaced are marked stale WITH A
+// REASON, and Lex's redraft against the accepted policy is offered here — beside the user's text, never over
+// it. ⚠ NOTHING IS APPLIED UNTIL THE USER SAYS: "Use this version" accepts it, "Edit it" takes it into the
+// editor (still pending), "Keep mine" dismisses it and clears the stale mark.
+//
+// ⚠ A SEPARATE COMPONENT FROM `RefinementOffer`, because that one only renders on an ACCEPTED field's
+// `proposal`; a redraft can sit beside an accepted field, a reopened one, or none at all.
+// ⚠ COLOUR IS NEVER THE ONLY CUE (docs/CLAUDE.md §21): a 2px border, the words "MAY NEED REVISITING" /
+// "LEX'S REDRAFT", a glyph, and a sentence saying what happens if the user does nothing.
+function FieldNotes({
+  field, busy, onUseLexVersion, onKeepMine, onEditRedraft,
+}: {
+  field: CanonicalField
+  busy: boolean
+  onUseLexVersion: (key: string, value: unknown) => void
+  onKeepMine: (key: string) => void
+  onEditRedraft?: (key: string) => void
+}) {
+  const reason = field.stale?.reason
+  const redraft = field.redraft
+  if (!reason && !redraft) return null
+  const v = redraft?.value
+  const text = v == null ? '' : Array.isArray(v)
+    ? (v as string[]).join(', ')
+    : typeof v === 'string' ? v
+      : Object.entries(v as Record<string, unknown>).map(([k, x]) => `${SLOT_LABELS[k] ?? k}: ${String(x)}`).join('\n')
+  return (
+    <div className="mt-2 space-y-2">
+      {reason && (
+        <p className="rounded-lg border-2 border-dashed border-zinc-500 p-2 text-[11px] text-zinc-800 leading-snug">
+          <span className="font-semibold"><span aria-hidden>△</span> May need revisiting.</span> {reason}
+        </p>
+      )}
+      {redraft && text.trim() && (
+        <div className="rounded-lg border-2 border-zinc-900 bg-zinc-50 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-700">
+            <span aria-hidden>◇</span> Lex’s redraft — beside your text
+          </p>
+          <p className="text-[11px] text-zinc-600 mt-0.5 mb-1.5 leading-snug">
+            Written against the guiding policy you accepted. Your text above stays exactly as it is unless you take this.
+          </p>
+          <p className="text-xs text-zinc-800 whitespace-pre-wrap">{text}</p>
+          {redraft.rationale && (
+            <p className="text-[11px] text-zinc-500 mt-1.5 leading-snug border-l-2 border-zinc-300 pl-2">{redraft.rationale}</p>
+          )}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button onClick={() => onUseLexVersion(field.key, v)} disabled={busy}
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40">
+              Use this version
+            </button>
+            {onEditRedraft && (
+              <button onClick={() => onEditRedraft(field.key)} disabled={busy}
+                className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-400 text-zinc-800 hover:bg-white disabled:opacity-40">
+                Edit it
+              </button>
+            )}
+            <button onClick={() => onKeepMine(field.key)} disabled={busy}
+              className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-600 hover:bg-white disabled:opacity-40">
+              Keep mine
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * ══ 26-N §7 — VERBATIM FROM BRIEF_26N §7 ══════════════════════════════════════════════════════
+ * Each paragraph is a list of parts: a plain string, or `{ strong }` for the word the brief bolds.
+ */
+export const COHERENT_ACTIONS_INTRO: Array<Array<string | { strong: string }>> = [
+  [
+    'Now your guiding policy is in place, we turn to the actions that carry it out. Each action must be ',
+    { strong: 'coherent' },
+    ': in line with the guiding policy, and consistent with the other actions, so that they reinforce rather than undermine one another. Together they should address the causes you identified and solve the problem.',
+  ],
+  ['Your coherent actions should form a complete structure of legislative, organisational and financial measures — covering behaviour, incentives and the ways the system could be gamed.'],
+  ['Each action must be specific enough to scrutinise: draft text where legislation is proposed; where it is organisational, who implements it, how, and why they would have the skill and the incentive to do it well.'],
+]
 
 function Tick() {
   return (
@@ -1565,9 +1651,11 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
 export default function FieldsPanel({
   pages, causes, policyOptions, actions, costLines, benchmarks, busy, currentFieldKey,
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
-  onUseLexVersion, onKeepMine,
+  onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
 }: {
+  /** 26-N - take Lex's redraft (offered beside the user's words) into the editor, still pending. */
+  onEditRedraft?: (key: string) => void
   /** 26-M addendum — an accepted suggestion became a real action; the parent re-reads the state. */
   onSuggestionChanged?: () => void
   pages: CanonicalState['pages']
@@ -1663,7 +1751,7 @@ export default function FieldsPanel({
     }
   }, [activePageKey])
 
-  const renderField = (f: CanonicalField) => {
+  const renderFieldBody = (f: CanonicalField) => {
     if (f.type === 'narrative') return <BoxField field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
     // §19-D Task 2a, second instance — found on the 12 Aug walk, not by a type error.
     //
@@ -1701,8 +1789,21 @@ export default function FieldsPanel({
       }
       if (f.key === 'actions') return (
         <>
+          {/* ══ 26-N §7 — THE INTRODUCTION TO COHERENT ACTIONS, IN CHARLIE'S WORDS, VERBATIM ═══════════
+              Three paragraphs, at the top of the section, above everything else in it. ⚠ NOT PARAPHRASED: the
+              wording is the brief's (BRIEF_26N §7) and `check:lex-26n-intro` asserts it character for character.
+              It is exported as COHERENT_ACTIONS_INTRO so a test can read the same string the screen prints. */}
+          <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-3 mb-3 space-y-2" id="coherent-actions-intro">
+            {COHERENT_ACTIONS_INTRO.map((p, i) => (
+              <p key={i} className="text-sm text-zinc-800 leading-relaxed">
+                {p.map((part, j) => (typeof part === 'string' ? part : <strong key={j}>{part.strong}</strong>))}
+              </p>
+            ))}
+          </div>
           {/* 26-M addendum §3 — SUGGESTIONS AT THE TOP of Coherent Actions, above the user's own list. */}
           {ideaId && <ActionSuggestions ideaId={ideaId} onChanged={onSuggestionChanged} />}
+          {/* 26-N §8 - "Check for gaps": the free check, then four models; suggestions with Accept / Dismiss. */}
+          {ideaId && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
           <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
         </>
       )
@@ -1714,6 +1815,14 @@ export default function FieldsPanel({
     }
     return <OutputField field={f} busy={busy} onAcceptOutput={onAcceptOutput} onSkip={onSkip} onReopen={onReopen} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} />
   }
+
+  // 26-N - every field gets its "may need revisiting" note and any redraft offered beside the user's words.
+  const renderField = (f: CanonicalField) => (
+    <>
+      {renderFieldBody(f)}
+      <FieldNotes field={f} busy={busy} onUseLexVersion={onUseLexVersion} onKeepMine={onKeepMine} onEditRedraft={onEditRedraft} />
+    </>
+  )
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">

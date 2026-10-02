@@ -311,7 +311,13 @@ export async function readPolicyState(ideaId: string) {
   // "greyed out until you've commented on each option" (§10a of BRIEF_26L had this as "sorted",
   // pending confirmation; decision 103 settles it as feedback/disposition, either satisfies).
   const feedbackGiven = new Set(feedbackByPolicyRows.map((f) => f.policyOptionId).filter((x): x is string => !!x))
-  const stillWaiting = dispositionable.filter(
+  // ══ 26-N §4b — ONCE A GUIDING POLICY IS SETTLED, THE GATE NO LONGER APPLIES ══════════════════════
+  // The gate exists to stop a user consolidating before they have engaged with every candidate. A policy
+  // that has been accepted has finished that job; Charlie's screen still read "Waiting on #2" after he had
+  // accepted his final version, because the old candidate was still undispositioned and the gate never
+  // asked whether anything had been settled.
+  const alreadySettled = !!idea?.chosenApproach?.trim()
+  const stillWaiting = alreadySettled ? [] : dispositionable.filter(
     (r) => effectiveDisposition({ ...r, disposition: r.disposition, duplicateOfNumber: r.duplicateOfNumber }) === 'UNDISPOSITIONED'
       && !feedbackGiven.has(r.id),
   )
@@ -428,7 +434,7 @@ export async function applyPolicyOp(input: {
   edit?: { approach?: string; rulesOut?: string; caseFor?: string; likelihood?: string }
   /** `acceptEnhance`/`edit` only — whose prior wording `FieldRevision` records as superseded. */
   userId?: string
-}): Promise<{ state: PolicyState; addedNumber?: number; compoundTest?: CompoundTest; actionIdeas?: unknown } | { notOnThisIdea: true }> {
+}): Promise<{ state: PolicyState; addedNumber?: number; compoundTest?: CompoundTest; actionIdeas?: unknown; policyFields?: unknown } | { notOnThisIdea: true }> {
   const { ideaId: id, op, policyId, reason, phase, merge, text, duplicateOfNumber, enhance, edit, userId } = input
 
   const row = policyId
@@ -449,6 +455,8 @@ export async function applyPolicyOp(input: {
   let compoundTest: CompoundTest | undefined
   /** 26-M — what the settle EVENT did with the held coherent-action ideas (see `onChosenApproachSettled`). */
   let actionIdeas: Awaited<ReturnType<typeof import('./action-ideas').onChosenApproachSettled>> | undefined
+  /** 26-N - what the same event did to the kernel fields (Chosen approach accepted, sections filled, stale, redrafts). */
+  let policyFields: Awaited<ReturnType<typeof import('./policy-fields').applyAcceptedPolicyToKernel>> | undefined
 
   switch (op) {
     // ══════════ 25-T §2b — THE MERGE WRITES HERE, ON ACCEPTANCE, AND NOWHERE ELSE ══════════
@@ -510,6 +518,13 @@ export async function applyPolicyOp(input: {
           }),
           prisma.policyOption.update({ where: { id: row.id }, data: { approach } }),
         ])
+        // 26-N - EDITING THE SETTLED POLICY EDITS WHAT EVERYTHING DOWNSTREAM READS. The card edit rewrote
+        // `PolicyOption.approach` only, so the Chosen approach field and `Idea.chosenApproach` (what the
+        // documents and Lex's context read) kept the old wording after the user had changed it.
+        if (row.status === 'CHOSEN') {
+          const { acceptField } = await import('@/lib/lex/field-machine')
+          await acceptField(id, userId, 'chosenApproach', approach)
+        }
       }
       const rest: Record<string, unknown> = {}
       if (edit.rulesOut !== undefined) rest.rulesOut = edit.rulesOut.trim() || null
@@ -609,6 +624,8 @@ export async function applyPolicyOp(input: {
     // ══ §1.10 — WHAT THE USER LEAVES WITH ══════════════════════════════════════
     case 'settle':
       if (row) {
+        // The policy being replaced, for the reason text on the fields written for it (26-N section 2c).
+        const replaced = await prisma.policyOption.findFirst({ where: { ideaId: id, status: 'CHOSEN', id: { not: row.id } }, select: { number: true } })
         await prisma.$transaction([
           // One CHOSEN at a time: settling a second silently would leave two.
           prisma.policyOption.updateMany({
@@ -640,8 +657,12 @@ export async function applyPolicyOp(input: {
         // parked with the policy this replaces are tested against this one and written to the Coherent
         // Actions candidate list. HERE, because this is where a guiding policy becomes the settled one,
         // whichever screen or route got it here. It never throws and never blocks the settle.
-        const { onChosenApproachSettled } = await import('./action-ideas')
-        actionIdeas = await onChosenApproachSettled(id, row.id, userId ?? null)
+        // 26-N - AND THE KERNEL FIELDS, in the same handler: Chosen approach accepted, the final version's
+        // sections filled, the replaced policy's fields marked stale, the redrafts offered.
+        const { onGuidingPolicySettled } = await import('./policy-fields')
+        const handled = await onGuidingPolicySettled(id, row.id, userId ?? null, replaced?.number ?? null)
+        actionIdeas = handled.actionIdeas
+        policyFields = handled.policyFields
       }
       break
 
@@ -657,6 +678,11 @@ export async function applyPolicyOp(input: {
           prisma.policyOption.update({ where: { id: chosen.id }, data: { status: 'CANDIDATE' } }),
           prisma.idea.update({ where: { id }, data: { chosenApproach: null } }),
         ])
+        // 26-N - THE FIELD FOLLOWS THE POLICY BACK TOO. This op reopened the policy and left the Chosen approach
+        // FIELD accepted with the old text, so every document (which read the field) kept printing a policy the
+        // user had un-chosen. The older route (`unchoosePolicyApproach`) always reset it; now both do.
+        const { unchoosePolicyApproach } = await import('@/lib/lex/field-machine')
+        await unchoosePolicyApproach(id)
       }
       break
     }
@@ -876,7 +902,7 @@ export async function applyPolicyOp(input: {
   }
 
   await syncPolicyField(id)
-  return { state: await readPolicyState(id), addedNumber, compoundTest, actionIdeas }
+  return { state: await readPolicyState(id), addedNumber, compoundTest, actionIdeas, policyFields }
 }
 
 /**

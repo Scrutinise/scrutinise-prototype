@@ -375,7 +375,76 @@ export async function dismissProposal(ideaId: string, fieldKey: string): Promise
     where: { ideaId, fieldKey, status: 'ACCEPTED' },
     data: { proposal: Prisma.DbNull },
   })
-  return cleared.count > 0
+  // 26-N — "keep mine" also answers a redraft offered beside the field, on ANY status, and clears the
+  // "may need revisiting" mark: the user has looked at it and kept their words.
+  const redraft = await prisma.ideaFieldState.updateMany({
+    where: { ideaId, fieldKey, NOT: { redraft: { equals: Prisma.DbNull } } },
+    data: { redraft: Prisma.DbNull, stale: false, staleReason: null },
+  })
+  return cleared.count > 0 || redraft.count > 0
+}
+
+/**
+ * ══ 26-N — A REDRAFT OFFERED BESIDE THE USER'S WORDS, NEVER OVER THEM ═══════════════════════════
+ *
+ * Charlie, 2 Oct: *"His edit stands. When §2c redrafts the stale fields against the accepted policy, any
+ * redraft of a field he has edited appears beside his text as a proposal — never over it. That rule holds
+ * for every field he touches."*
+ *
+ * WHAT COUNTS AS "HIS WORDS": any field holding a non-empty `value` — accepted, or reopened (a reopened field
+ * keeps its accepted value and copies it into `proposal`, which is the editor, so `proposal` there IS his text).
+ * For those the redraft goes in `redraft`, a slot nothing else uses; `value`, `status` and `proposal` are not
+ * in the write.
+ *
+ * ⚠ WHERE THERE ARE NO WORDS OF HIS — empty, or only a build's own pending proposal — the redraft becomes the
+ * pending proposal, replacing Lex's own earlier guess. That is not "over his text": there is none.
+ * ⚠ A SKIPPED FIELD IS LEFT ALONE. Skipping was the user's decision about that field.
+ * ⚠ A REDRAFT IDENTICAL TO THE CURRENT WORDING IS NOT AN OFFER (same rule as `setProposal`).
+ */
+export async function offerRedraft(
+  ideaId: string,
+  fieldKey: string,
+  offer: { value: unknown; rationale: string; againstPolicyId: string },
+): Promise<'proposed' | 'beside' | 'unchanged' | 'skipped-field'> {
+  const row = await prisma.ideaFieldState.findUnique({
+    where: { ideaId_fieldKey: { ideaId, fieldKey } }, select: { status: true, value: true },
+  })
+  if (row?.status === 'SKIPPED') return 'skipped-field'
+  const next = encode(offer.value)
+  const hasHisWords = !!(row?.value && row.value.trim())
+  if (hasHisWords && next === row!.value) return 'unchanged'
+
+  if (!hasHisWords) {
+    await setStatus(ideaId, fieldKey, 'AWAITING_CONFIRMATION', { proposal: { value: offer.value, rationale: offer.rationale } })
+    await prisma.ideaFieldState.update({ where: { ideaId_fieldKey: { ideaId, fieldKey } }, data: { redraft: Prisma.DbNull } })
+    return 'proposed'
+  }
+  await prisma.ideaFieldState.update({
+    where: { ideaId_fieldKey: { ideaId, fieldKey } },
+    // ⚠ `value`, `status` and `proposal` are ABSENT from this write — see the doc comment.
+    data: { redraft: { value: offer.value, rationale: offer.rationale, againstPolicyId: offer.againstPolicyId, at: new Date().toISOString() } as never },
+  })
+  return 'beside'
+}
+
+/** ⚠ NEVER stale with no reason (IdeaFieldState.staleReason). Only an answered field can be stale. */
+export async function markFieldStale(ideaId: string, fieldKey: string, reason: string): Promise<void> {
+  await prisma.ideaFieldState.updateMany({
+    where: { ideaId, fieldKey, status: { in: ['ACCEPTED', 'AWAITING_CONFIRMATION'] } },
+    data: { stale: true, staleReason: reason },
+  })
+}
+
+/** "Edit it": take the redraft into the field's editor — still pending, nothing accepted. */
+export async function editRedraft(ideaId: string, fieldKey: string): Promise<boolean> {
+  const row = await prisma.ideaFieldState.findUnique({
+    where: { ideaId_fieldKey: { ideaId, fieldKey } }, select: { redraft: true },
+  })
+  const r = row?.redraft as { value?: unknown; rationale?: string } | null
+  if (!r || r.value == null) return false
+  await setStatus(ideaId, fieldKey, 'AWAITING_CONFIRMATION', { proposal: { value: r.value, rationale: r.rationale ?? null } })
+  await prisma.ideaFieldState.update({ where: { ideaId_fieldKey: { ideaId, fieldKey } }, data: { redraft: Prisma.DbNull } })
+  return true
 }
 
 /**
@@ -438,6 +507,12 @@ export async function acceptField(
     value = prop?.value ?? row?.value ?? null
   }
   await setStatus(ideaId, fieldKey, 'ACCEPTED', { value: encode(value), proposal: null })
+  // 26-N — accepting is the user re-affirming the field: a redraft offered beside it is answered (taken or
+  // overruled by what they just accepted), and "may need revisiting" no longer applies.
+  await prisma.ideaFieldState.update({
+    where: { ideaId_fieldKey: { ideaId, fieldKey } },
+    data: { redraft: Prisma.DbNull, stale: false, staleReason: null },
+  })
   await mirrorValue(ideaId, userId, fieldKey, value)
 }
 
@@ -893,6 +968,7 @@ export async function removePolicyOption(ideaId: string, optionId: string) {
 export async function choosePolicyApproach(ideaId: string, userId: string, optionId: string): Promise<boolean> {
   const chosen = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true, approach: true } })
   if (!chosen) return false
+  const replaced = await prisma.policyOption.findFirst({ where: { ideaId, status: 'CHOSEN' as never, id: { not: optionId } }, select: { number: true } })
   await prisma.$transaction([
     prisma.policyOption.updateMany({ where: { ideaId, id: { not: optionId } }, data: { status: 'RULED_OUT' as never } }),
     prisma.policyOption.update({ where: { id: optionId }, data: { status: 'CHOSEN' as never, ruleOutReason: null } }),
@@ -901,8 +977,8 @@ export async function choosePolicyApproach(ideaId: string, userId: string, optio
   await mirrorValue(ideaId, userId, 'chosenApproach', chosen.approach)
   // 26-M — the older direct route settles the same event; see `onChosenApproachSettled`. Dynamic import:
   // action-ideas imports this file.
-  const { onChosenApproachSettled } = await import('./action-ideas')
-  await onChosenApproachSettled(ideaId, optionId, userId)
+  const { onGuidingPolicySettled } = await import('./policy-fields')
+  await onGuidingPolicySettled(ideaId, optionId, userId, replaced?.number ?? null)
   return true
 }
 

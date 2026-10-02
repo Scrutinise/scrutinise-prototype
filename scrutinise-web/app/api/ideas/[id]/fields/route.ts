@@ -12,6 +12,7 @@ import {
   skipField,
   reopenField,
   dismissProposal,
+  editRedraft,
   fireSearchTrigger,
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
@@ -30,7 +31,7 @@ type Params = { params: Promise<{ id: string }> }
 const BodySchema = z.object({
   fieldKey: z.string().min(1),
   // ⚠ 25-X §1b — `keepMine` is its own action and not a flavour of skip. See dismissProposal.
-  action: z.enum(['submitBox', 'accept', 'skip', 'reopen', 'keepMine']),
+  action: z.enum(['submitBox', 'accept', 'skip', 'reopen', 'keepMine', 'editRedraft']),
   // value: a string (narrative/title/challenge), string[] (keywords), or an object
   // (structured fields — whoAffectedImpactCost/legalLandscape). Optional for
   // accept-as-proposed / skip / reopen.
@@ -106,6 +107,14 @@ export async function POST(req: Request, { params }: Params) {
       // is guarded on ACCEPTED, so a stale tab pressing this on a field the user has since
       // reopened would otherwise get an OK for a write that did not happen — and the screen
       // would show the offer gone until the next poll put it back.
+      // 26-N — take the redraft offered beside the user's words into the editor (pending, not accepted).
+      case 'editRedraft': {
+        const taken = await editRedraft(id, fieldKey)
+        if (!taken) {
+          return NextResponse.json({ error: 'There is no redraft on that field — it may have changed in another tab.' }, { status: 409 })
+        }
+        break
+      }
       case 'keepMine': {
         const cleared = await dismissProposal(id, fieldKey)
         if (!cleared) {

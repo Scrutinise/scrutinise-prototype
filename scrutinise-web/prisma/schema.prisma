@@ -2591,6 +2591,13 @@ model IdeaFieldState {
   /// ⚠ NEVER stale=true with a null reason — "this may need revisiting because cause 3 was
   /// amended" is the whole point; a bare flag with no reason is the thing this exists to avoid.
   staleReason String?
+  /// ══ 26-N — A REDRAFT OFFERED BESIDE WHAT THE USER ALREADY HAS, NEVER OVER IT ═══════════════
+  /// Shape: `{ value, rationale, againstPolicyId, at }`. Written when the guiding policy settles and a field
+  /// that already holds the user's own words (an accepted or reopened value) has been redrafted against it.
+  /// ⚠ A SEPARATE SLOT, NOT `proposal`: `proposal` is the field's pending text — the editor for an
+  /// AWAITING_CONFIRMATION field, which for a reopened field is the user's own words — so a redraft written
+  /// there would replace what the user is looking at. Cleared when the field is accepted, or dismissed.
+  redraft   Json?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 

@@ -916,6 +916,8 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-10-02 08:49 UTC (LEX 26-N — BRIEF_26N, §3 HELD)* — ▼▼ **THE GUIDING POLICY NOW SETTLES THE KERNEL.** Charlie's #30 was settled all along; the Chosen approach FIELD never was (`settle` did not write it), so documents and Lex read the old text. One handler `onGuidingPolicySettled` (`lib/lex/policy-fields.ts`) now accepts the field, fills What-it-rules-out, marks Leverage / Anticipated responses / summary stale WITH A REASON and redrafts Leverage / Anticipated responses / Conditions as PROPOSALS beside his words (`IdeaFieldState.redraft`; his edits stand). §4 tidy, §6a drafting, §7 intro, §8 Check for gaps shipped. **§3 (rename `Chosen approach` → `Guiding Policy`) is HELD** pending Charlie's decision on `docs/REPORT_26N_FIELDS.md` §5 — five documents call `chosenApproach` the guiding policy but the build summary calls `summaryGuidingPolicy` that; renaming would give two fields one name.
+Earlier:
 *Last updated: 2026-10-02 UTC (LEX 26-M regressions — see CHANGE_LOG's newest entry)* — ▼▼ **TWO 2 OCT REGRESSIONS FIXED.** ▶ "No coherent actions were written" was
 NOT a bypass by an edited acceptance (edited and unedited accept share one route and both go through `applyPolicyOp('settle')`): **18 actions WERE written** a minute after the
 Accept (7 → 25). The screen never showed them: `onSettled` reloaded only the Guiding Policy screen, the workspace's `state.actions` stayed stale and Coherent Actions is a

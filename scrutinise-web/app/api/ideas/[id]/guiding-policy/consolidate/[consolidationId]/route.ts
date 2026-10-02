@@ -358,6 +358,7 @@ export async function PATCH(req: Request, { params }: Params) {
   // ══ 26-M — THE ACTION-IDEA STEP RAN INSIDE `settle` (above), because it belongs to the EVENT "a policy
   // became the settled one", not to this button. This route only reports what that event did. ══════════
   const actionIdeas = settled.actionIdeas
+  const policyFields = settled.policyFields
 
-  return NextResponse.json({ consolidation: updated, state: settled.state, judge: finalJudge, actionIdeas })
+  return NextResponse.json({ consolidation: updated, state: settled.state, judge: finalJudge, actionIdeas, policyFields })
 }
