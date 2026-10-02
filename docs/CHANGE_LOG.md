@@ -1,5 +1,21 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-02 02:38 UTC — LEX 26-M addendum — coherent-action ideas from consolidation (candidates written on acceptance)
+
+When the final guiding policy is accepted, `testHeldActions` (`lib/lex/action-ideas.ts`) gathers (a) action ideas lifted from each consolidation draft
+(`extractActionIdeas` — quote-verified against the draft), (b) action ideas from the USER'S OWN COMMENTS on the drafts and the general comment
+(`extractFromComments` — read at acceptance, because the comments post-date the drafts; must quote the comment or its draft), and (c) every live un-moved
+parked action (`PolicyOption` kind COHERENT_ACTION) — tests all against the final policy (fits / does not fit / conflicts + one line), merges true duplicates,
+and WRITES one `LexCoherentAction` (source LEX) per group into the Coherent Actions candidate list. ⚠ Candidates, NOT confirmed: the field's "These are my
+actions" is untouched. Verdict, reason and provenance live on `ActionIdea`; `ActionSuggestions` shows them above the list with a Remove button. Parked actions
+are marked moved and re-parented to the settled policy (`rejectPolicyOption`'s cascade can no longer take them); `writeSort` skips an action already moved.
+A failed test changes nothing; the panel offers "Test and add them now" (`PATCH /action-ideas {op:'test'}`).
+**What happened to parked actions before this** (read off the live idea): `settle` demotes the old CHOSEN policy to CANDIDATE and releases only actions parked with the
+NEW policy, so those parked with the replaced one (4 of the 17 live action rows on idea 452c5ade; 13 more parked elsewhere) stayed stranded, and were RULED_OUT by
+`rejectPolicyOption`'s cascade if the old policy was then rejected.
+Schema: `ActionIdea` + `GuidingPolicyDraft.actionsExtractedAt` — `prisma/lex_26m_action_ideas.sql` (additive) APPLIED to production before this commit (whichdb: ep-old-dust-aboxi69a).
+Dry run on the real consolidation (stand-in policy #2, writes nothing, 2.2p): 13 ideas from the user's comments + 10 parked actions → 13 candidates, 6 merged. Check: `check-lex-26m-actions` 42 pass.
+
 ## 2026-10-02 00:23 UTC — LEX 26-M — material handed to Lex mid-kernel (Charlie, 2 Oct) + follow-up (Decision 109)
 
 **Follow-up, same commit:** (a) link cap 2 → 5 and links now filed IN PARALLEL with a 55s per-link budget (it was 2 because links were sequential, each fetch ≤20s + findings pass ≤120s, inside a 60s route — never a cost control); the comparison is skipped, and said to be skipped, if >60s has elapsed. (b) **Decision 109:** `ChatAttach` — the "Add a file or link" "+" — in `ChatPanel` and `AskLexPanel`, i.e. the chat on every stage; Lex now offers it. (c) chat message ceiling 4,000 → `MAX_TEXT_CHARS` in the schema, but an ordinary message stays at 4,000 and a longer one is accepted ONLY if filed as pasted material; pasted text is filed before the stage/research detectors run and the model + history get a one-line stub (never the article). (d) `decodeEntities` in `user-material.ts` (titles + `stripHtml`); `scripts/repair-material-titles.ts --apply` run on production: 2 source labels + 8 findings rewritten, re-run reports 0. `.text` is never touched. Check: `check-lex-26m` 47 pass; 25d/25k/25l/25o/25q/25r/25z pass.

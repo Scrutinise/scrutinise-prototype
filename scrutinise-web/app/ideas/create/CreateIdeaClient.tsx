@@ -451,6 +451,13 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   )
 
   // POST to a server endpoint that returns { state, messages } and apply both.
+  /** 26-M addendum — re-read the canonical state (an accepted suggestion created an action server-side). */
+  const refreshState = useCallback(async () => {
+    if (!ideaId) return
+    const res = await fetch(`/api/ideas/${ideaId}/state`)
+    if (res.ok) applyState(await res.json())
+  }, [ideaId, applyState])
+
   const post = useCallback(
     async (path: string, body: unknown) => {
       if (!ideaId) return
@@ -1180,6 +1187,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 costLinesApi={costLinesApi}
                 // 25-O §5 — the causes commentary fetches its own data.
                 ideaId={state.ideaId}
+                onSuggestionChanged={refreshState}
                 deepening={
                   <>
                     {/* ══════════ ⚠⚠ 25-Z §2c — WHAT LEFT THE MIDDLE PANEL, AND WHERE IT WENT ══

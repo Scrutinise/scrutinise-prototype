@@ -983,6 +983,8 @@ model Idea {
   // Consolidate audit trail (§3-§7).
   policyFeedback            PolicyFeedback[]
   guidingPolicyConsolidations GuidingPolicyConsolidation[]
+  // 26-M addendum — coherent-action ideas held from consolidation drafts, tested at acceptance.
+  actionIdeas               ActionIdea[]
   lexActions                LexCoherentAction[]
   ideaAssumptions           IdeaAssumption[]
   feedbackItems             FeedbackItem[]
@@ -2942,9 +2944,48 @@ model GuidingPolicyDraft {
   /// 26-L addendum 4 §2 — the user's comments on THIS draft; read by both "Write the final
   /// version" and "Start again" alongside the consolidation's general `userFeedback`.
   userFeedback      String?                    @db.Text
+  /// 26-M addendum — set once the coherent-action ideas in this draft have been lifted out and held
+  /// (see `ActionIdea`). Null = not yet extracted (or the extraction failed and is to be retried);
+  /// a draft with NO action ideas still gets a timestamp, so "nothing to extract" is not retried.
+  actionsExtractedAt DateTime?
   createdAt         DateTime                   @default(now())
 
   @@index([consolidationId])
+}
+
+/// ══ 26-M ADDENDUM — A COHERENT-ACTION IDEA, HELD UNTIL THE FINAL POLICY EXISTS ═══════════════
+///
+/// A consolidation draft is mostly a principle, but parts of it describe things to DO. Those parts
+/// are lifted out and HELD here — ⚠ NOTHING IS ADDED TO THE KERNEL. When the final guiding policy
+/// is accepted each held idea is tested against it (fits / does not fit / conflicts, one line why),
+/// duplicates are merged, and what is left appears at the top of Coherent Actions as a suggestion
+/// with Accept and Dismiss. ACCEPTED is the only status that creates a `LexCoherentAction`.
+///
+/// ⚠ `sources` IS A LIST, NOT A COLUMN: a merged duplicate keeps every draft (and every parked
+/// action) it came from, so "which draft said this" survives the merge. Shape:
+/// `[{ kind: 'DRAFT', model, draftId, consolidationId } | { kind: 'PARKED', policyOptionId, number, parkedWithNumber }]`.
+///
+/// ⚠ `consolidationId` is deliberately NOT a foreign key: the rows are owned by the idea (cascade
+/// below), and a consolidation deleted as an orphan must not take held ideas with it.
+model ActionIdea {
+  id               String   @id @default(uuid())
+  ideaId           String
+  idea             Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  consolidationId  String?
+  /// HELD → WRITTEN (an action was added to the Coherent Actions candidate list) | DISMISSED (the user removed it).
+  status           String   @default("HELD")
+  text             String   @db.Text
+  /// FITS | DOES_NOT_FIT | CONFLICTS | NOT_TESTED (the test did not cover it — never silently dropped).
+  verdict          String?
+  /// One line.
+  reason           String?
+  sources          Json
+  testedAgainstId  String?
+  acceptedActionId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([ideaId, status])
 }
 
 // Page 4 (Coherent Actions) action record (design §18.1). Kept as a NEW table,

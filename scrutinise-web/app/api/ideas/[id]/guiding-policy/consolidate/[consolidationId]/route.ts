@@ -14,6 +14,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
+import { extractActionIdeas, testHeldActions } from '@/lib/lex/action-ideas'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
 import { runFourDrafts, runRedraft, effectiveFailedModels, PREMIUM_DRAFT_MODELS, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, testIsCompound, testRulesOutNothing, type DraftForJudge, type JudgeVerdict } from '@/lib/lex/rumelt-tests'
@@ -185,6 +186,11 @@ export async function PATCH(req: Request, { params }: Params) {
       },
       include: { drafts: { orderBy: { createdAt: 'asc' } } },
     })
+    // 26-M addendum §1 — the retried drafts' action ideas are held too (un-read drafts only).
+    if (succeeded.length) {
+      await extractActionIdeas(id, consolidation.id, user?.id ?? null).catch((err) =>
+        console.error('[consolidate] action-idea extraction failed', err))
+    }
     return NextResponse.json({
       consolidation: updated,
       retried: succeeded.map((d) => d.model),
@@ -349,5 +355,18 @@ export async function PATCH(req: Request, { params }: Params) {
     include: { drafts: { orderBy: { createdAt: 'asc' } } },
   })
 
-  return NextResponse.json({ consolidation: updated, state: settled.state, judge: finalJudge })
+  // ══ 26-M ADDENDUM §2/§4 — TEST EVERY HELD ACTION AGAINST THE FINAL POLICY, IN THE SAME STEP ═══
+  //
+  // ⚠⚠ INCLUDING THE ACTIONS PARKED WITH THE POLICY THIS REPLACES. `settle` (above) demoted the
+  // previously chosen policy to CANDIDATE and released only the actions parked with the NEW one,
+  // so everything parked with the old one — 4 of the 17 live action rows on Charlie's idea when
+  // this was written (the other 13 are parked with other candidates, or with nothing) — would
+  // otherwise wait for ever, and be ruled out with that policy the day it is rejected.
+  //
+  // ⚠ NEVER ALLOWED TO FAIL THE ACCEPTANCE. The user has accepted a policy; if the test cannot run,
+  // that is reported in the response and retried from the Coherent Actions panel, and every held
+  // and parked action is exactly where it was.
+  const actionIdeas = await testHeldActions(id, created.id, user?.id ?? null, { consolidationId: consolidation.id })
+
+  return NextResponse.json({ consolidation: updated, state: settled.state, judge: finalJudge, actionIdeas })
 }

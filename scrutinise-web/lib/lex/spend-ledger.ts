@@ -477,6 +477,9 @@ export const PASS_PURPOSE: Record<string, SpendPurpose> = {
   'guiding-policy.draft': 'user builds',
   'guiding-policy.judge': 'user builds',
   'guiding-policy.redraft': 'user builds',
+  // 26-M addendum — lifting action ideas out of drafts, and testing them against the final policy.
+  'guiding-policy.actions-extract': 'user builds',
+  'guiding-policy.actions-test': 'user builds',
 
   'lex.chat': 'Lex chat',
   'lex.legacy-chat': 'Lex chat',

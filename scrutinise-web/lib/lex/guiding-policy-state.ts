@@ -1059,6 +1059,10 @@ export async function writeSort(input: {
   for (const s of sorted) {
     const row = byNumber.get(s.number)
     if (!row) continue
+    // ⚠ 26-M addendum — AN ACTION ALREADY MOVED INTO COHERENT ACTIONS IS NOT RE-SORTED. Re-sorting wrote
+    // `moveStatus: 'OFFERED'` and a fresh `parkedWithId` over it, which would offer a second copy of an
+    // action that is already in the list (and, for the ones the consolidation wrote, un-protect it).
+    if (row.moveStatus === 'ACCEPTED' && row.movedToActionId) continue
     const implementsRow = s.implementsPolicyNumber != null
       ? byNumber.get(s.implementsPolicyNumber) : null
     await prisma.policyOption.update({

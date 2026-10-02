@@ -8,6 +8,7 @@ import {
 } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
+import ActionSuggestions from './ActionSuggestions'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
@@ -1565,8 +1566,10 @@ export default function FieldsPanel({
   pages, causes, policyOptions, actions, costLines, benchmarks, busy, currentFieldKey,
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine,
-  causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId,
+  causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
 }: {
+  /** 26-M addendum — an accepted suggestion became a real action; the parent re-reads the state. */
+  onSuggestionChanged?: () => void
   pages: CanonicalState['pages']
   causes: CanonicalCause[]
   policyOptions: CanonicalPolicyOption[]
@@ -1696,7 +1699,13 @@ export default function FieldsPanel({
           </>
         )
       }
-      if (f.key === 'actions') return <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
+      if (f.key === 'actions') return (
+        <>
+          {/* 26-M addendum §3 — SUGGESTIONS AT THE TOP of Coherent Actions, above the user's own list. */}
+          {ideaId && <ActionSuggestions ideaId={ideaId} onChanged={onSuggestionChanged} />}
+          <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
+        </>
+      )
       return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} />
     }
     if (f.type === 'reference') {

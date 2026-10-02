@@ -15,6 +15,7 @@ import { enterSpendFor } from '@/lib/lex/build-context'
 import { readPolicyState } from '@/lib/lex/guiding-policy-state'
 import { runFourDrafts, effectiveFailedModels, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, type DraftForJudge } from '@/lib/lex/rumelt-tests'
+import { extractActionIdeas } from '@/lib/lex/action-ideas'
 
 export const maxDuration = 300
 /** Longer than `maxDuration`, so a marker this old can only be an orphan from a dead request. */
@@ -43,7 +44,11 @@ export async function GET(_req: Request, { params }: Params) {
   return NextResponse.json({ consolidations })
 }
 
+/** Past this much of the route's 300s, extraction is left to the accept step. */
+const EXTRACT_DEADLINE_MS = 250_000
+
 export async function POST(req: Request, { params }: Params) {
+  const startedAt = Date.now()
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
@@ -249,6 +254,15 @@ export async function POST(req: Request, { params }: Params) {
     data: { status: judged.ok ? 'JUDGED' : 'DRAFTING', costPence },
     include: { drafts: { orderBy: { createdAt: 'asc' } } },
   })
+
+  // ══ 26-M ADDENDUM §1 — HOLD EACH DRAFT'S ACTION IDEAS. NOTHING GOES NEAR THE KERNEL. ══════
+  // Best-effort and time-boxed: the drafts can use most of this route's 300s, and a held idea
+  // that was not extracted here is extracted when the final policy is accepted (the draft is
+  // un-stamped, so `testHeldActions` picks it up). Never allowed to fail the consolidation.
+  if (Date.now() - startedAt < EXTRACT_DEADLINE_MS) {
+    await extractActionIdeas(id, consolidation.id, user?.id ?? null).catch((err) =>
+      console.error('[consolidate] action-idea extraction failed', err))
+  }
 
   return NextResponse.json({
     consolidation: finalConsolidation,

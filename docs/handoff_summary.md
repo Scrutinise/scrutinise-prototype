@@ -916,6 +916,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-10-02 UTC (LEX 26-M + addendum — see CHANGE_LOG's two 26-M entries)* — ▼▼ **26-M SHIPPED; COHERENT-ACTION IDEAS FROM CONSOLIDATION.**
+▶ Chat: failed links say WHY (the 1 Oct "leansixsigmaexperts" failure was a 2-link cap, not a blocked page); cap now 5, parallel; "Add a file or link" "+" in the
+chat on every stage; pasted text filed (message ceiling raised to the document ceiling, model sees a stub); stated purpose runs the ~2p comparison;
+Consolidate-open offers relevant points for the final-version feedback. ▶ **Accepting a final guiding policy now WRITES coherent-action candidates**
+(`lib/lex/action-ideas.ts`): ideas from the four drafts AND from the user's own comments on them AND every live parked action, tested against the final policy
+(fits / does not fit / conflicts + one line), duplicates merged, written into the Coherent Actions candidate list as `LexCoherentAction` rows — NOT confirmed
+("These are my actions" is untouched). `ActionIdea` keeps verdict/reason/provenance; the panel above the list shows it with Remove. Parked actions are marked moved and
+re-parented to the settled policy so rejecting the old one cannot take them. Migration `prisma/lex_26m_action_ideas.sql` APPLIED to production. ▶ Entity not yet in
+`entity_list_v5.md` (CCh-only — needs Charlie's instruction): `ActionIdea`, `GuidingPolicyDraft.actionsExtractedAt`. ▶ Known pre-existing red checks (identical on a clean HEAD): 25h, 25i §2, 25n, 25p, 25s, 25x, sprint3e-ui.
+Earlier:
 *Last updated: 2026-09-30 00:35 UTC (LEX model review — report only)* — ▼▼ **NOTHING CHANGED; THREE DECISIONS WAITING.**
 `docs/MODEL_REVIEW_2026-09-30.md`. ▶ Fair panel: price-matched (~11p/press) or capability-top (~22p) — either needs the Anthropic client to
 stop forcing a tool (Opus 5.5 / Sonnet 5.5 / Fable 5.1 400 on it). ▶ Builds are 60% gemini-2.5-pro by spend; Jan-2027 Flash rate doubles the
