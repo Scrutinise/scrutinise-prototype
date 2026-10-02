@@ -132,6 +132,21 @@ function gapRoute(g: KnownUnknown): { kind: string; resolves: string } {
   }
 }
 
+/**
+ * ══ 26-N REPORT §4 — "CHOSEN BY LEX" WAS HARD-CODED, AND WRONG FOR A POLICY THE USER CHOSE ═════════════
+ *
+ * Every CHOSEN row was labelled "chosen by Lex". Charlie chose his through Consolidate, and the document told
+ * him Lex had. Who chose it is knowable: a build only PROPOSES the Chosen approach field, so while that field is
+ * still awaiting confirmation and the row is the build's own, it is Lex's recommendation; once the field has been
+ * settled — or the row is the user's own, as an accepted consolidation's is — the user chose it.
+ */
+function chosenAttribution(o: { source?: string | null; draftModel?: string | null }, fieldStillAwaiting: boolean): string {
+  if (fieldStillAwaiting && o.source !== 'USER') return 'Lex’s recommendation — not yet confirmed by you'
+  return o.draftModel
+    ? `chosen by you, from the consolidation of the drafts (the ${o.draftModel} draft)`
+    : 'chosen by you'
+}
+
 /** Compose the markdown body from the build's rows. Pure read; writes nothing. */
 export async function composeInitialQuestions(ideaId: string, buildId: string, buildVersion: number, opts: { late: boolean }): Promise<Snapshot> {
   const [build, forks, fields, causes, options, passes, issues, elicitation, avenueRows] = await Promise.all([
@@ -139,7 +154,7 @@ export async function composeInitialQuestions(ideaId: string, buildId: string, b
     prisma.buildFork.findMany({ where: { buildId }, orderBy: [{ forkKey: 'asc' }, { alternativeIndex: 'asc' }] }),
     prisma.ideaFieldState.findMany({ where: { ideaId, status: 'AWAITING_CONFIRMATION' }, select: { fieldKey: true, proposal: true } }),
     prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: { createdAt: 'asc' }, select: { cause: true, classification: true, isRootCause: true, whyPersisted: true, source: true } }),
-    prisma.policyOption.findMany({ where: { ideaId }, orderBy: { orderIndex: 'asc' }, select: { approach: true, caseFor: true, caseAgainst: true, status: true, ruleOutReason: true } }),
+    prisma.policyOption.findMany({ where: { ideaId }, orderBy: { orderIndex: 'asc' }, select: { approach: true, caseFor: true, caseAgainst: true, status: true, ruleOutReason: true, source: true, draftModel: true } }),
     prisma.deepeningPass.findMany({ where: { ideaId, runVersion: buildVersion }, select: { passKey: true, status: true, failureReason: true, knownUnknowns: true } }),
     prisma.deepeningIssue.findMany({ where: { ideaId, runVersion: buildVersion }, orderBy: { createdAt: 'asc' }, select: { title: true, text: true, status: true, passKey: true, sourceModel: true, dismissReason: true } }),
     prisma.ideaElicitation.findUnique({ where: { ideaId }, select: { ownKnowledge: true, ruledOut: true, readingUrl: true, readingFileName: true, readingStatus: true, goalDetail: true } }),
@@ -238,11 +253,12 @@ export async function composeInitialQuestions(ideaId: string, buildId: string, b
     }
     md.push(RESOLVES.cause)
   }
+  const awaitingKeys = new Set(fields.map((f) => f.fieldKey))
   if (options.length) {
     md.push('', '**Candidate approaches.**')
     for (const o of options) {
       counts.approaches++
-      const st = o.status === 'CHOSEN' ? 'chosen by Lex' : o.status === 'RULED_OUT' ? `ruled out${o.ruleOutReason ? ` — ${oneLine(o.ruleOutReason)}` : ''}` : 'candidate'
+      const st = o.status === 'CHOSEN' ? chosenAttribution(o, awaitingKeys.has('chosenApproach')) : o.status === 'RULED_OUT' ? `ruled out${o.ruleOutReason ? ` — ${oneLine(o.ruleOutReason)}` : ''}` : 'candidate'
       md.push(`- ${oneLine(o.approach)} *(${st})*`
         + (o.caseFor?.trim() ? ` For: ${oneLine(o.caseFor, 300)}` : '')
         + (o.caseAgainst?.trim() ? ` Against: ${oneLine(o.caseAgainst, 300)}` : ''))

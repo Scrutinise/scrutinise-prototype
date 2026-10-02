@@ -1,5 +1,8 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-02 09:39 UTC — LEX 26-N report §4: two honesty fixes in the generated documents
+
+(1) **Initial Questions** hard-coded "(chosen by Lex)" on every CHOSEN policy, including one the user chose through Consolidate. It now attributes the choice: "chosen by you" (+ ", from the consolidation of the drafts (the X draft)") once the Chosen approach field is settled or the row is the user's own; "Lex's recommendation — not yet confirmed by you" only while the field is still awaiting confirmation on a build-written row. (2) **Meeting Pack** said "N approaches are under consideration and none has been committed to" over a settled policy (its live list includes the CHOSEN row); a chosen policy is now stated as chosen with the others as "considered and not chosen". The **Proposal's** candidate fallback (reached whenever the field is not accepted, even if a row is CHOSEN) says "The approach chosen is: …" when one is. "None has been committed to" survives only for the no-chosen case. Check: `check-lex-26n` 56 pass. BRIEF_26O.md was not found in docs/.
 ## 2026-10-02 08:49 UTC — LEX 26-N (BRIEF_26N, `§3` HELD) — the guiding policy that never settled; kernel fields follow the settled policy
 
 **§1 — diagnosis corrected.** Charlie's policy WAS settled: `PolicyOption #30` is `CHOSEN` and `Idea.chosenApproach` is set. #30 is not a duplicate (nothing to archive) — it is the settled policy. What never happened:

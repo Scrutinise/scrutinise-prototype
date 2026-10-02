@@ -101,5 +101,21 @@ ok('"coherent" is the bolded word, as in the brief', intro[0].some((x) => typeof
 ok('it is rendered at the top of the actions field, above the suggestions', fp.indexOf('COHERENT_ACTIONS_INTRO.map') < fp.indexOf('<ActionSuggestions'))
 ok('control — a one-word change would be caught', briefParas[0] !== screenParas[0].replace('Together', 'All together'))
 
+
+console.log('\n── REPORT §4 — the documents say what is true about who chose, and whether one is chosen ──')
+const iq = read('lib/documents/build-initial-questions.ts')
+ok('Initial Questions no longer hard-codes "chosen by Lex"', !/'chosen by Lex'/.test(iq))
+ok('...it attributes the choice (the user\'s, once the field is settled or the row is theirs)', /function chosenAttribution/.test(iq) && /chosen by you/.test(iq))
+ok('...and still says "Lex\'s recommendation" where the build only proposed it', /Lex’s recommendation — not yet confirmed by you/.test(iq))
+ok('...naming the draft a consolidation policy came from', /from the consolidation of the drafts \(the \$\{o\.draftModel\} draft\)/.test(iq))
+ok('...which needs source and draftModel selected', /select: \{ approach: true[^}]*source: true, draftModel: true \}/.test(iq))
+const mp = read('lib/documents/build-meeting-pack.ts')
+ok('Meeting Pack: a chosen policy is stated as chosen', /The approach that has been chosen/.test(mp))
+ok('..."none has been committed to" is only reachable when nothing is chosen', mp.indexOf("const chosen = live.find") < mp.lastIndexOf('none has been committed to') && /\} else if \(live\.length > 1\) \{/.test(mp))
+ok('...the others are called alternatives that were not chosen', /considered and not chosen/.test(mp))
+const pr = read('lib/documents/build-proposal.ts')
+ok('Proposal: with a policy chosen the fallback says so, not "No approach has been committed to"', /chosenRow/.test(pr) && /The approach chosen is:/.test(pr))
+ok('control — the old sentence is only the no-chosen branch', /: `No approach has been committed to yet\./.test(pr))
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

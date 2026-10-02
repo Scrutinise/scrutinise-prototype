@@ -387,11 +387,19 @@ function candidatePolicyBlocks(snapshot: ProposalSnapshot): Block[] {
     return [{ kind: 'note', text: 'No approach has been committed to, and no candidates have been recorded.' }]
   }
 
+  // ⚠ 26-N REPORT §4 — THE WORDING MATCHES THE STATE. This fallback runs whenever the Chosen approach FIELD is not
+  // accepted, which includes the case where a policy IS chosen on its row; it then said "No approach has been
+  // committed to yet" over a chosen policy. With one chosen it says so, and the rest are the alternatives.
+  const chosenRow = live.find((o) => o.status === 'CHOSEN')
   const out: Block[] = [{
     kind: 'note',
-    text: `No approach has been committed to yet. ${live.length} ${live.length === 1 ? 'is' : 'are'} `
-      + 'under consideration, and all of them are set out below with the reason each is there. '
-      + 'This is a decision the proposer has still to make, not a gap in the work.',
+    text: chosenRow
+      ? `The approach chosen is: ${chosenRow.approach} `
+        + `${live.length > 1 ? `The other ${live.length - 1} ${live.length - 1 === 1 ? 'is' : 'are'} alternatives that were considered and not chosen, ` : 'It is set out below, '}`
+        + 'with the reason each is there.'
+      : `No approach has been committed to yet. ${live.length} ${live.length === 1 ? 'is' : 'are'} `
+        + 'under consideration, and all of them are set out below with the reason each is there. '
+        + 'This is a decision the proposer has still to make, not a gap in the work.',
   }]
 
   // ⚠ THE SORT'S OWN GROUPS, IN THE SORT'S OWN ORDER. A flat list of twenty-four is the thing

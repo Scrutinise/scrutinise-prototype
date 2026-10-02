@@ -114,7 +114,32 @@ export function buildMeetingPackDocument(
     const live = (snapshot.options ?? []).filter((o) => o.status !== 'RULED_OUT')
     const ruledOut = (snapshot.options ?? []).filter((o) => o.status === 'RULED_OUT')
 
-    if (live.length > 1) {
+    // ══ 26-N REPORT §4 — THE WORDING MUST MATCH THE STATE ═══════════════════════════════════════
+    // `live` includes the CHOSEN row, so with a policy chosen and others still live this said "N approaches are
+    // under consideration and none has been committed to" over a settled decision. A chosen policy is stated as
+    // chosen, and the others are said to be alternatives that were not chosen.
+    const chosen = live.find((o) => o.status === 'CHOSEN')
+    if (chosen) {
+      const others = live.filter((o) => o !== chosen)
+      blocks.push({ kind: 'heading', level: 1, runs: text('The approach that has been chosen') })
+      blocks.push({ kind: 'paragraph', runs: text(chosen.approach) })
+      if (chosen.caseFor) blocks.push({ kind: 'paragraph', runs: text(chosen.caseFor) })
+      if (others.length) {
+        blocks.push({ kind: 'heading', level: 1, runs: text('Other approaches that were considered') })
+        blocks.push({
+          kind: 'note',
+          text: `${others.length} other approach${others.length === 1 ? ' was' : 'es were'} considered and not chosen. `
+            + 'They are kept here so the meeting can see what the chosen approach was weighed against.',
+        })
+        blocks.push({
+          kind: 'bullets',
+          items: others.map((o): Run[] => [
+            { text: o.approach, bold: true },
+            { text: o.caseFor ? ` — ${o.caseFor}` : '' },
+          ]),
+        })
+      }
+    } else if (live.length > 1) {
       blocks.push({ kind: 'heading', level: 1, runs: text('The approaches on the table') })
       blocks.push({
         kind: 'note',
