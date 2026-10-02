@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import AcceptCard from './AcceptCard'
 import EditOfferCard from './EditOfferCard'
 import ChatAttach from './ChatAttach'
+import AgentCards, { type AgentCardsState } from './AgentCards'
 import type { EditOffer } from '@/lib/lex/field-edit'
 import type { CanonicalField, CanonicalState } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
@@ -120,9 +121,21 @@ export default function ChatPanel({
   onDismissFeedbackOffer,
   onAcceptEdit,
   onDismissEdit,
+  agent,
+  onAgentConfirm,
+  onAgentDismiss,
+  onAgentUndo,
+  conversationPence,
   ideaId,
   onMaterialChanged,
 }: {
+  /** 26-P — what the tool-calling Lex put on the screen: confirmations, undos, candidate cards. Absent for the old Lex. */
+  agent?: AgentCardsState | null
+  onAgentConfirm?: (token: string) => void
+  onAgentDismiss?: (token: string) => void
+  onAgentUndo?: (token: string) => void
+  /** 26-P §8b — what this conversation has cost, in pence. Absent for the old Lex, which has no such figure. */
+  conversationPence?: number | null
   /** Decision 109 — when set, the "+" (file or link) is offered beside the box, on every stage. */
   ideaId?: string | null
   onMaterialChanged?: () => void
@@ -178,7 +191,8 @@ export default function ChatPanel({
   // ⚠ `- 1` IS THE ARRIVAL LINE. The last thing Lex said is what the user came back to read;
   // hiding it too would open the panel on nothing at all.
   const hiddenCount = showPrior ? 0 : Math.max(0, (arrivedWith.current ?? 0) - 1)
-  const visibleMessages = hiddenCount > 0 ? messages.slice(hiddenCount) : messages
+  // 26-P — a bookkeeping entry (a used-confirmation marker) has no words and is not a bubble.
+  const visibleMessages = (hiddenCount > 0 ? messages.slice(hiddenCount) : messages).filter((m) => (m.content ?? '').trim().length > 0)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -279,6 +293,12 @@ export default function ChatPanel({
           />
         )}
 
+        {/* ══ 26-P §3b/§4c — WHAT THE TOOLS RETURNED. A confirmation here is a real button; typing
+            "yes" into the box below approves nothing. ═══════════════════════════════════════ */}
+        {agent && onAgentConfirm && onAgentDismiss && onAgentUndo && (
+          <AgentCards state={agent} busy={busy} onConfirm={onAgentConfirm} onDismissPending={onAgentDismiss} onUndo={onAgentUndo} />
+        )}
+
         {/* The accept card renders IFF a field is awaiting confirmation. */}
         {awaitingField && awaitingField.status === 'AWAITING_CONFIRMATION' && (
           <AcceptCard field={awaitingField} busy={busy} onAccept={onAccept} onDecline={onDecline} />
@@ -303,7 +323,13 @@ export default function ChatPanel({
       <div className="border-t border-zinc-200 px-4 py-3">
         {/* §20.5 — the same action, always in reach, not only when Lex offers it. */}
         {onGiveFeedback && (
-          <div className="flex justify-end mb-1.5">
+          <div className="flex justify-end items-center gap-3 mb-1.5">
+            {/* 26-P §8b — "the user can see what the conversation has cost": the same honesty about cost the platform applies to builds. */}
+            {conversationPence != null && (
+              <span className="text-[11px] text-zinc-500" data-testid="conversation-cost">
+                This conversation has cost {conversationPence < 0.05 ? 'under 0.1' : conversationPence.toFixed(1)}p
+              </span>
+            )}
             <button
               onClick={onGiveFeedback}
               className="text-[11px] text-zinc-400 hover:text-zinc-700"

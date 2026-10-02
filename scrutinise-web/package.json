@@ -192,7 +192,8 @@
     "patch:question-template": "tsx scripts/patch-question-template.ts",
     "check:s14-merge": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s14-merge.ts",
     "audit:s14-scores": "bash scripts/s14-run.sh audit-scores",
-    "measure:s14-merge": "bash scripts/s14-run.sh measure"
+    "measure:s14-merge": "bash scripts/s14-run.sh measure",
+    "check:lex-26p": "tsx --env-file=.env scripts/check-lex-26p.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

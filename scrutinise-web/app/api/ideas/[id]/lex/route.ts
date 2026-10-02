@@ -31,6 +31,8 @@ import {
 import { fileChatPolicyFeedback, policyFeedbackFiledBlock, guidingPolicyChatRules, isGuidingPolicyContext } from '@/lib/lex/policy-feedback-chat'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
 import { buildFactsBlock } from '@/lib/lex/facts'
+import { agentEnabledFor } from '@/lib/lex/agent/flag'
+import { handleAgentTurn } from '@/lib/lex/agent/turn'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
 import { productFactsBlock } from '@/lib/lex/product-facts'
 import {
@@ -40,7 +42,11 @@ import {
 
 type Params = { params: Promise<{ id: string }> }
 
-/** The route's `maxDuration` is 120s (vercel.json). Past this much elapsed, a comparison is not started. */
+/**
+ * The route's `maxDuration` is 300s (vercel.json — raised from 120 by 26-P: the tool-calling Lex can chain
+ * a search, a filing and a draft in one turn, and its own loop stops at 240s). The OLD Lex below still
+ * budgets as if it had 120: past this much elapsed, a comparison is not started.
+ */
 const COMPARISON_DEADLINE_MS = 60_000
 
 const BodySchema = z.object({
@@ -55,6 +61,10 @@ const BodySchema = z.object({
    * about which question is live.
    */
   mode: z.enum(['FLOW', 'ASK']).optional(),
+  /** 26-P — where the user is; the agent's snapshot carries it. Ignored by the old Lex. */
+  ui: z.object({ stage: z.string().max(40).nullish(), panel: z.string().max(40).nullish() }).optional(),
+  /** 26-P — one id per send, so a network retry cannot act twice. Ignored by the old Lex. */
+  clientTurnId: z.string().min(8).max(80).nullish(),
 })
 
 type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string; field?: string; offer?: FeedbackOffer }
@@ -79,6 +89,20 @@ export async function POST(req: Request, { params }: Params) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   let { message } = parsed.data
   const askOnly = parsed.data.mode === 'ASK'
+
+  // ══ 26-P — THE SWITCH. ONE MOMENT OF REPLACEMENT, NOT TWO LEXES. ═════════════════════════════
+  //
+  // Decision 123: replace, don't run two. For a user the switch is on (`LEX_AGENT`: off | all | a list —
+  // lib/lex/agent/flag.ts), this turn is handled by the tool-calling Lex and NOTHING below this block runs:
+  // not the keyword detectors, not the 30-field envelope, not the tool-decider. The old code stays only so
+  // the changeover is a single flip; it is removed in the sprint after the switch is on for everyone.
+  if (agentEnabledFor({ id: user.id, email: user.email })) {
+    const out = await handleAgentTurn({
+      ideaId: id, user: { id: user.id, email: user.email }, idea: authz.idea, message,
+      ui: parsed.data.ui, clientTurnId: parsed.data.clientTurnId, readOnly: askOnly,
+    })
+    return NextResponse.json(out.body, { status: out.status })
+  }
 
   // ══ 26-M FOLLOW-UP — PASTED TEXT IS FILED FIRST, AND THE MODEL NEVER SEES IT ═════════════════
   //

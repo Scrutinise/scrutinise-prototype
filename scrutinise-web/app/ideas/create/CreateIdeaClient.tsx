@@ -23,6 +23,7 @@ import RerunOptions from '@/components/lex/RerunOptions'
 import { usePanelLayout } from '@/components/lex/usePanelLayout'
 import { PANEL_ROLES, HIDE_PANEL_LABEL } from '@/lib/lex/panel-layout'
 import type { EditOffer } from '@/lib/lex/field-edit'
+import { isLive, type AgentCardsState } from '@/components/lex/AgentCards'
 import WorkList from '@/components/lex/WorkList'
 // ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
 // TYPE import, erased at compile, so the server-only counting module never reaches the
@@ -145,6 +146,32 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
    * "put it in" on a rewrite two turns old, against a policy the conversation has moved past.
    */
   const [editOffer, setEditOffer] = useState<EditOffer | null>(null)
+  /**
+   * ══ 26-P §2a/§3b — WHAT THE TOOL-CALLING LEX LEFT ON THE SCREEN ══════════════════════════
+   *
+   * Confirmations waiting on a button, undos, and candidate cards — all of it the RESULT of a tool,
+   * none of it parsed from a reply. Hydrated from the last Lex message of the stored transcript so a
+   * confirmation survives a reload (the token expiry, not the page, decides when it dies). `null` for
+   * a user the old Lex serves: nothing here renders for them.
+   */
+  const [agent, setAgent] = useState<AgentCardsState | null>(() => {
+    const last = [...((initialMessages as Array<Record<string, unknown>> | undefined) ?? [])]
+      .reverse().find((m) => m && m.role === 'lex' && (m.pending || m.undo || m.ui))
+    if (!last) return null
+    const used = new Set(((initialMessages as Array<Record<string, unknown>> | undefined) ?? []).flatMap((m) => (Array.isArray(m?.used) ? (m.used as string[]) : [])))
+    const unused = (t: string) => !used.has(t.split('.')[1]?.slice(0, 24) ?? '')
+    return {
+      pending: ((last.pending as AgentCardsState['pending']) ?? []).filter((p) => isLive(p.token) && unused(p.token)),
+      undo: ((last.undo as AgentCardsState['undo']) ?? []).filter((u) => isLive(u.token) && unused(u.token)),
+      ui: [],
+    }
+  })
+  /** §8b — what this conversation has cost, in pence. `null` until the tool-calling Lex has spoken (the old Lex reports no cost). */
+  const [conversationPence, setConversationPence] = useState<number | null>(() => {
+    const rows = (initialMessages as Array<Record<string, unknown>> | undefined) ?? []
+    const any = rows.some((m) => typeof m?.costPence === 'number')
+    return any ? rows.reduce((s, m) => s + (typeof m?.costPence === 'number' ? (m.costPence as number) : 0), 0) : null
+  })
   const [tab, setTab] = useState<Tab>('chat')
   // Sprint 1.4: on a user's very first idea, open the walkthrough unprompted.
   const [showHelp, setShowHelp] = useState(Boolean(isFirstIdea))
@@ -309,6 +336,54 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     }
   }, [])
 
+  /**
+   * 26-P §2a — THE INTERFACE IS DRIVEN BY TOOL RESULTS. A tool that opened a panel or touched a field
+   * returns an effect; this is the one place they become UI. ⚠ Only panels the user can see change, and
+   * only to OPEN them — nothing is collapsed or navigated away from by Lex.
+   */
+  const applyAgentUi = useCallback((effects: unknown) => {
+    if (!Array.isArray(effects)) return
+    for (const e of effects as Array<{ type?: string; panel?: string }>) {
+      if (e?.type === 'highlight_field') { setPanelOpen((p) => ({ ...p, fields: true })); setTab('fields') }
+      if (e?.type === 'open_panel') {
+        if (e.panel === 'research') { setPanelOpen((p) => ({ ...p, background: true })); setTab('background') }
+        else if (e.panel === 'guiding-policy' || e.panel === 'actions' || e.panel === 'idea') { setPanelOpen((p) => ({ ...p, fields: true })); setTab('fields') }
+        else { setPanelOpen((p) => ({ ...p, chat: true })) }
+      }
+    }
+  }, [])
+
+  /** The button. ⚠ The ONLY way an asks-first action runs: a signed token posted here. */
+  const confirmAgent = useCallback(async (token: string) => {
+    if (!ideaId) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/lex-agent/confirm`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { error?: string; chatText?: string; state?: CanonicalState; agent?: AgentCardsState }
+      const said = data.chatText ?? data.error ?? 'I could not do that, and I am not sure why.'
+      setMessages((prev) => [...prev, { role: 'lex', content: said, stage: data.state?.stage }])
+      if (data.state) applyState(data.state)
+      // The pressed card is gone either way (done, refused or expired); what the server returned replaces it.
+      setAgent((prev) => ({
+        pending: (prev?.pending ?? []).filter((p) => p.token !== token),
+        undo: [...(data.agent?.undo ?? []), ...(prev?.undo ?? []).filter((u) => u.token !== token)],
+        ui: [],
+      }))
+      applyAgentUi(data.agent?.ui)
+    } catch (err) {
+      console.error('[lex-agent] confirm failed:', err)
+      setMessages((prev) => [...prev, { role: 'lex', content: 'I lost the connection — nothing has been changed. Try the button again.' }])
+    } finally {
+      setBusy(false)
+    }
+  }, [ideaId, applyState, applyAgentUi])
+
+  const dismissAgent = useCallback((token: string) => {
+    setAgent((prev) => prev && { ...prev, pending: prev.pending.filter((p) => p.token !== token) })
+  }, [])
+
   // ── Actions ────────────────────────────────────────────────────────────────
   const sendMessage = useCallback(
     async (text: string) => {
@@ -333,11 +408,14 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       setBusy(true)
       setError(null)
 
+      // ⚠ 26-P — ONE ID PER SEND, reused by the retry below. The tool-calling Lex can write, so a retried
+      // POST must be recognised server-side as the same turn, not acted on twice.
+      const clientTurnId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}${Math.random().toString(36).slice(2)}`
       const postOnce = async () => {
         const res = await fetch(`/api/ideas/${ideaId}/lex`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({ message: text, clientTurnId, ui: { stage: lexStage } }),
         })
         if (!res.ok) throw new Error(`lex ${res.status}`)
         return res.json()
@@ -367,6 +445,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         }
         appendLex(data.messages, replyStage)
         if (data.state) applyState(data.state)
+        if (data.agent) {
+          // The tool-calling Lex: its cards REPLACE the last turn's (a stale confirmation must not linger).
+          setAgent({ pending: data.agent.pending ?? [], undo: data.agent.undo ?? [], ui: data.agent.ui ?? [] })
+          if (!data.replayed) setConversationPence((p) => (p ?? 0) + (data.agent.costPence ?? 0))
+          applyAgentUi(data.agent.ui)
+        }
       } catch (err) {
         console.error('[lex] turn failed after retry:', err)
         setMessages((prev) => [
@@ -377,7 +461,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         setBusy(false)
       }
     },
-    [ideaId, applyState, appendLex, state?.stage],
+    [ideaId, applyState, appendLex, applyAgentUi, lexStage, state?.stage],
   )
 
   /**
@@ -1089,6 +1173,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onDismissFeedbackOffer={() => setFeedbackOffer(false)}
                 onAcceptEdit={acceptEdit}
                 onDismissEdit={() => setEditOffer(null)}
+                agent={agent}
+                onAgentConfirm={confirmAgent}
+                onAgentDismiss={dismissAgent}
+                onAgentUndo={confirmAgent}
+                conversationPence={conversationPence}
               />
               </div>
 

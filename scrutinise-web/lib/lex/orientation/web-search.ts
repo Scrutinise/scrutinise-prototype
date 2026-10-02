@@ -226,7 +226,12 @@ async function callGeminiRaw(opts: {
       contents: [{ role: 'user', parts: [{ text: opts.user }] }],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 2048,
+        // ⚠ 26-P — 2048 → 8192. Measured live on 2 Oct: the GROUNDED note for "how does the private sector deal
+        // with individual accountability" was cut off at 2,048 (`finishReason: MAX_TOKENS`), so the whole
+        // search returned null and chat reported "the web search did not complete" for a question the search
+        // could answer. CLAUDE.md §18 rule 5: output is billed on what is generated, so a generous ceiling on a
+        // call that writes a short note costs nothing; a tight one only ever fires.
+        maxOutputTokens: 8192,
         ...(opts.schema ? { responseMimeType: 'application/json', responseSchema: opts.schema, thinkingConfig: { thinkingBudget: 0 } } : {}),
       },
     }
@@ -248,7 +253,7 @@ async function callGeminiRaw(opts: {
     // CLAUDE.md §18 — BEFORE reading the body. A truncated grounded note reads as merely thin;
     // a truncated structured pass would surface as `JSON.parse` failing on the caller's side and
     // read as a serialiser bug rather than a length limit. Name it here, once, for both callers.
-    const problem = geminiFinishProblem(cand, 2048, { label: 'web-search:google' })
+    const problem = geminiFinishProblem(cand, 8192, { label: 'web-search:google' })
     if (problem) {
       console.warn(`[web-search:google] ${problem.detail}`)
       return null

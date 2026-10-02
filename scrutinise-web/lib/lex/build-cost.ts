@@ -57,6 +57,10 @@ const DEFAULT_RATES: Record<string, ModelRate> = {
   // recorded rather than the promotion: an estimate that silently assumes a discount overstates
   // the ceiling's headroom the day the promotion ends, and this table has no expiry mechanism.
   'claude-sonnet-5': { inPerM: 3.00, outPerM: 15.00 },
+  // 26-P — Sonnet 5.5, the model the tool-calling Lex runs on. Anthropic's published table, read from the
+  // claude-api reference cached 2026-09-25: $2.00 in / $10.00 out (cache reads $0.20, which `agent/loop.ts`
+  // prices itself via `actualUsd`). ⚠ NOT verified against an invoice.
+  'claude-sonnet-5-5': { inPerM: 2.00, outPerM: 10.00 },
   'claude-fable-5': { inPerM: 10.00, outPerM: 50.00 },
   'claude-haiku-4-5': { inPerM: 1.00, outPerM: 5.00 },
   // The dated form of the Haiku id, which `scripts/legislation/compile.ts` names as its Gemini-429
