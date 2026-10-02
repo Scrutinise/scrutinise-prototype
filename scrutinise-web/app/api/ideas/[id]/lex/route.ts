@@ -9,13 +9,15 @@ import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
 import { setProposal, storeExtracted, addCause, listCauses, setRootCause } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
-import { isContinueIntent, isPlainAssent, performStageAdvance, isResearchRequest, researchQueryFrom } from '@/lib/lex/stage'
+import { isContinueIntent, isPlainAssent, performStageAdvance, isCorpusSearchRequest, researchQueryFrom } from '@/lib/lex/stage'
+import { runLexCorpusSearch } from '@/lib/lex/chat-corpus-search'
+import { availableActionsBlock } from '@/lib/lex/available-actions'
 import { countProblemPresses } from '@/lib/lex/orchestrator'
 import { acceptedSummary as buildAcceptedSummary, sourceValuesFor } from '@/lib/lex/accepted-context'
 import { matchCause, AMBIGUOUS } from '@/lib/lex/match-cause'
 import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
-import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
+import { readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import {
   fileUrlsFromChat, filePastedTextFromChat, materialFiledBlock, statesPurpose, MIN_PASTE_CHARS, CHAT_MESSAGE_LIMIT,
   comparisonReportFrom, type ComparisonReport,
@@ -128,11 +130,22 @@ export async function POST(req: Request, { params }: Params) {
   // ── §19-C Task 1c: an explicit request to search the corpus is HANDLED, not
   // improvised. The platform runs the search, stores the references in the panel,
   // and Lex describes only what came back (the facts block enforces that).
+  //
+  // ══ 26-M — LEX SEARCHES THE CORPUS FROM THE CHAT, THROUGH `runGeneralCorpusChat` ═════════════
+  // Before this the detector demanded a verb AND a noun from a short list, so "search for what the private
+  // sector does" matched nothing and Lex — told it could not search — sent the user to a full re-run and a
+  // Deepening pass that could not even be reached. The search is the platform's; Lex reports it, and the
+  // sources are appended below whatever Lex says. See lib/lex/chat-corpus-search.ts.
   let research: ResearchRecord | null = null
-  if (isResearchRequest(message)) {
+  let corpusSearch: Awaited<ReturnType<typeof runLexCorpusSearch>> | null = null
+  if (isCorpusSearchRequest(message)) {
     const query = researchQueryFrom(message) || message
-    research = await runAdHocResearch(id, query)
-    console.log('[lex-diag] ad-hoc research from chat', { query: query.slice(0, 80), ok: research.ok, results: research.results.length })
+    corpusSearch = await runLexCorpusSearch({
+      ideaId: id, userId: user.id, query, ideaTitle: idea.title ?? null,
+      history: (Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),
+    })
+    research = corpusSearch.record
+    console.log('[lex-diag] corpus search from chat', { query: query.slice(0, 80), ok: corpusSearch.ok, sources: corpusSearch.sourceCount, failure: corpusSearch.failure })
   }
 
   // ══ DECISION 92 — A URL IN THE MESSAGE IS FILED BEFORE LEX EVER SPEAKS ══════════════
@@ -335,6 +348,12 @@ export async function POST(req: Request, { params }: Params) {
     // 25-Q §6 — the same array "How this works" renders. See lib/lex/product-facts.ts.
     productFactsBlock: productFactsBlock(),
     askOnly,
+    // 26-M — the search the platform ran this turn, and what may be suggested on THIS screen right now.
+    corpusSearchBlock: corpusSearch?.block ?? null,
+    availableActionsBlock: availableActionsBlock({
+      state: pre,
+      pendingNewMaterial: (await pendingMaterialSince(id)).count,
+    }),
     // Decision 92 — what the platform just filed on this idea, before this turn.
     materialFiledBlock: materialFiledBlock(materialResults, comparison),
     // 26-I addendum A1-A4 — what was filed this turn, plus the standing Guiding Policy
@@ -359,6 +378,9 @@ export async function POST(req: Request, { params }: Params) {
     console.error('[lex] turn failed (after retries)', { kind: e.kind ?? null, status: e.status ?? null, message: e.message })
     return NextResponse.json({ error: 'Lex unavailable', errorType: e.kind ?? 'api_error' }, { status: 502 })
   }
+
+  // 26-M — THE SOURCES ARE THE PLATFORM'S, appended whatever Lex wrote: the user is shown what the answer rests on.
+  if (corpusSearch?.footer) lex.chatText = `${lex.chatText.trim()}${corpusSearch.footer}`
 
   // Proposal handling (§4 + §13): act only on a proposal for the CURRENT field
   // (narrative box or Title/Keywords) and only when valid. Otherwise discard —

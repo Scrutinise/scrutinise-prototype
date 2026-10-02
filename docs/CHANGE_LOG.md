@@ -1,5 +1,22 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-02 04:09 UTC — LEX 26-M — TWO 2 OCT REGRESSIONS: actions invisible after Accept; Lex could not search
+
+**1. "No coherent actions were written."** Diagnosed from production before any change: the hypothesis (an edited acceptance settles through an older route) is WRONG —
+`acceptedEdited` and unedited both go `PATCH /consolidate/[id] {op:'accept'}` → `applyPolicyOp('settle')`. The step DID run: 18 `ActionIdea` rows `WRITTEN` and `LexCoherentAction`
+7 → 25 (`source=LEX`), created 03:49:52–03:49:53, ~65s after the 03:48:46 Accept. What was missing was the SCREEN: `GuidingPolicyScreen`'s `onSettled` was `load` (reloads only that screen),
+so the workspace's `state.actions` stayed at 7 and the Coherent Actions section (page status `visited` → collapsed) showed nothing until a reload. Fixed: (a) the step now lives in the EVENT —
+`onChosenApproachSettled` (`lib/lex/action-ideas.ts`) is called from `applyPolicyOp('settle')` and from `choosePolicyApproach` (the older direct route); the consolidation route only reports it;
+(b) comment ideas are read once per consolidation (a `COMMENT` source marks them read — without this every re-settle would write them again, because merged text no longer matches raw text);
+(c) the screen says "N actions added to Coherent Actions… Nothing is confirmed" (or that they were NOT added and are held) with a "Go to Coherent Actions" button, and the workspace re-reads its state.
+Verified: one full run INCLUDING the write on a scratch idea (deleted after): settle → 5 candidates (2 drafts + 2 comments + 2 parked, 1 merge), parked rows marked moved, `state.actions` = 5 =
+panel, actions field NOT confirmed; settle again → 5 → 5 (idempotent); `choosePolicyApproach` → fired. On Charlie's idea a dry run now reports 0 to write: nothing to redo, nothing duplicated.
+**2. Lex could not search the corpus.** 26-L removed the "research an angle" box on the basis that Lex would do it; the prompt said "you cannot search the corpus yourself" and sent users to a full re-run /
+Deepening pass. Now: `lib/lex/chat-corpus-search.ts` REUSES `runGeneralCorpusChat` (`lib/lex/general-chat.ts` — previously admin-only via `/api/admin/lex-general`; now takes `spendStream` and returns the
+`context` it numbered from); the platform runs the search before Lex speaks, Lex reports it, and the sources are appended by the platform. `isCorpusSearchRequest` no longer needs a noun from a short
+list (and ignores messages carrying links). `lib/lex/available-actions.ts` gives Lex, per turn and from the screen's own state, what it may suggest: Deepening LOCKED until all four kernel pages are complete,
+full re-run not sensible mid-kernel. Live probe (real corpus, scratch idea): 36 sources in 36s; the "what next, more evidence" turn no longer mentions a re-run or Deepening. `check-lex-26m-regressions` 51 pass;
+`check-lex-26m-actions` 42 pass.
 ## 2026-10-02 02:38 UTC — LEX 26-M addendum — coherent-action ideas from consolidation (candidates written on acceptance)
 
 When the final guiding policy is accepted, `testHeldActions` (`lib/lex/action-ideas.ts`) gathers (a) action ideas lifted from each consolidation draft

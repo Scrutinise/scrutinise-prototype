@@ -105,6 +105,17 @@ export interface LexTurnContext {
    * whether or not this particular turn filed anything. See lib/lex/policy-feedback-chat.ts.
    */
   policyFeedbackBlock?: string | null
+  /**
+   * ══ 26-M — THE CORPUS SEARCH THE PLATFORM RAN THIS TURN ═══════════════════════════════════
+   * Present only when the user asked for a search and the platform ran it (lib/lex/chat-corpus-search.ts).
+   * Lex reports what it found; it never searches, and never claims a search that is not described here.
+   */
+  corpusSearchBlock?: string | null
+  /**
+   * 26-M — WHAT LEX MAY SUGGEST RIGHT NOW (lib/lex/available-actions.ts), from the screen's own state. Without
+   * it Lex recommended a full re-run and a Deepening pass that could not be reached.
+   */
+  availableActionsBlock?: string | null
 }
 
 /**
@@ -437,7 +448,7 @@ ${method}
 
 ${PLATFORM_CONTROLS}
 
-${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.policyFeedbackBlock ? `${ctx.policyFeedbackBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
+${ctx.availableActionsBlock ? `${ctx.availableActionsBlock}\n\n` : ''}${ctx.corpusSearchBlock ? `${ctx.corpusSearchBlock}\n\n` : ''}${ctx.materialFiledBlock ? `${ctx.materialFiledBlock}\n\n` : ''}${ctx.policyFeedbackBlock ? `${ctx.policyFeedbackBlock}\n\n` : ''}${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
   user:            ${ctx.preferredName}
   experience:      ${ctx.experienceLevel ?? 'unknown — establish it gently early on'}
   mode:            ${ctx.lexMode}
@@ -460,7 +471,10 @@ RULES
     // and pointed at the panel. Brevity is right for conducting a form and wrong for
     // answering a question, and the two are now different turns.
     ? 'chatText answers the question, at whatever length the question deserves — for a substantive one that is several short paragraphs, and anything under three sentences is almost certainly an evasion. Structure it: take each part of what they asked in turn.'
-    : 'chatText is always 1–4 sentences.'} Never put JSON or field names in chatText.
+    : ctx.corpusSearchBlock
+      // 26-M — reporting a search is not a one-line answer: what was found, how strong, and the [n] it rests on.
+      ? 'chatText reports the search: what was found, how much and how strong, citing the [n] numbers — a short paragraph or two, no more than the sources support.'
+      : 'chatText is always 1–4 sentences.'} Never put JSON or field names in chatText.
 - Only ever propose for the CURRENT field shown above (never another field). If no current field is shown, propose nothing at all.
 - Never say you have written, saved, put or drafted something into a box unless you returned a proposal for the CURRENT field in this same turn. Claiming a write that did not happen is worse than saying nothing.
 - NUMBERS: state a figure only if it appears in a RETRIEVED STATISTICS block above, and give its period, unit and source when you do. With no such block, do not produce figures from memory — say what you'd need to look up. A confident wrong number is the worst thing you can give a user building a case for Parliament.
@@ -468,7 +482,7 @@ RULES
 - WHAT NEVER-CLAIM DOES NOT MEAN. It governs claims about THE PLATFORM AND THE CORPUS — what was retrieved, saved, searched or is sitting in a panel. It does NOT stop you thinking. You may and should reason from general knowledge: weigh one instrument against another, name the regime that already covers something, say what the closest existing analogue is, say what a committee would ask, and say what you think. Label it as reasoning when you do ("I'm reasoning here rather than citing…"). Refusing to answer a question you can answer is not caution — it is the failure this rule gets blamed for. The only hard line is fabrication: never invent a citation, a statistic, a date, a case name, or a claim about a document you were not shown.
 - NEVER END A SENTENCE MID-WORD, and never treat a fragment as a finished clause. If something you have been given stops in the middle of a word or a thought, say so in plain words ("your note on leverage stops mid-sentence — what did you mean to say?") rather than copying the break through into your own writing. A cut-off sentence the user cannot tell is cut off is a claim they cannot check.
 - If you could not do something (a draft failed, a search didn't run), say it plainly in one sentence and offer to try again. An honest failure is always better than a confident substitute.
-- RESEARCH REQUESTS: you cannot search the corpus yourself. If the user asks you to look something up and the FACTS block shows no search ran this turn, say so plainly — and then say where the search they want DOES happen, per WHERE THE CONTROLS ARE above: a full re-run from Stage 1 searches the corpus again, and each Deepening pass at Stage 3 searches for its own question. Never imply you have searched, never describe sources you have not been shown, and never send them to a panel on spec.
+- RESEARCH REQUESTS: you search the corpus FROM THIS CHAT — but the platform runs the search and hands you the result in a CORPUS SEARCH block. If there is no such block this turn, no search ran: say so plainly, and tell the user to ask you to search for it ("search for …") — that is the whole of the route; never send them to a re-run, a Deepening pass or another stage to search. Never imply you have searched, never describe sources you have not been shown, and never send them to a panel on spec.
 - "extracted" is optional; include only slots you are confident about.`
 }
 

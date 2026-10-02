@@ -193,6 +193,13 @@ export async function storeStageSearch(
   await saveStageSearches(ideaId, store)
 }
 
+/** Append a search record to the idea's stored searches — what the panel shows as research the user asked for. */
+export async function appendAdHocRecord(ideaId: string, record: ResearchRecord): Promise<void> {
+  const store = await loadStageSearches(ideaId)
+  store.research = [...store.research, record].slice(-6)
+  await saveStageSearches(ideaId, store)
+}
+
 /** Task 1c — a corpus search the user asked for in chat. Appended, never replacing. */
 export async function runAdHocResearch(ideaId: string, query: string): Promise<ResearchRecord> {
   const terms = query.split(/\s+/).filter(Boolean).slice(0, 24)

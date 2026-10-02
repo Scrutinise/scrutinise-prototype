@@ -82,11 +82,42 @@ export function isResearchRequest(raw: string): boolean {
   return true
 }
 
+/**
+ * ══ 26-M — "SEARCH FOR …" NEEDS NO NOUN FROM A LIST ═══════════════════════════════════════════
+ *
+ * `isResearchRequest` above demands BOTH a search verb and one of a short list of nouns (corpus, law, act…),
+ * so "search for what the private sector does about this" — the thing a user actually types — matched
+ * nothing, fell through to a Lex that was told it could not search, and sent the user to a re-run.
+ *
+ * Still EXPLICIT: a search verb in a request frame ("can you", "please", "I want you to", or the message
+ * opening with the verb), never merely a question about the law. Anything `isResearchRequest` accepted is
+ * still accepted.
+ */
+const SEARCH_PHRASE =
+  /\b(?:search(?:\s+(?:for|the|our|again))?|research\s+(?:the|into|on|what|how|whether|if|for|about)|look\s?up|look for|dig (?:in)?to|find (?:me |us )?(?:out|sources|evidence|studies|examples|cases|legislation|precedents?|anything|what|information|data)|is there (?:anything|any (?:evidence|research|legislation|law|precedent)))\b/i
+const REQUEST_FRAME =
+  /(?:\b(?:can|could|would|will) you\b|\bplease\b|\bi(?:'d| would) like you to\b|\bi want you to\b|\bgo and\b|\blet'?s\b|^\s*(?:search|research|look|find|dig|is there)\b)/i
+
+export function isCorpusSearchRequest(raw: string): boolean {
+  const text = raw.trim()
+  if (!text) return false
+  // A message carrying a link is GIVING material ("add these links to the background research"), not asking
+  // for a search — and "research" there is a noun. Filing handles it.
+  if (/https?:\/\//i.test(text)) return false
+  if (isResearchRequest(text)) return true
+  if (!SEARCH_PHRASE.test(text) || !REQUEST_FRAME.test(text)) return false
+  if (/\b(?:i(?:'ve| have)? (?:already )?(?:researched|searched|looked)|don'?t (?:search|research|look)|no need to (?:search|research))\b/i.test(text)) return false
+  // Something has to be left to search FOR once the instruction is taken away.
+  return researchQueryFrom(text).split(/\s+/).filter(Boolean).length >= 2
+}
+
 /** Strip the instruction wrapper so the query is the SUBJECT, not the request. */
 export function researchQueryFrom(raw: string): string {
   return raw
     .replace(/^[^:]*:\s*/, '')                     // "can you research X in the corpus: <query>"
     .replace(RESEARCH_VERB, ' ')
+    .replace(SEARCH_PHRASE, ' ')
+    .replace(/\b(?:i want you to|i'd like you to|i would like you to|let'?s|go and)\b/gi, ' ')
     .replace(/\b(?:can|could|would|please|you|for me|in (?:our|the) (?:corpus|database|library)|the corpus)\b/gi, ' ')
     .replace(/[?]+$/, '')
     .replace(/\s+/g, ' ')

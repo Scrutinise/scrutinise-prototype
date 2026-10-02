@@ -413,7 +413,8 @@ function ConsolidatePanel({
   ideaId: string
   consolidateInfo: State['consolidate']
   /** Re-reads the guiding-policy state, e.g. after Accept sets Chosen approach. */
-  onSettled: () => void
+  /** Called with the accept response, so the screen can say what the settle added to Coherent Actions. */
+  onSettled: (response?: { actionIdeas?: ActionIdeasResult }) => void
 }) {
   const [consolidation, setConsolidation] = useState<Consolidation | null>(null)
   const [busy, setBusy] = useState(false)
@@ -494,7 +495,7 @@ function ConsolidatePanel({
       const j = await res.json().catch(() => ({}))
       if (!res.ok) { setError(typeof j?.error === 'string' ? j.error : 'That did not save.'); return }
       setConsolidation(j.consolidation)
-      if (body.op === 'accept') onSettled()
+      if (body.op === 'accept') onSettled(j)
       // 26-L addendum 2 §1 — retry may still leave some models failed; replace the list
       // with whatever failed THIS time, not the original set (a model that just succeeded
       // must stop being offered for retry).
@@ -831,7 +832,23 @@ function ConsolidatePanel({
   )
 }
 
-export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
+/** What the settle event did with the held coherent-action ideas (lib/lex/action-ideas.ts `TestSummary`). */
+interface ActionIdeasResult {
+  ok: boolean
+  error?: string
+  written: number
+  merged: number
+  fromComments: number
+  parkedRetested: number
+}
+
+export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActions }: {
+  ideaId: string
+  /** The settle wrote to Coherent Actions: the workspace above this screen must re-read its state. */
+  onActionsAdded?: () => void
+  onGoToActions?: () => void
+}) {
+  const [addedNote, setAddedNote] = useState<ActionIdeasResult | null>(null)
   const [s, setS] = useState<State | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -1424,7 +1441,43 @@ export default function GuidingPolicyScreen({ ideaId }: { ideaId: string }) {
       )}
 
       {/* ══ 26-I §3-§7 — CONSOLIDATE ═══════════════════════════════════════════ */}
-      <ConsolidatePanel ideaId={ideaId} consolidateInfo={s.consolidate} onSettled={load} />
+      {/* ══ 26-M — SAY WHAT THE SETTLE DID TO COHERENT ACTIONS, AND TAKE THE USER THERE ═══════════
+          ⚠ The actions were being written and nothing on this screen said so: `onSettled` reloaded only THIS
+          screen, so the workspace's own list stayed as it was and the Coherent Actions section — a different,
+          collapsed section — showed nothing new until a reload. Charlie reported "no coherent actions were
+          written"; the rows were there (18 of them, a minute after he pressed Accept). */}
+      {addedNote && (
+        <div className="mx-4 my-2 rounded-lg border-2 border-zinc-900 p-3 text-sm text-zinc-900">
+          {addedNote.ok ? (
+            <>
+              <span className="font-semibold">{addedNote.written} action{addedNote.written === 1 ? '' : 's'} added to Coherent Actions</span>
+              {' '}as candidates — from the four drafts, your comments on them
+              {addedNote.parkedRetested > 0 ? ` and ${addedNote.parkedRetested} that were waiting with other policies` : ''}
+              , each tested against your final guiding policy. Nothing is confirmed.
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">The actions were not added.</span>{' '}
+              {addedNote.error ?? 'The test did not complete.'} Nothing was lost — they are held, and Coherent Actions will offer to add them.
+            </>
+          )}
+          {onGoToActions && (
+            <button type="button" onClick={onGoToActions}
+              className="ml-2 text-xs font-semibold px-3 py-1 rounded-full bg-zinc-900 text-white">
+              Go to Coherent Actions
+            </button>
+          )}
+        </div>
+      )}
+      <ConsolidatePanel
+        ideaId={ideaId}
+        consolidateInfo={s.consolidate}
+        onSettled={(j) => {
+          void load()
+          if (j?.actionIdeas) setAddedNote(j.actionIdeas)
+          onActionsAdded?.()
+        }}
+      />
 
       {/* ══ 26-L addendum 4 §2 — THE "FEEDBACK ON THE GUIDING POLICY IN GENERAL" BOX AND ITS SEND
           BUTTON ARE GONE from this screen. Its job is done by the one general box inside the

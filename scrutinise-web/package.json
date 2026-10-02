@@ -116,6 +116,7 @@
     "check:lex-26a": "tsx --env-file=.env scripts/check-lex-26a.ts",
     "check:lex-26m": "tsx --env-file=.env scripts/check-lex-26m.ts",
     "check:lex-26m-actions": "tsx --env-file=.env scripts/check-lex-26m-actions.ts",
+    "check:lex-26m-regressions": "tsx --env-file=.env scripts/check-lex-26m-regressions.ts",
     "sync:worker-retrieval": "tsx --env-file=.env scripts/sync-worker-retrieval.ts",
     "set:worker-email": "tsx --env-file=.env scripts/set-worker-email-vars.ts",
     "check:prompt-examples": "tsx --env-file=.env scripts/check-prompt-examples.ts",

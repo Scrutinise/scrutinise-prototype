@@ -916,6 +916,14 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-10-02 UTC (LEX 26-M regressions — see CHANGE_LOG's newest entry)* — ▼▼ **TWO 2 OCT REGRESSIONS FIXED.** ▶ "No coherent actions were written" was
+NOT a bypass by an edited acceptance (edited and unedited accept share one route and both go through `applyPolicyOp('settle')`): **18 actions WERE written** a minute after the
+Accept (7 → 25). The screen never showed them: `onSettled` reloaded only the Guiding Policy screen, the workspace's `state.actions` stayed stale and Coherent Actions is a
+collapsed section. Fixed: the step now runs INSIDE the settle event (`onChosenApproachSettled`, from `applyPolicyOp('settle')` AND `choosePolicyApproach`), the screen says how many
+were added and offers "Go to Coherent Actions", and the workspace refreshes. ▶ **Lex searches the corpus from the chat** (`lib/lex/chat-corpus-search.ts` reusing
+`runGeneralCorpusChat`; sources appended by the platform; `isCorpusSearchRequest` no longer needs a noun from a list) and `lib/lex/available-actions.ts` tells Lex which
+suggestions are open and sensible on the user's screen (Deepening locked until the kernel is complete; full re-run not sensible mid-kernel).
+Earlier:
 *Last updated: 2026-10-02 UTC (LEX 26-M + addendum — see CHANGE_LOG's two 26-M entries)* — ▼▼ **26-M SHIPPED; COHERENT-ACTION IDEAS FROM CONSOLIDATION.**
 ▶ Chat: failed links say WHY (the 1 Oct "leansixsigmaexperts" failure was a 2-link cap, not a blocked page); cap now 5, parallel; "Add a file or link" "+" in the
 chat on every stage; pasted text filed (message ceiling raised to the document ceiling, model sees a stub); stated purpose runs the ~2p comparison;

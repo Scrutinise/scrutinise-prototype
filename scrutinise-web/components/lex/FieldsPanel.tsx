@@ -1695,7 +1695,7 @@ export default function FieldsPanel({
                 the candidates; this is where they act on them. Replacing the list would take
                 away the editing the loop field already does well, and 25-P §0 is explicit that
                 what works must not be disturbed. */}
-            <GuidingPolicyScreen ideaId={ideaId} />
+            <GuidingPolicyScreen ideaId={ideaId} onActionsAdded={onSuggestionChanged} onGoToActions={() => onGoToPage('COHERENT_ACTIONS')} />
           </>
         )
       }

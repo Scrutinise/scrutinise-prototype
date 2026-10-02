@@ -14,7 +14,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
-import { extractActionIdeas, testHeldActions } from '@/lib/lex/action-ideas'
+import { extractActionIdeas } from '@/lib/lex/action-ideas'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
 import { runFourDrafts, runRedraft, effectiveFailedModels, PREMIUM_DRAFT_MODELS, type ConsolidateContext } from '@/lib/lex/guiding-policy-consolidate'
 import { judgeDrafts, testIsCompound, testRulesOutNothing, type DraftForJudge, type JudgeVerdict } from '@/lib/lex/rumelt-tests'
@@ -337,7 +337,7 @@ export async function PATCH(req: Request, { params }: Params) {
   // §7b — reuses the EXISTING mechanism: `settle` is what sets Chosen approach and opens
   // Leverage, Anticipated responses, Conditions for success and the Guiding-policy summary.
   // Not a second unlock path — the one this screen has always used, on a fresh row.
-  const settled = await applyPolicyOp({ ideaId: id, op: 'settle', policyId: created.id })
+  const settled = await applyPolicyOp({ ideaId: id, op: 'settle', policyId: created.id, userId: user?.id })
   if ('notOnThisIdea' in settled) {
     return NextResponse.json({ error: 'The accepted draft could not be settled.' }, { status: 500 })
   }
@@ -355,18 +355,9 @@ export async function PATCH(req: Request, { params }: Params) {
     include: { drafts: { orderBy: { createdAt: 'asc' } } },
   })
 
-  // ══ 26-M ADDENDUM §2/§4 — TEST EVERY HELD ACTION AGAINST THE FINAL POLICY, IN THE SAME STEP ═══
-  //
-  // ⚠⚠ INCLUDING THE ACTIONS PARKED WITH THE POLICY THIS REPLACES. `settle` (above) demoted the
-  // previously chosen policy to CANDIDATE and released only the actions parked with the NEW one,
-  // so everything parked with the old one — 4 of the 17 live action rows on Charlie's idea when
-  // this was written (the other 13 are parked with other candidates, or with nothing) — would
-  // otherwise wait for ever, and be ruled out with that policy the day it is rejected.
-  //
-  // ⚠ NEVER ALLOWED TO FAIL THE ACCEPTANCE. The user has accepted a policy; if the test cannot run,
-  // that is reported in the response and retried from the Coherent Actions panel, and every held
-  // and parked action is exactly where it was.
-  const actionIdeas = await testHeldActions(id, created.id, user?.id ?? null, { consolidationId: consolidation.id })
+  // ══ 26-M — THE ACTION-IDEA STEP RAN INSIDE `settle` (above), because it belongs to the EVENT "a policy
+  // became the settled one", not to this button. This route only reports what that event did. ══════════
+  const actionIdeas = settled.actionIdeas
 
   return NextResponse.json({ consolidation: updated, state: settled.state, judge: finalJudge, actionIdeas })
 }

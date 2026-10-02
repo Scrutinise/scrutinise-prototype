@@ -106,6 +106,12 @@ export interface GeneralChatResult {
   /** Result ids the answer drew on, validated against `results`. */
   cited: string[]
   diagnostics: GeneralChatDiagnostics
+  /**
+   * 26-M — EXACTLY the sources the answer call was shown, in the order its [n] markers number them. A caller
+   * that wants to print "[3] is this Act" needs the list the model was numbering from; rebuilding it from
+   * `results` would be a second copy of the filter and the slice, and would drift.
+   */
+  context?: SearchResult[]
 }
 
 /** Terms sent to the gateway. Same shape as runAdHocResearch — the question is the query. */
@@ -320,6 +326,8 @@ async function callGeminiForAnswer(
   history: GeneralChatTurn[],
   results: SearchResult[],
   webSourcesBlock?: string | null,
+  /** 26-M — whose spend this is. Defaults to the admin surface this was built for. */
+  spendStream: 'admin' | 'lex' = 'admin',
 ): Promise<AnswerOutput> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set in this environment')
@@ -386,7 +394,7 @@ async function callGeminiForAnswer(
     const data = (await res.json()) as Resp
     // BRIEF_SEARCH_S6 §3 addendum. Corpus chat is admin-only, and it is still spend — leaving it
     // out would understate the platform total by exactly the calls Charlie makes himself.
-    void recordGeminiUsage(data, { stream: 'admin', pass: 'lex.general-chat', model: modelFor('lex.general-chat') })
+    void recordGeminiUsage(data, { stream: spendStream, pass: 'lex.general-chat', model: modelFor('lex.general-chat') })
     const candidate = data?.candidates?.[0]
     const text = candidate?.content?.parts?.[0]?.text
     if (typeof text !== 'string') {
@@ -471,6 +479,8 @@ async function runGeneralCorpusChatInner(input: {
   /** S21 §7 amendment — "each ledger row stamped with userId". The caller (the admin route)
    *  already has the authenticated user; this is what carries it onto the web-search rows. */
   userId?: string | null
+  /** 26-M — set by the idea chat so the answer call is ledgered to the user's builds, not the admin surface. */
+  spendStream?: 'admin' | 'lex'
 }): Promise<GeneralChatResult> {
   const question = input.question.trim()
   const history = input.history ?? []
@@ -608,7 +618,7 @@ async function runGeneralCorpusChatInner(input: {
   const t1 = Date.now()
   let out: AnswerOutput
   try {
-    out = await callGeminiForAnswer(question, history, context, webSourcesBlock)
+    out = await callGeminiForAnswer(question, history, context, webSourcesBlock, input.spendStream ?? 'admin')
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err)
     diagnostics.answerMs = Date.now() - t1
@@ -677,5 +687,5 @@ async function runGeneralCorpusChatInner(input: {
     answerMs: diagnostics.answerMs,
   })
 
-  return { answer: out.answer, results: search.results, cited, diagnostics }
+  return { answer: out.answer, results: search.results, cited, diagnostics, context }
 }

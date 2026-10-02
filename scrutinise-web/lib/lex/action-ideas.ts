@@ -199,6 +199,16 @@ export async function extractFromComments(
     })
     if (!c) return { ok: false, held: 0, ideas: [], error: 'That consolidation is not on this idea.' }
 
+    // ⚠ READ ONCE PER CONSOLIDATION. The settle event can fire more than once for an idea (a policy is
+    // chosen, un-chosen, chosen again), and the merged text that was written no longer matches the raw
+    // comment idea, so de-duplicating on text alone would write every comment idea again each time. A row
+    // that carries a COMMENT source for this consolidation — held, written or dismissed — means its
+    // comments have been read.
+    const already = await prisma.actionIdea.findMany({ where: { ideaId }, select: { sources: true } })
+    if (already.some((r) => (r.sources as unknown as IdeaSource[]).some((s) => s.kind === 'COMMENT' && s.consolidationId === consolidationId))) {
+      return { ok: true, held: 0, ideas: [] }
+    }
+
     type Src = { text: string; draftText: string | null; model: string | null }
     const sources: Src[] = []
     if (c.userFeedback?.trim()) sources.push({ text: c.userFeedback.trim(), draftText: null, model: null })
@@ -483,6 +493,28 @@ export async function testHeldActions(
   } catch (err) {
     console.error('[action-ideas] test THREW', { ideaId, error: err instanceof Error ? err.message : err })
     return none({ ok: false, error: err instanceof Error ? err.message : String(err) })
+  }
+}
+
+/**
+ * ══ THE EVENT: A GUIDING POLICY BECAME THE SETTLED ONE ═════════════════════════════════════════
+ *
+ * Called from every place that settles Chosen approach (`applyPolicyOp('settle')` — which the consolidation's
+ * Accept, edited or not, and the screen's own Settle both go through — and `choosePolicyApproach`). The
+ * comments read are those of the idea's most recent consolidation.
+ *
+ * ⚠ IT WAS A BUTTON'S STEP BEFORE: the call sat in the consolidation route, so a policy settled any other way
+ * would never have run it. Never throws; a failure is returned in the summary and the panel offers a retry.
+ */
+export async function onChosenApproachSettled(ideaId: string, policyId: string, userId: string | null) {
+  try {
+    const latest = await prisma.guidingPolicyConsolidation.findFirst({
+      where: { ideaId }, orderBy: { createdAt: 'desc' }, select: { id: true },
+    })
+    return await testHeldActions(ideaId, policyId, userId, { consolidationId: latest?.id })
+  } catch (err) {
+    console.error('[action-ideas] settle hook THREW', { ideaId, error: err instanceof Error ? err.message : err })
+    return { ok: false as const, error: err instanceof Error ? err.message : String(err), written: 0, merged: 0, counts: ZERO_COUNTS(), parkedRetested: 0, fromComments: 0 }
   }
 }
 

@@ -899,6 +899,10 @@ export async function choosePolicyApproach(ideaId: string, userId: string, optio
   ])
   await setStatus(ideaId, 'chosenApproach', 'ACCEPTED', { value: chosen.approach, proposal: null })
   await mirrorValue(ideaId, userId, 'chosenApproach', chosen.approach)
+  // 26-M — the older direct route settles the same event; see `onChosenApproachSettled`. Dynamic import:
+  // action-ideas imports this file.
+  const { onChosenApproachSettled } = await import('./action-ideas')
+  await onChosenApproachSettled(ideaId, optionId, userId)
   return true
 }
 

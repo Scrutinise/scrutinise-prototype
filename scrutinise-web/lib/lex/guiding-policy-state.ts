@@ -428,7 +428,7 @@ export async function applyPolicyOp(input: {
   edit?: { approach?: string; rulesOut?: string; caseFor?: string; likelihood?: string }
   /** `acceptEnhance`/`edit` only — whose prior wording `FieldRevision` records as superseded. */
   userId?: string
-}): Promise<{ state: PolicyState; addedNumber?: number; compoundTest?: CompoundTest } | { notOnThisIdea: true }> {
+}): Promise<{ state: PolicyState; addedNumber?: number; compoundTest?: CompoundTest; actionIdeas?: unknown } | { notOnThisIdea: true }> {
   const { ideaId: id, op, policyId, reason, phase, merge, text, duplicateOfNumber, enhance, edit, userId } = input
 
   const row = policyId
@@ -447,6 +447,8 @@ export async function applyPolicyOp(input: {
 
   let addedNumber: number | undefined
   let compoundTest: CompoundTest | undefined
+  /** 26-M — what the settle EVENT did with the held coherent-action ideas (see `onChosenApproachSettled`). */
+  let actionIdeas: Awaited<ReturnType<typeof import('./action-ideas').onChosenApproachSettled>> | undefined
 
   switch (op) {
     // ══════════ 25-T §2b — THE MERGE WRITES HERE, ON ACCEPTANCE, AND NOWHERE ELSE ══════════
@@ -633,6 +635,13 @@ export async function applyPolicyOp(input: {
             where: { id: p.id }, data: { movedToActionId: action.id },
           })
         }
+        // ══ 26-M — THE STEP IS ATTACHED TO THE EVENT, NOT TO A BUTTON ═══════════════════════════
+        // Held coherent-action ideas (from the drafts and from the user's comments) and the actions
+        // parked with the policy this replaces are tested against this one and written to the Coherent
+        // Actions candidate list. HERE, because this is where a guiding policy becomes the settled one,
+        // whichever screen or route got it here. It never throws and never blocks the settle.
+        const { onChosenApproachSettled } = await import('./action-ideas')
+        actionIdeas = await onChosenApproachSettled(id, row.id, userId ?? null)
       }
       break
 
@@ -867,7 +876,7 @@ export async function applyPolicyOp(input: {
   }
 
   await syncPolicyField(id)
-  return { state: await readPolicyState(id), addedNumber, compoundTest }
+  return { state: await readPolicyState(id), addedNumber, compoundTest, actionIdeas }
 }
 
 /**
