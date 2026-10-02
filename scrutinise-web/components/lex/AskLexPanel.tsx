@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react'
 import NotesPanel from './NotesPanel'
+import ChatAttach from './ChatAttach'
 
 /**
  * ══ 25-Q §3a — A LEX CHAT ON THE IDEA STAGE, AND THE NOTES BESIDE IT ══════════════════
@@ -107,6 +108,7 @@ export default function AskLexPanel({ ideaId }: { ideaId: string }) {
             ))}
             {busy && <p className="text-xs text-zinc-400">Thinking…</p>}
           </div>
+          <ChatAttach ideaId={ideaId} />
           <div className="flex gap-2">
             <textarea
               value={input}

@@ -9,14 +9,22 @@ import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
 import { setProposal, storeExtracted, addCause, listCauses, setRootCause } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
-import { isContinueIntent, performStageAdvance, isResearchRequest, researchQueryFrom } from '@/lib/lex/stage'
+import { isContinueIntent, isPlainAssent, performStageAdvance, isResearchRequest, researchQueryFrom } from '@/lib/lex/stage'
 import { countProblemPresses } from '@/lib/lex/orchestrator'
 import { acceptedSummary as buildAcceptedSummary, sourceValuesFor } from '@/lib/lex/accepted-context'
 import { matchCause, AMBIGUOUS } from '@/lib/lex/match-cause'
 import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
-import { fileUrlsFromChat, materialFiledBlock } from '@/lib/lex/chat-material'
+import {
+  fileUrlsFromChat, filePastedTextFromChat, materialFiledBlock, statesPurpose, MIN_PASTE_CHARS, CHAT_MESSAGE_LIMIT,
+  comparisonReportFrom, type ComparisonReport,
+} from '@/lib/lex/chat-material'
+import { pendingMaterialSince, runUpdatePass } from '@/lib/lex/update-pass'
+import { MAX_TEXT_CHARS } from '@/lib/lex/user-material'
+import {
+  buildConsolidationOffer, pendingOffer, fileConsolidationOffer, offerFiledBlock, type FeedbackOffer,
+} from '@/lib/lex/stage-relevance'
 import { fileChatPolicyFeedback, policyFeedbackFiledBlock, guidingPolicyChatRules, isGuidingPolicyContext } from '@/lib/lex/policy-feedback-chat'
 import { applyPolicyOp } from '@/lib/lex/guiding-policy-state'
 import { buildFactsBlock } from '@/lib/lex/facts'
@@ -29,8 +37,15 @@ import {
 
 type Params = { params: Promise<{ id: string }> }
 
+/** The route's `maxDuration` is 120s (vercel.json). Past this much elapsed, a comparison is not started. */
+const COMPARISON_DEADLINE_MS = 60_000
+
 const BodySchema = z.object({
-  message: z.string().trim().min(1).max(4000),
+  // ⚠ 26-M follow-up — THE CEILING IS THE DOCUMENT CEILING, NOT THE CHAT ONE. A pasted article was
+  // cut off at 4,000 characters, which is the failure Charlie named. The schema now admits up to
+  // what a stored document may be (`MAX_TEXT_CHARS`); the route below holds an ordinary message to
+  // `CHAT_MESSAGE_LIMIT` and lets a longer one through ONLY if it is filed as pasted material.
+  message: z.string().trim().min(1).max(MAX_TEXT_CHARS),
   /**
    * ⚠ 25-Q §3a — 'ASK' is the first stage's chat: it answers and changes nothing. The
    * elicitation owns the state machine there, and two conductors on one page would disagree
@@ -39,11 +54,12 @@ const BodySchema = z.object({
   mode: z.enum(['FLOW', 'ASK']).optional(),
 })
 
-type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string; field?: string }
+type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string; field?: string; offer?: FeedbackOffer }
 
 // POST /api/ideas/[id]/lex — one Lex turn. Lex returns content only; the
 // platform validates any proposal and sets state. State never half-advances (§4).
 export async function POST(req: Request, { params }: Params) {
+  const turnStartedAt = Date.now()
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
@@ -58,8 +74,28 @@ export async function POST(req: Request, { params }: Params) {
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = BodySchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
-  const { message } = parsed.data
+  let { message } = parsed.data
   const askOnly = parsed.data.mode === 'ASK'
+
+  // ══ 26-M FOLLOW-UP — PASTED TEXT IS FILED FIRST, AND THE MODEL NEVER SEES IT ═════════════════
+  //
+  // ⚠ BEFORE EVERYTHING ELSE IN THE TURN. The stage-advance and research detectors below match
+  // single words anywhere in a message ("continue", "look up"); an article pasted in full contains
+  // both, and would move the user to the next stage or start a corpus search.
+  //
+  // ⚠ AND THE MODEL, AND THE HISTORY, GET A STUB. user-material.ts's rule 2: a document is never
+  // injected wholesale into a prompt — it is read once into findings. A 100,000-character paste in
+  // the transcript would be sent to the model on each of the next 20 turns. So `message` becomes a
+  // one-line description of what the platform did, from here on.
+  const pastedResults = message.length >= MIN_PASTE_CHARS ? await filePastedTextFromChat(id, user.id, message) : []
+  if (message.length > CHAT_MESSAGE_LIMIT && !pastedResults.length) {
+    return NextResponse.json({
+      error: `That message is ${message.length.toLocaleString('en-GB')} characters, and a chat message is limited to ${CHAT_MESSAGE_LIMIT.toLocaleString('en-GB')}. To give me a long document, use the "Add a file or link" button above the box.`,
+    }, { status: 422 })
+  }
+  if (pastedResults.length) {
+    message = `[Text pasted into the chat — ${message.length.toLocaleString('en-GB')} characters. The platform has filed it as material; it is not reproduced here.]`
+  }
 
   // Current field is whatever the platform says — never the model's choice.
   let pre = await computeCanonicalState(id)
@@ -105,18 +141,76 @@ export async function POST(req: Request, { params }: Params) {
   // why. Runs through the identical pipeline an upload uses, including its cap and its
   // rejection logging — a link filed from chat is not a lesser or different kind of
   // material.
-  const materialResults = await fileUrlsFromChat(id, user.id, message)
+  //
+  // 26-M item 1 — long text pasted after a link was refused is filed the same way, so the route
+  // out that Lex offers is one the chat actually honours.
+  const materialResults = [
+    ...(await fileUrlsFromChat(id, user.id, message)),
+    ...pastedResults,
+  ]
   if (materialResults.length) {
     console.log('[lex-diag] chat-filed material', {
-      urls: materialResults.map((r) => ({ url: r.url, outcome: r.outcome })),
+      urls: materialResults.map((r) => ({ url: r.url, outcome: r.outcome, kind: r.kind ?? null, pasted: !!r.pasted })),
     })
+  }
+
+  // ══ 26-M ITEM 3 — A STATED PURPOSE RUNS THE COMPARISON; A PASSIVE UPLOAD STILL ONLY OFFERS ══
+  //
+  // 26-K §4c's "offer, do not run" stands for material dropped in with nothing said about it.
+  // Where the message itself says what the material is for, the platform runs the one comparison
+  // (~2p) over everything pending, before Lex speaks, and Lex reports it. ⚠ Only when something
+  // was actually filed with findings: a refusal has nothing to compare.
+  let comparison: ComparisonReport | null = null
+  let consolidationOffer: Awaited<ReturnType<typeof buildConsolidationOffer>> = null
+  // ⚠ NOT A PASTE: its message is the platform's stub, so there are no words of the user's to read a purpose from.
+  const newlyRead = materialResults.filter((r) => r.outcome === 'filed' && r.materialId && !r.pasted && (r.findingCount ?? 0) > 0)
+  if (newlyRead.length && statesPurpose(message) && Date.now() - turnStartedAt > COMPARISON_DEADLINE_MS) {
+    // ⚠ Not started: the links took most of the route's 120s and the comparison alone can need 90.
+    // Said as what it is, and the offer in the working area is still there.
+    comparison = {
+      ok: false, error: 'the links took most of the time this reply is allowed, so there was not time left to compare them — it can be run from the working area',
+      materialCount: newlyRead.length,
+      counts: { SUPPORTS: 0, CONTRADICTS: 0, NEW_CAUSE: 0, NEW_POLICY_OPTION: 0, NOTHING: 0 }, contradictions: [], costPence: null,
+    }
+  } else if (newlyRead.length && statesPurpose(message)) {
+    try {
+      const pending = await pendingMaterialSince(id)
+      const ids = Array.from(new Set([...pending.materialIds, ...newlyRead.map((r) => r.materialId!)]))
+      const result = await runUpdatePass(id, user.id, { materialIds: ids })
+      comparison = comparisonReportFrom(result, ids.length)
+      // 26-M item 4 — with Consolidate open, what bears on it is offered for the final-version feedback.
+      if (result.ok) consolidationOffer = await buildConsolidationOffer(id, result.proposedChanges)
+      console.log('[lex-diag] purposeful comparison', {
+        ok: result.ok, materials: ids.length, counts: result.counts, costPence: result.costPence,
+        offered: !!consolidationOffer,
+      })
+    } catch (err) {
+      console.error('[lex-diag] purposeful comparison THREW', err)
+      comparison = {
+        ok: false, error: err instanceof Error ? err.message : String(err), materialCount: newlyRead.length,
+        counts: { SUPPORTS: 0, CONTRADICTS: 0, NEW_CAUSE: 0, NEW_POLICY_OPTION: 0, NOTHING: 0 }, contradictions: [], costPence: null,
+      }
+    }
+  }
+
+  // ══ 26-M ITEM 4 — THE USER'S "YES" TO LEX'S OFFER IS FILED BY THE PLATFORM, THEN CONFIRMED ════
+  const outstandingOffer = pendingOffer((Array.isArray(idea.aiChatHistory) ? idea.aiChatHistory : []) as ChatMsg[])
+  let offerFilingBlock: string | null = null
+  if (outstandingOffer && isPlainAssent(message)) {
+    const filed = await fileConsolidationOffer(id, outstandingOffer)
+    offerFilingBlock = offerFiledBlock(filed)
+    console.log('[lex-diag] consolidation feedback offer agreed', { outcome: filed.outcome, consolidationId: outstandingOffer.consolidationId })
   }
 
   // ══ 26-I ADDENDUM A1/A2 — GUIDING-POLICY FEEDBACK, FILED ON THE SAME PATTERN ══════
   //
   // Deterministic and scoped to the Guiding Policy page (see isGuidingPolicyContext) —
   // never fires on an unrelated page's chat, and never asks Lex to decide what happened.
-  const policyFeedbackResult = await fileChatPolicyFeedback(id, pre.currentField?.key, message)
+  // ⚠ NOT ON A "yes" THAT WAS ANSWERING AN OFFER: that word is consent, not feedback, and filing
+  // it as a comment on the guiding policy would put "yes please" in front of the final draft.
+  const policyFeedbackResult: Awaited<ReturnType<typeof fileChatPolicyFeedback>> = offerFilingBlock
+    ? { outcome: 'not-guiding-policy' }
+    : await fileChatPolicyFeedback(id, pre.currentField?.key, message)
   if (policyFeedbackResult.outcome !== 'not-guiding-policy') {
     console.log('[lex-diag] chat-filed policy feedback', policyFeedbackResult)
   }
@@ -242,10 +336,13 @@ export async function POST(req: Request, { params }: Params) {
     productFactsBlock: productFactsBlock(),
     askOnly,
     // Decision 92 — what the platform just filed on this idea, before this turn.
-    materialFiledBlock: materialFiledBlock(materialResults),
+    materialFiledBlock: materialFiledBlock(materialResults, comparison),
     // 26-I addendum A1-A4 — what was filed this turn, plus the standing Guiding Policy
     // page rules (A3/A4), combined into one block; null off that page.
+    // 26-M item 4 — plus what bears on the open consolidation, or the confirmation of an agreed offer.
     policyFeedbackBlock: [
+      offerFilingBlock,
+      consolidationOffer?.block ?? null,
       policyFeedbackFiledBlock(policyFeedbackResult),
       await guidingPolicyChatRules(id, pre.currentField?.key),
     ].filter(Boolean).join('\n\n') || null,
@@ -458,7 +555,9 @@ export async function POST(req: Request, { params }: Params) {
     ...(Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),
     { role: 'user', content: message, timestamp: now, stage: pre.stage },
     // Tagged with the field it was said about — this is what the problem gate counts.
-    { role: 'lex', content: lex.chatText, timestamp: now, stage: pre.stage, field: current?.key },
+    // 26-M item 4 — the offer rides on the message that makes it, so a later "yes" can be matched to it.
+    { role: 'lex', content: lex.chatText, timestamp: now, stage: pre.stage, field: current?.key,
+      ...(consolidationOffer ? { offer: consolidationOffer.offer } : {}) },
   ].slice(-60)
   await prisma.idea.update({ where: { id }, data: { aiChatHistory: updatedHistory } })
 

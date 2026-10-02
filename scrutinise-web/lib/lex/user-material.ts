@@ -318,18 +318,43 @@ function stripHtml(html: string): string {
     .replace(/<\/(p|div|li|h[1-6]|tr|section|article)>/gi, '\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
     .replace(/[ \t]{2,}/g, ' ')
+    // Decoded LAST and in one pass: a decoded "<" must not be re-read as a tag, and a
+    // double-escaped "&amp;lt;" must stay "&lt;".
+    .replace(/&(?:#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi, (m) => decodeEntities(m))
 }
 
 function htmlTitle(html: string): string | null {
   const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)
-  return m ? m[1].replace(/\s+/g, ' ').trim() || null : null
+  return m ? decodeEntities(m[1]).replace(/\s+/g, ' ').trim() || null : null
+}
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”',
+  ndash: '–', mdash: '—', hellip: '…', pound: '£', euro: '€', copy: '©',
+}
+
+/**
+ * ⚠⚠ HTML ENTITIES, DECODED ONCE, IN ONE PLACE. Charlie's sources list read "Root Cause Analysis: The
+ * Project Manager&#039;s Guide 2026" and "…Tools &amp; Real Examples" — `htmlTitle` returned the raw
+ * source, and `stripHtml`'s own list of five entities missed `&#039;` (it handled only `&#39;`),
+ * every typographic one, and every other numeric reference.
+ *
+ * Numeric (decimal and hex) and the named set above; anything else is left exactly as written,
+ * because guessing at an unknown entity would be inventing text. Decoded in a SINGLE pass, so
+ * `&amp;lt;` becomes `&lt;` and not `<` — a double-escaped string stays as the page wrote it.
+ * Exported so the repair script and the check use the very function the extractor does.
+ */
+export function decodeEntities(s: string): string {
+  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi, (whole, body: string) => {
+    if (body[0] === '#') {
+      const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10)
+      if (!Number.isFinite(code) || code < 1 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return whole
+      return String.fromCodePoint(code)
+    }
+    return NAMED_ENTITIES[body.toLowerCase()] ?? whole
+  })
 }
 
 // ── the findings pass ────────────────────────────────────────────────────────

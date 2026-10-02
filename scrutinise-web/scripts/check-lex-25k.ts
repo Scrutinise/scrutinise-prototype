@@ -330,7 +330,15 @@ const CHECKS: Check[] = [
         if (!PLATFORM_CONTROLS.includes(st.name)) return `the control map never mentions ${st.name}`
       }
       if (!/never a bare "I can't"/.test(PLATFORM_CONTROLS)) return 'the rule against a bare refusal is gone'
-      if (!/Redraft from what I found/.test(PLATFORM_CONTROLS)) return 'the re-run control is not named as it is labelled'
+      // ⚠ 26-M item 2 — REPOINTED. This used to REQUIRE the two dialogue labels in Lex's map, and
+      // Lex then sent a user to "Redraft from what I found" and "Search again from scratch" on a
+      // screen where neither was showing: they live in a dialogue that exists only after the
+      // re-run is pressed. The map must now NOT carry them, and must carry the rule that stops it
+      // naming any control it was not given.
+      if (/Redraft from what I found|Search again from scratch/.test(PLATFORM_CONTROLS)) {
+        return 'the map names dialogue buttons that are not on the screen the user is on'
+      }
+      if (!/NAME ONLY CONTROLS THAT ARE DESCRIBED/.test(PLATFORM_CONTROLS)) return 'the rule against naming an undescribed control is gone'
       // And it has to actually reach the prompt.
       const client = src['lib/lex/lex-client.ts']
       return /\$\{PLATFORM_CONTROLS\}/.test(client) ? null : 'the map is written but never injected into the prompt'

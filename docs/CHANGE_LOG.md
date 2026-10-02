@@ -1,5 +1,26 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-02 00:23 UTC — LEX 26-M — material handed to Lex mid-kernel (Charlie, 2 Oct) + follow-up (Decision 109)
+
+**Follow-up, same commit:** (a) link cap 2 → 5 and links now filed IN PARALLEL with a 55s per-link budget (it was 2 because links were sequential, each fetch ≤20s + findings pass ≤120s, inside a 60s route — never a cost control); the comparison is skipped, and said to be skipped, if >60s has elapsed. (b) **Decision 109:** `ChatAttach` — the "Add a file or link" "+" — in `ChatPanel` and `AskLexPanel`, i.e. the chat on every stage; Lex now offers it. (c) chat message ceiling 4,000 → `MAX_TEXT_CHARS` in the schema, but an ordinary message stays at 4,000 and a longer one is accepted ONLY if filed as pasted material; pasted text is filed before the stage/research detectors run and the model + history get a one-line stub (never the article). (d) `decodeEntities` in `user-material.ts` (titles + `stripHtml`); `scripts/repair-material-titles.ts --apply` run on production: 2 source labels + 8 findings rewritten, re-run reports 0. `.text` is never touched. Check: `check-lex-26m` 47 pass; 25d/25k/25l/25o/25q/25r/25z pass.
+⚠ Pre-existing, not from this work: `check-lex-25i` §2 (expects a hard `ideaUserMaterial.delete`; 26-J made it an archive) and `check-sprint3e-ui` (4 idea-delete assertions) fail on files this commit does not touch.
+
+1. **Link failures say why.** Root cause of the leansixsigmaexperts.com report was NOT a blocked/paywalled page (live fetch: HTTP 200, 226KB; no
+   rejection row exists): the message held THREE links and `urlsIn` silently sliced to two (`MAX_URLS_PER_TURN`), so the third was never fetched
+   and Lex invented a reason. It is now reported `NOT TRIED` (`urlsNotAttempted`). Refusals carry the reason + kind and offer "paste the text
+   here"; the old "never tell the user to paste or upload" instruction is gone and Lex may not send the user to another stage. Long text pasted
+   within 30 min of a refusal is filed (`filePastedTextFromChat`, kind FILE, link kept as `url`). ⚠ No upload is offered: the Strategy-stage chat has no attach control.
+2. **Lex names only controls that exist.** "Redraft from what I found" / "Search again from scratch" lived in `lib/lex/platform-controls.ts` but are
+   buttons inside the re-run DIALOGUE (shown only after pressing re-run, and "Redraft" only when reuse is possible). Removed; rule added: name only
+   controls described in the block or in `PRODUCT_FACTS` (the array `HowItWorksModal` renders).
+3. **Stated purpose runs the comparison** (`statesPurpose`, deterministic, before Lex speaks; `runUpdatePass` over all pending material, ~2p). Passive
+   uploads still only offer (26-K §4c). `vercel.json`: lex route `maxDuration` 60 → 120 to carry fetch + findings + comparison.
+4. **Stage relevance** (`lib/lex/stage-relevance.ts`): with Consolidate open, a comparison's contradictions / new policy options / policy-targeted
+   changes are offered for the final-version feedback (`GuidingPolicyConsolidation.userFeedback`, appended). Offer rides on the Lex message; filed by
+   the platform only on a short plain yes (`isPlainAssent`), then confirmed. Contradictions are named first. A "yes" answering an offer is not also filed as policy feedback.
+
+Check: `scripts/check-lex-26m.ts` (34 pass); `check-lex-25k` repointed (it required the stale labels). tsc clean. `check-lex-25r` not run — DB ECONNREFUSED.
+
 ## 2026-09-30 00:35 UTC — LEX model review — REPORT ONLY, no product code changed
 
 Full report: `docs/MODEL_REVIEW_2026-09-30.md`. Measured on the real context of idea 452c5ade (≈£2 of test spend; ledger rows

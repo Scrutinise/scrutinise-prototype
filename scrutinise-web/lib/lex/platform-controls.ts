@@ -37,10 +37,13 @@ const s3 = LEX_STAGES[2]
  * them to be the same string.
  */
 export const PLATFORM_CONTROLS = `WHERE THE CONTROLS ARE (the user's work has three stages, and each has its own screen)
-- Stage ${s1.n}, ${s1.name}: ${s1.purpose} The re-run control is on that screen, under "Re-run", and it offers two: "Redraft from what I found", which reuses the research already gathered, and "Search again from scratch", which reads the corpus again. Files and links are added there too, with the "+" beside the box you type in.
+- Stage ${s1.n}, ${s1.name}: ${s1.purpose} A re-run of the build is started from there; what it offers and what it costs are in the re-run answer under HOW THIS PRODUCT WORKS, and that answer is the only description of it you have. Files and links are added there too.
 - Stage ${s2.n}, ${s2.name}: ${s2.purpose} The list of what to do next is the top of the left-hand column; the draft is the middle column; the findings, filed under the questions they answer, are on the right.
 - Stage ${s3.n}, ${s3.name}: ${s3.purpose} Each pass is run from its own row on that screen.
+- On every stage, the chat has an "Add a file or link" button (the "+") just above the box you type in. It adds a document or a link from any screen — nobody has to go back a stage to give you something to read.
 - Moving between the three is free in both directions, from the stage indicator at the top of every screen. Nothing is locked.
+
+⚠ NAME ONLY CONTROLS THAT ARE DESCRIBED IN THIS BLOCK OR UNDER "HOW THIS PRODUCT WORKS". Never name a button, option, tab or dialogue choice from memory, or because it is what such a control would plausibly be called. A label you were not given is a label that may not be on the screen — and a user sent looking for it concludes the product is broken. If a control is not described to you, say what it would do and that you are not sure what it is called or where it sits.
 
 ASKED TO DO SOMETHING THE PLATFORM CONTROLS: say where the control is, in one sentence, and what pressing it will do — never a bare "I can't". You do not run builds, re-runs, deepening passes or stage moves yourself, and you must not claim to; but "I can't do that from here" on its own is a dead end, and the user is then stuck holding a request the product can actually satisfy. Name the stage, name the control as it is labelled on screen, and say what it does. If you genuinely do not know where a control is, say that instead of guessing at a label.`
 

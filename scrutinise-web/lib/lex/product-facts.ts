@@ -91,11 +91,21 @@ export const PRODUCT_FACTS: ProductFact[] = [
       + 'and what was there before is kept.',
   },
   {
+    question: 'How do I give you a document or a link to read?',
+    answer:
+      'Press "Add a file or link" — the "+" — just above the box you type in. It is there on every '
+      + 'stage, so you never have to go back to add something. A link can also simply be pasted into '
+      + 'a message and I will read it. If a page will not load for me, paste its text into the chat '
+      + 'instead, or add the PDF with the same button.',
+  },
+  {
     question: 'How do I re-run the build?',
     answer:
       'On THE IDEA stage, at the top of the page: there is a re-run control, a box for anything else '
-      + 'you want me to take into account, and somewhere to add a file or a link. If a run is already '
-      + 'going, a strip across the top says so and how far through it is.',
+      + 'you want me to take into account, and somewhere to add a file or a link. Pressing it opens a '
+      + 'short dialogue that says what the re-run will do and what it will cost before anything is '
+      + 'spent, and you can back out of it. If a run is already going, a strip across the top says so '
+      + 'and how far through it is.',
   },
 ]
 

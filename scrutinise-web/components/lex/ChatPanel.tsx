@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import AcceptCard from './AcceptCard'
 import EditOfferCard from './EditOfferCard'
+import ChatAttach from './ChatAttach'
 import type { EditOffer } from '@/lib/lex/field-edit'
 import type { CanonicalField, CanonicalState } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
@@ -119,7 +120,12 @@ export default function ChatPanel({
   onDismissFeedbackOffer,
   onAcceptEdit,
   onDismissEdit,
+  ideaId,
+  onMaterialChanged,
 }: {
+  /** Decision 109 — when set, the "+" (file or link) is offered beside the box, on every stage. */
+  ideaId?: string | null
+  onMaterialChanged?: () => void
   messages: ChatMessage[]
   awaitingField: CanonicalField | null
   busy: boolean
@@ -306,6 +312,7 @@ export default function ChatPanel({
             </button>
           </div>
         )}
+        {ideaId && <ChatAttach ideaId={ideaId} onChanged={onMaterialChanged} />}
         <div className="flex gap-2 items-end">
           <textarea
             ref={inputRef}

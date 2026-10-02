@@ -38,6 +38,19 @@ const ASSENT_START =
 const CONTINUE_PHRASE =
   /\b(?:i'?m ready|ready to (?:start|begin|go|continue|move)|let'?s (?:go|start|begin|crack on|move on|get (?:going|started|cracking))|move on|moving on|carry on|crack on|next (?:section|step|stage|page|part)|continue|proceed|onwards?|start the diagnosis|begin the diagnosis|on to the diagnosis)\b/i
 
+/**
+ * True when a SHORT message plainly says yes to what Lex just asked (26-M item 4: "should I add
+ * that to the feedback for the final version?"). Same grammar as the continue detector, same
+ * refusal of negations, and capped in length — a long message that happens to open with "yes" is
+ * an argument, not an answer, and must not be read as consent to a write.
+ */
+export function isPlainAssent(raw: string): boolean {
+  const text = raw.trim()
+  if (!text || text.length > 80) return false
+  if (NEGATION.test(text)) return false
+  return ASSENT_START.test(text) && !text.endsWith('?')
+}
+
 /** True when a chat message plainly means "move me on to the next section". */
 export function isContinueIntent(raw: string): boolean {
   const text = raw.trim()

@@ -1068,6 +1068,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 awaitingField={chatAwaitingField}
                 busy={busy}
                 focusNonce={focusNonce}
+                ideaId={ideaId}
                 currentStage={state.stage}
                 stageLabels={Object.fromEntries(state.pages.map((p) => [p.key, p.label]))}
                 nextPage={state.nextPage}
