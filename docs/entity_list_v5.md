@@ -1697,4 +1697,143 @@ Constraint: UNIQUE(followerId, followedUserId), UNIQUE(followerId, watchedIdeaId
 
 ***
 
+## SECTION 24 — LEX REBUILD ENTITIES (CATCH-UP, 4 Oct 2026) {\#section-24}
+
+*Added on Charlie's instruction (Decision 127) because this file had drifted behind the database. The Lex rebuild's tables were never written up here. This section covers the entities named in that instruction plus* `LexToolCall` *and the* `LlmSpend` *cache columns, which were also missing. **It is a catch-up, not a full inventory: other Lex-rebuild tables still need auditing against* `schema.prisma` *(the schema is the authority).** DDL of record is the SQL file named under each entity; never run* `prisma migrate diff` *or* `prisma format` *(CLAUDE.md §21).*
+
+### LexCoherentAction
+
+The Lex rebuild's action row (UI: Coherent Actions, page 4). Kept separate from the legacy `CoherentAction` above. Cascades with the idea. Indexes: `(ideaId)`, `(ideaId, status)`.
+
+| Field              | Type               | Notes                                                                                                        |
+|--------------------|--------------------|--------------------------------------------------------------------------------------------------------------|
+| id                 | UUID PK            |                                                                                                              |
+| ideaId             | FK                 | → Idea, cascade                                                                                              |
+| practicalStep      | String             | The action, one line                                                                                         |
+| mechanismType      | String nullable    | incentives / rules / transparency / market-design / institutional                                            |
+| whoImplements      | String nullable    | Shown as the implementer chip                                                                                |
+| targetOrganisation | String nullable    | Legislative actions                                                                                          |
+| wording            | String nullable    | Legislative actions — intent now, drafting later                                                             |
+| benefits           | JSON nullable      | `{ financial, social, ongoing }` ranges + basis                                                              |
+| implementationCost | JSON nullable      | `{ low, high, unit, basis, benchmarkId?, userOverride? }`                                                    |
+| enforcementCost    | JSON nullable      | Ongoing cost to administer                                                                                   |
+| regulatoryFriction | JSON nullable      | Ongoing compliance burden                                                                                    |
+| source             | LexEntitySource    | Default USER (LEX for rows Lex wrote)                                                                        |
+| orderIndex         | Integer            | Default 0 — the user's drag order; persisted                                                                 |
+| createdAt          | DateTime           |                                                                                                              |
+| updatedAt          | DateTime           |                                                                                                              |
+| **26-Q — the sixteen columns added by `prisma/lex_26q_actions.sql`** | | |
+| number             | Integer nullable   | Stable, user-visible number. Assigned by DB trigger `lex_action_number_trg` (`prisma/lex_26q_action_number_trigger.sql`) on every insert: one past the highest ever used in the idea. Never changes |
+| title              | String nullable    | What the action DOES. Editable                                                                               |
+| titleProposal      | String nullable    | Lex's draft title, held until accepted or edited                                                             |
+| headingId          | String nullable    | → ActionHeading. One per action. DB FK is ON DELETE SET NULL; no Prisma relation on purpose                   |
+| status             | String             | LIVE (default) / RULED_OUT (reason, restorable) / ARCHIVED (merged away or superseded by a rebuild). Nothing deletes |
+| ruleOutReason      | String nullable    | Required when ruled out; also holds "Superseded by a rebuild…" for archived rows                             |
+| parked             | Boolean            | Default false. "Later phase" — collapsed, still in documents                                                 |
+| parkedReason       | String nullable    |                                                                                                              |
+| mergedFrom         | Integer[]          | Default []. Numbers of the originals a merge absorbed                                                        |
+| mergedIntoId       | String nullable    | On an archived original: the action that absorbed it                                                         |
+| targetCauseIds     | String[]           | Default []. DiagnosisCause ids this action attacks — the RECORDED cause link (none existed before 26-Q)      |
+| avenue             | String nullable    | LEGISLATIVE / ORGANISATIONAL / FINANCIAL                                                                     |
+| link               | String nullable    | Which of the guiding policy's binding links it protects, in the link's own wording                           |
+| sequence           | String nullable    | NOW / NEXT / LATER                                                                                           |
+| beforeIds          | String[]           | Default []. Ids of the actions this one must come before                                                     |
+| facetProposal      | JSON nullable      | `{ targetCauseIds?, avenue?, link?, sequence?, beforeIds? }` — Lex's proposal, unaccepted                    |
+
+Rule: only `status = 'LIVE'` rows feed documents, kernel text, costing, the gap check and Lex's snapshot (parked rows are LIVE).
+
+***
+
+### ActionHeading
+
+26-Q §3 — the user's headings for their coherent actions, per idea. DDL: `prisma/lex_26q_actions.sql`. Index `(ideaId)`.
+
+| Field      | Type     | Notes                                                                                                      |
+|------------|----------|------------------------------------------------------------------------------------------------------------|
+| id         | UUID PK  |                                                                                                            |
+| ideaId     | FK       | → Idea, cascade                                                                                            |
+| name       | String   | Always printed beside the colour (colour is never the only cue)                                            |
+| colourKey  | String   | Entry in `lib/lex/action-headings.ts` (measured palette: differs in lightness and has a shape glyph)       |
+| hidden     | Boolean  | Default false. Hides the rows; the header and its count stay                                               |
+| orderIndex | Integer  | Default 0                                                                                                  |
+| createdAt  | DateTime |                                                                                                            |
+| updatedAt  | DateTime | Default now(), auto-updated                                                                                |
+
+***
+
+### ActionIdea
+
+26-M addendum — a coherent-action idea lifted out of a consolidation draft and HELD until the final guiding policy exists. Nothing is added to the kernel until one is ACCEPTED. Index `(ideaId, status)`.
+
+| Field            | Type            | Notes                                                                                                                                          |
+|------------------|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| id               | UUID PK         |                                                                                                                                                |
+| ideaId           | FK              | → Idea, cascade                                                                                                                                |
+| consolidationId  | String nullable | **Deliberately not a foreign key** — a consolidation deleted as an orphan must not take held ideas with it                                     |
+| status           | String          | HELD (default) → WRITTEN (an action was added) / DISMISSED. ACCEPTED is the only status that creates a LexCoherentAction                       |
+| text             | Text            |                                                                                                                                                |
+| verdict          | String nullable | FITS / DOES_NOT_FIT / CONFLICTS / NOT_TESTED (never silently dropped)                                                                          |
+| reason           | String nullable | One line                                                                                                                                       |
+| sources          | JSON            | A list, not a column — a merged duplicate keeps every origin: `[{kind:'DRAFT',model,draftId,consolidationId} \| {kind:'PARKED',policyOptionId,number,parkedWithNumber}]` |
+| testedAgainstId  | String nullable | The policy it was tested against                                                                                                               |
+| acceptedActionId | String nullable | The LexCoherentAction it created                                                                                                               |
+| createdAt        | DateTime        |                                                                                                                                                |
+| updatedAt        | DateTime        | Auto-updated                                                                                                                                   |
+
+***
+
+### GuidingPolicyDraft — fields added
+
+Only the additions are listed; the table is one premium model's draft within a guiding-policy consolidation, with the judge's verdict.
+
+| Field              | Type              | Notes                                                                                                                                                              |
+|--------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| actionsExtractedAt | DateTime nullable | 26-M addendum. Set once the draft's action ideas have been lifted out and held (see ActionIdea). Null = not yet extracted, or failed and to be retried. A draft with NO action ideas still gets a timestamp, so "nothing to extract" is not retried |
+| servedBy           | String nullable   | 26-O §4d. Set only when the panel slot's model was unavailable and a fallback wrote the draft: the model that actually did. `model` stays the slot; NULL = the slot's own model wrote it. DDL: `prisma/lex_26o_draft_served_by.sql` |
+
+***
+
+### IdeaFieldState — fields added
+
+| Field       | Type          | Notes                                                                                                                                                                                  |
+|-------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| stale       | Boolean       | 26-K §4b. Default false. An accepted field can be stale; an empty one cannot. Orthogonal to `status` (not a fifth FieldStatus)                                                         |
+| staleReason | String nullable | 26-K. Never `stale = true` with a null reason                                                                                                                                         |
+| redraft     | JSON nullable | 26-N. `{ value, rationale, againstPolicyId, at }` — a redraft offered BESIDE the user's own words when the guiding policy settles, never over them. A separate slot from `proposal` (which is the editor text). Cleared on accept or dismiss |
+
+***
+
+### LexToolCall
+
+26-P addendum §8c — one row per tool call Lex makes on an idea, shown to the owner beside the Privacy Log. Append-only. DDL: `prisma/lex_26o_cache_and_toolcalls.sql`. Index `(ideaId, createdAt)`.
+
+| Field         | Type            | Notes                                                                                              |
+|---------------|-----------------|----------------------------------------------------------------------------------------------------|
+| id            | UUID PK         |                                                                                                    |
+| ideaId        | FK              | → Idea, cascade                                                                                    |
+| userId        | String          | The owner Lex acted for                                                                            |
+| actor         | String          | Default "Lex". Never blank                                                                         |
+| turnId        | String nullable | The chat turn (client turn id)                                                                     |
+| tool          | String          |                                                                                                    |
+| tier          | String nullable | free / asks-first / run                                                                            |
+| instruction   | String          | The user's own message that the call followed (clipped); never document text                       |
+| input         | JSON            |                                                                                                    |
+| result        | JSON nullable   | What came back (clipped), or the failure                                                           |
+| ok            | Boolean         |                                                                                                    |
+| failureReason | String nullable |                                                                                                    |
+| tainted       | Boolean         | Default false. The turn had read third-party text when the call was made                           |
+| confirmedVia  | String nullable | 'button' when an asks-first action ran on the owner's Confirm; NULL otherwise                      |
+| createdAt     | DateTime        |                                                                                                    |
+
+***
+
+### LlmSpend — fields added (26-O §5a)
+
+| Field            | Type    | Notes                                                                                                             |
+|------------------|---------|-------------------------------------------------------------------------------------------------------------------|
+| tokensCached     | Integer | Default 0. Input tokens served from the provider's cache, billed at the cached-read rate. Subset of tokensIn. Rows before 26-O are 0 = "not recorded", not "none cached" |
+| tokensCacheWrite | Integer | Default 0. Input tokens written to a cache (Anthropic cache_creation_input_tokens). Subset of tokensIn            |
+
+***
+
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*

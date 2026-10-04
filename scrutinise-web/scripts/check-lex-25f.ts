@@ -24,7 +24,7 @@ import { join } from 'node:path'
 import { BUILD_PASSES, passDef, modelForPass, type BuildPassKey } from '../lib/lex/build-config'
 import { INTERROGATION_LIBRARY } from '../lib/lex/interrogation-library'
 import { queryDefects, queryIsWellFormed, QUERY_STOPWORDS, extractedQuery } from '../lib/lex/build-query'
-import { KERNEL_TESTS, CHEAPEST_MODEL, verifyModel, complianceIssueText, logicIssueText } from '../lib/lex/build-verify'
+import { KERNEL_TESTS, UNSTABLE_KERNEL_TESTS, UNSTABLE_TEST_NOTE, CHEAPEST_MODEL, verifyModel, complianceIssueText, logicIssueText } from '../lib/lex/build-verify'
 import { smartPanelModels, smartCritiqueModel, PAGE_ONE_CAP, normalisePanelAnswer } from '../lib/lex/build-smart'
 import { DEFAULT_DOOR, doorPath, isNewIdeaDoor, NEW_IDEA_PATH, NEW_IDEA_DOOR_KEY } from '../lib/lex/new-idea-door'
 import { TESTIMONY_INSTRUCTION, bearsTestimonyMarks, testimonyBlock } from '../lib/lex/testimony'
@@ -791,6 +791,21 @@ const CHECKS: Check[] = [
       if (!/a statutory framework/.test(text)) return 'the failing text is not quoted'
       const logic = logicIssueText({ kind: 'CIRCULAR', theText: 'accountability is poor because officials are not accountable', problem: 'it rests on itself' })
       return /accountability is poor/.test(logic) ? null : 'a logic defect does not quote the text'
+    },
+  },
+  {
+    // 4 Oct — the two tests that gave different answers on identical input say so wherever they show; the stable ones do not.
+    name: '§3 an UNSTABLE kernel test is labelled unstable in its issue text, and a stable one is not',
+    run: () => {
+      const mk = (id: string) => complianceIssueText(
+        { id, test: 'x', ask: '…' }, { id, passes: false, whatFails: 'It fails.', theTextThatFails: 'q' },
+      )
+      for (const id of ['OBSTACLE_DISTINCT', 'NO_BAD_STRATEGY_SMELL']) {
+        if (!UNSTABLE_KERNEL_TESTS.has(id) || !mk(id).includes(UNSTABLE_TEST_NOTE)) return `${id} is not labelled unstable`
+      }
+      const stable = KERNEL_TESTS.filter((t) => !UNSTABLE_KERNEL_TESTS.has(t.id))
+      if (stable.length !== KERNEL_TESTS.length - 2) return 'the unstable list names an id that is not a kernel test'
+      return stable.some((t) => mk(t.id).includes(UNSTABLE_TEST_NOTE)) ? 'a stable test carries the unstable label' : null
     },
   },
   {

@@ -397,6 +397,17 @@ export async function recordVerificationIssues(input: {
   return written
 }
 
+/**
+ * ⚠ THE TWO TESTS THAT DISAGREE WITH THEMSELVES (measured 4 Oct, 26-O §2b: kernel check run twice before and twice after
+ * the 26-O change on the same unchanged kernel, idea 452c5ade). Seven of nine tests gave the same answer in all four runs;
+ * these two did not. A verdict that flips on identical input is noise, so wherever one is shown it says so.
+ * Making them deterministic was not possible here: the checker is gemini-2.5-pro with thinking on, which is not
+ * reproducible at any temperature (the pass already runs at 0.1). Re-measure with `scripts/measure-26o-kernel-check.ts`;
+ * remove an id from this list only after a run of repeats agrees.
+ */
+export const UNSTABLE_KERNEL_TESTS: ReadonlySet<string> = new Set(['OBSTACLE_DISTINCT', 'NO_BAD_STRATEGY_SMELL'])
+export const UNSTABLE_TEST_NOTE = 'Unstable result: this check has given different answers on identical text, so treat it as a prompt to look, not a verdict.'
+
 /** The issue text for a failed kernel test. Quotes the kernel, because §3 requires it. */
 export function complianceIssueText(t: KernelTest, r: KernelTestResult): string {
   return [
@@ -406,6 +417,7 @@ export function complianceIssueText(t: KernelTest, r: KernelTestResult): string 
     strategyTestHeading(t.test),
     r.whatFails.trim(),
     r.theTextThatFails.trim() ? `The text that fails it: "${r.theTextThatFails.trim()}"` : '',
+    UNSTABLE_KERNEL_TESTS.has(r.id) ? UNSTABLE_TEST_NOTE : '',
   ].filter(Boolean).join(' ')
 }
 
