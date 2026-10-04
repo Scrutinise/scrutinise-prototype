@@ -1003,6 +1003,7 @@ model Idea {
   // each corpus source (§2a), and the user's own documents and links (§25.6).
   sourceDecisions           IdeaSourceDecision[]
   userMaterial              IdeaUserMaterial[]
+  lexToolCalls              LexToolCall[]
   // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
@@ -4549,6 +4550,11 @@ model LlmSpend {
   tokensOut      Int      @default(0)
   /// Billed at the OUTPUT rate, so kept separate rather than folded into input.
   tokensThinking Int      @default(0)
+  /// 26-O §5a — input tokens served from the provider's cache (a SUBSET of tokensIn, which keeps meaning
+  /// "all input"). Billed at the cached-read rate. Rows before 26-O are 0 — "not recorded", not "none cached".
+  tokensCached     Int    @default(0)
+  /// 26-O §5a — input tokens WRITTEN to a cache (Anthropic cache_creation_input_tokens; a subset of tokensIn).
+  tokensCacheWrite Int    @default(0)
   estCostPence   Decimal? @db.Decimal(12, 4)
   unpriced       Boolean  @default(false)
   /// Nullable: ingest spend belongs to no user and no idea, and is still Charlie's.
@@ -4996,6 +5002,48 @@ model IdeaUserMaterial {
 enum UserMaterialKind {
   FILE
   LINK
+}
+
+/// ══ 26-P ADDENDUM §8c — EVERYTHING LEX DOES TO AN IDEA, VISIBLE TO ITS OWNER ═══════════════════
+///
+/// One row per tool call Lex makes on an idea: WHEN (createdAt), WHICH instruction it followed (the user's
+/// own message in that turn — never text from a document), WHAT it did (tool + input) and WHAT CAME BACK
+/// (result, ok, failureReason). Shown to the owner on the idea page beside the Privacy Log. Every row has a
+/// NAMED ACTOR — "Lex", acting for `userId` — so "who did this" is never blank, including for this log.
+///
+/// This is NOT the chat message's `tools` JSON (that records what a reply claimed; this is the audit record,
+/// queryable per idea). Append-only: nothing updates or deletes a row except the idea's own deletion.
+/// Plain index only — nothing for docs/CLAUDE.md §21's register. DDL of record: prisma/lex_26o_cache_and_toolcalls.sql.
+model LexToolCall {
+  id            String   @id @default(uuid())
+  ideaId        String
+  idea          Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  /// The owner the call was made for — Lex acts as them, within their own idea.
+  userId        String
+  /// ⚠ NEVER BLANK. Who performed the action. Today always "Lex"; a column rather than a constant so the day
+  /// something else acts on an idea (an admin tool, a scheduled job) it is named the same way.
+  actor         String   @default("Lex")
+  /// The chat turn this call belongs to (the client turn id), so a turn's calls read together.
+  turnId        String?
+  tool          String
+  /// free | asks-first | run — what the call needed before it could happen.
+  tier          String?
+  /// The user's own message that this call followed (clipped). Content read from documents is data and is
+  /// never recorded here as an instruction.
+  instruction   String
+  input         Json
+  /// What the tool returned to Lex (clipped), or the failure.
+  result        Json?
+  ok            Boolean
+  failureReason String?
+  /// The turn had read untrusted content (a document, a page) when the call was made — the audit flag for
+  /// "was this call made in a turn that had seen third-party text".
+  tainted       Boolean  @default(false)
+  /// 'button' when an asks-first action ran because the owner pressed Confirm; NULL otherwise.
+  confirmedVia  String?
+  createdAt     DateTime @default(now())
+
+  @@index([ideaId, createdAt])
 }
 
 /// ══ 26-D §3–§6 — A GROUP: ONE ROW, OWNED, NAMED, SHOWABLE OR HIDEABLE ═══════════════
