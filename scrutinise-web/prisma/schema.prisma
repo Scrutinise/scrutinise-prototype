@@ -1004,6 +1004,7 @@ model Idea {
   sourceDecisions           IdeaSourceDecision[]
   userMaterial              IdeaUserMaterial[]
   lexToolCalls              LexToolCall[]
+  actionHeadings            ActionHeading[]
   // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
@@ -3023,6 +3024,50 @@ model LexCoherentAction {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   costLines          CostLine[]
+
+  // ══ 26-Q — MAKING A LONG LIST WORKABLE. DDL of record: prisma/lex_26q_actions.sql ═══════════════════
+  /// Stable, user-visible number ("put 7 and 12 under Transparency"). One past the highest ever used in the idea.
+  number             Int?
+  /// A short title saying what the action DOES. `titleProposal` is Lex's draft, held until the user accepts or edits it.
+  title              String?
+  titleProposal      String?
+  /// ONE heading per action — the user's structure (ActionHeading). No Prisma relation on purpose: the DB foreign key is
+  /// ON DELETE SET NULL, and the code unassigns before deleting a heading.
+  headingId          String?
+  /// LIVE | RULED_OUT (with a reason, restorable) | ARCHIVED (absorbed into a merge; `mergedIntoId` says where). Nothing deletes.
+  status             String          @default("LIVE")
+  ruleOutReason      String?
+  /// "Later phase" — parked under a collapsed header; still the user's, still restorable.
+  parked             Boolean         @default(false)
+  parkedReason       String?
+  mergedFrom         Int[]           @default([])
+  mergedIntoId       String?
+  // ── facets: the PLATFORM's, several sorts at once. Lex proposes (`facetProposal`); the user corrects; accepting copies.
+  /// DiagnosisCause ids this action attacks — the RECORDED link (before 26-Q none existed; the gap check guessed from words).
+  targetCauseIds     String[]        @default([])
+  avenue             String?         // LEGISLATIVE | ORGANISATIONAL | FINANCIAL
+  link               String?         // which of the guiding policy's binding links it protects (the link's own wording)
+  sequence           String?         // NOW | NEXT | LATER
+  beforeIds          String[]        @default([])  // ids of the actions THIS one must come before
+  facetProposal      Json?           // { targetCauseIds?, avenue?, link?, sequence?, beforeIds? } — Lex's proposal, unaccepted
+
+  @@index([ideaId])
+  @@index([ideaId, status])
+}
+
+/// ══ 26-Q §3 — THE USER'S HEADINGS FOR THEIR COHERENT ACTIONS, per idea ═══════════════════════════════
+/// `colourKey` names an entry in lib/lex/action-headings.ts (a MEASURED palette that differs in lightness as well as hue —
+/// Charlie is colour blind, and the heading's NAME is always printed beside the trim). DDL: prisma/lex_26q_actions.sql.
+model ActionHeading {
+  id         String   @id @default(uuid())
+  ideaId     String
+  idea       Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  name       String
+  colourKey  String
+  hidden     Boolean  @default(false)
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 
   @@index([ideaId])
 }
