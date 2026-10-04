@@ -2956,6 +2956,10 @@ model GuidingPolicyDraft {
   /// (see `ActionIdea`). Null = not yet extracted (or the extraction failed and is to be retried);
   /// a draft with NO action ideas still gets a timestamp, so "nothing to extract" is not retried.
   actionsExtractedAt DateTime?
+  /// 26-O §4d — set ONLY when the panel's model for this slot was unavailable and a FALLBACK answered
+  /// (gemini-3.1-pro-preview is a preview): the model that actually wrote the draft. `model` stays the panel slot
+  /// so retry/favourite keep working; NULL means "the slot's own model wrote it". The card says so when set.
+  servedBy          String?
   createdAt         DateTime                   @default(now())
 
   @@index([consolidationId])
