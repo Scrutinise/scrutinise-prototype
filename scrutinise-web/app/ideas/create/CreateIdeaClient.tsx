@@ -1254,6 +1254,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 causes={state.diagnosisCauses}
                 policyOptions={state.policyOptions}
                 actions={state.actions}
+                setAsideActions={state.setAsideActions}
+                actionHeadings={state.actionHeadings}
                 costLines={state.costLines}
                 benchmarks={state.benchmarks}
                 busy={busy}

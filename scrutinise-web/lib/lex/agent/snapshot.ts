@@ -108,7 +108,13 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
   // ── actions ──
   const actions = state?.actions ?? []
   lines.push('', `COHERENT ACTIONS (${actions.length}):`)
-  for (const a of actions) lines.push(`- ${short(a.id)} (${a.source}): ${clip(a.practicalStep, 180)}`)
+  // 26-Q — addressed by NUMBER, as the user sees it ("put 7 and 12 under Transparency"), with the title, heading and what is parked.
+  const headingName = new Map((state?.actionHeadings ?? []).map((h) => [h.id, h.name]))
+  const untitled = actions.filter((a) => !a.title?.trim()).length
+  for (const a of actions) {
+    lines.push(`- #${a.number ?? '?'} (${a.source})${a.title ? ` “${clip(a.title, 80)}”` : ''}${a.headingId && headingName.get(a.headingId) ? ` [heading: ${headingName.get(a.headingId)}]` : ''}${a.parked ? ' [later phase]' : ''}: ${clip(a.practicalStep, 180)}`)
+  }
+  if (actions.length) lines.push(`(${untitled} untitled, ${actions.filter((a) => a.titleProposal).length} with a proposed title, ${actions.filter((a) => a.facetProposal).length} with a proposed classification, ${actions.filter((a) => !a.targetCauseIds.length).length} with no recorded cause; ${(state?.setAsideActions ?? []).length} set aside; ${(state?.actionHeadings ?? []).length} headings)`)
 
   // ── sources ──
   lines.push('', `FILED SOURCES — the user's own material (${sources.length}):`)

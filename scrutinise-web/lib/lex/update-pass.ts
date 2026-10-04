@@ -165,7 +165,7 @@ async function readKernel(ideaId: string): Promise<KernelSnapshot> {
       where: { ideaId, status: { not: 'RULED_OUT' }, mergedIntoId: null, kind: 'GUIDING_POLICY' },
       select: { number: true, approach: true }, orderBy: { number: 'asc' },
     }),
-    prisma.lexCoherentAction.findMany({ where: { ideaId }, select: { id: true, practicalStep: true } }),
+    prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, select: { id: true, practicalStep: true } }),
   ])
   return {
     problem: idea?.challenge?.trim() || idea?.summaryDescription?.trim() || '(no problem statement recorded)',

@@ -2280,8 +2280,19 @@ async function actionsPass(c: PassContext): Promise<PassOutcome> {
     // legislation. The revise pass already deletes LEX causes before recreating them; actions get
     // the same rule here. The USER's own actions are never touched; cost lines cascade with the
     // superseded rows, which is right — they costed steps that no longer exist.
-    const superseded = await prisma.lexCoherentAction.deleteMany({ where: { ideaId, source: 'LEX' } })
-    if (superseded.count) console.log('[lex-diag] 26b actions — superseded the previous build\'s LEX actions', { buildId, removed: superseded.count })
+    // ⚠ 26-Q — A ROW THE USER HAS WORKED ON IS ARCHIVED, NOT DELETED. Titles, a heading, a merge, a park, a rule-out and
+    // Lex's accepted facets are the user's structure; deleting the row took all of it, silently, on every re-run. Such a
+    // row is now ARCHIVED ("superseded by a rebuild", restorable from the ruled-out section). A row with none of that is
+    // deleted exactly as before.
+    const touched = await prisma.lexCoherentAction.updateMany({
+      where: {
+        ideaId, source: 'LEX', status: 'LIVE',
+        OR: [{ title: { not: null } }, { headingId: { not: null } }, { parked: true }, { NOT: { mergedFrom: { isEmpty: true } } }, { sequence: { not: null } }, { avenue: { not: null } }, { link: { not: null } }, { NOT: { targetCauseIds: { isEmpty: true } } }],
+      },
+      data: { status: 'ARCHIVED', ruleOutReason: 'Superseded by a rebuild — restore it if you still want it.' },
+    })
+    const superseded = await prisma.lexCoherentAction.deleteMany({ where: { ideaId, source: 'LEX', status: 'LIVE' } })
+    if (superseded.count || touched.count) console.log('[lex-diag] 26b actions — superseded the previous build\'s LEX actions', { buildId, removed: superseded.count, archivedBecauseTheUserHadWorkedOnThem: touched.count })
     await createActions(ideaId, actions.map((x) => ({
       practicalStep: x.practicalStep.trim(),
       whoImplements: x.whoImplements?.trim() || null,
@@ -2477,7 +2488,7 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
   }
 
   const actions = await prisma.lexCoherentAction.findMany({
-    where: { ideaId }, select: { practicalStep: true, whoImplements: true },
+    where: { ideaId, status: 'LIVE' }, select: { practicalStep: true, whoImplements: true },
   })
 
   const result = await runRevisePass({
@@ -3490,7 +3501,7 @@ export async function kernelText(ideaId: string): Promise<string> {
       chosenApproach: true, summaryGuidingPolicy: true, summaryCoherentActions: true,
       legalLandscape: true, whoAffectedImpactCost: true,
       diagnosisCauses: { select: { cause: true, classification: true } },
-      lexActions: { select: { practicalStep: true, whoImplements: true } },
+      lexActions: { where: { status: 'LIVE' }, select: { practicalStep: true, whoImplements: true } },
     },
   })
   if (!idea) return ''
@@ -3619,7 +3630,7 @@ export async function kernelText(ideaId: string): Promise<string> {
  *  file changes; `export` is the whole diff. */
 export async function costLinesFor(ideaId: string): Promise<string[]> {
   const actions = await prisma.lexCoherentAction.findMany({
-    where: { ideaId },
+    where: { ideaId, status: 'LIVE' },
     select: { costLines: { select: { label: true, low: true, high: true, unit: true, basis: true } } },
   })
   return actions.flatMap((a) =>

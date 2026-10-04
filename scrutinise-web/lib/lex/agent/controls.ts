@@ -40,6 +40,16 @@ export const CONTROLS: readonly Control[] = [
   { label: 'Skip', file: 'components/lex/FieldsPanel.tsx', where: 'on a field that is waiting for you', does: 'leaves the field unfilled for now' },
   { label: 'Accept', file: 'components/lex/ActionGapCheck.tsx', where: 'on a proposal', does: 'accepts the proposal into your idea' },
   { label: 'Dismiss', file: 'components/lex/ActionGapCheck.tsx', where: 'on a proposal', does: 'dismisses the proposal' },
+  // 26-Q — the coherent-actions workspace (components/lex/ActionsWorkspace.tsx). Each label is printed there verbatim.
+  { label: 'Title these for me', file: 'components/lex/ActionsWorkspace.tsx', where: 'the toolbar above the list of coherent actions', does: 'has me draft a short title for every untitled action, as proposals you accept or edit' },
+  { label: 'Classify with Lex', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'has me propose, for every action, the causes it attacks, its avenue, which binding link it protects and where it sits in the sequence — all proposals you can correct' },
+  { label: 'Find duplicates', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'lists the pairs of actions that read as near-duplicates, closest first, with a Merge? button beside each' },
+  { label: 'Suggest headings from my guiding policy', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'offers starting headings drawn from your settled guiding policy, which you can add, rename or ignore' },
+  { label: 'Add heading', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'creates a heading of your own to sort actions under' },
+  { label: 'Coverage grid', file: 'components/lex/ActionsWorkspace.tsx', where: 'a view tab above the list of actions', does: 'shows causes against actions, so a cause with no action against it is an empty row' },
+  { label: 'Later phase', file: 'components/lex/ActionsWorkspace.tsx', where: 'on an open action, and in the bulk bar', does: 'parks an action under a collapsed Later phase header; it stays yours and can be brought back' },
+  { label: 'Merge', file: 'components/lex/ActionsWorkspace.tsx', where: 'the bulk bar, with exactly two actions selected', does: 'asks me how the two relate and merges them if they are one thing; the originals are kept' },
+  { label: 'Compare', file: 'components/lex/ActionsWorkspace.tsx', where: 'the bulk bar, with exactly two actions selected', does: 'shows the two side by side with my verdict on how they relate, and changes nothing' },
   { label: 'Re-run', file: 'components/lex/RerunOptions.tsx', where: 'on THE IDEA stage, at the top of the page', does: 'opens a dialogue that says what a re-run will do and cost before anything is spent' },
 ]
 

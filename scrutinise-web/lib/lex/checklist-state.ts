@@ -32,7 +32,7 @@ async function rowCounts(ideaId: string): Promise<RowCounts> {
   const [causes, policyOptions, actions] = await Promise.all([
     prisma.diagnosisCause.count({ where: { ideaId } }),
     prisma.policyOption.count({ where: { ideaId, mergedIntoId: null } }),
-    prisma.lexCoherentAction.count({ where: { ideaId } }),
+    prisma.lexCoherentAction.count({ where: { ideaId, status: 'LIVE' } }),
   ])
   return { causes, policyOptions, actions }
 }

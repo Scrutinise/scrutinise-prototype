@@ -181,11 +181,21 @@ const listCandidates: ToolDefinition = {
 
 const listActionsTool: ToolDefinition = {
   name: 'list_actions', category: 'see', tier: 'free',
-  description: 'List every coherent action in full.',
+  description: 'List every live coherent action in full — its number (what the user calls it), title, heading, facets (avenue, sequence, the binding link, the numbered causes it attacks, what it must come before), whether it is parked for a later phase, and any title or classification Lex has proposed that the user has not yet accepted. Ruled-out and merged-away actions are not listed.',
   schema: z.object({}),
   async run(ctx) {
-    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: ctx.ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
-    return { ok: true, data: rows.map((a) => ({ id: short(a.id), practicalStep: a.practicalStep, whoImplements: a.whoImplements, targetOrganisation: a.targetOrganisation, wording: a.wording, source: a.source })) }
+    const [rows, heads, causes] = await Promise.all([
+      prisma.lexCoherentAction.findMany({ where: { ideaId: ctx.ideaId, status: 'LIVE' }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }),
+      prisma.actionHeading.findMany({ where: { ideaId: ctx.ideaId } }),
+      prisma.diagnosisCause.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, number: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }),
+    ])
+    const hn = new Map(heads.map((h) => [h.id, h.name])), cn = new Map(causes.map((c, i) => [c.id, c.number ?? i + 1])), an = new Map(rows.map((r) => [r.id, r.number]))
+    return { ok: true, data: rows.map((a) => ({
+      number: a.number, id: short(a.id), title: a.title, titleProposed: a.titleProposal, heading: a.headingId ? hn.get(a.headingId) ?? null : null,
+      practicalStep: a.practicalStep, whoImplements: a.whoImplements, targetOrganisation: a.targetOrganisation, wording: a.wording, source: a.source,
+      avenue: a.avenue, sequence: a.sequence, link: a.link, causesAttacked: a.targetCauseIds.map((c) => cn.get(c)).filter(Boolean),
+      mustComeBefore: a.beforeIds.map((b) => an.get(b)).filter(Boolean), parkedForLaterPhase: a.parked, classificationProposed: a.facetProposal != null,
+    })) }
   },
 }
 
@@ -717,6 +727,265 @@ const restoreSource: ToolDefinition = {
   },
 }
 
+// ══ 26-Q — THE COHERENT-ACTIONS WORKSPACE, THROUGH LEX'S TOOLS (§8) ══════════════════════════════
+//
+// Everything the titles-only list does is reachable from the chat, through the SAME functions the screen's route calls
+// (`lib/lex/action-structure.ts`) — so "title these", "group these by cause", "which are duplicates", "put 7 and 12 under
+// Transparency" and "what has no action against it" cannot drift from the buttons. ⚠ TIERS, as the brief sets them:
+// assigning headings and facets, titling, parking and bringing back are FREE (nothing is lost, every one is reversible);
+// MERGING and RULING OUT ASK FIRST (the button), and both hand back an undo.
+
+import * as AS from '@/lib/lex/action-structure'
+import { groupActions, type GroupMode, GROUP_MODES } from '@/lib/lex/action-facets'
+
+const numbers = z.array(z.number().int()).min(1).max(60).describe('action numbers, as the user sees them (#7 is 7)')
+
+/** Owner-scoped: only numbers of LIVE actions on this idea resolve. */
+async function actionsByNumbers(ctx: ToolCtx, nums: number[]) {
+  const { rows, missing } = await AS.resolveActions(ctx.ideaId, nums)
+  return { rows, missing }
+}
+async function causeIdByNumber(ctx: ToolCtx, n: number) {
+  const causes = await prisma.diagnosisCause.findMany({ where: { ideaId: ctx.ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, number: true } })
+  return causes.find((c, i) => (c.number ?? i + 1) === n)?.id ?? null
+}
+const unwrap = <T,>(r: AS.Result<T>): { ok: true; data: T } | { ok: false; error: string } => r
+/** ⚠ a type predicate, not `!r.ok`: this project is `strict: false`, which does not narrow a union on a negated boolean. */
+const isBad = (r: { ok: boolean }): r is { ok: false; error: string } => r.ok === false
+
+const titleActionsTool: ToolDefinition = {
+  name: 'title_actions', category: 'draft', tier: 'free',
+  description: 'Draft a short title for every untitled coherent action, in one pass. The titles are PROPOSALS: each waits for the user to accept or edit it, and nothing is saved as theirs. A title says what the action does, not what it is about. Costs a few pence.',
+  schema: z.object({}),
+  async run(ctx) {
+    const r = unwrap(await AS.proposeTitles(ctx.ideaId, ctx.userId))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { ...r.data, status: 'proposed — waiting for the user to accept or edit; none is saved as theirs yet' }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const classifyActionsTool: ToolDefinition = {
+  name: 'classify_actions', category: 'draft', tier: 'free',
+  description: 'Propose, for every coherent action, the causes it attacks, its avenue (legislative / organisational / financial), which of the guiding policy’s binding links it protects, and where it sits in the sequence (now / next / later, and what it must come before). All PROPOSALS the user accepts or corrects; a field the user has already set is left alone. A few pence.',
+  schema: z.object({}),
+  async run(ctx) {
+    const r = unwrap(await AS.proposeFacets(ctx.ideaId, ctx.userId))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { ...r.data, status: 'proposed — waiting for the user to accept or correct' }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const suggestHeadingsTool: ToolDefinition = {
+  name: 'suggest_action_headings', category: 'see', tier: 'free',
+  description: 'Offer starting headings for the coherent actions, drawn from the settled guiding policy (its binding links and cross-cutting concerns). Returns suggestions only — creates nothing. Needs a settled guiding policy.',
+  schema: z.object({}),
+  async run(ctx) {
+    const r = unwrap(await AS.suggestHeadings(ctx.ideaId, ctx.userId))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { suggestions: r.data.suggestions, note: 'Nothing has been created. Offer them; create one with create_action_heading only if the user says so.' } }
+  },
+}
+
+const createHeadingTool: ToolDefinition = {
+  name: 'create_action_heading', category: 'draft', tier: 'free',
+  description: 'Create a heading the user can sort their coherent actions under. A heading with that name already existing is reused, not duplicated.',
+  schema: z.object({ name: z.string().min(1).max(60) }),
+  async run(ctx, { name }) {
+    const r = unwrap(await AS.createHeading(ctx.ideaId, name))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: r.data, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const assignHeadingTool: ToolDefinition = {
+  name: 'assign_action_heading', category: 'draft', tier: 'free',
+  description: 'Put coherent actions under a heading, by number (“put 7 and 12 under Transparency”). One heading per action: an action already under another heading moves. The heading is created if it does not exist. Pass heading null to take the actions out of their heading.',
+  schema: z.object({ actions: numbers, heading: z.string().max(60).nullable() }),
+  async run(ctx, { actions, heading }) {
+    const { rows, missing } = await actionsByNumbers(ctx, actions)
+    if (!rows.length) return fail(`there is no live action ${missing.map((m) => `#${m}`).join(', ')} on this idea.`)
+    let headingId: string | null = null
+    let created = false
+    if (heading) {
+      const h = unwrap(await AS.createHeading(ctx.ideaId, heading))
+      if (isBad(h)) return fail(h.error)
+      headingId = h.data.id; created = h.data.created
+    }
+    const r = unwrap(await AS.assignHeading(ctx.ideaId, rows.map((x) => x.id), headingId))
+    if (isBad(r)) return fail(r.error)
+    return {
+      ok: true, data: { assigned: r.data.assigned, heading, headingCreated: created, notFound: missing.map(Number) },
+      items: [...rows.map((x) => ({ ok: true, label: `#${x.number}` })), ...missing.map((m) => ({ ok: false, label: `#${m} (no such live action)` }))],
+      ui: [{ type: 'open_panel', panel: 'actions' }],
+    }
+  },
+}
+
+const setFacetsTool: ToolDefinition = {
+  name: 'set_action_facets', category: 'draft', tier: 'free',
+  description: 'Set one action’s classification: avenue (LEGISLATIVE / ORGANISATIONAL / FINANCIAL), sequence (NOW / NEXT / LATER), the binding link it protects (free text, the policy’s own wording), the numbered causes it attacks, and the action numbers it must come before. Only what you pass is changed; pass null to clear a single value.',
+  schema: z.object({
+    action: z.number().int(),
+    avenue: z.enum(['LEGISLATIVE', 'ORGANISATIONAL', 'FINANCIAL']).nullable().optional(),
+    sequence: z.enum(['NOW', 'NEXT', 'LATER']).nullable().optional(),
+    link: z.string().max(160).nullable().optional(),
+    causes: z.array(z.number().int()).max(20).optional().describe('cause numbers, as the user sees them'),
+    before: z.array(z.number().int()).max(40).optional().describe('action numbers this one must come before'),
+  }),
+  async run(ctx, input) {
+    const { rows } = await actionsByNumbers(ctx, [input.action])
+    if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+    const patch: AS.FacetPatch = {}
+    if (input.avenue !== undefined) patch.avenue = input.avenue
+    if (input.sequence !== undefined) patch.sequence = input.sequence
+    if (input.link !== undefined) patch.link = input.link
+    if (input.causes) {
+      const ids = await Promise.all(input.causes.map((n) => causeIdByNumber(ctx, n)))
+      const bad = input.causes.filter((_, i) => !ids[i])
+      if (bad.length) return fail(`there is no cause ${bad.map((b) => `#${b}`).join(', ')} on this idea.`)
+      patch.targetCauseIds = ids as string[]
+    }
+    if (input.before) {
+      const t = await actionsByNumbers(ctx, input.before)
+      if (t.missing.length) return fail(`there is no live action ${t.missing.map((m) => `#${m}`).join(', ')} to come before.`)
+      patch.beforeIds = t.rows.map((x) => x.id)
+    }
+    const r = unwrap(await AS.setFacets(ctx.ideaId, rows[0].id, patch))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { action: input.action, set: Object.keys(patch) }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const groupActionsTool: ToolDefinition = {
+  name: 'group_actions', category: 'see', tier: 'free',
+  description: 'Show the coherent actions grouped by heading, cause, link, avenue or sequence (“group these by cause”). READ ONLY — it re-sorts the answer, not the user’s list, and moves nothing between headings.',
+  schema: z.object({ by: z.enum(GROUP_MODES as unknown as [string, ...string[]]) }),
+  async run(ctx, { by }) {
+    const [rows, heads, causes] = await Promise.all([
+      AS.liveRows(ctx.ideaId).then((r) => r.filter((x) => !x.parked)),
+      prisma.actionHeading.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, name: true, colourKey: true, hidden: true, orderIndex: true } }),
+      prisma.diagnosisCause.findMany({ where: { ideaId: ctx.ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, number: true, cause: true } }),
+    ])
+    const groups = groupActions(rows as never, by as GroupMode, { headings: heads, causes: causes.map((c, i) => ({ id: c.id, number: c.number ?? i + 1, cause: c.cause })) })
+    return { ok: true, data: groups.map((g) => ({ group: g.label, count: g.actions.length, actions: g.actions.map((a) => `#${a.number} ${a.title || clip(a.practicalStep, 70)}`) })) }
+  },
+}
+
+const findDuplicatesTool: ToolDefinition = {
+  name: 'find_action_duplicates', category: 'see', tier: 'free',
+  description: 'Rank the pairs of coherent actions that read as near-duplicates, closest first (“which of these are duplicates?”). Causes that nearly every action attacks are ignored as evidence of similarity. READ ONLY.',
+  schema: z.object({}),
+  async run(ctx) {
+    const d = await AS.findDuplicates(ctx.ideaId)
+    return { ok: true, data: { pairs: d.pairs.slice(0, 15).map((p) => ({ a: p.aNumber, b: p.bNumber, similarity: Math.round(p.score * 100) + '%', aTitle: p.aLabel, bTitle: p.bLabel })), ignoredCausesEveryActionAttacks: d.ignoredUniversalCauses.map((c) => c.number) } }
+  },
+}
+
+const withoutActionTool: ToolDefinition = {
+  name: 'causes_without_action', category: 'see', tier: 'free',
+  description: 'List the diagnosed causes that have NO coherent action against them (“what has no action against it?”), from the RECORDED cause links. It also says how many actions carry a recorded cause — if few do, the answer is thin and classify_actions should be offered first. READ ONLY.',
+  schema: z.object({}),
+  async run(ctx) {
+    const r = await AS.causesWithoutAction(ctx.ideaId)
+    return { ok: true, data: { causesWithNoAction: r.uncovered, actionsWithARecordedCause: `${r.recorded.linked} of ${r.recorded.total}`, caution: r.recorded.linked < r.recorded.total ? 'Some actions have no recorded cause, so a cause listed here may in fact be covered by one of them.' : null } }
+  },
+}
+
+const compareActionsTool: ToolDefinition = {
+  name: 'compare_actions', category: 'see', tier: 'free',
+  description: 'Compare two coherent actions and report how they relate: MERGE (parts of one thing), ONE_CONTAINS_THE_OTHER, SEQUENCE (separate; one first) or CONTRADICTORY, with the reasoning and — for a merge — suggested merged wording. READ ONLY: it changes nothing. About 2p.',
+  schema: z.object({ a: z.number().int(), b: z.number().int() }),
+  async run(ctx, { a, b }) {
+    const r = unwrap(await AS.judgeActionMerge(ctx.ideaId, ctx.userId, a, b))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { a, b, verdict: r.data.answer.verdict, reasoning: r.data.answer.reasoning, suggestedMerged: r.data.answer.merged, subordinate: r.data.answer.subordinateNumber } }
+  },
+}
+
+const parkActionsTool: ToolDefinition = {
+  name: 'park_actions', category: 'draft', tier: 'free',
+  description: 'Park coherent actions under the collapsed “Later phase” header. They stay the user’s, stay in the proposal, and can be brought back with restore_actions.',
+  schema: z.object({ actions: numbers, reason: z.string().max(300).optional() }),
+  async run(ctx, { actions, reason }) {
+    const { rows, missing } = await actionsByNumbers(ctx, actions)
+    if (!rows.length) return fail(`there is no live action ${missing.map((m) => `#${m}`).join(', ')} on this idea.`)
+    const r = unwrap(await AS.park(ctx.ideaId, rows.map((x) => x.id), reason))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { parked: r.data.parked, notFound: missing.map(Number) }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const restoreActionsTool: ToolDefinition = {
+  name: 'restore_actions', category: 'draft', tier: 'free',
+  description: 'Bring coherent actions back: out of the Later phase, or back from ruled-out / merged-away. Addressed by the numbers the user saw.',
+  schema: z.object({ actions: numbers }),
+  async run(ctx, { actions }) {
+    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: ctx.ideaId, number: { in: actions } }, select: { id: true, number: true, status: true, parked: true } })
+    if (!rows.length) return fail(`there is no action ${actions.map((n) => `#${n}`).join(', ')} on this idea.`)
+    const back = unwrap(await AS.restore(ctx.ideaId, rows.filter((x) => x.status !== 'LIVE').map((x) => x.id)))
+    const un = unwrap(await AS.unpark(ctx.ideaId, rows.filter((x) => x.parked).map((x) => x.id)))
+    if (isBad(back)) return fail(back.error)
+    if (isBad(un)) return fail(un.error)
+    return { ok: true, data: { restored: back.data.restored, broughtBackFromLaterPhase: un.data.unparked, notFound: actions.filter((n) => !rows.some((r) => r.number === n)) }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const ruleOutActionsTool: ToolDefinition = {
+  name: 'rule_out_actions', category: 'change', tier: 'ask',
+  description: 'Rule coherent actions out, with a reason. They are kept (with the reason) in a collapsed “ruled out” section and can be restored; nothing is deleted. Asks the user to confirm first.',
+  schema: z.object({ actions: numbers, reason: z.string().min(3).max(400) }),
+  describe: ({ actions, reason }) => `Rule out ${actions.length === 1 ? `action ${actions[0]}` : `actions ${actions.join(', ')}`} (“${clip(reason, 120)}”). ${actions.length === 1 ? 'It stays' : 'They stay'} on the list of ruled-out actions and can be restored.`,
+  async run(ctx, { actions, reason }) {
+    const { rows, missing } = await actionsByNumbers(ctx, actions)
+    if (!rows.length) return fail(`there is no live action ${missing.map((m) => `#${m}`).join(', ')} on this idea.`)
+    const r = unwrap(await AS.ruleOut(ctx.ideaId, rows.map((x) => x.id), reason))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { ruledOut: r.data.ruledOut, notFound: missing.map(Number) }, undo: await undoToken(ctx, 'restore_actions', { actions: rows.map((x) => x.number) }, `Undo: restore ${rows.length === 1 ? `action ${rows[0].number}` : `${rows.length} actions`}`) }
+  },
+}
+
+const mergeActionsTool: ToolDefinition = {
+  name: 'merge_actions', category: 'change', tier: 'ask',
+  description: 'Merge two coherent actions into one new numbered action, using the title and wording YOU supply (mode "merge"), or fold one into the other (mode "fold": the one you name in foldNumber is folded into the other, whose wording you may restate). Both originals are KEPT, marked merged away, and are clickable beneath the result; cost lines are carried. The user sees both parents and the merged wording before confirming. Use compare_actions first if you are not sure how they relate.',
+  schema: z.object({
+    numberA: z.number().int(), numberB: z.number().int(), mode: z.enum(['merge', 'fold']).default('merge'),
+    foldNumber: z.number().int().optional().describe('mode fold only: the action number to fold away'),
+    title: z.string().min(3).max(110).describe('the merged (or restated container) action’s title — says what it does'),
+    practicalStep: z.string().min(15).max(900).describe('the merged action written as ONE action, not two paragraphs joined with "and"'),
+  }),
+  describe: ({ numberA, numberB, mode, foldNumber, title, practicalStep }) => mode === 'fold'
+    ? `Fold action ${foldNumber} into action ${foldNumber === numberA ? numberB : numberA}, restating it as “${clip(title, 80)}: ${clip(practicalStep, 160)}”. The folded action is kept, marked merged away.`
+    : `Merge actions ${numberA} and ${numberB} into one: “${clip(title, 80)}: ${clip(practicalStep, 180)}”. Both originals are kept, marked merged away.`,
+  async run(ctx, input) {
+    if (input.numberA === input.numberB) return fail('an action cannot be merged with itself.')
+    if (input.mode === 'fold' && input.foldNumber !== input.numberA && input.foldNumber !== input.numberB) return fail('for a fold, foldNumber must be one of the two action numbers.')
+    const answer: AS.ActionMergeAnswer = input.mode === 'fold'
+      ? { verdict: 'ONE_CONTAINS_THE_OTHER', reasoning: 'Folded at the user’s confirmation.', merged: { title: input.title, practicalStep: input.practicalStep }, subordinateNumber: input.foldNumber! }
+      : { verdict: 'MERGE', reasoning: 'Merged at the user’s confirmation.', merged: { title: input.title, practicalStep: input.practicalStep }, subordinateNumber: null }
+    const r = unwrap(await AS.applyActionMerge(ctx.ideaId, ctx.userId, input.numberA, input.numberB, answer))
+    if (isBad(r)) return fail(r.error)
+    return {
+      ok: true, data: { kind: r.data.kind, result: r.data.resultNumber, archived: r.data.archivedIds.length },
+      undo: r.data.kind === 'MERGED' ? await undoToken(ctx, 'unmerge_actions', { mergedNumber: r.data.resultNumber }, `Undo: split action ${r.data.resultNumber} back into ${input.numberA} and ${input.numberB}`) : undefined,
+      ui: [{ type: 'open_panel', panel: 'actions' }],
+    }
+  },
+}
+
+/** Only reached through an undo token — not offered to the model (see `MODEL_TOOLS`). */
+const unmergeActionsTool: ToolDefinition = {
+  name: 'unmerge_actions', category: 'change', tier: 'ask',
+  description: 'Undo an action merge.',
+  schema: z.object({ mergedNumber: z.number().int() }),
+  async run(ctx, { mergedNumber }) {
+    const row = await prisma.lexCoherentAction.findFirst({ where: { ideaId: ctx.ideaId, number: mergedNumber }, select: { id: true } })
+    if (!row) return fail(`there is no action ${mergedNumber}.`)
+    const r = unwrap(await AS.undoActionMerge(ctx.ideaId, row.id))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { restoredParents: r.data.restored } }
+  },
+}
+
 // ══ RUN — asks first above ~5p, price stated ═════════════════════════════════════════════════
 
 /** Route handlers are the one implementation of consolidation and a build start; call them rather than copy them (§25.3). */
@@ -789,9 +1058,12 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   acceptFieldTool, editFieldTool, ruleOut, restoreCandidate, mergeCandidates, choosePolicy, unchoosePolicy, moveToActions,
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,
   runComparison, runGap, runConsolidation, rerunBuild,
+  // 26-Q — the coherent-actions workspace
+  titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, groupActionsTool,
+  findDuplicatesTool, withoutActionTool, compareActionsTool, parkActionsTool, restoreActionsTool, ruleOutActionsTool, mergeActionsTool,
 ]
 
-const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource]
+const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource, unmergeActionsTool]
 
 const ALL = new Map<string, ToolDefinition>([...MODEL_TOOLS, ...INVERSES].map((t) => [t.name, t]))
 export const toolByName = (name: string) => ALL.get(name)

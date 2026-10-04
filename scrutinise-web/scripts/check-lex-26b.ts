@@ -109,7 +109,8 @@ async function main() {
   // contaminated steps under ACTIONS. Source: the actions pass supersedes LEX actions first.
   // Cold read: no idea with a DONE build carries more LEX actions than one actions pass writes.
   ok('a build supersedes the previous build\'s LEX actions before writing its own (source)',
-    /lexCoherentAction\.deleteMany\(\{ where: \{ ideaId, source: 'LEX' \} \}\)[\s\S]{0,600}await createActions\(ideaId, actions/.test(bt))
+    // 26-Q: the delete is now limited to LIVE rows the user has not worked on (worked-on rows are ARCHIVED first) — same property.
+    /lexCoherentAction\.deleteMany\(\{ where: \{ ideaId, source: 'LEX'(, status: 'LIVE')? \} \}\)[\s\S]{0,600}await createActions\(ideaId, actions/.test(bt))
   // The property holds for builds AFTER the fix. Ideas whose latest build predates it still carry
   // the accumulation and are LISTED, not asserted — a sweep is a production delete across many
   // ideas (the CCW measures among them) and is Charlie's to run: `scripts/sweep-stale-lex-actions.ts`.

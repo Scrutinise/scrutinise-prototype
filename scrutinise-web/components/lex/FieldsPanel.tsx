@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   fieldDef,
   type CanonicalState, type CanonicalField, type CanonicalCause, type CauseClassification,
-  type CanonicalPolicyOption, type CanonicalAction, type CanonicalBenchmark, type CanonicalCostLine, type CostRange,
+  type CanonicalPolicyOption, type CanonicalAction, type CanonicalActionHeading, type CanonicalBenchmark, type CanonicalCostLine, type CostRange,
 } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
 import ActionSuggestions from './ActionSuggestions'
 import ActionGapCheck from './ActionGapCheck'
+import ActionsWorkspace from './ActionsWorkspace'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
 import { useSectionChecklists } from './useSectionChecklists'
@@ -1611,9 +1612,11 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: 
 }
 
 // The actions loop + costing estimator (§18).
-function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi }: {
+function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged }: {
   field: CanonicalField; actions: CanonicalAction[]; benchmarks: CanonicalBenchmark[]
   costLines: CanonicalCostLine[]; busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi
+  /** 26-Q — the workspace needs the idea to reach its route, and the state it reads. */
+  ideaId?: string; setAside: CanonicalAction[]; headings: CanonicalActionHeading[]; causes: CanonicalCause[]; onChanged?: () => void
 }) {
   const [step, setStep] = useState('')
   const terminal = isTerminal(field)
@@ -1629,11 +1632,20 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
           own Edit/Save/Delete regardless of any notion of "terminal" — this used to bypass it
           for a compact summary once the loop was confirmed, which is exactly the lock §1 rules
           out. `ActionsApi.update`/`.remove` were never guarded on the field's status either. */}
-      <div className="space-y-1.5">
-        {actions.map((a) => (
-          <ActionCard key={a.id} action={a} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />
-        ))}
-      </div>
+      {/* ══ 26-Q — THE LIST IS A WORKSPACE NOW: titles-only lines, headings, facets, merge, grid, sequence. The full card
+          below is what opens in place when a title is clicked, so editing and costing are exactly as they were. ══ */}
+      {ideaId && onChanged ? (
+        <ActionsWorkspace
+          ideaId={ideaId} actions={actions} setAside={setAside} headings={headings} causes={causes} busy={busy} onChanged={onChanged}
+          renderFull={(a) => <ActionCard action={a} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
+        />
+      ) : (
+        <div className="space-y-1.5">
+          {actions.map((a) => (
+            <ActionCard key={a.id} action={a} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />
+          ))}
+        </div>
+      )}
       <div className="mt-2 flex gap-1.5">
         <input value={step} onChange={(e) => setStep(e.target.value)} placeholder="Add an action…"
           className="flex-1 text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
@@ -1660,7 +1672,11 @@ export default function FieldsPanel({
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
+  setAsideActions, actionHeadings,
 }: {
+  /** 26-Q — ruled-out / merged-away actions, and the user's headings (both from the canonical state). */
+  setAsideActions?: CanonicalAction[]
+  actionHeadings?: CanonicalActionHeading[]
   /** 26-N - take Lex's redraft (offered beside the user's words) into the editor, still pending. */
   onEditRedraft?: (key: string) => void
   /** 26-M addendum — an accepted suggestion became a real action; the parent re-reads the state. */
@@ -1811,7 +1827,8 @@ export default function FieldsPanel({
           {ideaId && <ActionSuggestions ideaId={ideaId} onChanged={onSuggestionChanged} />}
           {/* 26-N §8 - "Check for gaps": the free check, then four models; suggestions with Accept / Dismiss. */}
           {ideaId && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
-          <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
+          <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
+            ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} />
         </>
       )
       return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} />

@@ -1013,7 +1013,7 @@ export interface ActionInput {
 }
 
 export async function listActions(ideaId: string) {
-  return prisma.lexCoherentAction.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
+  return prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
 }
 
 export async function createActions(ideaId: string, actions: ActionInput[], source: 'USER' | 'LEX') {
@@ -1078,9 +1078,12 @@ export async function updateAction(ideaId: string, actionId: string, patch: Part
 }
 
 export async function removeAction(ideaId: string, actionId: string) {
-  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId }, select: { id: true } })
+  // ⚠ 26-Q — NOTHING DELETES. "Remove" used to hard-delete the row and, by cascade, its cost lines — with no confirm and no
+  // reason. It is now a rule-out: the row is kept (RULED_OUT, with the reason it was removed), costs and all, and can be
+  // restored from the ruled-out section. The caller's contract is unchanged: the action leaves the live list.
+  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true } })
   if (!row) return
-  await prisma.lexCoherentAction.delete({ where: { id: actionId } })
+  await prisma.lexCoherentAction.update({ where: { id: actionId }, data: { status: 'RULED_OUT', ruleOutReason: 'Removed from the list by you.', parked: false } })
 }
 
 /** The hand-seeded costing benchmarks (§18.3), available to the estimator. */
@@ -1242,7 +1245,7 @@ export async function suggestStaffCost(level: StaffLevel, fte: number, months: n
 export async function computeCostSummary(ideaId: string): Promise<{ summary: string; totals: Record<string, unknown> }> {
   const [actions, deflator, lines] = await Promise.all([
     prisma.lexCoherentAction.findMany({
-      where: { ideaId },
+      where: { ideaId, status: 'LIVE' },
       select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true },
     }),
     prisma.deflatorSeries.findMany({ select: { year: true, index: true } }),

@@ -1148,7 +1148,7 @@ function CanonicalFieldBlock({ field, canonicalState }: { field: CanonicalField;
     return (
       <ul className="space-y-1.5">
         {canonicalState.actions.map((a) => (
-          <li key={a.id} className="text-sm text-zinc-800">{a.practicalStep}</li>
+          <li key={a.id} className="text-sm text-zinc-800">{a.title ? <><span className="font-medium">{a.title}.</span> </> : null}{a.practicalStep}</li>
         ))}
       </ul>
     )

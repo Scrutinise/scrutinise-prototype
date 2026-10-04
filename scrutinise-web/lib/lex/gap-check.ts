@@ -60,6 +60,10 @@ export interface ActionLike {
   mechanismType?: string | null
   wording?: string | null
   targetOrganisation?: string | null
+  /** 26-Q — the RECORDED link: the numbers of the causes this action is recorded as attacking. Where present it beats a keyword guess. */
+  causeNumbers?: number[]
+  /** 26-Q — the recorded avenue (LEGISLATIVE / ORGANISATIONAL / FINANCIAL), if the user or an accepted proposal set one. */
+  recordedAvenue?: string | null
 }
 export interface CauseLike { number: number; cause: string }
 
@@ -108,14 +112,19 @@ export function detectFreeGaps(causes: CauseLike[], actions: ActionLike[]): Free
   const causesWithoutAction = causes.flatMap((c) => {
     const cs = stems(c.cause)
     const need = cs.size >= 4 ? 2 : 1
-    const matched = actionStems.some((as) => [...cs].filter((s) => as.has(s)).length >= need)
+    const recorded = actions.some((a) => a.causeNumbers?.includes(c.number)) // 26-Q — a recorded link is a fact; the words are only a guess
+    const matched = recorded || actionStems.some((as) => [...cs].filter((s) => as.has(s)).length >= need)
     return matched ? [] : [{
       number: c.number, cause: c.cause,
       reason: `No current action shares its key words with cause ${c.number} (a keyword match, not a recorded link — it may be covered in other words).`,
     }]
   })
   const have = new Set<GapCategory>()
-  for (const a of actions) for (const c of categoriesOf(a)) have.add(c)
+  for (const a of actions) {
+    for (const c of categoriesOf(a)) have.add(c)
+    const r = a.recordedAvenue?.toLowerCase() as GapCategory | undefined
+    if (r && GAP_CATEGORIES.includes(r)) have.add(r)
+  }
   const emptyCategories = GAP_CATEGORIES.filter((c) => !have.has(c)).map((category) => ({
     category,
     reason: `Nothing in the list reads as ${category} (read from each action's mechanism type and its words).`,
@@ -310,12 +319,13 @@ export async function runGapCheck(ideaId: string, userId: string | null): Promis
 
     const [idea, causes, actions, policy] = await Promise.all([
       prisma.idea.findUnique({ where: { id: ideaId }, select: { challenge: true, summaryDescription: true, pivotalObstacle: true } }),
-      prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: { number: 'asc' }, select: { number: true, cause: true } }),
-      prisma.lexCoherentAction.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { practicalStep: true, mechanismType: true, wording: true, targetOrganisation: true } }),
+      prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: { number: 'asc' }, select: { id: true, number: true, cause: true } }),
+      prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { practicalStep: true, mechanismType: true, wording: true, targetOrganisation: true, targetCauseIds: true, avenue: true } }),
       prisma.policyOption.findFirst({ where: { ideaId, status: 'CHOSEN' } }),
     ])
-    const causeList = causes.filter((c): c is { number: number; cause: string } => c.number != null)
-    const free = detectFreeGaps(causeList, actions)
+    const causeList = causes.filter((c): c is { id: string; number: number; cause: string } => c.number != null)
+    const numById = new Map(causes.map((c) => [c.id, c.number]))
+    const free = detectFreeGaps(causeList, actions.map((a) => ({ ...a, causeNumbers: a.targetCauseIds.map((id) => numById.get(id)).filter((n): n is number => n != null), recordedAvenue: a.avenue })))
     if (!policy) { await release(); return fail('Settle a guiding policy first — the check tests what is missing against it.', free) }
 
     const checkId = marker.id
@@ -462,12 +472,13 @@ export async function listGapSuggestions(ideaId: string): Promise<{
   running: boolean
 }> {
   const [causes, actions, rows, running] = await Promise.all([
-    prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: { number: 'asc' }, select: { number: true, cause: true } }),
-    prisma.lexCoherentAction.findMany({ where: { ideaId }, select: { practicalStep: true, mechanismType: true, wording: true, targetOrganisation: true } }),
+    prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: { number: 'asc' }, select: { id: true, number: true, cause: true } }),
+    prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, select: { practicalStep: true, mechanismType: true, wording: true, targetOrganisation: true, targetCauseIds: true, avenue: true } }),
     prisma.actionIdea.findMany({ where: { ideaId, status: 'SUGGESTED' }, orderBy: { createdAt: 'asc' } }),
     prisma.actionIdea.findFirst({ where: { ideaId, status: RUNNING, createdAt: { gte: new Date(Date.now() - IN_FLIGHT_MS) } }, select: { id: true } }),
   ])
-  const free = detectFreeGaps(causes.filter((c): c is { number: number; cause: string } => c.number != null), actions)
+  const numById2 = new Map(causes.map((c) => [c.id, c.number]))
+  const free = detectFreeGaps(causes.filter((c): c is { id: string; number: number; cause: string } => c.number != null), actions.map((a) => ({ ...a, causeNumbers: a.targetCauseIds.map((id) => numById2.get(id)).filter((n): n is number => n != null), recordedAvenue: a.avenue })))
   const suggestions = rows.flatMap((r): GapSuggestionView[] => {
     const s = (r.sources as unknown as GapSource[])?.[0]
     if (!s || s.kind !== 'GAP_CHECK') return []
@@ -487,6 +498,20 @@ export async function acceptGapSuggestion(ideaId: string, id: string): Promise<{
   const row = await prisma.actionIdea.findFirst({ where: { id, ideaId, status: 'SUGGESTED' } })
   if (!row) return { ok: false, error: 'That suggestion is not waiting on this idea.' }
   const action = await addAction(ideaId, { practicalStep: row.text, source: 'LEX' })
+  // ⚠ 26-Q — THE CAUSE THIS SUGGESTION WAS RAISED AGAINST WAS BEING THROWN AWAY HERE. `GapSource.addressesCauseNumber` was
+  // the only place an action's cause was ever named, and accepting the suggestion wrote `practicalStep` and nothing else, so
+  // the cause link the coverage grid needs did not exist for any action. It is recorded now, with the avenue the gap check
+  // already classified the suggestion under. (A user can correct both on the open action.)
+  const src = (row.sources as unknown as GapSource[] | null)?.[0]
+  if (src?.kind === 'GAP_CHECK') {
+    const data: Record<string, unknown> = { avenue: src.category.toUpperCase() }
+    if (src.addressesCauseNumber != null) {
+      const causes = await prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, number: true } })
+      const cause = causes.find((c, i) => (c.number ?? i + 1) === src.addressesCauseNumber)
+      if (cause) data.targetCauseIds = [cause.id]
+    }
+    await prisma.lexCoherentAction.update({ where: { id: action.id }, data: data as never })
+  }
   await prisma.actionIdea.update({ where: { id: row.id }, data: { status: 'ACCEPTED_GAP', acceptedActionId: action.id } })
   return { ok: true }
 }

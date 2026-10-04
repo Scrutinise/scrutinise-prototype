@@ -194,7 +194,9 @@
     "audit:s14-scores": "bash scripts/s14-run.sh audit-scores",
     "measure:s14-merge": "bash scripts/s14-run.sh measure",
     "check:lex-26p": "tsx --env-file=.env scripts/check-lex-26p.ts",
-    "check:lex-26o": "tsx --env-file=.env scripts/check-lex-26o.ts"
+    "check:lex-26o": "tsx --env-file=.env scripts/check-lex-26o.ts",
+    "check:lex-26q": "tsx --env-file=.env scripts/check-lex-26q.ts",
+    "verify:lex-26q-ui": "tsx scripts/verify-lex-26q-ui.tsx"
   },
   "prisma": {
     "seed": "npm run db:seed"

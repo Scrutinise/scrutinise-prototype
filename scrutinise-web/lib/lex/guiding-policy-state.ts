@@ -251,7 +251,7 @@ export async function readPolicyState(ideaId: string) {
       select: { id: true, cause: true, parentCauseId: true, isRootCause: true },
     }),
     prisma.lexCoherentAction.findMany({
-      where: { ideaId }, select: { id: true, practicalStep: true },
+      where: { ideaId, status: 'LIVE' }, select: { id: true, practicalStep: true },
     }),
     // 26-I addendum A5 — "shows what it will read: M items of feedback."
     prisma.policyFeedback.count({ where: { ideaId } }),

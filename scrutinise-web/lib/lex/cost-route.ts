@@ -118,7 +118,7 @@ export async function proposeCosts(input: {
   onUsage: (u: LlmUsage) => void
 }): Promise<CostProposal | null> {
   const actions = await prisma.lexCoherentAction.findMany({
-    where: { ideaId: input.ideaId },
+    where: { ideaId: input.ideaId, status: 'LIVE' },
     select: { id: true, practicalStep: true, whoImplements: true },
     orderBy: { createdAt: 'asc' },
   })

@@ -788,7 +788,7 @@ async function loadIdeaContext(ideaId: string): Promise<IdeaContext> {
       title: true, keywords: true, summaryDescription: true,
       challenge: true, diagnosis: true, pivotalObstacle: true, summaryDiagnosis: true,
       guidingPolicy: true, legalLandscape: true, whoAffectedImpactCost: true,
-      lexActions: { select: { practicalStep: true, costLines: { select: { label: true, low: true, high: true, unit: true, basis: true } } } },
+      lexActions: { where: { status: 'LIVE' }, select: { practicalStep: true, costLines: { select: { label: true, low: true, high: true, unit: true, basis: true } } } },
       policyOptions: { select: { approach: true, status: true } },
     },
   })

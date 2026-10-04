@@ -432,6 +432,40 @@ export interface CanonicalAction {
   enforcementCost: CostRange | null
   regulatoryFriction: CostRange | null
   source: 'USER' | 'LEX'
+  // ── 26-Q — the structure that makes a long list workable ──
+  /** Stable, user-visible number — "put 7 and 12 under Transparency". */
+  number: number | null
+  /** Short, says what the action DOES. null = untitled. */
+  title: string | null
+  /** Lex's draft title, awaiting the user's accept / edit. */
+  titleProposal: string | null
+  headingId: string | null
+  /** "Later phase". */
+  parked: boolean
+  parkedReason: string | null
+  /** DiagnosisCause ids — the RECORDED cause link. */
+  targetCauseIds: string[]
+  avenue: 'LEGISLATIVE' | 'ORGANISATIONAL' | 'FINANCIAL' | null
+  link: string | null
+  sequence: 'NOW' | 'NEXT' | 'LATER' | null
+  /** ids of the actions THIS one must come before. */
+  beforeIds: string[]
+  /** Lex's unaccepted proposal for the facets above. */
+  facetProposal: { targetCauseIds?: string[]; avenue?: string | null; link?: string | null; sequence?: string | null; beforeIds?: string[] } | null
+  mergedFrom: number[]
+  /** LIVE here; RULED_OUT / ARCHIVED rows come in `setAsideActions`. */
+  status: 'LIVE' | 'RULED_OUT' | 'ARCHIVED'
+  ruleOutReason: string | null
+  mergedIntoId: string | null
+}
+
+/** 26-Q §3 — one of the user's headings for their coherent actions. */
+export interface CanonicalActionHeading {
+  id: string
+  name: string
+  colourKey: string
+  hidden: boolean
+  orderIndex: number
 }
 
 /** A costing benchmark (§18.3 + COSTING_SCOPE §3) — a shared, sourced default value. */
@@ -469,6 +503,10 @@ export interface CanonicalState {
   policyOptions: CanonicalPolicyOption[]
   /** Page 4 coherent-action records (empty until Coherent Actions). */
   actions: CanonicalAction[]
+  /** 26-Q §7 — the actions the user has set aside: ruled out (with a reason) or merged away. Restorable; never deleted. */
+  setAsideActions: CanonicalAction[]
+  /** 26-Q §3 — the user's headings for the actions above. */
+  actionHeadings: CanonicalActionHeading[]
   /** §19-C Task 6 — cost lines across all of this idea's actions. */
   costLines: CanonicalCostLine[]
   /** Costing benchmarks available to the estimator (§18.3). */

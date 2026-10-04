@@ -73,7 +73,7 @@ export async function composeCommitteeEvidence(
       select: { fieldKey: true, status: true, value: true },
     }),
     prisma.lexCoherentAction.findMany({
-      where: { ideaId }, orderBy: { createdAt: 'asc' }, select: { practicalStep: true, whoImplements: true },
+      where: { ideaId, status: 'LIVE' }, orderBy: { createdAt: 'asc' }, select: { practicalStep: true, whoImplements: true },
     }),
     // §2d — "principal objections and the response to them" and "what remains unresolved" are
     // the SAME rows, split by status: ADDRESSED carries a response, OPEN does not yet.

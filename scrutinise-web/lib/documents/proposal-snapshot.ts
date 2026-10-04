@@ -605,7 +605,7 @@ export async function buildProposalSnapshot(
       orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
     }),
     prisma.lexCoherentAction.findMany({
-      where: { ideaId },
+      where: { ideaId, status: 'LIVE' }, // 26-Q — a ruled-out or merged-away action is not in a document
       orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
     }),
     prisma.costLine.findMany({

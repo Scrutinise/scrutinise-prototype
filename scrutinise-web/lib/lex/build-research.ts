@@ -137,7 +137,7 @@ export async function draftFactsFor(ideaId: string, carry: {
       rootCause: true, summaryGuidingPolicy: true, chosenApproach: true,
       legalLandscape: true, whoAffectedImpactCost: true,
       diagnosisCauses: { select: { cause: true } },
-      lexActions: { select: { practicalStep: true } },
+      lexActions: { where: { status: 'LIVE' }, select: { practicalStep: true } },
       policyOptions: { select: { approach: true, status: true } },
     },
   })
