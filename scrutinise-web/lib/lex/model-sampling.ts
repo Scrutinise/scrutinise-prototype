@@ -59,6 +59,18 @@ export const REJECTS_TEMPERATURE: ReadonlySet<string> = new Set([
   // this machine to reproduce the 400 directly) — the standing instruction to measure live
   // still applies to any FURTHER OpenAI reasoning model added here.
   'gpt-6-luna',
+  // 26-O §4 — MEASURED 4 Oct on the first live panel run: `gpt-6.1-sol` answered HTTP 400 "'temperature' does not
+  // support 0.4 with this model. Only the default (1) value is supported." — the same reasoning-model shape as luna.
+  'gpt-6.1-sol',
+  // MEASURED 4 Oct by `check:model-reachability`, the day `gpt-6-astra` joined REACHABLE: the same HTTP 400 on temperature 0.4.
+  'gpt-6-astra',
+  // The 5.5/5.1 Claude generation: no temperature is ever sent to Claude by `callAnthropic` unless a caller asks, and
+  // the three siblings above all refuse it, so these are listed to keep a future caller from learning it by a 400.
+  // ⚠ NOT individually probed for temperature — derived from the family, which this list's own header warns against;
+  // harmless here because omitting a parameter a model would accept changes nothing a caller asked for.
+  'claude-opus-5-5',
+  'claude-sonnet-5-5',
+  'claude-fable-5-1',
 ])
 
 export function acceptsTemperature(model: string): boolean {

@@ -38,7 +38,7 @@ function ok(cond: boolean, what: string) {
  *  assertion that cannot fail. */
 const REQUIRED = [
   'THE PROBLEM:', 'ROOT CAUSE:', 'PIVOTAL OBSTACLE:', 'THE DIAGNOSIS:',
-  'THE APPROACH:', 'THE GUIDING POLICY:', 'THE PLAN:',
+  'THE GUIDING POLICY:', 'SUMMARY OF THE GUIDING POLICY', 'THE PLAN:', // 26-O §2a — was THE APPROACH / THE GUIDING POLICY (the summary)
 ] as const
 
 async function main() {

@@ -41,8 +41,12 @@ export const isLive = (token: string, now = Date.now()) => {
 
 function priceLine(p: PendingConfirmation): string | null {
   if (p.pence == null) return null
-  // ⚠ The figure is the brief's, not a measured one, and the card says so rather than presenting it as exact.
-  return `${p.priceIsFloor ? 'At least ' : 'About '}${p.pence}p — an estimate, not a measured price.`
+  // ⚠ The card says WHICH it is (docs/CLAUDE.md §19): a measured figure names its sample ("measured, n=1 real run, 2026-10-04"),
+  // and the brief's figure says it was never measured. Neither is presented as exact — a run's real cost is shown after it.
+  const measured = (p.priceSource ?? '').startsWith('measured')
+  return measured
+    ? `${p.priceIsFloor ? 'At least ' : 'About '}${p.pence}p — ${p.priceSource}. The actual cost is shown afterwards.`
+    : `${p.priceIsFloor ? 'At least ' : 'About '}${p.pence}p — an estimate, not a measured price.`
 }
 
 export default function AgentCards({

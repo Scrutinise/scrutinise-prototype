@@ -207,6 +207,7 @@ export async function POST(req: Request, { params }: Params) {
       drafts: {
         create: succeeded.map((d) => ({
           model: d.model,
+          servedBy: d.servedBy ?? null, // 26-O §4d
           statement: d.value!.statement,
           rulesOut: d.value!.rulesOut,
           fixesCauseNumbers: d.value!.fixesCauseNumbers,

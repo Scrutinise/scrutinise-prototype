@@ -96,7 +96,7 @@ function spendFor(build: BuildView, key: string): string | null {
 const FORK_LABELS: Record<string, { label: string; about: string }> = {
   rootCause: { label: 'The root cause', about: 'why the problem happens' },
   pivotalObstacle: { label: 'The pivotal obstacle', about: 'why nobody has fixed it' },
-  chosenApproach: { label: 'The approach', about: 'the way at the obstacle' },
+  chosenApproach: { label: 'The Guiding Policy', about: 'the way at the obstacle' },
   summaryGuidingPolicy: { label: 'The instrument', about: 'what kind of tool this is' },
   summaryDiagnosis: { label: 'The diagnosis', about: 'what is going wrong' },
   summaryCoherentActions: { label: 'The plan', about: 'what would actually be done' },

@@ -34,6 +34,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createHash } from 'crypto'
+import { notChosenOptions } from './not-chosen'
 import { betaBlocks } from './build-proposal'
 import { BETA_MARKER } from '../lex/beta-disclosure'
 import type { Block, DocumentModel, Run, SourceRef } from './model'
@@ -246,7 +247,8 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
   // ── 3. Alternatives ruled out ──────────────────────────────────────────────
   blocks.push({ kind: 'rule' })
   blocks.push({ kind: 'heading', level: 2, runs: text('Alternatives ruled out') })
-  const ruledOut = (snapshot.options ?? []).filter((o) => o.status === 'RULED_OUT')
+  // 26-O §3b — a settled policy's other candidates are listed, with the reason "not chosen".
+  const ruledOut = notChosenOptions(snapshot.options ?? [])
   if (ruledOut.length) {
     blocks.push({
       kind: 'bullets',

@@ -15,7 +15,28 @@ import { recordUsage, type PricedSpend } from './spend-ledger'
 
 /** §3/B3 — one call per vendor, deliberately, so a single provider outage never leaves
  *  the user with fewer than three drafts to choose from. */
-export const PREMIUM_DRAFT_MODELS = ['gemini-2.5-pro', 'claude-opus-5', 'grok-4.7', 'gpt-6-luna'] as const
+/**
+ * ══ 26-O §4a (Charlie, decision 117) — THE PRICE-MATCHED PANEL ═════════════════════════════════
+ * Before: gemini-2.5-pro, claude-opus-5, grok-4.7, gpt-6-luna — a $0.10 model beside a $5 and two $2 ones, a panel
+ * "neither price-matched nor capability-matched" (MODEL_REVIEW 30 Sep §1). Now four models in the $2–$4 tier:
+ * Opus 5.5 ($4/$20), gpt-6.1-sol ($2/$10), Gemini 3.1 Pro preview ($2/$12), Grok 4.7 ($2/$6). Judge: Opus 5.5.
+ * Measured one Consolidate press on this panel ≈ 11.0p, against 10.4p before.
+ */
+export const PREMIUM_DRAFT_MODELS = ['claude-opus-5-5', 'gpt-6.1-sol', 'gemini-3.1-pro-preview', 'grok-4.7'] as const
+
+/**
+ * 26-O §4d — `gemini-3.1-pro-preview` IS A PREVIEW: Google can withdraw it without notice. If it errors for any reason a
+ * retry will not fix, the slot is answered by `gemini-2.5-pro` AND SAYS SO (`servedBy`, shown on the card) — a fallback
+ * the user cannot see is the "OFF vs FAILED look identical" fault of CLAUDE.md §18.
+ */
+/**
+ * 26-O §4e — THE "WHICH MODEL WAS CHOSEN" RECORD RESTARTS ON THE NEW PANEL. Old results are not comparable: a different
+ * four models, a different judge, and (before 2 Oct) no common reasoning effort. Any tally of `favouriteModel` /
+ * accepted drafts counts only consolidations created on or after this date (`scripts/panel-choice-record.ts` does).
+ */
+export const PANEL_RECORD_STARTS = '2026-10-04'
+
+export const PANEL_FALLBACKS: Readonly<Record<string, string>> = { 'gemini-3.1-pro-preview': 'gemini-2.5-pro' }
 
 /**
  * ══ 26-L ADDENDUM 2 §1 — THE THREE FAILURES, MEASURED FROM A REAL RUN ═══════════════════
@@ -49,9 +70,18 @@ const timeoutFor = (model: string) => MODEL_TIMEOUT_MS[model] ?? DRAFT_TIMEOUT_M
  * 1 Oct inputs: 200s timeout again; then 211s and 15,058 output tokens with no limit, versus 5,798
  * on 30 Sep (MODEL_REVIEW_2026-09-30). `reasoning.effort` is accepted by the Responses API and cuts
  * it: `medium` 93s / 6.7k tokens, `low` 16s / 1.1k. `medium` — a considered draft that finishes
- * well inside 150s, leaving the retry budget intact. Other providers ignore the option.
+ * well inside 150s, leaving the retry budget intact.
  */
-const reasoningEffortFor = (model: string): 'medium' | undefined => (model.startsWith('grok-') ? 'medium' : undefined)
+/**
+ * ══ 2 OCT — THE PANEL IS GIVEN THE SAME EFFORT, STATED ONCE ═══════════════════════════════
+ * Before this, each vendor ran at whatever its own default was, and the defaults were nowhere near
+ * each other: Grok unbounded (15k reasoning-heavy tokens, 211s), Gemini a fixed 2,048-token budget,
+ * Claude no reasoning control at all, GPT its API default. A panel meant to be compared was not
+ * comparable. One constant now, mapped per vendor in `callModelJson` (see `reasoningEffort`).
+ * Grok is held at `medium` pending the high-vs-medium draft comparison.
+ */
+export const DRAFT_REASONING_EFFORT = 'medium' as const
+const reasoningEffortFor = (_model: string): typeof DRAFT_REASONING_EFFORT => DRAFT_REASONING_EFFORT
 
 /** The routes that call this run under `maxDuration = 300`; the judge (~15s) and the DB writes
  *  come after the drafts, so the drafts — retry included — must be finished well inside that. */
@@ -151,8 +181,10 @@ export function draftSystemPrompt(): string {
     RUMELT_TESTS_TEXT,
     '',
     'Every field is required:',
-    '- statement: the approach, in one or two sentences. ONE approach — if you need "and" to',
-    '  join two different mechanisms, you have written two policies, not one.',
+    '- statement: the approach, RUTHLESSLY BRIEF — one sentence, two at the very most, and never a',
+    '  paragraph (it is checked: more than two sentences is flagged for review). ONE approach — if',
+    '  you need "and" to join two different mechanisms, you have written two policies, not one.',
+    '  Put the defence, the cross-references and the actions in the other fields or leave them out.',
     '- rulesOut: what choosing this approach deliberately forecloses. Required on every guiding',
     '  policy, candidate or final — never "nothing" unless you mean it literally rules out',
     '  nothing, which is itself a sign this is not yet a real choice.',
@@ -200,7 +232,10 @@ export function draftUserPrompt(ctx: ConsolidateContext): string {
 }
 
 export interface DraftCallResult {
+  /** The panel SLOT. Retry, favourite and the judge all key on it. */
   model: string
+  /** 26-O §4d — the model that actually wrote the draft, ONLY when it was a fallback. */
+  servedBy?: string
   ok: boolean
   value?: DraftOutput
   error?: string
@@ -225,7 +260,7 @@ export async function runFourDrafts(
   const user = draftUserPrompt(ctx)
   const deadline = Date.now() + DRAFT_BUDGET_MS
 
-  const attempt = async (model: string, timeoutMs: number) => {
+  const attempt = async (model: string, timeoutMs: number, label = model) => {
     const result = await callModelJson<DraftOutput>({
       model,
       system,
@@ -234,7 +269,7 @@ export async function runFourDrafts(
       maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS,
       timeoutMs,
       reasoningEffort: reasoningEffortFor(model),
-      label: `guiding-policy-draft:${model}`,
+      label: `guiding-policy-draft:${label}`,
       stream: 'lex',
       pass: 'guiding-policy.draft',
       ideaId: spend.ideaId, userId: spend.userId ?? null,
@@ -254,6 +289,18 @@ export async function runFourDrafts(
     models.map(async (model): Promise<DraftCallResult> => {
       const { result, priced } = await attempt(model, Math.min(timeoutFor(model), deadline - Date.now()))
       if (!result.ok) {
+        // 26-O §4d — a slot with a fallback (the preview Gemini) falls back at once, and says so. No retry of the
+        // preview first: a withdrawn model is a 404 and a retry cannot fix it; a transient fault costs one extra draft
+        // by a stable model, which is honest and cheaper than waiting.
+        const fb = PANEL_FALLBACKS[model]
+        const firstFail = result as import('./model-call').LlmFail
+        if (fb && !(firstFail.reason === 'truncated' || firstFail.reason === 'blocked')) {
+          console.warn(`[guiding-policy-draft:${model}] ${firstFail.reason} — falling back to ${fb}`)
+          const fell = await attempt(fb, Math.min(timeoutFor(fb), Math.max(deadline - Date.now(), 30_000)), `${model}->${fb}`)
+          if (fell.result.ok) return { model, servedBy: fb, ok: true, value: fell.result.value, usage: fell.result.usage, priced: fell.priced }
+          const fbFail = fell.result as import('./model-call').LlmFail
+          return { model, ok: false, usage: fbFail.usage, priced: fell.priced, error: `${firstFail.reason}: ${firstFail.detail}; fallback ${fb} also failed: ${fbFail.reason}` }
+        }
         // ⚠ `strict: false` — TS will not narrow a union on a boolean discriminant, per the
         // established idiom in reranker.ts/query-expansion.ts.
         const first = result as import('./model-call').LlmFail

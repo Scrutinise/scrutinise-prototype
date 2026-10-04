@@ -29,7 +29,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Models that reject `thinkingBudget: 0` outright. Verified live, not inferred. */
-export const REQUIRES_THINKING: string[] = ['gemini-2.5-pro']
+// 26-O §4 — `gemini-3.1-pro-preview` added: a Pro-tier thinking model, and the panel's Gemini. Whether it also rejects a
+// zero budget is checked by the live probe in 26-O's report rather than assumed; listing it only means it is given a real
+// budget, which a model that does NOT require one accepts anyway.
+export const REQUIRES_THINKING: string[] = ['gemini-2.5-pro', 'gemini-3.1-pro-preview']
 
 export function requiresThinking(model: string): boolean {
   return REQUIRES_THINKING.includes(model)

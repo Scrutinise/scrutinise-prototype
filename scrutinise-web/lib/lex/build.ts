@@ -3581,8 +3581,13 @@ export async function kernelText(ideaId: string): Promise<string> {
     v.obstacle && `PIVOTAL OBSTACLE: ${v.obstacle}`,
     v.diagnosis && `THE DIAGNOSIS: ${v.diagnosis}`,
     v.landscape && `THE LEGAL LANDSCAPE AS STATED: ${v.landscape}`,
-    v.approach && `THE APPROACH: ${v.approach}`,
-    v.policy && `THE GUIDING POLICY: ${v.policy}`,
+    // ⚠ 26-O §2a (Charlie, decision 115) — "actions are tested against the principle". THE GUIDING POLICY is the
+    // STATEMENT (`chosenApproach`); every kernel check, repair, adversarial and spawn pass reads this block, and
+    // until now it was handed the SUMMARY under that name, so actions were being tested against a paragraph that
+    // restated leverage, rules-out and conditions rather than against the principle. The summary rides along
+    // as context, labelled as what it is.
+    v.approach && `THE GUIDING POLICY: ${v.approach}`,
+    v.policy && `SUMMARY OF THE GUIDING POLICY (context only — test actions against THE GUIDING POLICY above, not this): ${v.policy}`,
     idea.lexActions.length && `ACTIONS:\n${idea.lexActions.map((a) => `- ${a.practicalStep}${a.whoImplements ? ` — ${a.whoImplements}` : ''}`).join('\n')}`,
     v.plan && `THE PLAN: ${v.plan}`,
     avenueRows.length && `THE THREE AVENUES (each evaluated to the same depth; the choice between them is the proposer's, not a decision this kernel makes):\n${avenueRows.map((a) => [

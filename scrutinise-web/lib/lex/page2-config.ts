@@ -111,7 +111,7 @@ export const DIAGNOSIS_FIELDS: FieldDef[] = [
   },
   {
     key: 'summaryDiagnosis',
-    label: 'Diagnosis summary',
+    label: 'Summary of Diagnosis', // 26-O §1d — was "Diagnosis summary"
     type: 'inferred',
     scope: 'idea',
     origin: 'proposed', // Lex generates when the page's other fields are terminal; user accepts

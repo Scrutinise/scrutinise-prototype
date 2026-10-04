@@ -1,0 +1,101 @@
+{
+ "arm": "flash38",
+ "idea": "a6473880",
+ "status": "DONE",
+ "seconds": 799,
+ "passes": "12/12",
+ "tokensIn": 122558,
+ "tokensOut": 25866,
+ "rowEstCostPence": 18.0928,
+ "costPenceAtTodaysRates": 18.0928,
+ "costPenceAtJan2027Rates": 31.961,
+ "unpriced": [],
+ "byModel": [
+  [
+   "gemini-3.8-flash",
+   {
+    "in": 119768,
+    "out": 22859,
+    "calls": 25
+   }
+  ],
+  [
+   "claude-sonnet-5",
+   {
+    "in": 2790,
+    "out": 3007,
+    "calls": 1
+   }
+  ]
+ ],
+ "kernelCheck": {
+  "passed": 8,
+  "of": 9
+ },
+ "findings": 26,
+ "findingsTraceable": 19,
+ "evidenceTotal": 36,
+ "passOutputs": [
+  "ORIENT: DONE — 240 retrieved, 40 read; 6 cited · 1 of 1 queries written",
+  "DIAGNOSIS: DONE — 4 causes, 2 recorded alternatives",
+  "APPROACH: DONE — 3 approaches",
+  "ACTIONS: DONE — 4 actions drafted; 3 of 3 avenues evaluated · depth ratio 0.91",
+  "RESEARCH: DONE — 4 questions asked; reviewed 400 sources; 17 findings, 3 contradicting the draft; 9 stated gaps (stopped at its own spend",
+  "REVISE: DONE — 3 causes rewritten; 2 places the evidence changed the draft; 2 forks settled, 2 opened",
+  "CAUSES_COMMENTARY: DONE — Described the terrain across 3 causes — 2 points where the sources disagree",
+  "SMART: DONE — 2 models answered your own words (gemini-3.8-flash, claude-sonnet-5); 16 terms of art named — 7 confirmed by the corpus,",
+  "KERNEL_CHECK: DONE — 8 of 9 kernel tests passed; 1 failed and are on your list — marked by gemini-3.8-flash",
+  "LOGIC_CHECK: DONE — ⚠ the chain from causes to actions does NOT hold; 1 defect in the argument — traced by gemini-3.8-flash",
+  "REPAIR: DONE — 2 failures → rewrote 1 field → retest: 8 of 9 kernel tests pass, the chain still does NOT hold — 1 issue marked addresse",
+  "ADVERSARIAL: DONE — 6 issues raised against the whole proposal, read by gemini-3.8-flash"
+ ],
+ "kernel": {
+  "title": "Stopping State Funding of Policy Campaigning",
+  "challenge": "Public funds are awarded to voluntary organisations that subsequently use those resources to campaign against government policy, effectively making taxpayers underwrite partisan or contested political arguments without explicit democratic consent.",
+  "whoAffectedImpactCost": "{\"cost\":\"Not established in aggregate across all public grant regimes, though individual grant programmes run into hundreds of millions annually.\",\"impact\":\"Distorts democratic policy debate by creating a self-reinforcing lobby loop where public money finances pressure on public bodies, while eroding trust in the charity sector's perceived independence.\",\"evidence\":\"Debates on government grants (pwdata-lords:daylord2016-02-10a:50) and select committee scrutiny confirming that grant-making departments regularly disburse funds to bodies engaged in active policy lobbying (committees-reports:publication:10194:arc-0015).\",\"affectedGroups\":\"Taxpayers whose funds underwrite campaigning they may oppose, and non-funded advocacy groups or independent charities who face an uneven playing field against state-subsidised policy campaigns.\"}",
+  "rootCause": "Public grant terms operate under discretionary executive Crown contracting powers that lack legally binding, cost-accounting ring-fences to prevent state-funded overheads from cross-subsidising policy advocacy.",
+  "pivotalObstacle": "The political resistance of charity coalitions and departmental sponsors who exploit the lack of objective cost-allocation standards to defeat contractual restrictions as 'gagging clauses' suppressing essential frontline evidence.",
+  "summaryDiagnosis": "Public grant funding routinely underwrites policy advocacy because general grant terms fail to prevent operational overheads from cross-subsidising campaigning, creating what the proposer terms 'sock puppets'—state-funded bodies lobbying the state for policy outcomes without democratic consent. As the 2016 anti-lobbying pause showed, past efforts collapsed because blanket speech prohibitions triggered sector-wide backlash against 'gagging clauses' that silenced solicited expert evidence. The pivotal persistent obstacle is that departmental accounting officers and recipient bodies benefit from this arrangement (securing outsourced policy validation and core funding) while lacking an enforceable, cost-allowability accounting standard to isolate unprompted campaigning without barring legitimate consultative input.",
+  "chosenApproach": "Implement a forensic cost-allowability and clawback regime within Cabinet Office grant standards that treats political lobbying as an unallowable grant cost while explicitly protecting solicited expert advice and consultation responses.",
+  "whatItRulesOut": "Rules out blanket speech bans on recipient charities, restrictions on independent privately funded advocacy, and revisions to general charity law or Charities SORP governance frameworks.",
+  "leverage": "It exploits the asymmetry between regulating general free expression and regulating financial accounting. By explicitly preserving charities' right to provide solicited technical advice and frontline evidence to government, it neutralises the sector's primary political defence ('silencing expert witnesses') while using forensic audit mechanisms to stop public cash subsidising campaigning infrastructure.",
+  "conditionsForSuccess": "• Cabinet Office grant standards define 'unallowable political advocacy costs' with sufficient accounting precision that grant auditors can distinguish campaigning campaigns from frontline operational evidence.\n• Grant funding agreements incorporate enforceable retrospective clawback provisions that trigger automatic recovery of grant disbursements upon identification of unallowable lobbying expenditure.\n• Departmental accounting officers enforce standard cost-allocation rules across all grant programmes without granting ad-hoc carve-outs to favoured departmental delivery partners.",
+  "summaryGuidingPolicy": "Enforce strict financial non-fungibility through standard grant cost-allowability and clawback covenants that treat unsolicited policy lobbying as an ineligible grant cost, while explicitly exempting solicited consultation responses and leaving private reserves unrestricted.",
+  "summaryCoherentActions": "1. Promulgate a binding addendum to the Cabinet Office Government Functional Standard for Grants (GovS 015) classifying unprompted policy campaigning, public advocacy advertising, and ministerial lobbying as 'unallowable grant costs', while explicitly permitting technical responses to official government consultations. — Cabinet Office\n2. Draft and standardise a mandatory clawback covenant in all standard departmental grant agreements that requires recipient bodies to refund any disbursements charged against unallowable lobbying or campaigning activities. — HM Treasury\n3. Mandate through the Cabinet Office Grants Centre of Expertise and cross-government grant terms that recipient bodies submit disaggregated accounting returns on policy engagement and public advocacy expenditure as a condition of receiving central grant payments. — Cabinet Office\n4. Establish a dedicated grant compliance audit unit within the Government Internal Audit Agency (GIAA) tasked with post-award forensic testing of charity payroll and overhead apportionments against grant conditions. — Government Internal Audit Agency"
+ },
+ "causes": [
+  {
+   "cause": "Public grant agreements rely on executive contract terms that lack precise, audit-tested definitions separating unallowable campaigning overheads from allowable frontline service feedback.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Core operational subsidies and overhead allocations provided by state grants are financially fungible with charities' independently raised funds.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Previous administrative interventions to halt state-subsidised lobbying attempted broad behavioural speech bans rather than cost-allocation accounting rules, triggering fierce sector backlash and government retreat.",
+   "classification": "CONTRIBUTORY",
+   "isRootCause": false
+  }
+ ],
+ "actions": [
+  {
+   "practicalStep": "Promulgate a binding addendum to the Cabinet Office Government Functional Standard for Grants (GovS 015) classifying unprompted policy campaigning, public advocacy advertising, and ministerial lobbying as 'unallowable grant costs', while explicitly permitting technical responses to official government consultations.",
+   "whoImplements": "Cabinet Office"
+  },
+  {
+   "practicalStep": "Draft and standardise a mandatory clawback covenant in all standard departmental grant agreements that requires recipient bodies to refund any disbursements charged against unallowable lobbying or campaigning activities.",
+   "whoImplements": "HM Treasury"
+  },
+  {
+   "practicalStep": "Direct the Charity Commission to update guidance CC9 and Statement of Recommended Practice (SORP) reporting templates to require grant-funded charities to report separately on expenditure allocated to policy engagement and public campaigning.",
+   "whoImplements": "Department for Culture, Media and Sport"
+  },
+  {
+   "practicalStep": "Establish a dedicated grant compliance audit unit within the Government Internal Audit Agency (GIAA) tasked with post-award forensic testing of charity payroll and overhead apportionments against grant conditions.",
+   "whoImplements": "Government Internal Audit Agency"
+  }
+ ]
+}

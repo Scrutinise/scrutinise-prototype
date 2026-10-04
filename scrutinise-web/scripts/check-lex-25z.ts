@@ -165,7 +165,9 @@ async function main() {
   ok('§4b — and an upward control labelled "prior chat" brings it back',
     /prior chat/.test(cp) && /↑/.test(cp))
   ok('§4c — nothing is filtered out of the data, only out of the view',
-    /const visibleMessages = hiddenCount > 0 \? messages\.slice\(hiddenCount\) : messages/.test(cp))
+    // 26-P added a view filter for empty bookkeeping entries (a used-confirmation marker has no words). Still a filter of
+    // the VIEW, not the data: `messages` itself is untouched. The assertion moves with the code, and says why.
+    /const visibleMessages = \(hiddenCount > 0 \? messages\.slice\(hiddenCount\) : messages\)\.filter\(\(m\) => \(m\.content \?\? ''\)\.trim\(\)\.length > 0\)/.test(cp))
 
   // ══ §5 — HEADINGS AND THE BETA NOTICE ════════════════════════════════════════════════
   console.log('\n§5 — headings and the Beta notice')

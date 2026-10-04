@@ -1,0 +1,96 @@
+{
+ "arm": "flash38",
+ "idea": "5c7287d2",
+ "status": "DONE",
+ "seconds": 738,
+ "passes": "12/12",
+ "tokensIn": 116805,
+ "tokensOut": 27170,
+ "rowEstCostPence": 17.927,
+ "costPenceAtTodaysRates": 17.927,
+ "costPenceAtJan2027Rates": 31.9111,
+ "unpriced": [],
+ "byModel": [
+  [
+   "gemini-3.8-flash",
+   {
+    "in": 114003,
+    "out": 24403,
+    "calls": 24
+   }
+  ],
+  [
+   "claude-sonnet-5",
+   {
+    "in": 2802,
+    "out": 2767,
+    "calls": 1
+   }
+  ]
+ ],
+ "kernelCheck": {
+  "passed": 5,
+  "of": 9
+ },
+ "findings": 22,
+ "findingsTraceable": 14,
+ "evidenceTotal": 32,
+ "passOutputs": [
+  "ORIENT: DONE — 295 retrieved, 40 read; 4 cited · 1 of 1 queries written",
+  "DIAGNOSIS: DONE — 4 causes, 4 recorded alternatives",
+  "APPROACH: DONE — 3 approaches",
+  "ACTIONS: DONE — 4 actions drafted; 3 of 3 avenues evaluated · depth ratio 0.78",
+  "RESEARCH: DONE — 4 questions asked; reviewed 400 sources; 13 findings, 3 contradicting the draft; 6 stated gaps — ⚠ an existing power may",
+  "REVISE: DONE — 4 causes rewritten; 2 places the evidence changed the draft; 2 forks settled, 2 opened",
+  "CAUSES_COMMENTARY: DONE — Described the terrain across 2 causes — 2 points where the sources disagree",
+  "SMART: DONE — 2 models answered your own words (gemini-3.8-flash, claude-sonnet-5); 8 terms of art named — 6 confirmed by the corpus, ",
+  "KERNEL_CHECK: DONE — 5 of 9 kernel tests passed; 4 failed and are on your list — marked by gemini-3.8-flash",
+  "LOGIC_CHECK: DONE — ⚠ the chain from causes to actions does NOT hold; 2 defects in the argument — traced by gemini-3.8-flash",
+  "REPAIR: DONE — 6 failures → rewrote 3 fields → retest: 4 of 9 kernel tests pass, the chain still does NOT hold; 3 could not be fixed ho",
+  "ADVERSARIAL: DONE — 4 issues raised against the whole proposal, read by gemini-3.8-flash"
+ ],
+ "kernel": {
+  "title": "Restoring Democratic Control Over Monetary Policy Decisions",
+  "challenge": "Monetary policy decisions impose severe, uneven distributional costs across society but are decided by unelected central bank officials who face no electoral consequence when their policies fail.",
+  "whoAffectedImpactCost": "{\"cost\":\"Not established in macroeconomic aggregate, but directly felt in household mortgage spikes and asset repricing.\",\"impact\":\"Unilateral interest rate and balance-sheet decisions redistribute wealth dramatically between borrowers and asset holders, influencing housing affordability, disposable income, and employment levels without democratic consent.\",\"evidence\":\"The proposer highlights that when rate decisions misfire or redistribute wealth, there is no direct mechanism to remove or penalise the decision-makers; the House of Lords Economic Affairs Committee (2023) confirmed that to meet inflation targets, Bank actions can counteract elected government fiscal policy [committees-reports:publication:42289:210852-0047].\",\"affectedGroups\":\"Mortgage holders, renters, low-wealth debtors, and asset owners.\"}",
+  "rootCause": "Elected politicians benefit from outsourcing blame for the painful distributional consequences of monetary policy to an insulated technocratic committee.",
+  "pivotalObstacle": "The sovereign credibility trap: financial markets enforce the statutory firewall of the Bank of England Act 1998 by pricing a political risk premium into UK sovereign debt whenever ministerial direction over interest rates is threatened, giving elected politicians a compelling structural incentive to preserve technocratic insulation.",
+  "summaryDiagnosis": "Monetary policy decisions exert massive distributional effects across households, yet under the Bank of England Act 1998 these decisions are insulated inside an unelected committee. The proposer describes this as turning an intrinsically political choice into an unaccountable technical one, noting direct experience of administrative delay and lack of redress. The root cause is political blame-shifting: ministers deliberately insulate the Bank to avoid taking electoral responsibility for painful interest rate hikes. The pivotal obstacle to dismantling this settlement is the sovereign credibility trap: bond markets demand an operational firewall to suppress UK gilt risk premia, meaning any restoration of ministerial control must overcome immediate fiscal and market repricing threats.",
+  "chosenApproach": "Reclaim direct political control of interest rates by enacting primary legislation to repeal the MPC's exclusive operational autonomy and establish an affirmative parliamentary approval regime for all base rate variations.",
+  "whatItRulesOut": "Rules out pre-decision parliamentary votes or confirmation hearings prior to rate announcements (to avoid market front-running and gilt repricing volatility), rules out reliance on non-binding remit letters or secondary delegated powers, and rules out covert balance-sheet coercion without formal statutory change.",
+  "leverage": "It eliminates the political offloading mechanism entirely: by removing the technocratic shield that allows ministers to disclaim responsibility, it forces macroeconomic trade-offs back into the electoral arena where distributional choices belong.",
+  "conditionsForSuccess": "• Treasury ministers must possess the political willingness to absorb direct voter blame for mortgage rate hikes rather than passing responsibility to an unelected committee.\n• The statutory framework must clearly define whether non-approval of an MPC decision freezes the bank rate or reverts it to a predefined statutory fallback rate.\n• Financial markets must not induce an unmanageable gilt crisis or capital flight that forces ministers to abandon political approvals within the first six months.\n• Parliamentary procedure must accommodate time-sensitive market-sensitive decisions without leaking rate changes prior to official market release.",
+  "summaryGuidingPolicy": "Reclaim direct political accountability over monetary policy by enacting primary legislation to repeal the MPC's exclusive statutory rate-setting monopoly under section 13 and establishing formal rate-setting authority in the Chancellor of the Exchequer, anchored by mandatory statutory distributional impact analyses laid before Parliament, while strictly ruling out market-sensitive pre-decision Commons votes or committee confirmation hearings.",
+  "summaryCoherentActions": "1. Draft and introduce primary legislation amending the Bank of England Act 1998 (repealing section 13's exclusive operational autonomy and reforming section 19) to transfer final official Bank Rate decision authority to the Chancellor of the Exchequer, converting the MPC into an expert statutory advisory council. — HM Treasury\n2. Establish in the same primary legislation a statutory requirement that every ministerial rate determination must be accompanied by an immediate Treasury distributional impact analysis laid before Parliament upon announcement. — HM Treasury\n3. Reconstitute the House of Commons Treasury Committee's standing orders to mandate formal post-decision scrutiny hearings with the Chancellor within 14 days of any Bank Rate modification, enforcing political accountability without pre-decision market leaks. — House of Commons Treasury Committee\n4. Exercise existing reporting powers under section 7B of the Bank of England Act 1998 (inserted by the 2016 Act) to require the Bank to prepare and publish financial reports regarding Treasury-indemnified Asset Purchase Facility operations and their distributional effects. — HM Treasury"
+ },
+ "causes": [
+  {
+   "cause": "Politicians systematically offload electoral blame for painful macroeconomic and distributional outcomes to technocrats.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "The Bank of England Act 1998 intentionally constructed a statutory barrier that excludes ordinary political oversight and direction.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  }
+ ],
+ "actions": [
+  {
+   "practicalStep": "Draft and introduce a Bank of England (Democratic Oversight) Bill repealing operational rate-setting autonomy and amending section 19 of the Bank of England Act 1998 to require an affirmative statutory instrument approved by the House of Commons for every MPC interest rate variation.",
+   "whoImplements": "HM Treasury"
+  },
+  {
+   "practicalStep": "Revise the Chancellor of the Exchequer's annual Monetary Policy Committee remit letter under existing statutory powers to mandate that the Bank submit distributional impact assessments (evaluating mortgagors, renters, and asset owners) alongside every rate recommendation.",
+   "whoImplements": "HM Treasury"
+  },
+  {
+   "practicalStep": "Establish a dedicated Parliamentary Monetary Oversight Panel within the House of Commons Treasury Committee with statutory standing to conduct mandatory confirmation and pre-decision hearings on proposed MPC rate variations prior to parliamentary vote.",
+   "whoImplements": "Treasury Committee"
+  },
+  {
+   "practicalStep": "Amend the Treasury-Bank of England Memorandum of Understanding on capital and indemnity arrangements to condition Treasury indemnity of the Asset Purchase Facility on explicit ministerial sign-off regarding balance-sheet unwind pacing.",
+   "whoImplements": "HM Treasury"
+  }
+ ]
+}

@@ -37,10 +37,15 @@ export type Provider = 'google' | 'anthropic' | 'xai' | 'openai'
  * alone should be probed before it is trusted to reject a caller.
  */
 export const REACHABLE: Record<Provider, string[]> = {
-  google: ['gemini-2.5-flash', 'gemini-2.5-pro'],
+  // 26-O §4a/§6 — `gemini-3.1-pro-preview` (consolidation panel) and `gemini-3.8-flash` (the build comparison) were
+  // both CALLED live on 30 Sep (docs/MODEL_REVIEW_2026-09-30.md §1/§2), which is the evidence this file requires.
+  // ⚠ 3.1 Pro is a PREVIEW: the consolidation falls back to gemini-2.5-pro if it errors, and says so on the card.
+  google: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.8-flash'],
   // `claude-haiku-4-5-20251001` is the dated form compile.ts names as its Gemini-429 fallback;
   // verified LIVE on 19 Aug 2026 (HTTP 200, echoing its own id).
-  anthropic: ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7',
+  // 26-O §4a — `claude-opus-5-5` (panel + judge), `claude-sonnet-5-5` (the 26-P agent), `claude-fable-5-1`: all CALLED live
+  // 30 Sep – 2 Oct (MODEL_REVIEW §1, LEX_26P_REPORT).
+  anthropic: ['claude-opus-5', 'claude-opus-5-5', 'claude-sonnet-5', 'claude-sonnet-5-5', 'claude-fable-5', 'claude-fable-5-1', 'claude-opus-4-8', 'claude-opus-4-7',
     'claude-haiku-4-5', 'claude-haiku-4-5-20251001'],
   // ⚠ 25-D §1a — `grok-4.20-multi-agent-0309` WAS REMOVED, and it is worth saying why rather
   // than leaving a silent absence for someone to "fix" by adding it back.
@@ -67,7 +72,8 @@ export const REACHABLE: Record<Provider, string[]> = {
   // docs read alone (developers.openai.com/api/docs/pricing, 25 Sep 2026), NOT a live call —
   // per this file's own rule that is weaker evidence, exactly like `grok-4.7`'s entry above.
   // Not made any pass's default until a live 1-token call has echoed this model id back.
-  openai: ['gpt-6-luna'],
+  // 26-O §4a — `gpt-6.1-sol` (panel) and `gpt-6-astra` were CALLED live on 30 Sep (MODEL_REVIEW §1).
+  openai: ['gpt-6-luna', 'gpt-6.1-sol', 'gpt-6-astra'],
 }
 
 /**

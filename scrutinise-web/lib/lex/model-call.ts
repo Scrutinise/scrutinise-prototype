@@ -34,10 +34,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { providerFor, type Provider } from './model-registry'
-import { thinkingConfigFor, outputBudgetFor } from './model-thinking'
+import { thinkingConfigFor, outputBudgetFor, requiresThinking } from './model-thinking'
+
+/**
+ * `reasoningEffort` → `thinkingBudget` for gemini-2.5-pro (allowed range 128–32768). Probed 2 Oct on the
+ * guiding-policy prompt: budget 2048 → 1,898 thought tokens (it used nearly all of it), 8192 → 2,640,
+ * dynamic → 3,085 — Gemini stops well short of a large budget on a task this size, so `medium` is a
+ * ceiling it will not hit, not a tax.
+ */
+const GEMINI_BUDGET_FOR_EFFORT = { low: 2048, medium: 8192, high: 24576 } as const
 import { samplingFor, samplingOmissions } from './model-sampling'
 import { geminiFinishProblem } from './gemini-finish'
-import { recordGeminiUsage, recordXaiUsage, type SpendStream, type PricedSpend } from './spend-ledger'
+import { recordGeminiUsage, recordXaiUsage, cacheFromAnthropic, cacheFromOpenAIShape, type SpendStream, type PricedSpend } from './spend-ledger'
 
 export interface LlmUsage {
   /** What we ASKED for. */
@@ -55,6 +63,9 @@ export interface LlmUsage {
    * the echoed id back on every call is what lets a caller notice at the moment it happens.
    */
   echoedModel?: string | null
+  /** 26-O §5a — input tokens served from the provider's cache / written to it. SUBSETS of `tokensIn`. */
+  tokensCached?: number
+  tokensCacheWrite?: number
   /**
    * ⚠ 26-L COST METERING — SET WHEN THIS FILE HAS ALREADY WRITTEN THE LEDGER ROW FOR THE CALL.
    * The Gemini and xAI paths below record inside `callModelJson`; Claude and GPT do not, so their
@@ -84,9 +95,18 @@ export interface ModelCallOptions {
   timeoutMs: number
   temperature?: number
   /**
-   * xAI only (ignored by every other provider). Left unset, grok-4.7 reasons without a ceiling:
-   * measured 1 Oct on the guiding-policy draft prompt — default 211s / 15,058 output tokens,
-   * `medium` 93s / 6,699, `low` 16s / 1,082. `max_output_tokens` does not bound it.
+   * ⚠ One knob, four vendors — so a panel can be given COMPARABLE effort rather than each vendor's
+   * own default. Left unset, every provider behaves exactly as before.
+   *   xAI       `reasoning.effort`            — unset, grok-4.7 reasons without a ceiling: measured 1 Oct
+   *                                             on the guiding-policy prompt, default 211s / 15,058 output
+   *                                             tokens, `medium` 93s / 6,699, `low` 16s / 1,082.
+   *   OpenAI    `reasoning_effort`
+   *   Anthropic `output_config.effort`        — NOT extended thinking: thinking cannot be enabled while
+   *                                             `tool_choice` forces the tool (HTTP 400, probed 2 Oct), and
+   *                                             forced-tool is how this file gets structured output.
+   *   Google    `thinkingBudget`              — only for models that must think (gemini-2.5-pro); see
+   *                                             GEMINI_BUDGET_FOR_EFFORT.
+   * `max_output_tokens` does not bound a model's reasoning on any of them.
    */
   reasoningEffort?: 'low' | 'medium' | 'high'
   /** Diagnostic label — appears in every log line and in the failure detail. */
@@ -207,7 +227,11 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
   // (400, "This model only works in thinking mode"), which made it unreachable through every one
   // of our clients while the registry listed it as available. The budget is now a property of the
   // model, and the output ceiling rises with it because thinking tokens count against it.
-  const maxOutputTokens = outputBudgetFor(o.model, o.maxOutputTokens)
+  // 2 Oct — an explicit effort sets the budget for a model that must think, and the ceiling rises by
+  // that budget (thinking counts against it) rather than by the flat headroom, which 8192 would exceed.
+  const effortBudget = o.reasoningEffort && requiresThinking(o.model) ? GEMINI_BUDGET_FOR_EFFORT[o.reasoningEffort] : null
+  const thinkingConfig = effortBudget != null ? { thinkingBudget: effortBudget } : thinkingConfigFor(o.model)
+  const maxOutputTokens = effortBudget != null ? o.maxOutputTokens + effortBudget : outputBudgetFor(o.model, o.maxOutputTokens)
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), o.timeoutMs)
@@ -225,7 +249,7 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
             maxOutputTokens,
             responseMimeType: 'application/json',
             responseSchema: o.schema,
-            thinkingConfig: thinkingConfigFor(o.model),
+            thinkingConfig,
           },
         }),
         signal: ctrl.signal,
@@ -253,6 +277,7 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       model: o.model,
       tokensIn: n(data?.usageMetadata?.promptTokenCount),
       tokensOut: n(data?.usageMetadata?.candidatesTokenCount) + n(data?.usageMetadata?.thoughtsTokenCount),
+      tokensCached: n(data?.usageMetadata?.cachedContentTokenCount),
       echoedModel: data?.modelVersion ?? null,
       recorded,
     }
@@ -270,6 +295,9 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
 
 // ── Anthropic ────────────────────────────────────────────────────────────────
 
+/** 26-O §4b — Claude models measured to answer HTTP 400 to a forced `tool_choice`. They take structured output. */
+export const REJECTS_FORCED_TOOL: ReadonlySet<string> = new Set(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1'])
+
 /**
  * ⚠ STRUCTURED OUTPUT VIA A FORCED TOOL. Anthropic has no `responseSchema`; the supported way to
  * get a guaranteed-shape object is to declare ONE tool whose `input_schema` is the schema and force
@@ -282,6 +310,7 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return { ok: false, reason: 'no-key', detail: `[${o.label}] ANTHROPIC_API_KEY not set`, usage: ZERO(o.model) }
 
+  const structuredOutput = REJECTS_FORCED_TOOL.has(o.model)
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), o.timeoutMs)
   try {
@@ -302,8 +331,22 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
         ...sampling(o),
         system: o.system,
         messages: [{ role: 'user', content: o.user }],
-        tools: [{ name: 'emit', description: 'Return the result.', input_schema: o.schema }],
-        tool_choice: { type: 'tool', name: 'emit' },
+        // ⚠⚠ 26-O §4b — THE NEWER CLAUDE MODELS REJECT A FORCED TOOL (HTTP 400, "tool_choice: type tool/any not
+        // supported": claude-opus-5-5, claude-sonnet-5-5, claude-fable-5-1 — MODEL_REVIEW 30 Sep). Those take
+        // STRUCTURED OUTPUT instead: `output_config.format` json_schema, constrained decoding, the JSON arriving in a
+        // text block. Chosen over `tool_choice: auto` because `auto` lets the model answer in prose — a probe on Fable
+        // did, and a draft that is not JSON is a lost draft — whereas constrained decoding cannot return a malformed
+        // object. Every OTHER Claude model keeps the forced tool, unchanged: it has worked in production and nothing
+        // here has been probed against it. The schema is closed (`closeSchema`), which structured output requires.
+        ...(structuredOutput
+          ? {}
+          : { tools: [{ name: 'emit', description: 'Return the result.', input_schema: o.schema }], tool_choice: { type: 'tool', name: 'emit' } }),
+        ...((o.reasoningEffort || structuredOutput) ? {
+          output_config: {
+            ...(o.reasoningEffort ? { effort: o.reasoningEffort } : {}),
+            ...(structuredOutput ? { format: { type: 'json_schema', schema: closeSchema(o.schema) } } : {}),
+          },
+        } : {}),
       }),
       signal: ctrl.signal,
     })
@@ -314,12 +357,13 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
     const data = await res.json() as {
       stop_reason?: string
       model?: string
-      usage?: { input_tokens?: number; output_tokens?: number }
+      usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number }
       content?: Array<{ type?: string; text?: string; input?: unknown }>
     }
+    // 26-O §5a — Anthropic reports cache reads/writes OUTSIDE `input_tokens`; folded in (see cacheFromAnthropic).
     const usage: LlmUsage = {
       model: o.model,
-      tokensIn: n(data?.usage?.input_tokens),
+      ...cacheFromAnthropic(data?.usage),
       tokensOut: n(data?.usage?.output_tokens),
       echoedModel: data?.model ?? null,
     }
@@ -335,6 +379,11 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       return { ok: false, reason: 'blocked', detail: `[${o.label}] the model refused to answer`, usage }
     }
 
+    // 26-O §4b — a model that took the structured-output path answers in a TEXT block holding the JSON.
+    if (structuredOutput) {
+      const text = data.content?.find((c) => c.type === 'text')?.text
+      return parseJson<T>(text, usage, o.label)
+    }
     const tool = data.content?.find((c) => c.type === 'tool_use')
     if (!tool || tool.input == null) {
       return { ok: false, reason: 'empty', detail: `[${o.label}] no tool_use block in the response`, usage }
@@ -372,6 +421,7 @@ async function callOpenAI<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
         // end to end (no key on this machine), and hardcoding the parameter is precisely how
         // it would 400 on its first live call.
         ...sampling(o, 0.4),
+        ...(o.reasoningEffort ? { reasoning_effort: o.reasoningEffort } : {}),
         messages: [
           { role: 'system', content: o.system },
           { role: 'user', content: o.user },
@@ -389,13 +439,14 @@ async function callOpenAI<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
     }
     const data = await res.json() as {
       model?: string
-      usage?: { prompt_tokens?: number; completion_tokens?: number }
+      usage?: { prompt_tokens?: number; completion_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } }
       choices?: Array<{ finish_reason?: string; message?: { content?: string; refusal?: string } }>
     }
     const usage: LlmUsage = {
       model: o.model,
       tokensIn: n(data?.usage?.prompt_tokens),
       tokensOut: n(data?.usage?.completion_tokens),
+      ...cacheFromOpenAIShape(data?.usage), // 26-O §5a
       echoedModel: data?.model ?? null,
     }
 
@@ -556,7 +607,9 @@ function abortOrHttp(err: unknown, o: ModelCallOptions): LlmFail {
   return {
     ok: false,
     reason: aborted ? 'timeout' : 'http',
-    detail: `[${o.label}] ${aborted ? `timed out after ${o.timeoutMs}ms` : err instanceof Error ? err.message : String(err)}`,
+    // 26-O — undici's "fetch failed" says nothing; the cause (a DNS/TLS/reset code, or a body it could not serialise)
+    // is on `err.cause`. Named here so the next one is diagnosable from the failure line, not by re-running with a probe.
+    detail: `[${o.label}] ${aborted ? `timed out after ${o.timeoutMs}ms` : err instanceof Error ? `${err.message}${err.cause ? ` (cause: ${String((err.cause as { code?: string; message?: string }).code ?? (err.cause as { message?: string }).message ?? err.cause)})` : ''}` : String(err)}`,
     usage: ZERO(o.model),
   }
 }

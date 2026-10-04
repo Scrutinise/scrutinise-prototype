@@ -299,7 +299,7 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
         : field.key === 'legalLandscape'
           ? `This field captures what law currently governs this and where it falls short. If a relevant Act or regulator came up in the background briefing, fold it in.`
           : field.key === 'anticipatedResponses'
-            ? `This field captures how people will respond to the chosen approach: avoidance, gaming, enforcement burden, legal challenge, and political attack vectors.`
+            ? `This field captures how people will respond to the Guiding Policy: avoidance, gaming, enforcement burden, legal challenge, and political attack vectors.`
             : `Help the user complete this structured field.`
     return ctx.awaiting
       ? `You have ALREADY drafted this field — it is showing in the panel on the right ("proposed by Lex"), waiting for the user to review and Save it. Do NOT move on or propose another field. If the user asks for a change, RETURN A FRESH PROPOSAL for THIS field (proposal.fieldKey "${field.key}", proposal.valueObject = the improved slot values for keys: ${slots}) and in chatText say briefly what you changed and ask them to Save it in the panel. If they seem happy, emit no proposal and invite them to Save (or edit in the panel).`
@@ -328,7 +328,7 @@ They can answer HERE, in chat, or select it in the panel — both work, and sayi
                 : field.key === 'chosenApproach'
                   ? `They are committing to ONE approach — and choosing it deliberately rules the others out (that is the point; a policy that rules nothing out is fluff). Help them pick the option with real leverage on the pivotal obstacle. They select it in the panel.`
                   : field.key === 'anticipatedResponses'
-                    ? `They are anticipating how people will respond to the chosen approach: avoidance, gaming, enforcement burden, legal challenge, and political attack vectors. Propose sharp, concrete responses for each; they refine in the panel.`
+                    ? `They are anticipating how people will respond to the Guiding Policy: avoidance, gaming, enforcement burden, legal challenge, and political attack vectors. Propose sharp, concrete responses for each; they refine in the panel.`
                     : field.key === 'actions'
                       ? `They are setting out the COORDINATED actions that execute the policy — each consistent with it and with each other, resources concentrated not smeared. For each action: the practical step, who implements it, and its costs (implementation, enforcement, regulatory friction) and benefits as sourced ranges. Help them concentrate effort and think about sequencing. They add and cost actions in the panel.`
                       : `Help the user complete this in the panel.`
@@ -380,7 +380,7 @@ Quietly capture anything useful in "extracted".`
     case 'whatItRulesOut':
       return `Compose WHAT THE POLICY RULES OUT from the options the user ruled out and their reasons (the residue of choosing). 2–4 sentences, concrete. proposal.valueText, proposal.fieldKey "whatItRulesOut". In chatText, invite them to accept or edit.`
     case 'conditionsForSuccess':
-      return `Propose the CONDITIONS FOR SUCCESS as testable bets — "for this to work, X must be true" — drawn from the chosen approach and its risks. A short list in one text block. proposal.valueText, proposal.fieldKey "conditionsForSuccess". In chatText, invite them to accept or add.`
+      return `Propose the CONDITIONS FOR SUCCESS as testable bets — "for this to work, X must be true" — drawn from the Guiding Policy and its risks. A short list in one text block. proposal.valueText, proposal.fieldKey "conditionsForSuccess". In chatText, invite them to accept or add.`
     case 'summaryGuidingPolicy':
       return `Write the GUIDING-POLICY SUMMARY: the chosen approach, its leverage on the pivotal obstacle, what it rules out and why, the anticipated responses, and the conditions for success. Compose it from the SOURCE VALUES block above — that is the complete text of what the user accepted. Write it as continuous prose in your own sentences; do NOT paste a clause out of the "already captured" inventory, and every sentence you write must be a whole sentence. proposal.valueText, proposal.fieldKey "summaryGuidingPolicy". In chatText, invite them to accept or adjust.`
     // ── Page 4 (Coherent Actions) ──
@@ -897,7 +897,7 @@ export async function generateCoherenceReview(input: {
     'not). UK context. Do not invent citations, numbers or bodies that were not mentioned.'
 
   const user = [
-    `Chosen approach: ${input.chosenApproach || '(not stated)'}`,
+    `Guiding Policy: ${input.chosenApproach || '(not stated)'}`,
     `Root cause: ${input.rootCause || '(not stated)'}`,
     `Pivotal obstacle: ${input.pivotalObstacle || '(not stated)'}`,
     input.causes.length ? `Causes identified:\n- ${input.causes.join('\n- ')}` : '',
@@ -1136,7 +1136,7 @@ export async function generateAnticipatedResponses(input: {
     'UK context. Do not invent case names, statutes or figures.'
 
   const user = [
-    `Chosen approach: ${input.chosenApproach || '(not stated)'}`,
+    `Guiding Policy: ${input.chosenApproach || '(not stated)'}`,
     `Pivotal obstacle: ${input.pivotalObstacle || '(not stated)'}`,
     `The problem: ${input.challenge || '(not stated)'}`,
     input.leverage ? `Why this approach has leverage: ${input.leverage}` : '',

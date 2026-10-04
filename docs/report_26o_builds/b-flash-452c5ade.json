@@ -1,0 +1,110 @@
+{
+ "arm": "flash38",
+ "idea": "452c5ade",
+ "status": "DONE",
+ "seconds": 744,
+ "passes": "12/12",
+ "tokensIn": 156240,
+ "tokensOut": 34446,
+ "rowEstCostPence": 24.1098,
+ "costPenceAtTodaysRates": 24.1098,
+ "costPenceAtJan2027Rates": 42.0224,
+ "unpriced": [],
+ "byModel": [
+  [
+   "gemini-3.8-flash",
+   {
+    "in": 152181,
+    "out": 30028,
+    "calls": 26
+   }
+  ],
+  [
+   "claude-sonnet-5",
+   {
+    "in": 4059,
+    "out": 4418,
+    "calls": 1
+   }
+  ]
+ ],
+ "kernelCheck": {
+  "passed": 8,
+  "of": 9
+ },
+ "findings": 25,
+ "findingsTraceable": 18,
+ "evidenceTotal": 41,
+ "passOutputs": [
+  "ORIENT: DONE — 306 retrieved, 40 read; 6 cited · 1 of 1 queries written",
+  "DIAGNOSIS: DONE — 4 causes, 4 recorded alternatives",
+  "APPROACH: DONE — 4 approaches",
+  "ACTIONS: DONE — 5 actions drafted; 3 of 3 avenues evaluated · depth ratio 0.88",
+  "RESEARCH: DONE — 5 questions asked; reviewed 500 sources; 17 findings, 5 contradicting the draft; 9 stated gaps (stopped at its own spend",
+  "REVISE: DONE — 5 causes rewritten; 3 places the evidence changed the draft; 4 forks settled, 4 opened",
+  "CAUSES_COMMENTARY: DONE — Described the terrain across 4 causes — 3 points where the sources disagree",
+  "SMART: DONE — 2 models answered your own words (gemini-3.8-flash, claude-sonnet-5); 10 terms of art named — 9 confirmed by the corpus,",
+  "KERNEL_CHECK: DONE — 8 of 9 kernel tests passed; 1 failed and are on your list — marked by gemini-3.8-flash",
+  "LOGIC_CHECK: DONE — ⚠ the chain from causes to actions does NOT hold; 2 defects in the argument — traced by gemini-3.8-flash",
+  "REPAIR: DONE — 3 failures → rewrote 4 fields → retest: 8 of 9 kernel tests pass, the chain still does NOT hold — 1 issue marked address",
+  "ADVERSARIAL: DONE — 6 issues raised against the whole proposal, read by gemini-3.8-flash"
+ ],
+ "kernel": {
+  "title": "Establishing Personal Operational Accountability in the Civil Service",
+  "challenge": "Public administration across government departments and arm's-length bodies routinely suffers from chronic delay and inaction because decision-making responsibility is deliberately atomised across layers of officials and legal advisers who face no personal consequence for failure or obstruction.",
+  "whoAffectedImpactCost": "{\"cost\":\"Direct financial waste from duplicated administrative salaries and stalled sector investment (such as repairs to care facilities); the aggregate system-wide cost is not established.\",\"impact\":\"Years of paralysis and protracted refusal to make decisions or engage, causing direct operational hardship to regulated sectors and stalling public policy implementation.\",\"evidence\":\"First-hand testimony from the proposer describing a 4-year administrative delay on a Northern Ireland care home VAT structure where government lawyers refused to meet, despite identical private legal work being completed in an afternoon; documented failures of Whitehall accountability in Public Administration Committee inquiries.\",\"affectedGroups\":\"Citizens and enterprises requiring administrative, tax, or regulatory determinations from government bodies (specifically highlighted: care home operators in Northern Ireland seeking VAT clarification), as well as taxpayers and elected ministers.\"}",
+  "rootCause": "The constitutional doctrine of ministerial responsibility, entrenched by the Carltona principle, legally collapses departmental action into the person of the Minister, relieving individual civil servants of direct operational liability and incentivising the diffusion of responsibility across internal hierarchies.",
+  "pivotalObstacle": "The persistent institutional lock-in where senior civil service leadership and Whitehall departmental hierarchies actively benefit from the Carltona shield and Osmotherly convention, successfully resisting reform by warning that piercing official anonymity undermines civil service neutrality, while relying on the statutory absence of delivery-based dismissal frameworks in CRAG 2010 to dilute internal managerial accountability into non-enforceable process.",
+  "summaryDiagnosis": "Civil service administrative stagnation and delay persist because the constitutional doctrine of ministerial responsibility, entrenched by the Carltona principle, legally collapses departmental action into the Minister, relieving individual civil servants of direct operational liability and incentivising the diffusion of responsibility across internal hierarchies. As demonstrated by a 4-year impasse over a care home VAT structure in Northern Ireland where officials and government legal advisers diffused decisions and refused technical dialogue, officials incur professional risk by taking individual operational initiative while facing zero personal consequence for obfuscation or collective inaction. Because Part 1 of the Constitutional Reform and Governance Act 2010 (CRAG) focuses on merit-based appointment and codes rather than delivery capability, and explicitly excludes the Northern Ireland Civil Service under s.1(2)(d), neither Whitehall nor devolved administrations possess an enforceable statutory feedback loop connecting personal performance to operational consequence.",
+  "chosenApproach": "Displace the Carltona presumption for major administrative determinations by establishing an explicit statutory 'Senior Operational Owner' regime with mandatory timeline limits, using executive powers under CRAG 2010 s.3 to tie senior civil service performance management directly to audited delivery milestones.",
+  "whatItRulesOut": "Rules out relying on internal, non-binding civil service managerial charters, voluntary capability reviews, or general transparency dashboards that lack personal termination or demotion consequences. Rules out universal Carltona repeal across all core policy-advising functions, preserving ministerial agency for broad political discretion while carving out operational and regulatory determinations. Rules out relying on Westminster CRAG 2010 amendments alone to resolve devolved administrative blockages in Northern Ireland.",
+  "leverage": "This approach exploits the asymmetry of operational ownership: inertia currently flourishes because diffusing a decision across multiple departments carries zero personal cost, whereas concentrating legal delivery responsibility into a single named Senior Responsible Owner makes hiding within committee consensus impossible.",
+  "conditionsForSuccess": "• Statements of Responsibility must be legally registered with explicit, exclusive operational owners for all major administrative workflows and statutory approvals, leaving zero unassigned residual duties.\n• Judicial oversight in administrative review must distinguish between policy direction set by Ministers and operational execution managed by named officials, ensuring courts do not treat administrative delay as shielded by executive discretion (ni-judgments:2022-niqb-21:1).\n• The statutory framework governing civil service management under the Constitutional Reform and Governance Act 2010 must be reconciled to permit personal demotion and removal for persistent operational delivery failure (explanatory-notes:en:ukpga/2010/25:1-0002).\n• Departmental Accounting Officers' duties under Managing Public Money must formally expand beyond regularity and propriety to include strict operational delivery pace and personal administrative competence (quangos-govuk:government/publications/nhs-foundation-trusts-accounting-officers-responsibilities:2).",
+  "summaryGuidingPolicy": "Enact primary legislation that explicitly displaces the Carltona presumption for major administrative determinations—establishing statutory Senior Operational Owners with personal delivery duties and select committee answerability across Whitehall and sponsoring parallel devolved legislation in Northern Ireland—while concurrently using Minister for the Civil Service executive powers under s.3 of CRAG 2010 to replace tenure protections with performance management tied to audited delivery milestones.",
+  "summaryCoherentActions": "1. Cabinet Office: Draft primary legislation amending Part 1 of the Constitutional Reform and Governance Act 2010 to require Senior Civil Service appointments at Director level and above to operate under statutory Statements of Responsibility with personal Parliamentary select committee accountability, while sponsoring parallel primary legislation in the Northern Ireland Assembly to apply matching obligations to the Northern Ireland Civil Service (remedying s.1(2)(d)). 2. HM Treasury: Revise Managing Public Money to require that major policy execution and regulatory determinations designate a single Senior Responsible Owner with sole operational sign-off. 3. Cabinet Office: Exercise executive powers under s.3 of CRAG 2010 to amend the Civil Service Management Code, replacing tenure protections with objective delivery metrics where missed statutory milestones trigger capability reviews. 4. Government Legal Department: Issue binding technical engagement protocols barring internal counsel from refusing direct technical dialogue with affected citizen groups during administrative determinations. 5. HM Treasury & Cabinet Office: Tie senior leadership bonus pools to National Audit Office-audited operational milestone completion rates."
+ },
+ "causes": [
+  {
+   "cause": "Constitutional doctrine and case law establish that departmental acts are legally fungible with ministerial acts, precluding personal legal liability for civil servants.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Parliamentary accountability conventions and executive guidance shield civil servants from direct, personal external scrutiny.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "The statutory framework governing the civil service codifies values and appointments but omits performance management or dismissal mechanisms.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Performance management systems fail to sanction persistent poor performance or reward successful operational delivery.",
+   "classification": "CONTRIBUTORY",
+   "isRootCause": false
+  }
+ ],
+ "actions": [
+  {
+   "practicalStep": "Draft and introduce an amendment to Part 1 of the Constitutional Reform and Governance Act 2010 to require all Senior Civil Service appointments at Director level and above to operate under individual statutory Statements of Responsibility, legally defining their specific delivery remits, binding operational timelines, and individual accountability to Parliamentary select committees.",
+   "whoImplements": "Cabinet Office"
+  },
+  {
+   "practicalStep": "Revise HM Treasury's Managing Public Money handbook to require that every major policy execution and regulatory clearance mandates a single-named Senior Responsible Owner (SRO) who possesses sole operational sign-off authority, expressly barring inter-departmental consensus delays and collective clearance committees.",
+   "whoImplements": "HM Treasury"
+  },
+  {
+   "practicalStep": "Issue mandatory Cabinet Office civil service management guidance replacing permanent non-performance dismissals protections with 360-degree objective delivery metrics, requiring that missed statutory milestones automatically trigger performance review panels rather than sideways promotion.",
+   "whoImplements": "Cabinet Office"
+  },
+  {
+   "practicalStep": "Direct the Government Legal Department to establish transparent public-facing engagement protocols that prohibit in-house counsel from refusing direct technical dialogue with affected citizen groups during regulatory or fiscal determination processes.",
+   "whoImplements": "Government Legal Department"
+  },
+  {
+   "practicalStep": "Tie departmental senior leadership bonus pools and annual performance increments directly to published operational speed and milestone completion rates audited by the National Audit Office.",
+   "whoImplements": "HM Treasury"
+  }
+ ]
+}

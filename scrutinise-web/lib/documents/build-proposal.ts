@@ -26,6 +26,7 @@
 
 import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
+import { notChosenOptions } from './not-chosen'
 import { historyLine, GROUP_HEADINGS } from '../lex/policy-history'
 import { DRAFTED_ATTRIBUTION, readableForkKey } from '../lex/reader-language'
 import { EVIDENCE_DISCLOSURE, BETA_MARKER } from '../lex/beta-disclosure'
@@ -648,7 +649,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   }
 
   const rulesOut = fieldText(fieldByKey(snapshot, 'whatItRulesOut'))
-  const ruledOutOptions = snapshot.options.filter((o) => o.status === 'RULED_OUT')
+  const ruledOutOptions = notChosenOptions(snapshot.options) // 26-O §3b — includes the candidates a settlement passed over
   if (rulesOut || ruledOutOptions.length) {
     blocks.push({ kind: 'heading', level: 2, runs: text('What it rules out') })
     if (rulesOut) blocks.push(...markdownToBlocks(rulesOut))

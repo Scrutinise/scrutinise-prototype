@@ -49,6 +49,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LexStageKey } from '@/lib/lex/stages'
+import SectionChecklistBlock from './SectionChecklistBlock'
 
 interface AgendaShape {
   buildVersion: number | null
@@ -412,6 +413,11 @@ export default function WorkList({
             })}
           </ul>
         )}
+
+        {/* ══ 26-P ADDENDUM — A CHECKLIST PER KERNEL SECTION, from the registry (lib/lex/section-checklists.ts).
+            Diagnosis's five checks show here while the causes are unconfirmed. A PATTERN: the registry says
+            what shows when, so the Guiding Policy and Coherent Actions checklists are entries, not new code. */}
+        {scope === 'strategy' && <SectionChecklistBlock ideaId={ideaId} refreshNonce={refreshNonce} />}
 
         {/* ══ THE DEEPENING'S OWN WORKLIST ══════════════════════════════════════
             25-K §3's summary rows, unchanged, and they are the right shape for Stage 3: the

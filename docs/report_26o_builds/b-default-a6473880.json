@@ -1,0 +1,104 @@
+{
+ "arm": "default",
+ "idea": "a6473880",
+ "status": "DONE",
+ "seconds": 838,
+ "passes": "12/12",
+ "tokensIn": 125380,
+ "tokensOut": 41878,
+ "rowEstCostPence": 28.8172,
+ "costPenceAtTodaysRates": 28.8172,
+ "costPenceAtJan2027Rates": 28.8172,
+ "unpriced": [],
+ "byModel": [
+  [
+   "gemini-2.5-flash",
+   {
+    "in": 83790,
+    "out": 20111,
+    "calls": 15
+   }
+  ],
+  [
+   "gemini-2.5-pro",
+   {
+    "in": 38800,
+    "out": 18803,
+    "calls": 7
+   }
+  ],
+  [
+   "claude-sonnet-5",
+   {
+    "in": 2790,
+    "out": 2964,
+    "calls": 1
+   }
+  ]
+ ],
+ "kernelCheck": {
+  "passed": 9,
+  "of": 9
+ },
+ "findings": 50,
+ "findingsTraceable": 43,
+ "evidenceTotal": 56,
+ "passOutputs": [
+  "ORIENT: DONE — 266 retrieved, 40 read; 6 cited · 1 of 1 queries written",
+  "DIAGNOSIS: DONE — 4 causes, 4 recorded alternatives",
+  "APPROACH: DONE — 3 approaches",
+  "ACTIONS: DONE — 4 actions drafted; 3 of 3 avenues evaluated · depth ratio 0.73",
+  "RESEARCH: DONE — 4 questions asked; reviewed 400 sources; 25 findings, 1 contradicting the draft; 0 stated gaps (stopped at its own spend",
+  "REVISE: DONE — 3 causes rewritten; 1 place the evidence changed the draft; 0 forks settled, 2 opened",
+  "CAUSES_COMMENTARY: DONE — Described the terrain across 2 causes — 3 points where the sources disagree",
+  "SMART: DONE — 2 models answered your own words (gemini-2.5-pro, claude-sonnet-5); 16 terms of art named — 7 confirmed by the corpus, 9",
+  "KERNEL_CHECK: DONE — 9 of 9 kernel tests passed — marked by gemini-2.5-pro",
+  "LOGIC_CHECK: DONE — the chain from causes to actions holds; 0 defects in the argument — traced by gemini-2.5-pro",
+  "REPAIR: DONE — nothing to repair — every kernel test passed and the argument held",
+  "ADVERSARIAL: DONE — 6 issues raised against the whole proposal, read by gemini-2.5-pro"
+ ],
+ "kernel": {
+  "title": "Preventing Publicly Funded Charities from Campaigning Against Government Policy",
+  "challenge": "Publicly funded charities campaign against the policy of their funding bodies, leading to public money underwriting one side of a political argument without explicit democratic approval, which undermines public trust and efficient allocation of resources.",
+  "whoAffectedImpactCost": "{\"cost\":\"Not established. The cost would include the direct financial expenditure on campaigning by charities, the administrative burden on government departments to monitor and manage grants, and the intangible cost of diminished public trust and political friction. The proposer reports this as 'public spending underwrites one side of a political argument'.\",\"impact\":\"Taxpayers' money is used to fund advocacy against government policy, potentially creating a perception of bias or misuse of funds. Government departments face challenges in implementing policy when publicly funded entities actively campaign against it. Charities risk public backlash and damage to their reputation if perceived as overly political or misusing funds. The public discourse can become skewed if one side of an argument is disproportionately funded by public money.\",\"evidence\":\"The proposer's account of 'sock puppets' and the general challenge. Reasoning here rather than citing: while specific figures are not available, the existence of Charity Commission guidance and parliamentary reports on the issue (e.g., committees-reports:publication:10194:arc-0015, quangos-govuk:government/publications/speaking-out-guidance-on-campaigning-and-political-activity-by-charities-cc9) suggests that the issue is significant enough to warrant regulatory attention.\",\"affectedGroups\":\"Taxpayers, government departments, charities receiving public funds, and the public discourse.\"}",
+  "rootCause": "The distinction between legitimate charitable advocacy and impermissible political campaigning is often unclear in practice, particularly when public funds are involved.",
+  "pivotalObstacle": "The lack of a clear, universally understood, and consistently enforced boundary between legitimate advocacy and impermissible campaigning. This ambiguity persists because no single body is incentivised to enforce it; charities benefit from the funding, and funding departments can benefit from the political cover of their grantees' advocacy.",
+  "summaryDiagnosis": "Publicly funded charities act as 'sock puppets', campaigning against the policy of their funders using taxpayer money. This persists because the boundary between legitimate advocacy and impermissible political campaigning is ambiguous. This ambiguity is a form of enforcement failure, as no single body has the incentive or clear mandate to police it; some government funders may even tacitly benefit from grantee lobbying that supports their own departmental aims.",
+  "chosenApproach": "Establish a clear, legally defined boundary between legitimate charitable advocacy and impermissible publicly-funded campaigning against government policy, focusing on the intent and direct impact of the activity.",
+  "whatItRulesOut": "This policy rules out relying solely on enhanced transparency (which reports the problem without fixing it) or on the discretion of individual government departments (the status quo which has failed). It also rules out a blanket ban on all campaigning by any charity that receives public funds, which would be unworkable and stifle legitimate advocacy.",
+  "leverage": "This approach leverages the clarity of legal definition to remove the ambiguity that currently allows publicly funded charities to campaign against government policy without clear accountability. By defining the intent and direct impact, it creates a bright line that can be consistently applied by both charities and funding bodies, addressing the 'unclear practical distinction' at the heart of the pivotal obstacle.",
+  "conditionsForSuccess": "• The new legal definition must clearly differentiate between legitimate advocacy for charitable purposes and campaigning against government policy, using objective, measurable criteria to assess intent and direct impact.\n• Government departments responsible for grants must consistently incorporate the new legal definition into all grant agreements and possess the capacity and will to enforce these conditions.\n• The Charity Commission must update its guidance (e.g., CC9) to align with the new legal definition, providing clear examples and case studies to aid charities in compliance.\n• An accessible and efficient dispute resolution mechanism must be established for charities to challenge interpretations or enforcement decisions, preventing prolonged legal battles.",
+  "summaryGuidingPolicy": "Establish a clear, legally defined boundary between legitimate charitable advocacy and impermissible publicly-funded campaigning against government policy, enforced through standardised grant conditions.",
+  "summaryCoherentActions": "The coherent actions involve drafting and introducing legislation to define 'impermissible publicly-funded campaigning' with specific criteria, mandating the Charity Commission to update its guidance (CC9) to reflect this new definition, requiring all government departments to incorporate standardized grant conditions prohibiting such activities, and establishing a clear process for reporting, investigating, and sanctioning breaches, potentially including clawbacks of funds."
+ },
+ "causes": [
+  {
+   "cause": "The distinction between legitimate charitable advocacy and impermissible political campaigning is often unclear in practice, particularly when public funds are involved.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Existing grant conditions, while aiming to prevent public funds from subsidising campaigning, are inconsistently applied and enforced across government departments.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  }
+ ],
+ "actions": [
+  {
+   "practicalStep": "Draft and introduce a legislative amendment to the Charities Act 2011, or new regulations, defining 'impermissible publicly-funded campaigning' as activity whose primary intent is to directly influence specific government policy decisions, rather than to educate the public or advocate for a charitable cause more broadly, when such activity is funded by public money. This definition should explicitly exclude general advocacy for the charity's mission.",
+   "whoImplements": "Ministry of Justice/Cabinet Office"
+  },
+  {
+   "practicalStep": "Mandate the Charity Commission to update its CC9 guidance to reflect the new legislative definition, providing clear examples and a decision-making framework for charities and funding bodies to assess whether an activity constitutes impermissible campaigning. This updated guidance should include a 'safe harbor' for general policy advocacy.",
+   "whoImplements": "Charity Commission"
+  },
+  {
+   "practicalStep": "Require all government departments and public bodies to incorporate standardized grant conditions into funding agreements, explicitly prohibiting the use of public funds for activities falling under the new definition of 'impermissible publicly-funded campaigning.' These conditions should include clear reporting requirements on advocacy spending.",
+   "whoImplements": "HM Treasury / Cabinet Office (via guidance to all departments)"
+  },
+  {
+   "practicalStep": "Establish a clear process for reporting and investigating alleged breaches of the new grant conditions, with the Charity Commission or an independent body (e.g., National Audit Office) empowered to investigate and recommend sanctions, which could include clawbacks of funds or temporary funding bans.",
+   "whoImplements": "Charity Commission / National Audit Office"
+  }
+ ]
+}

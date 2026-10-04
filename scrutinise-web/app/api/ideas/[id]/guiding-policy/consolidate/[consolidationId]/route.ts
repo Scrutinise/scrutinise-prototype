@@ -136,6 +136,7 @@ export async function PATCH(req: Request, { params }: Params) {
         data: succeeded.map((d) => ({
           consolidationId: consolidation.id,
           model: d.model,
+          servedBy: d.servedBy ?? null, // 26-O §4d
           statement: d.value!.statement,
           rulesOut: d.value!.rulesOut,
           fixesCauseNumbers: d.value!.fixesCauseNumbers,

@@ -37,7 +37,9 @@ export const GUIDING_POLICY_FIELDS: FieldDef[] = [
   },
   {
     key: 'chosenApproach',
-    label: 'Chosen approach',
+    // 26-O §1a (Charlie, decision 114) — was "Chosen approach". The STATEMENT is the Guiding Policy; the
+    // field key stays `chosenApproach` (DB / code identifier, never shown).
+    label: 'Guiding Policy',
     type: 'reference', // select one option → CHOSEN; the rest → RULED_OUT
     scope: 'idea',
     origin: 'box',
@@ -84,11 +86,11 @@ export const GUIDING_POLICY_FIELDS: FieldDef[] = [
   },
   {
     key: 'summaryGuidingPolicy',
-    label: 'Guiding-policy summary',
+    label: 'Summary of Guiding Policy', // 26-O §1b (decision 115) — was "Guiding-policy summary"
     type: 'inferred',
     scope: 'idea',
     origin: 'proposed', // Lex generates when the page's other fields are terminal
-    question: 'Here’s the guiding policy — the approach, its leverage, what it rules out, and the conditions.',
+    question: 'Here’s the summary of the guiding policy — the policy, its leverage, what it rules out, and the conditions.',
   },
 ]
 

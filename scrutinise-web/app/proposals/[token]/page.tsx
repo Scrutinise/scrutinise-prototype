@@ -149,7 +149,7 @@ export default async function SharedProposalPage({ params }: Props) {
           {[
             ['The problem', field('challenge')],
             ['The pivotal obstacle', field('pivotalObstacle')],
-            ['The approach', field('chosenApproach')],
+            ['Guiding Policy', field('chosenApproach')],
           ].map(([label, value]) => (
             <div key={label as string}>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</h2>

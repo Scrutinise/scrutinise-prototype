@@ -1,0 +1,109 @@
+{
+ "arm": "default",
+ "idea": "5c7287d2",
+ "status": "DONE",
+ "seconds": 937,
+ "passes": "12/12",
+ "tokensIn": 142454,
+ "tokensOut": 49224,
+ "rowEstCostPence": 36.235,
+ "costPenceAtTodaysRates": 36.235,
+ "costPenceAtJan2027Rates": 36.235,
+ "unpriced": [],
+ "byModel": [
+  [
+   "gemini-2.5-flash",
+   {
+    "in": 91079,
+    "out": 19286,
+    "calls": 15
+   }
+  ],
+  [
+   "gemini-2.5-pro",
+   {
+    "in": 48573,
+    "out": 27012,
+    "calls": 10
+   }
+  ],
+  [
+   "claude-sonnet-5",
+   {
+    "in": 2802,
+    "out": 2926,
+    "calls": 1
+   }
+  ]
+ ],
+ "kernelCheck": {
+  "passed": 8,
+  "of": 9
+ },
+ "findings": 38,
+ "findingsTraceable": 31,
+ "evidenceTotal": 45,
+ "passOutputs": [
+  "ORIENT: DONE — 276 retrieved, 40 read; 10 cited · 1 of 1 queries written",
+  "DIAGNOSIS: DONE — 4 causes, 4 recorded alternatives",
+  "APPROACH: DONE — 3 approaches",
+  "ACTIONS: DONE — 4 actions drafted; 3 of 3 avenues evaluated · depth ratio 0.02",
+  "RESEARCH: DONE — 4 questions asked; reviewed 400 sources; 18 findings, 1 contradicting the draft; 6 stated gaps — ⚠ an existing power may",
+  "REVISE: DONE — 3 causes rewritten; 1 place the evidence changed the draft; 2 forks settled, 0 opened",
+  "CAUSES_COMMENTARY: DONE — Described the terrain across 3 causes — 2 points where the sources disagree",
+  "SMART: DONE — 2 models answered your own words (gemini-2.5-pro, claude-sonnet-5); 18 terms of art named — 12 confirmed by the corpus, ",
+  "KERNEL_CHECK: DONE — 8 of 9 kernel tests passed; 1 failed and are on your list — marked by gemini-2.5-pro",
+  "LOGIC_CHECK: DONE — ⚠ the chain from causes to actions does NOT hold; 2 defects in the argument — traced by gemini-2.5-pro",
+  "REPAIR: DONE — 3 failures → rewrote 2 fields → retest: 9 of 9 kernel tests pass, the chain still does NOT hold — 1 issue marked address",
+  "ADVERSARIAL: DONE — 6 issues raised against the whole proposal, read by gemini-2.5-pro"
+ ],
+ "kernel": {
+  "title": "Reversing Bank of England Operational Independence",
+  "challenge": "Monetary policy decisions, which have significant distributional consequences, are made by unelected officials at the Bank of England without a clear mechanism for accountability when decisions prove problematic, leading to a perceived reclassification of political choices as technical ones.",
+  "whoAffectedImpactCost": "{\"cost\":\"Not established. The cost of reversing operational independence would involve significant legislative and institutional restructuring, and potential economic volatility during transition.\",\"impact\":\"Lack of recourse or clear accountability for economic hardship resulting from monetary policy decisions; erosion of public trust in independent institutions due to a perceived democratic deficit.\",\"evidence\":\"The proposer reports direct experience of bureaucratic delay and incompetence, and notes widespread reports of similar issues. The 'democratic deficit' in parliamentary debate on the Bank's performance is also noted in the House of Lords (pwdata-lords:daylord2024-05-02b:68).\",\"affectedGroups\":\"The general public, particularly those sensitive to inflation, interest rate changes, and the broader economic impact of monetary policy decisions.\"}",
+  "rootCause": "The Bank of England Act 1998 conferred operational independence on the Monetary Policy Committee (MPC) for formulating monetary policy.",
+  "pivotalObstacle": "The constitutional and legislative entrenchment of the Bank of England's operational independence, supported by a broad consensus on the benefits of depoliticized monetary policy, makes reversal a high-cost political choice that no major party has been willing to bear.",
+  "summaryDiagnosis": "The core problem is that monetary policy decisions, which have significant distributional consequences, are made by the unelected Monetary Policy Committee (MPC) of the Bank of England, whose operational independence was established by the Bank of England Act 1998. This has led to accountability mechanisms focusing on adherence to a remit set by the Treasury rather than direct answerability for policy outcomes, fostering a cultural perception that these decisions are solely for experts. The pivotal obstacle is the deeply entrenched legislative framework and the political will required to overturn a policy widely seen as beneficial for economic stability.",
+  "chosenApproach": "Enhance parliamentary scrutiny and approval mechanisms for the Bank of England's monetary policy remit and performance, without fully revoking operational independence.",
+  "whatItRulesOut": "This policy rules out maintaining the current division where the government sets the goal (the inflation target) but an independent committee controls the primary instrument (Bank Rate). It also rules out merely adjusting the Bank's mandate or adding scrutiny mechanisms while leaving its operational independence fundamentally intact.",
+  "leverage": "This approach exploits the existing framework where the Treasury sets the MPC's remit (pwdata-lords:daylord2013-03-19a:41) as a pivot point. By strengthening Parliament's role in approving and scrutinizing this remit, it introduces a more direct and public democratic check on the strategic direction of monetary policy, without disrupting the operational expertise of the Bank.",
+  "conditionsForSuccess": "• Parliament must establish a dedicated, well-resourced mechanism (e.g., a strengthened committee or a new approval process) to review and approve the MPC's annual remit, ensuring it is not merely a rubber stamp.\n• The Bank of England and Treasury must be legally required to provide clear, accessible explanations of monetary policy decisions and their expected distributional impacts to Parliament, avoiding overly technical jargon.\n• Parliamentary committees must have the power to compel senior Bank and Treasury officials to provide evidence and answer questions on monetary policy outcomes, not just adherence to the remit.\n• The government of the day must commit to allowing genuine parliamentary debate and potential amendment of the MPC's remit, rather than treating it as a fixed executive prerogative.",
+  "summaryGuidingPolicy": "Increase democratic accountability for monetary policy by strengthening parliamentary oversight of the Bank of England's remit and performance, while preserving its operational independence.",
+  "summaryCoherentActions": "Introduce a Bill to amend the Bank of England Act 1998 to: require a parliamentary debate and vote on the Chancellor's annual remit letter to the MPC; mandate the Treasury Committee to conduct pre-appointment hearings for MPC members; establish a formal mechanism for the Bank to respond to inquiries on distributional consequences; and require the MPC to report on these consequences in its public communications."
+ },
+ "causes": [
+  {
+   "cause": "The Bank of England Act 1998 conferred operational independence on the Monetary Policy Committee (MPC) for formulating monetary policy.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Accountability mechanisms primarily focus on scrutiny of the Bank's adherence to its remit rather than direct answerability for policy outcomes, particularly regarding distributional consequences.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "There is a cultural perception that monetary policy is a 'technical' domain best left to experts, rather than a 'political' one with significant public impact and distributional consequences.",
+   "classification": "CONTRIBUTORY",
+   "isRootCause": false
+  }
+ ],
+ "actions": [
+  {
+   "practicalStep": "Require a dedicated parliamentary debate and vote on the Chancellor's annual remit letter to the MPC before it takes effect, with a minimum debate time allocated.",
+   "whoImplements": "House of Commons (specifically the Treasury Committee and relevant parliamentary business managers)"
+  },
+  {
+   "practicalStep": "Mandate the Treasury Committee to conduct a pre-appointment hearing and vote for all external MPC members, with a report on their suitability and understanding of the remit's distributional impacts.",
+   "whoImplements": "Treasury Committee"
+  },
+  {
+   "practicalStep": "Establish a formal, publicly accessible mechanism for the Bank of England to respond to specific parliamentary inquiries regarding the distributional consequences of past monetary policy decisions, detailing the rationale and any lessons learned.",
+   "whoImplements": "Bank of England, Treasury Committee"
+  },
+  {
+   "practicalStep": "Amend the Bank of England Act 1998 to explicitly include consideration of 'significant distributional consequences' as a factor the MPC must report on in its Inflation Reports and other public communications.",
+   "whoImplements": "HM Treasury, Parliament"
+  }
+ ]
+}

@@ -816,7 +816,7 @@ async function loadIdeaContext(ideaId: string): Promise<IdeaContext> {
     // which would have quietly weakened FINANCIAL and POLITICAL_RISK for every idea built
     // since the rebuild without ever failing.
     idea.guidingPolicy && `Guiding policy: ${idea.guidingPolicy}`,
-    chosen && `Chosen approach: ${chosen.approach}`,
+    chosen && `Guiding Policy: ${chosen.approach}`,
     ruledOut.length && `Approaches ruled out: ${ruledOut.map((o) => o.approach).join('; ')}`,
     idea.lexActions.length && `Actions: ${idea.lexActions.map((a) => a.practicalStep).join('; ')}`,
   ].filter(Boolean) as string[]

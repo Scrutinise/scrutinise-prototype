@@ -121,7 +121,7 @@ export function buildMeetingPackDocument(
     const chosen = live.find((o) => o.status === 'CHOSEN')
     if (chosen) {
       const others = live.filter((o) => o !== chosen)
-      blocks.push({ kind: 'heading', level: 1, runs: text('The approach that has been chosen') })
+      blocks.push({ kind: 'heading', level: 1, runs: text('The Guiding Policy that has been chosen') })
       blocks.push({ kind: 'paragraph', runs: text(chosen.approach) })
       if (chosen.caseFor) blocks.push({ kind: 'paragraph', runs: text(chosen.caseFor) })
       if (others.length) {
@@ -129,7 +129,7 @@ export function buildMeetingPackDocument(
         blocks.push({
           kind: 'note',
           text: `${others.length} other approach${others.length === 1 ? ' was' : 'es were'} considered and not chosen. `
-            + 'They are kept here so the meeting can see what the chosen approach was weighed against.',
+            + 'They are kept here so the meeting can see what the Guiding Policy was weighed against.',
         })
         blocks.push({
           kind: 'bullets',
@@ -241,7 +241,7 @@ export function buildMeetingPackDocument(
     for (const [key, label] of [
       ['challenge', 'The problem'],
       ['rootCause', 'The cause'],
-      ['chosenApproach', 'The guiding policy'],
+      ['chosenApproach', 'Guiding Policy'],
     ] as const) {
       const v = fieldText(snapshot, key)
       blocks.push({ kind: 'heading', level: 1, runs: text(label) })

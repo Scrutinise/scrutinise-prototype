@@ -106,7 +106,8 @@ export interface JudgeContext {
 /** The one premium model used for the judge — see the report this feeds (26-I §4a/B2):
  *  reported here as a named export, not buried in the call site, so "which model did
  *  the judging" is one grep away rather than a fact only the call site knows. */
-export const JUDGE_MODEL = 'claude-opus-5'
+// 26-O §4a — Opus 5.5 (was Opus 5). Measured 30 Sep: 2.25p vs 1.92p a pass, cause-set agreement with Opus 5 = 0.80.
+export const JUDGE_MODEL = 'claude-opus-5-5'
 
 const JUDGE_SCHEMA = {
   type: 'object',
@@ -183,7 +184,8 @@ export async function judgeDrafts(
     drafts.map((d) => [d.index, { isCompound: testIsCompound(d.statement), rulesOutNothing: testRulesOutNothing(d.rulesOut) }]),
   )
 
-  const result = await callModelJson<{ verdicts: Array<{ index: number; answersObstacle: { verdict: boolean; why: string }; causesAttackedByJudge: number[] }> }>({
+  type JudgeOut = { verdicts: Array<{ index: number; answersObstacle: { verdict: boolean; why: string }; causesAttackedByJudge: number[] }> }
+  const callJudge = () => callModelJson<JudgeOut>({
     model: JUDGE_MODEL,
     system: judgeSystemPrompt(),
     user: judgeUserPrompt(ctx, drafts),
@@ -195,6 +197,17 @@ export async function judgeDrafts(
     pass: spend.pass,
     ideaId: spend.ideaId, userId: spend.userId ?? null,
   })
+  let result = await callJudge()
+  // 26-O — ONE retry on a transient transport failure. On 4 Oct a consolidation's judge call died with an undici
+  // "fetch failed" and the whole consolidation stayed DRAFTING with no verdicts, although every draft had been paid for.
+  // Not for a 4xx, truncation, a refusal or bad JSON — those are deterministic and a retry would just spend again.
+  if (!result.ok) {
+    const f = result as import('./model-call').LlmFail
+    if (f.reason === 'timeout' || (f.reason === 'http' && !/HTTP 4(?!29)\d\d/.test(f.detail))) {
+      console.warn(`[guiding-policy-judge] ${f.reason} — retrying once: ${f.detail.slice(0, 160)}`)
+      result = await callJudge()
+    }
+  }
 
   const priced = result.usage.recorded ?? await recordUsage(result.usage, {
     stream: 'lex', pass: spend.pass, ideaId: spend.ideaId, userId: spend.userId ?? null,

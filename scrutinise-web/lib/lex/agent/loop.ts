@@ -21,6 +21,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { recordSpend, USD_TO_GBP } from '@/lib/lex/spend-ledger'
+import { recordToolCall } from './tool-log'
 import { enforceNoPreamble, hasEvaluativePreamble } from '@/lib/lex/no-preamble'
 import { SYSTEM_PREFIX } from './system-prompt'
 import { buildSnapshot, type UiContext } from './snapshot'
@@ -66,6 +67,8 @@ export interface AgentTurnInput {
   readOnly?: boolean
   /** Test seam: supply a client. */
   client?: Anthropic
+  /** 26-P addendum §8c — the client turn id, so one turn's recorded calls read together. */
+  turnId?: string | null
 }
 
 export interface TurnCost {
@@ -300,6 +303,15 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
         summary: r.pending ? `waiting for confirmation: ${r.pending.summary}` : r.ok ? clipJson(r.data) : (r.error ?? 'failed'),
         ms: Date.now() - t0,
       })
+      // §8c — recorded for the OWNER, per idea, with the instruction it followed. Awaited: the row exists before the
+      // reply does. A call the model named that does not exist is recorded too — it is something Lex tried.
+      await recordToolCall({
+        ideaId: input.ideaId, userId: input.userId, turnId: input.turnId ?? null, tool: b.name,
+        tier: def?.runKind ? 'run' : def?.tier === 'ask' ? 'asks-first' : 'free',
+        instruction: input.message, input: b.input, ok: r.ok || !!r.pending,
+        summary: toolLog[toolLog.length - 1].summary, failureReason: r.ok || r.pending ? null : (r.error ?? 'failed'),
+        pending: !!r.pending, tainted: turn.tainted,
+      })
       if (r.ui) uiEffects.push(...r.ui)
       if (r.pending) pending.push(r.pending)
       if (r.undo) undo.push(r.undo)
@@ -353,6 +365,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     await recordSpend({
       stream: 'lex', pass: 'lex.agent.turn', model: AGENT_MODEL,
       tokensIn: cost.tokensIn + cost.tokensCacheWrite + cost.tokensCacheRead, tokensOut: cost.tokensOut,
+      tokensCached: cost.tokensCacheRead, tokensCacheWrite: cost.tokensCacheWrite, // 26-O §5a
       actualUsd: cost.usd, userId: input.userId, ideaId: input.ideaId, ref: `calls=${cost.calls} cacheRead=${cost.tokensCacheRead}`,
     }).catch((err) => console.error('[lex-agent] ledger write failed', err instanceof Error ? err.message : err))
 

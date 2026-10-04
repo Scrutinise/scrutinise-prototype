@@ -33,7 +33,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { rates, type ModelRate } from './build-cost'
+import { rateAt, priceTokens, type ModelRate } from './build-cost'
 import type { LlmUsage } from './build-llm'
 import { currentBuildContext } from './build-context'
 
@@ -49,6 +49,13 @@ export interface SpendEntry {
   tokensOut: number
   /** Thinking tokens, which bill at the OUTPUT rate and are counted as output here. */
   tokensThinking?: number
+  /**
+   * 26-O §5a — input tokens served from the provider's cache. A SUBSET of `tokensIn` (which stays "all input"), priced at
+   * the model's cached-read rate. Each reader normalises its provider's own shape into this — see `cachedFrom*` below.
+   */
+  tokensCached?: number
+  /** 26-O §5a — input tokens written to a cache (a subset of `tokensIn`), priced at the cache-write rate. */
+  tokensCacheWrite?: number
   /** Who this is attributable to. NULL for platform work with no user (ingest, admin sweeps). */
   userId?: string | null
   /** Which idea it was spent on. NULL for work that is not about one idea. */
@@ -109,7 +116,9 @@ export const USD_TO_GBP = Number(process.env.LEX_BUILD_USD_GBP ?? '0.79')
 
 /** Price one entry. Thinking tokens bill at the output rate — the only honest total. */
 export function priceEntry(
-  e: Pick<SpendEntry, 'model' | 'tokensIn' | 'tokensOut' | 'tokensThinking' | 'actualUsd'>,
+  e: Pick<SpendEntry, 'model' | 'tokensIn' | 'tokensOut' | 'tokensThinking' | 'tokensCached' | 'tokensCacheWrite' | 'actualUsd'>,
+  /** 26-O §5b — the day the call happened, which picks the DATED rate. Default now (a call is priced when recorded). */
+  at: Date = new Date(),
 ): PricedSpend {
   // ⚠ S21 §6 — A PROVIDER-REPORTED ACTUAL COST WINS OVER THE RATE CARD. xAI bills
   // tool invocations (web_search/x_search) as well as tokens, so a token-rate
@@ -120,10 +129,11 @@ export function priceEntry(
   if (e.actualUsd != null && Number.isFinite(e.actualUsd)) {
     return { pence: e.actualUsd * USD_TO_GBP * 100, usd: e.actualUsd, unpriced: false }
   }
-  const rate: ModelRate | undefined = rates()[e.model]
+  const rate: ModelRate | undefined = rateAt(e.model, at)
   if (!rate) return { pence: null, usd: null, unpriced: true }
   const out = e.tokensOut + (e.tokensThinking ?? 0)
-  const usd = (e.tokensIn / 1_000_000) * rate.inPerM + (out / 1_000_000) * rate.outPerM
+  // 26-O §5a — uncached, cached and cache-write input each at its own rate (a subset of tokensIn, never added to it).
+  const usd = priceTokens({ tokensIn: e.tokensIn, tokensOut: out, tokensCached: e.tokensCached, tokensCacheWrite: e.tokensCacheWrite }, rate)
   return { pence: usd * USD_TO_GBP * 100, usd, unpriced: false }
 }
 
@@ -165,9 +175,11 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   try {
     await prisma.$executeRaw`
       INSERT INTO "LlmSpend" ("stream", "pass", "model", "tokensIn", "tokensOut", "tokensThinking",
+                              "tokensCached", "tokensCacheWrite",
                               "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed",
                               "toolCalls", "postsFetched", "buildId", "step", "attrSource")
       VALUES (${e.stream}, ${e.pass}, ${e.model}, ${e.tokensIn}, ${e.tokensOut}, ${e.tokensThinking ?? 0},
+              ${e.tokensCached ?? 0}, ${e.tokensCacheWrite ?? 0},
               ${priced.pence}, ${priced.unpriced}, ${userId}, ${ideaId},
               ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false},
               ${e.toolCalls ?? null}, ${e.postsFetched ?? null}, ${buildId}, ${step}, ${attrSource})`
@@ -208,7 +220,39 @@ export function recordGeminiUsage(
     tokensIn: num(u.promptTokenCount),
     tokensOut: num(u.candidatesTokenCount),
     tokensThinking: num(u.thoughtsTokenCount),
+    ...cacheFromGemini(u),
   })
+}
+
+// ── 26-O §5a — CACHED TOKENS, normalised once per provider ──────────────────────────────────────────
+// The four vendors report a cache hit in four shapes, and one of them (Anthropic) reports it OUTSIDE the input
+// figure while the other three report it INSIDE. The ledger's contract is: `tokensIn` = ALL input, `tokensCached` and
+// `tokensCacheWrite` = subsets of it. Each function below returns the normalised triple, and each is exported so the
+// check feeds it the vendor's real shape rather than re-deriving the arithmetic (CLAUDE.md §25.3).
+const numOf = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+
+/** Gemini `usageMetadata.cachedContentTokenCount` — already INSIDE `promptTokenCount`. */
+export function cacheFromGemini(u: Record<string, unknown> | undefined | null): { tokensCached: number } {
+  return { tokensCached: numOf(u?.cachedContentTokenCount) }
+}
+
+/** OpenAI Responses / xAI Responses `usage.input_tokens_details.cached_tokens`, or chat-completions
+ *  `usage.prompt_tokens_details.cached_tokens` — both INSIDE the input figure. */
+export function cacheFromOpenAIShape(u: { input_tokens_details?: { cached_tokens?: number }; prompt_tokens_details?: { cached_tokens?: number } } | undefined | null): { tokensCached: number } {
+  return { tokensCached: numOf(u?.input_tokens_details?.cached_tokens ?? u?.prompt_tokens_details?.cached_tokens) }
+}
+
+/**
+ * Anthropic `usage.cache_read_input_tokens` / `cache_creation_input_tokens` — ⚠ OUTSIDE `input_tokens`, which counts
+ * only the uncached remainder. Folded into `tokensIn` here so the same definition holds for every vendor; without this
+ * a 20k-token cached prompt would record as ~200 input tokens and the cost would be wildly UNDERSTATED, the opposite
+ * error to the overstatement this sprint exists to fix.
+ */
+export function cacheFromAnthropic(u: { input_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number } | undefined | null):
+  { tokensIn: number; tokensCached: number; tokensCacheWrite: number } {
+  const read = numOf(u?.cache_read_input_tokens)
+  const write = numOf(u?.cache_creation_input_tokens)
+  return { tokensIn: numOf(u?.input_tokens) + read + write, tokensCached: read, tokensCacheWrite: write }
 }
 
 /** xAI reports actual billed spend as ticks; 1 USD = 1e10 ticks (docs, cost tracking,
@@ -239,6 +283,7 @@ export function recordXaiUsage(
     usage?: {
       input_tokens?: number
       output_tokens?: number
+      input_tokens_details?: { cached_tokens?: number }
       cost_in_usd_ticks?: number
       server_side_tool_usage_details?: { x_posts_fetched?: number; x_users_fetched?: number; web_search_calls?: number }
     }
@@ -255,6 +300,7 @@ export function recordXaiUsage(
     actualUsd: typeof u.cost_in_usd_ticks === 'number' ? u.cost_in_usd_ticks / XAI_TICKS_PER_USD : null,
     postsFetched: postsFetched || null,
     toolCalls,
+    ...cacheFromOpenAIShape(u),
   })
 }
 
@@ -276,18 +322,18 @@ export function recordAnthropicUsage(
   body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd' | 'toolCalls'>,
 ): Promise<PricedSpend> {
   const b = body as {
-    usage?: { input_tokens?: number; output_tokens?: number; server_tool_use?: { web_search_requests?: number } }
+    usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number; server_tool_use?: { web_search_requests?: number } }
   } | null
   const u = b?.usage ?? {}
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
-  const tokensIn = num(u.input_tokens)
+  const { tokensIn, tokensCached, tokensCacheWrite } = cacheFromAnthropic(u)
   const tokensOut = num(u.output_tokens)
   const toolCalls = num(u.server_tool_use?.web_search_requests) || null
-  const rate = rates()[ctx.model]
+  const rate = rateAt(ctx.model)
   const actualUsd = toolCalls && rate
-    ? (tokensIn / 1_000_000) * rate.inPerM + (tokensOut / 1_000_000) * rate.outPerM + toolCalls * ANTHROPIC_WEB_SEARCH_USD_PER_CALL
+    ? priceTokens({ tokensIn, tokensOut, tokensCached, tokensCacheWrite }, rate) + toolCalls * ANTHROPIC_WEB_SEARCH_USD_PER_CALL
     : null
-  return recordSpend({ ...ctx, tokensIn, tokensOut, actualUsd, toolCalls })
+  return recordSpend({ ...ctx, tokensIn, tokensOut, tokensCached, tokensCacheWrite, actualUsd, toolCalls })
 }
 
 /**
@@ -312,18 +358,19 @@ export function recordOpenaiUsage(
   body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd' | 'toolCalls'>,
 ): Promise<PricedSpend> {
   const b = body as {
-    usage?: { input_tokens?: number; output_tokens?: number }
+    usage?: { input_tokens?: number; output_tokens?: number; input_tokens_details?: { cached_tokens?: number } }
     output?: Array<{ type?: string }>
   } | null
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
   const tokensIn = num(b?.usage?.input_tokens)
   const tokensOut = num(b?.usage?.output_tokens)
+  const { tokensCached } = cacheFromOpenAIShape(b?.usage)
   const toolCalls = (b?.output ?? []).filter((o) => o.type === 'web_search_call').length || null
-  const rate = rates()[ctx.model]
+  const rate = rateAt(ctx.model)
   const actualUsd = toolCalls && rate
-    ? (tokensIn / 1_000_000) * rate.inPerM + (tokensOut / 1_000_000) * rate.outPerM + toolCalls * OPENAI_WEB_SEARCH_USD_PER_CALL
+    ? priceTokens({ tokensIn, tokensOut, tokensCached }, rate) + toolCalls * OPENAI_WEB_SEARCH_USD_PER_CALL
     : null
-  return recordSpend({ ...ctx, tokensIn, tokensOut, actualUsd, toolCalls })
+  return recordSpend({ ...ctx, tokensIn, tokensOut, tokensCached, actualUsd, toolCalls })
 }
 
 /**
@@ -336,12 +383,12 @@ export function recordOpenaiUsage(
 export function recordChatCompletionsUsage(
   body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'actualUsd'>,
 ): Promise<PricedSpend> {
-  const u = (body as { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost_in_usd_ticks?: number } } | null)?.usage ?? {}
+  const u = (body as { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost_in_usd_ticks?: number; prompt_tokens_details?: { cached_tokens?: number } } } | null)?.usage ?? {}
   const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
   const tokensIn = num(u.prompt_tokens)
   const tokensOut = u.total_tokens != null ? Math.max(0, num(u.total_tokens) - tokensIn) : num(u.completion_tokens)
   return recordSpend({
-    ...ctx, tokensIn, tokensOut,
+    ...ctx, tokensIn, tokensOut, ...cacheFromOpenAIShape(u),
     actualUsd: typeof u.cost_in_usd_ticks === 'number' ? u.cost_in_usd_ticks / XAI_TICKS_PER_USD : null,
   })
 }
@@ -350,7 +397,10 @@ export function recordChatCompletionsUsage(
 export const recordUsage = (
   usage: LlmUsage, ctx: Omit<SpendEntry, 'model' | 'tokensIn' | 'tokensOut'>,
 ): Promise<PricedSpend> =>
-  recordSpend({ ...ctx, model: usage.model, tokensIn: usage.tokensIn, tokensOut: usage.tokensOut })
+  recordSpend({
+    ...ctx, model: usage.model, tokensIn: usage.tokensIn, tokensOut: usage.tokensOut,
+    tokensCached: usage.tokensCached, tokensCacheWrite: usage.tokensCacheWrite, // 26-O §5a
+  })
 
 // ── Totals ───────────────────────────────────────────────────────────────────
 

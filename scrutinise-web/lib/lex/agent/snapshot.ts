@@ -22,6 +22,9 @@ import { pendingMaterialSince } from '@/lib/lex/update-pass'
 
 export const short = (id: string) => id.slice(0, 8)
 
+/** A filed source is a root-cause-analysis source when its title or address says so. Exported for the check. */
+export const RCA_SOURCE = /root[\s-]*cause|\bRCA\b|5[\s-]*whys?|five[\s-]*whys?|fishbone|ishikawa/i
+
 const clip = (s: unknown, n: number): string => {
   const t = typeof s === 'string' ? s : s == null ? '' : JSON.stringify(s)
   const flat = t.replace(/\s+/g, ' ').trim()
@@ -100,7 +103,7 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
     const tags = [p.status, p.kind, `source ${p.source}`, p.disposition !== 'UNDISPOSITIONED' ? p.disposition : '', p.phase === 'LATER' ? 'later phase' : ''].filter(Boolean)
     lines.push(`- #${p.number ?? '?'} [${tags.join(', ')}]: ${clip(p.approach, 220)}${p.ruleOutReason ? ` (ruled out: ${clip(p.ruleOutReason, 80)})` : ''}`)
   }
-  if (idea?.chosenApproach?.trim()) lines.push(`CHOSEN GUIDING POLICY: “${clip(idea.chosenApproach, 320)}”`)
+  if (idea?.chosenApproach?.trim()) lines.push(`GUIDING POLICY (settled): “${clip(idea.chosenApproach, 320)}”`)
 
   // ── actions ──
   const actions = state?.actions ?? []
@@ -112,6 +115,11 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
   for (const s of sources) {
     lines.push(`- ${short(s.id)} ${s.kind} “${clip(s.label, 90)}”${s.url ? ` ${clip(s.url, 90)}` : ''} — ${s.status}${s.status === 'FAILED' ? ` (${clip(s.failureReason, 80)})` : `, ${s.findingCount} findings`}`)
   }
+  // 26-P addendum §6a — "ground the method text in the user's filed RCA sources where they exist". The method
+  // block is the cached stable prefix and cannot depend on the idea, so the grounding is HERE: which of THIS
+  // user's READY sources are about root-cause analysis, named so Lex can read_source and cite them.
+  const rca = sources.filter((s) => s.status === 'READY' && RCA_SOURCE.test(`${s.label} ${s.url ?? ''}`))
+  if (rca.length) lines.push(`ROOT-CAUSE-ANALYSIS SOURCES THE USER HAS FILED (ground cause-finding advice in these and cite them): ${rca.map((s) => `${short(s.id)} “${clip(s.label, 70)}”`).join('; ')}`)
   if (decisions.length) lines.push(`Source decisions on corpus items: ${decisions.map((d) => `${d._count._all} ${d.status}`).join(', ')}`)
 
   // ── challenges ──

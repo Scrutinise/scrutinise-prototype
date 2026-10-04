@@ -26,6 +26,7 @@ import { historyLine, clusterLine, GROUP_HEADINGS } from '@/lib/lex/policy-histo
 import CollapsedSection from './CollapsedSection'
 import PriorVersions from './PriorVersions'
 import GuidingPolicyGuideModal from './GuidingPolicyGuideModal'
+import { testStatementLength, lengthFlagLine } from '@/lib/lex/statement-length'
 
 interface Policy {
   id: string
@@ -104,6 +105,8 @@ interface Draft {
   judge: JudgeVerdict | null
   costPence: number | null
   userFeedback: string | null
+  /** 26-O §4d — set when the slot's own model did not answer and this model wrote the draft instead. */
+  servedBy?: string | null
 }
 
 interface Consolidation {
@@ -137,10 +140,14 @@ interface Consolidation {
  * verdict is `answersObstacle` below, the judge's own semantic reading. This line is worded to
  * say so, on the card, every time — not only where a check happens to catch it.
  */
-function JudgeCard({ v }: { v: JudgeVerdict | null }) {
+function JudgeCard({ v, statement }: { v: JudgeVerdict | null; statement?: string }) {
+  // 26-O §4c — computed from the statement itself (not read off `v`) so a verdict stored before this existed, and a
+  // draft not yet judged, are flagged too. Same "flagged for review, not a verdict" form as the compound line.
+  const len = statement ? testStatementLength(statement) : null
   if (!v) return <p className="text-[11px] text-zinc-400 mt-2">Not yet tested.</p>
   return (
     <div className="mt-2 pt-2 border-t border-zinc-100 space-y-1">
+      {len?.tooLong && <p className="text-[11px] font-semibold text-amber-800">{lengthFlagLine(len)}</p>}
       <p className={`text-[11px] ${v.isCompound ? 'font-semibold text-amber-800' : 'text-zinc-600'}`}>
         {v.isCompound
           ? // ⚠ 26-L addendum 3 §6 — a FIXED one-line reason, never `v.compoundWhy`: verdicts stored
@@ -611,9 +618,15 @@ function ConsolidatePanel({
                 className={`rounded-lg border p-2.5 ${consolidation.favouriteModel === d.model ? 'border-2 border-zinc-900' : 'border-zinc-200'}`}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                  {d.model} — {pence(d.costPence)}
+                  {d.servedBy ?? d.model} — {pence(d.costPence)}
                   {consolidation.favouriteModel === d.model && <span className="ml-1 text-zinc-900">· favourite</span>}
                 </p>
+                {/* 26-O §4d — a fallback is SAID on the card, never left for the model name to imply. */}
+                {d.servedBy && (
+                  <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
+                    ⚠ {d.model} did not answer (it is a preview model); this draft was written by {d.servedBy} instead.
+                  </p>
+                )}
                 <p className="text-sm text-zinc-900 mt-1">{d.statement}</p>
                 <p className="text-[11px] text-zinc-600 mt-1.5"><span className="font-medium">Rules out:</span> {d.rulesOut}</p>
                 <p className="text-[11px] text-zinc-600 mt-1"><span className="font-medium">Likelihood:</span> {d.likelihood}</p>
@@ -622,7 +635,7 @@ function ConsolidatePanel({
                     ⚠ If only part delivered: {d.chainLink}
                   </p>
                 )}
-                <JudgeCard v={d.judge} />
+                <JudgeCard v={d.judge} statement={d.statement} />
                 {/* ══ 26-L addendum 4 §2 — A BOX ON EACH DRAFT, FOR COMMENTS ON THAT DRAFT ═════ */}
                 {consolidation.status !== 'ACCEPTED' && (
                   <div className="mt-2">
@@ -763,7 +776,7 @@ function ConsolidatePanel({
                       ⚠ If only part delivered: {consolidation.redraftChainLink}
                     </p>
                   )}
-                  <JudgeCard v={consolidation.redraftJudge} />
+                  <JudgeCard v={consolidation.redraftJudge} statement={consolidation.redraftText ?? undefined} />
                   {consolidation.status !== 'ACCEPTED' && (
                     <div className="flex flex-wrap gap-2 mt-2.5">
                       <button
@@ -822,8 +835,8 @@ function ConsolidatePanel({
 
           {consolidation.status === 'ACCEPTED' && (
             <p className="text-xs text-zinc-800 rounded-lg border-2 border-zinc-300 bg-zinc-50/70 px-3 py-2">
-              ✓ Accepted{consolidation.acceptedEdited ? ', with your edits' : ''} — this is now the Chosen approach.
-              Leverage, Anticipated responses, Conditions for success and the Guiding-policy summary are open below.
+              ✓ Accepted{consolidation.acceptedEdited ? ', with your edits' : ''} — this is now the Guiding Policy.
+              Leverage, Anticipated responses, Conditions for success and the Summary of Guiding Policy are open below.
             </p>
           )}
         </div>

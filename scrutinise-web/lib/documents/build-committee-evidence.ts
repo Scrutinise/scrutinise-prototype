@@ -109,7 +109,7 @@ export async function composeCommitteeEvidence(
   const diagnosis = accepted(rows, 'summaryDiagnosis')
   if (diagnosis) md.push('', diagnosis)
 
-  md.push('', '## The proposed approach')
+  md.push('', '## The Guiding Policy')
   const approach = accepted(rows, 'chosenApproach')
   md.push('', approach ?? '*No guiding policy has been settled on this proposal yet.*')
   const rulesOut = accepted(rows, 'whatItRulesOut')

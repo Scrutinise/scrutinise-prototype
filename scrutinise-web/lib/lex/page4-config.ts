@@ -49,11 +49,11 @@ export const COHERENT_ACTIONS_FIELDS: FieldDef[] = [
   },
   {
     key: 'summaryCoherentActions',
-    label: 'Coherent-actions summary',
+    label: 'Summary of Coherent Actions', // 26-O §1d — was "Coherent-actions summary"
     type: 'inferred',
     scope: 'idea',
     origin: 'proposed', // Lex generates when the page's other fields are terminal
-    question: 'Here’s the coherent-actions summary — the plan and its cost-benefit case.',
+    question: 'Here’s the summary of the coherent actions — the plan and its cost-benefit case.',
   },
 ]
 

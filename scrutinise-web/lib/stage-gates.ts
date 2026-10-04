@@ -1,6 +1,7 @@
 import { prisma } from './prisma'
 import type { Idea } from '@prisma/client'
 import { awardPoints } from './points'
+import { hasGuidingPolicy } from './lex/guiding-policy-answer'
 
 // Quality score mapping for IdeaReview outcomes (Stage 3→4 gate)
 const REVIEW_OUTCOME_SCORE: Record<string, number> = {
@@ -102,6 +103,7 @@ export async function checkStage2to3Gate(ideaId: string): Promise<string | null>
     select: {
       diagnosis: true,
       guidingPolicy: true,
+      chosenApproach: true, // 26-O §3 — a Lex-built idea's settled Guiding Policy; its legacy column is never written
       summaryCoherentActions: true,
       coherentActions: { select: { id: true } },
       research: { select: { id: true } },
@@ -113,7 +115,7 @@ export async function checkStage2to3Gate(ideaId: string): Promise<string | null>
   const errors: string[] = []
 
   if (!idea.diagnosis?.trim()) errors.push('Problem / diagnosis must be completed')
-  if (!idea.guidingPolicy?.trim()) errors.push('Guiding policy must be completed')
+  if (!hasGuidingPolicy(idea)) errors.push('Guiding policy must be completed')
   const hasCoherentAction =
     idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim()
   if (!hasCoherentAction) errors.push('At least 1 coherent action required')

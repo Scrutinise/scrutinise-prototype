@@ -1270,3 +1270,24 @@ reports the pipeline as exit 0 while the build has panicked, so the verification
 silently passes. A verification that cannot report failure is not one.
 
 ---
+
+## 29. TWO TRAPS IN SCRIPTS AND SCRATCH TREES THAT CAME FROM ONE AFTERNOON (4 October 2026)
+
+**1 — NEVER MAKE A `node_modules` A JUNCTION OR SYMLINK INTO A `git worktree`.** `git worktree remove --force`
+follows the link and deletes the **real** directory behind it. On 4 Oct a baseline worktree had
+`node_modules` junctioned to the live one to avoid a second install; removing the worktree emptied the
+shared tree's `node_modules` (421 packages) while another session was working in it. Restored with `npm ci`
+(lockfile unchanged, `tsc` clean), but the tree had no dependencies for several minutes.
+⚠ **If a baseline run needs a clean checkout, `npm ci` inside it** (build it at `C:/cb`, §28), or copy
+nothing and run the check against the commit another way. Remove the worktree with a plain `git worktree
+remove` (no `--force`), which refuses a dirty tree rather than recursing through a link.
+
+**2 — ES IMPORTS ARE HOISTED; AN ENVIRONMENT VARIABLE SET AT THE TOP OF A SCRIPT IS TOO LATE FOR ANY MODULE THAT READS IT AT
+LOAD.** `process.env.FTS_SEARCH_URL = …` as the first statement of a script runs *after* every `import` has
+loaded, so `fts-search` had already read "unset" and every search returned empty — with the build reporting
+DONE. (`assertRetrievalConfig` passed, because it reads the variable at call time.) The first Flash build of
+26-O ran that way and was discarded. ⚠ **Set such variables in the shell that launches the script**, or in a
+`--require` preload; and where a harness must prove its configuration, assert it **through the module that
+uses it**, not through `process.env`. The same hoisting is why the one test seam in the repo —
+`scripts/lib/stub-auth.cjs`, which replaces only `getAuthenticatedUser()` for scripts that call route
+handlers in-process — has to be preloaded with `--require` and cannot be set up inside the script.

@@ -11,6 +11,8 @@ import CausesCommentaryPanel from './CausesCommentary'
 import ActionSuggestions from './ActionSuggestions'
 import ActionGapCheck from './ActionGapCheck'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
+import DiagnosisGuideButton from './DiagnosisGuideModal'
+import { useSectionChecklists } from './useSectionChecklists'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
@@ -941,6 +943,8 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
   const [c, setC] = useState('')
   const [why, setWhy] = useState('')
   const terminal = isTerminal(field)
+  // 26-P ADDENDUM — "N of 5 checks not yet done", from the SAME registry state the worklist's tick boxes write.
+  const checksLine = useSectionChecklists(ideaId).state?.checklists.find((l) => l.section === 'DIAGNOSIS')?.notYetDone ?? null
   const tree = buildCauseTree(causes)
   // ⚠ BRIEF_26E §9a — "Remove the List/Map tabs." One section now: the map first (where there
   // is a chain to draw), the list below it, "Add a new cause" last. No toggle to lose track of.
@@ -1010,6 +1014,9 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
           {/* §9c — "These are my causes" → "Confirm these causes". */}
           <button disabled={busy || causes.length === 0} onClick={api.confirm}
             className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40">Confirm these causes</button>
+          {/* ══ 26-P ADDENDUM — the button stays available with the checks unticked; this says only HOW MANY are not
+              yet done, in words, and nothing else. No dialog, no disabled state, no second warning: the user decides. */}
+          {checksLine && <span className="self-center text-[11px] text-zinc-500">{checksLine}</span>}
           <button disabled={busy} onClick={api.skip}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
         </div>
@@ -2009,6 +2016,9 @@ export default function FieldsPanel({
                 Shown whenever Diagnosis is open — not only while it is the active stage, since
                 §1 of this same brief makes reopening a settled Diagnosis a normal act, and the
                 warning is exactly as true on a revisit as on a first pass. */}
+            {/* ══ 26-P ADDENDUM §6d — "HOW TO FIND THE RIGHT CAUSE", at the top of Diagnosis, same style as
+                "How this works" and the guiding-policy guide, carrying the techniques Lex is given (§6a). */}
+            {page.key === 'DIAGNOSIS' && !isLocked && !collapsed && <DiagnosisGuideButton />}
             {page.key === 'DIAGNOSIS' && !isLocked && !collapsed && (
               <p className="text-sm font-bold text-zinc-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 mb-2 leading-snug">
                 Identifying the right cause is the most important element in this process. If we

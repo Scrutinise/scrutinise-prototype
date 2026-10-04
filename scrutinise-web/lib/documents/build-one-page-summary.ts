@@ -119,7 +119,7 @@ export async function composeOnePageSummary(
   }
 
   const LABEL: Record<keyof typeof BUDGET, string> = {
-    problem: 'The problem', difference: 'What would be different', approach: 'The approach',
+    problem: 'The problem', difference: 'What would be different', approach: 'Guiding Policy',
     instrument: 'The instrument', for: 'The strongest argument for', against: 'The strongest argument against',
     unresolved: 'Still unresolved', evidenceLine: 'Where the evidence comes from',
   }

@@ -116,17 +116,17 @@ function partA() {
   const vr = verifyConfirm(tok, { ideaId: 'idea-1', userId: 'user-1' })
   ok('…and carries the tool and the input it was signed over', vr.ok && vr.payload.tool === 'rule_out_candidate' && stableStringify(vr.payload.input) === stableStringify(base.input))
   const wrongIdea = verifyConfirm(tok, { ideaId: 'idea-2', userId: 'user-1' })
-  ok('a token for one idea is DEAD on another (wrong-idea)', !wrongIdea.ok && wrongIdea.reason === 'wrong-idea')
+  ok('a token for one idea is DEAD on another (wrong-idea)', !wrongIdea.ok && (wrongIdea as { reason?: string }).reason === 'wrong-idea')
   const wrongUser = verifyConfirm(tok, { ideaId: 'idea-1', userId: 'user-2' })
-  ok('a token for one user is dead for another (wrong-user)', !wrongUser.ok && wrongUser.reason === 'wrong-user')
+  ok('a token for one user is dead for another (wrong-user)', !wrongUser.ok && (wrongUser as { reason?: string }).reason === 'wrong-user')
   const [body, sig] = tok.split('.')
   const forged = Buffer.from(JSON.stringify({ ...JSON.parse(Buffer.from(body, 'base64url').toString()), input: { number: 9, reason: 'x' } })).toString('base64url')
   const forgedRes = verifyConfirm(`${forged}.${sig}`, { ideaId: 'idea-1', userId: 'user-1' })
-  ok('RE-AIMING a token at a different row (input changed, signature kept) is refused (bad-signature)', !forgedRes.ok && forgedRes.reason === 'bad-signature')
+  ok('RE-AIMING a token at a different row (input changed, signature kept) is refused (bad-signature)', !forgedRes.ok && (forgedRes as { reason?: string }).reason === 'bad-signature')
   ok('a truncated signature is refused', !verifyConfirm(`${body}.${sig.slice(0, -2)}`, { ideaId: 'idea-1', userId: 'user-1' }).ok)
-  ok('garbage is refused as malformed', (() => { const r = verifyConfirm('not-a-token', { ideaId: 'idea-1', userId: 'user-1' }); return !r.ok && r.reason === 'malformed' })())
+  ok('garbage is refused as malformed', (() => { const r = verifyConfirm('not-a-token', { ideaId: 'idea-1', userId: 'user-1' }); return !r.ok && (r as { reason?: string }).reason === 'malformed' })())
   const old = signConfirm({ ...base, exp: Date.now() - 1000 })
-  ok('an expired token is refused (expired)', (() => { const r = verifyConfirm(old, { ideaId: 'idea-1', userId: 'user-1' }); return !r.ok && r.reason === 'expired' })())
+  ok('an expired token is refused (expired)', (() => { const r = verifyConfirm(old, { ideaId: 'idea-1', userId: 'user-1' }); return !r.ok && (r as { reason?: string }).reason === 'expired' })())
   const saved = { a: process.env.LEX_AGENT_SECRET, b: process.env.CLERK_SECRET_KEY }
   delete process.env.LEX_AGENT_SECRET; delete process.env.CLERK_SECRET_KEY
   let threw = false
@@ -147,7 +147,9 @@ function partA() {
   ok('the inverse tools (unmerge, restore_*) are NOT offered to the model — only reachable by a signed undo', !isModelTool('unmerge_candidates') && !isModelTool('restore_proposal') && !isModelTool('undo_sort_candidate') && !isModelTool('restore_source') && !!toolByName('unmerge_candidates'))
   ok('the comparison (~2p) runs without a button; gap check, consolidation and re-run do not (§3: asks first above ~5p)',
     !runNeedsConfirmation('run_comparison') && runNeedsConfirmation('run_gap_check') && runNeedsConfirmation('run_consolidation') && runNeedsConfirmation('rerun_build'))
-  ok('every price is labelled as the brief’s, not measured (§19)', Object.values(RUN_PRICES).every((p) => /not measured/.test(p.source)))
+  // 26-O follow-up item 4 — a price is EITHER measured (and says on how many real runs) OR labelled the brief's, never unlabelled (§19).
+  ok('every price says whether it is measured or the brief’s (§19)', Object.values(RUN_PRICES).every((p) => /^measured, (n=1|mean of n=\d+) real runs?, \d{4}-\d\d-\d\d$/.test(p.source) || /not measured/.test(p.source)))
+  ok('a figure labelled measured carries its runs', Object.values(RUN_PRICES).every((p) => !/^measured/.test(p.source) || (p.measured && p.measured.runs.length > 0)))
   ok('the web search tool is Gemini-only (S24b) — no xAI fallback in its source', /provider:\s*'google'/.test(readFileSync('lib/lex/agent/tools.ts', 'utf8')))
 
   section('A4 · prompt + cache: the prefix is byte-stable, and cheap to cache (§5b)')

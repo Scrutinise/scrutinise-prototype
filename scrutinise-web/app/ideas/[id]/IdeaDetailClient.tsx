@@ -23,6 +23,8 @@ import DeleteIdeaDialog from '@/components/lex/DeleteIdeaDialog'
 // lib/lex/state.ts (server-only); this component just types the already-fetched object.
 import type { CanonicalState, CanonicalField, CanonicalPage } from '@/lib/lex/page1-config'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
+import { guidingPolicyStatement, hasGuidingPolicy } from '@/lib/lex/guiding-policy-answer'
+import LexActivityLog from '@/components/lex/LexActivityLog'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -106,6 +108,7 @@ interface Idea {
   summaryDescription: string
   summaryDiagnosis: string | null
   summaryGuidingPolicy: string | null
+  chosenApproach?: string | null // 26-O §3 — the settled Guiding Policy statement
   summaryCoherentActions: string | null
   backgroundResearch: string | null
   stage: string
@@ -248,7 +251,7 @@ function IdeaOriginBanner({ idea }: { idea: Idea }) {
 function Stage2GateCard({ idea, onTakePublic }: { idea: Idea; onTakePublic: () => void }) {
   const checks = [
     { label: 'Problem / diagnosis completed', met: !!idea.diagnosis?.trim() },
-    { label: 'Guiding policy completed', met: !!idea.guidingPolicy?.trim() },
+    { label: 'Guiding policy completed', met: hasGuidingPolicy(idea) }, // 26-O §3 — the statement, or the legacy column on a legacy idea
     { label: 'At least 1 Coherent Action added', met: idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim() },
     {
       label: `Research: ${idea.research.length}/3 items added`,
@@ -1417,6 +1420,11 @@ function IdeaTab({
 }) {
   const [subTab, setSubTab] = useState<IdeaSubTab>('overview')
   const pageByKey = (key: string) => canonicalState?.pages.find((p) => p.key === key)
+  // 26-O §3 — the same statement the Policy tab shows; the legacy column only for a legacy idea.
+  const guidingPolicy = guidingPolicyStatement(idea, {
+    chosenRowApproach: canonicalState?.policyOptions.find((o) => o.status === 'CHOSEN')?.approach,
+    lexBuilt: (canonicalState?.policyOptions.length ?? 0) > 0,
+  })
 
   const subTabs: { key: IdeaSubTab; label: string }[] = [
     { key: 'overview', label: 'Overview' },
@@ -1487,23 +1495,31 @@ function IdeaTab({
                 <p className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">{idea.backgroundResearch}</p>
               </div>
             )}
-            {(idea.summaryDiagnosis || idea.summaryGuidingPolicy || idea.summaryCoherentActions) && (
+            {(idea.summaryDiagnosis || guidingPolicy || idea.summaryGuidingPolicy || idea.summaryCoherentActions) && (
               <div className="mt-5 space-y-4">
                 {idea.summaryDiagnosis && (
                   <div>
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Problem (summary)</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Summary of Diagnosis</p>
                     <p className="text-sm text-zinc-700">{idea.summaryDiagnosis}</p>
+                  </div>
+                )}
+                {/* 26-O §3 — ONE ANSWER to "what is the guiding policy": the statement, the same text the Policy
+                    tab shows. It read the summary here, under a different name, so the page gave three answers. */}
+                {guidingPolicy && (
+                  <div>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Guiding Policy</p>
+                    <p className="text-sm text-zinc-700">{guidingPolicy}</p>
                   </div>
                 )}
                 {idea.summaryGuidingPolicy && (
                   <div>
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Approach (summary)</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Summary of Guiding Policy</p>
                     <p className="text-sm text-zinc-700">{idea.summaryGuidingPolicy}</p>
                   </div>
                 )}
                 {idea.summaryCoherentActions && (
                   <div>
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">First step (summary)</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Summary of Coherent Actions</p>
                     <p className="text-sm text-zinc-700">{idea.summaryCoherentActions}</p>
                   </div>
                 )}
@@ -2445,7 +2461,7 @@ export default function IdeaDetailClient({
     idea.stage === 'STAGE_2' &&
     isOwner &&
     !!idea.diagnosis?.trim() &&
-    !!idea.guidingPolicy?.trim() &&
+    hasGuidingPolicy(idea) &&
     (idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim()) &&
     idea.research.length >= 3
 
@@ -2512,7 +2528,7 @@ export default function IdeaDetailClient({
     { key: 'exports', label: 'Documents' },
     { key: 'team', label: 'Team' },
     ...(['STAGE_4', 'STAGE_5'].includes(idea.stage) ? [{ key: 'campaign' as Tab, label: 'Campaign' }] : []),
-    ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log' }] : []),
+    ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log & Lex activity' }] : []),
   ]
 
   return (
@@ -2884,7 +2900,11 @@ export default function IdeaDetailClient({
             <CampaignTab ideaId={idea.id} isOwner={isOwner} />
           )}
           {activeTab === 'privacy-log' && isOwner && (
-            <PrivacyLogTab ideaId={idea.id} />
+            <div className="space-y-8">
+              <PrivacyLogTab ideaId={idea.id} />
+              {/* 26-P addendum §8c — beside the Privacy Log, not in the chat: what Lex has done, for its owner. */}
+              <LexActivityLog ideaId={idea.id} />
+            </div>
           )}
         </div>
 

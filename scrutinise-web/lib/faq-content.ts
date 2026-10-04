@@ -1,4 +1,8 @@
 // FAQ content — sourced from scrutinise_FAQ_final.md
+// 26-P addendum — the Diagnosis checks are printed FROM THE REGISTRY (lib/lex/section-checklists.ts), the same five
+// sentences the worklist and the "How to find the right cause" guide use, so the three cannot say different things.
+import { DIAGNOSIS_CHECKLIST } from '@/lib/lex/section-checklists'
+
 export const FAQ_MARKDOWN = `# Scrutinise — Frequently Asked Questions
 
 ## A note for new arrivals
@@ -93,6 +97,14 @@ The most important part is the diagnosis and users are encouraged to investigate
 **Stage 4 — Campaign.** Listed on the platform. Voting opens publicly. You start building endorsements from MPs and peers and gathering visible support.
 
 **Stage 5 — Legislate.** Taken on by an MP or other Parliamentarian to start the Parliamentary process, either Government sponsored or as a Private Members Bill. To get here, you need at least three MP endorsements, three peer endorsements, one parliamentary draftsman endorsement, and complete proposed wording for the legislation you want to see. At this point your proposal is ready to be submitted to Parliament.
+
+### Stage 2, the first draft — Diagnosis: how do I know I have found the right cause?
+
+Everything after the Diagnosis is built on the cause you settle on, so it deserves the most care. While you are working on your causes, "What to do next" shows five checks. Tick each when you are satisfied — none is required, and "Confirm these causes" stays available either way. Beside any check, "Ask Lex" has Lex apply that test to your causes and tell you what it finds; it reports and suggests, and changes nothing.
+
+${DIAGNOSIS_CHECKLIST.checks.map((k, i) => `${i + 1}. **${k.title}** — ${k.question}`).join('\n')}
+
+These help you find and test candidate causes. They cannot prove a single root cause, and Lex will not claim they have — choosing the one obstacle that matters most is a separate judgement, and it is yours. The "How to find the right cause" guide at the top of the Diagnosis section explains each check.
 
 ### Voting is hidden until Stage 4 — why?
 

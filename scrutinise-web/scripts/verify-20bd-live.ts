@@ -247,7 +247,7 @@ async function main() {
     // `JSON.stringify` comparison saw a structured field as changed. Asserting
     // ONLY that the edited field is named would have passed straight over it.
     ok('v2’s change note names the edited field',
-      Boolean(v2.version.changeNote?.includes('Chosen approach')), v2.version.changeNote ?? 'null')
+      Boolean(v2.version.changeNote?.includes('Guiding Policy')), v2.version.changeNote ?? 'null')
     ok('and does NOT invent an edit on a field nobody touched (jsonb reorders keys)',
       Boolean(v2.version.changeNote?.includes('1 field edited')) &&
       !v2.version.changeNote?.includes('Who’s affected'),

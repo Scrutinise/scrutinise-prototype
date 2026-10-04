@@ -175,7 +175,7 @@ function fallbackValue(defKey: string, state: CanonicalState): unknown {
       const rc = acceptedValue(state, 'rootCause') as string | null
       const po = acceptedValue(state, 'pivotalObstacle') as string | null
       const parts = [rc ? `The root cause is ${rc}` : '', po ? `the pivotal obstacle is ${po}` : ''].filter(Boolean)
-      return parts.length ? parts.join('; ') + '.' : 'Diagnosis summary — please refine this.'
+      return parts.length ? parts.join('; ') + '.' : 'Summary of Diagnosis — please refine this.'
     }
     default:
       return 'Please refine this.'

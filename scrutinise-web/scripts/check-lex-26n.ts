@@ -59,8 +59,8 @@ ok('the redraft offers Use this version / Edit it / Keep mine', ['Use this versi
 ok('the stale note carries a word and a glyph, not colour alone', /△<\/span> May need revisiting/.test(fp) && /◇/.test(fp))
 
 console.log('\n── §3 is HELD ──')
-ok('the label is still "Chosen approach" (no relabel until Charlie decides)', /key: 'chosenApproach',\s*label: 'Chosen approach'/.test(read('lib/lex/page3-config.ts')))
-ok('control — a relabelled config would be caught', !/label: 'Chosen approach'/.test("label: 'Guiding Policy'"))
+ok('the label is "Guiding Policy" (26-O §1a, Charlie decision 114 — supersedes the 26-N hold)', /key: 'chosenApproach',\s*(\/\/[^\n]*\n\s*)*label: 'Guiding Policy'/.test(read('lib/lex/page3-config.ts')))
+ok('control — the old label would be caught', !/key: 'chosenApproach',\s*label: 'Guiding Policy'/.test("key: 'chosenApproach',\n    label: 'Chosen approach'"))
 
 console.log('\n── §4b the Consolidate gate does not apply once settled ──')
 ok('a settled policy empties the waiting list', /alreadySettled = !!idea\?\.chosenApproach\?\.trim\(\)/.test(gps) && /const stillWaiting = alreadySettled \? \[\]/.test(gps))
@@ -110,7 +110,7 @@ ok('...and still says "Lex\'s recommendation" where the build only proposed it',
 ok('...naming the draft a consolidation policy came from', /from the consolidation of the drafts \(the \$\{o\.draftModel\} draft\)/.test(iq))
 ok('...which needs source and draftModel selected', /select: \{ approach: true[^}]*source: true, draftModel: true \}/.test(iq))
 const mp = read('lib/documents/build-meeting-pack.ts')
-ok('Meeting Pack: a chosen policy is stated as chosen', /The approach that has been chosen/.test(mp))
+ok('Meeting Pack: a chosen policy is stated as chosen', /The Guiding Policy that has been chosen/.test(mp))
 ok('..."none has been committed to" is only reachable when nothing is chosen', mp.indexOf("const chosen = live.find") < mp.lastIndexOf('none has been committed to') && /\} else if \(live\.length > 1\) \{/.test(mp))
 ok('...the others are called alternatives that were not chosen', /considered and not chosen/.test(mp))
 const pr = read('lib/documents/build-proposal.ts')

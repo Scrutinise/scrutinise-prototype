@@ -7,6 +7,7 @@ import { computeCanonicalState } from '@/lib/lex/state'
 import { CHAT_MESSAGE_LIMIT, MIN_PASTE_CHARS } from '@/lib/lex/chat-material'
 import { recordSpend } from '@/lib/lex/spend-ledger'
 import { verifyConfirm } from './confirm-token'
+import { recordToolCall } from './tool-log'
 import { runAgentTurn, olderHistory, priceUsage, type ChatMsg, type AgentTurnResult } from './loop'
 import { execute, toolByName } from './tools'
 import type { ToolCtx, UiEffect, PendingConfirmation, UndoOffer } from './types'
@@ -109,7 +110,7 @@ export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult
   const summary = await maybeSummarise(a.ideaId, a.user.id, history, a.client)
   const result = await runAgentTurn({
     ideaId: a.ideaId, userId: a.user.id, message, ui: a.ui, history, summary: summary.text, pastedText,
-    thinking: a.thinking, readOnly: a.readOnly, client: a.client,
+    thinking: a.thinking, readOnly: a.readOnly, client: a.client, turnId: a.clientTurnId ?? null,
   })
 
   const now = new Date().toISOString()
@@ -194,6 +195,17 @@ export async function handleConfirm(a: { ideaId: string; user: Owner; idea: Idea
 
   const r = await execute(def, ctx, v.payload.input)
   const summary = def.describe ? def.describe(def.schema.safeParse(v.payload.input).data) : def.name
+  // §8c — the confirmed action is Lex's action too, run because the OWNER PRESSED THE BUTTON: recorded with that as its
+  // instruction (and the user's last message that led to the offer), `confirmedVia: 'button'`. The pending row from the
+  // turn that offered it stays, so the log reads "offered … confirmed … done".
+  const lastAsk = [...history].reverse().find((m) => m.role === 'user')
+  await recordToolCall({
+    ideaId: a.ideaId, userId: a.user.id, turnId: null, tool: def.name, tier: def.runKind ? 'run' : 'asks-first',
+    instruction: `The owner pressed Confirm on: ${summary}${lastAsk ? ` — after they wrote: ${String(lastAsk.content ?? '').slice(0, 600)}` : ''}`,
+    input: v.payload.input, ok: r.ok,
+    summary: r.ok ? `Done — ${summary}` : `Could not be done: ${r.error ?? 'no reason was given'}`,
+    failureReason: r.ok ? null : (r.error ?? 'no reason was given'), confirmedVia: 'button',
+  })
   const line = r.ok ? `Done — ${summary}` : `That could not be done: ${r.error ?? 'no reason was given'}`
   const after = asHistory((await prisma.idea.findUnique({ where: { id: a.ideaId }, select: { aiChatHistory: true } }))?.aiChatHistory)
   const lexMsg: ChatMsg = { role: 'lex', content: line, timestamp: new Date().toISOString(), undo: r.undo ? [r.undo] : [], ui: r.ui ?? [], confirmedTool: def.name, confirmedOk: r.ok }

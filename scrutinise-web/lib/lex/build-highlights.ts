@@ -129,7 +129,10 @@ const DRAFTED_FIELDS: Array<{ key: string; label: string }> = [
   { key: 'challenge', label: 'The problem' },
   { key: 'summaryDiagnosis', label: 'The diagnosis' },
   { key: 'pivotalObstacle', label: 'The pivotal obstacle' },
-  { key: 'summaryGuidingPolicy', label: 'The guiding policy' },
+  // 26-O §1c — "The guiding policy" prints the STATEMENT (chosenApproach); it printed the summary, which made the
+  // summary and the statement look like the same thing. The summary keeps its own row under its own name.
+  { key: 'chosenApproach', label: 'The guiding policy' },
+  { key: 'summaryGuidingPolicy', label: 'Summary of Guiding Policy' },
   { key: 'whatItRulesOut', label: 'What it rules out' },
   { key: 'conditionsForSuccess', label: 'Conditions for success' },
   { key: 'summaryCoherentActions', label: 'The plan' },

@@ -1,0 +1,113 @@
+{
+ "arm": "default",
+ "idea": "452c5ade",
+ "status": "DONE",
+ "seconds": 822,
+ "passes": "12/12",
+ "tokensIn": 157922,
+ "tokensOut": 46294,
+ "rowEstCostPence": 32.2059,
+ "costPenceAtTodaysRates": 32.2059,
+ "costPenceAtJan2027Rates": 32.2059,
+ "unpriced": [],
+ "byModel": [
+  [
+   "gemini-2.5-flash",
+   {
+    "in": 108801,
+    "out": 23786,
+    "calls": 14
+   }
+  ],
+  [
+   "gemini-2.5-pro",
+   {
+    "in": 45062,
+    "out": 18112,
+    "calls": 7
+   }
+  ],
+  [
+   "claude-sonnet-5",
+   {
+    "in": 4059,
+    "out": 4396,
+    "calls": 1
+   }
+  ]
+ ],
+ "kernelCheck": {
+  "passed": 9,
+  "of": 9
+ },
+ "findings": 63,
+ "findingsTraceable": 54,
+ "evidenceTotal": 71,
+ "passOutputs": [
+  "ORIENT: DONE — 239 retrieved, 40 read; 17 cited · 1 of 1 queries written",
+  "DIAGNOSIS: DONE — 5 causes, 4 recorded alternatives",
+  "APPROACH: DONE — 3 approaches",
+  "ACTIONS: DONE — 5 actions drafted; 3 of 3 avenues evaluated · depth ratio 0.89",
+  "RESEARCH: DONE — 3 questions asked; reviewed 300 sources; 29 findings, 1 contradicting the draft; 6 stated gaps — ⚠ an existing power may",
+  "REVISE: DONE — 4 causes rewritten; 3 places the evidence changed the draft; 6 forks settled, 0 opened",
+  "CAUSES_COMMENTARY: DONE — Described the terrain across 3 causes — 2 points where the sources disagree",
+  "SMART: DONE — 2 models answered your own words (gemini-2.5-pro, claude-sonnet-5); 10 terms of art named — 9 confirmed by the corpus, 1",
+  "KERNEL_CHECK: DONE — 9 of 9 kernel tests passed — marked by gemini-2.5-pro",
+  "LOGIC_CHECK: DONE — the chain from causes to actions holds; 0 defects in the argument — traced by gemini-2.5-pro",
+  "REPAIR: DONE — nothing to repair — every kernel test passed and the argument held",
+  "ADVERSARIAL: DONE — 6 issues raised against the whole proposal, read by gemini-2.5-pro"
+ ],
+ "kernel": {
+  "title": "Enhancing Civil Service Accountability and Performance",
+  "challenge": "The UK civil service suffers from a lack of clear individual accountability, leading to delays, inefficiency, and a perception that civil servants are incentivised to avoid responsibility, ultimately hindering public service delivery and wasting taxpayer money.",
+  "whoAffectedImpactCost": "{\"cost\":\"The proposer estimates the financial cost could be \\\"2x too many people employed\\\" plus the \\\"real financial cost of failure.\\\" No specific figure is established in the provided sources, but the impact is described as saving \\\"billions\\\" if addressed.\",\"impact\":\"Massive delays and incompetence in public service delivery, financial waste due to inefficiency and potential overstaffing, lack of trust in government, and in critical areas like the MOD, potential risks to national security.\",\"evidence\":\"Proposer's direct experience with VAT approval for care homes in Northern Ireland, taking four years for work a private lawyer completed in an afternoon; reports from Public Administration and Constitutional Affairs Committee (PACAC) and Public Administration Select Committee (PASC) on civil service accountability (committees-reports:publication:11165:arc-0001, committees-reports:publication:11758:arc-0005); House of Lords debates on weakening accountability due to quangos (pwdata-lords:daylord2006-05-25b:90).\",\"affectedGroups\":\"Taxpayers, citizens requiring public services, care home owners (as per proposer's account), Ministers, and the overall efficiency of government.\"}",
+  "rootCause": "The prevailing culture within the civil service incentivises the diffusion of responsibility and risk aversion.",
+  "pivotalObstacle": "The absence of any mechanism to enforce *individual* accountability for performance. The doctrine of Ministerial Responsibility makes the Minister accountable for everything, which in practice means no single official is accountable for anything. This structural shield allows the culture of risk-aversion and responsibility-diffusion to persist, as there are no personal consequences for delay and failure, and no rewards for timely delivery.",
+  "summaryDiagnosis": "The core problem is a civil service culture that diffuses responsibility, a rational response to a system where blame for failure is career-ending but reward for success is absent. As the proposer experienced, this leads to institutional paralysis, where officials avoid individual ownership, taking four years for a task a private lawyer did in an afternoon. This culture persists because there is no effective mechanism for enforcing individual accountability; the constitutional doctrine of Ministerial Responsibility shields officials, while internal performance management lacks meaningful consequences.",
+  "chosenApproach": "Implement a robust, transparent performance management framework for individual civil servants, linking specific outcomes to personal accountability and career progression.",
+  "whatItRulesOut": "This policy rules out treating accountability as a collective responsibility. It rejects reforms that focus only on departmental-level targets, purely internal HR processes that lack transparency, or relying on the existing doctrine of Ministerial Responsibility to drive operational performance.",
+  "leverage": "This approach directly targets the incentive structure within the civil service, shifting it from risk aversion and responsibility diffusion to one that rewards individual ownership and measurable delivery, thereby changing the underlying culture that perpetuates inefficiency and lack of accountability.",
+  "conditionsForSuccess": "• Clear, measurable, and relevant performance metrics are developed for a wide range of civil service roles, including those in policy development and advisory functions, and these metrics are regularly reviewed for effectiveness.\n• Senior civil service leadership actively champions and models the new accountability framework, consistently applying performance standards and consequences without fear or favour.\n• Sufficient resources are allocated for training managers in performance assessment, feedback, and difficult conversations, ensuring fair and consistent application across departments.\n• A clear, transparent, and timely appeals process is established for civil servants who believe their performance evaluations are unfair or inaccurate.\n• The system explicitly differentiates between systemic failures requiring process changes and individual performance failures, as the proposer suggests, to ensure appropriate responses.",
+  "summaryGuidingPolicy": "Shift accountability from the abstract (the 'Department' or the Minister) to the specific (a named, responsible individual) for every significant decision and project. This will be achieved by making individual performance and its consequences—positive and negative—personal, public, and unavoidable.",
+  "summaryCoherentActions": "First, use existing powers under the Civil Service Management Code to mandate that a single, named Senior Responsible Owner (SRO) is assigned to every major project and policy, with their name and responsibilities published. Second, link the performance evaluation of these SROs directly to the delivery of these published outcomes, making this the primary factor in their promotion and pay. Third, create an independent oversight body to audit and publicly report on the effectiveness of this new accountability framework, ensuring it is applied consistently and not gamed."
+ },
+ "causes": [
+  {
+   "cause": "The prevailing culture within the civil service incentivises the diffusion of responsibility and risk aversion.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "Lack of clear, measurable performance metrics and individual responsibility for outcomes within the civil service.",
+   "classification": "MATERIAL",
+   "isRootCause": false
+  },
+  {
+   "cause": "The doctrine of Ministerial Responsibility, while constitutionally sound, inadvertently diffuses individual civil servant accountability.",
+   "classification": "CONTRIBUTORY",
+   "isRootCause": false
+  }
+ ],
+ "actions": [
+  {
+   "practicalStep": "Develop and implement a standardized, department-agnostic performance management framework for all civil service grades, incorporating clear, measurable objectives (OKRs) and key results linked to public service outcomes. This framework should explicitly define individual responsibilities within projects and operational tasks.",
+   "whoImplements": "Cabinet Office, in consultation with individual departments"
+  },
+  {
+   "practicalStep": "Establish a transparent system for regular performance reviews, including 360-degree feedback where appropriate, with results directly impacting career progression, promotion, and, in cases of repeated failure, demotion or removal. This system must differentiate between systemic failures and individual performance issues.",
+   "whoImplements": "Civil Service HR, Departmental Line Managers"
+  },
+  {
+   "practicalStep": "Introduce mandatory training for all civil servants and managers on accountability frameworks, effective delegation, and performance measurement, drawing on best practices from the private sector and other public administrations. Emphasize the importance of individual ownership and decision-making.",
+   "whoImplements": "Civil Service Learning, Departmental Learning & Development teams"
+  },
+  {
+   "practicalStep": "Mandate the use of clear RACI (Responsible, Accountable, Consulted, Informed) matrices for all significant projects and policy initiatives, ensuring that a single individual is designated as 'Accountable' for specific outcomes at each stage. This should be publicly accessible within the relevant department.",
+   "whoImplements": "All Government Departments"
+  },
+  {
+   "practicalStep": "Create a Civil Service Performance Oversight Committee, with cross-departmental representation and independent expertise, to regularly review the effectiveness of the new performance management framework, identify systemic barriers to accountability, and recommend improvements.",
+   "whoImplements": "Cabinet Office, Parliament (through PACAC)"
+  }
+ ]
+}

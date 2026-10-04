@@ -9,7 +9,7 @@
 // one literal is the label Charlie specified verbatim for general knowledge (§4a), which is meant to be
 // emitted.
 
-import { M_GENERAL, M_ANSWER, M_PRESS_TO_READ, M_DIAGNOSIS, M_GUIDING_POLICY, M_COHERENT_ACTIONS } from '../method'
+import { M_GENERAL, M_ANSWER, M_PRESS_TO_READ, M_DIAGNOSIS, M_RCA, M_GUIDING_POLICY, M_COHERENT_ACTIONS } from '../method'
 import { NO_EVALUATIVE_PREAMBLE } from '../no-preamble'
 import { productFactsBlock } from '../product-facts'
 import { CONTROLS, PANEL_NAMES } from './controls'
@@ -54,6 +54,7 @@ export const SYSTEM_PREFIX = [
   M_GENERAL,
   `A single action is an action; a principle you can test an action against is a policy. A guiding policy that is really a list of actions has not made the choice.`,
   M_DIAGNOSIS,
+  M_RCA,
   M_GUIDING_POLICY,
   M_COHERENT_ACTIONS,
   'An action is specific when it names who does what, and by when or under what trigger.',
