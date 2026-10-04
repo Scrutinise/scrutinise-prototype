@@ -2,6 +2,8 @@
 // 26-P addendum — the Diagnosis checks are printed FROM THE REGISTRY (lib/lex/section-checklists.ts), the same five
 // sentences the worklist and the "How to find the right cause" guide use, so the three cannot say different things.
 import { DIAGNOSIS_CHECKLIST } from '@/lib/lex/section-checklists'
+// 26-H — the seven stages, the caveat and the review statuses are printed FROM lib/documents/stage-banner.ts, the copy every generated document opens with.
+import { SEVEN_STAGES, NOT_YET_AVAILABLE, STAGE_CAVEAT_HEADING, STAGE_CAVEAT, REVIEW_COUNTERPARTS_NOTE, FIRST_SCRUTINY_LABEL } from '@/lib/documents/stage-banner'
 
 export const FAQ_MARKDOWN = `# Scrutinise — Frequently Asked Questions
 
@@ -98,6 +100,17 @@ The most important part is the diagnosis and users are encouraged to investigate
 
 **Stage 5 — Legislate.** Taken on by an MP or other Parliamentarian to start the Parliamentary process, either Government sponsored or as a Private Members Bill. To get here, you need at least three MP endorsements, three peer endorsements, one parliamentary draftsman endorsement, and complete proposed wording for the legislation you want to see. At this point your proposal is ready to be submitted to Parliament.
 
+### The seven stages of a proposal — and what "First Scrutiny" means
+
+The five stages above say **who can see** your idea. The seven stages below say **where the work has got to** — what the proposal has become and what has been done to it. Every document the platform generates opens with the stage it belongs to.
+
+${SEVEN_STAGES.map((s) => `${s.n}. **${s.name}** — ${s.does}${s.available ? '' : ` *(${NOT_YET_AVAILABLE})*`}`).join('\n')}
+
+**${STAGE_CAVEAT_HEADING}** ${STAGE_CAVEAT}
+
+**"${FIRST_SCRUTINY_LABEL}" is not a stage. It is a review status** — whether anyone outside has looked at the work. It is true of everything made in Stages 1, 2 and 3 alike: a briefing, a kernel and a deepened proposal. ${REVIEW_COUNTERPARTS_NOTE} The platform never infers a review from a comment or a contribution; a review is a deliberate act.
+
+**Stage 7, In Force, is stated and not built.** It would track whether a law, once in force, did what it was meant to, and the platform has nothing to build that with yet. It is listed so that you can see what the platform is for.
 ### Stage 2, the first draft — Diagnosis: how do I know I have found the right cause?
 
 Everything after the Diagnosis is built on the cause you settle on, so it deserves the most care. While you are working on your causes, "What to do next" shows five checks. Tick each when you are satisfied — none is required, and "Confirm these causes" stays available either way. Beside any check, "Ask Lex" has Lex apply that test to your causes and tell you what it finds; it reports and suggests, and changes nothing.

@@ -33,6 +33,7 @@ import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
 import { buildMeetingPackDocument, type MeetingPackSection } from './build-meeting-pack'
 import { buildProposalDocument, buildSummaryDocument, type ProposalBuildResult } from './build-proposal'
+import { withStageBanner, documentStage } from './stage-banner'
 import { buildEvidencePackDocument } from './build-evidence-pack'
 import {
   buildProposalSnapshot,
@@ -132,13 +133,18 @@ export function buildFor(
   onlineViewUrl?: string | null,
   opts: { sections?: MeetingPackSection[] } = {},
 ): ProposalBuildResult {
+  // ⚠ 26-H §4 — the stage banner goes on every kind, here, the one place a kind maps to a builder. Built from
+  // the kernel, so Stage 2 (The First Draft), or Stage 3 once a Deepening pass has actually run — read from the
+  // snapshot's own pass list, not from `Idea.stage`.
+  const stage = documentStage({ kind: 'KERNEL', deepeningHasRun: (snapshot.passes ?? []).some((p) => p.status === 'RUN') })
+  const bannered = (r: ProposalBuildResult): ProposalBuildResult => ({ ...r, model: withStageBanner(r.model, stage) })
   switch (kind) {
-    case 'PROPOSAL': return buildProposalDocument(snapshot)
-    case 'EVIDENCE_PACK': return buildEvidencePackDocument(snapshot)
-    case 'PROPOSAL_SUMMARY': return buildSummaryDocument(snapshot, { onlineViewUrl })
+    case 'PROPOSAL': return bannered(buildProposalDocument(snapshot))
+    case 'EVIDENCE_PACK': return bannered(buildEvidencePackDocument(snapshot))
+    case 'PROPOSAL_SUMMARY': return bannered(buildSummaryDocument(snapshot, { onlineViewUrl }))
     // §5e — `sections` is what the user chose to show before printing. Absent means all of
     // them: not choosing is not the same as choosing to omit.
-    case 'MEETING_PACK': return buildMeetingPackDocument(snapshot, { sections: opts.sections, onlineViewUrl })
+    case 'MEETING_PACK': return bannered(buildMeetingPackDocument(snapshot, { sections: opts.sections, onlineViewUrl }))
   }
 }
 

@@ -17,6 +17,7 @@ import { buildInitialBackground, ExportUnavailableError } from './build-initial-
 import { buildInitialQuestions, INITIAL_QUESTIONS_KIND } from './build-initial-questions'
 import { buildCommitteeEvidence, COMMITTEE_EVIDENCE_KIND } from './build-committee-evidence'
 import { buildOnePageSummary, ONE_PAGE_SUMMARY_KIND } from './build-one-page-summary'
+import { withStageBanner, documentStage } from './stage-banner'
 import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
 
@@ -43,21 +44,25 @@ export function isExportKind(v: unknown): v is ExportKind {
   return typeof v === 'string' && (EXPORT_KINDS as readonly string[]).includes(v)
 }
 
-async function buildFor(kind: ExportKind, ideaId: string) {
+// ⚠ 26-H §4 — EVERY generated document opens with its stage, its review status, the seven stages and the
+// caveat, internal ones included (4b). Applied HERE, the one place these four kinds are built, so no builder
+// can forget it. The two briefing documents are the First Pass; the other two are built from the kernel.
+export async function buildFor(kind: ExportKind, ideaId: string) {
+  const ran = async () => (await prisma.deepeningPass.count({ where: { ideaId, status: 'RUN' } })) > 0
   if (kind === INITIAL_QUESTIONS_KIND) {
     const b = await buildInitialQuestions(ideaId)
-    return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', deepeningHasRun: false })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   if (kind === COMMITTEE_EVIDENCE_KIND) {
     const b = await buildCommitteeEvidence(ideaId)
-    return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', deepeningHasRun: await ran() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   if (kind === ONE_PAGE_SUMMARY_KIND) {
     const b = await buildOnePageSummary(ideaId)
-    return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', deepeningHasRun: await ran() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   const b = await buildInitialBackground(ideaId)
-  return { model: b.model, fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+  return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', deepeningHasRun: false })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
 }
 
 export interface ExportStatus {

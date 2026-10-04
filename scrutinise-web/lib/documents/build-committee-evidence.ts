@@ -29,7 +29,7 @@ import { betaBlocks } from './build-proposal'
 import { markdownToBlocks } from './markdown'
 import { ExportUnavailableError } from './build-initial-background'
 import {
-  COMMITTEE_EVIDENCE_NAME, COMMITTEE_EVIDENCE_OPENING, FIRST_SCRUTINY_NOTE, isFirstScrutiny,
+  COMMITTEE_EVIDENCE_NAME, COMMITTEE_EVIDENCE_OPENING,
 } from './lex-26g-document-names'
 
 export const COMMITTEE_EVIDENCE_KIND = 'COMMITTEE_EVIDENCE'
@@ -207,8 +207,7 @@ export async function buildCommitteeEvidence(ideaId: string): Promise<CommitteeE
 
   const blocks: Block[] = []
   blocks.push(...betaBlocks())
-  // §4c — shown while true, plainly, before the submission itself.
-  if (isFirstScrutiny(idea.stage)) blocks.push({ kind: 'note', text: FIRST_SCRUTINY_NOTE })
+  // 26-H — stage + review status open every document via `withStageBanner` (no stage-based inference here).
   const dot = COMMITTEE_EVIDENCE_OPENING.indexOf('. ') + 1
   blocks.push({ kind: 'paragraph', runs: [
     { text: COMMITTEE_EVIDENCE_OPENING.slice(0, dot), bold: true },

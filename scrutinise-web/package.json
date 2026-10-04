@@ -196,7 +196,8 @@
     "check:lex-26p": "tsx --env-file=.env scripts/check-lex-26p.ts",
     "check:lex-26o": "tsx --env-file=.env scripts/check-lex-26o.ts",
     "check:lex-26q": "tsx --env-file=.env scripts/check-lex-26q.ts",
-    "verify:lex-26q-ui": "tsx scripts/verify-lex-26q-ui.tsx"
+    "verify:lex-26q-ui": "tsx scripts/verify-lex-26q-ui.tsx",
+    "check:lex-26h": "tsx --env-file=.env scripts/check-lex-26h.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

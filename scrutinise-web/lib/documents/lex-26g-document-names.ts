@@ -39,19 +39,7 @@ export const ONE_PAGE_SUMMARY_BLURB =
   + 'document and a PDF.'
 
 /**
- * §4c — Charlie's definition, verbatim: "the label for an output that has not yet undergone any
- * external scrutiny." Shown on both new documents while true; dropped once it stops being true.
- * `idea.stage` reaching STAGE_3 (DEVELOP — "public scrutiny" in the Five Stages architecture,
- * docs/CLAUDE.md §3) is the platform's own existing fact for "this has left the building before,
- * for real" — not a new column, not a guess.
+ * 26-H — REMOVED: `FIRST_SCRUTINY_NOTE` and `isFirstScrutiny(idea.stage)`. "First Scrutiny" is a REVIEW STATUS, not a stage,
+ * and `Idea.stage` reaching 3 is not a review (nothing recorded one — BRIEF_26H §5b). The stage, the review status,
+ * the seven stages and the caveat now open every document from `stage-banner.ts` (`withStageBanner`).
  */
-export const FIRST_SCRUTINY_MARKER = 'First Scrutiny'
-
-export const FIRST_SCRUTINY_NOTE =
-  'First Scrutiny. This proposal has not yet been through Develop or Campaign — nobody outside '
-  + 'your own team has reviewed it. Treat it accordingly.'
-
-/** §4c's "how the platform would know" — one function, so no caller re-derives the rule. */
-export function isFirstScrutiny(stage: string): boolean {
-  return stage === 'STAGE_1' || stage === 'STAGE_2'
-}

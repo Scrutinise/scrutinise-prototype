@@ -21,7 +21,7 @@ import { betaBlocks } from './build-proposal'
 import { markdownToBlocks } from './markdown'
 import { ExportUnavailableError } from './build-initial-background'
 import { AVENUES, AVENUE_LABEL } from '@/lib/lex/build-avenues'
-import { ONE_PAGE_SUMMARY_NAME, FIRST_SCRUTINY_NOTE, isFirstScrutiny } from './lex-26g-document-names'
+import { ONE_PAGE_SUMMARY_NAME } from './lex-26g-document-names'
 
 export const ONE_PAGE_SUMMARY_KIND = 'ONE_PAGE_SUMMARY'
 
@@ -189,7 +189,8 @@ export async function buildOnePageSummary(ideaId: string): Promise<OnePageSummar
 
   const blocks: Block[] = []
   blocks.push(...betaBlocks())
-  if (isFirstScrutiny(idea.stage)) blocks.push({ kind: 'note', text: FIRST_SCRUTINY_NOTE })
+  // 26-H — the review status (and the stage) now open every document through `withStageBanner`; the old
+  // per-document note here was dropped when `Idea.stage` reached 3, which inferred a review that nothing recorded.
   blocks.push({ kind: 'note', text:
     snap.composedLate
       ? `Composed on ${snap.updatedAt.toISOString().slice(0, 16).replace('T', ' ')} UTC from build ${snap.buildVersion}'s rows as they stood then.`
