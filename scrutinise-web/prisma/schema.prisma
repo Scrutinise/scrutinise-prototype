@@ -455,6 +455,11 @@ enum OperationalIngestStatus {
 model User {
   id                        String              @id @default(uuid())
   clerkId                   String              @unique
+  /// ══ DECISION 137 (8 Oct 2026) — A STABLE PSEUDONYMOUS REFERENCE: "User 435" ═════════════════════════════════
+  /// Replaces "the user" in feedback, so repeat reports from one person connect WITHOUT naming them. A serial the
+  /// database assigns — not an initial (which identifies), not a hash of anything about the person (which can be
+  /// re-derived). Shown only in feedback. DDL: prisma/lex_feedback_bug_report.sql.
+  feedbackRef               Int                 @unique @default(autoincrement())
   /// 25-N §3c — this user's private working notes, across every idea. Never read by anyone else.
   ideaNotes                 IdeaNote[]
   fieldRevisions            FieldRevision[] @relation("FieldRevisionAcceptor")
@@ -2547,6 +2552,8 @@ enum FeedbackSurface {
   OPTIONS
   COSTS
   OTHER
+  /// 8 Oct 2026 — a fault in the INTERFACE, not a criticism of Lex's output. DDL: prisma/lex_feedback_bug_report.sql.
+  BUG_REPORT
 }
 
 // §20.5 — a critique of Lex's output, passed back to Scrutinise WITH CONSENT.
@@ -2571,6 +2578,12 @@ model FeedbackItem {
   sentAt          DateTime?
   sendError       String?
   createdAt       DateTime        @default(now())
+  /// 8 Oct 2026 — BUG REPORTS ONLY. What the interface was doing, VERBATIM: the error shown, the control pressed, the numbers
+  /// involved, the failing request (sanitised). Never summarised by a model — a summary turned one report into "the grouping
+  /// of 'CAs under pressure'", which was not what was reported. DDL: prisma/lex_feedback_bug_report.sql.
+  technicalDetail Json?
+  /// `[{ key, name, contentType, bytes }]` — files the user chose to send with the report; the bytes are in R2 under `key`.
+  attachments     Json?
 
   @@index([ideaId])
   @@index([userId])
