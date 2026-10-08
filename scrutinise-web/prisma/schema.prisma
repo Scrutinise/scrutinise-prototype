@@ -1010,6 +1010,9 @@ model Idea {
   userMaterial              IdeaUserMaterial[]
   lexToolCalls              LexToolCall[]
   actionHeadings            ActionHeading[]
+  /// 26-R — the numbered source registry and the research notebook. DDL: prisma/lex_26r_registry_notebook.sql.
+  ideaSources               IdeaSource[]
+  researchNotes             ResearchNote[]
   // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
@@ -5375,4 +5378,94 @@ model ResourceReport {
   createdAt        DateTime  @default(now())
 
   @@index([resourceId, status])
+}
+
+
+/// ══ 26-R — THE SOURCE REGISTRY (26-E §3) ═══════════════════════════════════════════════════════════════════
+/// One numbered list of everything an idea rests on. A note cites an entry; a document cites the same entry; nothing is
+/// numbered twice. `number` is assigned by a database trigger (one past the highest EVER used in the idea) and never reused;
+/// "delete" archives. It points AT `IdeaSourceDecision.sourceKey` / `EvidenceItem.sourceId` (corpusKey) and
+/// `IdeaUserMaterial.id` (materialId) — each unique per idea, so syncing from those tables is idempotent.
+/// DDL of record: prisma/lex_26r_registry_notebook.sql.
+model IdeaSource {
+  id          String    @id @default(uuid())
+  ideaId      String
+  idea        Idea      @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  number      Int?
+  /// CORPUS | URL | DOCUMENT | OWN_OBSERVATION
+  kind        String
+  title       String
+  url         String?
+  citation    String?
+  sourceType  String?
+  author      String?
+  /// As the page states it ("12 March 2024") — free text on purpose; a date we guessed would be a claim nobody made.
+  publishedAt String?
+  /// 20–80 words. Lex writes it, or the user does.
+  snippet     String?   @db.Text
+  /// READ | NOT_READ — an unread source must never look read (26-E §3c). `readNote` says why.
+  readStatus  String    @default("NOT_READ")
+  readNote    String?
+  corpusKey   String?
+  materialId  String?
+  addedBy     String?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  notes       ResearchNote[]
+
+  @@unique([ideaId, number])
+  @@unique([ideaId, corpusKey])
+  @@unique([ideaId, materialId])
+  @@index([ideaId])
+}
+
+/// ══ 26-R — A RESEARCH NOTE: a quote, a source and a comment ═════════════════════════════════════════════════
+/// Author, status and a private layer exist from the first row (BRIEF_26R §8, decision 134). Nobody edits another person's
+/// comment — others reply beneath it. Only IN_RECORD notes reach a document. A note set aside keeps its reason: the reason is
+/// itself research. Nothing deletes.
+model ResearchNote {
+  id             String     @id @default(uuid())
+  ideaId         String
+  idea           Idea       @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  sourceId       String
+  source         IdeaSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  quote          String?    @db.Text
+  quoteLocation  String?
+  comment        String?    @db.Text
+  /// SUPPORTS | CONTRADICTS | CONTEXT | UNDECIDED
+  stance         String     @default("UNDECIDED")
+  /// [{ kind: 'cause'|'policy'|'action'|'challenge'|'decision', id, label }]
+  bearsOn        Json       @default("[]")
+  tags           String[]   @default([])
+  heading        String?
+  importance     Int?
+  authorId       String
+  /// USER | LEX
+  authorKind     String     @default("USER")
+  /// IN_RECORD | UNREVIEWED | SET_ASIDE
+  status         String     @default("IN_RECORD")
+  setAsideReason String?
+  setAsideBy     String?
+  setAsideAt     DateTime?
+  /// "Mine only" until its author shares it.
+  mineOnly       Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now()) @updatedAt
+  replies        ResearchNoteReply[]
+
+  @@index([ideaId])
+  @@index([ideaId, sourceId])
+  @@index([ideaId, authorId])
+}
+
+model ResearchNoteReply {
+  id        String       @id @default(uuid())
+  noteId    String
+  note      ResearchNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  authorId  String
+  text      String       @db.Text
+  createdAt DateTime     @default(now())
+
+  @@index([noteId])
 }
