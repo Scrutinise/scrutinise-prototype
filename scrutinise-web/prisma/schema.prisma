@@ -3066,6 +3066,13 @@ model LexCoherentAction {
   sequence           String?         // NOW | NEXT | LATER
   beforeIds          String[]        @default([])  // ids of the actions THIS one must come before
   facetProposal      Json?           // { targetCauseIds?, avenue?, link?, sequence?, beforeIds? } — Lex's proposal, unaccepted
+  /// ══ DECISION 138 (9 Oct 2026) — THE POLICY TEST, ON THE ACTION ═══════════════════════════════════════════
+  /// What the consolidation's test said about this action against the settled guiding policy: FITS | DOES_NOT_FIT | CONFLICTS |
+  /// NOT_TESTED, a one-line reason, and where it came from (strings, in words). NULL = it never went through that test.
+  /// Moved here from `ActionIdea` so the "Added from the consolidation" box could go. DDL: prisma/lex_policy_test_on_action.sql.
+  policyTestVerdict  String?
+  policyTestReason   String?
+  policyTestFrom     Json?
 
   @@index([ideaId])
   @@index([ideaId, status])
