@@ -18,6 +18,8 @@ import { buildInitialQuestions, INITIAL_QUESTIONS_KIND } from './build-initial-q
 import { buildCommitteeEvidence, COMMITTEE_EVIDENCE_KIND } from './build-committee-evidence'
 import { buildOnePageSummary, ONE_PAGE_SUMMARY_KIND } from './build-one-page-summary'
 import { withStageBanner, documentStage } from './stage-banner'
+import { readKernelProgress } from './stage-facts'
+import { syncRegistry } from '@/lib/lex/source-registry'
 import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
 
@@ -48,21 +50,22 @@ export function isExportKind(v: unknown): v is ExportKind {
 // caveat, internal ones included (4b). Applied HERE, the one place these four kinds are built, so no builder
 // can forget it. The two briefing documents are the First Pass; the other two are built from the kernel.
 export async function buildFor(kind: ExportKind, ideaId: string) {
-  const ran = async () => (await prisma.deepeningPass.count({ where: { ideaId, status: 'RUN' } })) > 0
+  // Decision 135 — the stage is the kernel's progress (stage-facts.ts), not whether a pass has run.
+  const progress = () => readKernelProgress(ideaId)
   if (kind === INITIAL_QUESTIONS_KIND) {
     const b = await buildInitialQuestions(ideaId)
-    return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', deepeningHasRun: false })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   if (kind === COMMITTEE_EVIDENCE_KIND) {
     const b = await buildCommitteeEvidence(ideaId)
-    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', deepeningHasRun: await ran() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   if (kind === ONE_PAGE_SUMMARY_KIND) {
     const b = await buildOnePageSummary(ideaId)
-    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', deepeningHasRun: await ran() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   const b = await buildInitialBackground(ideaId)
-  return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', deepeningHasRun: false })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+  return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
 }
 
 export interface ExportStatus {
@@ -171,6 +174,8 @@ export async function generateExport(
   }
   if (before.generated && !before.stale && !opts.force) return before
 
+  // 26-R — number the sources before the document cites them (explicit generation is the place to write numbers).
+  await syncRegistry(ideaId)
   // ⚠ RE-RENDERS, NEVER RE-RUNS. `buildFor` reads stored rows only.
   const { model, fingerprint, sourceLabel } = await buildFor(kind, ideaId)
 

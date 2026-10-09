@@ -173,6 +173,7 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
       })
     }
     const refs: SourceRef[] = items.map((e) => ({
+      ref: e.ref,
       title: e.title,
       citation: e.citation ?? '',
       url: e.url ?? '',
@@ -223,6 +224,7 @@ export function buildEvidencePackDocument(snapshot: ProposalSnapshot): ProposalB
         const runs: Run[] = []
         const name = e.title?.trim() || e.citation?.trim() || e.sourceKey
         runs.push({ text: name, bold: true })
+        if (e.ref) runs.push({ text: ` [Ref: ${e.ref}]`, bold: true }) // 26-R — the same number the notebook cites
         if (e.citation?.trim() && e.citation.trim() !== name) runs.push({ text: ` — ${e.citation.trim()}` })
         if (e.url?.trim()) runs.push({ text: ` (${e.url.trim()})` })
         // ⚠ An excluded row with no reason is REPORTED as one. The write path refuses to

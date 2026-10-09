@@ -503,6 +503,69 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
   await sendEmail({ to: toEmail, subject, html, text })
 }
 
+export interface LexFeedbackEmailInput {
+  feedbackItemId: string
+  stage: string
+  surface: string
+  summarisedText: string
+  userEdited: boolean
+  ideaTitle: string
+  ideaId: string
+  userRef?: string
+  technicalDetail?: Record<string, unknown> | null
+  files: Array<{ name: string; bytes: number; url: string }>
+}
+
+/** PURE — the subject and bodies of a feedback email, so a check can read exactly what would be sent. */
+export function buildLexFeedbackEmail({ feedbackItemId, stage, surface, summarisedText, userEdited, ideaTitle, ideaId, userRef, technicalDetail, files }: LexFeedbackEmailInput): { subject: string; text: string; html: string } {
+  const who = userRef ?? 'A user'
+  const isBug = surface === 'BUG_REPORT'
+  const subject = isBug ? `[Bug report] ${who} · ${stage}` : `[Lex feedback] ${who} · ${stage} · ${surface}`
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const escaped = esc(summarisedText)
+  const techText = technicalDetail && Object.keys(technicalDetail).length ? JSON.stringify(technicalDetail, null, 2) : null
+
+  const text = `
+${isBug ? `${who} has reported a fault in the screen, with consent.` : `${who} has passed back feedback on Lex's output, with consent.`}
+
+Stage:   ${stage}
+Surface: ${surface}
+Idea:    ${ideaTitle}
+From:    ${who}
+Edited before sending: ${userEdited ? 'yes' : 'no'}
+
+${isBug ? 'Their words (personal content stripped; not summarised):' : 'What they said (summarised, personal content stripped):'}
+${summarisedText}
+${techText ? `\nTechnical detail (verbatim, personal content stripped):\n${techText}\n` : ''}${files.length ? `\nAttached (links last 24 hours; the files stay stored):\n${files.map((f) => `- ${f.name} (${Math.round(f.bytes / 1024)} KB): ${f.url}`).join('\n')}\n` : ''}
+---
+FeedbackItem: ${feedbackItemId}
+Idea: ${APP_URL}/ideas/${ideaId}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 640px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">${isBug ? 'Bug report' : 'Lex feedback'}</h2>
+  <table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
+    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600; width: 110px;">From</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${esc(who)}</td></tr>
+    <tr><td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">Stage</td><td style="padding: 6px 12px; font-size: 13px;">${esc(stage)}</td></tr>
+    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600;">Surface</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${esc(surface)}</td></tr>
+    <tr><td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">Idea</td><td style="padding: 6px 12px; font-size: 13px;">${esc(ideaTitle)}</td></tr>
+    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600;">Edited</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${userEdited ? 'yes' : 'no'}</td></tr>
+  </table>
+  <p style="font-size: 13px; font-weight: 600;">${isBug ? 'Their words — personal content stripped, not summarised:' : 'Summarised, personal content stripped:'}</p>
+  <p style="font-size: 13px; white-space: pre-wrap; padding: 12px; background: #f9f9f9; border-radius: 4px;">${escaped}</p>
+  ${techText ? `<p style="font-size: 13px; font-weight: 600;">Technical detail — verbatim:</p><pre style="font-size: 12px; white-space: pre-wrap; word-break: break-word; padding: 12px; background: #f4f4f5; border-radius: 4px;">${esc(techText)}</pre>` : ''}
+  ${files.length ? `<p style="font-size: 13px; font-weight: 600;">Attached (links last 24 hours):</p><ul style="font-size: 13px;">${files.map((f) => `<li><a href="${f.url}">${esc(f.name)}</a> (${Math.round(f.bytes / 1024)} KB)</li>`).join('')}</ul>` : ''}
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">FeedbackItem: ${feedbackItemId} · <a href="${APP_URL}/ideas/${ideaId}">open the idea</a></p>
+</body>
+</html>
+`.trim()
+  return { subject, text, html }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // §20.5 — a Lex critique the user consented to pass back. The body carries ONLY
 // `summarisedText` (what the user saw and approved); their raw wording never
@@ -518,6 +581,9 @@ export async function sendLexFeedbackEmail({
   userEdited,
   ideaTitle,
   ideaId,
+  userRef,
+  technicalDetail,
+  attachments,
 }: {
   feedbackItemId: string
   stage: string
@@ -526,6 +592,11 @@ export async function sendLexFeedbackEmail({
   userEdited: boolean
   ideaTitle: string
   ideaId: string
+  /** DECISION 137 — "User 435". The only way the sender is named; never a name, an initial, or "the user". */
+  userRef?: string
+  /** Bug reports only: sanitised, and printed exactly as stored — never summarised. */
+  technicalDetail?: Record<string, unknown> | null
+  attachments?: Array<{ key: string; name: string; contentType: string; bytes: number }>
 }): Promise<void> {
   const adminEmail = 'cl@scrutinise.org'
 
@@ -541,43 +612,15 @@ export async function sendLexFeedbackEmail({
     throw new Error(`${adminEmail} is on the suppression list — feedback email was not sent`)
   }
 
-  const subject = `[Lex feedback] ${stage} · ${surface}`
-  const escaped = summarisedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  // Files are in the private bucket; the row holds the KEY. A signed URL is the platform maximum of 24h (security rule 10), so the
+  // email says so, and the file can be re-linked from the key at any time.
+  const files: Array<{ name: string; bytes: number; url: string }> = []
+  if (attachments?.length) {
+    const { r2SignedUrl } = await import('@/lib/r2')
+    for (const a of attachments) files.push({ name: a.name, bytes: a.bytes, url: await r2SignedUrl(a.key, { downloadAs: a.name }) })
+  }
 
-  const text = `
-A user has passed back feedback on Lex's output, with consent.
-
-Stage:   ${stage}
-Surface: ${surface}
-Idea:    ${ideaTitle}
-Edited by the user before sending: ${userEdited ? 'yes' : 'no'}
-
-What they said (summarised, personal content stripped):
-${summarisedText}
-
----
-FeedbackItem: ${feedbackItemId}
-Idea: ${APP_URL}/ideas/${ideaId}
-`.trim()
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
-  <h2 style="font-size: 18px; font-weight: 600;">Lex feedback</h2>
-  <table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
-    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600; width: 110px;">Stage</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${stage}</td></tr>
-    <tr><td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">Surface</td><td style="padding: 6px 12px; font-size: 13px;">${surface}</td></tr>
-    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600;">Idea</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${ideaTitle}</td></tr>
-    <tr><td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">User edited</td><td style="padding: 6px 12px; font-size: 13px;">${userEdited ? 'yes' : 'no'}</td></tr>
-  </table>
-  <p style="font-size: 13px; font-weight: 600;">Summarised, personal content stripped:</p>
-  <p style="font-size: 13px; white-space: pre-wrap; padding: 12px; background: #f9f9f9; border-radius: 4px;">${escaped}</p>
-  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
-  <p style="color: #71717a; font-size: 12px;">FeedbackItem: ${feedbackItemId} · <a href="${APP_URL}/ideas/${ideaId}">open the idea</a></p>
-</body>
-</html>
-`.trim()
+  const { subject, text, html } = buildLexFeedbackEmail({ feedbackItemId, stage, surface, summarisedText, userEdited, ideaTitle, ideaId, userRef, technicalDetail, files })
 
   await sendEmail({ to: adminEmail, subject, html, text })
 }

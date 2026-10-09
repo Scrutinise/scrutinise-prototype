@@ -11,6 +11,7 @@ import QualityRating from '@/components/QualityRating'
 import VoteInterceptModal from '@/components/VoteInterceptModal'
 import ContributionsTab from './ContributionsTab'
 import ResearchTab, { type ResearchItem } from './ResearchTab'
+import ResearchNotebook from '@/components/lex/ResearchNotebook'
 import AmendmentsTab from './AmendmentsTab'
 import CampaignTab from './CampaignTab'
 import DocumentExports from '@/components/documents/DocumentExports'
@@ -1224,7 +1225,14 @@ function CanonicalPageBlock({
    *  this idea has legacy-table content (see the block comment above). */
   legacyFallback?: React.ReactNode
 }) {
-  const { done, total } = pageProgress(page)
+  // ══ 8 Oct 2026 (Charlie's walkthrough, item 1) — ONCE A GUIDING POLICY IS SETTLED, THE CANDIDATES LEAVE THIS TAB ══
+  // "Settled" is the field's own state (the Guiding Policy field ACCEPTED, which `onGuidingPolicySettled` writes), not a
+  // count. The editor keeps every candidate under "Not chosen", so nothing is lost; this page is the read-only landing page
+  // and shows the policy, what it rules out, leverage, anticipated responses and conditions — with the summary in a box.
+  const policySettled = page?.key === 'GUIDING_POLICY'
+    && page.fields.some((f) => f.key === 'chosenApproach' && f.status === 'ACCEPTED' && f.value != null && f.value !== '')
+  const shownFields = page ? (policySettled ? page.fields.filter((f) => f.key !== 'policyOptions') : page.fields) : []
+  const { done, total } = pageProgress(page && policySettled ? { ...page, fields: shownFields } : page)
   if (!page || !canonicalState || done === 0) {
     if (legacyFallback) {
       return <div><LegacyFallbackNotice />{legacyFallback}</div>
@@ -1235,7 +1243,7 @@ function CanonicalPageBlock({
     <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
-          {done} of {total} approved
+          {done} of {total} {total === 1 ? 'part' : 'parts'} approved
         </p>
         {canEdit && (
           <Link href={editHref} className="text-xs text-zinc-500 hover:text-zinc-900 underline underline-offset-2">
@@ -1244,7 +1252,13 @@ function CanonicalPageBlock({
         )}
       </div>
       <div className="space-y-5">
-        {page.fields.map((f) => (
+        {shownFields.map((f) => f.key === 'summaryGuidingPolicy' && policySettled ? (
+          // The summary is set apart in a box — a 2px border and its own heading, so it is distinct without relying on colour.
+          <section key={f.key} aria-label={f.label} className="rounded-lg border-2 border-zinc-800 bg-zinc-50 p-4">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-700">{f.label}</p>
+            <CanonicalFieldBlock field={f} canonicalState={canonicalState} />
+          </section>
+        ) : (
           <div key={f.key}>
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">{f.label}</p>
             <CanonicalFieldBlock field={f} canonicalState={canonicalState} />
@@ -1476,7 +1490,7 @@ function IdeaTab({
                   const { done, total } = pageProgress(p)
                   return (
                     <span key={p.key} className="text-[11px] text-zinc-500">
-                      <span className="font-medium text-zinc-700">{p.label}</span>: {done} of {total} approved
+                      <span className="font-medium text-zinc-700">{p.label}</span>: {done} of {total} {total === 1 ? 'part' : 'parts'} approved
                     </span>
                   )
                 })}
@@ -2820,6 +2834,16 @@ export default function IdeaDetailClient({
               currentUserId={currentUserId}
               onCommentAdded={() => setCommentCount(c => c + 1)}
             />
+          )}
+          {/* ══ 26-R — THE RESEARCH NOTEBOOK, on the Overview page's Research tab (one of the four "Add research" surfaces). ══ */}
+          {activeTab === 'research' && (isOwner || isCollaborator) && (
+            <section className="mb-8 max-w-3xl" aria-label="Research notebook">
+              <h2 className="text-lg font-semibold text-zinc-900">Research notebook</h2>
+              <p className="text-sm text-zinc-600 mt-1 mb-3">
+                Quotes, sources and comments — yours and your team’s. Every note cites a numbered source; nothing is deleted, only set aside with a reason.
+              </p>
+              <ResearchNotebook ideaId={idea.id} />
+            </section>
           )}
           {activeTab === 'research' && (
             <ResearchTab

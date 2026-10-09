@@ -36,6 +36,9 @@ import { useCallback, useEffect, useState } from 'react'
 import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-panel'
 import { HEADINGS_ABOVE_DIVIDER } from '@/lib/lex/question-headings'
 import YourMaterial from './YourMaterial'
+import AddResearch from './AddResearch'
+import ResearchNotebook from './ResearchNotebook'
+import SourcesRegistry from './SourcesRegistry'
 import ClaimReview from './ClaimReview'
 import OutputsPanel from './OutputsPanel'
 import AgendaPanel from './AgendaPanel'
@@ -82,6 +85,7 @@ const GAP_STYLE: Record<string, string> = {
  */
 const SPECIAL_TITLES: Record<string, string> = {
   __outputs: 'Outputs',
+  __notebook: 'Research notebook', // 26-R
   __decisions: 'Decisions',
   // ⚠ 25-Z §3 — renamed. See AgendaPanel's heading; both read from a decision, not a copy.
   __changed_mind: 'Notable Research',
@@ -625,6 +629,9 @@ export default function QuestionPanel({
           {/* §4 — status first: what did not run, what failed, what pass is open. */}
           {notices}
 
+          {/* ══ 26-R (DECISION 133) — "+ ADD RESEARCH", THE ONE DOOR. It replaces "+ Add a file or link" here and on every surface. ══ */}
+          <AddResearch ideaId={ideaId} compact onSaved={() => void load()} />
+
           {/* §2 — Charlie's wording, verbatim, and it replaces both deleted headings. */}
           <p className="text-[11px] text-zinc-500">Everything Lex found or worked out:</p>
 
@@ -667,6 +674,17 @@ export default function QuestionPanel({
               >
                 <span className="text-sm font-semibold text-zinc-900 flex-1">Outputs</span>
                 <span className="text-[11px] text-zinc-500">what you can take away</span>
+                <span aria-hidden className="text-zinc-300 text-xs">›</span>
+              </button>
+            </li>
+            {/* 26-R — the notebook: quotes, sources and comments, yours and your team's; Lex's findings a toggle away. */}
+            <li>
+              <button
+                onClick={() => setOpenKey('__notebook')}
+                className="w-full flex items-baseline gap-2 rounded-lg border-2 border-zinc-300 bg-white px-3 py-2 text-left hover:border-zinc-500 hover:bg-zinc-50"
+              >
+                <span className="text-sm font-semibold text-zinc-900 flex-1">Research notebook</span>
+                <span className="text-[11px] text-zinc-500">what you have read, and what you made of it</span>
                 <span aria-hidden className="text-zinc-300 text-xs">›</span>
               </button>
             </li>
@@ -825,16 +843,26 @@ export default function QuestionPanel({
             <ClaimReview ideaId={ideaId} />
           )}
 
-          {/* §25.6 — adding a document or a link lives inside its own item. */}
+          {/* §25.6 — adding a document or a link lives inside its own item. 26-R: through "Add research" (one door); this list
+              is what was filed, and what Lex has read of it. */}
           {openHeading.key === 'YOUR_MATERIAL' && (
+            <div className="rounded-lg border border-zinc-200 p-2.5 space-y-2">
+              <AddResearch ideaId={ideaId} compact onSaved={() => void load()} />
+              <YourMaterial ideaId={ideaId} onChanged={() => void load()} hideAdd />
+            </div>
+          )}
+
+          {/* ══ 26-E §3 / 26-R — "SOURCES": the numbered list, "Add source", "Create snippet". ══ */}
+          {openHeading.key === 'KEY_SOURCES' && (
             <div className="rounded-lg border border-zinc-200 p-2.5">
-              <YourMaterial ideaId={ideaId} onChanged={() => void load()} />
+              <SourcesRegistry ideaId={ideaId} onChanged={() => void load()} />
             </div>
           )}
         </div>
       )}
 
       {openKey === '__outputs' && <OutputsPanel ideaId={ideaId} />}
+      {openKey === '__notebook' && <ResearchNotebook ideaId={ideaId} compact />}
 
       {/* ══ 25-N §3b — THE TWO THAT MOVED OUT OF THE MIDDLE COLUMN ═════════════
           ⚠ ONE COMPONENT, ONE `view`. `AgendaPanel` renders its own sections; passing the

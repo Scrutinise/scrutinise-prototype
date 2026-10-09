@@ -102,7 +102,7 @@ const BUILD_STEPS: { name: string; side: string; blurb: string }[] = [
     blurb: 'Ten passes over about ten minutes: I search the corpus, draft a diagnosis and an approach, research what the draft raises, revise it against what I find, and read the whole thing back as a hostile committee clerk.',
   },
   {
-    name: 'The Strategy',
+    name: 'The First Draft',
     side: 'last',
     blurb: 'Everything I drafted, as proposals you accept, edit or throw out — with the decisions I had to make laid out so you can take them yourself. Nothing is yours until you say it is.',
   },

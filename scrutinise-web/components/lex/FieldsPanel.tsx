@@ -8,8 +8,8 @@ import {
 } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
-import ActionSuggestions from './ActionSuggestions'
 import ActionGapCheck from './ActionGapCheck'
+import RefTextarea, { IdeaIdContext } from './RefTextarea'
 import ActionsWorkspace from './ActionsWorkspace'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
@@ -74,7 +74,6 @@ export interface ActionDraft {
 export interface ActionsApi {
   add: (input: ActionDraft) => void
   update: (actionId: string, patch: Partial<ActionDraft>) => void
-  remove: (actionId: string) => void
   confirm: () => void
   skip: () => void
 }
@@ -192,7 +191,7 @@ function GrowTextarea({
   }, [userSized])
 
   return (
-    <textarea
+    <RefTextarea
       ref={ref}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -777,19 +776,19 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
             match, and start all of them at roughly twice their current height."*
 
             ⚠ IT WAS AN `<input>`, WHICH CANNOT GROW AT ALL. The two boxes beneath it are
-            `<textarea resize-y>`, so a user who wrote a long cause could drag those and not
+            `<RefTextarea resize-y>`, so a user who wrote a long cause could drag those and not
             this one — and a cause is frequently the longest sentence on the card, because it
             has to state something that is HAPPENING rather than name a topic. One control
             behaving unlike its neighbours reads as broken rather than as different.
 
             ⚠ AND ENTER STILL DOES NOT INSERT A NEWLINE. A cause is one statement; the
             textarea is for seeing it, not for writing a paragraph in. */}
-        <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Cause"
+        <RefTextarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Cause"
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
           className="w-full text-sm p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-        <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted?"
+        <RefTextarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted?"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-        <textarea value={ev} onChange={(e) => setEv(e.target.value)} rows={2} placeholder="Evidence (optional)"
+        <RefTextarea value={ev} onChange={(e) => setEv(e.target.value)} rows={2} placeholder="Evidence (optional)"
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <div className="flex gap-2">
@@ -1001,10 +1000,10 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
         {/* ⚠ 25-Q §8b — THE SAME CHANGE ON THE ADD FORM. Fixing the edit form alone would
             leave the two doors into one record behaving differently, which is the same
             complaint one step earlier. */}
-        <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Add a cause…"
+        <RefTextarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Add a cause…"
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
           className="w-full text-sm p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-        <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted? (optional)"
+        <RefTextarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted? (optional)"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <button disabled={busy || !c.trim()} onClick={() => { api.add({ cause: c.trim(), whyPersisted: why.trim() || undefined }); setC(''); setWhy('') }}
           className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">{terminal ? 'Add another cause' : 'Add cause'}</button>
@@ -1134,9 +1133,9 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
         <input value={approach} onChange={(e) => setApproach(e.target.value)} placeholder="The approach"
           className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
         <MechChips selected={mechs} busy={busy} onToggle={(m) => setMechs((s) => s.includes(m) ? s.filter((x) => x !== m) : [...s, m])} />
-        <textarea value={caseFor} onChange={(e) => setCaseFor(e.target.value)} rows={2} placeholder="The case for"
+        <RefTextarea value={caseFor} onChange={(e) => setCaseFor(e.target.value)} rows={2} placeholder="The case for"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-        <textarea value={caseAgainst} onChange={(e) => setCaseAgainst(e.target.value)} rows={2} placeholder="The case against"
+        <RefTextarea value={caseAgainst} onChange={(e) => setCaseAgainst(e.target.value)} rows={2} placeholder="The case against"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <div className="flex gap-2">
           <button disabled={busy || !approach.trim()} onClick={() => { api.update(option.id, { approach: approach.trim(), caseFor, caseAgainst, mechanismTypes: mechs }); setEditing(false) }}
@@ -1253,9 +1252,9 @@ function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId }: {
         <div className="mt-2 rounded-lg border border-dashed border-zinc-300 p-2 space-y-1.5">
           <input value={approach} onChange={(e) => setApproach(e.target.value)} placeholder="Add an approach…"
             className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-          <textarea value={caseFor} onChange={(e) => setCaseFor(e.target.value)} rows={2} placeholder="The case for (optional)"
+          <RefTextarea value={caseFor} onChange={(e) => setCaseFor(e.target.value)} rows={2} placeholder="The case for (optional)"
             className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-          <textarea value={caseAgainst} onChange={(e) => setCaseAgainst(e.target.value)} rows={2} placeholder="The case against (optional)"
+          <RefTextarea value={caseAgainst} onChange={(e) => setCaseAgainst(e.target.value)} rows={2} placeholder="The case against (optional)"
             className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
           <button disabled={busy || !approach.trim()} onClick={() => { api.add({ approach: approach.trim(), caseFor: caseFor.trim() || undefined, caseAgainst: caseAgainst.trim() || undefined }); setApproach(''); setCaseFor(''); setCaseAgainst('') }}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add approach</button>
@@ -1548,7 +1547,7 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: 
         </div>
         <input value={d.targetOrganisation ?? ''} onChange={(e) => patch({ targetOrganisation: e.target.value })} placeholder="Target organisation (legislative)"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        <textarea value={d.wording ?? ''} onChange={(e) => patch({ wording: e.target.value })} rows={2} placeholder="Intended wording (legislative)"
+        <RefTextarea value={d.wording ?? ''} onChange={(e) => patch({ wording: e.target.value })} rows={2} placeholder="Intended wording (legislative)"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <div className="space-y-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Costs (ranges with basis)</p>
@@ -1605,7 +1604,7 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: 
         {action.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
         <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
         <CostLineAdder actionId={action.id} busy={busy} api={costLinesApi} />
-        <button disabled={busy} onClick={() => api.remove(action.id)} className="text-[11px] text-zinc-400 hover:text-red-600">Delete</button>
+        {/* DECISION 139 (9 Oct 2026) — the card's "Delete" is gone. It never deleted (since 26-Q it ruled the action out with a fixed reason the user never gave), and its name promised what it did not do. RULE OUT, with a reason, restorable, is the only route: open the action in the list and use "Rule out". */}
       </div>
     </div>
   )
@@ -1823,8 +1822,10 @@ export default function FieldsPanel({
               </p>
             ))}
           </div>
-          {/* 26-M addendum §3 — SUGGESTIONS AT THE TOP of Coherent Actions, above the user's own list. */}
-          {ideaId && <ActionSuggestions ideaId={ideaId} onChanged={onSuggestionChanged} />}
+          {/* DECISION 138 (9 Oct 2026) — ONE LIST. The "Added from the consolidation (17)" box that stood here is gone: since decision 111
+              those actions are written straight into the list below, so the box duplicated them. What it carried (the policy-test
+              verdict, its reason and where it came from) is on each action — a label on the row, the detail when it is opened, and
+              "By policy test" in Group. The retry for ideas still held is a notice at the top of the list (ActionsWorkspace). */}
           {/* 26-N §8 - "Check for gaps": the free check, then four models; suggestions with Accept / Dismiss. */}
           {ideaId && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
           <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
@@ -1849,6 +1850,8 @@ export default function FieldsPanel({
   )
 
   return (
+    // 26-E §3d / 26-R — the idea id for every "Add source" menu in the boxes below (see RefTextarea).
+    <IdeaIdContext.Provider value={ideaId || null}>
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
       {/* ══ 25-N §3d — THE DRAFT'S OWN INTRODUCTION, IN CHARLIE'S WORDS, VERBATIM ═════
           §3d gives this its exact wording, and it is the first thing in the column for a
@@ -1986,8 +1989,13 @@ export default function FieldsPanel({
                   ⚠ `text-zinc-400` ON A HEAVY SATURATED BOX FAILS CONTRAST — this is the same
                   measured `onHeadingBg` the label uses, not a second colour to check. */}
               {!isLocked && total > 0 && (
+                // ⚠ 9 Oct 2026 (Charlie's screenshots, item 4) — "0 of 4 approved" sat above a list of 28 actions and read as a count of
+                // the actions. It counts the page's PARTS (kernel fields accepted or skipped): on this page the action list as a whole,
+                // the coherence check, the costing and the summary. The word now says so, and on this page the number of actions is
+                // beside it — because actions are not approved one by one; the list is confirmed as a whole ("These are my actions").
                 <span className={`text-[11px] whitespace-nowrap ${isActive ? accent.onHeadingBg : 'text-zinc-400'}`}>
-                  {done} of {total} approved
+                  {done} of {total} {total === 1 ? 'part' : 'parts'} approved
+                  {page.key === 'COHERENT_ACTIONS' ? ` · ${actions.length} action${actions.length === 1 ? '' : 's'}` : ''}
                 </span>
               )}
               {isLocked && <span className="text-[11px] text-zinc-300">soon</span>}
@@ -2099,5 +2107,6 @@ export default function FieldsPanel({
           pure renderer of canonical state. */}
       {deepening}
     </div>
+    </IdeaIdContext.Provider>
   )
 }

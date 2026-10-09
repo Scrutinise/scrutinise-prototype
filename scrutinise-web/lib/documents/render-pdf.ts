@@ -197,7 +197,7 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
     drawRuns([{ text: label.toUpperCase(), bold: true }], { size: 8.5, leading: 13, colour: MUTED, after: 4 })
     for (const ref of refs) {
       need(46)
-      drawRuns([{ text: ref.title, bold: true }], { size: 10, leading: 14 })
+      drawRuns([{ text: ref.ref ? `[Ref: ${ref.ref}] ${ref.title}` : ref.title, bold: true }], { size: 10, leading: 14 })
       const meta = [ref.citation, ref.date].filter(Boolean).join(' · ')
       if (meta) drawRuns([{ text: meta }], { size: 8.5, leading: 12, colour: MUTED })
       if (ref.snippet) drawRuns([{ text: ref.snippet, italic: true }], { size: 8.5, leading: 12, colour: MUTED })

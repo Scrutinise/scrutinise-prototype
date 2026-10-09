@@ -24,6 +24,8 @@ export interface SourceRef {
   url: string
   snippet?: string
   date?: string
+  /** 26-R — this source's number in the idea's registry; printed as `[Ref: n]` so a note and a document cite the same entry. */
+  ref?: number
 }
 
 export type Block =

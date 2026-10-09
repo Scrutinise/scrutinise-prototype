@@ -45,10 +45,12 @@ interface MaterialRow {
 }
 
 export default function YourMaterial({
-  ideaId, onChanged, onCount,
+  ideaId, onChanged, onCount, hideAdd = false,
 }: {
   ideaId: string
   onChanged?: () => void
+  /** 26-R (decision 133) — the add controls live in "Add research" now; this component keeps the LIST of what was filed. */
+  hideAdd?: boolean
   /**
    * 25-K §2 — how many things are attached, reported upward so the composer's "+" can
    * carry a count.
@@ -267,7 +269,7 @@ export default function YourMaterial({
       {error && <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5">{error}</p>}
       {note && <p className="text-[11px] text-zinc-600 bg-zinc-50 border border-zinc-200 rounded p-1.5">{note}</p>}
 
-      {remaining > 0 ? (
+      {hideAdd ? null : remaining > 0 ? (
         <>
           <div className="flex gap-1.5">
             <input

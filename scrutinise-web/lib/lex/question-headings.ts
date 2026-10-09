@@ -198,7 +198,8 @@ export const QUESTION_HEADINGS: QuestionHeading[] = [
     // once, so its ordering of what to read first is the one worth showing; the
     // deterministic ranker in `build-highlights.ts` handles the rest.
     key: 'KEY_SOURCES',
-    heading: 'Key sources',
+    // 26-E §3a / 26-R — renamed "Sources": it now also carries the numbered registry, so "key" undersold it.
+    heading: 'Sources',
     lookingFor: 'the two or three things worth reading before anything else, and why each one',
   },
   {

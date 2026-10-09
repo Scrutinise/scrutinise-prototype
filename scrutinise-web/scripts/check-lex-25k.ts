@@ -147,7 +147,7 @@ const NAV_ORDER = ['My ideas', 'Browse', 'Central', 'About', 'Support', 'Admin']
  */
 function stageTableProperty(stages: ReadonlyArray<{ n: number; name: string; purpose: string }>): string | null {
   const names = stages.map((s) => s.name)
-  const want = ['The Idea', 'The Strategy', 'The Deepening']
+  const want = ['The First Pass', 'The First Draft', 'The Deepening'] // Decision 136 — the bar says what the documents say
   if (names.join(' | ') !== want.join(' | ')) return `the stages are ${names.join(' | ')}`
   if (stages.map((s) => s.n).join('') !== '123') return 'the stages are not numbered 1, 2, 3'
   const mute = stages.filter((s) => s.purpose.trim().length < 20)

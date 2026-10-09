@@ -10,9 +10,14 @@
 // An implementation word on a user's screen is a word they have to translate before they
 // can act. So the vocabulary is:
 //
-//   1 · The Idea        say what you want to change; add information and files; re-run
-//   2 · The Strategy    work through what Lex drafted: read what matters, make the decisions
-//   3 · The Deepening   go deeper — more research, more evidence, harder questions
+//   1 · The First Pass   say what you want to change; add information and files; re-run
+//   2 · The First Draft  work through what Lex drafted: read what matters, make the decisions
+//   3 · The Deepening    go deeper — more research, more evidence, harder questions
+//
+// ⚠ DECISION 136 (Oct 2026): the first two were "The Idea" and "The Strategy" until the seven-stage model
+// named stages 1 and 2 "The First Pass" and "The First Draft" (lib/documents/stage-banner.ts). The bar and the
+// generated documents now say the same thing — one scheme, not three. The KEYS ('idea', 'strategy') and the
+// URLs are unchanged: they are identifiers, not words a user reads.
 //
 // ⚠ THE NAMES AND THE PURPOSE LINES ARE DATA, NOT JSX. Two surfaces render this bar and a
 // third will; the day they disagree about what stage 2 is called is the day the bar stops
@@ -62,13 +67,13 @@ export const LEX_STAGES: readonly LexStage[] = [
   {
     n: 1,
     key: 'idea',
-    name: 'The Idea',
+    name: 'The First Pass',
     purpose: 'Say what you want to change. Add information and files, then re-run.',
   },
   {
     n: 2,
     key: 'strategy',
-    name: 'The Strategy',
+    name: 'The First Draft',
     purpose: 'Work through what Lex drafted: read what matters, make the decisions.',
   },
   {

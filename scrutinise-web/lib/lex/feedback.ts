@@ -246,6 +246,8 @@ export interface SummariseResult {
   redactions: Redaction[]
   /** True when the model was unavailable and we fell back to the scrubbed original. */
   usedFallback: boolean
+  /** True when the text is the user's OWN words, scrubbed, by design (a bug report) — not a degraded fallback. */
+  verbatim?: boolean
 }
 
 /**
@@ -258,8 +260,19 @@ export async function summariseCritique(input: {
   surface: FeedbackSurfaceKey
   stage: string
   identities: (string | null | undefined)[]
+  /** DECISION 137 — "User 435". The summary names the person by this and by nothing else. */
+  userRef?: string
 }): Promise<SummariseResult> {
   const scrubbedIn = scrubPersonal(input.text, input.identities)
+
+  // ══ A BUG REPORT IS NOT SUMMARISED (8 Oct 2026, item 4c) ═════════════════════════════════════════════════
+  // A model compressing a report about the interface turned "bulk Assign to heading returned 'That request was not valid'" into
+  // "the grouping of 'CAs under pressure'" — a sentence about something else. The user's own words, scrubbed of personal
+  // content, are what is sent; the technical detail travels beside them untouched. Nothing here calls a model.
+  if (input.surface === 'BUG_REPORT') {
+    return { summarisedText: scrubbedIn.text.slice(0, 2000), redactions: scrubbedIn.redactions, usedFallback: false, verbatim: true }
+  }
+  const who = input.userRef ?? 'A user'
 
   const apiKey = process.env.GEMINI_API_KEY
   const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
@@ -278,7 +291,8 @@ export async function summariseCritique(input: {
   const system =
     'You are summarising a user\'s CRITICISM of an AI assistant\'s output on a UK civic policy ' +
     'platform, so the product team can act on it. Write 1–4 sentences in the third person, ' +
-    'plain British English, stating what the user found wrong and what they expected instead. ' +
+    'plain British English, stating what the person found wrong and what they expected instead. ' +
+    `Refer to the person ONLY as "${who}" — never "the user", never a name, never an initial or a pronoun-based guess. ` +
     'Keep the substance and the sharpness — do not soften the complaint, do not add praise, do ' +
     'not add anything they did not say. STRIP ALL PERSONAL CONTENT: no names of the user or of ' +
     'anyone else, no employers, job titles, locations, health or family details, no contact ' +
@@ -289,7 +303,7 @@ export async function summariseCritique(input: {
   const user = [
     `Part of the output being criticised: ${SURFACE_LABELS[input.surface]}`,
     `Stage of the work: ${input.stage}`,
-    `What the user said:\n${scrubbedIn.text}`,
+    `What ${who} said:\n${scrubbedIn.text}`,
   ].join('\n')
 
   const ctrl = new AbortController()

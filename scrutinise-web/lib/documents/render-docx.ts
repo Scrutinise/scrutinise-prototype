@@ -76,7 +76,7 @@ function blockToParagraphs(block: Block): Paragraph[] {
       ]
       for (const ref of block.refs) {
         out.push(new Paragraph({
-          children: [new TextRun({ text: ref.title, bold: true })],
+          children: [new TextRun({ text: ref.ref ? `[Ref: ${ref.ref}] ${ref.title}` : ref.title, bold: true })],
           spacing: { after: 20 },
         }))
         const meta = [ref.citation, ref.date].filter(Boolean).join(' · ')

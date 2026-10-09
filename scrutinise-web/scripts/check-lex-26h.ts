@@ -14,8 +14,12 @@ import JSZip from 'jszip'
 import { prisma } from '../lib/prisma'
 import {
   SEVEN_STAGES, STAGE_CAVEAT, STAGE_CAVEAT_HEADING, NOT_YET_AVAILABLE, reviewStatus, stageBannerBlocks, stageSentence,
-  documentStage, withStageBanner, NO_REVIEW_RECORDED,
+  documentStage, withStageBanner, NO_REVIEW_RECORDED, kernelProgressOf,
 } from '../lib/documents/stage-banner'
+import { readKernelProgress } from '../lib/documents/stage-facts'
+import { LEX_STAGES } from '../lib/lex/stages'
+import { DEEPENING_PASS_KEYS } from '../lib/lex/pass-keys'
+import { PASS_KEYS } from '../lib/lex/deepening-config'
 import { FAQ_MARKDOWN } from '../lib/faq-content'
 import { EXPORT_KINDS, buildFor as buildExportModel } from '../lib/documents/export'
 import { PROPOSAL_KINDS, buildFor as buildProposalModel } from '../lib/documents/proposal-export'
@@ -58,8 +62,24 @@ async function main() {
     reviewStatus({ privateReview: { reviewers: 4, date: '2027-05-12' }, publicReview: { reviewers: 1, date: '2027-06-01' } }).label === 'Publicly reviewed — 1 reviewer, 1 June 2027')
   ok('§5b — zero reviewers, or no date, is NOT a review', reviewStatus({ privateReview: { reviewers: 0, date: '2027-05-12' }, publicReview: { reviewers: 3, date: '' } }).key === 'FIRST_SCRUTINY')
   control('a review with no reviewers must not read as reviewed', reviewStatus({ privateReview: { reviewers: 0, date: '2027-05-12' }, publicReview: null }).key !== 'FIRST_SCRUTINY')
-  ok('documentStage: briefing = 1; kernel = 2; kernel with a Deepening that ran = 3',
-    documentStage({ kind: 'FIRST_PASS', deepeningHasRun: true }) === 1 && documentStage({ kind: 'KERNEL', deepeningHasRun: false }) === 2 && documentStage({ kind: 'KERNEL', deepeningHasRun: true }) === 3)
+  // ── Decision 135 — the stage is the kernel's PROGRESS ────────────────────────────────────────────────────────────
+  const P = (built: boolean, kernelComplete: boolean, enteredDeepening: boolean) => ({ built, kernelComplete, enteredDeepening })
+  ok('135: briefing documents are Stage 1 whatever the progress', documentStage({ kind: 'FIRST_PASS', progress: P(true, true, true) }) === 1)
+  ok('135: Stage 1 until the first build', documentStage({ kind: 'KERNEL', progress: P(false, false, false) }) === 1)
+  ok('135: built, kernel not complete → Stage 2', documentStage({ kind: 'KERNEL', progress: P(true, false, false) }) === 2)
+  ok('135: kernel complete but the Deepening not entered → still Stage 2', documentStage({ kind: 'KERNEL', progress: P(true, true, false) }) === 2)
+  ok('135: Deepening entered but the kernel NOT complete → still Stage 2', documentStage({ kind: 'KERNEL', progress: P(true, false, true) }) === 2)
+  ok('135: built, kernel complete AND Deepening entered → Stage 3', documentStage({ kind: 'KERNEL', progress: P(true, true, true) }) === 3)
+  ok('135: the document stack\'s list of Deepening pass keys is the Deepening\'s own (no drift)', [...DEEPENING_PASS_KEYS].sort().join() === [...PASS_KEYS].sort().join(), ` vs `)
+  const KEYS = ['EVIDENCE_PRECEDENT', 'LEGAL']
+  const prog = (statuses: string[], passes: { passKey: string; status: string }[]) => kernelProgressOf({ built: true, fieldStatuses: statuses, deepeningPassKeys: KEYS, passes })
+  ok('135: decision 97 — every field ACCEPTED or SKIPPED is complete', prog(['ACCEPTED', 'SKIPPED', 'ACCEPTED'], []).kernelComplete)
+  ok('135: one AWAITING_CONFIRMATION / EMPTY field means the kernel is not complete', !prog(['ACCEPTED', 'AWAITING_CONFIRMATION'], []).kernelComplete && !prog(['ACCEPTED', 'EMPTY'], []).kernelComplete)
+  ok('135: a RUN row the BUILD wrote (its own research key) is not the user entering the Deepening', !prog(['ACCEPTED'], [{ passKey: 'SMART_VOCABULARY', status: 'RUN' }]).enteredDeepening)
+  ok('135: a Deepening pass the user began counts, run or still running', prog(['ACCEPTED'], [{ passKey: 'LEGAL', status: 'RUNNING' }]).enteredDeepening && prog(['ACCEPTED'], [{ passKey: 'LEGAL', status: 'RUN' }]).enteredDeepening)
+  ok('135: a NOT_RUN Deepening row is not entry', !prog(['ACCEPTED'], [{ passKey: 'LEGAL', status: 'NOT_RUN' }]).enteredDeepening)
+  control('135: a build-written RUN row must not make a Stage 3 document (must be FALSE)',
+    documentStage({ kind: 'KERNEL', progress: prog(['ACCEPTED', 'AWAITING_CONFIRMATION'], [{ passKey: 'SMART_VOCABULARY', status: 'RUN' }]) }) === 3)
 
   const banner = stageBannerBlocks(2)
   const empty: DocumentModel = { title: 't', sourceLabel: 's', generatedAt: new Date(0), blocks: [{ kind: 'paragraph', runs: [{ text: 'BODY' }] }] }
@@ -89,17 +109,31 @@ async function main() {
   for (const k of PROPOSAL_KINDS) built.push({ kind: k, model: buildProposalModel(k, snap, null).model })
   ok(`all eight kinds were built (${built.length})`, built.length === 8, built.map((b) => b.kind).join())
 
-  const ranDeepening = (await prisma.deepeningPass.count({ where: { ideaId: idea.id, status: 'RUN' } })) > 0
+  const progress = await readKernelProgress(idea.id)
+  console.log(`  progress read off the idea: ${JSON.stringify(progress)}`)
+  const kernelStage = documentStage({ kind: 'KERNEL', progress })
   for (const b of built) {
     const t = text(b.model, banner.length)
     const first = b.model.blocks[0]
     const firstText = first && first.kind === 'paragraph' ? runsToText(first.runs) : ''
     ok(`${b.kind}: opens with the stage in bold, before anything else`, /^This is a Stage [123] document: /.test(firstText) && (first as { runs: { bold?: boolean }[] }).runs[0].bold === true, firstText.slice(0, 80))
     ok(`${b.kind}: review status First Scrutiny, the seven stages and the caveat follow`, t.includes('Review status: First Scrutiny') && t.includes('7 · In Force') && t.includes(STAGE_CAVEAT))
-    const expected = b.kind === 'INITIAL_BACKGROUND' || b.kind === 'INITIAL_QUESTIONS' ? 1 : ranDeepening ? 3 : 2
+    const expected = b.kind === 'INITIAL_BACKGROUND' || b.kind === 'INITIAL_QUESTIONS' ? 1 : kernelStage
     ok(`${b.kind}: is a Stage ${expected} document (derived from what it is, not from Idea.stage=${idea.stage})`, firstText.startsWith(`This is a Stage ${expected} document`), firstText)
     ok(`${b.kind}: nothing in the document names stage 2 "First Scrutiny"`, !/First Scrutiny[^\n]{0,40}(The First Draft|Stage 2)|Stage 2[^\n]{0,40}First Scrutiny/.test(text(b.model, 400)))
   }
+  // Charlie's stated expectation for this idea (Decision 135), asserted as written and not derived: the One-Page Summary
+  // of 452c5ade opens "This is a Stage 2 document: The First Draft."
+  const onePage = built.find((b) => b.kind === 'ONE_PAGE_SUMMARY')
+  const onePageFirst = onePage && onePage.model.blocks[0].kind === 'paragraph' ? runsToText(onePage.model.blocks[0].runs) : ''
+  ok('135: the One-Page Summary of 452c5ade opens "This is a Stage 2 document: The First Draft."', onePageFirst === 'This is a Stage 2 document: The First Draft.', onePageFirst)
+  control('135: a Stage 3 opening must not satisfy that expectation (must be FALSE)', 'This is a Stage 3 document: The Deepening.' === 'This is a Stage 2 document: The First Draft.')
+
+  // Decision 136 — the bar and the documents say the same thing.
+  ok('136: the workspace bar names its stages from the documents\' words',
+    LEX_STAGES.map((s) => s.name).join('|') === SEVEN_STAGES.slice(0, 3).map((s) => s.name).join('|'), LEX_STAGES.map((s) => s.name).join('|'))
+  control('136: the old bar names must not match the documents (must be FALSE)', ['The Idea', 'The Strategy', 'The Deepening'].join('|') === SEVEN_STAGES.slice(0, 3).map((s) => s.name).join('|'))
+
   control('a built document with the banner stripped must fail', /^This is a Stage/.test(text({ ...built[0].model, blocks: built[0].model.blocks.slice(banner.length) }, 1)))
 
   // Rendered files: read the banner back OUT of the .docx and confirm the .pdf renders (not the model, the file).

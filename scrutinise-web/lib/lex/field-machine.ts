@@ -1016,10 +1016,28 @@ export async function listActions(ideaId: string) {
   return prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
 }
 
+/**
+ * ══ THE ORDERING RULE FOR COHERENT ACTIONS (8 Oct 2026): A NEW ACTION GOES LAST UNLESS THE USER MOVES IT ═══
+ *
+ * The list is ordered `orderIndex ASC, createdAt ASC`. "Last" therefore means ONE PAST THE HIGHEST `orderIndex`
+ * THE IDEA HAS EVER HELD — over every row, whatever its status.
+ *
+ * ⚠ THE RULE THIS REPLACES WAS `count(rows)`, AND IT FAILS THE MOMENT THE INDICES HAVE GAPS. Charlie's idea:
+ * #20–#24 were created on 4 Sep with indices 35–39 (earlier rebuilds had hard-deleted rows, so count ≠ highest
+ * index); everything created later was given count = 24..27, which sorted #25–#28 between #19 and #20 and tied
+ * #25 with #19 at 24. And three creation paths in guiding-policy-state.ts set no index at all (default 0 = the top).
+ * EVERY path that creates an action calls this. The one deliberate exception is a MERGE, which takes the position
+ * of its parents (action-structure.ts): the result stands where the two it replaces stood.
+ */
+export async function nextActionOrderIndex(ideaId: string): Promise<number> {
+  const top = await prisma.lexCoherentAction.aggregate({ where: { ideaId }, _max: { orderIndex: true } })
+  return (top._max.orderIndex ?? -1) + 1
+}
+
 export async function createActions(ideaId: string, actions: ActionInput[], source: 'USER' | 'LEX') {
   const clean = actions.filter((a) => a.practicalStep?.trim())
   if (!clean.length) return
-  const base = await prisma.lexCoherentAction.count({ where: { ideaId } })
+  const base = await nextActionOrderIndex(ideaId)
   await prisma.lexCoherentAction.createMany({
     data: clean.map((a, i) => ({
       ideaId,
@@ -1039,7 +1057,7 @@ export async function createActions(ideaId: string, actions: ActionInput[], sour
 }
 
 export async function addAction(ideaId: string, input: ActionInput) {
-  const base = await prisma.lexCoherentAction.count({ where: { ideaId } })
+  const base = await nextActionOrderIndex(ideaId)
   return prisma.lexCoherentAction.create({
     data: {
       ideaId,
@@ -1077,14 +1095,7 @@ export async function updateAction(ideaId: string, actionId: string, patch: Part
   })
 }
 
-export async function removeAction(ideaId: string, actionId: string) {
-  // ⚠ 26-Q — NOTHING DELETES. "Remove" used to hard-delete the row and, by cascade, its cost lines — with no confirm and no
-  // reason. It is now a rule-out: the row is kept (RULED_OUT, with the reason it was removed), costs and all, and can be
-  // restored from the ruled-out section. The caller's contract is unchanged: the action leaves the live list.
-  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true } })
-  if (!row) return
-  await prisma.lexCoherentAction.update({ where: { id: actionId }, data: { status: 'RULED_OUT', ruleOutReason: 'Removed from the list by you.', parked: false } })
-}
+// DECISION 139 (9 Oct 2026) - removeAction is gone. There is no un-reasoned way to take an action off the list: "Remove" hard-deleted the row (and its cost lines) until 26-Q, then ruled it out with a fixed reason the user never gave. RULE OUT, with the user's own reason and restorable, is the only route: ruleOut in lib/lex/action-structure.ts.
 
 /** The hand-seeded costing benchmarks (§18.3), available to the estimator. */
 export async function listBenchmarks() {

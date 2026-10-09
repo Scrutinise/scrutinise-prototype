@@ -15,9 +15,13 @@
 // editing, costing and cost lines are reused as they are.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CanonicalAction, CanonicalActionHeading, CanonicalCause } from '@/lib/lex/page1-config'
 import { HEADING_PALETTE, colourFor } from '@/lib/lex/action-headings'
+import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
+import type { ActionStructureRequest, ActionStructureOp } from '@/lib/lex/action-structure-schema'
+import { OP_WORDS } from '@/lib/lex/action-structure-schema'
+import { explainFailure } from '@/lib/api-rejection'
 import {
   AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODES, GROUP_MODE_LABEL,
   actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, type GroupMode,
@@ -27,21 +31,32 @@ import {
 
 interface OpResult<T = unknown> { ok: boolean; result: T | null; error: string | null }
 
+/** The body of a call, typed against the route's own schema: `ids` where the route wants `actionIds` is a compile error. */
+type Bodies = { [R in ActionStructureRequest as R['op']]: Omit<R, 'op'> }
+
 function useOps(ideaId: string, onChanged: () => void) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
-  const run = useCallback(async <T,>(op: string, body: Record<string, unknown> = {}, label?: string): Promise<OpResult<T>> => {
+  // `K` is inferred from `op`, so `body` is checked against THAT op's schema. The result is untyped (`any`); the few callers
+  // that read it annotate it where they use it.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const run = useCallback(async <K extends keyof Bodies>(op: K, body: Bodies[K], label?: string): Promise<OpResult<any>> => {
+    type T = any // eslint-disable-line @typescript-eslint/no-explicit-any
     setBusy(label ?? op); setError(null)
+    const url = `/api/ideas/${ideaId}/action-structure`
+    const sent = { op, ...body }
+    const control = OP_WORDS[op]
     try {
-      const res = await fetch(`/api/ideas/${ideaId}/action-structure`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op, ...body }) })
-      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: T; error?: string | { formErrors?: string[] } | null }
-      const err = typeof j.error === 'string' ? j.error : j.error ? 'That request was not valid.' : (!res.ok ? `HTTP ${res.status}` : null)
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sent) })
+      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: T; error?: unknown }
+      // §30 — every rejection says which input and why. `explainFailure` words even an old-shape body.
+      const err = j.error || !res.ok ? explainFailure(j, res.status, control) : null
       if (err) { setError(err); return { ok: false, result: null, error: err } }
       onChanged()
       return { ok: true, result: (j.result ?? null) as T | null, error: null }
     } catch (e) {
-      const m = e instanceof Error ? e.message : 'network error'
+      const m = `${control} could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`
       setError(m); return { ok: false, result: null, error: m }
     } finally { setBusy(null) }
   }, [ideaId, onChanged])
@@ -72,15 +87,17 @@ interface Props {
   onChanged: () => void
   /** The full existing action card (edit, costs, cost lines) — shown in place when a title is opened. */
   renderFull: (a: CanonicalAction) => ReactNode
+  /** Ids of rows to render already open. Used by the render checks, so that what an OPENED row shows is read from the output. */
+  initiallyOpen?: string[]
 }
 
 type View = 'list' | 'coverage' | 'sequence'
 
-export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull }: Props) {
+export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen }: Props) {
   const ops = useOps(ideaId, onChanged)
   const [view, setView] = useState<View>('list')
   const [mode, setMode] = useState<GroupMode>('heading')
-  const [open, setOpen] = useState<Set<string>>(new Set())
+  const [open, setOpen] = useState<Set<string>>(new Set(initiallyOpen ?? []))
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [newHeading, setNewHeading] = useState('')
   const [suggestions, setSuggestions] = useState<Array<{ name: string; why: string }> | null>(null)
@@ -147,10 +164,12 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   }
 
   // ── bulk ──
-  const bulk = async (op: string, extra: Record<string, unknown>) => {
-    const r = await ops.run(op, { ids: selIds, ...extra })
-    if (r.ok) setSelected(new Set())
-  }
+  // Typed per control (no generic `bulk(op, extra)`: a helper that spreads `{ ids }` into every op is exactly how the
+  // bulk "Assign to heading" came to send `ids` where the route wants `actionIds`).
+  const clearIfDone = (r: { ok: boolean }) => { if (r.ok) setSelected(new Set()) }
+  const bulkAssign = (headingId: string | null) => ops.run('assignHeading', { actionIds: selIds, headingId }).then(clearIfDone)
+  const bulkPark = () => ops.run('park', { ids: selIds, reason: reason.trim() || null }).then(clearIfDone)
+  const bulkRuleOut = () => ops.run('ruleOut', { ids: selIds, reason: reason.trim() }).then(clearIfDone)
 
   // ── one line ──
   const renderRow = (a: CanonicalAction) => {
@@ -183,6 +202,13 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               {a.whoImplements && <span title={a.whoImplements}>by {a.whoImplements.length > 40 ? `${a.whoImplements.slice(0, 39)}…` : a.whoImplements}</span>}
               <span>{specificEnough(a) ? 'specific enough' : 'not yet specific'}</span>
               {a.mergedFrom.length > 0 && <span>merged from #{a.mergedFrom.join(', #')}</span>}
+              {/* DECISION 138 — the policy test, in the one list: a WORD AND A SHAPE (✗ ○ ? ✓), never colour alone. A conflict is boxed. */}
+              {a.policyTest && (
+                <span title={a.policyTest.reason ?? undefined}
+                  className={`font-semibold text-zinc-800 ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900 rounded px-1' : ''}`}>
+                  <span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}
+                </span>
+              )}
               {a.facetProposal && <span className="font-semibold text-zinc-700">Lex has proposed facets</span>}
             </div>
             {a.titleProposal && (
@@ -223,17 +249,17 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             </select></label>
         )}
         <button disabled={disabled || untitled === 0} onClick={async () => {
-          const r = await ops.run<{ proposed: number; skipped: number; asTopics: number }>('proposeTitles', {}, 'Lex is writing titles')
+          const r = await ops.run('proposeTitles', {}, 'Lex is writing titles')
           if (r.ok && r.result) ops.setNote(`Lex proposed ${r.result.proposed} title${r.result.proposed === 1 ? '' : 's'}${r.result.skipped ? `; ${r.result.skipped} it could not title` : ''}${r.result.asTopics ? `; ${r.result.asTopics} read like a topic rather than an action — worth a look` : ''}. Nothing is saved until you accept.`)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Title these for me{untitled ? ` (${untitled})` : ''}</button>
         {titleProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptTitles', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Use all {titleProposals} proposed titles</button>}
         <button disabled={disabled || live.length === 0} onClick={async () => {
-          const r = await ops.run<{ proposed: number; links: string[] }>('proposeFacets', {}, 'Lex is classifying')
+          const r = await ops.run('proposeFacets', {}, 'Lex is classifying')
           if (r.ok && r.result) ops.setNote(`Lex proposed a classification for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}${r.result.links.length ? ` and read ${r.result.links.length} binding link${r.result.links.length === 1 ? '' : 's'} from your guiding policy` : ''}. Open an action to correct it, or accept the lot.`)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Classify with Lex</button>
         {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed classifications</button>}
         <button disabled={disabled || live.length < 2} onClick={async () => {
-          const r = await ops.run<NonNullable<typeof dupes>>('findDuplicates', {}, 'finding duplicates')
+          const r = await ops.run('findDuplicates', {}, 'finding duplicates')
           if (r.ok) setDupes(r.result)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Find duplicates</button>
       </div>
@@ -244,7 +270,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           className="text-xs p-1.5 rounded border border-zinc-300 w-60 focus:outline-none focus:border-blue-400" />
         <button disabled={disabled || !newHeading.trim()} onClick={() => { void ops.run('createHeading', { name: newHeading }); setNewHeading('') }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">Add heading</button>
         <button disabled={disabled} onClick={async () => {
-          const r = await ops.run<{ suggestions: Array<{ name: string; why: string }> }>('suggestHeadings', {}, 'Lex is reading your guiding policy')
+          const r = await ops.run('suggestHeadings', {}, 'Lex is reading your guiding policy')
           if (r.ok && r.result) setSuggestions(r.result.suggestions)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 hover:bg-zinc-50">Suggest headings from my guiding policy</button>
       </div>
@@ -268,7 +294,11 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       )}
 
       {ops.busy && <p className="text-[11px] text-zinc-600" role="status">Working: {ops.busy}…</p>}
-      {ops.error && <p className="text-[11px] font-semibold text-amber-800" role="alert">⚠ {ops.error}</p>}
+      {ops.error && (
+        <p className="text-[11px] font-semibold text-amber-800" role="alert">⚠ {ops.error}{' '}
+          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('scrutinise:report-bug'))} className="underline font-medium ml-1">Report this problem</button>
+        </p>
+      )}
       {ops.note && <p className="text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-2 py-1">{ops.note} <button onClick={() => ops.setNote(null)} className="underline ml-1">dismiss</button></p>}
     </div>
   )
@@ -277,13 +307,13 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const BulkBar = selIds.length > 0 && (
     <div className="sticky top-0 z-10 rounded-lg border-2 border-zinc-900 bg-white p-2 flex flex-wrap items-center gap-1.5">
       <span className="text-xs font-semibold">{selIds.length} selected</span>
-      <select disabled={disabled} defaultValue="" onChange={(e) => { if (e.target.value !== '__') void bulk('assignHeading', e.target.value === '' ? { headingId: null } : { headingId: e.target.value }); e.target.value = '__' }} aria-label="Assign selected to a heading" className="text-xs border border-zinc-300 rounded px-1 py-0.5">
+      <select disabled={disabled} defaultValue="" onChange={(e) => { if (e.target.value !== '__') void bulkAssign(e.target.value === '' ? null : e.target.value); e.target.value = '__' }} aria-label="Assign selected to a heading" className="text-xs border border-zinc-300 rounded px-1 py-0.5">
         <option value="__">Assign to heading…</option><option value="">No heading</option>
         {headings.map((h) => <option key={h.id} value={h.id}>{colourFor(h.colourKey).glyph} {h.name}</option>)}
       </select>
-      <button disabled={disabled} onClick={() => void bulk('park', { reason: reason || null })} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300">Later phase</button>
-      <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (to rule out)" className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-44" />
-      <button disabled={disabled || reason.trim().length < 3} onClick={() => void bulk('ruleOut', { reason })} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Rule out</button>
+      <button disabled={disabled} onClick={() => void bulkPark()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300">Later phase</button>
+      <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (to rule out)" maxLength={600} className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-44" />
+      <button disabled={disabled || reason.trim().length < 3} onClick={() => void bulkRuleOut()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Rule out</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'merge' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Merge</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'compare' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Compare</button>
       <button onClick={() => setSelected(new Set())} className="text-xs underline text-zinc-500 ml-auto">Clear</button>
@@ -293,6 +323,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   return (
     <div className="space-y-2">
       {Toolbar}
+      <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />
       {BulkBar}
       {pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
       {dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
@@ -366,6 +397,18 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
         <button disabled={disabled} onClick={() => void ops.run('setTitle', { actionId: a.id, title: title.trim() || null })} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Save title</button>
       </div>
 
+      {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
+      {a.policyTest && (
+        <div className={`rounded bg-white p-2 text-xs ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
+          <p className="mt-0.5 text-zinc-900">
+            <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
+            {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
+          </p>
+          {a.policyTest.from.length > 0 && <p className="mt-0.5 text-[11px] text-zinc-500">From: {a.policyTest.from.join('; ')}</p>}
+        </div>
+      )}
+
       <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">How this action is classified {a.facetProposal && '— Lex has proposed some of it'}</p>
         {a.facetProposal && <FacetProposal a={a} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id] })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id] })} />}
@@ -379,7 +422,7 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
               <option value="">not placed</option>{SEQUENCES.map((v) => <option key={v} value={v}>{SEQUENCE_LABEL[v]}</option>)}
             </select></label>
           <label className="flex items-center gap-1">{FACET_WORD.link}
-            <input value={link} onChange={(e) => setLink(e.target.value)} onBlur={() => link.trim() !== (a.link ?? '') && facetSet({ link: link.trim() || null })} placeholder="which binding link it protects"
+            <input value={link} onChange={(e) => setLink(e.target.value)} onBlur={() => link.trim() !== (a.link ?? '') && facetSet({ link: link.trim() || null })} placeholder="which binding link it protects" maxLength={200}
               className="border border-zinc-300 rounded px-1 py-0.5 w-48" /></label>
         </div>
         <details className="text-[11px]">
@@ -428,7 +471,7 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
         <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null })} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">Later phase</button>
         <button disabled={disabled || why.trim().length < 3} onClick={() => void ops.run('ruleOut', { ids: [a.id], reason: why })} title={why.trim().length < 3 ? 'Give a reason first — it is kept so you can bring the action back.' : undefined}
           className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700 disabled:opacity-40">Rule out</button>
-        <input value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Reason (needed to rule out)" className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
+        <input value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Reason (needed to rule out)" maxLength={600} className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
       </div>
     </div>
   )
@@ -497,18 +540,18 @@ function FacetProposal({ a, causes, others, onAccept, onDismiss }: { a: Canonica
 
 function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: string; a: number; b: number; mode: 'merge' | 'compare'; ops: ReturnType<typeof useOps>; onClose: () => void; byNumber: (n: number) => CanonicalAction | undefined }) {
   void ideaId
-  type Answer = { verdict: string; reasoning: string; merged: { title: string; practicalStep: string } | null; subordinateNumber: number | null }
+  type Answer = { verdict: 'MERGE' | 'ONE_CONTAINS_THE_OTHER' | 'SEQUENCE' | 'CONTRADICTORY'; reasoning: string; merged: { title: string; practicalStep: string } | null; subordinateNumber: number | null }
   const [answer, setAnswer] = useState<Answer | null>(null)
   const [edited, setEdited] = useState<{ title: string; practicalStep: string } | null>(null)
   const [done, setDone] = useState<string | null>(null)
   const A = byNumber(a), B = byNumber(b)
   const judge = async () => {
-    const r = await ops.run<{ answer: Answer }>('judgeMerge', { a, b }, 'Lex is comparing them')
+    const r = await ops.run('judgeMerge', { a, b }, 'Lex is comparing them')
     if (r.ok && r.result) { setAnswer(r.result.answer); setEdited(r.result.answer.merged) }
   }
   const apply = async () => {
     if (!answer) return
-    const r = await ops.run<{ kind: string; resultNumber: number }>('applyMerge', { a, b, answer: { ...answer, merged: edited ?? answer.merged } }, 'merging')
+    const r = await ops.run('applyMerge', { a, b, answer: { ...answer, merged: edited ?? answer.merged } }, 'merging')
     if (r.ok && r.result) setDone(r.result.kind === 'MERGED' ? `Merged into #${r.result.resultNumber}. The originals are kept beneath it.` : `Folded into #${r.result.resultNumber}. The other is kept, marked merged away.`)
   }
   const VERDICT: Record<string, string> = {
@@ -648,5 +691,47 @@ export function SequenceView({ actions }: { actions: CanonicalAction[] }) {
           </div>))}
       </div>
     </section>
+  )
+}
+
+
+/**
+ * DECISION 138 — the one thing the old "Added from the consolidation" box did that is not a property of an action: the RETRY. Ideas
+ * lifted from the drafts are HELD until the settled guiding policy has tested them; if the step did not complete, they stay held and
+ * this says so, with the button to run it again. It shows nothing when nothing is held. (The added actions themselves are in the
+ * list above, each with its verdict.)
+ */
+function HeldFromConsolidation({ ideaId, onChanged }: { ideaId: string; onChanged: () => void }) {
+  const [held, setHeld] = useState(0)
+  const [settled, setSettled] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/action-ideas`)
+      if (!res.ok) return
+      const j = await res.json()
+      setHeld(Number(j.held) || 0); setSettled(!!j.settledPolicyId)
+    } catch { /* a notice that cannot load simply does not show */ }
+  }, [ideaId])
+  useEffect(() => { void load() }, [load])
+  if (!(held > 0 && settled)) return msg ? <p role="alert" className="text-[11px] font-semibold text-amber-800">⚠ {msg}</p> : null
+  return (
+    <p className="text-[11px] text-zinc-800 rounded border border-zinc-300 bg-zinc-50 px-2 py-1.5">
+      {held} idea{held === 1 ? '' : 's'} from the consolidation {held === 1 ? 'is' : 'are'} being held and not yet in your list.{' '}
+      <button type="button" disabled={busy} className="underline font-medium disabled:opacity-40"
+        onClick={async () => {
+          setBusy(true); setMsg(null)
+          try {
+            const res = await fetch(`/api/ideas/${ideaId}/action-ideas`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'test' }) })
+            const j = await res.json().catch(() => ({}))
+            if (!res.ok) { setMsg(explainFailure(j, res.status, 'Testing the held ideas')); return }
+            await load(); onChanged()
+          } finally { setBusy(false) }
+        }}>
+        {busy ? 'Adding…' : 'Test and add them now'}
+      </button>
+      {msg && <span role="alert" className="block font-semibold text-amber-800 mt-1">⚠ {msg}</span>}
+    </p>
   )
 }

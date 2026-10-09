@@ -134,7 +134,7 @@ export function QuestionCard(p: QuestionCardProps) {
             type="button"
             onClick={p.onToggleAttach}
             aria-expanded={!!p.attachOpen}
-            title="Add a document or a link for me to read — a report, a letter, an article, a web page"
+            title="Add a file, a link, pasted text, a quote or just a thought — kept with its source"
             className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
               p.attachOpen
                 ? 'bg-zinc-900 border-zinc-900 text-white'
@@ -143,7 +143,7 @@ export function QuestionCard(p: QuestionCardProps) {
           >
             <span aria-hidden className="text-base leading-none">{p.attachOpen ? '−' : '+'}</span>
             <span>
-              {p.attachOpen ? 'Close' : 'Add a file or link'}
+              {p.attachOpen ? 'Close' : 'Add research'}
               {p.attachCount ? ` (${p.attachCount})` : ''}
             </span>
           </button>
@@ -236,7 +236,7 @@ export function IntakeCard(p: IntakeCardProps) {
                 type="button"
                 onClick={p.onToggleAttach}
                 aria-expanded={!!p.attachOpen}
-                title="Add a document or a link for me to read — a report, a letter, an article, a web page"
+                title="Add a file, a link, pasted text, a quote or just a thought — kept with its source"
                 className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
                   p.attachOpen
                     ? 'bg-zinc-900 border-zinc-900 text-white'
@@ -245,7 +245,7 @@ export function IntakeCard(p: IntakeCardProps) {
               >
                 <span aria-hidden className="text-base leading-none">{p.attachOpen ? '−' : '+'}</span>
                 <span>
-                  {p.attachOpen ? 'Close' : 'Add a file or link'}
+                  {p.attachOpen ? 'Close' : 'Add research'}
                   {p.attachCount ? ` (${p.attachCount})` : ''}
                 </span>
               </button>
@@ -326,7 +326,7 @@ export function ReplyCard(p: ReplyCardProps) {
             type="button"
             onClick={p.onToggleAttach}
             aria-expanded={!!p.attachOpen}
-            title="Add a document or a link for me to read — a report, a letter, an article, a web page"
+            title="Add a file, a link, pasted text, a quote or just a thought — kept with its source"
             className={`text-sm font-medium px-3 py-2 rounded-full border-2 inline-flex items-center gap-1.5 ${
               p.attachOpen
                 ? 'bg-zinc-900 border-zinc-900 text-white'
@@ -335,7 +335,7 @@ export function ReplyCard(p: ReplyCardProps) {
           >
             <span aria-hidden className="text-base leading-none">{p.attachOpen ? '−' : '+'}</span>
             <span>
-              {p.attachOpen ? 'Close' : 'Add a file or link'}
+              {p.attachOpen ? 'Close' : 'Add research'}
               {p.attachCount ? ` (${p.attachCount})` : ''}
             </span>
           </button>

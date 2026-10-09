@@ -31,8 +31,10 @@ import { hasRealTitle } from '@/components/lex/MyIdeasList'
 import RerunDialogue from '@/components/lex/RerunDialogue'
 import RerunBanner from '@/components/lex/RerunBanner'
 import YourMaterial from '@/components/lex/YourMaterial'
+import AddResearch from '@/components/lex/AddResearch'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
+import { installFaultCapture } from '@/lib/client-fault-capture'
 import type { StageContext } from '@/lib/lex/stage-context'
 import { WAIT_MESSAGE } from '@/lib/lex/search-wait'
 import AskLexPanel from '@/components/lex/AskLexPanel'
@@ -311,6 +313,8 @@ export default function BuildIdeaClient(
   const [showHelp, setShowHelp] = useState(Boolean(isFirstIdea))
   // A1: the consent flow. Nothing is stored or sent until an explicit yes.
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  // 8 Oct 2026 (item 4) — record failed requests / clicks / uncaught errors from the moment the page opens (see the Create page).
+  useEffect(() => { installFaultCapture() }, [])
   const [feedbackOffer, setFeedbackOffer] = useState(false)
   // A6: Exit, and the prompt that stops a half-typed answer being thrown away.
   const [exitPrompt, setExitPrompt] = useState(false)
@@ -1170,9 +1174,10 @@ export default function BuildIdeaClient(
               {elicit.phase === 'CONFIRMED' && ideaId && (
                 <div className="mb-4 rounded-xl border border-zinc-200 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
-                    Add a file or link
+                    Add research
                   </p>
-                  <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} />
+                  <AddResearch ideaId={ideaId} bare onSaved={() => void refresh()} />
+                  <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} hideAdd />
                 </div>
               )}
               {/* ══ 25-K §2 — THE RE-RUN, PRESENT, NOT CONDITIONAL ════════════════
@@ -1395,11 +1400,10 @@ export default function BuildIdeaClient(
                   })()
                 }}
                 attachPanel={ideaId && (
-                  <YourMaterial
-                    ideaId={ideaId}
-                    onChanged={() => void refresh()}
-                    onCount={setAttached}
-                  />
+                  <>
+                    <AddResearch ideaId={ideaId} bare onSaved={() => void refresh()} />
+                    <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} hideAdd />
+                  </>
                 )}
               />
             )}
@@ -1418,11 +1422,10 @@ export default function BuildIdeaClient(
                 attachOpen={attachOpen}
                 onToggleAttach={ideaId ? () => setAttachOpen((v) => !v) : undefined}
                 attachPanel={ideaId && (
-                  <YourMaterial
-                    ideaId={ideaId}
-                    onChanged={() => void refresh()}
-                    onCount={setAttached}
-                  />
+                  <>
+                    <AddResearch ideaId={ideaId} bare onSaved={() => void refresh()} />
+                    <YourMaterial ideaId={ideaId} onChanged={() => void refresh()} onCount={setAttached} hideAdd />
+                  </>
                 )}
               />
             )}

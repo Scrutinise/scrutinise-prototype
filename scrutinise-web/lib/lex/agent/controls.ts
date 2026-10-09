@@ -28,7 +28,7 @@ export interface Control {
 }
 
 export const CONTROLS: readonly Control[] = [
-  { label: 'Add a file or link', file: 'components/lex/ChatAttach.tsx', where: 'the “+” just above the box you type in, on every stage', does: 'adds a document or a link for me to read' },
+  { label: 'Add research', file: 'components/lex/AddResearch.tsx', where: 'the “+” just above the box you type in, on every stage', does: 'adds a file, a link, pasted text of any length, a quote or just a thought to the research notebook, with its source — and I read it' },
   { label: 'Give feedback on Lex', file: 'components/lex/ChatPanel.tsx', where: 'beneath the chat, above the box you type in', does: 'opens a dialogue to pass a problem back to the Scrutinise team, showing exactly what would be sent first' },
   { label: 'prior chat', file: 'components/lex/ChatPanel.tsx', where: 'the strip at the top of the chat', does: 'shows the earlier conversation, which is hidden when the chat opens' },
   { label: 'Add to report', file: 'components/lex/QuestionPanel.tsx', where: 'on a source in THE RESEARCH', does: 'marks it as one of the sources the proposal itself rests on, so it appears in DRAFT STRATEGY' },

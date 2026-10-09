@@ -16,9 +16,25 @@ export const SEQUENCES = ['NOW', 'NEXT', 'LATER'] as const
 export type Sequence = (typeof SEQUENCES)[number]
 export const SEQUENCE_LABEL: Record<Sequence, string> = { NOW: 'Now', NEXT: 'Next', LATER: 'Later' }
 
-export const GROUP_MODES = ['heading', 'cause', 'link', 'avenue', 'sequence'] as const
+export const GROUP_MODES = ['heading', 'cause', 'link', 'avenue', 'sequence', 'policy-test'] as const
 export type GroupMode = (typeof GROUP_MODES)[number]
-export const GROUP_MODE_LABEL: Record<GroupMode, string> = { heading: 'By heading', cause: 'By cause', link: 'By link', avenue: 'By avenue', sequence: 'By sequence' }
+export const GROUP_MODE_LABEL: Record<GroupMode, string> = { heading: 'By heading', cause: 'By cause', link: 'By link', avenue: 'By avenue', sequence: 'By sequence', 'policy-test': 'By policy test' }
+
+// ══ DECISION 138 (9 Oct 2026) — THE POLICY TEST, IN THE ONE LIST ═══════════════════════════════════════════════
+// What the consolidation's test said about an action against the settled guiding policy. A verdict is a WORD AND A SHAPE OF A DIFFERENT
+// KIND, never colour alone (docs/CLAUDE.md §21; Charlie is colour blind): ✗ Conflicts · ○ Does not fit · ? Not tested · ✓ Fits.
+// The order is the order they are LISTED in: the worst first, so a conflict is never the last thing a reader reaches.
+export const POLICY_VERDICTS = ['CONFLICTS', 'DOES_NOT_FIT', 'NOT_TESTED', 'FITS'] as const
+export type PolicyVerdict = (typeof POLICY_VERDICTS)[number]
+export const POLICY_VERDICT_UI: Record<PolicyVerdict, { glyph: string; word: string }> = {
+  CONFLICTS: { glyph: '✗', word: 'Conflicts' },
+  DOES_NOT_FIT: { glyph: '○', word: 'Does not fit' },
+  NOT_TESTED: { glyph: '?', word: 'Not tested' },
+  FITS: { glyph: '✓', word: 'Fits' },
+}
+export interface PolicyTest { verdict: PolicyVerdict; reason: string | null; from: string[] }
+/** An action the consolidation never tested (the user's own, or from another route) says so in words — it is never shown as fitting. */
+export const NOT_IN_POLICY_TEST = 'Not part of the consolidation’s policy test'
 
 export interface ActionLike {
   id: string
@@ -33,6 +49,8 @@ export interface ActionLike {
   link: string | null
   sequence: string | null
   beforeIds: string[]
+  /** Decision 138 — null/absent = never went through the consolidation's policy test. */
+  policyTest?: PolicyTest | null
 }
 export interface CauseLike { id: string; number: number | null; cause: string }
 export interface HeadingLike { id: string; name: string; colourKey: string; hidden: boolean; orderIndex: number }
@@ -92,6 +110,16 @@ export function groupActions<T extends ActionLike>(
       else bucket('none', 'No cause recorded').actions.push(a)
     }
     return out.sort((x, y) => orderOf(x.key, order.map((c) => `c:${c.id}`)) - orderOf(y.key, order.map((c) => `c:${c.id}`)))
+  }
+  if (mode === 'policy-test') {
+    // The four verdicts always head the list in their fixed order — a conflict first — and an action that never went through the test
+    // lands in a group that says so, last. (Empty verdict groups are not returned; an empty "Conflicts" is simply good news.)
+    for (const a of actions) {
+      const v = a.policyTest?.verdict
+      if (v && POLICY_VERDICTS.includes(v)) bucket(`pt:${v}`, `${POLICY_VERDICT_UI[v].glyph} ${POLICY_VERDICT_UI[v].word}`).actions.push(a)
+      else bucket('none', NOT_IN_POLICY_TEST).actions.push(a)
+    }
+    return out.sort((x, y) => orderOf(x.key, POLICY_VERDICTS.map((v) => `pt:${v}`)) - orderOf(y.key, POLICY_VERDICTS.map((v) => `pt:${v}`)))
   }
   if (mode === 'avenue') {
     for (const a of actions) {

@@ -33,7 +33,9 @@ import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
 import { buildMeetingPackDocument, type MeetingPackSection } from './build-meeting-pack'
 import { buildProposalDocument, buildSummaryDocument, type ProposalBuildResult } from './build-proposal'
-import { withStageBanner, documentStage } from './stage-banner'
+import { withStageBanner, documentStage, kernelProgressOf } from './stage-banner'
+import { DEEPENING_PASS_KEYS } from '@/lib/lex/pass-keys'
+import { syncRegistry } from '@/lib/lex/source-registry'
 import { buildEvidencePackDocument } from './build-evidence-pack'
 import {
   buildProposalSnapshot,
@@ -134,9 +136,19 @@ export function buildFor(
   opts: { sections?: MeetingPackSection[] } = {},
 ): ProposalBuildResult {
   // ⚠ 26-H §4 — the stage banner goes on every kind, here, the one place a kind maps to a builder. Built from
-  // the kernel, so Stage 2 (The First Draft), or Stage 3 once a Deepening pass has actually run — read from the
-  // snapshot's own pass list, not from `Idea.stage`.
-  const stage = documentStage({ kind: 'KERNEL', deepeningHasRun: (snapshot.passes ?? []).some((p) => p.status === 'RUN') })
+  // the kernel, so its stage is the kernel's progress (Decision 135), read from the snapshot's OWN fields and
+  // pass list — a frozen version keeps the stage it had — and never from `Idea.stage`.
+  // ⚠ "Built" has no column in the snapshot; it is inferred from what only a build or a Deepening pass leaves
+  // behind (pass rows, or a field awaiting confirmation). Reported in LEX_26H follow-up as an inference.
+  const stage = documentStage({
+    kind: 'KERNEL',
+    progress: kernelProgressOf({
+      built: (snapshot.passes ?? []).length > 0 || snapshot.fields.some((f) => f.status === 'AWAITING_CONFIRMATION'),
+      fieldStatuses: snapshot.fields.map((f) => f.status),
+      deepeningPassKeys: DEEPENING_PASS_KEYS,
+      passes: snapshot.passes ?? [],
+    }),
+  })
   const bannered = (r: ProposalBuildResult): ProposalBuildResult => ({ ...r, model: withStageBanner(r.model, stage) })
   switch (kind) {
     case 'PROPOSAL': return bannered(buildProposalDocument(snapshot))
@@ -251,6 +263,9 @@ export async function generateProposalExport(
   kind: ProposalKind,
   opts: { force?: boolean; onlineViewUrl?: string | null; sections?: MeetingPackSection[] } = {},
 ): Promise<ProposalExportStatus> {
+  // 26-R — number every source the idea rests on BEFORE the snapshot is read, so the document carries [Ref: n] for all of them.
+  // Generating is an explicit act (unlike the status read, which only fingerprints), so it is the place to write numbers.
+  await syncRegistry(ideaId)
   const snapshot = await buildProposalSnapshot(ideaId)
   // ⚠⚠ 25-N §5e — THE CHOSEN SECTIONS ARE PART OF THE FINGERPRINT, and they have to be.
   // The store is idempotent by hash: without this, a user who unticked two sections and pressed

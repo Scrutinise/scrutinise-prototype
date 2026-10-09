@@ -40,7 +40,7 @@ export function availableActionsBlock(input: AvailabilityInput): string {
     'ALWAYS AVAILABLE, and the right first answer to most requests:',
     '- Talking it through with you, here.',
     '- Searching the corpus: you can do it from this chat — the platform runs it when asked and gives you the results.',
-    '- Adding a document or a link with "Add a file or link" above the box, or pasting a link into a message.',
+    '- Adding a document or a link with "Add research" above the box, or pasting a link into a message.',
     '- Their private Notes (the second tab beside this chat).',
   ]
   if (input.pendingNewMaterial > 0) {

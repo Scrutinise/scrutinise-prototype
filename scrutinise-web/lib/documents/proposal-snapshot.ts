@@ -38,6 +38,7 @@ import { prisma } from '@/lib/prisma'
 import { PAGE_SEQUENCE, type FieldDef } from '@/lib/lex/page1-config'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
+import { refIndex, urlKey } from '@/lib/lex/source-registry'
 
 /**
  * The shape version. Stored snapshots outlive the code that wrote them: a version
@@ -187,6 +188,8 @@ export interface SnapshotAction {
 }
 
 export interface SnapshotEvidence {
+  /** 26-R — the registry number of the source this finding cites. Optional (older versions). */
+  ref?: number
   id: string
   passKey: string
   fieldRef: string | null
@@ -311,6 +314,8 @@ export interface SnapshotFork {
 }
 
 export interface SnapshotSourceRef {
+  /** 26-R — the registry number (`[Ref: n]`). Optional: a version minted before the registry has none. */
+  ref?: number
   id: string
   title: string
   citation: string
@@ -346,6 +351,8 @@ export interface SnapshotSource {
  * reader is most likely to ask about.
  */
 export interface SnapshotExcludedSource {
+  /** 26-R — registry number. Optional (older versions). */
+  ref?: number
   sourceKey: string
   title: string | null
   citation: string | null
@@ -760,7 +767,15 @@ export async function buildProposalSnapshot(
     }
   })
 
+  // 26-R — READ-ONLY. This function is also the staleness fingerprint, run on every page load, so it must not write: numbers
+  // are assigned where a source is created or decided, by `syncRegistry` in the explicit generate/mint paths and the notebook
+  // and Sources reads. A source with no row yet simply has no `ref` here (and the document prints none) — never a guessed one.
+  const regIndex = await refIndex(ideaId)
+  const refFor = (key: string | null | undefined, url: string | null | undefined): number | undefined =>
+    (key ? regIndex.byCorpusKey.get(key) ?? regIndex.byMaterialId.get(key) : undefined) ?? (url ? regIndex.byUrlKey.get(urlKey(url)) : undefined)
+
   const evidence: SnapshotEvidence[] = evidenceRows.map((e) => ({
+    ref: refFor(e.sourceId, e.url),
     id: e.id,
     passKey: e.passKey,
     fieldRef: e.fieldRef,
@@ -845,6 +860,7 @@ export async function buildProposalSnapshot(
         .map((r) => {
           const d = r.id ? decisionByKey.get(r.id) : undefined
           return {
+            ref: refFor(r.id, r.url),
             id: r.id ?? '',
             title: r.title?.trim() || 'Untitled source',
             citation: r.citation?.trim() || '',
@@ -871,6 +887,7 @@ export async function buildProposalSnapshot(
   const prioritySources: SnapshotSourceRef[] = decisionRows
     .filter((d) => d.status === 'PRIORITY')
     .map((d) => ({
+      ref: refFor(d.sourceKey, d.url),
       id: d.sourceKey,
       title: d.title?.trim() || 'Untitled source',
       citation: d.citation?.trim() || '',
@@ -885,6 +902,7 @@ export async function buildProposalSnapshot(
   const excludedSources: SnapshotExcludedSource[] = decisionRows
     .filter((d) => d.status === 'EXCLUDED')
     .map((d) => ({
+      ref: refFor(d.sourceKey, d.url),
       sourceKey: d.sourceKey,
       title: d.title,
       citation: d.citation,

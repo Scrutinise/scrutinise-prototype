@@ -3,8 +3,9 @@
 // cannot drift. Owner or collaborator (authorizeIdea), exactly as the older /actions route. Nothing here deletes an action.
 
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { ActionStructureBody as Body, OP_WORDS, INPUT_WORDS, type ActionStructureOp } from '@/lib/lex/action-structure-schema'
+import { describeIssues } from '@/lib/api-rejection'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { assertWritableField } from '@/lib/lex/stage'
@@ -13,44 +14,6 @@ import * as S from '@/lib/lex/action-structure'
 export const maxDuration = 300
 
 type Params = { params: Promise<{ id: string }> }
-const ids = z.array(z.string().min(1)).min(1).max(300)
-const Answer = z.object({
-  verdict: z.enum(['MERGE', 'ONE_CONTAINS_THE_OTHER', 'SEQUENCE', 'CONTRADICTORY']),
-  reasoning: z.string().max(4000),
-  merged: z.object({ title: z.string().max(300), practicalStep: z.string().min(1).max(4000) }).nullable().optional(),
-  subordinateNumber: z.number().int().nullable().optional(),
-})
-const Facets = z.object({
-  targetCauseIds: z.array(z.string()).max(40).optional(),
-  avenue: z.enum(['LEGISLATIVE', 'ORGANISATIONAL', 'FINANCIAL']).nullable().optional(),
-  link: z.string().max(200).nullable().optional(),
-  sequence: z.enum(['NOW', 'NEXT', 'LATER']).nullable().optional(),
-  beforeIds: z.array(z.string()).max(100).optional(),
-})
-const Body = z.discriminatedUnion('op', [
-  z.object({ op: z.literal('createHeading'), name: z.string().min(1).max(80), colourKey: z.string().max(30).optional() }),
-  z.object({ op: z.literal('updateHeading'), headingId: z.string(), name: z.string().min(1).max(80).optional(), colourKey: z.string().max(30).optional(), hidden: z.boolean().optional() }),
-  z.object({ op: z.literal('deleteHeading'), headingId: z.string() }),
-  z.object({ op: z.literal('assignHeading'), actionIds: ids, headingId: z.string().nullable() }),
-  z.object({ op: z.literal('setTitle'), actionId: z.string(), title: z.string().max(300).nullable() }),
-  z.object({ op: z.literal('acceptTitles'), ids: ids.optional() }),
-  z.object({ op: z.literal('dismissTitles'), ids: ids.optional() }),
-  z.object({ op: z.literal('proposeTitles') }),
-  z.object({ op: z.literal('reorder'), order: z.array(z.string()).min(1).max(500) }),
-  z.object({ op: z.literal('park'), ids, reason: z.string().max(600).nullable().optional() }),
-  z.object({ op: z.literal('unpark'), ids }),
-  z.object({ op: z.literal('ruleOut'), ids, reason: z.string().max(600) }),
-  z.object({ op: z.literal('restore'), ids }),
-  z.object({ op: z.literal('setFacets'), actionId: z.string(), patch: Facets }),
-  z.object({ op: z.literal('acceptFacets'), ids: ids.optional() }),
-  z.object({ op: z.literal('dismissFacets'), ids: ids.optional() }),
-  z.object({ op: z.literal('proposeFacets') }),
-  z.object({ op: z.literal('suggestHeadings') }),
-  z.object({ op: z.literal('judgeMerge'), a: z.number().int(), b: z.number().int() }),
-  z.object({ op: z.literal('applyMerge'), a: z.number().int(), b: z.number().int(), answer: Answer }),
-  z.object({ op: z.literal('undoMerge'), mergedId: z.string() }),
-  z.object({ op: z.literal('findDuplicates') }),
-])
 
 export async function POST(req: Request, { params }: Params) {
   const { id } = await params
@@ -59,9 +22,16 @@ export async function POST(req: Request, { params }: Params) {
   enterSpendFor(authz.user, authz.idea)
 
   let raw: unknown
-  try { raw = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
+  try { raw = await req.json() } catch { return NextResponse.json({ error: 'That control sent something the server could not read at all (the body was not JSON). Nothing was changed.' }, { status: 400 }) }
   const parsed = Body.safeParse(raw)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  if (!parsed.success) {
+    // CLAUDE.md §30 — a rejection names the input and the reason, in words. Never the flatten() object.
+    const op = (raw as { op?: unknown } | null)?.op
+    const action = typeof op === 'string' && op in OP_WORDS ? OP_WORDS[op as ActionStructureOp] : 'That action'
+    const { message, rejected } = describeIssues(parsed.error.issues, { action, labels: INPUT_WORDS })
+    console.warn('[action-structure] rejected', { op, rejected })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
   const b = parsed.data
 
   if (await assertWritableField(id, 'actions')) return NextResponse.json({ error: 'You haven’t started the Coherent Actions yet.' }, { status: 409 })

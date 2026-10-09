@@ -24,6 +24,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { refIndex, urlKey } from '@/lib/lex/source-registry'
 import type { Block, DocumentModel, SourceRef } from './model'
 import { betaBlocks } from './build-proposal'
 import { markdownToBlocks } from './markdown'
@@ -228,13 +229,16 @@ export async function buildCommitteeEvidence(ideaId: string): Promise<CommitteeE
   const evidenceRows = await prisma.evidenceItem.findMany({
     where: { ideaId, runVersion: snap.buildVersion, status: 'ACCEPTED' },
     orderBy: { createdAt: 'asc' },
-    select: { title: true, citation: true, url: true },
+    select: { title: true, citation: true, url: true, sourceId: true },
   })
   if (evidenceRows.length) {
+    // 26-R — the same registry number every other document and the notebook cite. Read-only (no numbering happens here).
+    const idx = await refIndex(ideaId)
     blocks.push({
       kind: 'sources',
       label: 'Sources',
       refs: evidenceRows.map((e): SourceRef => ({
+        ref: (e.sourceId ? idx.byCorpusKey.get(e.sourceId) ?? idx.byMaterialId.get(e.sourceId) : undefined) ?? (e.url ? idx.byUrlKey.get(urlKey(e.url)) : undefined),
         title: e.title, citation: e.citation ?? e.title, url: e.url ?? '',
       })),
     })

@@ -42,6 +42,14 @@ import { applyPolicyOp, rejectPolicyOption, syncPolicyField } from '@/lib/lex/gu
 import { testIsCompound } from '@/lib/lex/rumelt-tests'
 import { pendingMaterialSince, runUpdatePass } from '@/lib/lex/update-pass'
 import { runGapCheck } from '@/lib/lex/gap-check'
+import * as RN from '@/lib/lex/research-notes'
+import { listRegistry } from '@/lib/lex/source-registry'
+import { similarNotes, findDisagreements, noteTitle } from '@/lib/lex/research-notebook-views'
+import { STANCES, BEARS_ON_KINDS } from '@/lib/lex/research-notebook-schema'
+import { callJson, llmOk } from '@/lib/lex/build-llm'
+import { modelFor } from '@/lib/lex/model-registry'
+import { fetchedContentIsData } from '@/lib/lex/fetched-content-guard'
+import { verbatimSpan } from '@/lib/lex/user-material'
 
 // ══ helpers ═══════════════════════════════════════════════════════════════════════════════════
 
@@ -1046,6 +1054,250 @@ const rerunBuild: ToolDefinition = {
   },
 }
 
+// ══ 26-R — THE RESEARCH NOTEBOOK, THROUGH LEX'S TOOLS (BRIEF_26R §5) ══════════════════════════════
+//
+// Writing and tagging are FREE; NOTHING IS DELETED; pasted and fetched content reaches Lex as DATA (the `untrusted` channel), and
+// no tool fires except from the user's own turn. The same library the screen's route calls (`lib/lex/research-notes.ts`), so the
+// notebook and the chat cannot drift.
+// ⚠ A NOTE LEX WRITES IS UNREVIEWED until the owner puts it in the record (the record is what reaches documents).
+// ⚠ A QUOTE IS VERBATIM BY CONSTRUCTION: where the source's text is stored, the quote saved is the DOCUMENT'S OWN words for the span
+//   (`verbatimSpan`), never the model's string — and a quote that is not in the document is refused, not "corrected".
+// ⚠ Lex never edits a person's comment: `update_research_note` has no comment parameter, and the library refuses it anyway.
+
+async function viewerOf(ctx: ToolCtx): Promise<RN.Viewer> {
+  const idea = await prisma.idea.findUnique({ where: { id: ctx.ideaId }, select: { creatorId: true } })
+  return { id: ctx.userId, isOwner: idea?.creatorId === ctx.userId }
+}
+async function sourceByNumber(ctx: ToolCtx, n: number) {
+  await RN.readNotebook(ctx.ideaId, { id: ctx.userId, isOwner: true }, {}) // numbers every source first (idempotent)
+  return prisma.ideaSource.findFirst({ where: { ideaId: ctx.ideaId, number: n } })
+}
+async function sourceText(sourceId: string): Promise<{ text: string | null; materialId: string | null; why: string | null }> {
+  const s = await prisma.ideaSource.findUnique({ where: { id: sourceId } })
+  if (!s?.materialId) return { text: null, materialId: null, why: s?.readNote ?? 'only its address or citation is saved — its text was never read' }
+  const m = await prisma.ideaUserMaterial.findUnique({ where: { id: s.materialId }, select: { text: true, archivedAt: true } })
+  return { text: m?.text ?? null, materialId: s.materialId, why: m?.text ? null : 'the stored text is empty' }
+}
+async function resolveNote(ctx: ToolCtx, ref: string) {
+  const all = await prisma.researchNote.findMany({ where: { ideaId: ctx.ideaId, OR: [{ mineOnly: false }, { authorId: ctx.userId }] }, select: { id: true } })
+  return resolvePrefix(all, ref)
+}
+
+const sourceNumberSchema = z.number().int().min(1).describe('the source’s number, as in [Ref: 7] (7)')
+
+const addResearchNoteTool: ToolDefinition = {
+  name: 'add_research_note', category: 'draft', tier: 'free',
+  description: 'Add a note to the research notebook: a quote, a source and a comment. EVERY NOTE CITES A SOURCE — pass sourceNumber (an existing [Ref: n]), or newSource (a title, and a web address if there is one), or ownObservation:true for the user’s own knowledge. A quote must be word for word from the source; where the source’s text is stored it is checked against it. The note is saved UNREVIEWED: the user decides whether it goes in the record.',
+  schema: z.object({
+    sourceNumber: sourceNumberSchema.optional(),
+    newSource: z.object({ title: z.string().min(1).max(300), url: z.string().max(2000).optional() }).optional(),
+    ownObservation: z.boolean().optional(),
+    quote: z.string().max(4000).optional(), quoteLocation: z.string().max(200).optional(),
+    comment: z.string().max(4000).optional().describe('the note’s comment, in the user’s words or yours — it is labelled as written by Lex'),
+    stance: z.enum(STANCES).optional(), tags: z.array(z.string().min(1).max(40)).max(10).optional(),
+    provenance: ProvenanceSchema,
+  }),
+  async run(ctx, input) {
+    const prov = await checkProvenance(ctx, input.provenance)
+    if (provFailed(prov)) return fail(prov.error)
+    if (!input.quote?.trim() && !input.comment?.trim()) return fail('give a quote or a comment — a note with neither is empty.')
+    let sourceId: string | undefined
+    let quote = input.quote?.trim() || null
+    if (input.sourceNumber) {
+      const s = await sourceByNumber(ctx, input.sourceNumber)
+      if (!s) return fail(`there is no source [Ref: ${input.sourceNumber}] on this idea. Use list_research_notebook to see the numbers.`)
+      sourceId = s.id
+      if (quote) {
+        const t = await sourceText(s.id)
+        if (t.text) {
+          const span = verbatimSpan(quote, t.text)
+          if (!span) return fail(`that quote is not word for word in [Ref: ${s.number}] “${clip(s.title, 60)}”. Quote it exactly from the text, or save it as a comment instead.`)
+          quote = span // the document's own words, not the model's string
+        }
+      }
+    }
+    const viewer = await viewerOf(ctx)
+    const r = await RN.addNote(ctx.ideaId, { id: ctx.userId }, viewer, {
+      op: 'addNote', ...(sourceId ? { sourceId } : {}), ...(input.newSource ? { newSource: { kind: 'URL', title: input.newSource.title, url: input.newSource.url ?? null, readStatus: 'NOT_READ', readNote: 'added by Lex from the user’s words; the page itself was not read' } } : {}),
+      ...(input.ownObservation ? { ownObservation: true } : {}), quote, quoteLocation: input.quoteLocation ?? null, comment: input.comment ?? null, stance: input.stance, tags: input.tags,
+    }, { authorKind: 'LEX' })
+    if (!r.ok) return fail((r as { error: string }).error)
+    const d = (r as { data: { noteId: string | null; ref: number } }).data
+    return { ok: true, data: { note: d.noteId ? short(d.noteId) : null, cites: `[Ref: ${d.ref}]`, status: 'UNREVIEWED — written by Lex; the owner puts it in the record', provenance: prov.line }, ui: [{ type: 'open_panel', panel: 'notebook' }] }
+  },
+}
+
+const listNotebookTool: ToolDefinition = {
+  name: 'list_research_notebook', category: 'see', tier: 'free',
+  description: 'See the research notebook: the numbered sources ([Ref: n], and whether each was actually read) and the notes visible to the user (short id, source, stance, status, author). Use it to find a source number or a note id before you act on one.',
+  schema: z.object({ includeSetAside: z.boolean().optional() }),
+  async run(ctx, { includeSetAside }) {
+    const viewer = await viewerOf(ctx)
+    const nb = await RN.readNotebook(ctx.ideaId, viewer, { includeSetAside: !!includeSetAside })
+    return { ok: true, data: {
+      sources: nb.sources.filter((s) => !s.archived).slice(0, 80).map((s) => ({ ref: s.number, title: clip(s.title, 80), kind: s.kind, read: s.readStatus === 'READ' ? 'read' : `NOT READ${s.readNote ? ` (${clip(s.readNote, 60)})` : ''}` })),
+      sourceCount: nb.sources.filter((s) => !s.archived).length,
+      notes: nb.notes.slice(-60).map((n) => ({ note: short(n.id), ref: n.source?.number ?? null, title: noteTitle(n, 80), stance: n.stance, status: n.status, by: n.authorKind === 'LEX' ? 'Lex' : n.mine ? 'the user' : n.authorName })),
+      noteCount: nb.ownCount, note: 'Lex’s own findings are not listed here; they are on the research panel.',
+    } }
+  },
+}
+
+const extractQuotesTool: ToolDefinition = {
+  name: 'extract_quotes', category: 'see', tier: 'free',
+  description: 'Read a FILED document (by its [Ref: n]) and offer the passages that bear on the user’s proposal — each word for word from the document, with why it matters. READ ONLY: it offers; nothing is saved. Offer this whenever a document has just been filed. If the source was never read (only an address was saved) it says so. A few pence.',
+  schema: z.object({ sourceNumber: sourceNumberSchema }),
+  async run(ctx, { sourceNumber }) {
+    const s = await sourceByNumber(ctx, sourceNumber)
+    if (!s) return fail(`there is no source [Ref: ${sourceNumber}] on this idea.`)
+    const t = await sourceText(s.id)
+    if (!t.text) return fail(`[Ref: ${s.number}] “${clip(s.title, 60)}” has not been read — ${t.why}. Ask the user to paste its text with “Add research”, then try again.`)
+    const idea = await prisma.idea.findUnique({ where: { id: ctx.ideaId }, select: { title: true, summaryDescription: true } })
+    const fields = await prisma.ideaFieldState.findMany({ where: { ideaId: ctx.ideaId, fieldKey: { in: ['challenge', 'rootCause', 'chosenApproach', 'summaryDiagnosis'] }, status: 'ACCEPTED' }, select: { fieldKey: true, value: true } })
+    const res = await callJson<{ quotes?: Array<{ quote?: string; why?: string }> }>({
+      model: modelFor('lex.material'),
+      system: [
+        'You find, in ONE document, the passages that bear on a UK policy proposal, for a researcher to quote.',
+        'Each passage must be a VERBATIM span of the document — word for word, not a paraphrase — long enough to stand alone (a sentence or two). For each, say in one line why it bears on the proposal.',
+        'Offer at most six, fewer if fewer bear on it; an empty list is a legitimate answer. Never carry over an example, a subject or a figure from these instructions.',
+        fetchedContentIsData('document text'),
+      ].join('\n'),
+      user: [`THE PROPOSAL: ${idea?.title ?? ''}`, idea?.summaryDescription ?? '', ...fields.map((f) => `${f.fieldKey}: ${clip(f.value, 400)}`), '', 'THE DOCUMENT:', t.text.slice(0, 40_000)].join('\n'),
+      schema: { type: 'object', properties: { quotes: { type: 'array', items: { type: 'object', properties: { quote: { type: 'string' }, why: { type: 'string' } }, required: ['quote', 'why'] } } }, required: ['quotes'] },
+      maxOutputTokens: 4000, timeoutMs: 90_000, temperature: 0.2, label: 'extract-quotes',
+    })
+    if (!llmOk(res)) return fail(`the document could not be read just now (${(res as { reason?: string }).reason ?? 'the model did not answer'}). Nothing was saved.`)
+    const offered: Array<{ quote: string; why: string }> = []
+    let dropped = 0
+    for (const q of res.value.quotes ?? []) {
+      const span = q.quote ? verbatimSpan(q.quote, t.text) : null
+      if (span) offered.push({ quote: span, why: clip(q.why, 200) }); else dropped++
+    }
+    return {
+      ok: true,
+      data: { source: `[Ref: ${s.number}] ${clip(s.title, 80)}`, material: t.materialId ? short(t.materialId) : null, offered: offered.length, droppedNotVerbatim: dropped, next: 'Show these to the user. To keep one, call add_research_note with sourceNumber and the quote, provenance kind filed_document and refs [material].' },
+      untrusted: untrustedBlock(ctx, `quotes from [Ref: ${s.number}]`, offered.map((o, i) => `${i + 1}. “${o.quote}”\n   why: ${o.why}`).join('\n\n') || '(no passage in this document bears on the proposal)'),
+    }
+  },
+}
+
+const suggestTagsTool: ToolDefinition = {
+  name: 'suggest_tags_and_links', category: 'see', tier: 'free',
+  description: 'For one note (short id from list_research_notebook): propose a few tags and what it bears on (a cause, the policy, an action, a challenge, a decision). PROPOSALS ONLY — nothing is changed; apply with update_research_note if the user agrees. A few pence.',
+  schema: z.object({ note: z.string().min(4).max(40) }),
+  async run(ctx, { note }) {
+    const row = await resolveNote(ctx, note)
+    if (!row) return fail(`no note starts with “${note}”. Use list_research_notebook.`)
+    const n = await prisma.researchNote.findUnique({ where: { id: row.id } })
+    const options = await RN.bearsOnOptions(ctx.ideaId)
+    const res = await callJson<{ tags?: string[]; bearsOn?: string[] }>({
+      model: modelFor('lex.material'),
+      system: [
+        'You help file a research note. Propose up to five short lowercase tags, and which of the listed items the note bears on (by the exact key given).',
+        'Choose only items the note actually speaks to; none is a legitimate answer. Never carry over an example from these instructions.',
+        fetchedContentIsData('note text'),
+      ].join('\n'),
+      user: [`NOTE:\n${n?.quote ?? ''}\n${n?.comment ?? ''}`, '', 'ITEMS IT MAY BEAR ON (key — label):', ...options.map((o) => `${o.kind}:${o.id} — ${o.label}`)].join('\n'),
+      schema: { type: 'object', properties: { tags: { type: 'array', items: { type: 'string' } }, bearsOn: { type: 'array', items: { type: 'string' } } }, required: ['tags', 'bearsOn'] },
+      maxOutputTokens: 1200, timeoutMs: 45_000, temperature: 0.2, label: 'suggest-tags',
+    })
+    if (!llmOk(res)) return fail('the suggestion could not be made just now. Nothing was changed.')
+    const valid = new Map(options.map((o) => [`${o.kind}:${o.id}`, o]))
+    const links = (res.value.bearsOn ?? []).map((k) => valid.get(k)).filter((x): x is NonNullable<typeof x> => !!x)
+    return { ok: true, data: { note: short(row.id), tags: (res.value.tags ?? []).slice(0, 5).map((t) => t.toLowerCase().trim()).filter(Boolean), bearsOn: links.map((l) => ({ kind: l.kind, id: short(l.id), label: l.label })), status: 'proposed — nothing has been applied' } }
+  },
+}
+
+const updateNoteTool: ToolDefinition = {
+  name: 'update_research_note', category: 'draft', tier: 'free',
+  description: 'Tag a note, set its stance (SUPPORTS / CONTRADICTS / CONTEXT / UNDECIDED), link what it bears on, or give it a heading or importance. You CANNOT change anyone’s comment or quote — those are their words. Reversible; nothing is deleted.',
+  schema: z.object({
+    note: z.string().min(4).max(40),
+    stance: z.enum(STANCES).optional(), tags: z.array(z.string().min(1).max(40)).max(10).optional(),
+    bearsOn: z.array(z.object({ kind: z.enum(BEARS_ON_KINDS), id: z.string().min(4).max(60) })).max(10).optional(),
+    heading: z.string().max(80).nullable().optional(), importance: z.number().int().min(1).max(3).nullable().optional(),
+  }),
+  async run(ctx, input) {
+    const row = await resolveNote(ctx, input.note)
+    if (!row) return fail(`no note starts with “${input.note}”. Use list_research_notebook.`)
+    const viewer = await viewerOf(ctx)
+    let bears: Array<{ kind: (typeof BEARS_ON_KINDS)[number]; id: string; label?: string }> | undefined
+    if (input.bearsOn) {
+      const options = await RN.bearsOnOptions(ctx.ideaId)
+      bears = []
+      for (const b of input.bearsOn) {
+        const o = options.find((x) => x.kind === b.kind && (x.id === b.id || x.id.startsWith(b.id)))
+        if (!o) return fail(`there is no ${b.kind} “${b.id}” on this idea to bear on.`)
+        bears.push({ kind: o.kind, id: o.id, label: o.label })
+      }
+    }
+    const r = await RN.updateNote(ctx.ideaId, viewer, { op: 'updateNote', noteId: row.id, stance: input.stance, tags: input.tags, bearsOn: bears, heading: input.heading, importance: input.importance })
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { note: short(row.id), changed: Object.keys(input).filter((k) => k !== 'note') }, ui: [{ type: 'open_panel', panel: 'notebook' }] }
+  },
+}
+
+const findSimilarTool: ToolDefinition = {
+  name: 'find_similar_notes', category: 'see', tier: 'free',
+  description: 'Find notes that say much the same as one note (short id from list_research_notebook), by the words they share. READ ONLY, no cost.',
+  schema: z.object({ note: z.string().min(4).max(40) }),
+  async run(ctx, { note }) {
+    const row = await resolveNote(ctx, note)
+    if (!row) return fail(`no note starts with “${note}”. Use list_research_notebook.`)
+    const nb = await RN.readNotebook(ctx.ideaId, await viewerOf(ctx), { includeSetAside: true })
+    const target = nb.notes.find((n) => n.id === row.id)!
+    const sim = similarNotes(target, nb.notes)
+    return { ok: true, data: { note: short(row.id), similar: sim.map((x) => ({ note: short(x.note.id), score: Math.round(x.score * 100) / 100, title: noteTitle(x.note, 80), ref: x.note.source?.number ?? null })), note2: sim.length ? 'Overlap of words, not of meaning — look before you merge or set aside anything.' : 'No other note shares enough words with it.' } }
+  },
+}
+
+const findDisagreementsTool: ToolDefinition = {
+  name: 'find_disagreements', category: 'see', tier: 'free',
+  description: 'Where the research disagrees with itself: notes marked CONTRADICTS, and pairs of notes on the same thing with opposite stances — including between team members, named. READ ONLY, no cost.',
+  schema: z.object({}),
+  async run(ctx) {
+    const nb = await RN.readNotebook(ctx.ideaId, await viewerOf(ctx), {})
+    const d = findDisagreements(nb.notes)
+    return { ok: true, data: { count: d.length, disagreements: d.slice(0, 25).map((x) => ({ kind: x.kind, on: clip(x.on, 100), notes: x.notes.map((n) => ({ note: short(n.id), stance: n.stance, title: noteTitle(n, 70), by: n.authorName })), between: x.between })), note: d.length ? undefined : 'Nothing in the notebook is marked as contradicting, and no two notes on the same thing take opposite sides.' } }
+  },
+}
+
+const whatHaveIReadOnTool: ToolDefinition = {
+  name: 'what_have_i_read_on', category: 'see', tier: 'free',
+  description: 'What the user has read on a cause, the policy or an action (by its number): the notebook’s notes that bear on it, with their sources. READ ONLY, no cost.',
+  schema: z.object({ kind: z.enum(['cause', 'policy', 'action']), number: z.number().int().min(1) }),
+  async run(ctx, { kind, number }) {
+    const options = await RN.bearsOnOptions(ctx.ideaId)
+    const label = kind === 'cause' ? `Cause ${number}:` : kind === 'policy' ? `Policy ${number}:` : `Action ${number}:`
+    const target = options.find((o) => o.kind === kind && (o.label ?? '').startsWith(label))
+    if (!target) return fail(`there is no ${kind} ${number} on this idea.`)
+    const nb = await RN.readNotebook(ctx.ideaId, await viewerOf(ctx), {})
+    const hits = nb.notes.filter((n) => n.bearsOn.some((b) => b.kind === kind && b.id === target.id))
+    return { ok: true, data: { on: target.label, count: hits.length, notes: hits.map((n) => ({ note: short(n.id), ref: n.source?.number ?? null, source: clip(n.source?.title, 60), stance: n.stance, title: noteTitle(n, 80) })), note: hits.length ? undefined : `Nothing in the notebook is linked to ${kind} ${number} yet — that is a statement about the notebook, not about the subject.` } }
+  },
+}
+
+const summariseSourceTool: ToolDefinition = {
+  name: 'summarise_source', category: 'see', tier: 'free',
+  description: 'Summarise one FILED source (by its [Ref: n]) in a few sentences, from its stored text. READ ONLY: nothing is saved. If the source was never read it says so rather than summarising from its title. A few pence.',
+  schema: z.object({ sourceNumber: sourceNumberSchema }),
+  async run(ctx, { sourceNumber }) {
+    const s = await sourceByNumber(ctx, sourceNumber)
+    if (!s) return fail(`there is no source [Ref: ${sourceNumber}] on this idea.`)
+    const t = await sourceText(s.id)
+    if (!t.text) return fail(`[Ref: ${s.number}] “${clip(s.title, 60)}” has not been read — ${t.why}. Nothing can honestly be summarised.`)
+    const res = await callJson<{ summary?: string }>({
+      model: modelFor('lex.material'),
+      system: ['Summarise ONE document in three to five plain-English sentences: what it is, what it says, and what a reader would take from it. Say only what the text says. Never carry over an example from these instructions.', fetchedContentIsData('document text')].join('\n'),
+      user: `TITLE: ${s.title}\n\n${t.text.slice(0, 40_000)}`,
+      schema: { type: 'object', properties: { summary: { type: 'string' } }, required: ['summary'] },
+      maxOutputTokens: 1500, timeoutMs: 60_000, temperature: 0.2, label: 'summarise-source',
+    })
+    if (!llmOk(res) || !res.value.summary) return fail('the summary could not be written just now. Nothing was saved.')
+    return { ok: true, data: { source: `[Ref: ${s.number}] ${clip(s.title, 80)}` }, untrusted: untrustedBlock(ctx, `summary of [Ref: ${s.number}]`, res.value.summary) }
+  },
+}
+
 // ══ registry + execution ══════════════════════════════════════════════════════════════════════
 
 /** The tools the MODEL is offered. The `undo_*` / `restore_*` inverses are reachable only through a signed undo token. */
@@ -1061,6 +1313,8 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   // 26-Q — the coherent-actions workspace
   titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, groupActionsTool,
   findDuplicatesTool, withoutActionTool, compareActionsTool, parkActionsTool, restoreActionsTool, ruleOutActionsTool, mergeActionsTool,
+  // 26-R — the research notebook
+  addResearchNoteTool, listNotebookTool, extractQuotesTool, suggestTagsTool, updateNoteTool, findSimilarTool, findDisagreementsTool, whatHaveIReadOnTool, summariseSourceTool,
 ]
 
 const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource, unmergeActionsTool]

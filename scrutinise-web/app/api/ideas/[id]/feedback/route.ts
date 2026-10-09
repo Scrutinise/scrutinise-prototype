@@ -8,6 +8,12 @@
 // A mail failure must not lose the record, so the send is attempted after the row
 // exists and its failure is written back onto that row. The response says plainly
 // what happened so Lex never claims a send that did not occur (§19-C 1b).
+//
+// 8 Oct 2026 (Charlie's walkthrough, item 4):
+//   · BUG_REPORT is a surface of its own, and for it the model summary is SKIPPED: the user's words (scrubbed) and the technical
+//     detail (sanitised, never paraphrased) are what is shown, stored and emailed;
+//   · a report may carry up to three files (uploaded at Yes, via ./attachment — nothing is stored before the Yes);
+//   · DECISION 137 — the person is "User 435" in the summary and the email, never "the user".
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse } from 'next/server'
@@ -17,16 +23,26 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { sendLexFeedbackEmail } from '@/lib/email'
+import { describeIssues } from '@/lib/api-rejection'
 import {
   scrubPersonal,
   summariseCritique,
   FEEDBACK_SURFACES,
   type FeedbackSurfaceKey,
 } from '@/lib/lex/feedback'
+import { FEEDBACK_ATTACHMENT_MAX_FILES, userRefLabel, type FeedbackAttachment } from '@/lib/lex/feedback-types'
+import { sanitiseTechnicalDetail } from '@/lib/lex/feedback-technical'
 
 type Params = { params: Promise<{ id: string }> }
 
 const SurfaceSchema = z.enum(FEEDBACK_SURFACES as [FeedbackSurfaceKey, ...FeedbackSurfaceKey[]])
+const Detail = z.record(z.string(), z.unknown()).optional()
+const AttachmentMeta = z.object({
+  key: z.string().min(1).max(300),
+  name: z.string().min(1).max(200),
+  contentType: z.string().min(1).max(100),
+  bytes: z.number().int().min(0).max(20 * 1024 * 1024),
+})
 
 const BodySchema = z.discriminatedUnion('action', [
   z.object({
@@ -34,6 +50,7 @@ const BodySchema = z.discriminatedUnion('action', [
     text: z.string().trim().min(1).max(4000),
     surface: SurfaceSchema.default('OTHER'),
     stage: z.string().trim().max(64).default('ORIENTATION'),
+    technicalDetail: Detail,
   }),
   z.object({
     action: z.literal('submit'),
@@ -42,8 +59,15 @@ const BodySchema = z.discriminatedUnion('action', [
     surface: SurfaceSchema.default('OTHER'),
     stage: z.string().trim().max(64).default('ORIENTATION'),
     userEdited: z.boolean().default(false),
+    technicalDetail: Detail,
+    attachments: z.array(AttachmentMeta).max(FEEDBACK_ATTACHMENT_MAX_FILES).optional(),
   }),
 ])
+
+const WORDS: Record<string, string> = {
+  text: 'what you wrote', originalText: 'what you wrote', summarisedText: 'the text to be sent', surface: 'what this is about',
+  stage: 'the stage', technicalDetail: 'the technical detail', attachments: 'the attached files', userEdited: 'the edit flag',
+}
 
 export async function POST(req: Request, { params }: Params) {
   const { id } = await params
@@ -57,14 +81,20 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   let raw: unknown
-  try { raw = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
+  try { raw = await req.json() } catch { return NextResponse.json({ error: 'The feedback form sent something the server could not read (the body was not JSON). Nothing has been sent.' }, { status: 400 }) }
   const parsed = BodySchema.safeParse(raw)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  if (!parsed.success) {
+    // CLAUDE.md §30 — name the input and the reason.
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'Sending feedback', labels: WORDS })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
   const body = parsed.data
 
   // The user's own identifiers — the one category of personal content we can name
   // exactly, so we hand it to the scrubber rather than hoping the model spots it.
   const identities = [user.name, user.firstName, user.lastName, user.preferredName, user.username, user.email]
+  // DECISION 137 — a stable pseudonymous reference, so repeat reports connect without naming anyone.
+  const userRef = userRefLabel((user as { feedbackRef?: number | null }).feedbackRef)
 
   // ── summarise: nothing is written, nothing is sent ─────────────────────────
   if (body.action === 'summarise') {
@@ -73,11 +103,17 @@ export async function POST(req: Request, { params }: Params) {
       surface: body.surface,
       stage: body.stage,
       identities,
+      userRef,
     })
+    // The technical detail is sanitised HERE and handed back, so what the user sees is what will be stored and sent.
+    const tech = body.surface === 'BUG_REPORT' && body.technicalDetail ? sanitiseTechnicalDetail(body.technicalDetail, identities) : null
     return NextResponse.json({
       summarisedText: result.summarisedText,
-      redactions: result.redactions,
+      redactions: [...result.redactions, ...(tech?.redactions ?? [])],
       usedFallback: result.usedFallback,
+      verbatim: Boolean(result.verbatim),
+      technicalDetail: tech?.detail ?? null,
+      userRef,
       stored: false,
       sent: false,
     })
@@ -89,18 +125,28 @@ export async function POST(req: Request, { params }: Params) {
   // shown the corrected text and asked once more — we neither send personal
   // content nor silently send something different from what they approved.
   const rescrub = scrubPersonal(body.summarisedText, identities)
-  if (rescrub.text !== body.summarisedText) {
+  const techOut = body.surface === 'BUG_REPORT' && body.technicalDetail ? sanitiseTechnicalDetail(body.technicalDetail, identities) : null
+  const techChanged = !!techOut && JSON.stringify(techOut.detail) !== JSON.stringify(body.technicalDetail)
+  if (rescrub.text !== body.summarisedText || techChanged) {
     return NextResponse.json(
       {
         error: 'personal_content_found',
         message: 'That version still had personal details in it, so nothing has been sent. Here it is with them removed — send this instead?',
         summarisedText: rescrub.text,
-        redactions: rescrub.redactions,
+        technicalDetail: techOut?.detail ?? null,
+        redactions: [...rescrub.redactions, ...(techOut?.redactions ?? [])],
         stored: false,
         sent: false,
       },
       { status: 409 },
     )
+  }
+
+  // Attachments may only be keys THIS user uploaded for THIS idea (./attachment) — never an arbitrary R2 key.
+  const prefix = `_feedback/${idea.id}/${user.id}/`
+  const attachments: FeedbackAttachment[] = (body.attachments ?? []).filter((a) => a.key.startsWith(prefix) && !a.key.includes('..'))
+  if ((body.attachments ?? []).length !== attachments.length) {
+    return NextResponse.json({ error: 'One of the attached files was not one you uploaded for this idea, so nothing has been sent.' }, { status: 422 })
   }
 
   // Persist FIRST. From here on the record exists whatever the mail server does.
@@ -116,6 +162,8 @@ export async function POST(req: Request, { params }: Params) {
       summarisedText: rescrub.text,
       userEdited: body.userEdited,
       consentGiven: true,
+      technicalDetail: (techOut?.detail ?? undefined) as never,
+      attachments: (attachments.length ? attachments : undefined) as never,
     },
     select: { id: true },
   })
@@ -131,6 +179,9 @@ export async function POST(req: Request, { params }: Params) {
       userEdited: body.userEdited,
       ideaTitle: idea.title,
       ideaId: idea.id,
+      userRef,
+      technicalDetail: techOut?.detail ?? null,
+      attachments,
     })
     sent = true
   } catch (err) {

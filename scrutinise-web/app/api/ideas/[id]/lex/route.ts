@@ -117,7 +117,7 @@ export async function POST(req: Request, { params }: Params) {
   const pastedResults = message.length >= MIN_PASTE_CHARS ? await filePastedTextFromChat(id, user.id, message) : []
   if (message.length > CHAT_MESSAGE_LIMIT && !pastedResults.length) {
     return NextResponse.json({
-      error: `That message is ${message.length.toLocaleString('en-GB')} characters, and a chat message is limited to ${CHAT_MESSAGE_LIMIT.toLocaleString('en-GB')}. To give me a long document, use the "Add a file or link" button above the box.`,
+      error: `That message is ${message.length.toLocaleString('en-GB')} characters, and a chat message is limited to ${CHAT_MESSAGE_LIMIT.toLocaleString('en-GB')}. To give me a long document, use the "Add research" button above the box.`,
     }, { status: 422 })
   }
   if (pastedResults.length) {

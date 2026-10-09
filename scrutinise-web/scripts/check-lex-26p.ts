@@ -71,8 +71,13 @@ function partA() {
     real.some((v) => v.kind === 'unknown-control' && /redraft from what i found/i.test(v.detail)), kinds(real))
   ok('…and "Search again from scratch" with it', real.some((v) => v.kind === 'unknown-control' && /search again from scratch/i.test(v.detail)))
   ok('…and the REAL claim "has successfully filed" with no filing tool is flagged as unconfirmed', real.some((v) => v.kind === 'unconfirmed-claim'))
-  ok('"The Idea" (a real stage name) is NOT flagged as an unknown control', !real.some((v) => /“The Idea”/.test(v.detail)))
-  control('a reply naming only a real control is flagged unknown (must be FALSE)', () => check('Press “Add a file or link” above the box.', []).some((v) => v.kind === 'unknown-control'))
+  // Decision 136 renamed the bar's stages; the checker's labels come from LEX_STAGES, so the OLD name is now unknown
+  // (the transcript above is verbatim and still says it) and the NEW names are real.
+  ok('"The First Pass" (a real stage name) is NOT flagged as an unknown control',
+    !check('Go to “The First Pass” and add the file there.', []).some((v) => v.kind === 'unknown-control'))
+  ok('…and the retired "The Idea" IS flagged now, as a name on no screen',
+    check('Go to “The Idea” and add the file there.', []).some((v) => v.kind === 'unknown-control' && /The Idea/.test(v.detail)))
+  control('a reply naming only a real control is flagged unknown (must be FALSE)', () => check('Press “Add research” above the box.', []).some((v) => v.kind === 'unknown-control'))
 
   // §9-4: "you should see it added now" with no add.
   const should = 'I have a draft for you. You should see it added now in the Guiding policy list.'

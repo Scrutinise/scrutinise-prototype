@@ -457,6 +457,11 @@ export interface CanonicalAction {
   status: 'LIVE' | 'RULED_OUT' | 'ARCHIVED'
   ruleOutReason: string | null
   mergedIntoId: string | null
+  /**
+   * Decision 138 — what the consolidation's policy test said about this action against the settled guiding policy, and where it
+   * came from (in words). null = it never went through that test (the user's own, or from another route).
+   */
+  policyTest: { verdict: 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'; reason: string | null; from: string[] } | null
 }
 
 /** 26-Q §3 — one of the user's headings for their coherent actions. */

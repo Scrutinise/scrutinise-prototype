@@ -24,7 +24,7 @@
 import { prisma } from '@/lib/prisma'
 import { callModelJson } from './model-call'
 import { recordUsage } from './spend-ledger'
-import { addAction, removeAction } from './field-machine'
+import { addAction } from './field-machine'
 
 export type Verdict = 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'
 const VERDICTS: Verdict[] = ['FITS', 'DOES_NOT_FIT', 'CONFLICTS']
@@ -470,6 +470,15 @@ export async function testHeldActions(
       // ⚠ ONE CANDIDATE ACTION PER GROUP, in the list the user is already reviewing. Not confirmed: the
       // field's "These are my actions" is a separate act and is not touched here.
       const action = await addAction(ideaId, { practicalStep: g.text, source: 'LEX' })
+      // ══ DECISION 138 — THE VERDICT IS WRITTEN ON THE ACTION, NOT ONLY ON THE `ActionIdea` BEHIND IT ══════════
+      // The box that showed it is gone; the main list shows it from here (label with shape, reason and source when opened).
+      await prisma.lexCoherentAction.update({
+        where: { id: action.id },
+        data: {
+          policyTestVerdict: g.verdict, policyTestReason: g.reason || null,
+          policyTestFrom: Array.from(new Set(sources.map(describeSource))) as never,
+        },
+      })
       const data = {
         text: g.text, verdict: g.verdict, reason: g.reason || null, sources: sources as never,
         status: 'WRITTEN', testedAgainstId: finalPolicyId, acceptedActionId: action.id,
@@ -562,23 +571,8 @@ export async function listAddedActions(ideaId: string): Promise<{
   return { added, held: heldCount, settledPolicyId: settled?.id ?? null }
 }
 
-// ── 4. REMOVE ────────────────────────────────────────────────────────────────
-
-/**
- * Take an added action back out of the candidate list. The user's own decision — and the only thing that
- * may end a parked action here, which it then records.
- */
-export async function removeAddedAction(ideaId: string, id: string): Promise<{ ok: boolean; error?: string }> {
-  const row = await prisma.actionIdea.findFirst({ where: { id, ideaId, status: 'WRITTEN' } })
-  if (!row) return { ok: false, error: 'That action was not added from the consolidation on this idea.' }
-  if (row.acceptedActionId) await removeAction(ideaId, row.acceptedActionId)
-  const parkedIds = (row.sources as unknown as IdeaSource[]).filter((s) => s.kind === 'PARKED').map((s) => (s as { policyOptionId: string }).policyOptionId)
-  await prisma.$transaction([
-    prisma.actionIdea.update({ where: { id: row.id }, data: { status: 'DISMISSED' } }),
-    ...(parkedIds.length ? [prisma.policyOption.updateMany({
-      where: { id: { in: parkedIds }, ideaId },
-      data: { status: 'RULED_OUT', ruleOutReason: `Removed from Coherent Actions after the consolidation${row.reason ? `: ${row.reason}` : '.'}` },
-    })] : []),
-  ])
-  return { ok: true }
-}
+// ── 4. REMOVE — GONE (decision 139, 9 Oct 2026) ──────────────────────────────────────────────────────────
+//
+// "Remove from my actions" lived on the consolidation box that decision 138 removed. It hard-deleted the action (until 26-Q), and ruled
+// out the policy options parked with it. The only route off the list is now RULE OUT (a reason, restorable): lib/lex/action-structure.ts.
+// ActionIdea rows already DISMISSED by the old button are history and stay as they are.

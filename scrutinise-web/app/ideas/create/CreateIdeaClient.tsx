@@ -31,6 +31,7 @@ import WorkList from '@/components/lex/WorkList'
 import { stageByKey, type LexStageKey } from '@/lib/lex/stages'
 import type { StageContext } from '@/lib/lex/stage-context'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
+import { installFaultCapture } from '@/lib/client-fault-capture'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import AgendaPanel from '@/components/lex/AgendaPanel'
@@ -346,7 +347,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     for (const e of effects as Array<{ type?: string; panel?: string }>) {
       if (e?.type === 'highlight_field') { setPanelOpen((p) => ({ ...p, fields: true })); setTab('fields') }
       if (e?.type === 'open_panel') {
-        if (e.panel === 'research') { setPanelOpen((p) => ({ ...p, background: true })); setTab('background') }
+        if (e.panel === 'research' || e.panel === 'notebook') { setPanelOpen((p) => ({ ...p, background: true })); setTab('background') } // 26-R: the notebook lives in the research panel
         else if (e.panel === 'guiding-policy' || e.panel === 'actions' || e.panel === 'idea') { setPanelOpen((p) => ({ ...p, fields: true })); setTab('fields') }
         else { setPanelOpen((p) => ({ ...p, chat: true })) }
       }
@@ -616,7 +617,6 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const actionsApi: ActionsApi = {
     add: (input) => post('/actions', { action: 'add', ...input }),
     update: (actionId, patch) => post('/actions', { action: 'update', actionId, ...patch }),
-    remove: (actionId) => post('/actions', { action: 'remove', actionId }),
     confirm: () => post('/actions', { action: 'confirm' }),
     skip: () => post('/actions', { action: 'skip' }),
   }
@@ -668,6 +668,15 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     setFeedbackOffer(false)
     setFeedbackSurface(surface ?? surfaceForStage())
   }, [surfaceForStage])
+
+  // 8 Oct 2026 (item 4) — start recording failed requests, recent clicks and uncaught errors NOW, so that when a user reports a
+  // fault the facts are already held; and let an on-screen error open the bug form directly ("Report this problem").
+  useEffect(() => {
+    installFaultCapture()
+    const open = () => openFeedback('BUG_REPORT')
+    window.addEventListener('scrutinise:report-bug', open)
+    return () => window.removeEventListener('scrutinise:report-bug', open)
+  }, [openFeedback])
 
   // §19-C Task 7 — Exit. "Unsaved" here means a box the platform is holding for the
   // user's Save (a Lex proposal awaiting confirmation); everything else is already

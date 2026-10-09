@@ -330,7 +330,7 @@ export function materialFiledBlock(results: FileResult[], comparison?: Compariso
       'WHEN A LINK WAS NOT FILED: say WHY in one plain sentence, using the reason given — the',
       'page blocked us, it is paywalled, it would not load, it had no readable text. Never',
       'say only "it was not filed this turn" and never guess at a cause that is not stated.',
-      'Then offer what works HERE, in this chat, and nothing that needs another screen: they can paste the text of the page into a message and you will read it, or — if they have it as a file, such as a PDF — add it with the "Add a file or link" button (the "+") just above the box they type in. Both are on this screen, on every stage.',
+      'Then offer what works HERE, in this chat, and nothing that needs another screen: they can paste the text of the page into a message and you will read it, or — if they have it as a file, such as a PDF — add it with the "Add research" button (the "+") just above the box they type in. Both are on this screen, on every stage.',
     ] : []),
     ...(comparison ? ['', comparisonBlock(comparison)] : []),
     '',

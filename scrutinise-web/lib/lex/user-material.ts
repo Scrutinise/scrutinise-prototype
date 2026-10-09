@@ -42,6 +42,7 @@ import { HEADING_ORDER, QUESTION_HEADINGS, isHeadingKey, type HeadingKey } from 
 import { USER_MATERIAL_PASS_PREFIX } from './heading-map'
 import { sourceDateFields } from './evidence-date'
 import { fetchedContentIsData } from './fetched-content-guard'
+import { registerNewMaterial } from './source-registry'
 
 // ── caps ─────────────────────────────────────────────────────────────────────
 //
@@ -417,6 +418,9 @@ const SYSTEM = [
  */
 export async function runMaterialFindings(materialId: string): Promise<{ written: number; note: string | null }> {
   const material = await prisma.ideaUserMaterial.findUnique({ where: { id: materialId } })
+  // 26-R — every upload, fetched link and chat-filed document passes through here straight after it is created, so this is
+  // where it is NUMBERED: a filed document has a [Ref: n] before any finding is written from it.
+  if (material) await registerNewMaterial(material.ideaId)
   if (!material?.text) return { written: 0, note: 'There is no stored text to read.' }
   // Held in a local: this package compiles with `strict: false` and the narrowing above does
   // not survive the awaits below.

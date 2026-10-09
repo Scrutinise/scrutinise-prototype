@@ -20,7 +20,7 @@ import { prisma } from '../lib/prisma'
 import { HEADING_PALETTE, lightnessOf, contrastOnWhite, colourFor, nextColourKey } from '../lib/lex/action-headings'
 import { groupActions, coverageGrid, sequenceLayout, rankDuplicates, universalCauseIds, specificEnough, actionLabel, GROUP_MODES, type ActionLike } from '../lib/lex/action-facets'
 import { computeCanonicalState } from '../lib/lex/state'
-import { addAction, removeAction } from '../lib/lex/field-machine'
+import { addAction } from '../lib/lex/field-machine'
 import * as S from '../lib/lex/action-structure'
 import { kernelText } from '../lib/lex/build'
 import { execute, toolByName, MODEL_TOOLS } from '../lib/lex/agent/tools'
@@ -206,9 +206,8 @@ async function partB() {
     ok('the kernel text Lex and every check read does NOT carry the ruled-out action', !kt.includes('first accountable officers') && kt.includes('named owner'))
     await S.restore(id, [raw.id])
     ok('restore brings it back, reason cleared', (await computeCanonicalState(id))!.actions.some((a) => a.id === raw.id) && (await prisma.lexCoherentAction.findUnique({ where: { id: raw.id } }))!.ruleOutReason === null)
-    await removeAction(id, raw.id)
-    ok('the OLD "Delete" (removeAction) is now a rule-out: the row survives and so would its costs', (await prisma.lexCoherentAction.count({ where: { id: raw.id } })) === 1 && (await prisma.lexCoherentAction.findUnique({ where: { id: raw.id } }))!.status === 'RULED_OUT')
-    await S.restore(id, [raw.id])
+    // DECISION 139 (9 Oct 2026) - the old "Remove" / "Delete" (removeAction) is GONE: rule out, with a reason, is the only route.
+    ok('decision 139: there is no un-reasoned removal left in the library, the legacy route or the card', typeof (await import('../lib/lex/field-machine') as Record<string, unknown>).removeAction === 'undefined')
 
     section('B · merge keeps the originals; costs are carried; undo restores')
     await prisma.costLine.create({ data: { actionId: a1.id, label: 'Register build', costType: 'OTHER', category: 'IMPLEMENTATION', low: 10, high: 20 } as never })

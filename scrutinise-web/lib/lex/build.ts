@@ -95,7 +95,7 @@ import {
 } from './build-smart'
 import {
   runKernelCompliance, runLogicCheck, recordVerificationIssues,
-  complianceIssueText, logicIssueText, verifyModel, KERNEL_TESTS,
+  complianceIssueText, logicIssueText, verifyModel, KERNEL_TESTS, UNSTABLE_KERNEL_TESTS,
 } from './build-verify'
 import { sourceDateFields, weighedAgainstLine } from './evidence-date'
 
@@ -3202,13 +3202,19 @@ async function repairPass(c: PassContext): Promise<PassOutcome> {
   }
   const stillFailing = k2.results.filter((r) => !r.passes)
   const stillIds = new Set(stillFailing.map((r) => r.id))
+  const stableTotal = KERNEL_TESTS.filter((t) => !UNSTABLE_KERNEL_TESTS.has(t.id)).length
+  const stableRetestPasses = k2.results.filter((r) => r.passes && !UNSTABLE_KERNEL_TESTS.has(r.id)).length
   const originalIds = new Set(kernelFailures.map((r) => r.id))
 
   // Original failures the retest now passes → ADDRESSED, with the note. Match by the test's own
   // heading, which is how the issue text opens (`complianceIssueText`).
   let addressed = 0
+  // ⚠ Decision 135 follow-up: an UNSTABLE test's pass is no more a verdict than its failure (it has given
+  // different answers on identical text), so a pass on one is NOT evidence the repair worked. It stays OPEN,
+  // already labelled unstable, and is left out of the "retest passes" count below.
   for (const r of kernelFailures) {
     if (stillIds.has(r.id)) continue
+    if (UNSTABLE_KERNEL_TESTS.has(r.id)) continue
     const t = KERNEL_TESTS.find((x) => x.id === r.id)
     if (!t) continue
     const res = await prisma.deepeningIssue.updateMany({
@@ -3235,7 +3241,7 @@ async function repairPass(c: PassContext): Promise<PassOutcome> {
   console.log('[lex-diag] 26b repair done', {
     buildId, rewritten, changed: repair.changed.length, couldNotFix: repair.couldNotFix.length,
     kernelBefore: `${KERNEL_TESTS.length - kernelFailures.length}/${KERNEL_TESTS.length}`,
-    kernelAfter: `${k2.results.length - stillFailing.length}/${KERNEL_TESTS.length}`,
+    kernelAfter: `${stableRetestPasses}/${stableTotal} stable (unstable excluded)`,
     chainBefore: chainHeld, chainAfter: l2.chainHolds, addressed, newIssues: written,
   })
 
@@ -3243,7 +3249,7 @@ async function repairPass(c: PassContext): Promise<PassOutcome> {
     ok: true,
     output:
       `${kernelFailures.length + defects.length} failure${kernelFailures.length + defects.length === 1 ? '' : 's'} → rewrote ${rewritten} field${rewritten === 1 ? '' : 's'} → retest: `
-      + `${k2.results.length - stillFailing.length} of ${KERNEL_TESTS.length} kernel tests pass, the chain ${l2.chainHolds ? 'holds' : 'still does NOT hold'}`
+      + `${stableRetestPasses} of ${stableTotal} stable kernel tests pass (${UNSTABLE_KERNEL_TESTS.size} unstable tests not counted either way), the chain ${l2.chainHolds ? 'holds' : 'still does NOT hold'}`
       + `${addressed ? ` — ${addressed} issue${addressed === 1 ? '' : 's'} marked addressed` : ''}`
       + `${repair.couldNotFix.length ? `; ${repair.couldNotFix.length} could not be fixed honestly` : ''}`,
     carry: {

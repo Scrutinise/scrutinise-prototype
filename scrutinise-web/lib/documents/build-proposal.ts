@@ -143,6 +143,7 @@ function pushClaim(
         kind: 'bullets',
         items: refs.map((e): Run[] => {
           const runs: Run[] = [{ text: e.title, bold: true }]
+          if (e.ref) runs.push({ text: ` [Ref: ${e.ref}]`, bold: true }) // 26-R — the same number the notebook and the source list cite
           if (e.citation) runs.push({ text: ` — ${e.citation}` })
           if (e.url) runs.push({ text: ` ${e.url}`, href: e.url })
           return runs
@@ -315,8 +316,8 @@ function evidenceRows(rows: ProposalSnapshot['evidence']): Block[] {
       level: 3,
       runs: text(unreviewed ? `${e.title} — not yet reviewed` : e.title),
     })
-    if (e.citation || e.url) {
-      out.push({ kind: 'paragraph', runs: text([e.citation, e.url].filter(Boolean).join(' · ')) })
+    if (e.ref || e.citation || e.url) {
+      out.push({ kind: 'paragraph', runs: text([e.ref ? `[Ref: ${e.ref}]` : null, e.citation, e.url].filter(Boolean).join(' · ')) })
     }
     // ⚠ THE SIFT'S REASON, VERBATIM OR ABSENT. Never invented — a row written before the sift
     // existed has none, and saying so beats a plausible sentence.
@@ -822,7 +823,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
         kind: 'sources',
         label: 'Chosen by the proposer as the ones that matter',
         refs: priority.map((r): SourceRef => ({
-          title: r.title, citation: r.citation, url: r.url,
+          ref: r.ref, title: r.title, citation: r.citation, url: r.url,
           snippet: r.annotation ?? undefined,
         })),
       })
@@ -845,7 +846,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
     blocks.push({ kind: 'heading', level: 1, runs: text('Sources') })
     for (const group of snapshot.sources) {
       const refs: SourceRef[] = group.refs.map((r) => ({
-        title: r.title, citation: r.citation, url: r.url, snippet: r.snippet, date: r.date,
+        ref: r.ref, title: r.title, citation: r.citation, url: r.url, snippet: r.snippet, date: r.date,
       }))
       blocks.push({ kind: 'sources', label: group.label, refs })
     }
@@ -855,6 +856,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
         kind: 'sources',
         label: 'Accepted findings',
         refs: findings.map((e): SourceRef => ({
+          ref: e.ref,
           title: e.title,
           citation: e.citation ?? '',
           url: e.url ?? '',

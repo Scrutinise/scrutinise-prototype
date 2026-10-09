@@ -93,7 +93,7 @@ export const PRODUCT_FACTS: ProductFact[] = [
   {
     question: 'How do I give you a document or a link to read?',
     answer:
-      'Press "Add a file or link" — the "+" — just above the box you type in. It is there on every '
+      'Press "Add research" — the "+" — just above the box you type in. It is there on every '
       + 'stage, so you never have to go back to add something. A link can also simply be pasted into '
       + 'a message and I will read it. If a page will not load for me, paste its text into the chat '
       + 'instead, or add the PDF with the same button.',

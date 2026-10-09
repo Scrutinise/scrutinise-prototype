@@ -172,7 +172,7 @@ export default function RerunBanner({ ideaId, surface = 'strategy' }: {
             {clean
               ? `Version ${finished.version} is ready — all ${finished.passesTotal} passes ran. `
                 + (surface === 'build'
-                  ? 'The Strategy is where it landed.'
+                  ? 'The First Draft is where it landed.'
                   : 'The panel beside you was drawn before it finished.')
               : `${finished.passesComplete} of ${finished.passesTotal} passes ran. What they produced is real; the rest did not happen.`}
           </p>

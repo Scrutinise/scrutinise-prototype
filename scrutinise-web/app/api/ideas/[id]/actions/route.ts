@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
+import { describeIssues } from '@/lib/api-rejection'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import {
   addAction,
   updateAction,
-  removeAction,
   listActions,
   acceptField,
   skipField,
@@ -54,7 +54,6 @@ const BodySchema = z.discriminatedUnion('action', [
     ...ActionFields,
     practicalStep: z.string().trim().min(1).max(2000).optional(),
   }),
-  z.object({ action: z.literal('remove'), actionId: z.string().min(1) }),
   z.object({ action: z.literal('confirm') }),
   z.object({ action: z.literal('skip') }),
 ])
@@ -69,7 +68,11 @@ export async function POST(req: Request, { params }: Params) {
   let raw: unknown
   try { raw = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = BodySchema.safeParse(raw)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  if (!parsed.success) {
+    // CLAUDE.md §30 — name the input and the reason, in words; never the flatten() object.
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'That change to the action', labels: { practicalStep: 'the action text', actionId: 'the action', whoImplements: 'who implements it', wording: 'the wording' } })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
   const body = parsed.data
 
   // §19-B Task 1 — write side of "chat page == state page".
@@ -90,9 +93,6 @@ export async function POST(req: Request, { params }: Params) {
         await updateAction(id, actionId, patch)
         break
       }
-      case 'remove':
-        await removeAction(id, body.actionId)
-        break
       case 'confirm': {
         const actions = await listActions(id)
         if (!actions.length) {

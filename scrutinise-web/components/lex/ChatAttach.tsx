@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import YourMaterial from './YourMaterial'
+import AddResearch from './AddResearch'
 
 /**
  * ══ DECISION 109 — THE "+" IS IN THE CHAT ON EVERY STAGE ═══════════════════════════════════
@@ -19,27 +20,19 @@ import YourMaterial from './YourMaterial'
  * word and by the glyph's shape (+ / −), never by hue alone.
  */
 export default function ChatAttach({ ideaId, onChanged }: { ideaId: string; onChanged?: () => void }) {
-  const [open, setOpen] = useState(false)
+  // 26-R (DECISION 133) — "+ Add a file or link" is "+ Add research" here, as on every surface: one door for a file, a link, pasted
+  // text of any length, a quote or a thought. The documents already filed stay listed beneath it (no add controls of their own).
+  const [showFiled, setShowFiled] = useState(false)
   const [count, setCount] = useState(0)
-
   return (
     <div className="mb-2">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        title="Add a document or a link for me to read — a report, a letter, an article, a web page"
-        className={`text-xs font-medium px-3 py-1.5 rounded-full border-2 inline-flex items-center gap-1.5 ${
-          open ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
-        }`}
-      >
-        <span aria-hidden className="text-sm leading-none">{open ? '−' : '+'}</span>
-        <span>{open ? 'Close' : 'Add a file or link'}{count ? ` (${count})` : ''}</span>
+      <AddResearch ideaId={ideaId} onSaved={onChanged} />
+      <button type="button" onClick={() => setShowFiled((s) => !s)} aria-expanded={showFiled} className="text-[11px] underline text-zinc-500">
+        {showFiled ? 'Hide' : 'Show'} what has been filed{count ? ` (${count})` : ''}
       </button>
-      {/* Mounted only while open, but the count is kept in this component's state so it survives. */}
-      {open && (
+      {showFiled && (
         <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-zinc-200 p-2">
-          <YourMaterial ideaId={ideaId} onChanged={onChanged} onCount={setCount} />
+          <YourMaterial ideaId={ideaId} onChanged={onChanged} onCount={setCount} hideAdd />
         </div>
       )}
     </div>

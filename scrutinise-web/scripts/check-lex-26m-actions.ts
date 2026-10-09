@@ -94,14 +94,13 @@ ok('a comment reads as the user\'s own words', describeSource({ kind: 'COMMENT',
   && /general comment/.test(describeSource({ kind: 'COMMENT', consolidationId: 'c', model: null })))
 
 console.log('\n── reachable from a route; the verdict is not colour alone ──')
-ok('the panel is imported by FieldsPanel', /import ActionSuggestions from/.test(read('components/lex/FieldsPanel.tsx')))
-ok('...rendered above the actions list', read('components/lex/FieldsPanel.tsx').indexOf('<ActionSuggestions') < read('components/lex/FieldsPanel.tsx').indexOf('<ActionsField field={f}'))
+// DECISIONS 138 + 139 (9 Oct 2026): the box is gone, the verdict is on the action, and Remove is gone. The full set of assertions is in check:lex-9oct.
+ok('decision 138: the "Added from the consolidation" box is not imported or rendered any more', !/ActionSuggestions/.test(read('components/lex/FieldsPanel.tsx')))
 const routeSrc = read('app/api/ideas/[id]/action-ideas/route.ts')
-ok('the route offers remove and retry, and no accept', /z\.literal\('remove'\)/.test(routeSrc) && !/z\.literal\('accept'\)/.test(routeSrc))
-const ui = read('components/lex/ActionSuggestions.tsx')
-ok('each verdict has a word AND a differently-shaped glyph', ['Conflicts', 'Does not fit', 'Fits'].every((w) => ui.includes(w)) && ['✕', '○', '✓'].every((g) => ui.includes(g)))
-ok('it says it is in the list below and nothing is confirmed', /candidates/.test(ui) && /Nothing is confirmed/.test(ui))
-ok('it says where each came from, and lets the user remove it', /From: \{s\.from\.join/.test(ui) && /Remove from my actions/.test(ui))
+ok('the route offers retry only: no accept, and (decision 139) no remove', !/z\.literal\('remove'\)/.test(routeSrc) && !/z\.literal\('accept'\)/.test(routeSrc) && /z\.literal\('test'\)/.test(routeSrc))
+const ui = read('components/lex/ActionsWorkspace.tsx')
+ok('each verdict has a word AND a differently-shaped glyph, on the action', ['Conflicts', 'Does not fit', 'Fits'].every((w) => read('lib/lex/action-facets.ts').includes(w)) && ['✗', '○', '✓'].every((g) => read('lib/lex/action-facets.ts').includes(g)) && /POLICY_VERDICT_UI\[a\.policyTest\.verdict\]/.test(ui))
+ok('it says where each came from when the row is opened, and there is no Remove', /From: \{a\.policyTest\.from\.join/.test(ui) && !/Remove from my actions/.test(ui))
 ok('the schema holds the table and the migration says it is additive', /model ActionIdea/.test(read('prisma/schema.prisma')) && /ADDITIVE ONLY/.test(read('prisma/lex_26m_action_ideas.sql')))
 
 console.log(`\n${pass} passed, ${fail} failed`)

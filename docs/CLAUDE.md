@@ -1291,3 +1291,48 @@ DONE. (`assertRetrievalConfig` passed, because it reads the variable at call tim
 uses it**, not through `process.env`. The same hoisting is why the one test seam in the repo —
 `scripts/lib/stub-auth.cjs`, which replaces only `getAuthenticatedUser()` for scripts that call route
 handlers in-process — has to be preloaded with `--require` and cannot be set up inside the script.
+
+---
+
+## 30. EVERY REJECTED REQUEST TELLS THE USER WHICH INPUT WAS REJECTED, AND WHY, IN WORDS (8 October 2026)
+
+**The rule: a screen never says "not valid" and stops. A rejection names the control the person pressed, the input that was
+refused (by its key and in the words they know it by), and the reason — and says whether anything changed. A bare "not valid"
+is a defect, in the route that wrote it and in the client that displayed it.**
+
+### What produced it
+
+Charlie, bulk "Assign to heading" on two actions, to a heading created seconds earlier: *"That request was not valid."* No
+reason. Lex's own tool made the same assignment successfully, so the route accepted one shape of request and refused the UI's.
+
+⚠ **The hypothesis was wrong, and it is worth recording why.** It was that the UI sent a stale identifier for the new heading, or
+numbers where ids belonged. It sent neither. The route requires `actionIds`; the per-row dropdown sent `actionIds`; **the bulk bar
+sent `ids`** — because a shared `bulk(op, extra)` helper spread `{ ids }` into every op. The heading was irrelevant. Lex's tool
+never failed because it calls the library function directly and never touches the request schema.
+
+Three faults stacked, and the rule has to close all three:
+
+1. **The route answered with zod's `flatten()` object**, which says nothing a person can read.
+2. **The client turned any object into one fixed sentence**, discarding even that.
+3. **The two sides shared no contract**, so a wrong key compiled.
+
+### How to comply
+
+1. **Word it where it is rejected.** `lib/api-rejection.ts` (`describeIssues`) turns a zod issue list into *"“Assign to heading” was
+   not done. Rejected: the selected actions (“actionIds”) was missing. Nothing was changed."* The route returns that as `error`,
+   with the structured `rejected` list beside it. Never return `parsed.error.flatten()` as the user-visible `error`.
+2. **Word it where it is shown.** `explainFailure(body, status, control)` words even a body from an older route, and its last resort
+   still names the control and the status. There is no path that prints a bare sentence.
+3. **Share the contract.** The request schema lives in its own module (`lib/lex/action-structure-schema.ts`) and the client types
+   every call against it with `import type` (erased; no zod in the bundle). The wrong key is a compile error.
+4. **No generic helper that spreads a shape into every op.** Type each control's call.
+5. **A limit the server enforces is a limit the input shows** (`maxLength`). The audit of this bar found the rule-out reason (600),
+   and the classification link (200), accepted any length and would have produced the same bare message.
+6. **Test through the route.** `scripts/check-lex-walk-8oct.ts` posts the body the old bar sent to the real handler and asserts the
+   answer names `actionIds`, then posts the corrected body and reads the rows back.
+
+⚠ **Not yet done everywhere.** About 80 other route files still return `error: parsed.error.flatten()`. They are not broken, they are
+unworded; convert each as it is touched, and a sweep should not be needed to find them (`grep -rn "error.flatten()" app/api`).
+
+*(Companions: §18 — a failure must name its cause; §24 — a schema that permits is not a prompt that requires. This is the same
+family at the keyboard: the system knew exactly what was wrong and kept it from the person who could fix it.)*

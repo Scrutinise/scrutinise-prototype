@@ -50,8 +50,8 @@ ok('a not-attempted link is reported as exactly that', /NOT TRIED/.test(notTried
 control('a cap of two would have hidden the third (the 1 Oct failure)', urlsIn(five).slice(0, 2).includes(link(3)) === false)
 
 console.log('\n── decision 109 — the "+" on every stage; a pasted article is not cut off ──')
-ok('Lex offers the "+" for a file, here, on every stage', /Add a file or link/.test(failedBlock) && /on every stage/.test(failedBlock))
-ok('the "+" is in the single source How this works renders', PRODUCT_FACTS.some((f) => /Add a file or link/.test(f.answer)))
+ok('Lex offers the "+" for a file, here, on every stage', /Add research/.test(failedBlock) && /on every stage/.test(failedBlock))
+ok('the "+" is in the single source How this works renders', PRODUCT_FACTS.some((f) => /Add research/.test(f.answer)))
 ok('an ordinary message stays at 4,000', CHAT_MESSAGE_LIMIT === 4000)
 ok('the schema admits a whole stored document, not 4,000', MAX_TEXT_CHARS >= 100000)
 control('the old limit would have cut a 20,000-character article', 20000 > 4000)

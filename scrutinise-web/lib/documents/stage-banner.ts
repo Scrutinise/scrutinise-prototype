@@ -6,11 +6,11 @@
 // "First Scrutiny" is a review status, true of everything made in stages 1–3. It is NOT the name of
 // stage 2 — that is "The First Draft" — and it must never be used as one.
 //
-// ⚠ NOT THE PRODUCT'S OTHER STAGE SCHEMES. `Idea.stage` (STAGE_1…5: Create/Draft/Develop/Campaign/
-// Legislate — docs/CLAUDE.md §3) and `lib/lex/stages.ts` (The Idea / The Strategy / The Deepening —
-// the three screens of making a proposal) are different schemes. This is the seven-stage model Charlie
-// adopted on 25 Sep 2026. How the three relate is reported in docs/LEX_26H_REPORT.md; nothing here
-// reads either of them to decide a document's stage.
+// ⚠ NOT `Idea.stage` (STAGE_1…5: Create/Draft/Develop/Campaign/Legislate — docs/CLAUDE.md §3), which is the
+// platform's visibility ladder and a different thing. This is the seven-stage model Charlie adopted on 25 Sep
+// 2026. Since DECISION 136 the workspace bar (`lib/lex/stages.ts`) names its first two stages from the same
+// words — The First Pass, The First Draft, The Deepening — so the bar and the documents are one scheme.
+// Nothing here reads `Idea.stage` to decide a document's stage.
 //
 // ⚠ NO IMPORTS. Pure data and pure functions, so the FAQ (a client-safe module) and the builders read
 // ONE copy of the stage names and the caveat (CLAUDE.md §28; check:client-boundary).
@@ -183,12 +183,54 @@ export function withStageBanner(model: DocumentModel, stage: SevenStageNumber, r
 }
 
 /**
- * Which stage a document is. ⚠ Derived from what the document IS and from a fact the platform holds, never
- * from `Idea.stage`: the briefing and the questions are the First Pass (what is already there); anything built
- * from the kernel is the First Draft; a kernel whose Deepening has actually run (`DeepeningPass.status = RUN`)
- * is a Stage 3 document. Stage 4+ documents do not exist yet.
+ * ══ DECISION 135 — A DOCUMENT'S STAGE COMES FROM THE KERNEL'S PROGRESS, NOT FROM WHETHER A PASS HAS RUN ══
+ *
+ * Three facts, all about how far the work has got:
+ *   · `built`            — a first build has completed.
+ *   · `kernelComplete`   — decision 97: EVERY kernel field is accepted or skipped.
+ *   · `enteredDeepening` — the user has run (or begun) a pass of the Deepening itself.
+ *
+ * Stage 1 until the first build. Stage 2 until the kernel is complete AND the user has entered the Deepening.
+ * Stage 3 from then.
+ *
+ * ⚠ WHY THE OLD TEST WAS WRONG. It read "any `DeepeningPass` row with status RUN". The BUILD writes such rows
+ * itself (build-research.ts, build-smart.ts), so a document made straight after a build, before the user had
+ * touched the kernel, announced itself as Stage 3. The new test cannot be satisfied by a build.
+ * ⚠ The facts are inputs, not read here: this file imports nothing (CLAUDE.md §28).
  */
-export function documentStage(opts: { kind: 'FIRST_PASS' | 'KERNEL'; deepeningHasRun: boolean }): SevenStageNumber {
+export interface KernelProgress {
+  built: boolean
+  kernelComplete: boolean
+  enteredDeepening: boolean
+}
+
+export function stageFromProgress(p: KernelProgress): SevenStageNumber {
+  if (!p.built) return 1
+  return p.kernelComplete && p.enteredDeepening ? 3 : 2
+}
+
+/**
+ * Which stage a document is. ⚠ Never from `Idea.stage`. The briefing and the questions are the First Pass
+ * whatever the progress (they are "what is already there" and were made from the corpus, not the kernel);
+ * anything built from the kernel takes the idea's stage from `stageFromProgress`. Stage 4+ do not exist yet.
+ */
+export function documentStage(opts: { kind: 'FIRST_PASS' | 'KERNEL'; progress: KernelProgress }): SevenStageNumber {
   if (opts.kind === 'FIRST_PASS') return 1
-  return opts.deepeningHasRun ? 3 : 2
+  return stageFromProgress(opts.progress)
+}
+
+/** The facts as the snapshot-free reader (stage-facts.ts) and the frozen-snapshot reader both build them. */
+export function kernelProgressOf(input: {
+  built: boolean
+  /** Status of every kernel field, a missing row as 'EMPTY'. */
+  fieldStatuses: readonly string[]
+  /** The Deepening's own pass keys (deepening-config PASS_KEYS) — NOT the research the build files under other keys. */
+  deepeningPassKeys: readonly string[]
+  passes: ReadonlyArray<{ passKey: string; status: string }>
+}): KernelProgress {
+  return {
+    built: input.built,
+    kernelComplete: input.fieldStatuses.length > 0 && input.fieldStatuses.every((s) => s === 'ACCEPTED' || s === 'SKIPPED'),
+    enteredDeepening: input.passes.some((p) => input.deepeningPassKeys.includes(p.passKey) && p.status !== 'NOT_RUN'),
+  }
 }

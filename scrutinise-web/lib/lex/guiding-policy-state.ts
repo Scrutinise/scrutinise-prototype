@@ -16,7 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { setLoopProposal } from '@/lib/lex/field-machine'
+import { setLoopProposal, nextActionOrderIndex } from '@/lib/lex/field-machine'
 import {
   pairPolicies, nextNumber, universalCauses, nearDuplicatePairs,
   type Pairing, type DuplicatePair,
@@ -556,7 +556,7 @@ export async function applyPolicyOp(input: {
         break
       }
       const action = await prisma.lexCoherentAction.create({
-        data: { ideaId: id, practicalStep: row.approach, source: 'LEX' },
+        data: { ideaId: id, practicalStep: row.approach, source: 'LEX', orderIndex: await nextActionOrderIndex(id) },
       })
       await prisma.policyOption.update({
         where: { id: row.id },
@@ -646,7 +646,7 @@ export async function applyPolicyOp(input: {
         })
         for (const p of parked) {
           const action = await prisma.lexCoherentAction.create({
-            data: { ideaId: id, practicalStep: p.approach, source: 'LEX' },
+            data: { ideaId: id, practicalStep: p.approach, source: 'LEX', orderIndex: await nextActionOrderIndex(id) },
           })
           await prisma.policyOption.update({
             where: { id: p.id }, data: { movedToActionId: action.id },
@@ -888,7 +888,7 @@ export async function applyPolicyOp(input: {
         break
       }
       const action = await prisma.lexCoherentAction.create({
-        data: { ideaId: id, practicalStep: row.approach, source: 'USER' },
+        data: { ideaId: id, practicalStep: row.approach, source: 'USER', orderIndex: await nextActionOrderIndex(id) },
       })
       await prisma.policyOption.update({
         where: { id: row.id },

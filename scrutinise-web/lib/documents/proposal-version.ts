@@ -29,6 +29,7 @@
 
 import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { syncRegistry } from '@/lib/lex/source-registry'
 import {
   buildProposalSnapshot,
   snapshotHash,
@@ -160,6 +161,8 @@ export async function mintVersion(
   userId: string,
   opts: { userNote?: string | null; force?: boolean } = {},
 ): Promise<MintResult> {
+  // 26-R — a minted version is frozen, so every source must be numbered BEFORE it is frozen (explicit act; safe to write).
+  await syncRegistry(ideaId)
   const snapshot = await buildProposalSnapshot(ideaId)
   const hash = snapshotHash(snapshot)
 

@@ -3,7 +3,6 @@
 //
 // GET   → the actions it added (verdict against the final policy, one-line reason, which draft /
 //         comment / parked action each came from), and how many ideas are still held.
-// PATCH → { op: 'remove', id }   take one added action back out of the list
 //         { op: 'test' }         run the step again against the settled policy — the retry when the
 //                                one at acceptance did not complete
 //
@@ -16,7 +15,8 @@ import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { prisma } from '@/lib/prisma'
-import { listAddedActions, removeAddedAction, testHeldActions } from '@/lib/lex/action-ideas'
+import { listAddedActions, testHeldActions } from '@/lib/lex/action-ideas'
+import { describeIssues } from '@/lib/api-rejection'
 
 export const maxDuration = 120
 
@@ -30,7 +30,6 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 const PatchSchema = z.discriminatedUnion('op', [
-  z.object({ op: z.literal('remove'), id: z.string().min(1) }),
   z.object({ op: z.literal('test') }),
 ])
 
@@ -41,7 +40,11 @@ export async function PATCH(req: Request, { params }: Params) {
   enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
 
   const parsed = PatchSchema.safeParse(await req.json().catch(() => ({})))
-  if (!parsed.success) return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 422 })
+  if (!parsed.success) {
+    // CLAUDE.md section 30 - name the input and the reason. (remove is gone: decision 139 - rule an action out instead.)
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'Testing the held ideas', labels: { op: 'the control' } })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
   const body = parsed.data
 
   if (body.op === 'test') {
@@ -54,7 +57,6 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ summary, ...(await listAddedActions(id)) })
   }
 
-  const result = await removeAddedAction(id, body.id)
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 })
-  return NextResponse.json({ ok: true, ...(await listAddedActions(id)) })
+  // Unreachable while `test` is the only op; kept so a future op that is added to the schema without a handler fails loudly.
+  return NextResponse.json({ error: 'That control is not one this route can run. Nothing was changed.' }, { status: 422 })
 }

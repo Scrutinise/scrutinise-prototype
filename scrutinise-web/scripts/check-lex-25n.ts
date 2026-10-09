@@ -210,7 +210,7 @@ function main() {
   ok('§2 — and the explanatory line is Charlie’s, verbatim',
     /Everything Lex found or worked out:/.test(read('components/lex/QuestionPanel.tsx')))
   ok('§2 — the count says what it counts',
-    /\{done\} of \{total\} approved/.test(fields))
+    /\{done\} of \{total\} \{total === 1 \? 'part' : 'parts'\} approved/.test(fields))
 
   const modal = read('components/lex/HowItWorksModal.tsx')
   ok('§2 — "You can:" is deleted from the tour intro',
