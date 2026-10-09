@@ -5429,7 +5429,7 @@ model ResearchNote {
   ideaId         String
   idea           Idea       @relation(fields: [ideaId], references: [id], onDelete: Cascade)
   sourceId       String
-  source         IdeaSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  source         IdeaSource @relation(fields: [sourceId], references: [id], onDelete: NoAction)
   quote          String?    @db.Text
   quoteLocation  String?
   comment        String?    @db.Text
