@@ -337,8 +337,11 @@ async function main() {
       where: { ideaId_fieldKey: { ideaId, fieldKey: 'causes' } },
       select: { status: true, proposal: true },
     })
-    ok('and the causes section is marked changed rather than left claiming agreement',
-      causesAfter?.status === 'AWAITING_CONFIRMATION', `${causesBefore?.status ?? 'none'} → ${causesAfter?.status}`)
+    // 25-X (setProposal): a revision offered to an ACCEPTED field is held beside it as a proposal and the
+    // status is NOT demoted. 'Changed' now means a proposal pending on a field that is still ACCEPTED
+    // (was: status flipped to AWAITING_CONFIRMATION).
+    ok('and the accepted causes section keeps its status but now carries the revision as a pending proposal',
+      causesAfter?.status === 'ACCEPTED' && causesAfter?.proposal != null,`${causesBefore?.status ?? 'none'} → ${causesAfter?.status}`)
     const proposed = String((causesAfter?.proposal as { value?: unknown } | null)?.value ?? '')
     ok('the re-proposed list carries the new cause AND the ones already there',
       proposed.includes('Appeals are heard by the body that refused.')
@@ -593,8 +596,9 @@ async function main() {
       () => /3 full builds and 3 re-runs/.test('You have 4 builds left.'))
 
     const agendaSrc = code('components/lex/AgendaPanel.tsx')
+    // 25-Z moved the challenges out of this box, so the total is now reading + gaps (was actionable + challenges).
     ok('the header count is the actionable one, not the total',
-      /count=\{actionable\}/.test(agendaSrc) && /const total = actionable \+ challenges/.test(agendaSrc))
+      /count=\{actionable\}/.test(agendaSrc) && /const total = reading \+ a\.gaps\.length/.test(agendaSrc))
     ok('and the total is rendered inside',
       /\{total\} in all/.test(agendaSrc))
 

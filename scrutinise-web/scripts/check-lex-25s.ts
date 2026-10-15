@@ -199,8 +199,14 @@ async function main() {
     /p\.node\.number/.test(map))
   ok('§3d — the diagram scrolls inside its own box rather than widening the panel',
     /overflow-x-auto/.test(map))
+  // BRIEF_26E §9a removed the List/Map toggle: the list is always rendered below the map, as the nested
+  // CauseTreeView, so the indentation is asserted on that component (was: a `view === 'map'` branch + flat cards).
+  const treeView = (/function CauseTreeView[\s\S]*?\r?\n}\r?\n/.exec(panel) ?? [''])[0]
   ok('§3e — the list view keeps its indentation',
-    /view === 'map' \?/.test(panel) && /<CauseCard key=\{cause\.id\} cause=\{cause\} depth=\{0\}/.test(panel))
+    /<CauseTreeView nodes=\{tree\} busy=\{busy\} api=\{api\} \/>/.test(panel)
+      && /ml-3[^"]*border-l/.test(treeView) && /<CauseTreeView nodes=\{n\.kids\}/.test(treeView))
+  control('a list that rendered every cause flat (no nested kids) would fail',
+    () => /<CauseTreeView nodes=\{n\.kids\}/.test('function CauseTreeView(){ return nodes.map((n)=><CauseCard cause={n} />) }\n'))
   control('a map that was still the indented list would fail',
     () => /<CauseMap/.test('{view === "map" ? <CauseTreeView nodes={tree} /> : null}'))
 

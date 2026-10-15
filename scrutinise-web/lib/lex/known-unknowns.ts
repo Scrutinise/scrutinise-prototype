@@ -133,3 +133,19 @@ export function subjectsLost(input: KnownUnknown[], output: KnownUnknown[]): str
   const rendered = output.map((o) => `${o.question} ${o.why}`).join('\n')
   return [...all].filter((s) => !rendered.includes(s))
 }
+
+/** Reads a stored `knownUnknowns` JSON column back into declared gaps, keeping `kind` and `subjects` (26-B §7a). Pure. Moved here from deepening.ts (26-S). */
+export function readKnownUnknowns(raw: unknown): KnownUnknown[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
+    .filter((x) => typeof x.question === 'string')
+    // 26-B §7a — `kind` was DROPPED here, so `classifyGap()` in agenda.ts never saw one and filed
+    // every corpus gap as research for the user to do. A search that found nothing was homework.
+    .map((x) => ({
+      question: String(x.question),
+      why: typeof x.why === 'string' ? x.why : '',
+      ...(typeof x.kind === 'string' ? { kind: x.kind as KnownUnknown['kind'] } : {}),
+      ...(Array.isArray(x.subjects) ? { subjects: x.subjects.filter((s): s is string => typeof s === 'string') } : {}),
+    }))
+}

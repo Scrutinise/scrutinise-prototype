@@ -61,16 +61,27 @@ console.log('\n§6 — an idea can be deleted')
 const ROUTE = 'app/api/ideas/[id]/route.ts'
 const route = code(ROUTE)
 ok('there is a DELETE handler', /export async function DELETE/.test(route))
+// 26-D §4b lifted the delete rules out of this route into `deleteIdeaForOwner`
+// (lib/lex/idea-lifecycle.ts), shared with the bulk route; behaviour unchanged. The route now only
+// authenticates and delegates, so the rule assertions read the shared function, and the route is
+// asserted to delegate (not to re-implement) it.
+const LIFECYCLE = 'lib/lex/idea-lifecycle.ts'
+const life = code(LIFECYCLE)
+const deleteHandler = route.slice(route.indexOf('export async function DELETE'))
+ok('the DELETE route delegates to the shared deleteIdeaForOwner, and the bulk route does too',
+  /deleteIdeaForOwner\(id, user\.id\)/.test(deleteHandler)
+  && /deleteIdeaForOwner\(id, user\.id\)/.test(code('app/api/ideas/bulk/route.ts')))
 ok('OWNER ONLY — a collaborator cannot delete what they were invited to help with',
-  /idea\.creatorId !== user\.id/.test(route) && /403/.test(route))
+  /idea\.creatorId !== userId/.test(life) && /status: 403/.test(life))
 ok('...and it does NOT reach for authorizeIdea, whose answer admits collaborators',
-  !/authorizeIdea/.test(route))
+  !/authorizeIdea/.test(route) && !/authorizeIdea/.test(life))
 ok('SOFT — deletedAt is set, nothing is destroyed',
-  /data: \{ deletedAt: new Date\(\) \}/.test(route) && !/prisma\.idea\.delete/.test(route))
+  /data: \{ deletedAt: new Date\(\) \}/.test(life) && !/prisma\.idea\.delete/.test(life)
+  && !/prisma\.idea\.delete|prisma\.idea\.update/.test(deleteHandler))
 ok('a public idea is REFUSED with a reason, not silently no-opped',
-  /PUBLIC_STAGES/.test(route) && /409/.test(route) && /Withdraw it instead/.test(read(ROUTE)))
+  /PUBLIC_STAGES/.test(life) && /status: 409/.test(life) && /Withdraw it instead/.test(read(LIFECYCLE)))
 ok('deleting twice is idempotent, not a 404 on the second press',
-  /alreadyDeleted: true/.test(route))
+  /alreadyDeleted: true/.test(life) && /alreadyDeleted: outcome\.alreadyDeleted/.test(deleteHandler))
 
 console.log('\n§6 — and it is actually gone')
 ok('the schema carries deletedAt', /deletedAt\s+DateTime\?/.test(read('prisma/schema.prisma')))

@@ -26,6 +26,7 @@ import { historyLine, clusterLine, GROUP_HEADINGS } from '@/lib/lex/policy-histo
 import CollapsedSection from './CollapsedSection'
 import PriorVersions from './PriorVersions'
 import GuidingPolicyGuideModal from './GuidingPolicyGuideModal'
+import PolicyReviewBar from './PolicyReviewBar'
 import { testStatementLength, lengthFlagLine } from '@/lib/lex/statement-length'
 
 interface Policy {
@@ -1119,6 +1120,8 @@ export default function GuidingPolicyScreen({ ideaId, onActionsAdded, onGoToActi
             How to write a Guiding Policy
           </button>
         </div>
+        {/* 26-S §6 (decision 150) — what bears on this policy: proposals from the update pass and notes bearing on it, with a reason for every "no". */}
+        <PolicyReviewBar ideaId={ideaId} onChanged={onActionsAdded} />
         {/* ══ 26-L addendum 2 §3 — THE INTRODUCTION, REPLACED VERBATIM ═══════════════════
             Supersedes BRIEF_26L §10a / decision 103 item 2's wording. This version drops "the
             success of your mission" framing for what a guiding policy actually IS — the

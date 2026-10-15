@@ -20,6 +20,7 @@ import {
   syncRegistry, addSource, ownObservationSource, listRegistry, refIndex, urlKey, type RegistrySource,
 } from './source-registry'
 import { normalise, MAX_TEXT_CHARS, runMaterialFindings } from './user-material'
+import { SET_ASIDE_PREFIX, DISMISSED_PREFIX } from './update-pass'
 import type { NotebookRequest, Stance, NoteStatus, BearsOnRef } from './research-notebook-schema'
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string }
@@ -62,6 +63,12 @@ export function canSeeNote(note: { mineOnly: boolean; authorId: string }, viewer
   return !note.mineOnly || note.authorId === viewerId
 }
 
+/** A short title for a note: its quote, else its comment, else its source. (26-S: the policy review lists notes by it.) */
+export function noteTitleOf(n: Pick<NoteView, 'quote' | 'comment' | 'source'>): string {
+  const t = (n.quote ?? n.comment ?? n.source?.title ?? '(empty note)').replace(/\s+/g, ' ').trim()
+  return t.length > 140 ? `${t.slice(0, 139)}…` : t
+}
+
 export async function readNotebook(ideaId: string, viewer: Viewer, opts: { includeLex?: boolean; includeSetAside?: boolean } = {}): Promise<{
   notes: NoteView[]; sources: RegistrySource[]; lexCount: number; ownCount: number; setAsideCount: number
 }> {
@@ -71,7 +78,7 @@ export async function readNotebook(ideaId: string, viewer: Viewer, opts: { inclu
     prisma.researchNote.findMany({ where: { ideaId }, include: { replies: { orderBy: { createdAt: 'asc' } } }, orderBy: { createdAt: 'asc' } }),
     listRegistry(ideaId, { includeArchived: true }),
     opts.includeLex
-      ? prisma.evidenceItem.findMany({ where: { ideaId }, orderBy: { createdAt: 'asc' }, select: { id: true, title: true, body: true, kind: true, sourceId: true, url: true, citation: true, createdAt: true, status: true } })
+      ? prisma.evidenceItem.findMany({ where: { ideaId }, orderBy: { createdAt: 'asc' }, select: { id: true, title: true, body: true, kind: true, sourceId: true, url: true, citation: true, createdAt: true, status: true, note: true } })
       : Promise.resolve([]),
   ])
   const visible = rows.filter((n) => canSeeNote(n, viewer.id))
@@ -98,7 +105,12 @@ export async function readNotebook(ideaId: string, viewer: Viewer, opts: { inclu
         quote: null, quoteLocation: null, comment: `${e.title}\n\n${e.body}`.trim(),
         stance: e.kind === 'SUPPORTS' ? 'SUPPORTS' : e.kind === 'CONTRADICTS' ? 'CONTRADICTS' : e.kind === 'FINDING' ? 'CONTEXT' : 'UNDECIDED',
         bearsOn: [], tags: [], heading: null, importance: null, authorId: 'lex', authorName: 'Lex', authorKind: 'LEX',
-        status: e.status === 'REJECTED' ? 'SET_ASIDE' : 'IN_RECORD', setAsideReason: e.status === 'REJECTED' ? 'rejected on the research panel' : null,
+        // 26-S §6: a finding set aside from the policy review keeps its own reason ("considered, not taken"); a dismissed one says so.
+        status: e.status === 'REJECTED' ? 'SET_ASIDE' : 'IN_RECORD',
+        setAsideReason: e.status !== 'REJECTED' ? null
+          : e.note?.startsWith(SET_ASIDE_PREFIX) ? `considered, not taken — ${e.note.slice(SET_ASIDE_PREFIX.length)}`
+          : e.note?.startsWith(DISMISSED_PREFIX) ? `dismissed — ${e.note.slice(DISMISSED_PREFIX.length)}`
+          : 'rejected on the research panel',
         mineOnly: false, mine: false, createdAt: e.createdAt.toISOString(), replies: [],
       })
     }
@@ -115,15 +127,23 @@ export async function readNotebook(ideaId: string, viewer: Viewer, opts: { inclu
 export async function bearsOnOptions(ideaId: string): Promise<BearsOnRef[]> {
   const [causes, policies, actions, issues, forks] = await Promise.all([
     prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: [{ number: 'asc' }], select: { id: true, number: true, cause: true } }),
-    prisma.policyOption.findMany({ where: { ideaId, status: { not: 'RULED_OUT' }, kind: 'GUIDING_POLICY' }, orderBy: [{ number: 'asc' }], select: { id: true, number: true, approach: true } }),
+    prisma.policyOption.findMany({ where: { ideaId, status: { not: 'RULED_OUT' }, kind: 'GUIDING_POLICY' }, orderBy: [{ number: 'asc' }], select: { id: true, number: true, approach: true, status: true } }),
     prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, orderBy: [{ number: 'asc' }], select: { id: true, number: true, title: true, practicalStep: true } }),
     prisma.deepeningIssue.findMany({ where: { ideaId, status: 'OPEN' }, orderBy: [{ createdAt: 'asc' }], take: 60, select: { id: true, title: true, text: true } }),
     prisma.buildFork.findMany({ where: { ideaId, resolved: false }, distinct: ['forkKey'], select: { id: true, forkKey: true, chosen: true } }),
   ])
   const clip = (s: string, n = 90) => (s.length > n ? `${s.slice(0, n - 1)}…` : s)
+  // 26-S §6b — "the policy" is a choice of its own: the settled Guiding Policy when there is one (it is then NOT listed a second time
+  // among the numbered approaches), otherwise a stand-in that says it is not yet settled. A note that bears on it is what the policy
+  // review's count reads (`bearsOnPolicy`), so the choice has to exist where the user adds the note.
+  const settled = policies.find((p) => p.status === 'CHOSEN')
+  const policyChoice: BearsOnRef = settled
+    ? { kind: 'policy', id: settled.id, label: `The Guiding Policy: ${clip(settled.approach)}` }
+    : { kind: 'policy', id: 'guiding-policy', label: 'The Guiding Policy (not yet settled)' }
   return [
+    policyChoice,
     ...causes.map((c): BearsOnRef => ({ kind: 'cause', id: c.id, label: `Cause ${c.number ?? '?'}: ${clip(c.cause)}` })),
-    ...policies.map((p): BearsOnRef => ({ kind: 'policy', id: p.id, label: `Policy ${p.number ?? '?'}: ${clip(p.approach)}` })),
+    ...policies.filter((p) => p.id !== settled?.id).map((p): BearsOnRef => ({ kind: 'policy', id: p.id, label: `Policy ${p.number ?? '?'}: ${clip(p.approach)}` })),
     ...actions.map((a): BearsOnRef => ({ kind: 'action', id: a.id, label: `Action ${a.number ?? '?'}: ${clip(a.title?.trim() || a.practicalStep)}` })),
     ...issues.map((i): BearsOnRef => ({ kind: 'challenge', id: i.id, label: `Challenge: ${clip(i.title?.trim() || i.text)}` })),
     ...forks.map((f): BearsOnRef => ({ kind: 'decision', id: f.id, label: `Decision: ${clip(f.chosen)}` })),

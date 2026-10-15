@@ -266,8 +266,12 @@ const CHECKS: Check[] = [
   {
     name: '§2 (as §25-K §1) BOTH surfaces render the stage indicator, so the route exists in every direction',
     run: (src) => {
-      if (!/<StageBar context=\{stageCtx\} \/>/.test(src['app/ideas/build/BuildIdeaClient.tsx'])) {
-        return 'stage 1 has no stage indicator'
+      // 26-C §2g DELIBERATELY removed the stage header from the stage-1 build screen ("it belongs on the
+      // next page"); the build page keeps the props but must not render it. The indicator now lives on
+      // the create page, which is where stages 1-3 are shown. Reinstating it on build is a decision.
+      const buildCode = src['app/ideas/build/BuildIdeaClient.tsx'].replace(/\/\*[\s\S]*?\*\//g, ' ')
+      if (/<StageBar\b/.test(buildCode)) {
+        return 'the stage-1 build screen renders the stage indicator again — 26-C §2g removed it'
       }
       if (!/<StageBar context=\{stageCtx\} \/>/.test(src['app/ideas/create/CreateIdeaClient.tsx'])) {
         return 'stages 2 and 3 have no stage indicator'

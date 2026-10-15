@@ -268,7 +268,8 @@ interface TestOut {
   groups?: Array<{ members?: unknown; text?: unknown; verdict?: unknown; reason?: unknown }>
 }
 
-const TEST_SCHEMA = {
+// 26-S §3c — exported so the import pass tests its rows with THE SAME words and schema (the brief: "same test as testHeldActions").
+export const TEST_SCHEMA = {
   type: 'object',
   properties: {
     groups: {
@@ -288,7 +289,7 @@ const TEST_SCHEMA = {
   required: ['groups'],
 }
 
-const TEST_SYSTEM = [
+export const TEST_SYSTEM = [
   'You test candidate coherent actions against a FINAL guiding policy, and merge duplicates.',
   '',
   'For each group of one or more numbered items, give:',

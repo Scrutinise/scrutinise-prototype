@@ -428,7 +428,9 @@ const CHECKS: Check[] = [
     run: (src) => {
       const c = src['lib/lex/build-client.ts']
       for (const m of ['A CAUSAL CHAIN, NOT AN INVENTORY', 'THE COUNTERINTUITIVE RESULT',
-        'CITE THE FINDING, NOT THE CITATION', 'REFRAME THE INSTRUMENT IF IT IS WRONG',
+        // 26-B §3 (three avenues, proposer chooses) replaced quality 4 "REFRAME THE INSTRUMENT IF IT IS
+        // WRONG" with "SAY WHICH AVENUE A FINDING BEARS ON": the build no longer picks an instrument.
+        'CITE THE FINDING, NOT THE CITATION', 'SAY WHICH AVENUE A FINDING BEARS ON',
         'GIVE A TEST THE USER CAN APPLY', 'PROPOSE THE NEXT ACTION']) {
         if (!c.includes(m)) return `§25.7 instruction lost: ${m}`
       }

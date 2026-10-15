@@ -34,7 +34,7 @@ import { generateDeepeningFindings, type RawFinding } from './deepening-client'
 import { siftCandidates, siftSummaryLine, SIFT_CANDIDATE_TARGET, type SiftKeep } from './deepening-sift'
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { runJob, jobQuestion, type JobOutcome } from './deepening-jobs'
-import { collapseKnownUnknowns, type KnownUnknown } from './known-unknowns'
+import { collapseKnownUnknowns, readKnownUnknowns, type KnownUnknown } from './known-unknowns'
 import { sourceDateFields } from './evidence-date'
 
 // 25-C §2.4 — the shape and the collapse live in known-unknowns.ts so the panel, the build's
@@ -175,20 +175,9 @@ function toIssueView(i: {
   }
 }
 
-export function readKnownUnknowns(raw: unknown): KnownUnknown[] {
-  if (!Array.isArray(raw)) return []
-  return raw
-    .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
-    .filter((x) => typeof x.question === 'string')
-    // 26-B §7a — `kind` was DROPPED here, so `classifyGap()` in agenda.ts never saw one and filed
-    // every corpus gap as research for the user to do. A search that found nothing was homework.
-    .map((x) => ({
-      question: String(x.question),
-      why: typeof x.why === 'string' ? x.why : '',
-      ...(typeof x.kind === 'string' ? { kind: x.kind as KnownUnknown['kind'] } : {}),
-      ...(Array.isArray(x.subjects) ? { subjects: x.subjects.filter((s): s is string => typeof s === 'string') } : {}),
-    }))
-}
+// 26-S: readKnownUnknowns moved to known-unknowns.ts (a pure reader), so the document stack can use it WITHOUT importing this engine (check:20bd).
+// Re-exported so every existing caller keeps working.
+export { readKnownUnknowns } from './known-unknowns'
 
 /**
  * §24.2 evidence facts. COUNTS ONLY, and deliberately no aggregate: there is no field

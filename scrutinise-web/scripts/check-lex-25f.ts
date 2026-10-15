@@ -323,17 +323,19 @@ const CHECKS: Check[] = [
       if (/updateMany\(\{\s*where: \{ buildId: c\.buildId, forkKey: INSTRUMENT_FORK_KEY \},\s*data: \{[^}]*alternative:/s.test(s)) {
         return 'the unfiltered updateMany is back — it writes one alternative onto every row'
       }
-      if (!/alreadyCarrying/.test(s)) return 'the append is not idempotent, so a re-run adds a duplicate'
-      if (!/nextIndex/.test(s)) return 'the finding is not appended as its own alternative'
+      // 26-B retired the append (`alreadyCarrying` / `nextIndex`): an existing-power finding is no longer
+      // written onto the instrument fork at all, it lands on the LEGISLATIVE avenue row, scoped by avenue,
+      // so there is no alternative to duplicate. What is asserted now is that it is scoped and not fork-wide.
+      if (!/buildAvenue\.updateMany\(\{\s*where: \{ buildId: c\.buildId, avenue: 'LEGISLATIVE' \}/.test(s)) {
+        return 'the existing-power finding is not written to the legislative avenue row alone'
+      }
       return null
     },
     break: (src) => ({
       ...src,
-      // ⚠ RENAMED TO A NON-SUPERSTRING. The first version renamed it to
-      // `alreadyCarryingXX`, which still contains `alreadyCarrying` — so the assertion's
-      // substring test matched the corrupted source and the control passed.
+      // Drop the avenue scope, which makes the write hit every avenue of the build.
       'lib/lex/build.ts': src['lib/lex/build.ts']
-        .split('alreadyCarrying').join('zzIdempotenceGone'),
+        .split("where: { buildId: c.buildId, avenue: 'LEGISLATIVE' }").join('where: { buildId: c.buildId }'),
     }),
   },
   {
@@ -608,13 +610,15 @@ const CHECKS: Check[] = [
     run: (src) => {
       const s = src['lib/lex/build.ts']
       if (!/coverageCheck\(/.test(s)) return 'the coverage check never runs'
-      return /ANOTHER MODEL MADE THIS POINT AND OUR PROPOSAL DOES NOT ADDRESS IT/.test(s)
+      // 25-Q §7 moved the "ANOTHER MODEL MADE THIS POINT..." lead-in out of the text: the issue now holds the
+      // point and why it matters, and the naming model travels as `sourceModel` (rendered at the foot).
+      return /for \(const m of coverage\.missed\)[\s\S]{0,2500}deepeningIssue\.create[\s\S]{0,600}text: `\$\{m\.point\.trim\(\)\} \$\{m\.whyItMatters\.trim\(\)\}`[\s\S]{0,200}sourceModel: m\.namedBy/.test(s)
         ? null
         : 'a missed point does not reach the issues list'
     },
     break: (src) => ({
       ...src,
-      'lib/lex/build.ts': src['lib/lex/build.ts'].split('ANOTHER MODEL MADE THIS POINT').join('x'),
+      'lib/lex/build.ts': src['lib/lex/build.ts'].split('sourceModel: m.namedBy').join('sourceModel: null'),
     }),
   },
   {
@@ -840,7 +844,9 @@ const CHECKS: Check[] = [
       const s = src['lib/lex/build-client.ts']
       if (!/const ANSWER_QUALITY = \[/.test(s)) return 'the six instructions are not in the prompts'
       for (const marker of ['A CAUSAL CHAIN, NOT AN INVENTORY', 'THE COUNTERINTUITIVE RESULT',
-        'CITE THE FINDING, NOT THE CITATION', 'REFRAME THE INSTRUMENT IF IT IS WRONG',
+        // 26-B replaced "REFRAME THE INSTRUMENT IF IT IS WRONG" (instruction 4) with the avenue instruction:
+        // the finding is stated beside the route it bears on, not used to override the proposer's choice.
+        'CITE THE FINDING, NOT THE CITATION', 'SAY WHICH AVENUE A FINDING BEARS ON',
         'GIVE A TEST THE USER CAN APPLY', 'PROPOSE THE NEXT ACTION']) {
         if (!s.includes(marker)) return `instruction missing: ${marker}`
       }
@@ -1040,15 +1046,17 @@ const CHECKS: Check[] = [
         ['app/dashboard/DashboardClient.tsx', /href="\/ideas\/new">Start your first idea/],
         ['app/ideas/page.tsx', /href="\/ideas\/new"/],
         ['app/page.tsx', /href="\/ideas\/new">\s*\n\s*Get Started/],
-        ['components/PublicNav.tsx', /href="\/ideas\/new"/],
         ['components/ui/Navbar.tsx', /href: '\/ideas\/new'/],
       ]
       for (const [f, re] of entries) {
         if (!re.test(src[f])) return `${f} still points a creation entry somewhere other than ${NEW_IDEA_PATH}`
       }
-      // Two links in PublicNav — desktop and the mobile menu.
-      const nav = (src['components/PublicNav.tsx'].match(/\/ideas\/new/g) ?? []).length
-      return nav >= 2 ? null : `PublicNav has ${nav} switched links; the desktop nav and the mobile menu both need one`
+      // 26-C Addendum 3 §23a: PublicNav's "My ideas" entry points at /ideas/mine (which itself redirects to the
+      // New-idea door when the user has none), so it is no longer a creation entry. The property kept: neither
+      // of its two links (desktop and the mobile menu) is left on the old /ideas/create door.
+      const nav = (src['components/PublicNav.tsx'].match(/href="\/ideas\/mine"/g) ?? []).length
+      if (/href="\/ideas\/create"/.test(src['components/PublicNav.tsx'])) return 'PublicNav still links the old creation door'
+      return nav >= 2 ? null : `PublicNav has ${nav} /ideas/mine links; the desktop nav and the mobile menu both need one`
     },
     break: (src) => ({
       ...src,
@@ -1065,7 +1073,9 @@ const CHECKS: Check[] = [
         // said to delete it once a real "my ideas" surface existed; `MyIdeasList` is it.
         // The PROPERTY is unchanged and still asserted: a built idea opens on the PROPOSAL,
         // never through the creation switch.
-        ['components/lex/MyIdeasList.tsx', /\/ideas\/create\?ideaId=\$\{i\.ideaId\}/],
+        // 26-C Addendum 3 §23c: a card now opens the idea overview (`/ideas/${i.ideaId}`); the overview's Edit
+        // link (IdeaDetailClient, asserted above) is what chooses create vs build. Still never the creation switch.
+        ['components/lex/MyIdeasList.tsx', /return `\/ideas\/\$\{i\.ideaId\}`/],
         ['app/ideas/build/BuildIdeaClient.tsx', /\/ideas\/create\?ideaId=\$\{ideaId\}/],
         ['lib/email.ts', /\/ideas\/create\?ideaId=\$\{ideaId\}/],
       ]
@@ -1083,7 +1093,7 @@ const CHECKS: Check[] = [
     break: (src) => ({
       ...src,
       'components/lex/MyIdeasList.tsx': src['components/lex/MyIdeasList.tsx']
-        .replace('/ideas/create?ideaId=${i.ideaId}', '/ideas/new?ideaId=${i.ideaId}'),
+        .replace('return `/ideas/${i.ideaId}`', 'return `/ideas/new?ideaId=${i.ideaId}`'),
     }),
   },
   {

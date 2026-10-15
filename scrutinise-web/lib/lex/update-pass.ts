@@ -39,6 +39,12 @@ import type { SearchResult } from './page1-config'
 
 export const UPDATE_PASS_KEY = 'MATERIAL_UPDATE'
 
+// 26-S §6 — how a REJECTED finding says WHY it is rejected. `EvidenceStatus` is a database enum (PROPOSED | ACCEPTED | REJECTED), so
+// "set aside" (right, but not taken — shown in the notebook as "considered, not taken") and "dismissed" (wrong) are told apart by the
+// prefix of the note, here and only here. lib/lex/policy-review.ts writes them; the notebook reads them.
+export const SET_ASIDE_PREFIX = 'Set aside — considered, not taken: '
+export const DISMISSED_PREFIX = 'Dismissed: '
+
 export interface ProposedChangeView {
   id: string
   kind: string
@@ -432,6 +438,52 @@ export async function runUpdatePass(
   return { ok: true, proposedChanges, counts, costPence: priced.pence, ms: Date.now() - t0 }
 }
 
+// ── 26-S §3e — findings written by ANOTHER route (the action import pass), as proposals ────────────────────
+
+export interface ImportedFinding {
+  category: Exclude<UpdateCategory, 'NOTHING'>
+  /** 'pivotalObstacle' | 'challenge' | `causes:<n>` | `policyOptions:<n>` — SUPPORTS / CONTRADICTS only. */
+  targetRef: string | null
+  title: string
+  explanation: string
+  /** NEW_CAUSE / NEW_POLICY_OPTION: the proposed text. */
+  proposedText: string | null
+  sourceId: string | null
+  citation: string | null
+}
+
+/**
+ * The import pass's "for the policy, not an action" rows, written where the policy review already looks: `EvidenceItem` rows of
+ * this pass, PROPOSED, in the 26-K categories (BRIEF_26S §3e — "Nothing on the policy changes until accepted").
+ *
+ * ⚠ DIFFERENT FROM `writeClassification` IN ONE WAY, ON PURPOSE. The update pass puts a NEW_POLICY_OPTION straight into the sort
+ * (§4a, "no separate path"). A document with fifty provisions could put a dozen candidates into the sort in one click of
+ * "confirm import", so here a new approach is PROPOSED like the rest and `judgeUpdateItem` adds it on accept.
+ */
+export async function writeProposedFindings(ideaId: string, findings: ImportedFinding[]): Promise<{ written: number }> {
+  if (!findings.length) return { written: 0 }
+  const runVersion = ((await prisma.deepeningPass.findUnique({
+    where: { ideaId_passKey: { ideaId, passKey: UPDATE_PASS_KEY } }, select: { runVersion: true },
+  }))?.runVersion ?? 0) + 1
+  for (const f of findings) {
+    await prisma.evidenceItem.create({
+      data: {
+        ideaId, passKey: UPDATE_PASS_KEY, runVersion, sourceType: 'USER_DOCUMENT', sourceId: f.sourceId, citation: f.citation, url: null,
+        kind: f.category, fieldRef: f.category === 'NEW_CAUSE' || f.category === 'NEW_POLICY_OPTION' ? null : f.targetRef,
+        title: f.title.slice(0, 300),
+        body: f.category === 'NEW_CAUSE' || f.category === 'NEW_POLICY_OPTION' ? (f.proposedText || f.explanation) : f.explanation,
+        status: 'PROPOSED',
+      },
+    })
+  }
+  await prisma.deepeningPass.upsert({
+    where: { ideaId_passKey: { ideaId, passKey: UPDATE_PASS_KEY } },
+    create: { ideaId, passKey: UPDATE_PASS_KEY, status: 'RUN', runVersion, startedAt: new Date(), completedAt: new Date(), candidatesReviewed: findings.length, candidatesKept: findings.length },
+    update: { runVersion, completedAt: new Date() },
+  })
+  return { written: findings.length }
+}
+
 // ── accepting/dismissing one proposed change (§4a/§4b) ────────────────────────
 
 export interface AcceptResult {
@@ -460,6 +512,17 @@ export async function judgeUpdateItem(
     const created = await addCause(ideaId, { cause: item.body, source: 'LEX_CORPUS' })
     await prisma.evidenceItem.update({
       where: { id: item.id }, data: { fieldRef: `causes:${created.number}`, note: `Added as cause ${created.number}.` },
+    })
+    return { ok: true }
+  }
+
+  // 26-S: a PROPOSED new approach (from the import pass) enters the sort only now, on accept — through the same one path.
+  if (item.kind === 'NEW_POLICY_OPTION') {
+    const added = await applyPolicyOp({ ideaId, op: 'add', text: item.body })
+    const number = 'addedNumber' in added ? added.addedNumber : undefined
+    await prisma.evidenceItem.update({
+      where: { id: item.id },
+      data: { fieldRef: number != null ? `policyOptions:${number}` : null, note: number != null ? `Entered the sort as candidate ${number}.` : 'Could not be added.' },
     })
     return { ok: true }
   }

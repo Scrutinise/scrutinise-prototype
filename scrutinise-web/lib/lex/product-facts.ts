@@ -84,6 +84,15 @@ export const PRODUCT_FACTS: ProductFact[] = [
       + 'report" is on the same card.',
   },
   {
+    // 26-S §5b (decision 141) — VERBATIM from BRIEF_26S §5b, plus the one example the brief asks for.
+    question: 'What is the difference between a heading and an action?',
+    answer:
+      'A heading is an instrument — the thing that gets made: an Act, a code of conduct, a register, a training scheme. '
+      + 'An action is a provision — one rule inside it, specific enough to be accepted or rejected on its own. '
+      + 'If you have a document full of ideas, use "Import actions from a document", or give it to Lex. '
+      + 'For example: a Bill is a heading; each clause in it is an action.',
+  },
+  {
     question: 'Can you change the draft for me?',
     answer:
       'Yes, for the text. Ask me to rewrite a box or one of the numbered candidate approaches and I '

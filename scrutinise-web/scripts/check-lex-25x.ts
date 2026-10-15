@@ -265,7 +265,9 @@ async function main() {
     const archived = issues.filter((i) => i.status === 'DISMISSED')
 
     ok('§3 — nothing was deleted: every challenge is still on the idea',
-      issues.length === 225, `${issues.length} rows`)
+      // The pilot idea keeps accumulating challenges with each build (225 at v9, 255 by 15 Oct 2026), so the
+      // hard-coded 225 became a ceiling; the property is "none deleted", i.e. never fewer than the 225 seen at 25-X.
+      issues.length >= 225, `${issues.length} rows`)
     ok('§3 — the current set is smaller than the accumulated pile',
       cur.length > 0 && cur.length < issues.length, `${cur.length} of ${issues.length}`)
     ok('§3 — the 43 promotions are applied', promoted.length === 43, `${promoted.length}`)
@@ -278,14 +280,32 @@ async function main() {
 
     const long = textOf(buildProposalDocument(snapshot).model)
     const pack = textOf(buildMeetingPackDocument(snapshot).model)
-    const promotedSample = promoted.find((i) => i.status === 'OPEN' && i.title?.trim())
-    if (!promotedSample) skip('§3 the promoted marker', 'no open promoted challenge with a title')
+    // build-proposal.ts prints the marker only for a challenge in the CURRENT set (`current !== false`) whose
+    // runVersion differs from its promotedToVersion; the sample must be one the document is meant to mark
+    // (was: any open promoted one - which could be an earlier-draft row or one promoted into its own draft).
+    const promotedSample = promoted.find((i) => (i.status === 'OPEN' || i.status === 'DEFERRED')
+      && i.current !== false && i.runVersion !== i.promotedToVersion && i.title?.trim())
+    if (!promotedSample) skip('§3 the promoted marker', 'no current promoted challenge with a title')
     else {
       ok('§3 — a promoted challenge prints the draft it was raised against',
-        long.includes(`[raised against draft ${promotedSample.runVersion}, still applies]`),
-        `draft ${promotedSample.runVersion}`)
+        long.includes('[raised against draft ' + promotedSample.runVersion + ', still applies]'),
+        'draft ' + promotedSample.runVersion)
     }
-    ok('§3 — the archived ones are still visible in the document, with their reasons',
+    // Once a later build runs, challenges promoted into the previous one stop being current (snapshot
+    // current = raised against, or promoted into, the NEWEST version) - on the pilot all 43 promotions are
+    // into v9 and the newest is later. They then render under "Raised against earlier drafts" as '[draft N]',
+    // so the draft they were raised against must still be printed there.
+    const earlierPromoted = promoted.find((i) => (i.status === 'OPEN' || i.status === 'DEFERRED')
+      && i.current === false && i.text?.trim())
+    if (!earlierPromoted) skip('§3 the earlier-draft marker', 'no promoted challenge left outside the current set')
+    else {
+      ok('§3 — a promoted challenge that is no longer in the current set still prints its draft',
+        long.includes('Raised against earlier drafts, not yet resolved')
+          && long.includes(earlierPromoted.text + ' [draft ' + earlierPromoted.runVersion + ']'),
+        'draft ' + earlierPromoted.runVersion)
+      control('an earlier-draft row printed with the wrong draft number would fail',
+        () => long.includes(earlierPromoted.text + ' [draft ' + (earlierPromoted.runVersion + 100) + ']'))
+    }    ok('§3 — the archived ones are still visible in the document, with their reasons',
       long.includes('Considered and set aside'))
     const archivedSample = archived.find((i) => i.dismissReason?.includes('Already made against'))
     ok('§3 — an archived duplicate NAMES the challenge that duplicates it',

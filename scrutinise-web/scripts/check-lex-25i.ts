@@ -218,7 +218,10 @@ const CHECKS: Check[] = [
       if (!/prisma\.\$transaction\(\[/.test(r)) return 'the two deletes are not atomic'
       const del = r.slice(r.indexOf('export async function DELETE'))
       if (!/evidenceItem\.deleteMany/.test(del)) return 'the findings survive the document — quotations with no source'
-      return /ideaUserMaterial\.delete/.test(del) ? null : 'the material row is not deleted'
+      // 26-J §2b: DELETE now ARCHIVES the material row (archivedAt) — "nothing deletes". The findings
+      // still go with it, in the same transaction; what must NOT happen is the row being destroyed.
+      if (/ideaUserMaterial\.delete\b/.test(del)) return 'the material row is hard-deleted — it must be archived'
+      return /ideaUserMaterial\.update\([^)]*archivedAt/.test(del.replace(/\s+/g, ' ')) ? null : 'the material row is not archived'
     },
     break: (src) => ({
       ...src,

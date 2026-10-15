@@ -98,7 +98,9 @@ const screenParas = intro.map((p) => p.map((x) => (typeof x === 'string' ? x : x
 ok('three paragraphs', briefParas.length === 3 && screenParas.length === 3)
 for (let i = 0; i < 3; i++) ok(`paragraph ${i + 1} matches the brief, character for character`, briefParas[i] === screenParas[i])
 ok('"coherent" is the bolded word, as in the brief', intro[0].some((x) => typeof x !== 'string' && x.strong === 'coherent'))
-ok('it is rendered at the top of the actions field, above the suggestions', fp.indexOf('COHERENT_ACTIONS_INTRO.map') < fp.indexOf('<ActionSuggestions'))
+// 26-S: `<ActionSuggestions` was removed with the "Added from the consolidation" box (decision 138, 9 Oct), so this assertion compared an
+// offset against indexOf = -1 and was red from that day (found 15 Oct). The intro still stands at the top, above the first thing under it.
+ok('it is rendered at the top of the actions field, above the gap check and the list', fp.indexOf('COHERENT_ACTIONS_INTRO.map') > 0 && fp.indexOf('COHERENT_ACTIONS_INTRO.map') < fp.indexOf('<ActionGapCheck') && fp.indexOf('<ActionGapCheck') < fp.indexOf('<ActionsField'))
 ok('control — a one-word change would be caught', briefParas[0] !== screenParas[0].replace('Together', 'All together'))
 
 

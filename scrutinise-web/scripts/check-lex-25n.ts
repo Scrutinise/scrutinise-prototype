@@ -194,9 +194,11 @@ function main() {
     PANEL_ROLES.left.name === 'WORKING AREA'
     && PANEL_ROLES.middle.name === 'DRAFT STRATEGY'
     && PANEL_ROLES.right.name === 'THE RESEARCH')
+  // 25-Z §3 re-worded THE RESEARCH's sentence (Charlie's wording, verbatim): now a phrase, no longer
+  // "This panel is where you’ll find the background…". The two deleted subtitles are unchanged.
   ok('§2 — two subtitles are deleted and THE RESEARCH keeps its sentence, verbatim',
     PANEL_ROLES.left.role === '' && PANEL_ROLES.middle.role === ''
-    && PANEL_ROLES.right.role.startsWith('This panel is where you’ll find the background'))
+    && PANEL_ROLES.right.role === 'The issues, the numbers and the debates behind your strategy')
   ok('§2 — "Collapse" is gone; every column says "Hide this Panel", from one constant',
     HIDE_PANEL_LABEL === 'Hide this Panel'
     && !/collapse ‹|collapse ›/.test(read('app/ideas/create/CreateIdeaClient.tsx'))
@@ -232,9 +234,13 @@ function main() {
   ok('§3a — "Make priority" is "Add to report", with a balancing "Remove from report"',
     /Add to report/.test(qPanel) && /Remove from report/.test(qPanel)
     && !/Make priority/.test(qPanel))
-  ok('§3a — and what is added appears in the middle column, under its own heading',
+  // 25-Z §2c moved ReportAdditions out of the middle column: it is now rendered by OutputsPanel (THE
+  // RESEARCH, under Outputs) with the heading "For Report Inclusion"; the component's own default
+  // title survives. CreateIdeaClient keeps only an unused import of it (so it must NOT render it).
+  ok('§3a — and what is added appears under Outputs in THE RESEARCH, under its own heading',
     /What you have put in the report/.test(read('components/lex/ReportAdditions.tsx'))
-    && /<ReportAdditions/.test(read('app/ideas/create/CreateIdeaClient.tsx')))
+    && /<ReportAdditions ideaId=\{ideaId\} title="For Report Inclusion"/.test(read('components/lex/OutputsPanel.tsx'))
+    && !/<ReportAdditions/.test(code('app/ideas/create/CreateIdeaClient.tsx')))
   ok('§3a — the heading arrives with its first item, from the server’s order',
     /data\.headings\s*\n?\s*\.map\(\(h\) => \(\{ key: h\.key, heading: h\.heading, entries: h\.entries\.filter\(\(e\) => e\.priority/
       .test(read('components/lex/ReportAdditions.tsx')))
@@ -275,11 +281,11 @@ function main() {
   control('a note query that is not scoped to the user',
     () => /userId: authz\.user\.id/.test(notesRoute.replace(/userId: authz\.user\.id/g, 'userId: undefined')))
 
+  // 25-Z §3 re-worded both sentences (Charlie's wording, verbatim; the code comments there say so).
   ok('§3d — the worklist panel text is Charlie’s, verbatim',
-    /This panel lists the decisions and actions you need to take to build the draft strategy/
-      .test(read('components/lex/WorkList.tsx')))
+    /Here are your decisions and actions:/.test(read('components/lex/WorkList.tsx')))
   ok('§3d — and so is the draft’s own introduction',
-    /Here is the draft strategy I have written for you to review and develop into your formal/
+    /Here is your draft strategy to review and develop into your formal proposal\. Edit\s+directly, discuss with Lex or ask Lex to improve it for you\./
       .test(fields))
 
   // ⚠ §3e's ORDER IS DATA, so it is asserted without rendering anything.
@@ -451,10 +457,17 @@ function main() {
     read('components/lex/QuestionPanel.tsx'),
     read('components/lex/BackgroundPanel.tsx'),
   ].join('\n')
-  for (const name of ['RerunBanner', 'NotesPanel', 'ReportAdditions']) {
+  for (const name of ['RerunBanner', 'NotesPanel']) {
     ok(`§23.1 — ${name} is imported by something a route renders`,
       new RegExp(`import ${name} from`).test(importers) && new RegExp(`<${name}`).test(importers))
   }
+  // 25-Z §2c: ReportAdditions is no longer rendered by the create page (it keeps a dead import);
+  // the chain is QuestionPanel → OutputsPanel → ReportAdditions, asserted link by link.
+  ok('§23.1 — ReportAdditions is imported by something a route renders',
+    /import ReportAdditions from/.test(read('components/lex/OutputsPanel.tsx'))
+    && /<ReportAdditions/.test(read('components/lex/OutputsPanel.tsx'))
+    && /import OutputsPanel from/.test(read('components/lex/QuestionPanel.tsx'))
+    && /<OutputsPanel/.test(read('components/lex/QuestionPanel.tsx')))
   control('a component nothing imports counted as reachable',
     () => /import NoSuchPanel from/.test(importers))
 

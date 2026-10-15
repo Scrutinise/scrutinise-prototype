@@ -349,6 +349,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       if (e?.type === 'open_panel') {
         if (e.panel === 'research' || e.panel === 'notebook') { setPanelOpen((p) => ({ ...p, background: true })); setTab('background') } // 26-R: the notebook lives in the research panel
         else if (e.panel === 'guiding-policy' || e.panel === 'actions' || e.panel === 'idea') { setPanelOpen((p) => ({ ...p, fields: true })); setTab('fields') }
+        else if (e.panel === 'actions-import') {
+          // 26-S: Lex started an import. Open the actions panel; the import control (already mounted or about to be) reloads its pass.
+          setPanelOpen((p) => ({ ...p, fields: true })); setTab('fields')
+          window.dispatchEvent(new CustomEvent('scrutinise:action-import-started'))
+        }
         else { setPanelOpen((p) => ({ ...p, chat: true })) }
       }
     }

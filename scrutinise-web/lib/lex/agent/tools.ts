@@ -43,7 +43,8 @@ import { testIsCompound } from '@/lib/lex/rumelt-tests'
 import { pendingMaterialSince, runUpdatePass } from '@/lib/lex/update-pass'
 import { runGapCheck } from '@/lib/lex/gap-check'
 import * as RN from '@/lib/lex/research-notes'
-import { listRegistry } from '@/lib/lex/source-registry'
+import * as IMP from '@/lib/lex/action-import'
+import { listRegistry, syncRegistry } from '@/lib/lex/source-registry'
 import { similarNotes, findDisagreements, noteTitle } from '@/lib/lex/research-notebook-views'
 import { STANCES, BEARS_ON_KINDS } from '@/lib/lex/research-notebook-schema'
 import { callJson, llmOk } from '@/lib/lex/build-llm'
@@ -398,7 +399,16 @@ const fileText: ToolDefinition = {
       select: { id: true },
     })
     const findings = await runMaterialFindings(created.id)
-    return { ok: true, items: [{ ok: true, label }], data: { id: short(created.id), findings: findings.written, note: findings.note }, ui: [{ type: 'open_panel', panel: 'sources' }] }
+    // 26-S §3a — a document filed while the user is working on their actions is offered for import (the extract_quotes pattern).
+    // "Working on their actions" = the idea has live Coherent Actions; the offer names the number so the tool can be called at once.
+    let offer: string | undefined
+    try {
+      await syncRegistry(ctx.ideaId)
+      const reg = await prisma.ideaSource.findFirst({ where: { ideaId: ctx.ideaId, materialId: created.id }, select: { number: true } })
+      const live = await prisma.lexCoherentAction.count({ where: { ideaId: ctx.ideaId, status: 'LIVE' } })
+      if (reg?.number && live > 0) offer = `This is [Ref: ${reg.number}]. The user is working on their Coherent Actions: OFFER to import the ideas in it as actions (import_actions_from_source with sourceNumber ${reg.number}) — it asks first, shows a table to review, and adds nothing until they confirm it. Offer; do not start it unasked.`
+    } catch { /* an offer that cannot be computed is simply not made */ }
+    return { ok: true, items: [{ ok: true, label }], data: { id: short(created.id), findings: findings.written, note: findings.note, ...(offer ? { offer } : {}) }, ui: [{ type: 'open_panel', panel: 'sources' }] }
   },
 }
 
@@ -1054,6 +1064,31 @@ const rerunBuild: ToolDefinition = {
   },
 }
 
+// ══ 26-S §3a — THE ACTION IMPORT, THROUGH LEX'S TOOLS (decision 140) ═════════════════════════════════
+//
+// The same pass the "Import actions from a document" button runs (lib/lex/action-import.ts) — Lex only STARTS it. Asks first (it
+// spends), and even then it only builds the review TABLE: nothing reaches the actions list until the owner confirms that table on
+// screen. So a model can never write sixty rows silently, which is the point of the pass.
+const importActionsTool: ToolDefinition = {
+  name: 'import_actions_from_source', category: 'run', tier: 'ask', runKind: 'import_actions',
+  description: `Read a FILED document (by its [Ref: n]) and build the review table that turns the ideas in it into rows in the Coherent Actions list. NOTHING is added until the user confirms the table on screen — you start the reading, they review and confirm. ${priceSentence('import_actions')}. Asks the user to confirm first. A source that was saved but never read is refused with the reason. Offer this whenever a document has just been filed at the Coherent Actions stage (the same control is the button “Import actions from a document” on the actions toolbar).`,
+  schema: z.object({ sourceNumber: z.number().int().min(1).describe('the source’s number, as in [Ref: 7] (7)') }),
+  describe: ({ sourceNumber }) => `Read [Ref: ${sourceNumber}] and build the table for importing its ideas as actions — ${priceSentence('import_actions')}. Nothing is added to your list until you confirm the table.`,
+  async run(ctx, { sourceNumber }) {
+    const r = await IMP.startImport(ctx.ideaId, ctx.userId, sourceNumber)
+    if (!r.ok) return fail((r as { error: string }).error)
+    const v = r.data
+    return {
+      ok: true,
+      data: {
+        started: true, source: `[Ref: ${v.sourceNumber}] ${clip(v.mapping.sourceTitle, 80)}`, parts: v.chunkCount, status: v.status.toLowerCase(),
+        next: 'The table is being built on the actions panel and takes a few minutes. Tell the user to open the Coherent Actions section, review the table, change anything they want, and press Confirm. Nothing has been added to their list yet.',
+      },
+      ui: [{ type: 'open_panel', panel: 'actions-import' }],
+    }
+  },
+}
+
 // ══ 26-R — THE RESEARCH NOTEBOOK, THROUGH LEX'S TOOLS (BRIEF_26R §5) ══════════════════════════════
 //
 // Writing and tagging are FREE; NOTHING IS DELETED; pasted and fetched content reaches Lex as DATA (the `untrusted` channel), and
@@ -1095,12 +1130,15 @@ const addResearchNoteTool: ToolDefinition = {
     quote: z.string().max(4000).optional(), quoteLocation: z.string().max(200).optional(),
     comment: z.string().max(4000).optional().describe('the note’s comment, in the user’s words or yours — it is labelled as written by Lex'),
     stance: z.enum(STANCES).optional(), tags: z.array(z.string().min(1).max(40)).max(10).optional(),
+    bearsOnPolicy: z.boolean().optional().describe('true: the note bears on the Guiding Policy. Use it when the user says “note this for the policy”: pass ownObservation:true (their own observation is the source) and the user’s words as the comment.'),
     provenance: ProvenanceSchema,
   }),
   async run(ctx, input) {
     const prov = await checkProvenance(ctx, input.provenance)
     if (provFailed(prov)) return fail(prov.error)
     if (!input.quote?.trim() && !input.comment?.trim()) return fail('give a quote or a comment — a note with neither is empty.')
+    // 26-S §6b — "note this for the policy": the note bears on the Guiding Policy, so it shows in the count on the policy's header.
+    const policyRef = input.bearsOnPolicy ? (await RN.bearsOnOptions(ctx.ideaId)).find((o) => o.kind === 'policy') : undefined
     let sourceId: string | undefined
     let quote = input.quote?.trim() || null
     if (input.sourceNumber) {
@@ -1120,6 +1158,7 @@ const addResearchNoteTool: ToolDefinition = {
     const r = await RN.addNote(ctx.ideaId, { id: ctx.userId }, viewer, {
       op: 'addNote', ...(sourceId ? { sourceId } : {}), ...(input.newSource ? { newSource: { kind: 'URL', title: input.newSource.title, url: input.newSource.url ?? null, readStatus: 'NOT_READ', readNote: 'added by Lex from the user’s words; the page itself was not read' } } : {}),
       ...(input.ownObservation ? { ownObservation: true } : {}), quote, quoteLocation: input.quoteLocation ?? null, comment: input.comment ?? null, stance: input.stance, tags: input.tags,
+      ...(policyRef ? { bearsOn: [policyRef] } : {}),
     }, { authorKind: 'LEX' })
     if (!r.ok) return fail((r as { error: string }).error)
     const d = (r as { data: { noteId: string | null; ref: number } }).data
@@ -1309,7 +1348,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   explain,
   acceptFieldTool, editFieldTool, ruleOut, restoreCandidate, mergeCandidates, choosePolicy, unchoosePolicy, moveToActions,
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,
-  runComparison, runGap, runConsolidation, rerunBuild,
+  runComparison, runGap, runConsolidation, rerunBuild, importActionsTool,
   // 26-Q — the coherent-actions workspace
   titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, groupActionsTool,
   findDuplicatesTool, withoutActionTool, compareActionsTool, parkActionsTool, restoreActionsTool, ruleOutActionsTool, mergeActionsTool,

@@ -13,7 +13,9 @@
 // words. The next real run should be added to `runs` (and `pence` recomputed) — the verifier prints the line to paste. A kind
 // with no measurement keeps the brief's figure and the "not measured" label.
 
-export type RunKind = 'run_comparison' | 'run_gap_check' | 'run_consolidation' | 'rerun_build'
+import { IMPORT_RUNS } from '../action-import-types'
+
+export type RunKind = 'run_comparison' | 'run_gap_check' | 'run_consolidation' | 'rerun_build' | 'import_actions'
 
 export interface RunMeasurement {
   /** Every measured total, in pence, oldest first. */
@@ -50,6 +52,13 @@ export const RUN_PRICES: Record<RunKind, RunPrice> = {
   // Three FULL builds on scratch copies of three real ideas (452c5ade, a6473880, 5c7287d2), the worker's retrieval stack,
   // this working tree's code, the current build models: 32.2p, 28.8p, 36.2p (`scripts/measure-26o-builds.ts`). A REUSE
   // re-run (research kept) is cheaper and has NOT been measured, so this is the FULL price, which the card's mode says.
+  // 26-S §3g — PER 1,000 WORDS OF THE DOCUMENT, because the cost is the document's length (chunks) and the number of rows (policy test).
+  // The runs are IMPORT_RUNS (lib/lex/action-import-types.ts — the same constant the panel's "about Np" reads), normalised per 1,000 words.
+  import_actions: measuredPrice('reading a document into the import table (per 1,000 words of the document)', {
+    runs: IMPORT_RUNS.map((r) => Math.round((r.pence / r.words) * 10000) / 10),
+    on: IMPORT_RUNS[IMPORT_RUNS.length - 1].on,
+    what: 'the whole import pass — Sonnet 5.5 reading the document in parts, the heading step, and the Gemini 2.5 Pro policy test — on a scratch copy of a real idea',
+  }),
   rerun_build: measuredPrice('a re-run of the build', { runs: [32.2, 28.8, 36.2], on: '2026-10-04', what: 'three FULL builds on scratch copies of three real ideas, current build models, worker retrieval stack' }),
 }
 

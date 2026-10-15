@@ -9,6 +9,7 @@ import {
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
 import ActionGapCheck from './ActionGapCheck'
+import ActionImport from './ActionImport'
 import RefTextarea, { IdeaIdContext } from './RefTextarea'
 import ActionsWorkspace from './ActionsWorkspace'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
@@ -376,6 +377,20 @@ function Tick() {
     </svg>
   )
 }
+
+/**
+ * ══ 26-S §5b (decision 141) — VERBATIM FROM BRIEF_26S §5b, APPENDED TO THE INTRODUCTION ═════════════════════
+ * A separate constant, not a fourth entry of COHERENT_ACTIONS_INTRO: that array is asserted three-paragraphs-verbatim against
+ * BRIEF_26N §7 by `check:lex-26n`, and these words come from a different brief. `check:lex-26s` asserts THIS one against §5b.
+ */
+export const HEADING_VS_ACTION_PARAGRAPH: Array<string | { strong: string }> = [
+  { strong: 'A heading is an instrument' },
+  ' — the thing that gets made: an Act, a code of conduct, a register, a training scheme. ',
+  { strong: 'An action is a provision' },
+  ' — one rule inside it, specific enough to be accepted or rejected on its own. If you have a document full of ideas, use ',
+  { strong: 'Import actions from a document' },
+  ', or give it to Lex.',
+]
 
 function StatusDot({ status }: { status: CanonicalField['status'] }) {
   const cls =
@@ -1821,6 +1836,9 @@ export default function FieldsPanel({
                 {p.map((part, j) => (typeof part === 'string' ? part : <strong key={j}>{part.strong}</strong>))}
               </p>
             ))}
+            <p className="text-sm text-zinc-800 leading-relaxed" id="heading-vs-action">
+              {HEADING_VS_ACTION_PARAGRAPH.map((part, j) => (typeof part === 'string' ? part : <strong key={j}>{part.strong}</strong>))}
+            </p>
           </div>
           {/* DECISION 138 (9 Oct 2026) — ONE LIST. The "Added from the consolidation (17)" box that stood here is gone: since decision 111
               those actions are written straight into the list below, so the box duplicated them. What it carried (the policy-test
@@ -1828,6 +1846,8 @@ export default function FieldsPanel({
               "By policy test" in Group. The retry for ideas still held is a notice at the top of the list (ActionsWorkspace). */}
           {/* 26-N §8 - "Check for gaps": the free check, then four models; suggestions with Accept / Dismiss. */}
           {ideaId && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
+          {/* 26-S §3a (decision 140) — "Import actions from a document": a visible control, beside "Check for gaps". */}
+          {ideaId && <ActionImport ideaId={ideaId} onChanged={onSuggestionChanged} />}
           <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
             ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} />
         </>

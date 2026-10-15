@@ -34,6 +34,7 @@ export const CONTROLS: readonly Control[] = [
   { label: 'Add to report', file: 'components/lex/QuestionPanel.tsx', where: 'on a source in THE RESEARCH', does: 'marks it as one of the sources the proposal itself rests on, so it appears in DRAFT STRATEGY' },
   { label: 'Remove from report', file: 'components/lex/QuestionPanel.tsx', where: 'on the same card, once a source has been added', does: 'takes the source back out of DRAFT STRATEGY' },
   { label: 'Check for gaps', file: 'components/lex/ActionGapCheck.tsx', where: 'the actions section', does: 'runs the gap check on the coherent actions' },
+  { label: 'Import actions from a document', file: 'components/lex/ActionImport.tsx', where: 'the actions section, beside “Check for gaps”', does: 'reads a document you have filed and shows a table of every idea in it — what is new, what adds to an action you already have, what belongs to the policy — for you to change and confirm before anything is added' },
   { label: 'Consolidate', file: 'components/lex/GuidingPolicyScreen.tsx', where: 'the guiding-policy screen', does: 'drafts the guiding policy from the candidates marked as part of the solution' },
   { label: 'Rule out', file: 'components/lex/FieldsPanel.tsx', where: 'on a candidate approach', does: 'rules the candidate out, with a reason; it can be restored' },
   { label: 'Add approach', file: 'components/lex/FieldsPanel.tsx', where: 'beneath the candidate approaches', does: 'adds an approach of your own as a candidate' },
