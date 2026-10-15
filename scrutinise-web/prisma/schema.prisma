@@ -1013,6 +1013,7 @@ model Idea {
   /// 26-R — the numbered source registry and the research notebook. DDL: prisma/lex_26r_registry_notebook.sql.
   ideaSources               IdeaSource[]
   researchNotes             ResearchNote[]
+  actionImportPasses        ActionImportPass[]
   // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
@@ -3089,10 +3090,43 @@ model ActionHeading {
   colourKey  String
   hidden     Boolean  @default(false)
   orderIndex Int      @default(0)
+  /// 26-S §5a (decision 141) — what this instrument does and why it is needed, <= 120 words. NULL = not yet written.
+  /// DDL: prisma/lex_26s_import.sql.
+  purpose    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@index([ideaId])
+}
+
+/// ══ 26-S §3 (decision 140) — THE ACTION IMPORT PASS ══════════════════════════════════════════════════════
+/// A document full of ideas becomes rows in the Coherent Actions list, AFTER the user has seen and approved the mapping. This
+/// row is the pass: its `mapping` is the table the user reviews (and edits — a title, a heading, a struck row), and nothing
+/// reaches `LexCoherentAction` until `confirmImport`. `sourceId` is an `IdeaSource.id` (no relation, as `headingId` has none:
+/// a source is archived, never deleted). DDL: prisma/lex_26s_import.sql.
+/// MAPPING (work in progress — `chunksDone` of `chunkCount`) → READY (review it) → CONFIRMED | DISCARDED, or FAILED (with a reason).
+model ActionImportPass {
+  id           String    @id @default(uuid())
+  ideaId       String
+  idea         Idea      @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  sourceId     String
+  sourceNumber Int
+  status       String    @default("MAPPING")
+  /// The review table: { chunks, items, existing, headings, uncovered } — shape in lib/lex/action-import-schema.ts.
+  mapping      Json
+  chunkCount   Int       @default(0)
+  chunksDone   Int       @default(0)
+  /// Pence spent so far, summed from the ledger rows this pass wrote. NULL until a call has been priced.
+  spentPence   Float?
+  failure      String?
+  /// What the confirm wrote (counts, the ids of the actions created) — the audit trail beside Privacy Log & Lex activity.
+  result       Json?
+  startedBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+  confirmedAt  DateTime?
+
+  @@index([ideaId, status])
 }
 
 /// Sprint 3-C (§19-C Task 6) — cost engine v0. One costed line at a time under an
