@@ -1836,4 +1836,90 @@ Only the additions are listed; the table is one premium model's draft within a g
 
 ***
 
+### ActionHeading — field added (26-S, decision 141)
+
+| Field   | Type            | Notes                                                                                                              |
+|---------|-----------------|--------------------------------------------------------------------------------------------------------------------|
+| purpose | String nullable | What this instrument does and why it is needed, at most 120 words (enforced in code). Null = not yet written. DDL: `prisma/lex_26s_import.sql` |
+
+### ActionImportPass (26-S, decision 140)
+
+The action import pass: a document full of ideas becomes rows in the Coherent Actions list after the user has reviewed the mapping table. The row IS the pass; nothing reaches `LexCoherentAction` until confirm. Cascades with the idea. Index `(ideaId, status)`. DDL: `prisma/lex_26s_import.sql`.
+
+| Field        | Type            | Notes                                                                                                         |
+|--------------|-----------------|---------------------------------------------------------------------------------------------------------------|
+| id           | UUID PK         |                                                                                                               |
+| ideaId       | FK              | → Idea, cascade                                                                                               |
+| sourceId     | String          | `IdeaSource.id` of the numbered document read. No Prisma relation (a source is archived, never deleted)       |
+| sourceNumber | Integer         | The `[Ref: n]` number — the provenance written on every new row                                               |
+| status       | String          | MAPPING / READY / CONFIRMING (the lock a confirm takes) / CONFIRMED / FAILED / DISCARDED                       |
+| mapping      | JSON            | The review table: chunks, items (the document's words + proposal + policy test), existing-action headings, headings, uncovered passages. Shape: `lib/lex/action-import-types.ts` |
+| chunkCount   | Integer         | Parts the document is read in                                                                                 |
+| chunksDone   | Integer         |                                                                                                               |
+| spentPence   | Float nullable  | Summed from the ledger rows the pass wrote                                                                    |
+| failure      | String nullable | Why it failed, in words                                                                                       |
+| result       | JSON nullable   | What the confirm wrote (ids, counts)                                                                          |
+| startedBy    | String          | User id                                                                                                       |
+| createdAt / updatedAt / confirmedAt | DateTime | updatedAt doubles as the compare-and-set token                                                  |
+
+### FeedbackItem — fields added (26-S, decision 154)
+
+| Field           | Type              | Notes                                                                                      |
+|-----------------|-------------------|--------------------------------------------------------------------------------------------|
+| status          | String            | Default NEW. NEW / TRIAGED ("Looked at") / RESOLVED ("Fixed") / WONTFIX ("Not doing") — `Feedback`'s lifecycle |
+| adminNotes      | Text nullable     |                                                                                            |
+| statusChangedAt | DateTime nullable | Index `(status, createdAt)`. DDL: `prisma/lex_26s_feedback_admin.sql`                      |
+
+### IdeaSource (26-R) — the numbered source registry
+
+One numbered list per idea, cited by notes and documents alike (`[Ref: n]`). Numbers are assigned by DB trigger `lex_source_number_trg` (one past the highest ever used; never reused). A source is archived, never deleted. Unique `(ideaId, number)`, `(ideaId, corpusKey)`, `(ideaId, materialId)`.
+
+| Field       | Type            | Notes                                                                                   |
+|-------------|-----------------|-----------------------------------------------------------------------------------------|
+| id          | UUID PK         |                                                                                         |
+| ideaId      | FK              | → Idea, cascade                                                                         |
+| number      | Integer nullable| The `[Ref: n]` number                                                                   |
+| kind        | String          | CORPUS / URL / DOCUMENT / OWN_OBSERVATION                                               |
+| title, url, citation, sourceType, author, publishedAt | String nullable | publishedAt is free text as the page states it |
+| snippet     | Text nullable   | 20–80 words                                                                             |
+| readStatus  | String          | READ / NOT_READ (default). An unread source must never look read; `readNote` says why   |
+| readNote    | String nullable |                                                                                         |
+| corpusKey, materialId | String nullable | The corpus source / `IdeaUserMaterial` it stands for                          |
+| addedBy     | String nullable |                                                                                         |
+| archivedAt  | DateTime nullable |                                                                                       |
+| createdAt / updatedAt | DateTime |                                                                                      |
+
+### ResearchNote (26-R) — the research notebook
+
+A quote, a source and a comment. Every note cites a registry source (even "my own observation"). Nobody edits another person's comment; nothing deletes (a note is set aside with a reason). Indexes `(ideaId)`, `(ideaId, sourceId)`, `(ideaId, authorId)`.
+
+| Field          | Type            | Notes                                                                                     |
+|----------------|-----------------|-------------------------------------------------------------------------------------------|
+| id             | UUID PK         |                                                                                           |
+| ideaId         | FK              | → Idea, cascade                                                                           |
+| sourceId       | FK              | → IdeaSource, NO ACTION                                                                   |
+| quote, quoteLocation, comment | nullable | A note needs a quote or a comment                                                  |
+| stance         | String          | SUPPORTS / CONTRADICTS / CONTEXT / UNDECIDED (default)                                    |
+| bearsOn        | JSON            | `[{ kind: cause/policy/action/challenge/decision, id, label }]` — "policy" feeds the policy review count (26-S §6) |
+| tags           | String[]        |                                                                                           |
+| heading, importance | nullable   |                                                                                           |
+| authorId       | String          |                                                                                           |
+| authorKind     | String          | USER / LEX                                                                                |
+| status         | String          | IN_RECORD (default) / UNREVIEWED / SET_ASIDE                                              |
+| setAsideReason, setAsideBy, setAsideAt | nullable | The reason is kept — it is itself research                                |
+| mineOnly       | Boolean         | Private until its author shares it                                                        |
+| createdAt / updatedAt | DateTime |                                                                                       |
+
+### ResearchNoteReply (26-R)
+
+| Field     | Type     | Notes                                                |
+|-----------|----------|------------------------------------------------------|
+| id        | UUID PK  |                                                      |
+| noteId    | FK       | → ResearchNote, cascade                              |
+| authorId  | String   | Replies sit beneath a note; the note's comment is never edited by anyone else |
+| text      | Text     |                                                      |
+| createdAt | DateTime |                                                      |
+
+***
+
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*

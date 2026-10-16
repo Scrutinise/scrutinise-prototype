@@ -932,6 +932,13 @@ export default function AdminPage() {
               {s.label}
             </button>
           ))}
+          {/* 26-S decision 154 — a page nothing links to is a page nobody opens. */}
+          <a
+            href="/admin/feedback"
+            className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Feedback
+          </a>
           <a
             href="/admin/lex-general"
             className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
