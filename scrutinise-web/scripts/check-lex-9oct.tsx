@@ -99,7 +99,9 @@ async function partB() {
   ok('WHERE THE VERDICT IS STORED: every one now carries the same verdict and reason ON THE ACTION that the ActionIdea row holds', mismatch.length === 0, `${mismatch.length} differ`)
   const noFrom = written.filter((w) => { const a = byId.get(w.acceptedActionId!)!; return !Array.isArray(a.policyTestFrom) || (a.policyTestFrom as unknown[]).length === 0 })
   ok('…and where each came from', noFrom.length === 0, `${noFrom.length} without`)
-  const tally = rows.filter((r) => r.policyTestVerdict).reduce((m: Record<string, number>, r) => { m[r.policyTestVerdict!] = (m[r.policyTestVerdict!] ?? 0) + 1; return m }, {})
+  // LIVE rows only: the list shows live actions, and 26-S (decision 153, 16 Oct) restored the action deleted on 2 Oct as a RULED-OUT row with its CONFLICTS verdict,
+  // which is in the record but not in the list — counting it made the tally disagree with the screen by one.
+  const tally = rows.filter((r) => r.status === 'LIVE' && r.policyTestVerdict).reduce((m: Record<string, number>, r) => { m[r.policyTestVerdict!] = (m[r.policyTestVerdict!] ?? 0) + 1; return m }, {})
   console.log(`    on the actions: ${JSON.stringify(tally)}`)
   const live = rows.filter((r) => r.status === 'LIVE')
   const html = render(live.map(toAction), [])

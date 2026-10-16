@@ -86,6 +86,19 @@ export function stripComments(src: string): string {
 }
 
 /**
+ * STALE → updated (26-S, action import pass, docs/BRIEF_26S.md): ActionImport.tsx has a table
+ * column headed "Proposal" whose cells are a `ProposalKind` (NEW / ADDS_TO / PART_OF / POLICY) —
+ * what Lex proposes to DO with each imported item. That is a different thing from "the proposal"
+ * as the user's whole piece of work, which is what §1 bans as a label. The ONE header cell is
+ * exempted, by exact markup and exact file; nothing else is. (If Charlie would rather the header
+ * say something else, renaming it removes the need for this.)
+ */
+function exemptImportColumn(file: string, content: string): string {
+  if (!/(^|[\\/])ActionImport\.tsx$/.test(file)) return content
+  return content.split('<th className="p-1.5 font-semibold w-[17%]">Proposal</th>').join('<th className="p-1.5 font-semibold w-[17%]">(import column)</th>')
+}
+
+/**
  * §1's sweep, as a function so a control can plant a violation and watch it fire.
  *
  * ⚠ THE RULE IS ABOUT NAVIGATION, NOT THE WORD. "A proposal a Member of Parliament could
@@ -241,7 +254,7 @@ const CHECKS: Check[] = [
   {
     name: '§1 no user-facing "build" or "proposal" is left as a label — swept, not spot-checked',
     run: () => {
-      const offenders = navigationImplementationWords(screens().map((f) => [f, read(f)]))
+      const offenders = navigationImplementationWords(screens().map((f) => [f, exemptImportColumn(f, read(f))]))
       return offenders.length ? `still implementation words:\n       ${offenders.join('\n       ')}` : null
     },
     // ⚠ THE CONTROL PLANTS ONE. Without it this passes trivially the day the regex stops
@@ -251,7 +264,14 @@ const CHECKS: Check[] = [
       const planted = navigationImplementationWords([
         ['fake/Screen.tsx', '  return <a href="/x">The proposal</a>\n'],
       ])
-      return planted.length ? 'rejected' : null
+      if (!planted.length) return null
+      // The 26-S exemption must be NARROW: the same header anywhere else, or any other
+      // "Proposal" label inside ActionImport, is still caught.
+      const hdr = '<th className="p-1.5 font-semibold w-[17%]">Proposal</th>'
+      const elsewhere = navigationImplementationWords([['components/lex/Other.tsx', exemptImportColumn('components/lex/Other.tsx', hdr)]])
+      const otherLabel = navigationImplementationWords([['components/lex/ActionImport.tsx', exemptImportColumn('components/lex/ActionImport.tsx', `${hdr}\n<a href="/x">Your proposal</a>`)]])
+      const exempted = navigationImplementationWords([['components/lex/ActionImport.tsx', exemptImportColumn('components/lex/ActionImport.tsx', hdr)]])
+      return elsewhere.length && otherLabel.length && !exempted.length ? 'rejected' : null
     },
   },
 

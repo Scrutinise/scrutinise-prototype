@@ -27,6 +27,7 @@ const base: MyIdea = {
   excerpt: 'Bus services in my area were cut and the replacement never turns up',
   stage: 'STAGE_1',
   elicitationStatus: 'IN_PROGRESS',
+  createdAt: '2026-08-27T00:00:00.000Z',
   buildStatus: null,
   passesComplete: null,
   updatedAt: '2026-08-26T09:15:00.000Z',

@@ -112,3 +112,28 @@ Header count and review list (`PolicyReviewBar`, route `/policy-review`): findin
 
 ## I. Only Charlie can confirm
 The §20 string off the live site; the browser pass (1d) before the import runs on his idea; the table on his own document (the first real test); `LEX_AGENT` on Vercel; 153, 154, 156; his policy note (6d). **For CCh:** `entity_list_v5.md` not edited — add `ActionImportPass` and `ActionHeading.purpose`. **For Search/Ingest:** Managing Public Money; departmental ARAs; dates on `nao-reports`. **26-S2** (§4, rest of §5, §7) not started; larger than S1; needs Charlie's field-mapping sign-off before anything moves.
+
+## J. ADDENDUM 1 (16 Oct) — what was done
+
+- **153 done:** the action deleted on 2 Oct is back on 452c5ade as **#29, RULED OUT**, reason = the verdict (CONFLICTS — “The policy explicitly rules out thresholds…”; only that opening survives, and the reason says so). Read back. Side effect the checks found: `check:lex-9oct` counted ruled-out rows in its verdict tally and disagreed with the screen by one — it now counts live rows.
+- **154 done:** `FeedbackItem.status/adminNotes/statusChangedAt` (schema+SQL together, `8b3df40`); `/admin/feedback`, linked from the admin tab bar; `check:lex-26s-addendum` 21/21 on a real write, status change read back, non-admin 403, attachments opened by a fresh signed link from the row's own key.
+- **156:** recorded, nothing changed. **§C1:** the 11 Oct push logged (pushed 00:00:56 UTC by this clone; it carried five previously local-only commits). **§C2:** entity list Section 24 caught up. **Correction:** commit `8b3df40`'s `Date:` trailer (00:30 UTC) was a guess, not the clock (real: 15:13 UTC); it is pushed, so it is corrected in the CHANGE_LOG instead.
+- **§C3 attribution:** all 18 import-pass ledger rows (map 9, structure 3, test 6) carry user and idea; the pass name tells the step. **Gap:** the ledger's `ref` column is empty because `callModelJson` cannot pass one, so the pass row's `spentPence` is tied to the ledger by idea + pass name + time, not by pass id. Adding `ref` touches `model-call.ts` (shared); proposed for 26-S2. Charlie's first real run will show the same rows.
+- **161 — who owns the 17 “elsewhere” (15 route dirs):** Lex — `admin/*` (config, lex-general, lex-insights, positions, reports, spend ×2, users/role), `ai/*` (public, [ideaId]), `feedback`, `ideas`; **Search** — `search`, `legislation-guide/suggestions`; **Central** — `user/onboarding`, plus its 29 under `communities/[id]`. Lex's 34 under `ideas/[id]` go in 26-S2.
+
+## K. Decision 160 — the sweep, classified (rule 16)
+
+Memory was short, so it ran one suite per process. `check:prompt-examples`: **green** (19 quoted illustrations in prompts, 0 ever returned as stored output; scanned 1,396 challenges, 3,460 findings). `check:scripts` (tsc over scripts): was red on 9 fixtures, now green. `check:central*` deliberately not run (Central's; they write to production).
+
+**Fixed — stale assertion updated, decision cited in the file:** 25f, 25g, 25h, 25i, 25n, 25p, 25x, sprint3e-ui, 26n, 25c, 25k, 25q, 25w (all but one), 25v (one of three), build-25a, s8-attribution, s7-retrieval, legislation-urls, render-decode, answer, score-scope (six sites pinned by file and line with reasons), surface-3, surface-4, goldv2 (CRLF checkout), 9oct.
+
+**Real defects — listed for a decision, assertion left asserting the truth:**
+1. **Cause numbering race and three bad rows** (25s; decision 159, planned for 26-S2).
+2. **25v:** 22 stored citations still point into the wrong committee-publication URL space (3 ideas; the repair `scripts/backfill-committee-urls.ts` exists, writes the database, not run); 24 `DeepeningIssue` rows still carry “KERNEL TEST FAILED / THE ROAD TAKEN AT” text (ideas eef23476, 9910c16e, 72a29705) and need a rewrite.
+3. **25w:** 23 of 255 challenges on the pilot idea have no title — `lib/lex/deepening.ts:638-639` writes adversarial issues with `title: null` every time.
+4. **spend-attribution:** 170 of 762 person-caused ledger rows since 29 Sep have no user — `lib/lex/feedback.ts:339` (no userId; still failing 15 Oct 22:00 UTC), `build.draft` (29 rows), a Search burst on 11 Oct, smaller groups.
+5. **Latent:** `lib/lex/grain.ts:142,153` sorts a mixed-scorer list by `.score` without the guard (called only from checks today).
+
+**Environment — cannot run here, not weakened:** stream-coverage, annotation-titles, s20b-control (need `FTS_SEARCH_URL`/`VECTOR_SEARCH_URL`); s9-catalogue, s10-stats-licence (need `STATS_DATABASE_URL`, kept in `scripts/stats/.env` on another machine); model-reachability (passes — 24 usable — with `NODE_OPTIONS=--use-system-ca`; this machine's TLS inspection); names-negative (writes then rolls back on the 15M-row production table — run it in a quiet window; not run). Side note: `legsRun` reports `keyword` when the search URL is unset, so a run that did no keyword search looks like one that did.
+
+`check:20bd` was also fixed in the product (seam breach), see §H.

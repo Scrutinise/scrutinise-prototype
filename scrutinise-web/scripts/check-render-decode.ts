@@ -67,7 +67,10 @@ const READ_PATHS: Array<{ file: string; why: string; must: string[] }> = [
 ]
 
 /** Files allowed to render raw HTML. Corpus text must never reach one. */
-const RAW_HTML_ALLOWLIST = ['app/support/page.tsx']
+// components/lex/ResearchNotebook.tsx added (LEX 26-R sprint 1, research notebook): its one raw-HTML span
+// is the drag-to-bookmarks "Add to Scrutinise" anchor, built from the bookmarklet href (window origin +
+// ideaId, lib/lex/bookmarklet) and escaped with esc() (& " <) first. No corpus text reaches it.
+const RAW_HTML_ALLOWLIST = ['app/support/page.tsx', 'components/lex/ResearchNotebook.tsx']
 
 async function main() {
   console.log('════ check:render-decode ════\n§1 the decoder has not drifted')

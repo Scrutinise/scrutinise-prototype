@@ -144,9 +144,16 @@ console.log('\n§2a — the platform discards a proposal on a question turn')
 const ROUTE = 'app/api/ideas/[id]/lex/route.ts'
 const route = code(ROUTE)
 ok('the route computes whether the turn is a question', /looksLikeAQuestion\(message\)/.test(route))
-ok('...and discards any proposal when it is', /if \(questionTurn && lex\.proposal\)[\s\S]{0,300}lex\.proposal = null/.test(route))
+// STALE → updated (LEX 26-N §6a, route.ts "A DRAFT OF A NAMED FIELD IS FILED..."): a question turn that
+// explicitly asks for a draft of a NAMED field is no longer discarded (`&& !draftReq`) - it is filed by
+// fileLexDraft. Every other question turn still loses its proposal.
+ok('...and discards any proposal when it is, unless the user asked for a named-field draft',
+  /if \(questionTurn && lex\.proposal && !draftReq\)[\s\S]{0,300}lex\.proposal = null/.test(route))
+ok('...the exemption is only the explicit draft request (no other bypass of the discard)',
+  (route.match(/questionTurn && lex\.proposal/g) ?? []).length === 1 && /const draftReq = askOnly \? null : requestedDraftField\(message/.test(route))
 ok('...BEFORE the causes branch, so no path slips past it',
-  route.indexOf('lex.proposal = null') < route.indexOf("current?.key === 'causes'"))
+  route.indexOf('questionTurn && lex.proposal') > -1
+  && route.indexOf('questionTurn && lex.proposal') < route.indexOf("current?.key === 'causes'"))
 ok('...and both signals are logged, so a silent block is distinguishable from a dodged one',
   /\[lex-diag\] turn shape/.test(read(ROUTE)) && /questionTurn/.test(read(ROUTE)))
 ok('the prompt builder is given both signals', /questionTurn,/.test(route) && /sourcesInHand,/.test(route))

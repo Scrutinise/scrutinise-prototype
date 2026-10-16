@@ -251,22 +251,48 @@ section('source invariant — nothing sorts by score except score-scope.ts')
     path.resolve(root, 'scripts/check-score-scope.ts'),
   ].map((p) => path.resolve(p)))
 
+  // STALE-PRECISION (decision 160 sweep, 16 Oct 2026): the regex matches ANY `.score` comparator, but
+  // the rule (BRIEF_SEARCH_S2B §0) is about SearchResult lists that can mix scorers (bm25 / rrf /
+  // vector). These sites were reviewed one by one and sort a DIFFERENT kind of `score`: a vote tally,
+  // a text-similarity ratio, or a single-arm vector score. Each is pinned by file + exact line text, so
+  // a new bare sort anywhere (or an edit to one of these lines) is flagged again, and an entry that
+  // no longer matches any line fails below (no dead exemptions).
+  // lib/lex/grain.ts:142,153 is deliberately NOT here: it is a generic aggregator over a caller-supplied
+  // retrieval list with no assertSingleScorer/sortByScore guard — reported as a latent violation.
+  const NOT_RETRIEVAL_SCORE: Array<{ file: string; line: string; why: string }> = [
+    { file: 'lib/lex/action-facets.ts', line: 'pairs.sort((x, y) => y.score - x.score)', why: 'duplicate-pair Jaccard similarity, no retriever' },
+    { file: 'lib/lex/research-notebook-views.ts', line: '.sort((x, y) => y.score - x.score)', why: 'note-to-note similarity, no retriever' },
+    { file: 'lib/question-library.ts', line: '.sort((a, b) => b.score - a.score || b.createdAt.getTime() - a.createdAt.getTime())', why: 'community vote tally' },
+    { file: 'lib/question-library.ts', line: '.sort((x, y) => y.score - x.score)[0]', why: 'community vote tally (top answer)' },
+    { file: 'lib/resources.ts', line: ': mapped.sort((a, b) => b.score - a.score || b.createdAt.getTime() - a.createdAt.getTime())', why: 'community vote tally' },
+    { file: 'scripts/argument-seed-draw.ts', line: 'for (const a of buckets.values()) a.sort((x, y) => (y.score ?? 0) - (x.score ?? 0))', why: 'one-off draw: only the dense (vector) arm carries a score, keyword-arm hits are null' },
+  ]
+  const exemptKey = (rel: string, line: string) => NOT_RETRIEVAL_SCORE.some((e) => e.file === rel.replace(/\\/g, '/') && e.line === line.trim())
+  const BARE_SORT = /\.sort\s*\([^)]*\)\s*=>[^\n]*\.score[^\n]*[-<>][^\n]*\.score/
   const offenders: string[] = []
+  const exemptSeen = new Set<string>()
   for (const f of files) {
     if (ALLOWED.has(path.resolve(f))) continue
     const src = fs.readFileSync(f, 'utf8')
+    const rel = path.relative(root, f)
     src.split('\n').forEach((line, i) => {
       // A comparator whose body compares `.score` on both sides — the exact shape deleted from
       // groupForPanel. Comment lines are exempt: the reason this exists is written down in
       // several of them, and a doc comment is not a code path.
       if (/^\s*(\/\/|\*|\/\*)/.test(line)) return
-      if (/\.sort\s*\([^)]*\)\s*=>[^\n]*\.score[^\n]*[-<>][^\n]*\.score/.test(line)) {
-        offenders.push(`${path.relative(root, f)}:${i + 1}  ${line.trim()}`)
+      if (BARE_SORT.test(line)) {
+        if (exemptKey(rel, line)) { exemptSeen.add(`${rel.replace(/\\/g, '/')}|${line.trim()}`); return }
+        offenders.push(`${rel}:${i + 1}  ${line.trim()}`)
       }
     })
   }
   ok(`no bare sort-by-score outside the helper (${files.length} files scanned)`,
      offenders.length === 0, offenders.join(' | '))
+  ok('every reviewed non-retrieval exemption still matches a real line (no dead exemptions)',
+     NOT_RETRIEVAL_SCORE.every((e) => exemptSeen.has(`${e.file}|${e.line}`)),
+     NOT_RETRIEVAL_SCORE.filter((e) => !exemptSeen.has(`${e.file}|${e.line}`)).map((e) => e.file).join(', '))
+  ok('control: an unlisted bare sort in an exempted file is still flagged',
+     BARE_SORT.test('  x.sort((a, b) => b.score - a.score)') && !exemptKey('lib/resources.ts', 'x.sort((a, b) => b.score - a.score)'))
 
   // Prove THAT assertion can fail too: the same regex against the deleted line.
   const deleted = '  for (const r of [...results].sort((a, b) => b.score - a.score)) {'

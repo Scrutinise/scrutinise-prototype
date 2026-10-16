@@ -151,8 +151,15 @@ function main() {
   check(badCalls.length === 0, 'no attributionFor() call site passes a title-shaped value',
     badCalls.slice(0, 2).join(' | ') || 'none')
   const callers = files.filter((f) => callArgs(f.src).length && !f.path.endsWith('lib/lex/attribution.ts'))
-  check(callers.length === 2, '   …and there are exactly the two adapters calling it',
-    callers.map((f) => f.path).join(', '))
+  // STALE → updated: the vector retrieval arm (lib/lex/vector-search.ts, "S8 §2 — same single
+  // construction site as the sparse adapter, columns only", added with the vector pilot/embed build)
+  // is a third adapter, as is the stats catalogue. The rule is "a closed, NAMED set of adapters
+  // that pass columns only" — so the set is asserted by name, and a fourth caller still fails.
+  const ADAPTERS = ['lib/lex/fts-search.ts', 'lib/lex/stats-catalogue.ts', 'lib/lex/vector-search.ts']
+  const callerPaths = callers.map((f) => f.path.replace(/\\/g, '/')).sort()
+  check(callerPaths.length === ADAPTERS.length && ADAPTERS.every((a) => callerPaths.some((p) => p.endsWith(a))),
+    '   …and the callers are exactly the three named adapters (fts, stats-catalogue, vector)',
+    callerPaths.join(', '))
   const plantedCall = [{
     path: 'SYNTHETIC/planted.ts',
     src: `const a = attributionFor(h.corpus, { speaker: h.sectionTitle.split('—')[1] })`,

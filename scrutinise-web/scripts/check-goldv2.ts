@@ -45,8 +45,11 @@ const fail = (m: string) => { failures++; console.log(`  ❌ ${m}`) }
 const pass = (m: string) => console.log(`  ✅ ${m}`)
 
 function main() {
-  const md = fs.readFileSync(MD, 'utf8')
-  const verifier = fs.readFileSync(VERIFIER, 'utf8')
+  // Line-ending tolerant: git on Windows (core.autocrlf=true) checks the markdown out as CRLF, and
+  // the heading regex `(.+)$` does not match across a trailing \r, so every id read as "not in the
+  // markdown". Content is unchanged; only the checkout's line endings are normalised.
+  const md = fs.readFileSync(MD, 'utf8').replace(/\r\n/g, '\n')
+  const verifier = fs.readFileSync(VERIFIER, 'utf8').replace(/\r\n/g, '\n')
 
   console.log('═'.repeat(100))
   console.log('GOLD v2 — transcription vs the document Charlie validated')

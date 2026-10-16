@@ -109,11 +109,14 @@ function main() {
 
   // ── §3 the framing harness must not measure its own leak ────────────────────────────────────
   console.log('\n  §3 the framing experiment')
-  const framing = fs.readFileSync(path.join(__dirname, '../../scripts/ingest/search/measure-s7-framing.ts'), 'utf8')
+  // STALE (SEARCH S8, CHANGE_LOG "Deleted: measure-s7-framing.ts (re-homed)"; docs/SEARCH_S8_REPORT.md:230):
+  // the S7 harness was deleted and moved to scripts/measure-s8-framing.ts, which keeps the same
+  // properties; the floor-effect report is now the "HEADROOM — THE REAL SAMPLE SIZE" section.
+  const framing = fs.readFileSync(path.join(__dirname, 'measure-s8-framing.ts'), 'utf8')
   check(/re\.test\(enriched\) && !re\.test\(bare\)/.test(framing),
     '⚠⚠ the leak test is DIFFERENTIAL — a question naming its own subject is not a leak')
-  check(/UNDERPOWERED/.test(framing),
-    '⚠ the harness reports its own floor effect rather than a "+0.0pp" headline')
+  check(/HEADROOM — THE REAL SAMPLE SIZE/.test(framing) && /withHeadroom/.test(framing),
+    '⚠ the harness reports its own floor effect (headroom count) rather than a "+0.0pp" headline')
   check(/no result below licenses a claim about user profiles/.test(framing),
     '⚠⚠ and states which comparison it ran — the gold set has no user and no profile')
   check(/ALTERNATE THE ORDER/.test(framing), 'run order alternates against the cache artefact')

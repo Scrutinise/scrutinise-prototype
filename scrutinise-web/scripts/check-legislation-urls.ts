@@ -62,11 +62,15 @@ function pure() {
     resolveResultUrl('COMMITTEE', 'committees-evidence:writtenevidence:121125:1', 'https://committees.parliament.uk/writtenevidence/121125/'))
   ok('oral evidence gains /html/',
     committeeUrl('https://committees.parliament.uk/oralevidence/5900/') === 'https://committees.parliament.uk/oralevidence/5900/html/')
-  ok('publications gain /html/',
-    resolveResultUrl('COMMITTEE', 'committees-reports:publication:45000:1', 'https://committees.parliament.uk/publications/45000/')
-      === 'https://committees.parliament.uk/publications/45000/html/')
-  ok('a URL that already has /html/ is left alone',
-    committeeUrl('https://committees.parliament.uk/publications/45000/html/') === 'https://committees.parliament.uk/publications/45000/html/')
+  // STALE → updated (LEX 25-V §11, lib/lex/committee-url.ts:41-109): `/publications/N/html/` serves a
+  // DIFFERENT document (measured 2 Sep 2026: 6912 → grouse shooting), so `publications` left FAMILIES and a
+  // known-bad bare or /html/ publications address is now SUPPRESSED (empty string, citation stands alone).
+  ok('publications are NOT given /html/ — the bare form is suppressed, never a wrong-document link',
+    resolveResultUrl('COMMITTEE', 'committees-reports:publication:45000:1', 'https://committees.parliament.uk/publications/45000/') === '')
+  ok('a publications /html/ URL is suppressed too (it resolves to somebody else\'s document)',
+    committeeUrl('https://committees.parliament.uk/publications/45000/html/') === '')
+  ok('a writtenevidence URL that already has /html/ is left alone',
+    committeeUrl('https://committees.parliament.uk/writtenevidence/121125/html/') === 'https://committees.parliament.uk/writtenevidence/121125/html/')
   ok('a /pdf/ URL is left alone', committeeUrl('https://committees.parliament.uk/writtenevidence/121125/pdf/')
     === 'https://committees.parliament.uk/writtenevidence/121125/pdf/')
   ok('an inquiry /work/ page is NOT rewritten (it resolves in the bare form)',

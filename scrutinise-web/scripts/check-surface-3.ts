@@ -344,7 +344,10 @@ async function main() {
   // ⚠ SUBJECT CHOSEN BY WHAT HAS HAPPENED, NOT BY WHAT THE CHECK NEEDS (§26). Nothing is filed
   // here; an idea that already carries filed positions is read as it stands.
   const subject = await prisma.evidenceItem.findFirst({
-    where: { headingKey: 'POSITIONS', passKey: POSITIONS_PASS_KEY },
+    // Live ideas only: buildProposalSnapshot throws SnapshotUnavailableError for a soft-deleted
+    // idea (proposal-snapshot.ts), and filed rows outlive their idea. A deleted idea made this
+    // suite crash with no summary line.
+    where: { headingKey: 'POSITIONS', passKey: POSITIONS_PASS_KEY, idea: { deletedAt: null } },
     select: { ideaId: true },
     orderBy: { createdAt: 'desc' },
   })

@@ -21,7 +21,7 @@ function ok(name: string, cond: boolean, detail = '') { if (cond) { pass++; cons
 const act = (n: number, over: Partial<CanonicalAction> = {}): CanonicalAction => ({
   id: `a${n}`, practicalStep: `Step number ${n} that does a particular thing`, mechanismType: null, whoImplements: null, targetOrganisation: null, wording: null, benefits: null,
   implementationCost: null, enforcementCost: null, regulatoryFriction: null, source: 'USER', number: n, title: null, titleProposal: null, headingId: null, parked: false, parkedReason: null,
-  targetCauseIds: [], avenue: null, link: null, sequence: null, beforeIds: [], facetProposal: null, mergedFrom: [], status: 'LIVE', ruleOutReason: null, mergedIntoId: null, ...over,
+  targetCauseIds: [], avenue: null, link: null, sequence: null, beforeIds: [], facetProposal: null, mergedFrom: [], status: 'LIVE', ruleOutReason: null, mergedIntoId: null, policyTest: null, ...over,
 })
 const heads: CanonicalActionHeading[] = [
   { id: 'h1', name: 'Legislation', colourKey: 'navy', hidden: false, orderIndex: 0 },

@@ -293,8 +293,12 @@ async function main() {
     ok('§8a — not-asked headings are excluded from both lists above',
       (qp.match(/!isNotAsked\(h\)/g) ?? []).length === 2)
     ok('§8b — the cause title is a textarea like the boxes under it',
-      /<textarea value=\{c\}[\s\S]{0,200}placeholder="Cause"/.test(qp) === false
-        && /<textarea value=\{c\}/.test(code('components/lex/FieldsPanel.tsx')))
+      // STALE → updated: the cause title in FieldsPanel is now `<RefTextarea …>`, the 26-R source
+      // registry's drop-in for `<textarea>` (components/lex/RefTextarea.tsx renders a plain
+      // <textarea {...props}>, plus an "Add source" menu). Same property: a multi-line box, not an <input>.
+      /<(textarea|RefTextarea) value=\{c\}[\s\S]{0,200}placeholder="Cause"/.test(qp) === false
+        && /<(textarea|RefTextarea) value=\{c\}[\s\S]{0,200}placeholder="Cause"/.test(code('components/lex/FieldsPanel.tsx'))
+        && /<textarea ref=\{inner\} \{\.\.\.props\} \/>/.test(code('components/lex/RefTextarea.tsx')))
     ok('§8c — the draft banner is in both documents already',
       (code('lib/documents/build-proposal.ts').match(/draftBanner\(snapshot\)/g) ?? []).length === 2)
   } finally {

@@ -127,7 +127,7 @@ async function main() {
   const onePage = built.find((b) => b.kind === 'ONE_PAGE_SUMMARY')
   const onePageFirst = onePage && onePage.model.blocks[0].kind === 'paragraph' ? runsToText(onePage.model.blocks[0].runs) : ''
   ok('135: the One-Page Summary of 452c5ade opens "This is a Stage 2 document: The First Draft."', onePageFirst === 'This is a Stage 2 document: The First Draft.', onePageFirst)
-  control('135: a Stage 3 opening must not satisfy that expectation (must be FALSE)', 'This is a Stage 3 document: The Deepening.' === 'This is a Stage 2 document: The First Draft.')
+  control('135: a Stage 3 opening must not satisfy that expectation (must be FALSE)', ('This is a Stage 3 document: The Deepening.' as string) === 'This is a Stage 2 document: The First Draft.')
 
   // Decision 136 — the bar and the documents say the same thing.
   ok('136: the workspace bar names its stages from the documents\' words',

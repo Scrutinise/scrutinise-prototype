@@ -109,8 +109,27 @@ async function main() {
     `${liveOptions.length} candidates`)
   control('a report printing none of them would fail that',
     () => liveOptions.every((o) => ''.includes(o.approach.slice(0, 60))))
-  ok('the sort\'s own reasoning reaches the page',
-    liveOptions.filter((o) => o.kindReason).every((o) => long.includes(o.kindReason!.slice(0, 50))))
+  // STALE → updated (26-O §3b, docs/BRIEF_26O.md): once the proposer has committed to an approach the
+  // long proposal prints the chosen approach and lists the other candidates under "What it rules
+  // out" ("— not chosen"); the per-candidate sort reasoning (candidatePolicyBlocks) is printed only
+  // while NO approach is committed. The pilot idea is now settled, so the old assertion read the
+  // wrong branch. Assert both branches: the unsettled one on the same snapshot with the committed
+  // approach withheld (deterministic, independent of the pilot's state), the settled one as it is.
+  const unsettled = textOf(buildProposalDocument({
+    ...snapshot, fields: snapshot.fields.filter((f) => f.key !== 'chosenApproach'),
+  }).model)
+  const withReason = liveOptions.filter((o) => o.kindReason)
+  ok('the sort\'s own reasoning reaches the page while no approach is committed',
+    withReason.length > 0 && withReason.every((o) => unsettled.includes(o.kindReason!.slice(0, 50))),
+    `${withReason.length} reasons`)
+  control('a page printing none of the reasons would fail that',
+    () => withReason.length > 0 && withReason.every((o) => ''.includes(o.kindReason!.slice(0, 50))))
+  const settledField = snapshot.fields.find((f) => f.key === 'chosenApproach')
+  if (settledField && (settledField.status === 'ACCEPTED' || settledField.status === 'SKIPPED') && typeof settledField.value === 'string' && settledField.value.trim()) {
+    ok('a settled proposal prints its chosen approach, and the other candidates as not chosen',
+      long.includes(settledField.value.trim().slice(0, 50)) && liveOptions.filter((o) => o.status === 'CANDIDATE').every((o) => long.includes(`${o.approach.slice(0, 50)}`)),
+      'candidates listed under "What it rules out"')
+  } else notChecked.push('§2 — the pilot proposal has no committed approach, so the settled branch could not be asserted on it')
   ok('and the snapshot carries what the sort wrote',
     liveOptions.some((o) => !!o.kind) && liveOptions.some((o) => !!o.sorted))
 

@@ -241,11 +241,14 @@ const CHECKS: Check[] = [
     name: '§1a the gate is capped in the engine too, not only in the prompt',
     run: (s) => {
       const src = s['lib/lex/elicitation.ts']
-      return /const willPress = shaped && presses < MAX_PROBLEM_PRESSES/.test(src)
+      // STALE → updated: 26-C §3b moved the engine cap from `willPress = shaped && presses <
+      // MAX_PROBLEM_PRESSES` to an early `break` BEFORE the gate is evaluated (once the ceiling
+      // is reached, or the closing question has been put, Lex stops asking).
+      return /if \(presses >= MAX_PROBLEM_PRESSES \|\| priorClosingAsked\) \{[\s\S]{0,400}?\bbreak\b[\s\S]{0,800}?const shaped = isIntake && looksLikeASolution\(text\)/.test(src)
         ? null
-        : 'the elicitation no longer caps the problem gate at MAX_PROBLEM_PRESSES'
+        : 'the elicitation no longer stops at MAX_PROBLEM_PRESSES before the problem gate runs'
     },
-    break: (s) => ({ ...s, 'lib/lex/elicitation.ts': s['lib/lex/elicitation.ts'].replace('const willPress = shaped && presses < MAX_PROBLEM_PRESSES', 'const willPress = shaped') }),
+    break: (s) => ({ ...s, 'lib/lex/elicitation.ts': s['lib/lex/elicitation.ts'].replace('if (presses >= MAX_PROBLEM_PRESSES || priorClosingAsked) {', 'if (priorClosingAsked) {') }),
   },
   {
     name: '§1c a failed confirmation is REPORTED, never a stitched-together paragraph',
@@ -284,7 +287,10 @@ const CHECKS: Check[] = [
         ? null
         : 'the build claim no longer reads the update count'
     },
-    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace('if (claimed.count === 0) throw new BuildAlreadyRunning()', '// count unchecked') }),
+    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].split('if (claimed.count === 0) throw new BuildAlreadyRunning()').join('// count unchecked') }),
+    // Control fix: build.ts now has TWO such claims (the reopen at ~671 and the new-build claim at
+    // ~843); `.replace` corrupted only the first and the run regex still matched the second, so the
+    // control never fired. Corrupt them all.
   },
   {
     name: '§2 one active build per idea is enforced by a PARTIAL unique index',
@@ -547,26 +553,20 @@ const CHECKS: Check[] = [
     break: (s) => ({ ...s, 'lib/lex/build-config.ts': s['lib/lex/build-config.ts'].replace('export const ALTERNATIVES_PER_FORK = 2', 'export const ALTERNATIVES_PER_FORK = 3') }),
   },
   {
-    name: '§4 the instrument question is asked, and a build that skips it says so',
+    name: '§4 the approach pass NAMES NO instrument (26-B §3) — and the platform still owns the instrument key',
     run: (s) => {
-      // The options live in build-config (INSTRUMENTS) and are interpolated into the
-      // approach prompt. Both halves are asserted: a list nothing reads is decoration,
-      // and an interpolation of an empty list is an unanswerable question.
-      const cfg = s['lib/lex/build-config.ts']
-      for (const option of ['primary legislation', 'secondary legislation', 'regulator rule or guidance', 'funding', 'organisational change']) {
-        if (!cfg.includes(option)) return `the instrument option "${option}" is gone from INSTRUMENTS`
-      }
+      // STALE → updated: 26-B §3 reversed §4. The approach pass used to name one instrument out of
+      // six (INSTRUMENTS interpolated into the prompt, a gap reported when none was named). The
+      // instrument now comes OUT: the actions pass evaluates three avenues and the proposer chooses.
       const client = s['lib/lex/build-client.ts']
-      if (!/INSTRUMENTS\.join/.test(client)) {
-        return 'the instrument options are no longer put into the approach prompt'
-      }
+      if (/INSTRUMENTS\.join/.test(client)) return 'the approach prompt is naming an instrument again (26-B §3 removed that)'
+      if (!/DO NOT NAME AN INSTRUMENT HERE/.test(client)) return 'the approach prompt no longer forbids naming an instrument'
       const engine = s['lib/lex/build.ts']
-      if (!/INSTRUMENT_FORK_KEY/.test(engine)) return 'the instrument choice is no longer recorded as a fork'
-      return /APPROACH named no instrument/.test(engine)
-        ? null
-        : 'a build that names no instrument no longer reports the gap'
+      if (/APPROACH named no instrument/.test(engine)) return 'the “APPROACH named no instrument” gap report is back — it contradicts 26-B §3'
+      if (!/NO INSTRUMENT IS NAMED HERE ANY MORE/.test(engine)) return 'the 26-B §3 decision note is gone from the approach pass'
+      return /INSTRUMENT_FORK_KEY/.test(engine) ? null : 'the platform-owned instrument key (used to drop model duplicates) is gone'
     },
-    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace('APPROACH named no instrument', 'all fine') }),
+    break: (s) => ({ ...s, 'lib/lex/build-client.ts': s['lib/lex/build-client.ts'].replace('DO NOT NAME AN INSTRUMENT HERE', 'name an instrument here') }),
   },
   {
     name: '§4 a model-emitted duplicate of the instrument fork is dropped, and the drop is counted',

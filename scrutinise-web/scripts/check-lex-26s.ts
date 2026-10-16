@@ -148,7 +148,7 @@ function partA() {
   control('a bears-on check that matched any ref would count a cause note (must be FALSE)', P.bearsOnPolicy([{ kind: 'cause' }]))
   const noReason = PolicyReviewBody.safeParse({ op: 'dismiss', evidenceId: 'e' })
   ok('a dismissal sent with no reason is refused, naming "the reason"', !noReason.success)
-  ok('the set-aside and dismissed prefixes differ (one enum, two meanings)', P.SET_ASIDE_PREFIX !== P.DISMISSED_PREFIX && P.SET_ASIDE_PREFIX.startsWith('Set aside'))
+  ok('the set-aside and dismissed prefixes differ (one enum, two meanings)', (P.SET_ASIDE_PREFIX as string) !== P.DISMISSED_PREFIX && P.SET_ASIDE_PREFIX.startsWith('Set aside'))
 }
 
 // ── RENDER — the table the user sees, read out of the rendered markup (§25) ─────────────────────────────────────

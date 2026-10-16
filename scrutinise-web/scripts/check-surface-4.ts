@@ -144,7 +144,15 @@ async function main() {
 
   // ══ §1c — THE ORDER SAYS WHAT IT IS ══════════════════════════════════════════════════════
   console.log('\n── §1c — an alphabetical slice is never presented as a ranking ──')
-  const bigIdea = ideas.find((i) => /Human Rights|Sentencing/i.test(i.title ?? ''))
+  // STALE-FIXED (SURFACE 4 §2, see whatThisTargetCanYield): an EDM target holds exactly one actor by
+  // design, so it can never be "large" and carries no ranking note. The first title match is now an
+  // EDM idea ("...human rights treaties"), so choose the first matching idea that resolves to a
+  // DIVISION target. The assertions below are unchanged and still fail if the note goes missing.
+  let bigIdea: (typeof ideas)[number] | undefined
+  for (const cand of ideas.filter((i) => /Human Rights|Sentencing/i.test(i.title ?? ''))) {
+    const ct = await targetForIdea(cand.id)
+    if (ct && ct.targetType !== 'edm') { bigIdea = cand; break }
+  }
   if (!bigIdea) {
     unchecked('the ranking note reaches the surface', 'no idea with a large division target')
   } else {

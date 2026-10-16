@@ -57,7 +57,7 @@ const mkNote = (o: Partial<NoteView> & { id: string }): NoteView => ({
   lex: false, source: null, sourceId: null, quote: null, quoteLocation: null, comment: null, stance: 'UNDECIDED', bearsOn: [], tags: [], heading: null, importance: null,
   authorId: 'u1', authorName: 'Ada', authorKind: 'USER', status: 'IN_RECORD', setAsideReason: null, mineOnly: false, mine: true, createdAt: '2026-10-01T10:00:00.000Z', replies: [], ...o,
 })
-const SRC = (n: number, title: string) => ({ id: `s${n}`, number: n, kind: 'URL', title, url: null, citation: null, sourceType: null, author: null, publishedAt: null, snippet: null, readStatus: 'READ' as const, readNote: null, corpusKey: null, materialId: null, archived: false, createdAt: '2026-10-01T00:00:00.000Z' })
+const SRC = (n: number, title: string) => ({ id: `s${n}`, number: n, kind: 'URL' as const, title, url: null, citation: null, sourceType: null, author: null, publishedAt: null, snippet: null, readStatus: 'READ' as const, readNote: null, corpusKey: null, materialId: null, archived: false, createdAt: '2026-10-01T00:00:00.000Z' })
 
 function partA() {
   section('A · pure')

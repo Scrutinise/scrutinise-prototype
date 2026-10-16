@@ -190,8 +190,14 @@ async function main() {
       const pack = textOf(buildMeetingPackDocument(snapshot).model)
       ok('§C — the title appears in the LONG REPORT, ahead of its text',
         long.includes(`${open.title!.trim()} — `), open.title!)
-      ok('§C — and in the MEETING PACK',
-        pack.includes(`${open.title!.trim()} — `), open.title!)
+      // STALE → updated (25-X §3, build-meeting-pack.ts:218-221): the meeting pack prints only the
+      // CURRENT build's OPEN challenges (`status === 'OPEN' && current !== false`), not deferred
+      // ones or earlier drafts'. The old probe took any titled open-or-deferred challenge, which can
+      // legitimately be absent from the pack. Pick one the pack is meant to print.
+      const inPack = snapshot.issues.find((i) => i.title?.trim() && i.status === 'OPEN' && i.current !== false)
+      if (!inPack) skip('§C the title in the meeting pack', 'no titled OPEN challenge on the current build')
+      else ok('§C — and in the MEETING PACK',
+        pack.includes(`${inPack.title!.trim()} — `), inPack.title!)
       control('the rendered-title assertion is not satisfied by any string', () => {
         const invented = 'A title no challenge on this idea carries'
         return long.includes(`${invented} — `)

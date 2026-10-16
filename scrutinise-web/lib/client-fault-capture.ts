@@ -104,7 +104,7 @@ export function installFaultCapture(): void {
 /** The error text on screen right now — what the user actually read. */
 function errorsOnScreen(): string[] {
   if (typeof document === 'undefined') return []
-  return [...document.querySelectorAll('[role="alert"]')]
+  return Array.from(document.querySelectorAll('[role="alert"]')) // Array.from, not spread: the scripts' tsconfig has no DOM.Iterable (check:scripts)
     .map((n) => (n as HTMLElement).innerText?.replace(/\s+/g, ' ').trim())
     .filter(Boolean)
     .slice(0, 4) as string[]

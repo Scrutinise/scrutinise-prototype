@@ -384,7 +384,9 @@ const CHECKS: Check[] = [
     run: (src) => {
       const panel = src['components/lex/AgendaPanel.tsx']
       const at = (marker: string) => panel.indexOf(marker)
-      const contradictions = at('Where the research changed my mind')
+      // STALE → updated: 25-Z §3 renamed the section "Where the research changed my mind" to
+      // "Notable Research" (AgendaPanel.tsx; CHANGE_LOG 25-Z). The order assertion is unchanged.
+      const contradictions = at('title="Notable Research"')
       const decisions = at('title="Decisions"')
       const reading = at('Read these')
       if (contradictions < 0 || decisions < 0 || reading < 0) return 'a section is missing from the panel'
@@ -395,7 +397,7 @@ const CHECKS: Check[] = [
     break: (src) => ({
       ...src,
       'components/lex/AgendaPanel.tsx': src['components/lex/AgendaPanel.tsx']
-        .replace('Where the research changed my mind', 'ZZZ moved to the bottom'),
+        .replace('title="Notable Research"', 'title="ZZZ moved to the bottom"'),
     }),
   },
   {
@@ -407,7 +409,9 @@ const CHECKS: Check[] = [
       // on a panel that showed the disclaimer first. What matters is that the framing appears
       // nowhere BEFORE the work — so the FIRST occurrence is the one to test.
       const framing = panel.indexOf('{a.framing}')
-      const firstSection = panel.indexOf('Where the research changed my mind')
+      // STALE marker (25-Z §3 renamed the section) — it was matching -1, so this passed vacuously.
+      const firstSection = panel.indexOf('title="Notable Research"')
+      if (firstSection < 0) return 'the first agenda section is missing, so "after the work" cannot be tested'
       if (framing < 0) return 'the framing paragraph is not rendered'
       return framing > firstSection
         ? null
@@ -515,11 +519,17 @@ const CHECKS: Check[] = [
     }),
   },
   {
-    name: '§3a the fork move READS ITS OWN RESULT, and creates a fork when none exists',
+    name: '§3a the existing-power write READS ITS OWN RESULT, and says so when there is no row to carry it',
     run: (src) => {
+      // STALE → updated: 26-B §3c replaced recordInstrumentRetirement (which rewrote the
+      // `guidingPolicy:instrument` fork and created one when none existed) with
+      // recordExistingPowerOnLegislativeAvenue, which writes onto the LEGISLATIVE BuildAvenue row.
+      // The principle survives: the write's result is read, and a missing row is reported, not
+      // papered over. The "create a fork" half is RETIRED: 26-B says nothing else moves, and
+      // inventing a row to hang the finding on is explicitly refused (see the function's note).
       const b = src['lib/lex/build.ts']
-      const at = b.indexOf('async function recordInstrumentRetirement')
-      if (at < 0) return 'recordInstrumentRetirement is gone'
+      const at = b.indexOf('async function recordExistingPowerOnLegislativeAvenue')
+      if (at < 0) return 'recordExistingPowerOnLegislativeAvenue is gone'
       // ⚠ Sliced to the function's own closing brace rather than a fixed character count. A
       // fixed window silently stops covering the tail of the function the moment somebody adds a
       // comment — which is exactly what happened here, and the check reported the create path
@@ -530,17 +540,20 @@ const CHECKS: Check[] = [
       // ⚠ This logged "instrument fork changed by research" without looking at how many rows the
       // updateMany had touched — announcing the sprint's headline acceptance criterion as met on a
       // run where no such fork existed. A claim whose result is not checked is not a claim.
-      if (!/moved\.count/.test(body)) {
-        return 'the updateMany result is not read — the "fork changed" line can announce a change that did not happen'
+      if (!/updated\.count/.test(body)) {
+        return 'the updateMany result is not read — the "recorded" line can announce a write that did not happen'
       }
-      // And a real power with no fork to carry it must not be dropped on the floor.
-      return /buildFork\.create/.test(body)
+      // The finding must not move the instrument fork any more (26-B §3c: a finding, not an override).
+      if (/buildFork\./.test(body)) return 'the existing-power write touches BuildFork again — 26-B §3c made it a finding beside the avenue, not an override'
+      // And a real power with no avenue row to carry it must still be kept somewhere: the uncertainty.
+      if (!/mergeUncertainties/.test(body)) return 'when no legislative avenue row exists the finding is lost, which is the worst available outcome'
+      return /updated\.count === 0/.test(body)
         ? null
-        : 'when no instrument fork exists the finding is lost, which is the worst available outcome'
+        : 'a missing legislative avenue row is not reported'
     },
     break: (src) => ({
       ...src,
-      'lib/lex/build.ts': src['lib/lex/build.ts'].replace(/moved\.count/g, '1'),
+      'lib/lex/build.ts': src['lib/lex/build.ts'].replace(/updated\.count/g, '1'),
     }),
   },
   {
@@ -583,7 +596,9 @@ const CHECKS: Check[] = [
     name: '§3e a gap is classified from its TAG, never from its wording',
     run: (src) => {
       const a = src['lib/lex/agenda.ts']
-      if (!/switch \(g\.kind\)/.test(a)) return 'classifyGap does not switch on the structural tag'
+      // STALE → updated: 26-B §7a — the switch is on `kindOf(g)`, which reads the tag first and
+      // only falls back to the producer's own sentence for untagged legacy rows (known-unknowns.ts).
+      if (!/switch \(kindOf\(g\)\)/.test(a)) return 'classifyGap does not switch on the structural tag'
       // A regex over the reason would put "only you can answer this" on a search failure.
       return /g\.why\.(match|includes|test)|\/.*\/\.test\(g\.why\)/.test(a)
         ? 'classifyGap reads the prose — a search failure would be classified as the user\'s job'
@@ -591,7 +606,7 @@ const CHECKS: Check[] = [
     },
     break: (src) => ({
       ...src,
-      'lib/lex/agenda.ts': src['lib/lex/agenda.ts'].replace('switch (g.kind)', 'switch (g.why)'),
+      'lib/lex/agenda.ts': src['lib/lex/agenda.ts'].replace('switch (kindOf(g))', 'switch (g.why)'),
     }),
   },
 ]
