@@ -172,6 +172,11 @@ async function main() {
     ok('createCauses with sub-causes followed by another parent (the shape that collided) gives every cause its own number', new Set(all.map((c) => c.number)).size === all.length && all.every((c) => c.number != null))
     const byText = (t: string) => all.find((c) => c.cause === t)!.number as number
     ok('…in insert order: parent, its sub-causes, then the next parent', byText('parent one') < byText('kid a') && byText('kid b') < byText('parent two') && byText('parent two') < byText('parent three') && byText('kid c') < byText('parent four'))
+    const dup = all[0].number as number
+    let refusedDup = ''
+    try { await prisma.diagnosisCause.create({ data: { ideaId: sc.id, cause: 'a deliberate duplicate', orderIndex: 999, number: dup } }) } catch (e) { refusedDup = String(e) }
+    ok('a duplicate number cannot be STORED: the unique index (ideaId, number) refuses it', /Unique constraint|unique/i.test(refusedDup), refusedDup.slice(0, 120))
+    control('a table with no unique index would have accepted the duplicate (must be FALSE)', () => refusedDup === '')
     control('the old arithmetic (parent n++, kids n+i, n NOT advanced) would give the next parent a kid’s number',
       () => { const n0 = 5; let n = n0; const parent = n++; const kids = [n, n + 1]; const next = n++; return new Set([parent, ...kids, next]).size === 4 })
   } finally {

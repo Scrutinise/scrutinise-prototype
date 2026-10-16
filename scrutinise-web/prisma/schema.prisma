@@ -2772,7 +2772,8 @@ model DiagnosisCause {
   @@index([ideaId])
   @@index([parentCauseId])
   /// §2a — looked up on every instruction the user types by number.
-  @@index([ideaId, number])
+  /// 26-S 159 — a duplicate cause number cannot be stored (the number itself is assigned by lex_cause_number_trg). DDL: prisma/lex_26s_cause_number_unique.sql.
+  @@unique([ideaId, number])
 }
 
 // Page 3 (Guiding Policy) candidate approach (design §17). Lex seeds candidates per

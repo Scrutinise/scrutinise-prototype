@@ -11,7 +11,10 @@ import { prisma } from '../lib/prisma'
 import { spendOriginOf } from '../lib/lex/spend-origin'
 
 const i = process.argv.indexOf('--since')
-const since = new Date(i > 0 ? process.argv[i + 1] : '2026-09-29T10:00:00Z')
+// 26-S decision 164 (17 Oct 2026): the default cutoff moved from 29 Sep 10:00 to 16 Oct 23:22 UTC — the deployment (ae062f5) that made feedback attribution
+// explicit. Before it, 266 of 866 ledger rows had no user and NONE had an idea (so no owner could be backfilled): measurement runs and scripts outside any request,
+// listed pass by pass in docs/CHANGE_LOG.md. They are history, not a live fault; pass `--since 2026-09-29T10:00:00Z` to see them again.
+const since = new Date(i > 0 ? process.argv[i + 1] : '2026-10-16T23:22:00Z')
 
 async function main() {
   const rows = await prisma.$queryRawUnsafe(
