@@ -2588,10 +2588,16 @@ model FeedbackItem {
   technicalDetail Json?
   /// `[{ key, name, contentType, bytes }]` — files the user chose to send with the report; the bytes are in R2 under `key`.
   attachments     Json?
+  /// 26-S §8b (decision 154) — the admin list. Same lifecycle shape as `Feedback`: NEW | TRIAGED (shown as "looked at") | RESOLVED ("fixed") | WONTFIX ("not doing").
+  /// DDL: prisma/lex_26s_feedback_admin.sql.
+  status          String          @default("NEW")
+  adminNotes      String?         @db.Text
+  statusChangedAt DateTime?
 
   @@index([ideaId])
   @@index([userId])
   @@index([createdAt])
+  @@index([status, createdAt])
 }
 
 model IdeaFieldState {
