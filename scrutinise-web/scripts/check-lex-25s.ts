@@ -23,6 +23,8 @@ import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { prisma } from '../lib/prisma'
+import { createCauses } from '../lib/lex/field-machine'
+import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 import { historyLine, clusterLine, GROUP_HEADINGS, andList } from '../lib/lex/policy-history'
 import { wouldCreateCycle, reorderedIds, nextCauseNumber } from '../lib/lex/cause-tree'
 import { applyPolicyOp, type PolicyState } from '../lib/lex/guiding-policy-state'
@@ -154,6 +156,27 @@ async function main() {
     nextCauseNumber([{ number: 1 }, { number: 4 }, { number: null }]) === 5)
   control('a numbering that filled gaps would fail',
     () => nextCauseNumber([{ number: 1 }, { number: 4 }]) === 2)
+
+  // ── 26-S decision 159 (17 Oct 2026): the DATABASE assigns the number, and cannot assign the same one twice ──────────────────────
+  console.log('\n§2a (26-S 159) — cause numbers are assigned by the database')
+  const trg = await prisma.$queryRaw<Array<{ n: bigint }>>`SELECT COUNT(*) AS n FROM pg_trigger WHERE tgname = 'lex_cause_number_trg' AND NOT tgisinternal`
+  ok('the trigger lex_cause_number_trg exists on DiagnosisCause', Number(trg[0]?.n ?? 0) === 1)
+  const sc = await scratchCopy('452c5ade', 'c159')
+  try {
+    const top = Math.max(0, ...(await prisma.diagnosisCause.findMany({ where: { ideaId: sc.id }, select: { number: true } })).map((c) => c.number ?? 0))
+    const made = await Promise.all(Array.from({ length: 12 }, (_, i) => prisma.diagnosisCause.create({ data: { ideaId: sc.id, cause: `concurrent ${i}`, orderIndex: 100 + i } })))
+    const nums = made.map((m) => m.number as number).sort((x, y) => x - y)
+    ok('12 causes inserted AT ONCE with no number get 12 DIFFERENT numbers, one past the highest', new Set(nums).size === 12 && nums[0] === top + 1 && nums[11] === top + 12, nums.join())
+    await createCauses(sc.id, [{ cause: 'parent one', subCauses: [{ cause: 'kid a' }, { cause: 'kid b' }] }, { cause: 'parent two' }, { cause: 'parent three', subCauses: [{ cause: 'kid c' }] }, { cause: 'parent four' }], 'LEX_CORPUS')
+    const all = await prisma.diagnosisCause.findMany({ where: { ideaId: sc.id }, select: { number: true, cause: true } })
+    ok('createCauses with sub-causes followed by another parent (the shape that collided) gives every cause its own number', new Set(all.map((c) => c.number)).size === all.length && all.every((c) => c.number != null))
+    const byText = (t: string) => all.find((c) => c.cause === t)!.number as number
+    ok('…in insert order: parent, its sub-causes, then the next parent', byText('parent one') < byText('kid a') && byText('kid b') < byText('parent two') && byText('parent two') < byText('parent three') && byText('kid c') < byText('parent four'))
+    control('the old arithmetic (parent n++, kids n+i, n NOT advanced) would give the next parent a kid’s number',
+      () => { const n0 = 5; let n = n0; const parent = n++; const kids = [n, n + 1]; const next = n++; return new Set([parent, ...kids, next]).size === 4 })
+  } finally {
+    ok('the scratch idea deletes cleanly', (await deleteScratch(sc.id)) === true)
+  }
 
   // ══════════ §2b/§2d — REORDER AND THE LOOP GUARD, OVER REAL SHAPES ═══════════
   console.log('\n§2b/§2d — reorder keeps everything; a loop is refused')

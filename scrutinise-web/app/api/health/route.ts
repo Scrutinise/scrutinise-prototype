@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { capabilitySnapshot } from '@/lib/env-flags';
 import { buildDriver } from '@/lib/lex/build-config';
 import { resolvedVectorStreams } from '@/lib/lex/query-router';
+import { parseAgentSwitch } from '@/lib/lex/agent/flag';
 
 /**
  * ⚠ THIS ENDPOINT ANSWERS "WHAT IS PRODUCTION ACTUALLY RUNNING?" — see docs/CLAUDE.md §20.
@@ -136,6 +137,10 @@ export async function GET() {
       //
       // A mode name is the same class of public fact as the commit SHA beside it.
       build: { driver: buildDriver() },
+      // ⚠ 26-S decision 158 — WHICH LEX IS IN FORCE. Charlie sets LEX_AGENT in Vercel (SAML-blocked to every session), and an env change reaches
+      // production only on the NEXT DEPLOYMENT. This is read through `parseAgentSwitch` — the code path the Lex route itself uses — so it reports what is
+      // IN FORCE: 'all' (everyone has the tool-calling Lex), 'list' (named accounts only) or 'off'. A MODE ONLY: never the list, never an address.
+      lex: { agent: parseAgentSwitch(process.env.LEX_AGENT).mode },
     },
     { status: 200 },
   );

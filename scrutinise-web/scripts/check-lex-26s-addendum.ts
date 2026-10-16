@@ -80,6 +80,14 @@ async function main() {
   ok('CHANGE_LOG records the unlogged push of 7a28d52', /7a28d52/.test(log) && /carries every local commit/.test(log))
   const ent = read('../docs/entity_list_v5.md')
   ok('entity_list_v5 has the 26-S and 26-R tables', ['ActionImportPass', 'IdeaSource', 'ResearchNote', 'ResearchNoteReply'].every((t) => ent.includes(t)) && /purpose/.test(ent))
+  section('D · decisions 163 and 165 — the guard on aggregateToDocuments')
+  const { aggregateToDocuments } = await import('../lib/lex/grain')
+  const mixed = [{ id: 'a:1', score: 12, scorer: 'bm25' as const }, { id: 'b:1', score: 0.02, scorer: 'rrf' as const }]
+  let refused = ''
+  try { aggregateToDocuments(mixed, 'max') } catch (e) { refused = String(e) }
+  ok('aggregateToDocuments REFUSES a mixed bm25 + rrf list (it used to sort it silently)', /tried to compare scores across 2 scorers/.test(refused), refused)
+  ok('…and still aggregates a single-scorer list, best first', aggregateToDocuments([{ id: 'a:1', score: 1, scorer: 'bm25' as const }, { id: 'b:1', score: 3, scorer: 'bm25' as const }], 'max')[0].documentKey.startsWith('b'))
+  control('a guard that never threw would pass the "refused" test (must be FALSE)', refused === '')
   console.log(`\n${pass + fail} assertions · ${pass} passed · ${fail} failed · ${controls} controls (${dead} dead)`)
   await prisma.$disconnect()
   process.exit(fail || dead ? 1 : 0)

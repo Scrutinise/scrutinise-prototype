@@ -104,6 +104,8 @@ export async function POST(req: Request, { params }: Params) {
       stage: body.stage,
       identities,
       userRef,
+      userId: user.id,
+      ideaId: idea.id,
     })
     // The technical detail is sanitised HERE and handed back, so what the user sees is what will be stored and sent.
     const tech = body.surface === 'BUG_REPORT' && body.technicalDetail ? sanitiseTechnicalDetail(body.technicalDetail, identities) : null

@@ -15,6 +15,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { prisma } from '../lib/prisma'
+import { titleFromText } from '../lib/lex/issue-title'
 import { buildProposalSnapshot } from '../lib/documents/proposal-snapshot'
 import { buildProposalDocument } from '../lib/documents/build-proposal'
 import { buildMeetingPackDocument } from '../lib/documents/build-meeting-pack'
@@ -173,6 +174,17 @@ async function main() {
   }
 
   // ══ §C — THE TITLE REACHES THE DOCUMENT ══════════════════════════════════════════════
+  // ── 26-S decision 163 (17 Oct 2026): an adversarial issue is written WITH a title, taken from its own text (<= 12 words) ──
+  console.log('\n§163 — a challenge always has a title (taken from its own text)')
+  const longIssue = 'The proposal assumes every department can name one accountable person for each project, but it says nothing about projects that cross departments; who answers then?'
+  const t1 = titleFromText(longIssue)
+  ok('a long issue gets a title of at most 12 words, from its own first words', t1.split(' ').length <= 12 && longIssue.startsWith(t1.split(' ').slice(0, 3).join(' ')), t1)
+  ok('a short first sentence is the title whole, without its full stop', titleFromText('No evidence is offered for the cost estimate. The figure appears twice.') === 'No evidence is offered for the cost estimate')
+  ok('an empty issue gets no invented title', titleFromText('   ') === '')
+  control('a titler that returned the whole text would break the 12-word rule (must be FALSE)', () => longIssue.split(' ').length <= 12)
+  const dsrc = readFileSync(join(process.cwd(), 'lib/lex/deepening.ts'), 'utf8').replace(/\r\n/g, '\n')
+  ok('the write never stores a null title for an issue that has text (the adversarial path was storing null)', /title: issue\.title\?\.trim\(\) \|\| titleFromText\(issue\.text\) \|\| null/.test(dsrc))
+
   console.log('\n§C — a challenge title, in the rendered output')
   const snapshot = await buildProposalSnapshot(IDEA)
   {

@@ -262,6 +262,9 @@ export async function summariseCritique(input: {
   identities: (string | null | undefined)[]
   /** DECISION 137 — "User 435". The summary names the person by this and by nothing else. */
   userRef?: string
+  /** 26-S 164 — who and what the spend is for, PASSED, not left to ambient context: the 4 unattributed lex.feedback rows were calls made outside a request. */
+  userId?: string | null
+  ideaId?: string | null
 }): Promise<SummariseResult> {
   const scrubbedIn = scrubPersonal(input.text, input.identities)
 
@@ -336,7 +339,7 @@ export async function summariseCritique(input: {
     // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
     // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
     // never take down the work it is measuring.
-    void recordGeminiUsage(data, { stream: 'lex', pass: 'lex.feedback', model: model })
+    void recordGeminiUsage(data, { stream: 'lex', pass: 'lex.feedback', model: model, userId: input.userId ?? null, ideaId: input.ideaId ?? null })
     // 600 tokens is the tightest budget of any JSON call in the app, so this is the one most
     // likely to hit the ceiling. Non-throwing: the fallback() degradation is kept, the guard
     // only stops the truncation arriving as a parse failure. See gemini-finish.ts.

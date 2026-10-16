@@ -84,6 +84,9 @@ export function assertSingleScorer(results: readonly Scored[], label: string): v
  * build if a `.sort()` comparing `.score` appears anywhere else, because a bare comparator is
  * exactly how this class came back the first time.
  */
+/** The comparator, for a sort that needs a tie-break of its own (grain.ts). Lives HERE so the one sanctioned place for "compare .score" stays this file. */
+export const byScoreDesc = <T extends { score: number }>(a: T, b: T): number => b.score - a.score
+
 export function sortByScore<T extends Scored>(results: readonly T[], label: string): T[] {
   assertSingleScorer(results, label)
   return [...results].sort((a, b) => b.score - a.score)

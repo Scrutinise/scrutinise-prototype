@@ -25,7 +25,6 @@ import { runOrientation } from './orientation'
 import { runSearch } from './search-gateway'
 import { stripNullBytes } from './json-safe'
 import { nextNumber } from './guiding-policy'
-import { nextCauseNumber } from './cause-tree'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -723,18 +722,20 @@ export async function listCauses(ideaId: string) {
  * ⚠ 25-S §2a — THE STABLE NUMBER, ASSIGNED WHERE THE ROW IS CREATED. 25-R's lesson, applied
  * before it can be repeated: 25-P put the policy numbering inside a function the SCREEN called,
  * so an idea nobody opened had none. A row's identity is not a property of somebody looking at
- * it. `nextCauseNumber` is max+1 and never reuses a gap.
+ * it.
+ *
+ * ⚠⚠ 26-S DECISION 159 (17 Oct 2026) — THE NUMBER IS NOW ASSIGNED BY THE DATABASE (`lex_cause_number_trg`, prisma/lex_26s_cause_number.sql), NOT BY THIS FILE.
+ * Two ideas had duplicated cause numbers and one a missing one. The cause was HERE: `createCauses` numbered a parent `n++` and its sub-causes `n + i`
+ * WITHOUT advancing `n` past them, so the next parent took the first sub-cause's number (a deterministic collision, 20ms apart in the data —
+ * it looked like a race and was not only one); and `max+1` computed in the app is a race in any case. Creators now leave `number` unset; the
+ * trigger takes a per-idea advisory lock and assigns one past the highest in the idea, and a UNIQUE index (ideaId, number) makes a duplicate
+ * impossible to store. `nextCauseNumber` (cause-tree.ts) stays as the pure statement of the rule, for the check.
  */
-async function nextCauseNumberFor(ideaId: string): Promise<number> {
-  const rows = await prisma.diagnosisCause.findMany({ where: { ideaId }, select: { number: true } })
-  return nextCauseNumber(rows)
-}
 
 export async function createCauses(ideaId: string, causes: CauseInput[], source: 'USER' | 'LEX_CORPUS') {
   const clean = causes.filter((c) => c.cause?.trim())
   if (!clean.length) return
   let base = await prisma.diagnosisCause.count({ where: { ideaId } })
-  let n = await nextCauseNumberFor(ideaId)
   for (const c of clean) {
     const parent = await prisma.diagnosisCause.create({
       data: {
@@ -746,17 +747,15 @@ export async function createCauses(ideaId: string, causes: CauseInput[], source:
         parentCauseId: c.parentCauseId ?? null,
         source: (c.source ?? source) as never,
         orderIndex: base++,
-        number: n++,
       },
     })
     const kids = (c.subCauses ?? []).filter((s) => s.cause?.trim())
     if (kids.length) {
       await prisma.diagnosisCause.createMany({
-        // ⚠ 25-S §2a — the sub-causes are numbered from the same sequence as their parents.
+        // ⚠ 25-S §2a — the sub-causes are numbered from the same sequence as their parents (now by the trigger, in insert order).
         // One list of numbers per idea: "cause 7" must mean one thing whatever its depth.
         data: kids.map((s, i) => ({
           ideaId,
-          number: n + i,
           cause: s.cause.trim(),
           whyPersisted: s.whyPersisted?.trim() || null,
           evidence: s.evidence?.trim() || null,
@@ -773,7 +772,6 @@ export async function createCauses(ideaId: string, causes: CauseInput[], source:
 
 export async function addCause(ideaId: string, input: CauseInput) {
   const base = await prisma.diagnosisCause.count({ where: { ideaId } })
-  const number = await nextCauseNumberFor(ideaId)
   // Scope the parent to this idea so a caller can't graft onto another idea's tree.
   let parentCauseId: string | null = null
   if (input.parentCauseId) {
@@ -792,7 +790,6 @@ export async function addCause(ideaId: string, input: CauseInput) {
       parentCauseId,
       source: (input.source ?? 'USER') as never,
       orderIndex: base,
-      number,
     },
   })
 }

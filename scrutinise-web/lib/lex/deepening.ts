@@ -35,6 +35,7 @@ import { siftCandidates, siftSummaryLine, SIFT_CANDIDATE_TARGET, type SiftKeep }
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { runJob, jobQuestion, type JobOutcome } from './deepening-jobs'
 import { collapseKnownUnknowns, readKnownUnknowns, type KnownUnknown } from './known-unknowns'
+import { titleFromText } from './issue-title'
 import { sourceDateFields } from './evidence-date'
 
 // 25-C §2.4 — the shape and the collapse live in known-unknowns.ts so the panel, the build's
@@ -647,7 +648,8 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
 
     for (const issue of issueTexts) {
       await prisma.deepeningIssue.create({
-        data: { ideaId, passKey, runVersion, text: issue.text, title: issue.title, status: 'OPEN' },
+        // 26-S 163 — never untitled: a producer that gave no title (the adversarial call returns plain strings) gets one from the issue's own text.
+        data: { ideaId, passKey, runVersion, text: issue.text, title: issue.title?.trim() || titleFromText(issue.text) || null, status: 'OPEN' },
       })
       issues++
     }

@@ -53,6 +53,8 @@
 // grains MUST be identical there, and `check:s19-grain` fails if it is not.
 
 /** The three grains the corpus can be scored at. Ordered coarse-last. */
+import { assertSingleScorer, byScoreDesc, type Scored, type ScorerId } from './score-scope'
+
 export type Grain = 'chunk' | 'section' | 'document'
 
 export const GRAINS: Grain[] = ['chunk', 'section', 'document']
@@ -128,10 +130,14 @@ export type DocumentAggregation = 'max' | 'sum' | 'sum-top3'
  * document below the retrieval depth contribute nothing, so the deeper the input list the more the
  * `sum` variants can move. The depth is therefore part of the result and the caller must report it.
  */
-export function aggregateToDocuments<T extends { id: string; score: number; parentDocId?: string | null }>(
+export function aggregateToDocuments<T extends { id: string; score: number; scorer?: ScorerId; parentDocId?: string | null }>(
   ranked: T[],
   how: DocumentAggregation,
 ): Array<{ documentKey: string; score: number; members: T[]; best: T }> {
+  // 26-S 165 — A MIXED-SCORER LIST IS REFUSED, not silently mis-ordered. This sorted a caller-supplied list by .score with no guard: only checks called it,
+  // so nothing was wrong yet, but the first real caller handing it a bm25 + rrf list would have got a confident wrong ordering. (Rows that carry no
+  // `scorer` — the checks' fixtures — cannot be tested and are left alone.)
+  assertSingleScorer(ranked.filter((r): r is T & Scored => r.scorer !== undefined), 'aggregateToDocuments')
   const groups = new Map<string, T[]>()
   for (const r of ranked) {
     const k = documentKeyOf(r.id, r.parentDocId)
@@ -139,7 +145,7 @@ export function aggregateToDocuments<T extends { id: string; score: number; pare
     if (g) g.push(r); else groups.set(k, [r])
   }
   const out = [...groups.entries()].map(([documentKey, members]) => {
-    const desc = [...members].sort((a, b) => b.score - a.score)
+    const desc = [...members].sort(byScoreDesc)
     const score =
       how === 'max' ? desc[0].score
         : how === 'sum' ? desc.reduce((a, b) => a + b.score, 0)
@@ -150,7 +156,7 @@ export function aggregateToDocuments<T extends { id: string; score: number; pare
   // tiebreak is how five names came back alphabetical in SURFACE 4 and were read as a ranking.
   const firstIndex = new Map<string, number>()
   ranked.forEach((r, i) => { const k = documentKeyOf(r.id, r.parentDocId); if (!firstIndex.has(k)) firstIndex.set(k, i) })
-  return out.sort((a, b) => (b.score - a.score) || ((firstIndex.get(a.documentKey) ?? 0) - (firstIndex.get(b.documentKey) ?? 0)))
+  return out.sort((a, b) => byScoreDesc(a, b) || ((firstIndex.get(a.documentKey) ?? 0) - (firstIndex.get(b.documentKey) ?? 0)))
 }
 
 /**
