@@ -2769,6 +2769,10 @@ model DiagnosisCause {
   /// `IdeaFieldState.stale`'s comment for why this is a flag beside the row, not a status value.
   stale          Boolean              @default(false)
   staleReason    String?
+  /// 26-S2 §11a (decision 175) — ARCHIVED, not deleted: the cause (and its sub-causes) leave every list but the row, and so its number, stays.
+  /// A cause number is never reused (lex_cause_number_trg takes max(number)+1 over ALL rows, archived included). `lib/prisma.ts` adds
+  /// `archivedAt: null` to every direct read of this model unless the query names `archivedAt` itself. DDL: prisma/lex_26s2_cause_archive.sql.
+  archivedAt     DateTime?
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 
