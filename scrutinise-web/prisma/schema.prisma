@@ -3091,6 +3091,9 @@ model LexCoherentAction {
   /// 26-S2 §3c — "kept with a note": the user's reason for keeping an action the policy test says CONFLICTS, <= 600 characters.
   /// NULL = no note. The verdict itself is never edited. DDL: prisma/lex_26s2_steps.sql.
   conflictNote       String?
+  /// 26-S2 decision 181 — the COMMENTARY: unlimited, the Mechanism section of an action. It takes the intention, examples, dimensions and any text
+  /// the 1,000-character action statement (`practicalStep`) cuts. Lex offers it whenever she shortens anything. DDL: prisma/lex_26s2_commentary.sql.
+  commentary         String?        @db.Text
 
   @@index([ideaId])
   @@index([ideaId, status])
