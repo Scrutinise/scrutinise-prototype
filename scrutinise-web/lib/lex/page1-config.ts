@@ -516,6 +516,8 @@ export interface CanonicalState {
   actionHeadings: CanonicalActionHeading[]
   /** 26-S2 §3a — the step (1–4) the user was on in the Coherent Actions screen. */
   actionsStep: 1 | 2 | 3 | 4
+  /** 26-S2 §11a — causes the user removed. They are archived, not deleted: kept, with their numbers, out of every list. */
+  archivedCauses: number
   /** §19-C Task 6 — cost lines across all of this idea's actions. */
   costLines: CanonicalCostLine[]
   /** Costing benchmarks available to the estimator (§18.3). */

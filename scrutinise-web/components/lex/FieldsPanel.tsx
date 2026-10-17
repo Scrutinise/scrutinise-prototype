@@ -956,7 +956,7 @@ function CauseTreeView({ nodes, busy, api }: { nodes: CauseTreeNode[]; busy: boo
 }
 
 // The causes loop (§7.2 + §16.2 tree). Interactive while active; read-only once accepted.
-function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalField; causes: CanonicalCause[]; busy: boolean; api: CausesApi; ideaId: string }) {
+function CausesField({ field, causes, busy, api, ideaId, archived = 0 }: { field: CanonicalField; causes: CanonicalCause[]; busy: boolean; api: CausesApi; ideaId: string; archived?: number }) {
   const [c, setC] = useState('')
   const [why, setWhy] = useState('')
   const terminal = isTerminal(field)
@@ -1008,6 +1008,8 @@ function CausesField({ field, causes, busy, api, ideaId }: { field: CanonicalFie
       )}
       {/* ══ §9b — THE LIST, SHOWING THE SAME HIERARCHY THE MAP SHOWS ════════════════ */}
       <CauseTreeView nodes={tree} busy={busy} api={api} />
+      {/* 26-S2 §11a (decision 175) — a removed cause is ARCHIVED: out of the list, kept with its number, which is never reused. */}
+      {archived > 0 && <p className="text-[11px] text-zinc-600 mt-1" data-archived-causes>{archived} cause{archived === 1 ? '' : 's'} archived — removed from this list but kept, with {archived === 1 ? 'its' : 'their'} number{archived === 1 ? '' : 's'}; a cause number is never used twice.</p>}
 
       {/* ⚠ BRIEF_26E §1 — no longer gated on `!terminal`. Confirming the causes loop used to
           remove the add-cause form along with it, so a cause you thought of afterwards had
@@ -1720,8 +1722,10 @@ export default function FieldsPanel({
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
-  setAsideActions, actionHeadings, actionsStep,
+  setAsideActions, actionHeadings, actionsStep, archivedCauses = 0,
 }: {
+  /** 26-S2 §11a — how many causes the user removed (archived, with their numbers). */
+  archivedCauses?: number
   /** 26-Q — ruled-out / merged-away actions, and the user's headings (both from the canonical state). */
   setAsideActions?: CanonicalAction[]
   actionHeadings?: CanonicalActionHeading[]
@@ -1901,7 +1905,7 @@ export default function FieldsPanel({
           )}
         </>
       )
-      return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} />
+      return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} archived={archivedCauses} />
     }
     if (f.type === 'reference') {
       if (f.key === 'chosenApproach') return <ChosenApproachField field={f} options={policyOptions} busy={busy} api={policyApi} />

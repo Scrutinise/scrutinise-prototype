@@ -82,7 +82,8 @@ function partA() {
   ok('…and the source, in the user\'s words ("parked with policy 2 (item 15)", "your comment during consolidation (Claude draft)")', opened.includes('From: parked with policy 2 (item 15); your comment during consolidation (Claude draft)'))
   ok('…under a "Policy test" heading, with the verdict', opened.includes('Policy test') && /✗/.test(opened) && opened.includes('Conflicts.'))
   const openedFits = text(render(fixtures, [], [], ['a3']))
-  ok('OPENING an untested action shows no policy-test block (it is not shown as fitting)', !openedFits.includes('Policy test'))
+  // 26-S2 decision 170: an untested action now says so in WORDS and offers the test — the property this asserted (it is never shown as fitting) still holds.
+  ok('OPENING an untested action says "? Not tested" and offers “Test against the policy” — it is never shown as fitting', openedFits.includes('Not tested') && openedFits.includes('Test against the policy') && !/✓|Fits/.test(openedFits.split('Policy test')[1]?.slice(0, 200) ?? '✓'))
   control('the closed row giving away the reason (must be FALSE)', closed.includes('rules out thresholds'))
   ok('the "Added from the consolidation" box is not on the page', !html.includes('Added from the consolidation') && !html.includes('Remove from my actions'))
 }

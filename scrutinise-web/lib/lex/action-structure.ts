@@ -27,6 +27,7 @@ export const STRUCTURE_MODEL = 'gemini-2.5-pro'
 const BATCH = 45
 import { LIMITS } from './input-limits'
 import { clampStep, type ActionsStep } from './action-steps'
+import { TEST_SYSTEM, TEST_SCHEMA, placeGroups } from './action-ideas'
 const TITLE_MAX = LIMITS.actionTitle
 
 export type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string }
@@ -401,6 +402,67 @@ export async function proposeFacets(ideaId: string, userId: string | null, asked
     }
   }
   return { ok: true, data: { proposed, links: [], pence: unpriced ? null : pence } }
+}
+
+// ── 26-S2 §4 (decision 170) — "TEST AGAINST THE POLICY": the same test as the import's, for rows that were never tested ──────────────
+//
+// The import tests each row with the consolidation's own words and schema (`TEST_SYSTEM` / `TEST_SCHEMA`, action-ideas.ts) and every row it
+// writes carries a verdict. Rows from before that — build-era actions, the user's own — read "? Not tested". This runs the SAME test on them
+// (or, with `ids`, again on named ones: an action that was edited after a ✗ Conflicts is re-tested rather than argued with). Each batch is
+// written as it completes, so a failure part-way keeps what was tested and says how many were.
+const POLICY_TEST_BATCH = 25
+const POLICY_TEST_ONE_BY_ONE = [
+  '',
+  '⚠ HERE EVERY GROUP HAS EXACTLY ONE MEMBER. These actions are already on the user\'s list and are judged one by one; do not merge any of them,',
+  'whatever they have in common. The `text` of each group is that action\'s own wording.',
+].join('\n')
+
+export async function testAgainstPolicy(ideaId: string, userId: string | null, opts: { ids?: string[] } = {}): Promise<Result<{
+  tested: number; counts: Record<string, number>; pence: number | null; batches: number; noPolicy?: false
+}>> {
+  const chosen = await prisma.policyOption.findFirst({ where: { ideaId, status: 'CHOSEN' as never }, select: { approach: true, rulesOut: true, chainLink: true } })
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { chosenApproach: true } })
+  const policy = clip(idea?.chosenApproach || chosen?.approach, 1200)
+  if (!policy) return fail('There is no accepted Guiding Policy on this idea yet, so there is nothing to test the actions against. Settle the policy first. Nothing was changed.')
+  const all = await prisma.lexCoherentAction.findMany({
+    where: { ideaId, status: 'LIVE', ...(opts.ids ? { id: { in: opts.ids } } : {}) },
+    select: { id: true, number: true, title: true, practicalStep: true, policyTestVerdict: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+  })
+  if (opts.ids && all.length !== new Set(opts.ids).size) return fail('One of those actions is not on this idea’s live list. Nothing was tested.')
+  const rows = opts.ids ? all : all.filter((r) => !r.policyTestVerdict || r.policyTestVerdict === 'NOT_TESTED')
+  const counts: Record<string, number> = { FITS: 0, DOES_NOT_FIT: 0, CONFLICTS: 0, NOT_TESTED: 0 }
+  if (!rows.length) return { ok: true, data: { tested: 0, counts, pence: 0, batches: 0 } }
+  const user0 = [
+    'THE FINAL GUIDING POLICY',
+    `Policy: ${policy}`,
+    chosen?.rulesOut ? `What it rules out: ${clip(chosen.rulesOut, 700)}` : '',
+    chosen?.chainLink ? `If only part is delivered: ${clip(chosen.chainLink, 700)}` : '',
+    '', 'THE CANDIDATE ACTIONS',
+  ].filter((l, i, a) => l !== '' || a[i - 1] !== '')
+  let tested = 0, pence = 0, unpriced = false, batches = 0
+  for (let i = 0; i < rows.length; i += POLICY_TEST_BATCH) {
+    const batch = rows.slice(i, i + POLICY_TEST_BATCH)
+    const user = [...user0, ...batch.map((r, k) => `[${k}] ${clip(r.title || '', 120)}${r.title ? ': ' : ''}${clip(r.practicalStep, 600)}`)].join('\n')
+    const res = await callModelJson<{ groups?: Array<{ members?: unknown; text?: unknown; verdict?: unknown; reason?: unknown }> }>({
+      model: STRUCTURE_MODEL, system: TEST_SYSTEM + POLICY_TEST_ONE_BY_ONE, user, schema: TEST_SCHEMA as never, maxOutputTokens: 8192, timeoutMs: 120_000,
+      temperature: 0.1, reasoningEffort: 'medium', label: 'action-policy-test', stream: 'lex', pass: 'actions.policy-test', ideaId, userId,
+    })
+    const priced = res.usage.recorded ?? (await recordUsage(res.usage, { stream: 'lex', pass: 'actions.policy-test', ideaId, userId, failed: !res.ok }))
+    if (priced.pence == null) unpriced = true; else pence += priced.pence
+    batches++
+    if (!res.ok) {
+      console.warn('[action-policy-test] failed', { ideaId, reason: (res as { reason: string }).reason, detail: clip((res as { detail: string }).detail, 300) })
+      return fail(`Testing did not finish: ${tested} of ${rows.length} actions were tested and saved; the rest still read “? Not tested”. Press “Test against the policy” again to continue.`)
+    }
+    for (const g of placeGroups(res.value.groups, batch.map((r) => r.title || r.practicalStep))) {
+      for (const mem of g.members) {
+        const row = batch[mem]
+        await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { policyTestVerdict: g.verdict, policyTestReason: g.reason || null } })
+        counts[g.verdict] = (counts[g.verdict] ?? 0) + 1; tested++
+      }
+    }
+  }
+  return { ok: true, data: { tested, counts, pence: unpriced ? null : pence, batches } }
 }
 
 // ── 26-S2 §3 — the step the user is on, and "kept with a note" ───────────────────────────────────────────────

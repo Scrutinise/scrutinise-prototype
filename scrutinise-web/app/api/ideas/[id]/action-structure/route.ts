@@ -66,6 +66,7 @@ export async function POST(req: Request, { params }: Params) {
       case 'findDuplicates': result = { ok: true, data: await S.findDuplicates(id) }; break
       case 'setStep': result = await S.setStep(id, b.step); break
       case 'keepConflict': result = await S.keepConflict(id, b.actionId, b.note); break
+      case 'testPolicy': result = await S.testAgainstPolicy(id, uid, { ids: b.ids }); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

@@ -155,3 +155,20 @@ Built and checked as described in the CHANGE_LOG entry of that push. What the re
 7. **Classify with Lex dropped the "binding links" read** (decision 167 retired the facet) — one fewer thing the model is asked, so a cheaper call; not re-measured (a model run on a scratch idea was not made in this push).
 
 **Not done, said plainly:** the step checklist is at the foot of each list but **not yet in the worklist ("What to do next")**; that block is a different, registry-driven tick-box mechanism and adding a computed checklist to it is its own small piece. The Lex snapshot's actions block now carries the step, so a step change changes the cached prefix (pence). Nothing here has been seen in a browser by me or by Charlie — the render is checked (static markup, 78 assertions incl. a mutation run); the clicks are not.
+
+---
+
+## E. Sprint 1, push B — the policy test, the filter, archived causes (BRIEF_26S2 §4/170, §8, 11a)
+
+**What was measured.** "Test against the policy" on a scratch copy of 452c5ade with four verdicts blanked: **14 actions untested, one call, 3.88p, 37 s** (9 fit, 5 do not fit, 0 conflict). That is the first measurement of this call (n=1), so the button says so. At that rate Charlie's 11 untested rows cost about 3p and the other ~60 untested build-era rows on other ideas about 15p. Not run on any real idea.
+
+**Decisions inside the brief's latitude (say if any is wrong):**
+1. **"Unreviewed" is not defined in BRIEF_26S §5d or here.** I read it as: a proposal of Lex's is waiting for the user (a title, or this step's classification), or the action has never been tested against the policy. The filter's tooltip states the reading.
+2. **"n archived" counts ARCHIVED actions only** (a merge or rebuild did it), not RULED OUT ones (the user did that) — the brief's example is "after a rebuild archives one".
+3. **A removed cause has no Restore.** Archive is for the number's sake; a restore was not asked for.
+4. **`lib/prisma.ts` now filters archived causes from every direct read of `DiagnosisCause`.** I chose a client extension over touching ~30 readers because the next reader written would otherwise forget. Cost: it is a global behaviour of the shared client for one model, and a nested read (`select: { diagnosisCauses }`) is NOT covered — the three in `build.ts` / `build-research.ts` carry the filter themselves. `findUnique` is unaffected (an id names one row).
+5. **No Lex chat tool for "Test against the policy"** — only the screen. The control is in Lex's list so she can point to it.
+
+**⚠ For a decision (the brief: "list it; do not fix without a decision"):** the revise pass (`build.ts:2566`) still hard-deletes the Lex-sourced causes it rewrites, which frees their numbers — the one remaining path that can make "cause 3" mean a different cause. The other kernel hard-deletes are listed in the CHANGE_LOG entry (policy option, cost line, heading, evidence rows, private notes).
+
+**Verification honesty.** Static renders and database round-trips are checked (99 assertions, mutation-tested); the real model ran once for part F. **Nothing was clicked in a browser by me.** Delivery for push A was read back from the running site (`/api/health` = `a95b185`; the string "you are here" is in the live JavaScript chunk `cdd6c0fd954e1761.js`); push B's is below once pushed.

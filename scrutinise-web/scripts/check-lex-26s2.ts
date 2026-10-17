@@ -25,9 +25,13 @@ import ActionsWorkspace from '../components/lex/ActionsWorkspace'
 import ActionsSteps from '../components/lex/ActionsSteps'
 import * as ST from '../lib/lex/action-steps'
 import { computeCanonicalState } from '../lib/lex/state'
+import * as FM from '../lib/lex/field-machine'
+import * as S from '../lib/lex/action-structure'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 
 const LIVE = process.argv.includes('--live')
+/** --live-policy: spend on part F only (the real model tests four untested actions on a scratch idea; a few pence). */
+const LIVE_POLICY = LIVE || process.argv.includes('--live-policy')
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
 function ok(name: string, cond: boolean, detail = '') { ran++; if (cond) { pass++; console.log(`  ✓ ${name}`) } else { fail++; console.log(`  ✗ ${name}${detail ? `\n      ${detail}` : ''}`) } }
 function control(name: string, propertyHolds: boolean) { controls++; if (propertyHolds) { dead++; console.log(`  ✗ DEAD CONTROL — ${name}`) } else console.log(`  · control fired — ${name}`) }
@@ -355,11 +359,125 @@ async function partD() {
   }
 }
 
+// ── E · 11a — a removed cause is ARCHIVED; its number is never reused (BRIEF_26S2 §12 item 8) ─────────────────────────
+
+async function partE() {
+  section('E · archiving a cause keeps its number; the next cause takes one past the highest EVER — a SCRATCH idea')
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  const copy = await scratchCopy('452c5ade', 's26s2e')
+  const id = copy.id
+  try {
+    const before = await prisma.diagnosisCause.findMany({ where: { ideaId: id }, orderBy: { number: 'asc' } })
+    const highest = Math.max(...before.map((c) => c.number ?? 0))
+    const top = before.find((c) => c.number === highest)!
+    // a cause with a sub-cause beneath it, so the subtree goes with it
+    const parent = await FM.addCause(id, { cause: 'A parent cause made for the archive check' })
+    const child = await FM.addCause(id, { cause: 'A sub-cause beneath it', parentCauseId: parent.id })
+    ok('new causes take one past the highest (the trigger)', parent.number === highest + 1 && child.number === highest + 2, `${parent.number}, ${child.number}`)
+    const n = await FM.removeCause(id, parent.id)
+    ok('removing the parent archives it AND the sub-cause beneath it (the database used to cascade-delete the pair)', n === 2)
+    const rows = await prisma.$queryRaw<Array<{ id: string; number: number; archivedAt: Date | null }>>`SELECT "id","number","archivedAt" FROM "DiagnosisCause" WHERE "ideaId" = ${id} AND "id" IN (${parent.id}, ${child.id})`
+    ok('…read back with a plain SQL read (not the product\'s reader): BOTH ROWS ARE STILL THERE, with their numbers, marked archived', rows.length === 2 && rows.every((r) => r.archivedAt != null) && rows.some((r) => r.number === parent.number) && rows.some((r) => r.number === child.number), JSON.stringify(rows))
+    const st = await computeCanonicalState(id)
+    ok('…and out of every list the screen reads: the state\'s causes no longer include them, and it says how many are archived', !st.diagnosisCauses.some((c) => c.id === parent.id || c.id === child.id) && st.archivedCauses === 2)
+    ok('…a direct read by the product\'s client leaves them out; naming `archivedAt` asks for them', (await prisma.diagnosisCause.findMany({ where: { ideaId: id } })).every((c) => c.archivedAt == null) && (await prisma.diagnosisCause.findMany({ where: { ideaId: id, archivedAt: { not: null } } })).length === 2 && (await prisma.diagnosisCause.count({ where: { ideaId: id } })) === before.length)
+    const next = await FM.addCause(id, { cause: 'The cause added after the archive' })
+    ok('THE NEXT CAUSE TAKES ONE PAST THE HIGHEST EVER — not the number the archived pair freed', next.number === highest + 3, `got ${next.number}, highest ever ${highest + 2}`)
+    control('the next cause reusing an archived number (must be FALSE)', next.number === parent.number || next.number === child.number)
+    // a nested read cannot see them either
+    const viaIdea = await prisma.idea.findUnique({ where: { id }, select: { diagnosisCauses: { where: { archivedAt: null }, select: { id: true } } } })
+    ok('a nested read that carries the filter leaves them out (the three build reads do)', !viaIdea!.diagnosisCauses.some((c) => c.id === parent.id))
+    // removing the root cause clears the field
+    const root = before.find((c) => c.isRootCause)
+    if (root && !root.parentCauseId) {
+      await FM.removeCause(id, root.id)
+      const idea = await prisma.idea.findUnique({ where: { id }, select: { rootCause: true } })
+      ok('archiving the chosen root cause still clears the rootCause field', idea?.rootCause == null)
+    } else skip('archiving the root cause clears the field', 'the scratch idea has no top-level root cause')
+    ok('removing a cause that is not on this idea does nothing', (await FM.removeCause(id, '00000000-0000-0000-0000-000000000000')) === 0)
+    void top
+  } finally {
+    await deleteScratch(id)
+  }
+}
+
+// ── F · 170 — "Test against the policy" ───────────────────────────────────────────────────────────────────────
+
+async function partF() {
+  section('F · "Test against the policy" — refusals in words (no spend)' + (LIVE_POLICY ? ' + the REAL model on a scratch idea (SPENDS)' : ''))
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  const copy = await scratchCopy('452c5ade', 's26s2f')
+  const id = copy.id
+  try {
+    const live = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE' }, orderBy: { number: 'asc' } })
+    const four = live.slice(0, 4)
+    // untested rows: blank their verdicts so they read "? Not tested"
+    await prisma.lexCoherentAction.updateMany({ where: { id: { in: four.map((r) => r.id) } }, data: { policyTestVerdict: null, policyTestReason: null } })
+    const bad = await S.testAgainstPolicy(id, owner.id, { ids: ['00000000-0000-0000-0000-000000000000'] })
+    ok('an action that is not on this idea is refused in words, and nothing is tested', !bad.ok && /not on this idea/.test((bad as { error: string }).error))
+    // no accepted policy → refused in words, no model call
+    await prisma.idea.update({ where: { id }, data: { chosenApproach: null } })
+    await prisma.policyOption.deleteMany({ where: { ideaId: id } })
+    const noPol = await S.testAgainstPolicy(id, owner.id, {})
+    ok('with no accepted Guiding Policy it refuses in words — "nothing to test the actions against" — and writes nothing', !noPol.ok && /no accepted Guiding Policy/.test((noPol as { error: string }).error) && (await prisma.lexCoherentAction.count({ where: { id: { in: four.map((r) => r.id) }, policyTestVerdict: { not: null } } })) === 0)
+    control('a refusal that still wrote a verdict (must be FALSE)', (await prisma.lexCoherentAction.count({ where: { id: { in: four.map((r) => r.id) }, policyTestVerdict: { not: null } } })) > 0)
+    if (!LIVE_POLICY) { skip('"Test against the policy" with the real model: a verdict and a reason written, read back, priced', 'needs --live-policy (it spends pence)'); return }
+    // the real model
+    await prisma.idea.update({ where: { id }, data: { chosenApproach: 'No work of any kind, at any scale, in any publicly funded body may begin or continue unless one named person owns it and answers for its outcome.' } })
+    await prisma.policyOption.create({ data: { ideaId: id, approach: 'No work of any kind, at any scale, in any publicly funded body may begin or continue unless one named person owns it and answers for its outcome.', status: 'CHOSEN', kind: 'GUIDING_POLICY', source: 'USER' } as never })
+    const t0 = Date.now()
+    const r = await S.testAgainstPolicy(id, owner.id, {})
+    const secs = Math.round((Date.now() - t0) / 1000)
+    ok('(live) the test runs', r.ok, (r as { error?: string }).error ?? '')
+    if (!r.ok) return
+    const d = (r as { data: { tested: number; counts: Record<string, number>; pence: number | null; batches: number } }).data
+    console.log(`    tested ${d.tested} in ${d.batches} call(s) · ${d.pence == null ? 'unpriced' : `${d.pence.toFixed(2)}p`} · ${secs}s · ${JSON.stringify(d.counts)}`)
+    const back = await prisma.lexCoherentAction.findMany({ where: { id: { in: four.map((r2) => r2.id) } } })
+    ok('(live) every untested action now carries a verdict and a one-line reason, READ BACK from the database', d.tested >= four.length && back.every((b) => ['FITS', 'DOES_NOT_FIT', 'CONFLICTS', 'NOT_TESTED'].includes(b.policyTestVerdict ?? '') && !!b.policyTestReason?.trim()), JSON.stringify(back.map((b) => [b.number, b.policyTestVerdict])))
+    ok('(live) the cost is measured and reported', d.pence != null && d.pence > 0)
+    const again = await S.testAgainstPolicy(id, owner.id, {})
+    ok('(live) running it again tests nothing more — only rows that read "? Not tested" are sent', again.ok && (again as { data: { tested: number } }).data.tested === 0 || (again as { data: { counts: Record<string, number> } }).data.counts.NOT_TESTED > 0)
+    const one = await S.testAgainstPolicy(id, owner.id, { ids: [four[0].id] })
+    ok('(live) "Test again" on one named action re-tests just that action', one.ok && (one as { data: { tested: number } }).data.tested === 1)
+  } finally {
+    await deleteScratch(id)
+  }
+}
+
+// ── G · §8 — the list filter and "· n archived" on a heading, RENDERED ────────────────────────────────────────
+
+function partG() {
+  section('G · §8 — the filter (Unreviewed / Conflicts / Not yet specific) and "· n archived" — RENDERED')
+  const rows = [
+    mkAction(1, { policyTest: { verdict: 'CONFLICTS', reason: 'x', from: [] }, headingId: 'h1' }),
+    mkAction(2, { policyTest: { verdict: 'FITS', reason: 'ok', from: [] }, headingId: 'h1', whoImplements: 'Cabinet Office' }),
+    mkAction(3, { policyTest: { verdict: 'FITS', reason: 'ok', from: [] }, titleProposal: 'A proposed title' }),
+  ]
+  const aside = [{ ...mkAction(9), status: 'ARCHIVED', headingId: 'h1', mergedIntoId: 'a1' }, { ...mkAction(10), status: 'RULED_OUT', headingId: 'h1', ruleOutReason: 'no' }]
+  const withAside = (step: number) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
+    ideaId: 'idea-x', actions: rows as never, setAside: aside as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
+    causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, step: step as never,
+  }))
+  const h1 = withAside(1), h2 = withAside(2)
+  ok('the filter is offered with COUNTS: All actions (3), Unreviewed, Conflicts (1)', /All actions \(3\)/.test(textOf(h1)) && /Conflicts \(1\)/.test(textOf(h1)) && /Unreviewed \(1\)/.test(textOf(h1)), textOf(h1).slice(0, 300))
+  ok('"Not yet specific" is offered from step 2 on, not in step 1', /Not yet specific \(\d\)/.test(textOf(h2)) && !/Not yet specific/.test(textOf(h1)))
+  ok('a heading reads "· 1 archived" after a merge/rebuild archived one of its actions — a RULED-OUT one is not counted as archived', /1 archived/.test(textOf(h1)) && !/2 archived/.test(textOf(h1)) && /data-archived-count/.test(h1))
+  ok('…and in step 1 the word is a button that opens the set-aside block', /<button[^>]*data-archived-count[^>]*>1 archived<\/button>/.test(h1) || /data-archived-count[^>]*>1 archived<\/button>/.test(h1))
+  control('a heading with nothing archived printing "archived" (must be FALSE)', /archived/.test(textOf(renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: rows as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, step: 1 as never })))))
+  ok('the Not-tested rows offer the test: the toolbar button counts them', /Test against the policy \(0 untested\)|Test against the policy/.test(textOf(renderWs(1, [mkAction(1), mkAction(2)]))) && /Test against the policy \(2 untested\)/.test(textOf(renderWs(1, [mkAction(1), mkAction(2)]))))
+  control('the button offered when every action is already tested (must be FALSE)', /Test against the policy \(/.test(textOf(renderWs(1, [mkAction(1, { policyTest: { verdict: 'FITS', reason: 'ok', from: [] } })]))))
+}
+
 async function main() {
   partA()
   await partB()
   partC()
   await partD()
+  await partE()
+  await partF()
+  partG()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

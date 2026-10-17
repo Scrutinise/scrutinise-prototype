@@ -3433,6 +3433,7 @@ async function causesCommentaryPass(c: PassContext): Promise<PassOutcome> {
     select: {
       title: true, challenge: true, summaryDiagnosis: true,
       diagnosisCauses: {
+        where: { archivedAt: null },
         select: { cause: true, whyPersisted: true, classification: true, parentCauseId: true, id: true },
         orderBy: { createdAt: 'asc' },
       },
@@ -3506,7 +3507,7 @@ export async function kernelText(ideaId: string): Promise<string> {
       title: true, challenge: true, summaryDiagnosis: true, rootCause: true, pivotalObstacle: true,
       chosenApproach: true, summaryGuidingPolicy: true, summaryCoherentActions: true,
       legalLandscape: true, whoAffectedImpactCost: true,
-      diagnosisCauses: { select: { cause: true, classification: true } },
+      diagnosisCauses: { where: { archivedAt: null }, select: { cause: true, classification: true } },
       lexActions: { where: { status: 'LIVE' }, select: { practicalStep: true, whoImplements: true } },
     },
   })

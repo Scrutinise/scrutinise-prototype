@@ -26,7 +26,7 @@ import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
 import {
   AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODE_LABEL,
-  actionLabel, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
+  actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
 } from '@/lib/lex/action-facets'
 import {
   STEPS, STEP_NUMBERS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
@@ -95,6 +95,17 @@ const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): Actions
   ...(p.targetCauseIds || p.avenue !== undefined ? [1 as const] : []), ...(p.sequence !== undefined || p.beforeIds ? [4 as const] : []),
 ]
 
+/** 26-S §5d / 26-S2 §8 — the list filter. `Unreviewed` is READ NARROWLY (the brief does not define it): a proposal of Lex's is waiting for the user (a title or a classification for this step), or the action was never tested against the policy. `Not yet specific` exists from step 2 on. */
+type Filter = 'all' | 'unreviewed' | 'conflicts' | 'notSpecific'
+const FILTER_LABEL: Record<Filter, string> = { all: 'All actions', unreviewed: 'Unreviewed', conflicts: 'Conflicts', notSpecific: 'Not yet specific' }
+const isUntested = (a: Pick<CanonicalAction, 'policyTest'>): boolean => !a.policyTest || a.policyTest.verdict === 'NOT_TESTED'
+/** What a finished policy test says, in words, with what it cost (170: the price is measured, never a guess). */
+const testedWords = (r: { tested: number; counts: Record<string, number>; pence: number | null } | null): string => {
+  if (!r || r.tested === 0) return 'Nothing needed testing: every action already has a verdict.'
+  const c = r.counts
+  return `Tested ${r.tested} action${r.tested === 1 ? '' : 's'} against your Guiding Policy: ${c.FITS ?? 0} fit, ${c.DOES_NOT_FIT ?? 0} do not fit, ${c.CONFLICTS ?? 0} conflict${c.NOT_TESTED ? `, ${c.NOT_TESTED} could not be tested` : ''}. ${r.pence == null ? 'The price was not recorded.' : `It cost ${r.pence < 1 ? r.pence.toFixed(2) : r.pence.toFixed(1)}p (measured on this run).`}`
+}
+
 const cost = (c: CanonicalAction['implementationCost']): string => {
   if (!c || (c.low == null && c.high == null)) return ''
   const f = (n: number) => `£${Math.round(n).toLocaleString()}`
@@ -161,7 +172,6 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const unparked = useMemo(() => live.filter((a) => !a.parked), [live])
   const parked = useMemo(() => live.filter((a) => a.parked), [live])
   const causeLite = useMemo(() => causes.map((c) => ({ id: c.id, number: c.number ?? null, cause: c.cause })), [causes])
-  const groups = useMemo(() => groupActions(unparked, mode, { headings, causes: causeLite }), [unparked, mode, headings, causeLite])
   const untitled = live.filter((a) => !a.title?.trim() && !a.titleProposal).length
   const titleProposals = live.filter((a) => a.titleProposal).length
   const facetProposals = live.filter((a) => a.facetProposal && proposalStep(a.facetProposal).includes(step)).length
@@ -175,6 +185,22 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   useEffect(() => { try { setDupesSig(window.localStorage.getItem(sigKey)) } catch { /* private window: it reads as not run, which is true */ } setSigReady(true) }, [sigKey])
   const markDuplicatesChecked = () => { try { window.localStorage.setItem(sigKey, listSig) } catch { /* ditto */ } setDupesSig(listSig) }
   const duplicatesChecked = sigReady && dupesSig === listSig
+  const untestedCount = unparked.filter(isUntested).length
+  // ── the list filter (§8) ──
+  const [filterAsked, setFilter] = useState<Filter>('all')
+  const filter: Filter = filterAsked === 'notSpecific' && step === 1 ? 'all' : filterAsked
+  const matches: Record<Filter, (a: CanonicalAction) => boolean> = {
+    all: () => true,
+    unreviewed: (a) => !!a.titleProposal || (!!a.facetProposal && proposalStep(a.facetProposal).includes(step)) || isUntested(a),
+    conflicts: (a) => a.policyTest?.verdict === 'CONFLICTS',
+    notSpecific: (a) => !specificEnough(a),
+  }
+  const filterCounts: Record<Filter, number> = { all: unparked.length, unreviewed: unparked.filter(matches.unreviewed).length, conflicts: unparked.filter(matches.conflicts).length, notSpecific: unparked.filter(matches.notSpecific).length }
+  const filterKeys: Filter[] = step === 1 ? ['all', 'unreviewed', 'conflicts'] : ['all', 'unreviewed', 'conflicts', 'notSpecific']
+  const shown = useMemo(() => unparked.filter(matches[filter]), [unparked, filter, step]) // eslint-disable-line react-hooks/exhaustive-deps
+  // a heading reads `· n archived` after a rebuild or a merge archives one of its actions (they sit under `Ruled out and merged away`)
+  const archivedByHeading = useMemo(() => { const m = new Map<string, number>(); for (const a of setAside) if (a.status === 'ARCHIVED' && a.headingId) m.set(a.headingId, (m.get(a.headingId) ?? 0) + 1); return m }, [setAside])
+  const groups = useMemo(() => groupActions(shown, mode, { headings, causes: causeLite }), [shown, mode, headings, causeLite])
   const checklist = useMemo(() => stepChecklist(step, unparked, { duplicatesChecked }, { actionIdsWithCostLines: costLineIds }), [step, unparked, duplicatesChecked, costLineIds])
 
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -395,6 +421,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             if (r.ok) { setDupes(r.result); markDuplicatesChecked() }
           }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Find duplicates</button>
         )}
+        {step === 1 && untestedCount > 0 && (
+          <button disabled={disabled} title="Runs the same test the import uses, on the actions that read ? Not tested. Measured once on a real idea: 14 actions for 3.9p in about 40 seconds (n=1). The price of this run is shown when it finishes." onClick={() => void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords)}
+            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Test against the policy ({untestedCount} untested)</button>
+        )}
       </div>
 
       {step === 1 && (
@@ -489,6 +519,15 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {step === 1 && pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
       {step === 1 && dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
 
+      {view === 'list' && unparked.length > 0 && (
+        <label className="text-[11px] text-zinc-600 flex flex-wrap items-center gap-1" data-list-filter title="Unreviewed: a proposal of Lex’s is waiting for you (a title, or this step’s classification), or the action has not been tested against the policy.">Show
+          <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs" aria-label="Filter the list">
+            {filterKeys.map((k) => <option key={k} value={k}>{FILTER_LABEL[k]} ({filterCounts[k]})</option>)}
+          </select>
+          {filter !== 'all' && <span className="font-semibold text-zinc-800">{shown.length} of {unparked.length} shown{shown.length === 0 ? ' — none match' : ''}</span>}
+        </label>
+      )}
+
       {view === 'list' && (
         <>
           {live.length === 0 && <p className="text-[11px] text-zinc-400">No actions yet.</p>}
@@ -497,7 +536,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               const h = g.key.startsWith('h:') ? headingById.get(g.key.slice(2)) : undefined
               return (
                 <section key={g.key} aria-label={g.label}>
-                  <GroupHeader g={g} h={step === 1 ? h : undefined} ops={ops} disabled={disabled} />
+                  <GroupHeader g={g} h={step === 1 ? h : undefined} ops={ops} disabled={disabled} archived={h ? archivedByHeading.get(h.id) ?? 0 : 0}
+                    onShowArchived={step === 1 ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
                 </section>
@@ -523,7 +563,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
 
       {step === 1 && setAside.length > 0 && (
-        <CollapsedBlock title="Ruled out and merged away" count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
+        <CollapsedBlock id="set-aside-block" title="Ruled out and merged away" count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
           <ul className="space-y-1">{setAside.map((a) => (
             <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
@@ -562,6 +602,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
   }
   const sources = a.policyTest ? provenanceLine(a.policyTest.from) : ''
   const headingName = a.headingId ? ctx.headingName(a.headingId) : null
+  // 170 — the same test as the import's, on this one action (a first test, or again after an edit)
+  const testOne = () => void ops.run('testPolicy', { ids: [a.id] }, 'Lex is testing it against your Guiding Policy', testedWords)
   const saveKeep = async (note: string | null) => {
     const r = await ops.run('keepConflict', { actionId: a.id, note }, undefined, () => note ? `Saved: #${a.number ?? '?'} is kept, with your note.` : `Saved: the note on #${a.number ?? '?'} is cleared.`)
     if (r.ok && !note) setKeepNote('')
@@ -571,6 +613,14 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
   const section: Record<ActionsStep, ReactNode> = {
     1: (
       <div className="space-y-2">
+        {/* 170 — an action the consolidation never tested says so in words, and offers the test. */}
+        {!a.policyTest && (
+          <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-not-tested-box>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
+            <p className="mt-0.5 text-zinc-900"><span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI.NOT_TESTED.glyph}</span> {POLICY_VERDICT_UI.NOT_TESTED.word}.</span> No policy test has been run on this action yet.</p>
+            <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Test against the policy</button></p>
+          </div>
+        )}
         {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
         {a.policyTest && (
           <div className={`rounded bg-white p-2 text-xs ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
@@ -579,6 +629,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
               <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
               {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
             </p>
+            <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{a.policyTest.verdict === 'NOT_TESTED' ? 'Test against the policy' : 'Test again'}</button></p>
             {/* 26-S2 §3c — an action the policy conflicts with is ruled out, edited and re-tested, or KEPT WITH A NOTE. */}
             {a.policyTest.verdict === 'CONFLICTS' && (
               <div className="mt-1.5 space-y-1" data-keep-note>
@@ -707,7 +758,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
 
 // ── pieces ───────────────────────────────────────────────────────────────────────────────────────────────
 
-function GroupHeader<T>({ g, h, ops, disabled }: { g: { key: string; label: string; colourKey?: string; hidden?: boolean; actions: T[] }; h?: CanonicalActionHeading; ops: ReturnType<typeof useOps>; disabled: boolean }) {
+function GroupHeader<T>({ g, h, ops, disabled, archived = 0, onShowArchived }: { g: { key: string; label: string; colourKey?: string; hidden?: boolean; actions: T[] }; h?: CanonicalActionHeading; ops: ReturnType<typeof useOps>; disabled: boolean; archived?: number; onShowArchived?: () => void }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(g.label)
   const c = g.colourKey ? colourFor(g.colourKey) : null
@@ -723,7 +774,9 @@ function GroupHeader<T>({ g, h, ops, disabled }: { g: { key: string; label: stri
       ) : (
         <h4 className="text-sm font-semibold text-zinc-900">{g.label}</h4>
       )}
-      <span className="text-[11px] text-zinc-500">{g.actions.length} action{g.actions.length === 1 ? '' : 's'}{c ? ` · ${c.name}` : ''}</span>
+      <span className="text-[11px] text-zinc-500">{g.actions.length} action{g.actions.length === 1 ? '' : 's'}{c ? ` · ${c.name}` : ''}
+        {archived > 0 && (<> · {onShowArchived ? <button type="button" onClick={onShowArchived} className="underline font-medium text-zinc-700" data-archived-count>{archived} archived</button> : <span data-archived-count>{archived} archived</span>}</>)}
+      </span>
       {h && !editing && (
         <span className="ml-auto flex flex-wrap gap-2 items-center text-[11px]">
           <button onClick={() => setEditing(true)} className="underline text-zinc-600">Rename</button>
@@ -738,9 +791,9 @@ function GroupHeader<T>({ g, h, ops, disabled }: { g: { key: string; label: stri
   )
 }
 
-function CollapsedBlock({ title, count, hint, open, onToggle, children }: { title: string; count: number; hint: string; open: boolean; onToggle: () => void; children: ReactNode }) {
+function CollapsedBlock({ id, title, count, hint, open, onToggle, children }: { id?: string; title: string; count: number; hint: string; open: boolean; onToggle: () => void; children: ReactNode }) {
   return (
-    <section className="rounded-lg border border-zinc-200">
+    <section id={id} className="rounded-lg border border-zinc-200">
       <button type="button" onClick={onToggle} aria-expanded={open} className="w-full flex items-baseline gap-2 px-2.5 py-1.5 text-left">
         <span className="text-sm font-semibold text-zinc-800">{title}</span><span className="text-[11px] text-zinc-500">{count}</span>
         <span className="text-[11px] text-zinc-400 flex-1">{hint}</span><span className="text-[11px] text-zinc-500">{open ? 'hide −' : 'show +'}</span>

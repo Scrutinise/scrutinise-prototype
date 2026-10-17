@@ -819,15 +819,28 @@ export async function updateCause(
   })
 }
 
-export async function removeCause(ideaId: string, causeId: string) {
-  const row = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true, isRootCause: true } })
-  if (!row) return
-  await prisma.diagnosisCause.delete({ where: { id: causeId } })
-  // If the deleted cause was the chosen root cause, clear the rootCause field back to EMPTY.
-  if (row.isRootCause) {
+/**
+ * 26-S2 §11a (decision 175) — REMOVING A CAUSE ARCHIVES IT (and the sub-causes under it, which the database used to cascade-delete): the row
+ * stays, so its number is never reused and "cause 7" cannot come to mean a different cause. Returns how many were archived (0 = not found).
+ */
+export async function removeCause(ideaId: string, causeId: string): Promise<number> {
+  const row = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true } })
+  if (!row) return 0
+  const ids = [causeId]
+  let frontier = [causeId]
+  while (frontier.length) {
+    const kids = await prisma.diagnosisCause.findMany({ where: { ideaId, parentCauseId: { in: frontier } }, select: { id: true } })
+    frontier = kids.map((k) => k.id).filter((k) => !ids.includes(k))
+    ids.push(...frontier)
+  }
+  const wasRoot = !!(await prisma.diagnosisCause.findFirst({ where: { ideaId, id: { in: ids }, isRootCause: true }, select: { id: true } }))
+  await prisma.diagnosisCause.updateMany({ where: { ideaId, id: { in: ids } }, data: { archivedAt: new Date(), isRootCause: false } })
+  // If the removed cause (or one beneath it) was the chosen root cause, clear the rootCause field back to EMPTY.
+  if (wasRoot) {
     await setStatus(ideaId, 'rootCause', 'EMPTY', { value: null, proposal: null })
     await prisma.idea.update({ where: { id: ideaId }, data: { rootCause: null } })
   }
+  return ids.length
 }
 
 /** Mark exactly one cause as the root cause (§7.1 field 4) and accept the rootCause field. */

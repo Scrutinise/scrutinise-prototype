@@ -55,6 +55,8 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   // 26-S2 §3 — the step bar (decision 166) and "kept with a note" for an action the policy test says CONFLICTS (§3c).
   z.object({ op: z.literal('setStep'), step: z.number().int().min(1).max(4) }),
   z.object({ op: z.literal('keepConflict'), actionId: z.string(), note: z.string().max(LIMITS.ruleOutReason).nullable() }),
+  // 170 — "Test against the policy": no `ids` = every action that reads "? Not tested"; `ids` = test (or re-test) those.
+  z.object({ op: z.literal('testPolicy'), ids: ids.optional() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -70,7 +72,7 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   acceptFacets: 'Accepting the proposed classification', dismissFacets: 'Dismissing the proposed classification',
   proposeFacets: '“Classify with Lex”', suggestHeadings: '“Suggest headings from my guiding policy”',
   judgeMerge: '“Compare”', applyMerge: '“Merge”', undoMerge: '“Undo merge”', findDuplicates: '“Find duplicates”',
-  setStep: 'Moving to that step', keepConflict: '“Keep it, with a note”',
+  setStep: 'Moving to that step', keepConflict: '“Keep it, with a note”', testPolicy: '“Test against the policy”',
 }
 
 /** And the words for the inputs those controls send. */

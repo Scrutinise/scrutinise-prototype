@@ -336,6 +336,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     setAsideActions,
     actionHeadings,
     actionsStep: clampStep(idea.actionsStep),
+    archivedCauses: await prisma.diagnosisCause.count({ where: { ideaId, archivedAt: { not: null } } }),
     costLines,
     benchmarks,
     userProfile: {

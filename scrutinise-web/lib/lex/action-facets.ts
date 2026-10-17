@@ -36,7 +36,7 @@ export interface PolicyTest { verdict: PolicyVerdict; reason: string | null; fro
 /** An action the consolidation never tested (the user's own, or from another route) says so in words — it is never shown as fitting. */
 export const NOT_IN_POLICY_TEST = 'Not part of the consolidation’s policy test'
 /** 26-S browser pass C — an action with NO recorded policy test reads "? Not tested" in words, never blank. */
-export const NOT_TESTED_TITLE = 'No policy test has been run on this action yet. “Test against the policy” comes in the next step.'
+export const NOT_TESTED_TITLE = 'No policy test has been run on this action yet. Open it and press “Test against the policy”, or press that button above the list to test every untested action at once.'
 
 /** "grok-4.7" → "Grok", "claude-opus-5" → "Claude", "gemini-2.5-pro" → "Gemini", "gpt-5" → "GPT". The family, never the version. */
 export function modelFamily(model: string): string {
