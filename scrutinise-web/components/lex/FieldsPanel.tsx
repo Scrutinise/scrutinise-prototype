@@ -1630,7 +1630,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
   field: CanonicalField; actions: CanonicalAction[]; benchmarks: CanonicalBenchmark[]
   costLines: CanonicalCostLine[]; busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi
   /** 26-Q — the workspace needs the idea to reach its route, and the state it reads. */
-  ideaId?: string; setAside: CanonicalAction[]; headings: CanonicalActionHeading[]; causes: CanonicalCause[]; onChanged?: () => void
+  ideaId?: string; setAside: CanonicalAction[]; headings: CanonicalActionHeading[]; causes: CanonicalCause[]; onChanged?: () => void | Promise<boolean | void>
 }) {
   const [step, setStep] = useState('')
   const terminal = isTerminal(field)
@@ -1694,7 +1694,7 @@ export default function FieldsPanel({
   /** 26-N - take Lex's redraft (offered beside the user's words) into the editor, still pending. */
   onEditRedraft?: (key: string) => void
   /** 26-M addendum — an accepted suggestion became a real action; the parent re-reads the state. */
-  onSuggestionChanged?: () => void
+  onSuggestionChanged?: () => void | Promise<boolean | void>
   pages: CanonicalState['pages']
   causes: CanonicalCause[]
   policyOptions: CanonicalPolicyOption[]

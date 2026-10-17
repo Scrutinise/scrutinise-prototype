@@ -44,6 +44,7 @@ export async function POST(req: Request, { params }: Params) {
       case 'updateHeading': result = await S.updateHeading(id, b.headingId, { name: b.name, colourKey: b.colourKey, hidden: b.hidden }); break
       case 'deleteHeading': result = await S.deleteHeading(id, b.headingId); break
       case 'assignHeading': result = await S.assignHeading(id, b.actionIds, b.headingId); break
+      case 'assignToNewHeading': result = await S.assignToNewHeading(id, b.actionIds, b.name); break
       case 'setTitle': result = await S.setTitle(id, b.actionId, b.title); break
       case 'acceptTitles': result = await S.acceptTitleProposals(id, b.ids); break
       case 'dismissTitles': result = await S.dismissTitleProposals(id, b.ids); break

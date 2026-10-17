@@ -25,7 +25,8 @@ import {
 /** Pro-class: titles and facets are read by the user as Lex's judgement, and a long list is one call per ~50 actions. */
 export const STRUCTURE_MODEL = 'gemini-2.5-pro'
 const BATCH = 45
-const TITLE_MAX = 110
+import { LIMITS } from './input-limits'
+const TITLE_MAX = LIMITS.actionTitle
 
 export type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string }
 const fail = (error: string): { ok: false; error: string } => ({ ok: false, error })
@@ -63,7 +64,7 @@ export async function resolveActions(ideaId: string, refs: Array<string | number
 // ── headings (§3) ──────────────────────────────────────────────────────────────────────────────────────────
 
 export async function createHeading(ideaId: string, name: string, colourKey?: string): Promise<Result<{ id: string; name: string; created: boolean }>> {
-  const n = clip(name, 60)
+  const n = clip(name, LIMITS.headingName)
   if (!n) return fail('A heading needs a name.')
   const existing = await prisma.actionHeading.findMany({ where: { ideaId }, select: { id: true, name: true, colourKey: true, orderIndex: true } })
   const same = existing.find((h) => h.name.toLowerCase() === n.toLowerCase())
@@ -99,7 +100,19 @@ export async function assignHeading(ideaId: string, actionIds: string[], heading
     if (!h) return fail('That heading is not on this idea.')
   }
   const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, id: { in: actionIds }, status: 'LIVE' }, data: { headingId } })
+  // 26-S browser pass: a write that moved NOTHING is a refusal in words, never a quiet success.
+  if (r.count === 0) return fail('None of those actions could be moved — they are no longer in the live list. Nothing was changed.')
   return { ok: true, data: { assigned: r.count } }
+}
+
+/** "+ New heading…" on the bulk bar: make the heading (or find the one with that name) and put the selected rows on it. One request. */
+export async function assignToNewHeading(ideaId: string, actionIds: string[], name: string): Promise<Result<{ headingId: string; name: string; created: boolean; assigned: number }>> {
+  const made = await createHeading(ideaId, name)
+  if (!made.ok) return fail((made as { error: string }).error)
+  const head = (made as { ok: true; data: { id: string; name: string; created: boolean } }).data
+  const moved = await assignHeading(ideaId, actionIds, head.id)
+  if (!moved.ok) return fail(`${head.created ? `The heading “${head.name}” was made, but` : 'The rows could not be moved:'} ${(moved as { error: string }).error}`)
+  return { ok: true, data: { headingId: head.id, name: head.name, created: head.created, assigned: (moved as { ok: true; data: { assigned: number } }).data.assigned } }
 }
 
 // ── titles (§1) ────────────────────────────────────────────────────────────────────────────────────────────
@@ -187,7 +200,7 @@ export async function reorder(ideaId: string, orderedIds: string[]): Promise<Res
 }
 
 export async function park(ideaId: string, ids: string[], reason?: string | null): Promise<Result<{ parked: number }>> {
-  const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, id: { in: ids }, status: 'LIVE' }, data: { parked: true, parkedReason: clip(reason, 400) || null } })
+  const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, id: { in: ids }, status: 'LIVE' }, data: { parked: true, parkedReason: clip(reason, LIMITS.ruleOutReason) || null } })
   return { ok: true, data: { parked: r.count } }
 }
 export async function unpark(ideaId: string, ids: string[]): Promise<Result<{ unparked: number }>> {
@@ -196,7 +209,7 @@ export async function unpark(ideaId: string, ids: string[]): Promise<Result<{ un
 }
 
 export async function ruleOut(ideaId: string, ids: string[], reason: string): Promise<Result<{ ruledOut: number }>> {
-  const why = clip(reason, 600)
+  const why = clip(reason, LIMITS.ruleOutReason)
   if (why.length < 3) return fail('Ruling an action out needs a reason — it is kept, with the reason, so you can bring it back.')
   const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, id: { in: ids }, status: 'LIVE' }, data: { status: 'RULED_OUT', ruleOutReason: why, parked: false } })
   return { ok: true, data: { ruledOut: r.count } }

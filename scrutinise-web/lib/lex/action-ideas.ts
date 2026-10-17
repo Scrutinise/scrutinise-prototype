@@ -25,6 +25,7 @@ import { prisma } from '@/lib/prisma'
 import { callModelJson } from './model-call'
 import { recordUsage } from './spend-ledger'
 import { addAction } from './field-machine'
+import { modelFamily } from './action-facets'
 
 export type Verdict = 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'
 const VERDICTS: Verdict[] = ['FITS', 'DOES_NOT_FIT', 'CONFLICTS']
@@ -37,7 +38,8 @@ export type IdeaSource =
 
 /** Words a reader sees for a source — the draft's model, or the policy an action was parked with. */
 export function describeSource(s: IdeaSource): string {
-  if (s.kind === 'COMMENT') return s.model ? `your comment on the ${s.model} draft` : 'your general comment on the drafts'
+  // 26-S browser pass E (17 Oct): "your comment during consolidation (Grok draft)" — the family, not the version string.
+  if (s.kind === 'COMMENT') return s.model ? `your comment during consolidation (${modelFamily(s.model)} draft)` : 'your general comment during consolidation'
   return s.kind === 'DRAFT'
     ? `${s.model} draft`
     : `parked with policy ${s.parkedWithNumber ?? '?'}${s.number != null ? ` (item ${s.number})` : ''}`

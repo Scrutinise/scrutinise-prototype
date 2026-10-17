@@ -930,7 +930,7 @@ export default function BuildIdeaClient(
         <FeedbackDialog
           ideaId={ideaId}
           stage="BUILD"
-          initialSurface="OTHER"
+          initialSurface="CHOOSE"
           onClose={() => setFeedbackOpen(false)}
         />
       )}

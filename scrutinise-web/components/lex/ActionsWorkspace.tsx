@@ -22,9 +22,11 @@ import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
 import type { ActionStructureRequest, ActionStructureOp } from '@/lib/lex/action-structure-schema'
 import { OP_WORDS } from '@/lib/lex/action-structure-schema'
 import { explainFailure } from '@/lib/api-rejection'
+import { LIMITS } from '@/lib/lex/input-limits'
+import BoundedInput from './BoundedInput'
 import {
   AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODES, GROUP_MODE_LABEL,
-  actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, type GroupMode,
+  actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
 } from '@/lib/lex/action-facets'
 
 // ── talking to the route ─────────────────────────────────────────────────────────────────────────────────
@@ -34,16 +36,24 @@ interface OpResult<T = unknown> { ok: boolean; result: T | null; error: string |
 /** The body of a call, typed against the route's own schema: `ids` where the route wants `actionIds` is a compile error. */
 type Bodies = { [R in ActionStructureRequest as R['op']]: Omit<R, 'op'> }
 
-function useOps(ideaId: string, onChanged: () => void) {
+/**
+ * ⚠⚠ 26-S BROWSER PASS (17 Oct 2026) — THE RULE FOR EVERY WRITE ON THIS SCREEN:
+ *   1. it RE-READS the list before it says anything — `onChanged()` is awaited, and if the re-read fails that is said, in words;
+ *   2. a refusal renders as "Not saved: <reason>" with an OK button, in the strip that stays at the top of the viewport
+ *      (the old message sat in the toolbar, above the fold of a 100-row list, so a rejection looked like nothing happening);
+ *   3. a success says WHAT happened ("#12 is now under “Legislation”") — a row that jumps to another group otherwise looks like it vanished.
+ */
+function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
   // `K` is inferred from `op`, so `body` is checked against THAT op's schema. The result is untyped (`any`); the few callers
   // that read it annotate it where they use it.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const run = useCallback(async <K extends keyof Bodies>(op: K, body: Bodies[K], label?: string): Promise<OpResult<any>> => {
+  const run = useCallback(async <K extends keyof Bodies>(op: K, body: Bodies[K], label?: string, said?: (result: any) => string | null): Promise<OpResult<any>> => {
     type T = any // eslint-disable-line @typescript-eslint/no-explicit-any
-    setBusy(label ?? op); setError(null)
+    setBusy(label ?? op); setError(null); setSaved(null)
     const url = `/api/ideas/${ideaId}/action-structure`
     const sent = { op, ...body }
     const control = OP_WORDS[op]
@@ -51,16 +61,18 @@ function useOps(ideaId: string, onChanged: () => void) {
       const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sent) })
       const j = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: T; error?: unknown }
       // §30 — every rejection says which input and why. `explainFailure` words even an old-shape body.
-      const err = j.error || !res.ok ? explainFailure(j, res.status, control) : null
+      const err = j.error || !res.ok ? `Not saved: ${explainFailure(j, res.status, control)}` : null
       if (err) { setError(err); return { ok: false, result: null, error: err } }
-      onChanged()
+      const fresh = await onChanged()
+      if (fresh === false) setError(`Saved, but the list could not be re-read from the server, so what is on screen may be out of date. Reload the page to see it.`)
+      else if (said) setSaved(said((j.result ?? null) as T | null))
       return { ok: true, result: (j.result ?? null) as T | null, error: null }
     } catch (e) {
-      const m = `${control} could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`
+      const m = `Not saved: ${control} could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`
       setError(m); return { ok: false, result: null, error: m }
     } finally { setBusy(null) }
   }, [ideaId, onChanged])
-  return { run, busy, error, note, setNote, clearError: () => setError(null) }
+  return { run, busy, error, saved, setSaved, note, setNote, clearError: () => setError(null) }
 }
 
 const FACET_WORD = { avenue: 'Avenue', sequence: 'Sequence', link: 'Link', causes: 'Causes', before: 'Comes before' }
@@ -84,7 +96,8 @@ interface Props {
   headings: CanonicalActionHeading[]
   causes: CanonicalCause[]
   busy: boolean
-  onChanged: () => void
+  /** Re-reads the list. Resolves `false` when the re-read failed (so the screen can say so); anything else is a success. */
+  onChanged: () => void | Promise<boolean | void>
   /** The full existing action card (edit, costs, cost lines) — shown in place when a title is opened. */
   renderFull: (a: CanonicalAction) => ReactNode
   /** Ids of rows to render already open. Used by the render checks, so that what an OPENED row shows is read from the output. */
@@ -104,6 +117,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const [dupes, setDupes] = useState<null | { pairs: Array<{ a: string; b: string; aNumber: number | null; bNumber: number | null; aLabel: string; bLabel: string; score: number; sharedCauseIds: string[] }>; ignoredUniversalCauses: Array<{ number: number; cause: string }> }>(null)
   const [pair, setPair] = useState<null | { a: number; b: number; mode: 'merge' | 'compare' }>(null)
   const [reason, setReason] = useState('')
+  const [bulkNewOpen, setBulkNewOpen] = useState(false)
+  const [bulkNewName, setBulkNewName] = useState('')
   const [showParked, setShowParked] = useState(false)
   const [showSetAside, setShowSetAside] = useState(false)
   const disabled = parentBusy || !!ops.busy
@@ -166,10 +181,32 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   // ── bulk ──
   // Typed per control (no generic `bulk(op, extra)`: a helper that spreads `{ ids }` into every op is exactly how the
   // bulk "Assign to heading" came to send `ids` where the route wants `actionIds`).
-  const clearIfDone = (r: { ok: boolean }) => { if (r.ok) setSelected(new Set()) }
-  const bulkAssign = (headingId: string | null) => ops.run('assignHeading', { actionIds: selIds, headingId }).then(clearIfDone)
-  const bulkPark = () => ops.run('park', { ids: selIds, reason: reason.trim() || null }).then(clearIfDone)
-  const bulkRuleOut = () => ops.run('ruleOut', { ids: selIds, reason: reason.trim() }).then(clearIfDone)
+  const clearIfDone = (r: { ok: boolean }) => { if (r.ok) { setSelected(new Set()); setReason('') } }
+  const movedWords = (n: number, asked: number, to: string) => `${n} action${n === 1 ? '' : 's'} ${to}${n < asked ? ` (${asked - n} of the ${asked} selected ${asked - n === 1 ? 'was' : 'were'} not in the live list)` : ''}.`
+  const headingName = (id: string | null) => (id ? headings.find((h) => h.id === id)?.name ?? 'that heading' : null)
+  const bulkAssign = (headingId: string | null) => ops.run('assignHeading', { actionIds: selIds, headingId }, undefined,
+    (r: { assigned: number }) => `Saved: ${movedWords(r.assigned, selIds.length, headingId ? `now under “${headingName(headingId)}”` : 'now have no heading')}`).then(clearIfDone)
+  const bulkNewHeading = async () => {
+    const name = bulkNewName.trim()
+    if (!name) return
+    const r = await ops.run('assignToNewHeading', { actionIds: selIds, name }, 'making the heading and moving the rows',
+      (x: { name: string; created: boolean; assigned: number }) => `Saved: ${x.created ? `heading “${x.name}” made; ` : `heading “${x.name}” already existed; `}${movedWords(x.assigned, selIds.length, `moved onto it`)}`)
+    clearIfDone(r)
+    if (r.ok) { setBulkNewOpen(false); setBulkNewName('') }
+  }
+  const bulkPark = () => ops.run('park', { ids: selIds, reason: reason.trim() || null }, undefined,
+    (r: { parked?: number }) => `Saved: ${r?.parked ?? selIds.length} action${(r?.parked ?? selIds.length) === 1 ? '' : 's'} moved to “Later phase”.`).then(clearIfDone)
+  const bulkRuleOut = () => ops.run('ruleOut', { ids: selIds, reason: reason.trim() }, undefined,
+    (r: { ruledOut: number }) => `Saved: ${r.ruledOut} action${r.ruledOut === 1 ? '' : 's'} ruled out, with your reason. They are kept under “Ruled out and merged away”; Restore brings one back.`).then(clearIfDone)
+  const addHeading = async () => {
+    const name = newHeading.trim()
+    if (!name) return
+    const r = await ops.run('createHeading', { name }, 'adding the heading',
+      (x: { name: string; created: boolean }) => x.created
+        ? `Saved: heading “${x.name}” added. It is in the list with no actions on it yet — use a row’s heading menu, or select rows and “Assign to heading”.`
+        : `Nothing added: you already have a heading called “${x.name}”.`)
+    if (r.ok) setNewHeading('')
+  }
 
   // ── one line ──
   const renderRow = (a: CanonicalAction) => {
@@ -177,8 +214,22 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     const c = h ? colourFor(h.colourKey) : null
     const isOpen = open.has(a.id)
     const originals = setAside.filter((s) => s.mergedIntoId === a.id)
+    // 26-S browser pass D — an OPENED record is ONE box: a 2px border and a light grey fill (border and fill, never colour alone).
+    const boxClass = isOpen ? 'border-2 border-zinc-900 bg-zinc-100' : `border bg-white ${dragging === a.id ? 'border-zinc-900 shadow' : 'border-zinc-200'}`
+    const headingSelect = (
+      <select value={a.headingId ?? ''} disabled={disabled} aria-label={`Heading for action ${a.number ?? ''}`}
+        onChange={(e) => {
+          const to = e.target.value || null
+          void ops.run('assignHeading', { actionIds: [a.id], headingId: to }, undefined,
+            () => `Saved: #${a.number ?? '?'} ${to ? `is now under “${headingName(to)}”` : 'now has no heading'}.`)
+        }}
+        className="text-[11px] border border-zinc-300 rounded px-1 py-0.5 max-w-[9rem] shrink-0 bg-white">
+        <option value="">No heading</option>
+        {headings.map((x) => <option key={x.id} value={x.id}>{colourFor(x.colourKey).glyph} {x.name}</option>)}
+      </select>
+    )
     return (
-      <li key={a.id} data-action-id={a.id} className={`rounded-lg border bg-white ${dragging === a.id ? 'border-zinc-900 shadow' : 'border-zinc-200'}`} style={c ? { borderLeft: `6px solid ${c.hex}` } : undefined}>
+      <li key={a.id} data-action-id={a.id} data-open={isOpen ? 'true' : undefined} className={`rounded-lg ${boxClass}`} style={c ? { borderLeft: `6px solid ${c.hex}` } : undefined}>
         <div className="flex items-start gap-1.5 px-2 py-1.5">
           <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSel(a.id)} aria-label={`Select action ${a.number ?? ''}`} className="mt-1 w-4 h-4 accent-zinc-900 shrink-0" />
           <button type="button" disabled={disabled} onPointerDown={onPointerDownDrag(a.id)}
@@ -191,7 +242,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           <div className="flex-1 min-w-0">
             <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded={isOpen} className="text-left w-full">
               <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`}>{actionLabel(a)}</span>
-              <span className="text-[11px] text-zinc-400 ml-1.5">{isOpen ? 'close −' : 'open +'}</span>
+              {!isOpen && <span className="text-[11px] text-zinc-400 ml-1.5">open +</span>}
             </button>
             <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-zinc-500 items-center">
               {h && <HeadingMark h={h} />}
@@ -203,10 +254,15 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               <span>{specificEnough(a) ? 'specific enough' : 'not yet specific'}</span>
               {a.mergedFrom.length > 0 && <span>merged from #{a.mergedFrom.join(', #')}</span>}
               {/* DECISION 138 — the policy test, in the one list: a WORD AND A SHAPE (✗ ○ ? ✓), never colour alone. A conflict is boxed. */}
-              {a.policyTest && (
+              {a.policyTest ? (
                 <span title={a.policyTest.reason ?? undefined}
                   className={`font-semibold text-zinc-800 ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900 rounded px-1' : ''}`}>
                   <span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}
+                </span>
+              ) : (
+                // 26-S browser pass C — a row the consolidation never tested says so IN WORDS; blank reads as "fine".
+                <span title={NOT_TESTED_TITLE} className="font-semibold text-zinc-800" data-not-tested>
+                  <span aria-hidden>{POLICY_VERDICT_UI.NOT_TESTED.glyph}</span> {POLICY_VERDICT_UI.NOT_TESTED.word}
                 </span>
               )}
               {a.facetProposal && <span className="font-semibold text-zinc-700">Lex has proposed facets</span>}
@@ -220,12 +276,13 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               </p>
             )}
           </div>
-          <select value={a.headingId ?? ''} disabled={disabled} aria-label={`Heading for action ${a.number ?? ''}`}
-            onChange={(e) => void ops.run('assignHeading', { actionIds: [a.id], headingId: e.target.value || null })}
-            className="text-[11px] border border-zinc-300 rounded px-1 py-0.5 max-w-[9rem] shrink-0">
-            <option value="">No heading</option>
-            {headings.map((x) => <option key={x.id} value={x.id}>{colourFor(x.colourKey).glyph} {x.name}</option>)}
-          </select>
+          {isOpen ? (
+            // 26-S browser pass D — opened: the close control top-right, the heading menu below it.
+            <div className="shrink-0 flex flex-col items-end gap-1">
+              <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">Close −</button>
+              {headingSelect}
+            </div>
+          ) : headingSelect}
         </div>
         {isOpen && <OpenAction a={a} originals={originals} ctx={{ live, byId, causeLite, disabled, ops, renderFull }} />}
       </li>
@@ -265,10 +322,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <input value={newHeading} onChange={(e) => setNewHeading(e.target.value)} placeholder="New heading — e.g. legislation, practical…" maxLength={60}
-          onKeyDown={(e) => { if (e.key === 'Enter' && newHeading.trim()) { void ops.run('createHeading', { name: newHeading }); setNewHeading('') } }}
+        <BoundedInput value={newHeading} onChange={setNewHeading} max={LIMITS.headingName} placeholder="New heading — e.g. legislation, practical…" aria-label="New heading name"
+          onEnter={() => void addHeading()} disabled={disabled}
           className="text-xs p-1.5 rounded border border-zinc-300 w-60 focus:outline-none focus:border-blue-400" />
-        <button disabled={disabled || !newHeading.trim()} onClick={() => { void ops.run('createHeading', { name: newHeading }); setNewHeading('') }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">Add heading</button>
+        <button disabled={disabled || !newHeading.trim()} onClick={() => void addHeading()} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">Add heading</button>
         <button disabled={disabled} onClick={async () => {
           const r = await ops.run('suggestHeadings', {}, 'Lex is reading your guiding policy')
           if (r.ok && r.result) setSuggestions(r.result.suggestions)
@@ -293,26 +350,52 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
         </div>
       )}
 
-      {ops.busy && <p className="text-[11px] text-zinc-600" role="status">Working: {ops.busy}…</p>}
-      {ops.error && (
-        <p className="text-[11px] font-semibold text-amber-800" role="alert">⚠ {ops.error}{' '}
-          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('scrutinise:report-bug'))} className="underline font-medium ml-1">Report this problem</button>
-        </p>
-      )}
-      {ops.note && <p className="text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-2 py-1">{ops.note} <button onClick={() => ops.setNote(null)} className="underline ml-1">dismiss</button></p>}
     </div>
   )
 
+  // ── the status strip: STAYS AT THE TOP OF THE VIEWPORT while the list is scrolled ──
+  // (it used to sit in the toolbar, above the fold of a long list: a refusal rendered, off screen, and looked like nothing happening.)
+  const statusRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (ops.error) statusRef.current?.scrollIntoView?.({ block: 'nearest' }) }, [ops.error])
+  const Status = (ops.busy || ops.error || ops.saved || ops.note) ? (
+    <div ref={statusRef} className="space-y-1" data-status-strip>
+      {ops.busy && <p className="text-[11px] text-zinc-700 bg-white border border-zinc-300 rounded px-2 py-1" role="status">Working: {ops.busy}…</p>}
+      {ops.error && (
+        <p className="text-xs font-semibold text-zinc-900 bg-white border-2 border-zinc-900 rounded px-2 py-1.5" role="alert">⚠ {ops.error}{' '}
+          <button type="button" onClick={ops.clearError} className="ml-1 px-2 py-0.5 rounded border border-zinc-900 bg-zinc-100 font-semibold">OK</button>
+          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('scrutinise:report-bug'))} className="underline font-medium ml-2">Report this problem</button>
+        </p>
+      )}
+      {ops.saved && <p className="text-xs text-zinc-900 bg-white border border-zinc-400 rounded px-2 py-1" role="status">✓ {ops.saved} <button type="button" onClick={() => ops.setSaved(null)} className="ml-1 underline">OK</button></p>}
+      {ops.note && <p className="text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-2 py-1">{ops.note} <button onClick={() => ops.setNote(null)} className="underline ml-1">dismiss</button></p>}
+    </div>
+  ) : null
+
   // ── bulk bar ──
   const BulkBar = selIds.length > 0 && (
-    <div className="sticky top-0 z-10 rounded-lg border-2 border-zinc-900 bg-white p-2 flex flex-wrap items-center gap-1.5">
-      <span className="text-xs font-semibold">{selIds.length} selected</span>
-      <select disabled={disabled} defaultValue="" onChange={(e) => { if (e.target.value !== '__') void bulkAssign(e.target.value === '' ? null : e.target.value); e.target.value = '__' }} aria-label="Assign selected to a heading" className="text-xs border border-zinc-300 rounded px-1 py-0.5">
-        <option value="__">Assign to heading…</option><option value="">No heading</option>
+    <div className="rounded-lg border-2 border-zinc-900 bg-white p-2 flex flex-wrap items-start gap-1.5" data-bulk-bar>
+      <span className="text-xs font-semibold mt-0.5">{selIds.length} selected</span>
+      <select disabled={disabled} defaultValue="" onChange={(e) => {
+        const v = e.target.value
+        if (v === '__') return
+        e.target.value = '__'
+        if (v === '__new') { setBulkNewOpen(true); return }
+        void bulkAssign(v === '' ? null : v)
+      }} aria-label="Assign selected to a heading" className="text-xs border border-zinc-300 rounded px-1 py-0.5 mt-0.5">
+        <option value="__">Assign to heading…</option><option value="__new">+ New heading…</option><option value="">No heading</option>
         {headings.map((h) => <option key={h.id} value={h.id}>{colourFor(h.colourKey).glyph} {h.name}</option>)}
       </select>
-      <button disabled={disabled} onClick={() => void bulkPark()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300">Later phase</button>
-      <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (to rule out)" maxLength={600} className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-44" />
+      {bulkNewOpen && (
+        <span className="inline-flex flex-wrap items-start gap-1 rounded border border-zinc-400 bg-zinc-50 p-1" data-bulk-new-heading>
+          <BoundedInput value={bulkNewName} onChange={setBulkNewName} max={LIMITS.headingName} placeholder="Name the new heading" aria-label="Name of the new heading"
+            onEnter={() => void bulkNewHeading()} disabled={disabled} className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-44" />
+          <button disabled={disabled || !bulkNewName.trim()} onClick={() => void bulkNewHeading()} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Create and move {selIds.length}</button>
+          <button type="button" onClick={() => { setBulkNewOpen(false); setBulkNewName('') }} className="text-xs underline text-zinc-600 mt-0.5">Cancel</button>
+        </span>
+      )}
+      <button disabled={disabled} onClick={() => void bulkPark()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 mt-0.5">Later phase</button>
+      <BoundedInput value={reason} onChange={setReason} max={LIMITS.ruleOutReason} placeholder="Reason (to rule out)" aria-label="Reason to rule out the selected actions"
+        className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-44" />
       <button disabled={disabled || reason.trim().length < 3} onClick={() => void bulkRuleOut()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Rule out</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'merge' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Merge</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'compare' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Compare</button>
@@ -324,7 +407,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     <div className="space-y-2">
       {Toolbar}
       <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />
-      {BulkBar}
+      {(Status || BulkBar) && <div className="sticky top-0 z-20 space-y-1" data-sticky-top>{Status}{BulkBar}</div>}
       {pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
       {dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
 
@@ -348,7 +431,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               <ul className="space-y-1">{parked.map((a) => (
                 <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
                   <span className="text-zinc-400">#{a.number}</span><span className="flex-1">{actionLabel(a)}{a.parkedReason ? <span className="text-zinc-500"> — {a.parkedReason}</span> : null}</span>
-                  <button disabled={disabled} onClick={() => void ops.run('unpark', { ids: [a.id] })} className="underline font-medium">Bring back</button>
+                  <button disabled={disabled} onClick={() => void ops.run('unpark', { ids: [a.id] }, undefined, () => `Saved: #${a.number ?? '?'} brought back into the list.`)} className="underline font-medium">Bring back</button>
                 </li>))}</ul>
             </CollapsedBlock>
           )}
@@ -364,7 +447,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
               <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason ? `: ${a.ruleOutReason}` : ''}</span></span>
-              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] })} className="underline font-medium">Restore</button>
+              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>
             </li>))}</ul>
         </CollapsedBlock>
       )}
@@ -388,14 +471,29 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
   const [why, setWhy] = useState('')
   const [seeOriginal, setSeeOriginal] = useState<string | null>(null)
   const others = live.filter((x) => x.id !== a.id)
-  const facetSet = (patch: Record<string, unknown>) => void ops.run('setFacets', { actionId: a.id, patch })
+  const [editingTitle, setEditingTitle] = useState(false)
+  const facetSet = (patch: Record<string, unknown>) => void ops.run('setFacets', { actionId: a.id, patch }, undefined, () => 'Saved: the classification.')
+  const saveTitle = async () => {
+    const r = await ops.run('setTitle', { actionId: a.id, title: title.trim() || null }, undefined, () => `Saved: the title of #${a.number ?? '?'}.`)
+    if (r.ok) setEditingTitle(false)
+  }
+  const sources = a.policyTest ? provenanceLine(a.policyTest.from) : ''
   return (
-    <div className="border-t border-zinc-100 px-2.5 py-2 space-y-2 bg-zinc-50/50">
-      <div className="flex gap-1.5">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="A short title saying what this action does" maxLength={110}
-          className="flex-1 text-sm p-1.5 rounded border border-zinc-300 focus:outline-none focus:border-blue-400" />
-        <button disabled={disabled} onClick={() => void ops.run('setTitle', { actionId: a.id, title: title.trim() || null })} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Save title</button>
-      </div>
+    <div className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2">
+      {/* 26-S browser pass D — the title reads as text; "Edit title" at its end opens the box (it replaces the always-open box + "Save title"). */}
+      {editingTitle ? (
+        <div className="flex flex-wrap gap-1.5 items-start">
+          <BoundedInput value={title} onChange={setTitle} max={LIMITS.actionTitle} placeholder="A short title saying what this action does" aria-label={`Title of action ${a.number ?? ''}`}
+            onEnter={() => void saveTitle()} className="flex-1 min-w-[12rem] text-sm p-1.5 rounded border border-zinc-300 focus:outline-none focus:border-blue-400" />
+          <button disabled={disabled} onClick={() => void saveTitle()} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
+          <button type="button" onClick={() => { setTitle(a.titleProposal ?? a.title ?? ''); setEditingTitle(false) }} className="text-xs underline text-zinc-600 mt-1">Cancel</button>
+        </div>
+      ) : (
+        <p className="text-sm font-semibold text-zinc-900">
+          {a.title?.trim() || <span className="font-normal text-zinc-600">No title yet.</span>}{' '}
+          <button type="button" disabled={disabled} onClick={() => setEditingTitle(true)} className="text-xs font-medium underline text-zinc-700 ml-1 disabled:opacity-40">Edit title</button>
+        </p>
+      )}
 
       {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
       {a.policyTest && (
@@ -405,7 +503,13 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
             <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
             {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
           </p>
-          {a.policyTest.from.length > 0 && <p className="mt-0.5 text-[11px] text-zinc-500">From: {a.policyTest.from.join('; ')}</p>}
+        </div>
+      )}
+      {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
+      {sources && (
+        <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Sources</p>
+          <p className="mt-0.5 text-zinc-800">{sources}</p>
         </div>
       )}
 
@@ -422,8 +526,8 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
               <option value="">not placed</option>{SEQUENCES.map((v) => <option key={v} value={v}>{SEQUENCE_LABEL[v]}</option>)}
             </select></label>
           <label className="flex items-center gap-1">{FACET_WORD.link}
-            <input value={link} onChange={(e) => setLink(e.target.value)} onBlur={() => link.trim() !== (a.link ?? '') && facetSet({ link: link.trim() || null })} placeholder="which binding link it protects" maxLength={200}
-              className="border border-zinc-300 rounded px-1 py-0.5 w-48" /></label>
+            <BoundedInput value={link} onChange={setLink} onBlur={() => link.trim() !== (a.link ?? '') && facetSet({ link: link.trim() || null })} placeholder="which binding link it protects" max={LIMITS.classificationLink}
+              aria-label={`Binding link for action ${a.number ?? ''}`} className="border border-zinc-300 rounded px-1 py-0.5 w-48" /></label>
         </div>
         <details className="text-[11px]">
           <summary className="cursor-pointer text-zinc-600">{FACET_WORD.causes}: {a.targetCauseIds.length ? a.targetCauseIds.map((id) => `#${causeLite.find((c) => c.id === id)?.number ?? '?'}`).join(', ') : 'none recorded'} — change</summary>
@@ -468,10 +572,11 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
       )}
 
       <div className="flex flex-wrap gap-2 items-center">
-        <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null })} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">Later phase</button>
-        <button disabled={disabled || why.trim().length < 3} onClick={() => void ops.run('ruleOut', { ids: [a.id], reason: why })} title={why.trim().length < 3 ? 'Give a reason first — it is kept so you can bring the action back.' : undefined}
+        <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null }, undefined, () => `Saved: #${a.number ?? '?'} moved to “Later phase”.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">Later phase</button>
+        <button disabled={disabled || why.trim().length < 3} onClick={() => void ops.run('ruleOut', { ids: [a.id], reason: why }, undefined, () => `Saved: #${a.number ?? '?'} ruled out, with your reason. It is kept under “Ruled out and merged away”; Restore brings it back.`)} title={why.trim().length < 3 ? 'Give a reason first — it is kept so you can bring the action back.' : undefined}
           className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700 disabled:opacity-40">Rule out</button>
-        <input value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Reason (needed to rule out)" maxLength={600} className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
+        <BoundedInput value={why} onChange={setWhy} max={LIMITS.ruleOutReason} placeholder="Reason (needed to rule out)" aria-label={`Reason to rule out action ${a.number ?? ''}`}
+          className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
       </div>
     </div>
   )
@@ -488,8 +593,8 @@ function GroupHeader<T>({ g, h, ops, disabled }: { g: { key: string; label: stri
       {c && <span aria-hidden style={{ color: c.hex }} className="text-base leading-none">{c.glyph}</span>}
       {editing && h ? (
         <>
-          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} className="text-sm border border-zinc-300 rounded px-1.5 py-0.5" />
-          <button disabled={disabled || !name.trim()} onClick={async () => { await ops.run('updateHeading', { headingId: h.id, name }); setEditing(false) }} className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-zinc-900 text-white">Save</button>
+          <BoundedInput value={name} onChange={setName} max={LIMITS.headingName} aria-label={`New name for the heading ${h.name}`} className="text-sm border border-zinc-300 rounded px-1.5 py-0.5" />
+          <button disabled={disabled || !name.trim()} onClick={async () => { const r = await ops.run('updateHeading', { headingId: h.id, name }, undefined, () => `Saved: the heading is now called “${name.trim()}”.`); if (r.ok) setEditing(false) }} className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-zinc-900 text-white">Save</button>
           <button onClick={() => { setName(g.label); setEditing(false) }} className="text-[11px] underline">Cancel</button>
         </>
       ) : (
@@ -503,7 +608,7 @@ function GroupHeader<T>({ g, h, ops, disabled }: { g: { key: string; label: stri
             {HEADING_PALETTE.map((p) => <option key={p.key} value={p.key}>{p.glyph} {p.name}</option>)}
           </select>
           <button disabled={disabled} onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? 'Show' : 'Hide'}</button>
-          <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Delete the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading.`)) void ops.run('deleteHeading', { headingId: h.id }) }} className="underline text-zinc-500">Delete heading</button>
+          <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Delete the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading.`)) void ops.run('deleteHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is deleted; its actions stay, with no heading.`) }} className="underline text-zinc-500">Delete heading</button>
         </span>
       )}
     </div>

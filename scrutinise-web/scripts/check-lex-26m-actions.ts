@@ -90,7 +90,7 @@ ok('a failed test changes nothing (it returns before any write)', lib.indexOf("i
 ok('a dry run writes no action and no idea', /if \(opts\.dryRun\) continue/.test(lib) && /if \(dryRun\) return/.test(lib))
 ok('the sort does not re-offer an action already moved', /moveStatus === 'ACCEPTED' && row\.movedToActionId\) continue/.test(read('lib/lex/guiding-policy-state.ts')))
 ok('control — a settle without the hook would be caught', !/onGuidingPolicySettled/.test(settleSrc.split('onGuidingPolicySettled').join('x')))
-ok('a comment reads as the user\'s own words', describeSource({ kind: 'COMMENT', consolidationId: 'c', model: 'grok-4.7' }) === 'your comment on the grok-4.7 draft'
+ok('a comment reads as the user\'s own words', describeSource({ kind: 'COMMENT', consolidationId: 'c', model: 'grok-4.7' }) === 'your comment during consolidation (Grok draft)' /* 26-S browser pass E, 17 Oct */
   && /general comment/.test(describeSource({ kind: 'COMMENT', consolidationId: 'c', model: null })))
 
 console.log('\n── reachable from a route; the verdict is not colour alone ──')
@@ -100,7 +100,7 @@ const routeSrc = read('app/api/ideas/[id]/action-ideas/route.ts')
 ok('the route offers retry only: no accept, and (decision 139) no remove', !/z\.literal\('remove'\)/.test(routeSrc) && !/z\.literal\('accept'\)/.test(routeSrc) && /z\.literal\('test'\)/.test(routeSrc))
 const ui = read('components/lex/ActionsWorkspace.tsx')
 ok('each verdict has a word AND a differently-shaped glyph, on the action', ['Conflicts', 'Does not fit', 'Fits'].every((w) => read('lib/lex/action-facets.ts').includes(w)) && ['✗', '○', '✓'].every((g) => read('lib/lex/action-facets.ts').includes(g)) && /POLICY_VERDICT_UI\[a\.policyTest\.verdict\]/.test(ui))
-ok('it says where each came from when the row is opened, and there is no Remove', /From: \{a\.policyTest\.from\.join/.test(ui) && !/Remove from my actions/.test(ui))
+ok('it says where each came from when the row is opened, and there is no Remove', /provenanceLine\(a\.policyTest\.from\)/.test(ui) /* 26-S browser pass E: the sources line, reworded, in the record's Sources */ && !/Remove from my actions/.test(ui))
 ok('the schema holds the table and the migration says it is additive', /model ActionIdea/.test(read('prisma/schema.prisma')) && /ADDITIVE ONLY/.test(read('prisma/lex_26m_action_ideas.sql')))
 
 console.log(`\n${pass} passed, ${fail} failed`)

@@ -169,7 +169,7 @@ async function partB() {
     if (!h1.ok || !h2.ok) return
     const asg = await S.assignHeading(id, [a1.id, a2.id, a3.id], h1.data.id)
     ok('three actions assigned in one go', asg.ok && asg.data.assigned === 3)
-    ok('an action id from ANOTHER idea cannot be assigned (scoped to the idea)', (await S.assignHeading(id, ['not-an-action-here'], h1.data.id)).ok && (await prisma.lexCoherentAction.count({ where: { id: 'not-an-action-here' } })) === 0)
+    ok('an action id from ANOTHER idea cannot be assigned (scoped to the idea) - and the refusal is in words, not a quiet "0 moved" (26-S browser pass)', (await S.assignHeading(id, ['not-an-action-here'], h1.data.id)).ok === false && (await prisma.lexCoherentAction.count({ where: { id: 'not-an-action-here' } })) === 0)
     const other = await S.assignHeading(id, [a4.id], 'a-heading-on-nobodys-idea')
     ok('a heading that is not on this idea is refused', !other.ok)
     const ord = await S.reorder(id, [a4.id, a3.id, a2.id, a1.id])

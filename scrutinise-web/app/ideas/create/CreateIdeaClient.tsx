@@ -71,13 +71,9 @@ interface Props {
 const CRITIQUE_INTENT =
   /\b(?:that(?:'s| is)|this(?:'s| is)|it(?:'s| is))\s+(?:not\s+right|wrong|incorrect|inaccurate|nonsense|rubbish|way off|miles off|misleading|too (?:low|high|vague|generic))\b|\b(?:you(?:'ve| have)?\s+(?:got|gotten)\s+(?:that|this|it)\s+wrong|you(?:'re| are)\s+wrong|that(?:'s| is)\s+made\s+up|you\s+made\s+that\s+up|where\s+did\s+(?:that|you\s+get\s+that)\s+(?:number|figure|come\s+from))\b|\bdoesn(?:'|’)?t\s+(?:make\s+sense|reflect|match)\b|\bi\s+don(?:'|’)?t\s+(?:agree|think\s+that(?:'s| is)\s+right)\b/i
 
-// Which part of Lex's output a critique on this page is most likely about (§20.5).
-const SURFACE_BY_STAGE: Record<string, FeedbackSurfaceKey> = {
-  ORIENTATION: 'BRIEFING',
-  DIAGNOSIS: 'CAUSES',
-  GUIDING_POLICY: 'OPTIONS',
-  COHERENT_ACTIONS: 'COSTS',
-}
+// 26-S browser pass F (17 Oct 2026): there used to be a map here from the stage to a GUESSED category (the actions stage → "The cost figures"),
+// and the form opened with that guess selected. Charlie, on the actions page, reporting a heading fault: it said "The cost figures". A guess the
+// user must notice and undo is a wrong answer filed by default, so the form now opens on "Choose…" and will not go on until one is chosen.
 
 const DEFAULT_OPENING = ["I'm Lex, your researcher and guide. What's the problem you want to fix?"]
 
@@ -542,10 +538,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
 
   // POST to a server endpoint that returns { state, messages } and apply both.
   /** 26-M addendum — re-read the canonical state (an accepted suggestion created an action server-side). */
-  const refreshState = useCallback(async () => {
-    if (!ideaId) return
-    const res = await fetch(`/api/ideas/${ideaId}/state`)
-    if (res.ok) applyState(await res.json())
+  // 26-S browser pass (17 Oct): it SAYS whether the re-read worked. A write that succeeded while its re-read failed left the list
+  // unchanged on screen and nothing said so (2 Oct "no actions were written", 9 Oct phantom "0 actions" were the same symptom).
+  const refreshState = useCallback(async (): Promise<boolean> => {
+    if (!ideaId) return true
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/state`, { cache: 'no-store' })
+      if (!res.ok) return false
+      applyState(await res.json())
+      return true
+    } catch { return false }
   }, [ideaId, applyState])
 
   const post = useCallback(
@@ -663,16 +665,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   // §20.5 — feedback capture. All of this is local to this component: the dialog
   // holds its own state and the offer is a transient flag. Nothing here touches
   // canonical state, the field machine or the conductor.
-  const [feedbackSurface, setFeedbackSurface] = useState<FeedbackSurfaceKey | null>(null)
+  const [feedbackSurface, setFeedbackSurface] = useState<FeedbackSurfaceKey | 'CHOOSE' | null>(null)
   const [feedbackOffer, setFeedbackOffer] = useState(false)
-  const surfaceForStage = useCallback(
-    (): FeedbackSurfaceKey => SURFACE_BY_STAGE[state?.stage ?? 'ORIENTATION'] ?? 'OTHER',
-    [state?.stage],
-  )
   const openFeedback = useCallback((surface?: FeedbackSurfaceKey) => {
     setFeedbackOffer(false)
-    setFeedbackSurface(surface ?? surfaceForStage())
-  }, [surfaceForStage])
+    setFeedbackSurface(surface ?? 'CHOOSE')
+  }, [])
 
   // 8 Oct 2026 (item 4) — start recording failed requests, recent clicks and uncaught errors NOW, so that when a user reports a
   // fault the facts are already held; and let an on-screen error open the bug form directly ("Report this problem").

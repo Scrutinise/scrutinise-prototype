@@ -78,7 +78,8 @@ function partA() {
   ok('CLOSED: the reason and the source are NOT on the row (they appear when it is opened)', !closed.includes('The policy explicitly rules out thresholds') && !closed.includes('claude-opus-5'))
   const opened = text(render(fixtures, [], [], ['a2']))
   ok('OPENED: the reason is shown', opened.includes('The policy explicitly rules out thresholds.'))
-  ok('…and the source, in the user\'s words ("parked with policy 2 (item 15)", "your comment on the claude-opus-5 draft")', opened.includes('From: parked with policy 2 (item 15); your comment on the claude-opus-5 draft'))
+  // 26-S browser pass E (17 Oct): the source is reworded at display ("your comment during consolidation (Claude draft)") and sits in the record's Sources, not on the verdict line.
+  ok('…and the source, in the user\'s words ("parked with policy 2 (item 15)", "your comment during consolidation (Claude draft)")', opened.includes('From: parked with policy 2 (item 15); your comment during consolidation (Claude draft)'))
   ok('…under a "Policy test" heading, with the verdict', opened.includes('Policy test') && /✗/.test(opened) && opened.includes('Conflicts.'))
   const openedFits = text(render(fixtures, [], [], ['a3']))
   ok('OPENING an untested action shows no policy-test block (it is not shown as fitting)', !openedFits.includes('Policy test'))

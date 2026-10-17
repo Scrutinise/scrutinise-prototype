@@ -28,6 +28,7 @@ import {
 } from '@/lib/lex/feedback-types'
 import { getTechnicalDetail } from '@/lib/client-fault-capture'
 import { explainFailure } from '@/lib/api-rejection'
+import BoundedInput from './BoundedInput'
 
 interface Redaction { kind: string; count: number }
 
@@ -36,16 +37,17 @@ type Step = 'write' | 'review' | 'done'
 export default function FeedbackDialog({
   ideaId,
   stage,
-  initialSurface = 'OTHER',
+  initialSurface = 'CHOOSE',
   onClose,
 }: {
   ideaId: string
   stage: string
-  initialSurface?: FeedbackSurfaceKey
+  /** 26-S browser pass F: 'CHOOSE' (the default) opens on "Choose…" — nothing is pre-selected on the user's behalf. */
+  initialSurface?: FeedbackSurfaceKey | 'CHOOSE'
   onClose: () => void
 }) {
   const [step, setStep] = useState<Step>('write')
-  const [surface, setSurface] = useState<FeedbackSurfaceKey>(initialSurface)
+  const [surface, setSurface] = useState<FeedbackSurfaceKey | 'CHOOSE'>(initialSurface)
   const [original, setOriginal] = useState('')
   const [summary, setSummary] = useState('')
   const [redactions, setRedactions] = useState<Redaction[]>([])
@@ -68,7 +70,7 @@ export default function FeedbackDialog({
     ? `Personal details removed: ${redactions.map((r) => `${r.kind}${r.count > 1 ? ` ×${r.count}` : ''}`).join(', ')}.`
     : null
 
-  const addFiles = (list: FileList | null) => {
+  const addFiles = (list: FileList | File[] | null) => {
     if (!list) return
     const next = [...files]
     const problems: string[] = []
@@ -82,9 +84,28 @@ export default function FeedbackDialog({
     setError(problems.length ? problems.join(' ') : null)
   }
 
+  // 26-S browser pass F — a screenshot PASTED from the clipboard (Win+Shift+S, then Ctrl+V) becomes an attachment, exactly as a chosen file does.
+  // Only when the clipboard carries an image: ordinary text pastes into the box as it always did.
+  const onPasteImage = (e: React.ClipboardEvent) => {
+    const imgs: File[] = []
+    for (const it of Array.from(e.clipboardData?.items ?? [])) {
+      if (it.kind === 'file' && it.type.startsWith('image/')) {
+        const f = it.getAsFile()
+        if (f) {
+          const ext = f.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png'
+          imgs.push(new File([f], `pasted-screenshot-${files.length + imgs.length + 1}.${ext}`, { type: f.type }))
+        }
+      }
+    }
+    if (imgs.length === 0) return
+    e.preventDefault()
+    addFiles(imgs)
+  }
+
   async function prepare() {
     const text = original.trim()
     if (!text || busy) return
+    if (surface === 'CHOOSE') { setError('Choose what this is about first (the list at the top). Nothing has been sent.'); return }
     setBusy(true)
     setError(null)
     try {
@@ -161,7 +182,7 @@ export default function FeedbackDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={isBug ? 'Report a bug' : 'Give feedback on Lex'}>
+    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={isBug ? 'Report a bug' : 'Give feedback on Lex'} onPaste={step === 'write' ? onPasteImage : undefined}>
       <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-5 max-h-[85vh] overflow-y-auto">
         <div className="flex items-start gap-3">
           <h2 className="text-base font-semibold text-zinc-900 flex-1">{isBug ? 'Report a bug' : 'Pass this back to Scrutinise'}</h2>
@@ -185,9 +206,11 @@ export default function FeedbackDialog({
             </label>
             <select
               value={surface}
-              onChange={(e) => { setSurface(e.target.value as FeedbackSurfaceKey); if (e.target.value === 'BUG_REPORT') setCaptured(getTechnicalDetail()) }}
+              aria-label="What is this about?"
+              onChange={(e) => { setSurface(e.target.value as FeedbackSurfaceKey | 'CHOOSE'); if (e.target.value === 'BUG_REPORT') setCaptured(getTechnicalDetail()) }}
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
             >
+              <option value="CHOOSE">Choose…</option>
               {FEEDBACK_SURFACES.map((s) => (
                 <option key={s} value={s}>{SURFACE_LABELS[s]}</option>
               ))}
@@ -196,12 +219,16 @@ export default function FeedbackDialog({
             <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mt-4 mb-1">
               {isBug ? 'What happened?' : 'What’s wrong with it?'}
             </label>
-            <textarea
-              value={original}
-              onChange={(e) => setOriginal(e.target.value)}
-              rows={5}
+            <BoundedInput
+              multiline
               autoFocus
-              maxLength={4000}
+              wrapperClassName="w-full"
+              value={original}
+              onChange={setOriginal}
+              rows={5}
+              max={4000}
+              showFrom={0.5}
+              aria-label={isBug ? 'What happened?' : 'What’s wrong with it?'}
               placeholder={isBug
                 ? 'e.g. I selected two actions, chose a heading from “Assign to heading…”, and it said the request was not valid. I expected them to move under that heading.'
                 : 'e.g. the cost range is far too low for a scheme this size, and it doesn’t say where the figure came from.'}
@@ -210,7 +237,7 @@ export default function FeedbackDialog({
 
             <div className="mt-3">
               <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1">
-                A screenshot or file (optional)
+                A screenshot or file (optional) — or paste a screenshot here with Ctrl+V
               </label>
               <input
                 type="file"
@@ -237,7 +264,8 @@ export default function FeedbackDialog({
             <div className="flex flex-wrap gap-2 mt-4">
               <button
                 onClick={prepare}
-                disabled={busy || !original.trim()}
+                disabled={busy || !original.trim() || surface === 'CHOOSE'}
+                title={surface === 'CHOOSE' ? 'Choose what this is about first' : undefined}
                 className="text-sm font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40"
               >
                 {busy ? 'Preparing…' : 'Show me what would be sent'}

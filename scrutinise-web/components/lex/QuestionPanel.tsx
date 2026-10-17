@@ -102,17 +102,30 @@ const SPECIAL_TITLES: Record<string, string> = {
  * rendered in three places; three copies is two that will drift.
  */
 function HeadingRow({
-  h, onOpen,
+  h, onOpen, notebook,
 }: {
   h: PanelData['headings'][number]
   onOpen: (key: string) => void
+  /** 26-S browser pass G — beside "Sources": "Notebook · N notes", linking to the notebook (the notes are where the sources were MADE USE OF). */
+  notebook?: { count: number | null; open: () => void }
 }) {
   const n = h.entries.length
   return (
-    <li>
+    <li className={notebook ? 'flex items-stretch gap-1.5' : undefined}>
+      {notebook && (
+        <button
+          type="button"
+          onClick={notebook.open}
+          data-notebook-link
+          className="order-2 shrink-0 flex items-baseline gap-1 rounded-lg border-2 border-zinc-300 bg-white px-3 py-2 text-left hover:border-zinc-500 hover:bg-zinc-50"
+        >
+          <span className="text-sm font-semibold text-zinc-900">Notebook{notebook.count != null ? ` · ${notebook.count} note${notebook.count === 1 ? '' : 's'}` : ''}</span>
+          <span aria-hidden className="text-zinc-300 text-xs">›</span>
+        </button>
+      )}
       <button
         onClick={() => onOpen(h.key)}
-        className="w-full flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50"
+        className={`${notebook ? 'flex-1 min-w-0 ' : 'w-full '}flex items-baseline gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400 hover:bg-zinc-50`}
       >
         <span className={`text-sm flex-1 ${n ? 'font-medium text-zinc-800' : 'text-zinc-500'}`}>
           {h.heading}
@@ -464,6 +477,18 @@ export default function QuestionPanel({
    * list that shows what is in each.
    */
   const [openKey, setOpenKey] = useState<string | null>(null)
+  // 26-S browser pass G — the notebook's note count, for the link beside "Sources". Re-read whenever the panel returns to the list.
+  const [noteCount, setNoteCount] = useState<number | null>(null)
+  useEffect(() => {
+    if (openKey) return
+    let live = true
+    fetch(`/api/ideas/${ideaId}/research-notebook?lex=0&setAside=0`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (live) setNoteCount(Array.isArray(j?.notes) ? j.notes.length : null) })
+      .catch(() => { if (live) setNoteCount(null) })
+    return () => { live = false }
+  }, [ideaId, openKey])
+  const notebookFor = (key: string) => (key === 'KEY_SOURCES' ? { count: noteCount, open: () => setOpenKey('__notebook') } : undefined)
   /** ⚠ 25-Z §5c — the one-time evidence-base disclosure. See `BetaSearchNotice`. */
   const [showBetaNotice, setShowBetaNotice] = useState(false)
 
@@ -688,7 +713,7 @@ export default function QuestionPanel({
                 <span aria-hidden className="text-zinc-300 text-xs">›</span>
               </button>
             </li>
-            {above.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} />)}
+            {above.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} />)}
           </ul>
 
           {/* §4's divider — above it, what you act on; below it, what it was built from. */}
@@ -731,14 +756,14 @@ export default function QuestionPanel({
 
           {/* ── EVERYTHING ELSE ────────────────────────────────────────────── */}
           <ul className="space-y-1">
-            {rest.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} />)}
+            {rest.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} />)}
           </ul>
 
           {/* ── AND ANYTHING NOT ASKED OF THIS DRAFT, AT THE BOTTOM ─────────── */}
           {(notAsked.length > 0 || data.unfiled.length > 0) && (
             <ul className="space-y-1">
               <li className="text-[11px] text-zinc-400 pt-1">Not asked of this draft</li>
-              {notAsked.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} />)}
+              {notAsked.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} />)}
               {data.unfiled.length > 0 && (
                 <li>
                   <button

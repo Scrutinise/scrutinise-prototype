@@ -35,6 +35,32 @@ export const POLICY_VERDICT_UI: Record<PolicyVerdict, { glyph: string; word: str
 export interface PolicyTest { verdict: PolicyVerdict; reason: string | null; from: string[] }
 /** An action the consolidation never tested (the user's own, or from another route) says so in words — it is never shown as fitting. */
 export const NOT_IN_POLICY_TEST = 'Not part of the consolidation’s policy test'
+/** 26-S browser pass C — an action with NO recorded policy test reads "? Not tested" in words, never blank. */
+export const NOT_TESTED_TITLE = 'No policy test has been run on this action yet. “Test against the policy” comes in the next step.'
+
+/** "grok-4.7" → "Grok", "claude-opus-5" → "Claude", "gemini-2.5-pro" → "Gemini", "gpt-5" → "GPT". The family, never the version. */
+export function modelFamily(model: string): string {
+  const head = model.trim().split(/[-_\s/.:]/)[0] ?? ''
+  const known: Record<string, string> = { gpt: 'GPT', grok: 'Grok', claude: 'Claude', gemini: 'Gemini', deepseek: 'DeepSeek', llama: 'Llama', mistral: 'Mistral' }
+  return known[head.toLowerCase()] ?? (head ? head.charAt(0).toUpperCase() + head.slice(1) : 'a model')
+}
+
+/**
+ * 26-S browser pass E — PROVENANCE IS A SOURCE, NOT PART OF THE VERDICT. Old rows hold "your comment on the grok-4.7 draft" (written
+ * into `policyTestFrom` before this wording); new rows are written as "your comment during consolidation (Grok draft)". This
+ * rewords either, at display, so no row needs a data write to read correctly.
+ */
+export function provenanceWords(item: string): string {
+  const m = item.match(/^your comment on the (.+) draft$/i)
+  if (m) return `your comment during consolidation (${modelFamily(m[1])} draft)`
+  if (/^your general comment on the drafts$/i.test(item)) return 'your general comment during consolidation'
+  return item
+}
+/** The sources line for an opened record: "From: …" — empty string when there is nothing to say. */
+export function provenanceLine(from: readonly string[]): string {
+  const items = from.map((s) => provenanceWords(String(s))).filter(Boolean)
+  return items.length ? `From: ${items.join('; ')}` : ''
+}
 
 export interface ActionLike {
   id: string
