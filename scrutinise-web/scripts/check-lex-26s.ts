@@ -108,8 +108,16 @@ function partA() {
 
   // merge across chunks
   const mk = (id: string, chunk: number, o: Partial<T.ImportItem>): T.ImportItem => ({ id, chunk, section: `S${id}`, quote: 'q', quoteVerified: true, proposal: 'NEW', headingName: null, actionNumber: null, reason: '', policyTest: null, title: 'Publish the register of named owners every year', summary: 'A public register is kept.', implementer: null, policyCategory: null, policyTarget: null, struck: false, edited: false, ...o })
-  const merged = I.mergeDuplicates([mk('a', 0, {}), mk('b', 1, { title: 'Publish the register of named owners each year', section: 'Sb' }), mk('c', 1, { title: 'Withhold Treasury funds from ownerless projects', summary: 'No money without an owner.', quote: 'zz' })])
+  const PASSAGE = 'The Board shall publish a register of the named owner of every major project each year and lay it before Parliament.'
+  const merged = I.mergeDuplicates([mk('a', 0, { quote: PASSAGE }), mk('b', 1, { title: 'Publish the register of named owners each year', section: 'Sb', quote: PASSAGE }), mk('c', 1, { title: 'Withhold Treasury funds from ownerless projects', summary: 'No money without an owner.', quote: 'zz' })])
   ok('the same item read in two parts becomes ONE row, noting where else it appeared', merged.items.length === 2 && merged.merged === 1 && /also Sb/.test(merged.items[0].section), JSON.stringify(merged.items.map((i) => i.section)))
+  // decision 180: ten same-shaped Q&A rules in different parts, near-identical titles and summaries, DIFFERENT quoted text → ten rows
+  const QA = ['redundancy pay', 'annual leave', 'sick pay', 'pension transfer', 'notice periods', 'flexible hours', 'maternity cover', 'whistleblowing', 'grievance appeals', 'agency workers']
+  const qaRows = QA.map((t, i) => mk(`q${i}`, i % 3, { section: `10.1 Q${i + 1}`, title: 'Answer the staff question on how the Board treats this', summary: 'A rule the Board must follow when answering the question.', quote: `Q: What happens to ${t} where the Board takes over a function? A: The Board must honour the existing terms on ${t} for twelve months and publish the change in writing.` }))
+  const qaMerged = I.mergeDuplicates(qaRows)
+  ok('ten same-shaped Q&A rules (near-identical titles and summaries, different quoted text) stay TEN rows', qaMerged.items.length === 10 && qaMerged.merged === 0, `${qaMerged.items.length} rows, ${qaMerged.merged} merged`)
+  control('a merge on title/summary shape alone would collapse the ten Q&A rules (must be FALSE)', qaMerged.items.length === 1)
+  ok('overlap is by quoted text: the same passage cut at a different end still merges, a different passage does not', I.quotesOverlap(PASSAGE, PASSAGE.replace(/ and lay it before Parliament\.$/, '')) && !I.quotesOverlap(qaRows[0].quote, qaRows[1].quote))
   const same = I.mergeDuplicates([mk('a', 0, {}), mk('b', 0, {})])
   ok('two similar rows in the SAME part are not merged (only duplicates across parts are the merge’s job)', same.items.length === 2)
   control('a merge that collapsed everything would leave one row (must be FALSE)', I.mergeDuplicates([mk('a', 0, {}), mk('b', 1, { title: 'Pilot the regime in three departments first', summary: 'A phased start.', quote: 'yy' })]).items.length === 1)

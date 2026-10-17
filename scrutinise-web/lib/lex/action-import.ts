@@ -286,16 +286,24 @@ export function findUncovered(chunkText: string, section: string, items: Array<P
 
 // ── merging duplicates across chunks (pure; exported for the check) ─────────────────────────────────────────
 
+/** 26-S2 decision 180 — do two quotes carry the SAME DOCUMENT TEXT? Equal, or one inside the other (the same passage cut at a
+ *  different end — the quotes are the document's own characters, so a re-read passage is a substring, never a paraphrase). A fuzzy
+ *  stem overlap was tried and merged two of ten same-shaped Q&A rules on shared words ("pay"); rows that share a SHAPE share
+ *  template words, never the passage. The error that remains is one extra row the user can strike, not a lost provision. */
+export function quotesOverlap(a: string, b: string): boolean {
+  const na = normText(a.replace(/…$/, '')), nb = normText(b.replace(/…$/, ''))
+  if (na.length < 20 || nb.length < 20) return false
+  return na === nb || na.includes(nb) || nb.includes(na)
+}
+
 /** Two rows from different chunks that are the same item collapse to one (BRIEF_26S §3g: "duplicates across chunks must resolve to
- *  one row"). The first keeps its place; the section notes where else it appeared. */
+ *  one row"). The first keeps its place; the section notes where else it appeared. Decision 180: ONLY rows whose quoted text
+ *  substantially overlaps — the title and summary are the model's words and never evidence that two rows are one passage. */
 export function mergeDuplicates(items: ImportItem[]): { items: ImportItem[]; merged: number } {
   const kept: ImportItem[] = []
   let merged = 0
   for (const it of items) {
-    const twin = kept.find((k) => k.chunk !== it.chunk && k.proposal === it.proposal && (k.actionNumber ?? -1) === (it.actionNumber ?? -1) && (
-      (k.quote.length >= 20 && normText(k.quote) === normText(it.quote)) ||
-      jaccard(stems(`${k.title} ${k.summary}`), stems(`${it.title} ${it.summary}`)) >= 0.75
-    ))
+    const twin = kept.find((k) => k.chunk !== it.chunk && k.proposal === it.proposal && (k.actionNumber ?? -1) === (it.actionNumber ?? -1) && quotesOverlap(k.quote, it.quote))
     if (twin) { merged++; if (!twin.section.includes(it.section)) twin.section = `${twin.section} (also ${it.section})`; continue }
     kept.push(it)
   }

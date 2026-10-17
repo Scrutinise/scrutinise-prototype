@@ -1122,7 +1122,7 @@ const sourceNumberSchema = z.number().int().min(1).describe('the source’s numb
 
 const addResearchNoteTool: ToolDefinition = {
   name: 'add_research_note', category: 'draft', tier: 'free',
-  description: 'Add a note to the research notebook: a quote, a source and a comment. EVERY NOTE CITES A SOURCE — pass sourceNumber (an existing [Ref: n]), or newSource (a title, and a web address if there is one), or ownObservation:true for the user’s own knowledge. A quote must be word for word from the source; where the source’s text is stored it is checked against it. The note is saved UNREVIEWED: the user decides whether it goes in the record.',
+  description: 'Add a note to the research notebook: a quote, a source and a comment. EVERY NOTE CITES A SOURCE — pass sourceNumber (an existing [Ref: n]), or newSource (a title, and a web address if there is one), or ownObservation:true for the user’s own knowledge. A quote must be word for word from the source; where the source’s text is stored it is checked against it. The note is saved UNREVIEWED (the user decides whether it goes in the record) — except a note the owner DICTATES (“note this for the policy: …”): pass dictated:true with their exact words and it is theirs, in the record.',
   schema: z.object({
     sourceNumber: sourceNumberSchema.optional(),
     newSource: z.object({ title: z.string().min(1).max(300), url: z.string().max(2000).optional() }).optional(),
@@ -1131,12 +1131,19 @@ const addResearchNoteTool: ToolDefinition = {
     comment: z.string().max(4000).optional().describe('the note’s comment, in the user’s words or yours — it is labelled as written by Lex'),
     stance: z.enum(STANCES).optional(), tags: z.array(z.string().min(1).max(40)).max(10).optional(),
     bearsOnPolicy: z.boolean().optional().describe('true: the note bears on the Guiding Policy. Use it when the user says “note this for the policy”: pass ownObservation:true (their own observation is the source) and the user’s words as the comment.'),
+    dictated: z.boolean().optional().describe('true ONLY when the comment is the user’s own words, copied exactly from what they just wrote (“note this for the policy: …” — the text after the colon). The note is then THE USER’S: author = the owner, in the record. Never true for your own findings, summaries or rewordings — those are saved unreviewed.'),
     provenance: ProvenanceSchema,
   }),
   async run(ctx, input) {
     const prov = await checkProvenance(ctx, input.provenance)
     if (provFailed(prov)) return fail(prov.error)
     if (!input.quote?.trim() && !input.comment?.trim()) return fail('give a quote or a comment — a note with neither is empty.')
+    // Decision 178 — a note the owner DICTATES is the owner's (author = owner, in the record); Lex's own findings stay unreviewed.
+    // Enforced, not trusted: the comment must be inside what the user wrote, so Lex cannot launder its own wording into the record.
+    if (input.dictated) {
+      const said = ctx.turn.userMessages.map(norm).join(' ')
+      if (!input.comment?.trim() || !said.includes(norm(input.comment))) return fail('“dictated” means the comment is the user’s own words, and this comment is not word for word in anything they have written. Save it without dictated:true (it will be Lex’s, unreviewed), or use their exact words.')
+    }
     // 26-S §6b — "note this for the policy": the note bears on the Guiding Policy, so it shows in the count on the policy's header.
     const policyRef = input.bearsOnPolicy ? (await RN.bearsOnOptions(ctx.ideaId)).find((o) => o.kind === 'policy') : undefined
     let sourceId: string | undefined
@@ -1159,10 +1166,11 @@ const addResearchNoteTool: ToolDefinition = {
       op: 'addNote', ...(sourceId ? { sourceId } : {}), ...(input.newSource ? { newSource: { kind: 'URL', title: input.newSource.title, url: input.newSource.url ?? null, readStatus: 'NOT_READ', readNote: 'added by Lex from the user’s words; the page itself was not read' } } : {}),
       ...(input.ownObservation ? { ownObservation: true } : {}), quote, quoteLocation: input.quoteLocation ?? null, comment: input.comment ?? null, stance: input.stance, tags: input.tags,
       ...(policyRef ? { bearsOn: [policyRef] } : {}),
-    }, { authorKind: 'LEX' })
+    }, { authorKind: input.dictated ? 'USER' : 'LEX' })
     if (!r.ok) return fail((r as { error: string }).error)
-    const d = (r as { data: { noteId: string | null; ref: number } }).data
-    return { ok: true, data: { note: d.noteId ? short(d.noteId) : null, cites: `[Ref: ${d.ref}]`, status: 'UNREVIEWED — written by Lex; the owner puts it in the record', provenance: prov.line }, ui: [{ type: 'open_panel', panel: 'notebook' }] }
+    const d = (r as { data: { noteId: string | null; ref: number; status: string } }).data
+    const status = d.status === 'IN_RECORD' ? 'IN THE RECORD — the user’s own words, written at their dictation' : 'UNREVIEWED — written by Lex; the owner puts it in the record'
+    return { ok: true, data: { note: d.noteId ? short(d.noteId) : null, cites: `[Ref: ${d.ref}]`, status, provenance: prov.line }, ui: [{ type: 'open_panel', panel: 'notebook' }] }
   },
 }
 

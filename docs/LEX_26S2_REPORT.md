@@ -113,3 +113,28 @@ BRIEF_26S2 §5 says Who maps from "`Impl` / `Who`", How from "`Enforce`", Agains
 ---
 
 **The sprint is stopped here, as BRIEF_26S2 §2 requires.** Awaiting Charlie's sign-off on B3–B5 (the mapping, the JSON column, and the "specific enough" flip) before any step-bar, record or §5 work.
+
+---
+
+## C. CCh's decisions 177–180 (17 Oct) and the SIZE of what is left
+
+### C1. Done in this push
+- **180** — `mergeDuplicates` merges only on overlapping *quoted document text* (equal, or one inside the other). The fixture caught my first attempt (a fuzzy stem overlap ≥ 0.85 merged 2 of 10 same-shaped rules on shared words), so the fuzzy path was removed, not tuned. Ten same-shaped Q&A rules → ten rows. **Charlie can re-run the import once the deploy is read back.**
+- **178** — `add_research_note{dictated:true}`: the owner's dictated note is the owner's (USER, IN_RECORD); refused unless the comment is word for word in what the user wrote. [Ref: 214] on 452c5ade re-marked LEX/UNREVIEWED → USER/IN_RECORD, read back.
+- **177 / 179** — signed off as in the handoff; **no code yet**: both live inside the step screens (the record column, the step-2 tag, the step-3 labels).
+
+### C2. Size of §3–§9 and §11 (reported before building, as asked)
+**Two sprints, as the brief anticipated. Split at the end of §4, as the brief says — with one addition: the record column and its migration (177b) go in sprint 2's first commit, not sprint 1's, because nothing reads it until step 2 exists.**
+
+| | what | size | spend |
+|---|---|---|---|
+| §3 | step bar, `Idea.actionsStep` (**schema + migration, one commit**), per-step toolbar / row tags / opened-record sections, four checklists, step-aware Lex (snapshot carries the step; Classify proposes by step; controls source lists steps). Touches `ActionsWorkspace.tsx` (841 lines), `GuidingPolicyScreen.tsx` (2,002), `guiding-policy-state.ts` (1,134), `agent/tools.ts` + `controls.ts`, `proposal-snapshot.ts` | **large** — the bulk of sprint 1 | none |
+| §4 | step 1 intro + tools; "Test against the policy" for untested rows (a model call per row — price measured, "n=" on the card); retire the Link facet from the screen; limits (mostly done 17 Oct) ; CLAUDE.md §30 addition | medium | ~pence on a scratch idea |
+| §5 | `record` JSON column (**schema + migration**), seven slots, "specific enough" redefinition (grid, checklist, tag), Classify-step-2 pass (chunked like the import, measured), per-action Ask Lex, Proposal / Meeting Pack print Who / How / Against | **large** | a measurement run, ≈ tens of pence |
+| §6 | step-3 cost form (low / high / basis / year / one-off / "no cost, because"); labels per 179 | medium | none |
+| §7 | Sequence / before-ids / sequence view moved behind step 4 | small | none |
+| §8 | "n archived" on headings, collapse/expand with counts, list filter | small–medium | none |
+| §9 | fold "Your material" into Sources (readers of `IdeaUserMaterial`: `QuestionPanel`, `ResearchTab`, `IdeaDetailClient`, `chat-material`, `elicitation*`, `page-one`, `question-panel`, `source-registry`, `user-material` — 9 files to route through the registry), short caveat, three focused dialogs | **large** | none |
+| §11 | 11a `removeCause` → archive (field-machine, build, gap-check, action-structure also delete — listed, not fixed, per the brief); 11b ambient `purpose` + dashboard split + `check:spend-attribution`; 11c snapshot token count; 11d **held** until Charlie's second-account test | medium | none |
+
+**Sprint 1:** §3, §4, §7, §8 (they are the step screens) + 11a. **Sprint 2:** §5 (+177 record, +179 labels, the Classify pass), §6, §9, 11b, 11c. §12's `check:lex-26s2` grows with each. Stopping here for the split to be confirmed is NOT required by the brief; the next push begins §3.

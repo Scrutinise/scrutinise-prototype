@@ -321,6 +321,17 @@ async function partC() {
     const said = 'nobody could name who owned a target'
     const ownLex = await execute(toolByName('add_research_note')!, ctx([`From my own time: ${said}.`]), { ownObservation: true, comment: 'The user’s own experience: no named owner for targets.', provenance: { kind: 'user_words', refs: [], quote: said } })
     ok('…while one citing the user\'s real words, to "my own observation", is saved', ownLex.ok)
+    // Decision 178 — a note the owner dictates is the owner's (author = owner, USER, IN_RECORD); Lex's own wording stays unreviewed.
+    const dict = 'Success is judged in two interests: the taxpayer and the beneficiary.'
+    const dictCtx = ctx([`note this for the policy: ${dict}`])
+    const dictOk = await execute(toolByName('add_research_note')!, dictCtx, { ownObservation: true, comment: dict, dictated: true, bearsOnPolicy: true, provenance: { kind: 'user_words', refs: [], quote: dict } })
+    const dictRow = await prisma.researchNote.findFirst({ where: { ideaId: id, comment: dict } })
+    ok('178: a DICTATED note is the owner\'s — author = owner, kind USER, IN THE RECORD, read back', dictOk.ok && dictRow?.authorKind === 'USER' && dictRow.status === 'IN_RECORD' && dictRow.authorId === owner!.id, JSON.stringify(dictRow && { k: dictRow.authorKind, s: dictRow.status }))
+    const laundered = await execute(toolByName('add_research_note')!, dictCtx, { ownObservation: true, comment: 'Lex\'s own summary of what the user probably meant.', dictated: true, provenance: { kind: 'user_words', refs: [], quote: dict } })
+    ok('178: "dictated" over words the user did not write is REFUSED — Lex cannot launder its own wording into the record', !laundered.ok && /word for word/.test(laundered.error ?? ''), laundered.error)
+    const lexOwn = await prisma.researchNote.findFirst({ where: { ideaId: id, comment: { startsWith: 'The user’s own experience' } } })
+    ok('178: Lex\'s own findings (not dictated) are still LEX / UNREVIEWED', lexOwn?.authorKind === 'LEX' && lexOwn.status === 'UNREVIEWED')
+    control('a dictated note that landed unreviewed would pass the "in the record" test (must be FALSE)', dictRow?.status === 'UNREVIEWED')
     const list = await execute(toolByName('list_research_notebook')!, ctx(), {})
     ok('list_research_notebook returns numbered sources with whether each was READ, and note ids', list.ok && (list.data as any).sources.some((s: any) => /NOT READ/.test(s.read)) && (list.data as any).notes.length >= 3, JSON.stringify(list.data).slice(0, 200))
     const noteIdShort = (list.data as any).notes[0].note as string
