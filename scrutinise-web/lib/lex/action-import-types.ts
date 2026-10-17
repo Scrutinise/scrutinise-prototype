@@ -6,8 +6,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** The words the user knows each control by, for the rejection sentence (docs/CLAUDE.md §30). Keyed by the request's `op`. */
-export const IMPORT_OP_WORDS: Record<'start' | 'advance' | 'edit' | 'confirm' | 'discard', string> = {
-  start: '“Import actions from a document”', advance: 'Reading the document', edit: 'Saving your changes to the table',
+export const IMPORT_OP_WORDS: Record<'start' | 'advance' | 'retryPart' | 'edit' | 'confirm' | 'discard', string> = {
+  start: '“Import actions from a document”', advance: 'Reading the document', retryPart: '“Retry this part”', edit: 'Saving your changes to the table',
   confirm: 'Confirming the import', discard: 'Discarding the import',
 }
 
@@ -15,7 +15,7 @@ export const IMPORT_INPUT_WORDS: Record<string, string> = {
   sourceNumber: 'the document’s number', passId: 'the import', items: 'the rows you changed', existing: 'the headings for the existing actions',
   headings: 'the proposed headings', op: 'the control', itemId: 'the row', patch: 'the change to the row', title: 'the title', summary: 'the summary',
   implementer: 'the implementer', proposal: 'the proposal', headingName: 'the heading', actionNumber: 'the action number', purpose: 'the purpose paragraph',
-  actionId: 'the action', proposedHeading: 'the heading', name: 'the heading name',
+  actionId: 'the action', proposedHeading: 'the heading', name: 'the heading name', chunkIndex: 'the part',
 }
 
 /** What the pass proposes to do with one item of the document (BRIEF_26S §3c). */
@@ -93,17 +93,29 @@ export interface ImportHeading {
 }
 
 export interface ImportChunk {
+  /** Stable for the life of the pass (a split gives its halves NEW indexes), so a row's `chunk` always finds its part. */
   index: number
+  /** What the user calls it: "4", and after an automatic split "4a" / "4b". Absent on a pass started before 26-S2 (then index + 1). */
+  part?: string
+  /** Measured on this part (26-S2 §10.6): pence, output tokens and seconds of the call that read it. */
+  pence?: number
+  outTokens?: number
+  seconds?: number
   label: string
   /** Character offsets into the stored text, so a resumed pass chunks identically. */
   from: number
   to: number
   status: 'PENDING' | 'DONE' | 'FAILED'
   itemCount: number
-  /** Calls made on this chunk. A transient failure is tried once more; a second names itself and ends the pass. */
+  /** Calls made on this chunk. A transient failure is tried once more; a second leaves THIS part waiting for "Retry part N" — the pass keeps every part that was read. */
   tries: number
   error: string | null
 }
+
+/** 26-S2 §10: a part that failed its tries (or was too dense even in small pieces). It waits for the user; nothing else is lost. */
+export const IMPORT_MAX_TRIES = 2
+export const chunkNeedsYou = (c: Pick<ImportChunk, 'status' | 'tries'>): boolean => c.status === 'FAILED' && c.tries >= IMPORT_MAX_TRIES
+export const partName = (c: Pick<ImportChunk, 'index' | 'part'>): string => c.part ?? String(c.index + 1)
 
 export type ImportStage = 'ITEMS' | 'STRUCTURE' | 'POLICY_TEST' | 'DONE'
 
@@ -123,6 +135,8 @@ export interface ImportMapping {
   /** Next item index the policy test has not yet covered. */
   policyTestCursor: number
   model: string
+  /** The one line the screen shows about what the pass just did on its own ("Part 4 was too dense to read in one go — splitting it…"). Replaced, never repeated. */
+  notice?: string | null
 }
 
 /** CONFIRMING is the lock a confirm takes, so two clicks (or two tabs) cannot write the rows twice. */
@@ -188,12 +202,16 @@ export const IMPORT_RUNS: ReadonlyArray<{ words: number; pence: number; on: stri
   { words: 1620, pence: 21.4, on: '2026-10-15' }, // 3 parts of ~900 words, 46 rows (verify-lex-26s-run.ts)
   { words: 1620, pence: 22.1, on: '2026-10-15' }, // 3 parts, 47 rows (inside check:lex-26s --live)
   { words: 1620, pence: 21.2, on: '2026-10-15' }, // ONE part of 1,620 words, 47 rows — the single-pass comparison (report §E)
+  // 26-S2 §10.6 — the first REAL document (Charlie's, 17 Oct): the 3 of 5 parts that were read = 4,841 words, 91 rows, 22.56p (8.02 + 8.40 + 6.17;
+  // 7.4–8.2k tokens in, 6.3–9.2k out, 40–55 s each). The two truncated attempts on part 4 (12.36p each, 14,000 tokens, ~77 s, nothing returned) are
+  // NOT in the rate: they are what the automatic split now prevents.
+  { words: 4841, pence: 22.56, on: '2026-10-17' },
 ]
 export const importPenceFor = (words: number): { pence: number; basis: string } => {
   const w = IMPORT_RUNS.reduce((a, r) => a + r.words, 0), p = IMPORT_RUNS.reduce((a, r) => a + r.pence, 0)
   return {
     pence: Math.max(1, Math.round((p / w) * Math.max(words, 1) * 10) / 10),
-    basis: `measured, ${IMPORT_RUNS.length === 1 ? 'n=1' : `mean of n=${IMPORT_RUNS.length}`} real run${IMPORT_RUNS.length === 1 ? '' : 's'} on a shorter document, scaled by length — ${IMPORT_RUNS[IMPORT_RUNS.length - 1].on}`,
+    basis: `measured, ${IMPORT_RUNS.length === 1 ? 'n=1' : `mean of n=${IMPORT_RUNS.length}`} real run${IMPORT_RUNS.length === 1 ? '' : 's'}, scaled by length — latest ${IMPORT_RUNS[IMPORT_RUNS.length - 1].on}`,
   }
 }
 

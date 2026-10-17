@@ -71,7 +71,7 @@ function partA() {
   const joined = chunks.map((c) => DOC.slice(c.from, c.to)).join(' ')
   ok('nothing is lost between parts: every fixture provision is wholly inside ONE part', ALL_ITEMS.every((it) => chunks.some((c) => norm(DOC.slice(c.from, c.to)).includes(norm(it.text)))))
   ok('the parts together contain every word of the document', stems(joined).size >= stems(DOC).size - 2)
-  const big = I.planChunks(DOC, 100000)
+  const big = I.planChunks(DOC, 100000, 1e9) // 26-S2: and no density cap either - the cap is its own test (check:lex-26s2)
   ok('a large size gives one part', big.length === 1 && big[0].from === 0)
   control('a chunker that dropped the last paragraph would pass the "every provision" test (must be FALSE)', ALL_ITEMS.every((it) => I.planChunks(DOC.slice(0, DOC.length - 400), 500).some((c) => norm(DOC.slice(c.from, c.to)).includes(norm(it.text)))))
 
@@ -201,17 +201,18 @@ async function partB() {
   const idea = await prisma.idea.findFirst({ where: { id: { startsWith: '452c5ade' }, deletedAt: null }, select: { id: true } })
   if (!idea) { skip('the cold read', 'idea 452c5ade is not in this database'); return }
   const [passes, imported, notesOnPolicy] = await Promise.all([
-    prisma.actionImportPass.count({ where: { ideaId: idea.id } }),
+    prisma.actionImportPass.count({ where: { ideaId: idea.id, status: 'CONFIRMED' } }), // 26-S2: Charlie ran one on 17 Oct (DISCARDED after part 4 truncated); none has been CONFIRMED
     prisma.lexCoherentAction.count({ where: { ideaId: idea.id, policyTestFrom: { array_contains: [] } } }).catch(() => 0),
     prisma.researchNote.findMany({ where: { ideaId: idea.id }, select: { bearsOn: true, status: true } }),
   ])
-  ok('no import pass has ever been run on Charlie’s idea (the building was done on scratch copies; he runs it on his own)', passes === 0, `${passes}`)
+  ok('no import pass has been CONFIRMED on Charlie’s idea (he ran one on 17 Oct and discarded it when part 4 failed; nothing was written)', passes === 0, `${passes}`)
   void imported
   const actions = await prisma.lexCoherentAction.findMany({ where: { ideaId: idea.id }, select: { policyTestFrom: true, practicalStep: true } })
   ok('none of his actions carries an import provenance line or an imported block', actions.every((a) => !JSON.stringify(a.policyTestFrom ?? '').includes('From: [Ref:') && !/imported \d{4}-\d{2}-\d{2}/.test(a.practicalStep)))
   const bearing = notesOnPolicy.filter((n) => Array.isArray(n.bearsOn) && (n.bearsOn as Array<{ kind?: string }>).some((b) => b.kind === 'policy'))
   console.log(`    notes on his idea that bear on the policy today: ${bearing.length} (his own first policy note is his to file — BRIEF_26S §6d)`)
-  control('a count of notes bearing on the policy that counted every note would equal all of them (must be FALSE unless all do)', bearing.length === notesOnPolicy.length && notesOnPolicy.length > 0)
+  if (notesOnPolicy.length > bearing.length) control('a count of notes bearing on the policy that counted every note would equal all of them (must be FALSE)', bearing.length === notesOnPolicy.length)
+  else skip('control: a count that counted every note', 'every note on his idea bears on the policy today, so the control cannot tell the two counts apart')
   const heads = await prisma.actionHeading.findMany({ where: { ideaId: idea.id }, select: { name: true, purpose: true } })
   ok('the new column exists and is empty on his headings (no purpose was written for him)', heads.every((h) => h.purpose === null))
 }

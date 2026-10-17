@@ -36,7 +36,7 @@ import { fetchedContentIsData } from './fetched-content-guard'
 import { writeProposedFindings, type ImportedFinding } from './update-pass'
 import { recordToolCall } from './agent/tool-log'
 import {
-  PROPOSAL_KINDS, PURPOSE_MAX_WORDS, countItems, provenanceLine, wordCount, importPenceFor, type ImportableSource,
+  PROPOSAL_KINDS, PURPOSE_MAX_WORDS, countItems, provenanceLine, wordCount, importPenceFor, chunkNeedsYou, partName, IMPORT_MAX_TRIES, type ImportableSource,
   type ImportChunk, type ImportExisting, type ImportHeading, type ImportItem, type ImportMapping, type ImportPassView, type ImportResult,
   type ImportStatus, type PolicyCategory, type PolicyVerdict, type ProposalKind,
 } from './action-import-types'
@@ -52,7 +52,15 @@ export const CHUNK_WORDS = Math.max(300, parseInt(process.env.LEX_IMPORT_CHUNK_W
 const QUOTE_WORDS = 60
 const TITLE_WORDS = 12
 const TEST_BATCH = 25
-const MAX_TRIES = 2
+/**
+ * 26-S2 §10.4 — the per-part OUTPUT ceiling. It was 14,000 and a dense part hit it (twice, at 12.4p each). A larger ceiling spends only what is
+ * used, so raising it costs nothing on a part that finishes. 20,000 is the most a non-streamed call is run at here: a part must finish in ~110 s
+ * (measured: 6–9k tokens in 40–55 s on Sonnet 5.5) and stay resumable. ⚠ Sonnet 5.5's own maximum output is NOT readable from this repository
+ * (no registry entry) and was not probed — the splitting, not the ceiling, is what makes a dense part finish.
+ */
+export const ITEMS_MAX_OUTPUT_TOKENS = 20000
+/** The model call, behind a seam so a check can force a truncation (scripts/check-lex-26s2.ts). Production never touches it. */
+export const modelCaller: { current: typeof callModelJson } = { current: callModelJson }
 
 const clip = (s: string | null | undefined, n: number): string => { const t = (s ?? '').replace(/\s+/g, ' ').trim(); return t.length > n ? `${t.slice(0, n - 1)}…` : t }
 const firstWords = (s: string, n: number): string => { const w = s.trim().split(/\s+/); return w.length > n ? `${w.slice(0, n).join(' ')}…` : s.trim() }
@@ -79,7 +87,7 @@ export async function readImportSource(ideaId: string, sourceNumber: number): Pr
 
 // ── chunking (pure; exported for the check) ──────────────────────────────────────────────────────────────────
 
-interface Para { start: number; end: number; words: number; heading: string | null }
+interface Para { start: number; end: number; words: number; heading: string | null; provisions: number }
 
 const HEADING_RES = [
   /^#{1,6}\s+\S/,
@@ -94,32 +102,107 @@ function headingOf(p: string): string | null {
   return null
 }
 
-/** Splits the stored text into chunks of about `maxWords`, preferring to break before a heading. Offsets index `text`. */
-export function planChunks(text: string, maxWords = CHUNK_WORDS): ImportChunk[] {
+/**
+ * 26-S2 §10.1 — DENSITY, NOT ONLY WORDS. Output size follows the NUMBER OF PROVISIONS, not the word count: on Charlie's real document a
+ * 2,100-word part of "seventeen Q&A rules and a thirteen-row table" asked for more than 14,000 tokens of rows and was cut off twice.
+ * A provision is estimated from the document's own structure — a list item, a numbered clause, a table row, a bold lead-in, a "Label:" line —
+ * and a part is closed at ~PROVISION_CAP of them, with the word ceiling as the backstop. Prose with no markers counts one per ~150 words.
+ */
+export const PROVISION_CAP = 25
+/** A part is never split below this (words); a part this small that still will not read is shown to the user, once. */
+export const SPLIT_FLOOR_WORDS = 250
+const MARKER_RE = /^\s*(?:[-*•–·]\s+\S|\d+(?:\.\d+)*[.)]\s+\S|\(?[a-z]{1,3}\)\s+\S|\([ivxlc]+\)\s+\S|\|.+\||\*\*[^*\n]{2,90}\*\*|[A-Z][A-Za-z0-9 /’'-]{2,50}:\s+\S)/
+const TABLE_RULE_RE = /^\s*\|?[\s:|-]+\|?\s*$/
+/**
+ * One paragraph's provisions. Marked lines (list items, numbered clauses, table rows, bold lead-ins) count one each. A paragraph with no markers
+ * — most text that comes out of a Word file — counts one if it reads as a STATEMENT (12–70 words, ending in punctuation: a rule, a requirement), one
+ * per ~70 words if longer, and nothing if it is a heading or a table cell. CALIBRATED on the only measured data (Charlie's document, 17 Oct): on the
+ * three parts that were read this gave 35 / 42 / 17 against 32 / 39 / 20 rows actually returned; on the part that was cut off at 14,000 tokens it
+ * gave 60. (Paragraph count and words-per-provision did not track: 93 / 80 / 156.) Three parts is a thin sample — it is a guide, and the automatic split is the guarantee.
+ */
+function paraProvisions(p: string): number {
+  const lines = p.split(/\r?\n/).filter((l) => l.trim() && !TABLE_RULE_RE.test(l))
+  const marked = lines.filter((l) => MARKER_RE.test(l)).length
+  if (marked > 0) return marked
+  const w = wordCount(p)
+  if (w < 12) return 0
+  if (w <= 70) return /[.;:)”"]$/.test(p.trim()) ? 1 : 0
+  return Math.ceil(w / 70)
+}
+export function provisionsIn(s: string): number {
+  return s.split(/\r?\n\s*\r?\n/).filter((p) => p.trim()).reduce((n, p) => n + paraProvisions(p), 0)
+}
+
+/** Paragraph (blank-line separated) units; a paragraph that alone holds more than the cap (a table, a long list with no blank lines) is cut into its lines. */
+function unitsOf(text: string): Para[] {
   const paras: Para[] = []
   const re = /\S[\s\S]*?(?=\r?\n\s*\r?\n|$)/g
   for (const m of text.matchAll(re)) {
     const start = m.index ?? 0
-    paras.push({ start, end: start + m[0].length, words: wordCount(m[0]), heading: headingOf(m[0]) })
+    const prov = paraProvisions(m[0])
+    if (prov > PROVISION_CAP && m[0].includes('\n')) {
+      let carry: Para | null = null
+      for (const lm of m[0].matchAll(/[^\r\n]+/g)) {
+        const s = start + (lm.index ?? 0), e = s + lm[0].length
+        const marked = MARKER_RE.test(lm[0]) && !TABLE_RULE_RE.test(lm[0])
+        if (marked || !carry) { if (carry) paras.push(carry); carry = { start: s, end: e, words: wordCount(lm[0]), heading: headingOf(lm[0]), provisions: marked ? 1 : 0 } }
+        else { carry.end = e; carry.words += wordCount(lm[0]) } // a continuation line stays with the item above it
+      }
+      if (carry) paras.push(carry)
+    } else paras.push({ start, end: start + m[0].length, words: wordCount(m[0]), heading: headingOf(m[0]), provisions: prov })
   }
+  return paras
+}
+
+/** Splits the stored text into parts: at most ~`maxWords` words AND ~PROVISION_CAP provisions, preferring to break before a heading. Offsets index `text`. */
+export function planChunks(text: string, maxWords = CHUNK_WORDS, cap = PROVISION_CAP): ImportChunk[] {
+  const paras = unitsOf(text)
   if (!paras.length) return []
-  const chunks: Array<{ from: number; to: number; label: string; words: number }> = []
-  let cur: { from: number; to: number; label: string; words: number } | null = null
+  type Cur = { from: number; to: number; label: string; words: number; provisions: number }
+  const chunks: Cur[] = []
+  let cur: Cur | null = null
   let lastHeading = ''
   for (const p of paras) {
     if (p.heading) lastHeading = p.heading
-    const wouldBe = (cur?.words ?? 0) + p.words
-    const breakHere = cur && (wouldBe > maxWords || (p.heading && cur.words >= maxWords * 0.6))
+    const wouldBeWords = (cur?.words ?? 0) + p.words
+    const wouldBeProv = (cur?.provisions ?? 0) + p.provisions
+    const breakHere = cur && (wouldBeWords > maxWords || wouldBeProv > cap || (p.heading && (cur.words >= maxWords * 0.6 || cur.provisions >= cap * 0.8)))
     if (!cur || breakHere) {
       if (cur) chunks.push(cur)
-      cur = { from: p.start, to: p.end, label: lastHeading, words: p.words }
-    } else { cur.to = p.end; cur.words += p.words; if (!cur.label && lastHeading) cur.label = lastHeading }
+      cur = { from: p.start, to: p.end, label: lastHeading, words: p.words, provisions: p.provisions }
+    } else { cur.to = p.end; cur.words += p.words; cur.provisions += p.provisions; if (!cur.label && lastHeading) cur.label = lastHeading }
   }
   if (cur) chunks.push(cur)
   return chunks.map((c, i) => ({
-    index: i, label: `${clip(c.label, 60) || 'start of the document'} (part ${i + 1} of ${chunks.length})`,
+    index: i, part: String(i + 1), label: `${clip(c.label, 60) || 'start of the document'} (part ${i + 1} of ${chunks.length})`,
     from: c.from, to: c.to, status: 'PENDING' as const, itemCount: 0, tries: 0, error: null,
   }))
+}
+
+/**
+ * 26-S2 §10.2 — SPLIT A PART IN TWO at the paragraph (or, inside one, line) boundary nearest the middle by provisions, then words. Returns
+ * null at the floor (<= SPLIT_FLOOR_WORDS words) or when there is no boundary to cut at. Pure; the halves are exact slices of the part.
+ */
+export function splitRange(text: string, from: number, to: number): [{ from: number; to: number }, { from: number; to: number }] | null {
+  const slice = text.slice(from, to)
+  if (wordCount(slice) <= SPLIT_FLOOR_WORDS) return null
+  // Boundaries: ends of the units inside the slice, forced to line level when a single paragraph is the whole part.
+  let units = unitsOf(slice).map((u) => ({ ...u, start: u.start + from, end: u.end + from }))
+  if (units.length < 2) {
+    units = []
+    for (const lm of slice.matchAll(/[^\r\n]+/g)) { const s = from + (lm.index ?? 0); units.push({ start: s, end: s + lm[0].length, words: wordCount(lm[0]), heading: null, provisions: 1 }) }
+  }
+  if (units.length < 2) return null
+  const totalW = units.reduce((a, u) => a + u.words, 0), totalP = units.reduce((a, u) => a + u.provisions, 0)
+  let accW = 0, accP = 0, best = -1, bestScore = Infinity
+  for (let i = 0; i < units.length - 1; i++) {
+    accW += units[i].words; accP += units[i].provisions
+    const score = Math.abs(accP / Math.max(totalP, 1) - 0.5) + Math.abs(accW / Math.max(totalW, 1) - 0.5) * 0.5
+    if (accW >= SPLIT_FLOOR_WORDS / 2 && totalW - accW >= SPLIT_FLOOR_WORDS / 2 && score < bestScore) { bestScore = score; best = i }
+  }
+  if (best < 0) best = Math.floor(units.length / 2) - 1
+  if (best < 0 || best >= units.length - 1) return null
+  return [{ from, to: units[best].end }, { from: units[best + 1].start, to }]
 }
 
 // ── verifying the document's words (pure; exported for the check) ───────────────────────────────────────────
@@ -437,13 +520,14 @@ async function priced(usage: Parameters<typeof recordUsage>[0] & { recorded?: un
 }
 
 /** Compare-and-set save: if another call advanced the pass meanwhile, this unit's result is dropped (and says so) rather than merged. */
-async function save(row: PassRow, patch: { mapping?: ImportMapping; status?: ImportStatus; chunksDone?: number; failure?: string | null; addPence?: number }): Promise<boolean> {
+async function save(row: PassRow, patch: { mapping?: ImportMapping; status?: ImportStatus; chunksDone?: number; chunkCount?: number; failure?: string | null; addPence?: number }): Promise<boolean> {
   const r = await prisma.actionImportPass.updateMany({
     where: { id: row.id, updatedAt: row.updatedAt },
     data: {
       ...(patch.mapping ? { mapping: patch.mapping as never } : {}),
       ...(patch.status ? { status: patch.status } : {}),
       ...(patch.chunksDone != null ? { chunksDone: patch.chunksDone } : {}),
+      ...(patch.chunkCount != null ? { chunkCount: patch.chunkCount } : {}),
       ...(patch.failure !== undefined ? { failure: patch.failure } : {}),
       ...(patch.addPence ? { spentPence: (row.spentPence ?? 0) + patch.addPence } : {}),
       updatedAt: new Date(),
@@ -467,9 +551,9 @@ export async function advanceImport(ideaId: string, userId: string, passId: stri
     if (m.stage === 'POLICY_TEST') return await advancePolicyTest(row, m, ideaId, userId)
     await save(row, { status: 'READY' })
   } catch (err) {
-    const msg = `The import stopped at ${m.stage === 'ITEMS' ? 'reading the document' : m.stage === 'STRUCTURE' ? 'proposing headings' : 'testing against the policy'}: ${err instanceof Error ? err.message.slice(0, 240) : 'unknown error'}. Nothing has been written to your actions.`
+    // Plain words on the screen; the exception is in the log. The pass is KEPT (a part already read is not lost to a fault further on).
+    const msg = `The import stopped while ${m.stage === 'ITEMS' ? 'reading the document' : m.stage === 'STRUCTURE' ? 'proposing headings' : 'testing against the policy'}, because something went wrong on our side. Everything read so far is kept and nothing has been written to your actions. Try again; if it stops again, use “Report a bug”.`
     console.error('[action-import] advance threw', { passId, stage: m.stage, err })
-    await save(row, { status: 'FAILED', failure: msg })
     return fail(msg)
   }
   const again = await prisma.actionImportPass.findFirst({ where: { id: passId } })
@@ -477,7 +561,15 @@ export async function advanceImport(ideaId: string, userId: string, passId: stri
 }
 
 async function advanceChunk(row: PassRow, m: ImportMapping, text: string, ideaId: string, userId: string): Promise<Result<ImportPassView>> {
-  const chunk = m.chunks.find((c) => c.status === 'PENDING' || c.status === 'FAILED')
+  // 26-S2 §10.3 — a part that used up its tries WAITS for the user ("Retry part N"); it does not end the pass, and the others are kept.
+  const chunk = m.chunks.find((c) => c.status === 'PENDING' || (c.status === 'FAILED' && !chunkNeedsYou(c)))
+  if (!chunk && m.chunks.some(chunkNeedsYou)) {
+    const waiting = m.chunks.filter(chunkNeedsYou)
+    const read = m.chunks.filter((c) => c.status === 'DONE').length
+    const msg = `${read} of ${m.chunks.length} parts read. ${waiting.map((c) => c.error ?? `Part ${partName(c)} could not be read.`).join(' ')}`
+    if (row.failure !== msg) await save(row, { failure: msg })
+    return { ok: true, data: asView((await prisma.actionImportPass.findFirst({ where: { id: row.id } }))!) }
+  }
   if (!chunk) {
     // every chunk is read → merge, find what no row covers, move to the structure step
     const merged = mergeDuplicates(m.items)
@@ -495,21 +587,45 @@ async function advanceChunk(row: PassRow, m: ImportMapping, text: string, ideaId
   const headingNames = headings.map((h) => h.name)
 
   chunk.tries += 1
-  const res = await callModelJson<{ items?: RawItem[] }>({
+  const t0 = Date.now()
+  const res = await modelCaller.current<{ items?: RawItem[] }>({
     model: IMPORT_MODEL, system: ITEMS_SYSTEM, user: chunkUser(text, chunk, m, kernel, live, headingNames, idea?.title ?? ''), schema: ITEMS_SCHEMA as never,
-    maxOutputTokens: 14000, timeoutMs: 200_000, temperature: 0.1, label: 'action-import-chunk', stream: 'lex', pass: 'action-import.map', ideaId, userId,
+    maxOutputTokens: ITEMS_MAX_OUTPUT_TOKENS, timeoutMs: 200_000, temperature: 0.1, label: 'action-import-chunk', stream: 'lex', pass: 'action-import.map', ideaId, userId,
   })
+  const seconds = Math.round((Date.now() - t0) / 100) / 10
   const pence = await priced(res.usage as never, ideaId, userId, 'action-import.map', !res.ok)
 
   if (!res.ok) {
     const f = res as { reason: string; detail: string }
-    chunk.status = 'FAILED'; chunk.error = `${f.reason}: ${clip(f.detail, 200)}`
-    if (chunk.tries >= MAX_TRIES) {
-      const msg = `Part ${chunk.index + 1} of ${m.chunks.length} (“${chunk.label}”) could not be read after ${chunk.tries} tries — ${chunk.error}. Nothing has been written to your actions. Discard this import and start again, or paste that part on its own.`
-      await save(row, { mapping: m, status: 'FAILED', failure: msg, addPence: pence })
-      return fail(msg)
+    // Developer words ("raise the budget") go to the LOG, never the screen (26-S2 §10.5). The user gets one sentence per failure.
+    console.warn('[action-import] part failed', { passId: row.id, part: partName(chunk), reason: f.reason, detail: clip(f.detail, 300) })
+    const here = text.slice(chunk.from, chunk.to)
+    if (f.reason === 'truncated') {
+      // Too many rows for one call: SPLIT the part and read the halves — recursively, down to the floor. Not a try, not an error.
+      const halves = splitRange(text, chunk.from, chunk.to)
+      if (halves) {
+        const base = partName(chunk)
+        const mk = (h: { from: number; to: number }, suffix: string, idx: number): ImportChunk => ({
+          index: idx, part: `${base}${suffix}`, label: `${clip(chunk.label.replace(/\s*\(part [^)]*\)\s*$/, ''), 60) || 'start of the document'} (part ${base}${suffix})`,
+          from: h.from, to: h.to, status: 'PENDING', itemCount: 0, tries: 0, error: null,
+        })
+        const nextIdx = Math.max(...m.chunks.map((c) => c.index)) + 1
+        const kids = [mk(halves[0], 'a', nextIdx), mk(halves[1], 'b', nextIdx + 1)]
+        const chunks = m.chunks.flatMap((c) => (c.index === chunk.index ? kids : [c]))
+        const next: ImportMapping = { ...m, chunks, notice: `Part ${base} was too dense to read in one go — splitting it and trying again.` }
+        await save(row, { mapping: next, addPence: pence, failure: null, chunkCount: chunks.length })
+        return { ok: true, data: asView((await prisma.actionImportPass.findFirst({ where: { id: row.id } }))!) }
+      }
+      chunk.status = 'FAILED'; chunk.tries = IMPORT_MAX_TRIES
+      chunk.error = `Part ${partName(chunk)} could not be read even in small pieces (${wordCount(here)} words). Nothing has been written. Paste that section on its own, or discard this import.`
+    } else {
+      chunk.status = 'FAILED'
+      chunk.error = chunk.tries >= IMPORT_MAX_TRIES
+        ? `Part ${partName(chunk)} could not be read — the reading service did not answer properly. Nothing has been written. Try this part again, or discard this import.`
+        : null
     }
-    await save(row, { mapping: m, addPence: pence })
+    const stuck = chunkNeedsYou(chunk)
+    await save(row, { mapping: m, addPence: pence, failure: stuck ? `${m.chunks.filter((c) => c.status === 'DONE').length} of ${m.chunks.length} parts read. ${chunk.error}` : null })
     return { ok: true, data: asView((await prisma.actionImportPass.findFirst({ where: { id: row.id } }))!) }
   }
 
@@ -519,9 +635,28 @@ async function advanceChunk(row: PassRow, m: ImportMapping, text: string, ideaId
   }
   const shaped = (res.value.items ?? []).map((r) => shapeItem(r, ctx)).filter((i) => i.quote || i.title)
   chunk.status = 'DONE'; chunk.error = null; chunk.itemCount = shaped.length
-  const next: ImportMapping = { ...m, items: [...m.items, ...shaped.map((s, i) => ({ ...s, id: `c${chunk.index}-${i + 1}` }))] }
-  await save(row, { mapping: next, chunksDone: next.chunks.filter((c) => c.status === 'DONE').length, addPence: pence })
+  chunk.pence = Math.round(pence * 100) / 100; chunk.outTokens = (res.usage as { tokensOut?: number }).tokensOut ?? 0; chunk.seconds = seconds // measured (§10.6)
+  const next: ImportMapping = { ...m, items: [...m.items, ...shaped.map((s, i) => ({ ...s, id: `c${chunk.index}-${i + 1}` }))], notice: null }
+  await save(row, { mapping: next, chunksDone: next.chunks.filter((c) => c.status === 'DONE').length, addPence: pence, failure: null })
   return { ok: true, data: asView((await prisma.actionImportPass.findFirst({ where: { id: row.id } }))!) }
+}
+
+/**
+ * 26-S2 §10.3 — "Retry part N": a part that failed its tries (or was too dense even in small pieces) goes back to waiting, with fresh tries.
+ * Every part already read is kept; nothing is re-read or re-spent but this one.
+ */
+export async function retryPart(ideaId: string, passId: string, chunkIndex: number): Promise<Result<ImportPassView>> {
+  const row = await prisma.actionImportPass.findFirst({ where: { id: passId, ideaId } })
+  if (!row) return fail('That import is not on this idea. Nothing was changed.')
+  if (row.status !== 'MAPPING') return fail('That import is no longer being read, so there is nothing to retry. Nothing was changed.')
+  const m = mappingOf(row)
+  const c = m.chunks.find((x) => x.index === chunkIndex)
+  if (!c) return fail('That part is not in this import. Nothing was changed.')
+  if (c.status !== 'FAILED') return fail(`Part ${partName(c)} is not waiting for a retry. Nothing was changed.`)
+  c.status = 'PENDING'; c.tries = 0; c.error = null
+  const ok = await save(row, { mapping: { ...m, notice: null }, failure: null })
+  if (!ok) return fail('The import moved on while you clicked. Look at it again. Nothing was changed.')
+  return { ok: true, data: asView((await prisma.actionImportPass.findFirst({ where: { id: passId } }))!) }
 }
 
 // ── structure: headings + existing → heading ─────────────────────────────────────────────────────────────
@@ -584,15 +719,17 @@ async function advanceStructure(row: PassRow, m: ImportMapping, ideaId: string, 
       'EXISTING ACTIONS (number — what it does — [its heading]):',
       m.existing.map((e) => `#${e.number} — ${e.label} — [${e.currentHeading ?? 'no heading'}]`).join('\n') || '(none)',
     ].join('\n')
-    const res = await callModelJson<{ purposes?: Array<{ heading?: string; purpose?: string }>; existing?: Array<{ number?: number; heading?: string }> }>({
+    const res = await modelCaller.current<{ purposes?: Array<{ heading?: string; purpose?: string }>; existing?: Array<{ number?: number; heading?: string }> }>({
       model: IMPORT_MODEL, system: STRUCTURE_SYSTEM, user, schema: STRUCTURE_SCHEMA as never,
       maxOutputTokens: 8000, timeoutMs: 150_000, temperature: 0.1, label: 'action-import-structure', stream: 'lex', pass: 'action-import.structure', ideaId, userId,
     })
     pence = await priced(res.usage as never, ideaId, userId, 'action-import.structure', !res.ok)
     if (!res.ok) {
       const f = res as { reason: string; detail: string }
-      const msg = `Proposing headings failed (${f.reason}: ${clip(f.detail, 200)}). Nothing has been written to your actions. Discard this import and start again.`
-      await save(row, { status: 'FAILED', failure: msg, addPence: pence })
+      // 26-S2 §10.5/§10.3: plain words (the detail is in the log), and the pass is KEPT — every part already read is still there; "Try again" re-asks.
+      console.warn('[action-import] structure step failed', { passId: row.id, reason: f.reason, detail: clip(f.detail, 300) })
+      const msg = 'Proposing the headings did not complete. Every part of the document has been read and is kept; nothing has been written to your actions. Try again, or discard this import.'
+      await save(row, { addPence: pence })
       return fail(msg)
     }
     for (const p of res.value.purposes ?? []) {
@@ -650,15 +787,16 @@ async function advancePolicyTest(row: PassRow, m: ImportMapping, ideaId: string,
       'THE CANDIDATE ACTIONS',
       ...batch.map(({ it }, i) => `[${i}] (${provenanceLine(row.sourceNumber, it.section)}) ${it.title}: ${it.summary}`),
     ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n')
-    const res = await callModelJson<{ groups?: Array<{ members?: unknown; text?: unknown; verdict?: unknown; reason?: unknown }> }>({
+    const res = await modelCaller.current<{ groups?: Array<{ members?: unknown; text?: unknown; verdict?: unknown; reason?: unknown }> }>({
       model: TEST_MODEL, system: TEST_SYSTEM + TEST_ONE_BY_ONE, user, schema: TEST_SCHEMA as never,
       maxOutputTokens: 8192, timeoutMs: 120_000, temperature: 0.1, reasoningEffort: 'medium', label: 'action-import-test', stream: 'lex', pass: 'action-import.test', ideaId, userId,
     })
     pence = await priced(res.usage as never, ideaId, userId, 'action-import.test', !res.ok)
     if (!res.ok) {
       const f = res as { reason: string; detail: string }
-      const msg = `Testing the rows against your Guiding Policy failed (${f.reason}: ${clip(f.detail, 200)}). Nothing has been written to your actions. Discard this import and start again.`
-      await save(row, { status: 'FAILED', failure: msg, addPence: pence })
+      console.warn('[action-import] policy test failed', { passId: row.id, reason: f.reason, detail: clip(f.detail, 300) })
+      const msg = 'Testing the rows against your Guiding Policy did not complete. The table is kept; nothing has been written to your actions. Try again, or discard this import.'
+      await save(row, { addPence: pence })
       return fail(msg)
     }
     const groups = placeGroups(res.value.groups, batch.map(({ it }) => it.title))

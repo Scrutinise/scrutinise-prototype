@@ -53,6 +53,7 @@ export async function POST(req: Request, { params }: Params) {
     switch (b.op) {
       case 'start': return respond(await I.startImport(id, uid, b.sourceNumber))
       case 'advance': return respond(await I.advanceImport(id, uid, b.passId))
+      case 'retryPart': return respond(await I.retryPart(id, b.passId, b.chunkIndex))
       case 'edit': return respond(await I.editImport(id, b.passId, { items: b.items as I.EditInput['items'], existing: b.existing as I.EditInput['existing'], headings: b.headings }))
       case 'confirm': return respond(await I.confirmImport(id, uid, b.passId))
       case 'discard': return respond(await I.discardImport(id, b.passId))

@@ -22,6 +22,8 @@ const ItemPatch = z.object({
 export const ActionImportBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('start'), sourceNumber: z.number().int().min(1) }),
   z.object({ op: z.literal('advance'), passId: z.string().min(1) }),
+  // 26-S2 §10.3 — after the automatic split, a part that still fails waits for this; every part already read is kept.
+  z.object({ op: z.literal('retryPart'), passId: z.string().min(1), chunkIndex: z.number().int().min(0) }),
   z.object({
     op: z.literal('edit'), passId: z.string().min(1),
     items: z.array(z.object({ itemId: z.string().min(1), patch: ItemPatch })).max(300).optional(),

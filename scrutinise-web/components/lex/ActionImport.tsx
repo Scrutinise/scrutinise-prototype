@@ -21,7 +21,7 @@ import { explainFailure } from '@/lib/api-rejection'
 import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
 import { colourFor } from '@/lib/lex/action-headings'
 import {
-  PROPOSAL_KINDS, PROPOSAL_WORDS, PROPOSAL_GLYPH, PURPOSE_MAX_WORDS, IMPORT_OP_WORDS, countItems, confirmSentence, wordCount,
+  PROPOSAL_KINDS, PROPOSAL_WORDS, PROPOSAL_GLYPH, PURPOSE_MAX_WORDS, IMPORT_OP_WORDS, countItems, confirmSentence, wordCount, chunkNeedsYou, partName,
   type ImportPassView, type ImportItem, type ImportableSource, type ProposalKind,
 } from '@/lib/lex/action-import-types'
 
@@ -75,7 +75,8 @@ export default function ActionImport({ ideaId, onChanged, initialSourceNumber }:
 
   // Keep the pass moving while it is being read: one unit of work per request.
   useEffect(() => {
-    if (!pass || pass.status !== 'MAPPING' || advancing.current || stalled) return
+    // A part waiting for "Retry part N" stops the automatic reading (26-S2 §10.3): nothing further is spent until the user chooses.
+    if (!pass || pass.status !== 'MAPPING' || advancing.current || stalled || pass.mapping.chunks.some(chunkNeedsYou)) return
     advancing.current = true
     void (async () => {
       const r = await call({ op: 'advance', passId: pass.id }, 'Reading the document')
@@ -164,11 +165,25 @@ export default function ActionImport({ ideaId, onChanged, initialSourceNumber }:
             <div className="space-y-1" role="status">
               <p className="text-sm font-medium text-zinc-900">Reading [Ref: {pass.sourceNumber}] “{pass.mapping.sourceTitle}”…</p>
               <p className="text-xs text-zinc-700">
-                {pass.mapping.stage === 'ITEMS' && `Part ${Math.min(pass.chunksDone + 1, pass.chunkCount)} of ${pass.chunkCount} — ${pass.mapping.items.length} item${pass.mapping.items.length === 1 ? '' : 's'} so far.`}
+                {pass.mapping.stage === 'ITEMS' && `${pass.chunksDone} of ${pass.chunkCount} parts read — ${pass.mapping.items.length} item${pass.mapping.items.length === 1 ? '' : 's'} so far.`}
                 {pass.mapping.stage === 'STRUCTURE' && 'Proposing headings and the purpose of each.'}
                 {pass.mapping.stage === 'POLICY_TEST' && 'Testing each row against your accepted Guiding Policy.'}
                 {' '}You can leave this page; it will be here, at this point, when you come back. Spent so far: {(pass.spentPence ?? 0).toFixed(1)}p.
               </p>
+              {/* 26-S2 §10.2 — what the pass did on its own, in one line ("Part 4 was too dense to read in one go — splitting it and trying again."). */}
+              {pass.mapping.notice && <p className="text-xs text-zinc-800 bg-zinc-50 border border-zinc-300 rounded px-2 py-1" role="status">{pass.mapping.notice}</p>}
+              {/* 26-S2 §10.3 — a part that would not read waits HERE; every part already read is kept, and nothing is written. */}
+              {pass.mapping.chunks.some(chunkNeedsYou) && (
+                <div className="rounded border-2 border-zinc-900 bg-white px-2 py-1.5 space-y-1" role="alert" data-import-stuck>
+                  <p className="text-xs font-semibold text-zinc-900">⚠ {pass.failure ?? 'A part could not be read.'}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {pass.mapping.chunks.filter(chunkNeedsYou).map((c) => (
+                      <button key={c.index} type="button" disabled={!!busy} onClick={async () => { const r = await call({ op: 'retryPart', passId: pass.id, chunkIndex: c.index }, `Retrying part ${partName(c)}`); if (r.ok) setPass(r.result as ImportPassView) }}
+                        className="text-xs font-medium px-2 py-0.5 rounded border-2 border-zinc-900 bg-white disabled:opacity-40">Retry part {partName(c)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {stalled && (
                 <p className="text-xs font-semibold text-amber-800" role="alert">⚠ Reading stopped after three failed tries (the reason is above). Nothing has been written to your actions.{' '}
                   <button type="button" onClick={() => { failures.current = 0; setStalled(false); void load() }} className="underline">Try again</button></p>
@@ -297,7 +312,7 @@ export function ImportReview({ pass, counts, busy, editItem, edit, confirm, disc
         <p className="text-[11px] text-zinc-700 mt-0.5">
           {counts.notAction + counts.unplaced + counts.struck > 0 && `${counts.notAction} not an action · ${counts.unplaced} could not be placed · ${counts.struck} left out — none of these is written. `}
           New actions land at the end of your list, <strong>not confirmed</strong> (“These are my actions” is untouched), each saying where it came from. Text added to an existing action goes <strong>beside</strong> yours, labelled — yours is never overwritten. Items for the policy go to the policy review as proposals; <strong>nothing on the policy changes until you accept it</strong>.
-          {' '}Reading the document cost {(pass.spentPence ?? 0).toFixed(1)}p; confirming costs nothing more.
+          {' '}Reading the document cost {(pass.spentPence ?? 0).toFixed(1)}p across {pass.chunkCount} parts — measured on this document (n=1 run); confirming costs nothing more.
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           <button type="button" disabled={busy} onClick={() => void confirm()} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-zinc-900 text-white disabled:opacity-40">Confirm: {confirmSentence(counts)}</button>
