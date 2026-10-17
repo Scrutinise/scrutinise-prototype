@@ -43,14 +43,18 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('ruleOut'), ids, reason: z.string().max(LIMITS.ruleOutReason) }),
   z.object({ op: z.literal('restore'), ids }),
   z.object({ op: z.literal('setFacets'), actionId: z.string(), patch: Facets }),
-  z.object({ op: z.literal('acceptFacets'), ids: ids.optional() }),
-  z.object({ op: z.literal('dismissFacets'), ids: ids.optional() }),
+  // `step`: accept / dismiss only that step's part of a proposal (1 causes + avenue, 4 sequence + before); absent = all of it.
+  z.object({ op: z.literal('acceptFacets'), ids: ids.optional(), step: z.number().int().min(1).max(4).optional() }),
+  z.object({ op: z.literal('dismissFacets'), ids: ids.optional(), step: z.number().int().min(1).max(4).optional() }),
   z.object({ op: z.literal('proposeFacets') }),
   z.object({ op: z.literal('suggestHeadings') }),
   z.object({ op: z.literal('judgeMerge'), a: z.number().int(), b: z.number().int() }),
   z.object({ op: z.literal('applyMerge'), a: z.number().int(), b: z.number().int(), answer: Answer }),
   z.object({ op: z.literal('undoMerge'), mergedId: z.string() }),
   z.object({ op: z.literal('findDuplicates') }),
+  // 26-S2 §3 — the step bar (decision 166) and "kept with a note" for an action the policy test says CONFLICTS (§3c).
+  z.object({ op: z.literal('setStep'), step: z.number().int().min(1).max(4) }),
+  z.object({ op: z.literal('keepConflict'), actionId: z.string(), note: z.string().max(LIMITS.ruleOutReason).nullable() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -66,6 +70,7 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   acceptFacets: 'Accepting the proposed classification', dismissFacets: 'Dismissing the proposed classification',
   proposeFacets: '“Classify with Lex”', suggestHeadings: '“Suggest headings from my guiding policy”',
   judgeMerge: '“Compare”', applyMerge: '“Merge”', undoMerge: '“Undo merge”', findDuplicates: '“Find duplicates”',
+  setStep: 'Moving to that step', keepConflict: '“Keep it, with a note”',
 }
 
 /** And the words for the inputs those controls send. */
@@ -73,5 +78,5 @@ export const INPUT_WORDS: Record<string, string> = {
   actionIds: 'the selected actions', ids: 'the selected actions', actionId: 'the action', headingId: 'the heading',
   name: 'the heading name', colourKey: 'the colour', title: 'the title', reason: 'the reason', order: 'the new order',
   patch: 'the classification', answer: 'Lex’s answer', mergedId: 'the merged action', a: 'the first action number', b: 'the second action number',
-  op: 'the control',
+  op: 'the control', step: 'the step (1 to 4)', note: 'the note',
 }

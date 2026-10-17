@@ -1336,3 +1336,33 @@ unworded; convert each as it is touched, and a sweep should not be needed to fin
 
 *(Companions: §18 — a failure must name its cause; §24 — a schema that permits is not a prompt that requires. This is the same
 family at the keyboard: the system knew exactly what was wrong and kept it from the person who could fix it.)*
+
+### 30.1 — Standing rule (decision 168, 17 October 2026): every bounded input shows its limit, and nothing fails silently
+
+**Every input with a limit shows the limit and the count left, stops at the limit, and says so in words when text is cut. A refusal
+anywhere on the Coherent Actions screen reads "Not saved: ‹reason›" with an OK, in the strip that stays at the top of the viewport.**
+*Never make the customer wrong.* The numbers live in ONE place (`lib/lex/input-limits.ts`), read by the request schema AND by every
+counter, so the box, the server and the sentence cannot disagree (`components/lex/BoundedInput.tsx`). Why: on 16–17 October a 700-character
+reason was silently cut to 600 by the browser, and a refusal drawn 1,746 px above the viewport looked like nothing happening. A write
+also re-reads the list before it says anything, so a succeeded-but-not-shown write is said, not silent.
+
+---
+
+## 31. THE SCREEN SHOWS ONLY THE TOOLS FOR THE STEP THE USER IS ON (17 October 2026, 26-S2 decision 166)
+
+**The rule: where a task has an order, the screen shows only the tools for the step the user is on. Everything else waits, reachable
+but out of the way — and a tool that belongs to another step is ABSENT, not greyed.**
+
+Why: 26-Q put fourteen tools and six facets on the Coherent Actions screen. Charlie's words on 17 October were "the dashboard of a
+fighter jet". A user sorting fifty actions cannot also be asked who implements each, what it costs and what comes before what.
+
+How it is built (`lib/lex/action-steps.ts`, `components/lex/ActionsSteps.tsx`, `ActionsWorkspace.tsx`): four steps — **1 Sort and prune ·
+2 Who, how and against · 3 Costs · 4 Order** — each with its own intro (verbatim, asserted against the brief), toolbar, row tags, opened-record
+sections and an ADVISORY checklist (it says what is unfinished and never blocks moving on). The step is stored per idea (`Idea.actionsStep`).
+Movement is free; no step is ever locked. An opened record shows the current step's sections first and open, the other steps' one line each
+("Who, how and against — not yet answered · from step 2"), so nothing is hidden, only out of the way. Lex follows the same rule: the snapshot
+carries the step, "Classify with Lex" proposes only that step's facets, and a control from another step is named only with "that is in step N".
+
+⚠ **Colour is never the only cue** (§21): the current step is marked by shape (●/○), weight (bold, a 2px border) and a word ("you are here").
+⚠ **A check for this asserts the RENDERED screen per step** (§25): `check:lex-26s2` part C renders every step and asserts both that the step's
+tools are there and that the other steps' tools are not — with a control that stays false and a mutation run that proves it can fail.

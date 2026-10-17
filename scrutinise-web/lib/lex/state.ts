@@ -12,6 +12,7 @@ import { prisma } from '@/lib/prisma'
 import { initializeFieldStates } from './field-machine'
 import { projectElicitationOntoPageOne } from './page-one'
 import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
+import { clampStep } from './action-steps'
 import {
   PAGE_SEQUENCE,
   LOCKED_PAGES,
@@ -47,6 +48,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       id: true,
       creatorId: true,
       lexPage: true,
+      actionsStep: true,
       legislationRefs: true,
       stageSearches: true,
       creator: {
@@ -260,6 +262,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     policyTest: a.policyTestVerdict
       ? { verdict: a.policyTestVerdict as NonNullable<CanonicalAction['policyTest']>['verdict'], reason: a.policyTestReason, from: Array.isArray(a.policyTestFrom) ? (a.policyTestFrom as unknown[]).map(String) : [] }
       : null,
+    conflictNote: a.conflictNote ?? null,
   })
   // 26-Q — the list the whole product reads is the LIVE one; ruled-out / merged-away rows are reported separately so the
   // panel can show them restorable and nothing else counts them (documents, costs, gap check, Lex's snapshot).
@@ -332,6 +335,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     actions,
     setAsideActions,
     actionHeadings,
+    actionsStep: clampStep(idea.actionsStep),
     costLines,
     benchmarks,
     userProfile: {

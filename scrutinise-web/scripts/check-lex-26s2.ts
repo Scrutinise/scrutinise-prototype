@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// 26-S2 (BRIEF_26S2 §12) — check:lex-26s2.   This file grows with the sprint; today it holds §10 (the import fix, item 5 of §12).
+// 26-S2 (BRIEF_26S2 §12) — check:lex-26s2.   This file grows with the sprint: §10 (the import fix, item 5 of §12) and, from sprint 1, the four steps (item 1: A–D below).
 //
 //   npx tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26s2.ts          (offline + a scratch idea, NO model spend)
 //   npx tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26s2.ts --live   (+ the real model on the dense fixture: SPENDS pence)
@@ -19,6 +19,12 @@ import { prisma } from '../lib/prisma'
 import * as I from '../lib/lex/action-import'
 import * as T from '../lib/lex/action-import-types'
 import * as RN from '../lib/lex/research-notes'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import ActionsWorkspace from '../components/lex/ActionsWorkspace'
+import ActionsSteps from '../components/lex/ActionsSteps'
+import * as ST from '../lib/lex/action-steps'
+import { computeCanonicalState } from '../lib/lex/state'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 
 const LIVE = process.argv.includes('--live')
@@ -201,9 +207,159 @@ async function partB() {
   }
 }
 
+
+// ── C · THE FOUR STEPS (BRIEF_26S2 §3, §4, §7; §12 item 1) ───────────────────────────────────────────────────
+
+const norm = (s: string) => s.replace(/[’‘]/g, "'").replace(/\s+/g, ' ')
+const textOf = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ')
+
+function mkAction(n: number, extra: Record<string, unknown> = {}) {
+  return {
+    id: `a${n}`, number: n, title: `Action ${n}`, practicalStep: `The body of action ${n}, written out in full so a summary line can be cut from it.`, whoImplements: null, wording: null, headingId: null,
+    targetCauseIds: [], avenue: null, link: null, sequence: null, beforeIds: [], parked: false, parkedReason: null, mergedFrom: [], status: 'LIVE', ruleOutReason: null, mergedIntoId: null,
+    facetProposal: null, titleProposal: null, source: 'LEX', mechanismType: null, targetOrganisation: null, benefits: null, implementationCost: null, enforcementCost: null,
+    regulatoryFriction: null, policyTest: null, conflictNote: null, ...extra,
+  }
+}
+const renderWs = (step: number, actions: unknown[], open: string[] = [], costLineActionIds: string[] = []) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
+  ideaId: 'idea-x', actions: actions as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
+  causes: [{ id: 'c1', number: 1, cause: 'A cause', whyPersisted: null }] as never, busy: false, onChanged: () => {}, renderFull: (a: { number: number }, s: number) => React.createElement('div', null, `FULL CARD ${a.number} STEP ${s}`),
+  initiallyOpen: open, step: step as never, costLineActionIds,
+}))
+
+function partC() {
+  section('C · the four steps — pure and RENDERED (the screen shows only the tools for the step the user is on)')
+  const brief = norm(read('../docs/BRIEF_26S2.md'))
+  for (const n of ST.STEP_NUMBERS) {
+    const s = ST.STEPS[n]
+    ok(`step ${n}'s intro is the brief's, word for word (“${s.lead}”)`, brief.includes(norm(`**${s.lead}** ${s.body}`)), s.body.slice(0, 60))
+  }
+  control('an intro altered by one word still matches the brief (must be FALSE)', brief.includes(norm(`**${ST.STEPS[1].lead}** ${ST.STEPS[1].body.replace('Get the list into shape', 'Get the list in shape')}`)))
+  ok('the step labels are the brief\'s four words', ST.STEP_NUMBERS.map((n) => `${n} ${ST.STEPS[n].label}`).join(' · ') === '1 Sort and prune · 2 Who, how and against · 3 Costs · 4 Order')
+  ok('clampStep never lets a stored value outside 1–4 through', ST.clampStep(0) === 1 && ST.clampStep(9) === 1 && ST.clampStep(3) === 3 && ST.clampStep('x') === 1 && ST.clampStep(null) === 1)
+
+  // the bar: position + weight + a word, never colour alone
+  const bar = renderToStaticMarkup(React.createElement(ActionsSteps, { ideaId: 'idea-x', initialStep: 2 as never, children: () => null }))
+  ok('the bar prints the four steps in words, in order', ST.STEP_NUMBERS.every((n) => textOf(bar).includes(`${n} ${ST.STEPS[n].label}`)) && textOf(bar).indexOf('1 Sort and prune') < textOf(bar).indexOf('4 Order'))
+  ok('the current step is marked by SHAPE (●), WEIGHT (bold, a 2px border) and a word ("you are here") — and only that one', /aria-current="step"[^>]*data-step="2"|data-step="2"[^>]*aria-current="step"/.test(bar) && (bar.match(/aria-current="step"/g) ?? []).length === 1 && /●/.test(bar) && (bar.match(/○/g) ?? []).length === 3 && /font-bold/.test(bar) && /border-2/.test(bar) && /you are here/.test(bar))
+  ok('…and the step\'s intro sits under the bar', textOf(bar).includes(ST.STEPS[2].lead) && textOf(bar).includes('An action is only real when someone named will do it'))
+  control('the OTHER steps\' intros printed as well (must be FALSE)', textOf(bar).includes(ST.STEPS[1].body.slice(0, 40)))
+
+  // the workspace, rendered, step by step
+  const rows = [
+    mkAction(1, { headingId: 'h1', avenue: 'LEGISLATIVE', targetCauseIds: ['c1'], whoImplements: 'Cabinet Office', sequence: 'NOW', policyTest: { verdict: 'FITS', reason: 'ok', from: [] }, implementationCost: { low: 1000, high: 2000, unit: null, basis: null, benchmarkId: null, userOverride: false } }),
+    mkAction(2, { policyTest: { verdict: 'CONFLICTS', reason: 'It rules out thresholds.', from: [] } }),
+    mkAction(3),
+  ]
+  const h2 = renderWs(2, rows)
+  const s1 = textOf(renderWs(1, rows)), s2 = textOf(h2), s3 = textOf(renderWs(3, rows)), s4 = textOf(renderWs(4, rows))
+  ok('STEP 1 offers its tools: Title these for me, Classify with Lex, Find duplicates, Add heading, Suggest headings, the Coverage grid', ['Title these for me', 'Classify with Lex', 'Find duplicates', 'Add heading', 'Suggest headings from my guiding policy', 'Coverage grid'].every((w) => s1.includes(w)))
+  ok('STEP 1 row: title, summary, heading, avenue, causes, verdict (shape + word) — and NOTHING of steps 2–4 (no Who, cost, sequence, “specific enough”)', s1.includes('Action 1') && s1.includes('The body of action 1') && s1.includes('Legislation') && s1.includes('Legislative') && s1.includes('1 cause') && s1.includes('✓ Fits') && s1.includes('✗ Conflicts') && !/Who:|Cost:|Sequence:|specific enough|Cabinet Office|Implement £/.test(s1), s1.slice(0, 600))
+  control('a step-1 row that still printed "specific enough" (must be FALSE)', /specific enough/.test(s1))
+  ok('STEP 1 has no sequence view and no Link tag anywhere', !/○ Sequence|● Sequence/.test(s1) && !/\blink:/i.test(s1))
+  ok('STEP 2 row carries Who ("Cabinet Office", else "not yet answered") and none of step 1\'s tools', s2.includes('Who: Cabinet Office') && s2.includes('Who: not yet answered') && !/Title these for me|Classify with Lex|Find duplicates|Coverage grid|Add heading/.test(s2) && !/Select action|Reorder action|Heading for action/.test(h2))
+  ok('STEP 3 row carries the cost ("Implement £1,000–£2,000", else "Cost: not yet answered") and no Who', s3.includes('Implement £1,000–£2,000') && s3.includes('Cost: not yet answered') && !/Who:/.test(s3))
+  ok('…a cost LINE counts as a cost (step 3 reads it as recorded)', textOf(renderWs(3, [mkAction(7)], [], ['a7'])).includes('cost lines recorded'))
+  ok('STEP 4 offers Classify with Lex (sequence), the Sequence view and its rows say where each sits; no step-1 tools', s4.includes('Classify with Lex') && /Sequence/.test(s4) && s4.includes('Sequence: not placed yet') && s4.includes('Now') && !/Title these for me|Find duplicates|Add heading|Coverage grid/.test(s4))
+  ok('the list is checklist-ended in EVERY step: each step prints its own advisory checklist', ST.STEP_NUMBERS.every((n) => new RegExp(`Step ${n} checklist`).test(textOf(renderWs(n, rows)))))
+  ok('…step 1\'s says what is unfinished, in words with counts, and that it never blocks', /2 actions have no heading/.test(s1) && /2 actions have no cause/.test(s1) && /Advisory: it never stops you moving on/.test(s1))
+  ok('…step 4\'s counts the actions with no sequence slot', /2 actions have no sequence slot/.test(s4))
+
+  // an OPENED record: this step's section first and open, every other under ONE line each
+  const o2 = renderWs(2, rows, ['a1'])
+  ok('OPENED in step 2: step 2\'s section is open; steps 1, 3 and 4 are collapsed under one line each saying where they stand', /data-step-section="2" data-step-open="true"/.test(o2) && (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 3 && /from step 1/.test(o2) && /from step 3/.test(o2) && /from step 4/.test(o2) && textOf(o2).includes('FULL CARD 1 STEP 2'))
+  ok('…the line for step 3 says "a cost range is recorded" where one is, and the collapsed sections still hold their content (nothing hidden, only out of the way)', /Costs — a cost range is recorded · from step 3/.test(textOf(o2)) && textOf(o2).includes('FULL CARD 1 STEP 3') && textOf(o2).includes('FULL CARD 1 STEP 1'))
+  const o1 = renderWs(1, rows, ['a2'])
+  ok('OPENED in step 1: the policy test with its reason, the conflict note control, causes, avenue — and "Edit title"', /Policy test/.test(textOf(o1)) && /It rules out thresholds/.test(textOf(o1)) && /Keep it, with a note/.test(textOf(o1)) && /Edit title/.test(textOf(o1)) && /Later phase/.test(textOf(o1)))
+  ok('…and "Who, how and against — not yet answered · from step 2" is the line for the Who section while unanswered', /Who, how and against — not yet answered · from step 2/.test(textOf(o1)))
+  control('a FITS action offering "Keep it, with a note" (must be FALSE)', /Keep it, with a note/.test(textOf(renderWs(1, rows, ['a1']))))
+
+  // the checklists, pure
+  const cl1 = ST.stepChecklist(1, rows as never, { duplicatesChecked: false })
+  ok('step 1 checklist: heading, cause, avenue, tested, duplicates, conflicts — six lines, each a count in words', cl1.length === 6 && cl1.map((l) => l.key).join() === 'heading,cause,avenue,tested,duplicates,conflicts' && cl1.find((l) => l.key === 'duplicates')!.done === false)
+  ok('…a conflict with a note is no longer waiting for a decision; a conflict without one is', ST.stepChecklist(1, [mkAction(2, { policyTest: { verdict: 'CONFLICTS', reason: 'x', from: [] }, conflictNote: 'We keep it for the pilot.' })] as never, { duplicatesChecked: true }).find((l) => l.key === 'conflicts')!.done === true && ST.stepChecklist(1, [mkAction(2, { policyTest: { verdict: 'CONFLICTS', reason: 'x', from: [] } })] as never, { duplicatesChecked: true }).find((l) => l.key === 'conflicts')!.done === false)
+  ok('…an empty list has no checklist (nothing to be unfinished)', ST.stepChecklist(1, [], { duplicatesChecked: false }).length === 0)
+  const allDone = [mkAction(1, { headingId: 'h1', avenue: 'LEGISLATIVE', targetCauseIds: ['c1'], policyTest: { verdict: 'FITS', reason: 'ok', from: [] } })]
+  ok('…and a list that is finished reads "All actions have a heading", "…at least one cause"', ST.stepChecklist(1, allDone as never, { duplicatesChecked: true }).every((l) => l.done) && ST.stepChecklist(1, allDone as never, { duplicatesChecked: true })[1].text === 'All actions have at least one cause')
+  control('a checklist that blocks (a disabled control keyed to it) (must be FALSE)', /disabled=\{[^}]*checklist/.test(read('components/lex/ActionsWorkspace.tsx')))
+
+  // decision 179 — labels
+  const cats = read('lib/lex/page4-config.ts')
+  ok('179: the cost columns are "Cost to implement / Cost to enforce / Cost of compliance" and are never called Against', /Cost to implement/.test(cats) && /Cost to enforce/.test(cats) && /Cost of compliance/.test(cats) && !/Regulatory friction|Impl:|Enforce:|Friction:/.test(read('components/lex/FieldsPanel.tsx')) && !/Against/.test(read('components/lex/FieldsPanel.tsx').split('function ActionCard')[1] ?? ''))
+  ok('…and the cost labels are on the card in step 3 only (the card prints them under `step === 3`)', /\{step === 3 && \(\s*<>\s*<div[^>]*>\s*<span>\{COST_LINE_LABEL\.implementationCost\}/.test(read('components/lex/FieldsPanel.tsx')))
+}
+
+async function partD() {
+  section('D · the step round-trips, "kept with a note", step-aware Classify — a SCRATCH idea (no model spend)')
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  ;(globalThis as { __STUB_AUTH_USER?: unknown }).__STUB_AUTH_USER = owner
+  const copy = await scratchCopy('452c5ade', 's26s2c')
+  const id = copy.id
+  const post = async (body: Record<string, unknown>) => {
+    const mod = await import('../app/api/ideas/[id]/action-structure/route')
+    const res = await mod.POST(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id }) })
+    return { status: res.status as number, json: (await res.json()) as any }
+  }
+  try {
+    const first = await computeCanonicalState(id)
+    ok('a scratch idea opens at step 1 (the default)', first.actionsStep === 1)
+    const r3 = await post({ op: 'setStep', step: 3 })
+    const back = await computeCanonicalState(id)
+    ok('setStep 3 through the real route is read back by the state the screen loads (round-trip)', r3.status === 200 && r3.json.ok && back.actionsStep === 3 && r3.json.state.actionsStep === 3, JSON.stringify(r3.json).slice(0, 200))
+    const direct = await prisma.idea.findUnique({ where: { id }, select: { actionsStep: true } })
+    ok('…and in the database row itself', direct?.actionsStep === 3)
+    const bad = await post({ op: 'setStep', step: 9 })
+    ok('a step that does not exist is refused IN WORDS naming the input, and changes nothing', bad.status === 422 && /the step \(1 to 4\)/.test(bad.json.error ?? '') && !/not valid\.?$/.test(bad.json.error ?? '') && (await computeCanonicalState(id)).actionsStep === 3, bad.json.error)
+    control('a refused step that moved the idea anyway (must be FALSE)', (await prisma.idea.findUnique({ where: { id }, select: { actionsStep: true } }))?.actionsStep === 9)
+
+    // kept with a note
+    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE' }, orderBy: { number: 'asc' } })
+    const [x, y] = rows
+    await prisma.lexCoherentAction.update({ where: { id: x.id }, data: { policyTestVerdict: 'CONFLICTS', policyTestReason: 'It rules out thresholds.' } })
+    await prisma.lexCoherentAction.update({ where: { id: y.id }, data: { policyTestVerdict: 'FITS', policyTestReason: 'ok' } })
+    const k = await post({ op: 'keepConflict', actionId: x.id, note: 'We keep it for the pilot year only.' })
+    const st = await computeCanonicalState(id)
+    const ax = st.actions.find((a) => a.id === x.id)!
+    ok('"Keep it, with a note" is saved and read back through the state; the VERDICT is untouched', k.status === 200 && ax.conflictNote === 'We keep it for the pilot year only.' && ax.policyTest?.verdict === 'CONFLICTS' && ax.policyTest?.reason === 'It rules out thresholds.')
+    ok('…and the step-1 checklist stops counting it as waiting', !ST.unresolvedConflict(ax) && ST.unresolvedConflict({ policyTest: ax.policyTest, conflictNote: null }))
+    const nope = await post({ op: 'keepConflict', actionId: y.id, note: 'a reason' })
+    ok('a note on an action that does not conflict is refused in words and not stored', nope.status === 422 && /does not conflict with the policy/.test(nope.json.error ?? '') && (await prisma.lexCoherentAction.findUnique({ where: { id: y.id } }))?.conflictNote == null, nope.json.error)
+    const long = await post({ op: 'keepConflict', actionId: x.id, note: 'x'.repeat(601) })
+    ok('a 601-character note sent directly is refused with the limit named, and the saved note is unchanged', long.status === 422 && /600/.test(long.json.error ?? '') && (await prisma.lexCoherentAction.findUnique({ where: { id: x.id } }))?.conflictNote === 'We keep it for the pilot year only.', long.json.error)
+    const clear = await post({ op: 'keepConflict', actionId: x.id, note: null })
+    ok('clearing the note puts the action back to waiting', clear.status === 200 && (await prisma.lexCoherentAction.findUnique({ where: { id: x.id } }))?.conflictNote == null)
+
+    // Classify is a step 1 / step 4 job
+    const cls = await post({ op: 'proposeFacets' })   // the idea is at step 3
+    ok('"Classify with Lex" in step 3 proposes nothing, spends nothing, and says why in words', cls.status === 422 && /step 1 \(causes and avenue\) or step 4/.test(cls.json.error ?? '') && /Nothing was proposed/.test(cls.json.error ?? ''), cls.json.error)
+
+    // accept / dismiss only this step's part
+    const cause = await prisma.diagnosisCause.findFirst({ where: { ideaId: id } })
+    await prisma.lexCoherentAction.update({ where: { id: x.id }, data: { targetCauseIds: [], avenue: null, sequence: null, beforeIds: [], facetProposal: { targetCauseIds: [cause!.id], avenue: 'LEGISLATIVE', sequence: 'NOW', link: 'a retired link' } as never } })
+    const before = await prisma.lexCoherentAction.findUnique({ where: { id: x.id } })
+    const a1 = await post({ op: 'acceptFacets', ids: [x.id], step: 1 })
+    const mid = await prisma.lexCoherentAction.findUnique({ where: { id: x.id } })
+    ok('accepting STEP 1 copies the causes and avenue only; the step-4 sequence stays waiting as a proposal', a1.status === 200 && mid!.targetCauseIds.includes(cause!.id) && mid!.avenue === 'LEGISLATIVE' && mid!.sequence == null && (mid!.facetProposal as any)?.sequence === 'NOW' && (mid!.facetProposal as any)?.targetCauseIds === undefined, JSON.stringify(mid!.facetProposal))
+    const a4 = await post({ op: 'acceptFacets', ids: [x.id], step: 4 })
+    const after = await prisma.lexCoherentAction.findUnique({ where: { id: x.id } })
+    ok('…then accepting STEP 4 copies the sequence', a4.status === 200 && after!.sequence === 'NOW')
+    ok('decision 167: the retired "link" in a proposal is dropped — never written to the column', after!.link === before!.link, `${before!.link} → ${after!.link}`)
+    control('a step-1 accept that also copied the sequence (must be FALSE)', mid!.sequence === 'NOW')
+    await prisma.lexCoherentAction.update({ where: { id: x.id }, data: { facetProposal: { targetCauseIds: [cause!.id], sequence: 'LATER' } as never } })
+    const d1 = await post({ op: 'dismissFacets', ids: [x.id], step: 4 })
+    const dd = await prisma.lexCoherentAction.findUnique({ where: { id: x.id } })
+    ok('dismissing STEP 4 drops only the sequence proposal; the step-1 proposal stays', d1.status === 200 && (dd!.facetProposal as any)?.sequence === undefined && (dd!.facetProposal as any)?.targetCauseIds?.length === 1)
+  } finally {
+    await deleteScratch(id)
+  }
+}
+
 async function main() {
   partA()
   await partB()
+  partC()
+  await partD()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

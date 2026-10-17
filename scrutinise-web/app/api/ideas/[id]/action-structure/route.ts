@@ -9,6 +9,7 @@ import { describeIssues } from '@/lib/api-rejection'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { assertWritableField } from '@/lib/lex/stage'
+import { clampStep } from '@/lib/lex/action-steps'
 import * as S from '@/lib/lex/action-structure'
 
 export const maxDuration = 300
@@ -55,14 +56,16 @@ export async function POST(req: Request, { params }: Params) {
       case 'ruleOut': result = await S.ruleOut(id, b.ids, b.reason); break
       case 'restore': result = await S.restore(id, b.ids); break
       case 'setFacets': result = await S.setFacets(id, b.actionId, b.patch); break
-      case 'acceptFacets': result = await S.acceptFacetProposals(id, b.ids); break
-      case 'dismissFacets': result = await S.dismissFacetProposals(id, b.ids); break
+      case 'acceptFacets': result = await S.acceptFacetProposals(id, b.ids, b.step ? clampStep(b.step) : undefined); break
+      case 'dismissFacets': result = await S.dismissFacetProposals(id, b.ids, b.step ? clampStep(b.step) : undefined); break
       case 'proposeFacets': result = await S.proposeFacets(id, uid); break
       case 'suggestHeadings': result = await S.suggestHeadings(id, uid); break
       case 'judgeMerge': result = await S.judgeActionMerge(id, uid, b.a, b.b); break
       case 'applyMerge': result = await S.applyActionMerge(id, uid, b.a, b.b, { ...b.answer, merged: b.answer.merged ?? null, subordinateNumber: b.answer.subordinateNumber ?? null }); break
       case 'undoMerge': result = await S.undoActionMerge(id, b.mergedId); break
       case 'findDuplicates': result = { ok: true, data: await S.findDuplicates(id) }; break
+      case 'setStep': result = await S.setStep(id, b.step); break
+      case 'keepConflict': result = await S.keepConflict(id, b.actionId, b.note); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

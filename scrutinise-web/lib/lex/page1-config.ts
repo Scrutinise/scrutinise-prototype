@@ -462,6 +462,8 @@ export interface CanonicalAction {
    * came from (in words). null = it never went through that test (the user's own, or from another route).
    */
   policyTest: { verdict: 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'; reason: string | null; from: string[] } | null
+  /** 26-S2 §3c — "kept with a note": why the user keeps an action the test says CONFLICTS. null = no note. */
+  conflictNote: string | null
 }
 
 /** 26-Q §3 — one of the user's headings for their coherent actions. */
@@ -512,6 +514,8 @@ export interface CanonicalState {
   setAsideActions: CanonicalAction[]
   /** 26-Q §3 — the user's headings for the actions above. */
   actionHeadings: CanonicalActionHeading[]
+  /** 26-S2 §3a — the step (1–4) the user was on in the Coherent Actions screen. */
+  actionsStep: 1 | 2 | 3 | 4
   /** §19-C Task 6 — cost lines across all of this idea's actions. */
   costLines: CanonicalCostLine[]
   /** Costing benchmarks available to the estimator (§18.3). */

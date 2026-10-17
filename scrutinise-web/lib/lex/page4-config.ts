@@ -16,9 +16,10 @@ export const BENEFIT_SLOTS = ['financial', 'social', 'ongoing'] as const
 
 // The three §18.2 cost categories, with who bears each (used by the estimator UI).
 export const COST_CATEGORIES = [
-  { key: 'implementationCost', label: 'Implementation (one-off)', fallsOn: 'Government' },
-  { key: 'enforcementCost', label: 'Enforcement (ongoing)', fallsOn: 'Regulator / state' },
-  { key: 'regulatoryFriction', label: 'Regulatory friction (ongoing)', fallsOn: 'The economy' },
+  // Decision 179 (26-S2): the three are COST lines — "Cost to implement / Cost to enforce / Cost of compliance" — in step 3 only. Never "Against".
+  { key: 'implementationCost', label: 'Cost to implement (one-off)', fallsOn: 'Government' },
+  { key: 'enforcementCost', label: 'Cost to enforce (ongoing)', fallsOn: 'Regulator / state' },
+  { key: 'regulatoryFriction', label: 'Cost of compliance (ongoing)', fallsOn: 'The economy' },
 ] as const
 
 export const COHERENT_ACTIONS_FIELDS: FieldDef[] = [

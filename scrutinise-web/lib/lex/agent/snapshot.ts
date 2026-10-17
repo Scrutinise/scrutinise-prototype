@@ -19,6 +19,7 @@
 import { prisma } from '@/lib/prisma'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { pendingMaterialSince } from '@/lib/lex/update-pass'
+import { clampStep, STEPS } from '@/lib/lex/action-steps'
 
 export const short = (id: string) => id.slice(0, 8)
 
@@ -107,7 +108,9 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
 
   // ── actions ──
   const actions = state?.actions ?? []
-  lines.push('', `COHERENT ACTIONS (${actions.length}):`)
+  // 26-S2 §3d — the snapshot carries the step the user is on, so Lex proposes and names only what that step offers.
+  const step = clampStep(state?.actionsStep)
+  lines.push('', `COHERENT ACTIONS (${actions.length}) — the user is in STEP ${step} of 4, “${STEPS[step].label}”:`)
   // 26-Q — addressed by NUMBER, as the user sees it ("put 7 and 12 under Transparency"), with the title, heading and what is parked.
   const headingName = new Map((state?.actionHeadings ?? []).map((h) => [h.id, h.name]))
   const untitled = actions.filter((a) => !a.title?.trim()).length

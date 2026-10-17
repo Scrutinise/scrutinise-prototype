@@ -12,6 +12,8 @@ import ActionGapCheck from './ActionGapCheck'
 import ActionImport from './ActionImport'
 import RefTextarea, { IdeaIdContext } from './RefTextarea'
 import ActionsWorkspace from './ActionsWorkspace'
+import ActionsSteps from './ActionsSteps'
+import { COST_LINE_LABEL, clampStep, type ActionsStep } from '@/lib/lex/action-steps'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
 import { useSectionChecklists } from './useSectionChecklists'
@@ -110,9 +112,9 @@ export interface CostLinesApi {
 
 const COST_TYPES: CanonicalCostLine['costType'][] = ['STAFF', 'CAPITAL', 'PROPERTY', 'RESEARCH', 'OTHER']
 const COST_CATEGORY_LABEL: Record<CanonicalCostLine['category'], string> = {
-  IMPLEMENTATION: 'Implementation (one-off)',
-  ENFORCEMENT: 'Enforcement (ongoing)',
-  FRICTION: 'Friction on the economy (ongoing)',
+  IMPLEMENTATION: 'Cost to implement (one-off)',
+  ENFORCEMENT: 'Cost to enforce (ongoing)',
+  FRICTION: 'Cost of compliance on the economy (ongoing)',
 }
 
 function hintsFor(key: string): string[] {
@@ -1540,38 +1542,53 @@ function costLineLabel(l: CanonicalCostLine): string {
   return `${range}${staff}`
 }
 
-function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: {
+/**
+ * 26-S2 §3 — THE ACTION CARD, ONE STEP AT A TIME. The opened record shows the current step's part first and the others one line each
+ * (ActionsWorkspace asks for the part it wants): step 1 the body (the step, mechanism, target, wording), step 2 Who, step 3 the cost ranges
+ * and cost lines — labelled "Cost to implement / Cost to enforce / Cost of compliance" (decision 179, never "Against"), step 4 nothing here
+ * (sequence is the workspace's own control). Editing a step edits only that step's part.
+ */
+function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, step = 1 }: {
   action: CanonicalAction; benchmarks: CanonicalBenchmark[]; costLines: CanonicalCostLine[]
-  busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi
+  busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi; step?: ActionsStep
 }) {
   const [editing, setEditing] = useState(false)
   const [d, setD] = useState<ActionDraft>(action)
   useEffect(() => { setD(action) }, [action])
   const patch = (p: Partial<ActionDraft>) => setD((x) => ({ ...x, ...p }))
+  if (step === 4) return null
 
   if (editing) {
     return (
       <div className="rounded-lg border border-blue-200 bg-white p-2 space-y-1.5">
-        <input value={d.practicalStep} onChange={(e) => patch({ practicalStep: e.target.value })} placeholder="The practical step"
-          className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        <div className="flex gap-1">
-          <input value={d.whoImplements ?? ''} onChange={(e) => patch({ whoImplements: e.target.value })} placeholder="Who implements"
-            className="flex-1 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-          <input value={d.mechanismType ?? ''} onChange={(e) => patch({ mechanismType: e.target.value })} placeholder="Mechanism"
-            className="w-28 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        </div>
-        <input value={d.targetOrganisation ?? ''} onChange={(e) => patch({ targetOrganisation: e.target.value })} placeholder="Target organisation (legislative)"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        <RefTextarea value={d.wording ?? ''} onChange={(e) => patch({ wording: e.target.value })} rows={2} placeholder="Intended wording (legislative)"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-        <div className="space-y-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Costs (ranges with basis)</p>
-          {COST_CATEGORIES.map((cat) => (
-            <CostRangeEditor key={cat.key} label={cat.label} fallsOn={cat.fallsOn}
-              value={(d[cat.key as keyof ActionDraft] as CostRange | null) ?? null} benchmarks={benchmarks} busy={busy}
-              onChange={(v) => patch({ [cat.key]: v } as Partial<ActionDraft>)} />
-          ))}
-        </div>
+        {step === 1 && (
+          <>
+            <input value={d.practicalStep} onChange={(e) => patch({ practicalStep: e.target.value })} placeholder="The practical step"
+              className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+            <input value={d.mechanismType ?? ''} onChange={(e) => patch({ mechanismType: e.target.value })} placeholder="Mechanism"
+              className="w-40 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+            <input value={d.targetOrganisation ?? ''} onChange={(e) => patch({ targetOrganisation: e.target.value })} placeholder="Target organisation (legislative)"
+              className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+            <RefTextarea value={d.wording ?? ''} onChange={(e) => patch({ wording: e.target.value })} rows={2} placeholder="Intended wording (legislative)"
+              className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+          </>
+        )}
+        {step === 2 && (
+          <label className="block text-[11px] text-zinc-600">Who implements it — a body or a role, and whether it sits inside or outside government
+            <input value={d.whoImplements ?? ''} onChange={(e) => patch({ whoImplements: e.target.value })} placeholder="Who implements"
+              className="mt-0.5 w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+          </label>
+        )}
+        {step === 3 && (
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Costs (ranges with basis)</p>
+            {COST_CATEGORIES.map((cat) => (
+              <CostRangeEditor key={cat.key} label={cat.label} fallsOn={cat.fallsOn}
+                value={(d[cat.key as keyof ActionDraft] as CostRange | null) ?? null} benchmarks={benchmarks} busy={busy}
+                onChange={(v) => patch({ [cat.key]: v } as Partial<ActionDraft>)} />
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <button disabled={busy || !d.practicalStep.trim()} onClick={() => { api.update(action.id, d); setEditing(false) }}
             className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
@@ -1581,44 +1598,55 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: 
     )
   }
 
+  const editWord = step === 1 ? 'Edit' : step === 2 ? 'Edit Who' : 'Edit costs'
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-2">
-      <p className="text-sm text-zinc-800">{action.practicalStep}</p>
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-zinc-500">
-        {action.whoImplements && <span>Who: {action.whoImplements}</span>}
-        {action.mechanismType && <span>Mechanism: {action.mechanismType}</span>}
-        {action.targetOrganisation && <span>Target: {action.targetOrganisation}</span>}
-      </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-zinc-600">
-        <span>Impl: {costLabel(action.implementationCost)}</span>
-        <span>Enforce: {costLabel(action.enforcementCost)}</span>
-        <span>Friction: {costLabel(action.regulatoryFriction)}</span>
-      </div>
-      {/* §19-C Task 6 — the costed lines for this action, and the add-one flow. */}
-      {costLines.length > 0 && (
-        <div className="mt-1.5 space-y-1">
-          {costLines.map((l) => (
-            <div key={l.id} className="flex items-start gap-2 text-[11px]">
-              <span className="text-zinc-300">·</span>
-              <div className="flex-1">
-                <span className="text-zinc-700">{l.label}</span>
-                <span className="text-zinc-400"> — {costLineLabel(l)}</span>
-                <span className="text-zinc-300"> · {COST_CATEGORY_LABEL[l.category].split(' (')[0]}</span>
-                {l.basis && <div className="text-zinc-400 italic">{l.basis}</div>}
-              </div>
-              <button disabled={busy} onClick={() => costLinesApi.remove(l.id)}
-                className="text-zinc-300 hover:text-red-600">delete</button>
-            </div>
-          ))}
-        </div>
+    <div className="rounded-lg border border-zinc-200 bg-white p-2" data-card-step={step}>
+      {step === 1 && (
+        <>
+          <p className="text-sm text-zinc-800">{action.practicalStep}</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-zinc-500">
+            {action.mechanismType && <span>Mechanism: {action.mechanismType}</span>}
+            {action.targetOrganisation && <span>Target: {action.targetOrganisation}</span>}
+          </div>
+        </>
       )}
-      {!action.whoImplements && (
-        <p className="text-[11px] text-amber-700 mt-1">No implementer named yet.</p>
+      {step === 2 && (
+        <>
+          <p className="text-sm text-zinc-800"><span className="font-semibold">Who:</span> {action.whoImplements?.trim() || <span className="font-semibold">Not yet answered</span>}</p>
+          <p className="text-[11px] text-zinc-500 mt-1">The rest of this step’s questions — the incentive now, what changes it, skill, how it is enforced, what will oppose it and what tells us it worked — are the next update.</p>
+        </>
+      )}
+      {step === 3 && (
+        <>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-600">
+            <span>{COST_LINE_LABEL.implementationCost}: {costLabel(action.implementationCost)}</span>
+            <span>{COST_LINE_LABEL.enforcementCost}: {costLabel(action.enforcementCost)}</span>
+            <span>{COST_LINE_LABEL.regulatoryFriction}: {costLabel(action.regulatoryFriction)}</span>
+          </div>
+          {/* §19-C Task 6 — the costed lines for this action, and the add-one flow. */}
+          {costLines.length > 0 && (
+            <div className="mt-1.5 space-y-1">
+              {costLines.map((l) => (
+                <div key={l.id} className="flex items-start gap-2 text-[11px]">
+                  <span className="text-zinc-300">·</span>
+                  <div className="flex-1">
+                    <span className="text-zinc-700">{l.label}</span>
+                    <span className="text-zinc-400"> — {costLineLabel(l)}</span>
+                    <span className="text-zinc-300"> · {COST_CATEGORY_LABEL[l.category].split(' (')[0]}</span>
+                    {l.basis && <div className="text-zinc-400 italic">{l.basis}</div>}
+                  </div>
+                  <button disabled={busy} onClick={() => costLinesApi.remove(l.id)}
+                    className="text-zinc-300 hover:text-red-600">delete</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
       <div className="flex flex-wrap gap-2 mt-1.5 items-center">
-        {action.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
-        <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
-        <CostLineAdder actionId={action.id} busy={busy} api={costLinesApi} />
+        {step === 1 && action.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
+        <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">{editWord}</button>
+        {step === 3 && <CostLineAdder actionId={action.id} busy={busy} api={costLinesApi} />}
         {/* DECISION 139 (9 Oct 2026) — the card's "Delete" is gone. It never deleted (since 26-Q it ruled the action out with a fixed reason the user never gave), and its name promised what it did not do. RULE OUT, with a reason, restorable, is the only route: open the action in the list and use "Rule out". */}
       </div>
     </div>
@@ -1626,13 +1654,15 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: 
 }
 
 // The actions loop + costing estimator (§18).
-function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged }: {
+function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged, step = 1 }: {
   field: CanonicalField; actions: CanonicalAction[]; benchmarks: CanonicalBenchmark[]
   costLines: CanonicalCostLine[]; busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi
   /** 26-Q — the workspace needs the idea to reach its route, and the state it reads. */
   ideaId?: string; setAside: CanonicalAction[]; headings: CanonicalActionHeading[]; causes: CanonicalCause[]; onChanged?: () => void | Promise<boolean | void>
+  /** 26-S2 §3 — the step the user is on; the screen shows only that step's tools. */
+  step?: ActionsStep
 }) {
-  const [step, setStep] = useState('')
+  const [draftStep, setDraftStep] = useState('')
   const terminal = isTerminal(field)
   return (
     <div className="rounded-lg border border-zinc-200 p-3">
@@ -1651,7 +1681,8 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
       {ideaId && onChanged ? (
         <ActionsWorkspace
           ideaId={ideaId} actions={actions} setAside={setAside} headings={headings} causes={causes} busy={busy} onChanged={onChanged}
-          renderFull={(a) => <ActionCard action={a} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
+          step={step} costLineActionIds={[...new Set(costLines.map((l) => l.actionId))]}
+          renderFull={(a, s) => <ActionCard action={a} step={s} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
         />
       ) : (
         <div className="space-y-1.5">
@@ -1660,12 +1691,15 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
           ))}
         </div>
       )}
-      <div className="mt-2 flex gap-1.5">
-        <input value={step} onChange={(e) => setStep(e.target.value)} placeholder="Add an action…"
-          className="flex-1 text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        <button disabled={busy || !step.trim()} onClick={() => { api.add({ practicalStep: step.trim() }); setStep('') }}
-          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add</button>
-      </div>
+      {/* "Add an action" is a step-1 tool (sorting the list); the others do not offer it. */}
+      {step === 1 && (
+        <div className="mt-2 flex gap-1.5">
+          <input value={draftStep} onChange={(e) => setDraftStep(e.target.value)} placeholder="Add an action…"
+            className="flex-1 text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+          <button disabled={busy || !draftStep.trim()} onClick={() => { api.add({ practicalStep: draftStep.trim() }); setDraftStep('') }}
+            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add</button>
+        </div>
+      )}
       {!terminal && (
         <div className="flex gap-2 mt-2">
           <button disabled={busy || actions.length === 0} onClick={api.confirm}
@@ -1686,11 +1720,13 @@ export default function FieldsPanel({
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
-  setAsideActions, actionHeadings,
+  setAsideActions, actionHeadings, actionsStep,
 }: {
   /** 26-Q — ruled-out / merged-away actions, and the user's headings (both from the canonical state). */
   setAsideActions?: CanonicalAction[]
   actionHeadings?: CanonicalActionHeading[]
+  /** 26-S2 §3a — the step (1–4) the user was on; the Coherent Actions screen opens there. */
+  actionsStep?: number
   /** 26-N - take Lex's redraft (offered beside the user's words) into the editor, still pending. */
   onEditRedraft?: (key: string) => void
   /** 26-M addendum — an accepted suggestion became a real action; the parent re-reads the state. */
@@ -1845,11 +1881,24 @@ export default function FieldsPanel({
               verdict, its reason and where it came from) is on each action — a label on the row, the detail when it is opened, and
               "By policy test" in Group. The retry for ideas still held is a notice at the top of the list (ActionsWorkspace). */}
           {/* 26-N §8 - "Check for gaps": the free check, then four models; suggestions with Accept / Dismiss. */}
-          {ideaId && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
-          {/* 26-S §3a (decision 140) — "Import actions from a document": a visible control, beside "Check for gaps". */}
-          {ideaId && <ActionImport ideaId={ideaId} onChanged={onSuggestionChanged} />}
-          <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
-            ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} />
+          {/* ══ 26-S2 §3 — THE FOUR STEPS. The bar, the step's intro, then ONLY that step's tools. "Check for gaps" and "Import actions from a
+              document" are step 1's (§4), so they are absent in the others — not greyed. ══ */}
+          {ideaId ? (
+            <ActionsSteps ideaId={ideaId} initialStep={clampStep(actionsStep)}>
+              {(step) => (
+                <>
+                  {step === 1 && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
+                  {/* 26-S §3a (decision 140) — "Import actions from a document": a visible control, beside "Check for gaps". */}
+                  {step === 1 && <ActionImport ideaId={ideaId} onChanged={onSuggestionChanged} />}
+                  <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
+                    ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} step={step} />
+                </>
+              )}
+            </ActionsSteps>
+          ) : (
+            <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
+              ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} />
+          )}
         </>
       )
       return <CausesField field={f} causes={causes} busy={busy} api={causesApi} ideaId={ideaId} />

@@ -26,6 +26,7 @@ import {
 export const STRUCTURE_MODEL = 'gemini-2.5-pro'
 const BATCH = 45
 import { LIMITS } from './input-limits'
+import { clampStep, type ActionsStep } from './action-steps'
 const TITLE_MAX = LIMITS.actionTitle
 
 export type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string }
@@ -255,68 +256,101 @@ export async function setFacets(ideaId: string, actionId: string, patch: FacetPa
   return { ok: true, data: null }
 }
 
-export async function acceptFacetProposals(ideaId: string, ids?: string[]): Promise<Result<{ accepted: number }>> {
+/** The proposal keys that belong to a step (26-S2 §3d): step 1 the causes and avenue, step 4 the sequence and what comes before. Anything else (an old "link") belongs to none. */
+const STEP_PROPOSAL_KEYS: Partial<Record<ActionsStep, Array<keyof FacetPatch>>> = { 1: ['targetCauseIds', 'avenue'], 4: ['sequence', 'beforeIds'] }
+
+/** Accept proposals. With a `step`, only that step's keys are accepted and the rest of the proposal stays waiting; without one, all of them (Lex's chat tool). */
+export async function acceptFacetProposals(ideaId: string, ids?: string[], step?: ActionsStep): Promise<Result<{ accepted: number }>> {
   const rows = (await prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE', ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, facetProposal: true } })).filter((r) => r.facetProposal != null)
+  const mine = step ? STEP_PROPOSAL_KEYS[step] ?? [] : null
   let n = 0
   for (const r of rows) {
-    const p = (r.facetProposal ?? {}) as FacetPatch
-    const data: Record<string, unknown> = { facetProposal: Prisma.DbNull }
+    const all = (r.facetProposal ?? {}) as FacetPatch
+    const p: FacetPatch = mine ? Object.fromEntries(Object.entries(all).filter(([k]) => mine.includes(k as keyof FacetPatch))) : all
+    if (mine && Object.keys(p).length === 0) continue // nothing waiting for THIS step
+    const rest = mine ? Object.fromEntries(Object.entries(all).filter(([k]) => !mine.includes(k as keyof FacetPatch))) : {}
+    const data: Record<string, unknown> = { facetProposal: Object.keys(rest).length ? rest : Prisma.DbNull }
     if (p.targetCauseIds) data.targetCauseIds = p.targetCauseIds
     if (p.avenue !== undefined) data.avenue = p.avenue
-    if (p.link !== undefined) data.link = p.link
+    // decision 167: the "link" facet is retired from the screen — an old proposal's link is dropped, never written
     if (p.sequence !== undefined) data.sequence = p.sequence
     if (p.beforeIds) data.beforeIds = p.beforeIds.filter((x) => x !== r.id)
     await prisma.lexCoherentAction.update({ where: { id: r.id }, data: data as never }); n++
   }
   return { ok: true, data: { accepted: n } }
 }
-export async function dismissFacetProposals(ideaId: string, ids?: string[]): Promise<Result<{ dismissed: number }>> {
-  const have = (await prisma.lexCoherentAction.findMany({ where: { ideaId, ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, facetProposal: true } })).filter((r) => r.facetProposal != null).map((r) => r.id)
-  const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, id: { in: have } }, data: { facetProposal: Prisma.DbNull } })
-  return { ok: true, data: { dismissed: r.count } }
+export async function dismissFacetProposals(ideaId: string, ids?: string[], step?: ActionsStep): Promise<Result<{ dismissed: number }>> {
+  const rows = (await prisma.lexCoherentAction.findMany({ where: { ideaId, ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, facetProposal: true } })).filter((r) => r.facetProposal != null)
+  const mine = step ? STEP_PROPOSAL_KEYS[step] ?? [] : null
+  let n = 0
+  for (const r of rows) {
+    const all = (r.facetProposal ?? {}) as Record<string, unknown>
+    const rest = mine ? Object.fromEntries(Object.entries(all).filter(([k]) => !mine.includes(k as keyof FacetPatch))) : {}
+    if (mine && Object.keys(rest).length === Object.keys(all).length) continue // nothing of THIS step's to dismiss
+    await prisma.lexCoherentAction.update({ where: { id: r.id }, data: { facetProposal: Object.keys(rest).length ? (rest as never) : Prisma.DbNull } }); n++
+  }
+  return { ok: true, data: { dismissed: n } }
 }
 
-const FACET_SCHEMA = {
-  type: 'object',
-  properties: {
-    links: { type: 'array', items: { type: 'string' } },
-    actions: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          number: { type: 'integer' },
-          causeNumbers: { type: 'array', items: { type: 'integer' } },
-          avenue: { type: 'string', enum: [...AVENUES, 'NONE'] },
-          link: { type: 'string' },
-          sequence: { type: 'string', enum: [...SEQUENCES, 'NONE'] },
-          beforeNumbers: { type: 'array', items: { type: 'integer' } },
-        },
-        required: ['number', 'causeNumbers', 'avenue', 'link', 'sequence', 'beforeNumbers'],
+// 26-S2 §3d — "Classify with Lex" proposes ONLY the current step's facets: step 1 the causes an action attacks and its avenue; step 4
+// its sequence and what it comes before. (Steps 2 and 3 have their own questions — the §5 slots and the cost form — and are not
+// classified here.) Decision 167 retired the "link" facet: it is neither asked for nor proposed, and nothing is written to the column.
+const FACET_PROPS = {
+  causeNumbers: { type: 'array', items: { type: 'integer' } },
+  avenue: { type: 'string', enum: [...AVENUES, 'NONE'] },
+  sequence: { type: 'string', enum: [...SEQUENCES, 'NONE'] },
+  beforeNumbers: { type: 'array', items: { type: 'integer' } },
+} as const
+const FACET_STEP_KEYS: Record<1 | 4, Array<keyof typeof FACET_PROPS>> = { 1: ['causeNumbers', 'avenue'], 4: ['sequence', 'beforeNumbers'] }
+
+function facetSchema(step: 1 | 4) {
+  const keys = FACET_STEP_KEYS[step]
+  return {
+    type: 'object',
+    properties: {
+      actions: {
+        type: 'array',
+        items: { type: 'object', properties: { number: { type: 'integer' }, ...Object.fromEntries(keys.map((k) => [k, FACET_PROPS[k]])) }, required: ['number', ...keys] },
       },
     },
-  },
-  required: ['links', 'actions'],
+    required: ['actions'],
+  }
 }
 
-const FACET_SYSTEM = [
-  M_GUIDING_POLICY, '', M_COHERENT_ACTIONS, '',
-  '════ YOU ARE CLASSIFYING COHERENT ACTIONS, AS PROPOSALS THE USER WILL CORRECT ════',
-  'First read the SETTLED GUIDING POLICY and name the BINDING LINKS it depends on — the few things that must hold together for it',
-  'to work (what happens if only part is delivered is the clue). Return them in `links`: at most eight, each a short phrase in the',
-  'policy\'s own terms. If there is no settled policy, return an empty list.',
-  'Then, for EACH numbered action, return:',
-  '  causeNumbers   the numbered causes this action directly attacks. Only causes it plainly addresses; an empty list is a real answer.',
-  '  avenue         LEGISLATIVE (a Bill or regulations), ORGANISATIONAL (how a body works) or FINANCIAL (money) — the avenue it is carried',
-  '                 out through — or NONE if it plainly is not any one.',
-  '  link           ONE of your `links` that this action protects or secures, copied exactly — or an empty string if none.',
-  '  sequence       NOW (can start at once and unlocks others), NEXT, LATER, or NONE if you cannot tell.',
-  '  beforeNumbers  the numbers of the actions THIS one must come before (it unlocks or is a precondition for them). Only real',
-  '                 dependencies; do not chain everything. Never its own number.',
-  'Use only the numbers given. Do not invent causes, links or actions. Never carry over a phrase from these instructions.',
-].join('\n')
+const FACET_LINES: Record<keyof typeof FACET_PROPS, string[]> = {
+  causeNumbers: ['  causeNumbers   the numbered causes this action directly attacks. Only causes it plainly addresses; an empty list is a real answer.'],
+  avenue: [
+    '  avenue         LEGISLATIVE (a Bill or regulations), ORGANISATIONAL (how a body works) or FINANCIAL (money) — the avenue it is carried',
+    '                 out through — or NONE if it plainly is not any one.',
+  ],
+  sequence: ['  sequence       NOW (can start at once and unlocks others), NEXT, LATER, or NONE if you cannot tell.'],
+  beforeNumbers: [
+    '  beforeNumbers  the numbers of the actions THIS one must come before (it unlocks or is a precondition for them). Only real',
+    '                 dependencies; do not chain everything. Never its own number.',
+  ],
+}
 
-export async function proposeFacets(ideaId: string, userId: string | null): Promise<Result<{ proposed: number; links: string[]; pence: number | null }>> {
+function facetSystem(step: 1 | 4): string {
+  return [
+    M_GUIDING_POLICY, '', M_COHERENT_ACTIONS, '',
+    '════ YOU ARE CLASSIFYING COHERENT ACTIONS, AS PROPOSALS THE USER WILL CORRECT ════',
+    'For EACH numbered action, return:',
+    ...FACET_STEP_KEYS[step].flatMap((k) => FACET_LINES[k]),
+    'Use only the numbers given. Do not invent causes or actions. Never carry over a phrase from these instructions.',
+  ].join('\n')
+}
+
+/** The step "Classify with Lex" works for: the one asked for, else the idea's own. Steps 2 and 3 have nothing to classify. */
+async function facetStep(ideaId: string, asked?: ActionsStep): Promise<Result<1 | 4>> {
+  const step = asked ?? clampStep((await prisma.idea.findUnique({ where: { id: ideaId }, select: { actionsStep: true } }))?.actionsStep)
+  if (step === 1 || step === 4) return { ok: true, data: step }
+  return fail(`Classifying is a job for step 1 (causes and avenue) or step 4 (sequence and what comes before); you are in step ${step}, which has its own questions. Nothing was proposed.`)
+}
+
+export async function proposeFacets(ideaId: string, userId: string | null, askedStep?: ActionsStep): Promise<Result<{ proposed: number; links: string[]; pence: number | null }>> {
+  const fs = await facetStep(ideaId, askedStep)
+  if (!fs.ok) return fail((fs as { error: string }).error)
+  const step = (fs as { data: 1 | 4 }).data
   const [rows, causes, idea, chosen] = await Promise.all([
     liveRows(ideaId), causesOf(ideaId),
     prisma.idea.findUnique({ where: { id: ideaId }, select: { chosenApproach: true } }),
@@ -331,38 +365,63 @@ export async function proposeFacets(ideaId: string, userId: string | null): Prom
   ].filter(Boolean).join('\n')
   const causeBlock = causes.map((c) => `[${c.number}] ${clip(c.cause, 260)}`).join('\n') || '(no causes recorded)'
   const numberToId = new Map(rows.map((r) => [r.number, r.id]))
-  const links = new Set<string>()
   let proposed = 0, pence = 0, unpriced = false
+  const system = facetSystem(step), schema = facetSchema(step)
   for (let i = 0; i < rows.length; i += BATCH) {
     const batch = rows.slice(i, i + BATCH)
     const user = [
-      policy, '', 'THE NUMBERED CAUSES:', causeBlock, '',
+      policy, '', ...(step === 1 ? ['THE NUMBERED CAUSES:', causeBlock, ''] : []),
       'ALL THE ACTIONS (for "before" references), numbered:', rows.map((r) => `[${r.number}] ${clip(r.title || r.practicalStep, 160)}`).join('\n'), '',
       'CLASSIFY THESE ACTIONS (full text):', batch.map((r) => `[${r.number}] ${clip(r.practicalStep, 700)}${r.whoImplements ? ` — implemented by ${clip(r.whoImplements, 160)}` : ''}`).join('\n'),
     ].join('\n')
-    const res = await callModelJson<{ links: string[]; actions: Array<{ number: number; causeNumbers: number[]; avenue: string; link: string; sequence: string; beforeNumbers: number[] }> }>({
-      model: STRUCTURE_MODEL, system: FACET_SYSTEM, user, schema: FACET_SCHEMA, maxOutputTokens: 6144, timeoutMs: 120_000, reasoningEffort: 'medium',
+    const res = await callModelJson<{ actions: Array<{ number: number; causeNumbers?: number[]; avenue?: string; sequence?: string; beforeNumbers?: number[] }> }>({
+      model: STRUCTURE_MODEL, system, user, schema, maxOutputTokens: 6144, timeoutMs: 120_000, reasoningEffort: 'medium',
       label: 'action-facets', stream: 'lex', pass: 'actions.facets', ideaId, userId,
     })
     const priced = res.usage.recorded ?? (await recordUsage(res.usage, { stream: 'lex', pass: 'actions.facets', ideaId, userId }))
     if (priced.pence == null) unpriced = true; else pence += priced.pence
     if (!res.ok) return fail(`Lex could not classify the actions (${(res as { reason: string }).reason}): ${(res as { detail: string }).detail.slice(0, 200)}`)
-    const given = new Set((res.value.links ?? []).map((l) => clip(l, 160)).filter(Boolean))
-    for (const l of given) links.add(l)
     for (const a of res.value.actions ?? []) {
       const row = batch.find((r) => r.number === a.number)
       if (!row) continue
       const p: FacetPatch = {}
-      // propose only where the user has nothing — a correction is not fought
-      if (!row.targetCauseIds.length) p.targetCauseIds = [...new Set((a.causeNumbers ?? []).map((n) => causeByNum.get(n)).filter((x): x is string => !!x))]
-      if (!row.avenue && (AVENUES as readonly string[]).includes(a.avenue)) p.avenue = a.avenue
-      if (!row.link && a.link && given.has(clip(a.link, 160))) p.link = clip(a.link, 160)
-      if (!row.sequence && (SEQUENCES as readonly string[]).includes(a.sequence)) p.sequence = a.sequence
-      if (!row.beforeIds.length) p.beforeIds = [...new Set((a.beforeNumbers ?? []).filter((n) => n !== row.number).map((n) => numberToId.get(n)).filter((x): x is string => !!x))]
-      if (Object.keys(p).length) { await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { facetProposal: p as never } }); proposed++ }
+      // propose only where the user has nothing — a correction is not fought; and only this step's facets
+      if (step === 1) {
+        if (!row.targetCauseIds.length) p.targetCauseIds = [...new Set((a.causeNumbers ?? []).map((n) => causeByNum.get(n)).filter((x): x is string => !!x))]
+        if (!row.avenue && (AVENUES as readonly string[]).includes(a.avenue ?? '')) p.avenue = a.avenue
+      } else {
+        if (!row.sequence && (SEQUENCES as readonly string[]).includes(a.sequence ?? '')) p.sequence = a.sequence
+        if (!row.beforeIds.length) p.beforeIds = [...new Set((a.beforeNumbers ?? []).filter((n) => n !== row.number).map((n) => numberToId.get(n)).filter((x): x is string => !!x))]
+      }
+      if (Object.keys(p).length) {
+        // merge into any proposal already waiting (the other step's) rather than replacing it
+        const waiting = ((await prisma.lexCoherentAction.findUnique({ where: { id: row.id }, select: { facetProposal: true } }))?.facetProposal ?? {}) as FacetPatch
+        await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { facetProposal: { ...waiting, ...p } as never } }); proposed++
+      }
     }
   }
-  return { ok: true, data: { proposed, links: [...links], pence: unpriced ? null : pence } }
+  return { ok: true, data: { proposed, links: [], pence: unpriced ? null : pence } }
+}
+
+// ── 26-S2 §3 — the step the user is on, and "kept with a note" ───────────────────────────────────────────────
+
+/** Stores the step (1–4) so the idea opens where the user left it. */
+export async function setStep(ideaId: string, step: number): Promise<Result<{ step: ActionsStep }>> {
+  const s = clampStep(step)
+  if (s !== step) return fail(`There is no step ${step}: the steps are 1 Sort and prune, 2 Who, how and against, 3 Costs, 4 Order. Nothing was changed.`)
+  await prisma.idea.update({ where: { id: ideaId }, data: { actionsStep: s } })
+  return { ok: true, data: { step: s } }
+}
+
+/** "Kept with a note": the reason the user keeps an action the policy test says CONFLICTS. An empty note clears it. The verdict is never edited. */
+export async function keepConflict(ideaId: string, actionId: string, note: string | null): Promise<Result<{ kept: boolean }>> {
+  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true, number: true, policyTestVerdict: true } })
+  if (!row) return fail('That action is not on this idea’s live list. Nothing was changed.')
+  const text = (note ?? '').replace(/\s+/g, ' ').trim()
+  if (text.length > LIMITS.ruleOutReason) return fail(`The note is ${text.length} characters; the limit is ${LIMITS.ruleOutReason}. Nothing was saved.`)
+  if (text && row.policyTestVerdict !== 'CONFLICTS') return fail(`#${row.number ?? '?'} does not conflict with the policy (the test says ${row.policyTestVerdict ? row.policyTestVerdict.toLowerCase().replace(/_/g, ' ') : 'it was not tested'}), so there is nothing to keep with a note. Nothing was saved.`)
+  await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { conflictNote: text || null } })
+  return { ok: true, data: { kept: !!text } }
 }
 
 // ── headings suggested from the guiding policy (§3c) ─────────────────────────────────────────────────────

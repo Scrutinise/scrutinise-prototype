@@ -138,3 +138,20 @@ BRIEF_26S2 §5 says Who maps from "`Impl` / `Who`", How from "`Enforce`", Agains
 | §11 | 11a `removeCause` → archive (field-machine, build, gap-check, action-structure also delete — listed, not fixed, per the brief); 11b ambient `purpose` + dashboard split + `check:spend-attribution`; 11c snapshot token count; 11d **held** until Charlie's second-account test | medium | none |
 
 **Sprint 1:** §3, §4, §7, §8 (they are the step screens) + 11a. **Sprint 2:** §5 (+177 record, +179 labels, the Classify pass), §6, §9, 11b, 11c. §12's `check:lex-26s2` grows with each. Stopping here for the split to be confirmed is NOT required by the brief; the next push begins §3.
+
+---
+
+## D. Sprint 1, push A — the four steps (BRIEF_26S2 §3, §4, §7)
+
+Built and checked as described in the CHANGE_LOG entry of that push. What the report adds:
+
+**Decisions taken inside the brief's latitude (say if any is wrong):**
+1. **Step storage** is a column (`Idea.actionsStep`), not browser storage — the brief says the idea reopens where the user left it, which has to survive a device change. Applied before any code read it.
+2. **"No unresolved duplicate" (checklist, step 1)** has no stored fact behind it. It reads "Find duplicates has been run since the last change" — remembered in THIS browser against a signature of the list's content. A different browser reads "not run", which is true to that browser.
+3. **"Kept with a note"** needed somewhere to live: `LexCoherentAction.conflictNote` (≤ 600). "Edited" (the brief's third way to resolve a conflict) cannot be detected; the checklist says "ruled out, re-tested after an edit, or kept with a note", and a re-test replaces the verdict when 170 lands.
+4. **Steps 2 and 3 have no toolbar** in this push — their questions are the opened record's (Who today; the cost ranges). Step 2 says its other questions are the next update; the seven slots are sprint 2 by the split.
+5. **The coverage grid is step 1's, the sequence view step 4's**; "Group by" offers step 1 heading / cause / avenue / policy test and step 4 heading / sequence. "By link" is gone with the facet.
+6. **Bulk bar, drag, Later phase, ruled-out blocks, "Add an action" are step 1's.** "These are my actions" / "Skip" (the field's own confirm) stay visible in every step.
+7. **Classify with Lex dropped the "binding links" read** (decision 167 retired the facet) — one fewer thing the model is asked, so a cheaper call; not re-measured (a model run on a scratch idea was not made in this push).
+
+**Not done, said plainly:** the step checklist is at the foot of each list but **not yet in the worklist ("What to do next")**; that block is a different, registry-driven tick-box mechanism and adding a computed checklist to it is its own small piece. The Lex snapshot's actions block now carries the step, so a step change changes the cached prefix (pence). Nothing here has been seen in a browser by me or by Charlie — the render is checked (static markup, 78 assertions incl. a mutation run); the clicks are not.

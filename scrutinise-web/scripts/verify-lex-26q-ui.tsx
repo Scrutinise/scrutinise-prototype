@@ -21,7 +21,7 @@ function ok(name: string, cond: boolean, detail = '') { if (cond) { pass++; cons
 const act = (n: number, over: Partial<CanonicalAction> = {}): CanonicalAction => ({
   id: `a${n}`, practicalStep: `Step number ${n} that does a particular thing`, mechanismType: null, whoImplements: null, targetOrganisation: null, wording: null, benefits: null,
   implementationCost: null, enforcementCost: null, regulatoryFriction: null, source: 'USER', number: n, title: null, titleProposal: null, headingId: null, parked: false, parkedReason: null,
-  targetCauseIds: [], avenue: null, link: null, sequence: null, beforeIds: [], facetProposal: null, mergedFrom: [], status: 'LIVE', ruleOutReason: null, mergedIntoId: null, policyTest: null, ...over,
+  targetCauseIds: [], avenue: null, link: null, sequence: null, beforeIds: [], facetProposal: null, mergedFrom: [], status: 'LIVE', ruleOutReason: null, mergedIntoId: null, policyTest: null, conflictNote: null, ...over,
 })
 const heads: CanonicalActionHeading[] = [
   { id: 'h1', name: 'Legislation', colourKey: 'navy', hidden: false, orderIndex: 0 },
@@ -55,10 +55,13 @@ ok('every DRAWN line has a heading dropdown (two: the third is under the hidden 
 ok('every drawn line has a checkbox and a drag handle', (html.match(/aria-label="Select action/g) ?? []).length === 2 && (html.match(/aria-label="Reorder action/g) ?? []).length === 2)
 ok('"Title these for me" says how many are untitled', html.includes('Title these for me (2)'))
 ok('a Lex-proposed title is offered with Use it / Edit / No — it is a proposal, not the title', !html.includes('Name one owner for each target') /* action 2 is hidden */ || html.includes('Lex suggests the title'))
-ok('a proposed classification is announced on the line', html.includes('Lex has proposed facets'))
-ok('the facets show as words: avenue, sequence, link, "specific enough"', html.includes('Legislative') && html.includes('Now') && html.includes('link: duty and means') && html.includes('specific enough') && html.includes('not yet specific'))
-ok('the group control offers every facet', ['By heading', 'By cause', 'By link', 'By avenue', 'By sequence'].every((l) => html.includes(l)))
-ok('the three views are offered, the current one marked with a glyph AND aria-selected', html.includes('Coverage grid') && html.includes('Sequence') && html.includes('aria-selected="true"') && html.includes('● List'))
+// 26-S2 §3: the screen shows only the current step's tools, so the old single-screen assertions below are asserted PER STEP (html = step 1; h2/h4 = steps 2 and 4).
+const mount = (step: 1 | 2 | 3 | 4) => renderToStaticMarkup(<ActionsWorkspace ideaId="idea-1" actions={actions} setAside={setAside} headings={heads} causes={causes} busy={false} onChanged={() => {}} renderFull={(a) => <div>FULL CARD {a.number}</div>} step={step} />)
+const h2 = mount(2), h4 = mount(4)
+ok('a proposed classification is announced on the line (step 1: the causes or an avenue)', html.includes('Lex has proposed causes or an avenue'))
+ok('the facets show as words, each in ITS step: avenue in step 1; who in step 2; sequence and "comes before" in step 4 — and no "link" or "specific enough" tag at all', html.includes('Legislative') && !html.includes('Now') && h2.includes('Who: Cabinet Office') && h4.includes('Now') && h4.includes('comes before #3') && !html.includes('link: duty and means') && !html.includes('specific enough') && !html.includes('not yet specific'))
+ok('the group control offers step 1’s facets (heading, cause, avenue, policy test) — not the retired link, and not sequence (that is step 4’s)', ['By heading', 'By cause', 'By avenue', 'By policy test'].every((l) => html.includes(l)) && !html.includes('By link') && !html.includes('By sequence') && h4.includes('By sequence'))
+ok('the views are offered per step, the current one marked with a glyph AND aria-selected: List and Coverage grid in step 1; List and Sequence in step 4', html.includes('Coverage grid') && !html.includes('○ Sequence') && h4.includes('○ Sequence') && !h4.includes('Coverage grid') && html.includes('aria-selected="true"') && html.includes('● List'))
 ok('Find duplicates and Classify with Lex are offered', html.includes('Find duplicates') && html.includes('Classify with Lex'))
 ok('the Later phase section is COLLAPSED (its parked action is not in the markup) but counted', html.includes('Later phase') && !html.includes('needs the Bill first') && html.includes('aria-expanded="false"'))
 ok('the ruled-out section is COLLAPSED but counted, and says nothing is deleted', html.includes('Ruled out and merged away') && html.includes('Nothing here is deleted') && !html.includes('Overtaken by the audit unit'))

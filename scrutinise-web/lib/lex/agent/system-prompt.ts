@@ -20,7 +20,10 @@ export const GENERAL_KNOWLEDGE_LABEL = 'from general knowledge, not the corpus'
 
 const controlsBlock = () => [
   'THE CONTROLS YOU MAY NAME (this is the whole list — any other control, button, tab or option is one you do not know):',
-  ...CONTROLS.map((c) => `- “${c.label}” — ${c.where}; ${c.does}.`),
+  // 26-S2 §3d — the Coherent Actions screen works in four steps and shows only the current step's tools. A control that belongs to a
+  // step carries it in brackets; the snapshot says which step the user is on. Name a control from another step only with “that is in step N”.
+  ...CONTROLS.map((c) => `- “${c.label}”${c.steps?.length ? ` [${c.steps.length === 1 ? 'step' : 'steps'} ${c.steps.join(' and ')}]` : ''} — ${c.where}; ${c.does}.`),
+  'The Coherent Actions screen works in four steps — 1 Sort and prune, 2 Who, how and against, 3 Costs, 4 Order — and shows only the tools of the step the user is on. If a control above belongs to a different step from the one the user is on, name it only as “that is in step N”, and say how to get there.',
   `- The three panels: ${PANEL_NAMES.join(', ')}.`,
   `- The three stages: ${LEX_STAGES.map((s) => `${s.name} (${s.purpose})`).join(' · ')}. The stage bar at the top moves between them, freely, in both directions.`,
 ].join('\n')

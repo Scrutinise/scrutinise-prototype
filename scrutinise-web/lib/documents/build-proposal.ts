@@ -705,9 +705,9 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
     blocks.push({ kind: 'paragraph', runs: meta })
 
     for (const [label, f] of [
-      ['Implementation (one-off)', a.implementationCost],
-      ['Enforcement (ongoing)', a.enforcementCost],
-      ['Regulatory friction (ongoing)', a.regulatoryFriction],
+      ['Cost to implement (one-off)', a.implementationCost],
+      ['Cost to enforce (ongoing)', a.enforcementCost],
+      ['Cost of compliance (ongoing)', a.regulatoryFriction],
     ] as const) {
       const runs = figureRuns(label, f)
       if (runs) blocks.push({ kind: 'paragraph', runs })

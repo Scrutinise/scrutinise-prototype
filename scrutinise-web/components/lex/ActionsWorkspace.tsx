@@ -25,9 +25,12 @@ import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
 import {
-  AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODES, GROUP_MODE_LABEL,
-  actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
+  AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODE_LABEL,
+  actionLabel, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
 } from '@/lib/lex/action-facets'
+import {
+  STEPS, STEP_NUMBERS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
+} from '@/lib/lex/action-steps'
 
 // ── talking to the route ─────────────────────────────────────────────────────────────────────────────────
 
@@ -75,7 +78,28 @@ function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>)
   return { run, busy, error, saved, setSaved, note, setNote, clearError: () => setError(null) }
 }
 
-const FACET_WORD = { avenue: 'Avenue', sequence: 'Sequence', link: 'Link', causes: 'Causes', before: 'Comes before' }
+// Decision 179: the three cost columns are COST lines — "Cost to implement / Cost to enforce / Cost of compliance" (never "Against", the step-2 slot).
+const COST_LINE_LABEL_SHORT = { implementationCost: 'Implement', enforcementCost: 'Enforce', regulatoryFriction: 'Compliance' } as const
+
+// Decision 167: "Link" is retired from the screen (the column stays; nothing is written to it).
+const FACET_WORD = { avenue: 'Avenue', sequence: 'Sequence', causes: 'Causes', before: 'Comes before' }
+
+/** 26-S2 §3b — which list groupings belong to which step. A grouping that belongs to another step is not offered (absent, not greyed). */
+const STEP_GROUP_MODES: Record<ActionsStep, GroupMode[]> = { 1: ['heading', 'cause', 'avenue', 'policy-test'], 2: ['heading'], 3: ['heading'], 4: ['heading', 'sequence'] }
+/** …and which views: the coverage grid is a step-1 tool (causes against actions); the sequence view is step 4's. */
+const STEP_VIEWS: Record<ActionsStep, Array<'list' | 'coverage' | 'sequence'>> = { 1: ['list', 'coverage'], 2: ['list'], 3: ['list'], 4: ['list', 'sequence'] }
+const VIEW_LABEL = { list: 'List', coverage: 'Coverage grid', sequence: 'Sequence' } as const
+
+/** A proposal belongs to a step by what it proposes: causes and avenue are step 1's; sequence and what comes before, step 4's. */
+const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): ActionsStep[] => [
+  ...(p.targetCauseIds || p.avenue !== undefined ? [1 as const] : []), ...(p.sequence !== undefined || p.beforeIds ? [4 as const] : []),
+]
+
+const cost = (c: CanonicalAction['implementationCost']): string => {
+  if (!c || (c.low == null && c.high == null)) return ''
+  const f = (n: number) => `£${Math.round(n).toLocaleString()}`
+  return c.low != null && c.high != null && c.low !== c.high ? `${f(c.low)}–${f(c.high)}` : f((c.low ?? c.high)!)
+}
 
 // ── the heading mark: name + shape + colour, together ───────────────────────────────────────────────────
 
@@ -98,18 +122,28 @@ interface Props {
   busy: boolean
   /** Re-reads the list. Resolves `false` when the re-read failed (so the screen can say so); anything else is a success. */
   onChanged: () => void | Promise<boolean | void>
-  /** The full existing action card (edit, costs, cost lines) — shown in place when a title is opened. */
-  renderFull: (a: CanonicalAction) => ReactNode
+  /** The existing action card, one STEP of it at a time (1 the body, 2 Who, 3 the cost ranges and lines, 4 nothing) — shown in place when a title is opened. */
+  renderFull: (a: CanonicalAction, step: ActionsStep) => ReactNode
   /** Ids of rows to render already open. Used by the render checks, so that what an OPENED row shows is read from the output. */
   initiallyOpen?: string[]
+  /** 26-S2 §3 — the step the user is on (1–4). The screen shows only that step's tools. Default 1. */
+  step?: ActionsStep
+  /** Ids of the actions that have cost lines (step 3's checklist counts a cost line as a cost). */
+  costLineActionIds?: string[]
 }
 
 type View = 'list' | 'coverage' | 'sequence'
 
-export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen }: Props) {
+export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, step = DEFAULT_STEP, costLineActionIds }: Props) {
   const ops = useOps(ideaId, onChanged)
-  const [view, setView] = useState<View>('list')
-  const [mode, setMode] = useState<GroupMode>('heading')
+  const [viewAsked, setView] = useState<View>('list')
+  const [modeAsked, setMode] = useState<GroupMode>('heading')
+  // a view or grouping that belongs to another step is not offered here: fall back to the list / by heading
+  const view: View = STEP_VIEWS[step].includes(viewAsked) ? viewAsked : 'list'
+  const mode: GroupMode = STEP_GROUP_MODES[step].includes(modeAsked) ? modeAsked : 'heading'
+  // "find duplicates has run since the last change": remembered per idea in this browser, against a signature of the list
+  const [dupesSig, setDupesSig] = useState<string | null>(null)
+  const [sigReady, setSigReady] = useState(false)
   const [open, setOpen] = useState<Set<string>>(new Set(initiallyOpen ?? []))
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [newHeading, setNewHeading] = useState('')
@@ -130,9 +164,18 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const groups = useMemo(() => groupActions(unparked, mode, { headings, causes: causeLite }), [unparked, mode, headings, causeLite])
   const untitled = live.filter((a) => !a.title?.trim() && !a.titleProposal).length
   const titleProposals = live.filter((a) => a.titleProposal).length
-  const facetProposals = live.filter((a) => a.facetProposal).length
+  const facetProposals = live.filter((a) => a.facetProposal && proposalStep(a.facetProposal).includes(step)).length
   const byId = useMemo(() => new Map(live.map((a) => [a.id, a])), [live])
   const headingById = useMemo(() => new Map(headings.map((h) => [h.id, h])), [headings])
+  const costLineIds = useMemo(() => new Set(costLineActionIds ?? []), [costLineActionIds])
+
+  // ── step 1's "no unresolved duplicate": find-duplicates has run since the last change to the list ──
+  const listSig = useMemo(() => live.map((a) => `${a.id}:${a.practicalStep.length}:${a.title ?? ''}`).join('|'), [live])
+  const sigKey = `lex:dupes-checked:${ideaId}`
+  useEffect(() => { try { setDupesSig(window.localStorage.getItem(sigKey)) } catch { /* private window: it reads as not run, which is true */ } setSigReady(true) }, [sigKey])
+  const markDuplicatesChecked = () => { try { window.localStorage.setItem(sigKey, listSig) } catch { /* ditto */ } setDupesSig(listSig) }
+  const duplicatesChecked = sigReady && dupesSig === listSig
+  const checklist = useMemo(() => stepChecklist(step, unparked, { duplicatesChecked }, { actionIdsWithCostLines: costLineIds }), [step, unparked, duplicatesChecked, costLineIds])
 
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -216,7 +259,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     const originals = setAside.filter((s) => s.mergedIntoId === a.id)
     // 26-S browser pass D — an OPENED record is ONE box: a 2px border and a light grey fill (border and fill, never colour alone).
     const boxClass = isOpen ? 'border-2 border-zinc-900 bg-zinc-100' : `border bg-white ${dragging === a.id ? 'border-zinc-900 shadow' : 'border-zinc-200'}`
-    const headingSelect = (
+    // Steps 2–4: the heading menu, the tick box and the drag handle are step 1's tools — absent here, not greyed.
+    const headingSelect = step !== 1 ? null : (
       <select value={a.headingId ?? ''} disabled={disabled} aria-label={`Heading for action ${a.number ?? ''}`}
         onChange={(e) => {
           const to = e.target.value || null
@@ -231,41 +275,59 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     return (
       <li key={a.id} data-action-id={a.id} data-open={isOpen ? 'true' : undefined} className={`rounded-lg ${boxClass}`} style={c ? { borderLeft: `6px solid ${c.hex}` } : undefined}>
         <div className="flex items-start gap-1.5 px-2 py-1.5">
-          <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSel(a.id)} aria-label={`Select action ${a.number ?? ''}`} className="mt-1 w-4 h-4 accent-zinc-900 shrink-0" />
-          <button type="button" disabled={disabled} onPointerDown={onPointerDownDrag(a.id)}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); nudge(a.id, -1) } if (e.key === 'ArrowDown') { e.preventDefault(); nudge(a.id, 1) } }}
-            title="Drag to reorder — or use the arrow keys" aria-label={`Reorder action ${a.number ?? ''}`}
-            className="shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-zinc-500 disabled:opacity-30 touch-none px-0.5" style={{ touchAction: 'none' }}>
-            <span aria-hidden className="text-base leading-none">⠿</span>
-          </button>
+          {step === 1 && <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSel(a.id)} aria-label={`Select action ${a.number ?? ''}`} className="mt-1 w-4 h-4 accent-zinc-900 shrink-0" />}
+          {step === 1 && (
+            <button type="button" disabled={disabled} onPointerDown={onPointerDownDrag(a.id)}
+              onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); nudge(a.id, -1) } if (e.key === 'ArrowDown') { e.preventDefault(); nudge(a.id, 1) } }}
+              title="Drag to reorder — or use the arrow keys" aria-label={`Reorder action ${a.number ?? ''}`}
+              className="shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-zinc-500 disabled:opacity-30 touch-none px-0.5" style={{ touchAction: 'none' }}>
+              <span aria-hidden className="text-base leading-none">⠿</span>
+            </button>
+          )}
           <span className="text-[11px] text-zinc-400 tabular-nums mt-0.5 w-7 shrink-0">#{a.number ?? '?'}</span>
           <div className="flex-1 min-w-0">
             <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded={isOpen} className="text-left w-full">
               <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`}>{actionLabel(a)}</span>
               {!isOpen && <span className="text-[11px] text-zinc-400 ml-1.5">open +</span>}
             </button>
+            {/* 26-S2 §3b — THE ROW SHOWS ONLY THIS STEP'S TAGS. Step 1: heading, verdict, causes, avenue. Step 2: who. Step 3: cost. Step 4: sequence. */}
+            {step === 1 && a.title && <span className="block text-[11px] text-zinc-500 mt-0.5" data-row-summary>{a.practicalStep.length > 140 ? `${a.practicalStep.slice(0, 139)}…` : a.practicalStep}</span>}
             <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-zinc-500 items-center">
-              {h && <HeadingMark h={h} />}
-              {a.avenue && <span>{AVENUE_LABEL[a.avenue]}</span>}
-              {a.sequence && <span>{SEQUENCE_LABEL[a.sequence]}</span>}
-              {a.targetCauseIds.length > 0 && <span>{a.targetCauseIds.length} cause{a.targetCauseIds.length === 1 ? '' : 's'}</span>}
-              {a.link && <span>link: {a.link}</span>}
-              {a.whoImplements && <span title={a.whoImplements}>by {a.whoImplements.length > 40 ? `${a.whoImplements.slice(0, 39)}…` : a.whoImplements}</span>}
-              <span>{specificEnough(a) ? 'specific enough' : 'not yet specific'}</span>
-              {a.mergedFrom.length > 0 && <span>merged from #{a.mergedFrom.join(', #')}</span>}
-              {/* DECISION 138 — the policy test, in the one list: a WORD AND A SHAPE (✗ ○ ? ✓), never colour alone. A conflict is boxed. */}
-              {a.policyTest ? (
-                <span title={a.policyTest.reason ?? undefined}
-                  className={`font-semibold text-zinc-800 ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900 rounded px-1' : ''}`}>
-                  <span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}
-                </span>
-              ) : (
-                // 26-S browser pass C — a row the consolidation never tested says so IN WORDS; blank reads as "fine".
-                <span title={NOT_TESTED_TITLE} className="font-semibold text-zinc-800" data-not-tested>
-                  <span aria-hidden>{POLICY_VERDICT_UI.NOT_TESTED.glyph}</span> {POLICY_VERDICT_UI.NOT_TESTED.word}
-                </span>
+              {step === 1 && (
+                <>
+                  {h && <HeadingMark h={h} />}
+                  {a.avenue && <span>{AVENUE_LABEL[a.avenue]}</span>}
+                  {a.targetCauseIds.length > 0 && <span>{a.targetCauseIds.length} cause{a.targetCauseIds.length === 1 ? '' : 's'}</span>}
+                  {a.mergedFrom.length > 0 && <span>merged from #{a.mergedFrom.join(', #')}</span>}
+                  {/* DECISION 138 — the policy test, in the one list: a WORD AND A SHAPE (✗ ○ ? ✓), never colour alone. A conflict is boxed. */}
+                  {a.policyTest ? (
+                    <span title={a.policyTest.reason ?? undefined}
+                      className={`font-semibold text-zinc-800 ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900 rounded px-1' : ''}`}>
+                      <span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}
+                      {a.policyTest.verdict === 'CONFLICTS' && a.conflictNote && <span className="font-normal"> · kept, with a note</span>}
+                    </span>
+                  ) : (
+                    // 26-S browser pass C — a row the consolidation never tested says so IN WORDS; blank reads as "fine".
+                    <span title={NOT_TESTED_TITLE} className="font-semibold text-zinc-800" data-not-tested>
+                      <span aria-hidden>{POLICY_VERDICT_UI.NOT_TESTED.glyph}</span> {POLICY_VERDICT_UI.NOT_TESTED.word}
+                    </span>
+                  )}
+                </>
               )}
-              {a.facetProposal && <span className="font-semibold text-zinc-700">Lex has proposed facets</span>}
+              {step === 2 && (a.whoImplements?.trim()
+                ? <span title={a.whoImplements}>Who: {a.whoImplements.length > 60 ? `${a.whoImplements.slice(0, 59)}…` : a.whoImplements}</span>
+                : <span className="font-semibold text-zinc-800">Who: not yet answered</span>)}
+              {step === 3 && (() => {
+                const parts = [cost(a.implementationCost) && `${COST_LINE_LABEL_SHORT.implementationCost} ${cost(a.implementationCost)}`, cost(a.enforcementCost) && `${COST_LINE_LABEL_SHORT.enforcementCost} ${cost(a.enforcementCost)}`, cost(a.regulatoryFriction) && `${COST_LINE_LABEL_SHORT.regulatoryFriction} ${cost(a.regulatoryFriction)}`].filter(Boolean)
+                return parts.length || costLineIds.has(a.id) ? <span>{parts.join(' · ') || 'cost lines recorded'}</span> : <span className="font-semibold text-zinc-800">Cost: not yet answered</span>
+              })()}
+              {step === 4 && (
+                <>
+                  {a.sequence ? <span>{SEQUENCE_LABEL[a.sequence]}</span> : <span className="font-semibold text-zinc-800">Sequence: not placed yet</span>}
+                  {a.beforeIds.length > 0 && <span>comes before {a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ')}</span>}
+                </>
+              )}
+              {a.facetProposal && proposalStep(a.facetProposal).includes(step) && <span className="font-semibold text-zinc-700">Lex has proposed {step === 1 ? 'causes or an avenue' : 'a sequence'}</span>}
             </div>
             {a.titleProposal && (
               <p className="mt-1 text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
@@ -284,43 +346,58 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             </div>
           ) : headingSelect}
         </div>
-        {isOpen && <OpenAction a={a} originals={originals} ctx={{ live, byId, causeLite, disabled, ops, renderFull }} />}
+        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} ctx={{ live, byId, causeLite, disabled, ops, renderFull, headingName }} />}
       </li>
     )
   }
 
   // ── the toolbar ──
-  const Toolbar = (
+  // 26-S2 §3b — ONLY THIS STEP'S CONTROLS ARE RENDERED. Controls that belong to another step are absent (not greyed).
+  //   step 1: titles, headings, causes and avenue (Classify), the coverage grid, duplicates · step 4: sequence (Classify) and its view.
+  //   Steps 2 and 3 have no toolbar yet: their questions are the opened record's (who; the cost ranges).
+  const modes = STEP_GROUP_MODES[step]
+  const views = STEP_VIEWS[step]
+  const classifyWords = step === 1 ? 'causes and avenue' : 'sequence and what comes before'
+  const Toolbar = (step === 2 || step === 3) ? null : (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
-        <div role="tablist" aria-label="View" className="inline-flex rounded-lg border border-zinc-300 overflow-hidden">
-          {([['list', 'List'], ['coverage', 'Coverage grid'], ['sequence', 'Sequence']] as Array<[View, string]>).map(([v, l]) => (
-            <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
-              className={`text-xs px-2.5 py-1 ${view === v ? 'bg-zinc-900 text-white font-semibold' : 'bg-white text-zinc-700 hover:bg-zinc-50'}`}>{view === v ? '● ' : '○ '}{l}</button>
-          ))}
-        </div>
-        {view === 'list' && (
+        {views.length > 1 && (
+          <div role="tablist" aria-label="View" className="inline-flex rounded-lg border border-zinc-300 overflow-hidden">
+            {views.map((v) => (
+              <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
+                className={`text-xs px-2.5 py-1 ${view === v ? 'bg-zinc-900 text-white font-semibold' : 'bg-white text-zinc-700 hover:bg-zinc-50'}`}>{view === v ? '● ' : '○ '}{VIEW_LABEL[v]}</button>
+            ))}
+          </div>
+        )}
+        {view === 'list' && modes.length > 1 && (
           <label className="text-[11px] text-zinc-600 flex items-center gap-1">Group
             <select value={mode} onChange={(e) => setMode(e.target.value as GroupMode)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs">
-              {GROUP_MODES.map((m) => <option key={m} value={m}>{GROUP_MODE_LABEL[m]}</option>)}
+              {modes.map((m) => <option key={m} value={m}>{GROUP_MODE_LABEL[m]}</option>)}
             </select></label>
         )}
-        <button disabled={disabled || untitled === 0} onClick={async () => {
-          const r = await ops.run('proposeTitles', {}, 'Lex is writing titles')
-          if (r.ok && r.result) ops.setNote(`Lex proposed ${r.result.proposed} title${r.result.proposed === 1 ? '' : 's'}${r.result.skipped ? `; ${r.result.skipped} it could not title` : ''}${r.result.asTopics ? `; ${r.result.asTopics} read like a topic rather than an action — worth a look` : ''}. Nothing is saved until you accept.`)
-        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Title these for me{untitled ? ` (${untitled})` : ''}</button>
-        {titleProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptTitles', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Use all {titleProposals} proposed titles</button>}
-        <button disabled={disabled || live.length === 0} onClick={async () => {
+        {step === 1 && (
+          <>
+            <button disabled={disabled || untitled === 0} onClick={async () => {
+              const r = await ops.run('proposeTitles', {}, 'Lex is writing titles')
+              if (r.ok && r.result) ops.setNote(`Lex proposed ${r.result.proposed} title${r.result.proposed === 1 ? '' : 's'}${r.result.skipped ? `; ${r.result.skipped} it could not title` : ''}${r.result.asTopics ? `; ${r.result.asTopics} read like a topic rather than an action — worth a look` : ''}. Nothing is saved until you accept.`)
+            }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Title these for me{untitled ? ` (${untitled})` : ''}</button>
+            {titleProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptTitles', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Use all {titleProposals} proposed titles</button>}
+          </>
+        )}
+        <button disabled={disabled || live.length === 0} title={`Lex proposes the ${classifyWords} for every action that has none. You accept or correct.`} onClick={async () => {
           const r = await ops.run('proposeFacets', {}, 'Lex is classifying')
-          if (r.ok && r.result) ops.setNote(`Lex proposed a classification for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}${r.result.links.length ? ` and read ${r.result.links.length} binding link${r.result.links.length === 1 ? '' : 's'} from your guiding policy` : ''}. Open an action to correct it, or accept the lot.`)
+          if (r.ok && r.result) ops.setNote(`Lex proposed the ${classifyWords} for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}. Open an action to correct it, or accept the lot.`)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Classify with Lex</button>
-        {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed classifications</button>}
-        <button disabled={disabled || live.length < 2} onClick={async () => {
-          const r = await ops.run('findDuplicates', {}, 'finding duplicates')
-          if (r.ok) setDupes(r.result)
-        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Find duplicates</button>
+        {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', { step })} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed {step === 1 ? 'classifications' : 'sequences'}</button>}
+        {step === 1 && (
+          <button disabled={disabled || live.length < 2} onClick={async () => {
+            const r = await ops.run('findDuplicates', {}, 'finding duplicates')
+            if (r.ok) { setDupes(r.result); markDuplicatesChecked() }
+          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Find duplicates</button>
+        )}
       </div>
 
+      {step === 1 && (
       <div className="flex flex-wrap items-center gap-1.5">
         <BoundedInput value={newHeading} onChange={setNewHeading} max={LIMITS.headingName} placeholder="New heading — e.g. legislation, practical…" aria-label="New heading name"
           onEnter={() => void addHeading()} disabled={disabled}
@@ -331,8 +408,9 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           if (r.ok && r.result) setSuggestions(r.result.suggestions)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 hover:bg-zinc-50">Suggest headings from my guiding policy</button>
       </div>
+      )}
 
-      {suggestions && (
+      {step === 1 && suggestions && (
         <div className="rounded-lg border border-zinc-200 bg-white p-2">
           <p className="text-[11px] font-semibold text-zinc-700">Starting headings from your guiding policy — add, rename later, or ignore.</p>
           <ul className="mt-1 space-y-1">
@@ -372,7 +450,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   ) : null
 
   // ── bulk bar ──
-  const BulkBar = selIds.length > 0 && (
+  const BulkBar = step === 1 && selIds.length > 0 && (
     <div className="rounded-lg border-2 border-zinc-900 bg-white p-2 flex flex-wrap items-start gap-1.5" data-bulk-bar>
       <span className="text-xs font-semibold mt-0.5">{selIds.length} selected</span>
       <select disabled={disabled} defaultValue="" onChange={(e) => {
@@ -406,10 +484,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   return (
     <div className="space-y-2">
       {Toolbar}
-      <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />
+      {step === 1 && <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />}
       {(Status || BulkBar) && <div className="sticky top-0 z-20 space-y-1" data-sticky-top>{Status}{BulkBar}</div>}
-      {pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
-      {dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
+      {step === 1 && pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
+      {step === 1 && dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
 
       {view === 'list' && (
         <>
@@ -419,14 +497,14 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               const h = g.key.startsWith('h:') ? headingById.get(g.key.slice(2)) : undefined
               return (
                 <section key={g.key} aria-label={g.label}>
-                  <GroupHeader g={g} h={h} ops={ops} disabled={disabled} />
+                  <GroupHeader g={g} h={step === 1 ? h : undefined} ops={ops} disabled={disabled} />
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
                 </section>
               )
             })}
           </div>
-          {parked.length > 0 && (
+          {step === 1 && parked.length > 0 && (
             <CollapsedBlock title="Later phase" count={parked.length} open={showParked} onToggle={() => setShowParked((v) => !v)} hint="Parked for later — still yours, still in the proposal.">
               <ul className="space-y-1">{parked.map((a) => (
                 <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
@@ -441,7 +519,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {view === 'coverage' && <CoverageView actions={unparked} causes={causeLite} headings={headings} />}
       {view === 'sequence' && <SequenceView actions={unparked} />}
 
-      {setAside.length > 0 && (
+      {/* 26-S2 §3c — this step's checklist at the foot of the list. ADVISORY: it says what is unfinished and never blocks moving on. */}
+      {checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
+
+      {step === 1 && setAside.length > 0 && (
         <CollapsedBlock title="Ruled out and merged away" count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
           <ul className="space-y-1">{setAside.map((a) => (
             <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
@@ -461,13 +542,15 @@ interface OpenCtx {
   causeLite: Array<{ id: string; number: number | null; cause: string }>
   disabled: boolean
   ops: ReturnType<typeof useOps>
-  renderFull: (a: CanonicalAction) => ReactNode
+  renderFull: (a: CanonicalAction, step: ActionsStep) => ReactNode
+  /** The heading's name, for the collapsed step-1 line of an opened record viewed from another step. */
+  headingName: (id: string | null) => string | null
 }
 
-function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: CanonicalAction[]; ctx: OpenCtx }) {
+function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAction; originals: CanonicalAction[]; ctx: OpenCtx; step: ActionsStep; hasCostLines: boolean }) {
   const { live, byId, causeLite, disabled, ops, renderFull } = ctx
   const [title, setTitle] = useState(a.titleProposal ?? a.title ?? '')
-  const [link, setLink] = useState(a.link ?? '')
+  const [keepNote, setKeepNote] = useState(a.conflictNote ?? '')
   const [why, setWhy] = useState('')
   const [seeOriginal, setSeeOriginal] = useState<string | null>(null)
   const others = live.filter((x) => x.id !== a.id)
@@ -478,6 +561,122 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
     if (r.ok) setEditingTitle(false)
   }
   const sources = a.policyTest ? provenanceLine(a.policyTest.from) : ''
+  const headingName = a.headingId ? ctx.headingName(a.headingId) : null
+  const saveKeep = async (note: string | null) => {
+    const r = await ops.run('keepConflict', { actionId: a.id, note }, undefined, () => note ? `Saved: #${a.number ?? '?'} is kept, with your note.` : `Saved: the note on #${a.number ?? '?'} is cleared.`)
+    if (r.ok && !note) setKeepNote('')
+  }
+
+  // ── the four steps' sections, built once; the CURRENT step's is open and first, the others sit below under one line each ──
+  const section: Record<ActionsStep, ReactNode> = {
+    1: (
+      <div className="space-y-2">
+        {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
+        {a.policyTest && (
+          <div className={`rounded bg-white p-2 text-xs ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
+            <p className="mt-0.5 text-zinc-900">
+              <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
+              {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
+            </p>
+            {/* 26-S2 §3c — an action the policy conflicts with is ruled out, edited and re-tested, or KEPT WITH A NOTE. */}
+            {a.policyTest.verdict === 'CONFLICTS' && (
+              <div className="mt-1.5 space-y-1" data-keep-note>
+                {a.conflictNote && <p className="text-zinc-900"><span className="font-semibold">Kept, with your note:</span> {a.conflictNote}</p>}
+                <BoundedInput value={keepNote} onChange={setKeepNote} max={LIMITS.ruleOutReason} placeholder="Why you are keeping it, although the policy conflicts" aria-label={`Why action ${a.number ?? ''} is kept although it conflicts`}
+                  className="w-full text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
+                <button type="button" disabled={disabled || keepNote.trim().length < 3 || keepNote.trim() === (a.conflictNote ?? '')} onClick={() => void saveKeep(keepNote.trim())}
+                  className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Keep it, with a note</button>
+                {a.conflictNote && <button type="button" disabled={disabled} onClick={() => void saveKeep(null)} className="text-[11px] underline text-zinc-600 ml-2 disabled:opacity-40">Clear the note</button>}
+              </div>
+            )}
+          </div>
+        )}
+        {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
+        {sources && (
+          <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Sources</p>
+            <p className="mt-0.5 text-zinc-800">{sources}</p>
+          </div>
+        )}
+
+        <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The causes it attacks, and its avenue {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
+          {a.facetProposal && proposalStep(a.facetProposal).includes(1) && <FacetProposal a={a} step={1} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 1 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 1 })} />}
+          <div className="flex flex-wrap gap-2 items-center text-[11px]">
+            <label className="flex items-center gap-1">{FACET_WORD.avenue}
+              <select value={a.avenue ?? ''} onChange={(e) => facetSet({ avenue: e.target.value || null })} disabled={disabled} className="border border-zinc-300 rounded px-1 py-0.5">
+                <option value="">not assigned</option>{AVENUES.map((v) => <option key={v} value={v}>{AVENUE_LABEL[v]}</option>)}
+              </select></label>
+          </div>
+          <details className="text-[11px]">
+            <summary className="cursor-pointer text-zinc-600">{FACET_WORD.causes}: {a.targetCauseIds.length ? a.targetCauseIds.map((id) => `#${causeLite.find((c) => c.id === id)?.number ?? '?'}`).join(', ') : 'none recorded'} — change</summary>
+            <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
+              {causeLite.map((c) => (
+                <li key={c.id}><label className="flex items-start gap-1.5">
+                  <input type="checkbox" checked={a.targetCauseIds.includes(c.id)} disabled={disabled} className="mt-0.5 accent-zinc-900"
+                    onChange={(e) => facetSet({ targetCauseIds: e.target.checked ? [...a.targetCauseIds, c.id] : a.targetCauseIds.filter((x) => x !== c.id) })} />
+                  <span><span className="font-medium">#{c.number}</span> {c.cause}</span></label></li>
+              ))}
+            </ul>
+          </details>
+        </div>
+
+        {renderFull(a, 1)}
+
+        {originals.length > 0 && (
+          <div className="rounded border border-zinc-200 bg-white p-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The originals this was made from — kept</p>
+            <ul className="mt-1 space-y-1">
+              {originals.map((o) => (
+                <li key={o.id} className="text-[11px]">
+                  <button type="button" onClick={() => setSeeOriginal(seeOriginal === o.id ? null : o.id)} aria-expanded={seeOriginal === o.id} className="text-left underline decoration-dotted">
+                    #{o.number} — {actionLabel(o, 80)}
+                  </button>
+                  {seeOriginal === o.id && <p className="mt-1 text-zinc-700 whitespace-pre-wrap">{o.practicalStep}{o.whoImplements ? ` — ${o.whoImplements}` : ''}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 items-center">
+          <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null }, undefined, () => `Saved: #${a.number ?? '?'} moved to “Later phase”.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">Later phase</button>
+          <button disabled={disabled || why.trim().length < 3} onClick={() => void ops.run('ruleOut', { ids: [a.id], reason: why }, undefined, () => `Saved: #${a.number ?? '?'} ruled out, with your reason. It is kept under “Ruled out and merged away”; Restore brings it back.`)} title={why.trim().length < 3 ? 'Give a reason first — it is kept so you can bring the action back.' : undefined}
+            className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700 disabled:opacity-40">Rule out</button>
+          <BoundedInput value={why} onChange={setWhy} max={LIMITS.ruleOutReason} placeholder="Reason (needed to rule out)" aria-label={`Reason to rule out action ${a.number ?? ''}`}
+            className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
+        </div>
+      </div>
+    ),
+    2: <div className="space-y-2">{renderFull(a, 2)}</div>,
+    3: <div className="space-y-2">{renderFull(a, 3)}</div>,
+    4: (
+      <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Order {a.facetProposal && proposalStep(a.facetProposal).includes(4) && '— Lex has proposed some of it'}</p>
+        {a.facetProposal && proposalStep(a.facetProposal).includes(4) && <FacetProposal a={a} step={4} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 4 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 4 })} />}
+        <div className="flex flex-wrap gap-2 items-center text-[11px]">
+          <label className="flex items-center gap-1">{FACET_WORD.sequence}
+            <select value={a.sequence ?? ''} onChange={(e) => facetSet({ sequence: e.target.value || null })} disabled={disabled} className="border border-zinc-300 rounded px-1 py-0.5">
+              <option value="">not placed</option>{SEQUENCES.map((v) => <option key={v} value={v}>{SEQUENCE_LABEL[v]}</option>)}
+            </select></label>
+        </div>
+        <details className="text-[11px]">
+          <summary className="cursor-pointer text-zinc-600">{FACET_WORD.before}: {a.beforeIds.length ? a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ') : 'nothing'} — change</summary>
+          <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
+            {others.map((o) => (
+              <li key={o.id}><label className="flex items-start gap-1.5">
+                <input type="checkbox" checked={a.beforeIds.includes(o.id)} disabled={disabled} className="mt-0.5 accent-zinc-900"
+                  onChange={(e) => facetSet({ beforeIds: e.target.checked ? [...a.beforeIds, o.id] : a.beforeIds.filter((x) => x !== o.id) })} />
+                <span><span className="font-medium">#{o.number}</span> {actionLabel(o, 70)}</span></label></li>
+            ))}
+          </ul>
+        </details>
+      </div>
+    ),
+  }
+  // the current step first and open; every other step below, collapsed under ONE line that says where it stands ("… — not yet answered · from step 2")
+  const order: ActionsStep[] = [step, ...STEP_NUMBERS.filter((n) => n !== step)]
   return (
     <div className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2">
       {/* 26-S browser pass D — the title reads as text; "Edit title" at its end opens the box (it replaces the always-open box + "Save title"). */}
@@ -494,90 +693,14 @@ function OpenAction({ a, originals, ctx }: { a: CanonicalAction; originals: Cano
           <button type="button" disabled={disabled} onClick={() => setEditingTitle(true)} className="text-xs font-medium underline text-zinc-700 ml-1 disabled:opacity-40">Edit title</button>
         </p>
       )}
-
-      {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
-      {a.policyTest && (
-        <div className={`rounded bg-white p-2 text-xs ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
-          <p className="mt-0.5 text-zinc-900">
-            <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
-            {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
-          </p>
-        </div>
-      )}
-      {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
-      {sources && (
-        <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Sources</p>
-          <p className="mt-0.5 text-zinc-800">{sources}</p>
-        </div>
-      )}
-
-      <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">How this action is classified {a.facetProposal && '— Lex has proposed some of it'}</p>
-        {a.facetProposal && <FacetProposal a={a} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id] })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id] })} />}
-        <div className="flex flex-wrap gap-2 items-center text-[11px]">
-          <label className="flex items-center gap-1">{FACET_WORD.avenue}
-            <select value={a.avenue ?? ''} onChange={(e) => facetSet({ avenue: e.target.value || null })} disabled={disabled} className="border border-zinc-300 rounded px-1 py-0.5">
-              <option value="">not assigned</option>{AVENUES.map((v) => <option key={v} value={v}>{AVENUE_LABEL[v]}</option>)}
-            </select></label>
-          <label className="flex items-center gap-1">{FACET_WORD.sequence}
-            <select value={a.sequence ?? ''} onChange={(e) => facetSet({ sequence: e.target.value || null })} disabled={disabled} className="border border-zinc-300 rounded px-1 py-0.5">
-              <option value="">not placed</option>{SEQUENCES.map((v) => <option key={v} value={v}>{SEQUENCE_LABEL[v]}</option>)}
-            </select></label>
-          <label className="flex items-center gap-1">{FACET_WORD.link}
-            <BoundedInput value={link} onChange={setLink} onBlur={() => link.trim() !== (a.link ?? '') && facetSet({ link: link.trim() || null })} placeholder="which binding link it protects" max={LIMITS.classificationLink}
-              aria-label={`Binding link for action ${a.number ?? ''}`} className="border border-zinc-300 rounded px-1 py-0.5 w-48" /></label>
-        </div>
-        <details className="text-[11px]">
-          <summary className="cursor-pointer text-zinc-600">{FACET_WORD.causes}: {a.targetCauseIds.length ? a.targetCauseIds.map((id) => `#${causeLite.find((c) => c.id === id)?.number ?? '?'}`).join(', ') : 'none recorded'} — change</summary>
-          <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
-            {causeLite.map((c) => (
-              <li key={c.id}><label className="flex items-start gap-1.5">
-                <input type="checkbox" checked={a.targetCauseIds.includes(c.id)} disabled={disabled} className="mt-0.5 accent-zinc-900"
-                  onChange={(e) => facetSet({ targetCauseIds: e.target.checked ? [...a.targetCauseIds, c.id] : a.targetCauseIds.filter((x) => x !== c.id) })} />
-                <span><span className="font-medium">#{c.number}</span> {c.cause}</span></label></li>
-            ))}
-          </ul>
+      {order.map((n) => n === step ? (
+        <div key={n} data-step-section={n} data-step-open="true" className="space-y-2">{section[n]}</div>
+      ) : (
+        <details key={n} data-step-section={n} className="rounded border border-zinc-200 bg-white">
+          <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(n, a, hasCostLines, headingName)}</summary>
+          <div className="px-2 pb-2 pt-1">{section[n]}</div>
         </details>
-        <details className="text-[11px]">
-          <summary className="cursor-pointer text-zinc-600">{FACET_WORD.before}: {a.beforeIds.length ? a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ') : 'nothing'} — change</summary>
-          <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
-            {others.map((o) => (
-              <li key={o.id}><label className="flex items-start gap-1.5">
-                <input type="checkbox" checked={a.beforeIds.includes(o.id)} disabled={disabled} className="mt-0.5 accent-zinc-900"
-                  onChange={(e) => facetSet({ beforeIds: e.target.checked ? [...a.beforeIds, o.id] : a.beforeIds.filter((x) => x !== o.id) })} />
-                <span><span className="font-medium">#{o.number}</span> {actionLabel(o, 70)}</span></label></li>
-            ))}
-          </ul>
-        </details>
-      </div>
-
-      {renderFull(a)}
-
-      {originals.length > 0 && (
-        <div className="rounded border border-zinc-200 bg-white p-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The originals this was made from — kept</p>
-          <ul className="mt-1 space-y-1">
-            {originals.map((o) => (
-              <li key={o.id} className="text-[11px]">
-                <button type="button" onClick={() => setSeeOriginal(seeOriginal === o.id ? null : o.id)} aria-expanded={seeOriginal === o.id} className="text-left underline decoration-dotted">
-                  #{o.number} — {actionLabel(o, 80)}
-                </button>
-                {seeOriginal === o.id && <p className="mt-1 text-zinc-700 whitespace-pre-wrap">{o.practicalStep}{o.whoImplements ? ` — ${o.whoImplements}` : ''}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2 items-center">
-        <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null }, undefined, () => `Saved: #${a.number ?? '?'} moved to “Later phase”.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">Later phase</button>
-        <button disabled={disabled || why.trim().length < 3} onClick={() => void ops.run('ruleOut', { ids: [a.id], reason: why }, undefined, () => `Saved: #${a.number ?? '?'} ruled out, with your reason. It is kept under “Ruled out and merged away”; Restore brings it back.`)} title={why.trim().length < 3 ? 'Give a reason first — it is kept so you can bring the action back.' : undefined}
-          className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700 disabled:opacity-40">Rule out</button>
-        <BoundedInput value={why} onChange={setWhy} max={LIMITS.ruleOutReason} placeholder="Reason (needed to rule out)" aria-label={`Reason to rule out action ${a.number ?? ''}`}
-          className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
-      </div>
+      ))}
     </div>
   )
 }
@@ -627,14 +750,31 @@ function CollapsedBlock({ title, count, hint, open, onToggle, children }: { titl
   )
 }
 
-function FacetProposal({ a, causes, others, onAccept, onDismiss }: { a: CanonicalAction; causes: Array<{ id: string; number: number | null }>; others: CanonicalAction[]; onAccept: () => void; onDismiss: () => void }) {
+/** 26-S2 §3 — advisory, never blocking: each line is a shape AND words ("✓" done, "○" not yet), with its count. */
+function StepChecklist({ step, lines }: { step: ActionsStep; lines: Array<{ key: string; done: boolean; text: string }> }) {
+  const open = lines.filter((l) => !l.done).length
+  return (
+    <section aria-label={`Checklist for step ${step}: ${STEPS[step].label}`} className="rounded-lg border border-zinc-300 bg-zinc-50 p-2.5" data-step-checklist={step}>
+      <p className="text-xs font-semibold text-zinc-800">Step {step} checklist — {open === 0 ? 'all done' : `${open} thing${open === 1 ? '' : 's'} still open`}. <span className="font-normal text-zinc-600">Advisory: it never stops you moving on.</span></p>
+      <ul className="mt-1 space-y-0.5">
+        {lines.map((l) => (
+          <li key={l.key} className={`text-[11px] ${l.done ? 'text-zinc-600' : 'text-zinc-900 font-medium'}`}>
+            <span aria-hidden>{l.done ? '✓' : '○'}</span> <span className="sr-only">{l.done ? 'Done: ' : 'Not yet: '}</span>{l.text}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function FacetProposal({ a, step, causes, others, onAccept, onDismiss }: { a: CanonicalAction; step: ActionsStep; causes: Array<{ id: string; number: number | null }>; others: CanonicalAction[]; onAccept: () => void; onDismiss: () => void }) {
   const p = a.facetProposal!
   const bits: string[] = []
-  if (p.targetCauseIds?.length) bits.push(`causes ${p.targetCauseIds.map((id) => `#${causes.find((c) => c.id === id)?.number ?? '?'}`).join(', ')}`)
-  if (p.avenue) bits.push(`avenue ${AVENUE_LABEL[p.avenue as keyof typeof AVENUE_LABEL] ?? p.avenue}`)
-  if (p.link) bits.push(`link “${p.link}”`)
-  if (p.sequence) bits.push(`sequence ${SEQUENCE_LABEL[p.sequence as keyof typeof SEQUENCE_LABEL] ?? p.sequence}`)
-  if (p.beforeIds?.length) bits.push(`comes before ${p.beforeIds.map((id) => `#${others.find((o) => o.id === id)?.number ?? '?'}`).join(', ')}`)
+  // only THIS step's part of the proposal is shown and accepted here; "link" is retired (decision 167)
+  if (step === 1 && p.targetCauseIds?.length) bits.push(`causes ${p.targetCauseIds.map((id) => `#${causes.find((c) => c.id === id)?.number ?? '?'}`).join(', ')}`)
+  if (step === 1 && p.avenue) bits.push(`avenue ${AVENUE_LABEL[p.avenue as keyof typeof AVENUE_LABEL] ?? p.avenue}`)
+  if (step === 4 && p.sequence) bits.push(`sequence ${SEQUENCE_LABEL[p.sequence as keyof typeof SEQUENCE_LABEL] ?? p.sequence}`)
+  if (step === 4 && p.beforeIds?.length) bits.push(`comes before ${p.beforeIds.map((id) => `#${others.find((o) => o.id === id)?.number ?? '?'}`).join(', ')}`)
   return (
     <p className="text-[11px] bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
       <span className="font-semibold">Lex proposes:</span> {bits.join(' · ') || 'nothing more than is already set'}.{' '}
