@@ -893,6 +893,9 @@ model Idea {
   // Lex rebuild — the current Lex PAGE the user has advanced into (§14 / Sprint 2).
   // Distinct from the 5-stage lifecycle `stage`. Advanced explicitly ("Continue to Diagnosis").
   lexPage                   String?         @default("ORIENTATION") // ORIENTATION | DIAGNOSIS | …
+  /// 26-S2 §3a (decision 166) — the step the user is on in the Coherent Actions screen: 1 Sort and prune · 2 Who, how and against ·
+  /// 3 Costs · 4 Order. Stored per idea so returning lands where they left it. DDL: prisma/lex_26s2_steps.sql.
+  actionsStep               Int             @default(1)
   // Lex rebuild — Page 2 (Diagnosis) fields (design §7.1). challenge/pivotalObstacle text;
   // whoAffectedImpactCost/legalLandscape are structured slot objects. rootCause +
   // summaryDiagnosis reuse the existing legacy Idea columns above.
@@ -3081,6 +3084,9 @@ model LexCoherentAction {
   policyTestVerdict  String?
   policyTestReason   String?
   policyTestFrom     Json?
+  /// 26-S2 §3c — "kept with a note": the user's reason for keeping an action the policy test says CONFLICTS, <= 600 characters.
+  /// NULL = no note. The verdict itself is never edited. DDL: prisma/lex_26s2_steps.sql.
+  conflictNote       String?
 
   @@index([ideaId])
   @@index([ideaId, status])
