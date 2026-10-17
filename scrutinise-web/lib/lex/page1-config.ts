@@ -464,6 +464,8 @@ export interface CanonicalAction {
   policyTest: { verdict: 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'; reason: string | null; from: string[] } | null
   /** 26-S2 §3c — "kept with a note": why the user keeps an action the test says CONFLICTS. null = no note. */
   conflictNote: string | null
+  /** Decision 181 — the commentary: unlimited, beside the 1,000-character statement. null = none. */
+  commentary: string | null
 }
 
 /** 26-Q §3 — one of the user's headings for their coherent actions. */

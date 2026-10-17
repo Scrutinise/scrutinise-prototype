@@ -9,6 +9,8 @@ export const LIMITS = {
   classificationLink: 200,
   actionTitle: 110,
   headingName: 60,
+  /** Decision 181 (17 Oct 2026): the action STATEMENT. It was 600 in 26-Q without a decision; the COMMENTARY beside it is unlimited and takes whatever a limit cuts. */
+  actionStatement: 1000,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

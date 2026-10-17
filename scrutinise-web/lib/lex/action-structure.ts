@@ -527,6 +527,14 @@ export async function suggestHeadings(ideaId: string, userId: string | null): Pr
 // ── merge and compare (§5) ───────────────────────────────────────────────────────────────────────────────
 
 export type ActionMergeVerdict = 'MERGE' | 'ONE_CONTAINS_THE_OTHER' | 'SEQUENCE' | 'CONTRADICTORY'
+/** Decision 181 - a restated statement longer than the limit keeps its first LIMITS.actionStatement characters as the statement and the WHOLE text goes in the commentary: nothing a limit cuts is dropped. */
+export function statementAndCommentary(text: string, ...commentaries: Array<string | null | undefined>): { statement: string; commentary: string | null } {
+  const t = text.replace(/\s+/g, ' ').trim()
+  const over = t.length > LIMITS.actionStatement
+  const parts = [...commentaries.map((c) => c?.trim()).filter((c): c is string => !!c), ...(over ? [`Full wording (cut from the statement by the ${LIMITS.actionStatement}-character limit): ${t}`] : [])]
+  return { statement: t.slice(0, LIMITS.actionStatement), commentary: parts.length ? parts.join('\n\n') : null }
+}
+
 export interface ActionMergeAnswer {
   verdict: ActionMergeVerdict
   reasoning: string
@@ -604,10 +612,11 @@ export async function applyActionMerge(ideaId: string, userId: string, na: numbe
   if (answer.verdict === 'MERGE') {
     const full = await prisma.lexCoherentAction.findMany({ where: { id: { in: [A.id, B.id] } } })
     const fa = full.find((x) => x.id === A.id)!, fb = full.find((x) => x.id === B.id)!
+    const sc = statementAndCommentary(answer.merged!.practicalStep, fa.commentary, fb.commentary)
     const made = await prisma.$transaction(async (tx) => {
       const row = await tx.lexCoherentAction.create({
         data: {
-          ideaId, practicalStep: clip(answer.merged!.practicalStep, 2000), title: clip(answer.merged!.title, TITLE_MAX) || null,
+          ideaId, practicalStep: sc.statement, commentary: sc.commentary, title: clip(answer.merged!.title, TITLE_MAX) || null,
           mechanismType: fa.mechanismType ?? fb.mechanismType, whoImplements: fa.whoImplements ?? fb.whoImplements,
           targetOrganisation: fa.targetOrganisation ?? fb.targetOrganisation, wording: fa.wording ?? fb.wording,
           benefits: (fa.benefits ?? fb.benefits ?? undefined) as never, implementationCost: (fa.implementationCost ?? fb.implementationCost ?? undefined) as never,
@@ -637,14 +646,15 @@ export async function applyActionMerge(ideaId: string, userId: string, na: numbe
   const full = await prisma.lexCoherentAction.findMany({ where: { id: { in: [sub.id, con.id] } } })
   const fs = full.find((x) => x.id === sub.id)!, fc = full.find((x) => x.id === con.id)!
   await prisma.$transaction(async (tx) => {
-    if (answer.merged?.practicalStep?.trim() && clip(answer.merged.practicalStep, 2000) !== fc.practicalStep) {
+    const restated = answer.merged?.practicalStep?.trim() ? statementAndCommentary(answer.merged.practicalStep, fc.commentary, fs.commentary) : null
+    if (restated && restated.statement !== fc.practicalStep) {
       // the container's prior wording is kept — the same record the guiding-policy enhance writes
-      await tx.fieldRevision.create({ data: { ideaId, fieldKey: 'actions', targetId: fc.id, targetNumber: fc.number, previousText: fc.practicalStep, previousSource: fc.source, newText: clip(answer.merged.practicalStep, 2000), acceptedById: userId, origin: 'ACTION_MERGE' } })
+      await tx.fieldRevision.create({ data: { ideaId, fieldKey: 'actions', targetId: fc.id, targetNumber: fc.number, previousText: fc.practicalStep, previousSource: fc.source, newText: restated!.statement, acceptedById: userId, origin: 'ACTION_MERGE' } })
     }
     await tx.lexCoherentAction.update({
       where: { id: fc.id },
       data: {
-        ...(answer.merged?.practicalStep?.trim() ? { practicalStep: clip(answer.merged.practicalStep, 2000) } : {}),
+        ...(restated ? { practicalStep: restated.statement, commentary: restated.commentary } : (fs.commentary?.trim() ? { commentary: [fc.commentary, fs.commentary].filter((c) => c?.trim()).join('\n\n') } : {})),
         ...(answer.merged?.title?.trim() ? { title: clip(answer.merged.title, TITLE_MAX) } : {}),
         whoImplements: fc.whoImplements ?? fs.whoImplements, wording: fc.wording ?? fs.wording,
         targetCauseIds: union(fc.targetCauseIds, fs.targetCauseIds), mergedFrom: union(fc.mergedFrom.map(String), [String(fs.number)]).map(Number),

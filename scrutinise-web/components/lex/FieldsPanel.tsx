@@ -13,6 +13,8 @@ import ActionImport from './ActionImport'
 import RefTextarea, { IdeaIdContext } from './RefTextarea'
 import ActionsWorkspace from './ActionsWorkspace'
 import ActionsSteps from './ActionsSteps'
+import BoundedInput from './BoundedInput'
+import { LIMITS } from '@/lib/lex/input-limits'
 import { COST_LINE_LABEL, clampStep, type ActionsStep } from '@/lib/lex/action-steps'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
@@ -69,6 +71,7 @@ export interface ActionDraft {
   whoImplements?: string | null
   targetOrganisation?: string | null
   wording?: string | null
+  commentary?: string | null
   benefits?: Record<string, string> | null
   implementationCost?: CostRange | null
   enforcementCost?: CostRange | null
@@ -1565,8 +1568,14 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, st
       <div className="rounded-lg border border-blue-200 bg-white p-2 space-y-1.5">
         {step === 1 && (
           <>
-            <input value={d.practicalStep} onChange={(e) => patch({ practicalStep: e.target.value })} placeholder="The practical step"
-              className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+            {/* Decision 181: the statement shows its limit and the count left; what a limit would cut goes in the commentary below. */}
+            <BoundedInput multiline rows={3} value={d.practicalStep} onChange={(v) => patch({ practicalStep: v })} max={LIMITS.actionStatement} placeholder="The action statement" aria-label="The action statement"
+              wrapperClassName="w-full" className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+            <label className="block text-[11px] text-zinc-600">Commentary — the intention, examples, dimensions, and anything the statement’s limit would cut. No limit.
+              <RefTextarea value={d.commentary ?? ''} onChange={(e) => patch({ commentary: e.target.value })} rows={4} placeholder="Commentary (optional)"
+                className="mt-0.5 w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+              <span className="text-[10px] text-zinc-500">{(d.commentary ?? '').length.toLocaleString()} characters · no limit</span>
+            </label>
             <input value={d.mechanismType ?? ''} onChange={(e) => patch({ mechanismType: e.target.value })} placeholder="Mechanism"
               className="w-40 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
             <input value={d.targetOrganisation ?? ''} onChange={(e) => patch({ targetOrganisation: e.target.value })} placeholder="Target organisation (legislative)"
@@ -1606,6 +1615,12 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, st
       {step === 1 && (
         <>
           <p className="text-sm text-zinc-800">{action.practicalStep}</p>
+          {action.commentary?.trim() && (
+            <div className="mt-1.5 rounded border border-zinc-200 bg-zinc-50 p-1.5" data-commentary>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Mechanism — commentary</p>
+              <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{action.commentary}</p>
+            </div>
+          )}
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-zinc-500">
             {action.mechanismType && <span>Mechanism: {action.mechanismType}</span>}
             {action.targetOrganisation && <span>Target: {action.targetOrganisation}</span>}

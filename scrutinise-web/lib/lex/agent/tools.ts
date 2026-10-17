@@ -17,6 +17,7 @@
 
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { LIMITS } from '@/lib/lex/input-limits'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { resolvePrefix, short } from './snapshot'
 import { signConfirm } from './confirm-token'
@@ -470,25 +471,60 @@ const addCandidate: ToolDefinition = {
   },
 }
 
+// Decision 181: the action STATEMENT is at most LIMITS.actionStatement characters; the COMMENTARY beside it is unlimited and takes the intention,
+// examples, dimensions and any text the limit would cut. Whenever Lex shortens ANYTHING she says so and offers the commentary — she never drops the cut text.
+const STATEMENT_TOO_LONG = `the action statement is limited to ${LIMITS.actionStatement} characters. Shorten it, and OFFER the user to keep the full text in the action's commentary (unlimited) — never drop the cut text.`
+
 const addActionTool: ToolDefinition = {
   name: 'add_action', category: 'draft', tier: 'free',
-  description: 'Add a coherent action: a specific practical step — who does what, by when or under what trigger. Specific, not a principle.',
+  description: `Add a coherent action: a specific practical step — who does what, by when or under what trigger. Specific, not a principle. The statement is at most ${LIMITS.actionStatement} characters; if you have to shorten what the user said, put the full text in \`commentary\` (unlimited) and tell them you did. If the user DICTATES the action ("add this action: …"), pass \`dictated:true\` with their exact words as practicalStep: it is then THE USER'S action (author = the owner), not yours. The result gives the action's NUMBER — say where it landed ("added as #31").`,
   schema: z.object({
-    practicalStep: z.string().min(15).max(600),
+    practicalStep: z.string().min(15).max(LIMITS.actionStatement, STATEMENT_TOO_LONG),
+    commentary: z.string().max(100000).optional().describe('unlimited: the intention, examples, dimensions, and any text the statement limit cut'),
     whoImplements: z.string().max(200).optional(),
     targetOrganisation: z.string().max(200).optional(),
     wording: z.string().max(1200).optional().describe('draft legislative or policy wording, if any'),
+    dictated: z.boolean().optional().describe('true ONLY when practicalStep is the user\'s own words, copied exactly from what they just wrote. Never for your own drafting or rewording.'),
     provenance: ProvenanceSchema,
   }),
   async run(ctx, input) {
     const prov = await checkProvenance(ctx, input.provenance)
     if (provFailed(prov)) return fail(prov.error)
-    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, whoImplements: input.whoImplements, targetOrganisation: input.targetOrganisation, wording: input.wording, source: 'LEX' })
+    // Decision 182 — same rule as 178: an action the owner dictates is the owner's. ENFORCED: the statement must be inside what the user wrote.
+    if (input.dictated) {
+      const said = ctx.turn.userMessages.map(norm).join(' ')
+      if (!said.includes(norm(input.practicalStep))) return fail('“dictated” means the statement is the user’s own words, and this is not word for word in anything they have written. Add it without dictated:true (it will be yours, marked as from Lex), or use their exact words.')
+    }
+    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.commentary, whoImplements: input.whoImplements, targetOrganisation: input.targetOrganisation, wording: input.wording, source: input.dictated ? 'USER' : 'LEX' })
     await auditProvenance(ctx, `actions:${row.id}`, input.practicalStep, input.wording ?? input.practicalStep, prov)
-    return { ok: true, data: { id: short(row.id), source: 'LEX', provenance: prov.line }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+    return {
+      ok: true,
+      data: { number: row.number, id: short(row.id), source: input.dictated ? 'USER (the owner’s own action, written at their dictation)' : 'LEX', hasCommentary: !!input.commentary?.trim(), provenance: prov.line, say: `Added as #${row.number}.` },
+      ui: [{ type: 'open_panel', panel: 'actions' }],
+    }
   },
 }
 
+const setActionCommentaryTool: ToolDefinition = {
+  name: 'set_action_commentary', category: 'draft', tier: 'free',
+  description: `Put text in an action's COMMENTARY (unlimited; beside its ${LIMITS.actionStatement}-character statement): the intention, examples, dimensions, or the full wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Never edit the statement itself with this.`,
+  schema: z.object({
+    action: z.number().int().describe('the action number, as in #31'),
+    commentary: z.string().min(1).max(100000),
+    mode: z.enum(['append', 'replace']).default('append'),
+    provenance: ProvenanceSchema,
+  }),
+  async run(ctx, input) {
+    const prov = await checkProvenance(ctx, input.provenance)
+    if (provFailed(prov)) return fail(prov.error)
+    const { rows } = await actionsByNumbers(ctx, [input.action])
+    if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+    const cur = await prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id }, select: { commentary: true } })
+    const next = input.mode === 'replace' || !cur?.commentary?.trim() ? input.commentary.trim() : `${cur.commentary.trim()}\n\n${input.commentary.trim()}`
+    await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
+    return { ok: true, data: { number: rows[0].number, commentaryLength: next.length, mode: input.mode, say: `Put it in the commentary of #${rows[0].number}.` } }
+  },
+}
 const writeNote: ToolDefinition = {
   name: 'write_note', category: 'draft', tier: 'free',
   description: 'Write a note in the user’s own private Notes (a snippet, a summary of what was said, something to come back to). The note is theirs: private to them and never in the report.',
@@ -969,7 +1005,7 @@ const mergeActionsTool: ToolDefinition = {
     numberA: z.number().int(), numberB: z.number().int(), mode: z.enum(['merge', 'fold']).default('merge'),
     foldNumber: z.number().int().optional().describe('mode fold only: the action number to fold away'),
     title: z.string().min(3).max(110).describe('the merged (or restated container) action’s title — says what it does'),
-    practicalStep: z.string().min(15).max(900).describe('the merged action written as ONE action, not two paragraphs joined with "and"'),
+    practicalStep: z.string().min(15).max(LIMITS.actionStatement, STATEMENT_TOO_LONG).describe('the merged action written as ONE action, not two paragraphs joined with "and"'),
   }),
   describe: ({ numberA, numberB, mode, foldNumber, title, practicalStep }) => mode === 'fold'
     ? `Fold action ${foldNumber} into action ${foldNumber === numberA ? numberB : numberA}, restating it as “${clip(title, 80)}: ${clip(practicalStep, 160)}”. The folded action is kept, marked merged away.`
@@ -1352,7 +1388,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
   searchCorpus, searchWeb, searchMyDocuments,
   fileUrl, fileText,
-  draftField, addCandidate, addActionTool, writeNote,
+  draftField, addCandidate, addActionTool, setActionCommentaryTool, writeNote,
   explain,
   acceptFieldTool, editFieldTool, ruleOut, restoreCandidate, mergeCandidates, choosePolicy, unchoosePolicy, moveToActions,
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,

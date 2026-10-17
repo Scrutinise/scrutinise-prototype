@@ -289,6 +289,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     const headingSelect = step !== 1 ? null : (
       <select value={a.headingId ?? ''} disabled={disabled} aria-label={`Heading for action ${a.number ?? ''}`}
         onChange={(e) => {
+          if (e.target.value === '__new') { e.target.value = a.headingId ?? ''; setSelected(new Set([a.id])); setBulkNewOpen(true); return }
           const to = e.target.value || null
           void ops.run('assignHeading', { actionIds: [a.id], headingId: to }, undefined,
             () => `Saved: #${a.number ?? '?'} ${to ? `is now under “${headingName(to)}”` : 'now has no heading'}.`)
@@ -296,6 +297,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
         className="text-[11px] border border-zinc-300 rounded px-1 py-0.5 max-w-[9rem] shrink-0 bg-white">
         <option value="">No heading</option>
         {headings.map((x) => <option key={x.id} value={x.id}>{colourFor(x.colourKey).glyph} {x.name}</option>)}
+        <option value="__new">+ New heading…</option>
       </select>
     )
     return (
@@ -505,7 +507,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       <BoundedInput value={reason} onChange={setReason} max={LIMITS.ruleOutReason} placeholder="Reason (to rule out)" aria-label="Reason to rule out the selected actions"
         className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-44" />
       <button disabled={disabled || reason.trim().length < 3} onClick={() => void bulkRuleOut()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Rule out</button>
-      <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'merge' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Merge</button>
+      <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'merge' })} title={selNums.length === 2 ? 'Lex reads both and gives a verdict and a reason; you edit her restated wording and confirm. Nothing is merged until you do.' : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Ask Lex to review and merge</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'compare' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Compare</button>
       <button onClick={() => setSelected(new Set())} className="text-xs underline text-zinc-500 ml-auto">Clear</button>
     </div>
@@ -857,7 +859,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
   }
   return (
     <section className="rounded-lg border-2 border-zinc-900 bg-white p-2.5 space-y-2" aria-label={mode === 'merge' ? 'Merge two actions' : 'Compare two actions'}>
-      <div className="flex items-center gap-2"><h4 className="text-sm font-semibold">{mode === 'merge' ? 'Merge' : 'Compare'} #{a} and #{b}</h4><button onClick={onClose} className="ml-auto text-xs underline">Close</button></div>
+      <div className="flex items-center gap-2"><h4 className="text-sm font-semibold">{mode === 'merge' ? 'Lex reviews, then merges' : 'Compare'} #{a} and #{b}</h4><button onClick={onClose} className="ml-auto text-xs underline">Close</button></div>
       <div className="grid sm:grid-cols-2 gap-2">
         {[A, B].map((x, i) => (
           <div key={i} className="rounded border border-zinc-200 p-2 text-[11px] text-zinc-800">
@@ -877,6 +879,9 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
               <p className="text-[11px] font-semibold">{answer.verdict === 'MERGE' ? 'The merged action' : `The containing action, restated (#${answer.subordinateNumber === a ? b : a})`} — edit it if you like:</p>
               <input value={edited.title} onChange={(e) => setEdited({ ...edited, title: e.target.value })} className="w-full text-sm p-1.5 rounded border border-zinc-300" />
               <textarea value={edited.practicalStep} onChange={(e) => setEdited({ ...edited, practicalStep: e.target.value })} rows={3} className="w-full text-xs p-1.5 rounded border border-zinc-300" />
+              <p className="text-[11px] text-zinc-700" data-statement-count>{edited.practicalStep.length > LIMITS.actionStatement
+                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in the action’s commentary — nothing is dropped.`
+                : `${LIMITS.actionStatement - edited.practicalStep.length} left of ${LIMITS.actionStatement}.`}</p>
             </div>
           )}
           {mode === 'merge' && (answer.verdict === 'MERGE' || answer.verdict === 'ONE_CONTAINS_THE_OTHER') && !done && (

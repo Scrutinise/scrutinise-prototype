@@ -27,6 +27,8 @@ import * as ST from '../lib/lex/action-steps'
 import { computeCanonicalState } from '../lib/lex/state'
 import * as FM from '../lib/lex/field-machine'
 import * as S from '../lib/lex/action-structure'
+import { execute, toolByName } from '../lib/lex/agent/tools'
+import { LIMITS } from '../lib/lex/input-limits'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 
 const LIVE = process.argv.includes('--live')
@@ -470,6 +472,73 @@ function partG() {
   control('the button offered when every action is already tested (must be FALSE)', /Test against the policy \(/.test(textOf(renderWs(1, [mkAction(1, { policyTest: { verdict: 'FITS', reason: 'ok', from: [] } })]))))
 }
 
+// ── H · decisions 181 (statement 1,000 + commentary), 182 (dictated actions), the merge label, the row's "+ New heading…" ──
+
+async function partH() {
+  section('H · 181 / 182 — the 1,000-character statement and the commentary; a dictated action is the owner\'s — a SCRATCH idea')
+  // pure + rendered
+  ok('the statement limit is 1,000 (it was 600 in 26-Q, set without a decision)', LIMITS.actionStatement === 1000)
+  const long = 'The Cabinet Office must publish a register naming the accountable owner of each statutory target. '.repeat(14).trim()
+  const sc = S.statementAndCommentary(long, 'An earlier note.')
+  ok('a restated statement over the limit keeps its first 1,000 characters AND the whole text goes in the commentary — nothing is dropped', long.length > 1000 && sc.statement.length === 1000 && !!sc.commentary && sc.commentary.includes(long) && sc.commentary.startsWith('An earlier note.'))
+  control('an over-limit statement that left the commentary empty (must be FALSE)', !S.statementAndCommentary(long).commentary)
+  ok('a statement within the limit adds nothing to the commentary', S.statementAndCommentary('Short enough.').commentary === null)
+  const wsHtml = renderWs(1, [mkAction(1), mkAction(2)])
+  ok('item 2: the bulk-bar control reads "Ask Lex to review and merge" (it always goes through Lex) — and nowhere a bare "Merge" button', renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'x', actions: [mkAction(1), mkAction(2)] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, step: 1 as never, initiallyOpen: [] })).indexOf('Ask Lex to review and merge') === -1 /* the bar shows only with a selection */ && /Ask Lex to review and merge/.test(read('components/lex/ActionsWorkspace.tsx')) && !/>Merge<\/button>/.test(read('components/lex/ActionsWorkspace.tsx')))
+  ok('item 3: the per-row heading menu now offers "+ New heading…" too, so both menus agree', /value="__new"[^>]*>\+ New heading…/.test(wsHtml) && (wsHtml.match(/\+ New heading…/g) ?? []).length >= 2)
+  control('step 2 offering a heading menu with "+ New heading…" (must be FALSE)', /\+ New heading…/.test(renderWs(2, [mkAction(1)])))
+
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  ;(globalThis as { __STUB_AUTH_USER?: unknown }).__STUB_AUTH_USER = owner
+  const copy = await scratchCopy('452c5ade', 's26s2h')
+  const id = copy.id
+  const ctx = (said: string[] = []) => ({ ideaId: id, userId: owner.id, confirmed: false, turn: { tainted: false, corpusIds: new Set<string>(), webSources: new Map(), userMessages: said, pastedText: null } })
+  try {
+    const t = (name: string) => toolByName(name)!
+    const exact = 'Every department must publish, each quarter, the name of the single person who owns each of its statutory delivery targets and answers for them.'
+    const prov = (q: string) => ({ kind: 'user_words', refs: [], quote: q.slice(0, 60) })
+    // 181 — over the limit is refused in words that offer the commentary
+    const tooLong = await execute(t('add_action'), ctx([long]), { practicalStep: long.slice(0, 1001), provenance: prov(long) })
+    ok('181: a 1,001-character statement is refused IN WORDS that name the limit and tell Lex to offer the commentary', !tooLong.ok && /1000 characters/.test(tooLong.error ?? '') && /commentary/.test(tooLong.error ?? ''), tooLong.error)
+    const atLimit = await execute(t('add_action'), ctx([long]), { practicalStep: long.slice(0, 1000), commentary: 'The intention: one named owner per target.', provenance: prov(long) })
+    const rowL = await prisma.lexCoherentAction.findFirst({ where: { ideaId: id, practicalStep: long.slice(0, 1000) } })
+    ok('181: exactly 1,000 characters is accepted, with a commentary — both read back', atLimit.ok && rowL?.practicalStep.length === 1000 && rowL.commentary === 'The intention: one named owner per target.', atLimit.error)
+    ok('182: the result carries the NEW NUMBER so Lex can say where it landed ("Added as #n")', atLimit.ok && typeof (atLimit.data as { number: number }).number === 'number' && (atLimit.data as { number: number }).number === rowL?.number && /Added as #\d+/.test((atLimit.data as { say: string }).say))
+    ok('…and an action Lex drafts (not dictated) is marked LEX', rowL?.source === 'LEX')
+    // 182 — dictated = the owner's, enforced
+    const dict = await execute(t('add_action'), ctx([`add this action: ${exact}`]), { practicalStep: exact, dictated: true, provenance: prov(exact) })
+    const rowD = await prisma.lexCoherentAction.findFirst({ where: { ideaId: id, practicalStep: exact } })
+    ok('182: a DICTATED action is the owner\'s — source USER, read back — and its result gives the number', dict.ok && rowD?.source === 'USER' && (dict.data as { number: number }).number === rowD?.number)
+    const laundered = await execute(t('add_action'), ctx([`add this action: ${exact}`]), { practicalStep: 'Lex\'s own paraphrase of what the user probably wanted done about delivery targets.', dictated: true, provenance: prov(exact) })
+    ok('182: "dictated" over words the user did not write is REFUSED — Lex cannot pass her own wording off as the owner\'s', !laundered.ok && /word for word/.test(laundered.error ?? ''), laundered.error)
+    control('a dictated action that landed as LEX-sourced (must be FALSE)', rowD?.source === 'LEX')
+    // set_action_commentary
+    const num = rowL!.number!
+    const a1 = await execute(t('set_action_commentary'), ctx([long]), { action: num, commentary: 'Second paragraph: examples.', mode: 'append', provenance: prov(long) })
+    const after = await prisma.lexCoherentAction.findUnique({ where: { id: rowL!.id } })
+    ok('181: set_action_commentary APPENDS by default (the earlier commentary is kept) — read back', a1.ok && after?.commentary === 'The intention: one named owner per target.\n\nSecond paragraph: examples.', JSON.stringify(after?.commentary))
+    const a2 = await execute(t('set_action_commentary'), ctx([long]), { action: num, commentary: 'x'.repeat(5000), mode: 'replace', provenance: prov(long) })
+    ok('…and takes 5,000 characters in "replace" — the commentary has no limit', a2.ok && (await prisma.lexCoherentAction.findUnique({ where: { id: rowL!.id } }))?.commentary?.length === 5000)
+    const none = await execute(t('set_action_commentary'), ctx([long]), { action: 9999, commentary: 'x', provenance: prov(long) })
+    ok('…an action number that is not on the idea is refused in words', !none.ok && /no live action #9999/.test(none.error ?? ''))
+    ok('Lex\'s instructions tell her to offer the commentary whenever she shortens anything, and to say the number', /OFFER to keep the full text in the commentary/.test(read('lib/lex/agent/system-prompt.ts')) && /say its number/.test(read('lib/lex/agent/system-prompt.ts')))
+    // the screen's route: 1,000 limit in words; the commentary round-trips through the state the screen loads
+    const post = async (body: Record<string, unknown>) => {
+      const mod = await import('../app/api/ideas/[id]/actions/route')
+      const res = await mod.POST(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id }) })
+      return { status: res.status as number, json: (await res.json()) as any }
+    }
+    const bad = await post({ action: 'update', actionId: rowL!.id, practicalStep: 'y'.repeat(1001) })
+    ok('the actions route refuses 1,001 characters naming the statement, the limit and the commentary — and changes nothing', bad.status === 422 && /action statement/.test(bad.json.error ?? '') && /1000/.test(bad.json.error ?? '') && /commentary/.test(bad.json.error ?? '') && (await prisma.lexCoherentAction.findUnique({ where: { id: rowL!.id } }))?.practicalStep.length === 1000, bad.json.error)
+    const good = await post({ action: 'update', actionId: rowL!.id, commentary: 'Edited on the screen.' })
+    const st = await computeCanonicalState(id)
+    ok('the screen\'s edit saves the commentary and the state the screen loads carries it', good.status === 200 && st.actions.find((x) => x.id === rowL!.id)?.commentary === 'Edited on the screen.')
+  } finally {
+    await deleteScratch(id)
+  }
+}
+
 async function main() {
   partA()
   await partB()
@@ -478,6 +547,7 @@ async function main() {
   await partE()
   await partF()
   partG()
+  await partH()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

@@ -263,6 +263,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       ? { verdict: a.policyTestVerdict as NonNullable<CanonicalAction['policyTest']>['verdict'], reason: a.policyTestReason, from: Array.isArray(a.policyTestFrom) ? (a.policyTestFrom as unknown[]).map(String) : [] }
       : null,
     conflictNote: a.conflictNote ?? null,
+    commentary: a.commentary ?? null,
   })
   // 26-Q — the list the whole product reads is the LIVE one; ruled-out / merged-away rows are reported separately so the
   // panel can show them restorable and nothing else counts them (documents, costs, gap check, Lex's snapshot).

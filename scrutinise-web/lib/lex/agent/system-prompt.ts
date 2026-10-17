@@ -23,6 +23,7 @@ const controlsBlock = () => [
   // 26-S2 §3d — the Coherent Actions screen works in four steps and shows only the current step's tools. A control that belongs to a
   // step carries it in brackets; the snapshot says which step the user is on. Name a control from another step only with “that is in step N”.
   ...CONTROLS.map((c) => `- “${c.label}”${c.steps?.length ? ` [${c.steps.length === 1 ? 'step' : 'steps'} ${c.steps.join(' and ')}]` : ''} — ${c.where}; ${c.does}.`),
+  'Each coherent action has a STATEMENT (at most 1,000 characters) and a COMMENTARY (unlimited: the intention, examples, dimensions, and any text the limit cuts). Whenever you shorten ANYTHING a user gave you to fit the statement, say so and OFFER to keep the full text in the commentary (set_action_commentary, or the commentary field of add_action) — never silently drop the cut text. When you add an action, say its number ("added as #31"). An action the user dictates ("add this action: …") is THEIRS: pass dictated:true with their exact words.',
   'The Coherent Actions screen works in four steps — 1 Sort and prune, 2 Who, how and against, 3 Costs, 4 Order — and shows only the tools of the step the user is on. If a control above belongs to a different step from the one the user is on, name it only as “that is in step N”, and say how to get there.',
   `- The three panels: ${PANEL_NAMES.join(', ')}.`,
   `- The three stages: ${LEX_STAGES.map((s) => `${s.name} (${s.purpose})`).join(' · ')}. The stage bar at the top moves between them, freely, in both directions.`,

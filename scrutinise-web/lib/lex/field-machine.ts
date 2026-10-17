@@ -1015,6 +1015,8 @@ export interface ActionInput {
   whoImplements?: string | null
   targetOrganisation?: string | null
   wording?: string | null
+  /** Decision 181 — unlimited; the intention, examples, dimensions and anything the 1,000-character statement cuts. */
+  commentary?: string | null
   benefits?: Record<string, string> | null
   implementationCost?: CostRangeInput
   enforcementCost?: CostRangeInput
@@ -1076,6 +1078,7 @@ export async function addAction(ideaId: string, input: ActionInput) {
       whoImplements: input.whoImplements?.trim() || null,
       targetOrganisation: input.targetOrganisation?.trim() || null,
       wording: input.wording?.trim() || null,
+      commentary: input.commentary?.trim() || null,
       benefits: (input.benefits ?? undefined) as never,
       implementationCost: (input.implementationCost ?? undefined) as never,
       enforcementCost: (input.enforcementCost ?? undefined) as never,
@@ -1097,6 +1100,7 @@ export async function updateAction(ideaId: string, actionId: string, patch: Part
       ...(patch.whoImplements !== undefined ? { whoImplements: patch.whoImplements?.trim() || null } : {}),
       ...(patch.targetOrganisation !== undefined ? { targetOrganisation: patch.targetOrganisation?.trim() || null } : {}),
       ...(patch.wording !== undefined ? { wording: patch.wording?.trim() || null } : {}),
+      ...(patch.commentary !== undefined ? { commentary: patch.commentary?.trim() || null } : {}),
       ...(patch.benefits !== undefined ? { benefits: (patch.benefits ?? undefined) as never } : {}),
       ...(patch.implementationCost !== undefined ? { implementationCost: (patch.implementationCost ?? undefined) as never } : {}),
       ...(patch.enforcementCost !== undefined ? { enforcementCost: (patch.enforcementCost ?? undefined) as never } : {}),

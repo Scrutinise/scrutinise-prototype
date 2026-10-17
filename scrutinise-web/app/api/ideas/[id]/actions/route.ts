@@ -13,6 +13,7 @@ import {
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 import { assertWritableField } from '@/lib/lex/stage'
+import { LIMITS } from '@/lib/lex/input-limits'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -34,7 +35,8 @@ const Benefits = z.object({
 }).nullable()
 
 const ActionFields = {
-  practicalStep: z.string().trim().min(1).max(2000),
+  practicalStep: z.string().trim().min(1).max(LIMITS.actionStatement),
+  commentary: z.string().trim().max(100000).optional().nullable(),
   mechanismType: z.string().trim().max(40).optional().nullable(),
   whoImplements: z.string().trim().max(2000).optional().nullable(),
   targetOrganisation: z.string().trim().max(2000).optional().nullable(),
@@ -52,7 +54,7 @@ const BodySchema = z.discriminatedUnion('action', [
     action: z.literal('update'),
     actionId: z.string().min(1),
     ...ActionFields,
-    practicalStep: z.string().trim().min(1).max(2000).optional(),
+    practicalStep: z.string().trim().min(1).max(LIMITS.actionStatement).optional(),
   }),
   z.object({ action: z.literal('confirm') }),
   z.object({ action: z.literal('skip') }),
@@ -70,7 +72,7 @@ export async function POST(req: Request, { params }: Params) {
   const parsed = BodySchema.safeParse(raw)
   if (!parsed.success) {
     // CLAUDE.md §30 — name the input and the reason, in words; never the flatten() object.
-    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'That change to the action', labels: { practicalStep: 'the action text', actionId: 'the action', whoImplements: 'who implements it', wording: 'the wording' } })
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'That change to the action', labels: { practicalStep: `the action statement (${LIMITS.actionStatement} characters at most — put the rest in the commentary)`, commentary: 'the commentary', actionId: 'the action', whoImplements: 'who implements it', wording: 'the wording' } })
     return NextResponse.json({ error: message, rejected }, { status: 422 })
   }
   const body = parsed.data
