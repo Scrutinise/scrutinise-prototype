@@ -4714,6 +4714,8 @@ model LlmSpend {
   /// HOW the attribution was learned — explicit | ambient | owner-of-idea | inferred-idea |
   /// inferred-window | NULL (unattributed). An inference must never pass for a fact.
   attrSource     String?
+  /// 26-S2 sec 11b (decision 176) - measurement | check: engineering spend, set at the call site by scripts (lib/lex/build-context.ts enterPurpose). NULL = a product call. DDL: prisma/lex_26s2_purpose.sql.
+  purpose        String?
   createdAt      DateTime @default(now())
 
   @@index([buildId])
