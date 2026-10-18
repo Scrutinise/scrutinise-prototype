@@ -34,7 +34,7 @@ interface Overview {
   since: string; until: string; daily: DailyRow[]; ideas: IdeaRow[]
   averagePencePerIdea: number | null; ideasCounted: number; averageNote: string
   totals: { calls: number; tokensIn: number; tokensOut: number; pence: number | null; unpricedCalls: number }
-  byPurpose?: Array<{ purpose: 'product' | 'measurement' | 'check'; calls: number; pence: number | null; unpricedCalls: number }>
+  byPurpose?: Array<{ purpose: 'product' | 'measurement' | 'check'; calls: number; inferredCalls?: number; pence: number | null; unpricedCalls: number }>
   unclassifiedPasses: string[]
 }
 
@@ -114,7 +114,7 @@ export function SpendSection() {
           <div className="grid gap-3 sm:grid-cols-3" data-spend-split>
             <Card label="Product spend" value={fmtPence(get('product')?.pence ?? 0)} note={`${fmtNum(get('product')?.calls ?? 0)} calls — what people's use of the product cost`} />
             <Card label="Engineering spend" value={fmtPence(engPence)} note={`${fmtNum((get('measurement')?.calls ?? 0) + (get('check')?.calls ?? 0))} calls — measurement runs and check scripts`} />
-            <Card label="…of which" value={`${fmtPence(get('measurement')?.pence ?? 0)} / ${fmtPence(get('check')?.pence ?? 0)}`} note="measurement / checks" />
+            <Card label="…of which" value={`${fmtPence(get('measurement')?.pence ?? 0)} / ${fmtPence(get('check')?.pence ?? 0)}`} note={`measurement / checks${(get('check')?.inferredCalls ?? 0) > 0 ? ` - ${fmtNum(get('check')!.inferredCalls!)} of the check calls are inferred (the idea they ran on was deleted), not stated` : ''}`} />
           </div>
         )
       })()}

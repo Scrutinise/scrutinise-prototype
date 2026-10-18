@@ -64,7 +64,7 @@ export interface SpendOverview {
   ideas: IdeaSpendRow[]
   totals: { calls: number; tokensIn: number; tokensOut: number; pence: number | null; unpricedCalls: number }
   /** 26-S2 sec 11b - PRODUCT spend (what people's use of the product cost) and ENGINEERING spend (measurement runs and check scripts), apart. Same window. */
-  byPurpose: Array<{ purpose: 'product' | 'measurement' | 'check'; calls: number; pence: number | null; unpricedCalls: number }>
+  byPurpose: Array<{ purpose: 'product' | 'measurement' | 'check'; calls: number; inferredCalls: number; pence: number | null; unpricedCalls: number }>
   /** ⚠ Non-empty when a pass fell into `unclassified` — the page must show this. */
   unclassifiedPasses: string[]
 }
@@ -151,7 +151,7 @@ export async function spendOverview(since: Date, until: Date): Promise<SpendOver
     FROM "LlmSpend" WHERE "createdAt" >= ${since} AND "createdAt" < ${until} GROUP BY 1 ORDER BY 1`
   const byPurpose = (['product', 'measurement', 'check'] as const).map((p) => {
     const r = purposes.find((x) => x.purpose === p)
-    return { purpose: p, calls: n(r?.calls), unpricedCalls: n(r?.unpriced_calls), pence: r ? (r.pence == null ? null : Number(r.pence)) : 0 }
+    return { purpose: p, calls: n(r?.calls), inferredCalls: n(r?.inferred_calls), unpricedCalls: n(r?.unpriced_calls), pence: r ? (r.pence == null ? null : Number(r.pence)) : 0 }
   })
 
   const { average, note } = averagePerIdea(ideaRows)

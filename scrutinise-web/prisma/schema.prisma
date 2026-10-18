@@ -4716,6 +4716,8 @@ model LlmSpend {
   attrSource     String?
   /// 26-S2 sec 11b (decision 176) - measurement | check: engineering spend, set at the call site by scripts (lib/lex/build-context.ts enterPurpose). NULL = a product call. DDL: prisma/lex_26s2_purpose.sql.
   purpose        String?
+  /// 26-S2 decision 193 - TRUE where `purpose` was inferred afterwards (the owning idea is gone), not stated at the call site. DDL: prisma/lex_26s2_purpose_inferred.sql.
+  purposeInferred Boolean @default(false)
   createdAt      DateTime @default(now())
 
   @@index([buildId])
