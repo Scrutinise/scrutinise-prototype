@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ActionImportRequest } from '@/lib/lex/action-import-schema'
 import { explainFailure } from '@/lib/api-rejection'
+import FocusDialog from './FocusDialog'
 import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
 import { colourFor } from '@/lib/lex/action-headings'
 import {
@@ -70,7 +71,7 @@ export default function ActionImport({ ideaId, onChanged, initialSourceNumber }:
     window.addEventListener('scrutinise:action-import-started', h)
     return () => window.removeEventListener('scrutinise:action-import-started', h)
   }, [load])
-  useEffect(() => { if (pass && ['MAPPING', 'READY', 'CONFIRMING', 'FAILED'].includes(pass.status)) setOpen(true) }, [pass?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 26-S2 sec 9d: the review is a DIALOG now, so a pass already under way does not throw one over the page on load - it is announced beside the button (below) and opened by the user.
   useEffect(() => { if (initialSourceNumber) { setPick(initialSourceNumber); setOpen(true) } }, [initialSourceNumber])
 
   // Keep the pass moving while it is being read: one unit of work per request.
@@ -127,11 +128,15 @@ export default function ActionImport({ ideaId, onChanged, initialSourceNumber }:
           className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50">
           Import actions from a document
         </button>
-        {pass && !open && ['MAPPING', 'READY'].includes(pass.status) && <span className="text-[11px] text-zinc-600">An import of [Ref: {pass.sourceNumber}] is {pass.status === 'READY' ? 'waiting for your review' : 'being read'}.</span>}
+        {pass && !open && ['MAPPING', 'READY', 'CONFIRMING', 'FAILED'].includes(pass.status) && (
+          <span className="text-[11px] text-zinc-600" data-import-announce>An import of [Ref: {pass.sourceNumber}] is {pass.status === 'READY' ? 'waiting for your review' : pass.status === 'FAILED' ? 'stopped' : 'being read'}.{' '}
+            <button type="button" onClick={() => { setOpen(true); void load() }} className="underline font-medium text-zinc-800">Open it</button></span>
+        )}
       </div>
 
       {open && (
-        <div className="mt-2 rounded-lg border border-zinc-300 bg-white p-3 space-y-3" role="region" aria-label="Import actions from a document">
+        <FocusDialog title="Import actions from a document" onClose={() => setOpen(false)} wide>
+        <div className="space-y-3" role="region" aria-label="Import actions from a document">
           {error && <p className="text-xs font-semibold text-amber-800" role="alert">⚠ {error}</p>}
           {busy && <p className="text-[11px] text-zinc-600" role="status">Working: {busy}…</p>}
 
@@ -207,6 +212,7 @@ export default function ActionImport({ ideaId, onChanged, initialSourceNumber }:
           {/* 4 · AFTER */}
           {pass && done && pass.result && <After pass={pass} ideaId={ideaId} onChanged={onChanged} onAnother={() => { setPass(null); setPick(null); void load() }} />}
         </div>
+        </FocusDialog>
       )}
     </div>
   )

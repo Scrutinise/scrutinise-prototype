@@ -58,6 +58,50 @@ export async function listRegistry(ideaId: string, opts: { includeArchived?: boo
   return rows.map(toSource)
 }
 
+/**
+ * 26-S2 sec 9a (decision 173) - THE ONE DEFINITION OF "THE DOCUMENTS ON THIS IDEA".
+ *
+ * The research panel showed each filed document twice because two readers each had their own idea of what a document is: the Sources list read the registry,
+ * "Your material" read `IdeaUserMaterial`. They were not the only two. Nine places read the material table directly, and they did not even agree on what to count:
+ * the Build page counted ARCHIVED rows (so the composer's "+" kept a document the user had removed), while the stage context, Lex's tools and the chat-attach cap
+ * all counted live ones. A document is a registry source with a `materialId` whose material is not archived; THIS is where that is decided, and the readers below
+ * ask here. A row is returned with its registry number where it has one (null only for a document filed a moment ago and not yet numbered).
+ */
+export interface LiveDocument {
+  materialId: string
+  kind: 'FILE' | 'LINK'
+  label: string
+  url: string | null
+  status: string
+  findingCount: number
+  failureReason: string | null
+  findingsAt: Date | null
+  charCount: number
+  /** The `[Ref: n]` number, or null when it has not been registered yet. */
+  number: number | null
+  sourceId: string | null
+}
+
+export async function listDocuments(ideaId: string): Promise<LiveDocument[]> {
+  const [mats, sources] = await Promise.all([
+    prisma.ideaUserMaterial.findMany({
+      where: { ideaId, archivedAt: null }, orderBy: { createdAt: 'asc' },
+      select: { id: true, kind: true, label: true, url: true, status: true, findingCount: true, failureReason: true, findingsAt: true, charCount: true },
+    }),
+    prisma.ideaSource.findMany({ where: { ideaId, materialId: { not: null } }, select: { id: true, number: true, materialId: true } }),
+  ])
+  const byMaterial = new Map(sources.map((s) => [s.materialId as string, s]))
+  return mats.map((m) => ({
+    materialId: m.id, kind: m.kind === 'LINK' ? 'LINK' : 'FILE', label: m.label, url: m.url, status: m.status, findingCount: m.findingCount, failureReason: m.failureReason, findingsAt: m.findingsAt, charCount: m.charCount,
+    number: byMaterial.get(m.id)?.number ?? null, sourceId: byMaterial.get(m.id)?.id ?? null,
+  }))
+}
+
+/** How many documents the idea holds. The same rows `listDocuments` returns - the cap, the composer's "+", the stage context and Lex all count THESE. */
+export async function countDocuments(ideaId: string): Promise<number> {
+  return prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } })
+}
+
 const clip = (s: string | null | undefined, n: number): string | null => { const t = (s ?? '').trim(); return t ? t.slice(0, n) : null }
 
 /** A web address reduced to what identifies the page, so the same page cited twice is one source. */

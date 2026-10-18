@@ -31,6 +31,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { countDocuments } from './source-registry'
 import {
   extractUrl, runMaterialFindings, MaterialRejected, createLinkMaterial, normalise,
   MAX_MATERIALS_PER_IDEA, MAX_TEXT_CHARS,
@@ -137,7 +138,7 @@ export async function fileUrlsFromChat(ideaId: string, userId: string, message: 
   // Slots are counted ONCE, up front, and handed out in order. Filing runs in parallel below, and
   // a per-link count would let five concurrent links all see "one slot left" and all take it.
   // 26-J §2b — an archived slot is a freed slot, same as material.route.ts's own cap check.
-  let slots = MAX_MATERIALS_PER_IDEA - await prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } })
+  let slots = MAX_MATERIALS_PER_IDEA - await countDocuments(ideaId)
 
   const jobs: Array<Promise<FileResult>> = []
   const settled: FileResult[] = []
@@ -261,7 +262,7 @@ export async function filePastedTextFromChat(ideaId: string, userId: string, mes
   })
   if (alreadyAnswered) return []
 
-  const count = await prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } })
+  const count = await countDocuments(ideaId)
   const target = refusal.target
   if (count >= MAX_MATERIALS_PER_IDEA) return [{ url: target, outcome: 'cap-reached', pasted: true }]
 

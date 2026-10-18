@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { countDocuments } from './source-registry'
 import { LEX_STAGES, stageHref, type LexStage, type LexStageKey } from './stages'
 
 export interface LexStageView extends LexStage {
@@ -67,7 +68,7 @@ async function strategyCounts(ideaId: string): Promise<{ fields: number; waiting
 async function ideaCounts(ideaId: string): Promise<{ material: number; runs: number }> {
   const [material, runs] = await Promise.all([
     // 26-J §2b — an archived document is no longer "handed over".
-    prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } }),
+    countDocuments(ideaId),
     prisma.ideaBuild.count({ where: { ideaId } }),
   ])
   return { material, runs }

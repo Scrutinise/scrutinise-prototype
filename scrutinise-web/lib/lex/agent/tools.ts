@@ -45,7 +45,7 @@ import { pendingMaterialSince, runUpdatePass } from '@/lib/lex/update-pass'
 import { runGapCheck } from '@/lib/lex/gap-check'
 import * as RN from '@/lib/lex/research-notes'
 import * as IMP from '@/lib/lex/action-import'
-import { listRegistry, syncRegistry } from '@/lib/lex/source-registry'
+import { listRegistry, syncRegistry, countDocuments, listDocuments } from '@/lib/lex/source-registry'
 import { similarNotes, findDisagreements, noteTitle } from '@/lib/lex/research-notebook-views'
 import { STANCES, BEARS_ON_KINDS } from '@/lib/lex/research-notebook-schema'
 import { callJson, llmOk } from '@/lib/lex/build-llm'
@@ -128,7 +128,8 @@ export async function checkProvenance(ctx: ToolCtx, p: Provenance | undefined): 
 
   // filed_document
   if (!p.refs.length) return { ok: false, error: 'provenance.kind "filed_document" needs refs — source ids from the snapshot.' }
-  const mats = await prisma.ideaUserMaterial.findMany({ where: { ideaId: ctx.ideaId, archivedAt: null }, select: { id: true, label: true, url: true } })
+  const docs = await listDocuments(ctx.ideaId)
+  const mats = docs.map((d) => ({ id: d.materialId, label: d.label, url: d.url }))
   const resolved = p.refs.map((r) => resolvePrefix(mats, r))
   const bad = p.refs.filter((_, i) => !resolved[i])
   if (bad.length) return { ok: false, error: `${bad.join(', ')} ${bad.length === 1 ? 'is' : 'are'} not a source filed on this idea.` }
@@ -380,7 +381,7 @@ const fileText: ToolDefinition = {
     originalUrl: z.string().url().optional(),
   }),
   async run(ctx, { text, label, originalUrl, fromPaste }) {
-    const count = await prisma.ideaUserMaterial.count({ where: { ideaId: ctx.ideaId, archivedAt: null } })
+    const count = await countDocuments(ctx.ideaId)
     if (count >= MAX_MATERIALS_PER_IDEA) return fail(`this idea already holds ${MAX_MATERIALS_PER_IDEA} filed sources, which is the limit. Archive one first.`)
     let body: string
     if (fromPaste) {

@@ -24,6 +24,7 @@ import {
   MAX_MATERIALS_PER_IDEA, MAX_UPLOAD_BYTES,
 } from '@/lib/lex/user-material'
 import { USER_MATERIAL_PASS_PREFIX } from '@/lib/lex/heading-map'
+import { countDocuments } from '@/lib/lex/source-registry'
 // 25-L §2 — every refusal is counted, with its type. See `material-rejection.ts`.
 import { logRejection, readRejections } from '@/lib/lex/material-rejection'
 import { MAX_TEXT_CHARS } from '@/lib/lex/user-material'
@@ -132,7 +133,7 @@ export async function POST(req: Request, { params }: Params) {
   // ⚠ THE CAP IS CHECKED BEFORE ANYTHING IS FETCHED OR PARSED. Checking after would mean a
   // 10MB upload is read, extracted and then refused — work done on a request we always knew
   // we would reject.
-  const count = await prisma.ideaUserMaterial.count({ where: { ideaId: id, archivedAt: null } })
+  const count = await countDocuments(id)
   if (count >= MAX_MATERIALS_PER_IDEA) {
     const detail = `This idea already has ${count} documents attached, which is the limit. `
       + 'Remove one you no longer need and add this instead.'

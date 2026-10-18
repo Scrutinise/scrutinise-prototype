@@ -20,6 +20,7 @@ import { prisma } from '@/lib/prisma'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { pendingMaterialSince } from '@/lib/lex/update-pass'
 import { clampStep, STEPS } from '@/lib/lex/action-steps'
+import { listDocuments } from '@/lib/lex/source-registry'
 
 export const short = (id: string) => id.slice(0, 8)
 
@@ -61,10 +62,8 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
       where: { ideaId, mergedIntoId: null }, orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, number: true, approach: true, status: true, kind: true, source: true, disposition: true, phase: true, ruleOutReason: true, rulesOut: true },
     }),
-    prisma.ideaUserMaterial.findMany({
-      where: { ideaId, archivedAt: null }, orderBy: { createdAt: 'asc' },
-      select: { id: true, kind: true, label: true, url: true, status: true, findingCount: true, failureReason: true },
-    }),
+    // 26-S2 sec 9a: the documents, from the one definition (lib/lex/source-registry.ts) - the same rows the panel's Sources list and every count use
+    listDocuments(ideaId).then((ds) => ds.map((d) => ({ id: d.materialId, kind: d.kind, label: d.label, url: d.url, status: d.status, findingCount: d.findingCount, failureReason: d.failureReason }))),
     prisma.ideaSourceDecision.groupBy({ by: ['status'], where: { ideaId }, _count: { _all: true } }),
     prisma.deepeningIssue.findMany({
       where: { ideaId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, take: 30,

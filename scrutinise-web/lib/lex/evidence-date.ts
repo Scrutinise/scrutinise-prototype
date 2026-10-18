@@ -235,6 +235,22 @@ function datestamp(d: Date): string {
   return iso.endsWith('-01-01') ? iso.slice(0, 4) : iso
 }
 
+/**
+ * 26-S2 sec 9b (decision 171-173) - THE CAVEAT, ONCE AND SHORT. The five-line "Undated. No retrievable source record ... an assertion rather than evidence" repeated on
+ * every one of Charlie's OWN documents. The meaning is kept - undated, no figures, so it is read as testimony and not as evidence - in one line on the card:
+ *
+ *     "Your own document: undated, no figures — read as your testimony, not as evidence."
+ *
+ * ⚠ THE LONG FORM STAYS IN THE EVIDENCE PACK, where it matters: `build-evidence-pack.ts` calls `evidenceStanding` directly and never this. It is for the
+ * panel's card on a document the user filed themselves, and for nothing else; a retrieved source keeps its full standing line.
+ */
+export function ownDocumentCaveat(st: Pick<EvidenceStanding, 'staleness' | 'standing'>): string {
+  // ⚠ "no figures" is said only where the standing logic found none. For the user's OWN document the body is not read here (it is fifty pages and stays off the wire), so a
+  // title with a number in it ("Report 2025") makes the logic say EVIDENCE - and "with figures" would be a claim nobody checked. In that case the line says only what is certain.
+  const bits = [st.staleness === 'UNDATED' ? 'undated' : st.staleness === 'NEEDS_CHECKING' ? 'old — check it' : 'dated', ...(st.standing === 'ASSERTION' ? ['no figures'] : [])]
+  return `Your own document: ${bits.join(', ')} — read as your testimony, not as evidence.`
+}
+
 export function evidenceStanding(input: {
   sourceDate: Date | null
   sourceDateBasis: string | null

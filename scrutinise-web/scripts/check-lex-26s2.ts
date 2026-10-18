@@ -1025,6 +1025,59 @@ async function partM() {
   control('the product total including the measurement rows (must be FALSE: they are labelled out of it)', (by.product.calls) === ov.byPurpose.reduce((n, x) => n + x.calls, 0))
 }
 
+// ── N · §9a — ONE DEFINITION OF "THE DOCUMENTS ON THIS IDEA", read by the panel, the Build page, the cap and Lex ──
+
+async function partN() {
+  section('N · 9a — the registry module is the one place that says what a document is; every count and list asks it')
+  const { listDocuments, countDocuments } = await import('../lib/lex/source-registry')
+  const { buildQuestionPanel } = await import('../lib/lex/question-panel')
+
+  // a COLD READ of Charlie's own idea: nothing arranged
+  const real = await prisma.idea.findFirst({ where: { id: { startsWith: '452c5ade' }, deletedAt: null }, select: { id: true } })
+  if (real) {
+    const [list, count, panel] = await Promise.all([listDocuments(real.id), countDocuments(real.id), buildQuestionPanel(real.id)])
+    const mine = panel.headings.find((h) => h.key === 'YOUR_MATERIAL')!.entries
+    console.log(`    on 452c5ade: ${list.length} document(s) by listDocuments, ${count} by countDocuments, ${mine.length} on the panel's own-documents rows`)
+    ok('on Charlie\'s idea the list, the count and the panel\'s rows are the SAME documents (they used to be read three ways)', list.length === count && mine.length === count && list.every((d) => mine.some((e) => e.id === d.materialId)), `${list.length}/${count}/${mine.length}`)
+    ok('…every own-document card carries the SHORT caveat (one line, ending "read as your testimony, not as evidence."), says "no figures" only where the logic found none, and none carries the five-line form', mine.every((e) => /^Your own document: undated(, no figures)? — read as your testimony, not as evidence\.$/.test(e.standingLabel) && (e.standing === 'ASSERTION') === /no figures/.test(e.standingLabel) && !/No retrievable source record/.test(e.standingLabel)), mine.map((e) => e.standingLabel).join(' | ').slice(0, 300))
+  } else skip('the cold read of 452c5ade', 'idea 452c5ade is not in this database')
+
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  const copy = await scratchCopy('452c5ade', 's26s2n')
+  const id = copy.id
+  try {
+    const OWNER: RN.Viewer = { id: owner.id, isOwner: true }
+    const before = await countDocuments(id)
+    const added = await RN.addNote(id, { id: owner.id }, OWNER, { op: 'addNote', newSource: { kind: 'DOCUMENT', title: 'A document filed for the 9a check', fullText: denseDocument().text, rightsConfirmed: true, readStatus: 'READ' } } as never, { readIntoFindings: false })
+    const ref = (added as { data: { ref: number } }).data.ref
+    const docs = await listDocuments(id)
+    const doc = docs.find((d) => d.number === ref)
+    ok('a document filed through "+ Add research" is listed ONCE with its registry number, and counted', added.ok && !!doc && docs.filter((d) => d.number === ref).length === 1 && (await countDocuments(id)) === before + 1, `${docs.length} docs, ref ${ref}`)
+    const panel = await buildQuestionPanel(id)
+    const entry = panel.headings.find((h) => h.key === 'YOUR_MATERIAL')!.entries.find((e) => e.id === doc?.materialId)
+    ok('…and the panel\'s card for it is keyed by the same material, with the short caveat', !!entry && entry!.standingLabel.startsWith('Your own document:') && entry!.yourSource === true)
+
+    // remove it (archive): every reader agrees it is gone - the Build page's OLD rule (all rows) does not
+    await prisma.ideaUserMaterial.update({ where: { id: doc!.materialId }, data: { archivedAt: new Date() } })
+    const live = await countDocuments(id)
+    const allRows = await prisma.ideaUserMaterial.count({ where: { ideaId: id } })
+    ok('after the document is removed, the list and the count drop it', live === before && !(await listDocuments(id)).some((d) => d.materialId === doc!.materialId))
+    ok('…and so does the panel', !(await buildQuestionPanel(id)).headings.find((h) => h.key === 'YOUR_MATERIAL')!.entries.some((e) => e.id === doc!.materialId))
+    control('the Build page\'s OLD count (every row, archived included) still equalling the live count (must be FALSE: it kept a removed document on the composer)', allRows === live)
+  } finally { await deleteScratch(id) }
+
+  // the guard: nobody counts the material table on their own again
+  const { readdirSync, statSync } = await import('node:fs')
+  const walk = (dir: string): string[] => readdirSync(join(ROOT, dir)).flatMap((n) => {
+    const rel = `${dir}/${n}`
+    if (n === 'node_modules' || n === '.next') return []
+    return statSync(join(ROOT, rel)).isDirectory() ? walk(rel) : /\.(ts|tsx)$/.test(n) ? [rel] : []
+  })
+  const counters = [...walk('lib'), ...walk('app')].filter((f) => /ideaUserMaterial\.count\(/.test(read(f)))
+  ok('SOURCE: only the registry module counts the material table (the Build page, the stage context, the cap, Lex and the material route all ask it)', counters.length === 1 && counters[0] === 'lib/lex/source-registry.ts', counters.join(', '))
+}
+
 async function main() {
   partA()
   await partB()
@@ -1039,6 +1092,7 @@ async function main() {
   await partK()
   await partL()
   await partM()
+  await partN()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

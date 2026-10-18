@@ -12,12 +12,31 @@
 // ⚠ A fetched page is data, never instruction (the snippet writer fences it). ⚠ Rejections arrive worded (CLAUDE.md §30).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { explainFailure } from '@/lib/api-rejection'
 import { REGISTRY_OP_WORDS, type RegistryRequest } from '@/lib/lex/research-notebook-schema'
 import type { RegistrySource } from '@/lib/lex/source-registry'
+import type { PanelEntry } from '@/lib/lex/question-panel'
+import { useMaterialViewer } from './YourMaterial'
 
-export default function SourcesRegistry({ ideaId, onChanged }: { ideaId: string; onChanged?: () => void }) {
+/**
+ * 26-S2 sec 9a (decision 173) - ONE LIST. A document the user filed used to show twice on the research panel: as a Sources card (number, read status, the caveat,
+ * Add to report / Set aside) and again under "Your material" (Open / Remove). The panel now shows each ONCE, here: the numbered card carries what the second list
+ * carried - **Open** - and "Remove" is gone. What it did (archive the document and delete the findings read from it) was not what the word said; **Set aside** says what it
+ * does - the document stays on the record, out of the report, WITH THE REASON KEPT - and **Put back** undoes it. The decisions are the panel's own (`/sources`, keyed by the
+ * document), so the Evidence Pack prints them as before.
+ */
+export interface DocumentCards {
+  /** The panel's own entries for the user's documents (the old "Your material" rows), found here by `materialId`. */
+  entries: PanelEntry[]
+  busy: boolean
+  onExclude: (entry: PanelEntry, reason: string) => void
+  onInclude: (entry: PanelEntry) => void
+  onPrioritise: (entry: PanelEntry, on: boolean) => void
+}
+
+export default function SourcesRegistry({ ideaId, onChanged, documents, highlightRef, reloadKey }: { ideaId: string; onChanged?: () => void; documents?: DocumentCards; highlightRef?: number | null; reloadKey?: number }) {
+  const viewer = useMaterialViewer(ideaId)
   const [sources, setSources] = useState<RegistrySource[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -32,7 +51,8 @@ export default function SourcesRegistry({ ideaId, onChanged }: { ideaId: string;
       setSources(j.sources as RegistrySource[]); setError(null)
     } catch (e) { setError(`Loading the sources could not reach the server (${e instanceof Error ? e.message : 'network error'}).`) }
   }, [ideaId])
-  useEffect(() => { void load() }, [load])
+  // reloadKey: the panel bumps it when research was added from OUTSIDE this list ("+ Add research" on the contents home), so the new card is here to be found
+  useEffect(() => { void load() }, [load, reloadKey])
 
   const call = useCallback(async (req: RegistryRequest): Promise<{ ok: boolean; result?: any }> => {
     setBusy(REGISTRY_OP_WORDS[req.op]); setError(null)
@@ -43,6 +63,13 @@ export default function SourcesRegistry({ ideaId, onChanged }: { ideaId: string;
       return { ok: true, result: j.result }
     } catch (e) { setError(`${REGISTRY_OP_WORDS[req.op]} could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`); return { ok: false } } finally { setBusy(null) }
   }, [ideaId])
+
+  const scrolled = useRef<number | null>(null)
+  useEffect(() => {
+    if (highlightRef == null || scrolled.current === highlightRef || !sources) return
+    const el = document.getElementById(`source-${highlightRef}`)
+    if (el) { scrolled.current = highlightRef; el.scrollIntoView?.({ block: 'center', behavior: 'smooth' }) }
+  }, [highlightRef, sources])
 
   if (!sources) return <p className="text-xs text-zinc-500">{error ?? 'Loading the sources…'}</p>
   const shown = showAll ? sources : sources.slice(0, 25)
@@ -61,9 +88,14 @@ export default function SourcesRegistry({ ideaId, onChanged }: { ideaId: string;
       </button>
       {adding && <AddSource ideaId={ideaId} call={call} onAdded={() => { setAdding(false); void load(); onChanged?.() }} />}
 
+      {viewer.node}
       <ol className="space-y-1.5">
-        {shown.map((s) => (
-          <li key={s.id} className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs">
+        {shown.map((s) => {
+          const doc = s.materialId ? documents?.entries.find((e) => e.id === s.materialId) : undefined
+          const fresh = highlightRef != null && s.number === highlightRef
+          return (
+          <li key={s.id} id={`source-${s.number}`} data-source-number={s.number} data-just-added={fresh ? 'true' : undefined}
+            className={`rounded-lg bg-white px-2.5 py-1.5 text-xs ${fresh ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
             <div className="flex items-start gap-2">
               <span className="font-semibold text-zinc-900 shrink-0">[Ref: {s.number}]</span>
               <div className="flex-1 min-w-0">
@@ -73,15 +105,72 @@ export default function SourcesRegistry({ ideaId, onChanged }: { ideaId: string;
                   {s.readStatus === 'NOT_READ' && <span className="font-semibold text-zinc-700">{[s.sourceType, s.author, s.publishedAt].some(Boolean) ? ' · ' : ''}not read{s.readNote ? ` — ${s.readNote}` : ''}</span>}
                 </div>
                 {s.snippet && <p className="mt-0.5 text-[11px] italic text-zinc-600">{s.snippet}</p>}
+                {fresh && <p className="mt-0.5 text-[11px] font-semibold text-zinc-900" role="status">✓ Just added — this is [Ref: {s.number}]</p>}
+                {doc && <DocumentLine doc={doc} cards={documents!} onOpen={() => void viewer.open(doc.id)} openBusy={viewer.busy} />}
               </div>
-              {s.kind !== 'OWN_OBSERVATION' && (
+              {s.kind !== 'OWN_OBSERVATION' && !doc && (
                 <button type="button" disabled={!!busy} onClick={() => void call({ op: 'archiveSource', sourceId: s.id }).then((r) => { if (r.ok) { void load(); onChanged?.() } })} className="text-[11px] text-zinc-400 hover:text-zinc-700 shrink-0">Remove</button>
               )}
             </div>
           </li>
-        ))}
+          )
+        })}
       </ol>
+      {/* A document that has no numbered source yet (it was filed a moment ago and the list has not been re-read) is still shown, once, here. */}
+      {documents && (() => {
+        const numbered = new Set(sources.map((x) => x.materialId).filter(Boolean))
+        const loose = documents.entries.filter((e) => !numbered.has(e.id))
+        return loose.length ? (
+          <ul className="space-y-1.5" data-unnumbered-documents>
+            {loose.map((e) => (
+              <li key={e.id} className="rounded-lg border border-dashed border-zinc-300 bg-white px-2.5 py-1.5 text-xs">
+                <span className="text-zinc-900">{e.title}</span> <span className="text-[11px] text-zinc-500">(not numbered yet)</span>
+                <DocumentLine doc={e} cards={documents} onOpen={() => void viewer.open(e.id)} openBusy={viewer.busy} />
+              </li>
+            ))}
+          </ul>
+        ) : null
+      })()}
       {sources.length > 25 && !showAll && <button type="button" onClick={() => setShowAll(true)} className="text-xs underline text-zinc-600">Show all {sources.length}</button>}
+    </div>
+  )
+}
+
+/** What a numbered card carries for a document the user filed: its status, the short caveat (ONCE), Open, Add to report, and Set aside - with a reason - / Put back. */
+function DocumentLine({ doc, cards, onOpen, openBusy }: { doc: PanelEntry; cards: DocumentCards; onOpen: () => void; openBusy: boolean }) {
+  const [asking, setAsking] = useState(false)
+  const [reason, setReason] = useState('')
+  return (
+    <div className="mt-1 space-y-1" data-document-line>
+      <p className="text-[11px] text-zinc-600">{doc.why}</p>
+      {/* 9b - the caveat, ONCE on the card and SHORT; the long form is in the Evidence Pack */}
+      <p className="text-[11px] text-zinc-700 font-medium" data-caveat>{doc.standingLabel}</p>
+      {doc.priority && !doc.excluded && <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-800 text-white">★ In the report</span>}
+      {doc.excluded && <p className="text-[11px] text-zinc-700"><span className="font-semibold">Set aside:</span> {doc.exclusionReason || 'no reason recorded'}</p>}
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={onOpen} disabled={openBusy} className="text-[11px] font-medium text-blue-700 hover:text-blue-900 disabled:opacity-40">Open</button>
+        {!doc.excluded ? (
+          <>
+            <button type="button" onClick={() => cards.onPrioritise(doc, !doc.priority)} disabled={cards.busy} aria-pressed={doc.priority}
+              className={`text-[11px] rounded border-2 px-1.5 py-0.5 disabled:opacity-40 whitespace-nowrap ${doc.priority ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50'}`}>
+              <span aria-hidden>{doc.priority ? '★' : '☆'}</span> {doc.priority ? 'Remove from report' : 'Add to report'}
+            </button>
+            <button type="button" onClick={() => setAsking((v) => !v)} disabled={cards.busy} className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40">Set aside</button>
+          </>
+        ) : (
+          <button type="button" onClick={() => cards.onInclude(doc)} disabled={cards.busy} className="text-[11px] text-zinc-600 hover:text-zinc-900 disabled:opacity-40">Put back</button>
+        )}
+      </div>
+      {asking && !doc.excluded && (
+        <div className="space-y-1">
+          <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why are you setting this aside?" aria-label="Why this document is set aside" className="w-full text-xs rounded border border-zinc-300 px-2 py-1.5" />
+          <div className="flex gap-2">
+            <button type="button" disabled={cards.busy || !reason.trim()} onClick={() => { cards.onExclude(doc, reason.trim()); setAsking(false); setReason('') }} className="text-[11px] px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Set aside</button>
+            <button type="button" onClick={() => { setAsking(false); setReason('') }} className="text-[11px] px-2 py-1 rounded border border-zinc-300 text-zinc-600">Cancel</button>
+          </div>
+          <p className="text-[11px] text-zinc-500">It stays on the record and in your evidence pack, marked as considered and set aside, with your reason. Nothing is deleted. “Put back” undoes it.</p>
+        </div>
+      )}
     </div>
   )
 }

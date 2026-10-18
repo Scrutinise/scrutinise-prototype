@@ -44,6 +44,121 @@ interface MaterialRow {
   failureReason: string | null
 }
 
+/** What the viewer is showing: the text Lex kept from one document or page. */
+export interface ViewedMaterial {
+  id: string; label: string; kind: string; filename: string | null; url: string | null
+  text: string | null; charCount: number; findingCount: number; findingsAt: string | null
+  /** 25-Q §5 - computed by the route, which owns the cap. Absent on an older response. */
+  truncated?: boolean
+}
+
+/**
+ * ══ 25-N §1f - OPEN WHAT YOU GAVE ME ══════════════════════════
+ *
+ * ⚠ IT FETCHES ON DEMAND, one row at a time. The list endpoint deliberately never returns
+ * `text` (see the route header): a fifty-page report on the wire on every poll, for nobody,
+ * is what that rule exists to prevent. Pressing Open is the one moment somebody wants it.
+ *
+ * 18 Oct (26-S2 sec 9a) - EXPORTED, so the research panel's ONE Sources list can offer "Open" on a document card without a second copy of the viewer.
+ */
+export function useMaterialViewer(ideaId: string, onError?: (message: string | null) => void): { open: (id: string) => Promise<void>; busy: boolean; node: React.ReactNode } {
+  const [viewing, setViewing] = useState<ViewedMaterial | null>(null)
+  const [busy, setBusy] = useState(false)
+  const open = useCallback(async (id: string) => {
+    setBusy(true); onError?.(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/material?materialId=${encodeURIComponent(id)}`)
+      if (!res.ok) { onError?.('That could not be opened.'); return }
+      setViewing(await res.json())
+    } catch {
+      onError?.('That could not be opened.')
+    } finally { setBusy(false) }
+  }, [ideaId, onError])
+  return { open, busy, node: viewing ? <MaterialViewer viewing={viewing} onClose={() => setViewing(null)} /> : null }
+}
+
+export function MaterialViewer({ viewing, onClose }: { viewing: ViewedMaterial; onClose: () => void }) {
+  const setViewing = (_: null) => onClose()
+  return (
+    <>
+      {/* ══ 25-N §1f — THE VIEWER ════════════════════════════════
+          ⚠ IT SAYS WHAT IT IS SHOWING, FIRST. This is the TEXT Lex kept, not the file — the
+          file was never stored, which is stated on the upload control and has to be stated
+          again here or the viewer becomes a quiet contradiction of it. A user who opened this
+          and found their PDF's layout gone would otherwise conclude something had been lost. */}
+      {(
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`What Lex read from ${viewing.label}`}
+          onClick={() => setViewing(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-200">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-semibold text-zinc-900 break-words">{viewing.label}</h2>
+                <p className="text-[11px] text-zinc-500 mt-0.5">
+                  {viewing.kind === 'FILE'
+                    ? 'This is the text Lex read out of your file. The file itself is never stored — this is the only copy we hold.'
+                    : 'This is the text Lex read from that page.'}
+                  {' '}
+                  {viewing.findingsAt
+                    ? viewing.findingCount > 0
+                      ? `Lex took ${viewing.findingCount} finding${viewing.findingCount === 1 ? '' : 's'} from it.`
+                      : 'Lex found nothing in it that bore on your idea.'
+                    : 'Lex has not read it yet.'}
+                  {/* ══ 25-Q §5 — SAY WHAT THE NUMBER MEANS, OR DO NOT PRINT IT ═══════════
+                      Charlie, on "9 findings · 87k characters kept": *confusing.* 25-N moved the
+                      count off the list and into here, which was right, and left it as a bare
+                      figure, which was not — "87,000 characters kept" answers a question about
+                      our storage, asked of somebody wondering whether their document was read
+                      in full.
+
+                      ⚠⚠ THE TWO CASES ARE DIFFERENT NEWS AND MUST NOT SHARE A SENTENCE. Below
+                      the cap, nothing was dropped and the honest answer is "all of it". At the
+                      cap, the last part of their document was never read — which is the one
+                      thing a user genuinely needs to be told, and the bare number never said.
+
+                      ⚠ `truncated` COMES FROM THE SERVER, which owns the cap. See the route. */}
+                  {' '}
+                  {viewing.truncated
+                    ? `I kept the first ${viewing.charCount.toLocaleString()} characters — about `
+                      + `fifty pages — and the rest of it was not read.`
+                    : `That is all of it: ${viewing.charCount.toLocaleString()} characters of text, nothing dropped.`}
+                </p>
+              </div>
+              {viewing.url && (
+                <a href={viewing.url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-medium text-blue-700 hover:text-blue-900 whitespace-nowrap">
+                  Original ↗
+                </a>
+              )}
+              <button onClick={() => setViewing(null)} aria-label="Close"
+                className="text-zinc-400 hover:text-zinc-700 text-lg leading-none px-1">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {viewing.text ? (
+                <pre className="text-xs text-zinc-800 whitespace-pre-wrap break-words font-sans leading-relaxed">
+                  {viewing.text}
+                </pre>
+              ) : (
+                <p className="text-sm text-zinc-600">
+                  There is no text stored for this one. That is not an empty document — it means the
+                  extraction never produced anything, and nothing has been read from it.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function YourMaterial({
   ideaId, onChanged, onCount, hideAdd = false,
 }: {
@@ -69,14 +184,9 @@ export default function YourMaterial({
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState('')
-  /** 25-N §1f — the row the user has asked to open, with the text we kept from it. */
-  const [viewing, setViewing] = useState<
-    { id: string; label: string; kind: string; filename: string | null; url: string | null
-      text: string | null; charCount: number; findingCount: number; findingsAt: string | null
-      /** 25-Q §5 — computed by the route, which owns the cap. Absent on an older response. */
-      truncated?: boolean } | null
-  >(null)
-  const [viewBusy, setViewBusy] = useState(false)
+  const viewer = useMaterialViewer(ideaId, setError)
+  const viewBusy = viewer.busy
+  const openMaterial = viewer.open
   const fileInput = useRef<HTMLInputElement>(null)
 
   /**
@@ -154,24 +264,6 @@ export default function YourMaterial({
       setLink('')
     } finally { setBusy(false) }
   }, [ideaId, link, after])
-
-  /**
-   * ══ 25-N §1f — OPEN WHAT YOU GAVE ME ══════════════════════════
-   *
-   * ⚠ IT FETCHES ON DEMAND, one row at a time. The list endpoint deliberately never returns
-   * `text` (see the route header): a fifty-page report on the wire on every poll, for nobody,
-   * is what that rule exists to prevent. Pressing Open is the one moment somebody wants it.
-   */
-  const openMaterial = useCallback(async (id: string) => {
-    setViewBusy(true); setError(null)
-    try {
-      const res = await fetch(`/api/ideas/${ideaId}/material?materialId=${encodeURIComponent(id)}`)
-      if (!res.ok) { setError('That could not be opened.'); return }
-      setViewing(await res.json())
-    } catch {
-      setError('That could not be opened.')
-    } finally { setViewBusy(false) }
-  }, [ideaId])
 
   const remove = useCallback(async (id: string) => {
     setBusy(true); setError(null)
@@ -309,80 +401,7 @@ export default function YourMaterial({
 
       {busy && <p className="text-[11px] text-zinc-500">Reading it…</p>}
 
-      {/* ══ 25-N §1f — THE VIEWER ════════════════════════════════
-          ⚠ IT SAYS WHAT IT IS SHOWING, FIRST. This is the TEXT Lex kept, not the file — the
-          file was never stored, which is stated on the upload control and has to be stated
-          again here or the viewer becomes a quiet contradiction of it. A user who opened this
-          and found their PDF's layout gone would otherwise conclude something had been lost. */}
-      {viewing && (
-        <div
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`What Lex read from ${viewing.label}`}
-          onClick={() => setViewing(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-200">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-semibold text-zinc-900 break-words">{viewing.label}</h2>
-                <p className="text-[11px] text-zinc-500 mt-0.5">
-                  {viewing.kind === 'FILE'
-                    ? 'This is the text Lex read out of your file. The file itself is never stored — this is the only copy we hold.'
-                    : 'This is the text Lex read from that page.'}
-                  {' '}
-                  {viewing.findingsAt
-                    ? viewing.findingCount > 0
-                      ? `Lex took ${viewing.findingCount} finding${viewing.findingCount === 1 ? '' : 's'} from it.`
-                      : 'Lex found nothing in it that bore on your idea.'
-                    : 'Lex has not read it yet.'}
-                  {/* ══ 25-Q §5 — SAY WHAT THE NUMBER MEANS, OR DO NOT PRINT IT ═══════════
-                      Charlie, on "9 findings · 87k characters kept": *confusing.* 25-N moved the
-                      count off the list and into here, which was right, and left it as a bare
-                      figure, which was not — "87,000 characters kept" answers a question about
-                      our storage, asked of somebody wondering whether their document was read
-                      in full.
-
-                      ⚠⚠ THE TWO CASES ARE DIFFERENT NEWS AND MUST NOT SHARE A SENTENCE. Below
-                      the cap, nothing was dropped and the honest answer is "all of it". At the
-                      cap, the last part of their document was never read — which is the one
-                      thing a user genuinely needs to be told, and the bare number never said.
-
-                      ⚠ `truncated` COMES FROM THE SERVER, which owns the cap. See the route. */}
-                  {' '}
-                  {viewing.truncated
-                    ? `I kept the first ${viewing.charCount.toLocaleString()} characters — about `
-                      + `fifty pages — and the rest of it was not read.`
-                    : `That is all of it: ${viewing.charCount.toLocaleString()} characters of text, nothing dropped.`}
-                </p>
-              </div>
-              {viewing.url && (
-                <a href={viewing.url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-medium text-blue-700 hover:text-blue-900 whitespace-nowrap">
-                  Original ↗
-                </a>
-              )}
-              <button onClick={() => setViewing(null)} aria-label="Close"
-                className="text-zinc-400 hover:text-zinc-700 text-lg leading-none px-1">✕</button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              {viewing.text ? (
-                <pre className="text-xs text-zinc-800 whitespace-pre-wrap break-words font-sans leading-relaxed">
-                  {viewing.text}
-                </pre>
-              ) : (
-                <p className="text-sm text-zinc-600">
-                  There is no text stored for this one. That is not an empty document — it means the
-                  extraction never produced anything, and nothing has been read from it.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {viewer.node}
     </div>
   )
 }

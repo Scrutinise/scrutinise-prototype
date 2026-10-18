@@ -25,6 +25,7 @@ import {
   STANCES, STANCE_LABEL, STANCE_GLYPH, BEARS_ON_LABEL, type Stance, type BearsOnRef, type NotebookRequest,
 } from '@/lib/lex/research-notebook-schema'
 import { explainFailure } from '@/lib/api-rejection'
+import FocusDialog from './FocusDialog'
 
 interface SourceOption { id: string; number: number; title: string; kind: string }
 interface Initial { url?: string; title?: string; text?: string }
@@ -33,7 +34,8 @@ export default function AddResearch({
   ideaId, onSaved, initial, defaultOpen = false, label = 'Add research', compact = false, bare = false,
 }: {
   ideaId: string
-  onSaved?: () => void
+  /** Called after a save, with the new source's number so the Sources list can show and highlight its card (26-S2 sec 9d). */
+  onSaved?: (info?: { ref: number }) => void
   initial?: Initial
   defaultOpen?: boolean
   label?: string
@@ -70,6 +72,7 @@ export default function AddResearch({
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<{ ref: number; title: string; status: string; noNote?: boolean } | null>(null)
   const textRef = useRef<HTMLTextAreaElement | null>(null)
+  const fileRef = useRef<HTMLInputElement | null>(null)
 
   const hasDocument = !!(sourceText.trim() || url.trim() || fileName)
   const wantsNewSource = !pick && (hasDocument || !!title.trim())
@@ -162,7 +165,9 @@ export default function AddResearch({
       if (!res.ok || !j.ok) { setError(explainFailure(j, res.status, 'Saving the research')); return }
       const sel = sources.find((s) => s.id === pick)
       setSaved({ ref: j.result.ref, title: pick === 'own' ? 'My own observation' : sel?.title ?? (title.trim() || url.trim() || 'your source'), status: j.result.status, noNote: !j.result.noteId })
-      reset(); onSaved?.()
+      reset()
+      if (!bare) setOpen(false) // 26-S2 sec 9d: on save the dialog closes; the new card is highlighted with its number
+      onSaved?.({ ref: j.result.ref })
     } catch (e) { setError(`Saving the research could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was saved.`) } finally { setSaving(false) }
   }
 
@@ -173,89 +178,103 @@ export default function AddResearch({
       aria-expanded={open}
       title="Add a file, a link, pasted text, a quote or just a thought — to the notebook, with its source"
       className={`${compact ? 'text-[11px] px-2.5 py-1' : 'text-xs px-3 py-1.5'} font-medium rounded-full border-2 inline-flex items-center gap-1.5 ${
-        open ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+        open && bare ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
       }`}
     >
-      <span aria-hidden className="text-sm leading-none">{open ? '−' : '+'}</span>
-      <span>{open ? 'Close' : label}</span>
+      <span aria-hidden className="text-sm leading-none">{open && bare ? '−' : '+'}</span>
+      <span>{open && bare ? 'Close' : label}</span>
     </button>
   )
 
   if (!open) return <div className="mb-2">{trigger}{saved && <SavedLine s={saved} />}</div>
 
-  return (
-    <div className="mb-2">
-      {bare ? null : trigger}
-      <div className={`${bare ? '' : 'mt-2 '}rounded-xl border-2 border-zinc-300 bg-white p-3 space-y-3 text-sm`} role="group" aria-label="Add research">
-        {saved && <SavedLine s={saved} />}
-        {error && <p role="alert" className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">⚠ {error}</p>}
+  // 26-S2 sec 9d (decision 172) - THE FIELDS, IN THIS ORDER: a file, an address or text -> the source's name -> the quote (optional) -> the comment
+  // (optional) -> "I may share this" (never defaulted). ONE Save, at the foot. Stance, tags, bears-on and "mine only" are folded under "More".
+  const form = (
+    <div className="space-y-3 text-sm" role="group" aria-label="Add research">
+      {error && <p role="alert" className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">⚠ {error}</p>}
 
-        <fieldset className="space-y-2">
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">1 · What are you adding? (any one — or nothing but a thought)</legend>
-          <div className="flex flex-wrap gap-1.5 items-center">
-            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="A web address" aria-label="Web address"
-              className="flex-1 min-w-[12rem] border border-zinc-300 rounded px-2 py-1 text-xs" />
-            <button type="button" onClick={() => void fetchPage()} disabled={!url.trim() || fetching} className="text-xs font-medium px-2.5 py-1 rounded border border-zinc-300 disabled:opacity-40">
-              {fetching ? 'Fetching…' : 'Fetch a readable view'}
-            </button>
+      <fieldset className="space-y-2">
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">1 · A file, a web address or text (any one — or nothing but a thought)</legend>
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* "Choose a file" is a BUTTON (a link-looking file control was missed) */}
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={fetching}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-zinc-400 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-choose-file>
+            Choose a file
+          </button>
+          <input ref={fileRef} type="file" hidden aria-label="File" onChange={(e) => { void readFile(e.target.files?.[0] ?? null); e.target.value = '' }} />
+          {fileName ? <span className="text-xs text-zinc-700">· {fileName}</span> : <span className="text-xs text-zinc-500">no file chosen</span>}
+        </div>
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="…or a web address" aria-label="Web address"
+            className="flex-1 min-w-[12rem] border border-zinc-300 rounded px-2 py-1 text-xs" />
+          <button type="button" onClick={() => void fetchPage()} disabled={!url.trim() || fetching} className="text-xs font-medium px-2.5 py-1 rounded border border-zinc-300 disabled:opacity-40">
+            {fetching ? 'Fetching…' : 'Fetch a readable view'}
+          </button>
+        </div>
+        {fetchNote && <p className={`text-xs rounded px-2 py-1 border ${fetchNote.ok ? 'bg-zinc-50 border-zinc-200 text-zinc-700' : 'bg-amber-50 border-amber-200 text-amber-900 font-medium'}`}>{fetchNote.ok ? '✓ ' : '✗ '}{fetchNote.text}</p>}
+        <label className="block text-[11px] text-zinc-500">…or paste the text here, of any length{textLocked ? ' (this is the text we read — select a passage from it)' : ''}</label>
+        <textarea ref={textRef} value={sourceText} onChange={(e) => !textLocked && setSourceText(e.target.value)} readOnly={textLocked} rows={sourceText ? 7 : 3}
+          placeholder="Paste an article, a report, a passage — or leave this empty and just write a thought below."
+          className={`w-full border border-zinc-300 rounded px-2 py-1.5 text-xs ${textLocked ? 'bg-zinc-50' : ''}`} />
+        {sourceText.trim() && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <button type="button" onClick={useSelection} className="text-xs font-medium px-2.5 py-1 rounded bg-zinc-900 text-white">Use the selected passage as the quote</button>
+            {textLocked && <button type="button" onClick={() => { setSourceText(''); setTextLocked(false); setFileName(null); setFetchNote(null) }} className="text-xs underline text-zinc-500">Clear the text</button>}
           </div>
-          <div className="flex flex-wrap gap-2 items-center text-xs text-zinc-600">
-            <label className="inline-flex items-center gap-1.5">or a file
-              <input type="file" onChange={(e) => { void readFile(e.target.files?.[0] ?? null); e.target.value = '' }} className="text-xs" /></label>
-            {fileName && <span className="text-zinc-700">· {fileName}</span>}
-          </div>
-          {fetchNote && <p className={`text-xs rounded px-2 py-1 border ${fetchNote.ok ? 'bg-zinc-50 border-zinc-200 text-zinc-700' : 'bg-amber-50 border-amber-200 text-amber-900 font-medium'}`}>{fetchNote.ok ? '✓ ' : '✗ '}{fetchNote.text}</p>}
-          <label className="block text-[11px] text-zinc-500">…or paste the text here, of any length{textLocked ? ' (this is the text we read — select a passage from it)' : ''}</label>
-          <textarea ref={textRef} value={sourceText} onChange={(e) => !textLocked && setSourceText(e.target.value)} readOnly={textLocked} rows={sourceText ? 7 : 3}
-            placeholder="Paste an article, a report, a passage — or leave this empty and just write a thought below."
-            className={`w-full border border-zinc-300 rounded px-2 py-1.5 text-xs ${textLocked ? 'bg-zinc-50' : ''}`} />
-          {sourceText.trim() && (
-            <div className="flex flex-wrap gap-2 items-center">
-              <button type="button" onClick={useSelection} className="text-xs font-medium px-2.5 py-1 rounded bg-zinc-900 text-white">Use the selected passage as the quote</button>
-              {textLocked && <button type="button" onClick={() => { setSourceText(''); setTextLocked(false); setFileName(null); setFetchNote(null) }} className="text-xs underline text-zinc-500">Clear the text</button>}
-            </div>
-          )}
-        </fieldset>
+        )}
+      </fieldset>
 
-        <fieldset className="space-y-1.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">2 · The quote (optional) and the comment (optional)</legend>
-          <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={3} maxLength={8000} placeholder="The quote — word for word, from the source" aria-label="Quote"
-            className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
-          <input value={location} onChange={(e) => setLocation(e.target.value)} maxLength={200} placeholder="Where in the source (page, paragraph, section, timestamp)" aria-label="Where the quote is from"
-            className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" />
-          <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={8000} placeholder="Your comment — in your own words" aria-label="Comment"
-            className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
-        </fieldset>
+      <fieldset className="space-y-1.5">
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">2 · The source (every note has one)</legend>
+        <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Which source" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs">
+          <option value="">{hasDocument || title.trim() ? 'A new source — named below' : 'Choose…'}</option>
+          <option value="own">My own observation</option>
+          {sources.map((s) => <option key={s.id} value={s.id}>[Ref: {s.number}] {s.title.slice(0, 90)}</option>)}
+        </select>
+        {!pick && (
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} placeholder="Title of the source" aria-label="Title" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" />
+        )}
+      </fieldset>
 
-        <fieldset className="space-y-1.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">3 · The source (every note has one)</legend>
-          <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Which source" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs">
-            <option value="">{hasDocument || title.trim() ? 'A new source — named below' : 'Choose…'}</option>
-            <option value="own">My own observation</option>
-            {sources.map((s) => <option key={s.id} value={s.id}>[Ref: {s.number}] {s.title.slice(0, 90)}</option>)}
-          </select>
+      <fieldset className="space-y-1.5">
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">3 · The quote — optional</legend>
+        <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={3} maxLength={8000} placeholder="The quote — word for word, from the source" aria-label="Quote"
+          className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
+        <input value={location} onChange={(e) => setLocation(e.target.value)} maxLength={200} placeholder="Where in the source (page, paragraph, section, timestamp)" aria-label="Where the quote is from"
+          className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" />
+      </fieldset>
+
+      <fieldset className="space-y-1.5">
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">4 · Your comment — optional</legend>
+        <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={8000} placeholder="Your comment — in your own words" aria-label="Comment"
+          className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
+      </fieldset>
+
+      {!pick && sourceText.trim() && (
+        <fieldset>
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">5 · Permission</legend>
+          <label className="mt-1 flex items-start gap-1.5 text-xs text-zinc-700">
+            <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-0.5 accent-zinc-900" />
+            <span>I may share this. <span className="text-zinc-500">(Keeping a document’s text is your assertion that you are allowed to. It is never ticked for you.)</span></span>
+          </label>
+        </fieldset>
+      )}
+
+      <details className="rounded border border-zinc-200 px-2 py-1.5">
+        <summary className="cursor-pointer text-xs text-zinc-700 font-medium">More — author, date, stance, tags, what it bears on (all optional, all addable later)</summary>
+        <div className="mt-2 space-y-1.5">
           {!pick && (
-            <div className="grid gap-1.5 sm:grid-cols-3">
-              <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} placeholder="Title of the source" aria-label="Title" className="sm:col-span-3 border border-zinc-300 rounded px-2 py-1 text-xs" />
+            <div className="grid gap-1.5 sm:grid-cols-2">
               <input value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={200} placeholder="Author" aria-label="Author" className="border border-zinc-300 rounded px-2 py-1 text-xs" />
               <input value={publishedAt} onChange={(e) => setPublishedAt(e.target.value)} maxLength={80} placeholder="Date" aria-label="Date" className="border border-zinc-300 rounded px-2 py-1 text-xs" />
             </div>
           )}
-          {!pick && sourceText.trim() && (
-            <label className="flex items-start gap-1.5 text-xs text-zinc-700">
-              <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-0.5 accent-zinc-900" />
-              <span>I may share this. <span className="text-zinc-500">(Keeping a document’s text is your assertion that you are allowed to.)</span></span>
-            </label>
-          )}
-        </fieldset>
-
-        <fieldset className="space-y-1.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">4 · Optional — add them now or later</legend>
           <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Stance">
-            {STANCES.map((s) => (
-              <button key={s} type="button" role="radio" aria-checked={stance === s} onClick={() => setStance(s)}
-                className={`text-xs px-2.5 py-1 rounded-full border-2 ${stance === s ? 'bg-zinc-900 border-zinc-900 text-white font-semibold' : 'bg-white border-zinc-300 text-zinc-700'}`}>
-                <span aria-hidden>{STANCE_GLYPH[s]}</span> {STANCE_LABEL[s]}
+            {STANCES.map((st) => (
+              <button key={st} type="button" role="radio" aria-checked={stance === st} onClick={() => setStance(st)}
+                className={`text-xs px-2.5 py-1 rounded-full border-2 ${stance === st ? 'bg-zinc-900 border-zinc-900 text-white font-semibold' : 'bg-white border-zinc-300 text-zinc-700'}`}>
+                <span aria-hidden>{STANCE_GLYPH[st]}</span> {STANCE_LABEL[st]}
               </button>
             ))}
           </div>
@@ -279,17 +298,39 @@ export default function AddResearch({
           <label className="flex items-center gap-1.5 text-xs text-zinc-700">
             <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-zinc-900" /> Mine only until I share it
           </label>
-        </fieldset>
+        </div>
+      </details>
+    </div>
+  )
 
-        <div className="flex flex-wrap gap-2 items-center">
-          <button type="button" onClick={() => void save()} disabled={saving || (!quote.trim() && !comment.trim() && !(wantsNewSource && !pick)) || (!pick && !wantsNewSource && !title.trim())}
-            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white disabled:opacity-40">
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          <span className="text-[11px] text-zinc-500">{!quote.trim() && !comment.trim() && !wantsNewSource ? 'Add a quote, a comment, or a file, link or text to save.' : ''}</span>
-          <button type="button" onClick={() => { reset(); setSaved(null) }} className="text-xs underline text-zinc-500 ml-auto">Start again</button>
+  const saveDisabled = saving || (!quote.trim() && !comment.trim() && !(wantsNewSource && !pick)) || (!pick && !wantsNewSource && !title.trim())
+  const footer = (
+    <>
+      <button type="button" onClick={() => void save()} disabled={saveDisabled} data-save
+        className="text-sm font-medium px-4 py-1.5 rounded-lg bg-zinc-900 text-white disabled:opacity-40">
+        {saving ? 'Saving…' : 'Save'}
+      </button>
+      <span className="text-[11px] text-zinc-500">{!quote.trim() && !comment.trim() && !wantsNewSource ? 'Add a quote, a comment, or a file, link or text to save.' : ''}</span>
+      <button type="button" onClick={() => { reset(); setSaved(null) }} className="text-xs underline text-zinc-500 ml-auto">Start again</button>
+    </>
+  )
+
+  // BARE (a host that already opens and closes a panel): the form inline, the Save at its foot. Otherwise: THE FOCUSED DIALOG.
+  if (bare) {
+    return (
+      <div className="mb-2">
+        <div className="rounded-xl border-2 border-zinc-300 bg-white p-3 space-y-3">
+          {saved && <SavedLine s={saved} />}
+          {form}
+          <div className="flex flex-wrap gap-2 items-center border-t border-zinc-200 pt-2">{footer}</div>
         </div>
       </div>
+    )
+  }
+  return (
+    <div className="mb-2">
+      {trigger}
+      <FocusDialog title="Add research" onClose={() => setOpen(false)} footer={footer}>{form}</FocusDialog>
     </div>
   )
 }

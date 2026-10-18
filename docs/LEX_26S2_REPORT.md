@@ -197,3 +197,12 @@ Built and checked as described in the CHANGE_LOG entry of that push. What the re
 
 Questions for CCh: (1) 183 — go, and in which order? (2) The 513 orphan rows (£4.99) are engineering in fact but cannot be labelled `measurement` vs `check` — leave them unlabelled, or label them all `check`? (3) Who in the record: I left a Who written before 18 Oct as "writer not recorded" rather than guessing LEX from `source`.
 
+
+
+## H. Sprint 2, push 2 — the research panel (§9)
+
+**One list (173).** "Your material" is folded into Sources: each document is one numbered card with Open, Add to report and Set aside (a reason is required and kept; Put back undoes it). "Remove" is gone from a document — it archived the document and deleted the findings read from it, which is not what the word said. **The caveat** is one short line per own-document card; the long form is the Evidence Pack's. **Dialogs (172):** "+ Add research" and "Import actions from a document" are focused dialogs (`FocusDialog`: page dimmed, nothing behind it scrolls, Escape and ✕, one Save in a fixed foot; "I may share this" never defaulted; on Save the new card is highlighted with its number). The feedback form was already a dialog.
+**What else reads `IdeaUserMaterial` (asked for):** 27 direct reads in 17 files that disagreed on what to count — the Build page counted ARCHIVED rows. `source-registry.ts` now owns "the documents on this idea" (`listDocuments` / `countDocuments`); nine readers ask it (Build page, stage context, chat-attach cap ×2, `file_text` cap, provenance lookup, Lex's snapshot, the material route's cap, the panel); the rest need the text or processing state and reach the document by `materialId` (the import ×2, `read_source` / `restore_source` / `materials()` in Lex's tools, `elicitation`, `page-one`, `update-pass`, `user-material`, the material route's CRUD ×3, `chat-material`'s duplicate finds ×2, the registry's own sync). A guard in `check:lex-26s2` fails if anything but the registry module counts the table again.
+**Checked in a real browser** (`check:lex-26s2-browser`, 33 assertions): the document once; the caveat once and short; Set aside disabled until a reason; the dialog dimmed, unscrollable, one Save in the foot; the new card numbered and highlighted. It found and I fixed a real bug: the Sources list did not re-read after adding research from the contents home. It is a stand-in server, so the real thing still needs Charlie's eyes.
+**Standing rule written (docs/CLAUDE.md §32):** a task with a beginning and a save is a focused dialog.
+

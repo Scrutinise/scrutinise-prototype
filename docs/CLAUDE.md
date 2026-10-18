@@ -1366,3 +1366,11 @@ carries the step, "Classify with Lex" proposes only that step's facets, and a co
 ⚠ **Colour is never the only cue** (§21): the current step is marked by shape (●/○), weight (bold, a 2px border) and a word ("you are here").
 ⚠ **A check for this asserts the RENDERED screen per step** (§25): `check:lex-26s2` part C renders every step and asserts both that the step's
 tools are there and that the other steps' tools are not — with a control that stays false and a mutation run that proves it can fail.
+
+
+---
+
+## 32. A TASK WITH A BEGINNING AND A SAVE IS A FOCUSED DIALOG (18 October 2026, 26-S2 decisions 171–173)
+
+**The rule: where a user starts a task that ends in a save (adding research, importing from a document, giving feedback), it opens in a focused dialog — the rest of the page dimmed and not scrollable, the title in words, ONE primary action in a fixed foot, Escape and ✕ to leave — not in a form unrolled in the page.** Why: Charlie filed a document through an inline form and took the next section down the page ("Decisions") to be part of it; the save was missed. A form that does not look like a form is a save nobody presses. `components/lex/FocusDialog.tsx` is the one component; the foot is the caller's so the Save is always in view. Corollaries: a dialog must not **ambush** the page (a task already under way is *announced* beside its button — "An import of [Ref: 213] is waiting for your review. Open it" — and opened by the user); a consent box ("I may share this") is **never defaulted**; and on Save the dialog closes onto the thing it made, **highlighted with its number**. `check:lex-26s2-browser` asserts all of it in a real browser.
+

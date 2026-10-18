@@ -35,7 +35,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { QuestionPanel as PanelData, PanelEntry } from '@/lib/lex/question-panel'
 import { HEADINGS_ABOVE_DIVIDER } from '@/lib/lex/question-headings'
-import YourMaterial from './YourMaterial'
 import AddResearch from './AddResearch'
 import ResearchNotebook from './ResearchNotebook'
 import SourcesRegistry from './SourcesRegistry'
@@ -102,14 +101,16 @@ const SPECIAL_TITLES: Record<string, string> = {
  * rendered in three places; three copies is two that will drift.
  */
 function HeadingRow({
-  h, onOpen, notebook,
+  h, onOpen, notebook, extraCount = 0,
 }: {
   h: PanelData['headings'][number]
   onOpen: (key: string) => void
+  /** 26-S2 sec 9a: documents the user filed are folded into Sources, so they are counted there. */
+  extraCount?: number
   /** 26-S browser pass G — beside "Sources": "Notebook · N notes", linking to the notebook (the notes are where the sources were MADE USE OF). */
   notebook?: { count: number | null; open: () => void }
 }) {
-  const n = h.entries.length
+  const n = h.entries.length + extraCount
   return (
     <li className={notebook ? 'flex items-stretch gap-1.5' : undefined}>
       {notebook && (
@@ -477,6 +478,10 @@ export default function QuestionPanel({
    * list that shows what is in each.
    */
   const [openKey, setOpenKey] = useState<string | null>(null)
+  // 26-S2 sec 9d - the number of the source just saved, so the Sources list shows and highlights its card.
+  const [justAdded, setJustAdded] = useState<number | null>(null)
+  const [sourcesNonce, setSourcesNonce] = useState(0)
+  useEffect(() => { if (openKey !== 'KEY_SOURCES') setJustAdded(null) }, [openKey])
   // 26-S browser pass G — the notebook's note count, for the link beside "Sources". Re-read whenever the panel returns to the list.
   const [noteCount, setNoteCount] = useState<number | null>(null)
   useEffect(() => {
@@ -563,13 +568,23 @@ export default function QuestionPanel({
   // which is the distinction `question-headings.ts` exists to keep.
   const isNotAsked = (h: PanelData['headings'][number]) =>
     h.entries.length === 0 && h.gap?.reason === 'not-asked'
-  const above = data.headings.filter(
+  // 26-S2 sec 9a (decision 173): "Your material" is FOLDED INTO Sources - one list, each document once. The server still files the documents under YOUR_MATERIAL
+  // (the Evidence Pack and the documents read it that way); this panel shows them on the numbered Sources cards and no longer lists them a second time.
+  const FOLDED = ['YOUR_MATERIAL']
+  const visible = data.headings.filter((h) => !FOLDED.includes(h.key))
+  const myDocuments = data.headings.find((h) => h.key === 'YOUR_MATERIAL')?.entries ?? []
+  const above = visible.filter(
     (h) => (HEADINGS_ABOVE_DIVIDER as string[]).includes(h.key) && !isNotAsked(h),
   )
-  const rest = data.headings.filter(
+  const rest = visible.filter(
     (h) => !(HEADINGS_ABOVE_DIVIDER as string[]).includes(h.key) && !isNotAsked(h),
   )
-  const notAsked = data.headings.filter(isNotAsked)
+  const notAsked = visible.filter(isNotAsked)
+  const afterAdd = (info?: { ref: number }) => {
+    void load()
+    setSourcesNonce((n) => n + 1)
+    if (info?.ref) { setJustAdded(info.ref); setOpenKey('KEY_SOURCES') } // the new card, with its number, on the list it joined
+  }
 
   const cardProps = {
     busy,
@@ -655,7 +670,7 @@ export default function QuestionPanel({
           {notices}
 
           {/* ══ 26-R (DECISION 133) — "+ ADD RESEARCH", THE ONE DOOR. It replaces "+ Add a file or link" here and on every surface. ══ */}
-          <AddResearch ideaId={ideaId} compact onSaved={() => void load()} />
+          <AddResearch ideaId={ideaId} compact onSaved={afterAdd} />
 
           {/* §2 — Charlie's wording, verbatim, and it replaces both deleted headings. */}
           <p className="text-[11px] text-zinc-500">Everything Lex found or worked out:</p>
@@ -713,7 +728,7 @@ export default function QuestionPanel({
                 <span aria-hidden className="text-zinc-300 text-xs">›</span>
               </button>
             </li>
-            {above.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} />)}
+            {above.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} extraCount={h.key === 'KEY_SOURCES' ? myDocuments.length : 0} />)}
           </ul>
 
           {/* §4's divider — above it, what you act on; below it, what it was built from. */}
@@ -756,14 +771,14 @@ export default function QuestionPanel({
 
           {/* ── EVERYTHING ELSE ────────────────────────────────────────────── */}
           <ul className="space-y-1">
-            {rest.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} />)}
+            {rest.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} extraCount={h.key === 'KEY_SOURCES' ? myDocuments.length : 0} />)}
           </ul>
 
           {/* ── AND ANYTHING NOT ASKED OF THIS DRAFT, AT THE BOTTOM ─────────── */}
           {(notAsked.length > 0 || data.unfiled.length > 0) && (
             <ul className="space-y-1">
               <li className="text-[11px] text-zinc-400 pt-1">Not asked of this draft</li>
-              {notAsked.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} />)}
+              {notAsked.map((h) => <HeadingRow key={h.key} h={h} onOpen={setOpenKey} notebook={notebookFor(h.key)} extraCount={h.key === 'KEY_SOURCES' ? myDocuments.length : 0} />)}
               {data.unfiled.length > 0 && (
                 <li>
                   <button
@@ -807,7 +822,7 @@ export default function QuestionPanel({
             </div>
           )}
 
-          {openHeading.entries.map((e) => (
+          {openHeading.key !== 'KEY_SOURCES' && openHeading.entries.map((e) => (
             <EntryCard
               key={e.id}
               e={e}
@@ -870,17 +885,23 @@ export default function QuestionPanel({
 
           {/* §25.6 — adding a document or a link lives inside its own item. 26-R: through "Add research" (one door); this list
               is what was filed, and what Lex has read of it. */}
-          {openHeading.key === 'YOUR_MATERIAL' && (
-            <div className="rounded-lg border border-zinc-200 p-2.5 space-y-2">
-              <AddResearch ideaId={ideaId} compact onSaved={() => void load()} />
-              <YourMaterial ideaId={ideaId} onChanged={() => void load()} hideAdd />
-            </div>
-          )}
-
-          {/* ══ 26-E §3 / 26-R — "SOURCES": the numbered list, "Add source", "Create snippet". ══ */}
+          {/* ══ 26-E §3 / 26-R / 26-S2 sec 9a - "SOURCES": ONE LIST. "+ Add research" once, above it; the numbered cards, the user's own documents among them (Open, the
+              short caveat, Add to report, Set aside); then what Lex says to read first. ══ */}
           {openHeading.key === 'KEY_SOURCES' && (
-            <div className="rounded-lg border border-zinc-200 p-2.5">
-              <SourcesRegistry ideaId={ideaId} onChanged={() => void load()} />
+            <div className="space-y-3" data-sources-one-list>
+              <AddResearch ideaId={ideaId} compact onSaved={afterAdd} />
+              <div className="rounded-lg border border-zinc-200 p-2.5">
+                <SourcesRegistry ideaId={ideaId} onChanged={() => void load()} highlightRef={justAdded} reloadKey={sourcesNonce}
+                  documents={{ entries: myDocuments, busy, onExclude: cardProps.onExclude, onInclude: cardProps.onInclude, onPrioritise: cardProps.onPrioritise }} />
+              </div>
+              {openHeading.entries.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">What Lex says to read first</p>
+                  {openHeading.entries.map((e) => (
+                    <EntryCard key={e.id} e={e} {...cardProps} currentHeading={openHeading.key} onMove={move} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

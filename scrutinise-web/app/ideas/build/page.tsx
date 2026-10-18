@@ -18,6 +18,7 @@ import BuildIdeaClient from './BuildIdeaClient'
 import { stageContext } from '@/lib/lex/stage-context'
 import { blankElicitationState } from '@/lib/lex/elicitation'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
+import { countDocuments } from '@/lib/lex/source-registry'
 
 interface Props {
   /**
@@ -143,7 +144,7 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
   // 25-K §2 — how many documents and links are already attached, so the composer's "+"
   // carries a count on the first paint rather than only after the panel is opened.
   const materialCount = initialIdeaId
-    ? await prisma.ideaUserMaterial.count({ where: { ideaId: initialIdeaId } })
+    ? await countDocuments(initialIdeaId) // 26-S2 sec 9a: it counted ARCHIVED rows too, so a removed document still showed on the composer's "+"
     : 0
 
   // ══ 25-I §1 — THE FIRST QUESTION, DRAWN WITHOUT CREATING ANYTHING ══════════

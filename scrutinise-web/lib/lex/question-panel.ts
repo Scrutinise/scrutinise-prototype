@@ -37,7 +37,8 @@ import {
   type EmptyReason, type HeadingKey,
 } from './question-headings'
 import { INTERROGATION_LIBRARY } from './interrogation-library'
-import { evidenceStanding, type Standing, type Staleness } from './evidence-date'
+import { listDocuments } from './source-registry'
+import { evidenceStanding, ownDocumentCaveat, type Standing, type Staleness } from './evidence-date'
 
 export interface PanelEntry {
   id: string
@@ -179,15 +180,8 @@ export async function buildQuestionPanel(
     //
     // ⚠ `text` IS NOT SELECTED. The panel never renders a document body, and putting fifty
     // pages on the wire for a heading that shows a filename is how a poll becomes expensive.
-    prisma.ideaUserMaterial.findMany({
-      // 26-J §2b — archived material is withdrawn; the panel must not still list it.
-      where: { ideaId, archivedAt: null },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true, kind: true, label: true, url: true, status: true,
-        charCount: true, findingsAt: true, findingCount: true, failureReason: true,
-      },
-    }),
+    // 26-S2 sec 9a: through the registry module's ONE definition of "the documents on this idea" (archived ones withdrawn - 26-J 2b - newest first, as before).
+    listDocuments(ideaId).then((ds) => ds.map((d) => ({ id: d.materialId, kind: d.kind, label: d.label, url: d.url, status: d.status, charCount: d.charCount, findingsAt: d.findingsAt, findingCount: d.findingCount, failureReason: d.failureReason })).reverse()),
   ])
 
   // ⚠ Keyed on BOTH the corpus source id and the evidence row id. A user excludes a SOURCE
@@ -319,7 +313,8 @@ export async function buildQuestionPanel(
       // that cannot be dated. A "your material" card exempted from the standing line would be
       // the one card on the panel that could quietly pass as current.
       sourceDate: null,
-      ...(({ staleness, standing, label }) => ({ staleness, standing, standingLabel: label }))(
+      // 26-S2 sec 9b: the card says it ONCE AND SHORT (`ownDocumentCaveat`); the Evidence Pack keeps the long form (it calls evidenceStanding itself).
+      ...(({ staleness, standing }) => ({ staleness, standing, standingLabel: ownDocumentCaveat({ staleness, standing }) }))(
         evidenceStanding({ sourceDate: null, sourceDateBasis: 'NO_SOURCE_ROW', body: null, title: m.label }),
       ),
     })
