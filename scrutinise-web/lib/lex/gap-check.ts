@@ -34,13 +34,17 @@ export type GapCategory = 'legislative' | 'organisational' | 'financial'
 export const GAP_CATEGORIES: GapCategory[] = ['legislative', 'organisational', 'financial']
 
 export interface GapSource {
-  kind: 'GAP_CHECK'
+  /** GAP_CHECK = the "Check for gaps" button; DIGEST (26-T1) = a gap a digest named, added by the user as a suggestion. */
+  kind: 'GAP_CHECK' | 'DIGEST'
   models: string[]
   whatFails: string
   category: GapCategory
   addressesCauseNumber: number | null
+  /** The check's id - for a DIGEST, the digest's id. */
   checkId: string
   checkCostPence: number | null
+  /** DIGEST only: how many models answered the digest, for "3 of 4". */
+  of?: number
 }
 
 const RUNNING = 'GAP_CHECK_RUNNING'
@@ -200,6 +204,7 @@ export function dropAlreadyThere(items: Combined[], existingTexts: string[]): { 
 }
 
 export function describeGapSource(s: GapSource): string {
+  if (s.kind === 'DIGEST') return `From: the digest, ${s.models.length} of ${s.of ?? 4} models (${s.models.join(', ')})`
   return `raised by ${s.models.join(', ')}`
 }
 
@@ -481,7 +486,7 @@ export async function listGapSuggestions(ideaId: string): Promise<{
   const free = detectFreeGaps(causes.filter((c): c is { id: string; number: number; cause: string } => c.number != null), actions.map((a) => ({ ...a, causeNumbers: a.targetCauseIds.map((id) => numById2.get(id)).filter((n): n is number => n != null), recordedAvenue: a.avenue })))
   const suggestions = rows.flatMap((r): GapSuggestionView[] => {
     const s = (r.sources as unknown as GapSource[])?.[0]
-    if (!s || s.kind !== 'GAP_CHECK') return []
+    if (!s || (s.kind !== 'GAP_CHECK' && s.kind !== 'DIGEST')) return []
     return [{
       id: r.id, text: r.text, verdict: (r.verdict as Verdict) ?? 'NOT_TESTED', reason: r.reason, whatFails: s.whatFails,
       category: s.category, addressesCauseNumber: s.addressesCauseNumber, models: s.models, raisedBy: describeGapSource(s),
@@ -503,7 +508,7 @@ export async function acceptGapSuggestion(ideaId: string, id: string): Promise<{
   // the cause link the coverage grid needs did not exist for any action. It is recorded now, with the avenue the gap check
   // already classified the suggestion under. (A user can correct both on the open action.)
   const src = (row.sources as unknown as GapSource[] | null)?.[0]
-  if (src?.kind === 'GAP_CHECK') {
+  if (src?.kind === 'GAP_CHECK' || src?.kind === 'DIGEST') {
     const data: Record<string, unknown> = { avenue: src.category.toUpperCase() }
     if (src.addressesCauseNumber != null) {
       const causes = await prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, number: true } })

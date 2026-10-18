@@ -13,6 +13,7 @@
 import type { CanonicalAction } from './page1-config'
 import { answeredCount, proposalCount, specificEnough } from './action-record'
 import { conditionChecklist, type ConditionsDoc } from './action-conditions'
+import { incentiveChecklistLine } from './incentive-map'
 
 export type ActionsStep = 1 | 2 | 3 | 4
 export const STEP_NUMBERS: ActionsStep[] = [1, 2, 3, 4]
@@ -59,7 +60,7 @@ export interface ChecklistContext {
   conditions?: ConditionsDoc
 }
 
-type A = Partial<Pick<CanonicalAction, 'conditionIds' | 'supportOnly'>> & Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
+type A = Partial<Pick<CanonicalAction, 'conditionIds' | 'supportOnly' | 'number' | 'title' | 'practicalStep'>> & Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 const line = (key: string, count: number, missing: (n: number) => string, ok: string): ChecklistLine => ({ key, done: count === 0, text: count === 0 ? ok : missing(count) })
@@ -106,6 +107,11 @@ export function stepChecklist(step: ActionsStep, actions: A[], ctx: ChecklistCon
         line('who', noWho, (c) => `${c} ${plural(c, 'action has', 'actions have')} no one named to implement ${plural(c, 'it', 'them')} (Who)`, 'Every action names who implements it'),
         line('specific', notSpecific, (c) => `${c} ${plural(c, 'action is', 'actions are')} not yet specific enough (Who and Against answered; draft text for a legislative action)`, 'Every action is specific enough'),
         line('waiting', waiting, (c) => `${c} ${plural(c, 'action has', 'actions have')} answers from Lex waiting for you to use or dismiss`, 'No answers from Lex are waiting for you'),
+        // 26-T1 §3d - read from the Incentive-now and What-changes-it slots (the "By who" view's own count)
+        ...(() => {
+          const l = incentiveChecklistLine(actions.map((a) => ({ id: a.id, number: a.number ?? null, title: a.title ?? null, practicalStep: a.practicalStep ?? '', whoImplements: a.whoImplements, record: a.record })))
+          return l ? [l] : []
+        })(),
       ]
     }
     case 3: {

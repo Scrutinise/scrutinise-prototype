@@ -916,6 +916,8 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-10-18 23:45 UTC (LEX 26-T1: the digest and the incentive map)* - ▶ **Read the top CHANGE_LOG entry and `docs/LEX_26T_REPORT.md`.** ▶ Step 1: "Ask four models about this heading" / "…the whole set" (measured 45.2p for 8 actions, 74.3p for the set - a floor, Grok timed out); step 2: "By who" view and a checklist line. `ActionDigest` table is live (`23f71c6`). ▶ **Charlie must look:** press the heading button on one heading; read "Where the four disagree" against his 17 Oct answer; open "By who" and see whether the AGAINST-with-nothing-changing cells are the ones he expected. ▶ **Open:** real-browser check not written; 26-T2 next; 196/183 and 11d not started.
+
 *Last updated: 2026-10-18 09:45 UTC (LEX 26-S2 18 Oct (5): 188 conditions, 189 avenue rule, 190 Re-sort + Consolidate, UI A/B built)* - ▶ **Read the top CHANGE_LOG entry and LEX_26S2_REPORT section J.** ▶ **Measured on scratch (n=1):** Re-sort 26.33p / 174 actions (0.151p each), Consolidate 28.33p (0.163p each), 174 -> 66 live. ▶ **Nothing deletes;** Undo / Unfold / Bring back restore. ▶ **Charlie's seven headings are renamed in place** (formerly lists). ▶ **After deploy:** run `scripts/seed-26s2-conditions-headings.ts --apply` (his ten conditions + the plan), then he presses Re-sort and Consolidate himself. ▶ **Open:** the Proposal/Meeting Pack do not print commentary (folded detail not in them); no notebook note holds the ten conditions; 183's other five paths wait for 26-T; 11d held.
 
 Earlier:

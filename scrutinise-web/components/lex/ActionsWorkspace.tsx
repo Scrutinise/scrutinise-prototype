@@ -25,6 +25,8 @@ import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
 import ActionSlots from './ActionSlots'
+import { useDigests, HeadingDigest, SetDigest, SetDigestButton } from './ActionDigest'
+import IncentiveMap from './IncentiveMap'
 import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
 import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc } from '@/lib/lex/action-conditions'
 import type { HeadingPlan } from '@/lib/lex/action-resort-pure'
@@ -92,8 +94,8 @@ const FACET_WORD = { avenue: 'Avenue', sequence: 'Sequence', causes: 'Causes', b
 /** 26-S2 §3b — which list groupings belong to which step. A grouping that belongs to another step is not offered (absent, not greyed). */
 const STEP_GROUP_MODES: Record<ActionsStep, GroupMode[]> = { 1: ['heading', 'cause', 'avenue', 'policy-test'], 2: ['heading'], 3: ['heading'], 4: ['heading', 'sequence'] }
 /** …and which views: the coverage grid is a step-1 tool (causes against actions); the sequence view is step 4's. */
-const STEP_VIEWS: Record<ActionsStep, Array<'list' | 'coverage' | 'conditions' | 'sequence'>> = { 1: ['list', 'coverage', 'conditions'], 2: ['list'], 3: ['list'], 4: ['list', 'sequence'] }
-const VIEW_LABEL = { list: 'List', coverage: 'Coverage grid', conditions: 'Conditions', sequence: 'Sequence' } as const
+const STEP_VIEWS: Record<ActionsStep, Array<'list' | 'coverage' | 'conditions' | 'sequence' | 'who'>> = { 1: ['list', 'coverage', 'conditions'], 2: ['list', 'who'], 3: ['list'], 4: ['list', 'sequence'] }
+const VIEW_LABEL = { list: 'List', coverage: 'Coverage grid', conditions: 'Conditions', sequence: 'Sequence', who: 'By who' } as const
 
 /** A proposal belongs to a step by what it proposes: causes, avenue and conditions are step 1's; sequence and what comes before, step 4's. */
 const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): ActionsStep[] => [
@@ -150,7 +152,7 @@ interface Props {
   structure?: { conditions: ConditionsDoc; headingPlan: HeadingPlan | null; archivedHeadings: Array<{ id: string; name: string }>; resortUndoable: number }
 }
 
-type View = 'list' | 'coverage' | 'conditions' | 'sequence'
+type View = 'list' | 'coverage' | 'conditions' | 'sequence' | 'who'
 
 export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, step = DEFAULT_STEP, costLineActionIds, structure }: Props) {
   const conditions = structure?.conditions ?? EMPTY_CONDITIONS
@@ -224,6 +226,17 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const checklist = useMemo(() => stepChecklist(step, unparked, { duplicatesChecked, conditions }, { actionIdsWithCostLines: costLineIds }), [step, unparked, duplicatesChecked, costLineIds, conditions])
   // 190 - Consolidate this heading: one card at a time, under the heading's own header
   const [consolidate, setConsolidate] = useState<ConsolidateCardState | null>(null)
+  // 26-T1 - the digest (four models + a judge), per heading and for the whole set: step 1's
+  const digests = useDigests(ideaId, step === 1, onChanged)
+  const [setDigestOpen, setSetDigestOpen] = useState(false)
+  /** "#12" in a digest opens that action in the list and brings it into view. */
+  const openByNumber = (n: number) => {
+    const a = live.find((x) => x.number === n)
+    if (!a) return
+    setFilter('all'); setFind('')
+    setOpen((s) => new Set(s).add(a.id))
+    setTimeout(() => document.querySelector(`[data-action-id="${a.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50)
+  }
   const allHeadingsHidden = headings.length > 0 && headings.every((h) => h.hidden)
 
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -450,6 +463,14 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const Step2Toolbar = (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
+        {views.length > 1 && (
+          <div role="tablist" aria-label="View" className="inline-flex rounded-lg border border-zinc-300 overflow-hidden" data-step2-views>
+            {views.map((v) => (
+              <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
+                className={`text-xs px-2.5 py-1 ${view === v ? 'bg-zinc-900 text-white font-semibold' : 'bg-white text-zinc-700 hover:bg-zinc-50'}`}>{view === v ? '● ' : '○ '}{VIEW_LABEL[v]}</button>
+            ))}
+          </div>
+        )}
         {HideAll}
         <button disabled={disabled || needAnswers === 0} title={`Lex proposes an answer for every slot that has none, on every action — Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked. Yours are never changed. It works through the list a dozen actions at a time. ${slotPrice}`} onClick={() => { const est = slotPriceEstimate(needAnswers); if (est != null && est > SLOT_CONFIRM_ABOVE_PENCE) setConfirmSlots(true); else void classifySlots() }}
           className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-classify-slots>Classify with Lex{needAnswers ? ` (${needAnswers} with open slots)` : ''}</button>
@@ -513,6 +534,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           <button disabled={disabled} title="Runs the same test the import uses, on the actions that read ? Not tested. Measured once on a real idea: 14 actions for 3.9p in about 40 seconds (n=1). The price of this run is shown when it finishes." onClick={() => void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords)}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Test against the policy ({untestedCount} untested)</button>
         )}
+        {step === 1 && <SetDigestButton state={digests} disabled={disabled || live.length === 0} onOpened={() => setSetDigestOpen(true)} />}
       </div>
 
       {step === 1 && (
@@ -553,9 +575,15 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   // (it used to sit in the toolbar, above the fold of a long list: a refusal rendered, off screen, and looked like nothing happening.)
   const statusRef = useRef<HTMLDivElement>(null)
   useEffect(() => { if (ops.error) statusRef.current?.scrollIntoView?.({ block: 'nearest' }) }, [ops.error])
-  const Status = (ops.busy || ops.error || ops.saved || ops.note) ? (
+  const Status = (ops.busy || ops.error || ops.saved || ops.note || digests.error || digests.note) ? (
     <div ref={statusRef} className="space-y-1" data-status-strip>
-      {ops.busy && <p className="text-[11px] text-zinc-700 bg-white border border-zinc-300 rounded px-2 py-1" role="status">Working: {ops.busy}…</p>}
+      {digests.error && (
+        <p className="text-xs font-semibold text-zinc-900 bg-white border-2 border-zinc-900 rounded px-2 py-1.5" role="alert" data-digest-error>⚠ {digests.error}{' '}
+          <button type="button" onClick={digests.clearError} className="ml-1 px-2 py-0.5 rounded border border-zinc-900 bg-zinc-100 font-semibold">OK</button>
+        </p>
+      )}
+      {digests.note && <p className="text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-2 py-1" data-digest-note>{digests.note} <button onClick={digests.clearNote} className="underline ml-1">dismiss</button></p>}
+      {ops.busy &&<p className="text-[11px] text-zinc-700 bg-white border border-zinc-300 rounded px-2 py-1" role="status">Working: {ops.busy}…</p>}
       {ops.error && (
         <p className="text-xs font-semibold text-zinc-900 bg-white border-2 border-zinc-900 rounded px-2 py-1.5" role="alert">⚠ {ops.error}{' '}
           <button type="button" onClick={ops.clearError} className="ml-1 px-2 py-0.5 rounded border border-zinc-900 bg-zinc-100 font-semibold">OK</button>
@@ -651,6 +679,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                     } : undefined}
                     onShowArchived={step === 1 ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
                   {consolidate && h && consolidate.headingId === h.id && <ConsolidateCard s={consolidate} ops={ops} disabled={disabled} setS={setConsolidate} onClose={() => setConsolidate(null)} />}
+                  {step === 1 && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled} />}
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
                 </section>
@@ -672,6 +701,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {view === 'coverage' && <CoverageView actions={unparked} causes={causeLite} headings={headings} />}
       {view === 'conditions' && <ConditionsCoverageView doc={conditions} actions={unparked} headings={headings} />}
       {view === 'sequence' && <SequenceView actions={unparked} />}
+      {view === 'who' && <IncentiveMap ideaId={ideaId} actions={unparked} onOpenAction={openByNumber} onChanged={onChanged} disabled={disabled} />}
+
+      {/* 26-T1 - the whole-set digest, at the foot of step 1 */}
+      {step === 1 && <SetDigest state={digests} open={setDigestOpen} setOpen={setSetDigestOpen} onOpenAction={openByNumber} disabled={disabled} />}
 
       {/* 26-S2 §3c — this step's checklist at the foot of the list. ADVISORY: it says what is unfinished and never blocks moving on. */}
       {checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
