@@ -287,6 +287,51 @@ async function partB() {
     await page.evaluate(() => { (window as never as { __h: { step?: number } }).__h.step = undefined; (window as never as { __mount: (w: string) => void }).__mount('workspace') })
     await page.waitForSelector('li[data-action-id]')
 
+    // ── 197 · the merge/compare panel's three one-press rule-outs
+    section('B7e · 197 — "Keep #a, rule out #b" · "Keep #b, rule out #a" · "Rule out both": rule out (never delete), reason worded and editable, same strip')
+    const storeRow = (n: number) => h<{ status: string; ruleOutReason: string | null } | null>(`(() => { const a = window.__h.store.actions.find(x => x.number === ${n}); return a ? { status: a.status, ruleOutReason: a.ruleOutReason } : null })()`)
+    const openPair = async (x: number, y: number) => {
+      await page.locator(`input[aria-label="Select action ${x}"]`).check()
+      await page.locator(`input[aria-label="Select action ${y}"]`).check()
+      await page.locator('button:has-text("Ask Lex to review and merge")').click()
+      await page.waitForSelector('[data-pair-ruleout]')
+    }
+    const total0 = await h<number>(`window.__h.store.actions.length`)
+    await openPair(26, 27)
+    const btns = page.locator('[data-pair-ruleout] button')
+    ok('the panel offers the three controls, worded with the numbers, beside the review', (await btns.count()) === 3 && (await btns.nth(0).innerText()) === 'Keep #26, rule out #27' && (await btns.nth(1).innerText()) === 'Keep #27, rule out #26' && (await btns.nth(2).innerText()) === 'Rule out both')
+    await page.locator('[data-pair-ruleout-button="keepA"]').click()
+    await page.waitForSelector('[data-status-strip] >> text=#27 ruled out')
+    const r27 = await storeRow(27), r26 = await storeRow(26)
+    ok('"Keep #26, rule out #27": #27 is ruled out with "Duplicate of #26"; #26 is untouched; the strip says "#27 ruled out"', r27?.status === 'RULED_OUT' && r27.ruleOutReason === 'Duplicate of #26' && r26?.status === 'LIVE', JSON.stringify([r26, r27]))
+    ok('…and the panel has closed and the row has left the live list', (await page.locator('[data-pair-ruleout]').count()) === 0 && (await page.locator('li[data-action-id="a27"]').count()) === 0)
+    await page.locator('[data-status-strip] button:has-text("OK")').click().catch(() => {})
+
+    await openPair(28, 29)
+    await page.locator('[data-pair-ruleout] input').fill('Same as the draft Act clause')
+    await page.locator('[data-pair-ruleout-button="keepB"]').click()
+    await page.waitForSelector('[data-status-strip] >> text=#28 ruled out')
+    const r28 = await storeRow(28), r29 = await storeRow(29)
+    ok('"Keep #29, rule out #28" with the reason EDITED first: #28 carries the edited words, #29 is untouched', r28?.status === 'RULED_OUT' && r28.ruleOutReason === 'Same as the draft Act clause' && r29?.status === 'LIVE', JSON.stringify([r28, r29]))
+    await page.locator('[data-status-strip] button:has-text("OK")').click().catch(() => {})
+
+    await openPair(30, 31)
+    await page.locator('[data-pair-ruleout-button="both"]').click()
+    await page.waitForSelector('[data-status-strip] >> text=#30 and #31 ruled out')
+    const r30 = await storeRow(30), r31 = await storeRow(31)
+    ok('"Rule out both": both are ruled out with "Neither needed"', r30?.status === 'RULED_OUT' && r31?.status === 'RULED_OUT' && r30.ruleOutReason === 'Neither needed' && r31.ruleOutReason === 'Neither needed')
+    ok('NOTHING WAS DELETED: the store still holds every action it held (five now ruled out or kept, none removed)', (await h<number>(`window.__h.store.actions.length`)) === total0)
+    await page.locator('[data-status-strip] button:has-text("OK")').click().catch(() => {})
+
+    await openPair(32, 33)
+    await page.evaluate(() => { (window as never as { __h: { rejectNext: unknown } }).__h.rejectNext = { status: 422, body: { ok: false, result: null, error: 'Those actions are no longer in the live list.' } } })
+    await page.locator('[data-pair-ruleout-button="keepA"]').click()
+    await page.waitForSelector('[data-status-strip] >> text=Not saved')
+    const r33 = await storeRow(33)
+    ok('a refusal reads "Not saved: …" in the strip, the panel stays open and nothing changed', /Not saved/.test(await text('[data-status-strip]')) && (await page.locator('[data-pair-ruleout]').count()) === 1 && r33?.status === 'LIVE')
+    control('a refused rule-out that still ruled the action out (must be FALSE)', r33?.status === 'RULED_OUT')
+    await page.locator('[data-status-strip] button:has-text("OK")').click().catch(() => {})
+
     // ── F · the feedback form
     section('B8 · F — the feedback form')
     await page.evaluate(() => (window as never as { __mount: (w: string) => void }).__mount('feedback'))

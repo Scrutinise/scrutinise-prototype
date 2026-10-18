@@ -986,6 +986,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
   const [answer, setAnswer] = useState<Answer | null>(null)
   const [edited, setEdited] = useState<{ title: string; practicalStep: string } | null>(null)
   const [done, setDone] = useState<string | null>(null)
+  const [pairReason, setPairReason] = useState('')
   const A = byNumber(a), B = byNumber(b)
   const judge = async () => {
     const r = await ops.run('judgeMerge', { a, b }, 'Lex is comparing them')
@@ -1011,6 +1012,29 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
           </div>
         ))}
       </div>
+      {/* 197 - the user decides: three one-press controls beside Lex's review. Each RULES OUT (never deletes) with a reason that is already worded
+          ("Duplicate of #n" / "Neither needed"); typing in the box replaces it before the press. The same strip confirms ("#b ruled out") or refuses ("Not saved: …"). */}
+      {!done && A && B && (
+        <div className="flex flex-wrap items-center gap-1.5" data-pair-ruleout>
+          {([
+            { key: 'keepA', label: `Keep #${a}, rule out #${b}`, ids: [B.id], nums: `#${b}`, dflt: `Duplicate of #${a}` },
+            { key: 'keepB', label: `Keep #${b}, rule out #${a}`, ids: [A.id], nums: `#${a}`, dflt: `Duplicate of #${b}` },
+            { key: 'both', label: 'Rule out both', ids: [A.id, B.id], nums: `#${a} and #${b}`, dflt: 'Neither needed' },
+          ] as Array<{ key: string; label: string; ids: string[]; nums: string; dflt: string }>).map((o) => {
+            const why = (pairReason.trim() || o.dflt).slice(0, LIMITS.ruleOutReason)
+            return (
+              <button key={o.key} type="button" disabled={!!ops.busy} data-pair-ruleout-button={o.key} title={`Rules out ${o.nums} with the reason “${why}”. Nothing is deleted; Restore brings it back.`}
+                onClick={async () => {
+                  const r = await ops.run('ruleOut', { ids: o.ids, reason: why }, undefined, () => `${o.nums} ruled out (“${why}”). Kept under “Ruled out and merged away”; Restore brings ${o.ids.length === 1 ? 'it' : 'them'} back.`)
+                  if (r.ok) onClose()
+                }}
+                className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-400 text-zinc-900 hover:bg-zinc-50 disabled:opacity-40">{o.label}</button>
+            )
+          })}
+          <BoundedInput value={pairReason} onChange={setPairReason} max={LIMITS.ruleOutReason} placeholder="Reason — or leave it: “Duplicate of #n” / “Neither needed”" aria-label="Reason to rule out (leave empty to use the worded one)"
+            className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-72 max-w-full" />
+        </div>
+      )}
       {!answer && !done && <button disabled={!!ops.busy} onClick={judge} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white disabled:opacity-40">{mode === 'merge' ? 'Ask Lex how they relate' : 'Compare them'}</button>}
       {answer && (
         <div className="space-y-1.5">

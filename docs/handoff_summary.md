@@ -10960,3 +10960,6 @@ Heading Hide/Show now works on steps 1-4 (row control on every step, Hide all / 
 
 ### LEX THREAD - 18 Oct (7) (195, 196) (2026-10-18 13:32 UTC)
 195 built: Proposal prints commentary as 'Components and detail'; Meeting Pack does not; folded components' cost lines roll up into their mechanism in the Proposal (the cost summary already summed all lines). 196: nothing to do. Waiting on Charlie running Re-sort/Consolidate; his count and Conditions view are the acceptance.
+
+### LEX THREAD - 18 Oct (8) 197 (2026-10-18 17:03 UTC)
+Three one-press rule-outs on the merge/compare panel (component only; browser-asserted, 89). Still waiting on Charlie running Re-sort/Consolidate.

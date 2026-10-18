@@ -1,5 +1,9 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-18 17:03 UTC - 26-S2 197: three one-press rule-outs on the merge/compare panel
+
+Beside "Ask Lex to review and merge" the panel now offers "Keep #a, rule out #b", "Keep #b, rule out #a" and "Rule out both". Each calls the existing ruleOut op (rules out, never deletes; Restore brings it back) with the worded reason "Duplicate of #n" / "Neither needed"; typing in the panel's reason box replaces it before the press. The same strip confirms ("#b ruled out") or refuses ("Not saved: ..., panel stays open, nothing changed); on success the panel closes. Component only. `check-lex-26s-browser` 89 (new B7e: all three, the edited reason, nothing deleted, a refusal, one control).
+
 ## 2026-10-18 13:32 UTC - 26-S2 195: the Proposal prints each action's commentary as "Components and detail"; folded components' cost lines roll up into their mechanism
 
 The Proposal (not the Meeting Pack) prints an action's commentary under it as "Components and detail" (the quoted, cited folded components and the reasoning). A folded component is archived, so its cost lines now roll up into the mechanism it was folded into, each marked "from component #n, folded in" (snapshot: `SnapshotAction.commentary`, `SnapshotCostLine.fromNumber`). `computeCostSummary` already summed every cost line on the idea, so the folded components' lines were already in the total; the check now proves it (the total moves when the line goes). Note, not changed: that sum has never filtered by action status, so a ruled-out or merged-away action's lines also count - reported to CCh. `check:lex-26s2-structure` 90 (new 195 assertions; its no-plan case now clears the plan the seed put on the copy). 196: no work (the other five hard-delete paths wait for 26-T; 11d held). Nothing else until Charlie has run the passes.
