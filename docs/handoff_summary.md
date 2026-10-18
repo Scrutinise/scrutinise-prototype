@@ -10954,3 +10954,6 @@ Workers 6, 9 (and others) were crash-looping via self-discovery: when their prim
 - DB: Railway PostgreSQL (`switchback.proxy.rlwy.net:16156`)
 - R2: Cloudflare `scrutinise-legislation` bucket
 - Web app: Vercel (scrutinise.org)
+
+### LEX THREAD - 18 Oct (6) C (2026-10-18 10:57 UTC)
+Heading Hide/Show now works on steps 1-4 (row control on every step, Hide all / Show all in every step's top group; state is the heading's `hidden`, per idea). Component + browser check only (82 assertions). The two /api/health watchers named in the brief were not found running in this session (no process matched); no background work left behind.

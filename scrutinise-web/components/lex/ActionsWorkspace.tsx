@@ -441,9 +441,16 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     }
     ops.setNote(`Lex proposed ${proposed} answer${proposed === 1 ? '' : 's'} for ${acts} action${acts === 1 ? '' : 's'}${unpriced ? '' : ` (${pence.toFixed(1)}p)`}. Each sits beside its slot: use it, edit it or dismiss it. Nothing you wrote was changed.`)
   }
+  // 190 (UI A, 18 Oct (6) C) - Hide all / Show all headings: the same control on every step (a heading's hidden state is per idea, so it holds across steps)
+  const HideAll = view === 'list' && mode === 'heading' && headings.length > 0 ? (
+    <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
+      (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
+      className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? 'Show all headings' : 'Hide all headings'}</button>
+  ) : null
   const Step2Toolbar = (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
+        {HideAll}
         <button disabled={disabled || needAnswers === 0} title={`Lex proposes an answer for every slot that has none, on every action — Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked. Yours are never changed. It works through the list a dozen actions at a time. ${slotPrice}`} onClick={() => { const est = slotPriceEstimate(needAnswers); if (est != null && est > SLOT_CONFIRM_ABOVE_PENCE) setConfirmSlots(true); else void classifySlots() }}
           className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-classify-slots>Classify with Lex{needAnswers ? ` (${needAnswers} with open slots)` : ''}</button>
         {confirmSlots && (
@@ -462,7 +469,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       </div>
     </div>
   )
-  const Toolbar = step === 3 ? null : step === 2 ? Step2Toolbar : (
+  const Toolbar = step === 3 ? (HideAll && <div className="flex flex-wrap items-center gap-1.5">{HideAll}</div>) : step === 2 ? Step2Toolbar : (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
         {views.length > 1 && (
@@ -480,11 +487,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             </select></label>
         )}
         {/* 190 (UI A) - one control for every heading: hides the lot, or shows the lot. A hidden heading keeps its actions; the list just does not show them. */}
-        {view === 'list' && headings.length > 0 && (
-          <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
-            (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? 'Show all headings' : 'Hide all headings'}</button>
-        )}
+        {HideAll}
         {step === 1 && (
           <>
             <button disabled={disabled || untitled === 0} onClick={async () => {
@@ -641,7 +644,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               const h = g.key.startsWith('h:') ? headingById.get(g.key.slice(2)) : undefined
               return (
                 <section key={g.key} aria-label={g.label}>
-                  <GroupHeader g={g} h={step === 1 ? h : undefined} ops={ops} disabled={disabled} archived={h ? archivedByHeading.get(h.id) ?? 0 : 0}
+                  <GroupHeader g={g} h={h} compact={step !== 1} ops={ops} disabled={disabled} archived={h ? archivedByHeading.get(h.id) ?? 0 : 0}
                     onConsolidate={step === 1 && h && g.actions.length >= 2 ? async () => {
                       const r = await ops.run('consolidatePlan', { headingId: h.id }, 'reading the heading')
                       if (r.ok && r.result) setConsolidate({ headingId: h.id, phase: 'confirm', heading: r.result.heading, actions: r.result.actions, estimate: r.result.estimate })
@@ -891,7 +894,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
 
 // ── pieces ───────────────────────────────────────────────────────────────────────────────────────────────
 
-function GroupHeader<T>({ g, h, ops, disabled, archived = 0, onShowArchived, onConsolidate }: { g: { key: string; label: string; colourKey?: string; hidden?: boolean; actions: T[] }; h?: CanonicalActionHeading; ops: ReturnType<typeof useOps>; disabled: boolean; archived?: number; onShowArchived?: () => void; onConsolidate?: () => void }) {
+function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, onShowArchived, onConsolidate }: { compact?: boolean; g: { key: string; label: string; colourKey?: string; hidden?: boolean; actions: T[] }; h?: CanonicalActionHeading; ops: ReturnType<typeof useOps>; disabled: boolean; archived?: number; onShowArchived?: () => void; onConsolidate?: () => void }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(g.label)
   const c = g.colourKey ? colourFor(g.colourKey) : null
@@ -910,7 +913,12 @@ function GroupHeader<T>({ g, h, ops, disabled, archived = 0, onShowArchived, onC
       <span className="text-[11px] text-zinc-500">{g.actions.length} action{g.actions.length === 1 ? '' : 's'}{c ? ` · ${c.name}` : ''}
         {archived > 0 && (<> · {onShowArchived ? <button type="button" onClick={onShowArchived} className="underline font-medium text-zinc-700" data-archived-count>{archived} archived</button> : <span data-archived-count>{archived} archived</span>}</>)}
       </span>
-      {h && !editing && (
+      {h && compact && (
+        <span className="ml-auto flex gap-2 items-center text-[11px]">
+          <button disabled={disabled} data-heading-hide onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? 'Show' : 'Hide'}</button>
+        </span>
+      )}
+      {h && !compact && !editing && (
         <span className="ml-auto flex flex-wrap gap-2 items-center text-[11px]">
           {onConsolidate && <button type="button" disabled={disabled} onClick={onConsolidate} data-consolidate-button title="Lex looks for actions here that are only parts of another, and for true duplicates. Nothing is deleted; every fold can be restored." className="font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 disabled:opacity-40">Consolidate this heading</button>}
           <button onClick={() => setEditing(true)} className="underline text-zinc-600">Rename</button>

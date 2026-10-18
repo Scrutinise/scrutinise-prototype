@@ -260,6 +260,33 @@ async function partB() {
     ok('pressing it again shows every heading, and the rows are back', (await h<boolean>(`window.__h.store.headings.every(x => !x.hidden)`)) && (await page.locator('text=/Hidden — \\d+ actions? not shown/').count()) === 0 && (await rowsShown()) === live0)
     await page.locator('[data-status-strip] button:has-text("OK")').click().catch(() => {})
 
+    // ── 18 Oct (6) C · a heading's Hide/Show works on EVERY step and the state holds across steps
+    section('B7d · 18 Oct (6) C — heading Hide/Show and Hide all work in steps 2, 3 and 4, and hold across steps')
+    for (const step of [2, 3, 4]) {
+      await page.evaluate((st) => { (window as never as { __h: { step: number } }).__h.step = st; (window as never as { __mount: (w: string) => void }).__mount('workspace') }, step)
+      await page.waitForSelector('li[data-action-id], [data-heading-hide]')
+      const hb = page.locator('section[aria-label="Legislation"] [data-heading-hide]')
+      ok(`step ${step}: the heading row has its own Hide control, and Hide all sits in the top group`, (await hb.count()) === 1 && (await page.locator('[data-hide-all-headings]').count()) === 1)
+      await hb.click()
+      await page.waitForFunction(() => (window as never as { __h: { store: { headings: Array<{ hidden: boolean }> } } }).__h.store.headings[0].hidden === true)
+      ok(`step ${step}: Hide hides the heading (the server holds it) and the row reads "Show"`, /^Show$/.test((await hb.innerText()).trim()))
+      // the state belongs to the idea: the next step opens with the heading still hidden
+      const next = step === 4 ? 2 : step + 1
+      await page.evaluate((st) => { (window as never as { __h: { step: number } }).__h.step = st; (window as never as { __mount: (w: string) => void }).__mount('workspace') }, next)
+      await page.waitForSelector('[data-heading-hide]')
+      ok(`step ${step} → step ${next}: the heading is still hidden`, /^Show$/.test((await page.locator('section[aria-label="Legislation"] [data-heading-hide]').innerText()).trim()))
+      await page.locator('section[aria-label="Legislation"] [data-heading-hide]').click()
+      await page.waitForFunction(() => (window as never as { __h: { store: { headings: Array<{ hidden: boolean }> } } }).__h.store.headings[0].hidden === false)
+      ok(`step ${next}: Show brings it back`, /^Hide$/.test((await page.locator('section[aria-label="Legislation"] [data-heading-hide]').innerText()).trim()))
+      await page.locator('[data-hide-all-headings]').click()
+      await page.waitForSelector('[data-status-strip] >> text=every heading is hidden')
+      ok(`step ${next}: Hide all hides every heading`, await h<boolean>(`window.__h.store.headings.every(x => x.hidden)`))
+      await page.locator('[data-hide-all-headings]').click()
+      await page.waitForSelector('[data-status-strip] >> text=every heading is shown')
+    }
+    await page.evaluate(() => { (window as never as { __h: { step?: number } }).__h.step = undefined; (window as never as { __mount: (w: string) => void }).__mount('workspace') })
+    await page.waitForSelector('li[data-action-id]')
+
     // ── F · the feedback form
     section('B8 · F — the feedback form')
     await page.evaluate(() => (window as never as { __mount: (w: string) => void }).__mount('feedback'))

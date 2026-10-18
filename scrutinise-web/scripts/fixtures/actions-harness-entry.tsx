@@ -35,7 +35,7 @@ const store = {
   ] as A[],
   headings: [{ id: 'h1', name: 'Legislation', colourKey: HEADING_PALETTE[0].key, hidden: false, orderIndex: 0 }] as A[],
 }
-const hooks: A = { store, rejectNext: null as A | null, failReread: false, log: [] as string[] }
+const hooks: A = { store, rejectNext: null as A | null, failReread: false, log: [] as string[], step: undefined as number | undefined } // step: which of the four steps the workspace shows (default: step 1)
 
 const clip = (s: string, n: number) => s.replace(/\s+/g, ' ').trim().slice(0, n)
 const stateBody = () => ({
@@ -80,6 +80,7 @@ function handle(raw: A): { status: number; body: A } {
     case 'park': { let n = 0; for (const a of store.actions) if (b.ids.includes(a.id)) { a.parked = true; a.parkedReason = clip(b.reason ?? '', LIMITS.ruleOutReason); n++ } return ok({ parked: n }) }
     // 190 (UI A) - "Hide all / Show all headings": one write for every heading
     case 'setHeadingsHidden': { let n = 0; for (const h of store.headings) if (!!h.hidden !== b.hidden) { h.hidden = b.hidden; n++ } return ok({ changed: n }) }
+    case 'updateHeading': { const h = store.headings.find((x) => x.id === b.headingId); if (h && b.hidden !== undefined) h.hidden = b.hidden; return ok(null) }
     case 'setTitle': { const a = store.actions.find((x) => x.id === b.actionId); if (a) a.title = b.title ? clip(b.title, LIMITS.actionTitle) : null; return ok(null) }
     default: return ok(null)
   }
@@ -116,7 +117,7 @@ function Workspace() {
     <div>
       <p id="count-live">{s.actions.length}</p>
       <ActionsWorkspace ideaId="x" actions={s.actions as never} setAside={s.setAsideActions as never} headings={s.actionHeadings as never} causes={[]} busy={false}
-        onChanged={reread} renderFull={(_a, _s, between) => <div data-full-card>{between}</div>} />
+        step={hooks.step} onChanged={reread} renderFull={(_a, _s, between) => <div data-full-card>{between}</div>} />
     </div>
   )
 }

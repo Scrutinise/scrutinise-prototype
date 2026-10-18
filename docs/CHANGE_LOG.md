@@ -1,5 +1,9 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-18 10:57 UTC - 26-S2 18 Oct (6) C: a heading's Hide/Show works on every step
+
+Defect: the heading row's Hide/Show (and the step-1 toolbar's Hide all) did nothing in steps 2, 3 and 4 - the row was handed no heading outside step 1, and steps 2/3 had no Hide all. Now every step's heading row has Hide/Show (`data-heading-hide`; Rename, colour, Delete and Consolidate stay step 1's), Hide all / Show all sits in the top group of every step (step 2's toolbar, a one-button row on step 3), and the state is the heading's own `hidden` flag, per idea, so it holds across steps. The find box (B) was already on every step's list. `check-lex-26s-browser` 82 assertions (new B7d: steps 2/3/4 hide, show, hide-all, and the state held on moving to the next step). Component only; no schema.
+
 ## 2026-10-18 09:45 UTC - 26-S2 decisions 186-191: conditions facet (188), the avenue rule (189), Re-sort into headings and Consolidate this heading (190), Hide all headings and the find box
 
 **188 conditions.** `Idea.conditions` (ordered; retired, never deleted; Lex's additions are proposals) and `LexCoherentAction.conditionIds` / `supportOnly`. Step 1 gains a "Conditions the proposal must meet" panel, a "Conditions" view (conditions x actions; an empty row reads NO ACTION), a chooser on each opened record, two checklist lines (also on the worklist), conditions in "Classify with Lex" (proposals, accepted per action or together), and Lex tools `conditions_coverage` / `propose_condition`. Charlie's ten are seeded verbatim by `scripts/seed-26s2-conditions-headings.ts`; no notebook note holding them exists on the idea, so the citation names CCh's brief.
