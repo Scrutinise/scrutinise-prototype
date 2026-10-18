@@ -1,0 +1,3 @@
+-- LEX 26-S2 decision 177 (CCh 17 Oct 2026) - the action RECORD: ONE additive JSON per action holding the six step-2 slots (Incentive now, What changes it, Skill, How, Against, What tells us it worked) and the provenance of Who. Each slot is { text, by: USER|LEX, at, proposal? } - so what a user wrote is kept apart from what Lex proposed, and per-field provenance exists from now on. Additive, nullable; no index (CLAUDE.md 21 register unchanged).
+-- Apply with `npx tsx scripts/whichdb.ts` first (16); commit with schema.prisma in one commit.
+ALTER TABLE "LexCoherentAction" ADD COLUMN IF NOT EXISTS "record" JSONB;

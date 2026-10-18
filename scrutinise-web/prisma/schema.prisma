@@ -3094,6 +3094,9 @@ model LexCoherentAction {
   /// 26-S2 decision 181 — the COMMENTARY: unlimited, the Mechanism section of an action. It takes the intention, examples, dimensions and any text
   /// the 1,000-character action statement (`practicalStep`) cuts. Lex offers it whenever she shortens anything. DDL: prisma/lex_26s2_commentary.sql.
   commentary         String?        @db.Text
+  /// 26-S2 decision 177 — the step-2 RECORD: { who?: { by, at, proposal? }, incentiveNow|whatChangesIt|skill|how|against|worked?: { text, by, at, direction?, linkActionId?, proposal? } }.
+  /// Who itself stays in `whoImplements` (this holds only who wrote it, and a proposal for it). DDL: prisma/lex_26s2_record.sql.
+  record             Json?
 
   @@index([ideaId])
   @@index([ideaId, status])
