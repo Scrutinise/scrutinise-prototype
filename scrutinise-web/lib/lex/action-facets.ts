@@ -14,6 +14,16 @@ export const AVENUES = ['LEGISLATIVE', 'ORGANISATIONAL', 'FINANCIAL'] as const
 export type Avenue = (typeof AVENUES)[number]
 export const AVENUE_LABEL: Record<Avenue, string> = { LEGISLATIVE: 'Legislative', ORGANISATIONAL: 'Organisational', FINANCIAL: 'Financial' }
 
+/**
+ * 26-S2 decision 189 (CCh, 18 Oct 2026) - THE AVENUE RULE, VERBATIM. One definition: Classify's prompt, the FAQ and the step-1 help all print this
+ * string, so the three cannot say different things. Legislative is anything laid before Parliament - which is why a statutory code
+ * (the Civil Service Code) is Legislative while a management code (the Civil Service Management Code) is Organisational.
+ */
+export const AVENUE_RULE =
+  'Legislative — anything Parliament enacts or that is laid before it: Acts, statutory codes (the Civil Service Code), statutory instruments. ' +
+  'Organisational — management codes, guidance, software, training, bodies, practice. ' +
+  'Financial — money mechanisms: budgets, incentives, pricing, benchmarks.'
+
 export const SEQUENCES = ['NOW', 'NEXT', 'LATER'] as const
 export type Sequence = (typeof SEQUENCES)[number]
 export const SEQUENCE_LABEL: Record<Sequence, string> = { NOW: 'Now', NEXT: 'Next', LATER: 'Later' }

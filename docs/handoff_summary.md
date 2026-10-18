@@ -916,6 +916,9 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+*Last updated: 2026-10-18 09:45 UTC (LEX 26-S2 18 Oct (5): 188 conditions, 189 avenue rule, 190 Re-sort + Consolidate, UI A/B built)* - ▶ **Read the top CHANGE_LOG entry and LEX_26S2_REPORT section J.** ▶ **Measured on scratch (n=1):** Re-sort 26.33p / 174 actions (0.151p each), Consolidate 28.33p (0.163p each), 174 -> 66 live. ▶ **Nothing deletes;** Undo / Unfold / Bring back restore. ▶ **Charlie's seven headings are renamed in place** (formerly lists). ▶ **After deploy:** run `scripts/seed-26s2-conditions-headings.ts --apply` (his ten conditions + the plan), then he presses Re-sort and Consolidate himself. ▶ **Open:** the Proposal/Meeting Pack do not print commentary (folded detail not in them); no notebook note holds the ten conditions; 183's other five paths wait for 26-T; 11d held.
+
+Earlier:
 *Last updated: 2026-10-18 08:05 UTC (LEX 26-S2 18 Oct (4): 192 + 193 done, 190 sized)* - ▶ **Revise pass archives** (causes and the previous build's actions; nothing deletes there now). ▶ **513 orphan spend rows** labelled `check` + `purposeInferred`. ▶ **190 sized** (LEX_26S2_REPORT section I): one sprint, about 2 days; sort pass 4-8p estimated, to be measured on scratch. ▶ **BLOCKED:** 188 (conditions) and 189 (avenue rule) refer to the "18 Oct (3) paste", which I do not have - CCh to re-send. ▶ Decisions recorded: 186 consolidate, 187 the seven headings (instruments), 191 no new code/body, 194 leave "writer not recorded".
 
 Earlier:

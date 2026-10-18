@@ -12,6 +12,8 @@ import { computeCanonicalState } from '@/lib/lex/state'
 import { assertWritableField } from '@/lib/lex/stage'
 import { clampStep } from '@/lib/lex/action-steps'
 import * as S from '@/lib/lex/action-structure'
+import * as CD from '@/lib/lex/action-conditions-server'
+import * as RS from '@/lib/lex/action-resort'
 
 export const maxDuration = 300
 
@@ -73,6 +75,21 @@ export async function POST(req: Request, { params }: Params) {
       case 'dismissSlot': result = await SL.dismissSlot(id, b.actionId, b.slot); break
       case 'proposeSlots': result = await SL.proposeSlots(id, uid, { ids: b.ids }); break
       case 'dismissSlots': result = await SL.dismissAllSlotProposals(id, b.ids); break
+      case 'addCondition': result = await CD.addCondition(id, uid, b.text); break
+      case 'editCondition': result = await CD.editCondition(id, b.conditionId, b.text); break
+      case 'retireCondition': result = await CD.retireCondition(id, b.conditionId, b.retired); break
+      case 'moveCondition': result = await CD.moveCondition(id, b.conditionId, b.dir); break
+      case 'acceptConditionProposal': result = await CD.acceptConditionProposal(id, uid, b.proposalId); break
+      case 'dismissConditionProposal': result = await CD.dismissConditionProposal(id, b.proposalId); break
+      case 'assignConditions': result = await CD.assignConditions(id, b.actionIds, { conditionIds: b.conditionIds, support: b.support, mode: b.mode }); break
+      case 'resortPlan': result = await RS.resortPlan(id); break
+      case 'resortBatch': result = await RS.resortBatch(id, uid, b.ids); break
+      case 'resortFinish': result = await RS.resortFinish(id); break
+      case 'undoResort': result = await RS.undoResort(id); break
+      case 'consolidatePlan': result = await RS.consolidatePlan(id, b.headingId); break
+      case 'consolidate': result = await RS.consolidateHeading(id, uid, b.headingId); break
+      case 'setHeadingsHidden': result = await S.setHeadingsHidden(id, b.hidden); break
+      case 'restoreHeading': result = await S.restoreHeading(id, b.headingId); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

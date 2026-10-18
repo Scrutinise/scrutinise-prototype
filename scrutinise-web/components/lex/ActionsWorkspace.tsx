@@ -25,6 +25,9 @@ import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
 import ActionSlots from './ActionSlots'
+import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
+import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc } from '@/lib/lex/action-conditions'
+import type { HeadingPlan } from '@/lib/lex/action-resort-pure'
 import { ALL_SLOTS, SLOT_RUNS, SLOT_CONFIRM_ABOVE_PENCE, slotPriceEstimate, answeredCount, proposalCount, slotAnswered, slotProposal, specificTag } from '@/lib/lex/action-record'
 import {
   AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODE_LABEL,
@@ -89,12 +92,12 @@ const FACET_WORD = { avenue: 'Avenue', sequence: 'Sequence', causes: 'Causes', b
 /** 26-S2 §3b — which list groupings belong to which step. A grouping that belongs to another step is not offered (absent, not greyed). */
 const STEP_GROUP_MODES: Record<ActionsStep, GroupMode[]> = { 1: ['heading', 'cause', 'avenue', 'policy-test'], 2: ['heading'], 3: ['heading'], 4: ['heading', 'sequence'] }
 /** …and which views: the coverage grid is a step-1 tool (causes against actions); the sequence view is step 4's. */
-const STEP_VIEWS: Record<ActionsStep, Array<'list' | 'coverage' | 'sequence'>> = { 1: ['list', 'coverage'], 2: ['list'], 3: ['list'], 4: ['list', 'sequence'] }
-const VIEW_LABEL = { list: 'List', coverage: 'Coverage grid', sequence: 'Sequence' } as const
+const STEP_VIEWS: Record<ActionsStep, Array<'list' | 'coverage' | 'conditions' | 'sequence'>> = { 1: ['list', 'coverage', 'conditions'], 2: ['list'], 3: ['list'], 4: ['list', 'sequence'] }
+const VIEW_LABEL = { list: 'List', coverage: 'Coverage grid', conditions: 'Conditions', sequence: 'Sequence' } as const
 
-/** A proposal belongs to a step by what it proposes: causes and avenue are step 1's; sequence and what comes before, step 4's. */
+/** A proposal belongs to a step by what it proposes: causes, avenue and conditions are step 1's; sequence and what comes before, step 4's. */
 const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): ActionsStep[] => [
-  ...(p.targetCauseIds || p.avenue !== undefined ? [1 as const] : []), ...(p.sequence !== undefined || p.beforeIds ? [4 as const] : []),
+  ...(p.targetCauseIds || p.avenue !== undefined || p.conditionIds || p.supportOnly ? [1 as const] : []), ...(p.sequence !== undefined || p.beforeIds ? [4 as const] : []),
 ]
 
 /** 26-S §5d / 26-S2 §8 — the list filter. `Unreviewed` is READ NARROWLY (the brief does not define it): a proposal of Lex's is waiting for the user (a title or a classification for this step), or the action was never tested against the policy. `Not yet specific` exists from step 2 on. */
@@ -143,11 +146,16 @@ interface Props {
   step?: ActionsStep
   /** Ids of the actions that have cost lines (step 3's checklist counts a cost line as a cost). */
   costLineActionIds?: string[]
+  /** 26-S2 188 + 190 - the idea's conditions, the instrument headings the Re-sort sorts into, the headings it archived, and how many moved actions Undo can put back. */
+  structure?: { conditions: ConditionsDoc; headingPlan: HeadingPlan | null; archivedHeadings: Array<{ id: string; name: string }>; resortUndoable: number }
 }
 
-type View = 'list' | 'coverage' | 'sequence'
+type View = 'list' | 'coverage' | 'conditions' | 'sequence'
 
-export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, step = DEFAULT_STEP, costLineActionIds }: Props) {
+export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, step = DEFAULT_STEP, costLineActionIds, structure }: Props) {
+  const conditions = structure?.conditions ?? EMPTY_CONDITIONS
+  const headingPlan = structure?.headingPlan ?? null
+  const archivedHeadings = structure?.archivedHeadings ?? []
   const ops = useOps(ideaId, onChanged)
   const [viewAsked, setView] = useState<View>('list')
   const [modeAsked, setMode] = useState<GroupMode>('heading')
@@ -168,6 +176,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const [bulkNewName, setBulkNewName] = useState('')
   const [showParked, setShowParked] = useState(false)
   const [showSetAside, setShowSetAside] = useState(false)
+  const [showRetired, setShowRetired] = useState(false)
+  const byIdAll = useMemo(() => new Map([...actions, ...setAside].map((a) => [a.id, a])), [actions, setAside])
   const disabled = parentBusy || !!ops.busy
 
   const live = actions
@@ -199,11 +209,22 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   }
   const filterCounts: Record<Filter, number> = { all: unparked.length, unreviewed: unparked.filter(matches.unreviewed).length, conflicts: unparked.filter(matches.conflicts).length, notSpecific: unparked.filter(matches.notSpecific).length }
   const filterKeys: Filter[] = step === 1 ? ['all', 'unreviewed', 'conflicts'] : ['all', 'unreviewed', 'conflicts', 'notSpecific']
-  const shown = useMemo(() => unparked.filter(matches[filter]), [unparked, filter, step]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 190 (UI B) - the FIND BOX: matches title, statement and commentary (and "#12"), every word of it, case-blind; filters the list live
+  const [find, setFind] = useState('')
+  const findWords = useMemo(() => find.toLowerCase().split(/\s+/).filter(Boolean), [find])
+  const found = (a: CanonicalAction) => {
+    if (!findWords.length) return true
+    const hay = `#${a.number ?? ''} ${a.title ?? ''} ${a.practicalStep} ${a.commentary ?? ''}`.toLowerCase()
+    return findWords.every((w) => hay.includes(w))
+  }
+  const shown = useMemo(() => unparked.filter(matches[filter]).filter(found), [unparked, filter, step, findWords]) // eslint-disable-line react-hooks/exhaustive-deps
   // a heading reads `· n archived` after a rebuild or a merge archives one of its actions (they sit under `Ruled out and merged away`)
   const archivedByHeading = useMemo(() => { const m = new Map<string, number>(); for (const a of setAside) if (a.status === 'ARCHIVED' && a.headingId) m.set(a.headingId, (m.get(a.headingId) ?? 0) + 1); return m }, [setAside])
   const groups = useMemo(() => groupActions(shown, mode, { headings, causes: causeLite }), [shown, mode, headings, causeLite])
-  const checklist = useMemo(() => stepChecklist(step, unparked, { duplicatesChecked }, { actionIdsWithCostLines: costLineIds }), [step, unparked, duplicatesChecked, costLineIds])
+  const checklist = useMemo(() => stepChecklist(step, unparked, { duplicatesChecked, conditions }, { actionIdsWithCostLines: costLineIds }), [step, unparked, duplicatesChecked, costLineIds, conditions])
+  // 190 - Consolidate this heading: one card at a time, under the heading's own header
+  const [consolidate, setConsolidate] = useState<ConsolidateCardState | null>(null)
+  const allHeadingsHidden = headings.length > 0 && headings.every((h) => h.hidden)
 
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -333,6 +354,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                   {h && <HeadingMark h={h} />}
                   {a.avenue && <span>{AVENUE_LABEL[a.avenue]}</span>}
                   {a.targetCauseIds.length > 0 && <span>{a.targetCauseIds.length} cause{a.targetCauseIds.length === 1 ? '' : 's'}</span>}
+                  {activeConditions(conditions).length > 0 && <span data-condition-tag>{a.supportOnly ? 'support' : a.conditionIds.length ? `condition${a.conditionIds.length === 1 ? '' : 's'} ${conditionWords(conditions, a)}` : 'no condition'}</span>}
+                  {setAside.some((s) => s.foldedIntoId === a.id) && <span data-folded-count>{setAside.filter((s) => s.foldedIntoId === a.id).length} folded in</span>}
                   {a.mergedFrom.length > 0 && <span>merged from #{a.mergedFrom.join(', #')}</span>}
                   {/* DECISION 138 — the policy test, in the one list: a WORD AND A SHAPE (✗ ○ ? ✓), never colour alone. A conflict is boxed. */}
                   {a.policyTest ? (
@@ -387,7 +410,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">Close −</button>
           ) : headingSelect}
         </div>
-        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ live, byId, causeLite, disabled, ops, renderFull, headingName }} />}
+        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ live, byId, causeLite, disabled, ops, renderFull, headingName, conditions }} />}
       </li>
     )
   }
@@ -397,7 +420,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   //   step 1: titles, headings, causes and avenue (Classify), the coverage grid, duplicates · step 4: sequence (Classify) and its view.
   //   Steps 2 and 3 have no toolbar yet: their questions are the opened record's (who; the cost ranges).
   const modes = STEP_GROUP_MODES[step]
-  const views = STEP_VIEWS[step]
+  const views = STEP_VIEWS[step].filter((v) => v !== 'conditions' || activeConditions(conditions).length > 0)
   const classifyWords = step === 1 ? 'causes and avenue' : 'sequence and what comes before'
   // 26-S2 §5 — step 2's one tool: "Classify with Lex" proposes the seven answers for every action that has none (one pass, chunked; the price measured).
   const [confirmSlots, setConfirmSlots] = useState(false)
@@ -456,6 +479,12 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               {modes.map((m) => <option key={m} value={m}>{GROUP_MODE_LABEL[m]}</option>)}
             </select></label>
         )}
+        {/* 190 (UI A) - one control for every heading: hides the lot, or shows the lot. A hidden heading keeps its actions; the list just does not show them. */}
+        {view === 'list' && headings.length > 0 && (
+          <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
+            (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
+            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? 'Show all headings' : 'Hide all headings'}</button>
+        )}
         {step === 1 && (
           <>
             <button disabled={disabled || untitled === 0} onClick={async () => {
@@ -476,6 +505,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             if (r.ok) { setDupes(r.result); markDuplicatesChecked() }
           }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Find duplicates</button>
         )}
+        {step === 1 && headingPlan && <ResortTool plan={headingPlan} undoable={structure?.resortUndoable ?? 0} ops={ops} disabled={disabled} />}
         {step === 1 && untestedCount > 0 && (
           <button disabled={disabled} title="Runs the same test the import uses, on the actions that read ? Not tested. Measured once on a real idea: 14 actions for 3.9p in about 40 seconds (n=1). The price of this run is shown when it finishes." onClick={() => void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords)}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Test against the policy ({untestedCount} untested)</button>
@@ -570,9 +600,25 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     <div className="space-y-2">
       {Toolbar}
       {step === 1 && <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />}
+      {step === 1 && <ConditionsPanel doc={conditions} actions={unparked} ops={ops} disabled={disabled} />}
       {(Status || BulkBar) && <div className="sticky top-0 z-20 space-y-1" data-sticky-top>{Status}{BulkBar}</div>}
       {step === 1 && pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
       {step === 1 && dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
+
+      {/* 190 (UI B) - the find box: title, statement and commentary; the list filters as you type; "n of m actions match"; one press clears it. */}
+      {view === 'list' && unparked.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" data-find-box>
+          <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
+            placeholder="Find in the actions — title, statement, commentary" aria-label="Find in the actions"
+            className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
+          {find.trim() && (
+            <>
+              <span className="text-[11px] font-semibold text-zinc-800" data-find-count role="status">{shown.length} of {unparked.length} action{unparked.length === 1 ? '' : 's'} match</span>
+              <button type="button" onClick={() => setFind('')} className="text-[11px] underline text-zinc-700" data-find-clear>Clear</button>
+            </>
+          )}
+        </div>
+      )}
 
       {view === 'list' && unparked.length > 0 && (
         <label className="text-[11px] text-zinc-600 flex flex-wrap items-center gap-1" data-list-filter title="Unreviewed: a proposal of Lex’s is waiting for you (a title, or this step’s classification), or the action has not been tested against the policy.">Show
@@ -596,7 +642,12 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               return (
                 <section key={g.key} aria-label={g.label}>
                   <GroupHeader g={g} h={step === 1 ? h : undefined} ops={ops} disabled={disabled} archived={h ? archivedByHeading.get(h.id) ?? 0 : 0}
+                    onConsolidate={step === 1 && h && g.actions.length >= 2 ? async () => {
+                      const r = await ops.run('consolidatePlan', { headingId: h.id }, 'reading the heading')
+                      if (r.ok && r.result) setConsolidate({ headingId: h.id, phase: 'confirm', heading: r.result.heading, actions: r.result.actions, estimate: r.result.estimate })
+                    } : undefined}
                     onShowArchived={step === 1 ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
+                  {consolidate && h && consolidate.headingId === h.id && <ConsolidateCard s={consolidate} ops={ops} disabled={disabled} setS={setConsolidate} onClose={() => setConsolidate(null)} />}
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
                 </section>
@@ -616,6 +667,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       )}
 
       {view === 'coverage' && <CoverageView actions={unparked} causes={causeLite} headings={headings} />}
+      {view === 'conditions' && <ConditionsCoverageView doc={conditions} actions={unparked} headings={headings} />}
       {view === 'sequence' && <SequenceView actions={unparked} />}
 
       {/* 26-S2 §3c — this step's checklist at the foot of the list. ADVISORY: it says what is unfinished and never blocks moving on. */}
@@ -626,8 +678,17 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           <ul className="space-y-1">{setAside.map((a) => (
             <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
-              <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason ? `: ${a.ruleOutReason}` : ''}</span></span>
-              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>
+              <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.foldedIntoId ? `folded into #${byIdAll.get(a.foldedIntoId)?.number ?? '?'} as a component` : a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason && !a.foldedIntoId ? `: ${a.ruleOutReason}` : ''}</span></span>
+              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} unfolded and back in the list; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s commentary.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">{a.foldedIntoId ? 'Unfold' : 'Restore'}</button>
+            </li>))}</ul>
+        </CollapsedBlock>
+      )}
+      {step === 1 && archivedHeadings.length > 0 && (
+        <CollapsedBlock id="retired-headings-block" title="Retired headings" count={archivedHeadings.length} open={showRetired} onToggle={() => setShowRetired((v) => !v)} hint="Archived by a re-sort. Kept; nothing is deleted.">
+          <ul className="space-y-1">{archivedHeadings.map((h) => (
+            <li key={h.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1" data-retired-heading>
+              <span className="flex-1">{h.name}</span>
+              <button disabled={disabled} onClick={() => void ops.run('restoreHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is back (empty — no action is moved onto it).`)} className="underline font-medium">Bring back</button>
             </li>))}</ul>
         </CollapsedBlock>
       )}
@@ -644,6 +705,8 @@ interface OpenCtx {
   renderFull: (a: CanonicalAction, step: ActionsStep, between?: ReactNode) => ReactNode
   /** The heading's name, for the collapsed step-1 line of an opened record viewed from another step. */
   headingName: (id: string | null) => string | null
+  /** 26-S2 188 - the idea's conditions, for the chooser on a step-1 record. */
+  conditions: ConditionsDoc
 }
 
 /** 18 Oct (CCh B) — the opened record's title line: the title as text, "Edit title" at its end (the box replaces it). Close sits at the row's right. */
@@ -726,8 +789,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
               <div className="ml-auto shrink-0">{headingSelect}</div>
             </div>
         <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The causes it attacks, and its avenue {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
-          {a.facetProposal && proposalStep(a.facetProposal).includes(1) && <FacetProposal a={a} step={1} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 1 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 1 })} />}
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The causes it attacks, its avenue{activeConditions(ctx.conditions).length ? ' and the conditions it delivers' : ''} {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
+          {a.facetProposal && proposalStep(a.facetProposal).includes(1) && <FacetProposal a={a} step={1} causes={causeLite} others={others} conditions={ctx.conditions} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 1 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 1 })} />}
           <div className="flex flex-wrap gap-2 items-center text-[11px]">
             <label className="flex items-center gap-1">{FACET_WORD.avenue}
               <select value={a.avenue ?? ''} onChange={(e) => facetSet({ avenue: e.target.value || null })} disabled={disabled} className="border border-zinc-300 rounded px-1 py-0.5">
@@ -745,6 +808,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
               ))}
             </ul>
           </details>
+          <ConditionChooser a={a} doc={ctx.conditions} ops={ops} disabled={disabled} />
         </div>
 
           </div>
@@ -827,7 +891,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
 
 // ── pieces ───────────────────────────────────────────────────────────────────────────────────────────────
 
-function GroupHeader<T>({ g, h, ops, disabled, archived = 0, onShowArchived }: { g: { key: string; label: string; colourKey?: string; hidden?: boolean; actions: T[] }; h?: CanonicalActionHeading; ops: ReturnType<typeof useOps>; disabled: boolean; archived?: number; onShowArchived?: () => void }) {
+function GroupHeader<T>({ g, h, ops, disabled, archived = 0, onShowArchived, onConsolidate }: { g: { key: string; label: string; colourKey?: string; hidden?: boolean; actions: T[] }; h?: CanonicalActionHeading; ops: ReturnType<typeof useOps>; disabled: boolean; archived?: number; onShowArchived?: () => void; onConsolidate?: () => void }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(g.label)
   const c = g.colourKey ? colourFor(g.colourKey) : null
@@ -848,6 +912,7 @@ function GroupHeader<T>({ g, h, ops, disabled, archived = 0, onShowArchived }: {
       </span>
       {h && !editing && (
         <span className="ml-auto flex flex-wrap gap-2 items-center text-[11px]">
+          {onConsolidate && <button type="button" disabled={disabled} onClick={onConsolidate} data-consolidate-button title="Lex looks for actions here that are only parts of another, and for true duplicates. Nothing is deleted; every fold can be restored." className="font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 disabled:opacity-40">Consolidate this heading</button>}
           <button onClick={() => setEditing(true)} className="underline text-zinc-600">Rename</button>
           <select value={h.colourKey} disabled={disabled} onChange={(e) => void ops.run('updateHeading', { headingId: h.id, colourKey: e.target.value })} aria-label={`Colour for ${h.name}`} className="border border-zinc-300 rounded px-1 py-0.5">
             {HEADING_PALETTE.map((p) => <option key={p.key} value={p.key}>{p.glyph} {p.name}</option>)}
@@ -889,9 +954,11 @@ function StepChecklist({ step, lines }: { step: ActionsStep; lines: Array<{ key:
   )
 }
 
-function FacetProposal({ a, step, causes, others, onAccept, onDismiss }: { a: CanonicalAction; step: ActionsStep; causes: Array<{ id: string; number: number | null }>; others: CanonicalAction[]; onAccept: () => void; onDismiss: () => void }) {
+function FacetProposal({ a, step, causes, others, onAccept, onDismiss, conditions }: { a: CanonicalAction; step: ActionsStep; causes: Array<{ id: string; number: number | null }>; others: CanonicalAction[]; onAccept: () => void; onDismiss: () => void; conditions?: ConditionsDoc }) {
   const p = a.facetProposal!
   const bits: string[] = []
+  if (step === 1 && p.supportOnly) bits.push('marked as support (delivers no condition directly)')
+  if (step === 1 && p.conditionIds?.length && conditions) bits.push(`delivers condition${p.conditionIds.length === 1 ? '' : 's'} ${conditionWords(conditions, { id: a.id, conditionIds: p.conditionIds, supportOnly: false })}`)
   // only THIS step's part of the proposal is shown and accepted here; "link" is retired (decision 167)
   if (step === 1 && p.targetCauseIds?.length) bits.push(`causes ${p.targetCauseIds.map((id) => `#${causes.find((c) => c.id === id)?.number ?? '?'}`).join(', ')}`)
   if (step === 1 && p.avenue) bits.push(`avenue ${AVENUE_LABEL[p.avenue as keyof typeof AVENUE_LABEL] ?? p.avenue}`)

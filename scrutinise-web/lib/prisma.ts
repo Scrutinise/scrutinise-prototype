@@ -35,6 +35,12 @@ function createPrismaClient() {
         aggregate: ({ args, query }) => query(liveOnly(args)),
         groupBy: ({ args, query }) => query(liveOnly(args) as never),
       },
+      // 26-S2 190 - a RETIRED HEADING is archived, not deleted; direct reads leave it out unless the query names `archivedAt`.
+      actionHeading: {
+        findMany: ({ args, query }) => query(liveOnly(args)),
+        findFirst: ({ args, query }) => query(liveOnly(args)),
+        count: ({ args, query }) => query(liveOnly(args)),
+      },
     },
   }) as unknown as PrismaClient
 }

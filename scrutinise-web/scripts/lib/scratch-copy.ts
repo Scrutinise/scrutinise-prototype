@@ -53,12 +53,28 @@ export async function scratchCopy(sourceId: string, label: string): Promise<{ id
     await prisma.diagnosisCause.update({ where: { id: causeMap.get(c.id)! }, data: { parentCauseId: causeMap.get(c.parentCauseId)! } })
   }
 
+  // 26-S2 190: the idea's headings (archived ones too) - the actions point at them, and the Re-sort / Consolidate passes work on them
+  const headings = await prisma.actionHeading.findMany({ where: { ideaId: src.id, OR: [{ archivedAt: null }, { archivedAt: { not: null } }] } })
+  const headingMap = new Map<string, string>()
+  for (const h of headings) {
+    const made = await prisma.actionHeading.create({ data: { ...strip(h as unknown as Row), ideaId: to } as never })
+    headingMap.set(h.id, made.id)
+  }
+
   // actions (so parked/moved pointers can be remapped)
   const actions = await prisma.lexCoherentAction.findMany({ where: { ideaId: src.id } })
   const actionMap = new Map<string, string>()
   for (const a of actions) {
-    const made = await prisma.lexCoherentAction.create({ data: { ...strip(a as unknown as Row), ideaId: to } as never })
+    const made = await prisma.lexCoherentAction.create({ data: { ...strip(a as unknown as Row, 'headingId', 'foldedIntoId', 'mergedIntoId', 'headingWasId'), ideaId: to, headingId: a.headingId ? (headingMap.get(a.headingId) ?? null) : null } as never })
     actionMap.set(a.id, made.id)
+  }
+  // pointers between actions, and the heading an action was on before a re-sort, follow their copies
+  for (const a of actions) {
+    const data: Row = {}
+    if (a.foldedIntoId && actionMap.has(a.foldedIntoId)) data.foldedIntoId = actionMap.get(a.foldedIntoId)
+    if (a.mergedIntoId && actionMap.has(a.mergedIntoId)) data.mergedIntoId = actionMap.get(a.mergedIntoId)
+    if (a.headingWasId) data.headingWasId = headingMap.get(a.headingWasId) ?? (a.headingWasId === 'NONE' ? 'NONE' : null)
+    if (Object.keys(data).length) await prisma.lexCoherentAction.update({ where: { id: actionMap.get(a.id)! }, data: data as never })
   }
 
   const opts = await prisma.policyOption.findMany({ where: { ideaId: src.id } })

@@ -12,6 +12,7 @@
 
 import type { CanonicalAction } from './page1-config'
 import { answeredCount, proposalCount, specificEnough } from './action-record'
+import { conditionChecklist, type ConditionsDoc } from './action-conditions'
 
 export type ActionsStep = 1 | 2 | 3 | 4
 export const STEP_NUMBERS: ActionsStep[] = [1, 2, 3, 4]
@@ -54,9 +55,11 @@ export interface ChecklistLine { key: string; done: boolean; text: string }
 export interface ChecklistContext {
   /** Has "Find duplicates" run since the last change to the list? */
   duplicatesChecked: boolean
+  /** 26-S2 188 - the idea's conditions; absent or empty = no condition lines. */
+  conditions?: ConditionsDoc
 }
 
-type A = Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
+type A = Partial<Pick<CanonicalAction, 'conditionIds' | 'supportOnly'>> & Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 const line = (key: string, count: number, missing: (n: number) => string, ok: string): ChecklistLine => ({ key, done: count === 0, text: count === 0 ? ok : missing(count) })
@@ -91,6 +94,7 @@ export function stepChecklist(step: ActionsStep, actions: A[], ctx: ChecklistCon
         line('tested', untested, (c) => `${c} ${plural(c, 'action has', 'actions have')} not been tested against the policy`, 'Every action has been tested against the policy'),
         { key: 'duplicates', done: ctx.duplicatesChecked, text: ctx.duplicatesChecked ? 'Find duplicates has been run since the last change' : 'Find duplicates has not been run since the last change' },
         line('conflicts', conflicts, (c) => `${c} ${plural(c, 'action conflicts', 'actions conflict')} with the policy and ${plural(c, 'has', 'have')} not been ruled out, re-tested after an edit, or kept with a note`, 'No action that conflicts with the policy is waiting for a decision'),
+        ...(ctx.conditions ? conditionChecklist(ctx.conditions, actions) : []),
       ]
     }
     case 2: {

@@ -1729,7 +1729,8 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
 }
 
 // The actions loop + costing estimator (§18).
-function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged, step = 1 }: {
+function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged, step = 1, structure }: {
+  structure?: React.ComponentProps<typeof ActionsWorkspace>['structure']
   field: CanonicalField; actions: CanonicalAction[]; benchmarks: CanonicalBenchmark[]
   costLines: CanonicalCostLine[]; busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi
   /** 26-Q — the workspace needs the idea to reach its route, and the state it reads. */
@@ -1756,7 +1757,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
       {ideaId && onChanged ? (
         <ActionsWorkspace
           ideaId={ideaId} actions={actions} setAside={setAside} headings={headings} causes={causes} busy={busy} onChanged={onChanged}
-          step={step} costLineActionIds={[...new Set(costLines.map((l) => l.actionId))]}
+          step={step} costLineActionIds={[...new Set(costLines.map((l) => l.actionId))]} structure={structure}
           renderFull={(a, s, between) => <ActionCard action={a} step={s} between={between} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
         />
       ) : (
@@ -1795,8 +1796,10 @@ export default function FieldsPanel({
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
-  setAsideActions, actionHeadings, actionsStep, archivedCauses = 0,
+  setAsideActions, actionHeadings, actionsStep, archivedCauses = 0, actionsStructure,
 }: {
+  /** 26-S2 188 + 190 - the conditions, the instrument-heading plan, the retired headings and the re-sort's Undo count, from the canonical state. */
+  actionsStructure?: React.ComponentProps<typeof ActionsWorkspace>['structure']
   /** 26-S2 §11a — how many causes the user removed (archived, with their numbers). */
   archivedCauses?: number
   /** 26-Q — ruled-out / merged-away actions, and the user's headings (both from the canonical state). */
@@ -1968,7 +1971,7 @@ export default function FieldsPanel({
                   {/* 26-S §3a (decision 140) — "Import actions from a document": a visible control, beside "Check for gaps". */}
                   {step === 1 && <ActionImport ideaId={ideaId} onChanged={onSuggestionChanged} />}
                   <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
-                    ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} step={step} />
+                    ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} step={step} structure={actionsStructure} />
                 </>
               )}
             </ActionsSteps>

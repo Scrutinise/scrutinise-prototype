@@ -31,7 +31,7 @@ const store = {
     mk(3, { policyTest: { verdict: 'CONFLICTS', reason: 'Rules out thresholds.', from: [] } }),
     mk(4), mk(5), mk(6),
     // thirty-four more, all tested: a hundred-row list is the case that matters (a message above the fold is a message that is not seen)
-    ...Array.from({ length: 34 }, (_, i) => mk(7 + i, { policyTest: { verdict: 'FITS', reason: 'Fits.', from: [] } })),
+    ...Array.from({ length: 34 }, (_, i) => mk(7 + i, { policyTest: { verdict: 'FITS', reason: 'Fits.', from: [] }, ...(i === 1 ? { commentary: 'Mechanism: a zebra crossing for every owner.' } : {}) })),
   ] as A[],
   headings: [{ id: 'h1', name: 'Legislation', colourKey: HEADING_PALETTE[0].key, hidden: false, orderIndex: 0 }] as A[],
 }
@@ -78,6 +78,8 @@ function handle(raw: A): { status: number; body: A } {
       return ok({ ruledOut: n })
     }
     case 'park': { let n = 0; for (const a of store.actions) if (b.ids.includes(a.id)) { a.parked = true; a.parkedReason = clip(b.reason ?? '', LIMITS.ruleOutReason); n++ } return ok({ parked: n }) }
+    // 190 (UI A) - "Hide all / Show all headings": one write for every heading
+    case 'setHeadingsHidden': { let n = 0; for (const h of store.headings) if (!!h.hidden !== b.hidden) { h.hidden = b.hidden; n++ } return ok({ changed: n }) }
     case 'setTitle': { const a = store.actions.find((x) => x.id === b.actionId); if (a) a.title = b.title ? clip(b.title, LIMITS.actionTitle) : null; return ok(null) }
     default: return ok(null)
   }

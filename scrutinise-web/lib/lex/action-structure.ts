@@ -19,7 +19,7 @@ import { recordUsage } from './spend-ledger'
 import { M_COHERENT_ACTIONS, M_GUIDING_POLICY } from './method'
 import { colourFor, nextColourKey, HEADING_PALETTE } from './action-headings'
 import {
-  AVENUES, SEQUENCES, actionLabel, rankDuplicates, coverageGrid, type ActionLike, type DuplicatePair,
+  AVENUES, AVENUE_RULE, SEQUENCES, actionLabel, rankDuplicates, coverageGrid, type ActionLike, type DuplicatePair,
 } from './action-facets'
 
 /** Pro-class: titles and facets are read by the user as Lex's judgement, and a long list is one call per ~50 actions. */
@@ -27,6 +27,9 @@ export const STRUCTURE_MODEL = 'gemini-2.5-pro'
 const BATCH = 45
 import { LIMITS } from './input-limits'
 import { clampStep, type ActionsStep } from './action-steps'
+import { unfold } from './action-fold'
+import { activeConditions } from './action-conditions'
+import { readConditions } from './action-conditions-server'
 import { TEST_SYSTEM, TEST_SCHEMA, placeGroups } from './action-ideas'
 const TITLE_MAX = LIMITS.actionTitle
 
@@ -40,6 +43,7 @@ const ROW = {
   id: true, number: true, title: true, titleProposal: true, practicalStep: true, whoImplements: true, wording: true, mechanismType: true,
   headingId: true, targetCauseIds: true, avenue: true, link: true, sequence: true, beforeIds: true, facetProposal: true,
   parked: true, parkedReason: true, status: true, ruleOutReason: true, mergedFrom: true, mergedIntoId: true, source: true, orderIndex: true, record: true,
+  conditionIds: true, supportOnly: true, foldedIntoId: true, headingWasId: true, headingReason: true, commentary: true,
 } as const
 
 export async function liveRows(ideaId: string) {
@@ -94,6 +98,20 @@ export async function deleteHeading(ideaId: string, headingId: string): Promise<
   const un = await prisma.lexCoherentAction.updateMany({ where: { ideaId, headingId }, data: { headingId: null } })
   await prisma.actionHeading.delete({ where: { id: headingId } })
   return { ok: true, data: { unassigned: un.count } }
+}
+
+/** 190 (UI A): "Hide all / Show all headings" - one write for every heading on the idea. A hidden heading keeps its actions; only the list stops showing them. */
+export async function setHeadingsHidden(ideaId: string, hidden: boolean): Promise<Result<{ changed: number }>> {
+  const r = await prisma.actionHeading.updateMany({ where: { ideaId, archivedAt: null, hidden: !hidden }, data: { hidden } })
+  return { ok: true, data: { changed: r.count } }
+}
+
+/** 190: bring back a heading the Re-sort archived (named `archivedAt`, so the live-only read lets it through). Its actions are not touched. */
+export async function restoreHeading(ideaId: string, headingId: string): Promise<Result> {
+  const h = await prisma.actionHeading.findFirst({ where: { id: headingId, ideaId, archivedAt: { not: null } }, select: { id: true } })
+  if (!h) return fail('That heading is not archived on this idea.')
+  await prisma.actionHeading.update({ where: { id: headingId }, data: { archivedAt: null } })
+  return { ok: true, data: null }
 }
 
 export async function assignHeading(ideaId: string, actionIds: string[], headingId: string | null): Promise<Result<{ assigned: number }>> {
@@ -218,13 +236,15 @@ export async function ruleOut(ideaId: string, ids: string[], reason: string): Pr
 }
 /** Bring a ruled-out or merged-away action back. */
 export async function restore(ideaId: string, ids: string[]): Promise<Result<{ restored: number }>> {
+  // 190: a component folded into a mechanism is UNFOLDED (its quote leaves the mechanism's commentary) before the plain restore sees it
+  const unfolded = await unfold(ideaId, ids)
   const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, id: { in: ids }, status: { not: 'LIVE' } }, data: { status: 'LIVE', ruleOutReason: null, mergedIntoId: null } })
-  return { ok: true, data: { restored: r.count } }
+  return { ok: true, data: { restored: r.count + unfolded } }
 }
 
 // ── facets (§4) ──────────────────────────────────────────────────────────────────────────────────────────
 
-export interface FacetPatch { targetCauseIds?: string[]; avenue?: string | null; link?: string | null; sequence?: string | null; beforeIds?: string[] }
+export interface FacetPatch { targetCauseIds?: string[]; avenue?: string | null; link?: string | null; sequence?: string | null; beforeIds?: string[]; conditionIds?: string[]; supportOnly?: boolean }
 
 export async function setFacets(ideaId: string, actionId: string, patch: FacetPatch): Promise<Result> {
   const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true, facetProposal: true } })
@@ -258,7 +278,7 @@ export async function setFacets(ideaId: string, actionId: string, patch: FacetPa
 }
 
 /** The proposal keys that belong to a step (26-S2 §3d): step 1 the causes and avenue, step 4 the sequence and what comes before. Anything else (an old "link") belongs to none. */
-const STEP_PROPOSAL_KEYS: Partial<Record<ActionsStep, Array<keyof FacetPatch>>> = { 1: ['targetCauseIds', 'avenue'], 4: ['sequence', 'beforeIds'] }
+const STEP_PROPOSAL_KEYS: Partial<Record<ActionsStep, Array<keyof FacetPatch>>> = { 1: ['targetCauseIds', 'avenue', 'conditionIds', 'supportOnly'], 4: ['sequence', 'beforeIds'] }
 
 /** Accept proposals. With a `step`, only that step's keys are accepted and the rest of the proposal stays waiting; without one, all of them (Lex's chat tool). */
 export async function acceptFacetProposals(ideaId: string, ids?: string[], step?: ActionsStep): Promise<Result<{ accepted: number }>> {
@@ -275,6 +295,8 @@ export async function acceptFacetProposals(ideaId: string, ids?: string[], step?
     if (p.avenue !== undefined) data.avenue = p.avenue
     // decision 167: the "link" facet is retired from the screen — an old proposal's link is dropped, never written
     if (p.sequence !== undefined) data.sequence = p.sequence
+    // 188: an accepted condition proposal sets the conditions, or marks the action support (which delivers none directly)
+    if (p.supportOnly) { data.supportOnly = true; data.conditionIds = [] } else if (p.conditionIds) { data.conditionIds = p.conditionIds; data.supportOnly = false }
     if (p.beforeIds) data.beforeIds = p.beforeIds.filter((x) => x !== r.id)
     await prisma.lexCoherentAction.update({ where: { id: r.id }, data: data as never }); n++
   }
@@ -301,11 +323,16 @@ const FACET_PROPS = {
   avenue: { type: 'string', enum: [...AVENUES, 'NONE'] },
   sequence: { type: 'string', enum: [...SEQUENCES, 'NONE'] },
   beforeNumbers: { type: 'array', items: { type: 'integer' } },
+  // 188 - the conditions the action delivers (numbers from the idea's list), or support: it delivers none directly
+  conditionNumbers: { type: 'array', items: { type: 'integer' } },
+  support: { type: 'boolean' },
 } as const
 const FACET_STEP_KEYS: Record<1 | 4, Array<keyof typeof FACET_PROPS>> = { 1: ['causeNumbers', 'avenue'], 4: ['sequence', 'beforeNumbers'] }
+/** Step 1 also classifies against the conditions - but only when the idea HAS some. */
+const stepKeys = (step: 1 | 4, withConditions: boolean): Array<keyof typeof FACET_PROPS> => (step === 1 && withConditions ? [...FACET_STEP_KEYS[1], 'conditionNumbers', 'support'] : FACET_STEP_KEYS[step])
 
-function facetSchema(step: 1 | 4) {
-  const keys = FACET_STEP_KEYS[step]
+function facetSchema(step: 1 | 4, withConditions = false) {
+  const keys = stepKeys(step, withConditions)
   return {
     type: 'object',
     properties: {
@@ -321,22 +348,24 @@ function facetSchema(step: 1 | 4) {
 const FACET_LINES: Record<keyof typeof FACET_PROPS, string[]> = {
   causeNumbers: ['  causeNumbers   the numbered causes this action directly attacks. Only causes it plainly addresses; an empty list is a real answer.'],
   avenue: [
-    '  avenue         LEGISLATIVE (a Bill or regulations), ORGANISATIONAL (how a body works) or FINANCIAL (money) — the avenue it is carried',
-    '                 out through — or NONE if it plainly is not any one.',
+    '  avenue         LEGISLATIVE, ORGANISATIONAL or FINANCIAL — the avenue it is carried out through — or NONE if it plainly is not any one.',
+    `                 THE RULE (follow it exactly): ${AVENUE_RULE}`,
   ],
   sequence: ['  sequence       NOW (can start at once and unlocks others), NEXT, LATER, or NONE if you cannot tell.'],
   beforeNumbers: [
     '  beforeNumbers  the numbers of the actions THIS one must come before (it unlocks or is a precondition for them). Only real',
     '                 dependencies; do not chain everything. Never its own number.',
   ],
+  conditionNumbers: ['  conditionNumbers  the numbers of the CONDITIONS (listed below) this action directly delivers. Only conditions it plainly delivers; an empty list is a real answer.'],
+  support: ['  support        true ONLY if the action delivers none of the conditions directly but supports the others (training, a pilot, a consultation); otherwise false.'],
 }
 
-function facetSystem(step: 1 | 4): string {
+function facetSystem(step: 1 | 4, withConditions = false): string {
   return [
     M_GUIDING_POLICY, '', M_COHERENT_ACTIONS, '',
     '════ YOU ARE CLASSIFYING COHERENT ACTIONS, AS PROPOSALS THE USER WILL CORRECT ════',
     'For EACH numbered action, return:',
-    ...FACET_STEP_KEYS[step].flatMap((k) => FACET_LINES[k]),
+    ...stepKeys(step, withConditions).flatMap((k) => FACET_LINES[k]),
     'Use only the numbers given. Do not invent causes or actions. Never carry over a phrase from these instructions.',
   ].join('\n')
 }
@@ -352,6 +381,7 @@ export async function proposeFacets(ideaId: string, userId: string | null, asked
   const fs = await facetStep(ideaId, askedStep)
   if (!fs.ok) return fail((fs as { error: string }).error)
   const step = (fs as { data: 1 | 4 }).data
+  const conditions = step === 1 ? activeConditions(await readConditions(ideaId)) : []
   const [rows, causes, idea, chosen] = await Promise.all([
     liveRows(ideaId), causesOf(ideaId),
     prisma.idea.findUnique({ where: { id: ideaId }, select: { chosenApproach: true } }),
@@ -367,15 +397,16 @@ export async function proposeFacets(ideaId: string, userId: string | null, asked
   const causeBlock = causes.map((c) => `[${c.number}] ${clip(c.cause, 260)}`).join('\n') || '(no causes recorded)'
   const numberToId = new Map(rows.map((r) => [r.number, r.id]))
   let proposed = 0, pence = 0, unpriced = false
-  const system = facetSystem(step), schema = facetSchema(step)
+  const system = facetSystem(step, conditions.length > 0), schema = facetSchema(step, conditions.length > 0)
   for (let i = 0; i < rows.length; i += BATCH) {
     const batch = rows.slice(i, i + BATCH)
     const user = [
       policy, '', ...(step === 1 ? ['THE NUMBERED CAUSES:', causeBlock, ''] : []),
+      ...(conditions.length ? ['THE NUMBERED CONDITIONS THE PROPOSAL MUST MEET:', conditions.map((c, i) => `[${i + 1}] ${clip(c.text, 300)}`).join('\n'), ''] : []),
       'ALL THE ACTIONS (for "before" references), numbered:', rows.map((r) => `[${r.number}] ${clip(r.title || r.practicalStep, 160)}`).join('\n'), '',
       'CLASSIFY THESE ACTIONS (full text):', batch.map((r) => `[${r.number}] ${clip(r.practicalStep, 700)}${r.whoImplements ? ` — implemented by ${clip(r.whoImplements, 160)}` : ''}`).join('\n'),
     ].join('\n')
-    const res = await callModelJson<{ actions: Array<{ number: number; causeNumbers?: number[]; avenue?: string; sequence?: string; beforeNumbers?: number[] }> }>({
+    const res = await callModelJson<{ actions: Array<{ number: number; causeNumbers?: number[]; avenue?: string; sequence?: string; beforeNumbers?: number[]; conditionNumbers?: number[]; support?: boolean }> }>({
       model: STRUCTURE_MODEL, system, user, schema, maxOutputTokens: 6144, timeoutMs: 120_000, reasoningEffort: 'medium',
       label: 'action-facets', stream: 'lex', pass: 'actions.facets', ideaId, userId,
     })
@@ -390,6 +421,11 @@ export async function proposeFacets(ideaId: string, userId: string | null, asked
       if (step === 1) {
         if (!row.targetCauseIds.length) p.targetCauseIds = [...new Set((a.causeNumbers ?? []).map((n) => causeByNum.get(n)).filter((x): x is string => !!x))]
         if (!row.avenue && (AVENUES as readonly string[]).includes(a.avenue ?? '')) p.avenue = a.avenue
+        if (conditions.length && !row.conditionIds.length && !row.supportOnly) {
+          const ids = [...new Set((a.conditionNumbers ?? []).map((n) => conditions[n - 1]?.id).filter((x): x is string => !!x))]
+          if (ids.length) p.conditionIds = ids
+          else if (a.support === true) p.supportOnly = true
+        }
       } else {
         if (!row.sequence && (SEQUENCES as readonly string[]).includes(a.sequence ?? '')) p.sequence = a.sequence
         if (!row.beforeIds.length) p.beforeIds = [...new Set((a.beforeNumbers ?? []).filter((n) => n !== row.number).map((n) => numberToId.get(n)).filter((x): x is string => !!x))]

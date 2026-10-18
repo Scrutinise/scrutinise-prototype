@@ -14,6 +14,8 @@ import { projectElicitationOntoPageOne } from './page-one'
 import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
 import { clampStep } from './action-steps'
 import { parseRecord } from './action-record'
+import { parseConditions } from './action-conditions'
+import { parseHeadingPlan } from './action-resort-pure'
 import {
   PAGE_SEQUENCE,
   LOCKED_PAGES,
@@ -50,6 +52,8 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       creatorId: true,
       lexPage: true,
       actionsStep: true,
+      conditions: true,
+      headingPlan: true,
       legislationRefs: true,
       stageSearches: true,
       creator: {
@@ -267,6 +271,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     commentary: a.commentary ?? null,
     record: a.record ? parseRecord(a.record) : null,
     noCostReason: a.noCostReason ?? null,
+    conditionIds: a.conditionIds ?? [], supportOnly: a.supportOnly === true, foldedIntoId: a.foldedIntoId ?? null, headingReason: a.headingReason ?? null,
   })
   // 26-Q — the list the whole product reads is the LIVE one; ruled-out / merged-away rows are reported separately so the
   // panel can show them restorable and nothing else counts them (documents, costs, gap check, Lex's snapshot).
@@ -341,6 +346,10 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     setAsideActions,
     actionHeadings,
     actionsStep: clampStep(idea.actionsStep),
+    conditions: parseConditions(idea.conditions),
+    headingPlan: parseHeadingPlan(idea.headingPlan),
+    archivedHeadings: (await prisma.actionHeading.findMany({ where: { ideaId, archivedAt: { not: null } }, select: { id: true, name: true }, orderBy: { name: 'asc' } })),
+    resortUndoable: actionRows.filter((a) => a.headingWasId != null && a.status === 'LIVE').length,
     archivedCauses: await prisma.diagnosisCause.count({ where: { ideaId, archivedAt: { not: null } } }),
     costLines,
     benchmarks,

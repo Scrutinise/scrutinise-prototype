@@ -65,6 +65,25 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   // "Classify with Lex" in step 2 (no `ids`: every action with an unanswered slot) and the per-action "Ask Lex" (`ids`).
   z.object({ op: z.literal('proposeSlots'), ids: ids.optional() }),
   z.object({ op: z.literal('dismissSlots'), ids: ids.optional() }),
+  // 26-S2 188 - the conditions facet: the idea's list (owner's words), Lex's proposed additions, and what each action delivers.
+  z.object({ op: z.literal('addCondition'), text: z.string().min(1).max(LIMITS.conditionText) }),
+  z.object({ op: z.literal('editCondition'), conditionId: z.string(), text: z.string().min(1).max(LIMITS.conditionText) }),
+  z.object({ op: z.literal('retireCondition'), conditionId: z.string(), retired: z.boolean() }),
+  z.object({ op: z.literal('moveCondition'), conditionId: z.string(), dir: z.enum(['up', 'down']) }),
+  z.object({ op: z.literal('acceptConditionProposal'), proposalId: z.string() }),
+  z.object({ op: z.literal('dismissConditionProposal'), proposalId: z.string() }),
+  // `support: true` marks the actions support (delivers none directly); `conditionIds` sets (or, with mode 'add', adds to) what they deliver.
+  z.object({ op: z.literal('assignConditions'), actionIds: ids, conditionIds: z.array(z.string()).max(40).optional(), support: z.boolean().optional(), mode: z.enum(['set', 'add']).optional() }),
+  // 26-S2 190 - Re-sort into headings (plan, one batch at a time so each is applied as it completes, finish, undo) and Consolidate this heading.
+  z.object({ op: z.literal('resortPlan') }),
+  z.object({ op: z.literal('resortBatch'), ids }),
+  z.object({ op: z.literal('resortFinish') }),
+  z.object({ op: z.literal('undoResort') }),
+  z.object({ op: z.literal('consolidatePlan'), headingId: z.string() }),
+  z.object({ op: z.literal('consolidate'), headingId: z.string() }),
+  z.object({ op: z.literal('setHeadingsHidden'), hidden: z.boolean() }),
+  // restore a heading the Re-sort archived (it is kept, never deleted)
+  z.object({ op: z.literal('restoreHeading'), headingId: z.string() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -83,6 +102,10 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   setStep: 'Moving to that step', keepConflict: '“Keep it, with a note”', testPolicy: '“Test against the policy”',
   setSlot: 'Saving the answer', acceptSlot: 'Using Lex’s proposed answer', dismissSlot: 'Dismissing Lex’s proposed answer',
   proposeSlots: '“Classify with Lex” / “Ask Lex”', dismissSlots: 'Dismissing Lex’s proposed answers',
+  addCondition: '“Add condition”', editCondition: 'Editing the condition', retireCondition: '“Retire condition”', moveCondition: 'Moving the condition',
+  acceptConditionProposal: 'Accepting Lex’s proposed condition', dismissConditionProposal: 'Dismissing Lex’s proposed condition', assignConditions: 'Saving what the action delivers',
+  resortPlan: '“Re-sort into headings”', resortBatch: '“Re-sort into headings”', resortFinish: '“Re-sort into headings”', undoResort: '“Undo the re-sort”',
+  consolidatePlan: '“Consolidate this heading”', consolidate: '“Consolidate this heading”', restoreHeading: '“Bring the heading back”', setHeadingsHidden: '“Hide all / Show all headings”',
 }
 
 /** And the words for the inputs those controls send. */
@@ -90,5 +113,6 @@ export const INPUT_WORDS: Record<string, string> = {
   actionIds: 'the selected actions', ids: 'the selected actions', actionId: 'the action', headingId: 'the heading',
   name: 'the heading name', colourKey: 'the colour', title: 'the title', reason: 'the reason', order: 'the new order',
   patch: 'the classification', answer: 'Lex’s answer', mergedId: 'the merged action', a: 'the first action number', b: 'the second action number',
+  conditionId: 'the condition', proposalId: 'the proposed condition', conditionIds: 'the conditions', support: 'the support mark', dir: 'the direction (up or down)', retired: 'retired or not',
   op: 'the control', step: 'the step (1 to 4)', note: 'the note', slot: 'the question being answered', text: 'the answer', direction: 'the direction (with, against, indifferent)', linkActionId: 'the linked action', replace: 'the choice to replace your answer',
 }

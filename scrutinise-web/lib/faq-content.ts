@@ -2,6 +2,7 @@
 // 26-P addendum — the Diagnosis checks are printed FROM THE REGISTRY (lib/lex/section-checklists.ts), the same five
 // sentences the worklist and the "How to find the right cause" guide use, so the three cannot say different things.
 import { DIAGNOSIS_CHECKLIST } from '@/lib/lex/section-checklists'
+import { AVENUE_RULE } from '@/lib/lex/action-facets'
 // 26-H — the seven stages, the caveat and the review statuses are printed FROM lib/documents/stage-banner.ts, the copy every generated document opens with.
 import { SEVEN_STAGES, NOT_YET_AVAILABLE, STAGE_CAVEAT_HEADING, STAGE_CAVEAT, REVIEW_COUNTERPARTS_NOTE, FIRST_SCRUTINY_LABEL } from '@/lib/documents/stage-banner'
 
@@ -87,6 +88,14 @@ It's the underlying structure of any good policy proposal, borrowed from Richard
 Most policy fails because one of these is missing or vague. The platform's structure forces you to be specific about all three, which is why proposals coming out of it tend to be more rigorous than the average op-ed or pamphlet.
 
 The most important part is the diagnosis and users are encouraged to investigate this to the greatest depth possible. If you do not identify the correct cause of the problem, whatever you do will not solve the problem and may make it worse. Often the most important driver is something few would have ever considered.
+
+### What are a coherent action's "avenue" and "conditions"?
+
+Each coherent action says which **avenue** it is carried out through. The rule, in full:
+
+> ${AVENUE_RULE}
+
+A proposal also has to meet a short list of **conditions** — for example "one named owner per task" or "safeguards against gaming". You write the list; each action says which conditions it delivers, or is marked **support** if it delivers none directly (a pilot, a consultation). The coverage view shows every condition against the actions that deliver it, and a condition no action delivers reads "NO ACTION".
 
 ### What are the five stages, in more detail?
 

@@ -9,6 +9,8 @@ export const LIMITS = {
   classificationLink: 200,
   actionTitle: 110,
   headingName: 60,
+  /** 26-S2 188: one condition the proposal must meet (lib/lex/action-conditions.ts CONDITION_MAX is the same number). */
+  conditionText: 400,
   /** Decision 181 (17 Oct 2026): the action STATEMENT. It was 600 in 26-Q without a decision; the COMMENTARY beside it is unlimited and takes whatever a limit cuts. */
   actionStatement: 1000,
   /** 26-S2 §5 (177): an answer in one of the step-2 slots (Incentive now, What changes it, Skill, How, Against, What tells us it worked). */

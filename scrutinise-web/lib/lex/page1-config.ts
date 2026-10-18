@@ -453,7 +453,7 @@ export interface CanonicalAction {
   /** ids of the actions THIS one must come before. */
   beforeIds: string[]
   /** Lex's unaccepted proposal for the facets above. */
-  facetProposal: { targetCauseIds?: string[]; avenue?: string | null; link?: string | null; sequence?: string | null; beforeIds?: string[] } | null
+  facetProposal: { targetCauseIds?: string[]; avenue?: string | null; link?: string | null; sequence?: string | null; beforeIds?: string[]; conditionIds?: string[]; supportOnly?: boolean } | null
   mergedFrom: number[]
   /** LIVE here; RULED_OUT / ARCHIVED rows come in `setAsideActions`. */
   status: 'LIVE' | 'RULED_OUT' | 'ARCHIVED'
@@ -472,6 +472,13 @@ export interface CanonicalAction {
   record: import('./action-record').ActionRecord | null
   /** 26-S2 sec 6 - "no cost, because ...": the user's reason this action costs nothing (an explicit answer to the cost question). null = not said. */
   noCostReason: string | null
+  /** 26-S2 188 - the idea's conditions this action delivers (ids into ConditionsDoc.items); `supportOnly` = marked support (delivers none directly). */
+  conditionIds: string[]
+  supportOnly: boolean
+  /** 26-S2 190 Consolidate - set on an ARCHIVED component folded into this mechanism; Restore unfolds it. */
+  foldedIntoId: string | null
+  /** 26-S2 190 Re-sort - the reason Lex gave for the heading it chose (null = the user placed it). */
+  headingReason: string | null
 }
 
 /** 26-Q §3 — one of the user's headings for their coherent actions. */
@@ -524,6 +531,13 @@ export interface CanonicalState {
   actionHeadings: CanonicalActionHeading[]
   /** 26-S2 §3a — the step (1–4) the user was on in the Coherent Actions screen. */
   actionsStep: 1 | 2 | 3 | 4
+  /** 26-S2 188 - the conditions the proposal must meet, with Lex's proposed additions beside. */
+  conditions: import('./action-conditions').ConditionsDoc
+  /** 26-S2 190 - the instrument headings the Re-sort sorts into (null = none set, so the button is absent), and the headings it archived (kept, restorable). */
+  headingPlan: import('./action-resort-pure').HeadingPlan | null
+  archivedHeadings: Array<{ id: string; name: string }>
+  /** 26-S2 190 - how many live actions a Re-sort has moved and can still put back. */
+  resortUndoable: number
   /** 26-S2 §11a — causes the user removed. They are archived, not deleted: kept, with their numbers, out of every list. */
   archivedCauses: number
   /** §19-C Task 6 — cost lines across all of this idea's actions. */

@@ -1024,6 +1024,43 @@ const testPolicyTool: ToolDefinition = {
   },
 }
 
+// ── 26-S2 188 - the CONDITIONS facet, in the chat ──────────────────────────────────────────────────────────
+import { conditionCoverage, activeConditions } from '@/lib/lex/action-conditions'
+import * as CDS from '@/lib/lex/action-conditions-server'
+
+const conditionsCoverageTool: ToolDefinition = {
+  name: 'conditions_coverage', category: 'see', tier: 'free',
+  description: 'The conditions the proposal must meet (the numbered list on this idea), and for each the actions that deliver it — with "NO ACTION" for a condition nothing delivers — plus the actions that deliver no condition and are not marked support. Use it for “which conditions have no action?”, “what delivers condition 6?”. READ ONLY.',
+  schema: z.object({}),
+  async run(ctx) {
+    const [doc, rows] = await Promise.all([CDS.readConditions(ctx.ideaId), AS.liveRows(ctx.ideaId).then((r) => r.filter((x) => !x.parked))])
+    const active = activeConditions(doc)
+    if (!active.length) return { ok: true, data: { conditions: [], say: 'This idea has no conditions yet. The user adds them in the Coherent Actions screen (step 1, “Conditions the proposal must meet”).' } }
+    const cov = conditionCoverage(doc, rows as never)
+    const num = (id: string) => rows.find((r) => r.id === id)?.number
+    return {
+      ok: true,
+      data: {
+        conditions: cov.rows.map((r) => ({ number: r.number, condition: r.condition.text, deliveredBy: r.actionIds.length ? r.actionIds.map(num) : 'NO ACTION' })),
+        noAction: cov.uncovered.map((u) => u.number),
+        actionsDeliveringNoCondition: cov.unassigned.map(num), markedSupport: cov.support,
+        proposalsWaiting: doc.proposals.length,
+      },
+    }
+  },
+}
+
+const proposeConditionTool: ToolDefinition = {
+  name: 'propose_condition', category: 'draft', tier: 'free',
+  description: 'Propose ONE more condition for the proposal to meet. It is only a PROPOSAL: it waits beside the list and the user adds it, or dismisses it; you cannot add to their list yourself. Give the condition as one short sentence in their style, and `why` — the gap it closes. Check conditions_coverage first so you do not propose one already there.',
+  schema: z.object({ text: z.string().min(5).max(LIMITS.conditionText), why: z.string().max(400).optional() }),
+  async run(ctx, { text, why }) {
+    const r = unwrap(await CDS.proposeCondition(ctx.ideaId, text, why ?? ''))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { as: 'a proposal beside the list — the user adds it or dismisses it', say: `Proposed the condition “${text}”; it waits beside the list for you to add or dismiss.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
 const groupActionsTool: ToolDefinition = {
   name: 'group_actions', category: 'see', tier: 'free',
   description: 'Show the coherent actions grouped by heading, cause, link, avenue or sequence (“group these by cause”). READ ONLY — it re-sorts the answer, not the user’s list, and moves nothing between headings.',
@@ -1511,7 +1548,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, groupActionsTool,
   findDuplicatesTool, withoutActionTool, compareActionsTool, parkActionsTool, restoreActionsTool, ruleOutActionsTool, mergeActionsTool,
   // 26-S2 — a record, step 2's answers, the policy test
-  getActionTool, setActionSlotTool, proposeSlotsTool, testPolicyTool,
+  getActionTool, setActionSlotTool, proposeSlotsTool, testPolicyTool, conditionsCoverageTool, proposeConditionTool,
   // 26-R — the research notebook
   addResearchNoteTool, listNotebookTool, extractQuotesTool, suggestTagsTool, updateNoteTool, findSimilarTool, findDisagreementsTool, whatHaveIReadOnTool, summariseSourceTool,
 ]

@@ -196,7 +196,7 @@ async function assemble(ideaId: string, userId: string): Promise<{ parts: Workli
     const live = state.actions.filter((a) => !a.parked)
     const withLines = new Set(state.costLines.map((l) => l.actionId))
     for (const step of STEP_NUMBERS) {
-      for (const l of stepChecklist(step, live, { duplicatesChecked: true }, { actionIdsWithCostLines: withLines })) {
+      for (const l of stepChecklist(step, live, { duplicatesChecked: true, conditions: state.conditions },{ actionIdsWithCostLines: withLines })) {
         if (l.done) continue
         decideItems.push({ key: `actions-step:${step}:${l.key}`, text: `Coherent actions, step ${step} (${STEPS[step].label}): ${l.text}`, anchor: null, href: null, ticked: on(`actions-step:${step}:${l.key}`) })
       }

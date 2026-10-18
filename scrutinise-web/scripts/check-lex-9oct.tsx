@@ -199,7 +199,8 @@ async function partD() {
   section('3 · HEADINGS — the code that WRITES a heading id (source sweep) and what a rebuild does to a headed action')
   const files = [...walk(join(ROOT, 'lib')), ...walk(join(ROOT, 'app')), ...walk(join(ROOT, 'components'))]
   const writers = files.filter((f) => { const t = readFileSync(f, 'utf8'); return /data:\s*\{\s*headingId/.test(t) || /headingId:\s*fa\.headingId/.test(t) || /data:\s*\{[^}]*headingId\s*:\s*null/.test(t) }).map((f) => f.split(/[\\/]/).slice(-1)[0])
-  ok('the ONLY code that writes a heading id is lib/lex/action-structure.ts (assign, delete-heading, merge)', writers.join() === 'action-structure.ts', writers.join())
+  // 26-S2 190: the Re-sort (action-resort.ts) also moves actions between headings - remembering where each was, and undoable - so it is the second, named writer
+  ok('the ONLY code that writes a heading id is lib/lex/action-structure.ts (assign, delete-heading, merge) and lib/lex/action-resort.ts (the Re-sort, with Undo)', [...writers].sort().join() === 'action-resort.ts,action-structure.ts', writers.join())
   control('a planted writer elsewhere would go unseen (must be FALSE)', !/data:\s*\{\s*headingId/.test('data: { headingId: x }'))
   const build = read('lib/lex/build.ts')
   ok('a REBUILD archives (not deletes) a LEX action the user has put under a heading — the heading id is kept', /\{ headingId: \{ not: null \} \}/.test(build) && /status: 'ARCHIVED'/.test(build))

@@ -324,6 +324,8 @@ async function partD() {
     return { status: res.status as number, json: (await res.json()) as any }
   }
   try {
+    // the copy inherits Charlie's own step, so put the column back to its DATABASE default first: this asserts the default, not his place on the screen
+    await prisma.$executeRawUnsafe(`UPDATE \"Idea\" SET \"actionsStep\" = DEFAULT WHERE id = $1`, id)
     const first = await computeCanonicalState(id)
     ok('a scratch idea opens at step 1 (the default)', first.actionsStep === 1)
     const r3 = await post({ op: 'setStep', step: 3 })
