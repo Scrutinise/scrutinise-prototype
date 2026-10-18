@@ -896,6 +896,10 @@ model Idea {
   /// 26-S2 §3a (decision 166) — the step the user is on in the Coherent Actions screen: 1 Sort and prune · 2 Who, how and against ·
   /// 3 Costs · 4 Order. Stored per idea so returning lands where they left it. DDL: prisma/lex_26s2_steps.sql.
   actionsStep               Int             @default(1)
+  /// 26-S2 decision 188 - the CONDITIONS the proposal must meet: { items:[{id,text,by,at}], proposals:[{id,text,why}], source? }. DDL: prisma/lex_26s2_conditions.sql.
+  conditions                Json?
+  /// 26-S2 190 - the instrument headings the Re-sort pass sorts into: { targets:[{name,purpose}], source }. DDL: prisma/lex_26s2_conditions.sql.
+  headingPlan               Json?
   // Lex rebuild — Page 2 (Diagnosis) fields (design §7.1). challenge/pivotalObstacle text;
   // whoAffectedImpactCost/legalLandscape are structured slot objects. rootCause +
   // summaryDiagnosis reuse the existing legacy Idea columns above.
@@ -3099,6 +3103,13 @@ model LexCoherentAction {
   record             Json?
   /// 26-S2 sec 6 - "no cost, because ...": the user's reason this action costs nothing. An explicit answer to the cost question, not a blank. DDL: prisma/lex_26s2_costs.sql.
   noCostReason       String?
+  /// 26-S2 188 - the conditions this action delivers; supportOnly = marked as support (delivers none directly). 190 - foldedIntoId the mechanism it was folded into; headingWasId / headingReason the Re-sort's before and why. DDL: prisma/lex_26s2_conditions.sql.
+  conditionIds       String[]        @default([])
+  supportOnly        Boolean         @default(false)
+  foldedIntoId       String?
+  headingWasId       String?
+  headingReason      String?
+  foldedAdded        Json?
 
   @@index([ideaId])
   @@index([ideaId, status])
@@ -3118,6 +3129,8 @@ model ActionHeading {
   /// 26-S §5a (decision 141) — what this instrument does and why it is needed, <= 120 words. NULL = not yet written.
   /// DDL: prisma/lex_26s_import.sql.
   purpose    String?
+  /// 26-S2 190 - a retired heading is ARCHIVED, not deleted; lib/prisma.ts hides archived headings from direct reads. DDL: prisma/lex_26s2_conditions.sql.
+  archivedAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
 
