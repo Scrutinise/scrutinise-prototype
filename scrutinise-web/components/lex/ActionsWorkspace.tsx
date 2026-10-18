@@ -134,7 +134,7 @@ interface Props {
   /** Re-reads the list. Resolves `false` when the re-read failed (so the screen can say so); anything else is a success. */
   onChanged: () => void | Promise<boolean | void>
   /** The existing action card, one STEP of it at a time (1 the body, 2 Who, 3 the cost ranges and lines, 4 nothing) — shown in place when a title is opened. */
-  renderFull: (a: CanonicalAction, step: ActionsStep) => ReactNode
+  renderFull: (a: CanonicalAction, step: ActionsStep, between?: ReactNode) => ReactNode
   /** Ids of rows to render already open. Used by the render checks, so that what an OPENED row shows is read from the output. */
   initiallyOpen?: string[]
   /** 26-S2 §3 — the step the user is on (1–4). The screen shows only that step's tools. Default 1. */
@@ -314,13 +314,18 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           )}
           <span className="text-[11px] text-zinc-400 tabular-nums mt-0.5 w-7 shrink-0">#{a.number ?? '?'}</span>
           <div className="flex-1 min-w-0">
-            <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded={isOpen} className="text-left w-full">
-              <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`}>{actionLabel(a)}</span>
-              {!isOpen && <span className="text-[11px] text-zinc-400 ml-1.5">open +</span>}
-            </button>
-            {/* 26-S2 §3b — THE ROW SHOWS ONLY THIS STEP'S TAGS. Step 1: heading, verdict, causes, avenue. Step 2: who. Step 3: cost. Step 4: sequence. */}
-            {step === 1 && a.title && <span className="block text-[11px] text-zinc-500 mt-0.5" data-row-summary>{a.practicalStep.length > 140 ? `${a.practicalStep.slice(0, 139)}…` : a.practicalStep}</span>}
-            <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-zinc-500 items-center">
+            {/* 18 Oct (CCh B) — OPENED: the title line is [title · Edit title] with Close at the right; the snippet, the repeated title and the tag line are gone (the record below says all of it). */}
+            {isOpen ? (
+              <OpenTitle a={a} disabled={disabled} ops={ops} />
+            ) : (
+              <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded={isOpen} className="text-left w-full">
+                <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`}>{actionLabel(a)}</span>
+                <span className="text-[11px] text-zinc-400 ml-1.5">open +</span>
+              </button>
+            )}
+            {/* 26-S2 §3b — THE ROW SHOWS ONLY THIS STEP'S TAGS. Step 1: heading, verdict, causes, avenue. Step 2: who. Step 3: cost. Step 4: sequence. The CLOSED row keeps a two-line snippet. */}
+            {!isOpen && step === 1 && a.title && <span className="block text-[11px] text-zinc-500 mt-0.5 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }} data-row-summary>{a.practicalStep.length > 240 ? `${a.practicalStep.slice(0, 239)}…` : a.practicalStep}</span>}
+            {!isOpen && <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-zinc-500 items-center">
               {step === 1 && (
                 <>
                   {h && <HeadingMark h={h} />}
@@ -356,7 +361,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                 </>
               )}
               {a.facetProposal && proposalStep(a.facetProposal).includes(step) && <span className="font-semibold text-zinc-700">Lex has proposed {step === 1 ? 'causes or an avenue' : 'a sequence'}</span>}
-            </div>
+            </div>}
             {a.titleProposal && (
               <p className="mt-1 text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
                 <span className="font-semibold">Lex suggests the title:</span> “{a.titleProposal}”{' '}
@@ -367,14 +372,11 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             )}
           </div>
           {isOpen ? (
-            // 26-S browser pass D — opened: the close control top-right, the heading menu below it.
-            <div className="shrink-0 flex flex-col items-end gap-1">
-              <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">Close −</button>
-              {headingSelect}
-            </div>
+            // 18 Oct (CCh B) — opened: Close is on the title line; the heading menu moved down beside the policy test.
+            <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">Close −</button>
           ) : headingSelect}
         </div>
-        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} ctx={{ live, byId, causeLite, disabled, ops, renderFull, headingName }} />}
+        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ live, byId, causeLite, disabled, ops, renderFull, headingName }} />}
       </li>
     )
   }
@@ -584,24 +586,41 @@ interface OpenCtx {
   causeLite: Array<{ id: string; number: number | null; cause: string }>
   disabled: boolean
   ops: ReturnType<typeof useOps>
-  renderFull: (a: CanonicalAction, step: ActionsStep) => ReactNode
+  renderFull: (a: CanonicalAction, step: ActionsStep, between?: ReactNode) => ReactNode
   /** The heading's name, for the collapsed step-1 line of an opened record viewed from another step. */
   headingName: (id: string | null) => string | null
 }
 
-function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAction; originals: CanonicalAction[]; ctx: OpenCtx; step: ActionsStep; hasCostLines: boolean }) {
-  const { live, byId, causeLite, disabled, ops, renderFull } = ctx
+/** 18 Oct (CCh B) — the opened record's title line: the title as text, "Edit title" at its end (the box replaces it). Close sits at the row's right. */
+function OpenTitle({ a, disabled, ops }: { a: CanonicalAction; disabled: boolean; ops: ReturnType<typeof useOps> }) {
   const [title, setTitle] = useState(a.titleProposal ?? a.title ?? '')
-  const [keepNote, setKeepNote] = useState(a.conflictNote ?? '')
-  const [why, setWhy] = useState('')
-  const [seeOriginal, setSeeOriginal] = useState<string | null>(null)
-  const others = live.filter((x) => x.id !== a.id)
   const [editingTitle, setEditingTitle] = useState(false)
-  const facetSet = (patch: Record<string, unknown>) => void ops.run('setFacets', { actionId: a.id, patch }, undefined, () => 'Saved: the classification.')
   const saveTitle = async () => {
     const r = await ops.run('setTitle', { actionId: a.id, title: title.trim() || null }, undefined, () => `Saved: the title of #${a.number ?? '?'}.`)
     if (r.ok) setEditingTitle(false)
   }
+  return editingTitle ? (
+    <div className="flex flex-wrap gap-1.5 items-start" data-open-title>
+      <BoundedInput value={title} onChange={setTitle} max={LIMITS.actionTitle} placeholder="A short title saying what this action does" aria-label={`Title of action ${a.number ?? ''}`}
+        onEnter={() => void saveTitle()} className="flex-1 min-w-[12rem] text-sm p-1.5 rounded border border-zinc-300 focus:outline-none focus:border-blue-400" />
+      <button disabled={disabled} onClick={() => void saveTitle()} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
+      <button type="button" onClick={() => { setTitle(a.titleProposal ?? a.title ?? ''); setEditingTitle(false) }} className="text-xs underline text-zinc-600 mt-1">Cancel</button>
+    </div>
+  ) : (
+    <p className="text-sm font-semibold text-zinc-900" data-open-title>
+      {a.title?.trim() || <span className="font-normal text-zinc-600">No title yet.</span>}{' '}
+      <button type="button" disabled={disabled} onClick={() => setEditingTitle(true)} className="text-xs font-medium underline text-zinc-700 ml-1 disabled:opacity-40">Edit title</button>
+    </p>
+  )
+}
+
+function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { a: CanonicalAction; originals: CanonicalAction[]; ctx: OpenCtx; step: ActionsStep; hasCostLines: boolean; headingSelect: ReactNode }) {
+  const { live, byId, causeLite, disabled, ops, renderFull } = ctx
+  const [keepNote, setKeepNote] = useState(a.conflictNote ?? '')
+  const [why, setWhy] = useState('')
+  const [seeOriginal, setSeeOriginal] = useState<string | null>(null)
+  const others = live.filter((x) => x.id !== a.id)
+  const facetSet = (patch: Record<string, unknown>) => void ops.run('setFacets', { actionId: a.id, patch }, undefined, () => 'Saved: the classification.')
   const sources = a.policyTest ? provenanceLine(a.policyTest.from) : ''
   const headingName = a.headingId ? ctx.headingName(a.headingId) : null
   // 170 — the same test as the import's, on this one action (a first test, or again after an edit)
@@ -615,9 +634,13 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
   const section: Record<ActionsStep, ReactNode> = {
     1: (
       <div className="space-y-2">
+        {renderFull(a, 1, (
+          <div className="space-y-2">
+            {/* 18 Oct (CCh B) - [policy test | heading menu] on one line, the test not full width; then avenue and causes. The statement above and the commentary below are the card's. */}
+            <div className="flex flex-wrap items-start justify-between gap-2" data-test-line>
         {/* 170 — an action the consolidation never tested says so in words, and offers the test. */}
         {!a.policyTest && (
-          <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-not-tested-box>
+          <div className="rounded border border-zinc-200 bg-white p-2 text-xs w-fit max-w-[34rem]" data-not-tested-box>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
             <p className="mt-0.5 text-zinc-900"><span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI.NOT_TESTED.glyph}</span> {POLICY_VERDICT_UI.NOT_TESTED.word}.</span> No policy test has been run on this action yet.</p>
             <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Test against the policy</button></p>
@@ -625,7 +648,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
         )}
         {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
         {a.policyTest && (
-          <div className={`rounded bg-white p-2 text-xs ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
+          <div className={`rounded bg-white p-2 text-xs w-fit max-w-[34rem] ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
             <p className="mt-0.5 text-zinc-900">
               <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
@@ -645,14 +668,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
             )}
           </div>
         )}
-        {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
-        {sources && (
-          <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Sources</p>
-            <p className="mt-0.5 text-zinc-800">{sources}</p>
-          </div>
-        )}
-
+              <div className="ml-auto shrink-0">{headingSelect}</div>
+            </div>
         <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The causes it attacks, and its avenue {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
           {a.facetProposal && proposalStep(a.facetProposal).includes(1) && <FacetProposal a={a} step={1} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 1 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 1 })} />}
@@ -675,7 +692,16 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
           </details>
         </div>
 
-        {renderFull(a, 1)}
+          </div>
+        ))}
+
+        {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
+        {sources && (
+          <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Sources</p>
+            <p className="mt-0.5 text-zinc-800">{sources}</p>
+          </div>
+        )}
 
         {originals.length > 0 && (
           <div className="rounded border border-zinc-200 bg-white p-2">
@@ -732,20 +758,6 @@ function OpenAction({ a, originals, ctx, step, hasCostLines }: { a: CanonicalAct
   const order: ActionsStep[] = [step, ...STEP_NUMBERS.filter((n) => n !== step)]
   return (
     <div className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2">
-      {/* 26-S browser pass D — the title reads as text; "Edit title" at its end opens the box (it replaces the always-open box + "Save title"). */}
-      {editingTitle ? (
-        <div className="flex flex-wrap gap-1.5 items-start">
-          <BoundedInput value={title} onChange={setTitle} max={LIMITS.actionTitle} placeholder="A short title saying what this action does" aria-label={`Title of action ${a.number ?? ''}`}
-            onEnter={() => void saveTitle()} className="flex-1 min-w-[12rem] text-sm p-1.5 rounded border border-zinc-300 focus:outline-none focus:border-blue-400" />
-          <button disabled={disabled} onClick={() => void saveTitle()} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
-          <button type="button" onClick={() => { setTitle(a.titleProposal ?? a.title ?? ''); setEditingTitle(false) }} className="text-xs underline text-zinc-600 mt-1">Cancel</button>
-        </div>
-      ) : (
-        <p className="text-sm font-semibold text-zinc-900">
-          {a.title?.trim() || <span className="font-normal text-zinc-600">No title yet.</span>}{' '}
-          <button type="button" disabled={disabled} onClick={() => setEditingTitle(true)} className="text-xs font-medium underline text-zinc-700 ml-1 disabled:opacity-40">Edit title</button>
-        </p>
-      )}
       {order.map((n) => n === step ? (
         <div key={n} data-step-section={n} data-step-open="true" className="space-y-2">{section[n]}</div>
       ) : (

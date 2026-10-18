@@ -26,6 +26,7 @@ import ActionsSteps from '../components/lex/ActionsSteps'
 import * as ST from '../lib/lex/action-steps'
 import { computeCanonicalState } from '../lib/lex/state'
 import * as FM from '../lib/lex/field-machine'
+import * as FP from '../components/lex/FieldsPanel'
 import * as S from '../lib/lex/action-structure'
 import { execute, toolByName } from '../lib/lex/agent/tools'
 import { LIMITS } from '../lib/lex/input-limits'
@@ -229,7 +230,7 @@ function mkAction(n: number, extra: Record<string, unknown> = {}) {
 }
 const renderWs = (step: number, actions: unknown[], open: string[] = [], costLineActionIds: string[] = []) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
   ideaId: 'idea-x', actions: actions as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
-  causes: [{ id: 'c1', number: 1, cause: 'A cause', whyPersisted: null }] as never, busy: false, onChanged: () => {}, renderFull: (a: { number: number }, s: number) => React.createElement('div', null, `FULL CARD ${a.number} STEP ${s}`),
+  causes: [{ id: 'c1', number: 1, cause: 'A cause', whyPersisted: null }] as never, busy: false, onChanged: () => {}, renderFull: (a: { number: number }, s: number, between?: React.ReactNode) => React.createElement('div', null, `FULL CARD ${a.number} STEP ${s}`, between),
   initiallyOpen: open, step: step as never, costLineActionIds,
 }))
 
@@ -539,6 +540,96 @@ async function partH() {
   }
 }
 
+// ── I · 18 Oct (CCh A, B) — a provider failure retries itself once and says why; the opened record's layout; the commentary renders ──
+
+async function partI() {
+  section('I · the import: one provider failure retries itself, and the words on the screen (a SCRATCH idea, the model stood in for)')
+  const credit = { reason: 'http', detail: '[action-import-chunk] HTTP 400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API."}}' }
+  ok('a 529 / 429 / 500 / a dropped connection / an empty or unparseable answer are each worth ONE retry', ['HTTP 529 overloaded', 'HTTP 429 rate', 'HTTP 500 x', 'fetch failed (cause: ECONNRESET)'].every((d) => I.isTransient({ reason: 'http', detail: d })) && I.isTransient({ reason: 'empty', detail: '' }) && I.isTransient({ reason: 'bad-json', detail: '' }))
+  ok('…an empty-credit refusal (400), a refusal, a timeout and a truncation are NOT retried inside the call (retrying cannot help, or the split handles it)', !I.isTransient(credit) && !I.isTransient({ reason: 'blocked', detail: '' }) && !I.isTransient({ reason: 'timeout', detail: '' }) && !I.isTransient({ reason: 'truncated', detail: '' }) && !I.isTransient({ reason: 'http', detail: 'HTTP 400 bad schema' }))
+  control('a 400 credit refusal judged transient (must be FALSE)', I.isTransient(credit))
+  ok('the reason in the sentence is plain: credit says so, anything else says "the model did not answer"', I.failureWhy(credit) === 'the model provider says the account is out of credit' && I.failureWhy({ reason: 'http', detail: 'HTTP 529' }) === 'the model did not answer')
+  const lib = read('lib/lex/action-import.ts')
+  ok('the old sentence ("the reading service", an undefined noun) is gone', !/reading service/.test(lib))
+
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  const copy = await scratchCopy('452c5ade', 's26s2i')
+  const id = copy.id
+  const OWNER: RN.Viewer = { id: owner.id, isOwner: true }
+  const real = I.modelCaller.current
+  try {
+    const { text } = denseDocument()
+    const added = await RN.addNote(id, { id: owner.id }, OWNER, { op: 'addNote', newSource: { kind: 'DOCUMENT', title: 'A dense section of rules', fullText: text, rightsConfirmed: true, readStatus: 'READ' } } as never, { readIntoFindings: false })
+    const ref = (added as { data: { ref: number } }).data.ref
+    const u0 = { model: 'stub', tokensIn: 0, tokensOut: 0, recorded: { pence: 0 } }
+    // (1) fails ONCE (529), then answers: ONE advance reads the part — the user sees nothing
+    let calls = 0
+    const log = { calls: 0, truncated: 0, sizes: [] as number[] }
+    const good = stub(1000, log)
+    I.modelCaller.current = (async (o: { user: string; label?: string }) => { if (o.label === 'action-import-chunk' && calls++ === 0) return { ok: false, reason: 'http', detail: '[action-import-chunk] HTTP 529 overloaded', usage: u0 }; return good(o as never) }) as unknown as Caller
+    const st = await I.startImport(id, owner.id, ref)
+    if (!st.ok) throw new Error((st as { error: string }).error)
+    const a1 = await I.advanceImport(id, owner.id, st.data.id)
+    const v1 = (a1 as { data: T.ImportPassView }).data
+    ok('(1) one transient failure retries itself: the FIRST advance reads part 1 — two calls, part DONE, no failure on the screen', calls === 2 && v1.mapping.chunks[0].status === 'DONE' && v1.mapping.chunks[0].tries === 1 && !v1.failure, `calls ${calls}, ${v1.mapping.chunks[0].status}, tries ${v1.mapping.chunks[0].tries}`)
+    await I.discardImport(id, v1.id)
+
+    // (2) out of credit: no inner retry; the words say why; the others are untouched
+    let c2 = 0
+    I.modelCaller.current = (async () => { c2++; return { ok: false, ...credit, usage: u0 } }) as unknown as Caller
+    const st2 = await I.startImport(id, owner.id, ref)
+    let v2 = (st2 as { data: T.ImportPassView }).data
+    for (let i = 0; i < 4 && v2.status === 'MAPPING' && !v2.mapping.chunks.some(T.chunkNeedsYou); i++) v2 = ((await I.advanceImport(id, owner.id, v2.id)) as { data: T.ImportPassView }).data
+    const m2 = v2.failure ?? ''
+    ok('(2) out of credit: one call per try (no pointless retry), and the screen says exactly why, in the agreed shape', c2 === 2 && /^0 of \d+ parts read\. Lex could not read part 1 \(the model provider says the account is out of credit\)\. Nothing has been written\./.test(m2), `${c2} calls; ${m2}`)
+    ok('…it offers "Retry part 1" by name and no developer word reaches the screen', /Retry part 1/.test(m2) && !DEV_WORDS.test(m2) && !/HTTP|credit balance|Anthropic/.test(m2), m2)
+    await I.discardImport(id, v2.id)
+
+    // (3) a persistent failure of the other kind: the sentence is Charlie's
+    I.modelCaller.current = (async () => ({ ok: false, reason: 'http', detail: '[action-import-chunk] HTTP 529 overloaded', usage: u0 })) as unknown as Caller
+    const st3 = await I.startImport(id, owner.id, ref)
+    let v3 = (st3 as { data: T.ImportPassView }).data
+    for (let i = 0; i < 4 && v3.status === 'MAPPING' && !v3.mapping.chunks.some(T.chunkNeedsYou); i++) v3 = ((await I.advanceImport(id, owner.id, v3.id)) as { data: T.ImportPassView }).data
+    ok('(3) a provider that keeps failing: "Lex could not read part 1 (the model did not answer). Nothing has been written."', /Lex could not read part 1 \(the model did not answer\)\. Nothing has been written\./.test(v3.failure ?? ''), v3.failure ?? '')
+    control('the failure sentence still naming "the reading service" (must be FALSE)', /reading service/.test(v3.failure ?? ''))
+    await I.discardImport(id, v3.id)
+  } finally {
+    I.modelCaller.current = real
+    await deleteScratch(id)
+  }
+}
+
+function partJ() {
+  section('J · the opened record, top to bottom (18 Oct, CCh B) — and the commentary renders')
+  const withCom = (n: number, extra: Record<string, unknown> = {}) => mkAction(n, { commentary: 'The intention: one named owner per target.\n\nSecond paragraph: examples.', policyTest: { verdict: 'FITS', reason: 'It fits the policy.', from: [] }, avenue: 'LEGISLATION', targetCauseIds: ['c1'], ...extra })
+  const act = withCom(7)
+  const openHtml = (step: number, a: unknown = act) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
+    ideaId: 'idea-x', actions: [a] as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
+    causes: [{ id: 'c1', number: 1, cause: 'A cause', whyPersisted: null }] as never, busy: false, onChanged: () => {},
+    renderFull: (x: unknown, s: number, between?: React.ReactNode) => React.createElement(FP.ActionCard, { action: x as never, step: s as never, between, benchmarks: [], costLines: [], busy: false, api: {} as never, costLinesApi: {} as never }),
+    initiallyOpen: ['a7'], step: step as never, costLineActionIds: [],
+  }))
+  const html = openHtml(1)
+  const pos = (re: RegExp) => html.search(re)
+  const order = [pos(/data-open-title/), pos(/Close −/), pos(/data-statement/), pos(/data-test-line/), pos(/The causes it attacks/), pos(/data-commentary/)]
+  ok('top to bottom: [title · Edit title · Close], the full statement, [test | heading menu], avenue and causes, Commentary', order.every((p) => p >= 0) && order.every((p, i) => i === 0 || p > order[i - 1] || (i === 1 && p > 0)), order.join(','))
+  const first = textOf(html.slice(pos(/data-open-title/), pos(/data-statement/)))
+  ok('the title line carries "Edit title" and Close, once each', /Edit title/.test(first) && (html.match(/Edit title/g) ?? []).length === 1 && (html.match(/Close −/g) ?? []).length === 1)
+  ok('the full statement is on the card, uncut', textOf(html).includes(norm(act.practicalStep)) && !/data-row-summary/.test(html))
+  ok('the title is not repeated (it appears once on the opened record)', (textOf(html).match(/Action 7/g) ?? []).length === 1, String((textOf(html).match(/Action 7/g) ?? []).length))
+  const line = html.slice(pos(/data-test-line/), pos(/The causes it attacks/))
+  ok('the policy test and the heading menu are on ONE line (the same flex row), the heading menu right-aligned, the test not full width', /Policy test/.test(line) && /Heading for action 7/.test(line) && /ml-auto/.test(line) && /w-fit/.test(line) && !/w-full/.test(line.slice(0, line.indexOf('Policy test') + 400)))
+  ok('the line under the title (avenue · causes · tested) is gone from the opened row', !/>1 cause</.test(html) && !/data-not-tested(?!-box)/.test(html))
+  ok('the Commentary renders on the opened card, labelled "Commentary" (not "Mechanism — commentary"), whole', /data-commentary/.test(html) && /Commentary<\/p>/.test(html) && !/Mechanism — commentary/.test(html) && textOf(html).includes('Second paragraph: examples.'))
+  control('an action with NO commentary showing a Commentary box (must be FALSE)', /data-commentary/.test(openHtml(1, withCom(7, { commentary: null }))))
+  control('the heading menu still sitting in the title line / header (must be FALSE)', /Heading for action 7[\s\S]{0,200}Close −/.test(html) || /Close −[\s\S]{0,300}Heading for action 7[\s\S]{0,30}<\/div><\/div><div class="border-t/.test(html))
+  const closed = renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: [act] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], step: 1 as never, costLineActionIds: [] }))
+  ok('the CLOSED row keeps a two-line snippet (clamped to two lines) and its tags', /data-row-summary/.test(closed) && /WebkitLineClamp|-webkit-line-clamp:\s*2/.test(closed) && /1 cause/.test(closed))
+  const s2 = openHtml(2)
+  ok('step 2 / 3: the opened record has the title line and no heading menu', /data-open-title/.test(s2) && !/Heading for action 7/.test(s2))
+}
+
 async function main() {
   partA()
   await partB()
@@ -548,6 +639,8 @@ async function main() {
   await partF()
   partG()
   await partH()
+  await partI()
+  partJ()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

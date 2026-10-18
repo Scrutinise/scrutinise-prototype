@@ -1553,9 +1553,11 @@ function costLineLabel(l: CanonicalCostLine): string {
  * and cost lines — labelled "Cost to implement / Cost to enforce / Cost of compliance" (decision 179, never "Against"), step 4 nothing here
  * (sequence is the workspace's own control). Editing a step edits only that step's part.
  */
-function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, step = 1 }: {
+export function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, step = 1, between }: {
   action: CanonicalAction; benchmarks: CanonicalBenchmark[]; costLines: CanonicalCostLine[]
   busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi; step?: ActionsStep
+  /** 18 Oct (CCh B) - step 1 only: what sits between the statement and the commentary (the policy-test line, avenue and causes). */
+  between?: ReactNode
 }) {
   const [editing, setEditing] = useState(false)
   const [d, setD] = useState<ActionDraft>(action)
@@ -1600,6 +1602,7 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, st
             ))}
           </div>
         )}
+        {step === 1 && between}
         <div className="flex gap-2">
           <button disabled={busy || !d.practicalStep.trim()} onClick={() => { api.update(action.id, d); setEditing(false) }}
             className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
@@ -1613,19 +1616,21 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi, st
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-2" data-card-step={step}>
       {step === 1 && (
-        <>
-          <p className="text-sm text-zinc-800">{action.practicalStep}</p>
+        <div className="space-y-2">
+          {/* 18 Oct (CCh B) - the FULL statement first; then what the workspace hands in; then the Commentary (181/185, unlimited, rendered whenever it exists). */}
+          <p className="text-sm text-zinc-800 whitespace-pre-wrap" data-statement>{action.practicalStep}</p>
+          {between}
           {action.commentary?.trim() && (
-            <div className="mt-1.5 rounded border border-zinc-200 bg-zinc-50 p-1.5" data-commentary>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Mechanism — commentary</p>
+            <div className="rounded border border-zinc-200 bg-zinc-50 p-1.5" data-commentary>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Commentary</p>
               <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{action.commentary}</p>
             </div>
           )}
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-zinc-500">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-500">
             {action.mechanismType && <span>Mechanism: {action.mechanismType}</span>}
             {action.targetOrganisation && <span>Target: {action.targetOrganisation}</span>}
           </div>
-        </>
+        </div>
       )}
       {step === 2 && (
         <>
@@ -1699,7 +1704,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
         <ActionsWorkspace
           ideaId={ideaId} actions={actions} setAside={setAside} headings={headings} causes={causes} busy={busy} onChanged={onChanged}
           step={step} costLineActionIds={[...new Set(costLines.map((l) => l.actionId))]}
-          renderFull={(a, s) => <ActionCard action={a} step={s} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
+          renderFull={(a, s, between) => <ActionCard action={a} step={s} between={between} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
         />
       ) : (
         <div className="space-y-1.5">

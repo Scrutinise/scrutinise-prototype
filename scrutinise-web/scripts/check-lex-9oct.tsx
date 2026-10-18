@@ -50,7 +50,7 @@ const toAction = (a: Row) => ({
   policyTest: a.policyTestVerdict ? { verdict: a.policyTestVerdict, reason: a.policyTestReason, from: Array.isArray(a.policyTestFrom) ? (a.policyTestFrom as unknown[]).map(String) : [] } : null,
 })
 const render = (actions: unknown[], headings: unknown[] = [], setAside: unknown[] = [], initiallyOpen: string[] = []) =>
-  renderToStaticMarkup(<ActionsWorkspace ideaId="idea-x" actions={actions as never} setAside={setAside as never} headings={headings as never} causes={[]} busy={false} onChanged={() => {}} renderFull={() => <div />} initiallyOpen={initiallyOpen} />)
+  renderToStaticMarkup(<ActionsWorkspace ideaId="idea-x" actions={actions as never} setAside={setAside as never} headings={headings as never} causes={[]} busy={false} onChanged={() => {}} renderFull={(_a, _s, between) => <div>{between}</div>} initiallyOpen={initiallyOpen} />)
 
 function partA() {
   section('1 · decision 138 — the policy test in the one list (pure + rendered)')

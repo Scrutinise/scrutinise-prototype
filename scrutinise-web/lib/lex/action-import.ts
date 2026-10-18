@@ -317,7 +317,7 @@ interface RawItem {
   title?: unknown; summary?: unknown; implementer?: unknown; policyCategory?: unknown; policyTarget?: unknown
 }
 
-const ITEMS_SCHEMA = {
+export const ITEMS_SCHEMA = {
   type: 'object',
   properties: {
     items: {
@@ -339,7 +339,7 @@ const ITEMS_SCHEMA = {
   required: ['items'],
 } as const
 
-const ITEMS_SYSTEM = [
+export const ITEMS_SYSTEM = [
   'You read ONE part of a document that proposes ideas for a UK policy proposal, and list every separate PROPOSAL in it, so a person',
   'can review each one before anything is added to their Coherent Actions list. A coherent action is a concrete step: something an',
   'organisation or a person would do, change, create, publish, require or stop.',
@@ -380,7 +380,7 @@ const ITEMS_SYSTEM = [
 
 interface KernelBits { problem: string; obstacle: string; causes: Array<{ number: number; cause: string }>; options: Array<{ number: number; approach: string }>; chosen: { approach: string; rulesOut: string | null; chainLink: string | null } | null }
 
-async function readKernelBits(ideaId: string): Promise<KernelBits> {
+export async function readKernelBits(ideaId: string): Promise<KernelBits> {
   const [idea, causes, options, chosen] = await Promise.all([
     prisma.idea.findUnique({ where: { id: ideaId }, select: { title: true, challenge: true, summaryDescription: true, pivotalObstacle: true } }),
     prisma.diagnosisCause.findMany({ where: { ideaId }, select: { number: true, cause: true }, orderBy: { number: 'asc' } }),
@@ -398,7 +398,7 @@ async function readKernelBits(ideaId: string): Promise<KernelBits> {
 
 const policyRefs = (k: KernelBits): Set<string> => new Set(['pivotalObstacle', 'challenge', ...k.causes.map((c) => `causes:${c.number}`), ...k.options.map((o) => `policyOptions:${o.number}`)])
 
-function chunkUser(text: string, chunk: ImportChunk, mapping: ImportMapping, kernel: KernelBits, live: Array<{ number: number; label: string }>, headingNames: string[], ideaTitle: string): string {
+export function chunkUser(text: string, chunk: ImportChunk, mapping: ImportMapping, kernel: KernelBits, live: Array<{ number: number; label: string }>, headingNames: string[], ideaTitle: string): string {
   return [
     `THE IDEA: ${ideaTitle}`,
     kernel.problem ? `THE PROBLEM IT ADDRESSES: ${clip(kernel.problem, 500)}` : '',
@@ -568,6 +568,24 @@ export async function advanceImport(ideaId: string, userId: string, passId: stri
   return { ok: true, data: asView(again!) }
 }
 
+/** The provider refused because the ACCOUNT is out of credit (HTTP 400 "credit balance is too low") — retrying cannot help. */
+const outOfCredit = (f: { detail: string }) => /credit balance is too low|insufficient[_ ]quota|billing/i.test(f.detail)
+
+/** Worth one immediate retry: a network fault, a timeout-free 5xx/429/529, an empty or unparseable answer. Never a billing or request-shape refusal. */
+export function isTransient(f: { reason: string; detail: string }): boolean {
+  if (f.reason === 'empty' || f.reason === 'bad-json') return true
+  if (f.reason !== 'http') return false // truncated is split, not retried; timeout would double a 200 s wait; blocked / no-key / unroutable cannot change
+  if (outOfCredit(f)) return false
+  const code = /HTTP (\d{3})/.exec(f.detail)?.[1]
+  return !code || code === '429' || code.startsWith('5') // no status = the connection itself failed
+}
+
+/** The one reason shown in the parentheses of the screen sentence — plain words, no developer nouns. */
+export function failureWhy(f: { reason: string; detail: string }): string {
+  if (outOfCredit(f)) return 'the model provider says the account is out of credit'
+  return 'the model did not answer'
+}
+
 async function advanceChunk(row: PassRow, m: ImportMapping, text: string, ideaId: string, userId: string): Promise<Result<ImportPassView>> {
   // 26-S2 §10.3 — a part that used up its tries WAITS for the user ("Retry part N"); it does not end the pass, and the others are kept.
   const chunk = m.chunks.find((c) => c.status === 'PENDING' || (c.status === 'FAILED' && !chunkNeedsYou(c)))
@@ -596,12 +614,19 @@ async function advanceChunk(row: PassRow, m: ImportMapping, text: string, ideaId
 
   chunk.tries += 1
   const t0 = Date.now()
-  const res = await modelCaller.current<{ items?: RawItem[] }>({
+  const callItems = () => modelCaller.current<{ items?: RawItem[] }>({
     model: IMPORT_MODEL, system: ITEMS_SYSTEM, user: chunkUser(text, chunk, m, kernel, live, headingNames, idea?.title ?? ''), schema: ITEMS_SCHEMA as never,
     maxOutputTokens: ITEMS_MAX_OUTPUT_TOKENS, timeoutMs: 200_000, temperature: 0.1, label: 'action-import-chunk', stream: 'lex', pass: 'action-import.map', ideaId, userId,
   })
+  // 18 Oct — a single provider failure retries ITSELF once before it reaches the screen (a part is read, or the user is told why it was not).
+  let res = await callItems()
+  let pence = await priced(res.usage as never, ideaId, userId, 'action-import.map', !res.ok)
+  if (!res.ok && isTransient(res as { reason: string; detail: string })) {
+    console.warn('[action-import] transient failure, retrying once', { passId: row.id, part: partName(chunk), reason: (res as { reason: string }).reason, detail: clip((res as { detail: string }).detail, 300) })
+    res = await callItems()
+    pence += await priced(res.usage as never, ideaId, userId, 'action-import.map', !res.ok)
+  }
   const seconds = Math.round((Date.now() - t0) / 100) / 10
-  const pence = await priced(res.usage as never, ideaId, userId, 'action-import.map', !res.ok)
 
   if (!res.ok) {
     const f = res as { reason: string; detail: string }
@@ -629,7 +654,7 @@ async function advanceChunk(row: PassRow, m: ImportMapping, text: string, ideaId
     } else {
       chunk.status = 'FAILED'
       chunk.error = chunk.tries >= IMPORT_MAX_TRIES
-        ? `Part ${partName(chunk)} could not be read — the reading service did not answer properly. Nothing has been written. Try this part again, or discard this import.`
+        ? `Lex could not read part ${partName(chunk)} (${failureWhy(f)}). Nothing has been written. Press “Retry part ${partName(chunk)}”, or discard this import.`
         : null
     }
     const stuck = chunkNeedsYou(chunk)
