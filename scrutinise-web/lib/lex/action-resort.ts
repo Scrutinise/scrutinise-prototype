@@ -259,7 +259,7 @@ export async function consolidateHeading(ideaId: string, userId: string, heading
         aC.forEach((x) => addCauses.add(x)); aD.forEach((x) => addConds.add(x))
         await tx.lexCoherentAction.update({
           where: { id: c.id },
-          data: { status: 'ARCHIVED', foldedIntoId: lead.id, ruleOutReason: `Folded into #${lead.number} as a component - restore it to unfold.`, foldedAdded: { targetCauseIds: aC, conditionIds: aD } as never },
+          data: { status: 'ARCHIVED', foldedIntoId: lead.id, ruleOutReason: `Part of #${lead.number} - Restore puts it back as its own row.`, foldedAdded: { targetCauseIds: aC, conditionIds: aD } as never },
         })
       }
       await tx.lexCoherentAction.update({

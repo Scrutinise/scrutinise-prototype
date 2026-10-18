@@ -702,7 +702,7 @@ export async function applyActionMerge(ideaId: string, userId: string, na: numbe
     })
     const cl = copyLines(fc.id, [fs.id])
     if (cl.length) await tx.costLine.createMany({ data: cl as never })
-    await tx.lexCoherentAction.update({ where: { id: fs.id }, data: { status: 'ARCHIVED', mergedIntoId: fc.id, ruleOutReason: `Folded into ${fc.number}.` } })
+    await tx.lexCoherentAction.update({ where: { id: fs.id }, data: { status: 'ARCHIVED', mergedIntoId: fc.id, ruleOutReason: `Joined into ${fc.number}.` } })
     const pointing = await tx.lexCoherentAction.findMany({ where: { ideaId, beforeIds: { has: fs.id } }, select: { id: true, beforeIds: true } })
     for (const p of pointing) await tx.lexCoherentAction.update({ where: { id: p.id }, data: { beforeIds: [...new Set(p.beforeIds.map((x) => (x === fs.id ? fc.id : x)))].filter((x) => x !== p.id) } })
   })

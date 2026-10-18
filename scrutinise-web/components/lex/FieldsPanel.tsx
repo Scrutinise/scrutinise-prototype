@@ -15,6 +15,7 @@ import ActionsWorkspace from './ActionsWorkspace'
 import ActionsSteps from './ActionsSteps'
 import BoundedInput from './BoundedInput'
 import { LIMITS } from '@/lib/lex/input-limits'
+import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
 import { COST_LINE_LABEL, clampStep, type ActionsStep } from '@/lib/lex/action-steps'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
@@ -1675,7 +1676,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
           {action.commentary?.trim() && (
             <div className="rounded border border-zinc-200 bg-zinc-50 p-1.5" data-commentary>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Commentary</p>
-              <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{action.commentary}</p>
+              <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{plainFoldHeader(action.commentary)}</p>
             </div>
           )}
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-500">

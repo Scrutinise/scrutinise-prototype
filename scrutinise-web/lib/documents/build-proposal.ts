@@ -730,7 +730,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
           })
           if (amount) runs.push({ text: ` — ${amount}${l.recurrence === 'ONE_OFF' ? ' one-off' : l.recurrence === 'PER_YEAR' ? ' per year' : ''}` })
           runs.push({ text: l.basis ? ` (${l.basis})` : ' (no basis stated)', italic: !l.basis })
-          if (l.fromNumber != null) runs.push({ text: ` — from component #${l.fromNumber}, folded in`, italic: true })
+          if (l.fromNumber != null) runs.push({ text: ` — from part #${l.fromNumber}, quoted in`, italic: true })
           return runs
         }),
       })
@@ -738,7 +738,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
 
     // 26-S2 195 - the action's commentary (its folded, quoted components and the reasoning) is printed under it. The Meeting Pack does not print it.
     if (a.commentary) {
-      blocks.push({ kind: 'heading', level: 3, runs: text('Components and detail') })
+      blocks.push({ kind: 'heading', level: 3, runs: text('Commentary') })
       blocks.push(...markdownToBlocks(a.commentary))
     }
 

@@ -355,7 +355,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                   {a.avenue && <span>{AVENUE_LABEL[a.avenue]}</span>}
                   {a.targetCauseIds.length > 0 && <span>{a.targetCauseIds.length} cause{a.targetCauseIds.length === 1 ? '' : 's'}</span>}
                   {activeConditions(conditions).length > 0 && <span data-condition-tag>{a.supportOnly ? 'support' : a.conditionIds.length ? `condition${a.conditionIds.length === 1 ? '' : 's'} ${conditionWords(conditions, a)}` : 'no condition'}</span>}
-                  {setAside.some((s) => s.foldedIntoId === a.id) && <span data-folded-count>{setAside.filter((s) => s.foldedIntoId === a.id).length} folded in</span>}
+                  {setAside.some((s) => s.foldedIntoId === a.id) && <span data-folded-count>{setAside.filter((s) => s.foldedIntoId === a.id).length} tucked in</span>}
                   {a.mergedFrom.length > 0 && <span>merged from #{a.mergedFrom.join(', #')}</span>}
                   {/* DECISION 138 — the policy test, in the one list: a WORD AND A SHAPE (✗ ○ ? ✓), never colour alone. A conflict is boxed. */}
                   {a.policyTest ? (
@@ -681,8 +681,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           <ul className="space-y-1">{setAside.map((a) => (
             <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
-              <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.foldedIntoId ? `folded into #${byIdAll.get(a.foldedIntoId)?.number ?? '?'} as a component` : a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason && !a.foldedIntoId ? `: ${a.ruleOutReason}` : ''}</span></span>
-              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} unfolded and back in the list; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s commentary.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">{a.foldedIntoId ? 'Unfold' : 'Restore'}</button>
+              <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.foldedIntoId ? `part of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}` : a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason && !a.foldedIntoId ? `: ${a.ruleOutReason}` : ''}</span></span>
+              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} restored as its own row; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s Commentary.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>
             </li>))}</ul>
         </CollapsedBlock>
       )}
@@ -920,7 +920,7 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
       )}
       {h && !compact && !editing && (
         <span className="ml-auto flex flex-wrap gap-2 items-center text-[11px]">
-          {onConsolidate && <button type="button" disabled={disabled} onClick={onConsolidate} data-consolidate-button title="Lex looks for actions here that are only parts of another, and for true duplicates. Nothing is deleted; every fold can be restored." className="font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 disabled:opacity-40">Consolidate this heading</button>}
+          {onConsolidate && <button type="button" disabled={disabled} onClick={onConsolidate} data-consolidate-button title="Lex looks for actions here that are only parts of another, and for two saying the same thing. Nothing is deleted; each can be restored." className="font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 disabled:opacity-40">Consolidate this heading</button>}
           <button onClick={() => setEditing(true)} className="underline text-zinc-600">Rename</button>
           <select value={h.colourKey} disabled={disabled} onChange={(e) => void ops.run('updateHeading', { headingId: h.id, colourKey: e.target.value })} aria-label={`Colour for ${h.name}`} className="border border-zinc-300 rounded px-1 py-0.5">
             {HEADING_PALETTE.map((p) => <option key={p.key} value={p.key}>{p.glyph} {p.name}</option>)}
@@ -995,7 +995,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
   const apply = async () => {
     if (!answer) return
     const r = await ops.run('applyMerge', { a, b, answer: { ...answer, merged: edited ?? answer.merged } }, 'merging')
-    if (r.ok && r.result) setDone(r.result.kind === 'MERGED' ? `Merged into #${r.result.resultNumber}. The originals are kept beneath it.` : `Folded into #${r.result.resultNumber}. The other is kept, marked merged away.`)
+    if (r.ok && r.result) setDone(r.result.kind === 'MERGED' ? `Merged into #${r.result.resultNumber}. The originals are kept beneath it.` : `Joined into #${r.result.resultNumber}. The other is kept, marked merged away.`)
   }
   const VERDICT: Record<string, string> = {
     MERGE: 'Merge — parts of one thing to do', ONE_CONTAINS_THE_OTHER: 'One contains the other', SEQUENCE: 'Sequence — separate; one goes first', CONTRADICTORY: 'Contradictory — they cannot both be done',
@@ -1051,7 +1051,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
             </div>
           )}
           {mode === 'merge' && (answer.verdict === 'MERGE' || answer.verdict === 'ONE_CONTAINS_THE_OTHER') && !done && (
-            <button disabled={!!ops.busy} onClick={apply} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white disabled:opacity-40">{answer.verdict === 'MERGE' ? 'Merge them' : `Fold #${answer.subordinateNumber} into #${answer.subordinateNumber === a ? b : a}`}</button>
+            <button disabled={!!ops.busy} onClick={apply} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white disabled:opacity-40">{answer.verdict === 'MERGE' ? 'Merge them' : `Join #${answer.subordinateNumber} into #${answer.subordinateNumber === a ? b : a}`}</button>
           )}
           {mode === 'merge' && answer.verdict === 'SEQUENCE' && answer.subordinateNumber != null && <p className="text-[11px] text-zinc-600">Nothing is merged. Open #{answer.subordinateNumber} and set its sequence to Later, with the other coming before it.</p>}
           {mode === 'merge' && answer.verdict === 'CONTRADICTORY' && <p className="text-[11px] text-zinc-600">Nothing is merged. Rule one of them out, with a reason, or keep both and say why.</p>}

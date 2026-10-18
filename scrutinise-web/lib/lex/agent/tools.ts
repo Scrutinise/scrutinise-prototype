@@ -1151,7 +1151,7 @@ const ruleOutActionsTool: ToolDefinition = {
 
 const mergeActionsTool: ToolDefinition = {
   name: 'merge_actions', category: 'change', tier: 'ask',
-  description: 'Merge two coherent actions into one new numbered action, using the title and wording YOU supply (mode "merge"), or fold one into the other (mode "fold": the one you name in foldNumber is folded into the other, whose wording you may restate). Both originals are KEPT, marked merged away, and are clickable beneath the result; cost lines are carried. The user sees both parents and the merged wording before confirming. Use compare_actions first if you are not sure how they relate.',
+  description: 'Merge two coherent actions into one new numbered action, using the title and wording YOU supply (mode "merge"), or join one into the other (mode "fold": the one you name in foldNumber is joined into the other, whose wording you may restate). Both originals are KEPT, marked merged away, and are clickable beneath the result; cost lines are carried. The user sees both parents and the merged wording before confirming. Use compare_actions first if you are not sure how they relate.',
   schema: z.object({
     numberA: z.number().int(), numberB: z.number().int(), mode: z.enum(['merge', 'fold']).default('merge'),
     foldNumber: z.number().int().optional().describe('mode fold only: the action number to fold away'),
@@ -1159,13 +1159,13 @@ const mergeActionsTool: ToolDefinition = {
     practicalStep: z.string().min(15).max(LIMITS.actionStatement, STATEMENT_TOO_LONG).describe('the merged action written as ONE action, not two paragraphs joined with "and"'),
   }),
   describe: ({ numberA, numberB, mode, foldNumber, title, practicalStep }) => mode === 'fold'
-    ? `Fold action ${foldNumber} into action ${foldNumber === numberA ? numberB : numberA}, restating it as “${clip(title, 80)}: ${clip(practicalStep, 160)}”. The folded action is kept, marked merged away.`
+    ? `Join action ${foldNumber} into action ${foldNumber === numberA ? numberB : numberA}, restating it as “${clip(title, 80)}: ${clip(practicalStep, 160)}”. The joined action is kept, marked merged away.`
     : `Merge actions ${numberA} and ${numberB} into one: “${clip(title, 80)}: ${clip(practicalStep, 180)}”. Both originals are kept, marked merged away.`,
   async run(ctx, input) {
     if (input.numberA === input.numberB) return fail('an action cannot be merged with itself.')
     if (input.mode === 'fold' && input.foldNumber !== input.numberA && input.foldNumber !== input.numberB) return fail('for a fold, foldNumber must be one of the two action numbers.')
     const answer: AS.ActionMergeAnswer = input.mode === 'fold'
-      ? { verdict: 'ONE_CONTAINS_THE_OTHER', reasoning: 'Folded at the user’s confirmation.', merged: { title: input.title, practicalStep: input.practicalStep }, subordinateNumber: input.foldNumber! }
+      ? { verdict: 'ONE_CONTAINS_THE_OTHER', reasoning: 'Joined at the user’s confirmation.', merged: { title: input.title, practicalStep: input.practicalStep }, subordinateNumber: input.foldNumber! }
       : { verdict: 'MERGE', reasoning: 'Merged at the user’s confirmation.', merged: { title: input.title, practicalStep: input.practicalStep }, subordinateNumber: null }
     const r = unwrap(await AS.applyActionMerge(ctx.ideaId, ctx.userId, input.numberA, input.numberB, answer))
     if (isBad(r)) return fail(r.error)

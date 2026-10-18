@@ -39,6 +39,7 @@ import { PAGE_SEQUENCE, type FieldDef } from '@/lib/lex/page1-config'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
 import { parseRecord } from '@/lib/lex/action-record'
+import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
 import { refIndex, urlKey } from '@/lib/lex/source-registry'
 
 /**
@@ -788,7 +789,7 @@ export async function buildProposalSnapshot(
       implementationCost: figure(a.implementationCost),
       enforcementCost: figure(a.enforcementCost),
       regulatoryFriction: figure(a.regulatoryFriction),
-      commentary: (a as { commentary?: string | null }).commentary?.trim() || null,
+      commentary: plainFoldHeader((a as { commentary?: string | null }).commentary).trim() || null,
       costLines: [...(linesByAction.get(a.id) ?? []), ...(rolledUp.get(a.id) ?? [])],
       source: a.source,
       evidenceIds,

@@ -75,7 +75,12 @@ export function consolidateEstimate(actions: number): { pence: number; measured:
 export const RESORT_CONFIRM_ABOVE_PENCE = 20
 
 // ── Consolidate ───────────────────────────────────────────────────────────────────────────────────────────
-export const FOLD_HEADER = 'Components folded in:'
+// 199 - plain words. Commentary written before 199 carries the old header; it is still recognised and is rewritten to the new one.
+export const FOLD_HEADER = 'Parts of this action, quoted'
+const LEGACY_FOLD_HEADER = 'Components folded in:'
+const isFoldHeader = (l: string) => l.trim() === FOLD_HEADER || l.trim() === LEGACY_FOLD_HEADER
+/** Show old commentary under the new header (display and documents; the stored text is rewritten the next time a part is added or taken out). */
+export const plainFoldHeader = (commentary: string | null | undefined): string => (commentary ?? '').split('\n').map((l) => (l.trim() === LEGACY_FOLD_HEADER ? FOLD_HEADER : l)).join('\n')
 const oneLine = (s: string) => s.replace(/\s+/g, ' ').trim()
 
 /** One bullet: the citation [#n], the component's own words in quotes, the reason. The text is the ROW's, never the model's. */
@@ -83,9 +88,9 @@ export function foldLine(number: number, title: string | null, statement: string
   return `• [#${number}] “${oneLine(statement)}”${title?.trim() ? ` (${oneLine(title)})` : ''}${reason?.trim() ? ` — ${oneLine(reason)}` : ''}`
 }
 export function addFoldLines(commentary: string | null | undefined, lines: string[]): string {
-  const base = (commentary ?? '').replace(/\s+$/, '')
+  const base = plainFoldHeader(commentary).replace(/\s+$/, '')
   if (!lines.length) return base
-  const has = base.split('\n').some((l) => l.trim() === FOLD_HEADER)
+  const has = base.split('\n').some(isFoldHeader)
   return has ? `${base}\n${lines.join('\n')}` : `${base ? `${base}\n\n` : ''}${FOLD_HEADER}\n${lines.join('\n')}`
 }
 /** Unfold one component: its bullet goes; the header goes with the last bullet. Returns null when nothing is left. */
@@ -94,7 +99,7 @@ export function removeFoldLine(commentary: string | null | undefined, number: nu
   const prefix = `• [#${number}] `
   const kept = lines.filter((l) => !l.startsWith(prefix))
   const bullets = kept.filter((l) => l.startsWith('• [#'))
-  const out = bullets.length ? kept : kept.filter((l) => l.trim() !== FOLD_HEADER)
+  const out = bullets.length ? kept.map((l) => (isFoldHeader(l) ? FOLD_HEADER : l)) : kept.filter((l) => !isFoldHeader(l))
   const text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim()
   return text || null
 }

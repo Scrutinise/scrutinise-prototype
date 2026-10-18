@@ -10966,3 +10966,6 @@ Three one-press rule-outs on the merge/compare panel (component only; browser-as
 
 ### LEX THREAD - 18 Oct (9) (2026-10-18 17:44 UTC)
 Retire heading (archives); 198 cost total excludes ruled-out/merged-away lines; Consolidate-on-hidden-heading asserted; 197 was already live (3f495ca). Waiting on Charlie.
+
+### LEX THREAD - 18 Oct (10) decision 199 (2026-10-18 22:04 UTC)
+Plain words for consolidation on screen, in Lex's controls list and in the Proposal (Tidy box, "tucked into their bigger action", "pairs joined", "Parts of this action, quoted", "part of #n"); old commentary headers still shown and rewritten on next change, no stored data edited. Waiting on Charlie.

@@ -245,8 +245,8 @@ export function ConsolidateCard({ s, ops, disabled, onClose, setS }: { s: Consol
   if (s.phase === 'confirm') {
     return (
       <div className="rounded border-2 border-zinc-900 bg-white p-2 text-xs space-y-1.5 mb-1" data-consolidate-card role="alert">
-        <p className="font-semibold">Consolidate “{s.heading}” ({s.actions} actions)?</p>
-        <p className="text-[11px]">Lex looks for <span className="font-medium">components</span> that are only parts of another action on this heading, and for <span className="font-medium">true duplicates</span>. A component is folded into its mechanism’s commentary as a quote of its own words, cited by number, and kept (archived) — Restore puts it back. A duplicate is merged and both originals are kept. Nothing is deleted. Estimated <span className="font-semibold">{pence(s.estimate.pence)}</span> — {s.estimate.measured ? 'measured on a copy of a real idea' : 'not yet measured: a guess until a run on a copy of a real idea is recorded'}.</p>
+        <p className="font-semibold">Tidy “{s.heading}” ({s.actions} actions)?</p>
+        <p className="text-[11px]">Lex reads the actions under this heading and sorts out two things. Parts of a bigger action — a field, a rule or a step that only makes sense inside another action on this list — are tucked into that action’s Commentary, quoted word for word with their number, so nothing is lost and “Restore” puts any of them back as its own row. Two actions saying the same thing are joined into one, and both originals are kept. Nothing is deleted. Estimated {pence(s.estimate.pence)} — {s.estimate.measured ? 'measured on a copy of a real idea' : 'not yet measured: a guess until a run on a copy of a real idea is recorded'}.</p>
         <p className="flex gap-2">
           <button type="button" disabled={disabled} data-consolidate-go onClick={async () => {
             const r = await ops.run('consolidate', { headingId: s.headingId }, `Lex is consolidating “${s.heading}”`)
@@ -261,13 +261,13 @@ export function ConsolidateCard({ s, ops, disabled, onClose, setS }: { s: Consol
   const ids = [...r.folded.map((f) => f.id), ...r.merged.map((m) => m.id)]
   return (
     <div className="rounded border-2 border-zinc-900 bg-white p-2 text-xs space-y-1 mb-1" data-consolidate-result role="status">
-      <p className="font-semibold">“{s.heading}”: {r.before} → {r.after} live actions{r.pence != null ? ` (${pence(r.pence)}, measured on this run)` : ''}.</p>
-      {r.folded.length > 0 && <p className="text-[11px]">Folded {r.folded.length} component{r.folded.length === 1 ? '' : 's'} into their mechanism: {r.folded.map((f) => `#${f.number} into #${f.intoNumber}`).join('; ')}. Each is quoted in the mechanism’s commentary and kept under “Ruled out and merged away”.</p>}
-      {r.merged.length > 0 && <p className="text-[11px]">Merged {r.merged.length} true duplicate{r.merged.length === 1 ? '' : 's'}: {r.merged.map((m) => `#${m.number} into #${m.intoNumber}`).join('; ')}. Both originals are kept.</p>}
-      {r.folded.length === 0 && r.merged.length === 0 && <p className="text-[11px]">Lex found nothing here it was sure enough to fold or merge, so nothing changed.</p>}
+      <p className="font-semibold">{r.before} → {r.after} live actions{r.pence != null ? ` (${pence(r.pence)}, measured on this run)` : ''}.</p>
+      {r.folded.length > 0 && <p className="text-[11px]">{r.folded.length} tucked into their bigger action: {r.folded.map((f) => `#${f.number} into #${f.intoNumber}`).join(', ')}. Each is quoted in that action’s Commentary and kept under “Ruled out and merged away”.</p>}
+      {r.merged.length > 0 && <p className="text-[11px]">{r.merged.length} {r.merged.length === 1 ? 'pair' : 'pairs'} joined: {r.merged.map((m) => `#${m.number} into #${m.intoNumber}`).join(', ')}, both kept.</p>}
+      {r.folded.length === 0 && r.merged.length === 0 && <p className="text-[11px]">Lex found nothing here it was sure enough about, so nothing changed.</p>}
       {r.refused.length > 0 && <p className="text-[11px] text-zinc-700">Not applied: {r.refused.join('; ')}.</p>}
       <p className="flex gap-2">
-        {ids.length > 0 && <button type="button" disabled={disabled} data-consolidate-undo onClick={async () => { const x = await ops.run('restore', { ids }, undefined, () => `Saved: ${ids.length} action${ids.length === 1 ? '' : 's'} restored; their quotes are out of the mechanisms’ commentary.`); if (x.ok) onClose() }} className="underline font-medium disabled:opacity-40">Undo this consolidation</button>}
+        {ids.length > 0 && <button type="button" disabled={disabled} data-consolidate-undo onClick={async () => { const x = await ops.run('restore', { ids }, undefined, () => `Saved: ${ids.length} action${ids.length === 1 ? '' : 's'} restored; their quotes are out of the Commentary.`); if (x.ok) onClose() }} className="underline font-medium disabled:opacity-40">Undo this consolidation</button>}
         <button type="button" onClick={onClose} className="underline text-zinc-700">Close</button>
       </p>
     </div>

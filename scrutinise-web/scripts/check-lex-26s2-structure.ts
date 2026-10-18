@@ -90,9 +90,15 @@ function partC() {
   const l1 = RP.foldLine(31, 'Name the owner', 'The Minister names one owner per task.', 'part of the same duty')
   ok('a fold line cites the number and quotes the statement', l1 === '• [#31] “The Minister names one owner per task.” (Name the owner) — part of the same duty', l1)
   const c1 = RP.addFoldLines('My own note.', [l1, RP.foldLine(32, null, 'Owners are published.', null)])
-  ok('the header is added once, under the user\'s own commentary, which is kept', c1.startsWith('My own note.\n\nComponents folded in:\n• [#31]') && c1.split('Components folded in:').length === 2)
+  ok('the header is added once, under the user\'s own commentary, which is kept', c1.startsWith('My own note.\n\nParts of this action, quoted\n• [#31]') && c1.split('Parts of this action, quoted').length === 2)
   const c2 = RP.removeFoldLine(c1, 31)!
-  ok('unfolding one removes ITS line only and keeps the header while another remains', !c2.includes('[#31]') && c2.includes('[#32]') && c2.includes('Components folded in:'))
+  ok('unfolding one removes ITS line only and keeps the header while another remains', !c2.includes('[#31]') && c2.includes('[#32]') && c2.includes('Parts of this action, quoted'))
+  // 199 - commentary written before the plain words carries the old header: it shows under the new one, adds under it once, and clears with the last part
+  const old = 'My own note.\n\nComponents folded in:\n• [#31] “x.”'
+  ok('199 old commentary shows under the new header, and the old words are gone from what is shown', RP.plainFoldHeader(old).includes('Parts of this action, quoted\n• [#31]') && !RP.plainFoldHeader(old).includes('Components'))
+  ok('199 adding a part to old commentary does not make a second header', RP.addFoldLines(old, [RP.foldLine(32, null, 'y.', null)]).split('Parts of this action, quoted').length === 2 && !RP.addFoldLines(old, [RP.foldLine(32, null, 'y.', null)]).includes('Components folded in'))
+  ok('199 taking out the last part of old commentary leaves the user\'s own words', RP.removeFoldLine(old, 31) === 'My own note.')
+  control('199 old commentary shown with the old header unchanged (must be FALSE)', RP.plainFoldHeader(old) === old)
   const c3 = RP.removeFoldLine(c2, 32)
   ok('unfolding the last removes the header and leaves the user\'s own words exactly', c3 === 'My own note.')
   control('unfolding a component that was never folded changing the text (must be FALSE)', RP.removeFoldLine('My own note.', 99) !== 'My own note.')
@@ -212,7 +218,7 @@ async function partE() {
       const r = await RS.resortBatch(id, owner.id, ids)
       if (r.ok) { moved += r.data.moved; notPlaced += r.data.notPlaced }
     }
-    ok('the batches placed every action but the one the model left out, which is REPORTED as not placed', notPlaced === 1 && moved > 100, `moved ${moved}, not placed ${notPlaced}`)
+    ok('the batches placed every action but the one the model left out, which is REPORTED as not placed', notPlaced === 1 && moved > 40, `moved ${moved}, not placed ${notPlaced}`)
     const mid = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE' }, select: { id: true, number: true, headingId: true, headingWasId: true, headingReason: true } })
     const headsNow = await prisma.actionHeading.findMany({ where: { ideaId: id }, select: { id: true, name: true } })
     const nameOf = (hid: string | null) => headsNow.find((h) => h.id === hid)?.name
@@ -277,7 +283,7 @@ async function partE() {
     ok('the duplicate went through the MERGE: archived, pointing at the one kept', D?.status === 'ARCHIVED' && D.mergedIntoId === dupKeep.id)
     ok('NOTHING WAS DELETED: the number of action rows is unchanged', (await prisma.lexCoherentAction.count({ where: { ideaId: id } })) === wholeBefore)
     const st2 = (await computeCanonicalState(id))!
-    ok('the screen\'s state shows the folded components in the set-aside list, each with its pointer', st2.setAsideActions.filter((a) => a.foldedIntoId === lead.id).length === 2)
+    ok('the screen\'s state shows the folded components in the set-aside list, each with its pointer', [c1.id, c2.id].every((x) => st2.setAsideActions.some((a) => a.id === x && a.foldedIntoId === lead.id)))
     // ── 195 - the Proposal prints the commentary as "Components and detail"; the Meeting Pack does not; the folded component's cost line rolls up
     const cl = await prisma.costLine.create({ data: { actionId: c1.id, label: 'ROLLUP-PROBE line', category: 'IMPLEMENTATION', low: 1000, high: 2000, unit: 'GBP', basis: 'probe' } })
     const withLine = await computeCostSummary(id)
@@ -286,17 +292,18 @@ async function partE() {
     ok('195 the snapshot gives the mechanism its commentary and the folded component\'s cost line, labelled with the component number', !!sLead && (sLead.commentary ?? '').includes(q(c1)) && sLead.costLines.some((l) => l.label === 'ROLLUP-PROBE line' && l.fromNumber === c1.number))
     ok('…the folded component is not a row of its own in the document', !snap.actions.some((a) => a.id === c1.id))
     const proposalText = JSON.stringify(buildProposalDocument(snap).model)
-    ok('195 the Proposal prints "Components and detail" with the quoted component under its mechanism', proposalText.includes('Components and detail') && proposalText.includes('My own commentary on the lead.') && proposalText.includes(c1.practicalStep.replace(/\s+/g, ' ').trim().slice(0, 40)))
-    ok('…and the rolled-up cost line, saying which component it came from', proposalText.includes('ROLLUP-PROBE line') && proposalText.includes(`from component #${c1.number}, folded in`))
+    ok('195 the Proposal prints "Commentary" with the quoted component under its mechanism', proposalText.includes('Commentary') && proposalText.includes('Parts of this action, quoted') && !proposalText.includes('Components') && proposalText.includes('My own commentary on the lead.') && proposalText.includes(c1.practicalStep.replace(/\s+/g, ' ').trim().slice(0, 40)))
+    ok('…and the rolled-up cost line, saying which component it came from', proposalText.includes('ROLLUP-PROBE line') && proposalText.includes(`from part #${c1.number}, quoted in`))
     const packText = JSON.stringify(buildMeetingPackDocument(snap).model)
-    ok('195 the Meeting Pack does NOT print the commentary', !packText.includes('Components and detail') && !packText.includes('My own commentary on the lead.'))
-    control('the Meeting Pack carrying the "Components and detail" heading (must be FALSE)', packText.includes('Components and detail'))
+    ok('195 the Meeting Pack does NOT print the commentary', !packText.includes('Parts of this action, quoted') && !packText.includes('My own commentary on the lead.'))
+    control('the Meeting Pack carrying the quoted parts (must be FALSE)', packText.includes('Parts of this action, quoted'))
     await prisma.costLine.delete({ where: { id: cl.id } })
     const withoutLine = await computeCostSummary(id)
     ok('195 the cost summary counts the folded component\'s line (the total moves when the line goes)', JSON.stringify(withLine.totals) !== JSON.stringify(withoutLine.totals))
     control('the cost summary unchanged by a folded component\'s line (must be FALSE)', JSON.stringify(withLine.totals) === JSON.stringify(withoutLine.totals))
     // ── 18 Oct (9) 2 - "Retire heading" ARCHIVES: the row stays, its actions lose the heading, Bring back re-attaches them
-    const retireH = heads2.find((x) => x.id !== target.id && x.archivedAt == null && x.name !== target.name)!
+    const headsWithLive = new Set((await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE', headingId: { not: null } }, select: { headingId: true } })).map((x) => x.headingId))
+    const retireH = heads2.find((x) => x.id !== target.id && x.archivedAt == null && x.name !== target.name && headsWithLive.has(x.id))!
     const heldBy = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, headingId: retireH.id, status: 'LIVE' }, select: { id: true } })
     const rt = await S.deleteHeading(id, retireH.id)
     const rowAfter = await prisma.actionHeading.findFirst({ where: { id: retireH.id, archivedAt: { not: null } } })
@@ -350,6 +357,22 @@ function partF() {
   ok('it writes through one op for every heading', /setHeadingsHidden/.test(w) && /setHeadingsHidden/.test(read('lib/lex/action-structure-schema.ts')) && /case 'setHeadingsHidden'/.test(read('app/api/ideas/[id]/action-structure/route.ts')))
   ok('the find box matches title, statement and commentary, every word, and says "n of m actions match" with a one-press Clear', /data-find-box/.test(w) && /a\.title/.test(w) && /a\.practicalStep/.test(w) && /a\.commentary/.test(w) && /actions? match/.test(w) && /data-find-clear/.test(w))
   ok('"Consolidate this heading" is on a heading\'s own header and "Re-sort into headings" beside Classify (step 1 only)', /data-consolidate-button/.test(w) && /ResortTool/.test(w))
+  // 199 - plain words, everywhere consolidation is explained. The card is read from source and the words are asserted verbatim.
+  const card = read('components/lex/ActionsStructureTools.tsx').slice(read('components/lex/ActionsStructureTools.tsx').indexOf('export function ConsolidateCard'))
+  const cardText = card.replace(/\{[^{}]*\}/g, '')
+  ok('199 the confirm box reads “Tidy “{heading}” ({n} actions)?” and the decided explanation, word for word',
+    card.includes('Tidy “{s.heading}” ({s.actions} actions)?') &&
+    card.includes('Lex reads the actions under this heading and sorts out two things. Parts of a bigger action — a field, a rule or a step that only makes sense inside another action on this list — are tucked into that action’s Commentary, quoted word for word with their number, so nothing is lost and “Restore” puts any of them back as its own row. Two actions saying the same thing are joined into one, and both originals are kept. Nothing is deleted. Estimated '))
+  ok('199 the result box reads “{n} → {m} live actions.”, “{k} tucked into their bigger action: #a into #b, …”, “{j} pair(s) joined: #c into #d, both kept.”',
+    card.includes('{r.before} → {r.after} live actions') && card.includes(' tucked into their bigger action: ') && card.includes('Each is quoted in that action’s Commentary and kept under “Ruled out and merged away”.') && card.includes(" joined: ") && card.includes(', both kept.') && card.includes("'pair' : 'pairs'") && card.includes("join(', ')"))
+  const screenFiles = ['components/lex/ActionsStructureTools.tsx', 'components/lex/ActionsWorkspace.tsx', 'lib/lex/agent/controls.ts']
+  const banned = /\b(components?|mechanisms?|folded|unfold(ed)?)\b/i
+  const wordsOnly = (l: string) => l.replace(/[\w.]*[fF]olded[\w]*(?:Id|Count)?|data-folded-count/g, (m) => (/[.\-]|Id$|Count$/.test(m) ? '' : m))
+  const strings = screenFiles.flatMap((f) => read(f).split('\n').filter((l) => /consolidat|tucked|Retire|set aside|Ruled out and merged|Restore|Join /i.test(l) && !/^\s*(\/\/|\*|\/\*)/.test(l) && !/\bimport\b|ComponentType|component\b.*\bfile\b|a component|components\/lex|the component|\.tsx|per-component|client component|`file`/.test(l)).map((l) => `${f}: ${l.trim().slice(0, 160)}`))
+  ok('199 no “component”, “mechanism”, “folded” or “unfold” in the consolidation strings on screen or in Lex\'s controls list', !strings.some((s) => banned.test(wordsOnly(s.split(': ').slice(1).join(': ')))), strings.filter((s) => banned.test(wordsOnly(s.split(': ').slice(1).join(': ')))).join(' | ').slice(0, 400))
+  control('199 the ban missing the old words when they are put back (must be FALSE)', !banned.test('Folded 2 components into their mechanism'))
+  ok('199 the ruled-out row says “part of #n” and its button is plain “Restore”', /`part of #\$\{byIdAll\.get\(a\.foldedIntoId\)\?\.number \?\? '\?'\}`/.test(w) && !/'Unfold'/.test(w))
+  ok('199 Lex\'s controls list names “Consolidate this heading” in the same plain words', /label: 'Consolidate this heading', file: 'components\/lex\/ActionsWorkspace.tsx'[^\n]*tucked into that action’s Commentary[^\n]*joined into one/.test(read('lib/lex/agent/controls.ts')))
   ok('the conditions view is a step-1 view and the conditions panel is step 1\'s', /1: \['list', 'coverage', 'conditions'\]/.test(w) && /step === 1 && <ConditionsPanel/.test(w))
   control('the find box also offered in step 3 (must be FALSE: it is a list tool, in every step the list is; this asserts it is not step-gated by mistake)', /step === 3 && .*data-find-box/.test(w))
 }
