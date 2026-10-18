@@ -3097,6 +3097,8 @@ model LexCoherentAction {
   /// 26-S2 decision 177 — the step-2 RECORD: { who?: { by, at, proposal? }, incentiveNow|whatChangesIt|skill|how|against|worked?: { text, by, at, direction?, linkActionId?, proposal? } }.
   /// Who itself stays in `whoImplements` (this holds only who wrote it, and a proposal for it). DDL: prisma/lex_26s2_record.sql.
   record             Json?
+  /// 26-S2 sec 6 - "no cost, because ...": the user's reason this action costs nothing. An explicit answer to the cost question, not a blank. DDL: prisma/lex_26s2_costs.sql.
+  noCostReason       String?
 
   @@index([ideaId])
   @@index([ideaId, status])
@@ -3173,6 +3175,8 @@ model CostLine {
   basis          String?           // the stated assumption — required in spirit, never auto-asserted
   benchmarkId    String?           // CostBenchmark the figure came from, when it did
   priceYear      Int?
+  /// 26-S2 sec 6 - ONE_OFF | PER_YEAR. null = not said (every line before 18 Oct). DDL: prisma/lex_26s2_costs.sql.
+  recurrence     String?
   orderIndex     Int               @default(0)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
