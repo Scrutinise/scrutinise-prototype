@@ -1,5 +1,13 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-18 08:05 UTC - 26-S2 decisions 192 + 193: the revise pass archives instead of deleting; the 513 orphan spend rows labelled check/inferred
+
+**192 (decision 183, the revise pass).** A rebuild no longer hard-deletes: its LEX_CORPUS causes (and sub-causes) are archived (`archivedAt`), and the previous build's LIVE LEX actions are archived with the reason "Superseded by a rebuild - restore it if you still want it." (before, only a row the user had worked on was; the rest were deleted, taking commentary, record slots, conflict notes and cost lines with them, and freeing their numbers). A user's marked root cause is still detached and kept. `check-lex-25x` follows the new sequence; `check:lex-26s2` part O asserts the build no longer hard-deletes either. The other five hard-delete paths wait for 26-T (decision 192).
+
+**193.** `LlmSpend.purposeInferred` (schema + `prisma/lex_26s2_purpose_inferred.sql`, committed together, applied after `whichdb`): the 513 rows (498.6p) on 42 deleted ideas are now `purpose = 'check'` with `purposeInferred = true`; Admin > Spend says how many check calls are inferred. `scripts/backfill-spend-orphans.ts` (dry run by default). Engineering spend since 29 Sep: measurement 85.3p, check 498.6p.
+
+**190 sized, 186/187/191 recorded, 188/189 NOT built** (the 18 Oct (3) paste is missing from this session): `docs/LEX_26S2_REPORT.md` section I.
+
 ## 2026-10-18 04:11 UTC — 26-S2 sprint 2, push 2: the research panel (§9 — one list, the caveat once and short, "+ Add research" and the import as focused dialogs, one definition of "the documents on this idea")
 
 **9a — ONE LIST (decision 173).** "Your material" is **folded into Sources**: the contents list has no separate row, "Sources" counts the documents, and each document is **one numbered card** `[Ref: n]` carrying what the second list carried — **Open** (the text Lex kept, in the same viewer) — plus **Add to report** and **Set aside**. **"Remove" is gone from a document.** What it did — archive the document and *delete the findings read from it* — was not what the word said; **Set aside** asks for a reason, keeps the document on the record and in the Evidence Pack as "considered and set aside, with your reason", deletes nothing, and **Put back** undoes it (the decisions are the panel's own, keyed by the document, so the Evidence Pack prints them as before). "+ Add research" sits **once above the list** (once on the contents home, once on the Sources item — never both on one screen). A document with no number yet is shown once, marked "not numbered yet". **Found by the browser check and fixed:** the Sources list did not re-read after "+ Add research" from the contents home, so the new card was not there to find.

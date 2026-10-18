@@ -206,3 +206,37 @@ Questions for CCh: (1) 183 — go, and in which order? (2) The 513 orphan rows (
 **Checked in a real browser** (`check:lex-26s2-browser`, 33 assertions): the document once; the caveat once and short; Set aside disabled until a reason; the dialog dimmed, unscrollable, one Save in the foot; the new card numbered and highlighted. It found and I fixed a real bug: the Sources list did not re-read after adding research from the contents home. It is a stand-in server, so the real thing still needs Charlie's eyes.
 **Standing rule written (docs/CLAUDE.md §32):** a task with a beginning and a save is a focused dialog.
 
+
+
+## I. 18 Oct (4) - decisions 186-194: what is done, the 190 sizing, and what I am missing
+
+**Done and pushed with this entry.** 192 (the revise pass): causes and a previous build's actions are ARCHIVED, not deleted (`build.ts`); the cause number is never reused and cost lines/commentary/record slots no longer cascade away with a superseded action. 193: the 513 orphan ledger rows (42 deleted ideas, 498.6p) are labelled `check` with a new `LlmSpend.purposeInferred = true` (schema + migration committed together, applied after `whichdb`); the Admin split says how many check calls are inferred. 194: nothing changed. `check:lex-26s2` part O asserts all of it.
+
+**Not done: 188 (conditions facet) and 189 (the avenue rule).** Both say "as in the 18 Oct (3) paste". That paste is not in this session, in the repo, or in CLAUDE.md/handoff; Charlie's ten conditions and the rule's wording exist only there. I have not guessed them. Please re-send the paste.
+
+**190 sized - on Charlie's idea 452c5ade, today (cold read).** 175 live actions, 20 headings (one hidden), 72,762 characters of action text (avg 416, max 4,032) = about 18k input tokens for the whole set; 7 carry commentary.
+| heading now | live |
+|---|---|
+| Gaming and Challenges | 31 |
+| Legislation (hidden) | 24 |
+| Performance Management | 21 |
+| Benchmarks and Measurement | 18 |
+| Statutory Accountability & Delivery Code | 18 |
+| Transparency & Oversight | 17 |
+| Independent Performance Adjudication | 13 |
+| Civil Service Code | 9 |
+| Training & Implementation | 7 |
+| Honest Error & Safe Harbour | 6 |
+| Digital Responsibility & Challenge Register | 5 |
+| Material Constraint Notice(s) | 3 + 2 |
+| Accountability & Delivery Code | 1 |
+| the six one-condition headings Charlie lists as retired | 0 each |
+"Legislation" (24, hidden) is in neither Charlie's seven nor his retired list - I will not touch it until told whether it maps to "Primary legislation".
+
+**Re-sort into headings (one call, no loop).** All 175 actions in one request (about 18k tokens in), 175 x {id, heading, reason} out (about 6k). Estimate 4-8p; I will MEASURE it on a scratch copy before putting a price on the card (the Classify price was a guess of the same kind until measured: 1.07p/action). One confirm. Mechanics: create the seven headings (or reuse by name), move each action, ARCHIVE the retired headings (needs `ActionHeading.archivedAt`, a new column - a heading delete is one of the five paths in 183), keep the reason on the action (`record`-style, with who/when) so it is reversible per action.
+
+**Consolidate this heading (per heading, a loop).** For each of the seven: the model is given that heading's actions and returns (a) mechanisms, each with its component action ids, and (b) true duplicate pairs. Components fold into the mechanism's commentary as QUOTED, CITED components ("[#31] ..."); a fold sets the component to ARCHIVED with `foldedInto`, a pointer, so Restore puts it back and unfolds the quote; duplicates merge through the existing merge (originals kept). One confirm per heading. Target 175 -> 40-70 live. Output is heavier than the sort (quotes), so I expect 2-4p per heading of 25 actions, again measured before it is priced. The risk to name: a model quoting a component slightly wrong. The fold therefore copies the component's text from the row, never from the model's output - the model chooses ids, the code writes the quote.
+
+**Size: one sprint, about 2 working days:** migration (`ActionHeading.archivedAt`, `LexCoherentAction.foldedInto`) and the heading archive paths (1/2 day, the heading is also one of 183's five); the sort pass, route, UI, price card (1/2 day); the consolidate pass, fold/restore, per-heading confirm UI (1 day); checks, scratch measurement, docs. 188/189 add to that once I have the paste.
+
+**Questions for CCh.** (1) The paste for 188/189. (2) "Legislation" (24, hidden): maps to Primary legislation? (3) The 14 retired headings include "Transparency & Oversight" while the new seven include "Transparency and oversight" - the same heading, different spelling; the sort treats the old one as retired and the new one as new, so its actions are re-sorted rather than kept. Confirm that is wanted.

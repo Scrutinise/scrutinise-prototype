@@ -2291,7 +2291,12 @@ async function actionsPass(c: PassContext): Promise<PassOutcome> {
       },
       data: { status: 'ARCHIVED', ruleOutReason: 'Superseded by a rebuild — restore it if you still want it.' },
     })
-    const superseded = await prisma.lexCoherentAction.deleteMany({ where: { ideaId, source: 'LEX', status: 'LIVE' } })
+    // ⚠ 26-S2 192 (decision 183) — the rest are ARCHIVED too, not deleted: a row with no title or heading can still carry commentary, a record
+    // slot, a conflict note or cost lines (the cost lines used to cascade away with it), and its number must not be reused.
+    const superseded = await prisma.lexCoherentAction.updateMany({
+      where: { ideaId, source: 'LEX', status: 'LIVE' },
+      data: { status: 'ARCHIVED', ruleOutReason: 'Superseded by a rebuild — restore it if you still want it.' },
+    })
     if (superseded.count || touched.count) console.log('[lex-diag] 26b actions — superseded the previous build\'s LEX actions', { buildId, removed: superseded.count, archivedBecauseTheUserHadWorkedOnThem: touched.count })
     await createActions(ideaId, actions.map((x) => ({
       practicalStep: x.practicalStep.trim(),
@@ -2563,9 +2568,20 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
         causes: marked.map((m) => m.cause.slice(0, 60)),
       })
     }
-    await prisma.diagnosisCause.deleteMany({
-      where: { ideaId, source: 'LEX_CORPUS', isRootCause: false },
-    })
+    // ⚠ 26-S2 192 (decision 183, the revise pass) — ARCHIVED, NOT DELETED. The rewrite used to delete these rows, which freed their numbers
+    // and let "cause 7" come to mean a different cause after a revise. They (and the sub-causes the database used to cascade-delete beneath
+    // them) now leave every list but the row stays, so the number is never reused (decision 175, `removeCause`). A marked root cause was
+    // detached above, so the walk below cannot reach it from a parent.
+    {
+      const ids: string[] = (await prisma.diagnosisCause.findMany({ where: { ideaId, source: 'LEX_CORPUS', isRootCause: false }, select: { id: true } })).map((x) => x.id)
+      let frontier = ids.slice()
+      while (frontier.length) {
+        const kids = await prisma.diagnosisCause.findMany({ where: { ideaId, parentCauseId: { in: frontier }, isRootCause: false }, select: { id: true } })
+        frontier = kids.map((k) => k.id).filter((k) => !ids.includes(k))
+        ids.push(...frontier)
+      }
+      if (ids.length) await prisma.diagnosisCause.updateMany({ where: { ideaId, id: { in: ids } }, data: { archivedAt: new Date() } })
+    }
     await createCauses(ideaId, nestByDrivenBy(causes, buildId), 'LEX_CORPUS')
     await setLoopProposal(ideaId, 'causes', causes.map((x) => `(${x.classification === 'MATERIAL' ? 'material' : 'contributory'}) ${x.cause.trim()}`))
   }

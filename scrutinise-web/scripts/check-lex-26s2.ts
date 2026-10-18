@@ -1078,6 +1078,20 @@ async function partN() {
   ok('SOURCE: only the registry module counts the material table (the Build page, the stage context, the cap, Lex and the material route all ask it)', counters.length === 1 && counters[0] === 'lib/lex/source-registry.ts', counters.join(', '))
 }
 
+async function partO() {
+  section('O · 192/193 — the revise pass archives (nothing deletes); the orphan ledger rows are labelled and flagged as inferred')
+  const build = read('lib/lex/build.ts').replace(/\/\/.*$/gm, '')
+  ok('SOURCE: the revise pass no longer hard-deletes causes or a previous build\'s actions (both are archived: the number is never reused)', !/diagnosisCause\.deleteMany/.test(build) && !/lexCoherentAction\.deleteMany/.test(build))
+  ok('…it archives with a timestamp / status', /diagnosisCause\.updateMany\(\{ where: \{ ideaId, id: \{ in: ids \} \}, data: \{ archivedAt: new Date\(\) \}/.test(build) && /status: 'ARCHIVED', ruleOutReason: 'Superseded by a rebuild/.test(build))
+  control('the no-hard-delete guard passing a revise that still deletes (must be FALSE)', !/diagnosisCause\.deleteMany/.test('await prisma.diagnosisCause.deleteMany({ where: {} })'))
+  const [orph] = await prisma.$queryRawUnsafe<Array<{ n: number }>>(`SELECT count(*)::int n FROM "LlmSpend" l WHERE l."ideaId" IS NOT NULL AND l.purpose IS NULL AND l."createdAt" >= '2026-09-29' AND NOT EXISTS (SELECT 1 FROM "Idea" i WHERE i.id = l."ideaId")`)
+  ok('no ledger row since 29 Sep belongs to a deleted idea and lacks a purpose', orph.n === 0, String(orph.n))
+  const [inf] = await prisma.$queryRawUnsafe<Array<{ n: number; bad: number }>>(`SELECT count(*)::int n, count(*) FILTER (WHERE purpose IS DISTINCT FROM 'check')::int bad FROM "LlmSpend" WHERE "purposeInferred"`)
+  ok('every row flagged purposeInferred says "check" - an inferred label is only ever the one backfill\'s', inf.n > 0 && inf.bad === 0, `${inf.n} inferred, ${inf.bad} not check`)
+  const [live] = await prisma.$queryRawUnsafe<Array<{ n: number }>>(`SELECT count(*)::int n FROM "LlmSpend" l WHERE l."purposeInferred" AND EXISTS (SELECT 1 FROM "Idea" i WHERE i.id = l."ideaId")`)
+  ok('…and none of them belongs to a live idea', live.n === 0, String(live.n))
+}
+
 async function main() {
   partA()
   await partB()
@@ -1093,6 +1107,7 @@ async function main() {
   await partL()
   await partM()
   await partN()
+  await partO()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

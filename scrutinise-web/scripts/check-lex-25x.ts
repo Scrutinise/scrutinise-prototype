@@ -238,7 +238,9 @@ async function main() {
     const build = stripComments(code('lib/lex/build.ts'))
     ok('§2a — build.ts detaches before it deletes, and deletes only unmarked rows',
       /isRootCause: true[\s\S]{0,400}?parentCauseId: null/.test(build)
-      && /deleteMany\(\{\s*where: \{ ideaId, source: 'LEX_CORPUS', isRootCause: false \}/.test(build))
+      && /findMany\(\{ where: \{ ideaId, source: 'LEX_CORPUS', isRootCause: false \}/.test(build)
+      && /updateMany\(\{ where: \{ ideaId, id: \{ in: ids \} \}, data: \{ archivedAt: new Date\(\) \}/.test(build)
+      && !/diagnosisCause\.deleteMany/.test(build))
 
     // §2b — the screen says so. Derived, so read it off the state the browser reads.
     const state2 = await computeCanonicalState(ideaId)
