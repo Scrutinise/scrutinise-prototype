@@ -926,7 +926,7 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
             {HEADING_PALETTE.map((p) => <option key={p.key} value={p.key}>{p.glyph} {p.name}</option>)}
           </select>
           <button disabled={disabled} onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? 'Show' : 'Hide'}</button>
-          <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Delete the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading.`)) void ops.run('deleteHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is deleted; its actions stay, with no heading.`) }} className="underline text-zinc-500">Delete heading</button>
+          <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Retire the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading. Nothing is deleted: “Bring back” under Retired headings restores it.`)) void ops.run('deleteHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is retired; its actions stay, with no heading. Bring it back under Retired headings.`) }} className="underline text-zinc-500">Retire heading</button>
         </span>
       )}
     </div>

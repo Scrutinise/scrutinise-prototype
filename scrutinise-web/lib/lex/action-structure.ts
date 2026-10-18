@@ -91,12 +91,13 @@ export async function updateHeading(ideaId: string, headingId: string, patch: { 
   return { ok: true, data: null }
 }
 
-/** Removes the HEADING only. Its actions keep everything else and simply lose the heading. */
+/** "Retire heading" (18 Oct (9) 2): ARCHIVES the heading (nothing deletes). Its live actions keep everything else and simply lose the heading, remembering it (`headingWasId`),
+ *  so "Bring back" under Retired headings re-attaches them. (The op keeps its old name, `deleteHeading`; it no longer deletes.) */
 export async function deleteHeading(ideaId: string, headingId: string): Promise<Result<{ unassigned: number }>> {
   const h = await prisma.actionHeading.findFirst({ where: { id: headingId, ideaId }, select: { id: true } })
   if (!h) return fail('That heading is not on this idea.')
-  const un = await prisma.lexCoherentAction.updateMany({ where: { ideaId, headingId }, data: { headingId: null } })
-  await prisma.actionHeading.delete({ where: { id: headingId } })
+  const un = await prisma.lexCoherentAction.updateMany({ where: { ideaId, headingId }, data: { headingId: null, headingWasId: headingId } })
+  await prisma.actionHeading.update({ where: { id: headingId }, data: { archivedAt: new Date() } })
   return { ok: true, data: { unassigned: un.count } }
 }
 
@@ -111,6 +112,8 @@ export async function restoreHeading(ideaId: string, headingId: string): Promise
   const h = await prisma.actionHeading.findFirst({ where: { id: headingId, ideaId, archivedAt: { not: null } }, select: { id: true } })
   if (!h) return fail('That heading is not archived on this idea.')
   await prisma.actionHeading.update({ where: { id: headingId }, data: { archivedAt: null } })
+  // actions that were retired WITH the heading (no heading now, and it remembers this one) go back onto it; an action a Re-sort moved elsewhere stays where it is
+  await prisma.lexCoherentAction.updateMany({ where: { ideaId, headingId: null, headingWasId: headingId, status: 'LIVE' }, data: { headingId, headingWasId: null } })
   return { ok: true, data: null }
 }
 

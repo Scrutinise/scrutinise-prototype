@@ -92,7 +92,7 @@ export type ActionStructureOp = ActionStructureRequest['op']
 
 /** The words the user knows each control by, for the rejection sentence. */
 export const OP_WORDS: Record<ActionStructureOp, string> = {
-  createHeading: '“Add heading”', updateHeading: 'Editing the heading', deleteHeading: '“Delete heading”',
+  createHeading: '“Add heading”', updateHeading: 'Editing the heading', deleteHeading: '“Retire heading”',
   assignHeading: '“Assign to heading”', assignToNewHeading: '“+ New heading…”', setTitle: '“Save title”', acceptTitles: 'Accepting the proposed titles',
   dismissTitles: 'Dismissing the proposed title', proposeTitles: '“Title these for me”', reorder: 'Saving the new order',
   park: '“Later phase”', unpark: '“Bring back”', ruleOut: '“Rule out”', restore: '“Restore”', setFacets: 'Saving the classification',

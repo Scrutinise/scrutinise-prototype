@@ -189,7 +189,7 @@ async function partD() {
     }
     // the one path that unassigns on purpose
     const holding = await prisma.lexCoherentAction.count({ where: { ideaId: id, headingId: HID } }) // A, B and the (archived) merge result\n    const delH = await S.deleteHeading(id, HID)\n    const after = await heads()\n    ok('deleting THE heading is the one deliberate unassign — it reports exactly how many rows it unassigned, and A and B are now headingless', delH.ok && (delH as any).data.unassigned === holding && holding >= 2 && after.every((x) => x.headingId === null), `reported , held `)
-    ok('…and the screen says so BEFORE it happens (the confirm names the count)', /Delete the heading .*Its \$\{g\.actions\.length\} action\(s\) stay, with no heading/.test(read('components/lex/ActionsWorkspace.tsx')))
+    ok('…and the screen says so BEFORE it happens (the confirm names the count)', /Retire the heading .*Its \$\{g\.actions\.length\} action\(s\) stay, with no heading/.test(read('components/lex/ActionsWorkspace.tsx')))
     control('deleting an empty heading unassigning something (must be FALSE)', (del as any).data.unassigned > 0)
   } finally {
     const gone = await deleteScratch(id)

@@ -295,6 +295,31 @@ async function partE() {
     const withoutLine = await computeCostSummary(id)
     ok('195 the cost summary counts the folded component\'s line (the total moves when the line goes)', JSON.stringify(withLine.totals) !== JSON.stringify(withoutLine.totals))
     control('the cost summary unchanged by a folded component\'s line (must be FALSE)', JSON.stringify(withLine.totals) === JSON.stringify(withoutLine.totals))
+    // ── 18 Oct (9) 2 - "Retire heading" ARCHIVES: the row stays, its actions lose the heading, Bring back re-attaches them
+    const retireH = heads2.find((x) => x.id !== target.id && x.archivedAt == null && x.name !== target.name)!
+    const heldBy = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, headingId: retireH.id, status: 'LIVE' }, select: { id: true } })
+    const rt = await S.deleteHeading(id, retireH.id)
+    const rowAfter = await prisma.actionHeading.findFirst({ where: { id: retireH.id, archivedAt: { not: null } } })
+    ok('Retire heading archives the heading row (it still exists) and unassigns exactly the actions it held', rt.ok && !!rowAfter && rt.data.unassigned === heldBy.length && heldBy.length > 0 && (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: null } })) === heldBy.length)
+    ok('…and it no longer shows on the live list of headings', !(await computeCanonicalState(id))!.actionHeadings.some((x) => x.id === retireH.id))
+    await S.restoreHeading(id, retireH.id)
+    ok('Bring back restores the heading AND puts its actions back on it', (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: retireH.id, headingWasId: null } })) === heldBy.length)
+    control('Retire heading removing the heading row (must be FALSE)', (await prisma.actionHeading.findFirst({ where: { id: retireH.id }, select: { id: true } })) === null)
+    // ── 198 - the cost total excludes lines on ruled-out and merged-away actions; folded components' lines stay in; restoring brings a line back
+    const other = members.find((m) => ![lead, c1, c2, dupKeep, dupDrop].some((x) => x.id === m.id))!
+    const base = JSON.stringify((await computeCostSummary(id)).totals)
+    const l198 = await prisma.costLine.create({ data: { actionId: other.id, label: '198-probe line', category: 'IMPLEMENTATION', low: 5000, high: 6000, unit: 'GBP', basis: 'probe' } })
+    const withLive = JSON.stringify((await computeCostSummary(id)).totals)
+    ok('198 a cost line on a LIVE action is in the total', withLive !== base)
+    await S.ruleOut(id, [other.id], 'probe')
+    const whileOut = JSON.stringify((await computeCostSummary(id)).totals)
+    ok('198 ruling the action out DROPS its line from the total (back to the total without it)', whileOut === base, `${whileOut} vs ${base}`)
+    control('the total unchanged by ruling out an action that has a cost line (must be FALSE)', whileOut === withLive)
+    await S.restore(id, [other.id])
+    ok('198 restoring the action brings the total back', JSON.stringify((await computeCostSummary(id)).totals) === withLive)
+    const dl = await prisma.costLine.create({ data: { actionId: dupDrop.id, label: '198-merged-away line', category: 'IMPLEMENTATION', low: 9000, high: 9500, unit: 'GBP', basis: 'probe' } })
+    ok('198 a line on a MERGED-AWAY action is not in the total', JSON.stringify((await computeCostSummary(id)).totals) === withLive)
+    await prisma.costLine.deleteMany({ where: { id: { in: [dl.id, l198.id] } } })
     // restore
     const rr = await S.restore(id, [c1.id, c2.id])
     const L2 = await prisma.lexCoherentAction.findUnique({ where: { id: lead.id } })

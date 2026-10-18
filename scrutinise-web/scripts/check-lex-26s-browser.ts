@@ -287,6 +287,27 @@ async function partB() {
     await page.evaluate(() => { (window as never as { __h: { step?: number } }).__h.step = undefined; (window as never as { __mount: (w: string) => void }).__mount('workspace') })
     await page.waitForSelector('li[data-action-id]')
 
+    // ── 18 Oct (9) 1 · "Consolidate this heading" is on the heading's row WHETHER OR NOT the heading is shown
+    section('B7f · 18 Oct (9) — "Consolidate this heading" renders on a hidden heading\'s row too; "Retire heading" replaces "Delete heading"')
+    await page.evaluate(() => {
+      const w = window as never as { __h: { store: { actions: Array<{ id: string; headingId: string | null }>; headings: Array<{ id: string; hidden: boolean }> } }; __mount: (s: string) => void }
+      for (const a of (w.__h.store.actions as Array<{ id: string; headingId: string | null; status: string; parked: boolean }>).filter((x) => x.status === 'LIVE' && !x.parked).slice(0, 4)) a.headingId = 'h1'
+      for (const hd of w.__h.store.headings) hd.hidden = true
+      w.__mount('workspace')
+    })
+    await page.waitForSelector('[data-hide-all-headings]')
+    const cons = page.locator('section[aria-label="Legislation"] [data-consolidate-button]')
+    ok('every heading hidden: the heading holding actions still shows "Consolidate this heading" on its row', (await page.locator('text=/Hidden — \\d+ actions? not shown/').count()) >= 1 && (await cons.count()) === 1 && /Consolidate this heading/.test(await cons.innerText()), `in-section ${await cons.count()}; where ${await page.locator('[data-consolidate-button]').evaluateAll((e) => e.map((x) => x.closest('section')?.getAttribute('aria-label')).join('|'))}; hidden-notes ${await page.locator('text=/Hidden — \\d+ actions? not shown/').count()}; buttons ${await page.locator('[data-consolidate-button]').count()}; sections ${await page.locator('section[aria-label]').evaluateAll((e) => e.map((x) => x.getAttribute('aria-label')).join('|'))}`)
+    ok('…and the row reads Rename · colour · Show · Retire heading (not "Delete heading")', (await page.locator('section[aria-label="Legislation"] >> text=Retire heading').count()) >= 1 && (await page.locator('text=Delete heading').count()) === 0)
+    control('the word "Delete heading" still on a row (must be FALSE)', (await page.locator('text=Delete heading').count()) > 0)
+    await page.evaluate(() => {
+      const w = window as never as { __h: { store: { actions: Array<{ id: string; headingId: string | null }>; headings: Array<{ hidden: boolean }> } }; __mount: (s: string) => void }
+      for (const a of w.__h.store.actions) if (a.headingId === 'h1') a.headingId = null
+      for (const hd of w.__h.store.headings) hd.hidden = false
+      w.__mount('workspace')
+    })
+    await page.waitForSelector('li[data-action-id]')
+
     // ── 197 · the merge/compare panel's three one-press rule-outs
     section('B7e · 197 — "Keep #a, rule out #b" · "Keep #b, rule out #a" · "Rule out both": rule out (never delete), reason worded and editable, same strip')
     const storeRow = (n: number) => h<{ status: string; ruleOutReason: string | null } | null>(`(() => { const a = window.__h.store.actions.find(x => x.number === ${n}); return a ? { status: a.status, ruleOutReason: a.ruleOutReason } : null })()`)

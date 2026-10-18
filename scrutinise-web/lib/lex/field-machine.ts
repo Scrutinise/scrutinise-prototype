@@ -1296,7 +1296,9 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     // §19-C Task 6 — cost LINES are the primary source now; the legacy per-action
     // three-range fields are still summed so nothing captured before this sprint is lost.
     prisma.costLine.findMany({
-      where: { action: { ideaId } },
+      // 198 (18 Oct (9)) - a line on a RULED-OUT or MERGED-AWAY action is not in the proposal, so it is not in the total; a line on a component FOLDED into a
+      // mechanism stays in (rolled up into it). A restored action brings its lines back. (Before 198 every line on the idea counted.)
+      where: { action: { ideaId, OR: [{ status: 'LIVE' }, { foldedIntoId: { not: null } }] } },
       // §19-D Task 7 — `basis` is selected because the summary makes a CLAIM about it
       // ("with a stated basis"). Before this it was never read, so the claim could
       // never have been checked against the data even in principle.

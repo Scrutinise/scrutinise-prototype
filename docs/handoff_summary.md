@@ -10963,3 +10963,6 @@ Heading Hide/Show now works on steps 1-4 (row control on every step, Hide all / 
 
 ### LEX THREAD - 18 Oct (8) 197 (2026-10-18 17:03 UTC)
 Three one-press rule-outs on the merge/compare panel (component only; browser-asserted, 89). Still waiting on Charlie running Re-sort/Consolidate.
+
+### LEX THREAD - 18 Oct (9) (2026-10-18 17:44 UTC)
+Retire heading (archives); 198 cost total excludes ruled-out/merged-away lines; Consolidate-on-hidden-heading asserted; 197 was already live (3f495ca). Waiting on Charlie.

@@ -1,5 +1,9 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-18 17:44 UTC - 26-S2 18 Oct (9): Retire heading (archives), the cost total excludes ruled-out / merged-away lines (198), Consolidate on hidden headings asserted
+
+**Retire heading** replaces "Delete heading": the heading is ARCHIVED (`archivedAt`), its live actions lose the heading but remember it (`headingWasId`), and "Bring back" under Retired headings restores the heading and puts those actions back (an action a Re-sort moved elsewhere stays put). Nothing deletes. **198** `computeCostSummary` counts cost lines only on LIVE actions and on components FOLDED into a mechanism (rolled up); a ruled-out or merged-away action's lines no longer count, and return on Restore. **Consolidate this heading** renders on the heading's row whether or not the heading is shown (string `Consolidate this heading` / `data-consolidate-button`; gated only on step 1 and two or more actions on the heading) - now asserted in a real browser on a hidden heading. Checks: structure 97, browser 91, 9oct 58 (confirm wording), cost-summary, 26s2 221.
+
 ## 2026-10-18 17:03 UTC - 26-S2 197: three one-press rule-outs on the merge/compare panel
 
 Beside "Ask Lex to review and merge" the panel now offers "Keep #a, rule out #b", "Keep #b, rule out #a" and "Rule out both". Each calls the existing ruleOut op (rules out, never deletes; Restore brings it back) with the worded reason "Duplicate of #n" / "Neither needed"; typing in the panel's reason box replaces it before the press. The same strip confirms ("#b ruled out") or refuses ("Not saved: ..., panel stays open, nothing changed); on success the panel closes. Component only. `check-lex-26s-browser` 89 (new B7e: all three, the edited reason, nothing deleted, a refusal, one control).
