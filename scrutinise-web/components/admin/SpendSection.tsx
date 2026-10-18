@@ -34,6 +34,7 @@ interface Overview {
   since: string; until: string; daily: DailyRow[]; ideas: IdeaRow[]
   averagePencePerIdea: number | null; ideasCounted: number; averageNote: string
   totals: { calls: number; tokensIn: number; tokensOut: number; pence: number | null; unpricedCalls: number }
+  byPurpose?: Array<{ purpose: 'product' | 'measurement' | 'check'; calls: number; pence: number | null; unpricedCalls: number }>
   unclassifiedPasses: string[]
 }
 
@@ -103,6 +104,20 @@ export function SpendSection() {
         <Card label="Average per idea" value={fmtPence(data.averagePencePerIdea)} note={data.averageNote} />
         <Card label="Tokens" value={`${fmtNum(data.totals.tokensIn)} in`} note={`${fmtNum(data.totals.tokensOut)} out`} />
       </div>
+
+      {/* 26-S2 sec 11b - product spend and engineering spend, apart: what people's use cost, and what measurement runs and check scripts cost */}
+      {data.byPurpose && (() => {
+        const get = (p: 'product' | 'measurement' | 'check') => data.byPurpose!.find((x) => x.purpose === p)
+        const eng = [get('measurement'), get('check')]
+        const engPence = eng.some((x) => x?.pence == null) ? null : eng.reduce((s, x) => s + (x?.pence ?? 0), 0)
+        return (
+          <div className="grid gap-3 sm:grid-cols-3" data-spend-split>
+            <Card label="Product spend" value={fmtPence(get('product')?.pence ?? 0)} note={`${fmtNum(get('product')?.calls ?? 0)} calls — what people's use of the product cost`} />
+            <Card label="Engineering spend" value={fmtPence(engPence)} note={`${fmtNum((get('measurement')?.calls ?? 0) + (get('check')?.calls ?? 0))} calls — measurement runs and check scripts`} />
+            <Card label="…of which" value={`${fmtPence(get('measurement')?.pence ?? 0)} / ${fmtPence(get('check')?.pence ?? 0)}`} note="measurement / checks" />
+          </div>
+        )
+      })()}
 
       {/* ⚠ an unclassified pass is a hole in the split and must be visible */}
       {data.unclassifiedPasses.length > 0 && (

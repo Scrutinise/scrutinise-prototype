@@ -38,6 +38,7 @@ import { prisma } from '@/lib/prisma'
 import { PAGE_SEQUENCE, type FieldDef } from '@/lib/lex/page1-config'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
+import { parseRecord } from '@/lib/lex/action-record'
 import { refIndex, urlKey } from '@/lib/lex/source-registry'
 
 /**
@@ -157,6 +158,8 @@ export interface SnapshotCostLine {
   label: string
   costType: string
   category: string
+  /** 26-S2 sec 6 - ONE_OFF | PER_YEAR; absent/null = not said. */
+  recurrence?: string | null
   staffLevel: string | null
   fteCount: number | null
   durationMonths: number | null
@@ -173,6 +176,11 @@ export interface SnapshotAction {
   practicalStep: string
   mechanismType: string | null
   whoImplements: string | null
+  /** 26-S2 §5 (177) - step 2: how it is enforced, and what will oppose it. null = not answered (printed "not yet stated"). */
+  how?: string | null
+  against?: string | null
+  /** 26-S2 sec 6 - "no cost, because ...": the user's reason this action costs nothing. */
+  noCostReason?: string | null
   targetOrganisation: string | null
   wording: string | null
   /** TRUE when this action names a target instrument or carries drafting intent. */
@@ -727,6 +735,7 @@ export async function buildProposalSnapshot(
       label: l.label,
       costType: l.costType,
       category: l.category,
+      recurrence: (l as { recurrence?: string | null }).recurrence ?? null,
       staffLevel: l.staffLevel ?? null,
       fteCount: l.fteCount ?? null,
       durationMonths: l.durationMonths ?? null,
@@ -750,6 +759,9 @@ export async function buildProposalSnapshot(
       practicalStep: a.practicalStep,
       mechanismType: a.mechanismType,
       whoImplements: a.whoImplements,
+      how: parseRecord((a as { record?: unknown }).record).how?.text || null,
+      against: parseRecord((a as { record?: unknown }).record).against?.text || null,
+      noCostReason: (a as { noCostReason?: string | null }).noCostReason?.trim() || null,
       targetOrganisation: a.targetOrganisation,
       wording: a.wording,
       // §20.4 — "where the instrument is legislative". Derived from what is

@@ -213,16 +213,20 @@ async function partB() {
     prisma.lexCoherentAction.count({ where: { ideaId: idea.id, policyTestFrom: { array_contains: [] } } }).catch(() => 0),
     prisma.researchNote.findMany({ where: { ideaId: idea.id }, select: { bearsOn: true, status: true } }),
   ])
-  ok('no import pass has been CONFIRMED on Charlie’s idea (he ran one on 17 Oct and discarded it when part 4 failed; nothing was written)', passes === 0, `${passes}`)
+  // RETIRED 18 Oct (26-S2, with the reason): this asserted that NO import pass had been CONFIRMED on Charlie's idea - true on 16-17 Oct, and the point of the cold read was
+  // to prove the 26-S import had not written to his data before he looked. He has since run and CONFIRMED an import (the idea went from 26 to 170+ live actions), so the
+  // assertion is now false by design. Reported, not asserted:
+  console.log(`    import passes CONFIRMED on his idea: ${passes} (he confirmed an import on 18 Oct; the 17 Oct precondition is retired)`)
+  skip('no import pass has been CONFIRMED on Charlie’s idea', 'retired 18 Oct: he has confirmed one - the check was a precondition for his first look')
   void imported
   const actions = await prisma.lexCoherentAction.findMany({ where: { ideaId: idea.id }, select: { policyTestFrom: true, practicalStep: true } })
-  ok('none of his actions carries an import provenance line or an imported block', actions.every((a) => !JSON.stringify(a.policyTestFrom ?? '').includes('From: [Ref:') && !/imported \d{4}-\d{2}-\d{2}/.test(a.practicalStep)))
+  skip('none of his actions carries an import provenance line or an imported block', 'retired 18 Oct: his confirmed import writes exactly those lines')
   const bearing = notesOnPolicy.filter((n) => Array.isArray(n.bearsOn) && (n.bearsOn as Array<{ kind?: string }>).some((b) => b.kind === 'policy'))
   console.log(`    notes on his idea that bear on the policy today: ${bearing.length} (his own first policy note is his to file — BRIEF_26S §6d)`)
   if (notesOnPolicy.length > bearing.length) control('a count of notes bearing on the policy that counted every note would equal all of them (must be FALSE)', bearing.length === notesOnPolicy.length)
   else skip('control: a count that counted every note', 'every note on his idea bears on the policy today, so the control cannot tell the two counts apart')
   const heads = await prisma.actionHeading.findMany({ where: { ideaId: idea.id }, select: { name: true, purpose: true } })
-  ok('the new column exists and is empty on his headings (no purpose was written for him)', heads.every((h) => h.purpose === null))
+  ok('the `purpose` column exists on his headings and holds text or nothing (it was empty on 16 Oct, before his import; headings made by the import carry a purpose now)', heads.every((h) => h.purpose === null || typeof h.purpose === 'string'))
 }
 
 // ── C · FULL RUN ─────────────────────────────────────────────────────────────────────────────────────────────

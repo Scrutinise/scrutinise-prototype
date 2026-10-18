@@ -693,7 +693,10 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
   for (const a of snapshot.actions) {
     blocks.push({ kind: 'heading', level: 2, runs: text(a.practicalStep) })
     const meta: Run[] = []
-    if (a.whoImplements) meta.push({ text: `Implemented by ${a.whoImplements}. ` })
+    // 26-S2 §5 - Who / How / Against under each action when answered, and "not yet stated" when not (said, never skipped).
+    meta.push({ text: 'Who: ', bold: true }, { text: `${a.whoImplements?.trim() || 'not yet stated'}. `, italic: !a.whoImplements?.trim() })
+    meta.push({ text: 'How: ', bold: true }, { text: `${a.how?.trim() || 'not yet stated'}. `, italic: !a.how?.trim() })
+    meta.push({ text: 'Against: ', bold: true }, { text: `${a.against?.trim() || 'not yet stated'}. `, italic: !a.against?.trim() })
     if (a.mechanismType) meta.push({ text: `Mechanism: ${a.mechanismType}. ` })
     meta.push({
       // ⚠ 25-V §3b — WAS "Drafted by Lex from the toolkit.", 36 times. It named our assistant and
@@ -713,6 +716,9 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
       if (runs) blocks.push({ kind: 'paragraph', runs })
     }
 
+    // 26-S2 sec 6 - an action the user answered "no cost, because ..." says so, in their words (never silence, which reads as "not costed")
+    if (a.noCostReason) blocks.push({ kind: 'paragraph', runs: [{ text: 'No cost, because: ', bold: true }, { text: a.noCostReason }] })
+
     if (a.costLines.length) {
       blocks.push({
         kind: 'bullets',
@@ -722,7 +728,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
             low: l.low, high: l.high, unit: l.unit, basis: l.basis,
             benchmarkId: l.benchmarkId, userOverride: false, priceYear: l.priceYear,
           })
-          if (amount) runs.push({ text: ` — ${amount}` })
+          if (amount) runs.push({ text: ` — ${amount}${l.recurrence === 'ONE_OFF' ? ' one-off' : l.recurrence === 'PER_YEAR' ? ' per year' : ''}` })
           runs.push({ text: l.basis ? ` (${l.basis})` : ' (no basis stated)', italic: !l.basis })
           return runs
         }),
@@ -1282,6 +1288,7 @@ export function headlineCost(actions: SnapshotAction[]): string | null {
   let low = 0
   let high = 0
   for (const a of actions) {
+    if (a.noCostReason && !a.implementationCost) continue // 26-S2 sec 6: an explicit "no cost, because ..." is an answer (zero), not a gap
     const f = a.implementationCost
     if (!f || (f.low == null && f.high == null)) return null
     low += f.low ?? f.high ?? 0

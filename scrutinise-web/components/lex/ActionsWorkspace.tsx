@@ -24,6 +24,8 @@ import { OP_WORDS } from '@/lib/lex/action-structure-schema'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
+import ActionSlots from './ActionSlots'
+import { ALL_SLOTS, SLOT_RUNS, SLOT_CONFIRM_ABOVE_PENCE, slotPriceEstimate, answeredCount, proposalCount, slotAnswered, slotProposal, specificTag } from '@/lib/lex/action-record'
 import {
   AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODE_LABEL,
   actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
@@ -191,7 +193,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const filter: Filter = filterAsked === 'notSpecific' && step === 1 ? 'all' : filterAsked
   const matches: Record<Filter, (a: CanonicalAction) => boolean> = {
     all: () => true,
-    unreviewed: (a) => !!a.titleProposal || (!!a.facetProposal && proposalStep(a.facetProposal).includes(step)) || isUntested(a),
+    unreviewed: (a) => !!a.titleProposal || (!!a.facetProposal && proposalStep(a.facetProposal).includes(step)) || (step === 2 && proposalCount(a) > 0) || isUntested(a),
     conflicts: (a) => a.policyTest?.verdict === 'CONFLICTS',
     notSpecific: (a) => !specificEnough(a),
   }
@@ -347,12 +349,21 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                   )}
                 </>
               )}
-              {step === 2 && (a.whoImplements?.trim()
-                ? <span title={a.whoImplements}>Who: {a.whoImplements.length > 60 ? `${a.whoImplements.slice(0, 59)}…` : a.whoImplements}</span>
-                : <span className="font-semibold text-zinc-800">Who: not yet answered</span>)}
+              {step === 2 && (
+                <>
+                  {a.whoImplements?.trim()
+                    ? <span title={a.whoImplements}>Who: {a.whoImplements.length > 60 ? `${a.whoImplements.slice(0, 59)}…` : a.whoImplements}</span>
+                    : <span className="font-semibold text-zinc-800">Who: not yet answered</span>}
+                  {/* 26-S2 §5 — "specific enough" is computed in step 2 and shown here only; the missing slots are named */}
+                  <span className={specificEnough(a) ? '' : 'font-semibold text-zinc-800'} data-specific-tag><span aria-hidden>{specificEnough(a) ? '✓' : '○'}</span> {specificTag(a)}</span>
+                  <span>{answeredCount(a)} of 7 answered</span>
+                  {proposalCount(a) > 0 && <span className="font-semibold text-zinc-700">Lex has proposed {proposalCount(a)} answer{proposalCount(a) === 1 ? '' : 's'}</span>}
+                </>
+              )}
               {step === 3 && (() => {
                 const parts = [cost(a.implementationCost) && `${COST_LINE_LABEL_SHORT.implementationCost} ${cost(a.implementationCost)}`, cost(a.enforcementCost) && `${COST_LINE_LABEL_SHORT.enforcementCost} ${cost(a.enforcementCost)}`, cost(a.regulatoryFriction) && `${COST_LINE_LABEL_SHORT.regulatoryFriction} ${cost(a.regulatoryFriction)}`].filter(Boolean)
-                return parts.length || costLineIds.has(a.id) ? <span>{parts.join(' · ') || 'cost lines recorded'}</span> : <span className="font-semibold text-zinc-800">Cost: not yet answered</span>
+                return a.noCostReason?.trim() ? <span title={a.noCostReason}><span className="font-semibold">No cost</span>, because {a.noCostReason.length > 70 ? `${a.noCostReason.slice(0, 69)}…` : a.noCostReason}</span>
+                  : parts.length || costLineIds.has(a.id) ? <span>{parts.join(' · ') || 'cost lines recorded'}</span> : <span className="font-semibold text-zinc-800">Cost: not yet answered</span>
               })()}
               {step === 4 && (
                 <>
@@ -388,7 +399,47 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const modes = STEP_GROUP_MODES[step]
   const views = STEP_VIEWS[step]
   const classifyWords = step === 1 ? 'causes and avenue' : 'sequence and what comes before'
-  const Toolbar = (step === 2 || step === 3) ? null : (
+  // 26-S2 §5 — step 2's one tool: "Classify with Lex" proposes the seven answers for every action that has none (one pass, chunked; the price measured).
+  const [confirmSlots, setConfirmSlots] = useState(false)
+  const needAnswers = live.filter((a) => ALL_SLOTS.some((k) => !slotAnswered(a, k) && !slotProposal(a, k))).length
+  const slotsWaiting = live.reduce((n, a) => n + proposalCount(a), 0)
+  const slotPrice = SLOT_RUNS.length
+    ? `Measured on a copy of a real idea: ${(SLOT_RUNS.reduce((n, r) => n + r.pence, 0) / SLOT_RUNS.reduce((n, r) => n + r.actions, 0)).toFixed(2)}p per action (n=${SLOT_RUNS.length}). The price of this run is shown when it finishes.`
+    : 'The price of this run is shown when it finishes.'
+  // one request does a dozen actions (a request has a time limit); the screen goes on until none is left or a round makes no progress
+  const classifySlots = async () => {
+    let proposed = 0, acts = 0, pence = 0, unpriced = false
+    for (let round = 0; round < 40; round++) {
+      const r = await ops.run('proposeSlots', {}, `Lex is proposing answers${acts ? ` (${acts} actions done so far)` : ''}`)
+      if (!r.ok || !r.result) { if (acts) ops.setNote(`Lex proposed ${proposed} answers for ${acts} actions before it stopped. Press the button again to continue; nothing you wrote was changed.`); return }
+      proposed += r.result.proposed ?? 0; acts += r.result.actions ?? 0
+      if (r.result.pence == null) unpriced = true; else pence += r.result.pence
+      if (!r.result.remaining || !r.result.proposed) break
+    }
+    ops.setNote(`Lex proposed ${proposed} answer${proposed === 1 ? '' : 's'} for ${acts} action${acts === 1 ? '' : 's'}${unpriced ? '' : ` (${pence.toFixed(1)}p)`}. Each sits beside its slot: use it, edit it or dismiss it. Nothing you wrote was changed.`)
+  }
+  const Step2Toolbar = (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button disabled={disabled || needAnswers === 0} title={`Lex proposes an answer for every slot that has none, on every action — Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked. Yours are never changed. It works through the list a dozen actions at a time. ${slotPrice}`} onClick={() => { const est = slotPriceEstimate(needAnswers); if (est != null && est > SLOT_CONFIRM_ABOVE_PENCE) setConfirmSlots(true); else void classifySlots() }}
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-classify-slots>Classify with Lex{needAnswers ? ` (${needAnswers} with open slots)` : ''}</button>
+        {confirmSlots && (
+          <span className="inline-flex flex-wrap items-center gap-1.5 rounded border-2 border-zinc-900 bg-white px-2 py-1 text-xs" data-confirm-slots role="alert">
+            <span>This is {needAnswers} actions, in about {Math.ceil(needAnswers / 12)} requests: estimated <span className="font-semibold">£{((slotPriceEstimate(needAnswers) ?? 0) / 100).toFixed(2)}</span> ({(slotPriceEstimate(1) ?? 0).toFixed(2)}p an action, measured n={SLOT_RUNS.length}). Go on?</span>
+            <button type="button" disabled={disabled} onClick={() => { setConfirmSlots(false); void classifySlots() }} className="font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Go on</button>
+            <button type="button" onClick={() => setConfirmSlots(false)} className="underline text-zinc-700">Cancel</button>
+          </span>
+        )}
+        {slotsWaiting > 0 && (
+          <>
+            <span className="text-[11px] text-zinc-700 font-semibold">{slotsWaiting} answer{slotsWaiting === 1 ? '' : 's'} from Lex waiting for you</span>
+            <button disabled={disabled} onClick={() => void ops.run('dismissSlots', {}, undefined, (r: { dismissed?: number }) => `Saved: ${r?.dismissed ?? 0} of Lex’s proposed answers dismissed. Your own answers were not touched.`)} className="text-[11px] underline text-zinc-600 disabled:opacity-40">Dismiss them all</button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+  const Toolbar = step === 3 ? null : step === 2 ? Step2Toolbar : (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
         {views.length > 1 && (
@@ -529,6 +580,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             {filterKeys.map((k) => <option key={k} value={k}>{FILTER_LABEL[k]} ({filterCounts[k]})</option>)}
           </select>
           {filter !== 'all' && <span className="font-semibold text-zinc-800">{shown.length} of {unparked.length} shown{shown.length === 0 ? ' — none match' : ''}</span>}
+          {/* 184 - the filter's own help text: what each choice means, in words (the definition of "Unreviewed" is Lex's reading, confirmed by CCh) */}
+          <span className="basis-full text-[10px] text-zinc-500" data-filter-help>
+            <span className="font-semibold">Unreviewed</span> — Lex has a proposal waiting for you (a title, this step’s classification{step === 2 ? ' or answers' : ''}), or the action has not been tested against the policy. <span className="font-semibold">Conflicts</span> — the policy test says the action conflicts with your Guiding Policy.{step === 1 ? '' : ' '}{step !== 1 && <><span className="font-semibold">Not yet specific</span> — Who and Against are not both answered (draft text, for a legislative action).</>}
+          </span>
         </label>
       )}
 
@@ -728,7 +783,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
         </div>
       </div>
     ),
-    2: <div className="space-y-2">{renderFull(a, 2)}</div>,
+    2: <div className="space-y-2"><ActionSlots a={a} others={others} disabled={disabled} run={ops.run as never} /></div>,
     3: <div className="space-y-2">{renderFull(a, 3)}</div>,
     4: (
       <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">

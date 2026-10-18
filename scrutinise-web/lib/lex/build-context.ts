@@ -27,9 +27,18 @@
 
 import { AsyncLocalStorage } from 'async_hooks'
 
+/**
+ * 26-S2 sec 11b (decision 176) - WHAT A CALL IS FOR, when it is not a product call. `measurement` = a benchmark, probe, sweep or reachability run;
+ * `check` = a check script exercising the code. Both are ENGINEERING spend: real money with no owner, and not an attribution failure.
+ */
+export type EngineeringPurpose = 'measurement' | 'check'
+export const ENGINEERING_PURPOSES: readonly EngineeringPurpose[] = ['measurement', 'check']
+
 export interface BuildContext {
   userId: string | null
   ideaId: string | null
+  /** 26-S2 sec 11b - set by a script at the call site (`enterPurpose`). Absent = a product call. */
+  purpose?: EngineeringPurpose | null
   /** COST DASHBOARD — the build (IdeaBuild.id) and the step (pass key) being run. */
   buildId?: string | null
   step?: string | null
@@ -62,6 +71,34 @@ export function runWithSpendContext<T>(ctx: BuildContext, fn: () => Promise<T>):
  *  a fallback source, not something every caller is expected to populate). */
 export function currentBuildContext(): BuildContext | null {
   return storage.getStore() ?? null
+}
+
+/**
+ * 26-S2 sec 11b - say what everything the rest of this async chain spends is FOR. A script calls it once, at the top:
+ *
+ *     enterPurpose('measurement')     // a benchmark / probe / sweep
+ *     enterPurpose('check')           // a check script
+ *
+ * It keeps whatever user / idea / build the context already carried (a check that runs a scratch idea still attributes the row to it) and adds the
+ * purpose. ⚠ NEVER call it in a request handler: a product call must carry no purpose, or product spend would be read as engineering.
+ */
+export function enterPurpose(purpose: EngineeringPurpose): void {
+  const cur = storage.getStore()
+  storage.enterWith({ userId: cur?.userId ?? null, ideaId: cur?.ideaId ?? null, buildId: cur?.buildId ?? null, step: cur?.step ?? null, purpose })
+}
+
+/**
+ * The purpose a SCRIPT has by its name, when it did not say: `check-*` / `verify-*` / `audit-*` are checks; `measure-*` / `probe-*` / `sweep-*` /
+ * `benchmark-*` are measurements. Read from the entry script (argv[1]) and ONLY outside a web request (a Next.js runtime never has a script entry),
+ * so a product call can never pick one up. An explicit `enterPurpose` always wins.
+ */
+export function purposeFromScriptName(argv1: string | undefined = process.argv[1], nextRuntime: string | undefined = process.env.NEXT_RUNTIME): EngineeringPurpose | null {
+  if (nextRuntime || !argv1) return null
+  const name = argv1.replace(/\\/g, '/').split('/').pop() ?? ''
+  if (!/(^|\/)scripts\//.test(argv1.replace(/\\/g, '/'))) return null
+  if (/^(check|verify|audit)-/.test(name)) return 'check'
+  if (/^(measure|probe|sweep|benchmark)-/.test(name)) return 'measurement'
+  return null
 }
 
 /**

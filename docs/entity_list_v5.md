@@ -1920,6 +1920,26 @@ A quote, a source and a comment. Every note cites a registry source (even "my ow
 | text      | Text     |                                                      |
 | createdAt | DateTime |                                                      |
 
+
+### 26-S2 additions (17–18 Oct 2026) — written at CCh's instruction of 17 Oct (3)
+
+*Every column below is additive and nullable, applied by a hand-written migration after `whichdb` and committed with `schema.prisma` in one commit. None is indexed (the CLAUDE.md §21 register is unchanged). `LlmSpend` is a raw-SQL table — its DDL of record is the `.sql` file and `llm_spend.sql`.*
+
+| Entity | Field | Type | Notes | Migration |
+|---|---|---|---|---|
+| **Idea** | `actionsStep` | Integer, default 1 | The step the user is on in the Coherent Actions screen: 1 Sort and prune · 2 Who, how and against · 3 Costs · 4 Order. Stored per idea so it opens where the user left it. Movement between steps is free; no step is locked (decision 166) | `lex_26s2_steps.sql` |
+| **LexCoherentAction** | `conflictNote` | Text nullable | "Kept, with a note" — why the owner keeps an action whose policy test says CONFLICTS. A conflict with a note is no longer "waiting for a decision" (§3c) | `lex_26s2_steps.sql` |
+| **LexCoherentAction** | `commentary` | Text nullable | Decision 181: UNLIMITED text beside the 1,000-character statement (`practicalStep`; the limit was 600 until 17 Oct) — the intention, examples, dimensions, and any text a limit cuts. Lex must offer it whenever she shortens anything. Rendered as "Commentary" (decision 185) | `lex_26s2_commentary.sql` |
+| **LexCoherentAction** | `record` | JSON nullable | Decision 177: the step-2 record. `{ who?: { by, at, proposal? }, incentiveNow \| whatChangesIt \| skill \| how \| against \| worked?: { text, by: USER\|LEX, at, direction?, linkActionId?, proposal?: { text, reason, source?, at, direction?, linkNumber? } } }`. **Who stays in `whoImplements`**; `record.who` holds only who wrote it and a waiting proposal. `by` + `at` are the **per-field provenance the database never had** (first written 18 Oct; earlier answers have none). A proposal sits BESIDE an answer and never overwrites one the user wrote | `lex_26s2_record.sql` |
+| **LexCoherentAction** | `noCostReason` | Text nullable | §6: "no cost, because …" — the owner's explicit answer that an action costs nothing (an answer, not a blank). The step-3 checklist, the cost summary, the Proposal and the headline cost all treat it as answered | `lex_26s2_costs.sql` |
+| **CostLine** | `recurrence` | String nullable | §6: `ONE_OFF` \| `PER_YEAR`. null = not said (every line before 18 Oct) | `lex_26s2_costs.sql` |
+| **DiagnosisCause** | `archivedAt` | DateTime nullable | §11a / decision 175: removing a cause ARCHIVES it; its number is never reused (the number trigger counts archived rows). Every direct read goes through the `lib/prisma.ts` client extension, which filters `archivedAt: null`; nested reads carry the filter explicitly | `lex_26s2_cause_archive.sql` |
+| **LlmSpend** | `purpose` | String nullable | §11b / decision 176: `measurement` \| `check` — engineering spend, set at the call site (`enterPurpose`, or the script's own name: `check-`/`verify-`/`audit-` → check; `measure-`/`probe-`/`sweep-`/`benchmark-` → measurement). NULL = a product call. The 266 history rows with no user and no idea are labelled `measurement` (`scripts/backfill-spend-purpose.ts`) | `lex_26s2_purpose.sql` |
+
+**Decisions 178 and 182 — the "dictated" rule has NO column.** When the owner dictates a note or an action through Lex ("note this for the policy: …", "add this action: …") the tool is called with `dictated:true`, and the platform **checks that the text is word for word inside what the user wrote** (else it refuses). The effect is stored in fields that already exist, not in a new flag: a dictated research note is `ResearchNote.authorKind = USER`, `status = IN_RECORD` (Lex's own findings stay `LEX` / `UNREVIEWED`); a dictated action is `LexCoherentAction.source = USER` (Lex's own are `LEX`). The same rule applies to a dictated step-2 answer: `record.<slot>.by = USER`.
+
+**Per-field provenance, stated plainly (decision 177b):** before 18 Oct the database could not say who wrote any field of an action (`source` records who created the ROW only). `record.<slot>.by/at` and `record.who.by/at` are the first per-field provenance; they exist from the first write after 18 Oct, so older answers read "writer not recorded".
+
 ***
 
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*

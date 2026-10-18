@@ -9,6 +9,14 @@ export type SpendOrigin = 'user-facing' | 'measurement' | 'platform' | 'unknown'
 const MEASUREMENT = /^(s24b\.|reachability|CLASSIFY_STALE|BACKFILL_TITLE|MERGE_TIGHTENED|graph\.edm-test|meter-verify)/
 const PLATFORM = /^(graph\.|orientation\.web-search$|smart-vocabulary\.)/
 
+/**
+ * 26-S2 sec 11b - how many of a person-caused pass's rows are MISSING attribution. A row is attributed when it carries a user, or a purpose
+ * (measurement | check: engineering spend, real money with no owner and not a lost user). `attributed` counts either.
+ */
+export function personRowsMissingAttribution(r: { n: number; attributed: number }): number {
+  return Math.max(0, r.n - r.attributed)
+}
+
 export function spendOriginOf(stream: string, pass: string): SpendOrigin {
   if (MEASUREMENT.test(pass)) return 'measurement'
   if (stream === 'ingest' || stream === 'graph' || PLATFORM.test(pass)) return 'platform'

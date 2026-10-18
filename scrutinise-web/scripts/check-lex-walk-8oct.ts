@@ -122,20 +122,22 @@ async function partC() {
   const id = copy.id
   try {
     // Reproduce the defect's precondition: a live row sitting far above count(rows).
+    // 18 Oct: the top index is now RELATIVE to the row count (the idea grew to 170+ rows when Charlie's import was confirmed, and a fixed 90 stopped being "far above").
     const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: id }, orderBy: { number: 'desc' }, take: 1 })
-    await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { orderIndex: 90 } })
     const total = await prisma.lexCoherentAction.count({ where: { ideaId: id } })
-    ok('the precondition holds: the highest index is far above the row count', total < 90, `${total} rows, top index 90`)
+    const TOP = total + 64
+    await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { orderIndex: TOP } })
+    ok('the precondition holds: the highest index is far above the row count', TOP > total + 60, `${total} rows, top index ${TOP}`)
 
     const a = await addAction(id, { practicalStep: 'Walk8 single add', source: 'LEX' })
     await createActions(id, [{ practicalStep: 'Walk8 batch one' }, { practicalStep: 'Walk8 batch two' }], 'LEX')
     const b = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, practicalStep: { startsWith: 'Walk8 batch' } }, orderBy: { orderIndex: 'asc' }, select: { orderIndex: true } })
-    ok('addAction lands above the previous top', a.orderIndex === 91, `got ${a.orderIndex}`)
-    ok('createActions (the build\'s path) lands above it, in the order given', b.length === 2 && b[0].orderIndex === 92 && b[1].orderIndex === 93, b.map((x) => x.orderIndex).join(','))
+    ok('addAction lands above the previous top', a.orderIndex === TOP + 1, `got ${a.orderIndex}`)
+    ok('createActions (the build\'s path) lands above it, in the order given', b.length === 2 && b[0].orderIndex === TOP + 2 && b[1].orderIndex === TOP + 3, b.map((x) => x.orderIndex).join(','))
     const st = await computeCanonicalState(id)
     const tail = st!.actions.slice(-3).map((x) => x.practicalStep)
     ok('read back through the screen\'s own state: the three new actions are the LAST three, in order', tail[0] === 'Walk8 single add' && tail[1] === 'Walk8 batch one' && tail[2] === 'Walk8 batch two', tail.join(' | '))
-    control('the OLD rule (count of rows) would also have put it last (must be FALSE)', total >= 90)
+    control('the OLD rule (count of rows) would also have put it last (must be FALSE)', total >= TOP)
   } finally {
     await deleteScratch(id)
   }

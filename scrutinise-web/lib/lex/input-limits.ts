@@ -11,6 +11,12 @@ export const LIMITS = {
   headingName: 60,
   /** Decision 181 (17 Oct 2026): the action STATEMENT. It was 600 in 26-Q without a decision; the COMMENTARY beside it is unlimited and takes whatever a limit cuts. */
   actionStatement: 1000,
+  /** 26-S2 §5 (177): an answer in one of the step-2 slots (Incentive now, What changes it, Skill, How, Against, What tells us it worked). */
+  slotAnswer: 1200,
+  /** Who — a body or a role — kept in `whoImplements` (it was 200 in the tools already). */
+  whoAnswer: 200,
+  /** 26-S2 sec 6: "no cost, because ...". */
+  noCostReason: 400,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

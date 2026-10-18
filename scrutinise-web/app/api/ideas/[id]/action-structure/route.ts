@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { ActionStructureBody as Body, OP_WORDS, INPUT_WORDS, type ActionStructureOp } from '@/lib/lex/action-structure-schema'
 import { describeIssues } from '@/lib/api-rejection'
+import * as SL from '@/lib/lex/action-slots'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { assertWritableField } from '@/lib/lex/stage'
@@ -67,6 +68,11 @@ export async function POST(req: Request, { params }: Params) {
       case 'setStep': result = await S.setStep(id, b.step); break
       case 'keepConflict': result = await S.keepConflict(id, b.actionId, b.note); break
       case 'testPolicy': result = await S.testAgainstPolicy(id, uid, { ids: b.ids }); break
+      case 'setSlot': result = await SL.setSlot(id, b.actionId, b.slot, { text: b.text, direction: b.direction, linkActionId: b.linkActionId }, 'USER'); break
+      case 'acceptSlot': result = await SL.acceptSlot(id, b.actionId, b.slot, { replace: b.replace }); break
+      case 'dismissSlot': result = await SL.dismissSlot(id, b.actionId, b.slot); break
+      case 'proposeSlots': result = await SL.proposeSlots(id, uid, { ids: b.ids }); break
+      case 'dismissSlots': result = await SL.dismissAllSlotProposals(id, b.ids); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

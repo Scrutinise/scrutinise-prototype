@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { CanonicalAction } from './page1-config'
+import { answeredCount, proposalCount, specificEnough } from './action-record'
 
 export type ActionsStep = 1 | 2 | 3 | 4
 export const STEP_NUMBERS: ActionsStep[] = [1, 2, 3, 4]
@@ -55,7 +56,7 @@ export interface ChecklistContext {
   duplicatesChecked: boolean
 }
 
-type A = Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction'>
+type A = Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 const line = (key: string, count: number, missing: (n: number) => string, ok: string): ChecklistLine => ({ key, done: count === 0, text: count === 0 ? ok : missing(count) })
@@ -64,6 +65,10 @@ const line = (key: string, count: number, missing: (n: number) => string, ok: st
 export function hasCostRange(a: Pick<CanonicalAction, 'implementationCost' | 'enforcementCost' | 'regulatoryFriction'>): boolean {
   return [a.implementationCost, a.enforcementCost, a.regulatoryFriction].some((c) => c && (c.low != null || c.high != null))
 }
+
+/** 26-S2 sec 6: has the cost question been ANSWERED - a range, a costed line, or an explicit "no cost, because ..."? */
+export const costAnswered = (a: Pick<CanonicalAction, 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>, hasLines = false): boolean =>
+  hasCostRange(a) || hasLines || !!a.noCostReason?.trim()
 
 /** A conflicting action nobody has dealt with: still live, still CONFLICTS, no note. (Ruled out leaves the live list; a re-test replaces the verdict.) */
 export const unresolvedConflict = (a: Pick<CanonicalAction, 'policyTest' | 'conflictNote'>): boolean => a.policyTest?.verdict === 'CONFLICTS' && !a.conflictNote?.trim()
@@ -90,10 +95,17 @@ export function stepChecklist(step: ActionsStep, actions: A[], ctx: ChecklistCon
     }
     case 2: {
       const noWho = actions.filter((a) => !a.whoImplements?.trim()).length
-      return [line('who', noWho, (c) => `${c} ${plural(c, 'action has', 'actions have')} no one named to implement ${plural(c, 'it', 'them')} (Who)`, 'Every action names who implements it')]
+      // "specific enough" is the step-2 definition (lib/lex/action-record.ts): Who AND Against, or draft text for a legislative action
+      const notSpecific = actions.filter((a) => !specificEnough(a)).length
+      const waiting = actions.filter((a) => proposalCount(a) > 0).length
+      return [
+        line('who', noWho, (c) => `${c} ${plural(c, 'action has', 'actions have')} no one named to implement ${plural(c, 'it', 'them')} (Who)`, 'Every action names who implements it'),
+        line('specific', notSpecific, (c) => `${c} ${plural(c, 'action is', 'actions are')} not yet specific enough (Who and Against answered; draft text for a legislative action)`, 'Every action is specific enough'),
+        line('waiting', waiting, (c) => `${c} ${plural(c, 'action has', 'actions have')} answers from Lex waiting for you to use or dismiss`, 'No answers from Lex are waiting for you'),
+      ]
     }
     case 3: {
-      const none = actions.filter((a) => !hasCostRange(a) && !opts.actionIdsWithCostLines?.has(a.id)).length
+      const none = actions.filter((a) => !costAnswered(a, !!opts.actionIdsWithCostLines?.has(a.id))).length
       return [line('cost', none, (c) => `${c} ${plural(c, 'action has', 'actions have')} no cost range`, 'Every action has a cost range')]
     }
     case 4: {
@@ -104,15 +116,18 @@ export function stepChecklist(step: ActionsStep, actions: A[], ctx: ChecklistCon
 }
 
 /** What the opened record's collapsed sections say, one line each ("Who, how and against — not yet answered · from step 2"). */
-export function otherStepLine(step: ActionsStep, a: Pick<CanonicalAction, 'whoImplements' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'avenue' | 'targetCauseIds' | 'policyTest'>, hasLines: boolean, headingName?: string | null): string {
+export function otherStepLine(step: ActionsStep, a: Pick<CanonicalAction, 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'avenue' | 'targetCauseIds' | 'policyTest' | 'noCostReason'>, hasLines: boolean, headingName?: string | null): string {
   switch (step) {
     case 1: {
       const verdict = a.policyTest && a.policyTest.verdict !== 'NOT_TESTED' ? { FITS: 'fits the policy', DOES_NOT_FIT: 'does not fit the policy', CONFLICTS: 'conflicts with the policy', NOT_TESTED: '' }[a.policyTest.verdict] : 'not tested against the policy'
       const bits = [headingName ? `under “${headingName}”` : 'no heading', a.avenue ? a.avenue.toLowerCase() : 'no avenue', `${a.targetCauseIds.length} cause${a.targetCauseIds.length === 1 ? '' : 's'}`, verdict]
       return `${STEPS[1].label} — ${bits.join(' · ')} · from step 1`
     }
-    case 2: return `${STEPS[2].label} — ${a.whoImplements?.trim() ? `Who: ${a.whoImplements.trim().length > 60 ? `${a.whoImplements.trim().slice(0, 59)}…` : a.whoImplements.trim()}` : 'not yet answered'} · from step 2`
-    case 3: return `${STEPS[3].label} — ${hasCostRange(a) || hasLines ? 'a cost range is recorded' : 'not yet answered'} · from step 3`
+    case 2: {
+      const done = answeredCount(a)
+      return `${STEPS[2].label} — ${done === 0 ? 'not yet answered' : `${done} of 7 answered${a.whoImplements?.trim() ? ` · Who: ${a.whoImplements.trim().length > 50 ? `${a.whoImplements.trim().slice(0, 49)}…` : a.whoImplements.trim()}` : ''}`} · from step 2`
+    }
+    case 3: return `${STEPS[3].label} — ${a.noCostReason?.trim() ? 'no cost, because ' + (a.noCostReason.trim().length > 50 ? a.noCostReason.trim().slice(0, 49) + '…' : a.noCostReason.trim()) : hasCostRange(a) || hasLines ? 'a cost range is recorded' : 'not yet answered'} · from step 3`
     case 4: return `${STEPS[4].label} — ${a.sequence ? `sequence: ${a.sequence.toLowerCase()}` : 'not yet answered'} · from step 4`
   }
 }

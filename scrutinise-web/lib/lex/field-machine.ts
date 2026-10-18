@@ -25,6 +25,7 @@ import { runOrientation } from './orientation'
 import { runSearch } from './search-gateway'
 import { stripNullBytes } from './json-safe'
 import { nextNumber } from './guiding-policy'
+import { parseRecord } from './action-record'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -1017,6 +1018,8 @@ export interface ActionInput {
   wording?: string | null
   /** Decision 181 — unlimited; the intention, examples, dimensions and anything the 1,000-character statement cuts. */
   commentary?: string | null
+  /** 26-S2 sec 6 - "no cost, because ..." (empty clears it). */
+  noCostReason?: string | null
   benefits?: Record<string, string> | null
   implementationCost?: CostRangeInput
   enforcementCost?: CostRangeInput
@@ -1090,17 +1093,29 @@ export async function addAction(ideaId: string, input: ActionInput) {
 }
 
 export async function updateAction(ideaId: string, actionId: string, patch: Partial<ActionInput>) {
-  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId }, select: { id: true } })
+  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId }, select: { id: true, record: true, whoImplements: true } })
   if (!row) return null
+  // 26-S2 (177): a Who written by hand records its writer. Only when it CHANGED - a card saved with the old Who untouched keeps the old provenance.
+  const whoChanged = patch.whoImplements !== undefined && (patch.whoImplements?.trim() || null) !== (row.whoImplements?.trim() || null)
+  const recordPatch = whoChanged ? (() => {
+    const rec = parseRecord(row.record)
+    const text = patch.whoImplements?.trim() || ''
+    if (text) rec.who = { by: 'USER', at: new Date().toISOString(), ...(rec.who?.proposal ? { proposal: rec.who.proposal } : {}) }
+    else if (rec.who?.proposal) rec.who = { by: 'USER', at: '', proposal: rec.who.proposal }
+    else delete rec.who
+    return { record: (Object.keys(rec).length ? rec : Prisma.DbNull) as never }
+  })() : {}
   return prisma.lexCoherentAction.update({
     where: { id: actionId },
     data: {
+      ...recordPatch,
       ...(patch.practicalStep !== undefined ? { practicalStep: patch.practicalStep.trim() } : {}),
       ...(patch.mechanismType !== undefined ? { mechanismType: patch.mechanismType?.trim() || null } : {}),
       ...(patch.whoImplements !== undefined ? { whoImplements: patch.whoImplements?.trim() || null } : {}),
       ...(patch.targetOrganisation !== undefined ? { targetOrganisation: patch.targetOrganisation?.trim() || null } : {}),
       ...(patch.wording !== undefined ? { wording: patch.wording?.trim() || null } : {}),
       ...(patch.commentary !== undefined ? { commentary: patch.commentary?.trim() || null } : {}),
+      ...(patch.noCostReason !== undefined ? { noCostReason: patch.noCostReason?.trim() || null } : {}),
       ...(patch.benefits !== undefined ? { benefits: (patch.benefits ?? undefined) as never } : {}),
       ...(patch.implementationCost !== undefined ? { implementationCost: (patch.implementationCost ?? undefined) as never } : {}),
       ...(patch.enforcementCost !== undefined ? { enforcementCost: (patch.enforcementCost ?? undefined) as never } : {}),
@@ -1134,6 +1149,8 @@ export interface CostLineInput {
   basis?: string | null
   benchmarkId?: string | null
   priceYear?: number | null
+  /** 26-S2 sec 6 - whether the line recurs. */
+  recurrence?: 'ONE_OFF' | 'PER_YEAR' | null
 }
 
 /** Cost lines for every action on an idea (one query, grouped by the caller). */
@@ -1167,6 +1184,7 @@ export async function addCostLine(ideaId: string, actionId: string, input: CostL
       basis: input.basis?.trim() || null,
       benchmarkId: input.benchmarkId ?? null,
       priceYear: input.priceYear ?? null,
+      recurrence: input.recurrence ?? null,
       orderIndex: base,
     },
   })
@@ -1190,6 +1208,7 @@ export async function updateCostLine(ideaId: string, lineId: string, patch: Part
       ...(patch.basis !== undefined ? { basis: patch.basis?.trim() || null } : {}),
       ...(patch.benchmarkId !== undefined ? { benchmarkId: patch.benchmarkId } : {}),
       ...(patch.priceYear !== undefined ? { priceYear: patch.priceYear } : {}),
+      ...(patch.recurrence !== undefined ? { recurrence: patch.recurrence } : {}),
     },
   })
 }
@@ -1271,7 +1290,7 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
   const [actions, deflator, lines] = await Promise.all([
     prisma.lexCoherentAction.findMany({
       where: { ideaId, status: 'LIVE' },
-      select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true },
+      select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true, noCostReason: true },
     }),
     prisma.deflatorSeries.findMany({ select: { year: true, index: true } }),
     // §19-C Task 6 — cost LINES are the primary source now; the legacy per-action
@@ -1281,7 +1300,7 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
       // §19-D Task 7 — `basis` is selected because the summary makes a CLAIM about it
       // ("with a stated basis"). Before this it was never read, so the claim could
       // never have been checked against the data even in principle.
-      select: { category: true, low: true, high: true, priceYear: true, basis: true },
+      select: { category: true, low: true, high: true, priceYear: true, basis: true, recurrence: true },
     }),
   ])
 
@@ -1410,9 +1429,18 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
           noBasis ? `${noBasis} ${noBasis === 1 ? 'has' : 'have'} no stated basis` : '',
         ].filter(Boolean).join(', and ')}. That makes this total weaker than it looks — worth fixing before anyone else reads it. Challenge any figure.`
 
+  // 26-S2 sec 6 - what the step-3 form records, said in the sentence: lines whose recurrence differs from their category's usual pattern (a "per year"
+  // implementation line, a "one-off" enforcement line) are summed into the category they were entered under - and SAID, so the total is not read as more
+  // regular than it is; and the actions the user has answered "no cost, because ..." are counted as answered, not as missing.
+  const oddRecurrence = lines.filter((l) => (l.low != null || l.high != null) && ((l.category === 'IMPLEMENTATION' && l.recurrence === 'PER_YEAR') || (l.category !== 'IMPLEMENTATION' && l.recurrence === 'ONE_OFF'))).length
+  const noCost = actions.filter((a) => a.noCostReason?.trim()).length
+  const formNotes =
+    (oddRecurrence ? ` ${oddRecurrence} costed ${oddRecurrence === 1 ? 'line is' : 'lines are'} recorded as ${oddRecurrence === 1 ? 'recurring differently' : 'recurring differently'} from the usual pattern of ${oddRecurrence === 1 ? 'its' : 'their'} category (implementation one-off; enforcement and compliance per year), and ${oddRecurrence === 1 ? 'is' : 'are'} summed under the category ${oddRecurrence === 1 ? 'it was' : 'they were'} entered under.` : '')
+    + (noCost ? ` ${noCost} ${noCost === 1 ? 'action is' : 'actions are'} recorded as costing nothing, each with the reason given.` : '')
+
   const summary =
     `The problem costs ${problemCost ? `~${problemCost}` : '(not yet quantified on Page 2)'}. ` +
-    `This plan costs ${planCost}${priceBase}.${quality}${eandcbNote}`
+    `This plan costs ${planCost}${priceBase}.${quality}${formNotes}${eandcbNote}`
 
   const totals = {
     implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric,
@@ -1420,6 +1448,8 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     // §19-D Task 7 — the provenance behind the sentence, so a caller (and the check)
     // can assert the claim and the data together.
     figures, oneSided, noBasis, noPriceYear, uprated,
+    // 26-S2 sec 6
+    oddRecurrence, noCost,
   }
   return { summary, totals }
 }

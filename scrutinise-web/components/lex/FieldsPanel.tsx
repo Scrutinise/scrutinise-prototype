@@ -72,6 +72,8 @@ export interface ActionDraft {
   targetOrganisation?: string | null
   wording?: string | null
   commentary?: string | null
+  /** 26-S2 sec 6 - "no cost, because ...". */
+  noCostReason?: string | null
   benefits?: Record<string, string> | null
   implementationCost?: CostRange | null
   enforcementCost?: CostRange | null
@@ -97,6 +99,8 @@ export interface CostLineDraft {
   basis?: string | null
   benchmarkId?: string | null
   priceYear?: number | null
+  /** 26-S2 sec 6 - one-off or per year. */
+  recurrence?: 'ONE_OFF' | 'PER_YEAR' | null
 }
 export interface StaffSuggestion {
   low: number | null
@@ -1520,14 +1524,35 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
           {d.high == null && d.low != null ? ' — no upper bound given, so it will be treated as a floor' : ''}.
         </p>
       )}
-      <input value={d.basis ?? ''} onChange={(e) => set({ basis: e.target.value })} placeholder="basis / assumption — where does this number come from?"
+      <input value={d.basis ?? ''} onChange={(e) => set({ basis: e.target.value })} placeholder="basis / assumption — where does this number come from? (one line)"
         className="w-full text-[11px] p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+      {/* 26-S2 sec 6 - the step's form: low, high, basis (above), the PRICE YEAR, and whether the cost is ONE-OFF or PER YEAR. Neither is guessed: the
+          one-off / per-year choice is pre-filled from the category and says so; the price year is left for the user (a stated year is a claim). */}
+      <div className="flex flex-wrap items-center gap-2 text-[11px]">
+        <label className="flex items-center gap-1">Price year
+          <input type="number" value={d.priceYear ?? ''} placeholder="e.g. 2025" disabled={busy} min={1900} max={2100}
+            onChange={(e) => set({ priceYear: e.target.value === '' ? null : Number(e.target.value) })}
+            className="w-20 p-1 rounded border border-zinc-200" aria-label="Price year of this figure" /></label>
+        <fieldset className="flex items-center gap-2" aria-label="Does this cost recur?">
+          {(['ONE_OFF', 'PER_YEAR'] as const).map((r) => {
+            const on = (d.recurrence ?? (d.category === 'IMPLEMENTATION' ? 'ONE_OFF' : 'PER_YEAR')) === r
+            return (
+              <label key={r} className={`flex items-center gap-1 rounded px-1.5 py-0.5 ${on ? 'border-2 border-zinc-900 font-semibold' : 'border border-zinc-300'}`}>
+                <input type="radio" name="recurrence" checked={on} disabled={busy} onChange={() => set({ recurrence: r })} className="accent-zinc-900" />
+                {r === 'ONE_OFF' ? 'one-off' : 'per year'}
+              </label>
+            )
+          })}
+          {d.recurrence == null && <span className="text-zinc-500">(pre-filled from the category — change it if it is wrong)</span>}
+        </fieldset>
+      </div>
       <div className="flex gap-2">
         <button disabled={busy || !d.label.trim()} onClick={() => {
           // §19-D Task 7 — `staffLevel` used to travel with a non-staff line: the draft
           // defaults it to MID and nothing cleared it when the type changed, which is
           // how a CAPITAL line came to be stored with staffLevel=MID.
-          api.add(actionId, d.costType === 'STAFF' ? d : { ...d, staffLevel: null, fteCount: null, durationMonths: null })
+          const withRecurrence = { ...d, recurrence: d.recurrence ?? (d.category === 'IMPLEMENTATION' ? 'ONE_OFF' as const : 'PER_YEAR' as const) }
+          api.add(actionId, d.costType === 'STAFF' ? withRecurrence : { ...withRecurrence, staffLevel: null, fteCount: null, durationMonths: null })
           setD({ label: '', costType: 'STAFF', category: 'IMPLEMENTATION', staffLevel: 'MID' })
           setRawLow(''); setRawHigh(''); setScale(1); setOpen(false)
         }}
@@ -1545,6 +1570,33 @@ function costLineLabel(l: CanonicalCostLine): string {
     : `£${Math.round(l.low ?? l.high ?? 0).toLocaleString()}${l.high != null && l.high !== l.low ? `–${Math.round(l.high).toLocaleString()}` : ''}`
   const staff = l.costType === 'STAFF' && l.fteCount ? ` · ${l.fteCount} FTE${l.durationMonths ? ` × ${l.durationMonths}m` : ''}` : ''
   return `${range}${staff}`
+}
+
+/**
+ * 26-S2 sec 6 - "NO COST, BECAUSE ...": an explicit answer to the cost question, with the user's reason. Not a blank (a blank reads as "not
+ * thought about"); the step-3 checklist, the row and the Proposal all say it in the user's words.
+ */
+function NoCostBox({ action, busy, api }: { action: CanonicalAction; busy: boolean; api: ActionsApi }) {
+  const [open, setOpen] = useState(false)
+  const [why, setWhy] = useState(action.noCostReason ?? '')
+  if (action.noCostReason && !open) {
+    return (
+      <span className="text-[11px] text-zinc-800" data-no-cost>
+        <span className="font-semibold">No cost, because:</span> {action.noCostReason}{' '}
+        <button type="button" disabled={busy} onClick={() => setOpen(true)} className="underline text-zinc-600 disabled:opacity-40">Edit</button>{' '}
+        <button type="button" disabled={busy} onClick={() => { api.update(action.id, { noCostReason: null }); setWhy('') }} className="underline text-zinc-600 disabled:opacity-40">Clear</button>
+      </span>
+    )
+  }
+  if (!open) return <button type="button" disabled={busy} onClick={() => setOpen(true)} className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40" data-no-cost-open>no cost, because…</button>
+  return (
+    <span className="inline-flex flex-wrap items-start gap-1.5 rounded border border-zinc-300 p-1" data-no-cost-form>
+      <BoundedInput value={why} onChange={setWhy} max={LIMITS.noCostReason} placeholder="Why this action costs nothing" aria-label={`Why action ${action.number ?? ''} costs nothing`}
+        onEnter={() => { if (why.trim().length >= 3) { api.update(action.id, { noCostReason: why.trim() }); setOpen(false) } }} className="text-[11px] p-1 rounded border border-zinc-200 w-64" />
+      <button type="button" disabled={busy || why.trim().length < 3} onClick={() => { api.update(action.id, { noCostReason: why.trim() }); setOpen(false) }} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
+      <button type="button" onClick={() => { setWhy(action.noCostReason ?? ''); setOpen(false) }} className="text-[11px] underline text-zinc-600 mt-0.5">Cancel</button>
+    </span>
+  )
 }
 
 /**
@@ -1653,7 +1705,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
                   <span className="text-zinc-300">·</span>
                   <div className="flex-1">
                     <span className="text-zinc-700">{l.label}</span>
-                    <span className="text-zinc-400"> — {costLineLabel(l)}</span>
+                    <span className="text-zinc-400"> — {costLineLabel(l)}{l.recurrence ? ` ${l.recurrence === 'ONE_OFF' ? 'one-off' : 'per year'}` : ''}{l.priceYear ? ` · ${l.priceYear} prices` : ''}</span>
                     <span className="text-zinc-300"> · {COST_CATEGORY_LABEL[l.category].split(' (')[0]}</span>
                     {l.basis && <div className="text-zinc-400 italic">{l.basis}</div>}
                   </div>
@@ -1669,6 +1721,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
         {step === 1 && action.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
         <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">{editWord}</button>
         {step === 3 && <CostLineAdder actionId={action.id} busy={busy} api={costLinesApi} />}
+        {step === 3 && <NoCostBox action={action} busy={busy} api={api} />}
         {/* DECISION 139 (9 Oct 2026) — the card's "Delete" is gone. It never deleted (since 26-Q it ruled the action out with a fixed reason the user never gave), and its name promised what it did not do. RULE OUT, with a reason, restorable, is the only route: open the action in the list and use "Rule out". */}
       </div>
     </div>

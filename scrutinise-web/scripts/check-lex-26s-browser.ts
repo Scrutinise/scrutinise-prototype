@@ -117,14 +117,22 @@ async function partB() {
     await page.locator('li[data-action-id="a2"] button[aria-expanded]').first().click()
     const li2 = page.locator('li[data-action-id="a2"]')
     ok('opened: the row carries the box marker, a 2px border and a grey fill', (await li2.getAttribute('data-open')) === 'true' && /border-2/.test((await li2.getAttribute('class')) ?? '') && /bg-zinc-100/.test((await li2.getAttribute('class')) ?? ''))
-    ok('opened: a "Close −" control top-right, and the heading menu BELOW it (same column)', await page.evaluate(() => {
+    const geo = await page.evaluate(() => {
       const li = document.querySelector('li[data-action-id="a2"]')!
       const close = [...li.querySelectorAll('button')].find((b) => /Close −/.test(b.textContent ?? ''))
       const sel = li.querySelector('select[aria-label^="Heading for action"]')
-      if (!close || !sel) return false
-      const a = close.getBoundingClientRect(), b = sel.getBoundingClientRect()
-      return b.top >= a.bottom - 1 && Math.abs(a.right - b.right) < 24
-    }))
+      const title = li.querySelector('[data-open-title]')
+      const line = li.querySelector('[data-test-line]')
+      const box = line?.firstElementChild
+      if (!close || !sel || !title || !line || !box) return { missing: { close: !!close, sel: !!sel, title: !!title, line: !!line, box: !!box } }
+      const c = close.getBoundingClientRect(), t = title.getBoundingClientRect(), s2 = sel.getBoundingClientRect(), b = box.getBoundingClientRect(), l = line.getBoundingClientRect(), r = li.getBoundingClientRect()
+      const sameLineAsTitle = Math.abs(c.top - t.top) < 30                      // Close and the title are one line
+      const menuOnTestLine = s2.top >= l.top - 2 && s2.bottom <= l.bottom + 2     // the menu is on the test line, not up with Close
+      const menuRight = Math.abs(r.right - s2.right) < 40                         // right-aligned
+      const testNotFull = b.width < r.width * 0.9                                // the test is not the full width of the record
+      return { ok: sameLineAsTitle && menuOnTestLine && menuRight && testNotFull && s2.top > c.bottom, sameLineAsTitle, menuOnTestLine, menuRight, testNotFull, c: [c.top, c.bottom, c.left, c.right], t: [t.top, t.bottom], s2: [s2.top, s2.bottom, s2.left, s2.right], l: [l.top, l.bottom], b: [b.width], r: [r.width, r.right] }
+    })
+    ok('opened (18 Oct, CCh B): the title line is [title · Edit title · Close] — Close at the right of the title line; the heading menu sits on the policy-test line, right-aligned, and the test is NOT full width', !!(geo as { ok?: boolean }).ok, JSON.stringify(geo))
     ok('opened: the title is text with an "Edit title" control — no always-open box, no "Save title"', (await li2.locator('text=Edit title').count()) === 1 && (await li2.locator('input[aria-label^="Title of action"]').count()) === 0 && (await li2.locator('text=Save title').count()) === 0)
     await li2.locator('text=Edit title').click()
     ok('"Edit title" opens the title box with a counter ("… left")', (await li2.locator('input[aria-label^="Title of action"]').count()) === 1 && /\d+ left/.test(await text('li[data-action-id="a2"] [data-limit-counter]')))

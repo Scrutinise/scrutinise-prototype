@@ -114,7 +114,7 @@ function Workspace() {
     <div>
       <p id="count-live">{s.actions.length}</p>
       <ActionsWorkspace ideaId="x" actions={s.actions as never} setAside={s.setAsideActions as never} headings={s.actionHeadings as never} causes={[]} busy={false}
-        onChanged={reread} renderFull={() => <div data-full-card />} />
+        onChanged={reread} renderFull={(_a, _s, between) => <div data-full-card>{between}</div>} />
     </div>
   )
 }

@@ -26,6 +26,8 @@ import { enterSpendFor } from '@/lib/lex/build-context'
 import { buildAgenda } from '@/lib/lex/agenda'
 import { buildQuestionPanel } from '@/lib/lex/question-panel'
 import { buildRerunChecklist, type RerunChecklist } from '@/lib/lex/rerun-checklist'
+import { computeCanonicalState } from '@/lib/lex/state'
+import { STEP_NUMBERS, STEPS, stepChecklist } from '@/lib/lex/action-steps'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -183,6 +185,22 @@ async function assemble(ideaId: string, userId: string): Promise<{ parts: Workli
       // the tick; asking the user to record it twice is asking them to do our bookkeeping.
       ticked: d.resolved || on(`decision:${d.forkKey}`),
     })
+  }
+
+  // ── 26-S2 (18 Oct): THE COHERENT ACTIONS' STEP CHECKLISTS ARE ON THE WORKLIST ──
+  // What each step still has open, in the step's own words ("12 actions have no heading"). DERIVED from the actions, never ticked: when the
+  // thing is done the line is gone. The "Find duplicates has not been run" line is left out - only the open screen can know it. A step
+  // with nothing open adds nothing, and an idea with no actions adds nothing.
+  const state = await computeCanonicalState(ideaId)
+  if (state && state.actions.length) {
+    const live = state.actions.filter((a) => !a.parked)
+    const withLines = new Set(state.costLines.map((l) => l.actionId))
+    for (const step of STEP_NUMBERS) {
+      for (const l of stepChecklist(step, live, { duplicatesChecked: true }, { actionIdsWithCostLines: withLines })) {
+        if (l.done) continue
+        decideItems.push({ key: `actions-step:${step}:${l.key}`, text: `Coherent actions, step ${step} (${STEPS[step].label}): ${l.text}`, anchor: null, href: null, ticked: on(`actions-step:${step}:${l.key}`) })
+      }
+    }
   }
 
   return {

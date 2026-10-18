@@ -37,6 +37,8 @@ const Benefits = z.object({
 const ActionFields = {
   practicalStep: z.string().trim().min(1).max(LIMITS.actionStatement),
   commentary: z.string().trim().max(100000).optional().nullable(),
+  /** 26-S2 sec 6 - "no cost, because ..." (null clears). */
+  noCostReason: z.string().trim().max(LIMITS.noCostReason).optional().nullable(),
   mechanismType: z.string().trim().max(40).optional().nullable(),
   whoImplements: z.string().trim().max(2000).optional().nullable(),
   targetOrganisation: z.string().trim().max(2000).optional().nullable(),
@@ -72,7 +74,7 @@ export async function POST(req: Request, { params }: Params) {
   const parsed = BodySchema.safeParse(raw)
   if (!parsed.success) {
     // CLAUDE.md §30 — name the input and the reason, in words; never the flatten() object.
-    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'That change to the action', labels: { practicalStep: `the action statement (${LIMITS.actionStatement} characters at most — put the rest in the commentary)`, commentary: 'the commentary', actionId: 'the action', whoImplements: 'who implements it', wording: 'the wording' } })
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'That change to the action', labels: { practicalStep: `the action statement (${LIMITS.actionStatement} characters at most — put the rest in the commentary)`, commentary: 'the commentary', noCostReason: 'the reason it costs nothing', actionId: 'the action', whoImplements: 'who implements it', wording: 'the wording' } })
     return NextResponse.json({ error: message, rejected }, { status: 422 })
   }
   const body = parsed.data

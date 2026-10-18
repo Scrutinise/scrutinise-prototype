@@ -35,7 +35,7 @@
 import { prisma } from '@/lib/prisma'
 import { rateAt, priceTokens, type ModelRate } from './build-cost'
 import type { LlmUsage } from './build-llm'
-import { currentBuildContext } from './build-context'
+import { currentBuildContext, purposeFromScriptName, type EngineeringPurpose } from './build-context'
 
 /** Which part of the platform spent this. Ingest's cost is not a user's, but it is Charlie's. */
 export type SpendStream = 'lex' | 'build' | 'deepening' | 'orientation' | 'graph' | 'ingest' | 'admin'
@@ -97,6 +97,8 @@ export interface SpendEntry {
    * `priceEntry`.
    */
   actualUsd?: number | null
+  /** 26-S2 sec 11b - `measurement` | `check` for engineering calls; absent = a product call. Ambient context (`enterPurpose`) or the script's own name fills it. */
+  purpose?: EngineeringPurpose | null
   /** COST DASHBOARD — the build and step this call was made for. Ambient context fills them when absent. */
   buildId?: string | null
   step?: string | null
@@ -166,8 +168,11 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   const ideaId = e.ideaId ?? ctx?.ideaId ?? null
   const buildId = e.buildId ?? ctx?.buildId ?? null
   const step = e.step ?? ctx?.step ?? null
+  // 26-S2 sec 11b: explicit > ambient (`enterPurpose`) > the script's own name. A web request never has one, so a product call stays NULL.
+  const purpose: EngineeringPurpose | null = e.purpose ?? ctx?.purpose ?? purposeFromScriptName()
   // COST DASHBOARD — HOW we know. An idea with no user: the idea's creator pays for it, derived here.
   let attrSource: string | null = e.userId || e.ideaId ? 'explicit' : (ctx?.userId || ctx?.ideaId ? 'ambient' : null)
+  if (!attrSource && purpose) attrSource = 'purpose'
   if (!userId && ideaId) {
     userId = await ownerOfIdea(ideaId)
     if (userId) attrSource = 'owner-of-idea'
@@ -177,12 +182,12 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
       INSERT INTO "LlmSpend" ("stream", "pass", "model", "tokensIn", "tokensOut", "tokensThinking",
                               "tokensCached", "tokensCacheWrite",
                               "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed",
-                              "toolCalls", "postsFetched", "buildId", "step", "attrSource")
+                              "toolCalls", "postsFetched", "buildId", "step", "attrSource", "purpose")
       VALUES (${e.stream}, ${e.pass}, ${e.model}, ${e.tokensIn}, ${e.tokensOut}, ${e.tokensThinking ?? 0},
               ${e.tokensCached ?? 0}, ${e.tokensCacheWrite ?? 0},
               ${priced.pence}, ${priced.unpriced}, ${userId}, ${ideaId},
               ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false},
-              ${e.toolCalls ?? null}, ${e.postsFetched ?? null}, ${buildId}, ${step}, ${attrSource})`
+              ${e.toolCalls ?? null}, ${e.postsFetched ?? null}, ${buildId}, ${step}, ${attrSource}, ${purpose})`
   } catch (err) {
     console.warn('[spend-ledger] could not record spend', {
       stream: e.stream, pass: e.pass, model: e.model,

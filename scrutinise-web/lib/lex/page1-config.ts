@@ -417,6 +417,8 @@ export interface CanonicalCostLine {
   basis: string | null
   benchmarkId: string | null
   priceYear: number | null
+  /** 26-S2 sec 6 - ONE_OFF | PER_YEAR; null = not said (every line before 18 Oct). */
+  recurrence: 'ONE_OFF' | 'PER_YEAR' | null
 }
 
 /** A Page 4 coherent action (§18.1), as the panel renders it. */
@@ -466,6 +468,10 @@ export interface CanonicalAction {
   conflictNote: string | null
   /** Decision 181 — the commentary: unlimited, beside the 1,000-character statement. null = none. */
   commentary: string | null
+  /** 26-S2 §5 (decision 177) — the step-2 record: six slots, each with its writer and date, and a proposal beside. Who stays in `whoImplements`. null = nothing recorded. */
+  record: import('./action-record').ActionRecord | null
+  /** 26-S2 sec 6 - "no cost, because ...": the user's reason this action costs nothing (an explicit answer to the cost question). null = not said. */
+  noCostReason: string | null
 }
 
 /** 26-Q §3 — one of the user's headings for their coherent actions. */

@@ -63,6 +63,8 @@ export interface SpendOverview {
   averageNote: string
   ideas: IdeaSpendRow[]
   totals: { calls: number; tokensIn: number; tokensOut: number; pence: number | null; unpricedCalls: number }
+  /** 26-S2 sec 11b - PRODUCT spend (what people's use of the product cost) and ENGINEERING spend (measurement runs and check scripts), apart. Same window. */
+  byPurpose: Array<{ purpose: 'product' | 'measurement' | 'check'; calls: number; pence: number | null; unpricedCalls: number }>
   /** ⚠ Non-empty when a pass fell into `unclassified` — the page must show this. */
   unclassifiedPasses: string[]
 }
@@ -142,6 +144,16 @@ export async function spendOverview(since: Date, until: Date): Promise<SpendOver
     { calls: 0, tokensIn: 0, tokensOut: 0, unpricedCalls: 0, pence: 0 as number | null },
   )
 
+  // 26-S2 sec 11b - product vs engineering. `purpose` NULL is a product call; a script sets measurement | check at the call site.
+  const purposes = await prisma.$queryRaw<Array<Record<string, unknown>>>`
+    SELECT COALESCE(purpose, 'product') AS purpose, COUNT(*) AS calls, COUNT(*) FILTER (WHERE unpriced) AS unpriced_calls,
+           CASE WHEN COUNT(*) FILTER (WHERE unpriced) > 0 THEN NULL ELSE SUM("estCostPence") END AS pence
+    FROM "LlmSpend" WHERE "createdAt" >= ${since} AND "createdAt" < ${until} GROUP BY 1 ORDER BY 1`
+  const byPurpose = (['product', 'measurement', 'check'] as const).map((p) => {
+    const r = purposes.find((x) => x.purpose === p)
+    return { purpose: p, calls: n(r?.calls), unpricedCalls: n(r?.unpriced_calls), pence: r ? (r.pence == null ? null : Number(r.pence)) : 0 }
+  })
+
   const { average, note } = averagePerIdea(ideaRows)
 
   return {
@@ -153,6 +165,7 @@ export async function spendOverview(since: Date, until: Date): Promise<SpendOver
     ideasCounted: ideaRows.length,
     averageNote: note,
     totals,
+    byPurpose,
     unclassifiedPasses: unclassified.map((u) => u.pass),
   }
 }

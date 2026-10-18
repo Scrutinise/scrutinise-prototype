@@ -28,7 +28,9 @@ const LineFields = {
   unit: z.string().trim().max(20).nullish(),
   basis: z.string().trim().max(2000).nullish(),
   benchmarkId: z.string().nullish(),
-  priceYear: z.number().int().nullish(),
+  priceYear: z.number().int().min(1900).max(2100).nullish(),
+  /** 26-S2 sec 6 - one-off or per year. */
+  recurrence: z.enum(['ONE_OFF', 'PER_YEAR']).nullish(),
 }
 
 const BodySchema = z.discriminatedUnion('action', [

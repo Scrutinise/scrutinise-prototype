@@ -8,6 +8,8 @@
 // here moves an action between headings — regrouping is a VIEW.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { specificEnough as recordSpecific } from './action-record' // imports nothing itself: the client bundle stays clean (§28)
+
 export const AVENUES = ['LEGISLATIVE', 'ORGANISATIONAL', 'FINANCIAL'] as const
 export type Avenue = (typeof AVENUES)[number]
 export const AVENUE_LABEL: Record<Avenue, string> = { LEGISLATIVE: 'Legislative', ORGANISATIONAL: 'Organisational', FINANCIAL: 'Financial' }
@@ -77,6 +79,8 @@ export interface ActionLike {
   beforeIds: string[]
   /** Decision 138 — null/absent = never went through the consolidation's policy test. */
   policyTest?: PolicyTest | null
+  /** 26-S2 §5 — the step-2 record (Incentive now … What tells us it worked). */
+  record?: unknown
 }
 export interface CauseLike { id: string; number: number | null; cause: string }
 export interface HeadingLike { id: string; name: string; colourKey: string; hidden: boolean; orderIndex: number }
@@ -89,8 +93,12 @@ export function actionLabel(a: Pick<ActionLike, 'title' | 'practicalStep'>, max 
   return s.length > max ? `${s.slice(0, max - 1)}…` : s
 }
 
-/** §4 "Specific enough?" — has draft text or a named implementer, or not yet. Derived, never stored. */
-export const specificEnough = (a: Pick<ActionLike, 'wording' | 'whoImplements'>): boolean => !!(a.wording?.trim() || a.whoImplements?.trim())
+/**
+ * "Specific enough" — REDEFINED 18 Oct (26-S2 §5, decision 177c): Who AND Against answered (organisational, financial), or draft text present
+ * (legislative). Computed in lib/lex/action-record.ts; shown in step 2 only. Derived, never stored. (It was "draft text OR a Who", which read
+ * 64 of 86 actions as specific; that is now 0 until Against is answered.)
+ */
+export const specificEnough = (a: Pick<ActionLike, 'wording' | 'whoImplements' | 'avenue' | 'record'>): boolean => recordSpecific(a)
 
 // ── regrouping (§4: "switch the list's grouping to any facet with one control") ─────────────────────────────────
 

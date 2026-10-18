@@ -39,7 +39,7 @@ const clip = (s: unknown, n: number) => (typeof s === 'string' ? s.replace(/\s+/
 const ROW = {
   id: true, number: true, title: true, titleProposal: true, practicalStep: true, whoImplements: true, wording: true, mechanismType: true,
   headingId: true, targetCauseIds: true, avenue: true, link: true, sequence: true, beforeIds: true, facetProposal: true,
-  parked: true, parkedReason: true, status: true, ruleOutReason: true, mergedFrom: true, mergedIntoId: true, source: true, orderIndex: true,
+  parked: true, parkedReason: true, status: true, ruleOutReason: true, mergedFrom: true, mergedIntoId: true, source: true, orderIndex: true, record: true,
 } as const
 
 export async function liveRows(ideaId: string) {

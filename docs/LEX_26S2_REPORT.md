@@ -172,3 +172,28 @@ Built and checked as described in the CHANGE_LOG entry of that push. What the re
 **⚠ For a decision (the brief: "list it; do not fix without a decision"):** the revise pass (`build.ts:2566`) still hard-deletes the Lex-sourced causes it rewrites, which frees their numbers — the one remaining path that can make "cause 3" mean a different cause. The other kernel hard-deletes are listed in the CHANGE_LOG entry (policy option, cost line, heading, evidence rows, private notes).
 
 **Verification honesty.** Static renders and database round-trips are checked (99 assertions, mutation-tested); the real model ran once for part F. **Nothing was clicked in a browser by me.** Delivery for push A was read back from the running site (`/api/health` = `a95b185`; the string "you are here" is in the live JavaScript chunk `cdd6c0fd954e1761.js`); **push B (`8cfe3f3`, 15:45 UTC): `/api/health` showed `8cfe3f3` at 15:48 UTC, and three strings only push B adds — "Test against the policy", "a cause number is never used twice", "Filter the list" — are in the live JavaScript chunk `44e32e57595186ec.js`.** Both were also built clean-room (a worktree of the committed HEAD, `npm ci`, `tsc` exit 0) before pushing; `next build` was not run there. Neither push was seen in a browser.
+
+
+---
+
+## F. CCh 18 Oct — items A and B (pushed `0f47601`, read back from the live bundle)
+
+**A — the import's "Part 1 could not be read" was the Anthropic account out of credit.** The Vercel log is not readable from this machine (the CLI token is invalid), so the failure was reproduced: the same system prompt, schema and part-1 text, sent to the same model, answered in 0.2–0.4 s with **HTTP 400 `invalid_request_error` — "Your credit balance is too low to access the Anthropic API."** That is also why nothing was spent. A single provider failure now retries itself once (429 / 5xx / 529 / a dropped connection / an empty or unparseable answer); a billing refusal, a timeout and a truncation are not retried inside the call. The sentence is "Lex could not read part 1 (the model did not answer). Nothing has been written. Press “Retry part 1”, or discard this import." — and "(the model provider says the account is out of credit)" when that is the reason. (Charlie evidently topped up and confirmed an import afterwards: 452c5ade now holds 175 live actions.)
+**B — the opened record**, top to bottom: [title · Edit title · Close]; the full statement; [policy test | heading menu, right-aligned] on one line, the test not full width; avenue and causes; **Commentary** (decision 185); then Sources, the originals, Later phase / Rule out. The header snippet, the repeated title and the avenue/causes/tested line are gone from the opened view; the closed row keeps a two-line snippet. **Asserted in a real browser** (`check:lex-26s-browser`). ⚠ **The commentary "not rendering" was not reproduced:** the database holds commentary on seven live actions, the state returns them, and the real card rendered through the real workspace shows the box (with a control).
+
+## G. Sprint 2, push 1 — what was built and what it cost
+
+| | |
+|---|---|
+| Step 2 (177) | seven slots, proposals beside answers, "Replace mine with this", per-field writer + date, "specific enough" redefined; **flip on the live data: 78 live actions, 68 → 0** |
+| "Classify with Lex" (step 2) | 6 actions a call, 12 a request, the screen continues; **MEASURED 18 actions · 3 calls · 19.34p · 207 s → 1.07p an action (n=1)**; asks first above 20p (a 175-action idea ≈ £1.87) |
+| §6 step 3 | price year, one-off / per year, "no cost, because …" (schema `cc85e7c`) |
+| 184 / worklist | filter help text; each step's open checklist lines on the worklist |
+| Lex tools | `get_action`, `set_action_slot`, `propose_action_slots`, `test_actions_against_policy` |
+| 11b | `LlmSpend.purpose`; Admin product / engineering split; **engineering since 29 Sep: £0.85 labelled (266 rows) + ≈ £4.99 on 42 deleted scratch ideas** |
+| 11c | snapshot on 452c5ade, same data: **15,471 → 15,488 tokens (+17)** |
+| 183 | **sized, not built: ~12–14 h** (CHANGE_LOG has the six paths and the recommended order) |
+| Not yet | §9 research panel; 11d (held for the second-account test); Lex proposing a cost basis from the Green Book (no cost-proposal pass exists to attach it to) |
+
+Questions for CCh: (1) 183 — go, and in which order? (2) The 513 orphan rows (£4.99) are engineering in fact but cannot be labelled `measurement` vs `check` — leave them unlabelled, or label them all `check`? (3) Who in the record: I left a Who written before 18 Oct as "writer not recorded" rather than guessing LEX from `source`.
+

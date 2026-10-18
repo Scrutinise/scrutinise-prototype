@@ -910,6 +910,119 @@ const setFacetsTool: ToolDefinition = {
   },
 }
 
+// ── 26-S2 §5 (177) — step 2, "Who, how and against": reading a record, answering a slot, proposing answers; and the policy test (170) ──
+
+import * as SL from '@/lib/lex/action-slots'
+import { ALL_SLOTS, SLOT_UI, parseRecord, slotAnswered, slotProposal, slotText, slotWriter, specificTag, answeredCount } from '@/lib/lex/action-record'
+
+const SLOT_ENUM = ALL_SLOTS as unknown as [string, ...string[]]
+
+const getActionTool: ToolDefinition = {
+  name: 'get_action', category: 'see', tier: 'free',
+  description: 'Read ONE coherent action in full by its number: the whole statement, its commentary, its heading, avenue, causes, the policy test with its reason, any note kept against a conflict, and the seven step-2 answers (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked) each with who wrote it and when, plus any answer of mine waiting beside a slot. The list shows rows only; use this for a record. READ ONLY.',
+  schema: z.object({ action: z.number().int().describe('the action number, as in #31') }),
+  async run(ctx, { action }) {
+    const { rows } = await actionsByNumbers(ctx, [action])
+    if (!rows.length) return fail(`there is no live action #${action} on this idea.`)
+    const [a, heads, causes] = await Promise.all([
+      prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id } }),
+      prisma.actionHeading.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, name: true } }),
+      prisma.diagnosisCause.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, number: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }),
+    ])
+    if (!a) return fail(`there is no live action #${action} on this idea.`)
+    const cn = new Map(causes.map((c, i) => [c.id, c.number ?? i + 1]))
+    const rec = parseRecord(a.record)
+    const slots = Object.fromEntries(ALL_SLOTS.map((k) => {
+      const w = slotWriter(a, k), p = slotProposal(a, k)
+      return [k, {
+        label: SLOT_UI[k].label, answer: slotText(a, k) || null, writtenBy: w ? (w.by === 'USER' ? 'the user' : 'Lex (accepted by the user)') : (slotAnswered(a, k) ? 'not recorded (written before 18 Oct)' : null), writtenAt: w?.at || null,
+        ...(k === 'incentiveNow' && rec.incentiveNow?.direction ? { direction: rec.incentiveNow.direction } : {}),
+        ...(p ? { lexProposes: { text: p.text, reason: p.reason, source: p.source, ...(p.direction ? { direction: p.direction } : {}), ...(p.linkNumber ? { linkedAction: p.linkNumber } : {}) } } : {}),
+      }]
+    }))
+    return {
+      ok: true,
+      data: {
+        number: a.number, title: a.title, statement: a.practicalStep, commentary: a.commentary, source: a.source, heading: a.headingId ? heads.find((h) => h.id === a.headingId)?.name ?? null : null,
+        avenue: a.avenue, causesAttacked: a.targetCauseIds.map((c) => cn.get(c)).filter(Boolean), policyTest: a.policyTestVerdict ? { verdict: a.policyTestVerdict, reason: a.policyTestReason } : 'not tested', keptWithNote: a.conflictNote,
+        step2: { specific: specificTag(a), answeredOf7: answeredCount(a), slots },
+      },
+    }
+  },
+}
+
+const setActionSlotTool: ToolDefinition = {
+  name: 'set_action_slot', category: 'draft', tier: 'free',
+  description: `Answer one step-2 question on an action: slot is one of ${ALL_SLOTS.join(', ')}. TWO WAYS, and the difference matters. If the user DICTATES the answer ("note that the implementer is the Cabinet Office"), pass dictated:true with their words as text: it is THE USER'S answer (written by them). Otherwise your text is stored as a PROPOSAL beside the slot — the user uses, edits or dismisses it — and never overwrites an answer they wrote. For incentiveNow you may pass direction WITH / AGAINST / INDIFFERENT; for whatChangesIt, linkAction = the number of the action that changes the incentive. Say where it landed.`,
+  schema: z.object({
+    action: z.number().int(),
+    slot: z.enum(SLOT_ENUM),
+    text: z.string().min(2).max(LIMITS.slotAnswer),
+    reason: z.string().max(240).optional().describe('one line: what a proposal rests on'),
+    direction: z.enum(['WITH', 'AGAINST', 'INDIFFERENT']).optional(),
+    linkAction: z.number().int().optional(),
+    dictated: z.boolean().optional().describe("true ONLY when text is the user's own words, copied exactly from what they just wrote"),
+    provenance: ProvenanceSchema,
+  }),
+  async run(ctx, input) {
+    const prov = await checkProvenance(ctx, input.provenance)
+    if (provFailed(prov)) return fail(prov.error)
+    const { rows } = await actionsByNumbers(ctx, [input.action])
+    if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+    let linkActionId: string | null = null
+    if (input.linkAction) {
+      const l = await actionsByNumbers(ctx, [input.linkAction])
+      if (!l.rows.length) return fail(`there is no live action #${input.linkAction} to link.`)
+      linkActionId = l.rows[0].id
+    }
+    const label = SLOT_UI[input.slot as keyof typeof SLOT_UI].label
+    if (input.dictated) {
+      const said = ctx.turn.userMessages.map(norm).join(' ')
+      if (!said.includes(norm(input.text))) return fail('“dictated” means the text is the user’s own words, and this is not word for word in anything they have written. Store it as your proposal (without dictated:true), or use their exact words.')
+      const r = unwrap(await SL.setSlot(ctx.ideaId, rows[0].id, input.slot, { text: input.text, direction: input.direction ?? null, linkActionId }, 'USER'))
+      if (isBad(r)) return fail(r.error)
+      return { ok: true, data: { number: rows[0].number, slot: input.slot, as: 'the user’s own answer', say: `Saved as your answer for “${label}” on #${rows[0].number}.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+    }
+    const r = unwrap(await SL.proposeSlotText(ctx.ideaId, rows[0].id, input.slot, { text: input.text, reason: input.reason, direction: input.direction ?? null, linkNumber: input.linkAction ?? null }))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { number: rows[0].number, slot: input.slot, as: 'a proposal beside the slot — the user uses, edits or dismisses it', say: `Proposed an answer for “${label}” on #${rows[0].number}; it waits beside the slot.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const proposeSlotsTool: ToolDefinition = {
+  name: 'propose_action_slots', category: 'draft', tier: 'free',
+  description: 'Propose the step-2 answers (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked) for the named actions, or for every action that has open slots when none are named. All PROPOSALS beside the slots: the user uses, edits or dismisses each; an answer they wrote is never touched. Costs pence (about 1p an action, measured; the result gives the price). One call does at most 12 actions: if the result says remaining > 0, say so and call again.',
+  schema: z.object({ actions: z.array(z.number().int()).max(12).optional().describe('action numbers (at most 12); omit for every action with an open slot, twelve at a time') }),
+  async run(ctx, { actions }) {
+    let ids: string[] | undefined
+    if (actions?.length) {
+      const t = await actionsByNumbers(ctx, actions)
+      if (t.missing.length) return fail(`there is no live action ${t.missing.map((m) => `#${m}`).join(', ')} on this idea.`)
+      ids = t.rows.map((x) => x.id)
+    }
+    const r = unwrap(await SL.proposeSlots(ctx.ideaId, ctx.userId, { ids }))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { ...r.data, status: 'proposed — waiting beside the slots for the user to use, edit or dismiss; none is an answer yet' }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const testPolicyTool: ToolDefinition = {
+  name: 'test_actions_against_policy', category: 'draft', tier: 'free',
+  description: 'Test coherent actions against the settled Guiding Policy — the same test the import uses: each is judged FITS, DOES NOT FIT or CONFLICTS, with a one-line reason, written to the action. With no actions named it tests every action that reads “? Not tested”; with numbers it (re-)tests those, e.g. after an edit. Needs an accepted Guiding Policy. Costs pence (about 0.3p an action, measured); the result gives the price.',
+  schema: z.object({ actions: z.array(z.number().int()).max(60).optional().describe('action numbers; omit for every action that was never tested') }),
+  async run(ctx, { actions }) {
+    let ids: string[] | undefined
+    if (actions?.length) {
+      const t = await actionsByNumbers(ctx, actions)
+      if (t.missing.length) return fail(`there is no live action ${t.missing.map((m) => `#${m}`).join(', ')} on this idea.`)
+      ids = t.rows.map((x) => x.id)
+    }
+    const r = unwrap(await AS.testAgainstPolicy(ctx.ideaId, ctx.userId, { ids }))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { ...r.data, say: `Tested ${r.data.tested} action${r.data.tested === 1 ? '' : 's'}: ${r.data.counts.FITS ?? 0} fit, ${r.data.counts.DOES_NOT_FIT ?? 0} do not fit, ${r.data.counts.CONFLICTS ?? 0} conflict${r.data.pence != null ? ` (${r.data.pence.toFixed(1)}p)` : ''}.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
 const groupActionsTool: ToolDefinition = {
   name: 'group_actions', category: 'see', tier: 'free',
   description: 'Show the coherent actions grouped by heading, cause, link, avenue or sequence (“group these by cause”). READ ONLY — it re-sorts the answer, not the user’s list, and moves nothing between headings.',
@@ -1396,6 +1509,8 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   // 26-Q — the coherent-actions workspace
   titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, groupActionsTool,
   findDuplicatesTool, withoutActionTool, compareActionsTool, parkActionsTool, restoreActionsTool, ruleOutActionsTool, mergeActionsTool,
+  // 26-S2 — a record, step 2's answers, the policy test
+  getActionTool, setActionSlotTool, proposeSlotsTool, testPolicyTool,
   // 26-R — the research notebook
   addResearchNoteTool, listNotebookTool, extractQuotesTool, suggestTagsTool, updateNoteTool, findSimilarTool, findDisagreementsTool, whatHaveIReadOnTool, summariseSourceTool,
 ]

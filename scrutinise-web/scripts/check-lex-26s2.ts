@@ -27,6 +27,18 @@ import * as ST from '../lib/lex/action-steps'
 import { computeCanonicalState } from '../lib/lex/state'
 import * as FM from '../lib/lex/field-machine'
 import * as FP from '../components/lex/FieldsPanel'
+import * as RC from '../lib/lex/action-record'
+import * as SL from '../lib/lex/action-slots'
+import * as F from '../lib/lex/action-facets'
+import { Prisma } from '@prisma/client'
+import { buildProposalSnapshot } from '../lib/documents/proposal-snapshot'
+import { buildProposalDocument } from '../lib/documents/build-proposal'
+import * as DOCS from '../lib/documents/build-proposal'
+import * as BC from '../lib/lex/build-context'
+import * as SP from '../lib/lex/spend-ledger'
+import * as SO from '../lib/lex/spend-origin'
+import * as SA from '../lib/lex/spend-admin'
+import { buildMeetingPackDocument } from '../lib/documents/build-meeting-pack'
 import * as S from '../lib/lex/action-structure'
 import { execute, toolByName } from '../lib/lex/agent/tools'
 import { LIMITS } from '../lib/lex/input-limits'
@@ -35,6 +47,8 @@ import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 const LIVE = process.argv.includes('--live')
 /** --live-policy: spend on part F only (the real model tests four untested actions on a scratch idea; a few pence). */
 const LIVE_POLICY = LIVE || process.argv.includes('--live-policy')
+/** --live-slots: spend on part K+ only (the real model proposes step 2 on a scratch copy; tens of pence). */
+const LIVE_SLOTS = LIVE || process.argv.includes('--live-slots')
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
 function ok(name: string, cond: boolean, detail = '') { ran++; if (cond) { pass++; console.log(`  ✓ ${name}`) } else { fail++; console.log(`  ✗ ${name}${detail ? `\n      ${detail}` : ''}`) } }
 function control(name: string, propertyHolds: boolean) { controls++; if (propertyHolds) { dead++; console.log(`  ✗ DEAD CONTROL — ${name}`) } else console.log(`  · control fired — ${name}`) }
@@ -264,7 +278,8 @@ function partC() {
   ok('STEP 1 row: title, summary, heading, avenue, causes, verdict (shape + word) — and NOTHING of steps 2–4 (no Who, cost, sequence, “specific enough”)', s1.includes('Action 1') && s1.includes('The body of action 1') && s1.includes('Legislation') && s1.includes('Legislative') && s1.includes('1 cause') && s1.includes('✓ Fits') && s1.includes('✗ Conflicts') && !/Who:|Cost:|Sequence:|specific enough|Cabinet Office|Implement £/.test(s1), s1.slice(0, 600))
   control('a step-1 row that still printed "specific enough" (must be FALSE)', /specific enough/.test(s1))
   ok('STEP 1 has no sequence view and no Link tag anywhere', !/○ Sequence|● Sequence/.test(s1) && !/\blink:/i.test(s1))
-  ok('STEP 2 row carries Who ("Cabinet Office", else "not yet answered") and none of step 1\'s tools', s2.includes('Who: Cabinet Office') && s2.includes('Who: not yet answered') && !/Title these for me|Classify with Lex|Find duplicates|Coverage grid|Add heading/.test(s2) && !/Select action|Reorder action|Heading for action/.test(h2))
+  ok('STEP 2 row carries Who ("Cabinet Office", else "not yet answered") and none of step 1\'s tools', s2.includes('Who: Cabinet Office') && s2.includes('Who: not yet answered') && !/Title these for me|Find duplicates|Coverage grid|Add heading/.test(s2) && !/Select action|Reorder action|Heading for action/.test(h2))
+  ok('…and STEP 2 offers its one tool, “Classify with Lex” (for the seven answers), and the row names the missing slots (“not yet specific — Who and Against unanswered”; “draft text missing” for a legislative one)', /Classify with Lex/.test(s2) && /not yet specific — draft text missing/.test(s2) && /not yet specific — Who and Against unanswered/.test(s2) && /1 of 7 answered/.test(s2) && /0 of 7 answered/.test(s2), s2.slice(0, 500))
   ok('STEP 3 row carries the cost ("Implement £1,000–£2,000", else "Cost: not yet answered") and no Who', s3.includes('Implement £1,000–£2,000') && s3.includes('Cost: not yet answered') && !/Who:/.test(s3))
   ok('…a cost LINE counts as a cost (step 3 reads it as recorded)', textOf(renderWs(3, [mkAction(7)], [], ['a7'])).includes('cost lines recorded'))
   ok('STEP 4 offers Classify with Lex (sequence), the Sequence view and its rows say where each sits; no step-1 tools', s4.includes('Classify with Lex') && /Sequence/.test(s4) && s4.includes('Sequence: not placed yet') && s4.includes('Now') && !/Title these for me|Find duplicates|Add heading|Coverage grid/.test(s4))
@@ -274,7 +289,7 @@ function partC() {
 
   // an OPENED record: this step's section first and open, every other under ONE line each
   const o2 = renderWs(2, rows, ['a1'])
-  ok('OPENED in step 2: step 2\'s section is open; steps 1, 3 and 4 are collapsed under one line each saying where they stand', /data-step-section="2" data-step-open="true"/.test(o2) && (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 3 && /from step 1/.test(o2) && /from step 3/.test(o2) && /from step 4/.test(o2) && textOf(o2).includes('FULL CARD 1 STEP 2'))
+  ok('OPENED in step 2: step 2\'s section is open; steps 1, 3 and 4 are collapsed under one line each saying where they stand', /data-step-section="2" data-step-open="true"/.test(o2) && (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 3 && /from step 1/.test(o2) && /from step 3/.test(o2) && /from step 4/.test(o2) && /data-slots-for="a1"/.test(o2) && (o2.match(/data-slot="/g) ?? []).length === 7)
   ok('…the line for step 3 says "a cost range is recorded" where one is, and the collapsed sections still hold their content (nothing hidden, only out of the way)', /Costs — a cost range is recorded · from step 3/.test(textOf(o2)) && textOf(o2).includes('FULL CARD 1 STEP 3') && textOf(o2).includes('FULL CARD 1 STEP 1'))
   const o1 = renderWs(1, rows, ['a2'])
   ok('OPENED in step 1: the policy test with its reason, the conflict note control, causes, avenue — and "Edit title"', /Policy test/.test(textOf(o1)) && /It rules out thresholds/.test(textOf(o1)) && /Keep it, with a note/.test(textOf(o1)) && /Edit title/.test(textOf(o1)) && /Later phase/.test(textOf(o1)))
@@ -630,6 +645,386 @@ function partJ() {
   ok('step 2 / 3: the opened record has the title line and no heading menu', /data-open-title/.test(s2) && !/Heading for action 7/.test(s2))
 }
 
+// ── K · decision 177 — the seven slots, "specific enough", the pass that proposes, the documents, the tools (a SCRATCH idea; the model stood in for) ──
+
+async function partK() {
+  section('K · 177 — step 2, "Who, how and against": the record, the tag, Lex proposes beside, never over')
+  // pure: "specific enough" — the three fixtures of BRIEF_26S2 §12.1, and their controls
+  const orgDone = { avenue: 'ORGANISATIONAL', whoImplements: 'The Cabinet Office', wording: null, record: { against: { text: 'Departments will resist the reporting burden; the counter is a single template.', by: 'USER', at: '2026-10-18T09:00:00.000Z' } } }
+  const draftOnly = { avenue: 'LEGISLATIVE', whoImplements: null, wording: 'The Secretary of State must publish a register.', record: null }
+  const neither = { avenue: 'ORGANISATIONAL', whoImplements: null, wording: null, record: null }
+  ok('fixture 1 — Who AND Against answered (organisational) reads "specific enough"', RC.specificEnough(orgDone) && RC.specificTag(orgDone) === 'specific enough')
+  ok('fixture 2 — draft text present (legislative) reads "specific enough"', RC.specificEnough(draftOnly))
+  ok('fixture 3 — neither: "not yet specific — Who and Against unanswered"', !RC.specificEnough(neither) && RC.specificTag(neither) === 'not yet specific — Who and Against unanswered')
+  ok('Who answered, Against not: "not yet specific — Against unanswered" (the tag names the missing slot)', RC.specificTag({ avenue: 'FINANCIAL', whoImplements: 'HM Treasury', wording: null, record: null }) === 'not yet specific — Against unanswered')
+  ok('a legislative action with no draft text: "not yet specific — draft text missing", even with a Who and an Against', RC.specificTag({ ...orgDone, avenue: 'LEGISLATIVE' }) === 'not yet specific — draft text missing')
+  control('a Who with no Against reading "specific enough" (the old rule — must be FALSE)', RC.specificEnough({ avenue: 'ORGANISATIONAL', whoImplements: 'The Cabinet Office', wording: null, record: null }))
+  control('a proposal waiting beside an empty Against counting as an answer (must be FALSE)', RC.specificEnough({ avenue: 'ORGANISATIONAL', whoImplements: 'X', wording: null, record: { against: { text: '', by: 'LEX', at: '', proposal: { text: 'Opposition', reason: '', source: null, at: '' } } } }))
+  ok('the facets module delegates to the one definition (the grid, the filter and the checklist cannot differ)', F.specificEnough(orgDone as never) === RC.specificEnough(orgDone) && F.specificEnough(neither as never) === RC.specificEnough(neither))
+
+  // a COLD READ of the live data: the flip, counted (CLAUDE.md §26 - nothing arranged by this check)
+  const live = await prisma.lexCoherentAction.findMany({ where: { status: 'LIVE', idea: { deletedAt: null } }, select: { whoImplements: true, wording: true, avenue: true, record: true } })
+  const oldRule = live.filter((a) => !!(a.wording?.trim() || a.whoImplements?.trim())).length
+  const newRule = live.filter((a) => RC.specificEnough(a)).length
+  console.log(`    the flip, on the live data: ${live.length} live actions; "specific enough" under the OLD rule (draft text or a Who): ${oldRule}; under the NEW rule: ${newRule}`)
+  ok('the new rule is never looser than the old one (no action became specific by the redefinition)', newRule <= oldRule)
+  ok('every action the old rule called specific only for its Who and that has no Against now reads "not yet specific"', live.filter((a) => a.whoImplements?.trim() && !a.wording?.trim() && !RC.slotAnswered(a, 'against')).every((a) => !RC.specificEnough(a)))
+
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  ;(globalThis as { __STUB_AUTH_USER?: unknown }).__STUB_AUTH_USER = owner
+  const copy = await scratchCopy('452c5ade', 's26s2k')
+  const id = copy.id
+  const realModel = SL.slotModel.current
+  const ctx = (said: string[] = []) => ({ ideaId: id, userId: owner.id, confirmed: false, turn: { tainted: false, corpusIds: new Set<string>(), webSources: new Map(), userMessages: said, pastedText: null } })
+  try {
+    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE' }, orderBy: { number: 'asc' } })
+    // a clean slate: no Who, no record, an organisational avenue — so the slots are the only thing under test
+    await prisma.lexCoherentAction.updateMany({ where: { ideaId: id }, data: { whoImplements: null, record: Prisma.DbNull, avenue: 'ORGANISATIONAL', wording: null } })
+    const [A, B, C] = rows
+    const st = async () => (await computeCanonicalState(id)).actions
+    const rec = async (aid: string) => RC.parseRecord((await prisma.lexCoherentAction.findUnique({ where: { id: aid }, select: { record: true } }))?.record)
+
+    // the user's own answers: stored with writer + timestamp; read back through the state the screen loads
+    const w = await SL.setSlot(id, A.id, 'who', { text: 'The Cabinet Office (inside government)' })
+    const ag = await SL.setSlot(id, A.id, 'against', { text: 'Departments will resist the reporting burden.' })
+    const aState = (await st()).find((x) => x.id === A.id)!
+    ok('Who is written to its COLUMN and the writer + date go in the record; Against is written to the record — both read back through the screen\'s state', w.ok && ag.ok && aState.whoImplements === 'The Cabinet Office (inside government)' && aState.record?.who?.by === 'USER' && !!aState.record?.who?.at && aState.record?.against?.text === 'Departments will resist the reporting burden.' && aState.record?.against?.by === 'USER' && !Number.isNaN(Date.parse(aState.record?.against?.at ?? '')))
+    ok('…and with Who + Against answered the action now reads "specific enough" (the state the screen loads)', RC.specificEnough(aState))
+    control('an action with only a Who reading "specific enough" after the write (must be FALSE)', RC.specificEnough((await st()).find((x) => x.id === B.id)!))
+    const inc = await SL.setSlot(id, A.id, 'incentiveNow', { text: 'Their present incentive is to avoid new duties.', direction: 'AGAINST' })
+    const chg = await SL.setSlot(id, A.id, 'whatChangesIt', { text: 'A public duty to report makes avoiding it costly.', linkActionId: B.id })
+    const a2 = (await rec(A.id))
+    ok('Incentive now keeps its direction (a word and a shape); What changes it keeps its link to another action', inc.ok && chg.ok && a2.incentiveNow?.direction === 'AGAINST' && a2.whatChangesIt?.linkActionId === B.id)
+    const selfLink = await SL.setSlot(id, A.id, 'whatChangesIt', { text: 'x', linkActionId: A.id })
+    ok('linking an action to itself is refused in words, and nothing changed', !selfLink.ok && /is not on this idea/.test((selfLink as { error: string }).error) && (await rec(A.id)).whatChangesIt?.linkActionId === B.id)
+    const tooLong = await SL.setSlot(id, A.id, 'skill', { text: 'y'.repeat(LIMITS.slotAnswer + 1) })
+    ok('a 1,201-character answer is refused in words naming the slot and the limit, and nothing is written', !tooLong.ok && /“Skill” is limited to 1200 characters/.test((tooLong as { error: string }).error) && !(await rec(A.id)).skill, (tooLong as { error?: string }).error)
+    const cleared = await SL.setSlot(id, A.id, 'skill', { text: '' })
+    ok('an empty answer clears the slot (no record of an empty answer)', cleared.ok && !(await rec(A.id)).skill)
+    ok('the writer words are honest: "you, 18 Oct" for a user answer; "writer not recorded" where none was', /^you, \d+ \w{3}$/.test(RC.writerWords(RC.slotWriter(aState, 'against'))) && RC.writerWords(null) === 'writer not recorded')
+
+    // the route (the screen's door): the limit in words, "Not saved"-ready, and the write lands
+    const post = async (body: Record<string, unknown>) => {
+      const mod = await import('../app/api/ideas/[id]/action-structure/route')
+      const res = await mod.POST(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id }) })
+      return { status: res.status as number, json: (await res.json()) as any }
+    }
+    const badRoute = await post({ op: 'setSlot', actionId: B.id, slot: 'how', text: 'z'.repeat(LIMITS.slotAnswer + 1) })
+    ok('the route refuses 1,201 characters naming the answer and the limit; nothing written', badRoute.status === 422 && /answer/.test(badRoute.json.error ?? '') && !(await rec(B.id)).how, badRoute.json.error)
+    const goodRoute = await post({ op: 'setSlot', actionId: B.id, slot: 'how', text: 'The National Audit Office checks it each year; a missed target is reported to Parliament.' })
+    ok('the route writes a slot, and the screen\'s state carries it with its writer', goodRoute.status === 200 && (await st()).find((x) => x.id === B.id)?.record?.how?.by === 'USER')
+    const noSlot = await post({ op: 'setSlot', actionId: B.id, slot: 'friction', text: 'x' })
+    ok('a slot that does not exist is refused naming the input', noSlot.status === 422 && /slot|question/i.test(noSlot.json.error ?? ''), noSlot.json.error)
+
+    // ── the pass: the model stood in for ──
+    const OWNER: RN.Viewer = { id: owner.id, isOwner: true }
+    const filed = await RN.addNote(id, { id: owner.id }, OWNER, { op: 'addNote', newSource: { kind: 'DOCUMENT', title: 'A note on public registers', fullText: denseDocument().text, rightsConfirmed: true, readStatus: 'READ' } } as never, { readIntoFindings: false })
+    const validRef = filed.ok ? (filed as { data: { ref: number } }).data.ref : 0
+    ok('a real source is filed on the scratch idea, so a proposal can cite it', validRef > 0)
+    const u0 = { model: 'stub', tokensIn: 10, tokensOut: 10, recorded: { pence: 0.2 } }
+    const seen: string[] = []
+    const asked = (user: string, n: number) => (user.match(new RegExp(`\\[${n}\\][^\\n]*\\n(?:[^\\[]*?)ASK: ([^\\n]+)`))?.[1] ?? '').split(',').map((x) => x.trim()).filter(Boolean)
+    const stubModel = (opts: { onCall?: (user: string) => Promise<void>; truncateOver?: number; log?: { calls: number; sizes: number[] } } = {}) => (async (o: { user: string }) => {
+      opts.log && (opts.log.calls++)
+      const nums = [...o.user.split('ANSWER FOR THESE ACTIONS:')[1].matchAll(/^\[(\d+)\]/gm)].map((m) => Number(m[1]))
+      opts.log?.sizes.push(nums.length)
+      seen.push(o.user)
+      if (opts.truncateOver && nums.length > opts.truncateOver) return { ok: false, reason: 'truncated', detail: 'cut off', usage: u0 }
+      await opts.onCall?.(o.user)
+      const actions = nums.map((n) => ({
+        number: n,
+        // the stand-in answers EVERY slot (even those not asked): a pass must keep to its ASK list
+        slots: RC.ALL_SLOTS.map((slot) => ({ slot, text: `Lex's answer for ${slot} on #${n}.`, reason: 'From the action wording and the settled policy.', direction: slot === 'incentiveNow' ? 'WITH' : 'NONE', linkNumber: slot === 'whatChangesIt' ? (n === rows[0].number ? rows[1].number : rows[0].number) : 0, sourceRef: slot === 'how' ? validRef : slot === 'against' ? 999999 : 0 })),
+      }))
+      return { ok: true, usage: u0, value: { actions } }
+    }) as unknown as typeof SL.slotModel.current
+
+    // the user wrote A's Who + Against and B's How: the pass asks for the REST, never for those
+    const log1 = { calls: 0, sizes: [] as number[] }
+    SL.slotModel.current = stubModel({ log: log1 })
+    const r1 = await SL.proposeSlots(id, owner.id)
+    const d1 = (r1 as { data: SL.SlotPassResult }).data
+    ok('ONE request does at most a dozen actions (a request has a time limit) and says how many are left, so the screen goes on by itself', r1.ok && d1.actions === SL.SLOT_MAX_PER_CALL && d1.remaining === rows.length - SL.SLOT_MAX_PER_CALL && d1.remaining > 0 && log1.calls === 2, JSON.stringify(d1))
+    // the loop the screen runs: request after request until none is left
+    let dMore = d1
+    for (let n = 0; n < 40 && dMore.remaining > 0; n++) dMore = (await SL.proposeSlots(id, owner.id) as { data: SL.SlotPassResult }).data
+    ok('…the following requests finish the list (remaining 0)', dMore.remaining === 0 && (await st()).filter((x) => RC.proposalCount(x) > 0).length === rows.length, JSON.stringify(dMore))
+    ok('the pass runs (stood-in model), prices itself, and returns what it did', r1.ok && (r1 as { data: SL.SlotPassResult }).data.proposed > 0 && Math.abs((r1 as { data: SL.SlotPassResult }).data.pence! - 2 * 0.2) < 1e-9, JSON.stringify((r1 as { data?: unknown }).data))
+    const aAfter = (await st()).find((x) => x.id === A.id)!
+    ok('A USER-WRITTEN ANSWER IS NEVER OVERWRITTEN: Who and Against on A are exactly as the user wrote them, though the stand-in answered every slot', aAfter.whoImplements === 'The Cabinet Office (inside government)' && aAfter.record?.against?.text === 'Departments will resist the reporting burden.' && aAfter.record?.against?.by === 'USER')
+    ok('…the prompt did not even ASK for the slots the user had answered (A: no who, no against)', !asked(seen[0], A.number!).includes('who') && !asked(seen[0], A.number!).includes('against') && asked(seen[0], A.number!).includes('skill'), `ASK for A: ${asked(seen[0], A.number!).join(', ')}`)
+    control('the user\'s Who changed by the pass (must be FALSE)', aAfter.whoImplements !== 'The Cabinet Office (inside government)')
+    const aRec = (await rec(A.id))
+    ok('…and the proposals sit BESIDE: a proposed Skill is stored as a proposal with its one-line reason, and is not an answer (A is still "specific enough" for its own reasons; the Skill slot reads unanswered)', aRec.skill?.proposal?.text === `Lex's answer for skill on #${A.number}.` && aRec.skill?.proposal?.reason.length! > 0 && !RC.slotAnswered(aAfter, 'skill') && RC.slotProposal(aAfter, 'skill')?.text === aRec.skill?.proposal?.text)
+    ok('...Incentive now carries Lex direction; What changes it carries a link only to a real, OTHER action (A own were answered by the user, so the proposals are read on C)', (await rec(C.id)).incentiveNow?.proposal?.direction === 'WITH' && (await rec(C.id)).whatChangesIt?.proposal?.linkNumber === rows[0].number && !aRec.incentiveNow?.proposal && !aRec.whatChangesIt?.proposal)
+    const cRec = (await rec(C.id))
+    ok('a proposal cites a [Ref: n] ONLY if that source is on the idea: How cites the real one; Against (the stand-in invented 999999) cites none', validRef > 0 && cRec.how?.proposal?.source === validRef && cRec.against?.proposal?.source === null && seen[0].includes(`[Ref: ${validRef}]`), `how ${cRec.how?.proposal?.source}, against ${cRec.against?.proposal?.source}`)
+    ok('B\'s How (the user\'s) is untouched and was not asked for', (await rec(B.id)).how?.text?.startsWith('The National Audit Office') === true && !asked(seen[0], B.number!).includes('how'))
+    ok(`the pass is chunked: ${rows.length} actions in ${log1.calls} calls of at most 6 across two requests`, log1.calls === Math.ceil(rows.length / 6) && Math.max(...log1.sizes) <= 6, JSON.stringify(log1))
+
+    // a second pass asks only where there is neither an answer nor a proposal waiting - so it asks for nothing
+    const log2 = { calls: 0, sizes: [] as number[] }
+    SL.slotModel.current = stubModel({ log: log2 })
+    const r2 = await SL.proposeSlots(id, owner.id)
+    ok('running it again proposes nothing and spends nothing (every open slot already has a proposal waiting)', r2.ok && (r2 as { data: SL.SlotPassResult }).data.proposed === 0 && log2.calls === 0, JSON.stringify((r2 as { data?: unknown }).data))
+
+    // the user answers a slot WHILE the pass runs: the answer wins, the proposal for it is dropped
+    await SL.dismissAllSlotProposals(id)
+    ok('"Dismiss them all" removes every proposal and leaves every answer', !(await st()).some((x) => RC.proposalCount(x) > 0) && (await st()).find((x) => x.id === A.id)?.record?.against?.text === 'Departments will resist the reporting burden.')
+    SL.slotModel.current = stubModel({ onCall: async () => { await SL.setSlot(id, C.id, 'skill', { text: 'Typed by the user while Lex was working.' }) } })
+    await SL.proposeSlots(id, owner.id, { ids: [C.id] })
+    const cRace = (await rec(C.id))
+    ok('an answer typed WHILE the pass ran is kept and the late proposal for that slot is dropped', cRace.skill?.text === 'Typed by the user while Lex was working.' && !cRace.skill?.proposal && cRace.skill?.by === 'USER')
+    control('the late proposal replacing the answer typed while it ran (must be FALSE)', cRace.skill?.text !== 'Typed by the user while Lex was working.')
+
+    // too much for one call: the pass splits, it does not fail
+    await SL.dismissAllSlotProposals(id)
+    const log3 = { calls: 0, sizes: [] as number[] }
+    SL.slotModel.current = stubModel({ log: log3, truncateOver: 2 })
+    let r3: Awaited<ReturnType<typeof SL.proposeSlots>> = await SL.proposeSlots(id, owner.id)
+    for (let n = 0; n < 40 && r3.ok && (r3 as { data: SL.SlotPassResult }).data.remaining > 0; n++) r3 = await SL.proposeSlots(id, owner.id)
+    ok('a call that is cut off is split in halves down to the floor, and the pass still completes', r3.ok && log3.sizes.some((n) => n <= 2) && (await st()).filter((x) => RC.proposalCount(x) > 0).length === rows.length, JSON.stringify(log3))
+
+    // the per-action "Ask Lex": only that action
+    await SL.dismissAllSlotProposals(id)
+    const log4 = { calls: 0, sizes: [] as number[] }
+    SL.slotModel.current = stubModel({ log: log4 })
+    const r4 = await SL.proposeSlots(id, owner.id, { ids: [B.id] })
+    ok('per-action "Ask Lex" proposes for that one action only', r4.ok && log4.sizes.join() === '1' && RC.proposalCount((await st()).find((x) => x.id === B.id)!) > 0 && RC.proposalCount((await st()).find((x) => x.id === C.id)!) === 0)
+    const notMine = await SL.proposeSlots(id, owner.id, { ids: ['not-an-action-here'] })
+    ok('…an action that is not on this idea is refused in words, nothing proposed', !notMine.ok && /not on this idea/.test((notMine as { error: string }).error))
+
+    // accept / replace / dismiss
+    const bState = (await st()).find((x) => x.id === B.id)!
+    const accWho = await SL.acceptSlot(id, B.id, 'who')
+    const bAfter = (await st()).find((x) => x.id === B.id)!
+    ok('"Use it" copies the proposal into an EMPTY slot, marked as accepted from Lex, and the proposal is cleared', !!RC.slotProposal(bState, 'who') && accWho.ok && bAfter.whoImplements === `Lex's answer for who on #${B.number}.` && bAfter.record?.who?.by === 'LEX' && !RC.slotProposal(bAfter, 'who') && /Lex \(accepted\)/.test(RC.writerWords(RC.slotWriter(bAfter, 'who'))))
+    await SL.proposeSlotText(id, B.id, 'how', { text: 'Lex would have the Treasury enforce it instead.', reason: 'The policy gives the Treasury the power.' })
+    const refuse = await SL.acceptSlot(id, B.id, 'how')
+    ok('accepting onto an answer the USER wrote is refused in words ("Replace mine with this"), and nothing changes', !refuse.ok && /Replace mine with this/.test((refuse as { error: string }).error) && (await rec(B.id)).how?.text?.startsWith('The National Audit Office') === true)
+    const repl = await SL.acceptSlot(id, B.id, 'how', { replace: true })
+    ok('…with the user\'s explicit "replace" it replaces', repl.ok && (await rec(B.id)).how?.by === 'LEX' && (await rec(B.id)).how?.text === 'Lex would have the Treasury enforce it instead.' && !(await rec(B.id)).how?.proposal)
+    const dis = await SL.dismissSlot(id, B.id, 'skill')
+    ok('"Dismiss" removes the proposal and leaves the slot as it was', dis.ok && !RC.slotProposal((await st()).find((x) => x.id === B.id)!, 'skill') && !(await rec(B.id)).skill)
+    const noProp = await SL.acceptSlot(id, B.id, 'skill')
+    ok('accepting where nothing is waiting is refused in words', !noProp.ok && /no proposal waiting/.test((noProp as { error: string }).error))
+
+    // the checklist and the row's words
+    const cl = ST.stepChecklist(2, (await st()).filter((x) => !x.parked) as never, { duplicatesChecked: false })
+    ok('the step-2 checklist uses the new definition and counts proposals waiting', cl.some((l) => l.key === 'specific' && !l.done && /not yet specific enough/.test(l.text)) && cl.some((l) => l.key === 'waiting'), cl.map((l) => l.text).join(' | '))
+
+    // ── the documents print Who / How / Against under each action, "not yet stated" when not ──
+    const snap = await buildProposalSnapshot(id)
+    const doc = JSON.stringify(buildProposalDocument(snap).model)
+    ok('the Proposal prints Who / How / Against under an action: the answered ones as written, the rest "not yet stated"', /Who: /.test(doc) && /not yet stated/.test(doc) && doc.includes('Lex would have the Treasury enforce it instead.') && doc.includes('Departments will resist the reporting burden.'), JSON.stringify({ who: /Who: /.test(doc), notStated: /not yet stated/.test(doc), how: doc.includes('Lex would have the Treasury'), against: doc.includes('Departments will resist'), len: doc.length, nActions: snap.actions.length }))
+    const pack = JSON.stringify(buildMeetingPackDocument(snap).model)
+    ok('the Meeting Pack prints them too', /Who: /.test(pack) && /Against: /.test(pack) && pack.includes('Departments will resist the reporting burden.'))
+    control('a Proposal that prints no "not yet stated" for a scratch idea with open slots (must be FALSE)', !/not yet stated/.test(doc))
+
+    // ── Lex's tools ──
+    const t = (name: string) => toolByName(name)!
+    ok('Lex has the four tools: get_action, set_action_slot, propose_action_slots, test_actions_against_policy', ['get_action', 'set_action_slot', 'propose_action_slots', 'test_actions_against_policy'].every((n) => !!toolByName(n)))
+    const prov = (q: string) => ({ kind: 'user_words', refs: [], quote: q.slice(0, 60) })
+    const g = await execute(t('get_action'), ctx(), { action: A.number })
+    const gd = g.data as { statement: string; step2: { slots: Record<string, { answer: string | null; writtenBy: string | null }>; answeredOf7: number } }
+    ok('get_action reads ONE record in full: the whole statement and the seven slots, each with its writer', g.ok && gd.statement === A.practicalStep && gd.step2.slots.who.answer === 'The Cabinet Office (inside government)' && gd.step2.slots.against.writtenBy === 'the user' && gd.step2.answeredOf7 >= 2, g.error)
+    const prop = await execute(t('set_action_slot'), ctx(['please look at this']), { action: C.number, slot: 'skill', text: 'They already run similar registers.', reason: 'The action wording', provenance: prov('please look at this') })
+    ok('set_action_slot WITHOUT dictated stores a PROPOSAL, not an answer', prop.ok && !RC.slotAnswered((await st()).find((x) => x.id === C.id)!, 'worked') && RC.slotProposal((await st()).find((x) => x.id === C.id)!, 'skill')?.text === 'They already run similar registers.')
+    const said = 'The measure is the share of targets with a named owner.'
+    const dic = await execute(t('set_action_slot'), ctx([`for #${C.number}, what tells us it worked: ${said}`]), { action: C.number, slot: 'worked', text: said, dictated: true, provenance: prov(said) })
+    ok('set_action_slot dictated:true is THE USER\'S answer (written by USER), and the tool says where it landed', dic.ok && (await rec(C.id)).worked?.by === 'USER' && /Saved as your answer/.test((dic.data as { say: string }).say))
+    const laund = await execute(t('set_action_slot'), ctx([`for #${C.number}, what tells us it worked: ${said}`]), { action: C.number, slot: 'how', text: 'Lex\'s own paraphrase of what they probably meant by enforcement.', dictated: true, provenance: prov(said) })
+    ok('dictated over words the user did not write is REFUSED — Lex cannot pass her wording off as the user\'s', !laund.ok && /word for word/.test(laund.error ?? ''), laund.error)
+    control('a laundered dictation that landed as the user\'s answer (must be FALSE)', (await rec(C.id)).how?.by === 'USER' && /paraphrase/.test((await rec(C.id)).how?.text ?? ''))
+    const overUser = await execute(t('set_action_slot'), ctx(['please look at this']), { action: A.number, slot: 'against', text: 'Lex thinks something else will oppose it.', provenance: prov('please look at this') })
+    ok('a Lex-authored slot over an answer the user wrote lands BESIDE it — the user\'s Against is intact', overUser.ok && (await rec(A.id)).against?.text === 'Departments will resist the reporting burden.' && (await rec(A.id)).against?.proposal?.text === 'Lex thinks something else will oppose it.')
+    SL.slotModel.current = stubModel()
+    await SL.dismissAllSlotProposals(id)
+    const viaTool = await execute(t('propose_action_slots'), ctx(), { actions: [C.number] })
+    ok('propose_action_slots (the stood-in model) proposes for the named action and says the answers are proposals', viaTool.ok && /proposed/.test(String((viaTool.data as { status: string }).status)) && RC.proposalCount((await st()).find((x) => x.id === C.id)!) > 0)
+    if (LIVE_POLICY) {
+      const tp = await execute(t('test_actions_against_policy'), ctx(), { actions: [A.number] })
+      ok('test_actions_against_policy (LIVE) writes a verdict and reason to the action, read back', tp.ok && !!(await prisma.lexCoherentAction.findUnique({ where: { id: A.id } }))?.policyTestVerdict, tp.error)
+    } else skip('test_actions_against_policy (live)', 'needs --live-policy (it spends pence)')
+    ok('the chat tools are named in Lex\'s instructions, with the dictated rule for slots', /get_action/.test(read('lib/lex/agent/system-prompt.ts')) && /set_action_slot/.test(read('lib/lex/agent/system-prompt.ts')) && /test_actions_against_policy/.test(read('lib/lex/agent/system-prompt.ts')))
+    ok('Lex\'s "I\'ve saved it" claims are checked against set_action_slot too', /'set_action_slot'/.test(read('lib/lex/agent/honesty.ts')))
+
+    // the live run (spends): the real model on the scratch idea, price measured (n=)
+    if (LIVE_SLOTS) {
+      section('K+ · the REAL model proposes step 2 on a scratch copy (SPENDS)')
+      SL.slotModel.current = realModel
+      await prisma.lexCoherentAction.updateMany({ where: { ideaId: id }, data: { whoImplements: null, record: Prisma.DbNull } })
+      const t0 = Date.now()
+      // the loop the screen runs: a request does a dozen actions; go on while some remain
+      const agg: SL.SlotPassResult = { proposed: 0, actions: 0, skipped: 0, remaining: 0, pence: 0, calls: 0 }
+      let live: Awaited<ReturnType<typeof SL.proposeSlots>> = { ok: true, data: agg }
+      for (let round = 0; round < 10; round++) {
+        live = await SL.proposeSlots(id, owner.id)
+        if (!live.ok) break
+        const x = (live as { data: SL.SlotPassResult }).data
+        agg.proposed += x.proposed; agg.actions += x.actions; agg.calls += x.calls; agg.pence = agg.pence != null && x.pence != null ? agg.pence + x.pence : null
+        console.log(`      request ${round + 1}: ${x.actions} actions, ${x.proposed} answers, ${x.calls} call(s), ${x.pence?.toFixed(2)}p, ${x.remaining} left`)
+        if (!x.remaining || !x.proposed) break
+      }
+      const secs = Math.round((Date.now() - t0) / 100) / 10
+      const d = agg
+      console.log(`    MEASURED: ${rows.length} actions · proposed ${d?.proposed} answers on ${d?.actions} actions · ${d?.calls} call(s) · ${d?.pence?.toFixed(2)}p · ${secs}s  →  ${d?.pence != null ? (d.pence / rows.length).toFixed(2) : '?'}p per action`)
+      ok('(live) the real model proposes answers for every action, cost measured', live.ok && (d?.proposed ?? 0) >= rows.length && d.actions === rows.length, (live as { error?: string }).error)
+      const sample = (await st()).find((x) => RC.proposalCount(x) > 0)
+      if (sample) for (const k of RC.ALL_SLOTS) { const p = RC.slotProposal(sample, k); if (p) console.log(`      #${sample.number} ${k}: ${p.direction ? `[${p.direction}] ` : ''}${p.text.slice(0, 140)}${p.source ? ` [Ref: ${p.source}]` : ''}  — ${p.reason.slice(0, 90)}`) }
+    } else skip('K+ the real model on step 2', 'needs --live-slots (it spends pence)')
+  } finally {
+    SL.slotModel.current = realModel
+    await deleteScratch(id)
+  }
+}
+
+// ── L · BRIEF_26S2 sec 6 (step 3, costs), 184 (the filter's help text), the checklists on the worklist (a SCRATCH idea) ──
+
+async function partL() {
+  section('L · step 3 — the cost form (one-off / per year, price year, "no cost, because"), the cost summary, the worklist, the filter help (184)')
+  // 184 - pure render: the filter's own help text carries the definitions
+  const htmlF = renderWs(1, [mkAction(1), mkAction(2)])
+  ok('184: the filter has its own HELP TEXT in words — what "Unreviewed" means (a proposal of Lex\'s waiting, or never tested) and what "Conflicts" means', /data-filter-help/.test(htmlF) && /Unreviewed<\/span> — Lex has a proposal waiting for you/.test(htmlF) && /has not been tested against the policy/.test(htmlF) && /Conflicts<\/span> — the policy test says/.test(htmlF))
+  ok('…and in step 2 it adds "Not yet specific" and the answers', /data-filter-help/.test(renderWs(2, [mkAction(1)])) && /Not yet specific<\/span> — Who and Against are not both answered/.test(renderWs(2, [mkAction(1)])) && /this step’s classification or answers/.test(renderWs(2, [mkAction(1)])))
+  control('step 1 describing "Not yet specific" (a step-2 tool; must be FALSE)', /Not yet specific<\/span>/.test(htmlF))
+  ok('"Unreviewed" in step 2 counts an action with a proposed answer waiting (and not one without)', (() => {
+    const fits = { verdict: 'FITS', reason: 'ok', from: [] }
+    const withP = mkAction(1, { policyTest: fits, record: { against: { text: '', by: 'LEX', at: '', proposal: { text: 'Opposition from the department.', reason: 'x', source: null, at: '' } } } })
+    const h = textOf(renderWs(2, [withP, mkAction(2, { policyTest: fits })]))
+    return /Unreviewed \(1\)/.test(h)
+  })())
+
+  const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
+  if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
+  ;(globalThis as { __STUB_AUTH_USER?: unknown }).__STUB_AUTH_USER = owner
+  const copy = await scratchCopy('452c5ade', 's26s2l')
+  const id = copy.id
+  try {
+    const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE' }, orderBy: { number: 'asc' }, take: 4 })
+    const [A, B, C] = rows
+    await prisma.lexCoherentAction.updateMany({ where: { ideaId: id }, data: { implementationCost: Prisma.DbNull, enforcementCost: Prisma.DbNull, regulatoryFriction: Prisma.DbNull, noCostReason: null } })
+    const st = async () => (await computeCanonicalState(id))
+    const call = async (route: string, body: Record<string, unknown>) => {
+      const mod = await import(route === 'cost' ? '../app/api/ideas/[id]/cost-lines/route' : '../app/api/ideas/[id]/actions/route')
+      const res = await mod.POST(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), { params: Promise.resolve({ id }) })
+      return { status: res.status as number, json: (await res.json()) as any }
+    }
+    // the cost form: low, high, basis, price year, one-off or per year
+    const add1 = await call('cost', { action: 'add', actionId: A.id, label: 'A new registry team', category: 'IMPLEMENTATION', costType: 'STAFF', low: 100000, high: 250000, basis: 'Six staff for a year at the median civil service grade', priceYear: 2025, recurrence: 'ONE_OFF' })
+    const add2 = await call('cost', { action: 'add', actionId: A.id, label: 'Running the registry', category: 'ENFORCEMENT', costType: 'OTHER', low: 40000, high: 60000, basis: 'Two staff a year', priceYear: 2025, recurrence: 'PER_YEAR' })
+    const s1 = await st()
+    const lines = s1.costLines.filter((l) => l.actionId === A.id)
+    ok('the form saves low, high, basis, price year and one-off / per year, and the screen\'s state carries all five', add1.status === 200 && add2.status === 200 && lines.length === 2 && lines.some((l) => l.recurrence === 'ONE_OFF' && l.priceYear === 2025 && l.low === 100000 && l.high === 250000 && l.basis?.startsWith('Six staff')) && lines.some((l) => l.recurrence === 'PER_YEAR'))
+    const badYear = await call('cost', { action: 'add', actionId: A.id, label: 'x', priceYear: 3025 })
+    ok('a price year of 3025 is refused (not a year), and nothing is written', badYear.status === 422 && (await st()).costLines.filter((l) => l.actionId === A.id).length === 2)
+    const badRec = await call('cost', { action: 'add', actionId: A.id, label: 'x', recurrence: 'MONTHLY' })
+    ok('a recurrence other than one-off / per year is refused', badRec.status === 422)
+
+    // "no cost, because"
+    const nc = await call('actions', { action: 'update', actionId: B.id, noCostReason: 'It restates a duty departments already carry; no new work is created.' })
+    const s2 = await st()
+    const bNow = s2.actions.find((x) => x.id === B.id)!
+    ok('"no cost, because ..." saves through the actions route and the state carries it', nc.status === 200 && bNow.noCostReason === 'It restates a duty departments already carry; no new work is created.')
+    const tooLongNc = await call('actions', { action: 'update', actionId: B.id, noCostReason: 'q'.repeat(LIMITS.noCostReason + 1) })
+    ok('…over the limit is refused naming it, and the saved reason is kept', tooLongNc.status === 422 && (await st()).actions.find((x) => x.id === B.id)?.noCostReason === bNow.noCostReason, tooLongNc.json.error)
+    const cl3 = ST.stepChecklist(3, s2.actions.filter((x) => !x.parked) as never, { duplicatesChecked: false }, { actionIdsWithCostLines: new Set(s2.costLines.map((l) => l.actionId)) })
+    const none = s2.actions.filter((x) => !x.parked && !ST.costAnswered(x, s2.costLines.some((l) => l.actionId === x.id))).length
+    ok('the step-3 checklist counts an action with a costed line (A) and one with "no cost, because" (B) as ANSWERED, and the rest as open', ST.costAnswered(bNow) && !ST.costAnswered(s2.actions.find((x) => x.id === C.id)!) && cl3[0].text.startsWith(`${none} `), cl3.map((l) => l.text).join(' | '))
+    control('an action with only a "no cost" reason still counted as having no cost answer (must be FALSE)', !ST.costAnswered(bNow))
+    const row3 = textOf(renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: id, actions: s2.actions.filter((x) => [A.id, B.id, C.id].includes(x.id)) as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], step: 3 as never, costLineActionIds: [A.id] })))
+    ok('the step-3 row says "No cost, because ..." where that is the answer, the cost where there is one, and "Cost: not yet answered" where neither', /No cost ?, because It restates a duty/.test(row3) && /Cost: not yet answered/.test(row3) && /cost lines recorded/.test(row3), row3.slice(0, 400))
+    ok('…and the collapsed line for step 3 on an opened record says "no cost, because"', /Costs — no cost, because It restates/.test(ST.otherStepLine(3, bNow as never, false)))
+
+    // the cost summary reads these
+    const sum = await FM.computeCostSummary(id)
+    const t = sum.totals as { oddRecurrence: number; noCost: number }
+    ok('the cost summary SAYS an action is recorded as costing nothing (and counts it)', t.noCost === 1 && /1 action is recorded as costing nothing, each with the reason given/.test(sum.summary), sum.summary)
+    await call('cost', { action: 'add', actionId: A.id, label: 'A yearly licence', category: 'IMPLEMENTATION', costType: 'OTHER', low: 1000, high: 2000, basis: 'Vendor quote', priceYear: 2025, recurrence: 'PER_YEAR' })
+    const sum2 = await FM.computeCostSummary(id)
+    ok('a "per year" line entered under the one-off category is SUMMED where it was entered and SAID (not silently regular)', (sum2.totals as { oddRecurrence: number }).oddRecurrence === 1 && /recurring differently from the usual pattern/.test(sum2.summary), sum2.summary)
+    control('a clean set of lines reporting a recurrence anomaly (must be FALSE)', (sum.totals as { oddRecurrence: number }).oddRecurrence > 0)
+
+    // the documents
+    const snap = await buildProposalSnapshot(id)
+    const doc = JSON.stringify(buildProposalDocument(snap).model)
+    ok('the Proposal prints "No cost, because: ..." in the user\'s words, and labels a costed line one-off / per year', doc.includes('No cost, because: ') && doc.includes('It restates a duty departments already carry') && /one-off/.test(doc) && /per year/.test(doc))
+    ok('the headline cost is not blanked by an action the user answered "no cost, because"', (() => { const a = snap.actions.map((x) => x.id === B.id ? { ...x, implementationCost: null } : { ...x, implementationCost: { low: 10, high: 20, unit: 'GBP', basis: 'b', benchmarkId: null, userOverride: false, priceYear: 2025 } as never }); return DOCS.headlineCost(a as never) !== null })())
+    control('the headline cost with a plain gap (no reason) still refuses to sum (must be FALSE as "summed")', DOCS.headlineCost(snap.actions.map((x) => x.id === B.id ? { ...x, implementationCost: null, noCostReason: null } : { ...x, implementationCost: { low: 10, high: 20, unit: 'GBP', basis: 'b', benchmarkId: null, userOverride: false, priceYear: 2025 } as never }) as never) !== null)
+
+    // the worklist: the step checklists are on it
+    const wl = await import('../app/api/ideas/[id]/worklist/route')
+    const res = await wl.GET(new Request('http://internal.invalid/'), { params: Promise.resolve({ id }) })
+    const wj = (await res.json()) as { parts: Array<{ key: string; items: Array<{ key: string; text: string; ticked: boolean }> }> }
+    const decide = wj.parts.find((p) => p.key === 'decide')!.items
+    const stepItems = decide.filter((i) => i.key.startsWith('actions-step:'))
+    ok('the worklist\'s "Decisions to make" carries the step checklists: each open line, in the step\'s words, for all four steps', stepItems.length >= 4 && [1, 2, 3, 4].every((n) => stepItems.some((i) => i.key.startsWith(`actions-step:${n}:`))) && stepItems.some((i) => /Coherent actions, step 2 \(Who, how and against\): \d+ actions? (is|are) not yet specific enough/.test(i.text)), stepItems.map((i) => i.text).join(' | ').slice(0, 400))
+    ok('…derived, never ticked by a measurement; the "Find duplicates" line (only the open screen can know it) is left out', stepItems.every((i) => !i.ticked) && !stepItems.some((i) => /Find duplicates/.test(i.text)))
+    control('a worklist for an idea with no actions listing action steps (must be FALSE)', await (async () => {
+      const empty = await scratchCopy('452c5ade', 's26s2l-empty')
+      try {
+        await prisma.lexCoherentAction.deleteMany({ where: { ideaId: empty.id } })
+        const r = await wl.GET(new Request('http://internal.invalid/'), { params: Promise.resolve({ id: empty.id }) })
+        const j = (await r.json()) as { parts: Array<{ key: string; items: Array<{ key: string }> }> }
+        return j.parts.flatMap((p) => p.items).some((i) => i.key.startsWith('actions-step:'))
+      } finally { await deleteScratch(empty.id) }
+    })())
+    ok('the form\'s words are on the screen: Price year, one-off / per year, "no cost, because…" (source-shaped)', /Price year/.test(read('components/lex/FieldsPanel.tsx')) && /one-off/.test(read('components/lex/FieldsPanel.tsx')) && /no cost, because…/.test(read('components/lex/FieldsPanel.tsx')))
+  } finally {
+    await deleteScratch(id)
+  }
+}
+
+// ── M · 11b (decision 176) — an ambient PURPOSE on the spend ledger; product spend and engineering spend apart ──
+
+async function partM() {
+  section('M · 11b — purpose on the ledger: measurement | check, set at the call site; product calls carry none')
+  ok('a script is known by its name: check-/verify-/audit- are checks; measure-/probe-/sweep-/benchmark- are measurements', BC.purposeFromScriptName('C:\\Code\\x\\scrutinise-web\\scripts\\check-lex-26s2.ts', undefined) === 'check' && BC.purposeFromScriptName('/app/scripts/verify-lex-26q-ui.tsx', undefined) === 'check' && BC.purposeFromScriptName('/app/scripts/measure-s14-merge.ts', undefined) === 'measurement' && BC.purposeFromScriptName('/app/scripts/probe-s11-reachability.ts', undefined) === 'measurement')
+  ok('…a WEB REQUEST never has one: under a Next runtime, or from an entry that is not a script, the answer is none', BC.purposeFromScriptName('/app/scripts/check-a.ts', 'nodejs') === null && BC.purposeFromScriptName('/var/task/server.js', undefined) === null && BC.purposeFromScriptName('/app/scripts/build-worker.ts', undefined) === null && BC.purposeFromScriptName('', undefined) === null)
+  control('a product entry point reading as engineering (must be FALSE)', BC.purposeFromScriptName('/var/task/.next/server/app/api/ideas/route.js', undefined) !== null)
+  ok('attribution: a row with a purpose is attributed (to engineering); a person-caused row with neither a user nor a purpose is MISSING', SO.personRowsMissingAttribution({ n: 5, attributed: 5 }) === 0 && SO.personRowsMissingAttribution({ n: 5, attributed: 3 }) === 2)
+  control('five person-caused rows with no user and no purpose reading as attributed (must be FALSE)', SO.personRowsMissingAttribution({ n: 5, attributed: 0 }) === 0)
+  ok('the attribution check counts a purpose row as attributed (source-shaped: the script\'s own SQL)', /FILTER \(WHERE "userId" IS NOT NULL OR purpose IS NOT NULL\)/.test(read('scripts/check-spend-attribution.ts')) && /personRowsMissingAttribution/.test(read('scripts/check-spend-attribution.ts')))
+
+  // the real ledger: a row written from THIS script is a check; an explicit purpose wins; a request carries none
+  const tag = `26s2m-${Date.now()}`
+  const at = (ref: string) => prisma.$queryRawUnsafe<Array<{ purpose: string | null; attrSource: string | null }>>(`SELECT purpose, "attrSource" FROM "LlmSpend" WHERE ref = $1`, ref)
+  const entry = (ref: string) => ({ stream: 'lex' as const, pass: 'test.26s2m', model: 'gemini-2.5-flash', tokensIn: 1, tokensOut: 1, ref })
+  try {
+    await SP.recordSpend(entry(`${tag}-a`))
+    const a = (await at(`${tag}-a`))[0]
+    ok('a row written from a check script carries purpose "check" (the script\'s own name), and its attrSource says why it is attributed', a?.purpose === 'check' && a?.attrSource === 'purpose', JSON.stringify(a))
+    BC.enterPurpose('measurement')
+    await SP.recordSpend(entry(`${tag}-b`))
+    const b = (await at(`${tag}-b`))[0]
+    ok('enterPurpose("measurement") is explicit and wins over the script\'s name', b?.purpose === 'measurement', JSON.stringify(b))
+    await SP.recordSpend({ ...entry(`${tag}-c`), purpose: 'check' })
+    ok('…and an explicit purpose on the entry wins over both', (await at(`${tag}-c`))[0]?.purpose === 'check')
+    // a request: Next sets NEXT_RUNTIME; the script's name must not leak into a product call
+    const bc = BC.currentBuildContext()
+    const saved = process.env.NEXT_RUNTIME
+    process.env.NEXT_RUNTIME = 'nodejs'
+    try {
+      // run outside the ambient purpose this script entered above
+      await BC.runWithSpendContext({ userId: null, ideaId: null, purpose: null }, () => SP.recordSpend(entry(`${tag}-d`)))
+    } finally { if (saved === undefined) delete process.env.NEXT_RUNTIME; else process.env.NEXT_RUNTIME = saved }
+    const d = (await at(`${tag}-d`))[0]
+    ok('a PRODUCT call (inside a web runtime) carries NO purpose - product spend is never read as engineering', d?.purpose === null && bc?.purpose === 'measurement', JSON.stringify(d))
+    control('a product call recorded as engineering (must be FALSE)', d?.purpose != null)
+  } finally {
+    await prisma.$executeRawUnsafe(`DELETE FROM "LlmSpend" WHERE ref LIKE $1`, `${tag}-%`)
+  }
+
+  // the dashboard: product and engineering apart, from the live ledger
+  const ov = await SA.spendOverview(new Date('2026-09-29T00:00:00Z'), new Date())
+  const by = Object.fromEntries(ov.byPurpose.map((x) => [x.purpose, x]))
+  console.log(`    since 29 Sep: product ${by.product?.calls} calls ${by.product?.pence?.toFixed(1)}p · measurement ${by.measurement?.calls} calls ${by.measurement?.pence?.toFixed(1)}p · check ${by.check?.calls} calls ${by.check?.pence?.toFixed(1)}p`)
+  ok('the dashboard returns product, measurement and check apart; the 266 history rows are labelled "measurement"', ov.byPurpose.map((x) => x.purpose).join() === 'product,measurement,check' && by.measurement.calls >= 266 && by.product.calls > 0)
+  ok('…and the screen carries the split (source-shaped: the Admin spend section)', /data-spend-split/.test(read('components/admin/SpendSection.tsx')) && /Engineering spend/.test(read('components/admin/SpendSection.tsx')))
+  control('the product total including the measurement rows (must be FALSE: they are labelled out of it)', (by.product.calls) === ov.byPurpose.reduce((n, x) => n + x.calls, 0))
+}
+
 async function main() {
   partA()
   await partB()
@@ -641,6 +1036,9 @@ async function main() {
   await partH()
   await partI()
   partJ()
+  await partK()
+  await partL()
+  await partM()
   console.log(`\n${pass} passed, ${fail} failed — ${ran} assertions ran, ${controls} controls (${dead} dead), ${notRun} not run`)
   await prisma.$disconnect()
   if (fail || dead) process.exit(1)

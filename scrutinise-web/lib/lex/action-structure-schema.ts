@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { LIMITS } from './input-limits'
 
 const ids = z.array(z.string().min(1)).min(1).max(300)
+const SLOT_NAMES = ['who', 'incentiveNow', 'whatChangesIt', 'skill', 'how', 'against', 'worked'] as const
 const Answer = z.object({
   verdict: z.enum(['MERGE', 'ONE_CONTAINS_THE_OTHER', 'SEQUENCE', 'CONTRADICTORY']),
   reasoning: z.string().max(4000),
@@ -57,6 +58,13 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('keepConflict'), actionId: z.string(), note: z.string().max(LIMITS.ruleOutReason).nullable() }),
   // 170 — "Test against the policy": no `ids` = every action that reads "? Not tested"; `ids` = test (or re-test) those.
   z.object({ op: z.literal('testPolicy'), ids: ids.optional() }),
+  // 26-S2 §5 (177) — step 2, "Who, how and against": the seven slots. `text` empty clears the slot. Accepting onto the user's own answer needs `replace`.
+  z.object({ op: z.literal('setSlot'), actionId: z.string(), slot: z.enum(SLOT_NAMES), text: z.string().max(LIMITS.slotAnswer), direction: z.enum(['WITH', 'AGAINST', 'INDIFFERENT']).nullable().optional(), linkActionId: z.string().nullable().optional() }),
+  z.object({ op: z.literal('acceptSlot'), actionId: z.string(), slot: z.enum(SLOT_NAMES), replace: z.boolean().optional() }),
+  z.object({ op: z.literal('dismissSlot'), actionId: z.string(), slot: z.enum(SLOT_NAMES) }),
+  // "Classify with Lex" in step 2 (no `ids`: every action with an unanswered slot) and the per-action "Ask Lex" (`ids`).
+  z.object({ op: z.literal('proposeSlots'), ids: ids.optional() }),
+  z.object({ op: z.literal('dismissSlots'), ids: ids.optional() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -73,6 +81,8 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   proposeFacets: '“Classify with Lex”', suggestHeadings: '“Suggest headings from my guiding policy”',
   judgeMerge: '“Compare”', applyMerge: '“Merge”', undoMerge: '“Undo merge”', findDuplicates: '“Find duplicates”',
   setStep: 'Moving to that step', keepConflict: '“Keep it, with a note”', testPolicy: '“Test against the policy”',
+  setSlot: 'Saving the answer', acceptSlot: 'Using Lex’s proposed answer', dismissSlot: 'Dismissing Lex’s proposed answer',
+  proposeSlots: '“Classify with Lex” / “Ask Lex”', dismissSlots: 'Dismissing Lex’s proposed answers',
 }
 
 /** And the words for the inputs those controls send. */
@@ -80,5 +90,5 @@ export const INPUT_WORDS: Record<string, string> = {
   actionIds: 'the selected actions', ids: 'the selected actions', actionId: 'the action', headingId: 'the heading',
   name: 'the heading name', colourKey: 'the colour', title: 'the title', reason: 'the reason', order: 'the new order',
   patch: 'the classification', answer: 'Lex’s answer', mergedId: 'the merged action', a: 'the first action number', b: 'the second action number',
-  op: 'the control', step: 'the step (1 to 4)', note: 'the note',
+  op: 'the control', step: 'the step (1 to 4)', note: 'the note', slot: 'the question being answered', text: 'the answer', direction: 'the direction (with, against, indifferent)', linkActionId: 'the linked action', replace: 'the choice to replace your answer',
 }

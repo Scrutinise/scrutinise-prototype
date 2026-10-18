@@ -94,7 +94,7 @@ function partA() {
   ok('by link: distinct wordings, none last', groupActions(acts, 'link', ctx).map((g) => g.label).join('|') === 'consequence|duty and means|No link recorded')
   ok('regrouping never loses an action (no-loss over every mode)', GROUP_MODES.every((m) => groupActions(acts, m, ctx).reduce((n, g) => n + g.actions.length, 0) === acts.length))
   control('a regrouping that dropped the unheaded action would be caught', () => gh.slice(0, 3).reduce((n, g) => n + g.actions.length, 0) === acts.length)
-  ok('"specific enough" = draft wording or a named implementer, derived', specificEnough({ wording: 'x', whoImplements: null }) && specificEnough({ wording: null, whoImplements: 'HMT' }) && !specificEnough({ wording: ' ', whoImplements: null }))
+  ok('"specific enough" — REDEFINED 18 Oct (26-S2 sec 5, decision 177c): Who AND Against answered, or draft text for a legislative action; a Who alone no longer counts (the full fixtures are in check:lex-26s2 part K)', specificEnough({ wording: 'x', whoImplements: null, avenue: 'LEGISLATIVE' } as never) && !specificEnough({ wording: null, whoImplements: 'HMT', avenue: 'FINANCIAL' } as never) && specificEnough({ wording: null, whoImplements: 'HMT', avenue: 'FINANCIAL', record: { against: { text: 'Opposition', by: 'USER', at: '' } } } as never) && !specificEnough({ wording: ' ', whoImplements: null, avenue: 'LEGISLATIVE' } as never))
   ok('a title leads where there is one, otherwise the first words', actionLabel({ title: 'Publish the measure', practicalStep: 'long text' }) === 'Publish the measure' && actionLabel({ title: null, practicalStep: 'x'.repeat(200) }).length <= 90)
 
   section('A · the coverage grid — an empty row is a cause with no action (§6a)')

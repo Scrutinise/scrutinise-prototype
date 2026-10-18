@@ -13,6 +13,7 @@ import { initializeFieldStates } from './field-machine'
 import { projectElicitationOntoPageOne } from './page-one'
 import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
 import { clampStep } from './action-steps'
+import { parseRecord } from './action-record'
 import {
   PAGE_SEQUENCE,
   LOCKED_PAGES,
@@ -264,6 +265,8 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       : null,
     conflictNote: a.conflictNote ?? null,
     commentary: a.commentary ?? null,
+    record: a.record ? parseRecord(a.record) : null,
+    noCostReason: a.noCostReason ?? null,
   })
   // 26-Q — the list the whole product reads is the LIVE one; ruled-out / merged-away rows are reported separately so the
   // panel can show them restorable and nothing else counts them (documents, costs, gap check, Lex's snapshot).
@@ -292,6 +295,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     basis: l.basis ?? null,
     benchmarkId: l.benchmarkId ?? null,
     priceYear: l.priceYear ?? null,
+    recurrence: (l.recurrence === 'ONE_OFF' || l.recurrence === 'PER_YEAR' ? l.recurrence : null) as CanonicalCostLine['recurrence'],
   }))
 
   // Costing benchmarks (§18.3) — only load once we're on Page 4 (cheap otherwise to skip).
