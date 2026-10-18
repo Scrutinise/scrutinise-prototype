@@ -23,6 +23,10 @@ import * as S from '../lib/lex/action-structure'
 import * as ST from '../lib/lex/action-steps'
 import * as F from '../lib/lex/action-facets'
 import { computeCanonicalState } from '../lib/lex/state'
+import { computeCostSummary } from '../lib/lex/field-machine'
+import { buildProposalSnapshot } from '../lib/documents/proposal-snapshot'
+import { buildProposalDocument } from '../lib/documents/build-proposal'
+import { buildMeetingPackDocument } from '../lib/documents/build-meeting-pack'
 import { toolByName, execute } from '../lib/lex/agent/tools'
 import { FAQ_MARKDOWN } from '../lib/faq-content'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
@@ -176,6 +180,7 @@ async function partE() {
   const realCall = RS.seams.callModelJson
   try {
     ok('the copy carries the headings (the Re-sort works on them)', (await prisma.actionHeading.count({ where: { ideaId: id } })) >= 5)
+    await prisma.$executeRaw`UPDATE "Idea" SET "headingPlan" = NULL WHERE id = ${id}` // the live idea now HAS its plan (seeded 18 Oct); the copy inherits it, so clear it to test the no-plan case
     const none = await RS.resortPlan(id)
     ok('without a plan the Re-sort refuses in words (the button is absent too)', !none.ok && /no instrument headings/.test((none as { error: string }).error))
     await RS.setHeadingPlan(id, SEVEN_HEADINGS)
@@ -273,6 +278,23 @@ async function partE() {
     ok('NOTHING WAS DELETED: the number of action rows is unchanged', (await prisma.lexCoherentAction.count({ where: { ideaId: id } })) === wholeBefore)
     const st2 = (await computeCanonicalState(id))!
     ok('the screen\'s state shows the folded components in the set-aside list, each with its pointer', st2.setAsideActions.filter((a) => a.foldedIntoId === lead.id).length === 2)
+    // ── 195 - the Proposal prints the commentary as "Components and detail"; the Meeting Pack does not; the folded component's cost line rolls up
+    const cl = await prisma.costLine.create({ data: { actionId: c1.id, label: 'ROLLUP-PROBE line', category: 'IMPLEMENTATION', low: 1000, high: 2000, unit: 'GBP', basis: 'probe' } })
+    const withLine = await computeCostSummary(id)
+    const snap = await buildProposalSnapshot(id)
+    const sLead = snap.actions.find((a) => a.id === lead.id)
+    ok('195 the snapshot gives the mechanism its commentary and the folded component\'s cost line, labelled with the component number', !!sLead && (sLead.commentary ?? '').includes(q(c1)) && sLead.costLines.some((l) => l.label === 'ROLLUP-PROBE line' && l.fromNumber === c1.number))
+    ok('…the folded component is not a row of its own in the document', !snap.actions.some((a) => a.id === c1.id))
+    const proposalText = JSON.stringify(buildProposalDocument(snap).model)
+    ok('195 the Proposal prints "Components and detail" with the quoted component under its mechanism', proposalText.includes('Components and detail') && proposalText.includes('My own commentary on the lead.') && proposalText.includes(c1.practicalStep.replace(/\s+/g, ' ').trim().slice(0, 40)))
+    ok('…and the rolled-up cost line, saying which component it came from', proposalText.includes('ROLLUP-PROBE line') && proposalText.includes(`from component #${c1.number}, folded in`))
+    const packText = JSON.stringify(buildMeetingPackDocument(snap).model)
+    ok('195 the Meeting Pack does NOT print the commentary', !packText.includes('Components and detail') && !packText.includes('My own commentary on the lead.'))
+    control('the Meeting Pack carrying the "Components and detail" heading (must be FALSE)', packText.includes('Components and detail'))
+    await prisma.costLine.delete({ where: { id: cl.id } })
+    const withoutLine = await computeCostSummary(id)
+    ok('195 the cost summary counts the folded component\'s line (the total moves when the line goes)', JSON.stringify(withLine.totals) !== JSON.stringify(withoutLine.totals))
+    control('the cost summary unchanged by a folded component\'s line (must be FALSE)', JSON.stringify(withLine.totals) === JSON.stringify(withoutLine.totals))
     // restore
     const rr = await S.restore(id, [c1.id, c2.id])
     const L2 = await prisma.lexCoherentAction.findUnique({ where: { id: lead.id } })

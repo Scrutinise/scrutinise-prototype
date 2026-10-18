@@ -10957,3 +10957,6 @@ Workers 6, 9 (and others) were crash-looping via self-discovery: when their prim
 
 ### LEX THREAD - 18 Oct (6) C (2026-10-18 10:57 UTC)
 Heading Hide/Show now works on steps 1-4 (row control on every step, Hide all / Show all in every step's top group; state is the heading's `hidden`, per idea). Component + browser check only (82 assertions). The two /api/health watchers named in the brief were not found running in this session (no process matched); no background work left behind.
+
+### LEX THREAD - 18 Oct (7) (195, 196) (2026-10-18 13:32 UTC)
+195 built: Proposal prints commentary as 'Components and detail'; Meeting Pack does not; folded components' cost lines roll up into their mechanism in the Proposal (the cost summary already summed all lines). 196: nothing to do. Waiting on Charlie running Re-sort/Consolidate; his count and Conditions view are the acceptance.

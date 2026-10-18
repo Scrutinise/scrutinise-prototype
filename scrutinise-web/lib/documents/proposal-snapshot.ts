@@ -169,6 +169,8 @@ export interface SnapshotCostLine {
   basis: string | null
   benchmarkId: string | null
   priceYear: number | null
+  /** 26-S2 195 - set when this line belongs to a component folded into the action it is printed under: that component's number. */
+  fromNumber?: number | null
 }
 
 export interface SnapshotAction {
@@ -189,6 +191,9 @@ export interface SnapshotAction {
   implementationCost: SnapshotCostFigure | null
   enforcementCost: SnapshotCostFigure | null
   regulatoryFriction: SnapshotCostFigure | null
+  /** 26-S2 195 - the action's commentary (a mechanism's folded, quoted components and Lex's reasoning). The Proposal prints it as "Components and detail"; the Meeting Pack does not. */
+  commentary?: string | null
+  /** Own cost lines first, then the lines of the components folded into this mechanism (each carries `fromNumber`). */
   costLines: SnapshotCostLine[]
   source: string
   evidenceIds: string[]
@@ -752,6 +757,17 @@ export async function buildProposalSnapshot(
     return line
   })
 
+  // 26-S2 195 - a folded component is archived, so it is not a row of its own; its cost lines roll up into the mechanism it was folded into.
+  const foldedRows = await prisma.lexCoherentAction.findMany({ where: { ideaId, foldedIntoId: { not: null } }, select: { id: true, number: true, foldedIntoId: true }, orderBy: { number: 'asc' } })
+  const rolledUp = new Map<string, SnapshotCostLine[]>()
+  for (const f of foldedRows) {
+    for (const l of linesByAction.get(f.id) ?? []) {
+      const list = rolledUp.get(f.foldedIntoId!) ?? []
+      list.push({ ...l, fromNumber: f.number ?? null })
+      rolledUp.set(f.foldedIntoId!, list)
+    }
+  }
+
   const actions: SnapshotAction[] = actionRows.map((a) => {
     const evidenceIds = evidenceByRef.get(refKeyFor('actions', a.id)) ?? []
     return {
@@ -772,7 +788,8 @@ export async function buildProposalSnapshot(
       implementationCost: figure(a.implementationCost),
       enforcementCost: figure(a.enforcementCost),
       regulatoryFriction: figure(a.regulatoryFriction),
-      costLines: linesByAction.get(a.id) ?? [],
+      commentary: (a as { commentary?: string | null }).commentary?.trim() || null,
+      costLines: [...(linesByAction.get(a.id) ?? []), ...(rolledUp.get(a.id) ?? [])],
       source: a.source,
       evidenceIds,
       supported: evidenceIds.length > 0,

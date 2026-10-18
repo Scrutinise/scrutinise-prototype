@@ -1,5 +1,9 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-18 13:32 UTC - 26-S2 195: the Proposal prints each action's commentary as "Components and detail"; folded components' cost lines roll up into their mechanism
+
+The Proposal (not the Meeting Pack) prints an action's commentary under it as "Components and detail" (the quoted, cited folded components and the reasoning). A folded component is archived, so its cost lines now roll up into the mechanism it was folded into, each marked "from component #n, folded in" (snapshot: `SnapshotAction.commentary`, `SnapshotCostLine.fromNumber`). `computeCostSummary` already summed every cost line on the idea, so the folded components' lines were already in the total; the check now proves it (the total moves when the line goes). Note, not changed: that sum has never filtered by action status, so a ruled-out or merged-away action's lines also count - reported to CCh. `check:lex-26s2-structure` 90 (new 195 assertions; its no-plan case now clears the plan the seed put on the copy). 196: no work (the other five hard-delete paths wait for 26-T; 11d held). Nothing else until Charlie has run the passes.
+
 ## 2026-10-18 10:57 UTC - 26-S2 18 Oct (6) C: a heading's Hide/Show works on every step
 
 Defect: the heading row's Hide/Show (and the step-1 toolbar's Hide all) did nothing in steps 2, 3 and 4 - the row was handed no heading outside step 1, and steps 2/3 had no Hide all. Now every step's heading row has Hide/Show (`data-heading-hide`; Rename, colour, Delete and Consolidate stay step 1's), Hide all / Show all sits in the top group of every step (step 2's toolbar, a one-button row on step 3), and the state is the heading's own `hidden` flag, per idea, so it holds across steps. The find box (B) was already on every step's list. `check-lex-26s-browser` 82 assertions (new B7d: steps 2/3/4 hide, show, hide-all, and the state held on moving to the next step). Component only; no schema.
