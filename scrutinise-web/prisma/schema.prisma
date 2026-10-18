@@ -1021,6 +1021,8 @@ model Idea {
   ideaSources               IdeaSource[]
   researchNotes             ResearchNote[]
   actionImportPasses        ActionImportPass[]
+  /// 26-T1 (decisions 146, 200, 201) — the four-model digests of a heading or of the whole set. DDL: prisma/lex_26t_digest.sql.
+  actionDigests             ActionDigest[]
   // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
@@ -3165,6 +3167,35 @@ model ActionImportPass {
   confirmedAt  DateTime?
 
   @@index([ideaId, status])
+}
+
+/// ══ 26-T1 (decisions 146, 200, 201) — THE DIGEST ═════════════════════════════════════════════════════════════
+/// Four models answer Charlie's six questions of 17 Oct about ONE heading (scope HEADING) or the WHOLE set (scope SET); a judge writes
+/// one digest that keeps each model's position named. `actionIds` is the live actions it read, so a digest can say it is stale.
+/// RUNNING (models in flight) -> MODELS_DONE (the judge is next) -> READY, or FAILED (with a reason). Nothing deletes: a newer digest
+/// of the same scope sits beside the older one. DDL: prisma/lex_26t_digest.sql.
+model ActionDigest {
+  id           String   @id @default(uuid())
+  ideaId       String
+  idea         Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  scope        String
+  /// No Prisma relation on purpose (as LexCoherentAction.headingId): a heading is archived, never deleted. `headingName` is its name then.
+  headingId    String?
+  headingName  String?
+  status       String   @default("RUNNING")
+  actionIds    String[] @default([])
+  /// One entry per panel model: { model, servedBy, ok, error?, answer?, pence }. Shape in lib/lex/action-digest-pure.ts.
+  modelOutputs Json     @default("[]")
+  /// The judge's digest. Shape in lib/lex/action-digest-pure.ts.
+  judgeOutput  Json?
+  spentPence   Float?
+  unpriced     Boolean  @default(false)
+  failure      String?
+  startedBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@index([ideaId, scope, headingId])
 }
 
 /// Sprint 3-C (§19-C Task 6) — cost engine v0. One costed line at a time under an
