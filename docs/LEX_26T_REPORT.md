@@ -42,3 +42,7 @@ None measured yet. Every button will show "measured (n=…)" or "estimate". Noth
 - **Public share links:** the three new kinds are refused there (they carry digests, notes and who-is-against-what).
 - **Section 7:** snapshot - code untouched; measured now 7,929 tokens (Gemini count; ≈8,978 by chars/4) on 452c5ade after Consolidate (58 live). Not comparable with the earlier 15,488, taken with 174 live actions. 196/183 (five hard-delete paths) and 11d: **not started** (11d still waits for the second-account test). Known-red suites: two stale fixtures fixed (26h, 26s2-structure); the data-dependent ones listed in the handoff remain.
 - **Not done:** a real-browser check for T1 and T2 (`check:lex-26t-browser`); Lex chat tools for the digest, the pack and threads; saved selections and Word-comment import (the brief defers them).
+
+### Push (19 Oct 2026)
+- 26-T2 pushed with the 26-U commit beneath it and the CHANGE_LOG (three streams' entries, one commit): origin/Main 7d7b75b. **Not yet read back live (§20)**: CC cannot read Vercel; Charlie to confirm the deploy shows Print all / Print this heading / Print selected on the Actions screen.
+- Still open: 196/183 hard-delete paths, 11d, browser check, Lex chat tools, decisions for CCh (issue->action link, B.3.6 reading, Grok timeout, glyphs).

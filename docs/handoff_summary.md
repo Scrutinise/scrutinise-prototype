@@ -10984,3 +10984,5 @@ Retire heading (archives); 198 cost total excludes ruled-out/merged-away lines; 
 
 ### LEX THREAD - 18 Oct (10) decision 199 (2026-10-18 22:04 UTC)
 Plain words for consolidation on screen, in Lex's controls list and in the Proposal (Tidy box, "tucked into their bigger action", "pairs joined", "Parts of this action, quoted", "part of #n"); old commentary headers still shown and rewritten on next change, no stored data edited. Waiting on Charlie.
+
+**26-T2 pushed 19 Oct 2026 (origin/Main 7d7b75b, with 26-U beneath it).** Live read-back pending (Charlie). Open items as in docs/LEX_26T_REPORT.md "Push".
