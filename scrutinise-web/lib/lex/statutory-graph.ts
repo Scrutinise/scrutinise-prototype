@@ -30,6 +30,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { readEffect, originOf, EDGE_SOURCES, type ChangeKind, type EdgeOrigin } from '@/lib/lex/effect-kinds'
 
 export const CITATION_TABLE = 'citation_edge'
 
@@ -747,3 +748,414 @@ export async function inboundFor(
 export function coverageStateKey(c: Coverage): string {
   return c.layers.map((l) => `${l.id}:${l.rows}`).join('|')
 }
+
+// ═════════════════════════════════════════════════════════════════════════════════════════
+// THE EFFECTS READER — what a change to an Act knocks on to (26-U, BRIEF_GRAPH_6).
+//
+// `inboundFor` answers "what REFERS to this Act" from `citation_edge`. This answers "what has
+// CHANGED, REPEALED, COMMENCED or MODIFIED it" from `legislation_edges` — the official record
+// of amendments, which this file has so far only COUNTED (the `amendment-effects` layer reports
+// `held-elsewhere`). Read-only, no schema change, one table.
+//
+// ⚠⚠ FOUR THINGS THIS READER REFUSES TO DO, each of which an earlier reader of this data did:
+//
+//   1. COLLAPSE `sub_type` INTO THE TYPE. Every row carries its verbatim `subType` AND an
+//      additive `changeKind` (see `effect-kinds.ts`). "705 amends" is a count of rows filed under
+//      that type; some are `excluded` or `applied by …` and change no word of the Act.
+//   2. LET THE TWO KINDS OF EVIDENCE LOOK ALIKE. `origin` is `official` (the publisher's own
+//      structured record — NO quotable text) or `extracted` (our reading of prose — the words
+//      kept, where any were, are in `quote`). A row never has a quote it does not hold.
+//   3. RETURN A WHOLE-CORPUS FIGURE. Counts are for the Act (and provision) asked about, queried
+//      with that Act's id; nothing here counts the table. "2.3 million links" is a statement about
+//      us, not an answer to anyone's question.
+//   4. PASS OFF A STALE COPY AS CURRENT. `freshness` is read from the rows' own `extracted_at`.
+//
+// ⚠ COUNTS ARE TRUE TOTALS, NOT `rows.length`. They come from a grouped COUNT in SQL, so a
+// per-type cap on the rows returned cannot shrink a number, and `truncated` says when it did.
+// ═════════════════════════════════════════════════════════════════════════════════════════
+
+export const EFFECTS_TABLE_NAME = EFFECTS_TABLE
+
+/** The four types TNA's effects feed files under. */
+export const EFFECT_EDGE_TYPES = ['amends', 'repeals', 'commences', 'modifies'] as const
+/** The two relationships OUR extractors wrote into the same table. */
+export const EXTRACTED_EDGE_TYPES = ['made-under', 'cites'] as const
+export type EffectEdgeType = typeof EFFECT_EDGE_TYPES[number]
+export type EdgeTypeName = EffectEdgeType | typeof EXTRACTED_EDGE_TYPES[number]
+export const ALL_EDGE_TYPES: readonly EdgeTypeName[] = [...EFFECT_EDGE_TYPES, ...EXTRACTED_EDGE_TYPES]
+
+/**
+ * What a call asks for when it names no types: the three that change or qualify an Act's
+ * text. ⚠ `commences` is a statement about WHEN, not WHAT, and on a heavily commenced Act
+ * (hundreds of rows) it would crowd the answer; it is one argument away.
+ */
+export const DEFAULT_EFFECT_TYPES: readonly EdgeTypeName[] = ['amends', 'repeals', 'modifies']
+
+export type EffectDirection = 'inbound' | 'outbound'
+
+export interface EffectRow {
+  direction: EffectDirection
+  edgeType: EdgeTypeName
+  /** ⚠ VERBATIM, never altered, never replaced by `changeKind`. */
+  subType: string
+  changeKind: ChangeKind
+  changeRule: string
+  /** What this row does, and for a not-textual row what it does NOT do — in a reader's words. */
+  changeReason: string
+  /** Recorded but not yet in force. */
+  prospective: boolean
+  temporary: boolean
+  /** The instrument / provision at the OTHER end of the edge. */
+  otherEnd: { corpus: string | null; gid: string; provision: string | null; title: string | null }
+  /** The provision of THE ACT ASKED ABOUT this row bears on; null = recorded against the Act as a whole. */
+  thisEndProvision: string | null
+  scope: 'provision' | 'act-wide'
+  granularity: string
+  /** The stored source label, verbatim. */
+  source: string
+  /** ⚠ null = a source this build does not know. Counted, never defaulted. */
+  origin: EdgeOrigin | null
+  /**
+   * ⚠⚠ ONLY AN `extracted` ROW THAT KEPT WORDS HAS ONE, AND IT IS OURS.
+   * An `official` row has none: `detail` on those is a date, a qualification and a flag.
+   */
+  quote: { text: string; kind: 'preamble-words' } | null
+  /** An official row's structured in-force fields. Not text; not a quotation. */
+  inForce: { date: string | null; qualification: string | null; applied: boolean } | null
+  /** `detail` that matched neither shape. Reported rather than dropped or promoted to a quote. */
+  detailUnparsed: string | null
+  extractedAt: string
+}
+
+export interface EffectTypeCounts {
+  edgeType: EdgeTypeName
+  /** TRUE rows for this Act (and provision) — counted in SQL, never `rows.length`. */
+  total: number
+  byKind: Record<ChangeKind, number>
+  /** How many rows each classification rule read — so a count can be explained, not just stated. */
+  byRule: Record<string, number>
+  bySource: Array<{ source: string; origin: EdgeOrigin | null; rows: number }>
+  byOrigin: { official: number; extracted: number; unrecognised: number }
+  /** Rows recorded against the Act as a whole (no provision) vs against a provision. */
+  byScope: { provision: number; actWide: number }
+  prospective: number
+  returned: number
+  truncated: boolean
+}
+
+export interface EffectsFreshness {
+  newestRowAt: string | null
+  ageDays: number | null
+  stale: boolean
+  /** ⚠ Generated from the figures above, never a fixed string. */
+  caveat: string
+}
+
+export interface EffectsResult {
+  target: { given: string; gid: string; provision: string | null; title: string | null }
+  resolution: {
+    /** The form the Act is named by in this answer: the bridge's canonical form where there is one. */
+    canonical: string
+    /** Every id form searched. */
+    candidates: string[]
+    bridge: 'not-needed' | 'bridged' | 'ambiguous-refused' | 'unavailable'
+    note: string | null
+  }
+  direction: EffectDirection
+  requestedTypes: EdgeTypeName[]
+  /** One entry per requested type, in the order asked — a zero is a stated zero, not an omission. */
+  perType: EffectTypeCounts[]
+  rows: EffectRow[]
+  freshness: EffectsFreshness
+  /** What this reader does NOT include. */
+  coverage: string
+  /** ⚠ WHAT WAS COUNTED. Rows read to produce the counts, and rows handed back. */
+  examined: { rowsCounted: number; rowsReturned: number }
+}
+
+export const EFFECTS_COVERAGE_STATEMENT =
+  'Official-record rows only (legislation.gov.uk’s own changes record, as stored here), plus our own '
+  + 'extraction where made-under or cites are asked for; Bills-API amendments are not included.'
+
+/**
+ * ⚠ THE CAVEAT IS BUILT FROM THE FIGURES. No digit is written in this template — every number
+ * is interpolated — and `check:statutory`'s no-hardcoded-figure rule covers this file.
+ */
+export function effectsFreshnessCaveat(newestRowAt: string | null, ageDays: number | null, stale: boolean): string {
+  if (!newestRowAt || ageDays === null) {
+    return 'We hold no dated record for this answer, so do not describe it as current — check legislation.gov.uk.'
+  }
+  const date = newestRowAt.slice(0, 10)
+  const base = `This is a stored copy of legislation.gov.uk’s changes record, last refreshed on ${date} (${ageDays} days ago)`
+  return stale
+    ? `${base}, so it will not show amendments, repeals or commencements made since then — check legislation.gov.uk before relying on it as current.`
+    : `${base}; it is not live.`
+}
+
+function freshnessOf(newest: Date | string | null): EffectsFreshness {
+  if (!newest) return { newestRowAt: null, ageDays: null, stale: true, caveat: effectsFreshnessCaveat(null, null, true) }
+  const d = new Date(newest)
+  const ageDays = Math.floor((Date.now() - d.getTime()) / 86_400_000)
+  const stale = ageDays > FRESHNESS_DAYS
+  const iso = d.toISOString()
+  return { newestRowAt: iso, ageDays, stale, caveat: effectsFreshnessCaveat(iso, ageDays, stale) }
+}
+
+/**
+ * The newest row in the table, for the case where the Act has NO rows and so cannot date itself.
+ * ⚠ A DATE, NEVER A COUNT — this is the one query here that is not scoped to the Act, and it
+ * returns a timestamp only. Cached: it moves only when an ingest runs.
+ */
+let tableNewestCache: { at: number; value: Date | null } | null = null
+async function tableNewest(): Promise<Date | null> {
+  if (tableNewestCache && Date.now() - tableNewestCache.at < 300_000) return tableNewestCache.value
+  const r = await prisma.$queryRawUnsafe<Array<{ newest: Date | null }>>(
+    `SELECT MAX(extracted_at) AS newest FROM ${EFFECTS_TABLE}`)
+  const value = r[0]?.newest ?? null
+  tableNewestCache = { at: Date.now(), value }
+  return value
+}
+
+/**
+ * ⚠ THE ID FORMS OF ONE ACT, THROUGH THE IDENTITY BRIDGE — AND A REFUSAL IS NOT AN ABSENCE.
+ *
+ * Pre-1963 Acts are recorded under a regnal form (`ukpga/Vict/24-25/100`) by the effects feed and
+ * under a calendar form (`ukpga/1861/100`) by our citation extractor; the same table holds both.
+ * `legislation_identity` records that they are one instrument (basis and all). A form that fits
+ * MORE THAN ONE Act is stored as `ambiguous-refused`: we do not guess between them, and the caller
+ * is told so rather than handed an empty answer that reads as "nothing affects it".
+ */
+async function resolveActForms(given: string): Promise<EffectsResult['resolution']> {
+  const base = gidCandidates(given)
+  let rows: Array<{ form: string; canonical: string | null; basis: string }>
+  try {
+    rows = await prisma.$queryRawUnsafe(`
+      SELECT form, canonical, basis FROM ${IDENTITY_TABLE}
+      WHERE form = ANY($1::text[]) OR canonical = ANY($1::text[])
+         OR canonical IN (SELECT canonical FROM ${IDENTITY_TABLE}
+                           WHERE form = ANY($1::text[]) AND canonical IS NOT NULL)`, base)
+  } catch {
+    return {
+      canonical: base[0], candidates: base, bridge: 'unavailable',
+      note: 'the year-form identity table could not be read, so rows recorded under a different year form of this Act may be missing',
+    }
+  }
+  const baseLower = new Set(base.map((b) => b.toLowerCase()))
+  const refused = rows.find((r) => r.basis === 'ambiguous-refused' && baseLower.has(r.form.toLowerCase()))
+  if (refused) {
+    return {
+      canonical: base[0], candidates: base, bridge: 'ambiguous-refused',
+      note: `“${refused.form}” fits more than one Act (two parliamentary sessions can fall inside one calendar year), `
+        + 'so we have not guessed between them. This is a refusal, not an absence: it does not mean nothing affects the Act you meant. '
+        + 'Ask again with the regnal-year form of the Act.',
+    }
+  }
+  const forms = new Set(base)
+  for (const r of rows) { forms.add(r.form); if (r.canonical) forms.add(r.canonical) }
+  const candidates = [...forms]
+  // The canonical form named for a form the caller gave; failing that, what the caller gave.
+  const canonical = rows.find((r) => r.canonical && baseLower.has(r.form.toLowerCase()))?.canonical
+    ?? rows.find((r) => r.canonical && baseLower.has(r.canonical.toLowerCase()))?.canonical
+    ?? base[0]
+  return {
+    canonical, candidates,
+    bridge: candidates.length > base.length ? 'bridged' : 'not-needed',
+    note: candidates.length > base.length
+      ? 'this Act is recorded under more than one year form; rows under every form are included'
+      : null,
+  }
+}
+
+const IN_FORCE_SHAPE = /^(\d{4}-\d{2}-\d{2})?\|([^|]*)\|(true|false)$/
+
+function parseEnd(id: string): { corpus: string | null; gid: string; provision: string | null } {
+  const p = id.split(':')
+  return { corpus: p.length > 1 ? p[0] : null, gid: p[1] ?? id, provision: p[2] ? p[2] : null }
+}
+
+interface RawEffectRow {
+  from_id: string; to_id: string; edge_type: string; sub_type: string; source: string
+  granularity: string; detail: string | null; extracted_at: Date
+}
+
+function toEffectRow(r: RawEffectRow, direction: EffectDirection): EffectRow {
+  const edgeType = r.edge_type as EdgeTypeName
+  const other = parseEnd(direction === 'inbound' ? r.from_id : r.to_id)
+  const thisEnd = parseEnd(direction === 'inbound' ? r.to_id : r.from_id)
+  const reading = readEffect(r.edge_type, r.sub_type)
+  const origin = originOf(r.source)
+
+  // ⚠ A QUOTE IS NEVER MANUFACTURED. Only our own extraction of `made-under` keeps words, and
+  // what it kept is the stored phrase — which may be cut short. A `cites` row in this table keeps
+  // none; an official row's `detail` is structured, not prose; an unknown source gets nothing.
+  let quote: EffectRow['quote'] = null
+  let inForce: EffectRow['inForce'] = null
+  let detailUnparsed: string | null = null
+  const detail = r.detail && r.detail.trim() ? r.detail : null
+  if (detail) {
+    if (origin === 'extracted' && edgeType === 'made-under') {
+      quote = { text: detail, kind: 'preamble-words' }
+    } else if (origin === 'official') {
+      const m = IN_FORCE_SHAPE.exec(detail)
+      if (m) inForce = { date: m[1] ?? null, qualification: m[2] || null, applied: m[3] === 'true' }
+      else detailUnparsed = detail
+    } else {
+      detailUnparsed = detail
+    }
+  }
+
+  return {
+    direction, edgeType, subType: r.sub_type,
+    changeKind: reading.kind, changeRule: reading.rule, changeReason: reading.reason,
+    prospective: reading.prospective, temporary: reading.temporary,
+    otherEnd: { ...other, title: null },
+    thisEndProvision: thisEnd.provision,
+    scope: thisEnd.provision === null ? 'act-wide' : 'provision',
+    granularity: r.granularity, source: r.source, origin, quote, inForce, detailUnparsed,
+    extractedAt: new Date(r.extracted_at).toISOString(),
+  }
+}
+
+const emptyKinds = (): Record<ChangeKind, number> => ({ textual: 0, 'not-textual': 0, unclassified: 0 })
+
+/**
+ * The recorded effects on an Act (or one provision of it), per type, with their sources.
+ *
+ * ⚠ A PROVISION QUERY RETURNS ACT-WIDE ROWS TOO, MARKED AS SUCH. An effect recorded against the
+ * Act as a whole bears on every provision in it (an Act-level repeal is not "about" section 5 and
+ * is still the biggest thing that can happen to it). `inboundFor` excludes the equivalent rows and
+ * counts them in prose; here they stay in the answer, counted separately in `byScope`, because a
+ * clerk asking about one section would otherwise never learn the whole Act was repealed.
+ *
+ * ⚠ `provision` must be an id (`section-149`), not a pattern. A character outside `[A-Za-z0-9-]`
+ * is REFUSED rather than stripped: it would otherwise reach the regex in `provisionPredicate`.
+ */
+export async function effectsFor(
+  act: string,
+  opts: {
+    provision?: string | null
+    direction?: EffectDirection
+    edgeTypes?: readonly EdgeTypeName[]
+    limitPerType?: number
+  } = {},
+): Promise<EffectsResult> {
+  const direction: EffectDirection = opts.direction ?? 'inbound'
+  const requestedTypes = [...new Set(opts.edgeTypes?.length ? opts.edgeTypes : DEFAULT_EFFECT_TYPES)]
+  for (const t of requestedTypes) {
+    if (!ALL_EDGE_TYPES.includes(t)) throw new Error(`"${t}" is not an edge type this reader knows (${ALL_EDGE_TYPES.join(', ')})`)
+  }
+  const limit = Math.min(Math.max(Math.trunc(opts.limitPerType ?? 100), 1), 500)
+  const provision = opts.provision?.trim() || null
+  if (provision && !/^[A-Za-z0-9-]+$/.test(provision)) {
+    throw new Error(`"${provision}" is not a provision id such as section-149 (letters, digits and hyphens only)`)
+  }
+
+  const resolution = await resolveActForms(act)
+  const gid = resolution.canonical
+  const empty =(): EffectTypeCounts[] => requestedTypes.map((edgeType) => ({
+    edgeType, total: 0, byKind: emptyKinds(), byRule: {}, bySource: [],
+    byOrigin: { official: 0, extracted: 0, unrecognised: 0 }, byScope: { provision: 0, actWide: 0 },
+    prospective: 0, returned: 0, truncated: false,
+  }))
+
+  // ⚠ A REFUSED FORM RETURNS NO ROWS AND SAYS WHY. Querying the literal form would attach rows to
+  // "this Act" that may belong to either of the two it fits.
+  if (resolution.bridge === 'ambiguous-refused') {
+    return {
+      target: { given: act, gid, provision, title: null }, resolution, direction, requestedTypes,
+      perType: empty(), rows: [], freshness: freshnessOf(await tableNewest()),
+      coverage: EFFECTS_COVERAGE_STATEMENT, examined: { rowsCounted: 0, rowsReturned: 0 },
+    }
+  }
+
+  const thisCol = direction === 'inbound' ? 'to_id' : 'from_id'
+  const otherCol = direction === 'inbound' ? 'from_id' : 'to_id'
+  const thisGid = `split_part(${thisCol}, ':', 2)`
+  const thisProv = `split_part(${thisCol}, ':', 3)`
+
+  // `= ANY($1)` over the expression index on (split_part(…, 2), edge_type) — see `gidCandidates`.
+  const provClause = (idx: number): { sql: string; params: string[] } => {
+    if (!provision) return { sql: '', params: [] }
+    const p = provisionPredicate(thisProv, provision)
+    return { sql: ` AND (${p.sql.replace(/\$P/g, `$${idx}`)} OR ${thisProv} = '')`, params: p.params }
+  }
+
+  const gp = provClause(3)
+  const grouped = await prisma.$queryRawUnsafe<Array<{
+    edge_type: string; source: string; sub_type: string; act_wide: boolean; n: bigint; newest: Date
+  }>>(
+    `SELECT edge_type, source, sub_type, (${thisProv} = '') AS act_wide,
+            COUNT(*)::bigint AS n, MAX(extracted_at) AS newest
+     FROM ${EFFECTS_TABLE}
+     WHERE ${thisGid} = ANY($1::text[]) AND edge_type = ANY($2::text[])${gp.sql}
+     GROUP BY 1, 2, 3, 4`,
+    resolution.candidates, requestedTypes, ...gp.params)
+
+  const perType = new Map<EdgeTypeName, EffectTypeCounts>(empty().map((c) => [c.edgeType, c]))
+  let newest: Date | null = null
+  let rowsCounted = 0
+  for (const g of grouped) {
+    const c = perType.get(g.edge_type as EdgeTypeName)
+    if (!c) continue
+    const n = Number(g.n)
+    const reading = readEffect(g.edge_type, g.sub_type)
+    const origin = originOf(g.source)
+    c.total += n
+    rowsCounted += n
+    c.byKind[reading.kind] += n
+    c.byRule[reading.rule] = (c.byRule[reading.rule] ?? 0) + n
+    if (reading.prospective) c.prospective += n
+    if (g.act_wide) c.byScope.actWide += n; else c.byScope.provision += n
+    if (origin === 'official') c.byOrigin.official += n
+    else if (origin === 'extracted') c.byOrigin.extracted += n
+    else c.byOrigin.unrecognised += n
+    const s = c.bySource.find((x) => x.source === g.source)
+    if (s) s.rows += n; else c.bySource.push({ source: g.source, origin, rows: n })
+    if (!newest || g.newest > newest) newest = g.newest
+  }
+
+  // The rows themselves: one capped query per type, so a heavily-amended type cannot crowd the others.
+  const rowSets = await Promise.all(requestedTypes.map(async (t) => {
+    if (!perType.get(t)!.total) return [] as RawEffectRow[]
+    const rp = provClause(3)
+    return prisma.$queryRawUnsafe<RawEffectRow[]>(
+      `SELECT from_id, to_id, edge_type, sub_type, source, granularity, detail, extracted_at
+       FROM ${EFFECTS_TABLE}
+       WHERE ${thisGid} = ANY($1::text[]) AND edge_type = $2${rp.sql}
+       ORDER BY ${otherCol}, sub_type
+       LIMIT ${limit}`,
+      resolution.candidates, t, ...rp.params)
+  }))
+  const rows: EffectRow[] = []
+  requestedTypes.forEach((t, i) => {
+    const c = perType.get(t)!
+    c.returned = rowSets[i].length
+    c.truncated = c.total > c.returned
+    for (const r of rowSets[i]) rows.push(toEffectRow(r, direction))
+  })
+
+  // Titles: one query for the distinct instruments at the other end and the target. A miss is null.
+  const gids = [...new Set([gid, ...rows.map((r) => r.otherEnd.gid)])]
+  const titles = new Map<string, string>()
+  for (const t of await prisma.$queryRawUnsafe<Array<{ gid: string; title: string | null }>>(
+    `SELECT gid, title FROM corpus_acts WHERE gid = ANY($1::text[]) AND title IS NOT NULL`,
+    [...new Set(gids.flatMap((g) => gidCandidates(g)).concat(resolution.candidates))],
+  ).catch(() => [])) {
+    if (t.title) titles.set(t.gid, t.title)
+  }
+  for (const r of rows) r.otherEnd.title = titles.get(r.otherEnd.gid) ?? null
+  const targetTitleFound = resolution.candidates.map((c) => titles.get(c)).find(Boolean) ?? null
+
+  return {
+    target: { given: act, gid, provision, title: targetTitleFound },
+    resolution, direction, requestedTypes,
+    perType: requestedTypes.map((t) => perType.get(t)!),
+    rows,
+    freshness: freshnessOf(newest ?? await tableNewest()),
+    coverage: EFFECTS_COVERAGE_STATEMENT,
+    examined: { rowsCounted, rowsReturned: rows.length },
+  }
+}
+
+/** The recognised sources, for a caller that wants to say what each one is. */
+export const KNOWN_EDGE_SOURCES = EDGE_SOURCES

@@ -631,13 +631,13 @@ one index build serves both this and the title reindex D-1 mentions. `stripAknPr
 | `scripts/ingest/names/backfill-committee-attribution.ts` | §2.2, `committees-reports`, no fetch |
 | `scripts/ingest/names/sweep-evidence-attribution.ts` | §2.2, `committees-evidence`, API sweep |
 | `scripts/ingest/names/check-names.ts` | **33/33**, unit + live |
-| `scripts/ingest/names/check-names-negative.ts` | **5/5 fired** — breaks the DB in a rolled-back txn |
+| `scripts/ingest/names/check-names-negative.ts` | **5/5 fired** — breaks the DB in a rolled-back txn. ⚠ **RETIRED 2026-10-19** (BRIEF_GRAPH_6): it UPDATEd a real row of the 15M-row production table to prove a guard could fail. Replaced by `check-names-controls.ts` — same five guards, run over a `WITH corpus_sections AS (VALUES …)` fixture in a `READ ONLY` session; see `docs/CHANGE_LOG.md`. |
 | `scripts/ingest/names/verify-titles.ts` | §1.4 screen + shuffle control |
 | `scripts/ingest/names/audit-caselaw.ts`, `audit-collections.ts`, `probe-committees-api.ts`, `probe-evidence-counts.ts`, `inspect-misses.ts`, `measure-css-pollution.ts`, `which-corpus.ts` | the audits, kept so every number above can be re-derived |
 | `scrutinise-web/scripts/verify-ingest-names-e2e.ts` | §2.3, the platform's own search |
 | `scripts/ingest/names/names-pool.ts` | dedicated pool — the shared one's 60 s client timeout kills these scans |
 
-**Checks:** `check:names` **33/33** · `check:names-negative` **5/5 fired, rollback demonstrated** ·
+**Checks:** `check:names` **33/33** · ~~`check:names-negative` **5/5 fired, rollback demonstrated**~~ (retired 2026-10-19; now `check:names-controls`) ·
 `verify:names-e2e` run live · `tsc` clean in `scrutinise-web`; in `scripts/` the only 6 errors are
 **pre-existing and in other threads' files** (`graph/check-3a.ts`, `ingest/graph/download-graph-sources.ts`,
 `ingest/s3-drop-readiness.ts`, `lib/lex/repeal-status.ts`) and none is touched by this sprint.

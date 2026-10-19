@@ -25,6 +25,8 @@ import { RUN_PRICES, runNeedsConfirmation, priceSentence, type RunKind } from '.
 import { explainTopic } from './controls'
 import type { ToolCtx, ToolDefinition, ToolResult, UiEffect } from './types'
 import { runSearch } from '@/lib/lex/search-gateway'
+import { effectsFor } from '@/lib/lex/statutory-graph'
+import { describeEffects, effectsHeadline } from '@/lib/lex/effects-describe'
 import { webSearch } from '@/lib/lex/orientation/web-search'
 import { markPublicSources } from '@/lib/lex/public-sources'
 import { fileUrlsFromChat } from '@/lib/lex/chat-material'
@@ -330,6 +332,71 @@ const searchWeb: ToolDefinition = {
       ok: true,
       data: { query, provider: out.provider, found: marked.length, note: marked.length ? 'These are NOT from the corpus; cite them [W1]… and say where each comes from.' : 'The web search ran and returned nothing.' },
       untrusted: marked.length ? untrustedBlock(ctx, 'web search', marked.map((m) => `[${m.marker}] ${m.title} — ${m.publisher}\n${m.url}\n${clip(m.why, 320)}`).join('\n\n')) : undefined,
+    }
+  },
+}
+
+// 26-U — the statutory effects reader (BRIEF_GRAPH_6; spec: SEARCH_S27_REPORT §5).
+const EFFECT_TYPE_ENUM = ['amends', 'repeals', 'commences', 'modifies', 'made-under', 'cites'] as const
+
+const statuteEffects: ToolDefinition = {
+  name: 'statute_effects', category: 'search', tier: 'free',
+  description: 'What has amended, repealed, modified or commenced an Act or one provision of it (and, if asked, what was made under it or cites it), read from a STORED COPY of legislation.gov.uk’s changes record — not live. '
+    + 'Answers "what else does this change?". Each row carries its recorded effect type VERBATIM plus whether it changes the words of the Act: an "amends" row that is excluded or applied-by does NOT change the Act’s words, so never describe a count of rows as a count of amendments without saying how many change the words. '
+    + 'Each row says whether it is legislation.gov.uk’s official record or our own extraction; official rows carry no quotable text. Always state the freshness sentence.',
+  schema: z.object({
+    act: z.string().min(3).describe('legislation.gov.uk id such as "ukpga/2010/15"; a full URL or a pre-1963 year form is accepted'),
+    provision: z.string().max(60).optional().describe('optional provision id such as "section-149" — matches the section, its subsections and lettered insertions, not section-1490'),
+    direction: z.enum(['inbound', 'outbound']).default('inbound').describe('inbound = what affects this Act; outbound = what this Act itself changes elsewhere'),
+    edge_types: z.array(z.enum(EFFECT_TYPE_ENUM)).max(6).optional().describe('default amends, repeals, modifies. commences is about WHEN; made-under and cites are OUR extraction, not the official record'),
+    limit_per_type: z.number().int().min(1).max(50).default(20),
+  }),
+  async run(ctx, { act, provision, direction, edge_types, limit_per_type }) {
+    let r
+    try {
+      r = await effectsFor(act, { provision, direction, edgeTypes: edge_types, limitPerType: limit_per_type })
+    } catch (err) {
+      // ⚠ FAILED ≠ EMPTY: "no effects recorded" is a claim about the record only if the lookup RAN.
+      return fail(`the effects lookup did not complete: ${err instanceof Error ? err.message : String(err)}`)
+    }
+    const refused = r.resolution.bridge === 'ambiguous-refused'
+    const rows = r.rows.map((row, i) => ({
+      n: i + 1,
+      type: row.edgeType, sub_type: row.subType,
+      changes_the_words: row.changeKind,            // textual | not-textual | unclassified
+      reading: row.changeKind === 'textual' ? undefined : row.changeReason,
+      prospective: row.prospective || undefined, temporary: row.temporary || undefined,
+      other_end: `${row.otherEnd.title ?? row.otherEnd.gid}${row.otherEnd.provision ? ` ${row.otherEnd.provision}` : ''}`,
+      other_end_id: row.otherEnd.gid,
+      this_end_provision: row.thisEndProvision ?? 'the Act as a whole',
+      origin: row.origin ?? `unrecognised source: ${row.source}`,   // official | extracted
+      source: row.source,
+      in_force: row.inForce ?? undefined,
+      has_quote: row.quote ? true : undefined,                      // the words themselves are in `untrusted`
+    }))
+    const quoted = r.rows.map((row, i) => (row.quote ? `[row ${i + 1}] ${row.quote.text}` : null)).filter(Boolean) as string[]
+    return {
+      ok: true,
+      data: {
+        headline: effectsHeadline(r),
+        summary: describeEffects(r),
+        refused: refused || undefined,
+        per_type: r.perType.map((c) => ({
+          type: c.edgeType, total: c.total, change_the_words: c.byKind.textual, do_not_change_the_words: c.byKind['not-textual'],
+          not_classified: c.byKind.unclassified, from_official_record: c.byOrigin.official, from_our_extraction: c.byOrigin.extracted,
+          shown: c.returned, truncated: c.truncated || undefined,
+        })),
+        rows,
+        freshness: r.freshness.caveat,
+        rules: [
+          'Say how many rows change the words and how many do not; never call all of them amendments.',
+          'An official-record row is structured data: it has no quotation. Only a row marked has_quote has words, and they are OUR extraction of the instrument’s preamble — say so.',
+          'This is a stored copy, not live. State the freshness sentence whenever you give a number.',
+        ],
+        note: r.examined.rowsCounted === 0 && !refused ? 'The lookup ran and found no rows of these types for this Act.' : undefined,
+      },
+      // Third-party prose (an instrument's own preamble) leaves in its own fenced channel (§4c).
+      untrusted: quoted.length ? untrustedBlock(ctx, 'words stored from instrument preambles (our extraction)', quoted.join('\n')) : undefined,
     }
   },
 }
@@ -1537,7 +1604,7 @@ const summariseSourceTool: ToolDefinition = {
 /** The tools the MODEL is offered. The `undo_*` / `restore_*` inverses are reachable only through a signed undo token. */
 export const MODEL_TOOLS: ToolDefinition[] = [
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
-  searchCorpus, searchWeb, searchMyDocuments,
+  searchCorpus, searchWeb, searchMyDocuments, statuteEffects,
   fileUrl, fileText,
   draftField, addCandidate, addActionTool, setActionCommentaryTool, writeNote,
   explain,

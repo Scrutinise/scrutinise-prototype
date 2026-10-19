@@ -234,6 +234,17 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## GRAPH THREAD — last updated 2026-10-19 00:17 UTC (GRAPH 6 / Lex 26-U)
+
+*Report: `docs/GRAPH_6_REPORT.md`. Built and committed locally; **NOT pushed, NOT verified live**.*
+
+▼ **LEX CAN NOW READ THE OFFICIAL RECORD OF AMENDMENTS — `effectsFor()` + the `statute_effects` tool.** `check:effects` **30/30, 27,403 assertions, 8/8 controls** (two mutations turned 11 cases red). Equality Act `705 amends / 90 repeals / 16 modifies` and Human Rights Act `35 / 11 / 42` reproduce exactly.
+⚠⚠ **A COUNT OF ROWS FILED UNDER A TYPE IS NOT A COUNT OF THAT THING.** Of the Equality Act's 705 "amends", 691 change the words, 6 do not, 8 are unclassified; the Human Rights Act's `excluded` s.3 row (Victims and Prisoners Act 2024 s.69) is shown as **DOES NOT CHANGE THE WORDS**. `sub_type` travels verbatim; `changeKind` is added beside it, never instead.
+⚠ **The brief's two-source split is live only for made-under / cites.** amends / repeals / commences / modifies are 100% official (legislation.gov.uk). `cites` rows in `legislation_edges` carry no text (0 of 121,279); only extracted `made-under` keeps a (possibly truncated) phrase. Official rows carry no quote.
+⚠ **Data is 105 days old** (single load, 5 Jul 2026) and the caveat says so on every answer. **Drafting output is NOT yet wired to the reader** (its `held-elsewhere` sentence is unchanged) — the next step.
+▶ **`check:names-negative` RETIRED** (it UPDATEd production rows to prove a guard could fail) → `check:names-controls`, read-only by construction.
+⚠ **For Charlie:** `docs/CHANGE_LOG.md` and `scripts/ingest/workers/process-row.ts` hold another stream's (CC-Ingest) uncommitted work, so my CHANGE_LOG entry is written but **uncommitted** — needs one agreed commit naming both. `verify:statutory-parity` is red (7 divergences) from GRAPH 5's `caselaw-markup` rows, not from this change.
+
 ## GRAPH THREAD — last updated 2026-09-08 14:20 UTC (GRAPH 5)
 
 *This section belongs to the GRAPH stream. Report: `docs/GRAPH_5_REPORT.md`.
