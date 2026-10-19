@@ -107,7 +107,7 @@ async function main() {
   for (const k of EXPORT_KINDS) built.push({ kind: k, model: (await buildExportModel(k, idea.id)).model })
   const snap = await buildProposalSnapshot(idea.id)
   for (const k of PROPOSAL_KINDS) built.push({ kind: k, model: buildProposalModel(k, snap, null).model })
-  ok(`all eight kinds were built (${built.length})`, built.length === 8, built.map((b) => b.kind).join())
+  ok(`every kind was built (${built.length} = ${EXPORT_KINDS.length} export + ${PROPOSAL_KINDS.length} proposal kinds; 26-T2 added three)`, built.length === EXPORT_KINDS.length + PROPOSAL_KINDS.length && built.length === 11, built.map((b) => b.kind).join())
 
   const progress = await readKernelProgress(idea.id)
   console.log(`  progress read off the idea: ${JSON.stringify(progress)}`)

@@ -4,7 +4,7 @@
 
 import {
   Document, Packer, Paragraph, TextRun, ExternalHyperlink, HeadingLevel,
-  AlignmentType, BorderStyle, Header,
+  AlignmentType, BorderStyle, Header, Table, TableRow, TableCell, WidthType,
 } from 'docx'
 import type { Block, DocumentModel, Run } from './model'
 
@@ -25,7 +25,7 @@ function runsToDocx(runs: Run[]): (TextRun | ExternalHyperlink)[] {
   })
 }
 
-function blockToParagraphs(block: Block): Paragraph[] {
+function blockToParagraphs(block: Block): (Paragraph | Table)[] {
   switch (block.kind) {
     // ⚠ 25-N §5c — HANDLED BY `renderDocx`, NOT HERE. A .docx repeating header is a property
     // of a document SECTION, not a paragraph in the flow, so a `section` block splits the
@@ -33,6 +33,26 @@ function blockToParagraphs(block: Block): Paragraph[] {
     // printed once, which is exactly what §5c is replacing.
     case 'section':
       return []
+
+    // 26-T2 §4d - a real Word table: a bold header row, then the body rows, one cell per column.
+    case 'table': {
+      const cell = (runs: Run[], bold = false) => new TableCell({
+        children: [new Paragraph({ children: runsToDocx(bold ? runs.map((r) => ({ ...r, bold: true })) : runs), spacing: { after: 40 } })],
+        margins: { top: 40, bottom: 40, left: 80, right: 80 },
+      })
+      const cols = Math.max(1, block.header.length)
+      return [
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          columnWidths: Array.from({ length: cols }, () => Math.floor(9000 / cols)),
+          rows: [
+            new TableRow({ tableHeader: true, children: block.header.map((h) => cell(h, true)) }),
+            ...block.rows.map((r) => new TableRow({ children: r.map((c) => cell(c)) })),
+          ],
+        }),
+        new Paragraph({ text: '', spacing: { after: 120 } }),
+      ]
+    }
 
     case 'heading':
       return [new Paragraph({ heading: HEADING_FOR[block.level], children: runsToDocx(block.runs), spacing: { before: 240, after: 120 } })]
@@ -108,7 +128,7 @@ function blockToParagraphs(block: Block): Paragraph[] {
 }
 
 export async function renderDocx(model: DocumentModel): Promise<Buffer> {
-  const children: Paragraph[] = [
+  const children: (Paragraph | Table)[] = [
     new Paragraph({ heading: HeadingLevel.TITLE, children: [new TextRun({ text: model.title })] }),
   ]
   if (model.subtitle) {
@@ -140,7 +160,7 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   //
   // ⚠ AND THE FIRST SECTION HOLDS THE TITLE PAGE AND HAS NO HEADER. A running "DRAFT STRATEGY"
   // over the document's own title block would be a header describing the wrong thing.
-  const docSections: Array<{ title: string | null; children: Paragraph[] }> = [
+  const docSections: Array<{ title: string | null; children: (Paragraph | Table)[] }> = [
     { title: null, children },
   ]
   for (const block of model.blocks) {

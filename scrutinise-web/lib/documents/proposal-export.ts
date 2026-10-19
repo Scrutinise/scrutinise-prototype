@@ -37,6 +37,8 @@ import { withStageBanner, documentStage, kernelProgressOf } from './stage-banner
 import { DEEPENING_PASS_KEYS } from '@/lib/lex/pass-keys'
 import { syncRegistry } from '@/lib/lex/source-registry'
 import { buildEvidencePackDocument } from './build-evidence-pack'
+import { buildActionsPackDocument, type PackSelection } from './build-actions-pack'
+import { buildBackgroundReport, buildIntroductorySummary } from './build-background-report'
 import {
   buildProposalSnapshot,
   snapshotHash,
@@ -59,7 +61,10 @@ export type ExportFormat = 'docx' | 'pdf'
 // the order every other document uses — what is open first, the settled kernel last. Making it
 // an option on `PROPOSAL` would have meant one builder with a mode flag, and the two readers
 // would have started sharing sentences that are right for one of them.
-export const PROPOSAL_KINDS = ['PROPOSAL', 'PROPOSAL_SUMMARY', 'MEETING_PACK', 'EVIDENCE_PACK'] as const
+// ⚠ 26-T2 - THREE MORE: `ACTIONS_PACK` (the ninth document, decision 202: any selection of actions, every paragraph numbered), `BACKGROUND_REPORT`
+// (decision 150: the ground the proposal stands on) and `INTRODUCTORY_SUMMARY` (one page for a reader new to it). `Document.kind` is a string, so
+// no migration; each is one row per idea like the others.
+export const PROPOSAL_KINDS = ['PROPOSAL', 'PROPOSAL_SUMMARY', 'MEETING_PACK', 'EVIDENCE_PACK', 'ACTIONS_PACK', 'BACKGROUND_REPORT', 'INTRODUCTORY_SUMMARY'] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
 const KIND_LABEL: Record<ProposalKind, string> = {
@@ -67,6 +72,9 @@ const KIND_LABEL: Record<ProposalKind, string> = {
   PROPOSAL_SUMMARY: 'The Summary',
   MEETING_PACK: 'The Meeting Pack',
   EVIDENCE_PACK: 'The Evidence Pack',
+  ACTIONS_PACK: 'The Actions Pack',
+  BACKGROUND_REPORT: 'The Background Report',
+  INTRODUCTORY_SUMMARY: 'The Introductory Summary',
 }
 
 const KIND_SLUG: Record<ProposalKind, string> = {
@@ -74,6 +82,9 @@ const KIND_SLUG: Record<ProposalKind, string> = {
   PROPOSAL_SUMMARY: 'summary',
   MEETING_PACK: 'meeting-pack',
   EVIDENCE_PACK: 'evidence-pack',
+  ACTIONS_PACK: 'actions-pack',
+  BACKGROUND_REPORT: 'background-report',
+  INTRODUCTORY_SUMMARY: 'introductory-summary',
 }
 
 export function isProposalKind(v: string): v is ProposalKind {
@@ -133,7 +144,7 @@ export function buildFor(
   kind: ProposalKind,
   snapshot: ProposalSnapshot,
   onlineViewUrl?: string | null,
-  opts: { sections?: MeetingPackSection[] } = {},
+  opts: { sections?: MeetingPackSection[]; selection?: PackSelection } = {},
 ): ProposalBuildResult {
   // ⚠ 26-H §4 — the stage banner goes on every kind, here, the one place a kind maps to a builder. Built from
   // the kernel, so its stage is the kernel's progress (Decision 135), read from the snapshot's OWN fields and
@@ -157,6 +168,10 @@ export function buildFor(
     // §5e — `sections` is what the user chose to show before printing. Absent means all of
     // them: not choosing is not the same as choosing to omit.
     case 'MEETING_PACK': return bannered(buildMeetingPackDocument(snapshot, { sections: opts.sections, onlineViewUrl }))
+    // 26-T2 - the stage banner (decision 101) goes on these like every kind; `[Ref: n]` is on every source line inside each builder.
+    case 'ACTIONS_PACK': return bannered(buildActionsPackDocument(snapshot, { selection: opts.selection }))
+    case 'BACKGROUND_REPORT': return bannered(buildBackgroundReport(snapshot))
+    case 'INTRODUCTORY_SUMMARY': return bannered(buildIntroductorySummary(snapshot))
   }
 }
 
@@ -261,7 +276,7 @@ export async function readProposalExportStatus(
 export async function generateProposalExport(
   ideaId: string,
   kind: ProposalKind,
-  opts: { force?: boolean; onlineViewUrl?: string | null; sections?: MeetingPackSection[] } = {},
+  opts: { force?: boolean; onlineViewUrl?: string | null; sections?: MeetingPackSection[]; selection?: PackSelection } = {},
 ): Promise<ProposalExportStatus> {
   // 26-R — number every source the idea rests on BEFORE the snapshot is read, so the document carries [Ref: n] for all of them.
   // Generating is an explicit act (unlike the status read, which only fingerprints), so it is the place to write numbers.
@@ -272,9 +287,15 @@ export async function generateProposalExport(
   // Generate again would get the CACHED file back — the same document, reported as freshly
   // generated, with the sections they thought they had removed still in it. The proposal has
   // not changed, so the snapshot hash has not changed; what changed is what they asked for.
+  // ⚠ 26-T2 - THE SAME RULE FOR THE ACTIONS PACK: the selection is part of what was asked for. A pack of three actions and a pack of all of them
+  // come from the same snapshot, and without this the second press would be answered with the first's cached file.
+  const sel = opts.selection
+  const selKey = sel?.actionIds?.length ? `ids:${[...sel.actionIds].sort().join(',')}` : sel?.headingId ? `heading:${sel.headingId}` : ''
   const hash = kind === 'MEETING_PACK' && opts.sections?.length
     ? `${snapshotHash(snapshot)}:${[...opts.sections].sort().join(',')}`
-    : snapshotHash(snapshot)
+    : kind === 'ACTIONS_PACK' && selKey
+      ? `${snapshotHash(snapshot)}:${selKey}`
+      : snapshotHash(snapshot)
 
   const existing = await prisma.document.findUnique({
     where: { ideaId_kind: { ideaId, kind } },
@@ -287,7 +308,7 @@ export async function generateProposalExport(
     return (await readProposalExportStatus(ideaId)).find((s) => s.kind === kind)!
   }
 
-  const result = buildFor(kind, snapshot, opts.onlineViewUrl, { sections: opts.sections })
+  const result = buildFor(kind, snapshot, opts.onlineViewUrl, { sections: opts.sections, selection: opts.selection })
 
   try {
     const { docx, pdf } = await renderPair(result)

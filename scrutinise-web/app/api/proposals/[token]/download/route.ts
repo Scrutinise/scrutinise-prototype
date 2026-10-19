@@ -45,11 +45,15 @@ export async function GET(req: Request, { params }: Params) {
   const kind = url.searchParams.get('kind') ?? 'PROPOSAL'
   const format = url.searchParams.get('format') ?? 'pdf'
 
-  if (!isProposalKind(kind)) {
+  // ⚠ 26-T2 - THE THREE NEW KINDS ARE THE TEAM'S, NOT THE PUBLIC'S. The Actions Pack, the Background Report and the Introductory Summary carry
+  // digests, the owner's notes and a map of who is against what; a shared-link reader gets the four documents the share page offers, and a
+  // `?kind=ACTIONS_PACK` typed into the address must not reach the others.
+  const PUBLIC_KINDS = PROPOSAL_KINDS.filter((k) => k !== 'ACTIONS_PACK' && k !== 'BACKGROUND_REPORT' && k !== 'INTRODUCTORY_SUMMARY')
+  if (!isProposalKind(kind) || !(PUBLIC_KINDS as readonly string[]).includes(kind)) {
     // ⚠ Derived from `PROPOSAL_KINDS`, not typed out. 20-E added EVIDENCE_PACK and this
     // message named two kinds — a hardcoded list in an error is a list that goes stale
     // silently, and tells the caller their valid request was invalid.
-    return NextResponse.json({ error: `kind must be one of ${PROPOSAL_KINDS.join(', ')}` }, { status: 422 })
+    return NextResponse.json({ error: `kind must be one of ${PUBLIC_KINDS.join(', ')}` }, { status: 422 })
   }
   if (format !== 'docx' && format !== 'pdf') {
     return NextResponse.json({ error: 'format must be docx or pdf' }, { status: 422 })

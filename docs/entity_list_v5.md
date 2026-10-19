@@ -1862,6 +1862,29 @@ The action import pass: a document full of ideas becomes rows in the Coherent Ac
 | startedBy    | String          | User id                                                                                                       |
 | createdAt / updatedAt / confirmedAt | DateTime | updatedAt doubles as the compare-and-set token                                                  |
 
+### ActionDigest (26-T1, decisions 146, 200, 201)
+
+The four-model digest of ONE heading (scope HEADING) or of the whole set (scope SET): four price-matched models answer the six questions Charlie asked on 17 Oct 2026, and a judge (Opus 5.5) writes one digest that keeps each model's position named. The row IS the digest; nothing in it writes to `LexCoherentAction` (its gaps become `ActionIdea` SUGGESTED rows only on the user's press, and a model's extra condition becomes a PROPOSAL in `Idea.conditions`). Nothing deletes: a newer digest of the same scope sits beside the older. Cascades with the idea. Index `(ideaId, scope, headingId)`. DDL: `prisma/lex_26t_digest.sql`. Shapes: `lib/lex/action-digest-pure.ts`.
+
+| Field        | Type            | Notes                                                                                                         |
+|--------------|-----------------|---------------------------------------------------------------------------------------------------------------|
+| id           | UUID PK         |                                                                                                               |
+| ideaId       | FK              | → Idea, cascade                                                                                               |
+| scope        | String          | HEADING / SET                                                                                                 |
+| headingId    | String nullable | `ActionHeading.id` for scope HEADING. No Prisma relation (a heading is archived, never deleted)               |
+| headingName  | String nullable | The heading's name when the digest was written                                                                |
+| status       | String          | RUNNING / WORKING_MODELS (a request holds the claim) / MODELS_DONE / WORKING_JUDGE / READY / FAILED            |
+| actionIds    | String[]        | The live actions it read — what makes a digest able to say "5 actions then, 7 now"                            |
+| modelOutputs | JSON            | One entry per panel slot: model, servedBy (only if a fallback answered), status, error, answer, dropped counts, pence |
+| judgeOutput  | JSON nullable   | `{ digest, flags, handled, trimmedCommentaries, commentaryMax }` — `handled` records which gaps/conditions the user's press has already used |
+| spentPence   | Float nullable  | Summed from the ledger                                                                                        |
+| unpriced     | Boolean         | True if any call could not be priced (the cost is then a floor)                                               |
+| failure      | String nullable | Why it failed, in words                                                                                       |
+| startedBy    | String          | User id                                                                                                       |
+| createdAt / updatedAt | DateTime | updatedAt is the claim's age: a claim older than a function's limit is an orphan                          |
+
+**26-T2 added no table or column.** A comment on an action is an existing `ResearchNote` whose `bearsOn` contains `{ kind: 'action', id }` (source: the idea's "my own observation" `IdeaSource`; tag `comment`), with replies in `ResearchNoteReply`. The Actions Pack, Background Report and Introductory Summary are `Document` rows with `kind` ACTIONS_PACK / BACKGROUND_REPORT / INTRODUCTORY_SUMMARY (one per idea, like the others); their extra reads ride in `ProposalSnapshot.actionsPack` (optional, so older stored versions simply lack it).
+
 ### FeedbackItem — fields added (26-S, decision 154)
 
 | Field           | Type              | Notes                                                                                      |

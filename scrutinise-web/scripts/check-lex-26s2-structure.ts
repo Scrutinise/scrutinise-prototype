@@ -124,6 +124,8 @@ async function partD() {
   const copy = await scratchCopy('452c5ade', 's26s2s')
   const id = copy.id
   try {
+    // the check OWNS its data (CLAUDE.md §25.4): the copy of the live idea now carries Charlie's own condition assignments, which this fixture must not inherit
+    await prisma.lexCoherentAction.updateMany({ where: { ideaId: id }, data: { conditionIds: [], supportOnly: false } })
     const rows0 = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE' }, orderBy: { number: 'asc' }, select: { id: true, number: true } })
     const sd = await CD.seedConditions(id, owner.id, CHARLIES_TEN, CONDITIONS_SOURCE)
     const doc = await CD.readConditions(id)

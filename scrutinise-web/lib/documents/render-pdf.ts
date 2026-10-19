@@ -182,6 +182,46 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
     cur.y -= opts.after ?? 0
   }
 
+  /** Wrap runs into lines no wider than `maxWidth` (the same rule as `drawRuns`, returning the lines instead of drawing them). */
+  function wrapRuns(runs: Run[], maxWidth: number, size: number): Word[][] {
+    const lines: Word[][] = []
+    let line: Word[] = [], width = 0
+    for (const w of layout(runs, fonts, size)) {
+      if (width + w.width > maxWidth && line.length) {
+        lines.push(line); line = []; width = 0
+        if (!w.text.trim()) continue
+      }
+      line.push(w); width += w.width
+    }
+    if (line.length) lines.push(line)
+    return lines.length ? lines : [[]]
+  }
+
+  /** 26-T2 §4d - a table as a grid: equal columns, a bold header row, ruled cells, rows kept whole across a page break. */
+  function drawTable(header: Run[][], rows: Run[][][]) {
+    const cols = Math.max(1, header.length)
+    const colW = CONTENT_WIDTH / cols
+    const PAD = 4, SIZE = 9, LEAD = 12
+    const drawRow = (cells: Run[][], bold: boolean) => {
+      const wrapped = cells.map((c) => wrapRuns(bold ? c.map((r) => ({ ...r, bold: true })) : c, colW - PAD * 2, SIZE))
+      const h = Math.max(...wrapped.map((l) => l.length)) * LEAD + PAD * 2
+      need(h)
+      const top = cur.y
+      wrapped.forEach((lines, ci) => {
+        const x0 = MARGIN + ci * colW
+        cur.page.drawRectangle({ x: x0, y: top - h, width: colW, height: h, borderColor: RULE, borderWidth: 0.75 })
+        lines.forEach((ln, li) => {
+          let x = x0 + PAD
+          for (const w of ln) { cur.page.drawText(w.text, { x, y: top - PAD - SIZE - li * LEAD, size: SIZE, font: w.font, color: INK }); x += w.width }
+        })
+      })
+      cur.y = top - h
+    }
+    drawRow(header, true)
+    for (const r of rows) drawRow(r, false)
+    cur.y -= 8
+  }
+
   function drawRule() {
     need(16)
     cur.page.drawLine({
@@ -246,6 +286,9 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
         break
       case 'rule':
         drawRule()
+        break
+      case 'table':
+        drawTable(block.header, block.rows)
         break
       case 'sources':
         drawSources(block.label, block.refs)

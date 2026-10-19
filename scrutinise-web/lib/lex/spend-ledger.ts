@@ -543,6 +543,8 @@ export const PASS_PURPOSE: Record<string, SpendPurpose> = {
   // 26-T1 - the digest: four models answer the six questions about a heading or the whole set, and a judge writes one digest.
   'action-digest.model': 'user builds',
   'action-digest.judge': 'user builds',
+  // 26-T2 §6 - Lex summarising a comment thread on an action, on request (stored nowhere).
+  'action-thread.summary': 'Lex chat',
 
   'lex.chat': 'Lex chat',
   'lex.legacy-chat': 'Lex chat',

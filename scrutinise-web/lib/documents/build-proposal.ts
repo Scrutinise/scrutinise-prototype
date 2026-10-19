@@ -84,19 +84,19 @@ function text(s: string): Run[] {
   return [{ text: s }]
 }
 
-function fieldByKey(snapshot: ProposalSnapshot, key: string): SnapshotField | undefined {
+export function fieldByKey(snapshot: ProposalSnapshot, key: string): SnapshotField | undefined {
   return snapshot.fields.find((f) => f.key === key)
 }
 
 /** The stored value as prose, or null when there is nothing to render. */
-function fieldText(field: SnapshotField | undefined): string | null {
+export function fieldText(field: SnapshotField | undefined): string | null {
   if (!field) return null
   if (field.status !== 'ACCEPTED' && field.status !== 'SKIPPED') return null
   if (typeof field.value === 'string' && field.value.trim()) return field.value.trim()
   return null
 }
 
-function money(f: SnapshotCostFigure | null): string | null {
+export function money(f: SnapshotCostFigure | null): string | null {
   if (!f) return null
   const unit = f.unit ?? 'GBP'
   const sym = unit === 'GBP' ? '£' : `${unit} `
@@ -116,7 +116,7 @@ function money(f: SnapshotCostFigure | null): string | null {
  * never shown bare. A bare number in a document sent to a committee clerk reads
  * as a costing; an uncosted number with its silence named reads as what it is.
  */
-function figureRuns(label: string, f: SnapshotCostFigure | null): Run[] | null {
+export function figureRuns(label: string, f: SnapshotCostFigure | null): Run[] | null {
   const amount = money(f)
   if (!amount) return null
   const runs: Run[] = [{ text: `${label}: `, bold: true }, { text: amount }]
@@ -347,7 +347,7 @@ function evidenceRows(rows: ProposalSnapshot['evidence']): Block[] {
  * ⚠ AND IT IS CONDITIONAL. A finished proposal must not be stamped DRAFT: a permanent banner
  * is a banner nobody reads, and it would be false on the one document it matters most on.
  */
-function draftBanner(snapshot: ProposalSnapshot): Block[] {
+export function draftBanner(snapshot: ProposalSnapshot): Block[] {
   const unevidenced = snapshot.coverage.fieldsTotal - snapshot.coverage.fieldsSupported
   const open = snapshot.knownUnknowns.length + snapshot.issues.filter((i) => i.status === 'OPEN').length
   // ⚠ THE TEST IS INTERNAL; ONLY THE VERDICT IS PRINTED. The counts decide whether the sentence

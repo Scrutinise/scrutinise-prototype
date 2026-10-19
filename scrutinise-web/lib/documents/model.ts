@@ -51,6 +51,12 @@ export type Block =
   | { kind: 'sources'; label: string; refs: SourceRef[] }
   | { kind: 'note'; text: string }
   | { kind: 'rule' }
+  /**
+   * 26-T2 §4d — A TABLE, rendered as a table. A markdown table in a stored body (an action's Commentary allows them) used to fall through
+   * `markdownToBlocks` as one run-on paragraph with its pipes in it. `header` is one cell per column; every row has the same number of cells
+   * (a short row is padded by the parser, never silently shortened).
+   */
+  | { kind: 'table'; header: Run[][]; rows: Run[][][] }
 
 export interface DocumentModel {
   /** Document title, used as the H1 and as the file's own title metadata. */

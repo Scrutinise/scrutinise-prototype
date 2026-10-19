@@ -205,6 +205,7 @@
     "check:lex-26s2": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26s2.ts",
     "check:lex-26s2-structure": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26s2-structure.ts",
     "check:lex-26t1": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26t1.ts",
+    "check:lex-26t2": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26t2.ts",
     "check:lex-26s2-browser": "tsx --env-file=.env scripts/check-lex-26s2-browser.ts",
     "check:lex-9oct": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-9oct.tsx",
     "check:lex-walk-8oct": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-walk-8oct.ts",

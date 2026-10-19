@@ -64,10 +64,37 @@ export function markdownToBlocks(md: string): Block[] {
   }
   const flushAll = () => { flushParagraph(); flushBullets() }
 
-  for (const rawLine of lines) {
+  // 26-T2 §4d - a GitHub-style table: a header row, a delimiter row of dashes (":" allowed), then body rows. Rows are padded to the header's width.
+  const cellsOf = (l: string): string[] => {
+    let s = l.trim()
+    if (s.startsWith('|')) s = s.slice(1)
+    if (s.endsWith('|') && !s.endsWith('\\|')) s = s.slice(0, -1)
+    return s.split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, '|').trim())
+  }
+  // a delimiter cell is dashes with optional colons (GFM: one dash is enough, ":-:" centres). The delimiter row must contain a pipe, so a horizontal rule ("---") under a line that happens to contain a pipe is not a table.
+  const isDelimiter = (l: string | undefined): boolean => !!l && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(l) && l.includes('|')
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i]
     const line = rawLine.trimEnd()
 
     if (!line.trim()) { flushAll(); continue }
+
+    if (line.includes('|') && isDelimiter(lines[i + 1])) {
+      flushAll()
+      const header = cellsOf(line)
+      const width = header.length
+      const rows: Run[][][] = []
+      let j = i + 2
+      while (j < lines.length && lines[j].trim() && lines[j].includes('|')) {
+        const cells = cellsOf(lines[j])
+        rows.push(Array.from({ length: width }, (_, k) => parseInline(cells[k] ?? '')))
+        j++
+      }
+      blocks.push({ kind: 'table', header: header.map((h) => parseInline(h)), rows })
+      i = j - 1
+      continue
+    }
 
     const heading = /^(#{1,6})\s+(.*)$/.exec(line)
     if (heading) {

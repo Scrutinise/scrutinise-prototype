@@ -19,6 +19,9 @@ export const LIMITS = {
   whoAnswer: 200,
   /** 26-S2 sec 6: "no cost, because ...". */
   noCostReason: 400,
+  /** 26-T2 §6: a comment on an action is a notebook note's comment (the notebook route allows 8,000), and a reply beneath it 4,000. */
+  actionComment: 8000,
+  actionReply: 4000,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

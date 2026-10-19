@@ -52,7 +52,9 @@ interface ExportStatus {
  * offering a button that produces a stub would be worse than not offering it. It appears here
  * the day it produces a document.
  */
-const SHOWN = ['PROPOSAL_SUMMARY', 'PROPOSAL', 'MEETING_PACK'] as const
+// 26-T2 - three more, built: the one-page Introductory Summary, the Background Report, and the Actions Pack (all of it here; any selection of
+// actions is printed from the Coherent Actions screen).
+const SHOWN = ['PROPOSAL_SUMMARY', 'INTRODUCTORY_SUMMARY', 'PROPOSAL', 'BACKGROUND_REPORT', 'ACTIONS_PACK', 'MEETING_PACK'] as const
 
 /**
  * ══ 25-N §5e — WHAT THE MEETING PACK MAY CONTAIN, AND WHAT THE USER CHOOSES ═════
@@ -76,6 +78,12 @@ const PACK_SECTIONS: Array<{ key: string; label: string }> = [
 ]
 
 const BLURB: Record<string, string> = {
+  INTRODUCTORY_SUMMARY: 'One page for someone new to the idea: the problem in your words, the policy, the instruments with a line each, what it costs if known, and what is not yet settled. '
+    + 'Arranged from your record; nothing in it is written by a model.',
+  BACKGROUND_REPORT: 'The ground the proposal stands on: what was read, what it said, where sources disagree, the conditions and where they came from, the issues raised and which actions meet them, '
+    + 'the incentives, and what was considered and not taken.',
+  ACTIONS_PACK: 'Every action with everything the record holds, under its heading, with every paragraph numbered (for example B.3.6) so a reviewer can say which one is wrong. '
+    + 'To print only some actions, select them on the Coherent Actions screen.',
   PROPOSAL_SUMMARY: 'About two pages — the problem, the obstacle, the approach, the cost and the ask. '
     + 'It points at the full version for anything deeper.',
   PROPOSAL: 'Everything: the kernel, and every section the resources panel holds — the prognosis, '

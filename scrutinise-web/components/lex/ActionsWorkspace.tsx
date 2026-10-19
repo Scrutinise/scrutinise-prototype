@@ -27,6 +27,8 @@ import BoundedInput from './BoundedInput'
 import ActionSlots from './ActionSlots'
 import { useDigests, HeadingDigest, SetDigest, SetDigestButton } from './ActionDigest'
 import IncentiveMap from './IncentiveMap'
+import { usePackPrint, PackStatus } from './ActionsPackPrint'
+import ActionComments from './ActionComments'
 import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
 import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc } from '@/lib/lex/action-conditions'
 import type { HeadingPlan } from '@/lib/lex/action-resort-pure'
@@ -229,6 +231,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   // 26-T1 - the digest (four models + a judge), per heading and for the whole set: step 1's
   const digests = useDigests(ideaId, step === 1, onChanged)
   const [setDigestOpen, setSetDigestOpen] = useState(false)
+  // 26-T2 - the Actions Pack: any selection, one heading, or all
+  const pack = usePackPrint(ideaId)
   /** "#12" in a digest opens that action in the list and brings it into view. */
   const openByNumber = (n: number) => {
     const a = live.find((x) => x.number === n)
@@ -423,7 +427,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">Close −</button>
           ) : headingSelect}
         </div>
-        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ live, byId, causeLite, disabled, ops, renderFull, headingName, conditions }} />}
+        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ ideaId, live, byId, causeLite, disabled, ops, renderFull, headingName, conditions }} />}
       </li>
     )
   }
@@ -535,6 +539,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Test against the policy ({untestedCount} untested)</button>
         )}
         {step === 1 && <SetDigestButton state={digests} disabled={disabled || live.length === 0} onOpened={() => setSetDigestOpen(true)} />}
+        {step === 1 && <button type="button" disabled={disabled || pack.busy || live.length === 0} data-print-all onClick={() => void pack.print(undefined, 'all the actions')} title="A printable pack of every action with everything the record holds, every paragraph numbered. No model is called." className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Print all</button>}
       </div>
 
       {step === 1 && (
@@ -575,8 +580,9 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   // (it used to sit in the toolbar, above the fold of a long list: a refusal rendered, off screen, and looked like nothing happening.)
   const statusRef = useRef<HTMLDivElement>(null)
   useEffect(() => { if (ops.error) statusRef.current?.scrollIntoView?.({ block: 'nearest' }) }, [ops.error])
-  const Status = (ops.busy || ops.error || ops.saved || ops.note || digests.error || digests.note) ? (
+  const Status = (ops.busy || ops.error || ops.saved || ops.note || digests.error || digests.note || pack.busy || pack.error || pack.ready) ? (
     <div ref={statusRef} className="space-y-1" data-status-strip>
+      <PackStatus s={pack} />
       {digests.error && (
         <p className="text-xs font-semibold text-zinc-900 bg-white border-2 border-zinc-900 rounded px-2 py-1.5" role="alert" data-digest-error>⚠ {digests.error}{' '}
           <button type="button" onClick={digests.clearError} className="ml-1 px-2 py-0.5 rounded border border-zinc-900 bg-zinc-100 font-semibold">OK</button>
@@ -623,6 +629,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       <button disabled={disabled || reason.trim().length < 3} onClick={() => void bulkRuleOut()} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Rule out</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'merge' })} title={selNums.length === 2 ? 'Lex reads both and gives a verdict and a reason; you edit her restated wording and confirm. Nothing is merged until you do.' : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Ask Lex to review and merge</button>
       <button disabled={disabled || selNums.length !== 2} onClick={() => setPair({ a: selNums[0], b: selNums[1], mode: 'compare' })} title={selNums.length === 2 ? undefined : 'Select exactly two actions'} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Compare</button>
+      <button disabled={disabled || pack.busy} data-print-selected onClick={() => void pack.print({ actionIds: selIds }, `${selIds.length} selected ${selIds.length === 1 ? 'action' : 'actions'}`)} title="Print the selected actions as an Actions Pack (Word and PDF), every paragraph numbered." className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 mt-0.5 disabled:opacity-40">Print selected as an Actions Pack</button>
       <button onClick={() => setSelected(new Set())} className="text-xs underline text-zinc-500 ml-auto">Clear</button>
     </div>
   )
@@ -679,7 +686,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                     } : undefined}
                     onShowArchived={step === 1 ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
                   {consolidate && h && consolidate.headingId === h.id && <ConsolidateCard s={consolidate} ops={ops} disabled={disabled} setS={setConsolidate} onClose={() => setConsolidate(null)} />}
-                  {step === 1 && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled} />}
+                  {step === 1 && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled}
+                    extra={<button type="button" disabled={disabled || pack.busy || g.actions.length === 0} data-print-heading onClick={() => void pack.print({ headingId: h.id }, `the heading “${h.name}”`)} title="Print this heading as an Actions Pack (Word and PDF), every paragraph numbered." className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Print this heading</button>} />}
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
                 </section>
@@ -733,6 +741,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
 }
 
 interface OpenCtx {
+  ideaId: string
   live: CanonicalAction[]
   byId: Map<string, CanonicalAction>
   causeLite: Array<{ id: string; number: number | null; cause: string }>
@@ -921,6 +930,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
           <div className="px-2 pb-2 pt-1">{section[n]}</div>
         </details>
       ))}
+      {/* 26-T2 §6 - the comment thread, at the foot of the record on every step */}
+      <ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} />
     </div>
   )
 }

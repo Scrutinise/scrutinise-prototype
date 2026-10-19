@@ -1,0 +1,244 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 26-T2 §4 (decisions 145, 202) — THE ACTIONS PACK: a printable pack of ANY selection of actions with everything the record holds.
+//
+// The ninth document kind, and a different reader again: a reviewer who will mark up paper. So:
+//   · EVERY PARAGRAPH IS NUMBERED  H.A.S - heading letter, the action's place in print order under that heading, and the section (1-11).
+//     "B.3.6 is wrong" works on paper and by email. The scheme is printed in a one-line key at the top.
+//   · EVERY SECTION OF EVERY ACTION IS PRINTED, even empty: a slot nobody has answered reads "not yet answered" (never silence, which reads as
+//     "fine"), so the numbers are the same on every printing and a gap is visible as a gap.
+//   · NOTHING IS GENERATED. It arranges what the record holds: the owner's words, the quoted parts of a bigger action, the digest as written
+//     and dated (with its staleness), each source as [Ref: n].
+//
+// Order: key · Guiding Policy · conditions · per heading (name, purpose, digest, its actions) · Incentives · Considered, not taken · sources.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { Block, DocumentModel, Run, SourceRef } from './model'
+import { markdownToBlocks } from './markdown'
+import { snapshotHash, assertRenderableSnapshot, type ProposalSnapshot, type SnapshotAction } from './proposal-snapshot'
+import { betaBlocks, figureRuns, money, type ProposalBuildResult } from './build-proposal'
+import { PACK_SLOT_LABEL, type ActionsPackData, type PackAction, type PackDigest } from './actions-pack-types'
+import { text, numbered, letterFor, incentiveBlocks, notTakenBlocks, dateWords } from './pack-sections'
+import { DIGEST_QUESTIONS } from '@/lib/lex/action-digest-pure'
+import { INCENTIVE_WORD } from '@/lib/lex/incentive-map'
+
+/** Which actions to print. `actionIds` wins; else a heading (`'__none'` = the actions with no heading); else everything. */
+export interface PackSelection { actionIds?: string[]; headingId?: string | null }
+
+export const PACK_SECTIONS = [
+  'What it is', 'Parts of this action, quoted', 'Who', 'Incentive now, and what changes it', 'Skill, how it is enforced, what will oppose it, and what tells us it worked',
+  'Causes and conditions', 'Test against the guiding policy', 'Cost', 'Sequence', 'Sources', 'The owner’s notes',
+] as const
+
+export const PACK_KEY_LINE =
+  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes). '
+  + 'To say a paragraph is wrong, quote its number, for example “B.2.3”. 0.n are the Guiding Policy and the conditions; D is a digest; INC.n and NOT.n are the Incentives and the Considered, not taken sections.'
+
+const NOT_ANSWERED = 'not yet answered'
+const AVENUE: Record<string, string> = { LEGISLATIVE: 'legislative', ORGANISATIONAL: 'organisational', FINANCIAL: 'financial' }
+const SEQ: Record<string, string> = { NOW: 'now', NEXT: 'next', LATER: 'later' }
+const VERDICT: Record<string, string> = { FITS: 'fits the policy', DOES_NOT_FIT: 'does not fit the policy', CONFLICTS: 'conflicts with the policy', NOT_TESTED: 'not tested against the policy' }
+const refTokens = (refs: number[]): Run[] => (refs.length ? [{ text: ` ${refs.map((n) => `[Ref: ${n}]`).join(' ')}` }] : [])
+
+export function selectActions(data: ActionsPackData, sel: PackSelection): { actions: PackAction[]; label: string } {
+  if (sel.actionIds?.length) {
+    const ids = new Set(sel.actionIds)
+    const actions = data.actions.filter((a) => ids.has(a.id))
+    return { actions, label: `${actions.length} selected ${actions.length === 1 ? 'action' : 'actions'}` }
+  }
+  if (sel.headingId !== undefined && sel.headingId !== null) {
+    const none = sel.headingId === '__none'
+    const actions = data.actions.filter((a) => (none ? a.headingId == null : a.headingId === sel.headingId))
+    const h = data.headings.find((x) => x.id === sel.headingId)
+    return { actions, label: none ? 'the actions with no heading' : `the heading “${h?.name ?? 'unknown'}”` }
+  }
+  return { actions: data.actions, label: 'all the actions' }
+}
+
+/** Heading blocks in print order: the headings in list order, then "No heading" last. Only headings that have a selected action (or were asked for) are printed. */
+export function headingGroups(data: ActionsPackData, actions: PackAction[], sel: PackSelection): Array<{ id: string | null; name: string; purpose: string | null; actions: PackAction[] }> {
+  const groups = data.headings.map((h) => ({ id: h.id as string | null, name: h.name, purpose: h.purpose, actions: actions.filter((a) => a.headingId === h.id) }))
+  groups.push({ id: null, name: 'No heading', purpose: null, actions: actions.filter((a) => a.headingId == null) })
+  const asked = sel.headingId && sel.headingId !== '__none' ? sel.headingId : null
+  return groups.filter((g) => g.actions.length > 0 || (asked != null && g.id === asked))
+}
+
+function slotLine(a: PackAction, key: keyof typeof PACK_SLOT_LABEL): Run[] {
+  const s = a.slots[key]
+  return [{ text: `${PACK_SLOT_LABEL[key]}: `, bold: true }, s?.text ? { text: s.text } : { text: NOT_ANSWERED, italic: true }]
+}
+
+function costBlocks(label: string, a: PackAction, sa: SnapshotAction | undefined): Block[] {
+  if (!sa) return [numbered(label, [{ text: `Cost: ${NOT_ANSWERED}`, italic: true }])]
+  const out: Block[] = []
+  const runs: Run[][] = []
+  for (const [l, f] of [['Cost to implement (one-off)', sa.implementationCost], ['Cost to enforce (ongoing)', sa.enforcementCost], ['Cost of compliance (ongoing)', sa.regulatoryFriction]] as const) {
+    const r = figureRuns(l, f)
+    if (r) runs.push(r)
+  }
+  for (const l of sa.costLines) {
+    const amount = money({ low: l.low, high: l.high, unit: l.unit, basis: l.basis, benchmarkId: l.benchmarkId, userOverride: false, priceYear: l.priceYear })
+    runs.push([{ text: l.label, bold: true }, { text: `${amount ? ` — ${amount}` : ''}${l.recurrence === 'ONE_OFF' ? ' one-off' : l.recurrence === 'PER_YEAR' ? ' per year' : ''}` }, { text: l.basis ? ` (${l.basis})` : ' (no basis stated)', italic: !l.basis }, ...(l.fromNumber != null ? [{ text: ` — from part #${l.fromNumber}`, italic: true }] : [])])
+  }
+  if (sa.noCostReason) runs.push([{ text: 'No cost, because: ', bold: true }, { text: sa.noCostReason }])
+  if (!runs.length) return [numbered(label, [{ text: `Cost: ${NOT_ANSWERED}`, italic: true }])]
+  out.push(numbered(label, [{ text: 'Cost', bold: true }]))
+  out.push({ kind: 'bullets', items: runs })
+  void a
+  return out
+}
+
+function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | undefined, numberToHeading: Map<number, string>): Block[] {
+  const N = (s: number) => `${L}.${n}.${s}`
+  const blocks: Block[] = []
+  blocks.push({ kind: 'heading', level: 2, runs: [{ text: `${L}.${n}  #${a.number}  ${a.title ?? a.statement.slice(0, 90)}` }] })
+  // 1 · what it is
+  blocks.push(numbered(N(1), [{ text: PACK_SECTIONS[0] + ': ', bold: true }, { text: a.statement }]))
+  const meta = [a.avenue ? `avenue: ${AVENUE[a.avenue] ?? a.avenue.toLowerCase()}` : null, a.parked ? `later phase${a.parkedReason ? ` (${a.parkedReason})` : ''}` : null].filter(Boolean)
+  if (meta.length) blocks.push({ kind: 'note', text: meta.join(' · ') })
+  if (a.detail) blocks.push(...markdownToBlocks(a.detail))
+  // 2 · the quoted parts
+  if (a.parts.length) {
+    blocks.push(numbered(N(2), [{ text: `${PACK_SECTIONS[1]}:`, bold: true }]))
+    blocks.push({ kind: 'bullets', items: a.parts.map((p): Run[] => [{ text: `#${p.number} `, bold: true }, { text: `“${p.quote}”` }, ...(p.title ? [{ text: ` (${p.title})`, italic: true }] : []), ...(p.reason ? [{ text: ` — ${p.reason}`, italic: true }] : []), ...refTokens(p.refs)]) })
+  } else blocks.push(numbered(N(2), [{ text: `${PACK_SECTIONS[1]}: `, bold: true }, { text: 'none - no other action has been folded into this one.', italic: true }]))
+  // 3 · who
+  blocks.push(numbered(N(3), slotLine(a, 'who')))
+  // 4 · incentive now / what changes it
+  const inc = a.slots.incentiveNow, chg = a.slots.whatChangesIt
+  blocks.push(numbered(N(4), [{ text: 'Incentive now: ', bold: true },
+    inc?.text ? { text: `${inc.direction ? `${INCENTIVE_WORD[inc.direction]} - ` : 'no direction chosen - '}${inc.text}` } : { text: NOT_ANSWERED, italic: true },
+    { text: '   What changes it: ', bold: true },
+    chg?.text ? { text: `${chg.text}${chg.linkNumber != null ? ` (relies on #${chg.linkNumber}${numberToHeading.get(chg.linkNumber) ? `, under “${numberToHeading.get(chg.linkNumber)}”` : ''})` : ' (no action linked)'}` } : { text: NOT_ANSWERED, italic: true }]))
+  // 5 · skill / how / against / worked
+  blocks.push(numbered(N(5), [{ text: `${PACK_SECTIONS[4]}:`, bold: true }]))
+  blocks.push({ kind: 'bullets', items: (['skill', 'how', 'against', 'worked'] as const).map((k) => slotLine(a, k)) })
+  // 6 · causes and conditions
+  blocks.push(numbered(N(6), [{ text: 'Causes: ', bold: true }, { text: a.causeNumbers.length ? a.causeNumbers.map((c) => `cause ${c}`).join(', ') : 'none recorded', italic: !a.causeNumbers.length },
+    { text: '   Conditions it delivers: ', bold: true }, { text: a.support ? 'marked support - it delivers none directly' : a.conditionNumbers.length ? a.conditionNumbers.map((c) => `condition ${c}`).join(', ') : 'none recorded', italic: !a.support && !a.conditionNumbers.length }]))
+  // 7 · policy test
+  blocks.push(numbered(N(7), [{ text: `${PACK_SECTIONS[6]}: `, bold: true },
+    a.policyTest ? { text: `${VERDICT[a.policyTest.verdict] ?? a.policyTest.verdict}${a.policyTest.reason ? ` - ${a.policyTest.reason}` : ''}${a.policyTest.verdict === 'CONFLICTS' && a.policyTest.conflictNote ? ` (kept, with the owner’s note: ${a.policyTest.conflictNote})` : ''}` } : { text: 'not tested against the policy', italic: true }]))
+  // 8 · cost
+  blocks.push(...costBlocks(N(8), a, sa))
+  // 9 · sequence
+  blocks.push(numbered(N(9), [{ text: 'Sequence: ', bold: true }, a.sequence ? { text: `${SEQ[a.sequence] ?? a.sequence.toLowerCase()}${a.beforeNumbers.length ? `; comes before ${a.beforeNumbers.map((x) => `#${x}`).join(', ')}` : ''}` } : { text: 'not yet placed', italic: true }]))
+  // 10 · sources
+  blocks.push(numbered(N(10), [{ text: 'Sources: ', bold: true }, a.refs.length ? { text: a.refs.map((r) => `[Ref: ${r}]`).join(' ') } : { text: 'none recorded for this action', italic: true }]))
+  // 11 · the owner's notes
+  if (a.notes.length) {
+    blocks.push(numbered(N(11), [{ text: `${PACK_SECTIONS[10]}:`, bold: true }]))
+    blocks.push({ kind: 'bullets', items: a.notes.map((x): Run[] => [{ text: x.text }, { text: ` — ${x.author}, ${dateWords(x.at)}`, italic: true }, ...refTokens(x.ref != null ? [x.ref] : [])]) })
+  } else blocks.push(numbered(N(11), [{ text: `${PACK_SECTIONS[10]}: `, bold: true }, { text: 'none in the record.', italic: true }]))
+  return blocks
+}
+
+function digestBlocks(prefix: string, d: PackDigest): Block[] {
+  const blocks: Block[] = []
+  let i = 0
+  const P = () => `${prefix}.D.${++i}`
+  blocks.push({ kind: 'heading', level: 2, runs: text(`Digest · written ${dateWords(d.createdAt)}${d.scope === 'HEADING' && d.headingName ? ` · “${d.headingName}”` : ' · the whole set'} · ${d.answering} models answered`) })
+  if (d.staleNote) blocks.push({ kind: 'note', text: `Out of date: ${d.staleNote}` })
+  for (const q of DIGEST_QUESTIONS.keys()) {
+    const a = d.answers.find((x) => x.question === q + 1)
+    blocks.push(numbered(P(), [{ text: `${q + 1}. ${DIGEST_QUESTIONS[q]} `, bold: true }, a ? { text: a.reconciled } : { text: 'The judge gave no answer to this question.', italic: true }]))
+  }
+  if (d.disagreements.length) {
+    blocks.push(numbered(P(), [{ text: d.answering === 4 ? 'Where the four disagree:' : `Where the ${d.answering} that answered disagree:`, bold: true }]))
+    blocks.push({ kind: 'bullets', items: d.disagreements.map((x): Run[] => [{ text: `${x.topic} — `, bold: true }, { text: x.positions.map((p) => `${p.model}: ${p.position}`).join(' | ') }]) })
+  }
+  if (d.gaps.length) {
+    blocks.push(numbered(P(), [{ text: 'What is missing, most-named first:', bold: true }]))
+    blocks.push({ kind: 'bullets', items: d.gaps.map((g): Run[] => [{ text: g.item, bold: true }, { text: ` (${g.category}; named by ${g.namedBy.length}) — what fails without it: ${g.whatFails}` }]) })
+  }
+  return blocks
+}
+
+export function buildActionsPackDocument(snapshot: ProposalSnapshot, opts: { selection?: PackSelection } = {}): ProposalBuildResult {
+  assertRenderableSnapshot(snapshot)
+  const sel = opts.selection ?? {}
+  const data = snapshot.actionsPack
+  const blocks: Block[] = []
+  blocks.push(...betaBlocks())
+  if (!data) {
+    blocks.push({ kind: 'note', text: 'This version of the proposal was stored before the Actions Pack existed, so the record it holds cannot be arranged as a pack. Generate the pack from the working draft instead.' })
+    return finish(snapshot, blocks, sel, 'no actions')
+  }
+  const { actions, label } = selectActions(data, sel)
+  blocks.push({ kind: 'note', text: PACK_KEY_LINE })
+  blocks.push({ kind: 'note', text: `This printing: ${label} of ${data.actions.length} live ${data.actions.length === 1 ? 'action' : 'actions'}.` })
+
+  // ── the Guiding Policy ──
+  const chosen = (snapshot.options ?? []).find((o) => o.status === 'CHOSEN')
+  blocks.push({ kind: 'heading', level: 1, runs: text('The Guiding Policy') })
+  if (chosen) {
+    blocks.push(numbered('0.1', [{ text: 'Statement: ', bold: true }, { text: chosen.approach }]))
+    const summary = [chosen.caseFor, chosen.chainLink ? `If only part is delivered: ${chosen.chainLink}` : null].filter(Boolean).join(' ')
+    blocks.push(numbered('0.2', [{ text: 'Summary: ', bold: true }, summary ? { text: summary } : { text: NOT_ANSWERED, italic: true }]))
+  } else blocks.push(numbered('0.1', [{ text: 'No Guiding Policy has been settled yet.', italic: true }]))
+
+  // ── the conditions ──
+  blocks.push({ kind: 'heading', level: 1, runs: text('The conditions the proposal must meet') })
+  if (data.conditions.length) {
+    data.conditions.forEach((c) => blocks.push(numbered(`0.${c.number + 2}`, [{ text: `Condition ${c.number}: `, bold: true }, { text: c.text }])))
+    if (data.conditionsSource) blocks.push({ kind: 'note', text: `Where the list came from: ${data.conditionsSource}` })
+  } else blocks.push(numbered('0.3', [{ text: 'The owner has recorded no conditions.', italic: true }]))
+
+  // ── the whole-set digest, when everything is printed ──
+  const all = !sel.actionIds?.length && (sel.headingId === undefined || sel.headingId === null)
+  const setDigest = data.digests.find((d) => d.scope === 'SET')
+  if (all) {
+    blocks.push({ kind: 'heading', level: 1, runs: text('Digest of the whole set') })
+    if (setDigest) blocks.push(...digestBlocks('SET', setDigest))
+    else blocks.push({ kind: 'paragraph', runs: [{ text: 'SET.D.1  ', bold: true }, { text: 'none yet.', italic: true }] })
+  }
+
+  // ── per heading ──
+  const saById = new Map((snapshot.actions ?? []).map((a) => [a.id, a]))
+  const headingOf = new Map(data.actions.map((a) => [a.number, data.headings.find((h) => h.id === a.headingId)?.name ?? '']))
+  const numberToHeading = new Map([...headingOf.entries()].filter(([, v]) => v))
+  const groups = headingGroups(data, actions, sel)
+  groups.forEach((g, gi) => {
+    const L = letterFor(gi)
+    blocks.push({ kind: 'section', title: `${L} · ${g.name}` })
+    blocks.push(numbered(`${L}.P`, [{ text: 'Purpose: ', bold: true }, g.purpose ? { text: g.purpose } : { text: g.id ? NOT_ANSWERED : 'these actions are not under any heading.', italic: true }]))
+    const hd = g.id ? data.digests.find((d) => d.scope === 'HEADING' && d.headingId === g.id) : null
+    if (g.id) {
+      if (hd) blocks.push(...digestBlocks(L, hd))
+      else blocks.push({ kind: 'paragraph', runs: [{ text: `${L}.D.1  `, bold: true }, { text: 'Digest: none yet.', italic: true }] })
+    }
+    if (!g.actions.length) blocks.push({ kind: 'paragraph', runs: text('No live actions under this heading.') })
+    g.actions.forEach((a, ai) => blocks.push(...actionBlocks(L, ai + 1, a, saById.get(a.id), numberToHeading)))
+  })
+
+  // ── incentives (over the printed actions) ──
+  blocks.push({ kind: 'section', title: 'INCENTIVES' })
+  blocks.push(...incentiveBlocks(actions))
+
+  // ── considered, not taken: ruled-out actions under the printed headings ──
+  blocks.push({ kind: 'section', title: 'CONSIDERED, NOT TAKEN' })
+  const headingIds = new Set<string | null>(groups.map((g) => g.id))
+  blocks.push(...notTakenBlocks(data, { headingIds, includeNotebook: false }))
+
+  // ── the source list, numbered ──
+  const cited = [...new Set(actions.flatMap((a) => a.refs))].sort((x, y) => x - y)
+  const byNumber = new Map(data.registry.map((s) => [s.number, s]))
+  blocks.push({ kind: 'section', title: 'SOURCES' })
+  if (cited.length) {
+    const refs: SourceRef[] = cited.map((n) => { const s = byNumber.get(n); return { ref: n, title: s?.title ?? 'A source not in the registry', citation: s?.citation ?? '', url: s?.url ?? '' } })
+    blocks.push({ kind: 'sources', label: `Sources cited in this printing (${cited.length})`, refs })
+  } else blocks.push({ kind: 'paragraph', runs: text('No source is recorded against the actions in this printing.') })
+
+  return finish(snapshot, blocks, sel, label)
+}
+
+function finish(snapshot: ProposalSnapshot, blocks: Block[], sel: PackSelection, label: string): ProposalBuildResult {
+  const model: DocumentModel = {
+    title: `${snapshot.title} — Actions Pack`,
+    subtitle: `${label}. Every paragraph is numbered so a reviewer can refer to it.`,
+    sourceLabel: 'the working record of this proposal (headings, actions, the step-2 answers, digests and notes)',
+    generatedAt: new Date(snapshot.generatedAt),
+    blocks,
+  }
+  void sel
+  return { model, fingerprint: snapshotHash(snapshot), sourceLabel: model.sourceLabel }
+}

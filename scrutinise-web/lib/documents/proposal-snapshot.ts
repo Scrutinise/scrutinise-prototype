@@ -40,6 +40,8 @@ import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
 import { parseRecord } from '@/lib/lex/action-record'
 import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
+import { readActionsPackData } from './actions-pack-read'
+import type { ActionsPackData } from './actions-pack-types'
 import { refIndex, urlKey } from '@/lib/lex/source-registry'
 
 /**
@@ -479,6 +481,12 @@ export interface ProposalSnapshot {
   scaffolded: SnapshotScaffold[]
   /** How much of the kernel is unevidenced — computed, so §3's marking is auditable. */
   coverage: { fieldsTotal: number; fieldsSupported: number; actionsTotal: number; actionsSupported: number }
+  /**
+   * 26-T2 — what the Actions Pack, the Background Report and the Introductory Summary read beyond the above (headings, conditions, the step-2
+   * slots, quoted parts, digests, notes in the record, what was considered and not taken). ⚠ OPTIONAL: a version minted before 26-T2 has none,
+   * and those three documents then say the version predates them (the `prioritySources` reasoning).
+   */
+  actionsPack?: ActionsPackData
 }
 
 /** Why a snapshot could not be built — stated, never papered over. */
@@ -981,6 +989,11 @@ export async function buildProposalSnapshot(
     },
   }
 
+  // 26-T2 - the extra reads. Evidence ids -> the registry numbers of the evidence that bears on each action.
+  const evidenceRefById = new Map(evidence.map((e) => [e.id, e.ref]))
+  const actionEvidenceRefs = new Map(actions.map((a) => [a.id, a.evidenceIds.map((id) => evidenceRefById.get(id)).filter((n): n is number => n != null)]))
+  const actionsPack = await readActionsPackData(ideaId, { actionEvidenceRefs, issues: issues.map((i) => ({ id: i.id, title: i.title ?? null, text: i.text, status: i.status, current: i.current })) })
+
   return {
     snapshotVersion: SNAPSHOT_VERSION,
     ideaId: idea.id,
@@ -1030,6 +1043,7 @@ export async function buildProposalSnapshot(
       actionsTotal: actions.length,
       actionsSupported: actions.filter((a) => a.supported).length,
     },
+    actionsPack,
   }
 }
 

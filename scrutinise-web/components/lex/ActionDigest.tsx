@@ -385,7 +385,7 @@ export function DigestPanel({ d, state, onOpenAction, disabled }: { d: DigestVie
 
 // ── what sits under a heading, and at the foot of step 1 ───────────────────────────────────────────────────
 
-export function HeadingDigest({ headingId, headingName, actionCount, state, onOpenAction, disabled }: { headingId: string; headingName: string; actionCount: number; state: DigestState; onOpenAction?: (n: number) => void; disabled: boolean }) {
+export function HeadingDigest({ headingId, headingName, actionCount, state, onOpenAction, disabled, extra }: { headingId: string; headingName: string; actionCount: number; state: DigestState; onOpenAction?: (n: number) => void; disabled: boolean; extra?: React.ReactNode }) {
   const d = state.forScope('HEADING', headingId)
   const [open, setOpen] = useState(false)
   const running = state.busy === headingId
@@ -396,6 +396,7 @@ export function HeadingDigest({ headingId, headingName, actionCount, state, onOp
       <div className="flex flex-wrap items-center gap-2">
         <AskButton label="Ask four models about this heading" price={price} running={running} disabled={disabled || state.busy != null || actionCount === 0} dataAttr="data-ask-heading-digest"
           onGo={() => { setOpen(true); void state.start('HEADING', headingId) }} />
+        {extra}
         {running && <span className="text-[11px] font-semibold" role="status">Working: {state.stage ?? 'starting'}…</span>}
         {d && (
           <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-[11px] text-zinc-700 underline" data-digest-line>

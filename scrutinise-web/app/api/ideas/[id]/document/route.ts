@@ -15,6 +15,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { describeIssues } from '@/lib/api-rejection'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import {
@@ -29,7 +30,7 @@ import { SnapshotUnavailableError } from '@/lib/documents/proposal-snapshot'
 type Params = { params: Promise<{ id: string }> }
 
 // Rendering two documents in two formats is heavier than a normal route.
-export const maxDuration = 60
+export const maxDuration = 120
 
 const BodySchema = z.object({
   action: z.literal('generate'),
@@ -45,6 +46,14 @@ const BodySchema = z.object({
    * ⚠ AND IT IS OPTIONAL. Absent means all of them — not choosing is not choosing to omit.
    */
   sections: z.array(z.enum(ALL_MEETING_PACK_SECTIONS as [string, ...string[]])).optional(),
+  /**
+   * 26-T2 §4a - WHICH ACTIONS THE ACTIONS PACK PRINTS. Optional: absent means all of them. `actionIds` (any selection) wins over `headingId`
+   * (one heading; '__none' = the actions under no heading). Ignored by every other kind.
+   */
+  selection: z.object({
+    actionIds: z.array(z.string().min(1).max(100)).min(1).max(400).optional(),
+    headingId: z.string().min(1).max(100).optional(),
+  }).optional(),
 })
 
 export async function GET(req: Request, { params }: Params) {
@@ -90,12 +99,17 @@ export async function POST(req: Request, { params }: Params) {
   let raw: unknown
   try { raw = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = BodySchema.safeParse(raw)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  if (!parsed.success) {
+    // CLAUDE.md §30 - a rejection names the input and the reason, in words (never the flatten() object).
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: '“Generate”', labels: { kind: 'the document', selection: 'the selection of actions', actionIds: 'the selected actions', headingId: 'the heading', sections: 'the sections', force: 'the regenerate choice', action: 'the control' } })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
 
   try {
     const status = await generateProposalExport(id, parsed.data.kind, {
       force: parsed.data.force,
       sections: parsed.data.sections as MeetingPackSection[] | undefined,
+      selection: parsed.data.selection,
     })
     return NextResponse.json({ document: status })
   } catch (err) {
