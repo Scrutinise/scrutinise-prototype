@@ -78,6 +78,25 @@ export async function listNaoReports(): Promise<NaoReport[]> {
   return out
 }
 
+/**
+ * The report's publication date from the same WP REST record `listNaoReports` walks (`date`,
+ * YYYY-MM-DD). `processNao` never set `itemDate`, so all 3,983 rows written before this existed
+ * are undated; the date was at source the whole time, in a field, not in the body text.
+ * Returns null on any failure — the caller warns and writes the row undated rather than failing
+ * a report whose PDFs are fine, but the warning is what makes the gap visible.
+ */
+export async function fetchNaoReportDate(slug: string): Promise<string | null> {
+  const res = await get(`${BASE}/wp-json/wp/v2/report?slug=${encodeURIComponent(slug)}&_fields=slug,date`)
+  if (!res) return null
+  try {
+    const items = await res.json() as Array<{ slug: string; date?: string }>
+    const hit = Array.isArray(items) ? items.find(i => i.slug === slug) : undefined
+    return hit?.date && /^\d{4}-\d{2}-\d{2}/.test(hit.date) ? hit.date.slice(0, 10) : null
+  } catch {
+    return null
+  }
+}
+
 export async function fetchNaoReportPdfUrls(pageUrl: string): Promise<string[] | null> {
   const res = await get(pageUrl)
   if (!res) return null

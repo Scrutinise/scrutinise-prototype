@@ -808,6 +808,32 @@ benefits"* carries a £ figure **65.5%** of the time and 25.9% carry labels with
 
 ---
 
+## INGEST THREAD — last updated 2026-10-20 08:13 UTC (INGEST_LEX_FIVE)
+
+*INGEST stream. Commits by explicit path only; the tree is shared.*
+
+▼▼ **INGEST_LEX_FIVE EXECUTED. §1, §2 (fetch) and §3 are WRITTEN TO THE DATABASE; §4 and §5 are AUDITED AND REPORTED, NOTHING WRITTEN; §6 audit built and failed first, exactly as predicted.** Executes `docs/BRIEF_INGEST_LEX_FIVE.md`. Report: **`docs/INGEST_LEX_FIVE_REPORT.md`** (§0 first, §5.1 volume finding second). CHANGE_LOG: 2026-10-18 23:57 UTC entry (committed in 7d7b75b).
+
+- **§0** — the 25 Sep brief (`BRIEF_INGEST_AMENDMENTS_EDGES_REACH.md`) was never committed; routing problem, not a blocker.
+- **§3 nao-reports** — 3,983/3,983 rows dated (1984-02 → 2026-06). `processNao` never set `itemDate`; the date is a WP REST field. Writer fixed (`fetchNaoReportDate`). ⚠ New rows are dated only after the ingest workers are redeployed.
+- **§1 Managing Public Money** — the 298-page PDF (83,752 words) held in `govuk-core-docs` via the real `processRow` path; read back from R2 ("value for money" ×93).
+- **§2 Departmental ARAs** — new corpus `departmental-accounts` (OGL3): 211 fetched, 204 verified, 7 not (named in the report); 551 sections / 19.1M words after removing 59 print/web duplicates. gov.uk's "Ministerial department" tag omits DBT/DSIT/DIT/DLUHC. ⚠ Figure extraction NOT started: the PDF text concatenates label, note and columns (`Staff costs54,955,266 5,238,303 …`); use the HTML financial statements or core-tables workbook.
+- **§5.1** — 45,655 amendments across 209 of 423 held bills (API declares 4,061 bills; we hold 10.4%). Listing ≈ 300 calls; full wording is one call each (≈ 2 h). `decision` has 14 values, not 5. Nothing written.
+- **§4** — TNA primary/EU effects files still dated 30 Oct 2025 at source; `extracted_at` is one value for all 2,348,993 rows, so S27 freshness reads ~98 days when primary data is ~1 year old. Nothing written.
+- **§6** — `search/audit-three-layer.ts` named exactly 7 ORPHANED-IN-INDEX collections (lda-commonsdivisions, lda-commonswrittenquestions, lda-lordsdivisions, lda-lordswrittenquestions, oecd, written-answers, written-statements) and 131,650 extra et-decisions FTS rows. `c2/purge-ledger.ts` added (append-only; a layer closes only on a count read-back). Index purge NOT re-run.
+
+⚠ **Prediction missed:** §2 fetch took 11 min, logged 40–120. Others scored in CHANGE_LOG.
+
+⚠ **Shared-file hazard, still open:** `scripts/ingest/shared/licence-map.ts` and `docs/LICENCE_REGISTER.md` carry my `departmental-accounts` line beside the FCA stream's uncommitted edits. NOT in the INGEST_LEX_FIVE commit. Until jointly committed, workers without the licence-map line write licence=NULL for new departmental-accounts rows (the 551 existing carry ogl-3.0).
+
+⚠ **Nothing in §1/§2/§3 has reached users:** none is in the served index. Needs an index rebuild/merge (Hetzner heavy job, §17) and `departmental-accounts` added to CC-Search's `corpus-map.ts`.
+
+**Decisions awaiting Charlie (full text in the report):** (1) amendment wording: full (≈ 2 h) or summary only; (2) edges: per-row source-vintage view + refresh the four daily secondary slices; (3) retire the 121,279 `cites` edges; (4) run the index purge on Hetzner; (5) index the three additions + CC-Search corpus-map entry; (6) approve the joint commit of the two shared files.
+
+**Not done:** amendment rows; any `legislation_edges` change; index purge; index rebuild; NAO worker redeploy; EDM sweep script still carries its own copy of the controller now in `shared/self-tuning-gap.ts`; live verification (§20) of anything. No stream worktree was created.
+
+---
+
 ## INGEST THREAD — last updated 2026-09-09 09:15 UTC (EDM SIGNATURES)
 
 *This section belongs to the INGEST stream. CENTRAL, SURFACE, LEX and SEARCH keep their own above

@@ -55,6 +55,7 @@ import fs from 'fs'
 import path from 'path'
 import { connectLance, FTS_TABLE } from '../search/lance'
 import { VEC_TABLE, CHUNKS_TABLE } from '../search/vector-common'
+import { markLayerDone } from './purge-ledger'
 
 const EXECUTE = process.argv.includes('--execute')
 const arg = (name: string) => (process.argv.find((a) => a.startsWith(`--${name}=`)) ?? '').split('=')[1] || null
@@ -125,6 +126,7 @@ async function main() {
 
   const db = await connectLance()
   const report: any[] = []
+  const layerResults: Array<{ table: string; ok: boolean; perBefore: Record<string, number>; perAfter: Record<string, number>; etTotal: number; etAfter: number }> = []
   const wholePred = `corpus IN (${WHOLE_CORPORA.map((c) => `'${esc(c)}'`).join(',')})`
   const idBatches = batched(partialIds, ID_BATCH)
 
@@ -167,6 +169,11 @@ async function main() {
       continue
     }
 
+    // §6.2 — per-collection counts BEFORE, so the ledger can say what each collection held and, after the
+    // delete, that it holds none. Completion is recorded from this READ-BACK, never from an exit code
+    // (LanceDB's allocator can abort a process with status 0 or 127).
+    const perBefore: Record<string, number> = {}
+    for (const c of WHOLE_CORPORA) perBefore[c] = await tbl.countRows(`corpus = '${esc(c)}'`)
     const d0 = Date.now()
     await tbl.delete(wholePred)
     console.log(`   ✓ seven collections deleted in one predicate (${((Date.now() - d0) / 1000).toFixed(1)}s)`)
@@ -191,6 +198,26 @@ async function main() {
     console.log(`   version ${versionBefore} → ${versionAfter}\n`)
     if (!okTotal || !okSurvivors) process.exitCode = 1
     report.push({ table: layer.table, versionBefore, versionAfter, rowsBefore, rowsAfter, removed, expected, etTotal, etAfter, executed: true })
+
+    // read the whole collections back one by one; a layer is CLOSED only if every one reads 0
+    const perAfter: Record<string, number> = {}
+    for (const c of WHOLE_CORPORA) perAfter[c] = await tbl.countRows(`corpus = '${esc(c)}'`)
+    layerResults.push({ table: layer.table, ok: okTotal && okSurvivors, perBefore, perAfter, etTotal, etAfter })
+  }
+
+  // ── §6.2: close the ledger layers that the read-back proves. FTS = corpus_fts; VECTOR = corpus_chunks AND corpus_vec.
+  if (EXECUTE) {
+    const get = (t: string) => layerResults.find((r) => r.table === t)
+    const closed = (r: { ok: boolean; perAfter: Record<string, number> } | undefined, c: string) => !!r && r.ok && r.perAfter[c] === 0
+    for (const c of WHOLE_CORPORA) {
+      const f = get(FTS_TABLE), ch = get(CHUNKS_TABLE), v = get(VEC_TABLE)
+      if (closed(f, c)) markLayerDone(STAMP!, 'l2-purge-index', c, 'fts', f!.perBefore[c], 0)
+      if (closed(ch, c) && closed(v, c)) markLayerDone(STAMP!, 'l2-purge-index', c, 'vector', ch!.perBefore[c] + v!.perBefore[c], 0)
+    }
+    // et-decisions landing pages: partial — closed when the survivors are exactly what was expected.
+    const f = get(FTS_TABLE), ch = get(CHUNKS_TABLE), v = get(VEC_TABLE)
+    if (f?.ok) markLayerDone(STAMP!, 'l2-purge-index', PARTIAL_CORPUS, 'fts', f.etTotal, f.etAfter, true)
+    if (ch?.ok && v?.ok) markLayerDone(STAMP!, 'l2-purge-index', PARTIAL_CORPUS, 'vector', ch.etTotal + v.etTotal, ch.etAfter + v.etAfter, true)
   }
 
   // ⚠ THE MODE IS IN THE FILENAME. A dry run and an execute run of the same manifest would

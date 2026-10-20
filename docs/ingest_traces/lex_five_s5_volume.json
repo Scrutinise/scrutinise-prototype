@@ -1,0 +1,2004 @@
+{
+ "ranAt": "2026-10-19T00:38:58.656Z",
+ "apiTotal": 4061,
+ "held": 423,
+ "A": [
+  {
+   "billId": 2626,
+   "stagesDeclared": 11,
+   "stagesWalked": 11,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 11849,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 11850,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12567,
+     "desc": "Money resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12476,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12593,
+     "desc": "Report stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12814,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12803,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12804,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12881,
+     "desc": "Order of Commitment discharged",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12902,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 12927,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 2862,
+   "stagesDeclared": 20,
+   "stagesWalked": 20,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 15248,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15249,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15622,
+     "desc": "Ways and Means resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15649,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16377,
+     "desc": "Carry-over motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16463,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16464,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15765,
+     "desc": "Report stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16544,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16551,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16552,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16796,
+     "desc": "Committee stage",
+     "house": "Lords",
+     "total": 73,
+     "hasField": true,
+     "status": 200,
+     "walk": {
+      "entriesWalked": 73,
+      "distinctAmendmentIds": 73,
+      "declared": 73,
+      "take1000": 73,
+      "agree": true
+     }
+    },
+    {
+     "stage": 17107,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 31,
+     "hasField": true,
+     "status": 200,
+     "walk": {
+      "entriesWalked": 31,
+      "distinctAmendmentIds": 31,
+      "declared": 31,
+      "take1000": 31,
+      "agree": true
+     }
+    },
+    {
+     "stage": 17160,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17373,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17241,
+     "desc": "Consideration of Lords amendments",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17517,
+     "desc": "Consideration of Commons amendments and / or reasons",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17555,
+     "desc": "Consideration of Lords message",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17660,
+     "desc": "Consideration of Commons amendments and / or reasons",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17673,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 2883,
+   "stagesDeclared": 6,
+   "stagesWalked": 6,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 15315,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15316,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15731,
+     "desc": "Order of Commitment discharged",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16192,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16315,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16316,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 2914,
+   "stagesDeclared": 10,
+   "stagesWalked": 10,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 15392,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15393,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15890,
+     "desc": "Money resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15820,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 15959,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16141,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16142,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16291,
+     "desc": "Order of Commitment discharged",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16296,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16390,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3056,
+   "stagesDeclared": 1,
+   "stagesWalked": 1,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 15795,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3142,
+   "stagesDeclared": 11,
+   "stagesWalked": 11,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 16328,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16329,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16337,
+     "desc": "Money resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16345,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16346,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16355,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16356,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16357,
+     "desc": "Committee stage",
+     "house": "Lords",
+     "total": 3,
+     "hasField": true,
+     "status": 200,
+     "walk": {
+      "entriesWalked": 3,
+      "distinctAmendmentIds": 3,
+      "declared": 3,
+      "take1000": 3,
+      "agree": true
+     }
+    },
+    {
+     "stage": 16358,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16359,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16379,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3171,
+   "stagesDeclared": 4,
+   "stagesWalked": 4,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 16508,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16509,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16894,
+     "desc": "Order of Commitment discharged",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17212,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3192,
+   "stagesDeclared": 9,
+   "stagesWalked": 9,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 16568,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16569,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17211,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17367,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17474,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17475,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17708,
+     "desc": "Order of Commitment discharged",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17755,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17878,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3268,
+   "stagesDeclared": 9,
+   "stagesWalked": 9,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 16734,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16735,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17144,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17145,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17146,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17147,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17374,
+     "desc": "Order of Commitment discharged",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17420,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17561,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3344,
+   "stagesDeclared": 13,
+   "stagesWalked": 13,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 16974,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 16975,
+     "desc": "Second reading committee",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17089,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17195,
+     "desc": "Lords Special Public Bill Committee",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17406,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17452,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17557,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17556,
+     "desc": "Second reading committee",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17751,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17753,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17781,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17864,
+     "desc": "Consideration of Commons amendments and / or reasons",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17897,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3442,
+   "stagesDeclared": 15,
+   "stagesWalked": 15,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 17582,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17594,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17622,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17607,
+     "desc": "Money resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17608,
+     "desc": "Ways and Means resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17633,
+     "desc": "Committee of the whole House",
+     "house": "Commons",
+     "total": 28,
+     "hasField": true,
+     "status": 200,
+     "walk": {
+      "entriesWalked": 28,
+      "distinctAmendmentIds": 28,
+      "declared": 28,
+      "take1000": 28,
+      "agree": true
+     }
+    },
+    {
+     "stage": 17674,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17712,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17713,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17764,
+     "desc": "Committee stage",
+     "house": "Lords",
+     "total": 36,
+     "hasField": true,
+     "status": 200,
+     "walk": {
+      "entriesWalked": 36,
+      "distinctAmendmentIds": 36,
+      "declared": 36,
+      "take1000": 36,
+      "agree": true
+     }
+    },
+    {
+     "stage": 17834,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 20,
+     "hasField": true,
+     "status": 200,
+     "walk": {
+      "entriesWalked": 20,
+      "distinctAmendmentIds": 20,
+      "declared": 20,
+      "take1000": 20,
+      "agree": true
+     }
+    },
+    {
+     "stage": 17938,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17980,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17962,
+     "desc": "Consideration of Lords amendments",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 17988,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3517,
+   "stagesDeclared": 1,
+   "stagesWalked": 1,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 18055,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3538,
+   "stagesDeclared": 1,
+   "stagesWalked": 1,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 18122,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3690,
+   "stagesDeclared": 11,
+   "stagesWalked": 11,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 18562,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18593,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18669,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18676,
+     "desc": "Committee of the whole House",
+     "house": "Commons",
+     "total": 7,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18681,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 1,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18826,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18830,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18831,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18832,
+     "desc": "Committee negatived",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18834,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18843,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3745,
+   "stagesDeclared": 1,
+   "stagesWalked": 1,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 18908,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3766,
+   "stagesDeclared": 12,
+   "stagesWalked": 12,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 18972,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 18973,
+     "desc": "Second reading committee",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19267,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19285,
+     "desc": "Lords Special Public Bill Committee",
+     "house": "Lords",
+     "total": 10,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19509,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 6,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19859,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19915,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19913,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20127,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20298,
+     "desc": "Committee of the whole House",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20299,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20314,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3879,
+   "stagesDeclared": 17,
+   "stagesWalked": 17,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 19250,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19251,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19321,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19302,
+     "desc": "Money resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19303,
+     "desc": "Ways and Means resolution",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19324,
+     "desc": "Committee stage",
+     "house": "Commons",
+     "total": 108,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19506,
+     "desc": "Report stage",
+     "house": "Commons",
+     "total": 135,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19810,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19812,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19813,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 19861,
+     "desc": "Committee stage",
+     "house": "Lords",
+     "total": 258,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20329,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 228,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20546,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 5,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20626,
+     "desc": "Programme motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20588,
+     "desc": "Consideration of Lords amendments",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20630,
+     "desc": "Consideration of Commons amendments and / or reasons",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20680,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 3942,
+   "stagesDeclared": 1,
+   "stagesWalked": 1,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 19718,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 4062,
+   "stagesDeclared": 11,
+   "stagesWalked": 11,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 20416,
+     "desc": "1st reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20453,
+     "desc": "Allocation of time motion",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20417,
+     "desc": "2nd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20433,
+     "desc": "Committee of the whole House",
+     "house": "Commons",
+     "total": 13,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20434,
+     "desc": "3rd reading",
+     "house": "Commons",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20467,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20468,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20469,
+     "desc": "Committee stage",
+     "house": "Lords",
+     "total": 27,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20470,
+     "desc": "Report stage",
+     "house": "Lords",
+     "total": 17,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20504,
+     "desc": "3rd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20531,
+     "desc": "Royal Assent",
+     "house": "Unassigned",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "billId": 4141,
+   "stagesDeclared": 3,
+   "stagesWalked": 3,
+   "stagesOk": true,
+   "perStage": [
+    {
+     "stage": 20790,
+     "desc": "1st reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 20791,
+     "desc": "2nd reading",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    },
+    {
+     "stage": 21134,
+     "desc": "Committee stage",
+     "house": "Lords",
+     "total": 0,
+     "hasField": true,
+     "status": 200
+    }
+   ]
+  }
+ ],
+ "B": {
+  "bills": 423,
+  "billsWithAmendments": 209,
+  "stagesWalked": 3713,
+  "stagesNotOk": [],
+  "calls0": 212,
+  "total": 45655,
+  "perBill": {
+   "2410": 116,
+   "2518": 0,
+   "2519": 0,
+   "2520": 31,
+   "2533": 90,
+   "2593": 556,
+   "2615": 1,
+   "2616": 0,
+   "2620": 0,
+   "2622": 0,
+   "2626": 0,
+   "2629": 0,
+   "2633": 0,
+   "2707": 37,
+   "2709": 318,
+   "2726": 21,
+   "2727": 107,
+   "2729": 309,
+   "2730": 40,
+   "2740": 140,
+   "2792": 203,
+   "2801": 148,
+   "2806": 42,
+   "2822": 100,
+   "2835": 0,
+   "2836": 79,
+   "2839": 743,
+   "2858": 23,
+   "2859": 18,
+   "2860": 23,
+   "2861": 19,
+   "2862": 104,
+   "2863": 0,
+   "2864": 74,
+   "2865": 104,
+   "2866": 88,
+   "2867": 111,
+   "2868": 189,
+   "2869": 0,
+   "2870": 0,
+   "2871": 0,
+   "2872": 0,
+   "2873": 0,
+   "2874": 1,
+   "2875": 0,
+   "2876": 1,
+   "2877": 24,
+   "2878": 0,
+   "2879": 0,
+   "2880": 0,
+   "2881": 0,
+   "2882": 0,
+   "2883": 0,
+   "2884": 0,
+   "2885": 0,
+   "2886": 0,
+   "2887": 0,
+   "2888": 0,
+   "2889": 0,
+   "2890": 0,
+   "2891": 0,
+   "2892": 0,
+   "2893": 0,
+   "2894": 0,
+   "2895": 0,
+   "2898": 0,
+   "2899": 0,
+   "2900": 0,
+   "2904": 0,
+   "2906": 0,
+   "2907": 0,
+   "2909": 0,
+   "2911": 0,
+   "2912": 0,
+   "2914": 0,
+   "2915": 0,
+   "2923": 0,
+   "2965": 0,
+   "2967": 0,
+   "2970": 0,
+   "3015": 159,
+   "3017": 0,
+   "3019": 0,
+   "3020": 360,
+   "3021": 469,
+   "3022": 722,
+   "3023": 414,
+   "3028": 0,
+   "3032": 238,
+   "3033": 0,
+   "3034": 0,
+   "3035": 102,
+   "3041": 0,
+   "3042": 19,
+   "3045": 0,
+   "3056": 0,
+   "3057": 59,
+   "3060": 0,
+   "3064": 40,
+   "3069": 91,
+   "3074": 0,
+   "3075": 0,
+   "3078": 0,
+   "3082": 0,
+   "3085": 0,
+   "3089": 0,
+   "3090": 0,
+   "3094": 0,
+   "3095": 0,
+   "3096": 0,
+   "3115": 0,
+   "3119": 0,
+   "3120": 169,
+   "3137": 945,
+   "3139": 0,
+   "3140": 0,
+   "3142": 3,
+   "3144": 0,
+   "3152": 104,
+   "3153": 399,
+   "3154": 625,
+   "3155": 1843,
+   "3156": 469,
+   "3157": 2,
+   "3158": 136,
+   "3159": 800,
+   "3160": 397,
+   "3161": 37,
+   "3162": 7,
+   "3163": 0,
+   "3164": 0,
+   "3165": 0,
+   "3166": 0,
+   "3167": 209,
+   "3168": 127,
+   "3169": 0,
+   "3170": 23,
+   "3171": 0,
+   "3172": 5,
+   "3173": 0,
+   "3174": 0,
+   "3175": 0,
+   "3176": 0,
+   "3177": 195,
+   "3178": 0,
+   "3179": 0,
+   "3180": 0,
+   "3181": 0,
+   "3182": 112,
+   "3183": 0,
+   "3184": 0,
+   "3185": 0,
+   "3186": 0,
+   "3187": 0,
+   "3188": 0,
+   "3189": 0,
+   "3190": 0,
+   "3191": 0,
+   "3192": 0,
+   "3193": 3,
+   "3194": 6,
+   "3195": 14,
+   "3196": 18,
+   "3197": 0,
+   "3198": 0,
+   "3199": 0,
+   "3200": 0,
+   "3202": 97,
+   "3203": 0,
+   "3204": 0,
+   "3205": 49,
+   "3207": 1,
+   "3209": 5,
+   "3210": 0,
+   "3214": 6,
+   "3215": 0,
+   "3216": 6,
+   "3223": 0,
+   "3237": 0,
+   "3268": 0,
+   "3309": 0,
+   "3310": 56,
+   "3311": 1131,
+   "3313": 0,
+   "3314": 0,
+   "3315": 0,
+   "3316": 0,
+   "3319": 0,
+   "3321": 0,
+   "3323": 0,
+   "3325": 0,
+   "3326": 389,
+   "3328": 0,
+   "3332": 0,
+   "3335": 0,
+   "3337": 0,
+   "3338": 2,
+   "3339": 410,
+   "3340": 408,
+   "3341": 45,
+   "3344": 0,
+   "3352": 25,
+   "3366": 3,
+   "3370": 0,
+   "3376": 16,
+   "3377": 29,
+   "3380": 0,
+   "3381": 1,
+   "3382": 0,
+   "3385": 0,
+   "3387": 0,
+   "3388": 0,
+   "3396": 70,
+   "3398": 2,
+   "3410": 35,
+   "3414": 22,
+   "3416": 8,
+   "3421": 62,
+   "3422": 4,
+   "3429": 1122,
+   "3430": 853,
+   "3435": 100,
+   "3442": 84,
+   "3443": 884,
+   "3453": 862,
+   "3455": 14,
+   "3462": 579,
+   "3465": 0,
+   "3475": 170,
+   "3481": 2,
+   "3493": 0,
+   "3504": 52,
+   "3505": 298,
+   "3506": 175,
+   "3507": 83,
+   "3508": 195,
+   "3509": 86,
+   "3511": 512,
+   "3512": 0,
+   "3513": 0,
+   "3514": 24,
+   "3515": 8,
+   "3516": 0,
+   "3517": 0,
+   "3518": 0,
+   "3519": 0,
+   "3520": 1,
+   "3521": 0,
+   "3522": 0,
+   "3523": 597,
+   "3524": 0,
+   "3525": 0,
+   "3526": 2,
+   "3527": 0,
+   "3528": 0,
+   "3529": 0,
+   "3530": 0,
+   "3531": 0,
+   "3532": 0,
+   "3533": 24,
+   "3534": 0,
+   "3535": 0,
+   "3536": 0,
+   "3537": 0,
+   "3538": 0,
+   "3539": 0,
+   "3540": 295,
+   "3541": 2,
+   "3542": 6,
+   "3543": 6,
+   "3548": 23,
+   "3549": 24,
+   "3551": 0,
+   "3552": 0,
+   "3554": 0,
+   "3557": 0,
+   "3558": 7,
+   "3563": 0,
+   "3564": 5,
+   "3570": 3,
+   "3586": 0,
+   "3592": 1,
+   "3654": 0,
+   "3656": 4,
+   "3685": 0,
+   "3690": 8,
+   "3692": 2,
+   "3694": 85,
+   "3698": 0,
+   "3701": 46,
+   "3702": 3,
+   "3703": 95,
+   "3719": 0,
+   "3731": 0,
+   "3732": 96,
+   "3733": 4,
+   "3734": 53,
+   "3735": 1,
+   "3737": 1413,
+   "3738": 257,
+   "3739": 99,
+   "3740": 0,
+   "3741": 0,
+   "3742": 0,
+   "3743": 0,
+   "3744": 0,
+   "3745": 0,
+   "3746": 0,
+   "3747": 34,
+   "3748": 5,
+   "3749": 4,
+   "3750": 1,
+   "3751": 293,
+   "3752": 308,
+   "3753": 12,
+   "3754": 0,
+   "3755": 237,
+   "3756": 5,
+   "3757": 0,
+   "3758": 6,
+   "3759": 0,
+   "3760": 0,
+   "3761": 0,
+   "3762": 10,
+   "3763": 0,
+   "3764": 654,
+   "3765": 165,
+   "3766": 16,
+   "3767": 5,
+   "3768": 0,
+   "3769": 11,
+   "3770": 26,
+   "3771": 0,
+   "3772": 91,
+   "3773": 2,
+   "3774": 1384,
+   "3779": 0,
+   "3783": 0,
+   "3785": 4,
+   "3786": 6,
+   "3787": 0,
+   "3790": 15,
+   "3810": 2,
+   "3821": 1,
+   "3825": 458,
+   "3832": 710,
+   "3873": 167,
+   "3874": 0,
+   "3879": 734,
+   "3881": 69,
+   "3882": 1,
+   "3884": 439,
+   "3887": 170,
+   "3888": 152,
+   "3894": 0,
+   "3895": 0,
+   "3896": 0,
+   "3897": 0,
+   "3899": 0,
+   "3900": 0,
+   "3909": 1496,
+   "3910": 413,
+   "3911": 0,
+   "3921": 473,
+   "3924": 0,
+   "3928": 0,
+   "3929": 505,
+   "3934": 0,
+   "3936": 0,
+   "3938": 1609,
+   "3942": 0,
+   "3946": 1538,
+   "3955": 32,
+   "3961": 5,
+   "3968": 193,
+   "3972": 81,
+   "3982": 894,
+   "3988": 74,
+   "3991": 1,
+   "4002": 1549,
+   "4004": 222,
+   "4012": 490,
+   "4016": 40,
+   "4019": 449,
+   "4030": 1008,
+   "4034": 7,
+   "4035": 336,
+   "4042": 283,
+   "4044": 0,
+   "4046": 107,
+   "4059": 6,
+   "4062": 57,
+   "4080": 570,
+   "4082": 0,
+   "4083": 229,
+   "4090": 0,
+   "4123": 143,
+   "4125": 252,
+   "4126": 266,
+   "4127": 253,
+   "4128": 153,
+   "4129": 353,
+   "4130": 16,
+   "4131": 0,
+   "4132": 0,
+   "4133": 0,
+   "4134": 0,
+   "4135": 0,
+   "4136": 0,
+   "4137": 19,
+   "4138": 3,
+   "4139": 0,
+   "4141": 0,
+   "4142": 0,
+   "4143": 0,
+   "4144": 0,
+   "4145": 0,
+   "4146": 5,
+   "4147": 0,
+   "4148": 0,
+   "4149": 0,
+   "4153": 0,
+   "4155": 0
+  },
+  "byStageDesc": {
+   "Lords Committee stage": 21062,
+   "Lords Report stage": 9866,
+   "Lords 3rd reading": 300,
+   "Commons Committee stage": 6974,
+   "Commons Report stage": 6573,
+   "Commons 2nd reading": 50,
+   "Commons Committee of the whole House": 721,
+   "Commons Money resolution": 3,
+   "Lords Lords Special Public Bill Committee": 18,
+   "Commons Consideration of Lords amendments": 87,
+   "Commons 3rd reading": 1
+  },
+  "failedStage": 0,
+  "maxStage": {
+   "n": 1289,
+   "bill": 3774,
+   "stage": 20186
+  }
+ },
+ "http": [
+  [
+   200,
+   4368
+  ]
+ ],
+ "throttled": 0
+}

@@ -61,6 +61,7 @@ import fs from 'fs'
 import path from 'path'
 import { pool, OUT } from './db'
 import { r2Put } from '../shared/r2-client'
+import { openRun } from './purge-ledger'
 
 const EXECUTE = process.argv.includes('--execute')
 const ONLY = (process.argv.find(a => a.startsWith('--only=')) ?? '').split('=')[1] || null
@@ -265,9 +266,13 @@ async function main() {
 
     const after = (await q(`SELECT count(*)::int n FROM corpus_sections WHERE ${t.where}`))[0].n
     console.log(`   after: ${n(after)} rows remain  ${after === 0 ? '✓' : '⚠'}`)
-    console.log(`   NEXT (index layer, not done here): drop these ids from the vector and FTS tables using`)
+    console.log(`   INDEX LAYERS PENDING (recorded in docs/census/purge-ledger.jsonl, run ${stamp}): drop these ids`)
+    console.log(`     from the FTS and vector tables with c2/l2-purge-index.ts --stamp=${stamp}; ids in`)
     console.log(`     ${path.relative(process.cwd(), idsPath)}\n`)
     summary.push({ key: t.key, rows: before, words: Number(words), executed: true, after, retiredTarget: retired })
+    // §6.2 — the index layers are written down as PENDING, where a check can read it. A run that stops
+    // here is no longer silent about it; `purge-ledger.ts` explains why this is a record and not an exit code.
+    openRun(stamp, 'l2-purge', t.corpus, before, after, !retired)
   }
 
   const total = summary.reduce((s, x) => s + (x.executed ? x.rows : 0), 0)

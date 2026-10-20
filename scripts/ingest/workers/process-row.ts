@@ -1215,7 +1215,10 @@ async function processGovukContent(row: QueueRow): Promise<void> {
   }
 
   const MAX_ATTACHMENTS = 20
-  for (const att of content.attachments.slice(0, MAX_ATTACHMENTS)) {
+  // A "(print ready)" PDF is the same document re-typeset for printing (MoJ ARA 2024-25: 314 pages
+  // both, 8.6 MB and 9.4 MB). Storing both doubles the words and returns every passage twice.
+  const attachments = content.attachments.filter(a => !/print[\s-]*ready/i.test(a.title ?? ''))
+  for (const att of attachments.slice(0, MAX_ATTACHMENTS)) {
     const buf = await fetchPdfBuffer(att.url!)
     if (!buf) continue
     const text = await pdfToText(buf, att.url!)
@@ -2918,9 +2921,11 @@ async function processScottishOrArchive(row: QueueRow): Promise<void> {
 // ── NAO reports (V20 probe 7 — WP REST API route) ─────────────────────────────
 
 async function processNao(row: QueueRow): Promise<void> {
-  const { fetchNaoReportPdfUrls, fetchNaoFile } = await import('../sources/nao')
+  const { fetchNaoReportPdfUrls, fetchNaoFile, fetchNaoReportDate } = await import('../sources/nao')
   const slug = row.docId
   const pageUrl = `https://www.nao.org.uk/reports/${slug}/`
+  const itemDate = (await fetchNaoReportDate(slug)) ?? undefined
+  if (!itemDate) console.warn(`[nao] ${slug}: no publication date from the WP API — row will be written undated`)
 
   const pdfUrls = await fetchNaoReportPdfUrls(pageUrl)
   if (pdfUrls === null) { await markFailed(row.id, `nao ${slug}: page fetch failed`); return }
@@ -2933,6 +2938,7 @@ async function processNao(row: QueueRow): Promise<void> {
       status: 'unavailable',
       availabilityStatus: 'no-provisions',
       availabilityNote: note,
+      itemDate,
       parentDocId: slug,
     })
     await markDone(row.id)
@@ -2958,6 +2964,7 @@ async function processNao(row: QueueRow): Promise<void> {
       status: 'compiled',
       format: 'pdf',
       sectionTitle: slug.replace(/-/g, ' '),
+      itemDate,
       parentDocId: slug,
     })
     texts.push(text)
