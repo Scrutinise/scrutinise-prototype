@@ -251,6 +251,17 @@ export const CAPABILITY_FLAGS = [
   // against the accepted gold set) — see docs/SEARCH_S24_REPORT.md.
   'LEX_ROUTER_BILL_VOCAB',
   //
+  // SEARCH-29 stage 1 — ORIENTATION v2 (lib/lex/orientation/v2.ts) called from the build's ORIENT pass. Needs
+  // LEX_WEB_ORIENTATION too. ⚠ DEFAULT OFF: nothing has produced an orientation on a real idea since 25 Sep
+  // (the build never called v1); this is the first thing that will, and it spends on Gemini and xAI per build.
+  'LEX_ORIENTATION_V2',
+  // SEARCH-29 stage 2 — hand orientation v2's vocabulary to the router alongside the user's own words.
+  // ⚠ DEFAULT OFF until measured on the 65 gold questions (docs/SEARCH_29_REPORT.md).
+  'LEX_ORIENTATION_TERMS',
+  // SEARCH-29 Option B — the answer context Lex is given reserves at least two places for each routed
+  // source that returned results; the rest go by score. ⚠ DEFAULT OFF until measured on the 65.
+  'LEX_ANSWER_STREAM_FLOOR',
+  //
   // ⚠⚠ `LEX_MERGE_COVERAGE` WAS HERE AND WAS RETIRED ON 2026-08-26 (S14 §2). It was S13's minimal
   // experiment — reallocate the post-floor slots by query-term coverage. Measured: **+2 of 65**
   // (23% → 26%) while moving **24 of 34 rankings**, and its two regressions took documents their

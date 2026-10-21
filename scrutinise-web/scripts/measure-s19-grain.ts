@@ -86,8 +86,8 @@ import {
   documentKeyOf, collapseToDocuments, aggregateToDocuments, rankOf, chunkCountOf,
   CHUNK_GRAIN_NOTE, type DocumentAggregation,
 } from '../lib/lex/grain'
-import { GOLD_CORPUS } from './gold/s10-gold-set'
-import { GOLD_V2 } from './gold/gold-v2-set'
+import { selectAnswerContext } from '../lib/lex/answer-context'
+import { ALL_GOLD_QUESTIONS, type GoldQuestion } from './gold/all-questions'
 
 export {}
 
@@ -119,13 +119,9 @@ const SET_VERSION = 'S10 GOLD_CANDIDATES_S8 (validated 20 Aug) + GOLD_CANDIDATES
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // the questions
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-interface Q { id: string; collection: string; question: string; keys: string[]; set: 's10' | 'v2' }
-const QUESTIONS: Q[] = [
-  ...GOLD_CORPUS.filter((q) => q.verdict === 'ACCEPT' && q.scoring !== 'negative-control')
-    .map((q): Q => ({ id: `S10-Q${q.n}`, collection: q.collection, question: q.question, keys: q.keys, set: 's10' })),
-  ...GOLD_V2.filter((q) => q.scoring === 'recall')
-    .map((q): Q => ({ id: `V2-${q.id}`, collection: q.collection ?? 'unknown', question: q.query, keys: q.keys, set: 'v2' })),
-].filter((q) => !ONLY.length || ONLY.includes(q.collection))
+// ONE definition of "the 65", shared with measure-gold-vocab.ts (SEARCH-29): scripts/gold/all-questions.ts.
+type Q = GoldQuestion
+const QUESTIONS: Q[] = ALL_GOLD_QUESTIONS.filter((q) => !ONLY.length || ONLY.includes(q.collection))
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // retrieval
@@ -235,6 +231,13 @@ async function main() {
     const streams = prod.retrieval?.vectorStreams ?? []
     if (streams.length) process.env.LEX_VECTOR_STREAMS = streams.join(',')
     flagNote.push(`gateway arm forced to production's flag string from /api/health (commit ${String(prod.commit).slice(0, 7)}); LEX_VECTOR_STREAMS=${process.env.LEX_VECTOR_STREAMS}`)
+    // SEARCH-28: `--set LEX_ROUTER_BILL_VOCAB=true` forces ONE flag AFTER production's string, so an arm can differ from production by exactly
+    // that flag and no other. Printed in the artefact like every other override.
+    for (const kv of (arg('set') ?? '').split(',').map((s) => s.trim()).filter(Boolean)) {
+      const [k, v] = kv.split('=')
+      process.env[k] = v
+      flagNote.push(`⚠⚠ FORCED AFTER PRODUCTION'S STRING: ${k}=${v}`)
+    }
   }
   // ── §4: the ARM THAT MEASURES WHAT §3 BUILT ─────────────────────────────────────────────────
   // ⚠ SET AFTER the production flag string, deliberately. Production is on a commit that predates
@@ -321,12 +324,24 @@ async function main() {
     }
   }
 
+  // SEARCH-29 stage 2: `--terms <file.json>` = { "<question id>": ["term", …] } hands each question's terms to the router
+  // alongside the question's own words (GatewayQuery.extraTerms). A question absent from the file gets none, and is counted.
+  const TERMS_FILE = arg('terms')
+  const termsByQuestion: Record<string, string[]> = TERMS_FILE ? JSON.parse(fs.readFileSync(path.resolve(TERMS_FILE), 'utf8')) : {}
+  if (TERMS_FILE) {
+    const have = QUESTIONS.filter((q) => (termsByQuestion[q.id] ?? []).length > 0).length
+    flagNote.push(`⚠⚠ STAGE 2 ARM: extraTerms from ${path.basename(TERMS_FILE)} for ${have} of ${QUESTIONS.length} questions`)
+    console.log(`  ⚠ stage-2 terms: ${have} of ${QUESTIONS.length} questions carry terms (${path.basename(TERMS_FILE)})`)
+  }
+
   for (const q of QUESTIONS) {
     if (aborted) break
     const corpora = [...new Set(q.keys.map((k) => k.split(':')[0]))]
 
     const arms: Record<string, GrainRanks & { error?: string; topWords?: Lengths }> = {}
     const armIds: Record<string, string[]> = {}
+    /** SEARCH-29 Option B: the 16-place answer context as handed over today vs with two places per routed stream. Same search, so paired. */
+    let ctxMeasure: Record<string, unknown> | null = null
 
     for (const armName of ARMS) {
       try {
@@ -337,9 +352,30 @@ async function main() {
           if (!VEC) { arms[armName] = { ...score([], q.keys, parents, 0), error: 'VECTOR_SEARCH_URL unset — NOT RUN' }; continue }
           ranked = await vecScoped(q.question, corpora, DENSE_DEPTH); depth = DENSE_DEPTH
         } else {
-          const g = await runSearch({ keywords: q.question.trim().split(/\s+/).filter(Boolean), intent: 'BACKGROUND_BRIEFING', limit: 34 })
+          const terms = termsByQuestion[q.id] ?? []
+          const g = await runSearch({ keywords: q.question.trim().split(/\s+/).filter(Boolean), intent: 'BACKGROUND_BRIEFING', limit: 34, ...(terms.length ? { extraTerms: terms } : {}) })
           ranked = g.results.map((r) => ({ id: r.id, score: r.score, corpus: r.id.split(':')[0] }))
           depth = ranked.length
+          // Option B — measured on THIS search's own result list, so before and after differ by nothing but the selection.
+          {
+            const eligible = g.results.filter((r) => !r.orphaned)
+            await ensureMeta(eligible.map((r) => r.id))
+            const keyDocs = new Set(q.keys.map((k) => documentKeyOf(k, parents.get(k) ?? null)))
+            const hit = (rows: Array<{ id: string }>) => ({
+              section: rows.some((r) => q.keys.includes(r.id)),
+              document: rows.some((r) => keyDocs.has(documentKeyOf(r.id, parents.get(r.id) ?? null))),
+            })
+            const before = eligible.slice(0, 16)
+            const sel = selectAnswerContext(eligible, g.meta.perStream, 16, 2)
+            ctxMeasure = {
+              routedStreams: g.meta.routedStreams ?? null, eligible: eligible.length,
+              before: hit(before), after: hit(sel.context),
+              added: sel.report.added, displaced: sel.report.displaced, floorApplied: sel.report.floorApplied,
+              perStream: sel.report.perStream,
+              streamsMissingBefore: sel.report.perStream.filter((s) => s.inContextBefore === 0).map((s) => s.stream),
+              extraTerms: terms.length,
+            }
+          }
           if (g.failed) arms[armName] = { ...score([], q.keys, parents, 0), error: `gateway FAILED: ${g.failureReason}` }
           if (g.meta.denseDegraded?.length) console.log(`    ⚠ dense degraded on ${g.meta.denseDegraded.map((d) => `${d.stream}:${d.reason}`).join(', ')}`)
         }
@@ -360,7 +396,7 @@ async function main() {
       const m = keyMeta.get(k)
       return { key: k, words: m?.wordcount ?? null, chunks: chunkCountOf(Math.round((m?.wordcount ?? 0) * 6.1)) }
     })
-    rows.push({ ...q, corpora, keyShape, arms, armTop20: armIds })
+    rows.push({ ...q, corpora, keyShape, arms, armTop20: armIds, ...(ctxMeasure ? { answerContext: ctxMeasure } : {}) })
 
     const fmt = (a: GrainRanks & { error?: string } | undefined) => {
       if (!a) return 'NOT RUN'
@@ -487,8 +523,36 @@ async function main() {
     console.log(`     e.g. ${[...unhydrated].slice(0, 4).join('  ')}`)
   }
 
+  // ── SEARCH-29 Option B: the answer context, before and after, paired on the same searches ───────────────
+  const ctxRows = rows.filter((r) => (r as any).answerContext && !(r.arms as any).gateway?.error)
+  let answerContextSummary: Record<string, unknown> | null = null
+  if (ctxRows.length) {
+    const c = (r: any) => r.answerContext as { before: { section: boolean; document: boolean }; after: { section: boolean; document: boolean }; streamsMissingBefore: string[]; displaced: string[]; added: string[] }
+    const n = ctxRows.length
+    const cnt = (f: (r: any) => boolean) => ctxRows.filter(f).length
+    const gainsDoc = ctxRows.filter((r) => !c(r).before.document && c(r).after.document).map((r: any) => r.id)
+    const lossesDoc = ctxRows.filter((r) => c(r).before.document && !c(r).after.document).map((r: any) => r.id)
+    answerContextSummary = {
+      questions: n,
+      documentInContext: { before: cnt((r) => c(r).before.document), after: cnt((r) => c(r).after.document), gains: gainsDoc, losses: lossesDoc },
+      sectionInContext: { before: cnt((r) => c(r).before.section), after: cnt((r) => c(r).after.section),
+        gains: ctxRows.filter((r) => !c(r).before.section && c(r).after.section).map((r: any) => r.id),
+        losses: ctxRows.filter((r) => c(r).before.section && !c(r).after.section).map((r: any) => r.id) },
+      questionsWhereASourceWasMissingBefore: cnt((r) => c(r).streamsMissingBefore.length > 0),
+      questionsWhereTheContextChanged: cnt((r) => c(r).added.length > 0),
+    }
+    const s = answerContextSummary as any
+    console.log('\n══ SEARCH-29 OPTION B · THE 16-PLACE ANSWER CONTEXT, PLAIN PREFIX vs TWO PLACES PER ROUTED SOURCE (paired: same searches) ══')
+    console.log(`   questions measured                         ${n}`)
+    console.log(`   gold DOCUMENT in the context    before ${s.documentInContext.before}   after ${s.documentInContext.after}   gains [${gainsDoc.join(', ')}]   losses [${lossesDoc.join(', ')}]`)
+    console.log(`   gold SECTION  in the context    before ${s.sectionInContext.before}   after ${s.sectionInContext.after}   gains [${s.sectionInContext.gains.join(', ')}]   losses [${s.sectionInContext.losses.join(', ')}]`)
+    console.log(`   questions where a routed source reached NONE of the context today: ${s.questionsWhereASourceWasMissingBefore};  where the context changed at all: ${s.questionsWhereTheContextChanged}`)
+  }
+
   const vec1 = await vecStats()
   fs.writeFileSync(OUT, JSON.stringify({
+    answerContextSummary,
+    termsFile: TERMS_FILE ? path.basename(TERMS_FILE) : null,
     takenAt: new Date().toISOString(),
     setVersion: SET_VERSION,
     arms: ARMS, depth: DEPTH, denseDepth: DENSE_DEPTH,

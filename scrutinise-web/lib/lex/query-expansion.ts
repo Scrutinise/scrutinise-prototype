@@ -801,8 +801,8 @@ function capRoute(route: RouteResult): RouteResult {
  * a router that names zero streams is exactly the failure mode this guards
  * against, so it degrades the same way.
  */
-export async function routeQuery(keywords: string[], ideaContext: string): Promise<RouteResult | null> {
-  return (await routeQueryDetailed(keywords, ideaContext))?.route ?? null
+export async function routeQuery(keywords: string[], ideaContext: string, extraTerms: string[] = []): Promise<RouteResult | null> {
+  return (await routeQueryDetailed(keywords, ideaContext, extraTerms))?.route ?? null
 }
 
 /**
@@ -812,7 +812,7 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
  * keeps the shape it was written against and there is exactly one routing code path, so a change
  * to routing cannot reach one caller and not the other.
  */
-export async function routeQueryDetailed(keywords: string[], ideaContext: string): Promise<RouteDecision | null> {
+export async function routeQueryDetailed(keywords: string[], ideaContext: string, extraTerms: string[] = []): Promise<RouteDecision | null> {
   // OFF is not a failure — but it is not nothing either, and it used to be silent.
   // It now emits its OWN counted outcome so a reader of the log, or of
   // routeOutcomeCounts(), can tell "never asked to route" from "asked and could not".
@@ -841,9 +841,15 @@ export async function routeQueryDetailed(keywords: string[], ideaContext: string
   // budget truncates every call and makes the salvage measurable in one pass.
   const maxOutputTokens = parseInt(process.env.QUERY_ROUTER_MAX_TOKENS ?? String(DEFAULT_MAX_OUTPUT_TOKENS), 10)
 
+  // SEARCH-29 stage 2 — ANY list of terms, not only orientation's. The caller's own words stay the question; these are
+  // the vocabulary the wider debate uses. With none given the message is byte-for-byte what it was.
+  const terms = [...new Set(extraTerms.map((t) => t.trim()).filter(Boolean))].slice(0, 30)
   const userMessage = [
     `Keywords: ${keywords.join(', ')}`,
     ideaContext ? `Idea context: ${ideaContext}` : '',
+    terms.length
+      ? `Further vocabulary the wider debate uses for this subject (from outside the person's own words; use a term in a stream's query only where that stream's documents would plausibly use it, and never force one in): ${terms.join('; ')}`
+      : '',
   ].filter(Boolean).join('\n')
 
   const res = await callGeminiJson({

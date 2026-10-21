@@ -176,13 +176,14 @@ Every item needs a real date in yyyy-mm-dd form. If the note gives only a month 
 
 \`salience\` is 0–3: 0 = nothing is happening in this area right now; 1 = occasional coverage; 2 = actively discussed; 3 = a live, contested issue in the news now.`
 
-interface GeminiCallResult {
+export interface GeminiCallResult {
   text: string
   sources: OrientationSource[]
   costUsd: number
 }
 
-async function callGemini(opts: {
+/** Exported for orientation v2 (SEARCH-29), which shares this call and its ledger row. */
+export async function callGemini(opts: {
   model: string
   apiKey: string
   timeoutMs: number

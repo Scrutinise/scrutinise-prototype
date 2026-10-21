@@ -36,6 +36,7 @@ import { enterBuildContext, runWithSpendContext } from './build-context'
 import { readAllowance, allowanceBlock, FULL_BUILD_THIRDS, REUSE_BUILD_THIRDS } from './allowance'
 import type { SearchResult } from './page1-config'
 import { runSearch } from './search-gateway'
+import { runOrientationV2, orientationV2Enabled, orientationTermsEnabled, termsForSearch, type OrientationV2 } from './orientation/v2'
 import { storeStageSearch, type StageSearchRecord } from './stage-search'
 import { setProposal, setLoopProposal, createCauses, createPolicyOptions, createActions, currentFieldValues } from './field-machine'
 import { appendTranscript, lexBubble } from './transcript'
@@ -86,7 +87,7 @@ import { buildHighlights, type BuildHighlights } from './build-highlights'
 import {
   writeQueries, extractedQuery, noteQueryDefects, queryProvenanceLine, type IssuedQuery,
 } from './build-query'
-import { testimonyForFacts, testimonyForPrompt } from './testimony'
+import { testimonyBlock, testimonyForFacts, testimonyForPrompt } from './testimony'
 import {
   smartPanelModels, smartCritiqueModel, pageOnePayload, PAGE_ONE_CAP,
   askPanelModel, testVocabulary, citeVocabulary, recordUnverifiedVocabulary,
@@ -1776,7 +1777,18 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
   // KEYWORDS are composed, and it changes identically for both arms — so A and B remain
   // comparable to each other, and neither is comparable to a pre-25-F run. That is
   // recorded on the row: `queryUsed` now says which builder produced the terms.
+  // ══ SEARCH-29 STAGE 1 — WHAT IS BEING ARGUED, AND THE VOCABULARY AROUND IT ═════════════════
+  // Runs CONCURRENTLY with the query writer below, so it adds no wall-clock beyond the slower of
+  // the two. ⚠ Before SEARCH-29 NOTHING in this pass called orientation at all: v1 was reachable
+  // only from the legacy Page-1 trigger, which is why the flag read ON and the ledger held no
+  // `orientation.*` row after 25 Sep. Off by default (LEX_ORIENTATION_V2); never throws.
   await c.activity('Writing the opening search query')
+  const orientV2: Promise<OrientationV2 | null> = orientationV2Enabled()
+    ? runOrientationV2({ input: c.ctx ? testimonyBlock(c.ctx, 6000) : '' }).catch((err) => {
+        console.warn('[lex-diag] orientation v2 threw', err instanceof Error ? err.message : err)
+        return null
+      })
+    : Promise.resolve(null)
   const openingJob = {
     id: 'ORIENT',
     question: 'What does the record hold that bears on this problem, and what law governs it today?',
@@ -1784,11 +1796,21 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
       'The statutes, committee reports, evaluations and judgments a specialist in this field would '
       + 'reach for first — named by the terms the field actually uses.',
   }
-  const writtenOpening = await writeQueries({
-    jobs: [openingJob],
-    context: [testimonyForFacts(c.ctx), framed.promptBlock].filter(Boolean).join('\n\n'),
-    onUsage: (u) => c.usages.push(u),
-  })
+  const [writtenOpening, orientation2] = await Promise.all([
+    writeQueries({
+      jobs: [openingJob],
+      context: [testimonyForFacts(c.ctx), framed.promptBlock].filter(Boolean).join('\n\n'),
+      onUsage: (u) => c.usages.push(u),
+    }),
+    orientV2,
+  ])
+  if (orientation2) {
+    // Stored where the idea's orientation has always lived; `version: 2` tells a reader which shape it is.
+    await prisma.idea.update({ where: { id: ideaId }, data: { orientation: stripNullBytes(orientation2) as never } })
+      .catch((err) => console.warn('[lex-diag] could not store orientation v2', err instanceof Error ? err.message : err))
+  }
+  // Stage 2 hands the vocabulary to the router ONLY when its own flag is on (LEX_ORIENTATION_TERMS).
+  const extraTerms = orientationTermsEnabled() ? termsForSearch(orientation2) : []
   const openingQuery: IssuedQuery =
     writtenOpening.get('ORIENT') ?? extractedQuery('ORIENT', c.ctx.problem || c.ctx.goalDetail || '')
   noteQueryDefects(openingQuery, buildId)
@@ -1811,6 +1833,7 @@ async function orientPass(c: PassContext): Promise<PassOutcome> {
         intent,
         ideaContext: framed.ideaContext,
         limit: 16,
+        ...(extraTerms.length ? { extraTerms } : {}),
       })
       anyRan = true
       if (out.failed) { anyFailed = true; continue }

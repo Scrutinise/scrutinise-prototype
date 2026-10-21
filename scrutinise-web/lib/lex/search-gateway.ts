@@ -135,6 +135,12 @@ export interface GatewayQuery {
    *  (grounding guardrail §3): web/expansion steer retrieval; the corpus is cited. */
   ideaContext?: string
   /**
+   * SEARCH-29 stage 2 — extra vocabulary for the ROUTER, alongside `keywords` (the person's own words, which stay the
+   * question). Any list of terms: orientation v2's today, Lex's update pass and "research an angle" later. Only the
+   * router reads it, and only when the router is on; it never enters briefing or cited text.
+   */
+  extraTerms?: string[]
+  /**
    * ⚠⚠ A PER-STREAM BUDGET, NOT A TOTAL — and this comment used to say the opposite.
    *
    * It read *"Max canonical results before grouping"*. It is not, and has never been: `limit` is
@@ -327,7 +333,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     // it anyway with the bare keywords — the caller's contract fixes the tier, so
     // "the router didn't pick legislation" cannot be allowed to mean "return
     // nothing". Same fail-open rule as the untiered path below.
-    const route = await routeQuery(keywords, q.ideaContext ?? '')
+    const route = await routeQuery(keywords, q.ideaContext ?? '', q.extraTerms ?? [])
     const tailored = route?.[q.tier as keyof typeof route]
     const streamQuery = tailored && tailored.trim() ? tailored.trim().split(/\s+/) : keywords
     if (tailored) {
@@ -398,7 +404,8 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     // S14 §1(b)/§3 — the DETAILED form, which carries the router's per-stream confidences as well
     // as its queries. `routeQuery` is a thin wrapper over this one, so there is still exactly one
     // routing code path; what changes here is only how much of its answer this caller reads.
-    const decision = await routeQueryDetailed(keywords, q.ideaContext ?? '')
+    const decision = await routeQueryDetailed(keywords, q.ideaContext ?? '', q.extraTerms ?? [])
+    if (q.extraTerms?.length) console.log('[search-gateway] router given extra vocabulary', { intent: q.intent, terms: q.extraTerms.length })
     const route = decision?.route ?? null
     const streamNames = route ? Object.keys(route) : []
     if (route && streamNames.length) {

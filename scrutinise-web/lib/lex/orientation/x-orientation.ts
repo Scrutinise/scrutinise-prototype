@@ -149,9 +149,10 @@ const ARGUMENTS_SCHEMA = {
 
 // ── the call ──────────────────────────────────────────────────────────────────
 
-interface XCallResult { parsed: Record<string, unknown>; costUsd: number; postsFetched: number }
+export interface XCallResult { parsed: Record<string, unknown>; costUsd: number; postsFetched: number }
 
-async function callGrok(opts: {
+/** Exported for orientation v2 (SEARCH-29), which shares this call and its ledger row. */
+export async function callGrok(opts: {
   model: string
   apiKey: string
   timeoutMs: number

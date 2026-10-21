@@ -36,6 +36,7 @@
 
 import type { SearchResult } from './page1-config'
 import { runSearch, type CapabilityFlags } from './search-gateway'
+import { answerStreamFloorEnabled, selectAnswerContext } from './answer-context'
 import { modelFor } from './model-registry'
 import { recordGeminiUsage } from './spend-ledger'
 import { flagEnabled } from '../env-flags'
@@ -575,7 +576,18 @@ async function runGeneralCorpusChatInner(input: {
   // and its count is already in `diagnostics.orphanCount`, logged once already in
   // search-gateway.ts. Kept, labelled (ORPHAN_LABEL, page1-config.ts, for a caller that
   // renders `results` directly), never cited.
-  const context = search.results.filter((r) => !r.orphaned).slice(0, answerContextLimit())
+  const eligible = search.results.filter((r) => !r.orphaned)
+  // SEARCH-29 Option B (LEX_ANSWER_STREAM_FLOOR, default OFF): every routed source that returned results holds at least two
+  // places; the rest go by score. OFF is exactly the old prefix. See lib/lex/answer-context.ts.
+  const picked = answerStreamFloorEnabled()
+    ? selectAnswerContext(eligible, search.meta.perStream, answerContextLimit())
+    : null
+  const context = picked ? picked.context : eligible.slice(0, answerContextLimit())
+  if (picked?.report.added.length) {
+    console.log('[lex-general] answer-context stream floor changed the context', {
+      added: picked.report.added.length, displaced: picked.report.displaced.length, floorApplied: picked.report.floorApplied,
+    })
+  }
   diagnostics.contextCount = context.length
   // What the answer call can actually see, per stream. The counted thing, not the assumed one:
   // "committees was routed" and "committees reached the model" are different claims, and the

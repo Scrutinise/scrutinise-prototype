@@ -1,0 +1,2500 @@
+{
+ "takenAt": "2026-10-21T23:19:51.584Z",
+ "report": [
+  {
+   "ideaId": "452c5ade-3153-400a-bf48-3b71aaa52773",
+   "title": "Enhancing Individual Accountability in the Civil Service",
+   "inputChars": 5698,
+   "on": {
+    "summary": {
+     "ok": true,
+     "ms": 39185,
+     "costUsd": 0.1167,
+     "arguments": 21,
+     "bySide": {
+      "for": 14,
+      "against": 5,
+      "nuanced": 2
+     },
+     "byTier": {
+      "B": 14,
+      "C": 7
+     },
+     "undated": 13,
+     "unverifiedSource": 0,
+     "merged": 0,
+     "dropped": 6,
+     "droppedByReason": {
+      "no-argument": 5,
+      "pile-on": 1
+     },
+     "vocabulary": {
+      "keyTerms": 30,
+      "statutoryTerms": 4,
+      "people": 28,
+      "organisations": 28,
+      "places": 11
+     },
+     "xPosts": 18,
+     "xCapExceeded": false,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 39173,
+       "costUsd": 0.009720999999999999
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 13803,
+       "costUsd": 0.10695495
+      }
+     ]
+    },
+    "result": {
+     "version": 2,
+     "ranAt": "2026-10-21T23:18:20.977Z",
+     "noiseFilter": true,
+     "arguments": [
+      {
+       "claim": "The status quo in public services is not working.",
+       "reason": "There is a necessity for investment and a new consensus on the state's function and methods.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globalgovernmentforum.com",
+        "url": "https://www.globalgovernmentforum.com/uk-announces-civil-service-reforms-to-move-fast-and-fix-things/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Public services must be easier to use, faster, and more efficient.",
+       "reason": "This can be achieved through digital transformation and the GOV.UK app, on par with modern banking and online shopping.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globalgovernmentforum.com",
+        "url": "https://www.globalgovernmentforum.com/uk-announces-civil-service-reforms-to-move-fast-and-fix-things/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Reform UK proposes increasing the performance bonus pool significantly.",
+       "reason": "This is to reward serious and hardworking officials and make the civil service a better place to work.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "reddit.com",
+        "url": "https://www.reddit.com/r/TheCivilService/comments/1pn6u74/reform_uk_plan_for_the_civil_service/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The government intends to strengthen the delivery, accountability, innovation, and productivity of the Civil Service.",
+       "reason": "This will be achieved through a fundamental review led by the Cabinet Secretary and Head of the Civil Service.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "www.gov.uk",
+        "url": "https://www.gov.uk/government/publications/review-into-the-organisation-performance-and-transformation-of-the-permanent-civil-service/review-into-the-organisation-performance-and-transformation-of-the-permanent-civil-service",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Reform UK plans to radically reduce the size of the civil service.",
+       "reason": "This is to create a smaller, more effective government and reward remaining staff with higher salaries.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "reformparty.uk",
+        "url": "https://reformparty.uk/news/danny-kruger-reform-will-radically-reduce-the-size-of-the-civil-service",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Officials who might seek to obstruct Reform UK's plans should prepare for another career.",
+       "reason": "The party expects collaboration to implement the public's mandate.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "reddit.com",
+        "url": "https://www.reddit.com/r/TheCivilService/comments/1pn6u74/reform_uk_plan_for_the_civil_service/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Ministers are considering legislation to abolish a swathe of quangos.",
+       "reason": "This is to restructure the state, cut civil service jobs, avoid duplication, bring greater accountability, and save money.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "theguardian.com",
+        "url": "https://www.theguardian.com/politics/2025/apr/06/ministers-consider-abolishing-hundreds-of-quangos-sources-say",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Compulsory redundancy rounds are needed to address the perennial problem of poor performance management and grade inflation in the civil service.",
+       "reason": "This would lead to higher performing teams and efficiencies.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "instituteforgovernment.org.uk",
+        "url": "https://www.instituteforgovernment.org.uk/comment/civil-service-mcfadden-performance",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "If civil servants fail to perform they will be sacked with KPIs set by ministers and bonuses only for the best performers",
+       "reason": "Only seven out of 7,000 senior civil servants are on a development programme for under-performance and the two pizza rule should apply to keep teams focused",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@christopherhope",
+        "url": "https://x.com/christopherhope/status/2013582970523717700",
+        "date": "2026-01-20",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Civil service productivity has shown no improvement in the last 20 years while the headcount has grown almost 40% larger over the last decade",
+       "reason": "This explains why Britain is broken and the civil service itself is broken",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@TiceRichard",
+        "url": "https://x.com/TiceRichard/status/2035363391892504816",
+        "date": "2026-03-21",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The DWP and most of the civil service needs total reform because so much money is being misused due to bad management",
+       "reason": "There is never any audit or accountability and a £by£ fully audited breakdown of all govt spending should replace budgets",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@KatieM12121",
+        "url": "https://x.com/KatieM12121/status/2109550686656749745",
+        "date": "2026-10-12",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Civil service reforms are needed to bring specialized bureaucracy smart government accountability digital service delivery and digital economy",
+       "reason": "Current generalist outdated systems block delivery of elected policies",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@civilservicepun",
+        "url": "https://x.com/civilservicepun/status/2110192945286775281",
+        "date": "2026-10-14",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Public sector productivity gap costs the UK economy £80bn a year",
+       "reason": "Many civil servants are never in the office and the sector lags private sector sharply",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@MarkJohnsonTw",
+        "url": "https://x.com/MarkJohnsonTw/status/2112869856705950148",
+        "date": "2026-10-21",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The country needs leaders who can raise standards of accountability in the civil service and sack all the incompetent and negligent civil servants especially those on high salaries",
+       "reason": "Current system lacks accountability and allows humongous pension entitlements for failures",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@MendyHowe12",
+        "url": "https://x.com/MendyHowe12/status/2112734410537836880",
+        "date": "2026-10-21",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Any move towards politicisation of the civil service will meet determined opposition.",
+       "reason": "This is not helped by politicians' current unpopularity, making it a non-starter for now.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "civilservant.org.uk",
+        "url": "https://www.civilservant.org.uk/csr-possible_reforms.html",
+        "date": "2002-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The constitutional principle of civil servants being only indirectly accountable to Parliament is problematic.",
+       "reason": "This leads to democratic incoherence and ineffective accountability mechanisms in an over-centralised state.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "lse.ac.uk",
+        "url": "https://blogs.lse.ac.uk/politicsandpolicy/civil-service-accountability-unstable-constitution-blick/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The principle of ministerial responsibility provides a pretext for political interference in civil service appointments.",
+       "reason": "It also allows senior civil servants to avoid accountability for administration.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "politicalquarterly.org.uk",
+        "url": "https://politicalquarterly.org.uk/blog/why-the-civil-service-is-failing-and-what-to-do-about-it/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "There is \"very little accountability\" in the senior civil service, particularly at cabinet secretary level.",
+       "reason": "This leads to opportunities for the system to not deliver what ministers have asked for.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "civilserviceworld.com",
+        "url": "https://www.civilserviceworld.com/professions/article/missions-drive-failed-because-the-system-said-no-exminister-tells-mps",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Whitehall's approach to managing performance is too weak at dealing with persistent underperformance.",
+       "reason": "Only 8% of civil servants agree that poor performance is well managed.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "smartthinking.org.uk",
+        "url": "https://smartthinking.org.uk/report/a-new-civil-service-performance-management-policy/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Quangos are a permanent layer of governance with potential democratic possibilities.",
+       "reason": "This challenges the stale debate that portrays them as inherently undemocratic, though problems with accountability exist.",
+       "side": "nuanced",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "northwindbook.com",
+        "url": "https://northwindbook.com/book/9780312216443",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Public services like the NHS raise long-term productivity through better health and skills but their delivery often adds layers of process admin and resistance",
+       "reason": "Higher union density and lack of competitive pressure slow automation and process redesign while technology shows potential gains in pilots but bureaucratic hurdles limit them",
+       "side": "nuanced",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@andoniAmu",
+        "url": "https://x.com/andoniAmu/status/2110697002438705630",
+        "date": "2026-10-15",
+        "tier": "C",
+        "verified": true
+       }
+      }
+     ],
+     "vocabulary": {
+      "keyTerms": [
+       "rewiring of the state",
+       "delivery-focused performance management",
+       "task forces",
+       "national school of government",
+       "digital transformation",
+       "GOV.UK app",
+       "democratic incoherence",
+       "over-centralised state",
+       "politicisation of the upper reaches of the civil service",
+       "permanent secretaries",
+       "Cabinet Secretary",
+       "Head of the Civil Service",
+       "arm's-length organisations",
+       "Non-Departmental Public Bodies (NDPBs)",
+       "quangos",
+       "ministerial responsibility",
+       "accounting officers",
+       "grade inflation",
+       "Rewiring the State study",
+       "Civil Service Code",
+       "Whitehall/Westminster reform",
+       "Next Steps agencification program",
+       "executive agency model",
+       "New Public Management (NPM) reforms",
+       "developmental appraisal system",
+       "civil service productivity",
+       "public sector productivity gap",
+       "accountability",
+       "sack civil servants",
+       "KPIs"
+      ],
+      "statutoryTerms": [
+       "Public Bodies Bill",
+       "Ministerial Code",
+       "Civil Service Order in Council 1995",
+       "Benn Act"
+      ],
+      "people": [
+       "Darren Jones",
+       "Andrew Blick",
+       "Sir Robin Mountfield",
+       "Francis Maude",
+       "Deborah Mabbett",
+       "Pat McFadden",
+       "Danny Kruger",
+       "Lord Maude of Horsham",
+       "Dame Antonia Romeo",
+       "Lord Gus O'Donnell",
+       "Alex Thomas",
+       "Sir Bob Kerslake",
+       "Sir Robin Butler",
+       "Mr Mottram",
+       "Jill Rutter",
+       "Gordon Brown",
+       "Sir Chris Wormald",
+       "Sir Olly Robbins",
+       "Jim Hacker",
+       "Sir Humphrey Appleby",
+       "Bernard Woolley",
+       "Margaret Thatcher",
+       "Priti Patel",
+       "Amber Rudd",
+       "Suella Braverman",
+       "Richard Tice",
+       "Rupert Lowe",
+       "Kemi Badenoch"
+      ],
+      "organisations": [
+       "Global Government Forum",
+       "Democratic Audit of the United Kingdom",
+       "Reform UK",
+       "Institute for Government (IfG)",
+       "Cabinet Office",
+       "Public Administration Committee (PASC)",
+       "Re:State",
+       "National Audit Office (NAO)",
+       "HR Champions",
+       "Bennett Institute of Public Policy",
+       "House of Lords Library",
+       "Political Quarterly",
+       "Serco",
+       "Orgvue",
+       "UK Security Vetting (UKSV)",
+       "Civil Service Commission",
+       "IPPR",
+       "Civil Service Employee Policy (CSEP)",
+       "VOA executive agency",
+       "Department for Education",
+       "Ofsted",
+       "DEFRA",
+       "Environment Agency",
+       "Home Office",
+       "UK Border Agency",
+       "ONS",
+       "DWP",
+       "NHS"
+      ],
+      "places": [
+       "Whitehall",
+       "Westminster",
+       "Canada",
+       "Australia",
+       "America (US)",
+       "London (Excel)",
+       "Gloucester",
+       "Southampton",
+       "Washington",
+       "UK",
+       "Northern Ireland"
+      ]
+     },
+     "dropped": [
+      {
+       "what": "Post by @grok on ONS data showing 0.7% and 0.9% productivity rises",
+       "reason": "no-argument",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @SiamaQadar criticizing Conservatives and Reform hypocrisy",
+       "reason": "pile-on",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @henryj17 linking to BBC article on productivity",
+       "reason": "no-argument",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @StevenScrase on Jenrick building legislation",
+       "reason": "no-argument",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @Bob730722 on civil servant headcount growth",
+       "reason": "no-argument",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @UNDPArabStates on Libya civil service reform agreement",
+       "reason": "no-argument",
+       "tier": "C"
+      }
+     ],
+     "merged": 0,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 39173,
+       "provider": "google",
+       "costUsd": 0.009720999999999999
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 13803,
+       "provider": "xai",
+       "costUsd": 0.10695495,
+       "postsFetched": 18,
+       "kept": 7,
+       "discarded": 6
+      }
+     ],
+     "failed": false,
+     "xCapExceeded": false,
+     "totalMs": 39185,
+     "totalCostUsd": 0.11667594999999999
+    }
+   },
+   "off": {
+    "summary": {
+     "ok": true,
+     "ms": 24675,
+     "costUsd": 0.1518,
+     "arguments": 28,
+     "bySide": {
+      "for": 16,
+      "against": 9,
+      "nuanced": 3
+     },
+     "byTier": {
+      "B": 14,
+      "C": 14
+     },
+     "undated": 13,
+     "unverifiedSource": 0,
+     "merged": 0,
+     "dropped": 0,
+     "droppedByReason": {},
+     "vocabulary": {
+      "keyTerms": 30,
+      "statutoryTerms": 7,
+      "people": 13,
+      "organisations": 17,
+      "places": 4
+     },
+     "xPosts": 24,
+     "xCapExceeded": false,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 24674,
+       "costUsd": 0.006628199999999999
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 17100,
+       "costUsd": 0.14519245
+      }
+     ]
+    },
+    "result": {
+     "version": 2,
+     "ranAt": "2026-10-21T23:18:45.652Z",
+     "noiseFilter": false,
+     "arguments": [
+      {
+       "claim": "The government aims to strengthen the Civil Service's delivery, accountability, innovation, and productivity.",
+       "reason": "To enhance public trust and confidence.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "www.gov.uk",
+        "url": "https://www.gov.uk/government/publications/review-into-the-organisation-performance-and-transformation-of-the-permanent-civil-service/review-into-the-organisation-performance-and-transformation-of-the-permanent-civil-service",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "A new performance management framework for senior civil servants is being introduced.",
+       "reason": "It includes dismissal for underperformance, seeking to boost productivity and ensure effective use of taxpayers' money.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globalgovernmentforum.com",
+        "url": "https://www.globalgovernmentforum.com/uk-civil-service-performance-review/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Poor performance management is a persistent issue in the Civil Service.",
+       "reason": "A single, rigorous performance management policy across Whitehall is needed to improve productivity and reward talent.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "re-state.co.uk",
+        "url": "https://re-state.co.uk/publications/a-new-civil-service-performance-management-policy/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Ministers are justified in demanding budget cuts and efficiencies.",
+       "reason": "This presents an opportunity to address poor performance management and grade inflation.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "smartthinking.org.uk",
+        "url": "https://smartthinking.org.uk/report/a-new-civil-service-performance-management-policy/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Reforming civil service recruitment and progression is necessary.",
+       "reason": "To enhance expertise, accountability, and institutional memory.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globalgovernmentforum.com",
+        "url": "https://www.globalgovernmentforum.com/rewired-for-delivery-what-ggf-evidence-tells-uk-civil-service-review-about-accountability-and-capability/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Lack of accountability to the public is at the heart of injustice because of quangos devolved assemblies and de-specialisation of civil service",
+       "reason": "Decisions no longer rest with Parliament but with unelected political appointees who cannot be challenged despite powers over lives",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@BurnsideWasTosh",
+        "url": "https://x.com/BurnsideWasTosh/status/1848396234630848898",
+        "date": "2024-10-21",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Blair and Brown started delegating powers to arm's length bodies and quangos and the 2010 Constitutional Governance and Reform Act removed ministers' ability to hire and fire civil servants",
+       "reason": "Until power and accountability restored to government nothing can improve",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@KathrynPorter26",
+        "url": "https://x.com/KathrynPorter26/status/2018594447353958843",
+        "date": "2026-02-03",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Quangos must be eliminated and control put back in hands of ministers because elected government can be held accountable by voters unlike unelected bodies",
+       "reason": "Quangos can request changes to their mandate with no one held accountable for decisions",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@KathrynPorter26",
+        "url": "https://x.com/KathrynPorter26/status/2050658344696680756",
+        "date": "2026-05-02",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "No government can change things without undoing Blair legacy of governance by quango stripping down civil service and putting decision making back into parliament",
+       "reason": "Reform have a plan to do that ensuring policies are enacted",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@Boo65864",
+        "url": "https://x.com/Boo65864/status/2062159726696169876",
+        "date": "2026-06-05",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Quangos are a deliberate system set up by politicians to abscond accountability to faceless bureaucrats while creating more civil service jobs so sack them all",
+       "reason": "No quango offers value for money and they fail constantly",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@Outoftweet123",
+        "url": "https://x.com/Outoftweet123/status/2064272667432108175",
+        "date": "2026-06-09",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Sack all the activists in civil service then things can get done",
+       "reason": "Civil service is the first thing to take on for reform",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@M_atty2",
+        "url": "https://x.com/M_atty2/status/2105782164365389893",
+        "date": "2026-10-01",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Whoever gets in needs to remove civil service barnacles working against the people or nothing can happen",
+       "reason": "Reform will do nothing without tackling entrenched civil service",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@FunknsteinBass",
+        "url": "https://x.com/FunknsteinBass/status/2107017521186611469",
+        "date": "2026-10-05",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Must ditch Northcote-Trevelyan model so ministers take responsibility and civil service heads are hired/fired based on results with hire and fire powers in departments",
+       "reason": "Current model prevents accountability and results delivery",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@cdgharvey",
+        "url": "https://x.com/cdgharvey/status/2110759919578452216",
+        "date": "2026-10-15",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Private sector pay and performance practices should be applied to civil service with pay linked to objective metrics from manifesto and bonuses for delivery",
+       "reason": "Link high pay to delivering metrics roll down incentives through every level so civil service hits goals or underperformers managed out",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@Integral_Views",
+        "url": "https://x.com/Integral_Views/status/2110844976170959262",
+        "date": "2026-10-15",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Reform Party 100-day plan targets civil service and quango headcounts and should add reducing number of quangos as bonfire is long overdue",
+       "reason": "Current system lacks accountability and needs slimming",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@top1percentile",
+        "url": "https://x.com/top1percentile/status/2112476002886787098",
+        "date": "2026-10-20",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Vast unaudited opaque management of unelected quangos who spend one third of UK budget must be addressed for huge savings",
+       "reason": "Quangos spend £376 billion last year bigger than welfare budget with no value for money or accountability",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@RobertJudd4",
+        "url": "https://x.com/RobertJudd4/status/2112959510818037854",
+        "date": "2026-10-21",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Previous quango reforms 'failed to spark' and the Cabinet Office was not enforcing the code for public appointments.",
+       "reason": "This indicates challenges in implementing reforms effectively.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "parliament.uk",
+        "url": "https://committees.parliament.uk/writtenevidence/119673/pdf/",
+        "date": "2021-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The traditional doctrine of civil servant accountability to ministers is outdated.",
+       "reason": "It allows both ministers and civil servants to evade responsibility.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "instituteforgovernment.org.uk",
+        "url": "https://www.instituteforgovernment.org.uk/article/comment/hodge-question-whom-are-civil-servants-accountable",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The expansion of the civil service and arm's-length bodies has eroded ministerial power.",
+       "reason": "This unbalances the Westminster system and reduces democratic accountability.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "policyexchange.org.uk",
+        "url": "https://policyexchange.org.uk/wp-content/uploads/2019/12/Whitehall-Reimagined.pdf",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The current system rewards 'survival' and maintaining relationships with politicians over boldness or delivery.",
+       "reason": "This hinders better performance.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globalgovernmentforum.com",
+        "url": "https://www.globalgovernmentforum.com/rewired-for-delivery-what-ggf-evidence-tells-uk-civil-service-review-about-accountability-and-capability/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Increased ministerial control over appointments and dismissals could politicise the civil service.",
+       "reason": "This would undermine its impartiality.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "parliament.uk",
+        "url": "https://lordslibrary.parliament.uk/politicisation-of-the-civil-service/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Institute for Government cautions against repeating 'failed ideas and narratives'.",
+       "reason": "They advise against constantly introducing new performance management processes for civil servants.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "instituteforgovernment.org.uk",
+        "url": "https://www.instituteforgovernment.org.uk/comment/civil-service-mcfadden-performance",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Civil servants widely perceive the existing performance management process as 'awful'.",
+       "reason": "This suggests deep-seated internal issues that make reform challenging.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "reddit.com",
+        "url": "https://www.reddit.com/r/TheCivilService/comments/1u5fana/performance_management/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "A new quango has been set up every week since Labour took office leading to more bureaucracy and red tape that dampens economic growth",
+       "reason": "Analysis shows 25 new arms-length bodies task forces and advisory councils since election adding extra regulation",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@sandieshoes",
+        "url": "https://x.com/sandieshoes/status/1872551732372205758",
+        "date": "2024-12-27",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Starmer added 27 new quangos in under a year stripping democracy from MPs and channeling over £400 billion through unelected civil servants who cannot be questioned",
+       "reason": "These groups make legislative decisions through statutory instruments with no vote and implement policies aligned with Agenda 2030",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@Artemisfornow",
+        "url": "https://x.com/Artemisfornow/status/1967494599880126942",
+        "date": "2025-09-15",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "A union representing senior civil servants views the new performance framework as reasonable.",
+       "reason": "However, it suggests it comes at a time of low morale and may be a political move to 'score political brownie points'.",
+       "side": "nuanced",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globalgovernmentforum.com",
+        "url": "https://www.globalgovernmentforum.com/uk-civil-service-performance-review/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The traditional doctrine asserts civil servants' political impartiality and accountability to ministers.",
+       "reason": "Ministers are then accountable to Parliament, with Accounting Officers directly accountable to Parliament for public money.",
+       "side": "nuanced",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "civilservant.org.uk",
+        "url": "https://www.civilservant.org.uk/westminster_model-homepage.html",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Civil service reforms transferring activity to executive agencies and quangos originated in 1980s Thatcher era and were extended by Blair",
+       "reason": "Thatcher's dislike of civil service and obsession with business model created the basis for current lack of accountability",
+       "side": "nuanced",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@SimonMagus",
+        "url": "https://x.com/SimonMagus/status/2112662131523076582",
+        "date": "2026-10-20",
+        "tier": "C",
+        "verified": true
+       }
+      }
+     ],
+     "vocabulary": {
+      "keyTerms": [
+       "Civil service reform",
+       "accountability",
+       "productivity",
+       "performance management",
+       "impartiality",
+       "meritocracy",
+       "bureaucracy",
+       "arm's-length bodies (ALBs)",
+       "quangos",
+       "ministerial control",
+       "democratic accountability",
+       "delivery",
+       "innovation",
+       "trust",
+       "confidence",
+       "grade inflation",
+       "politicisation",
+       "Westminster Model",
+       "Next Steps Agencies",
+       "Public Service Agreements (PSAs)",
+       "Prime Minister's Delivery Unit (PMDU)",
+       "Accounting Officers",
+       "performance improvement plans",
+       "core values (integrity, honesty, objectivity, impartiality)",
+       "quango",
+       "civil service",
+       "performance metrics",
+       "hire and fire",
+       "arm's length bodies",
+       "bonfire of the quangos"
+      ],
+      "statutoryTerms": [
+       "Civil Service Act (proposed)",
+       "Constitutional Reform and Governance Act 2010",
+       "Public Bodies Act (2011)",
+       "Civil Service (Management Functions) Act 1992",
+       "Civil Service Code",
+       "Civil Service Management Code",
+       "Constitutional Governance and Reform Act 2010"
+      ],
+      "people": [
+       "Dame Antonia Romeo",
+       "Lord Gus O'Donnell",
+       "Pat McFadden",
+       "Francis Maude",
+       "Margaret Hodge",
+       "Alex Thomas",
+       "Lord Maude of Horsham",
+       "Tony Blair",
+       "Gordon Brown",
+       "Starmer",
+       "Thatcher",
+       "Nigel Farage",
+       "Zia Yusuf"
+      ],
+      "organisations": [
+       "Institute for Government (IfG)",
+       "Policy Exchange",
+       "Global Government Forum",
+       "Public Administration and Constitutional Affairs Select Committee (PACAC)",
+       "Public Accounts Committee (PAC)",
+       "National Audit Office (NAO)",
+       "Re:State",
+       "Civil Service Commission",
+       "Cabinet Office",
+       "HM Treasury",
+       "UK Border Force",
+       "UK Border Agency",
+       "HMRC",
+       "Reform Party",
+       "quangos",
+       "civil service",
+       "Public Accounts Committee"
+      ],
+      "places": [
+       "Whitehall",
+       "Northern Ireland",
+       "UK",
+       "Britain"
+      ]
+     },
+     "dropped": [],
+     "merged": 0,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 24674,
+       "provider": "google",
+       "costUsd": 0.006628199999999999
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 17100,
+       "provider": "xai",
+       "costUsd": 0.14519245,
+       "postsFetched": 24,
+       "kept": 14,
+       "discarded": 0
+      }
+     ],
+     "failed": false,
+     "xCapExceeded": false,
+     "totalMs": 24675,
+     "totalCostUsd": 0.15182065
+    }
+   },
+   "onlyInOff": [
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "The government aims to strengthen the Civil Service's delivery, accountability, innovation, and productivity.",
+     "reason": "To enhance public trust and confidence."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "A new performance management framework for senior civil servants is being introduced.",
+     "reason": "It includes dismissal for underperformance, seeking to boost productivity and ensure effective use of taxpayers' money."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "Poor performance management is a persistent issue in the Civil Service.",
+     "reason": "A single, rigorous performance management policy across Whitehall is needed to improve productivity and reward talent."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "Ministers are justified in demanding budget cuts and efficiencies.",
+     "reason": "This presents an opportunity to address poor performance management and grade inflation."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "Reforming civil service recruitment and progression is necessary.",
+     "reason": "To enhance expertise, accountability, and institutional memory."
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Lack of accountability to the public is at the heart of injustice because of quangos devolved assemblies and de-specialisation of civil service",
+     "reason": "Decisions no longer rest with Parliament but with unelected political appointees who cannot be challenged despite powers over lives"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Blair and Brown started delegating powers to arm's length bodies and quangos and the 2010 Constitutional Governance and Reform Act removed ministers' ability to hire and fire civil servants",
+     "reason": "Until power and accountability restored to government nothing can improve"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Quangos must be eliminated and control put back in hands of ministers because elected government can be held accountable by voters unlike unelected bodies",
+     "reason": "Quangos can request changes to their mandate with no one held accountable for decisions"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "No government can change things without undoing Blair legacy of governance by quango stripping down civil service and putting decision making back into parliament",
+     "reason": "Reform have a plan to do that ensuring policies are enacted"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Quangos are a deliberate system set up by politicians to abscond accountability to faceless bureaucrats while creating more civil service jobs so sack them all",
+     "reason": "No quango offers value for money and they fail constantly"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Sack all the activists in civil service then things can get done",
+     "reason": "Civil service is the first thing to take on for reform"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Whoever gets in needs to remove civil service barnacles working against the people or nothing can happen",
+     "reason": "Reform will do nothing without tackling entrenched civil service"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Must ditch Northcote-Trevelyan model so ministers take responsibility and civil service heads are hired/fired based on results with hire and fire powers in departments",
+     "reason": "Current model prevents accountability and results delivery"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Private sector pay and performance practices should be applied to civil service with pay linked to objective metrics from manifesto and bonuses for delivery",
+     "reason": "Link high pay to delivering metrics roll down incentives through every level so civil service hits goals or underperformers managed out"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Reform Party 100-day plan targets civil service and quango headcounts and should add reducing number of quangos as bonfire is long overdue",
+     "reason": "Current system lacks accountability and needs slimming"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Vast unaudited opaque management of unelected quangos who spend one third of UK budget must be addressed for huge savings",
+     "reason": "Quangos spend £376 billion last year bigger than welfare budget with no value for money or accountability"
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "Previous quango reforms 'failed to spark' and the Cabinet Office was not enforcing the code for public appointments.",
+     "reason": "This indicates challenges in implementing reforms effectively."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The traditional doctrine of civil servant accountability to ministers is outdated.",
+     "reason": "It allows both ministers and civil servants to evade responsibility."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The expansion of the civil service and arm's-length bodies has eroded ministerial power.",
+     "reason": "This unbalances the Westminster system and reduces democratic accountability."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The current system rewards 'survival' and maintaining relationships with politicians over boldness or delivery.",
+     "reason": "This hinders better performance."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "Increased ministerial control over appointments and dismissals could politicise the civil service.",
+     "reason": "This would undermine its impartiality."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The Institute for Government cautions against repeating 'failed ideas and narratives'.",
+     "reason": "They advise against constantly introducing new performance management processes for civil servants."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "Civil servants widely perceive the existing performance management process as 'awful'.",
+     "reason": "This suggests deep-seated internal issues that make reform challenging."
+    },
+    {
+     "side": "against",
+     "tier": "C",
+     "claim": "A new quango has been set up every week since Labour took office leading to more bureaucracy and red tape that dampens economic growth",
+     "reason": "Analysis shows 25 new arms-length bodies task forces and advisory councils since election adding extra regulation"
+    },
+    {
+     "side": "against",
+     "tier": "C",
+     "claim": "Starmer added 27 new quangos in under a year stripping democracy from MPs and channeling over £400 billion through unelected civil servants who cannot be questioned",
+     "reason": "These groups make legislative decisions through statutory instruments with no vote and implement policies aligned with Agenda 2030"
+    },
+    {
+     "side": "nuanced",
+     "tier": "B",
+     "claim": "A union representing senior civil servants views the new performance framework as reasonable.",
+     "reason": "However, it suggests it comes at a time of low morale and may be a political move to 'score political brownie points'."
+    },
+    {
+     "side": "nuanced",
+     "tier": "B",
+     "claim": "The traditional doctrine asserts civil servants' political impartiality and accountability to ministers.",
+     "reason": "Ministers are then accountable to Parliament, with Accounting Officers directly accountable to Parliament for public money."
+    },
+    {
+     "side": "nuanced",
+     "tier": "C",
+     "claim": "Civil service reforms transferring activity to executive agencies and quangos originated in 1980s Thatcher era and were extended by Blair",
+     "reason": "Thatcher's dislike of civil service and obsession with business model created the basis for current lack of accountability"
+    }
+   ],
+   "ledgerRows": [
+    {
+     "pass": "orientation.x",
+     "model": "grok-4.3",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": 18,
+     "pence": "8.449",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "1.098",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.471",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.x",
+     "model": "grok-4.3",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": 24,
+     "pence": "11.470",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.738",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.324",
+     "purpose": "measurement"
+    }
+   ]
+  },
+  {
+   "ideaId": "2ef5358b-8961-49e7-b765-f328daa35316",
+   "title": "Streamlining Illegal Immigrant Deportation",
+   "inputChars": 650,
+   "on": {
+    "summary": {
+     "ok": true,
+     "ms": 31855,
+     "costUsd": 0.0746,
+     "arguments": 21,
+     "bySide": {
+      "for": 8,
+      "against": 12,
+      "nuanced": 1
+     },
+     "byTier": {
+      "B": 14,
+      "C": 7
+     },
+     "undated": 9,
+     "unverifiedSource": 0,
+     "merged": 0,
+     "dropped": 3,
+     "droppedByReason": {
+      "no-argument": 3
+     },
+     "vocabulary": {
+      "keyTerms": 30,
+      "statutoryTerms": 12,
+      "people": 27,
+      "organisations": 16,
+      "places": 16
+     },
+     "xPosts": 10,
+     "xCapExceeded": false,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 31853,
+       "costUsd": 0.008979599999999999
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 11182,
+       "costUsd": 0.06558745
+      }
+     ]
+    },
+    "result": {
+     "version": 2,
+     "ranAt": "2026-10-21T23:19:20.641Z",
+     "noiseFilter": true,
+     "arguments": [
+      {
+       "claim": "The Illegal Migration Act 2023 aims to deter unlawful migration.",
+       "reason": "It prevents people who arrive via \"irregular\" routes from making asylum claims and speeds up their removal.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "www.gov.uk",
+        "url": "https://www.gov.uk/government/collections/illegal-migration-bill",
+        "date": "2023-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Safety of Rwanda (Asylum and Immigration) Act 2024 was introduced to override legal obstacles.",
+       "reason": "It includes provisions of domestic law and most of the Human Rights Act 1998, and allows ministers to decide whether to comply with European Court of Human Rights interim measures.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "instituteforgovernment.org.uk",
+        "url": "https://www.instituteforgovernment.org.uk/explainer/rwanda-asylum-what-next-courts",
+        "date": "2024-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The UK government is pursuing a major expansion of its immigration detention capacity by up to 40%.",
+       "reason": "This expansion is to increase the removal of those with no right to remain in the UK.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "globaldetentionproject.org",
+        "url": "https://www.globaldetentionproject.org/united-kingdom-expanding-detention-capacity-despite-continued-evidence-of-harm",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The government proposes a new Independent Immigration Appeals Authority to replace existing tribunals.",
+       "reason": "This aims to reduce a significant backlog of asylum appeals and cut average waiting times.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "conservativepost.co.uk",
+        "url": "https://conservativepost.co.uk/tories-pledge-major-overhaul-of-immigration-appeals-system/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Home Office uses the Crown Development route for detention centre expansion.",
+       "reason": "They argue these projects are of \"national importance\" and \"urgency,\" allowing direct application to the Secretary of State.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "oxfordmail.co.uk",
+        "url": "https://www.oxfordmail.co.uk/news/26650830.campsfield-no-new-date-detention-centre-expansion-inquiry/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Deport illegal migrants instead of housing them in hotels",
+       "reason": "If worried about there being nowhere for the illegal migrants to go deport",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@KEdge23",
+        "url": "https://x.com/KEdge23/status/1957841842499695063",
+        "date": "2025-08-19",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Immediate arrest detention in centres on RAF bases and denied right to claim asylum or appeal",
+       "reason": "Migrants arriving on small boats would be arrested upon arrival detained in detention centres on RAF bases and denied the right to claim asylum or appeal deportation plan aims to build facilities for 24,000 people",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@CharlieSansom",
+        "url": "https://x.com/CharlieSansom/status/1960251095466246610",
+        "date": "2025-08-26",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "There are too many in the appeals process blocking deportations",
+       "reason": "over 22,000+ in the appeals process, 562 high court cases pending, they revoke more than deport with endless appeals",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@md_filmdesign",
+        "url": "https://x.com/md_filmdesign/status/2111770104144793622",
+        "date": "2026-10-18",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Illegal Migration Act 2023 is criticised for blocking legal challenges to removal decisions.",
+       "reason": "This is seen as a worrying precedent for the rule of law and fundamental human rights.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "ibanet.org",
+        "url": "https://www.ibanet.org/Immigration-rule-of-law-concerns-raised-over-UK-asylum-appeals-plan",
+        "date": "2023-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Illegal Migration Act 2023 is incompatible with the 1951 Refugee Convention.",
+       "reason": "It mandates removal regardless of protection claims, increasing the risk of refoulement.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "rescue.org",
+        "url": "https://www.rescue.org/uk/article/what-illegal-migration-bill-and-what-does-it-mean-refugees",
+        "date": "2023-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Expanding immigration detention is a cruel and inhumane punishment.",
+       "reason": "It particularly affects vulnerable migrants and asylum seekers who have experienced trauma, and it hinders access to necessary healthcare.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "righttoremain.org.uk",
+        "url": "https://righttoremain.org.uk/expanding-immigration-detention-harms-all-of-us-so-we-all-need-to-come-together-to-prevent-it-jcwi-and-asylum-matters-join-the-fight-to-stop-the-governments-detention-expansion-plan/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Past detention centres like Haslar IRC were closed due to reports of mistreatment and inhumane conditions.",
+       "reason": "One report described \"some of the worst accommodation in the immigration estate.\"",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "helenbamber.org",
+        "url": "https://www.helenbamber.org/resources/reportsbriefings/step-wrong-direction-governments-plan-increase-immigration-detention-can",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Many survivors of trafficking are unlawfully detained, often indefinitely, in immigration removal centres.",
+       "reason": "The UK is the only EU member state without a time limit on detention.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "duncanlewis.co.uk",
+        "url": "https://www.duncanlewis.co.uk/Unlawful-Detention.html",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Plans for a new appeals body staffed by adjudicators without legal qualifications raise concerns.",
+       "reason": "These concerns include an increased risk of legal error and undermined access to justice due to additional appeal costs.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "ibanet.org",
+        "url": "https://www.ibanet.org/Immigration-rule-of-law-concerns-raised-over-UK-asylum-appeals-plan",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Local councillors and campaigners oppose the Crown Development route.",
+       "reason": "It bypasses local planning authorities, providing insufficient space for local voices and lacking transparency.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "oxfordmail.co.uk",
+        "url": "https://www.oxfordmail.co.uk/news/26650830.campsfield-no-new-date-detention-centre-expansion-inquiry/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Reform UK's proposal to site detention centres based on voting patterns, prioritising Green-held constituencies, is condemned.",
+       "reason": "It is described as political retribution and an \"obscene and deeply alarming development.\"",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "courthousenews.com",
+        "url": "https://www.courthousenews.com/british-plan-for-migrant-detention-centers-in-green-voting-areas-causes-uproar/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The policy may not stop the boats or save public money",
+       "reason": "Home Office admits that the policy may not stop the boats or save the public money so invest instead in rapid processing and a centre in France",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@dave43law",
+        "url": "https://x.com/dave43law/status/1673430145716060160",
+        "date": "2023-06-26",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Powers to prohibit temporary dwellings can be used to halt proposed asylum centres",
+       "reason": "Councillor says powers granted to county councils permits them to prohibit temporary dwellings and this reserved power can be used to halt a proposed asylum centre",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@griptmedia",
+        "url": "https://x.com/griptmedia/status/1847628276740640896",
+        "date": "2024-10-19",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Government has to process thousands of applications at their own cost while claimants live in communities and can appeal rejections",
+       "reason": "By the time we can deport they must be found all this is at our dime they can also appeal those rejections",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@kwets11",
+        "url": "https://x.com/kwets11/status/2107430141542449410",
+        "date": "2026-10-06",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Fast tracking appeals by accepting them is creative accounting and a disgrace",
+       "reason": "refuse them first gave them right to appeal this cleared the immigration backlog but increased the appeal backlog by 270% they then fast tracked appeals by accepting the appeal",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@OptimisticLyon",
+        "url": "https://x.com/OptimisticLyon/status/2112556340224622979",
+        "date": "2026-10-20",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Existing legislation, including the Human Rights Act 1998 and the European Convention on Human Rights, has historically made it difficult to deport illegal migrants and foreign criminals.",
+       "reason": "Judges interpret human rights legislation.",
+       "side": "nuanced",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "amnesty.org.uk",
+        "url": "https://www.amnesty.org.uk/knowledge-hub/all-resources/deportation-powers/",
+        "date": "1998-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      }
+     ],
+     "vocabulary": {
+      "keyTerms": [
+       "unlawful entrants",
+       "immigration detention capacity",
+       "immigration removal centres (IRCs)",
+       "detention estate",
+       "asylum claims",
+       "refoulement",
+       "safe third country",
+       "human rights protections",
+       "European Convention on Human Rights (ECHR)",
+       "Illegal Migration Bill",
+       "Illegal Migration Act",
+       "small boat arrivals",
+       "asylum ban",
+       "Migration and Economic Development Partnership (Rwanda Plan)",
+       "interim measures (rule 39)",
+       "National Referral Mechanism (NRM)",
+       "modern slavery safeguards",
+       "unlawful detention",
+       "Hardial Singh Principles",
+       "administrative removal",
+       "overstayers",
+       "indefinite detention",
+       "immigration bail",
+       "Crown Development route",
+       "planning inquiry",
+       "detention centres",
+       "appeals process",
+       "illegal migrants",
+       "illegal immigrants",
+       "deport"
+      ],
+      "statutoryTerms": [
+       "Illegal Migration Act 2023",
+       "Human Rights Act 1998",
+       "European Convention on Human Rights (ECHR)",
+       "1951 Refugee Convention",
+       "Immigration Act 1971",
+       "UK Borders Act 2007",
+       "Immigration Act 2014",
+       "Safety of Rwanda (Asylum and Immigration) Act 2024",
+       "Town and Country Planning Act 1990 (Section 187B)",
+       "Immigration and Asylum Bill",
+       "Immigration and Asylum Act 1999 (Section 254)",
+       "Fenland District Council Local Plan (Policy LP6)"
+      ],
+      "people": [
+       "Home Secretary",
+       "Reform UK",
+       "Nigel Farage",
+       "Zia Yusuf",
+       "Amnesty International UK",
+       "Steve Valdez-Symonds",
+       "Joelle Grogan",
+       "United Nations High Commissioner for Refugees",
+       "High Court",
+       "Court of Appeal",
+       "Supreme Court",
+       "Rishi Sunak",
+       "Suella Braverman",
+       "Unseen UK",
+       "Institute for Government",
+       "Migration Observatory",
+       "Right to Remain",
+       "Joint Council for the Welfare of Immigrants (JCWI)",
+       "Asylum Matters",
+       "Lavanya Pallapi",
+       "Restore Britain",
+       "Rupert Lowe",
+       "Bar Council of England and Wales",
+       "Ian McDougall",
+       "Conservative Party",
+       "Home Office",
+       "Yvette Cooper"
+      ],
+      "organisations": [
+       "Reform UK",
+       "Amnesty International UK",
+       "United Nations High Commissioner for Refugees",
+       "Unseen UK",
+       "Institute for Government",
+       "Migration Observatory",
+       "Right to Remain",
+       "Joint Council for the Welfare of Immigrants (JCWI)",
+       "Asylum Matters",
+       "Restore Britain",
+       "Bar Council of England and Wales",
+       "Conservative Party",
+       "Policy Exchange",
+       "Labour government",
+       "Fairview Hotels",
+       "LGH Hotels"
+      ],
+      "places": [
+       "Campsfield House Immigration Removal Centre (Oxfordshire)",
+       "Haslar IRC (Hampshire)",
+       "Rwanda",
+       "English Channel",
+       "Morton Hall detention centre (Lincolnshire)",
+       "Yarl's Wood",
+       "Cherwell District Council (Banbury)",
+       "Great Yarmouth Borough Council",
+       "Bell Hotel (Epping)",
+       "Epping Forest District Council",
+       "Ipswich BC",
+       "Fenland District Council",
+       "Brussels (Belgium)",
+       "UK",
+       "France",
+       "RAF bases"
+      ]
+     },
+     "dropped": [
+      {
+       "what": "Post by @sundersays about transcript and Home Sec not defending proposals",
+       "reason": "no-argument",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @grok about South Africa asylum claims",
+       "reason": "no-argument",
+       "tier": "C"
+      },
+      {
+       "what": "Post by @grok about Conservative motion on ECHR and asylum seekers",
+       "reason": "no-argument",
+       "tier": "C"
+      }
+     ],
+     "merged": 0,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 31853,
+       "provider": "google",
+       "costUsd": 0.008979599999999999
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 11182,
+       "provider": "xai",
+       "costUsd": 0.06558745,
+       "postsFetched": 10,
+       "kept": 7,
+       "discarded": 3
+      }
+     ],
+     "failed": false,
+     "xCapExceeded": false,
+     "totalMs": 31855,
+     "totalCostUsd": 0.07456705000000001
+    }
+   },
+   "off": {
+    "summary": {
+     "ok": true,
+     "ms": 27894,
+     "costUsd": 0.0731,
+     "arguments": 22,
+     "bySide": {
+      "for": 10,
+      "against": 12
+     },
+     "byTier": {
+      "B": 14,
+      "C": 8
+     },
+     "undated": 9,
+     "unverifiedSource": 0,
+     "merged": 0,
+     "dropped": 0,
+     "droppedByReason": {},
+     "vocabulary": {
+      "keyTerms": 29,
+      "statutoryTerms": 13,
+      "people": 23,
+      "organisations": 23,
+      "places": 13
+     },
+     "xPosts": 10,
+     "xCapExceeded": false,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 27893,
+       "costUsd": 0.0089789
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 12096,
+       "costUsd": 0.0641214
+      }
+     ]
+    },
+    "result": {
+     "version": 2,
+     "ranAt": "2026-10-21T23:19:48.535Z",
+     "noiseFilter": false,
+     "arguments": [
+      {
+       "claim": "The Illegal Migration Act 2023 aims to stop illegal migration into the UK.",
+       "reason": "It removes the incentive for dangerous small boat crossings, ensuring those who arrive illegally cannot stay, thereby deterring dangerous journeys and disrupting people smugglers' business models.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "www.gov.uk",
+        "url": "https://www.gov.uk/government/collections/illegal-migration-bill",
+        "date": "2023-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Illegal Migration Act 2023 will speed up the removal of those with no right to be in the UK.",
+       "reason": "It changes the law so those who arrive illegally will be detained and promptly removed to their home country or a safe third country.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "www.gov.uk",
+        "url": "https://www.gov.uk/government/collections/illegal-migration-bill",
+        "date": "2023-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The approach taken by the Safety of Rwanda (Asylum and Immigration) Bill is justified.",
+       "reason": "The government argues it is justified as a matter of parliamentary sovereignty, constitutional propriety, UK law, and the UK's international obligations.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "www.gov.uk",
+        "url": "https://www.gov.uk/government/publications/the-safety-of-rwanda-asylum-and-immigration-bill-factsheets/safety-of-rwanda-asylum-and-immigration-bill-factsheet-accessible",
+        "date": "2023-01-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Overhauling the asylum appeals system will reduce the backlog, speed up removals, and cut costs.",
+       "reason": "The government proposes 'professional adjudicators' and a 24-week target for decisions, and a petition calls for ending legal aid for failed claims and immediate removal after refusal.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "theguardian.com",
+        "url": "https://www.theguardian.com/uk-news/2025/aug/24/asylum-appeals-process-overhaul-home-office",
+        "date": "2025-08-24",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Tougher border enforcement and mass deportations are necessary.",
+       "reason": "Illegal migration places growing pressure on housing, welfare, and public services.",
+       "side": "for",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "youtube.com",
+        "url": "https://www.youtube.com/watch?v=oFWzvRe8PBI",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Immediate arrest and detention of small boat arrivals in new centres on RAF bases with no asylum claims or appeals will enable swift deportation",
+       "reason": "Build facilities for 24,000 within 18 months at £2.5 billion to process and remove",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@CharlieSansom",
+        "url": "https://x.com/CharlieSansom/status/1960251095466246610",
+        "date": "2025-08-26",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Lock illegal immigrants in detention centres until origin identified then deport with no benefits or services",
+       "reason": "Island geography makes turning boats around simple and current lax rules encourage arrivals",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@mikeerwydd1968",
+        "url": "https://x.com/mikeerwydd1968/status/1978343757134037021",
+        "date": "2025-10-15",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Universal detention estate plus mass deportations up to 150,000 per year plus repeal of Human Rights Act and ECHR via Great Clarification Act will clear illegal population",
+       "reason": "Current legal barriers block removals so overhaul legislation and deny access to services",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@RestoreBritHil",
+        "url": "https://x.com/RestoreBritHil/status/2110737035556192707",
+        "date": "2026-10-15",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Rupert Lowe’s plan for 30,000 detention places will achieve deportations",
+       "reason": "Dedicated estate for processing and removal creates certainty of detention and return",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@Dnewton99886451",
+        "url": "https://x.com/Dnewton99886451/status/2111479786786959764",
+        "date": "2026-10-17",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "30k place detention estate for illegal arrivals will deliver deterrence through certainty of detention and removal",
+       "reason": "Clear message that illegal entry leads to immediate detention and deportation stops the boats",
+       "side": "for",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@hull_restore",
+        "url": "https://x.com/hull_restore/status/2112196472884101622",
+        "date": "2026-10-19",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Illegal Migration Act and similar policies breach the UK's international human rights and refugee law commitments.",
+       "reason": "They fail to provide due process and individualised risk assessments, violating the 1951 Refugee Convention and the European Convention on Human Rights (ECHR).",
+       "side": "against",
+       "repetitions": 1,
+       "undated": false,
+       "source": {
+        "label": "ohchr.org",
+        "url": "https://www.ohchr.org/en/press-releases/2023/07/un-experts-urge-uk-halt-implementation-illegal-immigration-bill",
+        "date": "2023-07-01",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Safety of Rwanda Bill still puts people's lives at risk and undermines the UK's international obligations.",
+       "reason": "Evidence indicates Rwanda is not a safe country for forced removal, and the Supreme Court found the previous Rwanda Memorandum of Understanding unlawful due to the risk of refoulement.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "publiclawproject.org.uk",
+        "url": "https://publiclawproject.org.uk/resources/why-mps-must-oppose-the-safety-of-rwanda-bill/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Plans to replace the First-Tier Tribunal with an Independent Immigration Appeals Authority raise rule of law concerns.",
+       "reason": "Adjudicators without legal qualifications could increase the risk of legal error, impacting due process and independent decision-making.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "ibanet.org",
+        "url": "https://www.ibanet.org/Immigration-rule-of-law-concerns-raised-over-UK-asylum-appeals-plan",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Illegal Migration Bill is an attack on judicial scrutiny.",
+       "reason": "It undermines the constitutional separation of powers by limiting the ability to challenge detention and appeal deportation decisions, and gives the Home Secretary power to overrule interim measures from the European Court of Human Rights (ECtHR).",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "libertyhumanrights.org.uk",
+        "url": "https://www.libertyhumanrights.org.uk/issue/explained-anti-refugee-bill/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The Illegal Migration Act bans support for some victims of human trafficking and modern slavery.",
+       "reason": "This could potentially trap them in exploitation and treat them as criminals.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "unseenuk.org",
+        "url": "https://www.unseenuk.org/illegal-migration-bill/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Mass detention is an 'inhumane, extortionate and completely pointless' gimmick.",
+       "reason": "Deterrents often fail against the desperation of people making dangerous journeys.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "ein.org.uk",
+        "url": "https://www.ein.org.uk/news/minister-and-labour-mps-stress-legal-duties-commons-debates-petitions-end-asylum-support-and",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The expansion of immigration detention is a cruel, inhumane, costly, and unnecessary solution.",
+       "reason": "It causes profound and often irreparable harm.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "righttoremain.org.uk",
+        "url": "https://righttoremain.org.uk/expanding-immigration-detention-harms-all-of-us-so-we-all-need-to-come-together-to-prevent-it-jcwi-and-asylum-matters-join-the-fight-to-stop-the-governments-detention-expansion-plan/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Reform UK's proposal to place migrant detention centres in Green-voting areas is an 'obscene and deeply alarming development'.",
+       "reason": "It risks turning immigration policy into political punishment and coerces areas against voting for certain parties.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "courthousenews.com",
+        "url": "https://www.courthousenews.com/british-plan-for-migrant-detention-centers-in-green-voting-areas-causes-uproar/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "The 'Hostile Environment' policies make life difficult for undocumented migrants.",
+       "reason": "They cut them off from fundamental services and undermine trust, turning professionals into immigration enforcers.",
+       "side": "against",
+       "repetitions": 1,
+       "undated": true,
+       "source": {
+        "label": "jcwi.org.uk",
+        "url": "https://jcwi.org.uk/reportsbriefings/the-hostile-environment-explained/",
+        "date": "",
+        "tier": "B",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Government opening new migrant centres without telling MPs shows no real intent to stop boats or deport",
+       "reason": "Low 4% removal rate and contracts to 2039 prove policy is just managing anger",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@JChimirie66677",
+        "url": "https://x.com/JChimirie66677/status/2070210148744983038",
+        "date": "2026-06-25",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Relocating illegal arrivals from third world into new sites while closing hotels shows ongoing settlement",
+       "reason": "Home Office announcements prove policy embeds rather than removes",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@liz_churchill10",
+        "url": "https://x.com/liz_churchill10/status/2070652057237795269",
+        "date": "2026-06-26",
+        "tier": "C",
+        "verified": true
+       }
+      },
+      {
+       "claim": "Endless appeals and court cases mean rejected asylum seekers stay in communities at public expense instead of being deported",
+       "reason": "Over 22,000 in appeals process and 562 high court cases pending so system fails to remove",
+       "side": "against",
+       "undated": false,
+       "repetitions": 1,
+       "source": {
+        "label": "@md_filmdesign",
+        "url": "https://x.com/md_filmdesign/status/2111770104144793622",
+        "date": "2026-10-18",
+        "tier": "C",
+        "verified": true
+       }
+      }
+     ],
+     "vocabulary": {
+      "keyTerms": [
+       "illegal immigrants",
+       "unlawful entry",
+       "detention centres",
+       "appeals",
+       "deportation",
+       "asylum",
+       "small boat crossings",
+       "irregular routes",
+       "safe third country",
+       "refoulement",
+       "modern slavery safeguards",
+       "Hostile Environment",
+       "offshore detention",
+       "parliamentary sovereignty",
+       "constitutional propriety",
+       "judicial scrutiny",
+       "rule of law",
+       "interim measures (Rule 39 order)",
+       "protection status",
+       "indefinite leave to remain",
+       "earned settlement",
+       "asylum ban",
+       "detention estate",
+       "mass deportations",
+       "small boats",
+       "illegal arrivals",
+       "asylum claims",
+       "appeals process",
+       "removal rate"
+      ],
+      "statutoryTerms": [
+       "Illegal Migration Act 2023",
+       "Safety of Rwanda (Asylum and Immigration) Bill",
+       "Nationality and Borders Act 2022",
+       "New Plan for Immigration",
+       "Immigration Acts",
+       "1951 Refugee Convention",
+       "European Convention on Human Rights (ECHR)",
+       "Good Friday Agreement",
+       "Migration Act 1958 (Australia)",
+       "Immigration and Asylum Bill 2026",
+       "Human Rights Act",
+       "ECHR",
+       "Great Clarification Act"
+      ],
+      "people": [
+       "Home Secretary",
+       "Suella Braverman",
+       "Yvette Cooper",
+       "Shabana Mahmood",
+       "Nigel Farage",
+       "Zia Yusuf",
+       "James Francis Whitehead",
+       "Steve Valdez-Symonds",
+       "Jerome Phelps",
+       "John Lamont MP",
+       "Rupert Lowe",
+       "Tony Vaughan",
+       "Bell Ribeiro-Addy",
+       "Peter Bedford",
+       "Miatta Fahnbulleh",
+       "Angela Rayner",
+       "Ali Ahmadi",
+       "Catherine Barnard",
+       "Fiona Costello",
+       "Greg Abbott",
+       "Donald Trump",
+       "PeterBleksley",
+       "Lindsay Hoyle"
+      ],
+      "organisations": [
+       "Amnesty International UK",
+       "Public Law Project (PLP)",
+       "Bar Council of England and Wales",
+       "JUSTICE",
+       "Immigration Lawyers Practitioners Association (ILPA)",
+       "Freedom from Torture",
+       "Unseen UK",
+       "Right to Remain",
+       "Joint Council for the Welfare of Immigrants (JCWI)",
+       "Asylum Matters",
+       "Quakers in Britain",
+       "Migration Observatory",
+       "House of Commons",
+       "House of Lords",
+       "Supreme Court",
+       "European Court of Human Rights (ECtHR)",
+       "Westminster Hall",
+       "National Referral Mechanism (NRM)",
+       "First-tier Tribunal (Immigration and Asylum Chamber)",
+       "Independent Immigration Appeals Authority",
+       "Restore Britain",
+       "Home Office",
+       "UK Home Office"
+      ],
+      "places": [
+       "Campsfield Immigration Removal Centre",
+       "Haslar Immigration Removal Centre",
+       "Morton Hall detention centre",
+       "Yarl's Wood",
+       "Rwanda",
+       "Australia",
+       "Albania",
+       "Afghanistan",
+       "Iran",
+       "English Channel",
+       "Northern Ireland",
+       "RAF bases",
+       "UK"
+      ]
+     },
+     "dropped": [],
+     "merged": 0,
+     "calls": [
+      {
+       "call": "v2-web",
+       "ok": true,
+       "ms": 27893,
+       "provider": "google",
+       "costUsd": 0.0089789
+      },
+      {
+       "call": "v2-x",
+       "ok": true,
+       "ms": 12096,
+       "provider": "xai",
+       "costUsd": 0.0641214,
+       "postsFetched": 10,
+       "kept": 8,
+       "discarded": 0
+      }
+     ],
+     "failed": false,
+     "xCapExceeded": false,
+     "totalMs": 27894,
+     "totalCostUsd": 0.0731003
+    }
+   },
+   "onlyInOff": [
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "The Illegal Migration Act 2023 aims to stop illegal migration into the UK.",
+     "reason": "It removes the incentive for dangerous small boat crossings, ensuring those who arrive illegally cannot stay, thereby deterring dangerous journeys and disrupting people smugglers' business models."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "The Illegal Migration Act 2023 will speed up the removal of those with no right to be in the UK.",
+     "reason": "It changes the law so those who arrive illegally will be detained and promptly removed to their home country or a safe third country."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "The approach taken by the Safety of Rwanda (Asylum and Immigration) Bill is justified.",
+     "reason": "The government argues it is justified as a matter of parliamentary sovereignty, constitutional propriety, UK law, and the UK's international obligations."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "Overhauling the asylum appeals system will reduce the backlog, speed up removals, and cut costs.",
+     "reason": "The government proposes 'professional adjudicators' and a 24-week target for decisions, and a petition calls for ending legal aid for failed claims and immediate removal after refusal."
+    },
+    {
+     "side": "for",
+     "tier": "B",
+     "claim": "Tougher border enforcement and mass deportations are necessary.",
+     "reason": "Illegal migration places growing pressure on housing, welfare, and public services."
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Immediate arrest and detention of small boat arrivals in new centres on RAF bases with no asylum claims or appeals will enable swift deportation",
+     "reason": "Build facilities for 24,000 within 18 months at £2.5 billion to process and remove"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Lock illegal immigrants in detention centres until origin identified then deport with no benefits or services",
+     "reason": "Island geography makes turning boats around simple and current lax rules encourage arrivals"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Universal detention estate plus mass deportations up to 150,000 per year plus repeal of Human Rights Act and ECHR via Great Clarification Act will clear illegal population",
+     "reason": "Current legal barriers block removals so overhaul legislation and deny access to services"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "Rupert Lowe’s plan for 30,000 detention places will achieve deportations",
+     "reason": "Dedicated estate for processing and removal creates certainty of detention and return"
+    },
+    {
+     "side": "for",
+     "tier": "C",
+     "claim": "30k place detention estate for illegal arrivals will deliver deterrence through certainty of detention and removal",
+     "reason": "Clear message that illegal entry leads to immediate detention and deportation stops the boats"
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The Illegal Migration Act and similar policies breach the UK's international human rights and refugee law commitments.",
+     "reason": "They fail to provide due process and individualised risk assessments, violating the 1951 Refugee Convention and the European Convention on Human Rights (ECHR)."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The Safety of Rwanda Bill still puts people's lives at risk and undermines the UK's international obligations.",
+     "reason": "Evidence indicates Rwanda is not a safe country for forced removal, and the Supreme Court found the previous Rwanda Memorandum of Understanding unlawful due to the risk of refoulement."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "Plans to replace the First-Tier Tribunal with an Independent Immigration Appeals Authority raise rule of law concerns.",
+     "reason": "Adjudicators without legal qualifications could increase the risk of legal error, impacting due process and independent decision-making."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The Illegal Migration Bill is an attack on judicial scrutiny.",
+     "reason": "It undermines the constitutional separation of powers by limiting the ability to challenge detention and appeal deportation decisions, and gives the Home Secretary power to overrule interim measures from the European Court of Human Rights (ECtHR)."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The Illegal Migration Act bans support for some victims of human trafficking and modern slavery.",
+     "reason": "This could potentially trap them in exploitation and treat them as criminals."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "Mass detention is an 'inhumane, extortionate and completely pointless' gimmick.",
+     "reason": "Deterrents often fail against the desperation of people making dangerous journeys."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The expansion of immigration detention is a cruel, inhumane, costly, and unnecessary solution.",
+     "reason": "It causes profound and often irreparable harm."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "Reform UK's proposal to place migrant detention centres in Green-voting areas is an 'obscene and deeply alarming development'.",
+     "reason": "It risks turning immigration policy into political punishment and coerces areas against voting for certain parties."
+    },
+    {
+     "side": "against",
+     "tier": "B",
+     "claim": "The 'Hostile Environment' policies make life difficult for undocumented migrants.",
+     "reason": "They cut them off from fundamental services and undermine trust, turning professionals into immigration enforcers."
+    },
+    {
+     "side": "against",
+     "tier": "C",
+     "claim": "Government opening new migrant centres without telling MPs shows no real intent to stop boats or deport",
+     "reason": "Low 4% removal rate and contracts to 2039 prove policy is just managing anger"
+    },
+    {
+     "side": "against",
+     "tier": "C",
+     "claim": "Relocating illegal arrivals from third world into new sites while closing hotels shows ongoing settlement",
+     "reason": "Home Office announcements prove policy embeds rather than removes"
+    },
+    {
+     "side": "against",
+     "tier": "C",
+     "claim": "Endless appeals and court cases mean rejected asylum seekers stay in communities at public expense instead of being deported",
+     "reason": "Over 22,000 in appeals process and 562 high court cases pending so system fails to remove"
+    }
+   ],
+   "ledgerRows": [
+    {
+     "pass": "orientation.x",
+     "model": "grok-4.3",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": 10,
+     "pence": "5.181",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.893",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.470",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.x",
+     "model": "grok-4.3",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": 10,
+     "pence": "5.066",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.746",
+     "purpose": "measurement"
+    },
+    {
+     "pass": "orientation.web",
+     "model": "gemini-2.5-flash",
+     "failed": false,
+     "toolCalls": null,
+     "postsFetched": null,
+     "pence": "0.441",
+     "purpose": "measurement"
+    }
+   ]
+  }
+ ]
+}
