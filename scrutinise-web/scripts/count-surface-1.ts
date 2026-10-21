@@ -7,6 +7,9 @@
  * of age.
  */
 import { searchLegislationViaGateway } from '../lib/lex/gateway-legacy'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: this script's name carries none of the prefixes the ledger infers a purpose from, so its model spend was unattributed.
+enterPurpose('measurement')
 export {}
 const QUERIES = [
   'sewage discharge water company penalties',

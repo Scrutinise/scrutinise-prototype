@@ -209,6 +209,10 @@
     "check:lex-26s2-browser": "tsx --env-file=.env scripts/check-lex-26s2-browser.ts",
     "check:lex-9oct": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-9oct.tsx",
     "check:lex-walk-8oct": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-walk-8oct.ts",
+    "check:amending-text": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-amending-text.ts",
+    "report:amending-text": "tsx --env-file=.env --tsconfig tsconfig.json scripts/report-amending-text.ts",
+    "check:search-purpose": "tsx --tsconfig tsconfig.json scripts/check-search-purpose.ts",
+    "check:search-161": "tsx --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-search-161.ts",
     "verify:lex-26q-ui": "tsx scripts/verify-lex-26q-ui.tsx",
     "check:lex-26h": "tsx --env-file=.env scripts/check-lex-26h.ts"
   },

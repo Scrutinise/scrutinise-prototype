@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { describeIssues } from '@/lib/api-rejection'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { sendLegislationGuideSuggestionEmail } from '@/lib/email'
@@ -49,7 +50,11 @@ export async function POST(req: NextRequest) {
   }
   const parsed = BodySchema.safeParse(raw)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    const { message, rejected } = describeIssues(parsed.error.issues, {
+      action: 'Sending your suggestion',
+      labels: { name: 'your name', email: 'your email address', credentials: 'your credentials', sectionKey: 'the section', suggestion: 'your suggestion' },
+    })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
   }
   const { name, email, credentials, sectionKey, suggestion } = parsed.data
 

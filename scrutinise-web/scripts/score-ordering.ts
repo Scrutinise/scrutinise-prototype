@@ -33,6 +33,9 @@
 import { runSearch } from '../lib/lex/search-gateway'
 import { PREFERENCES, PREFERENCE_QUERIES, type GoldPreference, type PrefSide } from './gold-preferences'
 import type { SearchResult } from '../lib/lex/page1-config'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: this script's name carries none of the prefixes the ledger infers a purpose from, so its model spend was unattributed.
+enterPurpose('measurement')
 
 const K = parseInt(process.env.ORDER_K ?? '20', 10)
 const LIMIT = parseInt(process.env.ORDER_LIMIT ?? '16', 10)

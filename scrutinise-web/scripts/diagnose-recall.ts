@@ -51,6 +51,9 @@ import type { SearchResult } from '../lib/lex/page1-config'
 // retrieval flags unset, a result that read as V36 having broken routing. It now
 // refuses to run degraded, and prints the configuration beside the number.
 import { assertRetrievalConfig, resolvedConfigLine } from '../lib/lex/harness-preflight'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: this script's name carries none of the prefixes the ledger infers a purpose from, so its model spend was unattributed.
+enterPurpose('measurement')
 
 const L = (() => { const i = process.argv.indexOf('--limit'); return i >= 0 ? parseInt(process.argv[i + 1], 10) : 16 })()
 const K = parseInt(process.env.ORDER_K ?? '20', 10)

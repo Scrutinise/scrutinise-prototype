@@ -21,6 +21,9 @@
  *     npx tsx --env-file=.env --tsconfig tsconfig.json scripts/v36-verify-recovered.ts
  */
 import { runSearch } from '../lib/lex/search-gateway'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: this script's name carries none of the prefixes the ledger infers a purpose from, so its model spend was unattributed.
+enterPurpose('measurement')
 
 type Target = { label: string; keywords: string[]; expectIdLike: RegExp }
 

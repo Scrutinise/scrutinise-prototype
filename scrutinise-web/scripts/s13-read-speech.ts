@@ -21,6 +21,9 @@
 import { prisma } from '../lib/prisma'
 import { r2Get } from '../lib/r2'
 import { SCOREABLE_V2 } from './gold/gold-v2-set'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: neutral script name; state the purpose so any spend is not left without one.
+enterPurpose('measurement')
 
 export {}
 

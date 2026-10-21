@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { describeIssues } from '@/lib/api-rejection'
 import { searchLegislation } from '@/lib/search'
 import { searchLegislationViaGateway } from '@/lib/lex/gateway-legacy'
 
@@ -27,7 +28,11 @@ export async function POST(req: Request) {
 
   const parsed = SearchSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    const { message, rejected } = describeIssues(parsed.error.issues, {
+      action: 'The search',
+      labels: { q: 'the search words', filters: 'the filters', limit: 'the number of results', offset: 'the page offset', minRank: 'the minimum relevance' },
+    })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
   }
 
   const { q, filters, limit, offset, minRank } = parsed.data

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { describeIssues } from '@/lib/api-rejection'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { authorizeIdea } from '@/lib/lex/authz'
@@ -36,7 +37,13 @@ export async function POST(req: Request, { params }: Params) {
   let raw: unknown
   try { raw = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = BodySchema.safeParse(raw)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  if (!parsed.success) {
+    const { message, rejected } = describeIssues(parsed.error.issues, {
+      action: 'The search',
+      labels: { action: 'the kind of search', query: 'the search words' },
+    })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
   const body = parsed.data
 
   const current = await prisma.idea.findUnique({ where: { id }, select: { lexPage: true } })

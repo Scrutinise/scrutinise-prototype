@@ -27,6 +27,9 @@
 // ─────────────────────────────────────────────────────────────────────────────────────────
 
 import { webSearch, type WebSearchProvider } from '../lib/lex/orientation/web-search'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: neutral script name; state the purpose so any spend is not left without one.
+enterPurpose('measurement')
 
 const QUESTIONS = [
   { q: 'What is the current UK inflation rate?', kind: 'current figures' },

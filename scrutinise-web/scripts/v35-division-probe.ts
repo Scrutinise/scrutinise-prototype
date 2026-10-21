@@ -1,6 +1,9 @@
 /** Are the roll-calls retrievable at all, or just out-ranked? Ask three ways. */
 import { runFtsSearch } from '../lib/lex/fts-search'
 import { STREAMS } from '../lib/lex/query-router'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: neutral script name; state the purpose so any spend is not left without one.
+enterPurpose('measurement')
 const corpusOf = (id: string) => id.split(':')[0]
 const DIV = ['commons-divisions-votes', 'lords-divisions-votes']
 async function main() {

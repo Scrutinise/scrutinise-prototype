@@ -21,6 +21,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Client } from 'pg'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: this script's name carries none of the prefixes the ledger infers a purpose from, so its model spend was unattributed.
+enterPurpose('measurement')
 
 const arg = (n: string) => { const a = process.argv.find((x) => x.startsWith(`--${n}=`)); return a ? a.slice(n.length + 3) : null }
 const has = (n: string) => process.argv.some((x) => x === `--${n}` || x.startsWith(`--${n}=`))

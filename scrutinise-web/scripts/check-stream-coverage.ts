@@ -30,6 +30,7 @@
  */
 import { runSearch } from '../lib/lex/search-gateway'
 import { interleaveStreams } from '../lib/lex/interleave'
+import { judgedMergeEnabled } from '../lib/lex/merge-judged'
 import type { SearchResult } from '../lib/lex/page1-config'
 
 /** The answer-context budget general-chat.ts uses. Read from the same env var so the two cannot
@@ -40,6 +41,10 @@ const BUDGET = (() => {
 })()
 
 const PRE_FIX = process.argv.includes('--pre-fix')
+
+/** With LEX_SEARCH_JUDGED_MERGE on (production), stream coverage is not an invariant - see the ok() site below. */
+const JUDGED = !PRE_FIX && judgedMergeEnabled()
+const observedLoss: boolean[] = []
 
 /**
  * Queries chosen to route WIDE — each plainly implicates law, Parliament, committee scrutiny and
@@ -115,9 +120,15 @@ async function main() {
     const missing = withHits.filter((s) => !s.ids.some((id) => inContext.has(id)))
 
     console.log(`  context: ${context.length} docs · ${covered.map((s) => `${s.stream}=${s.ids.filter((id) => inContext.has(id)).length}`).join(' ')}`)
-    ok(`every stream with hits reaches the context (${covered.length}/${withHits.length})`,
-       missing.length === 0,
-       missing.length ? `absent from the answer: ${missing.map((s) => `${s.stream}(${s.ids.length} hits)`).join(', ')}` : '')
+    const detail = missing.length ? `absent from the answer: ${missing.map((s) => `${s.stream}(${s.ids.length} hits)`).join(', ')}` : ''
+    if (JUDGED) {
+      // S14 retired slot-rationing on purpose: the judged merge orders by score, so a stream can legitimately fall outside
+      // the first 16. Reported, never failed, never silent - this check cannot say "passed" for a property it did not assert.
+      observedLoss.push(missing.length > 0)
+      console.log(`  · NOT ASSERTED (judged merge): ${covered.length}/${withHits.length} streams reach the context${detail ? ' - ' + detail : ''}`)
+    } else {
+      ok(`every stream with hits reaches the context (${covered.length}/${withHits.length})`, missing.length === 0, detail)
+    }
 
     // The floor. Not a separate invariant so much as the reason the first one is worth having:
     // a stream represented by a single document reads to the user as a stream that found nothing.
@@ -130,6 +141,10 @@ async function main() {
     process.exit(1)
   }
 
+  if (JUDGED) {
+    console.log(`\nJUDGED MERGE IS ON: 0 assertions made. Observed: ${observedLoss.filter(Boolean).length} of ${observedLoss.length} multi-stream queries lose at least one stream from the ${BUDGET}-document context. Run with LEX_SEARCH_JUDGED_MERGE=false to assert the round-robin invariant.`)
+    process.exit(0)
+  }
   console.log(`\n${passed} passed, ${failures.length} failed  (over ${routedQueries} multi-stream quer${routedQueries === 1 ? 'y' : 'ies'})`)
   if (PRE_FIX) {
     // Inverted on purpose: the point of this mode is to show the check has teeth.

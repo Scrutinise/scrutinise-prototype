@@ -25,6 +25,9 @@ import { prisma } from '../lib/prisma'
 import { r2Get } from '../lib/r2'
 import { SCOREABLE_V2 } from './gold/gold-v2-set'
 import { contentTerms, coverageOf } from '../lib/lex/term-coverage'
+import { enterPurpose } from '../lib/lex/build-context'
+// SEARCH-28: this script's name carries none of the prefixes the ledger infers a purpose from, so its model spend was unattributed.
+enterPurpose('measurement')
 
 export {}
 
