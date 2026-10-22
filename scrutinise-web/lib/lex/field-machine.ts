@@ -489,6 +489,36 @@ export async function setLoopProposal(
   })
 }
 
+/**
+ * ══ 21 Oct — ACCEPTING OVER ACCEPTED WORDS KEEPS THE WORDS IT REPLACES ═══════════════════════════════
+ *
+ * On 452c5ade the owner's own edited paragraph sat accepted in the Summary of Guiding Policy. Lex's shorter
+ * draft was offered BESIDE it, as it should be; taking the draft ("Use this version", or "Edit it" then Save)
+ * then replaced the accepted value with nothing kept, so neither the owner nor Lex could see what had been
+ * there. `value` is only ever accepted words, so any accept that changes it records the old text first —
+ * written BEFORE the replacement, so a failure between the two loses nothing.
+ * ⚠ Not twice: a chat rewrite (`field-edit-write.ts`) already records the same change when it is offered.
+ */
+async function keepReplacedValue(
+  ideaId: string, userId: string, fieldKey: string,
+  row: { value: string | null; redraft: unknown } | null, next: string,
+): Promise<void> {
+  const previous = row?.value
+  if (!previous?.trim() || previous === next || !userId) return
+  const already = await prisma.fieldRevision.findFirst({
+    where: { ideaId, fieldKey, targetId: null, previousText: previous, newText: next }, select: { id: true },
+  })
+  if (already) return
+  const redraft = row?.redraft as { value?: unknown } | null
+  await prisma.fieldRevision.create({
+    data: {
+      ideaId, fieldKey, targetId: null, targetNumber: null,
+      previousText: previous, previousSource: 'USER', newText: next, acceptedById: userId,
+      origin: redraft?.value != null && encode(redraft.value) === next ? 'REDRAFT_TAKEN' : 'FIELD_ACCEPT',
+    },
+  })
+}
+
 /** User accepts (optionally editing) → ACCEPTED. Returns whether keywords fired. */
 export async function acceptField(
   ideaId: string,
@@ -497,15 +527,16 @@ export async function acceptField(
   editedValue?: unknown,
 ): Promise<void> {
   assertWriteable(fieldKey)
+  const row = await prisma.ideaFieldState.findUnique({
+    where: { ideaId_fieldKey: { ideaId, fieldKey } },
+    select: { proposal: true, value: true, redraft: true },
+  })
   let value = editedValue
   if (value === undefined) {
-    const row = await prisma.ideaFieldState.findUnique({
-      where: { ideaId_fieldKey: { ideaId, fieldKey } },
-      select: { proposal: true, value: true },
-    })
     const prop = row?.proposal as { value?: unknown } | null
     value = prop?.value ?? row?.value ?? null
   }
+  await keepReplacedValue(ideaId, userId, fieldKey, row, encode(value))
   await setStatus(ideaId, fieldKey, 'ACCEPTED', { value: encode(value), proposal: null })
   // 26-N — accepting is the user re-affirming the field: a redraft offered beside it is answered (taken or
   // overruled by what they just accepted), and "may need revisiting" no longer applies.

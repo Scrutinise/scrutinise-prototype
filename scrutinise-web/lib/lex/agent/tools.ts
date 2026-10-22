@@ -26,6 +26,7 @@ import { explainTopic } from './controls'
 import type { ToolCtx, ToolDefinition, ToolResult, UiEffect } from './types'
 import { runSearch } from '@/lib/lex/search-gateway'
 import { effectsFor } from '@/lib/lex/statutory-graph'
+import { readSection } from '@/lib/lex/read-section'
 import { describeEffects, effectsHeadline } from '@/lib/lex/effects-describe'
 import { webSearch } from '@/lib/lex/orientation/web-search'
 import { markPublicSources } from '@/lib/lex/public-sources'
@@ -167,13 +168,19 @@ async function materials(ctx: ToolCtx) {
 
 const readField: ToolDefinition = {
   name: 'read_field', category: 'see', tier: 'free',
-  description: 'Read one kernel field in full: its current wording, status, any pending proposal and any redraft waiting beside the user’s words. Use the field key from the snapshot.',
+  description: 'Read one kernel field in full: its current wording, status, any pending proposal, any redraft waiting beside the user’s words, and its recent history (what earlier wording was replaced, when, and how). Use the field key from the snapshot.',
   schema: z.object({ fieldKey: z.string() }),
   async run(ctx, { fieldKey }) {
     const state = await computeCanonicalState(ctx.ideaId)
     for (const page of state?.pages ?? []) {
       const f = page.fields.find((x) => x.key === fieldKey)
-      if (f) return { ok: true, data: { key: f.key, label: f.label, page: page.key, status: f.status, value: f.value, proposal: f.proposal ?? null, redraft: f.redraft ?? null, stale: f.stale ?? null } }
+      if (!f) continue
+      // 21 Oct — so "where did my paragraph go?" has an answer: the replaced wording, kept by the platform.
+      const history = (await prisma.fieldRevision.findMany({
+        where: { ideaId: ctx.ideaId, fieldKey, targetId: null }, orderBy: { createdAt: 'desc' }, take: 3,
+        select: { createdAt: true, previousText: true, previousSource: true, origin: true },
+      })).map((r) => ({ replacedAt: r.createdAt.toISOString(), replacedWording: r.previousText, writtenBy: r.previousSource, how: r.origin }))
+      return { ok: true, data: { key: f.key, label: f.label, page: page.key, status: f.status, value: f.value, proposal: f.proposal ?? null, redraft: f.redraft ?? null, stale: f.stale ?? null, history } }
     }
     return fail(`there is no field "${fieldKey}" on this idea. The keys are in the snapshot.`)
   },
@@ -306,9 +313,15 @@ const searchCorpus: ToolDefinition = {
     if (!Number.isNaN(hi)) rows = rows.filter((r) => !r.date || Date.parse(r.date) <= hi)
     rows = rows.slice(0, limit)
     for (const r of rows) ctx.turn.corpusIds.add(r.id)
+    // 212 — an excerpt is a CUT, not the section. Name the cut ones so Lex reads them before saying it could not.
+    const cut = rows.filter((r) => clip(r.snippet, 320).endsWith('…')).map((r) => r.id)
     return {
       ok: true,
-      data: { query, found: rows.length, note: rows.length ? undefined : 'The search ran and returned nothing for this query and filters.' },
+      data: {
+        query, found: rows.length, note: rows.length ? undefined : 'The search ran and returned nothing for this query and filters.',
+        excerpts_cut_off: cut.length ? cut : undefined,
+        read_more: cut.length ? 'These excerpts end mid-text. Before you rely on one, or say you could not read the rest, call read_section with its id.' : undefined,
+      },
       untrusted: rows.length ? untrustedBlock(ctx, 'corpus search', rows.map((r, i) => `[${i + 1}] id=${r.id} · ${r.type} · ${r.title} — ${r.citation}${r.date ? ` · ${r.date.slice(0, 10)}` : ''}${r.url ? ` · ${r.url}` : ''}\n${clip(r.snippet, 320)}`).join('\n\n')) : undefined,
     }
   },
@@ -397,6 +410,41 @@ const statuteEffects: ToolDefinition = {
       },
       // Third-party prose (an instrument's own preamble) leaves in its own fenced channel (§4c).
       untrusted: quoted.length ? untrustedBlock(ctx, 'words stored from instrument preambles (our extraction)', quoted.join('\n')) : undefined,
+    }
+  },
+}
+
+// 212 — the whole held text of one corpus section (lib/lex/read-section.ts).
+const readSectionTool: ToolDefinition = {
+  name: 'read_section', category: 'search', tier: 'free',
+  description: 'Read the WHOLE held text of one corpus section, given its id exactly as search_corpus returned it or as you cite it (e.g. "primary-acts-2000plus:ukpga/2010/25:section-5"). '
+    + 'Call it whenever an excerpt is cut off and the rest matters — BEFORE saying you could not read the rest. A long section comes back in pages: pass the nextFrom it gives as `from` to read on. '
+    + 'If it returns no text, say so with its reason; what you have not read stays labelled as not read.',
+  schema: z.object({
+    id: z.string().min(5).max(300).describe('the corpus section id'),
+    from: z.number().int().min(0).optional().describe('character offset to start from — the nextFrom of a previous call'),
+  }),
+  async run(ctx, { id, from }) {
+    let r
+    try {
+      r = await readSection(id, { from })
+    } catch (err) {
+      // ⚠ FAILED ≠ NOT HELD: "the corpus does not hold it" is a claim only if the lookup RAN.
+      return fail(`the section read did not complete: ${err instanceof Error ? err.message : String(err)}`)
+    }
+    if (r.status !== 'text') return { ok: false, error: r.reason, data: { id: r.id, status: r.status, title: r.title ?? undefined, url: r.url ?? undefined } }
+    // A section read in full may be cited like one search_corpus returned.
+    ctx.turn.corpusIds.add(r.id)
+    if (r.readId) ctx.turn.corpusIds.add(r.readId)
+    if (r.nextFrom == null) for (const x of [r.id, r.readId]) if (x) ctx.turn.sectionsRead?.add(x)
+    return {
+      ok: true,
+      data: {
+        id: r.id, read_id: r.readId, title: r.title, url: r.url, date: r.date ?? undefined, speaker: r.speaker ?? undefined,
+        characters: { from: r.from, to: r.to, total: r.totalChars }, nextFrom: r.nextFrom, complete: r.nextFrom == null,
+        status: r.reason,
+      },
+      untrusted: untrustedBlock(ctx, `corpus section ${r.readId ?? r.id}`, r.text || '(empty)'),
     }
   },
 }
@@ -1604,7 +1652,7 @@ const summariseSourceTool: ToolDefinition = {
 /** The tools the MODEL is offered. The `undo_*` / `restore_*` inverses are reachable only through a signed undo token. */
 export const MODEL_TOOLS: ToolDefinition[] = [
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
-  searchCorpus, searchWeb, searchMyDocuments, statuteEffects,
+  searchCorpus, searchWeb, searchMyDocuments, statuteEffects, readSectionTool,
   fileUrl, fileText,
   draftField, addCandidate, addActionTool, setActionCommentaryTool, writeNote,
   explain,

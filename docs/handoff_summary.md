@@ -953,6 +953,18 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**⚠ 2026-10-21 23:42 UTC — LEX 21 Oct (2)/(3) supersedes the entry below.**
+- **211 is withdrawn** (decision 214); its code is reverted to HEAD.
+- **Kept:** 212 `read_section`, the ledger fix, the 214 prompt line, and `acceptField` keeping replaced words (452c5ade).
+- **Open:**
+  - the 214 line contradicts `system-prompt.ts:37`, which is for CCh to decide;
+  - `check:lex-read-section-turn` is 1/4 because corpus search aborted from this machine;
+  - 215/216/217/219 are not started;
+  - nothing is committed.
+- See CHANGE_LOG 2026-10-21 23:42.
+
+*Last updated: 2026-10-21 13:15 UTC (LEX 212 + 211: `read_section` and "Research this")*. ▶ **Read the top CHANGE_LOG entry.** ▶ 212: `read_section` (free) reads the whole held text of any corpus section by id (`lib/lex/read-section.ts`). `search_corpus` names its cut excerpts, and the prefix tells Lex to read before relying on one. ▶ 211: a "Research this" button under Send shows a priced confirm card. Confirm runs Sonnet 5.5 with thinking on (effort high, 20 steps, 75p ceiling), and the platform checks that every cited section was read in full. The default turn is unchanged. ⚠ S26's three-stage sequence does not exist yet, so it is not used. ▶ ⚠⚠ **THE PRICE IS NOT MEASURED. The Anthropic account hit its usage limit ("regain access on 2026-11-01")**, so the card shows 20p labelled as an estimate, and `check:lex-research` stays red on that case. **If production shares the account, Lex chat is down until 1 Nov. Charlie to check.** Re-measure command is in the CHANGE_LOG. ▶ Fixed: a failed turn wrote no ledger row. ▶ Not committed; no browser look yet.
+
 *Last updated: 2026-10-19 00:40 UTC (LEX 26-T2: the Actions Pack, Background Report, Introductory Summary, comments)* - ▶ **Read the top CHANGE_LOG entry and `docs/LEX_26T_REPORT.md` (26-T2 section).** ▶ Step 1: "Print all", "Print this heading", "Print selected as an Actions Pack" (every paragraph numbered, e.g. B.3.6); Outputs lists the Introductory Summary, Background Report and Actions Pack; every opened action has a Comments thread and "Ask Lex to summarise". ▶ **Charlie must look:** open one heading's pack in Word (numbering, quoted parts, "not yet answered"); read the Introductory Summary cold (Angus); add a comment and reply. ▶ **Decisions for CCh:** the issue-to-action link (the record has none); the B.3.6 reading. ▶ **Open:** no real-browser check yet; 196/183 and 11d not started.
 
 *Last updated: 2026-10-18 23:45 UTC (LEX 26-T1: the digest and the incentive map)* - ▶ **Read the top CHANGE_LOG entry and `docs/LEX_26T_REPORT.md`.** ▶ Step 1: "Ask four models about this heading" / "…the whole set" (measured 45.2p for 8 actions, 74.3p for the set - a floor, Grok timed out); step 2: "By who" view and a checklist line. `ActionDigest` table is live (`23f71c6`). ▶ **Charlie must look:** press the heading button on one heading; read "Where the four disagree" against his 17 Oct answer; open "By who" and see whether the AGAINST-with-nothing-changing cells are the ones he expected. ▶ **Open:** real-browser check not written; 26-T2 next; 196/183 and 11d not started.

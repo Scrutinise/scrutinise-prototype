@@ -233,7 +233,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
   const client = input.client ?? new Anthropic({ timeout: 120_000, maxRetries: 4 })
 
   const turn: TurnState = {
-    tainted: false, corpusIds: new Set(), webSources: new Map(), pastedText: input.pastedText ?? null,
+    tainted: false, corpusIds: new Set(), webSources: new Map(), sectionsRead: new Set(), pastedText: input.pastedText ?? null,
     userMessages: [input.message, ...input.history.filter((m) => m.role === 'user').slice(-HISTORY_WINDOW).map((m) => String(m.content ?? '')).reverse()],
   }
   const ctx: ToolCtx = { ideaId: input.ideaId, userId: input.userId, turn, confirmed: false }
@@ -320,6 +320,15 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     return blocks
   }
 
+  // ⚠ FOUND 21 OCT: the ledger row was written only on the success path, so a turn that failed AFTER several paid
+  // calls recorded nothing — 9.9p and 17.5p of real calls on a scratch run left no row. Both paths meter now.
+  const meter = () => (cost.calls ? recordSpend({
+    stream: 'lex', pass: 'lex.agent.turn', model: AGENT_MODEL,
+    tokensIn: cost.tokensIn + cost.tokensCacheWrite + cost.tokensCacheRead, tokensOut: cost.tokensOut,
+    tokensCached: cost.tokensCacheRead, tokensCacheWrite: cost.tokensCacheWrite, // 26-O §5a
+    actualUsd: cost.usd, userId: input.userId, ideaId: input.ideaId, ref: `calls=${cost.calls} cacheRead=${cost.tokensCacheRead}`,
+  }).catch((err) => console.error('[lex-agent] ledger write failed', err instanceof Error ? err.message : err)) : Promise.resolve())
+
   let last: Anthropic.Message | null = null
   try {
     for (let i = 0; ; i++) {
@@ -362,12 +371,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     reply = stripOpener(reply)
     if (!reply.trim()) reply = outcomes.some((o) => o.pending) ? 'That is waiting for you to confirm.' : 'I did not have anything to add to that.'
 
-    await recordSpend({
-      stream: 'lex', pass: 'lex.agent.turn', model: AGENT_MODEL,
-      tokensIn: cost.tokensIn + cost.tokensCacheWrite + cost.tokensCacheRead, tokensOut: cost.tokensOut,
-      tokensCached: cost.tokensCacheRead, tokensCacheWrite: cost.tokensCacheWrite, // 26-O §5a
-      actualUsd: cost.usd, userId: input.userId, ideaId: input.ideaId, ref: `calls=${cost.calls} cacheRead=${cost.tokensCacheRead}`,
-    }).catch((err) => console.error('[lex-agent] ledger write failed', err instanceof Error ? err.message : err))
+    await meter()
 
     console.log('[lex-agent] turn', {
       ideaId: input.ideaId, ended, calls: cost.calls, pence: Number(cost.pence.toFixed(2)),
@@ -380,7 +384,8 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     // A failure announces itself with its cause (CLAUDE.md §18). It is not dressed up as an answer.
     const reason = err instanceof Error ? err.message : String(err)
     const cause = err instanceof Error && (err as { cause?: unknown }).cause ? String((err as { cause?: { message?: string } }).cause?.message ?? (err as { cause?: unknown }).cause) : null
-    console.error('[lex-agent] turn FAILED', { ideaId: input.ideaId, reason, cause })
+    console.error('[lex-agent] turn FAILED', { ideaId: input.ideaId, reason, cause, calls: cost.calls, pence: Number(cost.pence.toFixed(2)) })
+    await meter()
     // ⚠ A FAILURE AFTER THE TOOLS HAVE WRITTEN MUST SAY SO. On 2 Oct three links were filed and the reply
     // then failed; the user was told only "Connection error" and would have filed them again. The record of
     // what was done comes from the tool results, not from a reply that never arrived.

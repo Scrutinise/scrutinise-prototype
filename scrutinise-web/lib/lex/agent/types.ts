@@ -11,6 +11,8 @@ export interface TurnState {
   tainted: boolean
   /** Corpus ids returned by `search_corpus` this turn — the only ones `corpus` provenance may cite besides ones already on the idea. */
   corpusIds: Set<string>
+  /** 212 — corpus sections `read_section` has read TO THE END this turn (the id asked for and the id read). */
+  sectionsRead?: Set<string>
   /** `[W]` markers returned by `search_web` this turn. */
   webSources: Map<string, { title: string; url: string; publisher: string }>
   /** The user's own recent words (this turn first). `user_words` provenance must quote these. */
