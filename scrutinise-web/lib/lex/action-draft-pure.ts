@@ -99,7 +99,7 @@ export function parseDraft(json: unknown): ActionDraft | undefined {
   const versions = (Array.isArray(json.versions) ? json.versions : []).filter(isObj).map((v, i) => ({
     ...parseInstruction(v), v: typeof v.v === 'number' ? v.v : i + 1, by: v.by === 'LEX' ? 'LEX' as const : 'USER' as const, at: str(v.at, 40),
   }))
-  const proposal = isObj(json.proposal) ? { ...parseInstruction(json.proposal), at: str(json.proposal.at, 40), reason: str(json.proposal.reason, 600), pence: typeof json.proposal.pence === 'number' ? json.proposal.pence : null } : undefined
+  const proposal = isObj(json.proposal) ? { ...parseInstruction(json.proposal), at: str(json.proposal.at, 40), reason: str(json.proposal.reason, 1600), pence: typeof json.proposal.pence === 'number' ? json.proposal.pence : null } : undefined
   if (!versions.length && !proposal) return undefined
   return { versions, ...(proposal ? { proposal } : {}) }
 }
@@ -154,6 +154,8 @@ export const DRAFT_RUNS: Array<{ pence: number; seconds: number; on: string }> =
   { pence: 15.41, seconds: 143, on: 'scratch copy of 452c5ade, 22 Oct 2026 (#38)' },
   { pence: 10.0, seconds: 62.8, on: 'scratch copy of 452c5ade, 22 Oct 2026 (#202)' },
   { pence: 10.16, seconds: 98.2, on: 'scratch copy of 452c5ade, 22 Oct 2026 (#202 again)' },
+  { pence: 12.13, seconds: 121.6, on: '452c5ade itself, 22 Oct 2026 (#38 redraft, decision 231, scripts/draft-action-live.ts)' },
+  { pence: 9.56, seconds: 98.5, on: '452c5ade itself, 22 Oct 2026 (#202, decision 232)' },
 ]
 export const DRAFT_PENCE_ESTIMATE = 6
 export function draftPrice(): { pence: number; measured: boolean; n: number } {

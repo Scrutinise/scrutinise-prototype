@@ -1,5 +1,26 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-22 10:05 UTC - LEX 22 Oct (6): decisions written into the record (231, 232), #38 and #202 drafted on 452c5ade, FTS timeout 120 s (234), heading renamed (187)
+
+**Data, on 452c5ade** (`scripts/apply-231-decisions.ts --apply`, read back):
+- **231.** Decisions 220, 221, the Code, and "an unmatched pair is void; the duty travels upward" are at the head of #38's and #59's Commentary, verbatim.
+- **232.** #202's Commentary now says the clause cites CRaG 2010 s.10 as the standard and creates no duty.
+- **Revisions.** Three FieldRevision rows keep the previous Commentary (origin `DRAFTING_DECISIONS_231`).
+- **187.** The heading "Legislation" is now "Primary legislation".
+
+**Drafts** (proposals beside the owner's version; `scripts/draft-action-live.ts`):
+- **#38, 12.13p.** Subsection (7) says a naming without the power and resources has no effect, and the duty passes to the nearest individual above who holds them.
+- **#202, 9.56p.** (4) gives CRaG s.10 as the standard; (5) says "This section creates no duty in addition to that standard."
+- **The price.** `DRAFT_RUNS` is now n=6, mean 10.8p.
+
+**Fixes:**
+- A draft's reason was clipped mid-word at 500 characters. The limits are now 1,500 when written and 1,600 when parsed.
+- **234.** `FTS_COLD_START_MS` is now 120 s. A warm fts-serve query took 86 s, which Search is looking at.
+
+**Not done:**
+- **233 ("Consequential amendments and repeals").** CCh Reply 41's wording isn't in this session, so the action hasn't been created.
+- **Local machine.** Kaspersky now intercepts TLS to api.anthropic.com. Node needs `NODE_OPTIONS=--use-system-ca`.
+
 ## 2026-10-22 02:07 UTC - GRAPH 7: the idea↔law join (`idea_law_link`), `ideaLawSet()`, the hand-attach path and the idea page's law panel
 
 **Why (as in the commit).** A user who opens an idea sees an empty graph panel and concludes we have no graph. We hold 1.29m legislation edges, 566k case-to-case links and 2.3m recorded acts; the only thing missing is a row saying which laws the idea concerns. Everything downstream hangs off that one row.

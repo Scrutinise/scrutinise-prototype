@@ -238,7 +238,7 @@ export async function draftWithLex(ideaId: string, actionId: string, userId: str
     extent: (v.extent ?? []).filter((e) => (EXTENTS as readonly string[]).includes(e)),
     precedents: (v.precedents ?? []).filter((p) => isDocUri(p.docUri)).map((p) => ({ docUri: p.docUri, provisionPath: p.provisionPath && isProvisionPath(p.provisionPath) ? p.provisionPath : null, how: clip(p.how, 300) })),
     clause: legislative && v.clause?.trim() ? withCaveat(v.clause) : '', plainWording: legislative ? '' : clip(v.plainWording, 4000), purpose: clip(v.purpose, 300), citations,
-    at: new Date().toISOString(), reason: `${clip(v.reason, 500)}${dropped.length ? ` Left out because they could not be checked: ${dropped.join('; ')}.` : ''}`, pence: priced.pence ?? null,
+    at: new Date().toISOString(), reason: `${clip(v.reason, 1500)}${dropped.length ? ` Left out because they could not be checked: ${dropped.join('; ')}.` : ''}`, pence: priced.pence ?? null,
   }
   const fresh = await load(ideaId, actionId) // re-read: a version the user saved while this ran is kept, untouched
   if (!fresh) return fail('The action was ruled out or merged while Lex was drafting. Nothing was written.')

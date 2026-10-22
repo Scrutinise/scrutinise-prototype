@@ -74,8 +74,13 @@ const FTS_URL = process.env.FTS_SEARCH_URL // e.g. https://fts-serve-production-
  * spinner. If that message is ever removed, this number has to come back down.
  *
  * The route that runs searches allows `maxDuration = 300`, so this fits inside it.
+ *
+ * ⚠ RAISED TO 120 s (22 Oct 2026, decision 234). A WARM query — not a wake — took 86 s
+ * (`serviceMs` 85,929, a CRaG s.5 search in `check-lex-read-section-turn.ts --live`), so 75 s
+ * failed a query fts-serve was in the middle of answering. Told to Search; the slow query is
+ * theirs to look at. 120 s still fits inside the route's 300 s.
  */
-export const FTS_COLD_START_MS = 75_000
+export const FTS_COLD_START_MS = 120_000
 const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? String(FTS_COLD_START_MS), 10)
 
 // ── citation/url derivation for legislation ──────────────────────────────────

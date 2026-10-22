@@ -15,7 +15,7 @@
 //
 // ⚠ AND A WAKE IS NOT A FAILURE EVEN WHEN IT IS SLOW. The old 25 s budget would have
 // aborted mid-wake and reported a search failure — a true statement about the request and a
-// false one about the system. The budget now covers the wake (75 s) precisely so this
+// false one about the system. The budget now covers the wake (120 s since 22 Oct, decision 234) precisely so this
 // distinction can be made honestly rather than by guessing.
 // ─────────────────────────────────────────────────────────────────────────────
 
