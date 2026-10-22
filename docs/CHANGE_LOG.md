@@ -1,5 +1,34 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-22 10:23 UTC - LEX 26-U §5: a drafting instruction writes its idea_law_link rows
+
+- **`lib/lex/action-law-rows.ts` (`writeInstructionRows`).** It writes a row for each provision line and precedent in an action's CURRENT owner version:
+  - `source='drafting_instruction'`, `action_id` set, `source_detail` "<action id> v<N>", `note` = the instruction's purpose;
+  - each target goes through GRAPH 7's `resolveLawTarget()` first, and one that isn't held is not written but is returned with its state.
+- **Called from `saveVersion` and `acceptProposal`.** The result is returned as `lawRows`. A failure says which version it was, and the save still stands (§18).
+- **Proposals write nothing.** A proposal isn't the instruction until it is accepted.
+- **A later version:**
+  - a row whose target reappears is superseded by the new row;
+  - a version that drops a target writes nothing for now and returns `notSuperseded`, because GRAPH asked that no withdrawal (`09e8939`) be written until its reader is on Main.
+- **The live read** excludes withdrawn rows, as GRAPH asked.
+- ⚠ **`as_at` is the version's save date, not the effects load date.** The load date (`tableNewest`) is private to `statutory-graph.ts`, and LEX has asked GRAPH to export it.
+- **Not done here:** a hand row and an instruction row naming the same target don't yet show as one line with both sources. That is GRAPH's panel and reader.
+- **452c5ade has 0 live link rows.** Its actions have no owner version yet: the #38 and #202 drafts are proposals waiting for Charlie.
+- **Checks.** `check:lex-26u` 48/48 with 6 controls, 0 dead; `tsc` 0; client-boundary ✓. A mutation that skipped superseding gave 3 failures and 1 dead control, and was reverted.
+- **Depends on GRAPH `09e8939`** (`withdrawnAt`), so it can't be pushed before it. **Not pushed.**
+
+## 2026-10-22 10:18 UTC - GRAPH 7 follow-up: a law link can be WITHDRAWN as well as superseded (`09e8939`)
+
+- Asked for by LEX 26-U §5. When an action's next instruction version drops a target, the old row has no replacement for
+  `superseded_by` (a self-FK) to point at. It is now withdrawn: `withdrawn_at` + `withdrawn_detail`. It is never deleted.
+- `prisma/graph_7_idea_law_link_withdrawn.sql` is applied to Neon and read back. It adds two nullable columns and two
+  CHECKs (a withdrawal needs a reason; a row is never both superseded and withdrawn). It rebuilds the three §21 partial
+  indexes on `superseded_by IS NULL AND withdrawn_at IS NULL`. The table had 0 rows.
+- `ideaLawSet` treats a row as live only when it is neither superseded nor withdrawn, and counts `examined.withdrawn`.
+  The hand path skips withdrawn rows when it checks for duplicates.
+- check:idea-law 22/22, 220 assertions. A mutation where the reader ignored `withdrawn_at` turned C1 red.
+- ⚠ Until `09e8939` is on origin/Main, production's reader ignores `withdrawn_at`. LEX writes no withdrawals before then.
+
 ## 2026-10-22 10:05 UTC - LEX 22 Oct (6): decisions written into the record (231, 232), #38 and #202 drafted on 452c5ade, FTS timeout 120 s (234), heading renamed (187)
 
 **Data, on 452c5ade** (`scripts/apply-231-decisions.ts --apply`, read back):

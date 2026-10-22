@@ -25,9 +25,15 @@ import {
   type ActionDraft, type DraftInstruction, type DraftProposal,
 } from './action-draft-pure'
 import type { Result } from './action-structure'
+import { writeInstructionRows, type LawRowsReport } from './action-law-rows'
 
 export const DRAFT_MODEL = 'claude-sonnet-5-5'
 const fail = (error: string): { ok: false; error: string } => ({ ok: false, error })
+/** §5: the new version's join rows. A failure is said with the version, never thrown over a save that succeeded (§18). */
+async function joinRows(ideaId: string, actionId: string, d: ActionDraft): Promise<LawRowsReport | { failed: string }> {
+  const v = d.versions[d.versions.length - 1]
+  try { return await writeInstructionRows(ideaId, actionId, v) } catch (e) { return { failed: `the law links for version ${v.v} were not written (${(e as Error).message})` } }
+}
 const clip = (s: unknown, n: number) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, n) : '')
 
 async function load(ideaId: string, actionId: string) {
@@ -48,17 +54,17 @@ export function draftOf(row: { record: unknown }): ActionDraft | undefined { ret
 
 // ── the user's own version ─────────────────────────────────────────────────────────────────────────────────────
 
-export async function saveVersion(ideaId: string, actionId: string, ins: DraftInstruction): Promise<Result<{ number: number | null; version: number }>> {
+export async function saveVersion(ideaId: string, actionId: string, ins: DraftInstruction): Promise<Result<{ number: number | null; version: number; lawRows: LawRowsReport | { failed: string } }>> {
   const row = await load(ideaId, actionId)
   if (!row) return fail('That action is not on this idea. Nothing was saved.')
   const bad = validateInstruction(ins)
   if (bad.length) return fail(`Not saved: ${bad.join('; ')}.`)
   const next = addVersion(draftOf(row), { ...ins, citations: [] }, 'USER', new Date().toISOString())
   await writeDraft(row, next)
-  return { ok: true, data: { number: row.number, version: next.versions[next.versions.length - 1].v } }
+  return { ok: true, data: { number: row.number, version: next.versions[next.versions.length - 1].v, lawRows: await joinRows(ideaId, row.id, next) } }
 }
 
-export async function acceptProposal(ideaId: string, actionId: string): Promise<Result<{ number: number | null; version: number }>> {
+export async function acceptProposal(ideaId: string, actionId: string): Promise<Result<{ number: number | null; version: number; lawRows: LawRowsReport | { failed: string } }>> {
   const row = await load(ideaId, actionId)
   if (!row) return fail('That action is not on this idea. Nothing was changed.')
   const d = draftOf(row)
@@ -67,7 +73,7 @@ export async function acceptProposal(ideaId: string, actionId: string): Promise<
   void _a; void _r; void _p
   const next = addVersion({ versions: d.versions }, ins, 'LEX', new Date().toISOString())
   await writeDraft(row, next) // the proposal is answered: `next` carries none
-  return { ok: true, data: { number: row.number, version: next.versions[next.versions.length - 1].v } }
+  return { ok: true, data: { number: row.number, version: next.versions[next.versions.length - 1].v, lawRows: await joinRows(ideaId, row.id, next) } }
 }
 
 export async function dismissProposal(ideaId: string, actionId: string): Promise<Result<{ number: number | null }>> {

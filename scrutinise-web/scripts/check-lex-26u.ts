@@ -159,12 +159,36 @@ async function part3and4() {
     const u = s.calls[0]?.user ?? ''
     ok('what Lex is given: OPC Parts 5.1, 6 and 9.2 as HELD, the precedents found by their own text, the action fenced as data', /GUIDANCE — Part 5\.1/.test(u) && /GUIDANCE — Part 6/.test(u) && /GUIDANCE — Part 9\.2/.test(u) && /PRECEDENT \(a model\) — Building Safety Act 2022/.test(u) && /THE OBJECTION/.test(u) && /<action>[\s\S]*<\/action>/.test(u), u.slice(0, 300))
     ok('§27: the system prompt carries no specimen clause (no "(1) The …" sentence of its own)', !/\(\d\) The [A-Z]/.test(s.calls[0]?.system ?? '') && !/\(\d\) A [a-z]/.test(s.calls[0]?.system ?? ''))
+    const linksOf = () => prisma.ideaLawLink.findMany({ where: { actionId: owner.id }, orderBy: { createdAt: 'asc' } })
+    ok('§5: a PROPOSAL writes no law link — it is not the instruction until accepted', (await linksOf()).length === 0)
     const acc = await DR.acceptProposal(copy.id, owner.id)
     const after = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))!
     ok('accepting makes it version 2 (by Lex); version 1 (the owner’s) is kept', acc.ok && after.versions.length === 2 && after.versions[0].by === 'USER' && after.versions[1].by === 'LEX' && !after.proposal)
+
+    section('§5 · the join (223, 226) — rows read back with the plain client, not the app’s reader')
+    const L2 = await linksOf()
+    const s5row = L2.find((l) => l.docUri === CRAG && l.provisionPath === 'section/5')
+    ok('accepting v2 writes one row per held line: CRaG s.5 `amends`, action set, source drafting_instruction, detail "<action> v2", note = purpose', !!s5row && s5row.relation === 'amends' && s5row.actionId === owner.id && s5row.ideaId === copy.id && s5row.source === 'drafting_instruction' && s5row.sourceDetail === `${owner.id} v2` && s5row.note === 'Put the Code on a statutory footing.', JSON.stringify(L2.map((l) => [l.relation, l.docUri, l.provisionPath, l.sourceDetail])))
+    ok('…and the precedent named in the instruction as a `precedent` row (LGA 1972 s.151)', L2.some((l) => l.relation === 'precedent' && l.docUri === 'ukpga/1972/70' && l.provisionPath === 'section/151'))
+    const rep = acc.ok ? acc.data.lawRows : null
+    ok('…the save reports what it wrote, and every line it did not write carries its state', !!rep && !('failed' in rep) && rep.written === L2.length && rep.written + rep.notHeld.length === 3 && rep.notHeld.every((n) => n.state !== 'held'), JSON.stringify(rep))
+    const { writeInstructionRows } = await import('../lib/lex/action-law-rows')
+    const again = await writeInstructionRows(copy.id, owner.id, after.versions[1])
+    ok('re-run on the same version writes nothing twice', again.written === 0 && again.unchanged === L2.length && (await linksOf()).length === L2.length)
+    const same = await DR.saveVersion(copy.id, owner.id, { ...after.versions[1], purpose: 'Put the Code on a statutory footing (v3).' })
+    const L3 = await linksOf()
+    const liveL3 = L3.filter((l) => l.supersededById === null)
+    ok('a new version naming the same targets SUPERSEDES the old rows (never deletes): old rows point at the new ones', same.ok && L3.length === 2 * L2.length && liveL3.length === L2.length && liveL3.every((l) => l.sourceDetail === `${owner.id} v3`) && L3.filter((l) => l.supersededById).every((l) => liveL3.some((n) => n.id === l.supersededById && n.relation === l.relation && n.docUri === l.docUri)))
+    control('a superseded row still reading as live (must be FALSE)', L3.filter((l) => l.sourceDetail === `${owner.id} v2`).some((l) => l.supersededById === null))
+    const dropped = await DR.saveVersion(copy.id, owner.id, { ...after.versions[1], precedents: [] })
+    const L4 = await linksOf()
+    ok('a version that drops a target writes NOTHING until GRAPH’s withdrawn marker is on Main, and says so', dropped.ok && 'notSuperseded' in dropped.data.lawRows && dropped.data.lawRows.notSuperseded === 1 && dropped.data.lawRows.written === 0 && L4.length === L3.length, JSON.stringify(dropped.ok && dropped.data.lawRows))
+    // Put the precedent back (a fifth version, the v3 targets again) so the pack and report below have the full instruction.
+    const restored = await DR.saveVersion(copy.id, owner.id, after.versions[1])
+    ok('…and a version restoring the targets supersedes the v3 rows in turn', restored.ok && 'written' in restored.data.lawRows && restored.data.lawRows.written === L2.length && restored.data.lawRows.superseded === L2.length)
     await setSlot(copy.id, owner.id, 'against', { text: 'A slot answer written after the draft.' })
     const kept = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))
-    ok('saving a step-2 slot afterwards does NOT drop the drafting instruction (parseRecord carries it)', kept?.versions.length === 2)
+    ok('saving a step-2 slot afterwards does NOT drop the drafting instruction (parseRecord carries it)', (kept?.versions.length ?? 0) >= 2)
     void parseDraft
 
     section('§4 · what this touches (144, 209, 210, 229) — a cold read on the real statute book')
@@ -200,7 +224,12 @@ async function part3and4() {
     const bg = await renderDocx(buildFor('BACKGROUND_REPORT', snap, null, {}).model)
     const BX = (await allText(bg)).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ')
     ok('the Background Report prints the schedule counts and the precedent citations', /WHAT THE DRAFTED CLAUSES TOUCH/i.test(BX) && /Primary legislation: \d+ provision/.test(BX) && /Precedents drawn on: .*ukpga\/1972\/70/.test(BX))
-  } finally { await deleteScratch(copy.id) }
+  } finally {
+    // Both idea_law_link FKs are RESTRICT: the scratch copy's links go first (superseding rows before the rows they replace).
+    await prisma.ideaLawLink.updateMany({ where: { ideaId: copy.id }, data: { supersededById: null } })
+    await prisma.ideaLawLink.deleteMany({ where: { ideaId: copy.id } })
+    await deleteScratch(copy.id)
+  }
 }
 
 async function main() {
