@@ -1377,7 +1377,8 @@ export async function ideaLawSet(ideaId: string, opts: { external?: boolean; fet
     include: { action: { select: { id: true, ideaId: true, number: true, title: true, practicalStep: true } } },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
   })
-  const live = all.filter((l) => l.supersededById === null)
+  // Live = neither superseded nor withdrawn (prisma/graph_7_idea_law_link_withdrawn.sql).
+  const live = all.filter((l) => l.supersededById === null && l.withdrawnAt === null)
 
   // One resolution and one effects read per distinct target, however many rows name it.
   const resolutions = new Map<string, Promise<LawResolution>>()
@@ -1453,7 +1454,8 @@ export async function ideaLawSet(ideaId: string, opts: { external?: boolean; fet
     counts,
     examined: {
       linkRows: all.length,
-      superseded: all.length - live.length,
+      superseded: all.filter((l) => l.supersededById !== null).length,
+      withdrawn: all.filter((l) => l.withdrawnAt !== null).length,
       // Per distinct target, so an Act named by two rows is not counted twice.
       effectRowsCounted: (await Promise.all([...effects.values()])).reduce((s, e) => s + e.rowsCounted, 0),
     },

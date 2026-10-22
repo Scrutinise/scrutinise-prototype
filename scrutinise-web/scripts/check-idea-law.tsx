@@ -96,6 +96,7 @@ const EXPECTED_COLUMNS: Record<string, [string, 'YES' | 'NO']> = {
   doc_uri: ['text', 'NO'], provision_path: ['text', 'YES'], relation: ['text', 'NO'], source: ['text', 'NO'],
   source_detail: ['text', 'YES'], note: ['text', 'YES'], as_at: ['date', 'NO'],
   created_at: ['timestamp with time zone', 'NO'], superseded_by: ['text', 'YES'],
+  withdrawn_at: ['timestamp with time zone', 'YES'], withdrawn_detail: ['text', 'YES'],
 }
 
 tc('A1 every column exists with the specified type and nullability — ids are TEXT, never numeric', async () => {
@@ -148,13 +149,13 @@ tc('A3 the foreign keys name "Idea" and "LexCoherentAction", and neither model i
   return a.done()
 })
 
-tc('A4 the three PARTIAL indexes exist, each on superseded_by IS NULL (docs/CLAUDE.md §21)', async () => {
+tc('A4 the three PARTIAL indexes exist, each on superseded_by IS NULL AND withdrawn_at IS NULL (docs/CLAUDE.md §21)', async () => {
   const a = new A()
   const ix = await sql<{ indexname: string; indexdef: string }>(`SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'idea_law_link'`)
   a.read(ix.length)
   for (const [name, cols] of [['idea_law_link_idea_live_idx', '(idea_id)'], ['idea_law_link_target_live_idx', '(doc_uri, provision_path)'], ['idea_law_link_action_live_idx', '(action_id)']]) {
     const d = ix.find((x) => x.indexname === name)?.indexdef ?? ''
-    a.ok(`${name} on ${cols} WHERE superseded_by IS NULL`, d.includes(cols) && /WHERE \(superseded_by IS NULL\)/.test(d), d || 'missing')
+    a.ok(`${name} on ${cols} WHERE live`, d.includes(cols) && /WHERE \(\(superseded_by IS NULL\) AND \(withdrawn_at IS NULL\)\)/.test(d), d || 'missing')
   }
   const register = readFileSync(`${ROOT}/../docs/CLAUDE.md`, 'utf8')
   a.input(1)
@@ -311,7 +312,7 @@ tc('B6 the real publishers: a nonexistent Act, Bill and section of a held Act ar
 // ═══ C — THE READER, ON A FIXTURE THIS SCRIPT OWNS ═════════════════════════════
 let scratch: { id: string } | null = null
 let fixtureSet: IdeaLawSet | null = null
-const fixture: { actionId?: string; foreignActionId?: string; bill?: string; modifies?: string; notHeld?: string; supersededOld?: string; inconsistent?: string; actionRow?: string } = {}
+const fixture: { actionId?: string; foreignActionId?: string; bill?: string; modifies?: string; notHeld?: string; supersededOld?: string; withdrawn?: string; inconsistent?: string; actionRow?: string } = {}
 
 async function buildFixture(): Promise<void> {
   scratch = await scratchCopy(MARQUEE.slice(0, 8), 'graph7-check')
@@ -337,6 +338,8 @@ async function buildFixture(): Promise<void> {
   const repl = await make({ targetKind: 'act', docUri: 'ukpga/1998/42', relation: 'constrains', note: 'fixture: the replacement' })
   await prisma.ideaLawLink.update({ where: { id: old.id }, data: { supersededById: repl.id } })
   fixture.supersededOld = old.id
+  // Retired with nothing to point at (LEX 26-U §5: the target is gone from the instruction's next version).
+  fixture.withdrawn = (await make({ targetKind: 'act', docUri: 'ukpga/2006/46', relation: 'relies_on', note: 'fixture: withdrawn', withdrawnAt: new Date(), withdrawnDetail: 'check:idea-law fixture: target absent from v2' })).id
   fixture.inconsistent = (await make({ actionId: fixture.foreignActionId, targetKind: 'act', docUri: 'ukpga/2010/25', relation: 'amends', note: 'fixture: an action of ANOTHER idea' })).id
   fixtureSet = await ideaLawSet(scratch.id, { external: false })
 }
@@ -362,7 +365,13 @@ tc('C1 every live row lands in exactly one group, its own relation; superseded r
   a.ok('the superseded row is not returned', !s.rows.some((r) => r.id === fixture.supersededOld))
   a.ok('superseded counted: 1', s.examined.superseded === 1, `${s.examined.superseded}`)
   a.ok('its replacement is returned', s.rows.some((r) => r.docUri === 'ukpga/1998/42' && r.relation === 'constrains'))
-  a.ok('linkRows = live + superseded + inconsistent', s.examined.linkRows === s.rows.length + s.examined.superseded + s.inconsistent.length, `${s.examined.linkRows} vs ${s.rows.length}+${s.examined.superseded}+${s.inconsistent.length}`)
+  a.ok('the withdrawn row is not returned', !s.rows.some((r) => r.id === fixture.withdrawn) && !s.inconsistent.some((r) => r.id === fixture.withdrawn))
+  a.ok('withdrawn counted: 1', s.examined.withdrawn === 1, `${s.examined.withdrawn}`)
+  // The two CHECKs, exercised: a withdrawal without a reason, and a row both superseded and withdrawn, are refused.
+  const refused = (p: Promise<unknown>) => p.then(() => false, (e) => /withdrawn/.test(String(e?.message ?? e)))
+  a.ok('withdrawn_at without withdrawn_detail is refused', await refused(prisma.ideaLawLink.update({ where: { id: fixture.withdrawn! }, data: { withdrawnDetail: null } })))
+  a.ok('superseded AND withdrawn is refused', await refused(prisma.ideaLawLink.update({ where: { id: fixture.withdrawn! }, data: { supersededById: fixture.modifies! } })))
+  a.ok('linkRows = live + superseded + withdrawn + inconsistent', s.examined.linkRows === s.rows.length + s.examined.superseded + s.examined.withdrawn + s.inconsistent.length, `${s.examined.linkRows} vs ${s.rows.length}+${s.examined.superseded}+${s.examined.withdrawn}+${s.inconsistent.length}`)
   return a.done(LAW_RELATIONS.map((r) => `${r} ${s.grouped[r].length}`).join(' · '))
 })
 

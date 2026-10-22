@@ -89,7 +89,7 @@ export async function attachHandRows(
   const sourceDetail = `${opts.by} ${asAt}`
 
   const live = await prisma.ideaLawLink.findMany({
-    where: { ideaId: idea.id, actionId: null, supersededById: null },
+    where: { ideaId: idea.id, actionId: null, supersededById: null, withdrawnAt: null },
     select: { docUri: true, provisionPath: true, relation: true },
   })
   const has = new Set(live.map((l) => `${l.relation}|${l.docUri}|${l.provisionPath ?? ''}`))

@@ -3127,8 +3127,10 @@ model LexCoherentAction {
 /// ⚠ Vocabularies are DB CHECK constraints (relation: amends | repeals | modifies | relies_on | constrains | precedent | context;
 /// source: hand | drafting_instruction | extraction; targetKind: act | provision | instrument | bill | document). The same lists
 /// live in lib/lex/idea-law-pure.ts and check:idea-law asserts they match pg_constraint.
-/// ⚠⚠ THREE PARTIAL INDEXES (WHERE superseded_by IS NULL) live only in the SQL — docs/CLAUDE.md §21. Never apply a migrate diff.
-/// ⚠ Never deleted: a wrong row is superseded. Both foreign keys onto Lex's tables are RESTRICT.
+/// ⚠⚠ THREE PARTIAL INDEXES (WHERE superseded_by IS NULL AND withdrawn_at IS NULL) live only in the SQL — docs/CLAUDE.md §21.
+/// Never apply a migrate diff. DDL: prisma/graph_7_idea_law_link.sql + prisma/graph_7_idea_law_link_withdrawn.sql.
+/// ⚠ Never deleted: a wrong row is superseded by its replacement, or — when nothing replaces it — withdrawn. Live = neither.
+/// Both foreign keys onto Lex's tables are RESTRICT.
 /// ⚠ An idea's `modifies` is an author's drafting choice; the corpus's `modifies` edges are frequently unread. Never sum them.
 model IdeaLawLink {
   id             String             @id @default(uuid())
@@ -3152,6 +3154,10 @@ model IdeaLawLink {
   supersededById String?            @map("superseded_by")
   supersededBy   IdeaLawLink?       @relation("IdeaLawLinkSupersede", fields: [supersededById], references: [id], onDelete: Restrict)
   supersedes     IdeaLawLink[]      @relation("IdeaLawLinkSupersede")
+  /// Retired with no replacement (e.g. the target is gone from the action's next instruction version). Never with supersededById.
+  withdrawnAt     DateTime?         @map("withdrawn_at") @db.Timestamptz()
+  /// Required (CHECK) when withdrawnAt is set: who withdrew it and why.
+  withdrawnDetail String?           @map("withdrawn_detail")
 
   @@map("idea_law_link")
 }

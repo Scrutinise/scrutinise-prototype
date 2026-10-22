@@ -101,7 +101,7 @@ export interface IdeaLawSet {
   inconsistent: IdeaLawRow[]
   counts: Record<LawResolutionState, number>
   /** ⚠ WHAT WAS COUNTED (constraint h). */
-  examined: { linkRows: number; superseded: number; effectRowsCounted: number }
+  examined: { linkRows: number; superseded: number; withdrawn: number; effectRowsCounted: number }
 }
 
 /** What each relation group is, and what the panel shows under it. */
