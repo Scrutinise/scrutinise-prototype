@@ -17,6 +17,17 @@
 - **Checks.** `check:lex-26u` 48/48 with 6 controls, 0 dead; `tsc` 0; client-boundary ✓. A mutation that skipped superseding gave 3 failures and 1 dead control, and was reverted.
 - **Depends on GRAPH `09e8939`** (`withdrawnAt`), so it can't be pushed before it. **Not pushed.**
 
+## 2026-10-22 10:27 UTC - GRAPH 7 follow-up: one law line per (relation, target) with every source on it; `effectsLoadDate()` exported (`e2b60d2`)
+
+- BRIEF_26U §5 says that when a hand row and a drafting-instruction row name the same relation and target, the panel
+  shows one line with both sources. `mergeLawLines()` in `idea-law-pure.ts` makes that line. Its `sources` list holds
+  every stored row, hand first, and each keeps its own action, note and `as_at`. The line's `as_at` is the oldest of
+  them. The same target under a different relation stays a separate line.
+- `effectsLoadDate()` is exported from `statutory-graph.ts`. It returns the date of the effects record's newest
+  `extracted_at` (today 2026-07-05), the same date the panel prints as the record's last refresh. LEX 26-U writes it as
+  the `as_at` of instruction rows.
+- check:idea-law 24/24, 233 assertions. A mutation with the merge removed turned C9 red.
+
 ## 2026-10-22 10:18 UTC - GRAPH 7 follow-up: a law link can be WITHDRAWN as well as superseded (`09e8939`)
 
 - Asked for by LEX 26-U §5. When an action's next instruction version drops a target, the old row has no replacement for
