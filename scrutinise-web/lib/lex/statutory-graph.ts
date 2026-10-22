@@ -32,7 +32,7 @@
 import { prisma } from '@/lib/prisma'
 import { readEffect, originOf, EDGE_SOURCES, type ChangeKind, type EdgeOrigin } from '@/lib/lex/effect-kinds'
 import {
-  PROVISION_PATH_SHAPE, provisionRefOf, isUnaddressableProvision, emptyGroups,
+  PROVISION_PATH_SHAPE, provisionRefOf, isUnaddressableProvision, emptyGroups, mergeLawLines,
   type IdeaLawSet, type IdeaLawRow, type LawResolution, type LawResolutionState, type LawEffectsSummary,
   type LawRelation, type LawSource, type LawTargetKind,
 } from '@/lib/lex/idea-law-pure'
@@ -922,6 +922,16 @@ async function tableNewest(): Promise<Date | null> {
 }
 
 /**
+ * The effects record's load date (YYYY-MM-DD): the newest `extracted_at` in the table, i.e. the law as we hold it.
+ * This is the `as_at` LEX 26-U §5 writes on a drafting-instruction row (BRIEF_26U decision 226). Null when the
+ * table holds no date. ⚠ It is the record's last refresh, so a change made after it is invisible to every reader here.
+ */
+export async function effectsLoadDate(): Promise<string | null> {
+  const d = await tableNewest()
+  return d ? new Date(d).toISOString().slice(0, 10) : null
+}
+
+/**
  * ⚠ THE ID FORMS OF ONE ACT, THROUGH THE IDENTITY BRIDGE — AND A REFUSAL IS NOT AN ABSENCE.
  *
  * Pre-1963 Acts are recorded under a regnal form (`ukpga/Vict/24-25/100`) by the effects feed and
@@ -1403,20 +1413,24 @@ export async function ideaLawSet(ideaId: string, opts: { external?: boolean; fet
       if (!effects.has(key)) effects.set(key, lawEffects(gid, ref))
       fx = await effects.get(key)!
     }
-    return {
-      id: l.id, ideaId: l.ideaId,
-      action: l.action ? { id: l.action.id, number: l.action.number, title: l.action.title || l.action.practicalStep } : null,
-      targetKind, docUri: l.docUri, provisionPath: l.provisionPath, relation,
+    const entry = {
+      id: l.id,
       source: l.source as LawSource, sourceDetail: l.sourceDetail, note: l.note,
+      action: l.action ? { id: l.action.id, number: l.action.number, title: l.action.title || l.action.practicalStep } : null,
       asAt: l.asAt.toISOString().slice(0, 10), createdAt: l.createdAt.toISOString(),
-      resolution, effects: fx,
+    }
+    return {
+      ...entry, ideaId: l.ideaId,
+      targetKind, docUri: l.docUri, provisionPath: l.provisionPath, relation,
+      resolution, effects: fx, sources: [entry],
     }
   }))
 
   // ⚠ An action row must belong to this idea's action AND to this idea. A mismatch is reported, never merged.
   const actionIdea = new Map(live.map((l) => [l.id, l.action?.ideaId ?? null]))
   const inconsistent = rows.filter((r) => r.ideaId !== ideaId || (r.action !== null && actionIdea.get(r.id) !== ideaId))
-  const consistent = rows.filter((r) => !inconsistent.includes(r))
+  // A hand row and an instruction row naming the same (relation, target) are ONE line with both sources (BRIEF_26U §5).
+  const consistent = mergeLawLines(rows.filter((r) => !inconsistent.includes(r)))
 
   const grouped = emptyGroups()
   for (const r of consistent) grouped[r.relation].push(r)
@@ -1433,8 +1447,7 @@ export async function ideaLawSet(ideaId: string, opts: { external?: boolean; fet
     if (await changesInForceAfter(r.resolution.canonical ?? r.docUri, ref, r.asAt).catch(() => 0) > 0) changed.push(r)
   }
   // ⚠ An idea with no links (most of them) pays for one indexed read and nothing else — this panel is on every idea page.
-  const refreshed = consistent.length ? await tableNewest().catch(() => null) : null
-  const recordRefreshedAt = refreshed ? new Date(refreshed).toISOString().slice(0, 10) : null
+  const recordRefreshedAt = consistent.length ? await effectsLoadDate().catch(() => null) : null
   const asserted = consistent.length ? consistent.map((r) => r.asAt).sort()[0] : null
 
   return {
@@ -1456,6 +1469,7 @@ export async function ideaLawSet(ideaId: string, opts: { external?: boolean; fet
       linkRows: all.length,
       superseded: all.filter((l) => l.supersededById !== null).length,
       withdrawn: all.filter((l) => l.withdrawnAt !== null).length,
+      mergedIntoALine: rows.length - inconsistent.length - consistent.length,
       // Per distinct target, so an Act named by two rows is not counted twice.
       effectRowsCounted: (await Promise.all([...effects.values()])).reduce((s, e) => s + e.rowsCounted, 0),
     },

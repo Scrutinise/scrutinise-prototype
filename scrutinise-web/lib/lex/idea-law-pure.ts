@@ -63,6 +63,23 @@ export interface LawEffectsSummary {
   failed: string | null
 }
 
+/** One stored row's own say on a line: who attached it, for what, why, and against which version of the law. */
+export interface IdeaLawSourceEntry {
+  id: string
+  source: LawSource
+  sourceDetail: string | null
+  note: string | null
+  action: { id: string; number: number | null; title: string } | null
+  asAt: string
+  createdAt: string
+}
+
+/**
+ * ⚠ A ROW HERE IS A LINE, NOT A STORED ROW. Stored rows naming the same (relation, doc_uri, provision_path) are one
+ * line (BRIEF_26U §5: a hand row and an instruction row show as one line with both sources). The top-level fields
+ * are the PRIMARY entry's (a hand row first, else the oldest); `sources` holds every entry, the primary first, so
+ * no action and no source is lost in the merge. `asAt` is the OLDEST of the entries, so freshness never under-reports.
+ */
 export interface IdeaLawRow {
   id: string
   ideaId: string
@@ -80,6 +97,35 @@ export interface IdeaLawRow {
   resolution: LawResolution
   /** Only for amends / repeals rows on legislation that is HELD. Never for a Bill (constraint f). */
   effects: LawEffectsSummary | null
+  /** Every stored row on this line, primary first. Always at least one. */
+  sources: IdeaLawSourceEntry[]
+}
+
+export const lawLineKey = (r: Pick<IdeaLawRow, 'relation' | 'docUri' | 'provisionPath'>): string =>
+  `${r.relation}|${r.docUri}|${r.provisionPath ?? ''}`
+
+/**
+ * Stored rows → lines, one per (relation, doc_uri, provision_path). Input order is kept for the lines (the first row
+ * of each key places it). ⚠ A different relation on the same target is a DIFFERENT line: amending s.5 and relying on
+ * s.5 are two statements, never merged.
+ */
+export function mergeLawLines(rows: IdeaLawRow[]): IdeaLawRow[] {
+  const byKey = new Map<string, IdeaLawRow[]>()
+  for (const r of rows) {
+    const k = lawLineKey(r)
+    const list = byKey.get(k)
+    if (list) list.push(r)
+    else byKey.set(k, [r])
+  }
+  return [...byKey.values()].map((group) => {
+    const primary = group.find((r) => r.source === 'hand') ?? group[0]
+    const ordered = [primary, ...group.filter((r) => r !== primary)]
+    return {
+      ...primary,
+      asAt: group.map((r) => r.asAt).sort()[0],
+      sources: ordered.flatMap((r) => r.sources),
+    }
+  })
 }
 
 export interface IdeaLawSet {
@@ -101,7 +147,7 @@ export interface IdeaLawSet {
   inconsistent: IdeaLawRow[]
   counts: Record<LawResolutionState, number>
   /** ⚠ WHAT WAS COUNTED (constraint h). */
-  examined: { linkRows: number; superseded: number; withdrawn: number; effectRowsCounted: number }
+  examined: { linkRows: number; superseded: number; withdrawn: number; mergedIntoALine: number; effectRowsCounted: number }
 }
 
 /** What each relation group is, and what the panel shows under it. */

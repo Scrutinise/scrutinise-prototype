@@ -55,10 +55,23 @@ function LawRow({ r }: { r: IdeaLawRow }) {
         {r.targetKind === 'bill' && <> · <strong className="text-foreground">{BILL_LABEL}</strong></>}
         {r.targetKind === 'document' && <> · a document, not law</>}
       </div>
-      <div className="mt-1 text-xs">
-        {r.action ? <>For action {r.action.number ?? '—'}: {r.action.title}</> : <>For the idea as a whole</>}
-      </div>
-      {r.note && <p className="mt-1 text-sm">{r.note}</p>}
+      {r.sources.length > 1 && (
+        <p className="mt-1 text-xs font-medium" data-law-sources={r.sources.length}>Named {r.sources.length} times — shown once, with each source:</p>
+      )}
+      <ul className="mt-1 space-y-1">
+        {r.sources.map((s) => (
+          <li key={s.id} data-law-source={s.source} data-law-source-row={s.id}>
+            <div className="text-xs">
+              {s.action ? <>For action {s.action.number ?? '—'}: {s.action.title}</> : <>For the idea as a whole</>}
+            </div>
+            {s.note && <p className="text-sm">{s.note}</p>}
+            <p className="text-xs text-muted-foreground">
+              {s.source === 'hand' ? 'Attached by hand' : s.source === 'drafting_instruction' ? 'From a drafting instruction' : 'Found by extraction'}
+              {s.sourceDetail ? ` (${s.sourceDetail})` : ''}, against the law as at {s.asAt}.
+            </p>
+          </li>
+        ))}
+      </ul>
       {r.resolution.state !== 'held' && (
         <p className="mt-1 text-xs font-medium" data-law-state={r.resolution.state}>⚠ {RESOLUTION_WORDS[r.resolution.state]} ({r.resolution.reason})</p>
       )}
@@ -66,10 +79,6 @@ function LawRow({ r }: { r: IdeaLawRow }) {
         <p className="mt-1 text-xs text-muted-foreground">{r.resolution.provision.reason}</p>
       )}
       {r.effects && <EffectsLine fx={r.effects} />}
-      <p className="mt-1 text-xs text-muted-foreground">
-        {r.source === 'hand' ? 'Attached by hand' : r.source === 'drafting_instruction' ? 'From a drafting instruction' : 'Found by extraction'}
-        {r.sourceDetail ? ` (${r.sourceDetail})` : ''}, against the law as at {r.asAt}.
-      </p>
     </li>
   )
 }

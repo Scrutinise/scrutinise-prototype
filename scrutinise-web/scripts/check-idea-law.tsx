@@ -23,10 +23,10 @@ import React from 'react'
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { prisma } from '../lib/prisma'
-import { ideaLawSet, resolveLawTarget, type LawFetch } from '../lib/lex/statutory-graph'
+import { ideaLawSet, resolveLawTarget, effectsLoadDate, type LawFetch } from '../lib/lex/statutory-graph'
 import { parseHandFile, attachHandRows } from '../lib/lex/idea-law-attach'
 import {
-  LAW_RELATIONS, LAW_SOURCES, LAW_TARGET_KINDS, BILL_LABEL, RESOLUTION_WORDS,
+  LAW_RELATIONS, LAW_SOURCES, LAW_TARGET_KINDS, BILL_LABEL, RESOLUTION_WORDS, lawLineKey, mergeLawLines,
   type IdeaLawSet, type LawEffectsSummary, type LawResolutionState,
 } from '../lib/lex/idea-law-pure'
 import IdeaLawPanel from '../components/lex/IdeaLawPanel'
@@ -312,7 +312,7 @@ tc('B6 the real publishers: a nonexistent Act, Bill and section of a held Act ar
 // ═══ C — THE READER, ON A FIXTURE THIS SCRIPT OWNS ═════════════════════════════
 let scratch: { id: string } | null = null
 let fixtureSet: IdeaLawSet | null = null
-const fixture: { actionId?: string; foreignActionId?: string; bill?: string; modifies?: string; notHeld?: string; supersededOld?: string; withdrawn?: string; inconsistent?: string; actionRow?: string } = {}
+const fixture: { actionId?: string; foreignActionId?: string; bill?: string; modifies?: string; notHeld?: string; supersededOld?: string; withdrawn?: string; dupOfHand?: string; inconsistent?: string; actionRow?: string } = {}
 
 async function buildFixture(): Promise<void> {
   scratch = await scratchCopy(MARQUEE.slice(0, 8), 'graph7-check')
@@ -340,6 +340,8 @@ async function buildFixture(): Promise<void> {
   fixture.supersededOld = old.id
   // Retired with nothing to point at (LEX 26-U §5: the target is gone from the instruction's next version).
   fixture.withdrawn = (await make({ targetKind: 'act', docUri: 'ukpga/2006/46', relation: 'relies_on', note: 'fixture: withdrawn', withdrawnAt: new Date(), withdrawnDetail: 'check:idea-law fixture: target absent from v2' })).id
+  // BRIEF_26U §5: an instruction row naming what a hand row already names (amends CRaG 2010) is one line, two sources.
+  fixture.dupOfHand = (await make({ actionId: fixture.actionId, targetKind: 'act', docUri: 'ukpga/2010/25', relation: 'amends', note: 'fixture: the instruction names CRaG too' })).id
   fixture.inconsistent = (await make({ actionId: fixture.foreignActionId, targetKind: 'act', docUri: 'ukpga/2010/25', relation: 'amends', note: 'fixture: an action of ANOTHER idea' })).id
   fixtureSet = await ideaLawSet(scratch.id, { external: false })
 }
@@ -371,7 +373,8 @@ tc('C1 every live row lands in exactly one group, its own relation; superseded r
   const refused = (p: Promise<unknown>) => p.then(() => false, (e) => /withdrawn/.test(String(e?.message ?? e)))
   a.ok('withdrawn_at without withdrawn_detail is refused', await refused(prisma.ideaLawLink.update({ where: { id: fixture.withdrawn! }, data: { withdrawnDetail: null } })))
   a.ok('superseded AND withdrawn is refused', await refused(prisma.ideaLawLink.update({ where: { id: fixture.withdrawn! }, data: { supersededById: fixture.modifies! } })))
-  a.ok('linkRows = live + superseded + withdrawn + inconsistent', s.examined.linkRows === s.rows.length + s.examined.superseded + s.examined.withdrawn + s.inconsistent.length, `${s.examined.linkRows} vs ${s.rows.length}+${s.examined.superseded}+${s.examined.withdrawn}+${s.inconsistent.length}`)
+  const { linkRows, superseded, withdrawn, mergedIntoALine } = s.examined
+  a.ok('linkRows = lines + merged + superseded + withdrawn + inconsistent', linkRows === s.rows.length + mergedIntoALine + superseded + withdrawn + s.inconsistent.length, `${linkRows} vs ${s.rows.length}+${mergedIntoALine}+${superseded}+${withdrawn}+${s.inconsistent.length}`)
   return a.done(LAW_RELATIONS.map((r) => `${r} ${s.grouped[r].length}`).join(' · '))
 })
 
@@ -386,6 +389,43 @@ tc('C2 action_id survives the union: the action row names WHICH action, the idea
   a.ok('it sits in amends beside the idea-level rows', s.grouped.amends.some((r) => r.id === fixture.actionRow) && s.grouped.amends.some((r) => r.action === null))
   a.ok('every hand row has no action', s.rows.filter((r) => r.source === 'hand').every((r) => r.action === null))
   return a.done()
+})
+
+tc('C9 a hand row and an instruction row naming the same (relation, target) are ONE line carrying both sources; a different relation is not merged', async () => {
+  const a = new A()
+  const s = needFixture()
+  a.read(s.rows.length)
+  const keys = s.rows.map(lawLineKey)
+  a.ok('no two lines share (relation, doc_uri, provision_path)', new Set(keys).size === keys.length)
+  const line = s.rows.find((r) => r.sources.some((e) => e.id === fixture.dupOfHand))
+  a.ok('the instruction row is on a line', !!line)
+  a.ok('that line is amends ukpga/2010/25', line?.relation === 'amends' && line?.docUri === 'ukpga/2010/25' && line?.provisionPath === null)
+  a.ok('it carries both sources, hand first', line?.sources.length === 2 && line.sources[0].source === 'hand' && line.sources[1].source === 'drafting_instruction', line?.sources.map((e) => e.source).join(',') ?? 'none')
+  a.ok('the instruction entry keeps its action', line?.sources[1]?.action?.id === fixture.actionId)
+  a.ok('the instruction row is NOT also a line of its own', !s.rows.some((r) => r.id === fixture.dupOfHand))
+  a.ok('merged counted: 1', s.examined.mergedIntoALine === 1, `${s.examined.mergedIntoALine}`)
+  a.ok('line as_at is the oldest of its sources', line?.asAt === line?.sources.map((e) => e.asAt).sort()[0])
+  // The pure merge, on inputs it did not get from the DB: same target, different relation → two lines.
+  const base = line!
+  const other = { ...base, id: 'x', relation: 'relies_on' as const, sources: [{ ...base.sources[0], id: 'x' }] }
+  a.input(1)
+  a.ok('amends and relies_on on one target stay two lines', mergeLawLines([{ ...base, sources: [base.sources[0]] }, other]).length === 2)
+  const html = render(s, null)
+  a.ok('the panel shows the line once, with both sources', html.split(`data-law-row="${line?.id}"`).length === 2
+    && html.includes(`data-law-source-row="${fixture.dupOfHand}"`) && html.includes('data-law-sources="2"'))
+  return a.done(`${line?.sources.map((e) => `${e.source}${e.action ? ` (action ${e.action.number})` : ''}`).join(' + ')}`)
+})
+
+tc('C10 effectsLoadDate() (LEX 26-U as_at) is the plain-SQL MAX(extracted_at) date, and is the date the panel says the record was refreshed', async () => {
+  const a = new A()
+  const d = await effectsLoadDate()
+  const newest = (await sql<{ d: Date | null }>(`SELECT MAX(extracted_at) AS d FROM legislation_edges`))[0]?.d ?? null
+  const direct = newest ? new Date(newest).toISOString().slice(0, 10) : null
+  a.read(1)
+  a.ok('a YYYY-MM-DD date', !!d && /^\d{4}-\d{2}-\d{2}$/.test(d), String(d))
+  a.ok('equals a separate SQL read', d === direct, `${d} vs ${direct}`)
+  a.ok('equals freshness.recordRefreshedAt', d === needFixture().freshness.recordRefreshedAt, `${needFixture().freshness.recordRefreshedAt}`)
+  return a.done(String(d))
 })
 
 tc('C3 a Bill never reaches the effects reader — even one filed under amends — and nothing but amends/repeals carries figures', async () => {
