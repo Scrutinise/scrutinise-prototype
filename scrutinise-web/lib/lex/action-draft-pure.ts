@@ -56,8 +56,9 @@ export const EMPTY_INSTRUCTION: DraftInstruction = {
 }
 
 // ── ids ───────────────────────────────────────────────────────────────────────────────────────────────────────
-// legislation.gov.uk type/year/number; a Bill as `bill/<id>`; a non-statutory document as `doc/<slug>` (spec §1.1).
-const DOC_URI = /^(?:(?:ukpga|uksi|asp|ssi|anaw|asc|nia|nisr|wsi|ukla|ukcm|apni|mwa|aep|aosp|aip|apgb|gbla|ukppa|eur|eudr|eudn)\/\d{4}\/\d+|bill\/\d+|doc\/[a-z0-9-]+)$/
+// legislation.gov.uk type/year/number; a Bill as `bill/<id>`; a non-statutory document as `doc/<corpus>/<doc id>` — the corpus's own
+// document id, never a free slug (IDEA_LAW_JOIN_SPEC as amended; GRAPH 7's resolveLawTarget refuses anything else).
+const DOC_URI = /^(?:(?:ukpga|uksi|asp|ssi|anaw|asc|nia|nisr|wsi|ukla|ukcm|apni|mwa|aep|aosp|aip|apgb|gbla|ukppa|eur|eudr|eudn)\/\d{4}\/\d+|bill\/\d+|doc\/[a-z0-9-]+\/\S+)$/
 const PROVISION_PATH = /^(?:section|part|chapter|schedule|paragraph|article|regulation|rule|crossheading)\/[0-9A-Za-z]+(?:\/(?:section|part|chapter|schedule|paragraph|article|regulation|rule|subsection)\/[0-9A-Za-z]+)*$/
 export const isDocUri = (s: string) => DOC_URI.test(s)
 export const isProvisionPath = (s: string) => PROVISION_PATH.test(s)
@@ -132,7 +133,7 @@ export function missingFields(ins: DraftInstruction | null, legislative: boolean
 export function validateInstruction(ins: DraftInstruction): string[] {
   const out: string[] = []
   ins.provisions.forEach((p, i) => {
-    if (!isDocUri(p.docUri)) out.push(`provision line ${i + 1}: “${p.docUri}” is not in legislation.gov.uk form (for example ukpga/2010/25, bill/3812 or doc/civil-service-code)`)
+    if (!isDocUri(p.docUri)) out.push(`provision line ${i + 1}: “${p.docUri}” is not in legislation.gov.uk form (for example ukpga/2010/25, bill/3812, or for a document doc/<collection>/<document id>)`)
     if (p.provisionPath && !isProvisionPath(p.provisionPath)) out.push(`provision line ${i + 1}: “${p.provisionPath}” is not a provision path such as section/5 or schedule/2/paragraph/3`)
   })
   return out

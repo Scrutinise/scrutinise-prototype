@@ -1,5 +1,15 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-22 02:07 UTC - GRAPH 7: the idea↔law join (`idea_law_link`), `ideaLawSet()`, the hand-attach path and the idea page's law panel
+
+**Why (as in the commit).** A user who opens an idea sees an empty graph panel and concludes we have no graph. We hold 1.29m legislation edges, 566k case-to-case links and 2.3m recorded acts; the only thing missing is a row saying which laws the idea concerns. Everything downstream hangs off that one row.
+**Table.** `idea_law_link`, Prisma model `IdeaLawLink` + DDL of record `prisma/graph_7_idea_law_link.sql` (the repo's pattern for Lex-written tables). Applied to Neon (`ep-old-dust-aboxi69a`, whichdb first), 0 rows; committed with the schema as `8fb2e80`. Every id column is TEXT. FKs go to `"Idea"` and `"LexCoherentAction"`, read from `schema.prisma` (neither is `@@map`-ped), both RESTRICT. `relation` is a CHECK constraint with seven values, as are `source`, `target_kind`, the hand-row note, provision/kind agreement and the `doc_uri` form. Three PARTIAL indexes, added to the §21 register (now 13).
+**Reader.** `resolveLawTarget()` + `ideaLawSet()` beside `inboundFor` in `statutory-graph.ts`. The corpus is checked first and the publisher only on a miss. Four states, never collapsed: held / named-not-held / no-such-id / lookup-failed. ⚠ legislation.gov.uk answers **400**, not 404, for an id that names nothing. Seven groups; `action_id` survives the union; an action of another idea goes to `inconsistent`; amends/repeals rows carry GRAPH_6's per-type counts with the change-the-words split. A Bill never reaches `effectsFor`, and the idea's `modifies` carries no corpus figure.
+**Hand path.** `npm run attach:idea-law -- <idea> <file> [--write]`: one row per line, all or nothing, re-runnable. Draft for 452c5ade at `docs/FOR_CHARLIE/graph7_idea_law_rows_452c5ade.txt`, dry run **held 20 / 20**, every title matching the Act the spec meant. **NOT written: that is Charlie's `--write`.**
+**Panel.** `components/lex/IdeaLawPanel.tsx` (imports only `idea-law-pure.ts`), under the Overview on `/ideas/[id]`. "None attached" and "could not read" are different sentences.
+**Checks.** `check:idea-law` 22/22, 378 rows + 29 inputs, 212 assertions, controls 6/6. Mutations: Bill guard removed → 2 red (first run 1; D1 tightened); `modifies` filed as `amends` → 4 red; both reverted. `check:effects` 30/30, `check:statutory` 17/0, client-boundary ✓, `tsc` 0, clean-build `--fast` PASS. Report: `docs/GRAPH_7_REPORT.md` (§6: seven things the data said the brief got wrong).
+**Not pushed. Not verified live.**
+
 ## 2026-10-21 23:38 UTC - SEARCH-29 (part 1, built and NOT measured): orientation never ran in the product, v2 built; stage 2 and Option B built behind flags; statistics read-only role
 
 **Why orientation produced nothing.** Not "ran and lost": **never called.** The last `orientation.*` ledger row is 25 Sep 01:19 UTC (32 rows ever, all 24-25 Sep) while `/api/health` read `LEX_WEB_ORIENTATION: true`. v1 is called only by the legacy Page-1 trigger (`fireSearchTrigger`); `build.ts`'s ORIENT pass never imported it. 2 of 64 ideas hold a stored orientation and both have `calls: []`.
@@ -19,6 +29,98 @@
 **5.** Ten scripts that import a spending Search module now call `enterPurpose('measurement')`; `check:search-purpose` scans every web script and fails on one with neither a purpose-bearing name nor the call (343 scanned, 60 spending, 0 unattributed, control fires).
 **Checks run before commit.** `tsc --noEmit` clean; `check-clean-build.sh --fast` pass; `check:search-purpose` pass. The live-corpus checks were run in the item's own session.
 **Not in this commit.** Item 3's `measure-s28-bills.ts` and the `--set` flag in `measure-s19-grain.ts`; Lex's uncommitted work (including `check:read-section` and `check:lex-research` in `package.json`, and the 212/211 CHANGE_LOG entry below, which stays unstaged).
+
+## 2026-10-22 02:41 UTC - LEX 26-U §3–§4: drafting instructions and illustrative clauses (148, 228), what each clause touches (144, 209, 210, 229); §5 stopped (no `idea_law_link` on Main)
+
+Full write-up: `docs/LEX_26U_REPORT.md`.
+
+**§3 — the drafting instruction.**
+- **The record.** `record.draft` holds versions plus Lex's proposal (`lib/lex/action-draft-pure.ts`). Every save is a new version and earlier ones are kept. The caveat is always the clause's first line (148).
+  - ⚠ `parseRecord` now carries `draft` through. It used to drop unknown keys, so the next slot save would have deleted a draft.
+- **Lex drafts** (`lib/lex/action-draft.ts`) with Sonnet 5.5 at effort high, from the action, its Commentary and slots, the policy and the conditions.
+  - It also reads the OPC guidance Parts 5.1, 6 and 9.2, cut from the held text, and the five precedents, found by their own text in the corpus.
+  - The result is a proposal beside the owner's version.
+  - Provision lines not in legislation.gov.uk form, and citations not supplied, are dropped, and the reason says so.
+- **Price.** Measured n=4, **mean 10.7p**, asks first.
+- **Draft all legislative actions.** Resumable, each draft stored as it completes. ⚠ It runs from the page, not the worker.
+- **Route ops:** `saveDraft`, `draftAction`, `acceptDraft`, `dismissDraft`, `touches`.
+
+**§4 — what this touches** (`lib/lex/action-touches*.ts`).
+- For each provision: its held text; the GRAPH 6 per-type counts exactly as returned, with unclassified printed; the load date and freshness from the data; and near provisions from legislation.gov.uk's contents, each with "consistent with this action? — not yet answered". CRaG s.5 shows s.10.
+- **The honest states:** "before Parliament — not yet law" / "named, not held" / "no such Act" / "lookup failed".
+- **Fixed on cold reads:**
+  - regnal-year ids (1911);
+  - `regional` held text;
+  - a `LIMIT` taken before the corpus filter, which made the Procurement Act 2023 read "not held".
+- **Actions Pack:** sections 12 Draft text and 13 What this touches, appended so 1–11 keep their numbers, and the annexe "Consequential amendments and repeals". **Background Report:** section 8.
+
+**§5:** not started. `origin/Main` has no `idea_law_link`.
+
+**Checks:**
+- `check:lex-26u` 40/40, 5 controls.
+- Unchanged: `check:prompt-examples` 0 of 24; 26-S2 221; 26-S2 browser 33; 26-T2 72; 26-P 116.
+- `tsc` and `check:client-boundary` clean.
+
+**Spend:** 62.6p drafting on scratch copies (19.7p of it on two calls cut off at an 8,000-token ceiling, now 16,000). All on the ledger.
+
+## 2026-10-22 02:10 UTC - LEX 22 Oct (5): the PSED action created on 452c5ade (decision 222)
+
+On Charlie's instruction, via CCh, the PSED action was created as **#202**, "Amend or remove the public sector equality duty for publicly funded bodies":
+- The statement is CCh Reply 39's wording, verbatim (637 characters). Avenue LEGISLATIVE, source USER.
+- The Commentary is as described, plus one line saying it was created on Charlie's instruction with CCh's wording.
+- ⚠ It sits under the heading **"Legislation"**. The idea has no heading named "Primary legislation", and Charlie chose "Legislation" for the same phrase on the precedent notes the same day.
+- Policy-tested: **FITS**, "removes a statutory collective duty that is in direct conflict with the policy's core requirement for single, named accountability" (1.17p, one call).
+- Read back: statement and commentary verbatim.
+
+## 2026-10-22 01:55 UTC - LEX 26-U §2 (decision 227): imported blocks moved out of action statements; editing never truncates
+
+**Diagnosis (#38, 452c5ade).** The 26-S1 import pass APPENDED "— More on this action, imported 2026-10-18 (From: [Ref: 213] …) —" blocks to the action STATEMENT (`action-import.ts`, step 3). That turned #38's 462-character sentence into 3,196 characters.
+- `BoundedInput` clamped EVERY change to the limit (`clampToLimit`). Deleting one word from a 3,196-character statement therefore cut it to its first 1,000: 90% gone.
+- Only 452c5ade was affected: 11 actions, 50 blocks, 10 statements over 1,000.
+
+**Migration, applied 01:55 UTC to every idea** (`scripts/migrate-227-import-blocks.ts --apply`).
+- **452c5ade:** 11 actions, 50 blocks moved into Commentary under "Parts of this action, quoted", verbatim.
+- **Read back:**
+  - 50 of 50 blocks found verbatim in the commentary.
+  - 0 live statements over 1,000.
+  - 0 statements still holding an imported block.
+  - 11 `FieldRevision` rows (origin `IMPORT_BLOCKS_TO_COMMENTARY_227`) keep each pre-migration statement.
+- **#38:** 3,196 → 462 characters, Charlie's sentence alone.
+- Tried first on a scratch copy, where statement + moved blocks reproduced the original text exactly.
+
+**Fixes.**
+- **`BoundedInput`:** text already in the box is never removed. An over-limit box takes edits that shorten it and refuses ones that lengthen it, saying so. The counter reads "⚠ N over the limit of M — shorten it to save" in words, red as well. Only new text in a box within its limit stops at the limit (168).
+- **The action card's Save:** an over-limit statement is refused with "Not saved: the statement is N characters; the limit is 1,000. Move the extra into Commentary or shorten." The text stays as typed, and Cancel restores.
+- **The import pass:** "Adds to" / "Part of" now go into Commentary (`addImportedBlocks`), never the statement.
+- **`removeFoldLine`:** counts an imported block as a part, so the header is not dropped from under one.
+
+## 2026-10-22 01:45 UTC - LEX 22 Oct (3)/(4): precedents filed on 452c5ade, "+ Add research" reads a .md whatever the browser calls it
+
+**1. Precedents on 452c5ade (data, at CCh's instruction; Charlie asked CC, not Lex).**
+- `IDEA_LAW_JOIN_SPEC.md` is filed as **[Ref: 215]**, kind DOCUMENT. "I may share" is not set, so no text is held (`readStatus` NOT_READ, with the reason).
+- Five ResearchNotes are filed, one per §2.4 precedent. Each quotes the spec's row byte-for-byte, read from the file, with locator "§2.4, row n".
+- Every note is status **UNREVIEWED**, author **CC**, heading "Primary legislation", and bears on Actions 38, 57 and 59.
+- Read back through `readNotebook` as the owner: 5 of 5, all verbatim. Nothing else was written.
+- Two points of CCh's instruction did not exist as stated; Charlie chose these resolutions on 22 Oct:
+  - There is no heading called "Primary legislation", and bears-on cannot point at a heading. The visible heading is "Legislation" (#38, #57, #59), so the notes bear on those three actions and carry "Primary legislation" as their own note heading.
+  - The notebook had no author kind for CC: "USER" shows Charlie "you", and "LEX" says Lex wrote it. The notes are stored as `authorKind 'CC'` with author id `cc`, and `readNotebook` names them "CC". ⚠ That reader change is not deployed, so production shows "A team member" until it ships.
+
+**2. "+ Add research" refused a .md** that the browser sent as `application/text`, because `extractFile` decided the format by the mime label alone. Now:
+- A file that claims to be text, by extension (.md, .markdown, .txt, .csv) or by a `text/…` / `application/text` label, is read as text when its bytes ARE text: no NUL byte, and under 1% control characters.
+- Invalid UTF-8 is read as Windows-1252, so a £ survives.
+- A file whose label says text but whose bytes are not is refused, naming its extension. The general refusal now names the extension too.
+- PDF and Word still go by their label.
+- Every upload path calls `extractFile`, so the chat attach is fixed as well.
+- `check:add-research-md-browser` 13/13, 2 controls fired. Chromium runs the real AddResearch dialog and uploads a .md fixture that the browser genuinely sent as `application/text`; the real extract route answers on a scratch copy. The research harness now lets `/research-notebook/extract` through to the network. `check:lex-26s2-browser` is still 33/33.
+
+**3. 222 (amended): NOT DONE.** No PSED action exists on 452c5ade. No action in any status mentions the Equality Act, s.149, PSED or an equality duty. Charlie chose to wait for CCh to name the action, or to have one created.
+
+**225, 226 recorded.** 225 (the Risks view) goes into the 215–219 sprint. 226 settles the 26-U questions:
+- `modifies` for "as if" modifications
+- `as_at` = the date of the effects load
+- the drafting instruction is versioned on the action's record, with `source_detail` = action id + version
+- a locator and a url on every quotation note
+- the spec's ids are text uuids
 
 ## 2026-10-22 00:51 UTC - LEX 22 Oct (2): 224 (rule 3 is now 214's rule), the 212 same-turn check passes live, and production's Anthropic key is not capped
 

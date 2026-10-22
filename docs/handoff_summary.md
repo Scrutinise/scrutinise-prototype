@@ -964,6 +964,23 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**⚠ 2026-10-22 02:41 UTC — LEX 26-U run overnight; see `docs/LEX_26U_REPORT.md`.**
+- **Done:**
+  - §2: #38 migrated, and editing never truncates (browser-asserted).
+  - §3: drafting instruction plus clause; measured 10.7p n=4.
+  - §4: what this touches, with the four honest states.
+  - Data written: precedents [Ref: 215] plus five CC notes on 452c5ade; the PSED action #202; the 227 migration.
+- **§5 stopped:** no `idea_law_link` on Main.
+- **Commits:** local only, not pushed. They sit on Search's unpushed `763c620`; ask Search before pushing.
+- **§20 string after the push:** "Move the extra into Commentary or shorten."
+- **Charlie to look at:**
+  - #38;
+  - the definition clause (220);
+  - the PSED clause (222: "must secure … on merit");
+  - "voided if unmatched", which is not drafted;
+  - the CRaG s.10 near question.
+- **Next sprint:** 215–219 and 225.
+
 **⚠ 2026-10-21 23:42 UTC — LEX 21 Oct (2)/(3) supersedes the entry below.**
 - **211 is withdrawn** (decision 214); its code is reverted to HEAD.
 - **Kept:** 212 `read_section`, the ledger fix, the 214 prompt line, and `acceptField` keeping replaced words (452c5ade).
