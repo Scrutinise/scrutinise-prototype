@@ -31,6 +31,11 @@
 
 import { prisma } from '@/lib/prisma'
 import { readEffect, originOf, EDGE_SOURCES, type ChangeKind, type EdgeOrigin } from '@/lib/lex/effect-kinds'
+import {
+  PROVISION_PATH_SHAPE, provisionRefOf, isUnaddressableProvision, emptyGroups,
+  type IdeaLawSet, type IdeaLawRow, type LawResolution, type LawResolutionState, type LawEffectsSummary,
+  type LawRelation, type LawSource, type LawTargetKind,
+} from '@/lib/lex/idea-law-pure'
 
 export const CITATION_TABLE = 'citation_edge'
 
@@ -1159,3 +1164,298 @@ export async function effectsFor(
 
 /** The recognised sources, for a caller that wants to say what each one is. */
 export const KNOWN_EDGE_SOURCES = EDGE_SOURCES
+
+// ═════════════════════════════════════════════════════════════════════════════════════════
+// THE IDEA↔LAW JOIN — which laws an idea concerns, and what the graph says about each (GRAPH 7).
+//
+// `idea_law_link` holds the rows (prisma/graph_7_idea_law_link.sql); this reads them, resolves every target
+// against the corpus, and hangs the effects reader off the amends / repeals rows. Read-only.
+//
+// ⚠⚠ THREE THINGS THIS READER REFUSES TO DO:
+//   1. CONFLATE THE FOUR RESOLUTION STATES. Held / named-not-held / no-such-id / lookup-failed are different
+//      facts, and a row that is not held is RETURNED in `unresolved` with its state — never dropped.
+//   2. PASS A BILL TO THE EFFECTS READER. A Bill is not law and has no effects (constraint f).
+//   3. LET AN IDEA'S `modifies` MEET THE CORPUS'S. The idea's row is an author's drafting choice; the corpus's
+//      `modifies` edges are frequently unclassified. The corpus figures appear only inside an amends / repeals
+//      row's `effects`, per type and split; nothing here adds them to anything an author wrote.
+// ═════════════════════════════════════════════════════════════════════════════════════════
+
+/** The fetch the resolver uses for the publisher checks — injectable so a check can make it fail. */
+export type LawFetch = (url: string, init: { method: 'GET' | 'HEAD' }) => Promise<{ status: number }>
+
+const defaultFetch: LawFetch = (url, init) =>
+  fetch(url, { ...init, redirect: 'follow', signal: AbortSignal.timeout(6_000), headers: { 'User-Agent': 'Scrutinise/1.0' } })
+
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`)
+
+/**
+ * The publisher's answer for an id we do not hold.
+ * ⚠ legislation.gov.uk answers **400**, not 404, for an id that names nothing (measured 22 Oct 2026 on
+ * `ukpga/2099/999/data.xml`). Both are read as "no such id"; anything else that is not a 200 is a failed lookup.
+ */
+async function askPublisher(url: string, f: LawFetch, method: 'GET' | 'HEAD' = 'HEAD'):
+  Promise<{ state: 'named-not-held' | 'no-such-id' | 'lookup-failed'; said: string }> {
+  try {
+    const r = await f(url, { method })
+    if (r.status === 200) return { state: 'named-not-held', said: `${url} answered 200` }
+    if (r.status === 404 || r.status === 400) return { state: 'no-such-id', said: `${url} answered ${r.status}` }
+    return { state: 'lookup-failed', said: `${url} answered ${r.status}, which says neither yes nor no` }
+  } catch (e) {
+    return { state: 'lookup-failed', said: `${url} could not be reached (${e instanceof Error ? e.message : String(e)})` }
+  }
+}
+
+/**
+ * Resolve one stored target against the corpus — and, only on a miss, against its publisher.
+ *
+ * ⚠ THE CORPUS FIRST, ALWAYS. "Held" can only be said by our own tables. The publisher is asked only to tell
+ * "named, not held" from "no such id", which no table of ours can do for something it has never seen.
+ * `external: false` skips that question and says so (`lookup-failed`), rather than guessing either way.
+ */
+export async function resolveLawTarget(
+  targetKind: LawTargetKind,
+  docUri: string,
+  provisionPath: string | null,
+  opts: { external?: boolean; fetch?: LawFetch } = {},
+): Promise<LawResolution> {
+  const external = opts.external ?? true
+  const f = opts.fetch ?? defaultFetch
+  const base = { title: null, canonical: null, provision: null } as const
+  try {
+    // ── a Bill: the Bills API corpus, by bill id ──────────────────────────────────────────
+    if (targetKind === 'bill') {
+      const m = /^bill\/(\d+)$/.exec(docUri)
+      if (!m) return { ...base, state: 'no-such-id', reason: `“${docUri}” is not a Bill id of the form bill/<number>`, checkedAgainst: [] }
+      const r = await prisma.$queryRawUnsafe<Array<{ n: number; compiled: number }>>(
+        `SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE status = 'compiled')::int AS compiled
+         FROM corpus_sections WHERE corpus = 'bills-api' AND split_part(id, ':', 2) = $1`, m[1])
+      if (r[0].compiled > 0) {
+        return { ...base, state: 'held', reason: `${r[0].compiled} of ${r[0].n} publications of Bill ${m[1]} held as text (bills-api)`, checkedAgainst: ['corpus'] }
+      }
+      if (!external) return { ...base, state: 'lookup-failed', reason: `no text of Bill ${m[1]} in our corpus (${r[0].n} rows, none compiled); the Bills API was not asked`, checkedAgainst: ['corpus'] }
+      const p = await askPublisher(`https://bills-api.parliament.uk/api/v1/Bills/${m[1]}`, f, 'GET')
+      return { ...base, state: p.state, reason: `no text of Bill ${m[1]} in our corpus (${r[0].n} rows, none compiled); ${p.said}`, checkedAgainst: ['corpus', 'bills-api'] }
+    }
+
+    // ── a document: doc/<corpus>/<document id>, which is the corpus's own key ───────────
+    if (targetKind === 'document') {
+      const m = /^doc\/([a-z0-9-]+)\/(.+)$/.exec(docUri)
+      if (!m) return { ...base, state: 'no-such-id', reason: `“${docUri}” is not a document id of the form doc/<corpus>/<document id>`, checkedAgainst: [] }
+      const r = await prisma.$queryRawUnsafe<Array<{ n: number }>>(
+        `SELECT COUNT(*)::int AS n FROM corpus_sections WHERE corpus = $1 AND id LIKE $2 ESCAPE '\\' AND status = 'compiled'`,
+        m[1], `${escapeLike(`${m[1]}:${m[2]}:`)}%`)
+      return r[0].n > 0
+        ? { ...base, state: 'held', reason: `${r[0].n} held sections under ${m[1]}:${m[2]}`, checkedAgainst: ['corpus'] }
+        // ⚠ A document has no public register to ask, so "named, not held" cannot be established for one.
+        : { ...base, state: 'no-such-id', reason: `no held text under ${m[1]}:${m[2]} — a document has no public register to ask, so this cannot be told apart from one we never ingested`, checkedAgainst: ['corpus'] }
+    }
+
+    // ── legislation: an Act or instrument, and perhaps one provision of it ────────────────
+    if (!/^[a-z]+\/[A-Za-z0-9-]+(\/[A-Za-z0-9-]+)+$/.test(docUri)) {
+      return { ...base, state: 'no-such-id', reason: `“${docUri}” is not a legislation id of the form type/year/number`, checkedAgainst: [] }
+    }
+    const resolution = await resolveActForms(docUri)
+    if (resolution.bridge === 'ambiguous-refused') {
+      return { ...base, state: 'lookup-failed', reason: resolution.note ?? 'this id fits more than one Act', checkedAgainst: ['corpus'] }
+    }
+    const acts = await prisma.$queryRawUnsafe<Array<{ gid: string; title: string | null; corpus: string | null; section_count: number; in_corpus: boolean }>>(
+      `SELECT gid, title, corpus, section_count, in_corpus FROM corpus_acts WHERE gid = ANY($1::text[])`, resolution.candidates)
+    const heldAct = acts.find((a) => a.in_corpus && a.section_count > 0 && a.corpus)
+    const bridgeNote = resolution.bridge === 'unavailable' ? ` (${resolution.note})` : ''
+
+    if (!heldAct) {
+      const known = acts[0]
+        ?? (await prisma.$queryRawUnsafe<Array<{ g: string }>>(
+          `SELECT split_part(to_id, ':', 2) AS g FROM ${EFFECTS_TABLE} WHERE split_part(to_id, ':', 2) = ANY($1::text[]) LIMIT 1`,
+          resolution.candidates))[0]
+      if (known) {
+        return {
+          ...base, state: 'named-not-held', title: acts[0]?.title ?? null, canonical: resolution.canonical,
+          reason: acts[0]
+            ? `${docUri} is in our register of Acts, with no text held${bridgeNote}`
+            : `${docUri} is named in the official changes record, and we hold no text of it${bridgeNote}`,
+          checkedAgainst: ['corpus'],
+        }
+      }
+      if (!external) return { ...base, state: 'lookup-failed', reason: `${docUri} is not in our corpus; legislation.gov.uk was not asked${bridgeNote}`, checkedAgainst: ['corpus'] }
+      const p = await askPublisher(`https://www.legislation.gov.uk/${docUri}/data.xml`, f)
+      return { ...base, state: p.state, reason: `${docUri} is not in our corpus; ${p.said}${bridgeNote}`, checkedAgainst: ['corpus', 'legislation.gov.uk'] }
+    }
+
+    const actHeld = {
+      title: heldAct.title, canonical: heldAct.gid !== docUri ? heldAct.gid : null,
+      reason: `${heldAct.gid} held: ${heldAct.section_count.toLocaleString()} sections in ${heldAct.corpus}${bridgeNote}`,
+    }
+    if (targetKind !== 'provision' || !provisionPath) {
+      return { ...actHeld, state: 'held', provision: null, checkedAgainst: ['corpus'] }
+    }
+
+    // ── the provision ───────────────────────────────────────────────────────────────────
+    const path = provisionPath.trim()
+    if (!PROVISION_PATH_SHAPE.test(path)) {
+      return { ...actHeld, state: 'no-such-id', checkedAgainst: ['corpus'],
+        provision: { path, ref: path, state: 'not-held', reason: `“${path}” is not a provision path such as section/149 or schedule/2/paragraph/3` },
+        reason: `${actHeld.reason}; the provision path is malformed` }
+    }
+    const ref = provisionRefOf(path)
+    if (isUnaddressableProvision(path)) {
+      return { ...actHeld, state: 'held', checkedAgainst: ['corpus'],
+        provision: { path, ref, state: 'unaddressable', reason: 'a Part or Chapter is not a row of its own in our corpus, so the Act is checked and the provision is not' } }
+    }
+    const pp = provisionPredicate(`split_part(id, ':', 3)`, ref)
+    const rows = await prisma.$queryRawUnsafe<Array<{ exact: number; n: number }>>(
+      `SELECT COUNT(*) FILTER (WHERE lower(split_part(id, ':', 3)) = $3)::int AS exact, COUNT(*)::int AS n
+       FROM corpus_sections WHERE corpus = $1 AND id LIKE $2 ESCAPE '\\' AND ${pp.sql.replace(/\$P/g, '$3')}`,
+      heldAct.corpus, `${escapeLike(`${heldAct.corpus}:${heldAct.gid}:`)}%`, ...pp.params)
+    if (rows[0].n > 0) {
+      return { ...actHeld, state: 'held', checkedAgainst: ['corpus'],
+        provision: { path, ref, state: 'held', reason: rows[0].exact ? `${ref} held` : `${ref} held as ${rows[0].n} rows beneath it` } }
+    }
+    if (!external) {
+      return { ...actHeld, state: 'lookup-failed', checkedAgainst: ['corpus'],
+        provision: { path, ref, state: 'not-held', reason: `no row for ${ref}; legislation.gov.uk was not asked` },
+        reason: `${actHeld.reason}; the provision is not held and was not checked` }
+    }
+    const p = await askPublisher(`https://www.legislation.gov.uk/${heldAct.gid}/${path}/data.xml`, f)
+    return { ...actHeld, state: p.state, checkedAgainst: ['corpus', 'legislation.gov.uk'],
+      provision: { path, ref, state: 'not-held', reason: `no row for ${ref} in ${heldAct.corpus}; ${p.said}` },
+      reason: `${actHeld.reason}; the provision is not held` }
+  } catch (e) {
+    return { ...base, state: 'lookup-failed', reason: `the lookup itself failed: ${e instanceof Error ? e.message : String(e)}`, checkedAgainst: [] }
+  }
+}
+
+/** GRAPH_6's per-type counts, as the panel shows them. ⚠ A failure is a sentence, never a zero. */
+async function lawEffects(gid: string, provisionRef: string | null): Promise<LawEffectsSummary> {
+  try {
+    const e = await effectsFor(gid, { provision: provisionRef, limitPerType: 1 })
+    return {
+      perType: e.perType.map((t) => ({
+        edgeType: t.edgeType, total: t.total,
+        textual: t.byKind.textual, notTextual: t.byKind['not-textual'], unclassified: t.byKind.unclassified,
+      })),
+      caveat: e.freshness.caveat,
+      rowsCounted: e.examined.rowsCounted,
+      failed: null,
+    }
+  } catch (err) {
+    return { perType: [], caveat: '', rowsCounted: 0, failed: `the effects record could not be read: ${err instanceof Error ? err.message : String(err)}` }
+  }
+}
+
+/**
+ * Official changes to a target coming into force AFTER the date a link was attached against.
+ * ⚠ It can only see what the stored record holds: a change made after the record's last refresh is invisible,
+ * and `freshness.basis` says so in the same breath as the result.
+ */
+async function changesInForceAfter(gid: string, provisionRef: string | null, asAt: string): Promise<number> {
+  const thisProv = `split_part(to_id, ':', 3)`
+  let provSql = ''
+  const params: unknown[] = [gidCandidates(gid), asAt]
+  if (provisionRef) {
+    const p = provisionPredicate(thisProv, provisionRef)
+    provSql = ` AND (${p.sql.replace(/\$P/g, '$3')} OR ${thisProv} = '')`
+    params.push(...p.params)
+  }
+  const r = await prisma.$queryRawUnsafe<Array<{ n: number }>>(
+    `SELECT COUNT(*)::int AS n FROM ${EFFECTS_TABLE}
+     WHERE split_part(to_id, ':', 2) = ANY($1::text[]) AND edge_type IN ('amends','repeals','modifies')
+       AND detail ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}[|]' AND substr(detail, 1, 10)::date > $2::date${provSql}`, ...params)
+  return r[0].n
+}
+
+/**
+ * Everything the idea concerns in law: its own rows and its actions' rows, resolved, grouped by relation.
+ *
+ * ⚠ READ-ONLY. ⚠ A failure to read the link table THROWS — an idea with no links and an idea whose links could
+ * not be read must never look the same, so the caller says which (the page does). A failure on one target is
+ * that row's `lookup-failed`, and the rest of the set still answers.
+ */
+export async function ideaLawSet(ideaId: string, opts: { external?: boolean; fetch?: LawFetch } = {}): Promise<IdeaLawSet> {
+  const all = await prisma.ideaLawLink.findMany({
+    where: { OR: [{ ideaId }, { action: { ideaId } }] },
+    include: { action: { select: { id: true, ideaId: true, number: true, title: true, practicalStep: true } } },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+  })
+  const live = all.filter((l) => l.supersededById === null)
+
+  // One resolution and one effects read per distinct target, however many rows name it.
+  const resolutions = new Map<string, Promise<LawResolution>>()
+  const resolve = (k: LawTargetKind, d: string, p: string | null) => {
+    const key = `${k}|${d}|${p ?? ''}`
+    if (!resolutions.has(key)) resolutions.set(key, resolveLawTarget(k, d, p, opts))
+    return resolutions.get(key)!
+  }
+  const effects = new Map<string, Promise<LawEffectsSummary>>()
+
+  const rows: IdeaLawRow[] = await Promise.all(live.map(async (l) => {
+    const targetKind = l.targetKind as LawTargetKind
+    const relation = l.relation as LawRelation
+    const resolution = await resolve(targetKind, l.docUri, l.provisionPath)
+    let fx: LawEffectsSummary | null = null
+    // ⚠ CONSTRAINT f: a Bill (and a document) never reaches the effects reader.
+    const isLegislation = targetKind === 'act' || targetKind === 'instrument' || targetKind === 'provision'
+    if ((relation === 'amends' || relation === 'repeals') && isLegislation && resolution.state === 'held') {
+      const gid = resolution.canonical ?? l.docUri
+      const ref = resolution.provision && resolution.provision.state !== 'unaddressable' ? resolution.provision.ref : null
+      const key = `${gid}|${ref ?? ''}`
+      if (!effects.has(key)) effects.set(key, lawEffects(gid, ref))
+      fx = await effects.get(key)!
+    }
+    return {
+      id: l.id, ideaId: l.ideaId,
+      action: l.action ? { id: l.action.id, number: l.action.number, title: l.action.title || l.action.practicalStep } : null,
+      targetKind, docUri: l.docUri, provisionPath: l.provisionPath, relation,
+      source: l.source as LawSource, sourceDetail: l.sourceDetail, note: l.note,
+      asAt: l.asAt.toISOString().slice(0, 10), createdAt: l.createdAt.toISOString(),
+      resolution, effects: fx,
+    }
+  }))
+
+  // ⚠ An action row must belong to this idea's action AND to this idea. A mismatch is reported, never merged.
+  const actionIdea = new Map(live.map((l) => [l.id, l.action?.ideaId ?? null]))
+  const inconsistent = rows.filter((r) => r.ideaId !== ideaId || (r.action !== null && actionIdea.get(r.id) !== ideaId))
+  const consistent = rows.filter((r) => !inconsistent.includes(r))
+
+  const grouped = emptyGroups()
+  for (const r of consistent) grouped[r.relation].push(r)
+
+  const counts: Record<LawResolutionState, number> = { held: 0, 'named-not-held': 0, 'no-such-id': 0, 'lookup-failed': 0 }
+  for (const r of consistent) counts[r.resolution.state]++
+
+  // Freshness: which held legislation has an official change coming into force after its as_at.
+  const changed: IdeaLawRow[] = []
+  for (const r of consistent) {
+    const isLegislation = r.targetKind === 'act' || r.targetKind === 'instrument' || r.targetKind === 'provision'
+    if (!isLegislation || r.resolution.state !== 'held') continue
+    const ref = r.resolution.provision && r.resolution.provision.state !== 'unaddressable' ? r.resolution.provision.ref : null
+    if (await changesInForceAfter(r.resolution.canonical ?? r.docUri, ref, r.asAt).catch(() => 0) > 0) changed.push(r)
+  }
+  // ⚠ An idea with no links (most of them) pays for one indexed read and nothing else — this panel is on every idea page.
+  const refreshed = consistent.length ? await tableNewest().catch(() => null) : null
+  const recordRefreshedAt = refreshed ? new Date(refreshed).toISOString().slice(0, 10) : null
+  const asserted = consistent.length ? consistent.map((r) => r.asAt).sort()[0] : null
+
+  return {
+    ideaId, rows: consistent, grouped,
+    freshness: {
+      asserted_as_at: asserted,
+      changed_since: changed,
+      recordRefreshedAt,
+      basis: !consistent.length
+        ? 'nothing is attached, so there is nothing to check for changes'
+        : recordRefreshedAt
+        ?`a row counts as changed if the official changes record holds an amendment, repeal or modification to its target coming into force after the date it was attached against; that record was last refreshed on ${recordRefreshedAt}, so a change made after then cannot be seen here`
+        : 'the official changes record holds no date, so no row can be shown as changed since it was attached',
+    },
+    unresolved: consistent.filter((r) => r.resolution.state !== 'held'),
+    inconsistent,
+    counts,
+    examined: {
+      linkRows: all.length,
+      superseded: all.length - live.length,
+      // Per distinct target, so an Act named by two rows is not counted twice.
+      effectRowsCounted: (await Promise.all([...effects.values()])).reduce((s, e) => s + e.rowsCounted, 0),
+    },
+  }
+}

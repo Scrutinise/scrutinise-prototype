@@ -811,8 +811,11 @@ duplicate rows in production weeks later.
 | `IdeaNote_seeded_source_key` | `IdeaNote` | One SEEDED note per (idea, user, source), so the "My original idea" note cannot be written twice by two tabs racing a read-then-write. Partial on `source <> 'USER'`. ⚠⚠ **The obvious `@@unique([ideaId, userId, source])` is WRONG IN THE DIRECTION THAT BREAKS THE FEATURE** — it would apply to `source = 'USER'` as well, so a user could have exactly ONE note. That is why it cannot be declared and has to live here. | `prisma/lex_25n_notes.sql` |
 
 | `Idea_visible_idx` | `Idea` | The live-idea index behind the owner's dashboard and the public list. Partial on `deletedAt IS NULL AND "archivedAt" IS NULL` — 25-O §4 added ARCHIVING as a separate act from the owner's own delete, and every list now filters both. | `prisma/lex_25o.sql` |
+| `idea_law_link_idea_live_idx` | `idea_law_link` | GRAPH 7: an idea's live law links, read by `ideaLawSet()` on every idea page. Partial on `superseded_by IS NULL` (links are never deleted, only superseded). | `prisma/graph_7_idea_law_link.sql` |
+| `idea_law_link_target_live_idx` | `idea_law_link` | GRAPH 7: every idea attached to one law, `(doc_uri, provision_path)`. Partial on `superseded_by IS NULL`. | `prisma/graph_7_idea_law_link.sql` |
+| `idea_law_link_action_live_idx` | `idea_law_link` | GRAPH 7: an action's live law links (Lex 26-U). Partial on `superseded_by IS NULL`. | `prisma/graph_7_idea_law_link.sql` |
 
-Ten entries today. **Add a row here the moment an eleventh exists** — the register is only useful if it
+Thirteen entries today. ⚠ The three GRAPH 7 rows are asserted by `check:idea-law` (A4); `check:central`'s enumeration in `check-central-stage1.ts` (Central's file) does not yet list them. **Add a row here the moment an eleventh exists** — the register is only useful if it
 is complete, and a partial index nobody wrote down is the whole failure mode.
 
 ⚠ Two of the eight were added without a register row and only found on a later sweep of

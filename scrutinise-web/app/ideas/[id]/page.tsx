@@ -5,6 +5,8 @@ import PublicNav from '@/components/PublicNav'
 import IdeaDetailClient from './IdeaDetailClient'
 import { getStage3GateData, getStage4GateData } from '@/lib/stage-gates'
 import { computeCanonicalState } from '@/lib/lex/state'
+import { ideaLawSet } from '@/lib/lex/statutory-graph'
+import type { IdeaLawSet } from '@/lib/lex/idea-law-pure'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -197,6 +199,15 @@ export default async function IdeaDetailPage({ params }: Props) {
   // (kept in the query for §1c — reported, not dropped this sprint).
   const canonicalState = await computeCanonicalState(id).catch(() => null)
 
+  // GRAPH 7 — the laws this idea concerns. ⚠ A failed read is SAID, never shown as an empty set.
+  let lawSet: IdeaLawSet | null = null
+  let lawSetError: string | null = null
+  try {
+    lawSet = await ideaLawSet(id)
+  } catch (e) {
+    lawSetError = e instanceof Error ? e.message : String(e)
+  }
+
   // Serialise for client (Prisma Decimal → string, Date → string)
   const serialised = {
     ...idea,
@@ -269,6 +280,8 @@ export default async function IdeaDetailPage({ params }: Props) {
         avgQualityRating={avgQualityRating}
         stage4GateData={stage4GateData}
         canonicalState={canonicalState}
+        lawSet={lawSet}
+        lawSetError={lawSetError}
       />
     </div>
   )

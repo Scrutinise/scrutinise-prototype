@@ -1,0 +1,32 @@
+# GRAPH 7 — hand rows for 452c5ade "Enhancing Individual Accountability in the Civil Service"
+# DRAFT for Charlie: the law list in IDEA_LAW_JOIN_SPEC.md §2.3 (operative set) and §2.4 (precedent set),
+# with every id verified against the corpus by a dry run on 22 Oct 2026. Edit, then run:
+#   npx tsx --env-file=.env scripts/attach-idea-law.ts 452c5ade ../docs/FOR_CHARLIE/graph7_idea_law_rows_452c5ade.txt --write
+# (from scrutinise-web). One row per line: relation, doc_uri, provision_path, note. Empty provision_path = the whole Act.
+#
+# ⚠ Two open questions in the covering reply bear on the notes, not on the ids: which statutory definition of
+#   "publicly funded body" is the spine (§2.2), and whether visibility is internal or public (§2.5).
+
+# §2.3 — the operative set
+amends, ukpga/2010/25, , Civil service statutory footing (Part 1); the Civil Service Code is made under s.5
+amends, ukpga/1992/61, , Delegation of management authority: the "power and resources" half of the pair
+amends, ukpga/2000/20, , The accounting officer regime: the existing single-named-person mechanism
+relies_on, ukpga/1983/44, , NAO remit: how a failure is examined
+relies_on, ukpga/2011/4, , The modern NAO and PAC machinery
+relies_on, ukpga/2000/36, , Schedule 1 "public authority" as the candidate scope definition, and the visibility requirement
+relies_on, ukpga/1998/23, , A named owner denied resources needs a protected route to say so
+constrains, ukpga/1996/18, , The hire-and-fire action (#28) turns on it: conduct against capability
+constrains, ukpga/2010/15, section/149, PSED is a collective duty on a body; the policy says responsibility is never shared sideways
+relies_on, ukpga/2005/12, , The blame-free investigation carve-out
+relies_on, ukpga/2023/54, , Outsourced work: the contracting-authority test
+context, bill/4019, , Public Office (Accountability) Bill: before Parliament, not law. Flagged by Lex; watch it
+
+# §2.4 — the precedent set
+precedent, ukpga/2022/30, , Accountable person and principal accountable person: the closest existing model to the policy as written
+precedent, ukpga/2000/8, , Senior Managers and Certification Regime: statements of responsibilities and a duty of responsibility
+precedent, ukpga/2013/33, , Banking Reform Act 2013: inserted the senior managers regime into FSMA 2000
+precedent, ukpga/2007/19, , The previous attempt to defeat "the team was responsible"; widely held not to bite on large organisations
+precedent, ukpga/1972/70, section/151, Chief finance officer: a named statutory post-holder with personal duties in every local authority
+precedent, ukpga/1989/42, section/4, Head of paid service: a named statutory post in every local authority
+precedent, ukpga/1989/42, section/5, Monitoring officer: a named statutory post in every local authority
+precedent, ukpga/2022/31, , HSSIB and the safe-space regime: blame-free investigation of system failure, already drafted

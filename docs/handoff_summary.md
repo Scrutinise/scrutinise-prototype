@@ -234,6 +234,17 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## GRAPH THREAD — last updated 2026-10-22 02:07 UTC (GRAPH 7)
+
+*Report: `docs/GRAPH_7_REPORT.md`. Table LIVE on Neon (0 rows); schema + SQL committed locally `8fb2e80`; the rest uncommitted; **nothing pushed, NOT verified live**.*
+
+▼ **THE IDEA↔LAW JOIN EXISTS: `idea_law_link`, `ideaLawSet()`, the hand path and the idea page's law panel.** `check:idea-law` **22/22, 212 assertions, 6/6 controls**; two mutations turned 2 and 4 cases red.
+▶ Every id column is TEXT; FKs go to `"Idea"` / `"LexCoherentAction"` (read from `schema.prisma`, unmapped), RESTRICT; `relation` is a seven-value CHECK constraint. Three partial indexes are in the §21 register; ⚠ `check:central`'s list (Central's file) does not have them.
+▶ **Charlie's action:** read `docs/FOR_CHARLIE/graph7_idea_law_rows_452c5ade.txt` (dry run: **held 20 / 20**, titles match the spec), then from `scrutinise-web`: `npm run attach:idea-law -- 452c5ade ../docs/FOR_CHARLIE/graph7_idea_law_rows_452c5ade.txt --write`.
+⚠ **For Lex 26-U:** write rows through `resolveLawTarget()` (or `attachHandRows`'s pattern), so a miss is refused, not stored. A document is `doc/<corpus>/<doc id>`, never a free slug. Because the FK is RESTRICT, delete links before `deleteScratch`.
+⚠ `CHANGE_LOG.md` and `scrutinise-web/package.json` hold **Lex's uncommitted work as well as mine** — commit them together with Lex, by agreement. ⚠ Local `Main` carries two other streams' unpushed commits (`763c620`, `2e72435`), so any push ships them.
+⚠ `changed_since` can see only changes **commencing** after `as_at` in a 5 Jul copy (report §6.4). It is empty today, and that does not mean "unchanged".
+
 ## GRAPH THREAD — last updated 2026-10-19 00:17 UTC (GRAPH 6 / Lex 26-U)
 
 *Report: `docs/GRAPH_6_REPORT.md`. Built and committed locally; **NOT pushed, NOT verified live**.*

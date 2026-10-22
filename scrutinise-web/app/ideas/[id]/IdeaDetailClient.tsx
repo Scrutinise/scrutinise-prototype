@@ -26,6 +26,8 @@ import type { CanonicalState, CanonicalField, CanonicalPage } from '@/lib/lex/pa
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { guidingPolicyStatement, hasGuidingPolicy } from '@/lib/lex/guiding-policy-answer'
 import LexActivityLog from '@/components/lex/LexActivityLog'
+import IdeaLawPanel from '@/components/lex/IdeaLawPanel'
+import type { IdeaLawSet } from '@/lib/lex/idea-law-pure'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -165,6 +167,9 @@ interface Props {
   /** 26-J §1 — the live kernel state (`lib/lex/state.ts`'s `computeCanonicalState`), the
    *  same object the editor's FieldsPanel renders. Null only if the read failed. */
   canonicalState: CanonicalState | null
+  /** GRAPH 7 — `ideaLawSet()`, read on the server. `lawSetError` set = the read FAILED, which is not "none attached". */
+  lawSet: IdeaLawSet | null
+  lawSetError: string | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2450,6 +2455,8 @@ export default function IdeaDetailClient({
   avgQualityRating,
   stage4GateData,
   canonicalState,
+  lawSet,
+  lawSetError,
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -2824,6 +2831,8 @@ export default function IdeaDetailClient({
                 </div>
               )}
               <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} canonicalState={canonicalState} editHref={hasBuild ? `/ideas/create?ideaId=${idea.id}` : `/ideas/build?ideaId=${idea.id}`} />
+              {/* GRAPH 7 — the idea↔law join, seven relation groups rendered separately. */}
+              <IdeaLawPanel set={lawSet} error={lawSetError} />
             </>
           )}
           {activeTab === 'contributions' && (
