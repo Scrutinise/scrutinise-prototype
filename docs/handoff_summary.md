@@ -964,7 +964,27 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
-**⚠ 2026-10-22 02:41 UTC — LEX 26-U run overnight; see `docs/LEX_26U_REPORT.md`.**
+**⚠ 2026-10-22 22:58 UTC — LEX 26-U: §2–§4 live, §5 committed and held; see `docs/LEX_26U_REPORT.md` (status, §5, §20).**
+- **Live at `64d30c2`:** §2–§4 and 22 Oct (6) (231, 232, 187, 234). Verified by `/api/health` and by "Move the extra into Commentary or shorten." in the live chunk. build-worker is NOT verified, because the Railway token answers "Not Authorized".
+- **Local, not pushed:** GRAPH `09e8939` → LEX `279f5e5` (§5 join writer) → GRAPH `e2b60d2` → GRAPH `9aa989f` → LEX `6bc36ca` (as_at = effectsLoadDate) → this docs commit.
+  - ⚠ **HELD: Railway incident QH8L8B3E is still "Identified" (read 22:56 UTC).** CCh 22 Oct (7): when it clears, re-test the original token, then push, then read back the merged line, `/api/health` and build-worker `meta.commitHash`.
+  - Until then, treat the token failure and the 86 s FTS timings as unproven.
+- **§5 rules:**
+  - Only owner versions write rows, through `resolveLawTarget`.
+  - A version that drops a target writes nothing (`notSuperseded`) until GRAPH says its withdrawal reader is on origin/Main.
+  - 452c5ade has 0 live link rows. `check:lex-26u` passes 49/49.
+- **Proposals awaiting Charlie:** the #38 redraft (12.13p; (7) the unmatched pair has no effect) and the #202 redraft (9.56p). `DRAFT_RUNS` n=6, mean 10.8p.
+- **Next, from CCh's 22 Oct (7):**
+  - 233: "Consequential amendments and repeals" under Primary legislation, statement verbatim;
+  - 238: #202's one-line merit standard, then a redraft that asks first;
+  - 235: chat markdown;
+  - 236: Documents on the action record;
+  - 237: box labels.
+- **Traps on this machine:**
+  - Kaspersky TLS: use `NODE_OPTIONS=--use-system-ca`.
+  - `check-clean-build.sh` needs a `/cygdrive/c/cb` copy, because `/tmp` is unusable.
+
+**2026-10-22 02:41 UTC (superseded by the entry above) — LEX 26-U run overnight.**
 - **Done:**
   - §2: #38 migrated, and editing never truncates (browser-asserted).
   - §3: drafting instruction plus clause; measured 10.7p n=4.

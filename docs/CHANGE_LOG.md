@@ -1,5 +1,11 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-22 22:57 UTC - LEX 26-U: report and handoff brought up to date (docs only)
+
+- `docs/LEX_26U_REPORT.md`: the status, §4's Primary legislation note, **§5 now BUILT** (it read STOPPED), §6 at 49/49 with the clean build, the 22 Oct (6) items, and §20 for what is live (`64d30c2`) and what is held.
+- `docs/handoff_summary.md`: the LEX thread entry for 22:58 UTC.
+- **Push HELD.** Railway incident QH8L8B3E still read "Identified" at 22:56 UTC. Under CCh's 22 Oct (7), once it clears: re-test the original token, push the six local commits, then read back the merged line, `/api/health` and build-worker `meta.commitHash`.
+
 ## 2026-10-22 10:31 UTC - LEX 26-U §5 follow-up: as_at is the effects load date
 
 - A drafting instruction's link rows now take `as_at` from GRAPH's `effectsLoadDate()` (`e2b60d2`), which is 2026-07-05 today. The version's save date is used only when the reader has no date. This corrects the ⚠ in the 10:23 entry below.

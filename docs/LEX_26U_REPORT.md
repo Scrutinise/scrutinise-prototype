@@ -1,9 +1,13 @@
 # LEX 26-U REPORT — drafting instructions, illustrative clauses, what each clause touches
 
-**Run:** 22 Oct 2026, overnight, in the brief's order (§2 → §3 → §4 → §5 gate). **Status at 02:41 UTC:**
-- §2, §3 and §4 are built and checked: `check:lex-26u` passes 40/40, with 5 controls and none dead.
-- §5 is **stopped as the brief instructs**, because `idea_law_link` is not on Main (GRAPH 7 has not landed).
-- Nothing is pushed. Search's `763c620` is underneath and waits on Search's Railway token.
+**Run:** 22 Oct 2026, overnight, in the brief's order (§2 → §3 → §4 → §5 gate).
+
+**Status at 22:58 UTC, 22 Oct (this replaces the 02:41 status):**
+- §2, §3 and §4 are **pushed and live** at `64d30c2`. See §20.
+- §5 is **built and committed locally** (`279f5e5`, `6bc36ca`) on GRAPH's `09e8939`/`e2b60d2`/`9aa989f`. **Not pushed:** Railway incident QH8L8B3E ("Railway Platform Outage") still read "Identified" at 22:56 UTC, and CCh's 22 Oct (7) holds the push until it clears.
+- `check:lex-26u` passes **49/49**, with 6 controls and none dead.
+
+**Status at 02:41 UTC (superseded):** §2–§4 built, 40/40; §5 stopped because `idea_law_link` was not on Main; nothing pushed.
 
 ---
 
@@ -69,21 +73,30 @@
   - The opened record has a "Draft text and what this touches" block, open on legislative actions.
   - The **Actions Pack** gains sections **12 Draft text** and **13 What this touches**. They are appended, so 1–11 keep their numbers. There is also a generated **annexe, "Consequential amendments and repeals"**, with the counted sentence.
   - The **Background Report** gains section 8: the schedule counts and the precedents drawn on.
-- ⚠ The **"Consequential amendments and repeals" action** under Primary legislation is not created or linked. The idea has no heading named "Primary legislation" (the visible one is "Legislation"), and Charlie should say whether that action exists.
+- ⚠ The **"Consequential amendments and repeals" action** under Primary legislation is not created or linked yet.
+  - The heading was renamed "Legislation" → "Primary legislation" on 452c5ade (decision 187, 22 Oct).
+  - The action is CCh's 233. CCh's 22 Oct (7) gives its statement verbatim; it is the next item.
 
-## §5 — the join: STOPPED (brief §0)
+## §5 — the join: BUILT, committed locally (`279f5e5`, `6bc36ca`), not pushed
 
-`idea_law_link` is not on Main: `origin/Main` is still `041e4e3`. The row-writer was not started. When GRAPH 7 lands, the drafting instruction already holds everything a row needs:
-- `relation` per line;
-- `source_detail` = action id + version;
-- `as_at` = the effects load date (2026-07-05);
-- `note` = the instruction's purpose.
+GRAPH 7 landed locally (`09e8939`: `withdrawn_at`/`withdrawn_detail` + CHECKs, applied to Neon), so the gate opened.
+
+- **Writer:** `lib/lex/action-law-rows.ts` → `writeInstructionRows(ideaId, actionId, v, { asAt })`.
+  - It is called from `saveVersion` and `acceptProposal` in `action-draft.ts`, and **only an owner's version writes rows**. A proposal from Lex never does.
+  - Each provision line becomes a row with source `drafting_instruction`, `source_detail` "<action id> v<N>", the line's relation, and note = the instruction's purpose. Each precedent becomes a `precedent` row.
+  - **Every target goes through GRAPH's `resolveLawTarget()` first.** A target that is not held is not written; it comes back in `notHeld` with its state.
+  - `as_at` = GRAPH's `effectsLoadDate()` (**2026-07-05**), falling back to the save date (`6bc36ca`, after GRAPH's `e2b60d2`).
+- **Never deleted.** A target that reappears in a later version is superseded by the new row.
+  - ⚠ **A version that DROPS a target writes nothing at all** and returns `notSuperseded` > 0. GRAPH asked that no withdrawal be written until its reader is on origin/Main, so a stale row is never left reading as current. When GRAPH says it is live, that hold becomes a withdrawal (`withdrawn_at` + "<action> instruction v<N>: target absent").
+- **Reader:** GRAPH's `mergeLawLines()` (`e2b60d2`) gives one line per (relation, target) with every source on it. ⚠ On a merged line, the top-level `row.action` may be the hand row's (null).
+- **On Charlie's idea:** 452c5ade has **0 live link rows**. The #38 and #202 drafts are proposals, so they write nothing until he accepts or saves one.
 
 ## §6 — verification
 
 | Suite | Result |
 |---|---|
-| `check:lex-26u` | **40/40**, 5 controls, 0 dead, 0 not run (§2 browser, §3 scripted, §4 cold read, pack and report rendered) |
+| `check:lex-26u` | **49/49**, 6 controls, 0 dead, 0 not run (§2 browser, §3 scripted, §4 cold read, pack and report rendered, §5 rows read back with the plain prisma client). **Mutation run** (superseding skipped): 3 failures and 1 dead control, then reverted. The 02:41 figure was 40/40 with 5 controls. |
+| clean build (`check-clean-build.sh`, A and B) | **passed** before the 64d30c2 push (run as a `/cygdrive/c/cb` copy, because `/tmp` is unusable in this sandbox) |
 | `check:prompt-examples` | 24 illustrations, 0 ever in stored output |
 | `check:lex-26s2` | 221/221 (4 not run, as before) |
 | `check:lex-26s2-browser` | 33/33 |
@@ -97,9 +110,9 @@
 
 1. #38: his sentence alone in the statement, the seven blocks under Commentary, and an edit that saves. **The data is migrated now.**
 2. The definition clause against 220 (as drafted above).
-3. The PSED clause against 222: "must secure … on merit". Is that a separate duty?
+3. The PSED clause against 222. *Updated:* the 232 redraft removed "must secure … on merit". CCh's 238 replaces the s.10 citation with a one-line standard for every publicly funded body; that redraft is still to come.
 4. "What this touches" on #38: does the near-provision question on CRaG s.10 read as he would ask it?
-5. #38's "voided if unmatched": the draft says the opposite.
+5. #38's "voided if unmatched". *Updated:* the 231 redraft now drafts it (subsection (7)). It is a proposal, for him to accept.
 
 ## Spend this sprint
 
@@ -108,11 +121,26 @@
 - The #202 policy test: 1.17p.
 - All of it is on the ledger.
 
+## After the run — 22 Oct (6), from CCh
+
+- **231 (done, read back).** The decisions now head #38's and #59's Commentary on 452c5ade: 220, 221, the Code, and "The pair (duty and means) — an unmatched pair is void; the duty travels upward". The FieldRevision origin is `DRAFTING_DECISIONS_231`.
+  - #38 was redrafted at 12.13p. Subsection (7): naming someone without the power and the resources has no effect, and the duty goes to the nearest individual above who holds them.
+- **232 (done).** #202 was redrafted at 9.56p: (4) cites CRaG s.10 as the standard; (5) "This section creates no duty in addition to that standard". "Must secure … on merit" has gone.
+  - Lex flagged that s.10 covers civil service selection only, not "advancement" and not every publicly funded body. CCh's 238 now answers that.
+  - The rest of Lex's reason was cut by a 500-character clip. The limit is now 1,500 written and 1,600 parsed.
+- Both drafts are **proposals awaiting Charlie**. Price: `DRAFT_RUNS` n=6, mean **10.8p**.
+- **187:** "Legislation" → "Primary legislation" on 452c5ade.
+- **234:** `FTS_COLD_START_MS` 120 000 ms. ⚠ Search says this hides the 86 s warm query rather than fixing it. That timing was taken during the Railway incident, so it is unproven until the incident clears.
+
 ## §20
 
-**Not pushed.** The push waits on Search's token question.
+**§2–§4 and 22 Oct (6): pushed, and verified live.**
+- `origin/Main` went `041e4e3` → `64d30c2`. Production `/api/health` reports commit `64d30c2`, env production.
+- **"Move the extra into Commentary or shorten."** reads back from live chunk `4f1e709a1e1ce26e.js` on /ideas/create (10:13 UTC).
+  - Control: the earlier chunk `d1d792a25d5a645d.js` has "Not saved: " but not that string.
+- ⚠ **build-worker: NOT verified.** `RAILWAY_API_TOKEN` answered "Not Authorized" (10:44 UTC re-test). Under CCh's instruction, that is unproven while incident QH8L8B3E affects Railway's API.
 
-The string to read back off the running site after the push is **"Move the extra into Commentary or shorten."**:
-- this sprint introduced it, in the action card's Save refusal;
-- it ships in the Coherent Actions page's client JavaScript;
-- the control is the same chunk before this commit, where it is absent.
+**§5: committed, NOT pushed.** Five local commits wait for the incident to clear: `09e8939`, `279f5e5`, `e2b60d2`, `9aa989f`, `6bc36ca`, plus the docs commit for this update. The order then, per CCh's 22 Oct (7):
+1. Re-test the original Railway token.
+2. Push.
+3. Read back the merged line and `/api/health`, and the build-worker's `meta.commitHash`.
