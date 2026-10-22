@@ -1023,6 +1023,8 @@ model Idea {
   actionImportPasses        ActionImportPass[]
   /// 26-T1 (decisions 146, 200, 201) — the four-model digests of a heading or of the whole set. DDL: prisma/lex_26t_digest.sql.
   actionDigests             ActionDigest[]
+  /// GRAPH 7 — the laws this idea concerns (its own rows; its actions' rows carry `actionId` as well). DDL: prisma/graph_7_idea_law_link.sql.
+  lawLinks                  IdeaLawLink[]
   // Sprint 25-L. What we refused to read (§2), and the graph claims judged against
   // this idea (§5). Both additive; neither is written by any existing path.
   materialRejections        IdeaMaterialRejection[]
@@ -3061,6 +3063,8 @@ model LexCoherentAction {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   costLines          CostLine[]
+  /// GRAPH 7 — the laws this one action concerns. DDL: prisma/graph_7_idea_law_link.sql.
+  lawLinks           IdeaLawLink[]
 
   // ══ 26-Q — MAKING A LONG LIST WORKABLE. DDL of record: prisma/lex_26q_actions.sql ═══════════════════
   /// Stable, user-visible number ("put 7 and 12 under Transparency"). One past the highest ever used in the idea.
@@ -3115,6 +3119,41 @@ model LexCoherentAction {
 
   @@index([ideaId])
   @@index([ideaId, status])
+}
+
+/// ══ GRAPH 7 — THE IDEA↔LAW JOIN (BRIEF_GRAPH_7.md §1). DDL of record: prisma/graph_7_idea_law_link.sql ═══════════════
+/// One row: which law an idea (or one of its actions) concerns, how it stands to it, who said so, against which version.
+/// The idea's set is the union of its own rows (`actionId` null) and its actions' rows; `actionId` survives the union.
+/// ⚠ Vocabularies are DB CHECK constraints (relation: amends | repeals | modifies | relies_on | constrains | precedent | context;
+/// source: hand | drafting_instruction | extraction; targetKind: act | provision | instrument | bill | document). The same lists
+/// live in lib/lex/idea-law-pure.ts and check:idea-law asserts they match pg_constraint.
+/// ⚠⚠ THREE PARTIAL INDEXES (WHERE superseded_by IS NULL) live only in the SQL — docs/CLAUDE.md §21. Never apply a migrate diff.
+/// ⚠ Never deleted: a wrong row is superseded. Both foreign keys onto Lex's tables are RESTRICT.
+/// ⚠ An idea's `modifies` is an author's drafting choice; the corpus's `modifies` edges are frequently unread. Never sum them.
+model IdeaLawLink {
+  id             String             @id @default(uuid())
+  ideaId         String             @map("idea_id")
+  idea           Idea               @relation(fields: [ideaId], references: [id], onDelete: Restrict)
+  actionId       String?            @map("action_id")
+  action         LexCoherentAction? @relation(fields: [actionId], references: [id], onDelete: Restrict)
+  targetKind     String             @map("target_kind")
+  /// 'ukpga/2010/25' · 'uksi/2015/1862' · 'bill/4019' · 'doc/<corpus>/<document id>'. No host, no leading slash.
+  docUri         String             @map("doc_uri")
+  /// legislation.gov.uk's path segments: 'section/149' · 'schedule/2/paragraph/3'. Null unless targetKind = 'provision'.
+  provisionPath  String?            @map("provision_path")
+  relation       String
+  source         String
+  sourceDetail   String?            @map("source_detail")
+  /// One line, human words: why this link exists. Required (CHECK) for source = 'hand'.
+  note           String?
+  /// The version of the law this was asserted against — NOT the ingest date.
+  asAt           DateTime           @map("as_at") @db.Date
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  supersededById String?            @map("superseded_by")
+  supersededBy   IdeaLawLink?       @relation("IdeaLawLinkSupersede", fields: [supersededById], references: [id], onDelete: Restrict)
+  supersedes     IdeaLawLink[]      @relation("IdeaLawLinkSupersede")
+
+  @@map("idea_law_link")
 }
 
 /// ══ 26-Q §3 — THE USER'S HEADINGS FOR THEIR COHERENT ACTIONS, per idea ═══════════════════════════════
