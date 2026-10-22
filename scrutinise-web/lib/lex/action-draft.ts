@@ -26,13 +26,15 @@ import {
 } from './action-draft-pure'
 import type { Result } from './action-structure'
 import { writeInstructionRows, type LawRowsReport } from './action-law-rows'
+import { effectsLoadDate } from './statutory-graph'
 
 export const DRAFT_MODEL = 'claude-sonnet-5-5'
 const fail = (error: string): { ok: false; error: string } => ({ ok: false, error })
 /** §5: the new version's join rows. A failure is said with the version, never thrown over a save that succeeded (§18). */
 async function joinRows(ideaId: string, actionId: string, d: ActionDraft): Promise<LawRowsReport | { failed: string }> {
   const v = d.versions[d.versions.length - 1]
-  try { return await writeInstructionRows(ideaId, actionId, v) } catch (e) { return { failed: `the law links for version ${v.v} were not written (${(e as Error).message})` } }
+  // as_at = the effects data's load date (GRAPH's effectsLoadDate); the save date only when the reader has none.
+  try { return await writeInstructionRows(ideaId, actionId, v, { asAt: (await effectsLoadDate().catch(() => null)) ?? undefined }) } catch (e) { return { failed: `the law links for version ${v.v} were not written (${(e as Error).message})` } }
 }
 const clip = (s: unknown, n: number) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, n) : '')
 

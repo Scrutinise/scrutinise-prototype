@@ -1,5 +1,11 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-22 10:31 UTC - LEX 26-U §5 follow-up: as_at is the effects load date
+
+- A drafting instruction's link rows now take `as_at` from GRAPH's `effectsLoadDate()` (`e2b60d2`), which is 2026-07-05 today. The version's save date is used only when the reader has no date. This corrects the ⚠ in the 10:23 entry below.
+- `check:lex-26u` 49/49, 6 controls, 0 dead; `tsc` 0; client-boundary ✓. The new assertion compares every row's `as_at` with `effectsLoadDate()`.
+- GRAPH's merged lines (`mergedIntoALine`, `sources[]`) don't affect this check, which reads rows with the plain client. **Not pushed.**
+
 ## 2026-10-22 10:23 UTC - LEX 26-U §5: a drafting instruction writes its idea_law_link rows
 
 - **`lib/lex/action-law-rows.ts` (`writeInstructionRows`).** It writes a row for each provision line and precedent in an action's CURRENT owner version:

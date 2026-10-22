@@ -169,6 +169,9 @@ async function part3and4() {
     const L2 = await linksOf()
     const s5row = L2.find((l) => l.docUri === CRAG && l.provisionPath === 'section/5')
     ok('accepting v2 writes one row per held line: CRaG s.5 `amends`, action set, source drafting_instruction, detail "<action> v2", note = purpose', !!s5row && s5row.relation === 'amends' && s5row.actionId === owner.id && s5row.ideaId === copy.id && s5row.source === 'drafting_instruction' && s5row.sourceDetail === `${owner.id} v2` && s5row.note === 'Put the Code on a statutory footing.', JSON.stringify(L2.map((l) => [l.relation, l.docUri, l.provisionPath, l.sourceDetail])))
+    const { effectsLoadDate } = await import('../lib/lex/statutory-graph')
+    const loadDate = await effectsLoadDate()
+    ok('…as_at is the effects data’s load date, not the save date', !!loadDate && L2.every((l) => l.asAt.toISOString().slice(0, 10) === loadDate), `${loadDate} vs ${L2.map((l) => l.asAt.toISOString().slice(0, 10)).join(',')}`)
     ok('…and the precedent named in the instruction as a `precedent` row (LGA 1972 s.151)', L2.some((l) => l.relation === 'precedent' && l.docUri === 'ukpga/1972/70' && l.provisionPath === 'section/151'))
     const rep = acc.ok ? acc.data.lawRows : null
     ok('…the save reports what it wrote, and every line it did not write carries its state', !!rep && !('failed' in rep) && rep.written === L2.length && rep.written + rep.notHeld.length === 3 && rep.notHeld.every((n) => n.state !== 'held'), JSON.stringify(rep))
