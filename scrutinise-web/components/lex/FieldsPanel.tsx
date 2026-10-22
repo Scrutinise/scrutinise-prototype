@@ -1614,8 +1614,17 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
 }) {
   const [editing, setEditing] = useState(false)
   const [d, setD] = useState<ActionDraft>(action)
+  // 26-U §2 (decision 227) — an over-limit statement is REFUSED at Save, in words, with the text left exactly as typed (never cut).
+  const [refusal, setRefusal] = useState<string | null>(null)
   useEffect(() => { setD(action) }, [action])
-  const patch = (p: Partial<ActionDraft>) => setD((x) => ({ ...x, ...p }))
+  const patch = (p: Partial<ActionDraft>) => { setRefusal(null); setD((x) => ({ ...x, ...p })) }
+  const save = () => {
+    if (step === 1 && d.practicalStep.length > LIMITS.actionStatement) {
+      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into Commentary or shorten.`)
+      return
+    }
+    api.update(action.id, d); setEditing(false)
+  }
   if (step === 4) return null
 
   if (editing) {
@@ -1656,10 +1665,11 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
           </div>
         )}
         {step === 1 && between}
+        {refusal && <p role="alert" className="text-xs font-semibold text-zinc-900 border-2 border-zinc-900 rounded px-2 py-1" data-save-refused>⚠ {refusal}</p>}
         <div className="flex gap-2">
-          <button disabled={busy || !d.practicalStep.trim()} onClick={() => { api.update(action.id, d); setEditing(false) }}
+          <button disabled={busy || !d.practicalStep.trim()} onClick={save}
             className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
-          <button disabled={busy} onClick={() => { setD(action); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">Cancel</button>
+          <button disabled={busy} onClick={() => { setD(action); setRefusal(null); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">Cancel</button>
         </div>
       </div>
     )

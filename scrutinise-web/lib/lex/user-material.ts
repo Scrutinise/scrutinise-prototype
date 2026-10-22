@@ -93,17 +93,55 @@ export interface Extracted {
   title: string | null
 }
 
+/** 22 Oct (CCh) — the text formats read as plain text whatever label the browser gives them. */
+export const TEXT_EXTENSIONS = new Set(['.md', '.markdown', '.txt', '.csv'])
+
+export function extensionOf(filename: string): string {
+  return /\.[A-Za-z0-9]{1,10}$/.exec(filename ?? '')?.[0].toLowerCase() ?? ''
+}
+
+/** Do the BYTES read as text? No NUL byte, and control characters (other than tab, newline, CR, form feed) under 1%. */
+export function looksLikeText(bytes: Buffer): boolean {
+  if (!bytes.byteLength || bytes.includes(0)) return false
+  let control = 0
+  for (const b of bytes.subarray(0, 256 * 1024)) if (b < 0x20 && b !== 0x09 && b !== 0x0a && b !== 0x0d && b !== 0x0c) control++
+  return control / Math.min(bytes.byteLength, 256 * 1024) < 0.01
+}
+
+/** UTF-8 when it is valid UTF-8 (BOM dropped); otherwise the bytes are read as Windows-1252, the other encoding a text file here is in. */
+function decodeText(bytes: Buffer): string {
+  try { return new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(bytes) } catch { return new TextDecoder('windows-1252').decode(bytes) }
+}
+
 /**
- * Text out of a file. Format by mime type, never by extension — an extension is a claim by
- * whoever named the file.
+ * ⚠ 22 OCT — NEVER BY THE BROWSER'S LABEL ALONE. A .md file came up from Charlie's browser as `application/text` and was refused,
+ * because this went by the mime type and nothing else. The label is a claim by the browser, the extension a claim by whoever named
+ * the file; the BYTES are the evidence. So a file that says it is text — by its extension (.md, .markdown, .txt, .csv) or by a
+ * `text/…` label — is read as text when its contents ARE text, and refused, naming the extension, when they are not.
+ * PDF and Word keep going by their label: their parsers fail loudly on anything else.
  */
-export async function extractFile(bytes: Buffer, mimeType: string, filename: string): Promise<Extracted> {
+function formatOf(bytes: Buffer, mimeType: string, filename: string): string {
+  if (mimeType === 'application/pdf' || mimeType.endsWith('wordprocessingml.document') || mimeType === 'text/html') return mimeType
+  const ext = extensionOf(filename)
+  const claimsText = TEXT_EXTENSIONS.has(ext) || mimeType.startsWith('text/') || mimeType === 'application/text'
+  if (!claimsText) return mimeType
+  if (looksLikeText(bytes)) return 'text/plain'
+  throw new MaterialRejected(
+    'unreadable-format',
+    `“${filename}” is named as a text file (${ext || mimeType}), but what is inside it is not text, so nothing was read. `
+    + 'If it came out of another program, save it from there as plain text and add it again.',
+  )
+}
+
+/** Text out of a file. See `formatOf` for how the format is decided. */
+export async function extractFile(bytes: Buffer, mimeTypeAsSent: string, filename: string): Promise<Extracted> {
   if (bytes.byteLength > MAX_UPLOAD_BYTES) {
     throw new MaterialRejected(
       'too-large',
       `That file is ${(bytes.byteLength / 1048576).toFixed(1)}MB and the limit is ${(MAX_UPLOAD_BYTES / 1048576).toFixed(0)}MB.`,
     )
   }
+  const mimeType = formatOf(bytes, mimeTypeAsSent, filename)
   if (!ACCEPTED_MIME.has(mimeType)) {
     // ⚠ A VIDEO FILE IS NOT AN UNREADABLE FORMAT, IT IS A VIDEO, and the two want
     // different things from the user. Naming it as "an unsupported type" would leave them
@@ -111,7 +149,8 @@ export async function extractFile(bytes: Buffer, mimeType: string, filename: str
     if (mimeType.startsWith('video/')) throw new MaterialRejected('video', VIDEO_MESSAGE)
     throw new MaterialRejected(
       'unreadable-format',
-      `We can read PDFs, Word documents, plain text and HTML. ${mimeType || 'That file type'} isn’t one of them — `
+      `We can read PDFs, Word documents, text files (.txt, .md, .markdown, .csv) and HTML. `
+      + `${extensionOf(filename) ? `A ${extensionOf(filename)} file` : 'A file with no extension'}${mimeType ? ` (sent as ${mimeType})` : ''} isn’t one of them — `
       + 'and we don’t do images or video, so nothing would be extracted.',
     )
   }
@@ -133,7 +172,7 @@ export async function extractFile(bytes: Buffer, mimeType: string, filename: str
     raw = stripHtml(bytes.toString('utf8'))
     title = htmlTitle(bytes.toString('utf8'))
   } else {
-    raw = bytes.toString('utf8')
+    raw = decodeText(bytes)
   }
 
   const text = normalise(raw)

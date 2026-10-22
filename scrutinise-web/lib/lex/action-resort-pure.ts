@@ -93,12 +93,35 @@ export function addFoldLines(commentary: string | null | undefined, lines: strin
   const has = base.split('\n').some(isFoldHeader)
   return has ? `${base}\n${lines.join('\n')}` : `${base ? `${base}\n\n` : ''}${FOLD_HEADER}\n${lines.join('\n')}`
 }
-/** Unfold one component: its bullet goes; the header goes with the last bullet. Returns null when nothing is left. */
+// ── 26-U §2 (decision 227) — imported material is Commentary, never statement ─────────────────────────────────
+// The import pass (26-S1 §3e) APPENDED "— More on this action, imported <date> (From: [Ref: n] …) —" blocks to the statement. On #38 that
+// made a 462-character sentence 3,196 characters, and editing it cut 90% of the text. The blocks now live under FOLD_HEADER in Commentary,
+// verbatim (head line, summary, the document's words); the statement keeps only what was there before the first block.
+const IMPORTED_HEAD = /\n*— (?:More on this action|A component of this action), imported \d{4}-\d{2}-\d{2} \([^\n]*\) —\n/g
+export const isImportedHeadLine = (l: string) => /^— (?:More on this action|A component of this action), imported \d{4}-\d{2}-\d{2} \(.*\) —$/.test(l.trim())
+
+/** Split a statement into the user's text and the imported blocks appended to it. Pure; lossless (statement + blocks = the input, modulo the blank lines between). */
+export function splitImportedBlocks(statement: string): { statement: string; blocks: string[] } {
+  const heads = [...statement.matchAll(IMPORTED_HEAD)]
+  if (!heads.length) return { statement, blocks: [] }
+  const blocks = heads.map((m, i) => statement.slice(m.index!, heads[i + 1]?.index ?? statement.length).trim())
+  return { statement: statement.slice(0, heads[0].index!).trimEnd(), blocks }
+}
+
+/** Add imported blocks to a commentary, under FOLD_HEADER (added if absent), after whatever is there. Pure. */
+export function addImportedBlocks(commentary: string | null | undefined, blocks: string[]): string {
+  const base = plainFoldHeader(commentary).replace(/\s+$/, '')
+  if (!blocks.length) return base
+  const has = base.split('\n').some(isFoldHeader)
+  return `${base ? `${base}\n\n` : ''}${has ? '' : `${FOLD_HEADER}\n`}${blocks.join('\n\n')}`
+}
+
+/** Unfold one component: its bullet goes; the header goes with the last bullet (an imported block counts as one). Returns null when nothing is left. */
 export function removeFoldLine(commentary: string | null | undefined, number: number): string | null {
   const lines = (commentary ?? '').split('\n')
   const prefix = `• [#${number}] `
   const kept = lines.filter((l) => !l.startsWith(prefix))
-  const bullets = kept.filter((l) => l.startsWith('• [#'))
+  const bullets = kept.filter((l) => l.startsWith('• [#') || isImportedHeadLine(l))
   const out = bullets.length ? kept.map((l) => (isFoldHeader(l) ? FOLD_HEADER : l)) : kept.filter((l) => !isFoldHeader(l))
   const text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim()
   return text || null

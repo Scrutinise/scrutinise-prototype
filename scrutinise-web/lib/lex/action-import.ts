@@ -35,6 +35,7 @@ import { syncRegistry } from './source-registry'
 import { fetchedContentIsData } from './fetched-content-guard'
 import { writeProposedFindings, type ImportedFinding } from './update-pass'
 import { recordToolCall } from './agent/tool-log'
+import { addImportedBlocks } from './action-resort-pure'
 import {
   PROPOSAL_KINDS, PURPOSE_MAX_WORDS, countItems, provenanceLine, wordCount, importPenceFor, chunkNeedsYou, partName, IMPORT_MAX_TRIES, type ImportableSource,
   type ImportChunk, type ImportExisting, type ImportHeading, type ImportItem, type ImportMapping, type ImportPassView, type ImportResult,
@@ -1035,11 +1036,13 @@ export async function confirmImport(ideaId: string, userId: string, passId: stri
     }
 
     // 3 · Adds to / Part of: APPENDED beside what is there. The user's own words are never overwritten (decision 59).
+    // ⚠ 26-U §2 (decision 227) — into the COMMENTARY, under "Parts of this action, quoted". It went into the statement, which on #38 grew
+    // 3,196 characters past a 1,000-character limit, and the next edit cut 90% of it.
     for (const it of m.items) {
       if (it.struck || (it.proposal !== 'ADDS_TO' && it.proposal !== 'PART_OF')) continue
-      const cur = await prisma.lexCoherentAction.findFirst({ where: { ideaId, number: it.actionNumber!, status: 'LIVE' }, select: { id: true, practicalStep: true } })
+      const cur = await prisma.lexCoherentAction.findFirst({ where: { ideaId, number: it.actionNumber!, status: 'LIVE' }, select: { id: true, commentary: true } })
       if (!cur) throw new Error(`action #${it.actionNumber} disappeared during the import`)
-      await prisma.lexCoherentAction.update({ where: { id: cur.id }, data: { practicalStep: cur.practicalStep + appendedBlock(it, row.sourceNumber) } })
+      await prisma.lexCoherentAction.update({ where: { id: cur.id }, data: { commentary: addImportedBlocks(cur.commentary, [appendedBlock(it, row.sourceNumber).trim()]) } })
       addedTo.push(it.actionNumber!)
     }
 

@@ -24,6 +24,9 @@ export interface PackSlot {
 
 export interface PackHeading { id: string; name: string; purpose: string | null; hidden: boolean }
 
+import type { DraftVersion } from '@/lib/lex/action-draft-pure'
+import type { Touch } from '@/lib/lex/action-touches'
+
 export interface PackAction {
   id: string
   number: number
@@ -49,6 +52,9 @@ export interface PackAction {
   refs: number[]
   /** Notes IN THE RECORD (the owner's, or put there by the owner) that bear on this action. */
   notes: Array<{ text: string; ref: number | null; author: string; at: string; stance: string }>
+  /** 26-U — the current drafting-instruction version (null = none written), and what it touches (null = not computed for this printing). */
+  draft: DraftVersion | null
+  touches: Touch[] | null
 }
 
 export interface PackRuledOut {

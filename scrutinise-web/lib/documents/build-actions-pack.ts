@@ -20,6 +20,8 @@ import { PACK_SLOT_LABEL, type ActionsPackData, type PackAction, type PackDigest
 import { text, numbered, letterFor, incentiveBlocks, notTakenBlocks, dateWords } from './pack-sections'
 import { DIGEST_QUESTIONS } from '@/lib/lex/action-digest-pure'
 import { INCENTIVE_WORD } from '@/lib/lex/incentive-map'
+import { CLAUSE_CAVEAT, INSTRUMENT_WORD, provisionLine } from '@/lib/lex/action-draft-pure'
+import { scheduleCounts, scheduleSentence, NEAR_QUESTION, STATE_WORDS as TOUCH_STATE } from '@/lib/lex/action-touches-pure'
 
 /** Which actions to print. `actionIds` wins; else a heading (`'__none'` = the actions with no heading); else everything. */
 export interface PackSelection { actionIds?: string[]; headingId?: string | null }
@@ -27,10 +29,12 @@ export interface PackSelection { actionIds?: string[]; headingId?: string | null
 export const PACK_SECTIONS = [
   'What it is', 'Parts of this action, quoted', 'Who', 'Incentive now, and what changes it', 'Skill, how it is enforced, what will oppose it, and what tells us it worked',
   'Causes and conditions', 'Test against the guiding policy', 'Cost', 'Sequence', 'Sources', 'The owner’s notes',
+  // 26-U — appended, never inserted: 1-11 keep their numbers on every printing (a reviewer's "B.3.6" must still mean the same paragraph).
+  'Draft text', 'What this touches',
 ] as const
 
 export const PACK_KEY_LINE =
-  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes). '
+  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes, 12 Draft text, 13 What this touches). '
   + 'To say a paragraph is wrong, quote its number, for example “B.2.3”. 0.n are the Guiding Policy and the conditions; D is a digest; INC.n and NOT.n are the Incentives and the Considered, not taken sections.'
 
 const NOT_ANSWERED = 'not yet answered'
@@ -129,6 +133,35 @@ function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | 
     blocks.push(numbered(N(11), [{ text: `${PACK_SECTIONS[10]}:`, bold: true }]))
     blocks.push({ kind: 'bullets', items: a.notes.map((x): Run[] => [{ text: x.text }, { text: ` — ${x.author}, ${dateWords(x.at)}`, italic: true }, ...refTokens(x.ref != null ? [x.ref] : [])]) })
   } else blocks.push(numbered(N(11), [{ text: `${PACK_SECTIONS[10]}: `, bold: true }, { text: 'none in the record.', italic: true }]))
+  // 12 · draft text — the instruction, then the clause with its caveat (the caveat is the clause's first line and is never printed without it)
+  const d = a.draft ?? null // a snapshot stored before 26-U has no draft: it reads as none written
+  if (!d) blocks.push(numbered(N(12), [{ text: `${PACK_SECTIONS[11]}: `, bold: true }, { text: 'no drafting instruction yet.', italic: true }]))
+  else {
+    const legislative = a.avenue === 'LEGISLATIVE'
+    blocks.push(numbered(N(12), [{ text: `${PACK_SECTIONS[11]} (version ${d.v}, by ${d.by === 'USER' ? 'the owner' : 'Lex, accepted by the owner'}): `, bold: true }, { text: `instrument — ${d.instrument ? INSTRUMENT_WORD[d.instrument] : NOT_ANSWERED}; duty on — ${d.dutyOnWhom || NOT_ANSWERED}; enforced — ${d.enforcedHow || NOT_ANSWERED}${legislative ? `; commencement — ${d.commencement || NOT_ANSWERED}; extent — ${d.extent.join(', ') || NOT_ANSWERED}` : ''}.` }]))
+    if (d.provisions.length) blocks.push({ kind: 'bullets', items: d.provisions.map((p): Run[] => [{ text: provisionLine(p) }]) })
+    if (d.precedents.length) blocks.push({ kind: 'bullets', items: d.precedents.map((p): Run[] => [{ text: `Precedent: ${p.docUri}${p.provisionPath ? ` ${p.provisionPath}` : ''} — ${p.how}` }]) })
+    const body = legislative ? d.clause : d.plainWording
+    if (body) for (const para of body.split(/\n+/).filter((l) => l.trim())) blocks.push({ kind: 'paragraph', runs: [{ text: para, italic: para.startsWith(CLAUSE_CAVEAT) }] })
+    else blocks.push({ kind: 'paragraph', runs: [{ text: legislative ? 'The clause: not yet drafted.' : 'Wording: not yet written.', italic: true }] })
+  }
+  // 13 · what this touches — computed for this printing from the instruction's provisions, with the honest states in words
+  if (!a.touches?.length) blocks.push(numbered(N(13), [{ text: `${PACK_SECTIONS[12]}: `, bold: true }, { text: d ? 'the instruction names no provision it amends, repeals, modifies, relies on or is constrained by.' : 'nothing to compute until there is a drafting instruction.', italic: true }]))
+  else {
+    blocks.push(numbered(N(13), [{ text: `${PACK_SECTIONS[12]}:`, bold: true }]))
+    blocks.push({ kind: 'bullets', items: a.touches.map((t): Run[] => [{ text: `${provisionLine(t.line)} — ${TOUCH_STATE[t.state]}${t.stateReason ? ` (${t.stateReason})` : ''}${t.effects ? `. ${t.effects.perType.map((c) => `${c.type}: ${c.total} (${c.changeTheWords} change the words, ${c.doNotChangeTheWords} do not, ${c.unclassified} unclassified)`).join('; ')}. ${t.effects.freshness}` : ''}${t.near.length ? ` Near provisions — ${NEAR_QUESTION}: ${t.near.map((n) => `s.${n.number} ${n.title}`).join('; ')}.` : ''}` }]) })
+  }
+  return blocks
+}
+
+
+/** 229 — the consequential schedule across the printed actions: counted in the body, listed in full. Generated; never retyped. */
+function scheduleBlocks(actions: PackAction[]): Block[] {
+  const all = actions.flatMap((a) => (a.touches ?? []).map((t) => ({ a, t }))).filter(({ t }) => ['amends', 'repeals', 'modifies'].includes(t.line.relation))
+  const blocks: Block[] = [{ kind: 'section', title: 'ANNEXE — CONSEQUENTIAL AMENDMENTS AND REPEALS' }]
+  if (!all.length) { blocks.push({ kind: 'paragraph', runs: [{ text: 'No printed action’s drafting instruction amends, repeals or modifies an existing provision yet.', italic: true }] }); return blocks }
+  blocks.push({ kind: 'paragraph', runs: [{ text: scheduleSentence(scheduleCounts(all.map((x) => x.t))) }] })
+  blocks.push({ kind: 'bullets', items: all.map(({ a, t }): Run[] => [{ text: `#${a.number}: ${provisionLine(t.line)} — ${TOUCH_STATE[t.state]}${t.effects ? `; ${t.effects.perType.map((c) => `${c.type} ${c.total} (${c.doNotChangeTheWords} do not change the words, ${c.unclassified} unclassified)`).join(', ')}` : ''}` }]) })
   return blocks
 }
 
@@ -218,6 +251,9 @@ export function buildActionsPackDocument(snapshot: ProposalSnapshot, opts: { sel
   blocks.push({ kind: 'section', title: 'CONSIDERED, NOT TAKEN' })
   const headingIds = new Set<string | null>(groups.map((g) => g.id))
   blocks.push(...notTakenBlocks(data, { headingIds, includeNotebook: false }))
+
+  // ── 26-U §4b: the consequential schedule (229) ──
+  blocks.push(...scheduleBlocks(actions))
 
   // ── the source list, numbered ──
   const cited = [...new Set(actions.flatMap((a) => a.refs))].sort((x, y) => x - y)

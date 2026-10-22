@@ -14,6 +14,8 @@ import { activeConditions } from '@/lib/lex/action-conditions'
 import { readConditions } from '@/lib/lex/action-conditions-server'
 import { listRegistry } from '@/lib/lex/source-registry'
 import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
+import { parseDraft, currentVersion } from '@/lib/lex/action-draft-pure'
+import { touchesFor } from '@/lib/lex/action-touches'
 import { SET_ASIDE_PREFIX, DISMISSED_PREFIX } from '@/lib/lex/update-pass'
 import { staleness, staleSentence, type StoredJudge, type StoredModelOutput } from '@/lib/lex/action-digest-pure'
 import {
@@ -103,8 +105,14 @@ export async function readActionsPackData(
       policyTest: r.policyTestVerdict ? { verdict: r.policyTestVerdict, reason: r.policyTestReason, conflictNote: r.conflictNote } : null,
       slots, sequence: r.sequence, beforeNumbers: r.beforeIds.map((id) => numById.get(id)).filter((n): n is number => n != null).sort((a, b) => a - b),
       parked: r.parked, parkedReason: r.parkedReason, detail, parts, refs, notes: noteRows,
+      // 26-U §3/§4 — the current drafting-instruction version, and (filled below) what it touches, computed, never written.
+      draft: currentVersion(parseDraft(rec.draft)), touches: null,
     }]
   })
+
+  // 26-U §4 — what each drafted action touches, computed now from its current instruction (the documents print it; nothing is stored).
+  // The held provision text is for the screen, not the stored snapshot: the documents print the line, its state and its counts.
+  for (const a of actions) if (a.draft?.provisions.some((p) => p.relation !== 'precedent')) a.touches = (await touchesFor(a.draft)).touches.map((t) => ({ ...t, heldText: null }))
 
   const ruledOut = ruled.flatMap((r) => (r.number == null ? [] : [{ number: r.number, title: r.title, statement: r.practicalStep, headingId: r.headingId, reason: r.ruleOutReason, lastChanged: r.updatedAt.toISOString() }]))
 

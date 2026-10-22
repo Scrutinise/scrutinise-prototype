@@ -90,7 +90,8 @@ export async function readNotebook(ideaId: string, viewer: Viewer, opts: { inclu
   const notes: NoteView[] = visible.map((n) => ({
     id: n.id, lex: false, source: byId.get(n.sourceId) ?? null, sourceId: n.sourceId, quote: n.quote, quoteLocation: n.quoteLocation, comment: n.comment,
     stance: n.stance as Stance, bearsOn: (Array.isArray(n.bearsOn) ? n.bearsOn : []) as unknown as BearsOnRef[], tags: n.tags, heading: n.heading, importance: n.importance,
-    authorId: n.authorId, authorName: nameOf.get(n.authorId) ?? 'A team member', authorKind: n.authorKind === 'LEX' ? 'LEX' : 'USER',
+    // 22 Oct (CCh) — a note filed by a development session at CCh's instruction is named as that, never as the owner or as Lex.
+    authorId: n.authorId, authorName: n.authorKind === 'CC' ? 'CC' : nameOf.get(n.authorId) ?? 'A team member', authorKind: n.authorKind === 'LEX' ? 'LEX' : 'USER',
     status: n.status as NoteStatus, setAsideReason: n.setAsideReason, mineOnly: n.mineOnly, mine: n.authorId === viewer.id, createdAt: n.createdAt.toISOString(),
     replies: n.replies.map((r) => ({ id: r.id, authorId: r.authorId, authorName: nameOf.get(r.authorId) ?? 'A team member', text: r.text, createdAt: r.createdAt.toISOString() })),
   }))

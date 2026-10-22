@@ -17,6 +17,8 @@ import type { Block, DocumentModel, Run, SourceRef } from './model'
 import { snapshotHash, assertRenderableSnapshot, type ProposalSnapshot } from './proposal-snapshot'
 import { betaBlocks, draftBanner, fieldByKey, fieldText, headlineCost, type ProposalBuildResult } from './build-proposal'
 import { text, numbered, incentiveBlocks, notTakenBlocks, dateWords } from './pack-sections'
+import { provisionLine } from '@/lib/lex/action-draft-pure'
+import { scheduleCounts, scheduleSentence, STATE_WORDS } from '@/lib/lex/action-touches-pure'
 
 const PREDATES = 'This version of the proposal was stored before this document existed, so the record it holds cannot be arranged here. Generate it from the working draft instead.'
 const STANCE: Record<string, string> = { SUPPORTS: 'supports', CONTRADICTS: 'contradicts', CONTEXT: 'context', UNDECIDED: 'undecided' }
@@ -89,6 +91,19 @@ export function buildBackgroundReport(snapshot: ProposalSnapshot): ProposalBuild
   // ── 7 · considered, not taken ──
   blocks.push({ kind: 'section', title: 'CONSIDERED, NOT TAKEN' })
   blocks.push(...notTakenBlocks(data, { includeNotebook: true }))
+
+  // ── 8 · 26-U §4c — what the drafted clauses touch (the consequential schedule's counts) and the precedents they draw on ──
+  blocks.push({ kind: 'section', title: 'WHAT THE DRAFTED CLAUSES TOUCH' })
+  const drafted = data.actions.filter((a) => a.draft)
+  if (!drafted.length) blocks.push(numbered('8.1', [{ text: data.actions.some((a) => 'draft' in a) ? 'No action has a drafting instruction yet.' : 'This version of the proposal was stored before drafting instructions existed.', italic: true }]))
+  else {
+    const touches = drafted.flatMap((a) => a.touches ?? [])
+    blocks.push(numbered('8.1', [{ text: `${drafted.length} ${drafted.length === 1 ? 'action has' : 'actions have'} a drafting instruction. ` }, { text: scheduleSentence(scheduleCounts(touches)) }]))
+    const named = touches.filter((t) => t.state !== 'held')
+    if (named.length) blocks.push(numbered('8.2', [{ text: 'Named but not computed: ', bold: true }, { text: named.map((t) => `${provisionLine(t.line)} — ${STATE_WORDS[t.state]}`).join('; ') }]))
+    const prec = drafted.flatMap((a) => (a.draft?.precedents ?? []).map((p) => ({ a, p })))
+    blocks.push(numbered('8.3', [{ text: 'Precedents drawn on: ', bold: true }, prec.length ? { text: prec.map(({ a, p }) => `#${a.number} — ${p.docUri}${p.provisionPath ? ` ${p.provisionPath}` : ''} (${p.how})`).join('; ') } : { text: 'none recorded in the drafting instructions.', italic: true }]))
+  }
 
   // ── the numbered sources ──
   blocks.push({ kind: 'section', title: 'SOURCES' })

@@ -14,6 +14,8 @@ import { clampStep } from '@/lib/lex/action-steps'
 import * as S from '@/lib/lex/action-structure'
 import * as CD from '@/lib/lex/action-conditions-server'
 import * as RS from '@/lib/lex/action-resort'
+import * as DR from '@/lib/lex/action-draft'
+import * as TO from '@/lib/lex/action-touches'
 
 export const maxDuration = 300
 
@@ -90,6 +92,24 @@ export async function POST(req: Request, { params }: Params) {
       case 'consolidate': result = await RS.consolidateHeading(id, uid, b.headingId); break
       case 'setHeadingsHidden': result = await S.setHeadingsHidden(id, b.hidden); break
       case 'restoreHeading': result = await S.restoreHeading(id, b.headingId); break
+      case 'saveDraft': {
+        const i = b.instruction
+        result = await DR.saveVersion(id, b.actionId, {
+          ...i, instrument: i.instrument ?? null, citations: i.citations ?? [],
+          provisions: i.provisions.map((p) => ({ ...p, provisionPath: p.provisionPath ?? null })),
+          precedents: i.precedents.map((p) => ({ ...p, provisionPath: p.provisionPath ?? null })),
+        })
+        break
+      }
+      case 'draftAction': result = await DR.draftWithLex(id, b.actionId, uid); break
+      case 'acceptDraft': result = await DR.acceptProposal(id, b.actionId); break
+      case 'dismissDraft': result = await DR.dismissProposal(id, b.actionId); break
+      case 'touches': {
+        const row = (await S.liveRows(id)).find((r) => r.id === b.actionId)
+        const cur = row ? DR.draftOf(row)?.versions.at(-1) ?? null : null
+        result = !row ? { ok: false, error: 'That action is not on this idea.' } : !cur ? { ok: false, error: 'There is no drafting instruction to compute from yet: save one, or use Lex’s draft, first.' } : { ok: true, data: await TO.touchesFor(cur) }
+        break
+      }
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

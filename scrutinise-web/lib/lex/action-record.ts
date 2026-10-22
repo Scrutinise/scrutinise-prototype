@@ -40,7 +40,12 @@ export const DIRECTION_UI: Record<Direction, { glyph: string; word: string }> = 
 export interface SlotProposal { text: string; reason: string; source: number | null; at: string; direction?: Direction | null; linkNumber?: number | null }
 export interface RecordSlot { text: string; by: 'USER' | 'LEX'; at: string; direction?: Direction | null; linkActionId?: string | null; proposal?: SlotProposal }
 export interface WhoMeta { by: 'USER' | 'LEX'; at: string; proposal?: SlotProposal }
-export interface ActionRecord { who?: WhoMeta; incentiveNow?: RecordSlot; whatChangesIt?: RecordSlot; skill?: RecordSlot; how?: RecordSlot; against?: RecordSlot; worked?: RecordSlot }
+export interface ActionRecord {
+  who?: WhoMeta; incentiveNow?: RecordSlot; whatChangesIt?: RecordSlot; skill?: RecordSlot; how?: RecordSlot; against?: RecordSlot; worked?: RecordSlot
+  /** 26-U §3 — the drafting instruction (lib/lex/action-draft-pure.ts). Carried through UNCHANGED by every slot write: parsing here keeps it
+   *  as stored, so saving a slot can never drop a draft. */
+  draft?: unknown
+}
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const str = (v: unknown, n = 4000): string => (typeof v === 'string' ? v.trim().slice(0, n) : '')
@@ -70,6 +75,8 @@ export function parseRecord(json: unknown): ActionRecord {
     if (!text && !proposal) continue
     out[k] = { text, by: by(s.by), at: str(s.at, 40), direction: dir(s.direction), linkActionId: typeof s.linkActionId === 'string' ? s.linkActionId : null, ...(proposal ? { proposal } : {}) }
   }
+  // ⚠ 26-U: every writer of `record` parses it and stores the result, so a key not kept here is DELETED by the next slot save.
+  if (isObj(json.draft)) out.draft = json.draft
   return out
 }
 
@@ -107,7 +114,10 @@ type SpecificLike = RecordLike & { avenue?: string | null; wording?: string | nu
 
 /** What is missing for the action to be specific enough, in the words the tag uses. Empty = specific enough. */
 export function missingForSpecific(a: SpecificLike): string[] {
-  if (a.avenue === 'LEGISLATIVE') return a.wording?.trim() ? [] : ['draft text']
+  // "Draft text present": the older wording column, or (26-U) a clause in the current drafting-instruction version.
+  const draft = parseRecord(a.record).draft as { versions?: Array<{ clause?: unknown }> } | undefined
+  const clause = draft?.versions?.length ? draft.versions[draft.versions.length - 1]?.clause : null
+  if (a.avenue === 'LEGISLATIVE') return a.wording?.trim() || (typeof clause === 'string' && clause.trim()) ? [] : ['draft text']
   const missing: string[] = []
   if (!slotAnswered(a, 'who')) missing.push('Who')
   if (!slotAnswered(a, 'against')) missing.push('Against')

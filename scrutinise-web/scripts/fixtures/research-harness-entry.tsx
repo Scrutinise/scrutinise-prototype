@@ -47,7 +47,8 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.includes('/research-notebook?lex=0')) return json(200, { notes: [] })
   if (url.includes('/research-notebook?options=1')) return json(200, { bearsOnOptions: [] })
   if (url.includes('/source-registry') && method === 'GET') return json(200, { sources: store.sources.filter((s: A) => !s.archived) })
-  if (url.includes('/research-notebook') && method === 'POST') {
+  // `/research-notebook/extract` is a file upload, not a note: it goes to the network (check:add-research-md-browser serves it with the real route).
+  if (url.includes('/research-notebook') && !url.includes('/extract') && method === 'POST') {
     const body = JSON.parse(String(init!.body))
     let ref: number
     if (body.newSource) {

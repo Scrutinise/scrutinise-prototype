@@ -29,6 +29,16 @@ import { useDigests, HeadingDigest, SetDigest, SetDigestButton } from './ActionD
 import IncentiveMap from './IncentiveMap'
 import { usePackPrint, PackStatus } from './ActionsPackPrint'
 import ActionComments from './ActionComments'
+import ActionDraftSection, { DraftAllButton } from './ActionDraftSection'
+import { parseDraft, currentVersion, missingFields } from '@/lib/lex/action-draft-pure'
+
+/** 26-U — the collapsed line for the Draft text block: "version 2 · Lex’s draft waiting" / "not yet written". */
+function draftSummary(a: { avenue: string | null; record?: unknown }): string {
+  const d = parseDraft((a.record as { draft?: unknown } | null)?.draft)
+  const cur = currentVersion(d)
+  const miss = missingFields(cur, a.avenue === 'LEGISLATIVE')
+  return [cur ? `version ${cur.v}` : 'not yet written', cur && miss.length ? `missing ${miss.join(', ')}` : cur ? 'every field answered' : '', d?.proposal ? 'Lex’s draft waiting beside it' : ''].filter(Boolean).join(' · ')
+}
 import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
 import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc } from '@/lib/lex/action-conditions'
 import type { HeadingPlan } from '@/lib/lex/action-resort-pure'
@@ -688,6 +698,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                   {consolidate && h && consolidate.headingId === h.id && <ConsolidateCard s={consolidate} ops={ops} disabled={disabled} setS={setConsolidate} onClose={() => setConsolidate(null)} />}
                   {step === 1 && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled}
                     extra={<button type="button" disabled={disabled || pack.busy || g.actions.length === 0} data-print-heading onClick={() => void pack.print({ headingId: h.id }, `the heading “${h.name}”`)} title="Print this heading as an Actions Pack (Word and PDF), every paragraph numbered." className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Print this heading</button>} />}
+                  {h && !g.hidden && <DraftAllButton actions={g.actions as never} run={ops.run as never} disabled={disabled} headingName={h.name} />}
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
                 </section>
@@ -930,6 +941,11 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
           <div className="px-2 pb-2 pt-1">{section[n]}</div>
         </details>
       ))}
+      {/* 26-U §3–§4 - the drafting instruction (Draft text) and What this touches, on every step; open on a legislative action */}
+      <details data-record-draft open={a.avenue === 'LEGISLATIVE'} className="rounded border border-zinc-200 bg-white">
+        <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">Draft text and what this touches — {draftSummary(a)}</summary>
+        <div className="px-2 pb-2 pt-1"><ActionDraftSection a={a} run={ops.run as never} disabled={disabled} /></div>
+      </details>
       {/* 26-T2 §6 - the comment thread, at the foot of the record on every step */}
       <ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} />
     </div>

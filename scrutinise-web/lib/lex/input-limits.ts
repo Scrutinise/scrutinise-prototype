@@ -30,7 +30,8 @@ export type LimitKey = keyof typeof LIMITS
 export function remainingWords(length: number, max: number): string {
   const left = max - length
   if (left > 0) return `${left} left`
-  return `limit reached (${max})`
+  if (left === 0) return `limit reached (${max})`
+  return `${(-left).toLocaleString('en-GB')} over the limit of ${max.toLocaleString('en-GB')} — shorten it to save`
 }
 
 /** Cut text to the limit; say, in words, how much was cut (empty string when nothing was). */

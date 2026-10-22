@@ -27,6 +27,17 @@ const Facets = z.object({
   beforeIds: z.array(z.string()).max(100).optional(),
 })
 
+const RELATION_NAMES = ['amends', 'repeals', 'relies_on', 'constrains', 'modifies', 'precedent'] as const
+const INSTRUMENT_NAMES = ['NEW_ACT', 'AMENDING_ACT', 'STATUTORY_CODE', 'STATUTORY_INSTRUMENT', 'MANAGEMENT_CODE', 'GUIDANCE'] as const
+const DraftInstructionBody = z.object({
+  instrument: z.enum(INSTRUMENT_NAMES).nullable(),
+  provisions: z.array(z.object({ docUri: z.string().min(3).max(60), provisionPath: z.string().max(80).nullable(), relation: z.enum(RELATION_NAMES), note: z.string().max(300) })).max(30),
+  dutyOnWhom: z.string().max(600), enforcedHow: z.string().max(600), commencement: z.string().max(600),
+  extent: z.array(z.enum(['England and Wales', 'Scotland', 'Northern Ireland', 'UK'])).max(4),
+  precedents: z.array(z.object({ docUri: z.string().min(3).max(60), provisionPath: z.string().max(80).nullable(), how: z.string().max(300) })).max(10),
+  clause: z.string().max(12000), plainWording: z.string().max(4000), purpose: z.string().max(300), citations: z.array(z.string().max(200)).max(40).default([]),
+})
+
 export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('createHeading'), name: z.string().min(1).max(LIMITS.headingName), colourKey: z.string().max(30).optional() }),
   z.object({ op: z.literal('updateHeading'), headingId: z.string(), name: z.string().min(1).max(LIMITS.headingName).optional(), colourKey: z.string().max(30).optional(), hidden: z.boolean().optional() }),
@@ -84,6 +95,13 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('setHeadingsHidden'), hidden: z.boolean() }),
   // restore a heading the Re-sort archived (it is kept, never deleted)
   z.object({ op: z.literal('restoreHeading'), headingId: z.string() }),
+  // 26-U §3 (148, 228) — the drafting instruction: the user's own version (a NEW version every save), Lex's draft (a proposal beside it),
+  // accept / dismiss that proposal; §4 — "What this touches", computed from the current version (read-only).
+  z.object({ op: z.literal('saveDraft'), actionId: z.string(), instruction: DraftInstructionBody }),
+  z.object({ op: z.literal('draftAction'), actionId: z.string() }),
+  z.object({ op: z.literal('acceptDraft'), actionId: z.string() }),
+  z.object({ op: z.literal('dismissDraft'), actionId: z.string() }),
+  z.object({ op: z.literal('touches'), actionId: z.string() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -106,6 +124,7 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   acceptConditionProposal: 'Accepting Lex’s proposed condition', dismissConditionProposal: 'Dismissing Lex’s proposed condition', assignConditions: 'Saving what the action delivers',
   resortPlan: '“Re-sort into headings”', resortBatch: '“Re-sort into headings”', resortFinish: '“Re-sort into headings”', undoResort: '“Undo the re-sort”',
   consolidatePlan: '“Consolidate this heading”', consolidate: '“Consolidate this heading”', restoreHeading: '“Bring the heading back”', setHeadingsHidden: '“Hide all / Show all headings”',
+  saveDraft: 'Saving the drafting instruction', draftAction: '“Draft this clause”', acceptDraft: 'Using Lex’s draft', dismissDraft: 'Dismissing Lex’s draft', touches: '“What this touches”',
 }
 
 /** And the words for the inputs those controls send. */
@@ -114,5 +133,6 @@ export const INPUT_WORDS: Record<string, string> = {
   name: 'the heading name', colourKey: 'the colour', title: 'the title', reason: 'the reason', order: 'the new order',
   patch: 'the classification', answer: 'Lex’s answer', mergedId: 'the merged action', a: 'the first action number', b: 'the second action number',
   conditionId: 'the condition', proposalId: 'the proposed condition', conditionIds: 'the conditions', support: 'the support mark', dir: 'the direction (up or down)', retired: 'retired or not',
+  instruction: 'the drafting instruction', provisions: 'the provisions it amends, repeals or relies on', docUri: 'the Act’s id (for example ukpga/2010/25)', provisionPath: 'the provision (for example section/5)', clause: 'the clause', extent: 'the extent', instrument: 'the instrument', precedents: 'the precedents',
   op: 'the control', step: 'the step (1 to 4)', note: 'the note', slot: 'the question being answered', text: 'the answer', direction: 'the direction (with, against, indifferent)', linkActionId: 'the linked action', replace: 'the choice to replace your answer',
 }
