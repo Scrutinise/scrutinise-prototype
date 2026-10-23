@@ -141,6 +141,7 @@
     "check:lex-read-section-turn": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-read-section-turn.ts",
     "check:add-research-md-browser": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-add-research-md-browser.ts",
     "check:lex-26u": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26u.ts",
+    "check:lex-235-chat-browser": "tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-235-chat-browser.ts",
     "measure:26u-draft": "tsx --tsconfig tsconfig.json --env-file=.env scripts/measure-26u-draft.ts",
     "check:field-revision-on-accept": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-field-revision-on-accept.ts",
     "report:effects": "tsx --env-file=.env scripts/report-effects.ts",

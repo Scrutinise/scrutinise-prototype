@@ -1,5 +1,34 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 09:01 UTC - LEX 22 Oct (7) / 23 Oct (8): 233, 238, 235, 237 done; 236 dropped (decision 247)
+
+- **Correction to the 07:51 entry below, and to 00:29:** 452c5ade does NOT have 0 link rows. Read with the plain client at 08:2x UTC: **20 rows, all live, all `hand`**, 0 superseded and 0 withdrawn, created 2026-10-22 22:53:04 UTC. That is Charlie's GRAPH 7 `--write`. The "0 live" line had been carried forward without a re-read. `--write` was not re-run, since the rows are there. The §5 writer selects only `source: 'drafting_instruction'` rows, so it never touches these.
+- **233:** #203 "Consequential amendments and repeals", under Primary legislation on 452c5ade.
+  - Statement verbatim (180 characters); source USER.
+  - Commentary points to the Actions Pack annexe and the Background Report §8 by name; nothing is retyped. The pack is generated on demand, so there is no stable URL to link.
+  - **Policy test: FITS**, 0.85p, through the product's own `testAgainstPolicy`.
+  - Script: `scrutinise-web/scripts/apply-233-238.ts` (dry run, then `--apply`, then a read-back).
+- **238:** #202's Commentary now opens with the one-line merit standard for every publicly funded body.
+  - It cites CRaG 2010 s.10 as the existing instance, with no process duty and no reporting, and says it replaces the 232 line (kept below it).
+  - The previous Commentary is kept as a FieldRevision (`DRAFTING_DECISION_238`).
+  - **Redraft NOT run.** Charlie is working on the #38 and #202 redrafts.
+- **235: Lex's chat replies render as markdown** (headings, bold, lists, paragraphs, tables, links).
+  - Both chat surfaces: `ChatPanel` (agent chat) and `AskLexPanel` (Ask tab).
+  - New `components/lex/ChatMarkdown.tsx` reuses `lib/documents/markdown.ts` (types-only imports, so `check:client-boundary` stays green).
+  - The user's own messages are unchanged. Only http(s), site-path and anchor links are drawn.
+  - The shared parser no longer treats an underscore inside a word as emphasis, so `read_section and search_corpus` keeps its underscores. This applies in documents too.
+  - **Lex's instructions** (agent `SYSTEM_PREFIX`): short paragraphs; a list at three or more items; a heading only as one line; never a wall of text. The old line "plain text … nothing to format for a parser" is removed.
+  - **`check:lex-235-chat-browser` 24/24, 1 control, 0 dead** (real components in Chromium).
+  - **Mutation run** (ChatPanel back to plain text): 8 failures, then reverted.
+- **237:** box labels verbatim on the action record: "The action, in up to 1,000 characters" (the number read from `LIMITS.actionStatement`) and "Detail, parts, tables — no limit". The statement box's accessible name matches its label. Browser-asserted in `check:lex-26u`, now **56/56, 8 controls, 0 dead**.
+- **236 dropped:** BRIEF_26V §2/§6 builds the Documents section; no interim one (CCh 23 Oct (8), decision 247).
+- **Found and fixed (LEX's own, from 26-U `2237f57`):** the drafting-instruction editor used bare `maxLength={600}` / `{300}` and the schema had literal `.max(600)` / `.max(80)`. That is the silent cut §30.1 forbids, and it had turned `check:lex-26s-browser`'s limit assertion red. Now `LIMITS.instructionLine`, `instructionPurpose` and `provisionPath`, with `BoundedInput` boxes. The assertion passes.
+- **Still red, NOT this work:**
+  - `check:lex-26s-browser` part B crashes on a strict locator: the status strip now holds two "OK" buttons (alert and status).
+  - `check:scripts` has 13 errors in files this work did not touch.
+- **Also run:** `tsc` 0; `check:lex-26s2` 221/221 (4 live cases not run, by design); `check:lex-26s2-browser` 33/33; `check:prompt-examples` green (24 illustrations, 0 in stored output); `check:client-boundary` green.
+- **Not committed, not pushed.**
+
 ## 2026-10-23 07:51 UTC - LEX 26-U §5 withdrawal: pushed and verified live at 910b17f
 
 - Pushed `b452f2d`, `920329e` and `910b17f` at 07:35 UTC (`ba49e10..910b17f`). `check:lex-26u` was re-run before the push: 54/54, 7 controls, 0 dead.

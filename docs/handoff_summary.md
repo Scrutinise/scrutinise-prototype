@@ -964,6 +964,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-23 09:1x UTC — 23 Oct (8): 233, 238, 235 and 237 done (NOT committed, NOT pushed); 236 dropped (decision 247); 26-V SIZED, waiting on the split.** See CHANGE_LOG 09:01 and `docs/LEX_26V_REPORT.md`.
+- **Correction:** 452c5ade has **20 live `hand` link rows** (Charlie's GRAPH 7 `--write`, 22 Oct 22:53 UTC), not 0. The 00:29 and 07:51 lines below are wrong on that point.
+- **233** is #203 under Primary legislation: policy test FITS, 0.85p. **238** is in #202's Commentary; the redraft is Charlie's.
+- **235:** chat markdown, `check:lex-235-chat-browser` 24/24. **237:** the box labels, asserted in `check:lex-26u` (56/56).
+- **Before push:** `check-clean-build.sh` (the files cross no package boundary, but run it anyway), then §20: health sha plus a live string, e.g. the label "Detail, parts, tables — no limit".
+- **Red, not this work:**
+  - `check:lex-26s-browser` part B crashes on two "OK" buttons in the status strip;
+  - `check:scripts` has 13 errors in untouched files.
+- **26-V:** V1 = structure + tree + placement (no spend); V2 = kinds + "draft what this heading needs" + passes (spends). The five questions in the report's §3 come first; ⚠ Q3: cascade depth 2–3 needs GRAPH.
+
 **✅ 2026-10-23 07:51 UTC — §5 withdrawal pushed and verified live at `910b17f`.** A version that drops a target now WITHDRAWS its live row; it is no longer held as `notSuperseded`. Verified: `/api/health` reports `910b17f`, and build-worker `db43d064` (push-triggered) shows `meta.commitHash` `910b17f43ec0` plus "retrieval configuration OK". `check:lex-26u` passes 54/54. **Next:** CCh 22 Oct (7) items 233, 238, 235, 236 and 237 (below); the #38 and #202 redrafts are still waiting for Charlie.
 
 **✅ 2026-10-23 00:29 UTC — everything outstanding is PUSHED and verified live at `c79eb84`. This supersedes the "HELD" lines below.**

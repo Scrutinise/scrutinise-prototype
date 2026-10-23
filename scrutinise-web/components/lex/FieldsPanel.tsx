@@ -51,6 +51,9 @@ export interface CausesApi {
 
 // §16.2 soft depth cap: beyond this Lex nudges consolidation rather than more depth.
 const MAX_CAUSE_DEPTH = 4
+// 237 (CCh 22 Oct (7)) — the action record's two box labels, verbatim.
+export const STATEMENT_LABEL = `The action, in up to ${LIMITS.actionStatement.toLocaleString('en-GB')} characters`
+export const COMMENTARY_LABEL = 'Detail, parts, tables — no limit'
 
 // Page 3 policy-options loop + chosen-approach handlers.
 export interface PolicyApi {
@@ -1633,12 +1636,14 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
         {step === 1 && (
           <>
             {/* Decision 181: the statement shows its limit and the count left; what a limit would cut goes in the commentary below. */}
-            <BoundedInput multiline rows={3} value={d.practicalStep} onChange={(v) => patch({ practicalStep: v })} max={LIMITS.actionStatement} placeholder="The action statement" aria-label="The action statement"
+            {/* 237 (CCh 22 Oct (7)) — the two box labels, verbatim; the number is the limit itself, so label and counter cannot disagree. */}
+            <p className="text-[11px] text-zinc-600" data-label="statement">{STATEMENT_LABEL}</p>
+            <BoundedInput multiline rows={3} value={d.practicalStep} onChange={(v) => patch({ practicalStep: v })} max={LIMITS.actionStatement} placeholder="The action statement" aria-label={STATEMENT_LABEL}
               wrapperClassName="w-full" className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-            <label className="block text-[11px] text-zinc-600">Commentary — the intention, examples, dimensions, and anything the statement’s limit would cut. No limit.
+            <label className="block text-[11px] text-zinc-600"><span data-label="commentary">{COMMENTARY_LABEL}</span>
               <RefTextarea value={d.commentary ?? ''} onChange={(e) => patch({ commentary: e.target.value })} rows={4} placeholder="Commentary (optional)"
                 className="mt-0.5 w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
-              <span className="text-[10px] text-zinc-500">{(d.commentary ?? '').length.toLocaleString()} characters · no limit</span>
+              <span className="text-[10px] text-zinc-500">{(d.commentary ?? '').length.toLocaleString()} characters</span>
             </label>
             <input value={d.mechanismType ?? ''} onChange={(e) => patch({ mechanismType: e.target.value })} placeholder="Mechanism"
               className="w-40 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />

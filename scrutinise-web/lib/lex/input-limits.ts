@@ -22,6 +22,13 @@ export const LIMITS = {
   /** 26-T2 §6: a comment on an action is a notebook note's comment (the notebook route allows 8,000), and a reply beneath it 4,000. */
   actionComment: 8000,
   actionReply: 4000,
+  /** 26-U §3: one line of a drafting instruction — Duty on whom, Enforced how, Commencement. It was a bare 600 in the schema and a bare
+   *  maxLength in the editor, so a long paste was cut without a word (§30.1). */
+  instructionLine: 600,
+  /** 26-U §3: the instruction's one-line purpose. */
+  instructionPurpose: 300,
+  /** 26-U §3: a provision path ("section/5") inside a Provisions or Precedent line — parsed from the line, not a box of its own. */
+  provisionPath: 80,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

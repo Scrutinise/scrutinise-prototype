@@ -24,6 +24,14 @@ export function parseInline(input: string): Run[] {
       runs.push({ text: rest })
       break
     }
+    // 235 — an underscore inside a word is a letter, not emphasis (GFM's rule): "read_section and search_corpus" would otherwise italicise
+    // everything between the two names. Asterisks keep their intraword meaning.
+    const delim = m[4] ?? m[6]
+    if (delim?.startsWith('_') && (/\w/.test(rest[m.index - 1] ?? '') || /\w/.test(rest[m.index + m[0].length] ?? ''))) {
+      runs.push({ text: rest.slice(0, m.index + delim.length) })
+      rest = rest.slice(m.index + delim.length)
+      continue
+    }
     if (m.index > 0) runs.push({ text: rest.slice(0, m.index) })
 
     if (m[1]) {

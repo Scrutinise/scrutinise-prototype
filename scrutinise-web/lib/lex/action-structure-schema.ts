@@ -31,11 +31,11 @@ const RELATION_NAMES = ['amends', 'repeals', 'relies_on', 'constrains', 'modifie
 const INSTRUMENT_NAMES = ['NEW_ACT', 'AMENDING_ACT', 'STATUTORY_CODE', 'STATUTORY_INSTRUMENT', 'MANAGEMENT_CODE', 'GUIDANCE'] as const
 const DraftInstructionBody = z.object({
   instrument: z.enum(INSTRUMENT_NAMES).nullable(),
-  provisions: z.array(z.object({ docUri: z.string().min(3).max(60), provisionPath: z.string().max(80).nullable(), relation: z.enum(RELATION_NAMES), note: z.string().max(300) })).max(30),
-  dutyOnWhom: z.string().max(600), enforcedHow: z.string().max(600), commencement: z.string().max(600),
+  provisions: z.array(z.object({ docUri: z.string().min(3).max(60), provisionPath: z.string().max(LIMITS.provisionPath).nullable(), relation: z.enum(RELATION_NAMES), note: z.string().max(300) })).max(30),
+  dutyOnWhom: z.string().max(LIMITS.instructionLine), enforcedHow: z.string().max(LIMITS.instructionLine), commencement: z.string().max(LIMITS.instructionLine),
   extent: z.array(z.enum(['England and Wales', 'Scotland', 'Northern Ireland', 'UK'])).max(4),
-  precedents: z.array(z.object({ docUri: z.string().min(3).max(60), provisionPath: z.string().max(80).nullable(), how: z.string().max(300) })).max(10),
-  clause: z.string().max(12000), plainWording: z.string().max(4000), purpose: z.string().max(300), citations: z.array(z.string().max(200)).max(40).default([]),
+  precedents: z.array(z.object({ docUri: z.string().min(3).max(60), provisionPath: z.string().max(LIMITS.provisionPath).nullable(), how: z.string().max(300) })).max(10),
+  clause: z.string().max(12000), plainWording: z.string().max(4000), purpose: z.string().max(LIMITS.instructionPurpose), citations: z.array(z.string().max(200)).max(40).default([]),
 })
 
 export const ActionStructureBody = z.discriminatedUnion('op', [

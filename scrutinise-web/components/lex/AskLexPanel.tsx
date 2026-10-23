@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react'
 import NotesPanel from './NotesPanel'
 import ChatAttach from './ChatAttach'
+import ChatMarkdown from './ChatMarkdown'
 
 /**
  * ══ 25-Q §3a — A LEX CHAT ON THE IDEA STAGE, AND THE NOTES BESIDE IT ══════════════════
@@ -99,10 +100,10 @@ export default function AskLexPanel({ ideaId }: { ideaId: string }) {
             )}
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-                  m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white'
+                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                  m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white whitespace-pre-wrap'
                 }`}>
-                  {m.content}
+                  {m.role === 'lex' ? <ChatMarkdown text={m.content} /> : m.content}
                 </div>
               </div>
             ))}

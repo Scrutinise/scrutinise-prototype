@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import AcceptCard from './AcceptCard'
 import EditOfferCard from './EditOfferCard'
 import ChatAttach from './ChatAttach'
+import ChatMarkdown from './ChatMarkdown'
 import AgentCards, { type AgentCardsState } from './AgentCards'
 import type { EditOffer } from '@/lib/lex/field-edit'
 import type { CanonicalField, CanonicalState } from '@/lib/lex/page1-config'
@@ -24,10 +25,10 @@ function Bubble({ m }: { m: ChatMessage }) {
       {m.role === 'lex' && (
         <div className="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold mr-2 mt-1">L</div>
       )}
-      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-        m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white'
+      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+        m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white whitespace-pre-wrap'
       }`}>
-        {m.content}
+        {m.role === 'lex' ? <ChatMarkdown text={m.content} /> : m.content}
       </div>
     </div>
   )

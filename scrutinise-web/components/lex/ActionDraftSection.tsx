@@ -15,6 +15,8 @@ import {
   type DraftInstruction, type DraftVersion, type Relation, type Instrument,
 } from '@/lib/lex/action-draft-pure'
 import { STATE_WORDS, type TouchesResult, type Touch } from '@/lib/lex/action-touches-pure'
+import { LIMITS } from '@/lib/lex/input-limits'
+import BoundedInput from './BoundedInput'
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,9 +76,10 @@ function Editor({ start, legislative, onSave, onCancel, disabled }: { start: Dra
         <label className="block text-[11px]">Amends / inserts into / repeals — one line each: relation ({RELATIONS.join(', ')}), the Act (ukpga/2010/25), the provision (section/5), then “ — ” and a note
           <textarea value={lines} onChange={(e) => setLines(e.target.value)} rows={4} className={box} aria-label="Provisions" /></label>
       )}
-      <label className="block text-[11px]">Duty on whom<input value={v.dutyOnWhom} onChange={(e) => set({ dutyOnWhom: e.target.value })} className={box} maxLength={600} /></label>
-      <label className="block text-[11px]">Enforced how<input value={v.enforcedHow} onChange={(e) => set({ enforcedHow: e.target.value })} className={box} maxLength={600} /></label>
-      {legislative && <label className="block text-[11px]">Commencement<input value={v.commencement} onChange={(e) => set({ commencement: e.target.value })} className={box} maxLength={600} /></label>}
+      {/* Every bounded box shows its limit and says when it cut something (§30.1); the numbers are the schema's own. */}
+      <label className="block text-[11px]">Duty on whom<BoundedInput value={v.dutyOnWhom} onChange={(x) => set({ dutyOnWhom: x })} className={box} max={LIMITS.instructionLine} aria-label="Duty on whom" /></label>
+      <label className="block text-[11px]">Enforced how<BoundedInput value={v.enforcedHow} onChange={(x) => set({ enforcedHow: x })} className={box} max={LIMITS.instructionLine} aria-label="Enforced how" /></label>
+      {legislative && <label className="block text-[11px]">Commencement<BoundedInput value={v.commencement} onChange={(x) => set({ commencement: x })} className={box} max={LIMITS.instructionLine} aria-label="Commencement" /></label>}
       {legislative && (
         <fieldset className="text-[11px]"><legend>Extent</legend>{EXTENTS.map((x) => (
           <label key={x} className="mr-2"><input type="checkbox" checked={v.extent.includes(x)} onChange={(e) => set({ extent: e.target.checked ? [...v.extent, x] : v.extent.filter((y) => y !== x) })} /> {x}</label>
@@ -85,7 +88,7 @@ function Editor({ start, legislative, onSave, onCancel, disabled }: { start: Dra
       {legislative
         ? <label className="block text-[11px]">The clause — its first line is always the caveat, added if you leave it out<textarea value={v.clause} onChange={(e) => set({ clause: e.target.value })} rows={8} className={`${box} font-serif`} aria-label="The clause" /></label>
         : <label className="block text-[11px]">Wording, in plain English<textarea value={v.plainWording} onChange={(e) => set({ plainWording: e.target.value })} rows={4} className={box} /></label>}
-      <label className="block text-[11px]">Purpose — one line<input value={v.purpose} onChange={(e) => set({ purpose: e.target.value })} className={box} maxLength={300} /></label>
+      <label className="block text-[11px]">Purpose — one line<BoundedInput value={v.purpose} onChange={(x) => set({ purpose: x })} className={box} max={LIMITS.instructionPurpose} aria-label="Purpose" /></label>
       <div className="flex gap-2">
         <button disabled={disabled} onClick={() => onSave({ ...v, provisions: legislative ? fromLines(lines) : [] })} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save as a new version</button>
         <button onClick={onCancel} className="text-xs underline text-zinc-600">Cancel</button>
