@@ -5644,6 +5644,8 @@ model ActionDocument {
   kind         String
   title        String
   /// DRAFTED · ACCEPTED (the owner accepted version `acceptedV`) · SUPERSEDED (CHECK). "No document yet" is a needed kind with no row.
+  /// 26-V1b 263 (prisma/lex_26v1b_accepted_kept.sql): ACCEPTED needs acceptedV; a DRAFTED document KEEPS the last version accepted, so the
+  /// screen can say "accepted at version N, then changed — accept again". The CHECK runs one way only.
   status       String    @default("DRAFTED")
   acceptedV    Int?      @map("accepted_v")
   /// 251 — a generated document whose data has moved on (the effects load date). Set together with staleReason (CHECK).
