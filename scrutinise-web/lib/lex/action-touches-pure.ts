@@ -24,7 +24,15 @@ export interface Touch {
   effects: { headline: string; summary: string[]; perType: EffectCount[]; loadDate: string | null; freshness: string; coverage: string } | null
   near: NearProvision[]
   nearNote: string | null
+  /** 26-V1b 261 — instruments whose own enacting words say they were MADE UNDER this provision (the citator's `enabling` rows). */
+  madeUnder?: MadeUnderBlock | null
+  /** 26-V1b 261 — judgments that cite this provision (the citator's case-law rows), most recent first. */
+  judgments?: JudgmentsBlock | null
 }
+export interface MadeUnderBlock { total: number; rows: Array<{ gid: string; title: string | null; link: string }>; actLevel: number; failed: string | null }
+export interface JudgmentsBlock { total: number; cases: number; rows: Array<{ citation: string; name: string | null; court: string; date: string | null; paragraph: string; passage: string; link: string }>; failed: string | null }
+/** "none held" in words — never an empty block (BRIEF_26V1b §3d). */
+export const NONE_HELD = 'none held'
 export interface TouchesResult { touches: Touch[]; counted: { lines: number; held: number; notHeld: number; failed: number } }
 
 /** 229 — the consequential schedule, counted: every amends / repeals / modifies line and what it knocks on to. */

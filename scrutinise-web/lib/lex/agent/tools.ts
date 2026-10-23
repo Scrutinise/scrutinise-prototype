@@ -589,14 +589,14 @@ const addCandidate: ToolDefinition = {
 
 // Decision 181: the action STATEMENT is at most LIMITS.actionStatement characters; the COMMENTARY beside it is unlimited and takes the intention,
 // examples, dimensions and any text the limit would cut. Whenever Lex shortens ANYTHING she says so and offers the commentary — she never drops the cut text.
-const STATEMENT_TOO_LONG = `the action statement is limited to ${LIMITS.actionStatement} characters. Shorten it, and OFFER the user to keep the full text in the action's commentary (unlimited) — never drop the cut text.`
+const STATEMENT_TOO_LONG = `the action statement is limited to ${LIMITS.actionStatement} characters. Shorten it, and OFFER the user to keep the full text in the action's Detail (unlimited) — never drop the cut text.`
 
 const addActionTool: ToolDefinition = {
   name: 'add_action', category: 'draft', tier: 'free',
-  description: `Add a coherent action: a specific practical step — who does what, by when or under what trigger. Specific, not a principle. The statement is at most ${LIMITS.actionStatement} characters; if you have to shorten what the user said, put the full text in \`commentary\` (unlimited) and tell them you did. If the user DICTATES the action ("add this action: …"), pass \`dictated:true\` with their exact words as practicalStep: it is then THE USER'S action (author = the owner), not yours. The result gives the action's NUMBER — say where it landed ("added as #31").`,
+  description: `Add a coherent action: a specific practical step — who does what, by when or under what trigger. Specific, not a principle. The statement is at most ${LIMITS.actionStatement} characters; if you have to shorten what the user said, put the full text in \`detail\` (unlimited) and tell them you did. If the user DICTATES the action ("add this action: …"), pass \`dictated:true\` with their exact words as practicalStep: it is then THE USER'S action (author = the owner), not yours. The result gives the action's NUMBER — say where it landed ("added as #31").`,
   schema: z.object({
     practicalStep: z.string().min(15).max(LIMITS.actionStatement, STATEMENT_TOO_LONG),
-    commentary: z.string().max(100000).optional().describe('unlimited: the intention, examples, dimensions, and any text the statement limit cut'),
+    detail: z.string().max(100000).optional().describe('the action’s Detail, unlimited: the intention, examples, dimensions, and any text the statement limit cut'),
     whoImplements: z.string().max(200).optional(),
     targetOrganisation: z.string().max(200).optional(),
     wording: z.string().max(1200).optional().describe('draft legislative or policy wording, if any'),
@@ -611,22 +611,22 @@ const addActionTool: ToolDefinition = {
       const said = ctx.turn.userMessages.map(norm).join(' ')
       if (!said.includes(norm(input.practicalStep))) return fail('“dictated” means the statement is the user’s own words, and this is not word for word in anything they have written. Add it without dictated:true (it will be yours, marked as from Lex), or use their exact words.')
     }
-    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.commentary, whoImplements: input.whoImplements, targetOrganisation: input.targetOrganisation, wording: input.wording, source: input.dictated ? 'USER' : 'LEX' })
+    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.detail, whoImplements: input.whoImplements, targetOrganisation: input.targetOrganisation, wording: input.wording, source: input.dictated ? 'USER' : 'LEX' })
     await auditProvenance(ctx, `actions:${row.id}`, input.practicalStep, input.wording ?? input.practicalStep, prov)
     return {
       ok: true,
-      data: { number: row.number, id: short(row.id), source: input.dictated ? 'USER (the owner’s own action, written at their dictation)' : 'LEX', hasCommentary: !!input.commentary?.trim(), provenance: prov.line, say: `Added as #${row.number}.` },
+      data: { number: row.number, id: short(row.id), source: input.dictated ? 'USER (the owner’s own action, written at their dictation)' : 'LEX', hasDetail: !!input.detail?.trim(), provenance: prov.line, say: `Added as #${row.number}.` },
       ui: [{ type: 'open_panel', panel: 'actions' }],
     }
   },
 }
 
-const setActionCommentaryTool: ToolDefinition = {
-  name: 'set_action_commentary', category: 'draft', tier: 'free',
-  description: `Put text in an action's COMMENTARY (unlimited; beside its ${LIMITS.actionStatement}-character statement): the intention, examples, dimensions, or the full wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Never edit the statement itself with this.`,
+const setActionDetailTool: ToolDefinition = {
+  name: 'set_action_detail', category: 'draft', tier: 'free',
+  description: `Put text in an action's DETAIL (unlimited; beside its ${LIMITS.actionStatement}-character statement): the intention, examples, dimensions, or the full wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Never edit the statement itself with this.`,
   schema: z.object({
     action: z.number().int().describe('the action number, as in #31'),
-    commentary: z.string().min(1).max(100000),
+    detail: z.string().min(1).max(100000),
     mode: z.enum(['append', 'replace']).default('append'),
     provenance: ProvenanceSchema,
   }),
@@ -636,9 +636,9 @@ const setActionCommentaryTool: ToolDefinition = {
     const { rows } = await actionsByNumbers(ctx, [input.action])
     if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
     const cur = await prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id }, select: { commentary: true } })
-    const next = input.mode === 'replace' || !cur?.commentary?.trim() ? input.commentary.trim() : `${cur.commentary.trim()}\n\n${input.commentary.trim()}`
+    const next = input.mode === 'replace' || !cur?.commentary?.trim() ? input.detail.trim() : `${cur.commentary.trim()}\n\n${input.detail.trim()}`
     await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
-    return { ok: true, data: { number: rows[0].number, commentaryLength: next.length, mode: input.mode, say: `Put it in the commentary of #${rows[0].number}.` } }
+    return { ok: true, data: { number: rows[0].number, detailLength: next.length, mode: input.mode, say: `Put it in the Detail of #${rows[0].number}.` } }
   },
 }
 const writeNote: ToolDefinition = {
@@ -1036,7 +1036,7 @@ const SLOT_ENUM = ALL_SLOTS as unknown as [string, ...string[]]
 
 const getActionTool: ToolDefinition = {
   name: 'get_action', category: 'see', tier: 'free',
-  description: 'Read ONE coherent action in full by its number: the whole statement, its commentary, its heading, avenue, causes, the policy test with its reason, any note kept against a conflict, and the seven step-2 answers (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked) each with who wrote it and when, plus any answer of mine waiting beside a slot. The list shows rows only; use this for a record. READ ONLY.',
+  description: 'Read ONE coherent action in full by its number: the whole statement, its Detail, its heading, avenue, causes, the policy test with its reason, any note kept against a conflict, and the seven step-2 answers (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked) each with who wrote it and when, plus any answer of mine waiting beside a slot. The list shows rows only; use this for a record. READ ONLY.',
   schema: z.object({ action: z.number().int().describe('the action number, as in #31') }),
   async run(ctx, { action }) {
     const { rows } = await actionsByNumbers(ctx, [action])
@@ -1061,7 +1061,7 @@ const getActionTool: ToolDefinition = {
     return {
       ok: true,
       data: {
-        number: a.number, title: a.title, statement: a.practicalStep, commentary: a.commentary, source: a.source, heading: a.headingId ? heads.find((h) => h.id === a.headingId)?.name ?? null : null,
+        number: a.number, title: a.title, statement: a.practicalStep, detail: a.commentary, source: a.source, heading: a.headingId ? heads.find((h) => h.id === a.headingId)?.name ?? null : null,
         avenue: a.avenue, causesAttacked: a.targetCauseIds.map((c) => cn.get(c)).filter(Boolean), policyTest: a.policyTestVerdict ? { verdict: a.policyTestVerdict, reason: a.policyTestReason } : 'not tested', keptWithNote: a.conflictNote,
         step2: { specific: specificTag(a), answeredOf7: answeredCount(a), slots },
       },
@@ -1656,7 +1656,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, readSectionTool,
   fileUrl, fileText,
-  draftField, addCandidate, addActionTool, setActionCommentaryTool, writeNote,
+  draftField, addCandidate, addActionTool, setActionDetailTool, writeNote,
   explain,
   acceptFieldTool, editFieldTool, ruleOut, restoreCandidate, mergeCandidates, choosePolicy, unchoosePolicy, moveToActions,
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,

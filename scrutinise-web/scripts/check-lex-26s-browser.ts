@@ -124,17 +124,18 @@ async function partB() {
       const close = Array.from(li.querySelectorAll('button')).find((b) => /Close −/.test(b.textContent ?? ''))
       const sel = li.querySelector('select[aria-label^="Heading for action"]')
       const title = li.querySelector('[data-open-title]')
+      const band = li.querySelector('[data-jump-band]')                           // 26-V1b 256: the heading menu moved to the jump band's right
       const line = li.querySelector('[data-test-line]')
       const box = line?.firstElementChild
-      if (!close || !sel || !title || !line || !box) return { missing: { close: !!close, sel: !!sel, title: !!title, line: !!line, box: !!box } }
-      const c = close.getBoundingClientRect(), t = title.getBoundingClientRect(), s2 = sel.getBoundingClientRect(), b = box.getBoundingClientRect(), l = line.getBoundingClientRect(), r = li.getBoundingClientRect()
+      if (!close || !sel || !title || !band || !line || !box) return { missing: { close: !!close, sel: !!sel, title: !!title, band: !!band, line: !!line, box: !!box } }
+      const c = close.getBoundingClientRect(), t = title.getBoundingClientRect(), s2 = sel.getBoundingClientRect(), b = box.getBoundingClientRect(), l = band.getBoundingClientRect(), r = li.getBoundingClientRect()
       const sameLineAsTitle = Math.abs(c.top - t.top) < 30                      // Close and the title are one line
-      const menuOnTestLine = s2.top >= l.top - 2 && s2.bottom <= l.bottom + 2     // the menu is on the test line, not up with Close
+      const menuOnTestLine = band.contains(sel) && s2.top >= l.top - 2 && s2.bottom <= l.bottom + 2     // the menu is in the jump band, not up with Close
       const menuRight = Math.abs(r.right - s2.right) < 40                         // right-aligned
       const testNotFull = b.width < r.width * 0.9                                // the test is not the full width of the record
       return { ok: sameLineAsTitle && menuOnTestLine && menuRight && testNotFull && s2.top > c.bottom, sameLineAsTitle, menuOnTestLine, menuRight, testNotFull, c: [c.top, c.bottom, c.left, c.right], t: [t.top, t.bottom], s2: [s2.top, s2.bottom, s2.left, s2.right], l: [l.top, l.bottom], b: [b.width], r: [r.width, r.right] }
     })
-    ok('opened (18 Oct, CCh B): the title line is [title · Edit title · Close] — Close at the right of the title line; the heading menu sits on the policy-test line, right-aligned, and the test is NOT full width', !!(geo as { ok?: boolean }).ok, JSON.stringify(geo))
+    ok('opened (18 Oct, CCh B): the title line is [title · Edit title · Close] — Close at the right of the title line; the heading menu sits at the right of the jump band (256; was the policy-test line), and the test is NOT full width', !!(geo as { ok?: boolean }).ok, JSON.stringify(geo))
     ok('opened: the title is text with an "Edit title" control — no always-open box, no "Save title"', (await li2.locator('text=Edit title').count()) === 1 && (await li2.locator('input[aria-label^="Title of action"]').count()) === 0 && (await li2.locator('text=Save title').count()) === 0)
     await li2.locator('text=Edit title').click()
     ok('"Edit title" opens the title box with a counter ("… left")', (await li2.locator('input[aria-label^="Title of action"]').count()) === 1 && /\d+ left/.test(await text('li[data-action-id="a2"] [data-limit-counter]')))

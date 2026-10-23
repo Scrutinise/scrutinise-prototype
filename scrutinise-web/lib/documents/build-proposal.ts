@@ -738,7 +738,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
 
     // 26-S2 195 - the action's commentary (its folded, quoted components and the reasoning) is printed under it. The Meeting Pack does not print it.
     if (a.commentary) {
-      blocks.push({ kind: 'heading', level: 3, runs: text('Commentary') })
+      blocks.push({ kind: 'heading', level: 3, runs: text('Detail') })
       blocks.push(...markdownToBlocks(a.commentary))
     }
 

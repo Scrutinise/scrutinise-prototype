@@ -3,6 +3,8 @@
 //
 //   GET                       the tree: heading → action → documents → parts, with "needs N: M drafted" and the counts
 //   POST { op: 'open' }       one document: every version, every proposal, its parts and sources
+//   POST { op: 'view' }       26-V1b §3: the document view — the above, plus each version's instruction, changes and law rows, the waiting proposal
+//   POST { op: 'forAction' }  26-V1b §3h: one action's documents, as the record's Documents section lists them
 //   POST { op: 'accept' }     accept a document as it stands
 //   POST { op: 'addByHand' }  a document of any kind but the generated ones, with its first version
 //   POST { op: 'saveText' }   a new version of a hand-written document
@@ -15,6 +17,7 @@ import { authorizeIdea } from '@/lib/lex/authz'
 import { describeIssues } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import * as D from '@/lib/lex/action-documents'
+import { documentView, actionDocuments } from '@/lib/lex/document-view'
 
 export const maxDuration = 300
 type Params = { params: Promise<{ id: string }> }
@@ -22,6 +25,8 @@ type Params = { params: Promise<{ id: string }> }
 const KIND = z.enum(D.DOCUMENT_KINDS)
 const Body = z.discriminatedUnion('op', [
   z.object({ op: z.literal('open'), documentId: z.string().min(1) }),
+  z.object({ op: z.literal('view'), documentId: z.string().min(1) }),
+  z.object({ op: z.literal('forAction'), actionId: z.string().min(1) }),
   z.object({ op: z.literal('accept'), documentId: z.string().min(1) }),
   z.object({ op: z.literal('addByHand'), actionId: z.string().min(1), kind: KIND, title: z.string().min(1).max(LIMITS.documentTitle), body: z.string().max(LIMITS.documentText) }),
   z.object({ op: z.literal('saveText'), documentId: z.string().min(1), body: z.string().max(LIMITS.documentText) }),
@@ -29,7 +34,7 @@ const Body = z.discriminatedUnion('op', [
   z.object({ op: z.literal('generate'), what: z.enum(['collision', 'schedule']), actionId: z.string().min(1).optional() }),
 ])
 const OP_WORDS: Record<string, string> = {
-  open: 'Opening that document', accept: 'Accepting that document', addByHand: 'Adding that document', saveText: 'Saving that document',
+  open: 'Opening that document', view: 'Opening that document', forAction: 'Reading that action’s documents', accept: 'Accepting that document', addByHand: 'Adding that document', saveText: 'Saving that document',
   setNeeds: 'Changing what that action needs', generate: 'Generating that document',
 }
 const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate' }
@@ -61,6 +66,8 @@ export async function POST(req: Request, { params }: Params) {
   try {
     switch (b.op) {
       case 'open': result = await D.openDocument(id, b.documentId); break
+      case 'view': result = await documentView(id, b.documentId); break
+      case 'forAction': result = await actionDocuments(id, b.actionId); break
       case 'accept': result = await D.acceptDocument(id, b.documentId); break
       case 'addByHand': result = await D.addDocumentByHand(id, b.actionId, { kind: b.kind, title: b.title, body: b.body }, { userId: uid, author }); break
       case 'saveText': result = await D.saveDocumentText(id, b.documentId, b.body, { userId: uid, author }); break

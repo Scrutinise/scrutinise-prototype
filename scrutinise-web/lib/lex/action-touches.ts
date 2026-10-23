@@ -19,7 +19,8 @@ import { effectsFor, type EffectsResult } from './statutory-graph'
 import { effectsHeadline, describeEffects } from './effects-describe'
 import { corpusProvision, targetKind, type DraftInstruction, type DraftProvision } from './action-draft-pure'
 
-import { type TargetState, type EffectCount, type NearProvision, type Touch, type TouchesResult, NEAR_QUESTION } from './action-touches-pure'
+import { type TargetState, type EffectCount, type NearProvision, type Touch, type TouchesResult, type MadeUnderBlock, type JudgmentsBlock, NEAR_QUESTION } from './action-touches-pure'
+import { courtOf, citationOfGid, paragraphWords } from './document-view-pure'
 export * from './action-touches-pure'
 
 /** The legislation collections: primary Acts, instruments, devolved legislation (`regional`) and retained EU law. Explanatory notes and the
@@ -106,6 +107,52 @@ const perTypeOf = (r: EffectsResult): EffectCount[] => r.perType.map((c) => ({
   official: c.byOrigin.official, extracted: c.byOrigin.extracted,
 }))
 
+// ── 26-V1b 261: what is made under it, and what the courts have said about it — the citator's rows, read directly ─────────────────
+// ⚠ Read from `citation_edge` here, not through `inboundFor`: case-law rows carry detection `caselaw-markup`, which `detectionOf` does not
+//   recognise, so the shared reader files every one of them as unrecognised (measured 23 Oct: 1,288,630 such rows).
+// ⚠ The citator's provision form is `section-149` / `schedule-1`, matched with subsections (`section-149-1`) but never `section-1490`.
+const citatorRef = (path: string | null): string | null => (path ? path.toLowerCase().replace(/\//g, '-') : null)
+const PROVISION_MATCH = `(lower(target_provision_ref) = $2 OR lower(target_provision_ref) ~ ('^' || $2 || '([^0-9].*)?$'))`
+const JUDGMENTS_SHOWN = 10
+
+export async function madeUnderFor(acts: string[], path: string | null): Promise<MadeUnderBlock> {
+  const ref = citatorRef(path)
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ gid: string }>>(
+      `SELECT DISTINCT source_gid AS gid FROM citation_edge WHERE detection = 'enabling' AND target_act_id = ANY($1::text[])${ref ? ` AND ${PROVISION_MATCH}` : ''} ORDER BY 1 LIMIT 500`,
+      ...(ref ? [acts, ref] : [acts]))
+    const actLevel = ref ? (await prisma.$queryRawUnsafe<Array<{ n: number }>>(
+      `SELECT COUNT(DISTINCT source_gid)::int n FROM citation_edge WHERE detection = 'enabling' AND target_act_id = ANY($1::text[]) AND target_provision_ref IS NULL`, acts))[0].n : 0
+    const titles = rows.length ? await prisma.$queryRawUnsafe<Array<{ gid: string; title: string | null }>>(`SELECT gid, title FROM corpus_acts WHERE gid = ANY($1::text[])`, rows.map((r) => r.gid)) : []
+    const t = new Map(titles.map((x) => [x.gid, x.title]))
+    return { total: rows.length, actLevel, failed: null, rows: rows.map((r) => ({ gid: r.gid, title: t.get(r.gid) ?? null, link: `https://www.legislation.gov.uk/${r.gid}` })) }
+  } catch (e) { return { total: 0, actLevel: 0, rows: [], failed: e instanceof Error ? e.message : String(e) } }
+}
+
+export async function judgmentsFor(acts: string[], path: string | null): Promise<JudgmentsBlock> {
+  const ref = citatorRef(path)
+  const where = `source_type = 'caselaw' AND target_act_id = ANY($1::text[])${ref ? ` AND ${PROVISION_MATCH}` : ''}`
+  const args = ref ? [acts, ref] : [acts]
+  try {
+    const [count] = await prisma.$queryRawUnsafe<Array<{ n: number; cases: number }>>(`SELECT COUNT(*)::int n, COUNT(DISTINCT source_gid)::int cases FROM citation_edge WHERE ${where}`, ...args)
+    // One row per judgment (its first citing paragraph), the most recent first.
+    const rows = count.cases ? await prisma.$queryRawUnsafe<Array<{ gid: string; uri: string; para: string | null; passage: string; name: string | null; at: Date | null }>>(
+      `SELECT * FROM (
+         SELECT DISTINCT ON (c.source_gid) c.source_gid AS gid, c.source_doc_uri AS uri, c.source_provision_ref AS para, c.citation_text AS passage, s."sectionTitle" AS name, s."itemDate" AS at
+           FROM citation_edge c LEFT JOIN corpus_sections s ON s.id = c.source_gid
+          WHERE ${where.replace(/\b(source_type|target_act_id|target_provision_ref)\b/g, 'c.$1')}
+          ORDER BY c.source_gid, c.source_provision_ref NULLS LAST) x
+       ORDER BY at DESC NULLS LAST LIMIT ${JUDGMENTS_SHOWN}`, ...args) : []
+    return {
+      total: count.n, cases: count.cases, failed: null,
+      rows: rows.slice(0, JUDGMENTS_SHOWN).map((r) => {
+        const citation = citationOfGid(r.gid)
+        return { citation, name: r.name, court: courtOf(citation), date: r.at ? r.at.toISOString().slice(0, 10) : null, paragraph: paragraphWords(r.para), passage: r.passage.trim(), link: r.uri.replace('/id/', '/') }
+      }),
+    }
+  } catch (e) { return { total: 0, cases: 0, rows: [], failed: e instanceof Error ? e.message : String(e) } }
+}
+
 export async function touchOf(line: DraftProvision): Promise<Touch> {
   const base: Touch = { line, state: 'held', stateReason: '', actTitle: null, corpusId: null, heldText: null, heldChars: null, effects: null, near: [], nearNote: null }
   const kind = targetKind(line.docUri, line.provisionPath)
@@ -134,8 +181,10 @@ export async function touchOf(line: DraftProvision): Promise<Touch> {
       try { near = nearFrom(await contentsOf(line.docUri), provision); if (!near.length) nearNote = `${provision} is not in legislation.gov.uk’s contents for ${line.docUri}` }
       catch (e) { nearNote = `near provisions could not be read: ${e instanceof Error ? e.message : String(e)}` }
     }
+    const acts = [...new Set([line.docUri, eff.resolution.canonical, ...eff.resolution.candidates].filter((x): x is string => !!x))]
+    const [madeUnder, judgments] = await Promise.all([madeUnderFor(acts, line.provisionPath), judgmentsFor(acts, line.provisionPath)])
     return {
-      ...base, state: 'held', actTitle: eff.target.title, corpusId, heldText, heldChars, near, nearNote,
+      ...base, state: 'held', actTitle: eff.target.title, corpusId, heldText, heldChars, near, nearNote, madeUnder, judgments,
       stateReason: held.exact ? '' : provision ? `we hold ${line.docUri} but not ${provision} on its own` : 'the Act as a whole',
       effects: { headline: effectsHeadline(eff), summary: describeEffects(eff), perType: perTypeOf(eff), loadDate: eff.freshness.newestRowAt?.slice(0, 10) ?? null, freshness: eff.freshness.caveat, coverage: eff.coverage },
     }

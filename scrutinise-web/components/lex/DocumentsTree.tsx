@@ -11,25 +11,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DocumentTree, TreeActionRow, TreeDocument } from '@/lib/lex/action-documents'
-import { KIND_WORD, STATUS_WORD, GENERATED_KINDS, documentNumber, needsLine, partNumber, treeCounts, type DocumentKind } from '@/lib/lex/action-documents-pure'
-import { draftPrice } from '@/lib/lex/action-draft-pure'
+import { KIND_WORD, GENERATED_KINDS, documentNumber, needsLine, partNumber, treeCounts, type DocumentKind } from '@/lib/lex/action-documents-pure'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import FocusDialog from './FocusDialog'
+import DocumentView from './DocumentView'
+import { statusWords } from '@/lib/lex/document-view-pure'
 import BoundedInput from './BoundedInput'
 
 type Filter = 'all' | 'missing' | 'drafted' | 'accepted'
 const FILTER_WORD: Record<Filter, string> = { all: 'All', missing: 'Missing', drafted: 'Drafted, not accepted', accepted: 'Accepted' }
 
-interface Opened {
-  id: string; d: string; number: number; actionNumber: number | null; kind: DocumentKind; title: string; status: TreeDocument['status']; acceptedV: number | null; stale: string | null
-  current: { v: number; author: string; at: string; body: string; sources: unknown; parts: Array<{ n: number; title: string; text: string }> } | null
-  versions: Array<{ v: number; author: string; at: string; chars: number }>
-  proposals: Array<{ v: number; at: string; answer: string | null; reason: string | null; pence: number | null }>
-}
-
-const AUTHOR_WORD: Record<string, string> = { LEX: 'Lex', OWNER: 'the owner', COLLABORATOR: 'a collaborator', GENERATED: 'generated from the data' }
-const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: string; readOnly?: boolean }) {
   const [tree, setTree] = useState<DocumentTree | null>(null)
@@ -38,7 +30,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
   const [filter, setFilter] = useState<Filter>('all')
   const [find, setFind] = useState('')
   const [closed, setClosed] = useState<Set<string>>(new Set())
-  const [opened, setOpened] = useState<Opened | null>(null)
+  const [opened, setOpened] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [adding, setAdding] = useState<{ action: TreeActionRow; kind: DocumentKind } | null>(null)
 
@@ -60,11 +52,8 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
     } finally { setBusy(false) }
   }, [ideaId])
 
-  const open = async (doc: TreeDocument) => {
-    if (opened?.id === doc.id) { setOpened(null); return }
-    const data = await post({ op: 'open', documentId: doc.id }, `Opening ${doc.d}`)
-    if (data) setOpened(data as Opened)
-  }
+  // 26-V1b §3 — a document opens the ONE document view (the same as from the record), which reads its own data
+  const open = (doc: TreeDocument) => setOpened(opened === doc.id ? null : doc.id)
 
   const allActions = useMemo(() => tree?.headings.flatMap((h) => h.actions) ?? [], [tree])
   const counts = useMemo(() => treeCounts(allActions.map((a) => ({ needs: a.needs, documents: a.documents.map((d) => ({ kind: d.kind, status: d.status })) }))), [allActions])
@@ -111,21 +100,10 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
               <span className="text-[11px] text-zinc-500">{rows.length} action{rows.length === 1 ? '' : 's'}</span>
             </button>
             {hOpen && <ul className="divide-y divide-zinc-100">{rows.map((a) => (
-              <ActionRow key={a.id} a={a} readOnly={readOnly} busy={busy} opened={opened} closed={closed} toggle={toggle} onOpen={open}
-                onAccept={async (doc) => { const r = await post({ op: 'accept', documentId: doc.id }, `Accepting ${doc.d}`); if (r) { setSaid(`Saved: ${doc.d} accepted.`); setOpened(null); await load() } }}
+              <ActionRow key={a.id} ideaId={ideaId} a={a} readOnly={readOnly} busy={busy} opened={opened} closed={closed} toggle={toggle} onOpen={open} onChanged={() => void load()}
                 onGenerate={async (what) => { const r = await post({ op: 'generate', what, actionId: a.id }, 'Generating the collision report') as { d?: string; rows?: number; unchanged?: boolean } | null; if (r) { setSaid(r.unchanged ? `Unchanged: ${r.d} already matches the clause and the effects data.` : `Saved: ${r.d} generated, ${r.rows} row${r.rows === 1 ? '' : 's'}.`); await load() } }}
                 onAdd={(kind) => setAdding({ action: a, kind })}
-                onRedraft={async () => {
-                  setBusy(true)
-                  try {
-                    const res = await fetch(`/api/ideas/${ideaId}/action-structure`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'draftAction', actionId: a.id }) })
-                    const body = await res.json().catch(() => null)
-                    setSaid(res.ok ? `Saved: Lex’s draft for #${a.number} is waiting beside the current version — open the action’s Draft text to use it or dismiss it.` : `Not done: ${explainFailure(body, res.status, `Drafting #${a.number}`)}`)
-                    setOpened(null); await load()
-                  } finally { setBusy(false) }
-                }}
                 onNeeds={async (mode, kinds, reason) => { const r = await post({ op: 'setNeeds', actionId: a.id, mode, kinds, reason }, `Changing what #${a.number} needs`); if (r) { setSaid(`Saved: what #${a.number} needs.`); await load() } }}
-                onSaveText={async (doc, body) => { const r = await post({ op: 'saveText', documentId: doc.id, body }, `Saving ${doc.d}`); if (r) { setSaid(`Saved: ${doc.d}, a new version.`); setOpened(null); await load() } }}
               />
             ))}</ul>}
           </section>
@@ -140,10 +118,10 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
   )
 }
 
-function ActionRow({ a, readOnly, busy, opened, closed, toggle, onOpen, onAccept, onGenerate, onAdd, onRedraft, onNeeds, onSaveText }: {
-  a: TreeActionRow; readOnly: boolean; busy: boolean; opened: Opened | null; closed: Set<string>; toggle: (k: string) => void
-  onOpen: (d: TreeDocument) => void; onAccept: (d: TreeDocument) => void; onGenerate: (what: 'collision') => void; onAdd: (k: DocumentKind) => void
-  onRedraft: () => void; onNeeds: (mode: 'derived' | 'nothing' | 'set', kinds: DocumentKind[] | undefined, reason: string) => void; onSaveText: (d: TreeDocument, body: string) => void
+function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, onChanged, onGenerate, onAdd, onNeeds }: {
+  ideaId: string; a: TreeActionRow; readOnly: boolean; busy: boolean; opened: string | null; closed: Set<string>; toggle: (k: string) => void
+  onOpen: (d: TreeDocument) => void; onChanged: () => void; onGenerate: (what: 'collision') => void; onAdd: (k: DocumentKind) => void
+  onNeeds: (mode: 'derived' | 'nothing' | 'set', kinds: DocumentKind[] | undefined, reason: string) => void
 }) {
   const ak = `a:${a.id}`
   const isOpen = !closed.has(ak)
@@ -168,14 +146,14 @@ function ActionRow({ a, readOnly, busy, opened, closed, toggle, onOpen, onAccept
         <ul className="ml-8 mt-1 space-y-1">
           {a.documents.map((d) => (
             <li key={d.id} data-tree-document={d.d}>
-              <button type="button" onClick={() => onOpen(d)} aria-expanded={opened?.id === d.id}
-                className={`w-full text-left text-xs rounded px-1.5 py-1 ${opened?.id === d.id ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
+              <button type="button" onClick={() => onOpen(d)} aria-expanded={opened === d.id}
+                className={`w-full text-left text-xs rounded px-1.5 py-1 ${opened === d.id ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
                 <span aria-hidden>●</span> <span className="font-semibold">{documentNumber(a.number, d.number)}</span> {d.title}
-                <span className="text-zinc-600"> — {KIND_WORD[d.kind]} · <span data-doc-status>{STATUS_WORD[d.status]}</span>{d.acceptedV ? ` (version ${d.acceptedV})` : ''}{d.stale ? ' · out of date' : ''}{d.proposalWaiting ? ' · a draft from Lex is waiting' : ''} · {d.d}</span>
-                {opened?.id === d.id && <span className="ml-1 font-semibold">open</span>}
+                <span className="text-zinc-600"> — {KIND_WORD[d.kind]} · <span data-doc-status>{statusWords(d.status, d.acceptedV, d.current?.v ?? null)}</span>{d.stale ? ' · out of date' : ''}{d.proposalWaiting ? ' · Lex’s proposal waiting' : ''} · {d.d}</span>
+                {opened === d.id && <span className="ml-1 font-semibold">open</span>}
               </button>
-              {opened?.id === d.id && <DocumentView doc={opened} treeDoc={d} actionNumber={a.number} readOnly={readOnly} busy={busy} onAccept={() => onAccept(d)} onGenerate={() => onGenerate('collision')} onRedraft={onRedraft} onSaveText={(b) => onSaveText(d, b)} />}
-              {opened?.id !== d.id && d.parts.length > 1 && (
+              {opened === d.id && <div className="ml-5 mt-1"><DocumentView ideaId={ideaId} documentId={d.id} readOnly={readOnly} onChanged={onChanged} /></div>}
+              {opened !== d.id && d.parts.length > 1 && (
                 <ul className="ml-5 mt-0.5">{d.parts.map((p) => <li key={p.n} className="text-[11px] text-zinc-600"><span aria-hidden>▸</span> {partNumber(a.number, d.number, p.n)} {p.title}</li>)}</ul>
               )}
             </li>
@@ -191,61 +169,6 @@ function ActionRow({ a, readOnly, busy, opened, closed, toggle, onOpen, onAccept
         </ul>
       )}
     </li>
-  )
-}
-
-function DocumentView({ doc, treeDoc, actionNumber, readOnly, busy, onAccept, onGenerate, onRedraft, onSaveText }: {
-  doc: Opened; treeDoc: TreeDocument; actionNumber: number | null; readOnly: boolean; busy: boolean
-  onAccept: () => void; onGenerate: () => void; onRedraft: () => void; onSaveText: (body: string) => void
-}) {
-  const [editing, setEditing] = useState(false)
-  const [text, setText] = useState(doc.current?.body ?? '')
-  const [askPrice, setAskPrice] = useState(false)
-  const generated = GENERATED_KINDS.has(doc.kind)
-  const price = draftPrice()
-  const sources = Array.isArray(doc.current?.sources) ? (doc.current!.sources as unknown[]).map(String) : []
-  return (
-    <div className="ml-5 mt-1 border-l-2 border-zinc-300 pl-2 space-y-1.5 text-xs" data-document-view={doc.d}>
-      <p><span className="font-semibold">{doc.d}</span>, {STATUS_WORD[doc.status]}{doc.stale ? <> · <span className="font-semibold">out of date</span>: {doc.stale}</> : ''}</p>
-      {doc.current
-        ? <p className="text-zinc-600">Version {doc.current.v}, by {AUTHOR_WORD[doc.current.author] ?? doc.current.author}, {when(doc.current.at)}.</p>
-        : <p className="text-zinc-600">No version yet{doc.proposals.some((p) => !p.answer) ? ' — only a draft from Lex, waiting in the action’s Draft text' : ''}.</p>}
-      {doc.current && !editing && (
-        <div className="space-y-1">
-          {doc.current.parts.map((p) => (
-            <div key={p.n} data-document-part={partNumber(actionNumber, doc.number, p.n)}>
-              <p className="font-semibold"><span aria-hidden>▸</span> {partNumber(actionNumber, doc.number, p.n)} {p.title}</p>
-              <pre className="whitespace-pre-wrap font-sans text-[11px] text-zinc-800">{p.text}</pre>
-            </div>
-          ))}
-        </div>
-      )}
-      {editing && (
-        <div className="space-y-1">
-          <BoundedInput multiline rows={10} value={text} onChange={setText} max={LIMITS.documentText} aria-label={`The text of ${doc.d}`} className="w-full text-xs border border-zinc-300 rounded p-1.5" wrapperClassName="w-full" />
-          <div className="flex gap-2"><button type="button" disabled={busy} onClick={() => onSaveText(text)} className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save as a new version</button><button type="button" onClick={() => setEditing(false)} className="underline">Cancel</button></div>
-        </div>
-      )}
-      {sources.length > 0 && <p className="text-zinc-600">Drew on: {sources.join(' · ')}</p>}
-      {doc.versions.length > 1 && <p className="text-zinc-600">Versions: {doc.versions.map((v) => `${v.v} (${AUTHOR_WORD[v.author] ?? v.author}, ${when(v.at)})`).join(' · ')}</p>}
-      {doc.proposals.length > 0 && <p className="text-zinc-600">Drafts from Lex: {doc.proposals.map((p) => `${p.v} — ${p.answer === 'ACCEPTED' ? 'used' : p.answer === 'DISMISSED' ? 'dismissed' : 'waiting'}${p.pence != null ? `, ${p.pence.toFixed(1)}p` : ''}`).join(' · ')}</p>}
-      {!readOnly && (
-        <div className="flex flex-wrap gap-2 pt-0.5">
-          {doc.current && doc.status !== 'ACCEPTED' && <button type="button" disabled={busy} onClick={onAccept} className="px-2 py-0.5 rounded border-2 border-zinc-900 font-semibold disabled:opacity-40">Accept version {doc.current.v}</button>}
-          {generated && doc.kind === 'COLLISION_REPORT' && <button type="button" disabled={busy} onClick={onGenerate} className="underline disabled:opacity-40">Generate again (free)</button>}
-          {!generated && doc.kind !== 'DRAFT_CLAUSE' && !editing && <button type="button" onClick={() => { setText(doc.current?.body ?? ''); setEditing(true) }} className="underline">Edit</button>}
-          {doc.kind === 'DRAFT_CLAUSE' && <span className="text-zinc-600">Edit it through the action’s Draft text, so the clause always traces to its instruction.</span>}
-          {doc.kind === 'DRAFT_CLAUSE' && !askPrice && <button type="button" disabled={busy} onClick={() => setAskPrice(true)} className="underline disabled:opacity-40">Ask Lex to redraft</button>}
-          {doc.kind === 'DRAFT_CLAUSE' && askPrice && (
-            <span data-redraft-ask>This costs about {price.pence}p ({price.measured ? `measured, n=${price.n}` : 'an estimate'}); the draft arrives beside the current version, never over it.{' '}
-              <button type="button" disabled={busy} onClick={() => { setAskPrice(false); onRedraft() }} className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Draft it</button>{' '}
-              <button type="button" onClick={() => setAskPrice(false)} className="underline">Not now</button></span>
-          )}
-          {!generated && doc.kind !== 'DRAFT_CLAUSE' && <span className="text-zinc-600">Lex drafts this kind in the next stage of this work; for now it is written by hand.</span>}
-        </div>
-      )}
-      <p className="sr-only">{treeDoc.d}</p>
-    </div>
   )
 }
 
@@ -269,7 +192,7 @@ function NeedsForm({ busy, onSave }: { busy: boolean; onSave: (mode: 'derived' |
   )
 }
 
-function AddDialog({ action, kind, busy, onClose, onSave }: { action: TreeActionRow; kind: DocumentKind; busy: boolean; onClose: () => void; onSave: (title: string, body: string) => void }) {
+export function AddDialog({ action, kind, busy, onClose, onSave }: { action: TreeActionRow; kind: DocumentKind; busy: boolean; onClose: () => void; onSave: (title: string, body: string) => void }) {
   const [title, setTitle] = useState(`${KIND_WORD[kind][0].toUpperCase()}${KIND_WORD[kind].slice(1)} for #${action.number}`)
   const [body, setBody] = useState('')
   return (

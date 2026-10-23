@@ -1,5 +1,39 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 19:14 UTC - LEX 26-V1b-a: the action record restructured, the document view, the Law panel's words
+
+- **Schema first** (`befa05c`, pushed before this code; 263): `action_document_accepted_check` now runs one way. ACCEPTED needs `accepted_v`; a DRAFTED document keeps its last accepted version. DDL `prisma/lex_26v1b_accepted_kept.sql`, applied to Neon after whichdb and read back.
+- **§2, the record** (`ActionsWorkspace.tsx` OpenAction, `ActionRecordSections.tsx`, `record-layout-pure.ts`):
+  - **Order:** Statement → jump band → policy test → Detail → Documents → Law → Who, how and against → Costs → Order → Comments.
+  - **Steps:** the current step's section is open; another step's sits under one line in its place.
+  - **The jump band** (256): each section with its state in words; the heading menu at its right; sticky; "≡ More" at narrow widths.
+  - **"Commentary" → "Detail"** (257): 38 changed lines across 13 files.
+    - Lex's tool is now `set_action_detail`, and `add_action` takes `detail`; the drafting prompt says DETAIL.
+    - The column keeps its name, and the causes commentary (25-O) keeps its own.
+  - **Quoted parts** (2d): one collapsible list, "Parts of this action, quoted (N)".
+- **§3, the document view** (`DocumentView.tsx`, `document-view.ts`, `document-view-pure.ts`), opened from the record and from the tree:
+  - **Header strip** (263): "used" and "accepted" are two acts, each said in words.
+  - **Tabs:** Text · Instruction (a table, with "Why Lex drafted it this way" collapsible) · What it touches (+ SIs made under it and judgments interpreting it, from the citator; "none held" where empty) · Versions (what changed, the law rows written or withdrawn, proposals set aside) · Issues.
+  - **The three-column comparison** (3g): Take this, Take all, Set aside (kept), Save as version N.
+  - **The record's Documents section** (3h).
+  - **Retired:** the record's old "Draft text and what this touches" block and the tree's own in-place view (one view now). `ActionDraftSection.tsx` keeps only the Editor and "Draft all".
+  - **Prompt:** the drafting pass is told a provision note is one line and the reasoning goes in `reason`.
+  - ⚠ **Case-law citations are read from `citation_edge` directly.** `detectionOf` does not know `caselaw-markup`, so `inboundFor` would file all 1,288,630 such rows as unrecognised.
+- **§6, the Law panel** (`law-panel-words.ts`; GRAPH's `IdeaLawPanel.tsx`, display only):
+  - 6a: "From #38's drafting instruction, version 1", never the internal id.
+  - 6b: "Also named at: …" under each line.
+  - 6c: "which action will?" under a hand amends row that no instruction amends.
+- **Checks:**
+  - `check:lex-26v1b` 42/42, 6 controls fired (0 dead). Mutation: the raw id put back → red, three failures.
+  - `check:lex-26v` 50/50, updated for 263 and the new view, with a cold read that allows for Charlie's use of #38.
+  - 26-S2's record-order and label assertions moved to the new order and "Detail".
+  - **Regression, run one at a time:**
+    - 26u 57/57 · 26s2 221/221 · 26s2-structure 105/105 · 26t1 98/98 · 26t2 72/72 · 26p 116/116.
+    - 26s2-browser 33/33 · 26s-browser (`--db`) 99/99 · 249-browser 23/23 · 235-chat-browser 24/24.
+    - prompt-examples, client-boundary and llm-guards 9/9 · check:scripts and tsc clean.
+    - The fixes were all stale wording ("Commentary" → "Detail"), plus 26s-browser's heading menu, which now sits in the jump band.
+  - ⚠ **`check:idea-law` E1 fails 23/24, and it is GRAPH's check, not this code.** It asserts that line count ≥ live link rows. #38's accept wrote 7 instruction rows, and 3 of them merged into hand lines (`e2b60d2`, one line per relation+target), so 452c5ade has 27 rows on 24 lines. The assertion predates the merge. Left for GRAPH.
+
 ## 2026-10-23 10:32 UTC - LEX 26-V1: documents on actions, D-numbers, the tree, Law and Documents tabs, Reports, the seven-stage badge
 
 - **Decisions 250–254 applied.**

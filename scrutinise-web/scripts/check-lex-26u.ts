@@ -84,7 +84,7 @@ async function part2() {
     control('the box cutting to its first 1,000 characters on that edit (must be FALSE)', after.length === LIMITS.actionStatement)
     await page.locator('button:text-is("Save")').click()
     const refused = await page.locator('[data-save-refused]').innerText().catch(() => '')
-    ok('Save is REFUSED in words: "Not saved: the statement is N characters; the limit is 1,000. Move the extra into Commentary or shorten."', refused.includes(`Not saved: the statement is ${minusWord.length.toLocaleString('en-GB')} characters; the limit is 1,000. Move the extra into Commentary or shorten.`), refused)
+    ok('Save is REFUSED in words: "Not saved: the statement is N characters; the limit is 1,000. Move the extra into Detail or shorten."', refused.includes(`Not saved: the statement is ${minusWord.length.toLocaleString('en-GB')} characters; the limit is 1,000. Move the extra into Detail or shorten.`), refused)
     ok('…nothing reached the API, and the text is still exactly as typed', (await page.evaluate(() => (window as never as { __card: { updates: unknown[] } }).__card.updates.length)) === 0 && (await box.inputValue()) === minusWord)
     await page.locator('button:text-is("Cancel")').click()
     ok('Cancel restores the record as it was', ((await page.locator('[data-statement]').innerText()).replace(/\s+/g, ' ')) === FIXTURE.replace(/\s+/g, ' '))

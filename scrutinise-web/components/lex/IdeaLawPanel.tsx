@@ -12,6 +12,7 @@ import {
   LAW_RELATIONS, RELATION_GROUPS, RESOLUTION_WORDS, BILL_LABEL,
   type IdeaLawSet, type IdeaLawRow, type LawEffectsSummary,
 } from '@/lib/lex/idea-law-pure'
+import { sourceWords, alsoNamedAt, unansweredAmendment, provisionWords } from '@/lib/lex/law-panel-words'
 
 function targetHref(r: IdeaLawRow): string | null {
   if (r.targetKind === 'bill') return `https://bills.parliament.uk/bills/${r.docUri.slice('bill/'.length)}`
@@ -19,9 +20,7 @@ function targetHref(r: IdeaLawRow): string | null {
   return `https://www.legislation.gov.uk/${r.docUri}${r.provisionPath ? `/${r.provisionPath}` : ''}`
 }
 
-function provisionLabel(path: string): string {
-  return path.split('/').reduce<string[]>((out, seg, i, all) => (i % 2 === 0 ? [...out, `${seg} ${all[i + 1] ?? ''}`.trim()] : out), []).join(', ')
-}
+const provisionLabel = provisionWords
 
 function EffectsLine({ fx }: { fx: LawEffectsSummary }) {
   if (fx.failed) return <p className="mt-1 text-xs">⚠ {fx.failed}</p>
@@ -41,7 +40,9 @@ function EffectsLine({ fx }: { fx: LawEffectsSummary }) {
   )
 }
 
-function LawRow({ r }: { r: IdeaLawRow }) {
+function LawRow({ r, all }: { r: IdeaLawRow; all: IdeaLawRow[] }) {
+  const also = alsoNamedAt(all, r)
+  const gap = unansweredAmendment(all, r)
   const href = targetHref(r)
   const name = r.resolution.title ?? r.docUri
   return (
@@ -66,12 +67,16 @@ function LawRow({ r }: { r: IdeaLawRow }) {
             </div>
             {s.note && <p className="text-sm">{s.note}</p>}
             <p className="text-xs text-muted-foreground">
-              {s.source === 'hand' ? 'Attached by hand' : s.source === 'drafting_instruction' ? 'From a drafting instruction' : 'Found by extraction'}
-              {s.sourceDetail ? ` (${s.sourceDetail})` : ''}, against the law as at {s.asAt}.
+              {/* 26-V1b 6a — the action's number and the version, never the internal id */}
+              {sourceWords(s)}, against the law as at {s.asAt}.
             </p>
           </li>
         ))}
       </ul>
+      {/* 26-V1b 6b — the same Act named elsewhere (another provision or another relation): said here, so the reader need not hunt */}
+      {also.length > 0 && <p className="mt-1 text-xs" data-law-also>Also named at: {also.join(' · ')}.</p>}
+      {/* 26-V1b 6c — the stated position and the drafted one, side by side */}
+      {gap && <p className="mt-1 text-xs font-semibold" data-law-gap>Question: {gap}</p>}
       {r.resolution.state !== 'held' && (
         <p className="mt-1 text-xs font-medium" data-law-state={r.resolution.state}>⚠ {RESOLUTION_WORDS[r.resolution.state]} ({r.resolution.reason})</p>
       )}
@@ -105,7 +110,7 @@ export default function IdeaLawPanel({ set, error }: { set: IdeaLawSet | null; e
             <div key={rel} className="mt-5" data-law-group={rel}>
               <h3 className="text-sm font-semibold">{RELATION_GROUPS[rel].heading} <span className="font-normal text-muted-foreground">({set.grouped[rel].length})</span></h3>
               <p className="text-xs text-muted-foreground">{RELATION_GROUPS[rel].what}. Shown: {RELATION_GROUPS[rel].shows}.</p>
-              <ul className="mt-2 space-y-2">{set.grouped[rel].map((r) => <LawRow key={r.id} r={r} />)}</ul>
+              <ul className="mt-2 space-y-2">{set.grouped[rel].map((r) => <LawRow key={r.id} r={r} all={set.rows} />)}</ul>
             </div>
           ))}
           {LAW_RELATIONS.some((rel) => set.grouped[rel].length === 0) && (

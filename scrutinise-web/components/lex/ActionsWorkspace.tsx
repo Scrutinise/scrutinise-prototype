@@ -29,16 +29,10 @@ import { useDigests, HeadingDigest, SetDigest, SetDigestButton } from './ActionD
 import IncentiveMap from './IncentiveMap'
 import { usePackPrint, PackStatus } from './ActionsPackPrint'
 import ActionComments from './ActionComments'
-import ActionDraftSection, { DraftAllButton } from './ActionDraftSection'
-import { parseDraft, currentVersion, missingFields } from '@/lib/lex/action-draft-pure'
+import { DraftAllButton } from './ActionDraftSection'
+import { useRecordFacts, JumpBand, DocumentsSection, LawSection } from './ActionRecordSections'
+import { bandStates, type RecordSection } from '@/lib/lex/record-layout-pure'
 
-/** 26-U — the collapsed line for the Draft text block: "version 2 · Lex’s draft waiting" / "not yet written". */
-function draftSummary(a: { avenue: string | null; record?: unknown }): string {
-  const d = parseDraft((a.record as { draft?: unknown } | null)?.draft)
-  const cur = currentVersion(d)
-  const miss = missingFields(cur, a.avenue === 'LEGISLATIVE')
-  return [cur ? `version ${cur.v}` : 'not yet written', cur && miss.length ? `missing ${miss.join(', ')}` : cur ? 'every field answered' : '', d?.proposal ? 'Lex’s draft waiting beside it' : ''].filter(Boolean).join(' · ')
-}
 import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
 import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc } from '@/lib/lex/action-conditions'
 import type { HeadingPlan } from '@/lib/lex/action-resort-pure'
@@ -48,7 +42,7 @@ import {
   actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
 } from '@/lib/lex/action-facets'
 import {
-  STEPS, STEP_NUMBERS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
+  STEPS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
 } from '@/lib/lex/action-steps'
 
 // ── talking to the route ─────────────────────────────────────────────────────────────────────────────────
@@ -94,7 +88,7 @@ function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>)
       setError(m); return { ok: false, result: null, error: m }
     } finally { setBusy(null) }
   }, [ideaId, onChanged])
-  return { run, busy, error, saved, setSaved, note, setNote, clearError: () => setError(null) }
+  return { run, busy, error, saved, setSaved, note, setNote, clearError: () => setError(null), /** 26-V1b — a write made outside `run` (the document view) re-reads the list the same way. */ refresh: onChanged }
 }
 
 // Decision 179: the three cost columns are COST lines — "Cost to implement / Cost to enforce / Cost of compliance" (never "Against", the step-2 slot).
@@ -657,7 +651,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {view === 'list' && unparked.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5" data-find-box>
           <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
-            placeholder="Find in the actions — title, statement, commentary" aria-label="Find in the actions"
+            placeholder="Find in the actions — title, statement, Detail" aria-label="Find in the actions"
             className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
           {find.trim() && (
             <>
@@ -734,7 +728,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
               <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.foldedIntoId ? `part of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}` : a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason && !a.foldedIntoId ? `: ${a.ruleOutReason}` : ''}</span></span>
-              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} restored as its own row; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s Commentary.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>
+              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} restored as its own row; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s Detail.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>
             </li>))}</ul>
         </CollapsedBlock>
       )}
@@ -804,11 +798,10 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
     if (r.ok && !note) setKeepNote('')
   }
 
-  // ── the four steps' sections, built once; the CURRENT step's is open and first, the others sit below under one line each ──
-  const section: Record<ActionsStep, ReactNode> = {
-    1: (
-      <div className="space-y-2">
-        {renderFull(a, 1, (
+  // ── 26-V1b §2a — ONE ORDER, top to bottom: Statement → jump band → policy test → Detail → Documents → Law → Who, how and against → Costs
+  //    → Order → Comments. The CURRENT step's own section is open; another step's sits in its place under one line (§31: out of the way,
+  //    never hidden). The statement and the Detail are the card's (renderFull); the band and the policy test are handed in between them.
+  const policyBlock = (
           <div className="space-y-2">
             {/* 18 Oct (CCh B) - [policy test | heading menu] on one line, the test not full width; then avenue and causes. The statement above and the commentary below are the card's. */}
             <div className="flex flex-wrap items-start justify-between gap-2" data-test-line>
@@ -842,7 +835,6 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
             )}
           </div>
         )}
-              <div className="ml-auto shrink-0">{headingSelect}</div>
             </div>
         <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The causes it attacks, its avenue{activeConditions(ctx.conditions).length ? ' and the conditions it delivers' : ''} {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
@@ -868,8 +860,9 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
         </div>
 
           </div>
-        ))}
-
+  )
+  const pruneBlock = (
+      <div className="space-y-2">
         {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
         {sources && (
           <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
@@ -902,7 +895,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
             className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
         </div>
       </div>
-    ),
+  )
+  const section: Record<2 | 3 | 4, ReactNode> = {
     2: <div className="space-y-2"><ActionSlots a={a} others={others} disabled={disabled} run={ops.run as never} /></div>,
     3: <div className="space-y-2">{renderFull(a, 3)}</div>,
     4: (
@@ -929,25 +923,60 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
       </div>
     ),
   }
-  // the current step first and open; every other step below, collapsed under ONE line that says where it stands ("… — not yet answered · from step 2")
-  const order: ActionsStep[] = [step, ...STEP_NUMBERS.filter((n) => n !== step)]
-  return (
-    <div className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2">
-      {order.map((n) => n === step ? (
-        <div key={n} data-step-section={n} data-step-open="true" className="space-y-2">{section[n]}</div>
-      ) : (
-        <details key={n} data-step-section={n} className="rounded border border-zinc-200 bg-white">
-          <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(n, a, hasCostLines, headingName)}</summary>
-          <div className="px-2 pb-2 pt-1">{section[n]}</div>
-        </details>
-      ))}
-      {/* 26-U §3–§4 - the drafting instruction (Draft text) and What this touches, on every step; open on a legislative action */}
-      <details data-record-draft open={a.avenue === 'LEGISLATIVE'} className="rounded border border-zinc-200 bg-white">
-        <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">Draft text and what this touches — {draftSummary(a)}</summary>
-        <div className="px-2 pb-2 pt-1"><ActionDraftSection a={a} run={ops.run as never} disabled={disabled} /></div>
+  // ── the record's facts (documents, law rows, comments) and the jump band (256) ──
+  const facts = useRecordFacts(ctx.ideaId, a.id)
+  const box = useRef<HTMLDivElement>(null)
+  const jump = (k: RecordSection) => {
+    const el = box.current?.querySelector<HTMLElement>(`[data-record-section="${k}"]`)
+    if (!el) return
+    if (el instanceof HTMLDetailsElement) el.open = true
+    el.querySelectorAll<HTMLDetailsElement>(':scope > details').forEach((d) => { d.open = true })
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const docsLive = facts.docs?.documents.filter((d) => d.status !== 'SUPERSEDED') ?? []
+  const needed = facts.docs?.needs.kinds ?? []
+  const states = bandStates({
+    detail: a.commentary,
+    documents: facts.docs ? { needed: needed.length, drafted: docsLive.filter((d) => needed.includes(d.kind) && d.current).length, accepted: docsLive.filter((d) => needed.includes(d.kind) && d.status === 'ACCEPTED').length, total: docsLive.length } : null,
+    lawRows: facts.docs?.lawRows ?? null,
+    whoAnswered: answeredCount(a), whoOf: ALL_SLOTS.length,
+    costs: a.noCostReason?.trim() ? 'no cost' : hasCostRange(a) || hasCostLines ? 'answered' : 'not answered',
+    after: others.filter((o) => o.beforeIds.includes(a.id)).map((o) => o.number),
+    comments: facts.comments,
+  })
+  const stepPart = (n: 2 | 3 | 4, key: RecordSection) => n === step
+    ? <div data-record-section={key} data-step-section={n} data-step-open="true" className="space-y-2 scroll-mt-10">{section[n]}</div>
+    : (
+      <details data-record-section={key} data-step-section={n} className="rounded border border-zinc-200 bg-white scroll-mt-10">
+        <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(n, a, hasCostLines, headingName)}</summary>
+        <div className="px-2 pb-2 pt-1">{section[n]}</div>
       </details>
+    )
+  const titled = (key: RecordSection, title: string, body: ReactNode) => (
+    <section data-record-section={key} aria-label={title} className="rounded border border-zinc-200 bg-white p-2 space-y-1 scroll-mt-10">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{title}</p>{body}
+    </section>
+  )
+  return (
+    <div ref={box} className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2" data-record-order="26v1b">
+      {renderFull(a, 1, (
+        <div className="space-y-2">
+          <JumpBand states={states} onJump={jump} headingSelect={headingSelect} />
+          {step === 1
+            ? <div data-step-section={1} data-step-open="true" data-record-section="policy">{policyBlock}</div>
+            : <details data-step-section={1} data-record-section="policy" className="rounded border border-zinc-200 bg-white"><summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(1, a, hasCostLines, headingName)}</summary><div className="px-2 pb-2 pt-1">{policyBlock}</div></details>}
+        </div>
+      ))}
+      {titled('documents', 'Documents', <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
+      {titled('law', 'Law', <LawSection facts={facts} number={a.number} />)}
+      {stepPart(2, 'who')}
+      {stepPart(3, 'costs')}
+      {stepPart(4, 'order')}
+      {step === 1
+        ? <div data-record-section="prune">{pruneBlock}</div>
+        : <details data-record-section="prune" className="rounded border border-zinc-200 bg-white"><summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">Sources, the originals, Later phase and Rule out · from step 1</summary><div className="px-2 pb-2 pt-1">{pruneBlock}</div></details>}
       {/* 26-T2 §6 - the comment thread, at the foot of the record on every step */}
-      <ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} />
+      <div data-record-section="comments" className="scroll-mt-10"><ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} /></div>
     </div>
   )
 }
@@ -1106,7 +1135,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
               <input value={edited.title} onChange={(e) => setEdited({ ...edited, title: e.target.value })} className="w-full text-sm p-1.5 rounded border border-zinc-300" />
               <textarea value={edited.practicalStep} onChange={(e) => setEdited({ ...edited, practicalStep: e.target.value })} rows={3} className="w-full text-xs p-1.5 rounded border border-zinc-300" />
               <p className="text-[11px] text-zinc-700" data-statement-count>{edited.practicalStep.length > LIMITS.actionStatement
-                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in the action’s commentary — nothing is dropped.`
+                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in the action’s Detail — nothing is dropped.`
                 : `${LIMITS.actionStatement - edited.practicalStep.length} left of ${LIMITS.actionStatement}.`}</p>
             </div>
           )}

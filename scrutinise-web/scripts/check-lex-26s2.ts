@@ -516,10 +516,10 @@ async function partH() {
     const t = (name: string) => toolByName(name)!
     const exact = 'Every department must publish, each quarter, the name of the single person who owns each of its statutory delivery targets and answers for them.'
     const prov = (q: string) => ({ kind: 'user_words', refs: [], quote: q.slice(0, 60) })
-    // 181 — over the limit is refused in words that offer the commentary
+    // 181 — over the limit is refused in words that offer the Detail (257: was "commentary")
     const tooLong = await execute(t('add_action'), ctx([long]), { practicalStep: long.slice(0, 1001), provenance: prov(long) })
-    ok('181: a 1,001-character statement is refused IN WORDS that name the limit and tell Lex to offer the commentary', !tooLong.ok && /1000 characters/.test(tooLong.error ?? '') && /commentary/.test(tooLong.error ?? ''), tooLong.error)
-    const atLimit = await execute(t('add_action'), ctx([long]), { practicalStep: long.slice(0, 1000), commentary: 'The intention: one named owner per target.', provenance: prov(long) })
+    ok('181: a 1,001-character statement is refused IN WORDS that name the limit and tell Lex to offer the Detail', !tooLong.ok && /1000 characters/.test(tooLong.error ?? '') && /Detail/.test(tooLong.error ?? ''), tooLong.error)
+    const atLimit = await execute(t('add_action'), ctx([long]), { practicalStep: long.slice(0, 1000), detail: 'The intention: one named owner per target.', provenance: prov(long) })
     const rowL = await prisma.lexCoherentAction.findFirst({ where: { ideaId: id, practicalStep: long.slice(0, 1000) } })
     ok('181: exactly 1,000 characters is accepted, with a commentary — both read back', atLimit.ok && rowL?.practicalStep.length === 1000 && rowL.commentary === 'The intention: one named owner per target.', atLimit.error)
     ok('182: the result carries the NEW NUMBER so Lex can say where it landed ("Added as #n")', atLimit.ok && typeof (atLimit.data as { number: number }).number === 'number' && (atLimit.data as { number: number }).number === rowL?.number && /Added as #\d+/.test((atLimit.data as { say: string }).say))
@@ -531,16 +531,16 @@ async function partH() {
     const laundered = await execute(t('add_action'), ctx([`add this action: ${exact}`]), { practicalStep: 'Lex\'s own paraphrase of what the user probably wanted done about delivery targets.', dictated: true, provenance: prov(exact) })
     ok('182: "dictated" over words the user did not write is REFUSED — Lex cannot pass her own wording off as the owner\'s', !laundered.ok && /word for word/.test(laundered.error ?? ''), laundered.error)
     control('a dictated action that landed as LEX-sourced (must be FALSE)', rowD?.source === 'LEX')
-    // set_action_commentary
+    // set_action_detail (26-V1b 257: the action's Commentary is called Detail, in the tool too)
     const num = rowL!.number!
-    const a1 = await execute(t('set_action_commentary'), ctx([long]), { action: num, commentary: 'Second paragraph: examples.', mode: 'append', provenance: prov(long) })
+    const a1 = await execute(t('set_action_detail'), ctx([long]), { action: num, detail: 'Second paragraph: examples.', mode: 'append', provenance: prov(long) })
     const after = await prisma.lexCoherentAction.findUnique({ where: { id: rowL!.id } })
-    ok('181: set_action_commentary APPENDS by default (the earlier commentary is kept) — read back', a1.ok && after?.commentary === 'The intention: one named owner per target.\n\nSecond paragraph: examples.', JSON.stringify(after?.commentary))
-    const a2 = await execute(t('set_action_commentary'), ctx([long]), { action: num, commentary: 'x'.repeat(5000), mode: 'replace', provenance: prov(long) })
+    ok('181: set_action_detail APPENDS by default (the earlier Detail is kept) — read back', a1.ok && after?.commentary === 'The intention: one named owner per target.\n\nSecond paragraph: examples.', JSON.stringify(after?.commentary))
+    const a2 = await execute(t('set_action_detail'), ctx([long]), { action: num, detail: 'x'.repeat(5000), mode: 'replace', provenance: prov(long) })
     ok('…and takes 5,000 characters in "replace" — the commentary has no limit', a2.ok && (await prisma.lexCoherentAction.findUnique({ where: { id: rowL!.id } }))?.commentary?.length === 5000)
-    const none = await execute(t('set_action_commentary'), ctx([long]), { action: 9999, commentary: 'x', provenance: prov(long) })
+    const none = await execute(t('set_action_detail'), ctx([long]), { action: 9999, detail: 'x', provenance: prov(long) })
     ok('…an action number that is not on the idea is refused in words', !none.ok && /no live action #9999/.test(none.error ?? ''))
-    ok('Lex\'s instructions tell her to offer the commentary whenever she shortens anything, and to say the number', /OFFER to keep the full text in the commentary/.test(read('lib/lex/agent/system-prompt.ts')) && /say its number/.test(read('lib/lex/agent/system-prompt.ts')))
+    ok('Lex\'s instructions tell her to offer the commentary whenever she shortens anything, and to say the number', /OFFER to keep the full text in the Detail/.test(read('lib/lex/agent/system-prompt.ts')) && /say its number/.test(read('lib/lex/agent/system-prompt.ts')))
     // the screen's route: 1,000 limit in words; the commentary round-trips through the state the screen loads
     const post = async (body: Record<string, unknown>) => {
       const mod = await import('../app/api/ideas/[id]/actions/route')
@@ -630,16 +630,18 @@ function partJ() {
   const html = openHtml(1)
   const pos = (re: RegExp) => html.search(re)
   const order = [pos(/data-open-title/), pos(/Close −/), pos(/data-statement/), pos(/data-test-line/), pos(/The causes it attacks/), pos(/data-commentary/)]
-  ok('top to bottom: [title · Edit title · Close], the full statement, [test | heading menu], avenue and causes, Commentary', order.every((p) => p >= 0) && order.every((p, i) => i === 0 || p > order[i - 1] || (i === 1 && p > 0)), order.join(','))
+  ok('top to bottom: [title · Edit title · Close], the full statement, [test | heading menu], avenue and causes, Detail', order.every((p) => p >= 0) && order.every((p, i) => i === 0 || p > order[i - 1] || (i === 1 && p > 0)), order.join(','))
   const first = textOf(html.slice(pos(/data-open-title/), pos(/data-statement/)))
   ok('the title line carries "Edit title" and Close, once each', /Edit title/.test(first) && (html.match(/Edit title/g) ?? []).length === 1 && (html.match(/Close −/g) ?? []).length === 1)
   ok('the full statement is on the card, uncut', textOf(html).includes(norm(act.practicalStep)) && !/data-row-summary/.test(html))
   ok('the title is not repeated (it appears once on the opened record)', (textOf(html).match(/Action 7/g) ?? []).length === 1, String((textOf(html).match(/Action 7/g) ?? []).length))
   const line = html.slice(pos(/data-test-line/), pos(/The causes it attacks/))
-  ok('the policy test and the heading menu are on ONE line (the same flex row), the heading menu right-aligned, the test not full width', /Policy test/.test(line) && /Heading for action 7/.test(line) && /ml-auto/.test(line) && /w-fit/.test(line) && !/w-full/.test(line.slice(0, line.indexOf('Policy test') + 400)))
+  const band = html.slice(pos(/data-jump-band/), pos(/data-test-line/))
+  // 26-V1b 256 — the heading menu moved from the policy-test line to the RIGHT of the jump band, which sits between the statement and the test
+  ok('256: the heading menu sits at the right of the jump band (above the policy test); the test is not full width', /Heading for action 7/.test(band) && /ml-auto/.test(band) && /Policy test/.test(line) && /w-fit/.test(line) && !/Heading for action 7/.test(line) && !/w-full/.test(line.slice(0, line.indexOf('Policy test') + 400)))
   ok('the line under the title (avenue · causes · tested) is gone from the opened row', !/>1 cause</.test(html) && !/data-not-tested(?!-box)/.test(html))
-  ok('the Commentary renders on the opened card, labelled "Commentary" (not "Mechanism — commentary"), whole', /data-commentary/.test(html) && /Commentary<\/p>/.test(html) && !/Mechanism — commentary/.test(html) && textOf(html).includes('Second paragraph: examples.'))
-  control('an action with NO commentary showing a Commentary box (must be FALSE)', /data-commentary/.test(openHtml(1, withCom(7, { commentary: null }))))
+  ok('257: the Detail renders on the opened card, labelled "Detail" (never "Commentary"), whole', /data-commentary/.test(html) && />Detail<\/p>/.test(html) && !/Commentary/.test(textOf(html)) && !/Mechanism — commentary/.test(html) && textOf(html).includes('Second paragraph: examples.'))
+  control('an action with NO detail showing detail text, rather than "No detail yet" (must be FALSE)', !/No detail yet/.test(openHtml(1, withCom(7, { commentary: null }))))
   control('the heading menu still sitting in the title line / header (must be FALSE)', /Heading for action 7[\s\S]{0,200}Close −/.test(html) || /Close −[\s\S]{0,300}Heading for action 7[\s\S]{0,30}<\/div><\/div><div class="border-t/.test(html))
   const closed = renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: [act] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], step: 1 as never, costLineActionIds: [] }))
   ok('the CLOSED row keeps a two-line snippet (clamped to two lines) and its tags', /data-row-summary/.test(closed) && /WebkitLineClamp|-webkit-line-clamp:\s*2/.test(closed) && /1 cause/.test(closed))

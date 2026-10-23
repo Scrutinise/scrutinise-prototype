@@ -68,7 +68,7 @@ function partA() {
   ok('the commentary is printed (the quoted parts) with its [Ref: n]', /Quote \[Ref: 5\]/.test(blk.text))
   const long = act(3, { commentary: 'x'.repeat(5000) })
   const cut = P.dataBlock(ctx, [long, long, long], 4000)
-  ok('over the budget every commentary is cut to one length, the cut ANNOUNCES itself in the text and is counted', cut.trimmedCommentaries === 3 && cut.commentaryMax != null && /commentary cut here at \d+ characters/.test(cut.text), `${cut.trimmedCommentaries} ${cut.commentaryMax}`)
+  ok('over the budget every commentary is cut to one length, the cut ANNOUNCES itself in the text and is counted', cut.trimmedCommentaries === 3 && cut.commentaryMax != null && /Detail cut here at \d+ characters/.test(cut.text), `${cut.trimmedCommentaries} ${cut.commentaryMax}`)
   control('an over-budget block with no cut reports 0 trimmed (must be FALSE)', P.dataBlock(ctx, [long, long, long], 4000).trimmedCommentaries === 0)
   ok('under the budget nothing is cut and nothing is claimed cut', P.dataBlock(ctx, [act(1)], 100_000).trimmedCommentaries === 0)
 

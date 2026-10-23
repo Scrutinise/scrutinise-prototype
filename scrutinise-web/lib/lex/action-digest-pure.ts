@@ -77,8 +77,8 @@ export function actionBlock(a: DigestAction, commentaryMax?: number): { text: st
   let trimmed = false
   if (a.commentary?.trim()) {
     let c = a.commentary.trim()
-    if (commentaryMax != null && c.length > commentaryMax) { c = `${c.slice(0, commentaryMax)} [commentary cut here at ${commentaryMax} characters - it is longer in the record]`; trimmed = true }
-    lines.push(`Commentary (the parts of this action, quoted, and the detail):\n${c}`)
+    if (commentaryMax != null && c.length > commentaryMax) { c = `${c.slice(0, commentaryMax)} [Detail cut here at ${commentaryMax} characters - it is longer in the record]`; trimmed = true }
+    lines.push(`Detail (the parts of this action, quoted, and the detail):\n${c}`)
   }
   return { text: lines.join('\n'), trimmed }
 }

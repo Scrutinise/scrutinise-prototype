@@ -44,7 +44,7 @@ export async function setSlot(ideaId: string, actionId: string, slot: string, in
   const row = await load(ideaId, actionId)
   if (!row) return fail('That action is not on this idea. Nothing was changed.')
   const text = input.text.replace(/\r\n/g, '\n').trim()
-  if (text.length > limitFor(slot)) return fail(`“${SLOT_UI[slot].label}” is limited to ${limitFor(slot)} characters and this is ${text.length}. Shorten it${slot === 'who' ? '' : ', or put the rest in the action’s commentary'}. Nothing was changed.`)
+  if (text.length > limitFor(slot)) return fail(`“${SLOT_UI[slot].label}” is limited to ${limitFor(slot)} characters and this is ${text.length}. Shorten it${slot === 'who' ? '' : ', or put the rest in the action’s Detail'}. Nothing was changed.`)
   let linkActionId: string | null = null
   if (slot === 'whatChangesIt' && input.linkActionId) {
     const live = await liveRows(ideaId)

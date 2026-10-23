@@ -103,7 +103,8 @@ async function appendVersion(tx: Tx, documentId: string, v: { author: Author; us
     },
   })
   // A new version is not the one the owner accepted: the document goes back to "drafted, not accepted" until accepted again.
-  await tx.actionDocument.update({ where: { id: documentId }, data: { status: 'DRAFTED', acceptedV: null, staleAt: null, staleReason: null } })
+  // 26-V1b 263 — a new version takes the document back to DRAFTED but KEEPS acceptedV, so the screen can say "accepted at version N, then changed".
+  await tx.actionDocument.update({ where: { id: documentId }, data: { status: 'DRAFTED', staleAt: null, staleReason: null } })
   return row
 }
 

@@ -38,8 +38,12 @@ async function partA() {
     const clause = docs.find((d) => d.kind === 'DRAFT_CLAUSE')
     const rec = (a?.record ?? {}) as { draft?: unknown; draftBefore26V?: { proposal?: { clause?: string } } }
     ok(`#${n}: 26-U's draft is document ${n}.1 (D.${n}.1), a draft clause`, !!clause && clause.number === 1, JSON.stringify(docs.map((d) => [d.kind, d.number])))
-    ok(`#${n}: …holding Lex's proposal, unanswered, and no version (nothing was ever accepted)`, !!clause && clause.versions.filter((v) => v.role === 'PROPOSAL' && !v.answer).length === 1 && clause.versions.filter((v) => v.role === 'VERSION').length === 0)
-    ok(`#${n}: the record carries no draft; the copy from before the move is kept, frozen, with the same clause`, !rec.draft && !!rec.draftBefore26V?.proposal?.clause && clause?.versions[0]?.body === rec.draftBefore26V.proposal.clause)
+    // Since 23 Oct 12:27 UTC Charlie has USED #38's proposal (now version 1 by Lex), and #202 has a second proposal (v1 set aside, kept).
+    // The cold read asserts what must stay true whatever the owner does next: at most one proposal waits, nothing is deleted, and the
+    // proposal moved in 26-V1 is still there, answered or not, with the frozen copy's clause.
+    const proposals = clause?.versions.filter((v) => v.role === 'PROPOSAL') ?? []
+    ok(`#${n}: …at most one of Lex's proposals waits, and the one moved in 26-V1 is kept (proposal 1, whatever its answer)`, !!clause && proposals.filter((v) => !v.answer).length <= 1 && proposals.some((v) => v.v === 1))
+    ok(`#${n}: the record carries no draft; the copy from before the move is kept, frozen, with the same clause as proposal 1`, !rec.draft && !!rec.draftBefore26V?.proposal?.clause && proposals.find((v) => v.v === 1)?.body === rec.draftBefore26V.proposal.clause)
     control(`#${n}: a second live copy of the draft in the record (must be FALSE)`, !!rec.draft)
   }
   const holder = await prisma.lexCoherentAction.findFirst({ where: { ideaId: idea.id, number: 203 }, select: { id: true, record: true } })
@@ -90,7 +94,7 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   ok('Accept marks D.59.1 accepted at version 1', accepted.ok && (await prisma.actionDocument.findUniqueOrThrow({ where: { id: clause!.id } })).status === 'ACCEPTED')
   const s2 = await DR.saveVersion(copy.id, owner.id, { ...ins, dutyOnWhom: 'a fixture duty, revised' }, { userId: copy.userId, author: 'OWNER' })
   const c2 = await prisma.actionDocument.findUniqueOrThrow({ where: { id: clause!.id }, include: { versions: true } })
-  ok('a new version takes it back to "drafted, not accepted", and BOTH versions are kept', s2.ok && c2.status === 'DRAFTED' && c2.acceptedV === null && c2.versions.filter((v) => v.role === 'VERSION').length === 2)
+  ok('263: a new version after an Accept is DRAFTED with acceptedV kept ("accepted at version 1, then changed"), and BOTH versions are kept', s2.ok && c2.status === 'DRAFTED' && c2.acceptedV === 1 && c2.versions.filter((v) => v.role === 'VERSION').length === 2)
   const tree1 = await D.documentTree(copy.id, { recordStale: true })
   const repRow = tree1.headings.flatMap((h) => h.actions).find((a) => a.id === owner.id)?.documents.find((d) => d.kind === 'COLLISION_REPORT')
   ok('the collision report is now out of date, and says why in words (251)', !!repRow?.stale && /the clause now has version 2/.test(repRow.stale), repRow?.stale ?? 'not stale')
@@ -204,7 +208,8 @@ async function partC(copyId: string, userId: string) {
     const expected = D.treeCounts(tree.headings.flatMap((h) => h.actions).map((a) => ({ needs: a.needs, documents: a.documents.map((d) => ({ kind: d.kind, status: d.status })) }))).line
     const shownCounts = await page.locator('[data-tree-counts]').innerText()
     ok('the counts at the top are the store’s own ("N actions · N need documents · N drafted · N accepted · N missing")', shownCounts === expected, `${shownCounts} vs ${expected}`)
-    ok('D.59.1 and D.59.2 are in the tree with their status in words', (await page.locator('[data-tree-document="D.59.1"] [data-doc-status]').innerText()) === 'drafted, not accepted' && (await page.locator('[data-tree-document="D.59.2"]').count()) === 1)
+    // 263: D.59.1 was accepted at version 1 in part B and then given a version 2 — so it reads "accepted at version 1, then changed"
+    ok('D.59.1 and D.59.2 are in the tree with their status in words (263: "accepted at version 1, then changed — accept again")', (await page.locator('[data-tree-document="D.59.1"] [data-doc-status]').innerText()) === 'accepted at version 1, then changed — accept again' && (await page.locator('[data-tree-document="D.59.2"]').count()) === 1)
     await page.locator('[data-tree-filter="missing"]').click()
     const missingRows = await page.locator('[data-tree-action]').count()
     const expectMissing = tree.headings.flatMap((h) => h.actions).filter((a) => a.missing.length).length
@@ -216,13 +221,16 @@ async function partC(copyId: string, userId: string) {
     await page.locator('[data-tree-document="D.59.1"] button').first().click()
     await page.waitForSelector('[data-document-view="D.59.1"]')
     const view = await page.locator('[data-document-view="D.59.1"]').innerText()
-    ok('clicking D.59.1 opens it in place: its version, its parts 59.1.1 and 59.1.2, its versions list', /Version 2, by the owner/.test(view) && (await page.locator('[data-document-part="59.1.1"]').count()) === 1 && (await page.locator('[data-document-part="59.1.2"]').count()) === 1 && /Versions: 1 .* 2 /.test(view), view.slice(0, 300))
+    await page.locator('[data-document-view="D.59.1"] [data-document-tab="versions"]').click()
+    const versionsShown = await page.locator('[data-versions-tab] [data-version-row]').count()
+    await page.locator('[data-document-view="D.59.1"] [data-document-tab="text"]').click()
+    ok('clicking D.59.1 opens the document view in place (26-V1b): its version, its parts 59.1.1 and 59.1.2, both versions listed', /version 2, yours/.test(view) && (await page.locator('[data-document-part="59.1.1"]').count()) === 1 && (await page.locator('[data-document-part="59.1.2"]').count()) === 1 && versionsShown === 2, `${view.slice(0, 300)} | versions ${versionsShown}`)
     await page.locator('[data-document-view="D.59.1"] button:has-text("Ask Lex to redraft")').click()
     ok('"Ask Lex to redraft" asks first, with the measured price, before any call', /costs about [\d.]+p \(measured, n=\d+\)/.test(await page.locator('[data-redraft-ask]').innerText()))
     await page.locator('[data-redraft-ask] button:has-text("Not now")').click()
     await page.locator('[data-document-view="D.59.1"] button:has-text("Accept version 2")').click()
-    await page.waitForFunction(() => document.querySelector('[data-tree-document="D.59.1"] [data-doc-status]')?.textContent === 'accepted', null, { timeout: 15_000 }).catch(() => {})
-    ok('Accept in the browser marks it "accepted" (word, not colour)', (await page.locator('[data-tree-document="D.59.1"] [data-doc-status]').innerText()) === 'accepted')
+    await page.waitForFunction(() => document.querySelector('[data-tree-document="D.59.1"] [data-doc-status]')?.textContent === 'accepted (version 2)', null, { timeout: 15_000 }).catch(() => {})
+    ok('Accept in the browser marks it "accepted (version 2)" (word, not colour)', (await page.locator('[data-tree-document="D.59.1"] [data-doc-status]').innerText()) === 'accepted (version 2)')
     const vs = await prisma.actionDocumentVersion.count({ where: { document: { ideaId: copyId, kind: 'DRAFT_CLAUSE', number: 1, actionId: (await prisma.lexCoherentAction.findFirstOrThrow({ where: { ideaId: copyId, number: 59 } })).id } } })
     ok('…and every version is kept', vs === 2)
     ok('no uncaught page error', errors.length === 0, errors.join(' | ').slice(0, 300))

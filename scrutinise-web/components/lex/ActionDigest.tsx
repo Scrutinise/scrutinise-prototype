@@ -217,7 +217,7 @@ export function DigestPanel({ d, state, onOpenAction, disabled }: { d: DigestVie
 
       <p className="text-[11px] text-zinc-600" data-digest-cost>
         {STATUS_WORDS[d.status] ?? d.status}. {answering} of {d.models.length} models answered. Cost {d.spentPence == null ? 'not recorded' : pence(d.spentPence)}{d.unpriced ? ' (at least one call could not be priced, so this is a floor)' : ' (measured on this run)'}.
-        {j && (j.trimmedCommentaries > 0 ? ` ⚠ ${j.trimmedCommentaries} long ${j.trimmedCommentaries === 1 ? 'commentary was' : 'commentaries were'} cut at ${j.commentaryMax} characters to fit what the models can read.` : '')}
+        {j && (j.trimmedCommentaries > 0 ? ` ⚠ ${j.trimmedCommentaries} long ${j.trimmedCommentaries === 1 ? 'Detail was' : 'Details were'} cut at ${j.commentaryMax} characters to fit what the models can read.` : '')}
       </p>
 
       {/* who answered, and who did not - a failure announces itself with its cause (CLAUDE.md §18) */}

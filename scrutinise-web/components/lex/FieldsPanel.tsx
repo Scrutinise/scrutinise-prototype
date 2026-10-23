@@ -15,7 +15,8 @@ import ActionsWorkspace from './ActionsWorkspace'
 import ActionsSteps from './ActionsSteps'
 import BoundedInput from './BoundedInput'
 import { LIMITS } from '@/lib/lex/input-limits'
-import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
+import { plainFoldHeader, FOLD_HEADER } from '@/lib/lex/action-resort-pure'
+import { detailParts, DETAIL_LABEL } from '@/lib/lex/record-layout-pure'
 import { COST_LINE_LABEL, clampStep, type ActionsStep } from '@/lib/lex/action-steps'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
@@ -1603,6 +1604,28 @@ function NoCostBox({ action, busy, api }: { action: CanonicalAction; busy: boole
   )
 }
 
+/** 26-V1b §2c–2d — the Detail box: the owner's own text, then "Parts of this action, quoted (N)", one line per part, each opening to its quote. */
+function DetailBox({ detail }: { detail: string | null | undefined }) {
+  const { text, parts } = detailParts(plainFoldHeader(detail))
+  return (
+    <div className="rounded border border-zinc-200 bg-zinc-50 p-1.5 scroll-mt-10" data-commentary data-record-section="detail">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{DETAIL_LABEL}</p>
+      {text ? <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{text}</p> : !parts.length && <p className="mt-0.5 text-xs text-zinc-500">No detail yet. Edit to add the intention, examples, dimensions or a table.</p>}
+      {parts.length > 0 && (
+        <details className="mt-1 text-xs" data-quoted-parts={parts.length}>
+          <summary className="cursor-pointer font-semibold text-zinc-800">{FOLD_HEADER} ({parts.length})</summary>
+          <ul className="mt-1 space-y-1">
+            {parts.map((p, i) => (
+              <li key={i}><details><summary className="cursor-pointer">{p.title}{p.source ? <span className="text-zinc-600"> — {p.source}</span> : ''}</summary>
+                <p className="mt-0.5 ml-3 whitespace-pre-wrap text-zinc-800">{p.body}</p></details></li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  )
+}
+
 /**
  * 26-S2 §3 — THE ACTION CARD, ONE STEP AT A TIME. The opened record shows the current step's part first and the others one line each
  * (ActionsWorkspace asks for the part it wants): step 1 the body (the step, mechanism, target, wording), step 2 Who, step 3 the cost ranges
@@ -1623,7 +1646,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
   const patch = (p: Partial<ActionDraft>) => { setRefusal(null); setD((x) => ({ ...x, ...p })) }
   const save = () => {
     if (step === 1 && d.practicalStep.length > LIMITS.actionStatement) {
-      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into Commentary or shorten.`)
+      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into Detail or shorten.`)
       return
     }
     api.update(action.id, d); setEditing(false)
@@ -1641,7 +1664,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
             <BoundedInput multiline rows={3} value={d.practicalStep} onChange={(v) => patch({ practicalStep: v })} max={LIMITS.actionStatement} placeholder="The action statement" aria-label={STATEMENT_LABEL}
               wrapperClassName="w-full" className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
             <label className="block text-[11px] text-zinc-600"><span data-label="commentary">{COMMENTARY_LABEL}</span>
-              <RefTextarea value={d.commentary ?? ''} onChange={(e) => patch({ commentary: e.target.value })} rows={4} placeholder="Commentary (optional)"
+              <RefTextarea value={d.commentary ?? ''} onChange={(e) => patch({ commentary: e.target.value })} rows={4} placeholder="Detail (optional)"
                 className="mt-0.5 w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
               <span className="text-[10px] text-zinc-500">{(d.commentary ?? '').length.toLocaleString()} characters</span>
             </label>
@@ -1688,12 +1711,8 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
           {/* 18 Oct (CCh B) - the FULL statement first; then what the workspace hands in; then the Commentary (181/185, unlimited, rendered whenever it exists). */}
           <p className="text-sm text-zinc-800 whitespace-pre-wrap" data-statement>{action.practicalStep}</p>
           {between}
-          {action.commentary?.trim() && (
-            <div className="rounded border border-zinc-200 bg-zinc-50 p-1.5" data-commentary>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Commentary</p>
-              <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{plainFoldHeader(action.commentary)}</p>
-            </div>
-          )}
+          {/* 26-V1b 257 — "Detail" (the column keeps its name); 2d — the quoted parts collapse to one line each, with their source */}
+          <DetailBox detail={action.commentary} />
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-500">
             {action.mechanismType && <span>Mechanism: {action.mechanismType}</span>}
             {action.targetOrganisation && <span>Target: {action.targetOrganisation}</span>}
