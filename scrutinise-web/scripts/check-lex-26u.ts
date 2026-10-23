@@ -185,10 +185,15 @@ async function part3and4() {
     control('a superseded row still reading as live (must be FALSE)', L3.filter((l) => l.sourceDetail === `${owner.id} v2`).some((l) => l.supersededById === null))
     const dropped = await DR.saveVersion(copy.id, owner.id, { ...after.versions[1], precedents: [] })
     const L4 = await linksOf()
-    ok('a version that drops a target writes NOTHING until GRAPH’s withdrawn marker is on Main, and says so', dropped.ok && 'notSuperseded' in dropped.data.lawRows && dropped.data.lawRows.notSuperseded === 1 && dropped.data.lawRows.written === 0 && L4.length === L3.length, JSON.stringify(dropped.ok && dropped.data.lawRows))
+    const v4 = `${owner.id} v4`
+    const prec3 = L4.find((l) => l.relation === 'precedent' && l.sourceDetail === `${owner.id} v3`)
+    ok('a version that drops a target WITHDRAWS its row (withdrawn_at + detail together), never deletes it; the kept target is superseded as usual', dropped.ok && 'withdrawn' in dropped.data.lawRows && dropped.data.lawRows.withdrawn === 1 && dropped.data.lawRows.written === L2.length - 1 && L4.length === L3.length + L2.length - 1 && !!prec3 && !!prec3.withdrawnAt && prec3.withdrawnDetail === `${owner.id} instruction v4: target absent` && prec3.supersededById === null, JSON.stringify(dropped.ok && dropped.data.lawRows))
+    control('a dropped target still reading as live after the drop (must be FALSE)', L4.some((l) => l.relation === 'precedent' && l.supersededById === null && l.withdrawnAt === null))
+    ok('…the live set is exactly the v4 lines', L4.filter((l) => l.supersededById === null && l.withdrawnAt === null).every((l) => l.sourceDetail === v4))
     // Put the precedent back (a fifth version, the v3 targets again) so the pack and report below have the full instruction.
     const restored = await DR.saveVersion(copy.id, owner.id, after.versions[1])
-    ok('…and a version restoring the targets supersedes the v3 rows in turn', restored.ok && 'written' in restored.data.lawRows && restored.data.lawRows.written === L2.length && restored.data.lawRows.superseded === L2.length)
+    const L5 = await linksOf()
+    ok('…and a version restoring the target writes a NEW row for it; the withdrawn row stays withdrawn, never un-withdrawn', restored.ok && 'written' in restored.data.lawRows && restored.data.lawRows.written === L2.length && restored.data.lawRows.superseded === L2.length - 1 && restored.data.lawRows.withdrawn === 0 && !!L5.find((l) => l.id === prec3?.id)?.withdrawnAt && L5.find((l) => l.id === prec3?.id)?.supersededById === null, JSON.stringify(restored.ok && restored.data.lawRows))
     await setSlot(copy.id, owner.id, 'against', { text: 'A slot answer written after the draft.' })
     const kept = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))
     ok('saving a step-2 slot afterwards does NOT drop the drafting instruction (parseRecord carries it)', (kept?.versions.length ?? 0) >= 2)

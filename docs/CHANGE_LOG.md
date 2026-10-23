@@ -1,5 +1,15 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 00:35 UTC - LEX 26-U §5: a dropped target is WITHDRAWN (GRAPH confirmed its reader is live)
+
+- GRAPH confirmed at 00:3x that its reader is live on origin/Main (b5f9496). `writeInstructionRows` no longer holds a version that drops a target. It **withdraws** the vanished target's live row: `withdrawnAt` and `withdrawnDetail` "<action> instruction v<N>: target absent", set together in one transaction.
+- GRAPH's rules:
+  - Only a live row is withdrawn, never a superseded one; the CHECK refuses those.
+  - A target that comes back gets a NEW row. The withdrawn one is never un-withdrawn.
+- `LawRowsReport.notSuperseded` becomes `withdrawn`. Nothing else read it.
+- `check:lex-26u` **50/50, 7 controls, 0 dead**. **Mutation run** (withdrawal skipped): 3 failures and 1 dead control, then reverted. `tsc` 0. **Committed, not pushed.**
+- 452c5ade has 0 live link rows, so nothing on Charlie's idea is withdrawn by this.
+
 ## 2026-10-23 00:29 UTC - LEX 26-U §5 + GRAPH 7 follow-ups pushed and verified live (c79eb84)
 
 - **Token:** the original `RAILWAY_API_TOKEN` was dead, not outage-blocked. At 00:18 `projectToken` answered "Project Token not found". Charlie put a new token in `.env`, and it authenticates (project 68707c61, env 991f733c).

@@ -6,8 +6,9 @@
 // ⚠ EVERY TARGET GOES THROUGH GRAPH 7's resolveLawTarget() FIRST (its constraint a). A target that is not held is NOT written — it is
 //   returned, with its state, so the caller can say so. "What this touches" already shows those states beside the clause.
 // ⚠ NEVER DELETED. A row of the previous version whose target and relation reappear is superseded by the new row. A row whose target is
-//   GONE from the new version is to be WITHDRAWN (GRAPH's withdrawn_at, 22 Oct); until GRAPH's reader for it is on Main, such a version
-//   writes NO rows and returns `notSuperseded` > 0 — never a stale row left reading as current.
+//   GONE from the new version is WITHDRAWN (GRAPH's withdrawn_at + withdrawn_detail, together — GRAPH confirmed its reader live on Main,
+//   23 Oct). Only a live row is ever withdrawn (the CHECK refuses a superseded one), and a target that comes back later gets a NEW row;
+//   the withdrawn one is never un-withdrawn.
 // ⚠ A hand row (GRAPH 7's attach script) is never touched or duplicated by this: it carries action_id NULL and source 'hand'.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -24,8 +25,8 @@ export interface LawRowsReport {
   unchanged: number
   /** Named in the instruction but not held: not written. */
   notHeld: Array<{ docUri: string; provisionPath: string | null; relation: LawRelation; state: LawResolutionState }>
-  /** Rows of an earlier version whose target is gone from this one — still live, pending GRAPH's rule. */
-  notSuperseded: number
+  /** Rows of an earlier version whose target is gone from this one: withdrawn, with the reason. */
+  withdrawn: number
 }
 
 const keyOf = (relation: string, docUri: string, provisionPath: string | null) => `${relation}|${docUri}|${provisionPath ?? ''}`
@@ -51,13 +52,19 @@ export async function writeInstructionRows(
     where: { actionId, source: 'drafting_instruction', supersededById: null, withdrawnAt: null },
     select: { id: true, relation: true, docUri: true, provisionPath: true, sourceDetail: true },
   })
-  const report: LawRowsReport = { version: v.v, written: 0, superseded: 0, unchanged: 0, notHeld: [], notSuperseded: 0 }
+  const report: LawRowsReport = { version: v.v, written: 0, superseded: 0, unchanged: 0, notHeld: [], withdrawn: 0 }
   const lines = linesOf(v)
   const wanted = new Set(lines.map((l) => keyOf(l.relation, l.docUri, l.provisionPath)))
-  report.notSuperseded = live.filter((r) => r.sourceDetail !== detail && !wanted.has(keyOf(r.relation, r.docUri, r.provisionPath))).length
-  // ⚠ GRAPH (22 Oct): a vanished target is WITHDRAWN (withdrawn_at), never left live — and no withdrawal is written until GRAPH says its
-  // reader is on Main. Until then a version that would leave a stale row live writes nothing at all, and says so.
-  if (report.notSuperseded) return report
+  // A vanished target is WITHDRAWN, never left live and never deleted. `live` holds only rows neither superseded nor withdrawn, so the
+  // CHECK (no withdrawing a superseded row) cannot be met here.
+  const gone = live.filter((r) => r.sourceDetail !== detail && !wanted.has(keyOf(r.relation, r.docUri, r.provisionPath)))
+  if (gone.length) {
+    const at = new Date()
+    await prisma.$transaction(gone.map((r) => prisma.ideaLawLink.update({
+      where: { id: r.id }, data: { withdrawnAt: at, withdrawnDetail: `${actionId} instruction v${v.v}: target absent` },
+    })))
+    report.withdrawn = gone.length
+  }
 
   for (const l of lines) {
     const k = keyOf(l.relation, l.docUri, l.provisionPath)
