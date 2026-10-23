@@ -1,5 +1,12 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 07:51 UTC - LEX 26-U §5 withdrawal: pushed and verified live at 910b17f
+
+- Pushed `b452f2d`, `920329e` and `910b17f` at 07:35 UTC (`ba49e10..910b17f`). `check:lex-26u` was re-run before the push: 54/54, 7 controls, 0 dead.
+- `/api/health` reports `910b17f43ec0`, production.
+- build-worker `db43d064`, triggered by the push itself: SUCCESS, `meta.commitHash` `910b17f43ec0`. At 07:50:27 the container printed "retrieval configuration OK".
+- Live behaviour: a version that drops a target now withdraws its live row ("<action> instruction v<N>: target absent"). 452c5ade has 0 live link rows, so nothing on Charlie's idea changes.
+
 ## 2026-10-23 00:39 UTC - LEX 26-U §5: check for a target still named but no longer held (GRAPH's edge)
 
 - `check:lex-26u` gains GRAPH's fixture, with no stub. The earlier version's row is written directly against `ukpga/1970/1`, an Act the corpus names but does not hold. The real save path then names it again.

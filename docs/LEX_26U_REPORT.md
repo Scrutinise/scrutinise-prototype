@@ -140,6 +140,8 @@ GRAPH 7 landed locally (`09e8939`: `withdrawn_at`/`withdrawn_detail` + CHECKs, a
   - Control: the earlier chunk `d1d792a25d5a645d.js` has "Not saved: " but not that string.
 - ⚠ **build-worker: NOT verified.** `RAILWAY_API_TOKEN` answered "Not Authorized" (10:44 UTC re-test). Under CCh's instruction, that is unproven while incident QH8L8B3E affects Railway's API.
 
+**✅ 23 Oct 07:51 UTC: §5 withdrawal (`b452f2d`, `910b17f`) is pushed and verified live at `910b17f`.** `/api/health` reports `910b17f`. build-worker `db43d064` was triggered by the push: SUCCESS, `meta.commitHash` `910b17f43ec0`, and "retrieval configuration OK" at 07:50:27. A dropped target is now WITHDRAWN, not held. `check:lex-26u` passes 54/54.
+
 **✅ 23 Oct 00:29 UTC: §5 is pushed and verified live at `c79eb84`.**
 - `/api/health` reports `c79eb84`, production.
 - The merged line "Named N times — shown once, with each source:" reads back from live chunk `526a6cf30743fb97.js`.

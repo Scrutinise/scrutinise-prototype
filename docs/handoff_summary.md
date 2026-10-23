@@ -964,6 +964,8 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**✅ 2026-10-23 07:51 UTC — §5 withdrawal pushed and verified live at `910b17f`.** A version that drops a target now WITHDRAWS its live row; it is no longer held as `notSuperseded`. Verified: `/api/health` reports `910b17f`, and build-worker `db43d064` (push-triggered) shows `meta.commitHash` `910b17f43ec0` plus "retrieval configuration OK". `check:lex-26u` passes 54/54. **Next:** CCh 22 Oct (7) items 233, 238, 235, 236 and 237 (below); the #38 and #202 redrafts are still waiting for Charlie.
+
 **✅ 2026-10-23 00:29 UTC — everything outstanding is PUSHED and verified live at `c79eb84`. This supersedes the "HELD" lines below.**
 - **Vercel:** `/api/health` reports `c79eb84`, production. The merged-line string is in live chunk `526a6cf30743fb97.js`.
 - **build-worker:** `ff2ae2d9` was triggered by the push itself, went SUCCESS with `meta.commitHash` `c79eb84cca2c`, and printed "retrieval configuration OK".
