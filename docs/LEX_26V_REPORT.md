@@ -1,6 +1,6 @@
 # LEX 26-V — Report
 
-**Status, 2026-10-23 10:32 UTC: 26-V1 BUILT; all checks green; push in progress (see §5).** 26-V2 is not started. The answers to §3's questions are in CCh 23 Oct (9): 250 "Reports"; 251 stored as versions, stale-marked; 252 rows with depth, depth 1 filled, GRAPH asked; 253 the worker (V2); 254 both badges.
+**Status, 2026-10-23 10:40 UTC: 26-V1 PUSHED AND VERIFIED LIVE at `39bebee`** (`/api/health`; the tree’s find-box text in live chunk `28729d09a063ff78.js`; build-worker `a7cb3837` push-triggered, `meta.commitHash` `39bebee0a20e`, "retrieval configuration OK" 10:39:14). Charlie’s screen is the last check (§5). 26-V2 is not started. The answers to §3's questions are in CCh 23 Oct (9): 250 "Reports"; 251 stored as versions, stale-marked; 252 rows with depth, depth 1 filled, GRAPH asked; 253 the worker (V2); 254 both badges.
 
 ## §5 26-V1 — what was built (CHANGE_LOG 2026-10-23 10:32)
 

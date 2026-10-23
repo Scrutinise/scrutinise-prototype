@@ -964,7 +964,7 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
-**▶ 2026-10-23 10:32 UTC — 23 Oct (9) done: 233–237 live (`b05bfa8`); 249 live (`3f7f20c`); 26-V1 built, all checks green.** See CHANGE_LOG 10:32 and `docs/LEX_26V_REPORT.md` §5.
+**▶ 2026-10-23 10:40 UTC — 23 Oct (9) done: 233–237 live (`b05bfa8`); 249 live (`3f7f20c`); 26-V1 PUSHED AND VERIFIED LIVE at `39bebee` (health, live chunk, build-worker sha + config line).** See CHANGE_LOG 10:32 and `docs/LEX_26V_REPORT.md` §5.
 - **The documents store is the ONE home of 26-U's drafts** (`lib/lex/action-documents.ts`). Never write `record.draft`; read through `draftsFor` / `withDrafts`.
 - **#38 and #202:** their drafts are Lex PROPOSALS awaiting Charlie's accept. The #202 redraft to reflect 238 is OFFERED (asks first, about 10p) and NOT run.
 - **Red checks fixed:** 26s-browser, 26s2-structure, check:scripts.
