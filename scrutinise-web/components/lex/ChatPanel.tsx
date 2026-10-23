@@ -5,6 +5,7 @@ import AcceptCard from './AcceptCard'
 import EditOfferCard from './EditOfferCard'
 import ChatAttach from './ChatAttach'
 import ChatMarkdown from './ChatMarkdown'
+import { INPUT_MIN_PX, LHP_KEYS, inputHeight, parsePx, readStored, writeStored } from '@/lib/lex/lhp-layout'
 import AgentCards, { type AgentCardsState } from './AgentCards'
 import type { EditOffer } from '@/lib/lex/field-edit'
 import type { CanonicalField, CanonicalState } from '@/lib/lex/page1-config'
@@ -172,6 +173,34 @@ export default function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // ══ Decision 249 — THE TYPING BOX GROWS AS TYPED TO HALF THE CHAT AREA, AND ITS BOTTOM EDGE DRAGS. Remembered per browser. ══
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [chosenPx, setChosenPx] = useState<number | null>(null)
+  const [boxPx, setBoxPx] = useState<number>(INPUT_MIN_PX)
+  const chatAreaPx = () => rootRef.current?.clientHeight ?? 0
+  const fit = (chosen: number | null) => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const h = inputHeight({ contentPx: el.scrollHeight, chosenPx: chosen, chatAreaPx: chatAreaPx() })
+    // Put the height straight back: React does not re-apply a style whose value did not change.
+    el.style.height = `${h}px`
+    setBoxPx(h)
+  }
+  useEffect(() => { const s = parsePx(readStored(LHP_KEYS.inputPx)); setChosenPx(s); fit(s) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  function startDrag(e: { preventDefault(): void; clientY: number }) {
+    e.preventDefault()
+    const startY = e.clientY, startH = boxPx
+    let last = startH
+    const move = (ev: PointerEvent) => {
+      last = inputHeight({ contentPx: 0, chosenPx: startH + (ev.clientY - startY), chatAreaPx: chatAreaPx() })
+      setChosenPx(last); setBoxPx(last)
+    }
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); writeStored(LHP_KEYS.inputPx, String(last)) }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
+
   // ══════════ ⚠⚠ 25-Z §4 — THE CHAT OPENS CLEAN ═══════════════════════════════════════════
   //
   // Charlie, on the walkthrough: the panel greeted him with a wall of earlier conversation.
@@ -206,7 +235,7 @@ export default function ChatPanel({
     const text = input.trim()
     if (!text || busy) return
     setInput('')
-    if (inputRef.current) inputRef.current.style.height = 'auto'
+    setBoxPx(inputHeight({ contentPx: 0, chosenPx, chatAreaPx: chatAreaPx() }))
     onSend(text)
   }
 
@@ -225,7 +254,7 @@ export default function ChatPanel({
   const labelOf = (k: string) => stageLabels?.[k] ?? k
 
   return (
-    <div className="flex flex-col h-full">
+    <div ref={rootRef} className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {/* ⚠ 25-Z §4b — THE WAY BACK. An upward control, labelled, saying how much is behind
             it — "prior chat" alone leaves the user guessing whether it is three messages or
@@ -341,24 +370,37 @@ export default function ChatPanel({
         )}
         {ideaId && <ChatAttach ideaId={ideaId} onChanged={onMaterialChanged} />}
         <div className="flex gap-2 items-end">
+          <div className="flex-1 flex flex-col">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => {
               setInput(e.target.value)
-              e.target.style.height = 'auto'
-              e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px'
+              fit(chosenPx)
             }}
+            style={{ height: boxPx }}
+            data-chat-input
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
             }}
             placeholder="Chat to Lex or dictate"
-            // ⚠ 25-R A3 — "with a large chat box". It was one row and grew on typing, so an
-            // empty panel offered a single line and read as a search field rather than a place
-            // to think out loud. It still grows to the same 160px ceiling.
+            // ⚠ 25-R A3 — "with a large chat box": three lines on arrival, never one. 249 replaces the old fixed 160px ceiling with half
+            // the chat area, and the user can drag the bottom edge to choose the resting height.
             rows={3}
-            className="flex-1 resize-none bg-white border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="w-full resize-none bg-white border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
           />
+          {/* The drag handle: a visible grip AND words for a screen reader, not a colour (§21). */}
+          <div
+            role="separator" aria-orientation="horizontal" aria-label="Drag to make the typing box taller or shorter"
+            title="Drag to resize the typing box" data-chat-input-handle
+            onPointerDown={startDrag}
+            // The grab area's size is inline, not a utility class: it is the whole control, so it must not depend on a stylesheet loading.
+            style={{ height: 12, cursor: 'ns-resize', touchAction: 'none' }}
+            className="flex items-center justify-center select-none"
+          >
+            <span aria-hidden style={{ display: 'block', width: 40, height: 6 }} className="border-t-2 border-b-2 border-zinc-400" />
+          </div>
+          </div>
           <button
             onClick={send}
             disabled={busy || !input.trim()}

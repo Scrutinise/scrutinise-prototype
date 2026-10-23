@@ -1,5 +1,23 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 09:42 UTC - LEX 23 Oct (9): 233–237 pushed + verified live at b05bfa8; decision 249 (LHP maximise, typing box) built
+
+- **Pushed** `b05bfa8` at 09:33 UTC, after a full clean build (A and B both PASS).
+  - `/api/health` reports `b05bfa8`, production.
+  - **§20:** "Detail, parts, tables" reads back from live chunk `a2acfb24fddbaca7.js` on /ideas/create. Control: the old label "the intention, examples, dimensions" is in 0 chunks.
+  - **build-worker** `1f3b5f15` was push-triggered: SUCCESS, `meta.commitHash` `b05bfa818f32`, "retrieval configuration OK" at 09:36:12.
+- **Correction (CCh 23 Oct (9)):** the #38 and #202 drafts are Lex **proposals** awaiting Charlie's accept, not Charlie's own redrafts, as the 09:01 entry said. A #202 redraft (asks first, about 10p) has been offered so the clause reflects the 238 line.
+- **Decision 249: the left-hand panel.**
+  - Each half (the worklist; Lex/Notes) has **"Maximise ⤢"**, which fills the panel. It then reads **"Minimise ⤡"** and restores the equal split (0.5). Word plus a different glyph plus `aria-pressed`, never a colour alone.
+  - The row divider shows only when neither half is maximised.
+  - The **typing box** grows as typed to **half the chat area**, replacing the old fixed 160px ceiling, and has a **drag handle on its bottom edge** (sized inline, named in words). It never goes below three lines.
+  - **Both are remembered per browser** (`localStorage`, read after mount; a missing or blocked store falls back to the default).
+  - A remembered "worklist" never hides the chat on a new idea that has no worklist.
+  - Files: `lib/lex/lhp-layout.ts`, `components/lex/MaximiseToggle.tsx`, `ChatPanel.tsx`, `CreateIdeaClient.tsx`.
+  - **`check:lex-249-browser` 23/23, 1 control, 0 dead.** The real ChatPanel and MaximiseToggle run in Chromium; CreateIdeaClient's wiring is asserted on source and labelled as such. Mutation run (no refit on typing): 2 failures, then reverted.
+  - `check:lex-235-chat-browser` 24/24; `tsc` 0.
+  - **Committed locally, not pushed.**
+
 ## 2026-10-23 09:01 UTC - LEX 22 Oct (7) / 23 Oct (8): 233, 238, 235, 237 done; 236 dropped (decision 247)
 
 - **Correction to the 07:51 entry below, and to 00:29:** 452c5ade does NOT have 0 link rows. Read with the plain client at 08:2x UTC: **20 rows, all live, all `hand`**, 0 superseded and 0 withdrawn, created 2026-10-22 22:53:04 UTC. That is Charlie's GRAPH 7 `--write`. The "0 live" line had been carried forward without a re-read. `--write` was not re-run, since the rows are there. The §5 writer selects only `source: 'drafting_instruction'` rows, so it never touches these.

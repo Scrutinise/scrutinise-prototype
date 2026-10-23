@@ -25,6 +25,8 @@ import { PANEL_ROLES, HIDE_PANEL_LABEL } from '@/lib/lex/panel-layout'
 import type { EditOffer } from '@/lib/lex/field-edit'
 import { isLive, type AgentCardsState } from '@/components/lex/AgentCards'
 import WorkList from '@/components/lex/WorkList'
+import MaximiseToggle from '@/components/lex/MaximiseToggle'
+import { EQUAL_SPLIT, LHP_KEYS, parseMax, readStored, writeStored, type LhpMax } from '@/lib/lex/lhp-layout'
 // ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
 // TYPE import, erased at compile, so the server-only counting module never reaches the
 // browser bundle. See `lib/lex/stages.ts`.
@@ -245,6 +247,18 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
    * yesterday's answer arriving on top of today's work.
    */
   const [worklistFraction, setWorklistFraction] = useState(0.42)
+  /**
+   * Decision 249 — EACH HALF CAN BE MAXIMISED TO FILL THE PANEL; Minimise restores the EQUAL split. Unlike the drag fraction above,
+   * which half is maximised IS remembered per browser (CCh 23 Oct (9)): it is a standing choice about the panel, not a reading position.
+   * Read after mount, so the server render and the first client render agree.
+   */
+  const [lhpMax, setLhpMaxState] = useState<LhpMax>('none')
+  useEffect(() => { setLhpMaxState(parseMax(readStored(LHP_KEYS.max))) }, [])
+  const setLhpMax = (m: LhpMax) => {
+    setLhpMaxState(m)
+    writeStored(LHP_KEYS.max, m === 'none' ? null : m)
+    if (m === 'none') setWorklistFraction(EQUAL_SPLIT)
+  }
   /**
    * §3c — *"Two tabs on the chat: Lex … and Notes."*
    *
@@ -1061,11 +1075,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 </button>
               </div>
               {/* ══ 25-N §3c — THE WORKLIST, AT A HEIGHT THE USER CHOSE ═══════════════ */}
-              {ideaId && (
+              {ideaId && lhpMax !== 'chat' && (
                 <div
-                  className="shrink-0 overflow-y-auto"
-                  style={{ height: `${(worklistFraction * 100).toFixed(1)}%` }}
+                  className={`overflow-y-auto ${lhpMax === 'worklist' ? 'flex-1 min-h-0' : 'shrink-0'}`}
+                  style={lhpMax === 'worklist' ? undefined : { height: `${(worklistFraction * 100).toFixed(1)}%` }}
+                  data-lhp-half="worklist"
                 >
+                  {/* Decision 249 — this half's Maximise / Minimise. */}
+                  <div className="sticky top-0 z-10 flex justify-end bg-white/90 px-2 pt-1">
+                    <MaximiseToggle half="the worklist" maximised={lhpMax === 'worklist'} onToggle={() => setLhpMax(lhpMax === 'worklist' ? 'none' : 'worklist')} />
+                  </div>
                   <WorkList
                     ideaId={ideaId}
                     scope={lexStage}
@@ -1088,7 +1107,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
 
               {/* §3c — the divider between the worklist and the chat. ⚠ NOT DESKTOP-ONLY,
                   unlike the column dividers: these two DO share a screen on a phone. */}
-              {ideaId && (
+              {ideaId && lhpMax === 'none' && (
                 <RowDivider
                   label="Resize the worklist and the chat"
                   onDrag={(d) =>
@@ -1103,6 +1122,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               {/* §3.2 — WHAT THIS STAGE IS, ONE LINE, ALWAYS VISIBLE, and drawn from the
                   same constant the indicator above uses so the two cannot say different
                   things about the same stage. */}
+              {/* Decision 249 — while the worklist fills the panel, everything below this line (the Lex/Notes half) is out of the way. */}
+              {/* ⚠ Only with a worklist on screen: a remembered "worklist" on a new idea (no worklist yet) must never hide the chat. */}
+              <div className={`flex-1 min-h-0 flex flex-col ${ideaId && lhpMax === 'worklist' ? 'hidden' : ''}`} data-lhp-half="chat">
               <p className="shrink-0 border-b border-zinc-100 px-3 py-1.5 text-[11px] text-zinc-500">
                 <span className="font-semibold text-zinc-700">{stageByKey(lexStage).name}.</span>{' '}
                 {stageByKey(lexStage).purpose}
@@ -1133,6 +1155,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 <span className="text-[10px] text-zinc-400 self-center pr-1">
                   {leftTab === 'lex' ? 'this page only' : 'private to you'}
                 </span>
+                {ideaId && (
+                  <span className="self-center">
+                    <MaximiseToggle half="the chat" maximised={lhpMax === 'chat'} onToggle={() => setLhpMax(lhpMax === 'chat' ? 'none' : 'chat')} />
+                  </span>
+                )}
               </div>
 
               {/* ══ 25-R ADDENDUM A3 — MINIMAL TEXT ON ARRIVAL, AND A BIG BOX ═══════════
@@ -1196,6 +1223,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               {/* §3c — Notes. Private to the user, never shared; see `NotesPanel`. */}
               <div className={`flex-1 min-h-0 ${leftTab === 'notes' ? '' : 'hidden'}`}>
                 {ideaId && <NotesPanel ideaId={ideaId} />}
+              </div>
               </div>
             </div>
 
