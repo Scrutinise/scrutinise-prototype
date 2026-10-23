@@ -194,6 +194,24 @@ async function part3and4() {
     const restored = await DR.saveVersion(copy.id, owner.id, after.versions[1])
     const L5 = await linksOf()
     ok('…and a version restoring the target writes a NEW row for it; the withdrawn row stays withdrawn, never un-withdrawn', restored.ok && 'written' in restored.data.lawRows && restored.data.lawRows.written === L2.length && restored.data.lawRows.superseded === L2.length - 1 && restored.data.lawRows.withdrawn === 0 && !!L5.find((l) => l.id === prec3?.id)?.withdrawnAt && L5.find((l) => l.id === prec3?.id)?.supersededById === null, JSON.stringify(restored.ok && restored.data.lawRows))
+    // GRAPH's edge (23 Oct): a target still NAMED in the next version but no longer held keeps its earlier row live, and the save says
+    // notHeld — so a live row and a not-held mention can never read as agreement. Fixtured without a stub: the earlier version's row is
+    // written directly against an Act the corpus names but does not hold (check:idea-law B3), and the real save path then names it.
+    const NAMED_NOT_HELD = 'ukpga/1970/1'
+    const vNow = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))!.versions.at(-1)!
+    const planted = await prisma.ideaLawLink.create({ data: {
+      ideaId: copy.id, actionId: owner.id, targetKind: 'act', docUri: NAMED_NOT_HELD, provisionPath: null, relation: 'relies_on',
+      source: 'drafting_instruction', sourceDetail: `${owner.id} v${vNow.v}`, note: null, asAt: new Date(),
+    } })
+    const namedSave = await DR.saveVersion(copy.id, owner.id, { ...after.versions[1], provisions: [...after.versions[1].provisions, { docUri: NAMED_NOT_HELD, provisionPath: null, relation: 'relies_on', note: '' }] })
+    const plantedNow = await prisma.ideaLawLink.findUniqueOrThrow({ where: { id: planted.id } })
+    const namedRep = namedSave.ok && 'notHeld' in namedSave.data.lawRows ? namedSave.data.lawRows : null
+    ok('a target still named but not held keeps its earlier row LIVE (neither superseded nor withdrawn)', plantedNow.supersededById === null && plantedNow.withdrawnAt === null, JSON.stringify({ s: plantedNow.supersededById, w: plantedNow.withdrawnAt }))
+    ok('…the save reports it in notHeld as named-not-held', !!namedRep?.notHeld.some((n) => n.docUri === NAMED_NOT_HELD && n.state === 'named-not-held'), JSON.stringify(namedRep?.notHeld))
+    ok('…and writes no new row for it', (await linksOf()).filter((l) => l.docUri === NAMED_NOT_HELD).length === 1)
+    // Back to the full instruction without it: the planted row's target is now gone, so it is withdrawn like any other.
+    const back = await DR.saveVersion(copy.id, owner.id, after.versions[1])
+    ok('…and a version that drops it then withdraws it', back.ok && 'withdrawn' in back.data.lawRows && back.data.lawRows.withdrawn === 1 && !!(await prisma.ideaLawLink.findUniqueOrThrow({ where: { id: planted.id } })).withdrawnAt)
     await setSlot(copy.id, owner.id, 'against', { text: 'A slot answer written after the draft.' })
     const kept = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))
     ok('saving a step-2 slot afterwards does NOT drop the drafting instruction (parseRecord carries it)', (kept?.versions.length ?? 0) >= 2)

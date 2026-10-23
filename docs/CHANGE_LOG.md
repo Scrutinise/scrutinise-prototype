@@ -1,5 +1,15 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 00:39 UTC - LEX 26-U §5: check for a target still named but no longer held (GRAPH's edge)
+
+- `check:lex-26u` gains GRAPH's fixture, with no stub. The earlier version's row is written directly against `ukpga/1970/1`, an Act the corpus names but does not hold. The real save path then names it again.
+- Asserted:
+  - the earlier row stays LIVE;
+  - the report lists it in `notHeld` as `named-not-held`;
+  - no new row is written;
+  - a later version that drops it withdraws it.
+- **54/54, 7 controls, 0 dead.** Mutation run (notHeld not reported): 2 failures, one of them the new assertion, then reverted. No product code changed. **Not pushed.**
+
 ## 2026-10-23 00:35 UTC - LEX 26-U §5: a dropped target is WITHDRAWN (GRAPH confirmed its reader is live)
 
 - GRAPH confirmed after the 00:29 push that its reader is live on origin/Main (b5f9496). `writeInstructionRows` no longer holds a version that drops a target. It **withdraws** the vanished target's live row: `withdrawnAt` and `withdrawnDetail` "<action> instruction v<N>: target absent", set together in one transaction.
