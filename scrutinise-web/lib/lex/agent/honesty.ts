@@ -32,7 +32,7 @@ export interface ToolOutcome {
 }
 
 export interface Violation {
-  kind: 'unconfirmed-claim' | 'pending-claimed-done' | 'overstated-total' | 'unknown-control' | 'phantom-pending'
+  kind: 'unconfirmed-claim' | 'pending-claimed-done' | 'overstated-total' | 'unknown-control' | 'phantom-pending' | 'dnumber-as-authority'
   sentence: string
   detail: string
 }
@@ -118,6 +118,18 @@ export function controlsNamedIn(sentence: string): string[] {
  */
 const WAITING_ON_BUTTON = /\bwaiting for you to confirm\b|\bawait(?:s|ing) your (?:confirmation|approval)\b|\bconfirm button\b|\bpress(?:ing)? (?:its |the |that )?confirm\b|\bneeds? your confirmation\b|\bfor you to confirm\b/i
 
+/**
+ * 26-V1 (decision 241) — A D-NUMBER IS OUR OWN OUTPUT, NEVER AUTHORITY. "D.38.1 requires…", "under D.38.2", "[Ref: D.38.1]" cite a draft
+ * as if it were law or evidence. A D-number may be NAMED (where a draft is, what state it is in); it may not be the reason something is so.
+ * ⚠ Errs toward flagging, like the rest of this file: one corrective retry, which tells the model to name the status and cite the source.
+ */
+const D_NUMBER = /\bD\.\d+\.\d+(?:\.\d+)?\b/
+const D_AS_CITATION = /\[\s*(?:Ref:\s*)?D\.\d+\.\d+/i
+const D_AUTHORITY = /\b(?:under|according to|pursuant to|by virtue of|as (?:required|provided|set out|established|stated|laid down) (?:by|in)|on the authority of)\s+D\.\d+\.\d+|\bD\.\d+\.\d+(?:\.\d+)?(?:,[^.?!]{0,40})?\s+(?:requires?|provides?|establishes|mandates?|obliges?|proves?|confirms?|shows? that|demonstrates?|is (?:the )?(?:law|authority|evidence))\b/i
+export function citesDNumberAsAuthority(sentence: string): boolean {
+  return D_NUMBER.test(sentence) && (D_AS_CITATION.test(sentence) || D_AUTHORITY.test(sentence))
+}
+
 export interface CheckInput {
   reply: string
   outcomes: ToolOutcome[]
@@ -163,6 +175,13 @@ export function checkReply(input: CheckInput): Violation[] {
           detail: `says all were filed, but ${unfiled.length} was not (${unfiled.map((i) => i.label ?? 'one item').join('; ')}) — each unfiled one must be reported with its real reason`,
         })
       }
+    }
+
+    if (citesDNumberAsAuthority(sentence)) {
+      violations.push({
+        kind: 'dnumber-as-authority', sentence,
+        detail: 'cites a D-number (one of this idea’s own documents) as if it were authority or evidence — a D-number is our draft, never a source: name it with its status in words right after it, and cite the law or the [Ref: n] source for anything it says',
+      })
     }
 
     for (const label of controlsNamedIn(sentence)) {

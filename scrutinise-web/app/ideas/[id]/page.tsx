@@ -7,6 +7,8 @@ import { getStage3GateData, getStage4GateData } from '@/lib/stage-gates'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { ideaLawSet } from '@/lib/lex/statutory-graph'
 import type { IdeaLawSet } from '@/lib/lex/idea-law-pure'
+import { readKernelProgress } from '@/lib/documents/stage-facts'
+import { stageByNumber, stageFromProgress } from '@/lib/documents/stage-banner'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -208,6 +210,11 @@ export default async function IdeaDetailPage({ params }: Props) {
     lawSetError = e instanceof Error ? e.message : String(e)
   }
 
+  // 26-V1 §6 (decision 254) — the stage the badges show is the SEVEN-stage one (lib/documents/stage-banner.ts), from the kernel's progress,
+  // never `Idea.stage` (which stays the visibility ladder behind Take Public etc.). A failed read says so rather than guessing a stage.
+  let sevenStage: { n: number; name: string } | null = null
+  try { const s = stageByNumber(stageFromProgress(await readKernelProgress(id))); sevenStage = { n: s.n, name: s.name } } catch { sevenStage = null }
+
   // Serialise for client (Prisma Decimal → string, Date → string)
   const serialised = {
     ...idea,
@@ -282,6 +289,7 @@ export default async function IdeaDetailPage({ params }: Props) {
         canonicalState={canonicalState}
         lawSet={lawSet}
         lawSetError={lawSetError}
+        sevenStage={sevenStage}
       />
     </div>
   )

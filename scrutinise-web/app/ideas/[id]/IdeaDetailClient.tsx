@@ -27,6 +27,7 @@ import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { guidingPolicyStatement, hasGuidingPolicy } from '@/lib/lex/guiding-policy-answer'
 import LexActivityLog from '@/components/lex/LexActivityLog'
 import IdeaLawPanel from '@/components/lex/IdeaLawPanel'
+import DocumentsTree from '@/components/lex/DocumentsTree'
 import type { IdeaLawSet } from '@/lib/lex/idea-law-pure'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -170,6 +171,17 @@ interface Props {
   /** GRAPH 7 — `ideaLawSet()`, read on the server. `lawSetError` set = the read FAILED, which is not "none attached". */
   lawSet: IdeaLawSet | null
   lawSetError: string | null
+  /** 26-V1 §6 (254) — the seven-stage position, from the kernel's progress (never `Idea.stage`). Null = it could not be read. */
+  sevenStage: { n: number; name: string } | null
+}
+
+/** 26-V1 §6 (254) — the one stage label both badges show: the seven-stage scheme, in words, the same neutral style for every stage. */
+function SevenStageBadge({ stage }: { stage: { n: number; name: string } | null }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-zinc-300 bg-white px-2.5 py-0.5 text-xs font-medium text-zinc-800" data-seven-stage>
+      {stage ? `Stage ${stage.n} of 7 · ${stage.name}` : 'Stage not read'}
+    </span>
+  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1085,7 +1097,7 @@ function FieldDisplay({
 
 // ── Idea tab with 4 sub-tabs ──────────────────────────────────────────────────
 
-type IdeaSubTab = 'overview' | 'diagnosis' | 'policy' | 'actions'
+type IdeaSubTab = 'overview' | 'diagnosis' | 'policy' | 'actions' | 'law' | 'documents'
 
 /** 26-J §1 — "N of M approved", the SAME arithmetic FieldsPanel.tsx uses on the editor
  *  (status ACCEPTED or SKIPPED counts as done). Computed here, not stored, for the same
@@ -1431,11 +1443,16 @@ function IdeaTab({
   canEdit,
   canonicalState,
   editHref,
+  sevenStage,
+  lawPanel,
 }: {
   idea: Idea
   canEdit: boolean
   canonicalState: CanonicalState | null
   editHref: string
+  sevenStage: { n: number; name: string } | null
+  /** 26-V1 §6 (244) — the GRAPH 7 law panel, moved up from the foot of the page into its own sub-tab. */
+  lawPanel: React.ReactNode
 }) {
   const [subTab, setSubTab] = useState<IdeaSubTab>('overview')
   const pageByKey = (key: string) => canonicalState?.pages.find((p) => p.key === key)
@@ -1450,11 +1467,11 @@ function IdeaTab({
     { key: 'diagnosis', label: 'Diagnosis' },
     { key: 'policy', label: 'Policy' },
     { key: 'actions', label: 'Coherent Actions' },
+    // 26-V1 §6 (decision 244): beside Coherent Actions — the law this idea concerns, and the documents on its actions.
+    { key: 'law', label: 'Law' },
+    { key: 'documents', label: 'Documents' },
   ]
 
-  const STAGE_LABELS_MAP: Record<string, string> = {
-    STAGE_1: 'Create', STAGE_2: 'Draft', STAGE_3: 'Develop', STAGE_4: 'Campaign', STAGE_5: 'Legislate',
-  }
   const IDEA_TYPE_LABELS: Record<string, string> = {
     LEGISLATION: 'Legislation',
     ORGANISATION: 'Organisational Change',
@@ -1549,9 +1566,8 @@ function IdeaTab({
           <div className="shrink-0 space-y-4 md:basis-1/3 md:border-l md:pl-5">
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Stage</p>
-              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'}`}>
-                {STAGE_LABELS_MAP[idea.stage] ?? idea.stage}
-              </span>
+              {/* 26-V1 §6 (254): the seven-stage label, as in the header; `Idea.stage` still drives the gates, not this badge. */}
+              <SevenStageBadge stage={sevenStage} />
             </div>
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Idea Type</p>
@@ -1612,6 +1628,16 @@ function IdeaTab({
           editHref={editHref}
           legacyFallback={idea.coherentActions.length ? <LegacyActionsFallback idea={idea} /> : undefined}
         />
+      )}
+
+      {subTab === 'law' && <div data-subtab="law">{lawPanel}</div>}
+
+      {/* 26-V1 §6 — the documents tree, read-only here; it is worked on in the Deepening. */}
+      {subTab === 'documents' && (
+        <div data-subtab="documents" className="space-y-2">
+          <p className="text-xs text-zinc-600">The documents on this idea’s actions — read here; drafted and accepted in The Deepening.</p>
+          <DocumentsTree ideaId={idea.id} readOnly />
+        </div>
       )}
     </div>
   )
@@ -2457,6 +2483,7 @@ export default function IdeaDetailClient({
   canonicalState,
   lawSet,
   lawSetError,
+  sevenStage,
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -2475,8 +2502,6 @@ export default function IdeaDetailClient({
   const [whatNextOpen, setWhatNextOpen] = useState(searchParams.get('whatnext') === 'true')
   const [deleteOpen, setDeleteOpen] = useState(false)   // §19-E Task 6
 
-  const stageLabel = STAGES.find(s => s.key === idea.stage)?.label ?? idea.stage
-  const badgeClass = STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'
 
   const stage2GateMet =
     idea.stage === 'STAGE_2' &&
@@ -2546,7 +2571,8 @@ export default function IdeaDetailClient({
     { key: 'contributions', label: `Contributions${commentCount > 0 ? ` (${commentCount})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
     // §8.2 — generated documents live outside the three Lex panels.
-    { key: 'exports', label: 'Documents' },
+    // 26-V1 decision 250: the generated outputs are "Reports"; "Documents" now means the documents on actions (the Idea tab's sub-tab).
+    { key: 'exports', label: 'Reports' },
     { key: 'team', label: 'Team' },
     ...(['STAGE_4', 'STAGE_5'].includes(idea.stage) ? [{ key: 'campaign' as Tab, label: 'Campaign' }] : []),
     ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log & Lex activity' }] : []),
@@ -2588,7 +2614,7 @@ export default function IdeaDetailClient({
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         {/* ⚠⚠ 26-C ADDENDUM 3 §24a — THE STAGE STEPPER IS REMOVED FROM THIS PAGE.
             "It does not belong on this page." The single-stage badge in the header
-            (`stageLabel`/`badgeClass`, a few lines down) and in the right-hand metadata
+            (now the seven-stage `SevenStageBadge`, 26-V1 §6) and in the right-hand metadata
             column still say which stage the idea is at — this removes the five-tile
             bar, not the fact of which stage it's in. */}
 
@@ -2598,9 +2624,8 @@ export default function IdeaDetailClient({
         {/* Header */}
         <div className="mb-6">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeClass}`}>
-              {stageLabel}
-            </span>
+            {/* 26-V1 §6 (decision 254) — the old five-stage "Create" badge is retired for the seven-stage label. */}
+            <SevenStageBadge stage={sevenStage} />
           </div>
 
           {/* ⚠⚠ 26-C ADDENDUM 3 §24b/§24c — THE GREY STATISTICS BOX STOOD HERE AND IS
@@ -2830,9 +2855,9 @@ export default function IdeaDetailClient({
                   />
                 </div>
               )}
-              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} canonicalState={canonicalState} editHref={hasBuild ? `/ideas/create?ideaId=${idea.id}` : `/ideas/build?ideaId=${idea.id}`} />
-              {/* GRAPH 7 — the idea↔law join, seven relation groups rendered separately. */}
-              <IdeaLawPanel set={lawSet} error={lawSetError} />
+              {/* GRAPH 7's law panel moved from the foot of this tab into the Idea tab's own "Law" sub-tab (26-V1 §6, decision 244). */}
+              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} canonicalState={canonicalState} editHref={hasBuild ? `/ideas/create?ideaId=${idea.id}` : `/ideas/build?ideaId=${idea.id}`}
+                sevenStage={sevenStage} lawPanel={<IdeaLawPanel set={lawSet} error={lawSetError} />} />
             </>
           )}
           {activeTab === 'contributions' && (

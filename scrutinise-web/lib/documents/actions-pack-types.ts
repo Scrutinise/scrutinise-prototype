@@ -55,6 +55,8 @@ export interface PackAction {
   /** 26-U — the current drafting-instruction version (null = none written), and what it touches (null = not computed for this printing). */
   draft: DraftVersion | null
   touches: Touch[] | null
+  /** 26-V1 — the action's documents, in number order (current version). Absent on a snapshot stored before 26-V: reads as none. */
+  documents?: import('@/lib/lex/action-documents').PackDocument[]
 }
 
 export interface PackRuledOut {

@@ -29,6 +29,9 @@ export const LIMITS = {
   instructionPurpose: 300,
   /** 26-U §3: a provision path ("section/5") inside a Provisions or Precedent line — parsed from the line, not a box of its own. */
   provisionPath: 80,
+  /** 26-V1: a document's title, and the text of one version of a hand-written document. */
+  documentTitle: 160,
+  documentText: 200000,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

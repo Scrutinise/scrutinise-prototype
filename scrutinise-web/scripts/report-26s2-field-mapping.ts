@@ -40,7 +40,7 @@ async function main() {
 
   console.log('\n## By idea (live ideas): rows · Who · Impl · Enforce · Friction · Link · Sequence · before · avenue · causes · costLines')
   const costLines = await prisma.costLine.groupBy({ by: ['actionId'], _count: { _all: true } }).catch(() => [] as Array<{ actionId: string; _count: { _all: number } }>)
-  const clByAction = new Map(costLines.map((c) => [c.actionId, c._count._all]))
+  const clByAction = new Map(costLines.map((c) => [c.actionId, c._count._all] as [string, number]))
   const per = new Map<string, typeof rowsLive>()
   for (const r of rowsLive) per.set(r.ideaId, [...(per.get(r.ideaId) ?? []), r])
   for (const [id, rs] of [...per.entries()].sort((a, b) => b[1].length - a[1].length)) {

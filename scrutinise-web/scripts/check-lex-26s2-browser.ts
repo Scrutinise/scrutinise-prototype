@@ -49,7 +49,9 @@ async function partB() {
   let css = ''
   try {
     const postcss = (await import('postcss')).default
-    const tw = (await import('@tailwindcss/postcss')).default
+    // Typed loosely on purpose: the package ships no type declarations, and this only feeds postcss.
+    const twName: string = '@tailwindcss/postcss'
+    const tw = (await import(twName)).default as () => import('postcss').AcceptedPlugin
     const src = ['QuestionPanel', 'SourcesRegistry', 'AddResearch', 'FocusDialog', 'YourMaterial', 'ActionImport'].map((c) => `@source "../components/lex/${c}.tsx";`).join(' ')
     const out = await postcss([tw()]).process(`@import 'tailwindcss'; ${src}`, { from: join(ROOT, 'scripts/_tw.css') })
     css = out.css

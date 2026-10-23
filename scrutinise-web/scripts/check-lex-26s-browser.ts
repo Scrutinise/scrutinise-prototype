@@ -87,7 +87,9 @@ async function partB() {
   let css = ''
   try {
     const postcss = (await import('postcss')).default
-    const tw = (await import('@tailwindcss/postcss')).default
+    // Typed loosely on purpose: the package ships no type declarations, and this only feeds postcss.
+    const twName: string = '@tailwindcss/postcss'
+    const tw = (await import(twName)).default as () => import('postcss').AcceptedPlugin
     const out = await postcss([tw()]).process(`@import 'tailwindcss'; @source "../components/lex/ActionsWorkspace.tsx"; @source "../components/lex/BoundedInput.tsx"; @source "../components/lex/FeedbackDialog.tsx";`, { from: join(ROOT, 'app', '_harness.css') })
     css = out.css
   } catch (e) { skip('layout measurements', `Tailwind did not compile: ${(e as Error).message.slice(0, 120)}`) }
@@ -119,7 +121,7 @@ async function partB() {
     ok('opened: the row carries the box marker, a 2px border and a grey fill', (await li2.getAttribute('data-open')) === 'true' && /border-2/.test((await li2.getAttribute('class')) ?? '') && /bg-zinc-100/.test((await li2.getAttribute('class')) ?? ''))
     const geo = await page.evaluate(() => {
       const li = document.querySelector('li[data-action-id="a2"]')!
-      const close = [...li.querySelectorAll('button')].find((b) => /Close −/.test(b.textContent ?? ''))
+      const close = Array.from(li.querySelectorAll('button')).find((b) => /Close −/.test(b.textContent ?? ''))
       const sel = li.querySelector('select[aria-label^="Heading for action"]')
       const title = li.querySelector('[data-open-title]')
       const line = li.querySelector('[data-test-line]')
@@ -164,6 +166,8 @@ async function partB() {
     await page.locator('[data-bulk-bar] button:has-text("Rule out")').click()
     await page.waitForSelector('[data-status-strip] >> text=Saved: 2 actions ruled out')
     ok('bulk Rule out → both rows left the list after the re-read; the strip says 2', (await page.locator('li[data-action-id="a3"], li[data-action-id="a4"]').count()) === 0 && (await page.locator('[data-bulk-bar]').count()) === 0)
+    // ⚠ Strict on purpose: if anything else is in the strip (it once was — an unanswered digest read), this says so instead of clicking past it.
+    ok('the strip holds only the save, no stray alert beside it', (await page.locator('[data-status-strip] [role=alert]').count()) === 0, JSON.stringify(await page.locator('[data-status-strip] [role=alert]').allInnerTexts()))
     await page.locator('[data-status-strip] button:has-text("OK")').click()
     ok('OK clears the strip', (await page.locator('[data-status-strip]').count()) === 0)
 

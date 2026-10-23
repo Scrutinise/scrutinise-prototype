@@ -98,7 +98,7 @@ export async function POST(req: Request, { params }: Params) {
           ...i, instrument: i.instrument ?? null, citations: i.citations ?? [],
           provisions: i.provisions.map((p) => ({ ...p, provisionPath: p.provisionPath ?? null })),
           precedents: i.precedents.map((p) => ({ ...p, provisionPath: p.provisionPath ?? null })),
-        })
+        }, { userId: uid, author: authz.idea.creatorId === uid ? 'OWNER' : 'COLLABORATOR' }) // 26-V1: the version records who wrote it
         break
       }
       case 'draftAction': result = await DR.draftWithLex(id, b.actionId, uid); break
@@ -106,7 +106,7 @@ export async function POST(req: Request, { params }: Params) {
       case 'dismissDraft': result = await DR.dismissProposal(id, b.actionId); break
       case 'touches': {
         const row = (await S.liveRows(id)).find((r) => r.id === b.actionId)
-        const cur = row ? DR.draftOf(row)?.versions.at(-1) ?? null : null
+        const cur = row ? (await DR.draftOfAction(row.id))?.versions.at(-1) ?? null : null
         result = !row ? { ok: false, error: 'That action is not on this idea.' } : !cur ? { ok: false, error: 'There is no drafting instruction to compute from yet: save one, or use Lex’s draft, first.' } : { ok: true, data: await TO.touchesFor(cur) }
         break
       }

@@ -71,7 +71,7 @@ function partA() {
   ok('a markdown table becomes a TABLE block, not a paragraph with pipes in it', !!t && t.kind === 'table')
   ok('…with the header, and every body row padded to the header\'s width (a short row is not shortened)', t?.kind === 'table' && t.header.length === 2 && t.rows.length === 2 && t.rows.every((r) => r.length === 2) && runsToText(t.rows[1][1]) === '')
   ok('…inline emphasis inside a cell survives', t?.kind === 'table' && t.rows[0][1].some((r) => r.bold && r.text === 'Cabinet Office'))
-  ok('…and the prose either side stays prose', blocks[0].kind === 'paragraph' && blocks[blocks.length - 1].kind === 'paragraph' && runsToText((blocks[blocks.length - 1] as { runs: never[] }).runs) === 'After.')
+  ok('…and the prose either side stays prose', blocks[0].kind === 'paragraph' && blocks[blocks.length - 1].kind === 'paragraph' && runsToText((blocks[blocks.length - 1] as unknown as { runs: never[] }).runs) === 'After.')
   control('the table text is left as a run-on paragraph with pipes (must be FALSE)', blocks.some((b) => b.kind === 'paragraph' && runsToText(b.runs).includes('|')))
   ok('a line with a pipe but no delimiter row is NOT a table', !markdownToBlocks('a | b\nc | d').some((b) => b.kind === 'table'))
   ok('heading letters run A..Z then AA', letterFor(0) === 'A' && letterFor(1) === 'B' && letterFor(25) === 'Z' && letterFor(26) === 'AA' && letterFor(27) === 'AB')

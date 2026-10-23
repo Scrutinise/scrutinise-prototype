@@ -1030,6 +1030,7 @@ const setFacetsTool: ToolDefinition = {
 
 import * as SL from '@/lib/lex/action-slots'
 import { ALL_SLOTS, SLOT_UI, parseRecord, slotAnswered, slotProposal, slotText, slotWriter, specificTag, answeredCount } from '@/lib/lex/action-record'
+import { withDrafts } from '@/lib/lex/action-documents'
 
 const SLOT_ENUM = ALL_SLOTS as unknown as [string, ...string[]]
 
@@ -1041,7 +1042,8 @@ const getActionTool: ToolDefinition = {
     const { rows } = await actionsByNumbers(ctx, [action])
     if (!rows.length) return fail(`there is no live action #${action} on this idea.`)
     const [a, heads, causes] = await Promise.all([
-      prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id } }),
+      // 26-V1: the drafting instruction is read from the documents store, attached as record.draft (what specificTag reads).
+      prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id } }).then(async (r) => (r ? (await withDrafts([r]))[0] : null)),
       prisma.actionHeading.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, name: true } }),
       prisma.diagnosisCause.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, number: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }),
     ])

@@ -21,9 +21,10 @@ import { parseRecord, SLOT_KEYS, SLOT_UI } from './action-record'
 import { readConditions } from './action-conditions-server'
 import { activeConditions } from './action-conditions'
 import {
-  INSTRUMENTS, RELATIONS, EXTENTS, CLAUSE_CAVEAT, parseDraft, addVersion, withCaveat, validateInstruction, isDocUri, isProvisionPath,
+  INSTRUMENTS, RELATIONS, EXTENTS, CLAUSE_CAVEAT, addVersion, currentVersion, withCaveat, validateInstruction, isDocUri, isProvisionPath,
   type ActionDraft, type DraftInstruction, type DraftProposal,
 } from './action-draft-pure'
+import { draftFor, writeDraftVersion, writeDraftProposal, dismissDraftProposal } from './action-documents'
 import type { Result } from './action-structure'
 import { writeInstructionRows, type LawRowsReport } from './action-law-rows'
 import { effectsLoadDate } from './statutory-graph'
@@ -44,49 +45,42 @@ async function load(ideaId: string, actionId: string) {
     select: { id: true, number: true, title: true, practicalStep: true, commentary: true, avenue: true, whoImplements: true, wording: true, record: true },
   })
 }
-type Row = NonNullable<Awaited<ReturnType<typeof load>>>
-
-async function writeDraft(row: Row, draft: ActionDraft) {
-  const rec = parseRecord(row.record) as Record<string, unknown>
-  rec.draft = draft
-  await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { record: rec as never } })
-}
-
-export function draftOf(row: { record: unknown }): ActionDraft | undefined { return parseDraft(parseRecord(row.record).draft) }
+// ── 26-V1: THE DRAFT LIVES IN THE DOCUMENTS STORE (lib/lex/action-documents.ts) as the action's draft-clause document. ──────────────
+// `record.draft` is never written again; every read below goes through draftFor, every write through the documents' own writers.
+export { draftFor as draftOfAction } from './action-documents'
 
 // ── the user's own version ─────────────────────────────────────────────────────────────────────────────────────
 
-export async function saveVersion(ideaId: string, actionId: string, ins: DraftInstruction): Promise<Result<{ number: number | null; version: number; lawRows: LawRowsReport | { failed: string } }>> {
+export async function saveVersion(ideaId: string, actionId: string, ins: DraftInstruction, by: { userId?: string | null; author?: 'OWNER' | 'COLLABORATOR' } = {}): Promise<Result<{ number: number | null; version: number; lawRows: LawRowsReport | { failed: string } }>> {
   const row = await load(ideaId, actionId)
   if (!row) return fail('That action is not on this idea. Nothing was saved.')
   const bad = validateInstruction(ins)
   if (bad.length) return fail(`Not saved: ${bad.join('; ')}.`)
-  const next = addVersion(draftOf(row), { ...ins, citations: [] }, 'USER', new Date().toISOString())
-  await writeDraft(row, next)
-  return { ok: true, data: { number: row.number, version: next.versions[next.versions.length - 1].v, lawRows: await joinRows(ideaId, row.id, next) } }
+  // The caveat goes on through addVersion, exactly as before; the documents store keeps the result.
+  const v = addVersion(undefined, { ...ins, citations: [] }, 'USER', new Date().toISOString()).versions[0]
+  await writeDraftVersion(ideaId, row.id, v, 'USER', { userId: by.userId, author: by.author, legislative: row.avenue === 'LEGISLATIVE' })
+  const next = await draftFor(row.id)
+  return { ok: true, data: { number: row.number, version: currentVersion(next)!.v, lawRows: await joinRows(ideaId, row.id, next!) } }
 }
 
 export async function acceptProposal(ideaId: string, actionId: string): Promise<Result<{ number: number | null; version: number; lawRows: LawRowsReport | { failed: string } }>> {
   const row = await load(ideaId, actionId)
   if (!row) return fail('That action is not on this idea. Nothing was changed.')
-  const d = draftOf(row)
+  const d = await draftFor(row.id)
   if (!d?.proposal) return fail(`Lex has no draft waiting on #${row.number ?? '?'}. Nothing was changed.`)
   const { at: _a, reason: _r, pence: _p, ...ins } = d.proposal
   void _a; void _r; void _p
-  const next = addVersion({ versions: d.versions }, ins, 'LEX', new Date().toISOString())
-  await writeDraft(row, next) // the proposal is answered: `next` carries none
-  return { ok: true, data: { number: row.number, version: next.versions[next.versions.length - 1].v, lawRows: await joinRows(ideaId, row.id, next) } }
+  const v = addVersion(undefined, ins, 'LEX', new Date().toISOString()).versions[0]
+  await writeDraftVersion(ideaId, row.id, v, 'LEX', { legislative: row.avenue === 'LEGISLATIVE', acceptProposal: true }) // the proposal is answered ACCEPTED, and kept
+  const next = await draftFor(row.id)
+  return { ok: true, data: { number: row.number, version: currentVersion(next)!.v, lawRows: await joinRows(ideaId, row.id, next!) } }
 }
 
 export async function dismissProposal(ideaId: string, actionId: string): Promise<Result<{ number: number | null }>> {
   const row = await load(ideaId, actionId)
   if (!row) return fail('That action is not on this idea. Nothing was changed.')
-  const d = draftOf(row)
-  if (!d?.proposal) return fail('There is no draft from Lex waiting. Nothing was changed.')
-  const rec = parseRecord(row.record) as Record<string, unknown>
-  if (d.versions.length) rec.draft = { versions: d.versions }
-  else delete rec.draft
-  await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { record: (Object.keys(rec).length ? rec : Prisma.DbNull) as never } })
+  // Answered DISMISSED and kept (26-U removed it from the record; the documents store never deletes).
+  if (!(await dismissDraftProposal(row.id))) return fail('There is no draft from Lex waiting. Nothing was changed.')
   return { ok: true, data: { number: row.number } }
 }
 
@@ -212,7 +206,7 @@ export async function draftWithLex(ideaId: string, actionId: string, userId: str
   const prec = legislative ? await Promise.all(PRECEDENTS.map(async (p) => ({ p, held: await precedentText(p) }))) : []
   const rec = parseRecord(row.record)
   const slots = SLOT_KEYS.map((k) => (rec[k]?.text ? `${SLOT_UI[k].label}: ${clip(rec[k]!.text, 500)}` : '')).filter(Boolean)
-  const current = draftOf(row)?.versions.at(-1)
+  const current = (await draftFor(row.id))?.versions.at(-1)
 
   const user = [
     `THE GUIDING POLICY:\n${clip(idea?.chosenApproach ?? '(not settled)', 3000)}`,
@@ -248,8 +242,8 @@ export async function draftWithLex(ideaId: string, actionId: string, userId: str
     clause: legislative && v.clause?.trim() ? withCaveat(v.clause) : '', plainWording: legislative ? '' : clip(v.plainWording, 4000), purpose: clip(v.purpose, 300), citations,
     at: new Date().toISOString(), reason: `${clip(v.reason, 1500)}${dropped.length ? ` Left out because they could not be checked: ${dropped.join('; ')}.` : ''}`, pence: priced.pence ?? null,
   }
-  const fresh = await load(ideaId, actionId) // re-read: a version the user saved while this ran is kept, untouched
+  const fresh = await load(ideaId, actionId) // re-read: a version the user saved while this ran is kept, untouched (a proposal sits beside it)
   if (!fresh) return fail('The action was ruled out or merged while Lex was drafting. Nothing was written.')
-  await writeDraft(fresh, { versions: draftOf(fresh)?.versions ?? [], proposal })
+  await writeDraftProposal(ideaId, fresh.id, proposal, legislative)
   return { ok: true, data: { number: row.number, pence: priced.pence ?? null, seconds: Math.round((Date.now() - started) / 100) / 10, dropped, held: { opc: opc.parts.length, precedents: prec.filter((x) => x.held).length }, notes: [opc.note, ...prec.filter((x) => !x.held).map((x) => `${x.p.name}: not held`)].filter((n): n is string => !!n) } }
 }

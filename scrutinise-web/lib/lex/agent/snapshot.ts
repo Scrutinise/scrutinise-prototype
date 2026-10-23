@@ -21,6 +21,7 @@ import { computeCanonicalState } from '@/lib/lex/state'
 import { pendingMaterialSince } from '@/lib/lex/update-pass'
 import { clampStep, STEPS } from '@/lib/lex/action-steps'
 import { listDocuments } from '@/lib/lex/source-registry'
+import { KIND_WORD, dNumberWords, type DocumentKind, type DocumentStatus } from '@/lib/lex/action-documents-pure'
 
 export const short = (id: string) => id.slice(0, 8)
 
@@ -113,8 +114,13 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
   // 26-Q — addressed by NUMBER, as the user sees it ("put 7 and 12 under Transparency"), with the title, heading and what is parked.
   const headingName = new Map((state?.actionHeadings ?? []).map((h) => [h.id, h.name]))
   const untitled = actions.filter((a) => !a.title?.trim()).length
+  // 26-V1 (241) — each action's documents, by D-number WITH their status, so Lex names a draft the way the screen does and never as settled.
+  const docs = await prisma.actionDocument.findMany({ where: { ideaId, status: { not: 'SUPERSEDED' } }, select: { actionId: true, number: true, kind: true, status: true, staleReason: true }, orderBy: { number: 'asc' } }).catch(() => [])
+  const docsOf = (a: { id: string; number: number | null }) => docs.filter((d) => d.actionId === a.id)
+    .map((d) => `${dNumberWords({ action: a.number, number: d.number, status: d.status as DocumentStatus, stale: !!d.staleReason })} (${KIND_WORD[d.kind as DocumentKind] ?? d.kind})`)
   for (const a of actions) {
-    lines.push(`- #${a.number ?? '?'} (${a.source})${a.title ? ` “${clip(a.title, 80)}”` : ''}${a.headingId && headingName.get(a.headingId) ? ` [heading: ${headingName.get(a.headingId)}]` : ''}${a.parked ? ' [later phase]' : ''}: ${clip(a.practicalStep, 180)}`)
+    const ds = docsOf(a)
+    lines.push(`- #${a.number ?? '?'} (${a.source})${a.title ? ` “${clip(a.title, 80)}”` : ''}${a.headingId && headingName.get(a.headingId) ? ` [heading: ${headingName.get(a.headingId)}]` : ''}${a.parked ? ' [later phase]' : ''}${ds.length ? ` [documents: ${ds.join('; ')}]` : ''}: ${clip(a.practicalStep, 180)}`)
   }
   if (actions.length) lines.push(`(${untitled} untitled, ${actions.filter((a) => a.titleProposal).length} with a proposed title, ${actions.filter((a) => a.facetProposal).length} with a proposed classification, ${actions.filter((a) => !a.targetCauseIds.length).length} with no recorded cause; ${(state?.setAsideActions ?? []).length} set aside; ${(state?.actionHeadings ?? []).length} headings)`)
 

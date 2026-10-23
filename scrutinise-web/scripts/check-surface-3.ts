@@ -141,6 +141,7 @@ function flatten(blocks: Block[]): string {
         break
       case 'note': out.push(b.text); break
       case 'rule': break
+      case 'table': out.push([b.header, ...b.rows].map((row) => row.map((c) => c.map((r) => r.text).join('')).join(' | ')).join(' / ')); break
       // ⚠ A block kind added later must break this check rather than be silently dropped, which
       // is how the first version of this flattener produced a FALSE NEGATIVE about the product.
       default: { const never: never = b; out.push(JSON.stringify(never)) }

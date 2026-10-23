@@ -1,6 +1,33 @@
 # LEX 26-V — Report
 
-**Status, 2026-10-23 09:1x UTC: SIZED, NOT STARTED.** As BRIEF_26V §0 asks, this is the size report and the split. Nothing is built until the split is agreed. The questions in §3 need an answer first.
+**Status, 2026-10-23 10:32 UTC: 26-V1 BUILT; all checks green; push in progress (see §5).** 26-V2 is not started. The answers to §3's questions are in CCh 23 Oct (9): 250 "Reports"; 251 stored as versions, stale-marked; 252 rows with depth, depth 1 filled, GRAPH asked; 253 the worker (V2); 254 both badges.
+
+## §5 26-V1 — what was built (CHANGE_LOG 2026-10-23 10:32)
+
+- **The store.** Two tables, `action_document` and `action_document_version` (schema `3f7f20c`). `lib/lex/action-documents.ts` is the only store; 26-U's draft is document N.1, and `record.draft` is never written again.
+- **The move.** #38 and #202 on 452c5ade (two Lex proposals, no versions) moved and read back identical. #203 holds the schedule `D.203.1`.
+- **The collision report** (N.2). Generated, free, stored as versions, rows with depth. Depth 1 only until GRAPH supplies 2–3. It is stale-marked in words.
+- **Needs a document.** Derived from avenue + instrument; overridden with a reason.
+- **The tree.** Counts, filters and find. A document opens in place, with Accept, Edit, and "Ask Lex to redraft" (asks first).
+- **Placement.**
+  - Overview: Law and Documents sub-tabs; "Reports"; the seven-stage badge.
+  - Deepening: law table → tree → passes.
+- **Pack.** Section 14 Documents, plus a Documents list beside Sources.
+- **Lex.** The prompt rule, documents in the snapshot, and the honesty check's `dnumber-as-authority`.
+- **Checks.**
+  - `check:lex-26v` 50/50, with a mutation run.
+  - The red checks are fixed: 26s-browser 99/99 (--db); 26s2-structure 105/105; check:scripts 0 errors.
+  - The full regression is green.
+- **Charlie's screen (§9):**
+  - the tree on 452c5ade;
+  - opening D.38.1 and D.202.1 (each "drafted, not accepted", with Lex's proposal waiting);
+  - the Law and Documents tabs;
+  - the "Reports" tab;
+  - the badge "Stage N of 7 · …".
+  - "Draft what this heading needs" is V2.
+- **Not in V1:** part comments; opening the full record from the tree; status words added automatically after a D-number in chat; a platform avenue (for a derived specification).
+
+**Earlier status, 09:1x UTC (superseded): SIZED, NOT STARTED.** As BRIEF_26V §0 asks, this is the size report and the split.
 
 ---
 

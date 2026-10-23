@@ -49,7 +49,7 @@ async function run(ideaId: string, userId: string, scope: 'HEADING' | 'SET', hea
 
   // §2g on the real output
   const row = await prisma.actionDigest.findUnique({ where: { id: v.id } })
-  const outputs = (row?.modelOutputs ?? []) as P.StoredModelOutput[]
+  const outputs = (row?.modelOutputs ?? []) as unknown as P.StoredModelOutput[]
   const answered = outputs.filter((o) => o.status === 'OK')
   ok(`${label}: at least three of the four models answered`, answered.length >= 3, `${answered.length}`)
   ok(`${label}: every answering model gave an answer to all six questions`, answered.every((o) => new Set(o.answer!.answers.map((a) => a.question)).size === 6), answered.map((o) => `${o.model}:${o.answer!.answers.map((a) => a.question).join('')}`).join(' '))

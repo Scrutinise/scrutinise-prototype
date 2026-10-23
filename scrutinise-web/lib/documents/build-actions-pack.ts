@@ -22,6 +22,7 @@ import { DIGEST_QUESTIONS } from '@/lib/lex/action-digest-pure'
 import { INCENTIVE_WORD } from '@/lib/lex/incentive-map'
 import { CLAUSE_CAVEAT, INSTRUMENT_WORD, provisionLine } from '@/lib/lex/action-draft-pure'
 import { scheduleCounts, scheduleSentence, NEAR_QUESTION, STATE_WORDS as TOUCH_STATE } from '@/lib/lex/action-touches-pure'
+import { KIND_WORD, dNumberWords } from '@/lib/lex/action-documents-pure'
 
 /** Which actions to print. `actionIds` wins; else a heading (`'__none'` = the actions with no heading); else everything. */
 export interface PackSelection { actionIds?: string[]; headingId?: string | null }
@@ -31,11 +32,14 @@ export const PACK_SECTIONS = [
   'Causes and conditions', 'Test against the guiding policy', 'Cost', 'Sequence', 'Sources', 'The owner’s notes',
   // 26-U — appended, never inserted: 1-11 keep their numbers on every printing (a reviewer's "B.3.6" must still mean the same paragraph).
   'Draft text', 'What this touches',
+  // 26-V1 §2e/§6 — appended the same way: the action's documents, in number order, each with its D-number and its status.
+  'Documents',
 ] as const
 
 export const PACK_KEY_LINE =
-  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes, 12 Draft text, 13 What this touches). '
-  + 'To say a paragraph is wrong, quote its number, for example “B.2.3”. 0.n are the Guiding Policy and the conditions; D is a digest; INC.n and NOT.n are the Incentives and the Considered, not taken sections.'
+  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes, 12 Draft text, 13 What this touches, 14 Documents). '
+  + 'To say a paragraph is wrong, quote its number, for example “B.2.3”. 0.n are the Guiding Policy and the conditions; D is a digest; INC.n and NOT.n are the Incentives and the Considered, not taken sections. '
+  + 'A document on an action has a D-number (D.38.2 = action 38, document 2) and is printed with its status: a D-number is our own output, never a source, so it is never in the [Ref: n] list.'
 
 const NOT_ANSWERED = 'not yet answered'
 const AVENUE: Record<string, string> = { LEGISLATIVE: 'legislative', ORGANISATIONAL: 'organisational', FINANCIAL: 'financial' }
@@ -151,6 +155,28 @@ function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | 
     blocks.push(numbered(N(13), [{ text: `${PACK_SECTIONS[12]}:`, bold: true }]))
     blocks.push({ kind: 'bullets', items: a.touches.map((t): Run[] => [{ text: `${provisionLine(t.line)} — ${TOUCH_STATE[t.state]}${t.stateReason ? ` (${t.stateReason})` : ''}${t.effects ? `. ${t.effects.perType.map((c) => `${c.type}: ${c.total} (${c.changeTheWords} change the words, ${c.doNotChangeTheWords} do not, ${c.unclassified} unclassified)`).join('; ')}. ${t.effects.freshness}` : ''}${t.near.length ? ` Near provisions — ${NEAR_QUESTION}: ${t.near.map((n) => `s.${n.number} ${n.title}`).join('; ')}.` : ''}` }]) })
   }
+  // 14 · documents — in number order after the record, each with its D-number and status in words (241: never read as settled)
+  const docs = a.documents ?? [] // a snapshot stored before 26-V has none: it reads as none
+  if (!docs.length) blocks.push(numbered(N(14), [{ text: `${PACK_SECTIONS[13]}: `, bold: true }, { text: 'none on this action yet.', italic: true }]))
+  else {
+    blocks.push(numbered(N(14), [{ text: `${PACK_SECTIONS[13]}:`, bold: true }]))
+    for (const doc of docs) {
+      blocks.push({ kind: 'heading', level: 3, runs: [{ text: `${dNumberWords({ action: a.number, number: doc.number, status: doc.status, stale: !!doc.stale })} — ${doc.title} (${KIND_WORD[doc.kind]}${doc.v ? `, version ${doc.v}` : ''})` }] })
+      if (doc.stale) blocks.push({ kind: 'note', text: `Out of date: ${doc.stale}` })
+      if (doc.body.trim()) blocks.push(...markdownToBlocks(doc.body))
+      else blocks.push({ kind: 'paragraph', runs: [{ text: 'No version yet — only a draft from Lex, not yet used.', italic: true }] })
+    }
+  }
+  return blocks
+}
+
+/** §2e — the Documents list, beside Sources and never merged into it: every document on the printed actions, with its status. */
+function documentListBlocks(actions: PackAction[]): Block[] {
+  const all = actions.flatMap((a) => (a.documents ?? []).map((d) => ({ a, d })))
+  const blocks: Block[] = [{ kind: 'section', title: 'DOCUMENTS' }]
+  if (!all.length) { blocks.push({ kind: 'paragraph', runs: text('No document is recorded on the actions in this printing.') }); return blocks }
+  blocks.push({ kind: 'paragraph', runs: [{ text: 'Our own outputs on the actions, in number order. None of them is evidence: the evidence is the Sources list.', italic: true }] })
+  blocks.push({ kind: 'bullets', items: all.map(({ a, d }): Run[] => [{ text: dNumberWords({ action: a.number, number: d.number, status: d.status, stale: !!d.stale }), bold: true }, { text: ` — ${d.title} (${KIND_WORD[d.kind]})` }]) })
   return blocks
 }
 
@@ -263,6 +289,9 @@ export function buildActionsPackDocument(snapshot: ProposalSnapshot, opts: { sel
     const refs: SourceRef[] = cited.map((n) => { const s = byNumber.get(n); return { ref: n, title: s?.title ?? 'A source not in the registry', citation: s?.citation ?? '', url: s?.url ?? '' } })
     blocks.push({ kind: 'sources', label: `Sources cited in this printing (${cited.length})`, refs })
   } else blocks.push({ kind: 'paragraph', runs: text('No source is recorded against the actions in this printing.') })
+
+  // ── 26-V1 §2e: the documents, as a second list (outputs), never merged into the sources (evidence) ──
+  blocks.push(...documentListBlocks(actions))
 
   return finish(snapshot, blocks, sel, label)
 }

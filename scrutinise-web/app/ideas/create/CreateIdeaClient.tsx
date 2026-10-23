@@ -36,6 +36,8 @@ import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import { installFaultCapture } from '@/lib/client-fault-capture'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
+import DocumentsTree from '@/components/lex/DocumentsTree'
+import DeepeningLawTable from '@/components/lex/DeepeningLawTable'
 import AgendaPanel from '@/components/lex/AgendaPanel'
 import ReportAdditions from '@/components/lex/ReportAdditions'
 import type { FeedbackSurfaceKey } from '@/lib/lex/feedback-types'
@@ -1278,7 +1280,15 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   {/* 26-K §4c's mount stays here: the Deepening stage renders `DeepeningPanel`
                       instead of `FieldsPanel`, so `RerunOptions`'s "New material and rebuilds"
                       section (nested inside `FieldsPanel`, see §10b above) never mounts here. */}
-                  <div className="pt-2">
+                  {/* 26-V1 §6 (decision 244): the law table at the top; the documents tree below it; the passes below that. */}
+                  <section className="pt-2" data-deepening="law">
+                    <DeepeningLawTable ideaId={state.ideaId} />
+                  </section>
+                  <section className="pt-3" data-deepening="documents">
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">The documents</h3>
+                    <DocumentsTree ideaId={state.ideaId} />
+                  </section>
+                  <div className="pt-3">
                     <UpdatePassPanel ideaId={state.ideaId} canEdit showResearchAngle={false} />
                   </div>
                   <DeepeningPanel

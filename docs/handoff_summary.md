@@ -964,6 +964,13 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-23 10:32 UTC — 23 Oct (9) done: 233–237 live (`b05bfa8`); 249 live (`3f7f20c`); 26-V1 built, all checks green.** See CHANGE_LOG 10:32 and `docs/LEX_26V_REPORT.md` §5.
+- **The documents store is the ONE home of 26-U's drafts** (`lib/lex/action-documents.ts`). Never write `record.draft`; read through `draftsFor` / `withDrafts`.
+- **#38 and #202:** their drafts are Lex PROPOSALS awaiting Charlie's accept. The #202 redraft to reflect 238 is OFFERED (asks first, about 10p) and NOT run.
+- **Red checks fixed:** 26s-browser, 26s2-structure, check:scripts.
+- **26-V2 next:** §4 templates, §5 heading drafting (on the worker; CCh 253), §7 passes.
+- **GRAPH is asked for depths 2–3 (252).**
+
 **▶ 2026-10-23 09:1x UTC — 23 Oct (8): 233, 238, 235 and 237 done (NOT committed, NOT pushed); 236 dropped (decision 247); 26-V SIZED, waiting on the split.** See CHANGE_LOG 09:01 and `docs/LEX_26V_REPORT.md`.
 - **Correction:** 452c5ade has **20 live `hand` link rows** (Charlie's GRAPH 7 `--write`, 22 Oct 22:53 UTC), not 0. The 00:29 and 07:51 lines below are wrong on that point.
 - **233** is #203 under Primary legislation: policy test FITS, 0.85p. **238** is in #202's Commentary; the redraft is Charlie's.

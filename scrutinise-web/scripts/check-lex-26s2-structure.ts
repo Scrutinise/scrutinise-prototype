@@ -199,6 +199,10 @@ async function partE() {
     const [hA, hB, hC] = [await mkHead('Old theme A', 90), await mkHead('Old theme B', 91), await mkHead('Old theme C', 92)]
     await prisma.lexCoherentAction.updateMany({ where: { id: { in: [liveRows0[1].id, liveRows0[2].id] } }, data: { headingId: hA.id } })
     await prisma.lexCoherentAction.update({ where: { id: liveRows0[0].id }, data: { headingId: hC.id } })
+    // ⚠ 452c5ade's "Legislation" was renamed "Primary legislation" on 22 Oct (decision 187), so a copy of it no longer has the short name
+    // this case exists to rename in place. The copy is this check's own fixture: put the short name back on it, so "renamed in place —
+    // same id, not a new heading" is still what is tested.
+    await prisma.actionHeading.updateMany({ where: { ideaId: id, name: 'Primary legislation' }, data: { name: 'Legislation' } })
     const before = await prisma.lexCoherentAction.findMany({ where: { ideaId: id }, select: { id: true, status: true, headingId: true, number: true, practicalStep: true, commentary: true } })
     const total0 = before.length
     const live0 = before.filter((b) => b.status === 'LIVE')

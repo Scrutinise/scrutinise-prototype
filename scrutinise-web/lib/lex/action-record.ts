@@ -45,6 +45,10 @@ export interface ActionRecord {
   /** 26-U §3 — the drafting instruction (lib/lex/action-draft-pure.ts). Carried through UNCHANGED by every slot write: parsing here keeps it
    *  as stored, so saving a slot can never drop a draft. */
   draft?: unknown
+  /** 26-V1 — 26-U's stored draft as it stood when it moved into action_document. Frozen: nothing reads or writes it. */
+  draftBefore26V?: unknown
+  /** 26-V1 (2d) — "needs a document" overridden by hand, with its reason (lib/lex/action-documents-pure.ts NeedsOverride). */
+  documentNeeds?: unknown
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -76,7 +80,12 @@ export function parseRecord(json: unknown): ActionRecord {
     out[k] = { text, by: by(s.by), at: str(s.at, 40), direction: dir(s.direction), linkActionId: typeof s.linkActionId === 'string' ? s.linkActionId : null, ...(proposal ? { proposal } : {}) }
   }
   // ⚠ 26-U: every writer of `record` parses it and stores the result, so a key not kept here is DELETED by the next slot save.
+  // ⚠ 26-V1: the draft now lives in action_document (lib/lex/action-documents.ts). `draft` here is only the VIEW the canonical state
+  // attaches for the screen; the stored copy from before the move is kept, frozen, as `draftBefore26V`, and the needs override as
+  // `documentNeeds`. All three are carried through unchanged.
   if (isObj(json.draft)) out.draft = json.draft
+  if (isObj(json.draftBefore26V)) out.draftBefore26V = json.draftBefore26V
+  if (isObj(json.documentNeeds)) out.documentNeeds = json.documentNeeds
   return out
 }
 

@@ -14,7 +14,8 @@ import { activeConditions } from '@/lib/lex/action-conditions'
 import { readConditions } from '@/lib/lex/action-conditions-server'
 import { listRegistry } from '@/lib/lex/source-registry'
 import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
-import { parseDraft, currentVersion } from '@/lib/lex/action-draft-pure'
+import { currentVersion } from '@/lib/lex/action-draft-pure'
+import { draftsFor, packDocuments } from '@/lib/lex/action-documents'
 import { touchesFor } from '@/lib/lex/action-touches'
 import { SET_ASIDE_PREFIX, DISMISSED_PREFIX } from '@/lib/lex/update-pass'
 import { staleness, staleSentence, type StoredJudge, type StoredModelOutput } from '@/lib/lex/action-digest-pure'
@@ -80,6 +81,9 @@ export async function readActionsPackData(
 
   const bears = (n: (typeof notes)[number]) => (Array.isArray(n.bearsOn) ? (n.bearsOn as unknown as Array<{ kind: string; id: string; label?: string }>) : [])
 
+  // 26-V1 — the drafting instruction from the documents store, and every document on each action (current version), in number order.
+  const [drafts, docsByAction] = await Promise.all([draftsFor(rows.map((r) => r.id)), packDocuments(ideaId)])
+
   const actions: PackAction[] = rows.flatMap((r): PackAction[] => {
     if (r.number == null) return []
     const rec = parseRecord(r.record)
@@ -106,7 +110,8 @@ export async function readActionsPackData(
       slots, sequence: r.sequence, beforeNumbers: r.beforeIds.map((id) => numById.get(id)).filter((n): n is number => n != null).sort((a, b) => a - b),
       parked: r.parked, parkedReason: r.parkedReason, detail, parts, refs, notes: noteRows,
       // 26-U §3/§4 — the current drafting-instruction version, and (filled below) what it touches, computed, never written.
-      draft: currentVersion(parseDraft(rec.draft)), touches: null,
+      draft: currentVersion(drafts.get(r.id)), touches: null,
+      documents: docsByAction.get(r.id) ?? [],
     }]
   })
 

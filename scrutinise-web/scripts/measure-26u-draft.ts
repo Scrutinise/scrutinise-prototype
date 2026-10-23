@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '../lib/prisma'
-import { draftWithLex, draftOf } from '../lib/lex/action-draft'
+import { draftWithLex, draftOfAction } from '../lib/lex/action-draft'
 import { touchesFor, STATE_WORDS } from '../lib/lex/action-touches'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 
@@ -32,9 +32,9 @@ async function main() {
       const a = await prisma.lexCoherentAction.findFirst({ where: { ideaId: copy.id, number: n, status: 'LIVE' }, select: { id: true, title: true } })
       if (!a) { console.log(`#${n}: not a live action on the copy`); continue }
       const r = await draftWithLex(copy.id, a.id, copy.userId)
-      if (!r.ok) { console.log(`#${n}: FAILED — ${r.error}`); continue }
+      if (!r.ok) { console.log(`#${n}: FAILED — ${'error' in r ? r.error : ''}`); continue }
       runs.push({ pence: r.data.pence ?? NaN, seconds: r.data.seconds })
-      const p = draftOf((await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: a.id }, select: { record: true } })))!.proposal!
+      const p = (await draftOfAction(a.id))!.proposal! // 26-V1: the draft lives in the documents store
       console.log(`\n══ #${n} ${a.title ?? ''} — ${r.data.pence?.toFixed(2)}p, ${r.data.seconds}s; OPC parts ${r.data.held.opc}, precedents held ${r.data.held.precedents}${r.data.notes.length ? `; notes: ${r.data.notes.join('; ')}` : ''}`)
       console.log(`instrument ${p.instrument} · duty on ${p.dutyOnWhom} · enforced ${p.enforcedHow} · commencement ${p.commencement} · extent ${p.extent.join(', ')}`)
       console.log('provisions:', p.provisions.map((x) => `${x.relation} ${x.docUri}${x.provisionPath ? ` ${x.provisionPath}` : ''}`).join(' | '))

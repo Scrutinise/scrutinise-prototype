@@ -1,5 +1,65 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 10:32 UTC - LEX 26-V1: documents on actions, D-numbers, the tree, Law and Documents tabs, Reports, the seven-stage badge
+
+- **Decisions 250–254 applied.**
+  - 250: the top tab is now "Reports".
+  - 251: collision reports are stored as versions and stale-marked.
+  - 252: rows carry a depth field; only depth 1 is filled, and GRAPH is asked for depths 2–3.
+  - 254: both old badges are retired.
+- **Schema** (`3f7f20c`, pushed earlier with 249): `action_document` + `action_document_version`, DDL `prisma/lex_26v_action_documents.sql`, applied to Neon after whichdb.
+- **One store.** `lib/lex/action-documents.ts` is the only store for 26-U's drafting instruction and clause, now document N.1. All of these read and write through it:
+  - `saveVersion`, `acceptProposal`, `dismissProposal` and `draftWithLex`;
+  - the canonical state (`withDrafts` attaches `record.draft` as a view);
+  - Lex's `get_action`, the Actions Pack, and the scripts.
+  - `record.draft` is never written again.
+  - A dismissed proposal is now answered DISMISSED and kept; 26-U had deleted it.
+- **Migration** (`scripts/migrate-26v-drafts.ts`):
+  - #38 and #202 on 452c5ade (both Lex proposals, no versions) were moved and read back field by field. The old copy is kept, frozen, as `record.draftBefore26V`.
+  - The first read-back of #38 FAILED and left its record in place, as designed. The pence went float 12.133768000000002 → NUMERIC 12.133768. The comparison now rounds pence to 6 places.
+  - The run also exposed a real bug: a proposal was carrying a version's `v`/`by`. Fixed in `draftsFor`.
+  - #203 is set to hold the consequential schedule (233), and its schedule `D.203.1` is generated (0 rows: no clause version exists yet).
+- **Collision report** (N.2): generated, no model call. Rows carry depth / parent / relation / target / state / GRAPH 6's split.
+  - Depth 1 comes from the clause's own lines, and the report says "Depth 1 only…" until GRAPH supplies depths 2–3.
+  - Display stops at depth 3: "and N further effects — see the schedule".
+  - Stale is said in words: the effects data was reloaded, or the clause has a newer version. The mark is recorded when the tree is read.
+  - ⚠ jsonb reorders keys, so "unchanged" compares with the keys sorted. Caught by the check's first run.
+- **Needs a document:** derived from avenue + instrument (code → code text; legislative → clause + collision report; financial → costing; organisational → operating text; no avenue → nothing derived, said). The override is recorded with its reason, by and at.
+- **The tree** (`components/lex/DocumentsTree.tsx`):
+  - heading → action ■ → document ● → part ▸; counts line; filters; find box (title, number, D-number).
+  - A document opens in place with its version, parts, versions, sources and Lex's drafts.
+  - Accept; Edit (text kinds); "Ask Lex to redraft" asks first with the measured price.
+  - "Generate it (free)"; "Write it" opens a FocusDialog; "Change what this needs".
+- **Placement:**
+  - The Overview's Idea tab gains sub-tabs **Law** (GRAPH 7's panel, moved from the foot) and **Documents** (the tree, read-only). The top tab "Documents" is now **"Reports"**.
+  - Both stage badges read "Stage N of 7 · <name>" from the kernel's progress (never `Idea.stage`).
+  - The Deepening page shows the law table (new `/api/ideas/[id]/law-set`), then the tree, then the passes.
+- **Actions Pack:** section 14 "Documents" per action, each with its D-number and status in words. A **DOCUMENTS** list follows SOURCES, never merged into it, and the key line explains D-numbers.
+- **Lex:**
+  - The system prompt says D-numbers are drafts, never sources, and must be named with their status.
+  - The snapshot lists each action's documents with status.
+  - The honesty check gains a sixth kind, `dnumber-as-authority` ("under D.x", "[Ref: D.x]", "D.x requires…").
+- **`check:lex-26v` 50/50, 4 controls, 0 dead:**
+  - a cold read of 452c5ade;
+  - scratch runs of the real functions (items 1–4);
+  - the real tree in Chromium, answered by the real route (item 5).
+  - **Mutation run** (display depth 99): 2 failures and 1 dead control, then reverted.
+- **Red checks fixed (rule 16):**
+  - `check:lex-26s-browser` **99/99 with --db**. The stray alert was the digest panel's unanswered read in the harness; the harness now answers it, and the check asserts no stray alert.
+  - `check:lex-26s2-structure` **105/105**. Its scratch copy had no "Legislation" to rename after decision 187; the fixture puts the short name back.
+  - `check:scripts` **0 errors** (18 fixed, including two scripts that imported the removed `draftOf`).
+- **Regression green:**
+  - 26-U 57/57; 26-S2 221/221 (4 live cases not run, by design); 26-S2-browser 33/33;
+  - 26-T1 98/98 and 26-T2 72/72 (4 live cases not run each); 26-P 116/116 (live replays not run);
+  - idea-law 24/24; prompt-examples, client-boundary and llm-guards green; 235 24/24; 249 23/23; tsc 0.
+- ⚠ **Ordering, said plainly:** the migration ran at ~10:00 UTC, before this code deployed. Until the push, the live site's Draft text for #38 and #202 showed no proposal. The rows were never lost (`action_document`, plus the frozen copy).
+- **Not in V1:**
+  - comments on a part;
+  - clicking an action in the tree to open its full record (the row shows its statement);
+  - automatic status words after a D-number in chat (Lex is instructed, and the honesty check refuses authority);
+  - a "platform" avenue to derive a specification from (none exists; add one by hand);
+  - V2 (the kinds' templates, "Draft what this heading needs", the passes re-pointed).
+
 ## 2026-10-23 09:42 UTC - LEX 23 Oct (9): 233–237 pushed + verified live at b05bfa8; decision 249 (LHP maximise, typing box) built
 
 - **Pushed** `b05bfa8` at 09:33 UTC, after a full clean build (A and B both PASS).

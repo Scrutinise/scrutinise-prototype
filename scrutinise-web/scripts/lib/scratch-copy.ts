@@ -104,6 +104,14 @@ export async function deleteScratch(id: string): Promise<boolean> {
   const row = await prisma.idea.findUnique({ where: { id }, select: { title: true } })
   if (!row) return true
   if (!row.title.startsWith(SCRATCH_PREFIX)) throw new Error(`refusing to delete ${id}: it is not a scratch copy ("${row.title.slice(0, 40)}")`)
+  // 26-V1: documents on actions hold RESTRICT keys onto the idea and its actions. On a SCRATCH copy only (checked just above), they go
+  // first, versions before documents, so the hard delete is not refused. The product itself never deletes a document.
+  const docIds = (await prisma.actionDocument.findMany({ where: { ideaId: id }, select: { id: true } })).map((d) => d.id)
+  if (docIds.length) {
+    await prisma.actionDocumentVersion.deleteMany({ where: { documentId: { in: docIds } } })
+    await prisma.actionDocument.updateMany({ where: { id: { in: docIds } }, data: { supersededBy: null, status: 'DRAFTED', acceptedV: null } })
+    await prisma.actionDocument.deleteMany({ where: { id: { in: docIds } } })
+  }
   try { await prisma.idea.delete({ where: { id } }); return true } catch (err) {
     // a hard delete can be refused by a restrictive foreign key; soft-delete so it is at least out of every list
     await prisma.idea.update({ where: { id }, data: { deletedAt: new Date() } }).catch(() => {})

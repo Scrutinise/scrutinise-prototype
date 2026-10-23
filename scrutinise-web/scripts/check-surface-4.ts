@@ -68,6 +68,7 @@ function flatten(blocks: Block[]): string {
         break
       case 'note': out.push(b.text); break
       case 'rule': break
+      case 'table': out.push([b.header, ...b.rows].map((row) => row.map((c) => c.map((r) => r.text).join('')).join(' | ')).join(' / ')); break
       default: { const never: never = b; out.push(JSON.stringify(never)) }
     }
   }

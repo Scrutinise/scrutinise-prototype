@@ -101,6 +101,9 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     return hooks.failReread ? json(500, { error: 'boom' }) : json(200, stateBody())
   }
   if (url.includes('/action-ideas')) return json(200, { held: 0, settledPolicyId: null })
+  // The digest panel (26-T1) reads its digests on mount. Unanswered, its relative URL failed on this origin-less page and put a stray
+  // "Could not read the digests" alert in the status strip, beside whatever the check was looking at. The workspace has none here.
+  if (url.includes('/action-digest') && (!init?.method || init.method === 'GET')) return json(200, { digests: [] })
   return realFetch(input, init)
 }) as typeof window.fetch
 hooks.post = async (raw: A) => { const r = handle(raw); return r }

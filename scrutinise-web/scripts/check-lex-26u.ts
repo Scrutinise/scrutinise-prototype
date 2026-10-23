@@ -155,7 +155,9 @@ async function part3and4() {
     const s = scriptedDraft()
     const run = await DR.draftWithLex(copy.id, owner.id, copy.userId, { call: s.call })
     const row = await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } })
-    const d = DR.draftOf(row)!
+    const d = (await DR.draftOfAction(owner.id))!  // 26-V1: read from the documents store
+    ok('26-V1: the action’s record carries no draft at all — the documents store is the one store', !(row.record as { draft?: unknown } | null)?.draft)
+    control('a copy of the draft still written into the record (must be FALSE)', !!(row.record as { draft?: unknown } | null)?.draft)
     ok('Lex’s draft is a PROPOSAL BESIDE the owner’s version — the owner’s version 1 untouched', run.ok && d.versions.length === 1 && d.versions[0].dutyOnWhom === 'the owner’s own words' && !!d.proposal)
     control('the owner’s clause replaced by Lex’s (must be FALSE)', d.versions[0].clause.includes('The Minister must issue'))
     ok('the proposal carries EVERY instruction field and the clause with the caveat as its first line', !!d.proposal && !!d.proposal.instrument && !!d.proposal.dutyOnWhom && !!d.proposal.enforcedHow && !!d.proposal.commencement && d.proposal.extent.length > 0 && d.proposal.clause.startsWith(CLAUSE_CAVEAT))
@@ -168,7 +170,7 @@ async function part3and4() {
     const linksOf = () => prisma.ideaLawLink.findMany({ where: { actionId: owner.id }, orderBy: { createdAt: 'asc' } })
     ok('§5: a PROPOSAL writes no law link — it is not the instruction until accepted', (await linksOf()).length === 0)
     const acc = await DR.acceptProposal(copy.id, owner.id)
-    const after = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))!
+    const after = (await DR.draftOfAction(owner.id))!
     ok('accepting makes it version 2 (by Lex); version 1 (the owner’s) is kept', acc.ok && after.versions.length === 2 && after.versions[0].by === 'USER' && after.versions[1].by === 'LEX' && !after.proposal)
 
     section('§5 · the join (223, 226) — rows read back with the plain client, not the app’s reader')
@@ -204,7 +206,7 @@ async function part3and4() {
     // notHeld — so a live row and a not-held mention can never read as agreement. Fixtured without a stub: the earlier version's row is
     // written directly against an Act the corpus names but does not hold (check:idea-law B3), and the real save path then names it.
     const NAMED_NOT_HELD = 'ukpga/1970/1'
-    const vNow = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))!.versions.at(-1)!
+    const vNow = (await DR.draftOfAction(owner.id))!.versions.at(-1)!
     const planted = await prisma.ideaLawLink.create({ data: {
       ideaId: copy.id, actionId: owner.id, targetKind: 'act', docUri: NAMED_NOT_HELD, provisionPath: null, relation: 'relies_on',
       source: 'drafting_instruction', sourceDetail: `${owner.id} v${vNow.v}`, note: null, asAt: new Date(),
@@ -219,8 +221,8 @@ async function part3and4() {
     const back = await DR.saveVersion(copy.id, owner.id, after.versions[1])
     ok('…and a version that drops it then withdraws it', back.ok && 'withdrawn' in back.data.lawRows && back.data.lawRows.withdrawn === 1 && !!(await prisma.ideaLawLink.findUniqueOrThrow({ where: { id: planted.id } })).withdrawnAt)
     await setSlot(copy.id, owner.id, 'against', { text: 'A slot answer written after the draft.' })
-    const kept = DR.draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: owner.id }, select: { record: true } }))
-    ok('saving a step-2 slot afterwards does NOT drop the drafting instruction (parseRecord carries it)', (kept?.versions.length ?? 0) >= 2)
+    const kept = await DR.draftOfAction(owner.id)
+    ok('saving a step-2 slot afterwards does NOT drop the drafting instruction (it lives in the documents store, not the record)', (kept?.versions.length ?? 0) >= 2)
     void parseDraft
 
     section('§4 · what this touches (144, 209, 210, 229) — a cold read on the real statute book')

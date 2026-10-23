@@ -14,6 +14,7 @@ import { projectElicitationOntoPageOne } from './page-one'
 import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
 import { clampStep } from './action-steps'
 import { parseRecord } from './action-record'
+import { withDrafts } from './action-documents'
 import { parseConditions } from './action-conditions'
 import { parseHeadingPlan } from './action-resort-pure'
 import {
@@ -228,10 +229,11 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
   }))
 
   // Page 4 actions.
-  const actionRows = await prisma.lexCoherentAction.findMany({
+  // 26-V1 — the drafting instruction is read from the documents store and attached as `record.draft`, the shape the screen reads.
+  const actionRows = await withDrafts(await prisma.lexCoherentAction.findMany({
     where: { ideaId },
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
-  })
+  }))
   const num = (v: unknown): number | null => (typeof v === 'number' ? v : null)
   const range = (v: unknown) => {
     const r = v as Record<string, unknown> | null

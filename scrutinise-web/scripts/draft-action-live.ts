@@ -4,7 +4,7 @@
 //   npx tsx --env-file=.env scripts/draft-action-live.ts <idea id or prefix> <action number>
 
 import { prisma } from '../lib/prisma'
-import { draftWithLex, draftOf } from '../lib/lex/action-draft'
+import { draftWithLex, draftOfAction } from '../lib/lex/action-draft'
 import { touchesFor } from '../lib/lex/action-touches'
 import { STATE_WORDS } from '../lib/lex/action-touches-pure'
 
@@ -16,8 +16,8 @@ async function main() {
   const idea = await prisma.idea.findUniqueOrThrow({ where: { id: ideas[0].id }, select: { id: true, creatorId: true } })
   const a = await prisma.lexCoherentAction.findFirstOrThrow({ where: { ideaId: idea.id, number: Number(num), status: 'LIVE' }, select: { id: true, title: true } })
   const r = await draftWithLex(idea.id, a.id, idea.creatorId)
-  if (!r.ok) { console.log(`#${num}: FAILED — ${r.error}`); return }
-  const d = draftOf(await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: a.id }, select: { record: true } }))!
+  if (!r.ok) { console.log(`#${num}: FAILED — ${'error' in r ? r.error : ''}`); return }
+  const d = (await draftOfAction(a.id))! // 26-V1: the draft lives in the documents store
   const p = d.proposal!
   console.log(`══ #${num} ${a.title ?? ''} — ${r.data.pence?.toFixed(2)}p, ${r.data.seconds}s; owner versions kept: ${d.versions.length}${r.data.notes.length ? `; notes: ${r.data.notes.join('; ')}` : ''}`)
   console.log(`instrument ${p.instrument} · duty on ${p.dutyOnWhom} · enforced ${p.enforcedHow} · commencement ${p.commencement} · extent ${p.extent.join(', ')}`)
